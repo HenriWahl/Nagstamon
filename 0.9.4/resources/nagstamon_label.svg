@@ -1,0 +1,303 @@
+<?xml version="1.0" encoding="UTF-8" standalone="no"?>
+<!-- Created with Inkscape (http://www.inkscape.org/) -->
+
+<svg
+   xmlns:dc="http://purl.org/dc/elements/1.1/"
+   xmlns:cc="http://creativecommons.org/ns#"
+   xmlns:rdf="http://www.w3.org/1999/02/22-rdf-syntax-ns#"
+   xmlns:svg="http://www.w3.org/2000/svg"
+   xmlns="http://www.w3.org/2000/svg"
+   xmlns:xlink="http://www.w3.org/1999/xlink"
+   xmlns:sodipodi="http://sodipodi.sourceforge.net/DTD/sodipodi-0.dtd"
+   xmlns:inkscape="http://www.inkscape.org/namespaces/inkscape"
+   width="210mm"
+   height="297mm"
+   id="svg2"
+   sodipodi:version="0.32"
+   inkscape:version="0.47pre4 r22446"
+   sodipodi:docname="nagstamon_label.svg"
+   inkscape:output_extension="org.inkscape.output.svg.inkscape"
+   version="1.1">
+  <defs
+     id="defs4">
+    <inkscape:perspective
+       sodipodi:type="inkscape:persp3d"
+       inkscape:vp_x="0 : 526.18109 : 1"
+       inkscape:vp_y="0 : 1000 : 0"
+       inkscape:vp_z="744.09448 : 526.18109 : 1"
+       inkscape:persp3d-origin="372.04724 : 350.78739 : 1"
+       id="perspective10" />
+    <radialGradient
+       gradientUnits="userSpaceOnUse"
+       gradientTransform="matrix(1,0,0,0.1341991,0,329.90715)"
+       r="115.5"
+       fy="381.04276"
+       fx="215"
+       cy="381.04276"
+       cx="215"
+       id="radialGradient3369"
+       xlink:href="#linearGradient3371"
+       inkscape:collect="always" />
+    <linearGradient
+       gradientTransform="translate(0,1.0253906e-5)"
+       gradientUnits="userSpaceOnUse"
+       y2="439.38992"
+       x2="380.94165"
+       y1="349.38992"
+       x1="380.94165"
+       id="linearGradient3341"
+       xlink:href="#linearGradient3343"
+       inkscape:collect="always" />
+    <linearGradient
+       gradientTransform="matrix(0.8787879,0,0,0.8571431,45.568681,64.198531)"
+       y2="589.38995"
+       x2="540.94165"
+       y1="309.38995"
+       x1="210.94165"
+       gradientUnits="userSpaceOnUse"
+       id="linearGradient3199"
+       xlink:href="#linearGradient3191"
+       inkscape:collect="always" />
+    <linearGradient
+       gradientUnits="userSpaceOnUse"
+       y2="309.38992"
+       x2="210.94165"
+       y1="589.38995"
+       x1="540.94165"
+       id="linearGradient3189"
+       xlink:href="#linearGradient3191"
+       inkscape:collect="always" />
+    <linearGradient
+       gradientUnits="userSpaceOnUse"
+       y2="599.38995"
+       x2="550.94165"
+       y1="299.38992"
+       x1="200.94165"
+       id="linearGradient3181"
+       xlink:href="#linearGradient3163"
+       inkscape:collect="always" />
+    <inkscape:perspective
+       id="perspective2433"
+       inkscape:persp3d-origin="372.04724 : 350.78739 : 1"
+       inkscape:vp_z="744.09448 : 526.18109 : 1"
+       inkscape:vp_y="6.123234e-14 : 1000 : 0"
+       inkscape:vp_x="0 : 526.18109 : 1"
+       sodipodi:type="inkscape:persp3d" />
+    <linearGradient
+       id="linearGradient3163">
+      <stop
+         id="stop3165"
+         offset="0"
+         style="stop-color:#ffffff;stop-opacity:1;" />
+      <stop
+         id="stop3167"
+         offset="1"
+         style="stop-color:#c3c3c3;stop-opacity:1;" />
+    </linearGradient>
+    <linearGradient
+       id="linearGradient3191">
+      <stop
+         style="stop-color:#767676;stop-opacity:1;"
+         offset="0"
+         id="stop3193" />
+      <stop
+         style="stop-color:#d4d4d4;stop-opacity:1;"
+         offset="1"
+         id="stop3195" />
+    </linearGradient>
+    <linearGradient
+       id="linearGradient3343">
+      <stop
+         style="stop-color:#ffffff;stop-opacity:0.59740257;"
+         offset="0"
+         id="stop3345" />
+      <stop
+         style="stop-color:#ffffff;stop-opacity:0.32034633;"
+         offset="1"
+         id="stop3347" />
+    </linearGradient>
+    <linearGradient
+       id="linearGradient3371">
+      <stop
+         style="stop-color:#575a5b;stop-opacity:1;"
+         offset="0"
+         id="stop3373" />
+      <stop
+         style="stop-color:#000000;stop-opacity:0;"
+         offset="1"
+         id="stop3375" />
+    </linearGradient>
+  </defs>
+  <sodipodi:namedview
+     id="base"
+     pagecolor="#ffffff"
+     bordercolor="#666666"
+     borderopacity="1.0"
+     inkscape:pageopacity="0.0"
+     inkscape:pageshadow="2"
+     inkscape:zoom="2.8"
+     inkscape:cx="329.28638"
+     inkscape:cy="637.50232"
+     inkscape:document-units="px"
+     inkscape:current-layer="layer1"
+     showgrid="false"
+     inkscape:window-width="1242"
+     inkscape:window-height="891"
+     inkscape:window-x="1794"
+     inkscape:window-y="88"
+     inkscape:window-maximized="0" />
+  <metadata
+     id="metadata7">
+    <rdf:RDF>
+      <cc:Work
+         rdf:about="">
+        <dc:format>image/svg+xml</dc:format>
+        <dc:type
+           rdf:resource="http://purl.org/dc/dcmitype/StillImage" />
+        <dc:title></dc:title>
+      </cc:Work>
+    </rdf:RDF>
+  </metadata>
+  <g
+     inkscape:label="Ebene 1"
+     inkscape:groupmode="layer"
+     id="layer1">
+    <rect
+       style="fill:none;fill-opacity:1;stroke:none"
+       id="rect2847"
+       width="323.92856"
+       height="70.35714"
+       x="194.28572"
+       y="356.64789"
+       ry="0"
+       inkscape:export-filename="/home/henri/Data/Projekte/nagstamon/svn/nagstamon/Nagstamon/resources/nagstamon_label.png"
+       inkscape:export-xdpi="35.817272"
+       inkscape:export-ydpi="35.817272" />
+    <g
+       transform="matrix(0.1832949,0,0,0.1832949,171.09181,307.1134)"
+       id="g2440"
+       inkscape:label="Ebene 1"
+       inkscape:export-filename="/home/henri/Data/Projekte/nagstamon/svn/nagstamon/Nagstamon/resources/nagstamon_label.png"
+       inkscape:export-xdpi="35.817272"
+       inkscape:export-ydpi="35.817272">
+      <g
+         id="g3191" />
+      <g
+         inkscape:export-ydpi="34.611824"
+         inkscape:export-xdpi="34.611824"
+         id="g3518">
+        <path
+           transform="matrix(1.6043478,0,0,2.086172,31.006873,-185.42155)"
+           d="m 330,381.04276 c 0,8.28427 -51.48725,15 -115,15 -63.51275,0 -115,-6.71573 -115,-15 0,-8.28428 51.48725,-15 115,-15 63.51275,0 115,6.71572 115,15 z"
+           sodipodi:ry="15"
+           sodipodi:rx="115"
+           sodipodi:cy="381.04276"
+           sodipodi:cx="215"
+           id="path3359"
+           style="opacity:1;fill:url(#radialGradient3369);fill-opacity:1;stroke:none;stroke-width:0.54660761;stroke-miterlimit:4;stroke-dasharray:0.54660761, 3.2796457;stroke-dashoffset:0;stroke-opacity:1"
+           sodipodi:type="arc" />
+        <rect
+           ry="39.583015"
+           inkscape:export-ydpi="10.383548"
+           inkscape:export-xdpi="10.383548"
+           inkscape:export-filename="/home/IFWNT/hw5/Data/Projekte/nagiostray/path3488.png"
+           style="fill:#434343;fill-opacity:1;stroke:none;stroke-width:1.90700674;stroke-miterlimit:4;stroke-dasharray:none;stroke-opacity:1"
+           id="rect3470"
+           width="370"
+           height="320"
+           x="190.94165"
+           y="289.38992" />
+        <rect
+           ry="37.109081"
+           inkscape:export-ydpi="10.383548"
+           inkscape:export-xdpi="10.383548"
+           inkscape:export-filename="/home/IFWNT/hw5/Data/Projekte/nagiostray/path3488.png"
+           style="fill:url(#linearGradient3181);fill-opacity:1;stroke:none;stroke-width:1.90700674;stroke-miterlimit:4;stroke-dasharray:none;stroke-opacity:1"
+           id="rect3171"
+           width="350"
+           height="300.00003"
+           x="200.94165"
+           y="299.38989" />
+        <rect
+           ry="34.635136"
+           inkscape:export-ydpi="10.383548"
+           inkscape:export-xdpi="10.383548"
+           inkscape:export-filename="/home/IFWNT/hw5/Data/Projekte/nagiostray/path3488.png"
+           style="fill:url(#linearGradient3189);fill-opacity:1;stroke:none;stroke-width:1.90700674;stroke-miterlimit:4;stroke-dasharray:none;stroke-opacity:1"
+           id="rect3173"
+           width="330"
+           height="279.99997"
+           x="210.94165"
+           y="309.38995" />
+        <rect
+           ry="29.687262"
+           inkscape:export-ydpi="10.383548"
+           inkscape:export-xdpi="10.383548"
+           inkscape:export-filename="/home/IFWNT/hw5/Data/Projekte/nagiostray/path3488.png"
+           style="fill:url(#linearGradient3199);fill-opacity:1;stroke:none;stroke-width:1.90700674;stroke-miterlimit:4;stroke-dasharray:none;stroke-opacity:1"
+           id="rect3197"
+           width="290"
+           height="240.00003"
+           x="230.94165"
+           y="329.38992" />
+        <rect
+           ry="27.213316"
+           inkscape:export-ydpi="10.383548"
+           inkscape:export-xdpi="10.383548"
+           inkscape:export-filename="/home/IFWNT/hw5/Data/Projekte/nagiostray/path3488.png"
+           style="fill:#000000;fill-opacity:1;stroke:none;stroke-width:1.90700674;stroke-miterlimit:4;stroke-dasharray:none;stroke-opacity:1"
+           id="rect3201"
+           width="270"
+           height="219.99997"
+           x="240.94165"
+           y="339.38995" />
+        <g
+           transform="matrix(-1,0,0,-1,751.8833,898.77986)"
+           id="g2417">
+          <path
+             style="fill:#ffff00;fill-opacity:1;stroke:none;stroke-width:1.90700674;stroke-miterlimit:4;stroke-opacity:1"
+             d="M 268.15497,339.38992 L 483.72833,339.38992 C 498.80451,339.38992 510.94165,351.52706 510.94165,366.60324 C 510.94165,389.38994 510.94165,399.38994 510.94165,409.38994 L 240.94165,409.38994 L 240.94165,366.60324 C 240.94165,351.52706 253.07879,339.38992 268.15497,339.38992 z"
+             id="rect3244"
+             sodipodi:nodetypes="ccccccc" />
+          <path
+             style="fill:#ff0000;fill-opacity:1;stroke:none;stroke-width:1.90700674;stroke-miterlimit:4;stroke-opacity:1"
+             d="M 483.72833,559.38994 L 268.15497,559.38994 C 253.07879,559.38994 240.94165,547.2528 240.94165,532.17662 C 240.94165,509.38992 240.94165,489.38992 240.94165,479.38992 L 510.94165,479.38992 L 510.94165,532.17662 C 510.94165,547.2528 498.80451,559.38994 483.72833,559.38994 z"
+             id="path3247"
+             sodipodi:nodetypes="ccccccc" />
+          <rect
+             style="fill:#ff8500;fill-opacity:1;stroke:none;stroke-width:1;stroke-miterlimit:4;stroke-dasharray:1, 6;stroke-dashoffset:0;stroke-opacity:1"
+             id="rect3249"
+             width="270"
+             height="70"
+             x="70"
+             y="156.04276"
+             transform="translate(170.94165,253.34718)"
+             ry="0" />
+        </g>
+        <path
+           id="text3349"
+           d="M 297.87524,359.38994 L 347.84292,359.38994 L 410.94165,482.84609 L 410.94165,359.38994 L 453.35609,359.38994 L 453.35609,539.38994 L 403.3884,539.38994 L 340.28968,415.93378 L 340.28968,539.38994 L 297.87524,539.38994 L 297.87524,359.38994"
+           style="font-size:40px;font-style:normal;font-weight:normal;opacity:1;fill:#000000;fill-opacity:1;stroke:none;stroke-width:1px;stroke-linecap:butt;stroke-linejoin:miter;stroke-opacity:1;font-family:Bitstream Vera Sans" />
+        <path
+           sodipodi:nodetypes="cccszccc"
+           id="path3333"
+           d="M 268.15497,339.38994 L 483.69858,339.38994 C 498.94165,339.38994 510.96527,351.62813 510.94165,366.63994 C 510.94165,377.05931 510.94165,379.38996 510.94165,379.38996 C 510.94165,397.60607 456.64097,370.51271 380.94165,429.38996 C 305.24233,488.2672 250.94165,489.38996 240.94165,489.38996 L 240.94165,366.60326 C 240.94165,351.52708 253.07879,339.38994 268.15497,339.38994 z"
+           style="fill:url(#linearGradient3341);fill-opacity:1;stroke:none;stroke-width:1.90700674;stroke-miterlimit:4;stroke-opacity:1" />
+      </g>
+    </g>
+    <text
+       xml:space="preserve"
+       style="font-size:41.27756882px;font-style:normal;font-weight:normal;fill:#000000;fill-opacity:1;stroke:none;stroke-width:1px;stroke-linecap:butt;stroke-linejoin:miter;stroke-opacity:1;font-family:Bitstream Vera Sans"
+       x="279.50137"
+       y="402.4429"
+       id="text2456"
+       inkscape:export-filename="/home/henri/Data/Projekte/nagstamon/svn/nagstamon/Nagstamon/resources/nagstamon_label.png"
+       inkscape:export-xdpi="35.817272"
+       inkscape:export-ydpi="35.817272"><tspan
+         sodipodi:role="line"
+         id="tspan2458"
+         x="279.50137"
+         y="402.4429"
+         style="font-weight:normal;-inkscape-font-specification:Bitstream Vera Sans">nagstamon</tspan></text>
+  </g>
+</svg>
