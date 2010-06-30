@@ -1,0 +1,401 @@
+2010-06-14 14:08  henriwww
+
+	* /Nagstamon/nagstamonActions.py, /Nagstamon/nagstamonGUI.py,
+	  /setup.py: worked on non-crashing-with-pango-assertion error
+	  message
+
+2010-06-14 08:27  henriwww
+
+	* /Nagstamon/nagstamon, /Nagstamon/nagstamonGUI.py: thrown gtk
+	  thread stuff away, fixed pango crash (hopefully)
+
+2010-06-11 15:11  henriwww
+
+	* /Nagstamon/nagstamonGUI.py: more GTK thread fixes
+
+2010-06-11 14:46  henriwww
+
+	* /Nagstamon/nagstamonActions.py, /Nagstamon/nagstamonGUI.py,
+	  /Nagstamon/resources/settings_dialog.glade,
+	  /Nagstamon/resources/settings_server_dialog.glade, /setup.py: got
+	  gtk and threads work better with windows
+
+2010-06-11 12:41  henriwww
+
+	* /Nagstamon/nagstamon, /Nagstamon/nagstamonActions.py,
+	  /Nagstamon/nagstamonGUI.py, /Nagstamon/nagstamonObjects.py: fixed
+	  bug in centreon code, hopefully fixed pango thread desaster
+
+2010-06-09 14:15  henriwww
+
+	* /Nagstamon/nagstamonActions.py, /Nagstamon/nagstamonGUI.py,
+	  /Nagstamon/nagstamonObjects.py,
+	  /Nagstamon/resources/settings_server_dialog.glade: Centreon patch
+	  from Benoit Soenen added and modified - not working with
+	  demo.centreon.com - anybody likes to test?
+
+2010-06-09 09:15  henriwww
+
+	* /Nagstamon/nagstamonActions.py, /Nagstamon/nagstamonObjects.py:
+	  added patch from mrdanwallis to get Nagios 1.x compatibility
+
+2010-05-09 21:32  henriwww
+
+	* /Nagstamon/resources/settings_dialog.glade: fixed bug 2998035
+
+2010-04-26 12:10  henriwww
+
+	* /Nagstamon/resources/nagstamon.1,
+	  /Nagstamon/resources/nagstamon.1.gz, /setup.py: use ungzipped
+	  manpage
+
+2010-04-26 11:36  henriwww
+
+	* /Nagstamon/resources/nagstamon.1.gz, /setup.py: 0.9.3 rc2
+
+2010-04-23 13:24  henriwww
+
+	* /Nagstamon/nagstamonActions.py, /Nagstamon/nagstamonGUI.py: 0.9.3
+	  rc1
+
+2010-04-22 12:25  henriwww
+
+	* /Nagstamon/nagstamonActions.py, /Nagstamon/nagstamonGUI.py,
+	  /Nagstamon/nagstamonObjects.py: recheck all button working
+
+2010-04-21 13:28  henriwww
+
+	* /Nagstamon/nagstamonActions.py, /Nagstamon/nagstamonGUI.py,
+	  /Nagstamon/nagstamonObjects.py,
+	  /Nagstamon/resources/recheckall.png,
+	  /Nagstamon/resources/recheckall.svg: recheck all button almost
+	  working
+
+2010-04-21 08:36  henriwww
+
+	* /Nagstamon/nagstamonActions.py, /Nagstamon/nagstamonGUI.py,
+	  /Nagstamon/nagstamonObjects.py: fixed bug in update interval,
+	  added URL-IP-detection as asked in Bug 2967416
+
+2010-04-21 08:05  henriwww
+
+	* /Nagstamon/nagstamonObjects.py: added http digest handler patch
+	  from Anonymous
+	  (https://sourceforge.net/tracker/index.php?func=detail&aid=2988938&group_id=236865&atid=1101370)
+
+2010-04-16 14:08  henriwww
+
+	* /Nagstamon/nagstamonActions.py, /Nagstamon/nagstamonGUI.py,
+	  /Nagstamon/nagstamonObjects.py: fixed problems with update
+	  interval
+
+2010-04-09 14:39  henriwww
+
+	* /Nagstamon/nagstamonConfig.py, /Nagstamon/nagstamonGUI.py,
+	  /Nagstamon/nagstamonObjects.py,
+	  /Nagstamon/resources/settings_dialog.glade: toggable
+	  notifications
+
+2010-04-01 10:22  henriwww
+
+	* /Nagstamon/nagstamonConfig.py, /Nagstamon/nagstamonGUI.py,
+	  /Nagstamon/resources/settings_dialog.glade: toggle notifications
+	  working
+
+2010-04-01 09:20  henriwww
+
+	* /Nagstamon/nagstamonActions.py, /Nagstamon/nagstamonGUI.py:
+
+2010-03-31 12:55  henriwww
+
+	* /Nagstamon/nagstamonActions.py, /Nagstamon/nagstamonObjects.py:
+	  Opsview fully supported in context menu
+
+2010-03-30 21:19  henriwww
+
+	* /Nagstamon/nagstamonActions.py, /Nagstamon/nagstamonObjects.py:
+	  experimenting with MultipartPostHandler.py
+
+2010-03-30 14:44  henriwww
+
+	* /Nagstamon/nagstamonActions.py: working on opsview downtime,
+	  recheck and acknowledge already work
+
+2010-03-30 11:55  henriwww
+
+	* /Nagstamon/nagstamonGUI.py, /Nagstamon/nagstamonObjects.py:
+	  connecting to failing hosts works in Opsview
+
+2010-03-25 18:16  henriwww
+
+	* /Nagstamon/nagstamonActions.py, /Nagstamon/nagstamonGUI.py,
+	  /Nagstamon/nagstamonObjects.py, /setup.py: opsview filters
+	  working
+
+2010-03-25 15:45  henriwww
+
+	* /Nagstamon/nagstamonActions.py, /Nagstamon/nagstamonGUI.py,
+	  /Nagstamon/nagstamonObjects.py: Opsview support partly working
+
+2010-03-24 14:58  henriwww
+
+	* /Nagstamon/nagstamonActions.py, /Nagstamon/nagstamonConfig.py,
+	  /Nagstamon/nagstamonGUI.py, /Nagstamon/nagstamonObjects.py,
+	  /Nagstamon/resources/settings_server_dialog.glade: startet work
+	  on Opsview support
+
+2010-03-22 19:19  henriwww
+
+	* /setup.py:
+
+2010-02-25 14:32  henriwww
+
+	* /Nagstamon/nagstamonObjects.py: fixed Mandriva bug
+
+2010-02-19 22:09  henriwww
+
+	* /Nagstamon/nagstamonGUI.py:
+
+2010-02-19 22:03  henriwww
+
+	* /Nagstamon/nagstamonConfig.py, /Nagstamon/nagstamonObjects.py,
+	  /Nagstamon/resources/settings_dialog.glade: added ability to
+	  filter out services on hosts in maintenance
+
+2010-02-19 15:40  henriwww
+
+	* /Nagstamon/nagstamonConfig.py, /Nagstamon/nagstamonGUI.py: fixed
+	  non-starting when config file is missing
+
+2010-02-16 15:32  henriwww
+
+	* /Nagstamon/nagstamonActions.py, /Nagstamon/nagstamonConfig.py,
+	  /Nagstamon/nagstamonGUI.py, /Nagstamon/nagstamonObjects.py,
+	  /Nagstamon/resources/acknowledge_dialog.glade,
+	  /Nagstamon/resources/downtime_dialog.glade: various bugfixes
+	  around acknowledging, addes ability to acknowlesge all services
+	  on a host at once
+
+2010-02-15 21:54  henriwww
+
+	* /Nagstamon/nagstamonActions.py, /Nagstamon/nagstamonGUI.py:
+	  finetuning enabling/disabling nagios servers
+
+2010-02-15 15:04  henriwww
+
+	* /Nagstamon/nagstamon, /Nagstamon/nagstamonActions.py,
+	  /Nagstamon/nagstamonConfig.py, /Nagstamon/nagstamonGUI.py,
+	  /Nagstamon/nagstamonObjects.py,
+	  /Nagstamon/resources/settings_server_dialog.glade: added ability
+	  to enable/disable Nagios servers
+
+2010-02-15 10:25  henriwww
+
+	* /Nagstamon/nagstamonActions.py,
+	  /Nagstamon/resources/acknowledge_dialog.glade: fixed bug 2950616
+	  - Diese und die folgenden Zeilen werden ignoriert --
+	  
+	  M Nagstamon/nagstamonActions.py
+	  M Nagstamon/resources/acknowledge_dialog.glade
+
+2010-02-04 16:40  henriwww
+
+	* /Nagstamon/nagstamon, /Nagstamon/nagstamonActions.py,
+	  /Nagstamon/nagstamonGUI.py, /Nagstamon/nagstamonObjects.py:
+	  looked at some GUI lag when bad connection and sometimes servers
+	  not getting restored after connection comes back - not fully
+	  usable
+
+2010-02-02 21:40  henriwww
+
+	* /Nagstamon/nagstamonActions.py, /Nagstamon/nagstamonGUI.py:
+	  server status in popup window fixed
+
+2010-02-02 14:47  henriwww
+
+	* /Nagstamon/nagstamonActions.py, /Nagstamon/nagstamonGUI.py,
+	  /Nagstamon/nagstamonObjects.py: fixed bug in settings dialog with
+	  default server, fixed missing filters at start, added server
+	  connection status in popup window
+
+2010-02-01 14:17  henriwww
+
+	* /Nagstamon/nagstamon, /Nagstamon/nagstamon.py,
+	  /Nagstamon/nagstamonGUI.py: use nagstamon instead of
+	  nagstamon.py, fixed bug with update interval in settings dialog
+
+2010-01-27 15:39  henriwww
+
+	* /Nagstamon/nagstamonConfig.py, /setup.py: bugfixes
+
+2010-01-27 09:46  henriwww
+
+	* /Nagstamon/nagstamonConfig.py, /Nagstamon/nagstamonGUI.py,
+	  /Nagstamon/nagstamonObjects.py: fixed bug with proxy users
+
+2010-01-26 23:50  henriwww
+
+	* /Nagstamon/nagstamonActions.py, /Nagstamon/nagstamonConfig.py,
+	  /Nagstamon/nagstamonGUI.py, /Nagstamon/nagstamonObjects.py,
+	  /Nagstamon/resources/settings_server_dialog.glade: fixed proxy
+	  settings dialog
+
+2010-01-26 15:01  henriwww
+
+	* /Nagstamon/nagstamonActions.py, /Nagstamon/nagstamonConfig.py,
+	  /Nagstamon/nagstamonGUI.py,
+	  /Nagstamon/resources/settings_server_dialog.glade: tuning of
+	  proxy options in settings dialog, not yet complete
+
+2010-01-26 11:06  henriwww
+
+	* /Nagstamon/nagstamonActions.py, /Nagstamon/nagstamonConfig.py,
+	  /Nagstamon/nagstamonGUI.py, /Nagstamon/nagstamonObjects.py,
+	  /Nagstamon/resources/settings_dialog.glade: regexp works, some
+	  bugfixes
+
+2010-01-25 16:05  henriwww
+
+	* /Nagstamon/nagstamonActions.py, /Nagstamon/nagstamonConfig.py,
+	  /Nagstamon/nagstamonGUI.py, /Nagstamon/nagstamonObjects.py:
+	  startet work on regexp, reworked filterung + notification
+
+2010-01-24 10:53  henriwww
+
+	* /Nagstamon/resources/settings_dialog.glade,
+	  /Nagstamon/resources/settings_server_dialog.glade: fixed settings
+	  dialog maximize button bug reported in bug 2937572
+
+2010-01-23 00:03  henriwww
+
+	* /Nagstamon/nagstamonActions.py, /Nagstamon/nagstamonConfig.py,
+	  /Nagstamon/nagstamonGUI.py,
+	  /Nagstamon/resources/settings_dialog.glade,
+	  /Nagstamon/resources/settings_server_dialog.glade: finally fixed
+	  dualscreen bugs in Windows, minor changes
+
+2010-01-22 16:17  henriwww
+
+	* /Nagstamon/nagstamonGUI.py: some multi monitor fixes, not usable
+	  yet
+
+2010-01-21 14:36  henriwww
+
+	* /Nagstamon/nagstamonConfig.py, /Nagstamon/nagstamonGUI.py,
+	  /Nagstamon/resources/settings_dialog.glade: show status window
+	  even on windows on dualscreen correctly
+
+2010-01-20 09:09  henriwww
+
+	* /Nagstamon/nagstamon.py, /Nagstamon/nagstamonActions.py,
+	  /Nagstamon/nagstamonConfig.py, /Nagstamon/nagstamonGUI.py,
+	  /Nagstamon/resources/nagstamon_label.png,
+	  /Nagstamon/resources/nagstamon_label.svg,
+	  /Nagstamon/resources/settings_dialog.glade: added possibility to
+	  show status popup as notification
+
+2010-01-19 15:09  henriwww
+
+	* /Nagstamon/nagstamonGUI.py,
+	  /Nagstamon/resources/nagstamon_small.png: fixed statusbar icon
+	  and systray icon statusbar placement bug
+
+2010-01-18 15:11  henriwww
+
+	* /Nagstamon/nagstamonGUI.py: different statusbar font sizes for
+	  Windows and Unix
+
+2010-01-18 13:47  henriwww
+
+	* /Nagstamon/nagstamon.py, /Nagstamon/nagstamonActions.py,
+	  /Nagstamon/nagstamonConfig.py, /Nagstamon/nagstamonGUI.py,
+	  /Nagstamon/nagstamonObjects.py: sound and notification working
+
+2010-01-15 14:58  henriwww
+
+	* /Nagstamon/nagstamonActions.py, /Nagstamon/nagstamonGUI.py,
+	  /Nagstamon/resources/settings_dialog.glade: added possibility to
+	  play sample sound files in settings dialog
+
+2010-01-14 17:27  henriwww
+
+	* /Nagstamon/nagstamonActions.py, /Nagstamon/nagstamonConfig.py,
+	  /Nagstamon/nagstamonGUI.py, /Nagstamon/nagstamonObjects.py,
+	  /Nagstamon/resources/critical.wav,
+	  /Nagstamon/resources/hostdown.wav,
+	  /Nagstamon/resources/settings_dialog.glade,
+	  /Nagstamon/resources/warning.wav: working sound, notifications
+	  setting dialog
+
+2010-01-08 14:26  henriwww
+
+	* /Nagstamon/nagstamonActions.py, /Nagstamon/nagstamonGUI.py:
+	  modified blinking statusbar to get some more calm
+
+2010-01-07 19:02  henriwww
+
+	* /Nagstamon/nagstamonActions.py, /Nagstamon/nagstamonGUI.py,
+	  /Nagstamon/nagstamonObjects.py: notification works for systray
+	  icon and statusbar
+
+2010-01-06 14:26  henriwww
+
+	* /Nagstamon/nagstamon.py, /Nagstamon/nagstamonActions.py,
+	  /Nagstamon/nagstamonGUI.py, /Nagstamon/nagstamonObjects.py: first
+	  attempts to implement notification
+
+2009-12-21 16:02  henriwww
+
+	* /Nagstamon/nagstamonActions.py, /Nagstamon/nagstamonGUI.py,
+	  /Nagstamon/nagstamonObjects.py: added use of proxy with username
+	  and password
+	  added automatic check for updates
+
+2009-12-21 14:35  henriwww
+
+	* /Nagstamon/proxytest.py:
+
+2009-12-21 14:34  henriwww
+
+	* /COPYRIGHT, /LICENSE, /Nagstamon, /Nagstamon/__init__.py,
+	  /Nagstamon/nagstamon, /Nagstamon/nagstamon.py,
+	  /Nagstamon/nagstamonActions.py, /Nagstamon/nagstamonConfig.py,
+	  /Nagstamon/nagstamonGUI.py, /Nagstamon/nagstamonObjects.py,
+	  /Nagstamon/proxytest.py, /Nagstamon/resources,
+	  /Nagstamon/resources/LICENSE,
+	  /Nagstamon/resources/acknowledge_dialog.glade,
+	  /Nagstamon/resources/close.png, /Nagstamon/resources/close.svg,
+	  /Nagstamon/resources/downtime_dialog.glade,
+	  /Nagstamon/resources/hosts.png, /Nagstamon/resources/hosts.svg,
+	  /Nagstamon/resources/nagios.png, /Nagstamon/resources/nagios.svg,
+	  /Nagstamon/resources/nagstamon.ico,
+	  /Nagstamon/resources/nagstamon.png,
+	  /Nagstamon/resources/nagstamon.svg,
+	  /Nagstamon/resources/nagstamon_black.png,
+	  /Nagstamon/resources/nagstamon_black.svg,
+	  /Nagstamon/resources/nagstamon_darkred.png,
+	  /Nagstamon/resources/nagstamon_darkred.svg,
+	  /Nagstamon/resources/nagstamon_error.png,
+	  /Nagstamon/resources/nagstamon_error.svg,
+	  /Nagstamon/resources/nagstamon_green.png,
+	  /Nagstamon/resources/nagstamon_green.svg,
+	  /Nagstamon/resources/nagstamon_label.png,
+	  /Nagstamon/resources/nagstamon_label.svg,
+	  /Nagstamon/resources/nagstamon_orange.png,
+	  /Nagstamon/resources/nagstamon_orange.svg,
+	  /Nagstamon/resources/nagstamon_red.png,
+	  /Nagstamon/resources/nagstamon_red.svg,
+	  /Nagstamon/resources/nagstamon_small.png,
+	  /Nagstamon/resources/nagstamon_small.svg,
+	  /Nagstamon/resources/nagstamon_yellow.png,
+	  /Nagstamon/resources/nagstamon_yellow.svg,
+	  /Nagstamon/resources/refresh.png,
+	  /Nagstamon/resources/refresh.svg,
+	  /Nagstamon/resources/services.png,
+	  /Nagstamon/resources/services.svg,
+	  /Nagstamon/resources/settings.png,
+	  /Nagstamon/resources/settings.svg,
+	  /Nagstamon/resources/settings_dialog.glade,
+	  /Nagstamon/resources/settings_server_dialog.glade, /setup.py:
+	  working on 0.9.0
+
