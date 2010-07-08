@@ -1,0 +1,6 @@
+#!/bin/sh
+#
+# little startup wrapper for nagstamon
+#
+cd /usr/lib/nagstamon
+exec ./nagstamon $1 $2 $3

@@ -1,0 +1,9 @@
+[Desktop Entry]
+Name=Nagstamon
+Comment=Nagios status monitor
+Exec=/usr/bin/nagstamon
+Icon=/usr/lib/nagstamon/resources/nagstamon.svg
+Terminal=false
+Type=Application
+Categories=Network;
+StartupNotify=true

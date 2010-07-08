@@ -1,0 +1,13 @@
+Package: nagstamon
+Version: 0.9.4
+Architecture: all
+Maintainer: h.wahl@ifw-dresden.de
+Installed-Size: 830 
+Priority: Optional
+Section: admin
+Depends: python, python-lxml, librsvg2-common, python-pkg-resources, python-glade2
+Recommends: sox, python-eggtrayicon
+Suggests: python-gnome2-extras
+Description: Nagios status monitor for the desktop. A tiny little statusbar or systray icon gives fast access to an overview about failed hosts and services monitored by various Nagios, Opsview and Centreon servers. Users can be notified by sound alert and get a quick overview by simply hovering the mouse pointer over the statusbar. They can instantly connect to failed hosts and services by context menu. See more on http://nagstamon.sourceforge.net. Consider installing sox for sound alerts. python-eggtrayicon is a part of the former python-gnome2-extras and necessary if statusbar should be glued into systray. In case your system has access to package python-eggtrayicon there is no need to install python-gnome2-extras.
+
+
