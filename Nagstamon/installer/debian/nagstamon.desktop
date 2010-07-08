@@ -1,0 +1,14 @@
+[Desktop Entry]
+Type=Application
+Name=nagstamon
+Comment=Nagios status monitor 
+Icon=/usr/share/nagstamon/Nagstamon/resources/nagstamon.svg
+Exec=nagstamon
+Terminal=false
+Categories=System;Monitor;GTK;
+#X-GNOME-Autostart-enabled=true
+#X-KDE-autostart-after=panel
+#X-KDE-StartupNotify=false
+#X-KDE-UniqueApplet=true
+#NoDisplay=true
+#OnlyShowIn=GNOME;XFCE;KDE

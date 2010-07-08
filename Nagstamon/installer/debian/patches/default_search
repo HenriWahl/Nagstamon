@@ -1,0 +1,16 @@
+# Description: disable the default search for newer version
+# Author: Carl Chenet <chaica@ohmytux.com>
+
+Index: nagstamon_0.9.3/Nagstamon/nagstamonConfig.py
+===================================================================
+--- nagstamon_0.9.3.orig/Nagstamon/nagstamonConfig.py	2010-06-15 00:38:16.000000000 +0200
++++ nagstamon_0.9.3/Nagstamon/nagstamonConfig.py	2010-06-15 00:38:39.000000000 +0200
+@@ -39,7 +39,7 @@
+         self.connect_by_dns_yes = True
+         self.connect_by_dns_no = False
+         self.debug_mode = False
+-        self.check_for_new_version = True
++        self.check_for_new_version = False
+         self.notification = True
+         self.notification_flashing = True
+         # because of nonexistent windows systray popup support I'll let it be now

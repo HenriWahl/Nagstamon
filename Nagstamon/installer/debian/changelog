@@ -1,0 +1,51 @@
+nagstamon (0.9.4-1) unstable; urgency=low
+
+  * New upstream release (Closes: #582977)
+  * removed debian/manpages
+  * renamed debian/nagstamon.install to debian/install 
+  * debian/patches
+    - removed settings_glade
+    - removed setup_patch
+
+ -- Carl Chenet <chaica@ohmytux.com>  Sat, 19 Jun 2010 12:46:42 +0200
+
+nagstamon (0.9.3-2) unstable; urgency=low
+
+  * debian/patches/default_search
+    - disable the default search for newer versions (Closes: #585928) 
+  * debian/patches/series
+    - added default_search
+
+ -- Carl Chenet <chaica@ohmytux.com>  Tue, 15 Jun 2010 00:41:22 +0200
+
+nagstamon (0.9.3-1) unstable; urgency=low
+
+  * New upstream release 
+  * Switching to 3.0 source format
+  * debian/patches
+    - added settings_glade patch to close #2998035 upstream bug
+    - added setup_patch to remove an absolute link for the upstream
+      manpage
+  * debian/control
+    - added quilt in Build-Depends
+    - added the support of Opsview servers in the long description 
+  * debian/nagstamon.manpages
+    - switched to the file provided by the upstream
+  * debian/nagstamon.desktop
+    - commenting the OnlyShowIn directive
+
+ -- Carl Chenet <chaica@ohmytux.com>  Sun, 23 May 2010 12:47:11 +0200
+
+nagstamon (0.9.2-2) unstable; urgency=low
+
+  * debian/control
+    - Added a mandatory runtime missing dependency python-pkg-resources.
+    - Fixed a typo in the long message.
+
+ -- Carl Chenet <chaica@ohmytux.com>  Wed, 24 Mar 2010 23:18:21 +0100
+
+nagstamon (0.9.2-1) unstable; urgency=low
+
+  * Initial release. (Closes: #534842)
+
+ -- Carl Chenet <chaica@ohmytux.com>  Mon, 22 Feb 2010 14:16:44 +0100
