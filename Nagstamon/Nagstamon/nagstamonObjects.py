@@ -27,12 +27,103 @@ except:
     
 import nagstamonActions
 
-          
+class Column(object):
+    ATTR_NAME = 'name'
+    LABEL = 'Name'
+    DEFAULT_VALUE = ''
+    SORT_FUNCTION_NAME = 'sort_function'
+    
+    def __init__(self, row):
+        self.value = self._get_value(row)
+    
+    def __str__(self):
+        return str(self.value)
+
+    def _get_value(self, row):
+        if hasattr(row, self.ATTR_NAME):
+            return getattr(row, self.ATTR_NAME)
+        return self.DEFAULT_VALUE 
+   
+    @classmethod
+    def get_label(cls):
+        """ Table header column label
+        """
+        return ' '.join([x.capitalize() for x in cls.ATTR_NAME.split('_')])
+   
+    @classmethod
+    def has_customized_sorting(cls):
+        return hasattr(cls, cls.SORT_FUNCTION_NAME)
+    
+class CustomSortingColumn(Column):
+    CHOICES = [] # list of expcted values with expected order
+    
+    @classmethod
+    def sort_function(cls, model, iter1, iter2, column):
+        """ Overrides default sorting behaviour """
+        data1, data2 = [model.get_value(x, column) for x in (iter1, iter2)]
+        try:
+            first = cls.CHOICES.index(data1) 
+            second = cls.CHOICES.index(data2)
+        except ValueError: # value not in CHOICES
+            return cmp(first, second)
+        return first - second
+    
+class StatusColumn(CustomSortingColumn):
+    ATTR_NAME = 'status'
+    CHOICES = ['DOWN', 'UNREACHABLE', 'CRITICAL', 'UNKNOWN', 'WARNING']
+
+class HostColumn(Column):
+    ATTR_NAME = 'host'
+    
+    def _get_value(self, row):
+       return row.get_host_name() 
+ 
+class ServiceColumn(Column):
+    def _get_value(self, row):
+        return row.get_service_name()
+    
+    @classmethod
+    def get_label(cls):
+        return 'Service'
+    
+class LastCheckColumn(Column):
+    ATTR_NAME = 'last_check'
+    
+class DurationColumn(Column):
+    ATTR_NAME = 'duration'
+    
+class AttemptColumn(Column):
+    ATTR_NAME = 'attempt'
+    
+class StatusInformationColumn(Column):
+    ATTR_NAME = 'status_information'
+    
 class NagiosServer(object):
     """
         object of Nagios server - when nagstamon will be able to poll various servers this
         will be useful   
     """
+    
+    DEFAULT_SORT_COLUMN_ID = 2
+    COLOR_COLUMN_ID = 2
+    HOST_COLUMN_ID = 0
+    SERVICE_COLUMN_ID = 1
+    
+    COLUMNS = [
+        HostColumn,
+        ServiceColumn,
+        StatusColumn,
+        LastCheckColumn,
+        DurationColumn,
+        AttemptColumn,
+        StatusInformationColumn
+    ]
+   
+    @classmethod
+    def get_columns(cls, row):
+        """ Gets columns filled with row data """
+        for column_class in cls.COLUMNS:
+            yield column_class(row)
     
     def __init__(self, **kwds):
         # add all keywords to object, every mode searchs inside for its favorite arguments/keywords
@@ -748,9 +839,21 @@ class NagiosServer(object):
         hopefully a __del__() method may make this object better collectable for gc
         """
         del(self)
+
+class NagiosObject(object):    
+    def get_host_name(self):
+        """ Extracts host name from status item.
+        Presentation purpose.
+        """
+        return ''
     
+    def get_service_name(self):
+        """ Extracts service name from status item.
+        Presentation purpose.
+        """
+        return ''
     
-class NagiosHost(object):
+class NagiosHost(NagiosObject):
     """
         one host which is monitored by a Nagios server, gets populated with services
     """
@@ -763,6 +866,8 @@ class NagiosHost(object):
         self.status_information = ""
         self.services = dict()
         
+    def get_host_name(self):
+        return self.name
         
     def __del__(self):
         """
@@ -771,7 +876,7 @@ class NagiosHost(object):
         del(self)
         
         
-class NagiosService(object):
+class NagiosService(NagiosObject):
     """
         one service which runs on a host
     """
@@ -784,6 +889,11 @@ class NagiosService(object):
         self.attempt = ""
         self.status_information = ""
         
+    def get_host_name(self):
+        return self.host
+    
+    def get_service_name(self):
+        return self.name 
         
     def __del__(self):
         """

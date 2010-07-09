@@ -38,6 +38,27 @@ import sys
 import gc
 import time
 
+class Sorting(object):
+    """ Sorting persistence purpose class
+    Stores tuple pairs in form of:
+    (<column_id>, <gtk.SORT_ASCENDING|gtk.SORT_DESCENDING)
+    """
+    def __init__(self, sorting_tuple_list=[], max_remember=4):
+        self.sorting_tuple_list = sorting_tuple_list
+        self.max_remember = max_remember
+    
+    def iteritems(self):
+        for item in reversed(self.sorting_tuple_list):
+            yield item
+
+    def add(self, id, order):
+        length = len(self.sorting_tuple_list)
+        if length > 0:
+            if length >= self.max_remember:
+                self.sorting_tuple_list.pop()
+            if id == self.sorting_tuple_list[0][0]:
+                self.sorting_tuple_list.remove(self.sorting_tuple_list[0])
+        self.sorting_tuple_list.insert(0, (id, order))
 
 class GUI(object):
     """
@@ -104,6 +125,38 @@ class GUI(object):
         # flag if about box is shown
         self.AboutDialogOpen = False
         
+        # saving sorting state between refresh
+        self.rows_reordered_handler = None
+        self.last_sorting = Sorting([(None, gtk.SORT_ASCENDING), (0, gtk.SORT_ASCENDING)],
+                                    max([len(x.COLUMNS) for x in self.servers.values()] or [0])+1) # stores sorting between table refresh
+        
+    def set_sorting(self, tab_model, server):
+        """ Restores sorting after refresh """
+        for id, order in self.last_sorting.iteritems():
+            if id is None:
+                id = server.DEFAULT_SORT_COLUMN_ID
+            tab_model.set_sort_column_id(id, order)
+            # this makes sorting arrows visible according to
+            # sort order after refresh
+            #column = self.popwin.ServerVBoxes[server.name].TreeView.get_column(id)
+            #if column is not None:
+            #    column.set_property('sort-order', order)
+
+    def on_column_header_click(self, model, id, tab_model):
+        """ Sets current sorting according to column id """
+        # makes column headers sortable by first time click (hack)
+        order = model.get_sort_order()
+        tab_model.set_sort_column_id(id, order)
+        
+        if self.rows_reordered_handler is not None:
+            tab_model.disconnect(self.rows_reordered_handler)
+        self.rows_reordered_handler = tab_model.connect_after('rows-reordered', self.on_sorting_order_change, id, model)
+        model.set_sort_column_id(id)
+
+    def on_sorting_order_change(self, tab_model, path, iter, new_order, id, model):
+        """ Saves current sorting change in object property """
+        order = model.get_sort_order()
+        self.last_sorting.add(id, order)
 
     def __del__(self):
         """
@@ -190,6 +243,9 @@ class GUI(object):
         # flag for overall status, needed by popwin.popup to decide if popup in case all is OK
         self.status_ok = False    
         
+        # set handler to None for do not disconnecting it after display refresh
+        self.rows_reordered_handler = None
+        
         # local counters for summarize all miserable hosts
         downs = 0
         unreachables = 0
@@ -231,44 +287,22 @@ class GUI(object):
                     
                     # fill treeview for popwin
                     # create a model for treeview where the table headers all are strings
-                    tab_model = gtk.ListStore(gobject.TYPE_STRING, gobject.TYPE_STRING, gobject.TYPE_STRING, gobject.TYPE_STRING, gobject.TYPE_STRING, gobject.TYPE_STRING, gobject.TYPE_STRING, gobject.TYPE_STRING, gobject.TYPE_STRING)
+                    tab_model = gtk.ListStore(*[gobject.TYPE_STRING]*(len(server.COLUMNS)+2))
                     
                     # apart from status informations there we need two columns which
                     # hold the color information, which is derived from status which
                     # is used as key at the above color dictionaries
                     
-                    # show hosts first to recognize down ones first, hosts and services
-                    # ordered by severity
-                    for status in ["DOWN", "UNREACHABLE"]:
-                        # sort hosts by name
-                        server.nagitems_filtered["hosts"][status].sort(key=lambda obj: obj.name)
-                        # put in sorted hosts
-                        for host in server.nagitems_filtered["hosts"][status]:
-                            iter = tab_model.insert_before(None, None)
-                            tab_model.set_value(iter, 0, str(host.name))
-                            tab_model.set_value(iter, 2, str(host.status))
-                            tab_model.set_value(iter, 3, str(host.last_check))                
-                            tab_model.set_value(iter, 4, str(host.duration))
-                            tab_model.set_value(iter, 5, str(host.attempt))             
-                            tab_model.set_value(iter, 6, str(host.status_information))
-                            tab_model.set_value(iter, 7, self.tab_bg_colors[host.status])
-                            tab_model.set_value(iter, 8, self.tab_fg_colors[host.status])
-                    
-                    for status in ["CRITICAL", "UNKNOWN", "WARNING"]:
-                        # sort services by host and service name
-                        server.nagitems_filtered["services"][status].sort(key=lambda obj: obj.host + obj.name)
-                        # put in sorted services
-                        for service in server.nagitems_filtered["services"][status]:
-                            iter = tab_model.insert_before(None, None)
-                            tab_model.set_value(iter, 0, str(service.host))
-                            tab_model.set_value(iter, 1, str(service.name))
-                            tab_model.set_value(iter, 2, str(service.status))
-                            tab_model.set_value(iter, 3, str(service.last_check))  
-                            tab_model.set_value(iter, 4, str(service.duration))
-                            tab_model.set_value(iter, 5, str(service.attempt))  
-                            tab_model.set_value(iter, 6, str(service.status_information))
-                            tab_model.set_value(iter, 7, self.tab_bg_colors[service.status])
-                            tab_model.set_value(iter, 8, self.tab_fg_colors[service.status])
+                    number_of_columns = len(server.COLUMNS)
+                    for item_type, status_dict in server.nagitems_filtered.iteritems():
+                        for status, item_list in status_dict.iteritems():
+                            for item in item_list:
+                                iter = tab_model.insert_before(None, None)
+                                columns = list(server.get_columns(item))
+                                for i, column in enumerate(columns):
+                                    tab_model.set_value(iter, i, str(column))
+                                tab_model.set_value(iter, number_of_columns, self.tab_bg_colors[str(columns[server.COLOR_COLUMN_ID])])
+                                tab_model.set_value(iter, number_of_columns+1, self.tab_fg_colors[str(columns[server.COLOR_COLUMN_ID])])
                     
                     # http://www.pygtk.org/pygtk2reference/class-gtktreeview.html#method-gtktreeview--set-model         
                     # clear treeviews columns
@@ -280,18 +314,31 @@ class GUI(object):
                     
                     # render aka create table view
                     tab_renderer = gtk.CellRendererText()
-                    tab_column_names = ["Host", "Service", "Status", "Last Check", "Duration", "Attempt", "Status Information"]
-                    for s in range(len(tab_column_names)):
+                    for s, column in enumerate(server.COLUMNS):
                         # fill columns of view with content of model and squeeze it through the renderer, using
                         # the color information from the last to colums of the model
-                        tab_column = gtk.TreeViewColumn(tab_column_names[s], tab_renderer, text=s, background=7, foreground=8)
+                        tab_column = gtk.TreeViewColumn(column.get_label(), tab_renderer, text=s,
+                                                        background=number_of_columns, foreground=number_of_columns+1)
                         self.popwin.ServerVBoxes[server.name].TreeView.append_column(tab_column)
-                        
+                       
+                        # set customized sorting
+                        if column.has_customized_sorting():
+                            tab_model.set_sort_func(s, column.sort_function, s)
+                            
+                        # make table sortable by clicking on column headers
+                        tab_column.set_clickable(True)
+                        #tab_column.set_property('sort-indicator', True) # makes sorting arrows visible
+                        tab_column.connect('clicked', self.on_column_header_click, s, tab_model)
+                    
+                    # restore sorting order from previous refresh
+                    self.set_sorting(tab_model, server)
+                    
                     # status field in server vbox in popwin    
                     self.popwin.UpdateStatus(server)
                     
                 except:
-                    pass
+                    import traceback
+                    traceback.print_exc(file=sys.stdout)
 
         # show and resize popwin
         self.popwin.VBox.hide_all()
@@ -386,7 +433,7 @@ class GUI(object):
             # set self.showPopwin to True because there is something to show
             self.popwin.showPopwin = True        
 
-            # do some cleanup
+        # do some cleanup
         gc.collect()
         
         # return False to get removed as gobject idle source
@@ -1360,8 +1407,8 @@ class Popwin(gtk.Window):
             path, obj, x, y = treeview.get_path_at_pos(int(event.x), int(event.y))
             # access content of rendered view model via normal python lists
             self.miserable_server = server
-            self.miserable_host = treeview.get_model()[path[0]][0]
-            self.miserable_service = treeview.get_model()[path[0]][1]
+            self.miserable_host = treeview.get_model()[path[0]][server.HOST_COLUMN_ID]
+            self.miserable_service = treeview.get_model()[path[0]][server.SERVICE_COLUMN_ID]
             # popup the relevant contect menu
             self.popupmenu.popup(None, None, None, event.button, event.time)
         except:
