@@ -730,16 +730,25 @@ class StatusBar(object):
         
         # TrayIcon - appears as status bar in Windows due to non existent egg.trayicon python module
         if platform.system() == "Windows":
-            self.StatusBar = gtk.Window(gtk.WINDOW_POPUP)
+            self.StatusBar = gtk.Window(gtk.WINDOW_TOPLEVEL)
+            #self.StatusBar = gtk.Window(gtk.WINDOW_POPUP)
+            self.StatusBar.set_decorated(False)
+            self.StatusBar.set_keep_above(True)            
         else:
             if str(self.conf.statusbar_systray) == "True":
                 try:
                     self.StatusBar = egg.trayicon.TrayIcon(self.output.name)
                 except:
                     print "python gnome2 extras with egg.trayicon not installed so trayicon cannot be used. Using floating desktop status bar instead."
-                    self.StatusBar = gtk.Window(gtk.WINDOW_POPUP)
+                    self.StatusBar = gtk.Window(gtk.WINDOW_TOPLEVEL)
+                    #self.StatusBar = gtk.Window(gtk.WINDOW_POPUP)
+                    self.StatusBar.set_decorated(False)
+                    self.StatusBar.set_keep_above(True)     
             else:
-                self.StatusBar = gtk.Window(gtk.WINDOW_POPUP)
+                self.StatusBar = gtk.Window(gtk.WINDOW_TOPLEVEL)
+                #self.StatusBar = gtk.Window(gtk.WINDOW_POPUP)
+                self.StatusBar.set_decorated(False)
+                self.StatusBar.set_keep_above(True)     
         
         # image for logo in statusbar
         self.nagstamonLogo = gtk.Image()
