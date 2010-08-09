@@ -152,7 +152,8 @@ class NagiosServer(object):
         self.CheckingForNewVersion = False
         self.WorstStatus = "UP"
         self.States = ["UP", "UNKNOWN", "WARNING", "CRITICAL", "UNREACHABLE", "DOWN"]
-        self.nagitems_filtered_list = list()
+        #self.nagitems_filtered_list = list()
+        self.nagitems_filtered = {"services":{"CRITICAL":[], "WARNING":[], "UNKNOWN":[]}, "hosts":{"DOWN":[], "UNREACHABLE":[]}}
         self.downs = 0
         self.unreachables = 0
         self.unknowns = 0
@@ -182,7 +183,7 @@ class NagiosServer(object):
         if str(self.conf.servers[self.name].enabled) == "False":
             self.WorstStatus = "UP"
             # dummy filtered items
-            self.nagitems_filtered = {"services":{"CRITICAL":[], "WARNING":[], "UNKNOWN":[]}, "hosts":{"DOWN":[], "UNREACHABLE":[]}}
+            #self.nagitems_filtered = {"services":{"CRITICAL":[], "WARNING":[], "UNKNOWN":[]}, "hosts":{"DOWN":[], "UNREACHABLE":[]}}
             self.isChecking = False          
             return True      
 
