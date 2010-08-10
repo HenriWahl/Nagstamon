@@ -733,7 +733,8 @@ class StatusBar(object):
             self.StatusBar = gtk.Window(gtk.WINDOW_TOPLEVEL)
             #self.StatusBar = gtk.Window(gtk.WINDOW_POPUP)
             self.StatusBar.set_decorated(False)
-            self.StatusBar.set_keep_above(True)            
+            self.StatusBar.set_keep_above(True)
+            self.StatusBar.set_property("skip_taskbar_hint", True)
         else:
             if str(self.conf.statusbar_systray) == "True":
                 try:
@@ -743,12 +744,13 @@ class StatusBar(object):
                     self.StatusBar = gtk.Window(gtk.WINDOW_TOPLEVEL)
                     #self.StatusBar = gtk.Window(gtk.WINDOW_POPUP)
                     self.StatusBar.set_decorated(False)
-                    self.StatusBar.set_keep_above(True)     
+                    self.StatusBar.set_keep_above(True)
             else:
                 self.StatusBar = gtk.Window(gtk.WINDOW_TOPLEVEL)
                 #self.StatusBar = gtk.Window(gtk.WINDOW_POPUP)
                 self.StatusBar.set_decorated(False)
-                self.StatusBar.set_keep_above(True)     
+                self.StatusBar.set_keep_above(True)
+                self.StatusBar.set_property("skip_taskbar_hint", True)
         
         # image for logo in statusbar
         self.nagstamonLogo = gtk.Image()

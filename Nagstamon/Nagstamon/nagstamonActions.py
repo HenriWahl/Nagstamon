@@ -89,7 +89,11 @@ class RefreshLoopOneServer(threading.Thread):
 
                     if server_status == "ERROR":
                         # set server status for status field in popwin
-                        self.server.status = "ERROR - please check settings/network"
+                        # shorter error message - see https://sourceforge.net/tracker/?func=detail&aid=3017044&group_id=236865&atid=1101373
+                        if self.conf.long_display == str(True):
+                            self.server.status = "ERROR"
+                        else:
+                            self.server.status = "ERR" 
                         gobject.idle_add(self.output.popwin.UpdateStatus, self.server)
                         # tell gobject to care about GUI stuff - refresh display status
                         # use a flag to prevent all threads at once to write to statusbar label in case
@@ -134,7 +138,7 @@ class RefreshLoopOneServer(threading.Thread):
                                     # set server status for status field in popwin
                                     if server_status == "ERROR":
                                         # shorter error message - see https://sourceforge.net/tracker/?func=detail&aid=3017044&group_id=236865&atid=1101373
-                                        if self.log_display == True:
+                                        if self.conf.long_display == str(True):
                                             self.server.status = "ERROR"
                                         else:
                                             self.server.status = "ERR" 
