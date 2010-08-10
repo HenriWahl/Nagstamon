@@ -133,7 +133,11 @@ class RefreshLoopOneServer(threading.Thread):
                                     server_status = self.server.GetStatus()
                                     # set server status for status field in popwin
                                     if server_status == "ERROR":
-                                        self.server.status = "ERROR - please check settings/network"
+                                        # shorter error message - see https://sourceforge.net/tracker/?func=detail&aid=3017044&group_id=236865&atid=1101373
+                                        if self.log_display == True:
+                                            self.server.status = "ERROR"
+                                        else:
+                                            self.server.status = "ERR" 
                                     else:
                                         self.server.status = "Connected"
                                     # tell gobject to care about GUI stuff - refresh display status
