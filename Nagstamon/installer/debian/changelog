@@ -1,3 +1,9 @@
+nagstamon (0.9.5pre-1) unstable; urgency=low
+
+  * New upstream release 
+
+ -- Henri Wahl <h.wahl@ifw-dresden.de>  Mon, 16 Aug 2010 7:00:00 +0200
+
 nagstamon (0.9.4-1) unstable; urgency=low
 
   * New upstream release (Closes: #582977)

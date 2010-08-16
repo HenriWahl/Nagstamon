@@ -431,7 +431,11 @@ class GUI(object):
                     self.NotificationOn(status=worst_status)
             
             # set self.showPopwin to True because there is something to show
-            self.popwin.showPopwin = True        
+            self.popwin.showPopwin = True   
+            
+        # try to fix bug #591875: eventually ends up lower in the window stacking order, and can't be raised
+        self.StatusBar.set_keep_above(True)
+        self.StatusBar.present()
 
         # do some cleanup
         gc.collect()
