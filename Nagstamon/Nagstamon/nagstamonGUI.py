@@ -434,8 +434,9 @@ class GUI(object):
             self.popwin.showPopwin = True   
             
         # try to fix bug #591875: eventually ends up lower in the window stacking order, and can't be raised
-        self.StatusBar.set_keep_above(True)
-        self.StatusBar.present()
+        self.statusbar.StatusBar.set_keep_above(True)
+        self.statusbar.StatusBar.present()
+        
 
         # do some cleanup
         gc.collect()
