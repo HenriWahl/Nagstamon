@@ -434,9 +434,10 @@ class GUI(object):
             self.popwin.showPopwin = True   
             
         # try to fix bug #591875: eventually ends up lower in the window stacking order, and can't be raised
-        self.statusbar.StatusBar.set_keep_above(True)
+        #self.statusbar.StatusBar.set_keep_above(True)
         # steals focus of other windows, better not to do this
         #self.statusbar.StatusBar.present()
+        
         
 
         # do some cleanup
@@ -740,6 +741,7 @@ class StatusBar(object):
             #self.StatusBar = gtk.Window(gtk.WINDOW_POPUP)
             self.StatusBar.set_decorated(False)
             self.StatusBar.set_keep_above(True)
+            self.StatusBar.set_type_hint(gtk.gdk.WINDOW_TYPE_HINT_TOOLBAR)
             self.StatusBar.set_property("skip_taskbar_hint", True)
         else:
             if str(self.conf.statusbar_systray) == "True":
@@ -750,12 +752,14 @@ class StatusBar(object):
                     self.StatusBar = gtk.Window(gtk.WINDOW_TOPLEVEL)
                     #self.StatusBar = gtk.Window(gtk.WINDOW_POPUP)
                     self.StatusBar.set_decorated(False)
+                    self.StatusBar.set_type_hint(gtk.gdk.WINDOW_TYPE_HINT_TOOLBAR)
                     self.StatusBar.set_keep_above(True)
             else:
                 self.StatusBar = gtk.Window(gtk.WINDOW_TOPLEVEL)
                 #self.StatusBar = gtk.Window(gtk.WINDOW_POPUP)
                 self.StatusBar.set_decorated(False)
                 self.StatusBar.set_keep_above(True)
+                self.StatusBar.set_type_hint(gtk.gdk.WINDOW_TYPE_HINT_TOOLBAR)
                 self.StatusBar.set_property("skip_taskbar_hint", True)
         
         # image for logo in statusbar
