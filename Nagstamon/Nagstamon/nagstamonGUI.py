@@ -158,11 +158,11 @@ class GUI(object):
         order = model.get_sort_order()
         self.last_sorting.add(id, order)
 
-    def __del__(self):
-        """
-        hopefully a __del__() method may make this object better collectable for gc
-        """
-        del(self)
+    #def __del__(self):
+    #    """
+    #    hopefully a __del__() method may make this object better collectable for gc
+    #    """
+    #    del(self)
 
     
     def CreateOutputVisuals(self):
@@ -1716,11 +1716,11 @@ class Settings(object):
         self.output.SettingsDialogOpen = False
         
 
-    def __del__(self):
-        """
-        hopefully a __del__() method may make this object better collectable for gc
-        """
-        del(self)
+    #def __del__(self):
+    #    """
+    #    hopefully a __del__() method may make this object better collectable for gc
+    #    """
+    #    del(self)
         
         
     def FillTreeView(self):
@@ -1988,11 +1988,11 @@ class NewServer(object):
         self.dialog.destroy()       
 
         
-    def __del__(self):
-        """
-        hopefully a __del__() method may make this object better collectable for gc
-        """
-        del(self)
+    #def __del__(self):
+    #    """
+    #    hopefully a __del__() method may make this object better collectable for gc
+    #    """
+    #    del(self)
  
 
     def OK(self, widget):
@@ -2158,11 +2158,11 @@ class EditServer(object):
             self.dialog.destroy()
 
             
-    def __del__(self):
-        """
-        hopefully a __del__() method may make this object better collectable for gc
-        """
-        del(self)
+    #def __del__(self):
+    #    """
+    #    hopefully a __del__() method may make this object better collectable for gc
+    #    """
+    #    del(self)
             
             
     def OK(self, widget):

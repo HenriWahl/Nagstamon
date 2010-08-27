@@ -173,11 +173,11 @@ class Config(object):
             self.configfile = configfile_temp
             
 
-    def __del__(self):
-        """
-        hopefully a __del__() method may make this object better collectable for gc
-        """
-        del(self)
+    #def __del__(self):
+    #    """
+    #    hopefully a __del__() method may make this object better collectable for gc
+    #    """
+    #    del(self)
             
 
     def SaveConfig(self):
@@ -292,9 +292,9 @@ class Server(object):
         self.proxy_password = ""
         
     
-    def __del__(self):
-        """
-        hopefully a __del__() method may make this object better collectable for gc
-        """
-        del(self)
+    #def __del__(self):
+    #    """
+    #    hopefully a __del__() method may make this object better collectable for gc
+    #    """
+    #    del(self)
 

@@ -47,8 +47,6 @@ class RefreshLoopOneServer(threading.Thread):
     stopped = False
     # Check flag, if set and thread recognizes do a refresh, set to True at the beginning
     doRefresh = True
-    # Update interval counter
-    count = 0
     
     def __init__(self, **kwds):
         # add all keywords to object, every mode searchs inside for its favorite arguments/keywords
@@ -58,20 +56,30 @@ class RefreshLoopOneServer(threading.Thread):
         self.setDaemon(1)
 
 
-    def __del__(self):
-        """
-        hopefully a __del__() method may make this object better collectable for gc
-        """
-        del(self)
+    #def __del__(self):
+    #    """
+    #    hopefully a __del__() method may make this object better collectable for gc
+    #    """
+    #    del(self)
         
 
     def run(self):  
         """
         loop until end of eternity or until server is stopped
         """
+       
+        ###import guppy
+        ###hp = guppy.hpy()
+        ###hp.setref()
+              
         while self.stopped == False:          
             # check if we have to leave update interval sleep
-            if self.count > int(self.conf.update_interval)*60: self.doRefresh = True
+            #if count > int(self.conf.update_interval)*60: self.doRefresh = True
+
+            if self.server.count > int(self.conf.update_interval)*12: self.doRefresh = True
+            
+            #print "SELF.COUNT every Schleife", count, sys.getrefcount(count), sys.getsizeof(count)#, gc.get_referrers(count)
+
             
             # self.doRefresh could also been changed by RefreshAllServers()
             if self.doRefresh == True:
@@ -149,16 +157,42 @@ class RefreshLoopOneServer(threading.Thread):
                                     # do some cleanup
                                     gc.collect()
                             except:
-                                pass
+                                import traceback
+                                traceback.print_exc(file=sys.stdout)
                             
                             # reset refresh flag
                             self.doRefresh = False
                             # reset counter
-                            self.count = 0           
+                            #import sys
+                            #print "SELF.COUNT", self.server.count, sys.getrefcount(self.server.count)
+                            #import guppy
+                            #h = guppy.hpy()
+                            #h = hp.heap()
+                            #rint h.byclodo
+                            #print h.bysize
+
+                          
+                            ###del count
+                            # do some cleanup
+                            del self.server.count
+                            gc.collect()
+                            self.server.count = 0         
+                            
+                            #import objgraph
+                            #objgraph.show_refs([self])
+                            #objgraph.show_backrefs([self.server.count])
+     
             else:
                 # sleep and count
-                time.sleep(2)
-                self.count += 2
+                time.sleep(3)
+                self.server.count += 3
+                gc.collect()
+                
+                #import objgraph
+                #objgraph.show_refs([self])
+                #objgraph.show_backrefs([self.server.count])
+                #objgraph.show_backrefs([count])
+                
 
         
     def Stop(self):
@@ -228,11 +262,11 @@ class Recheck(threading.Thread):
             pass
         
 
-    def __del__(self):
-        """
-        hopefully a __del__() method may make this object better collectable for gc
-        """
-        del(self)
+    #def __del__(self):
+    #    """
+    #    hopefully a __del__() method may make this object better collectable for gc
+    #    """
+    #    del(self)
         
         
 class RecheckAll(threading.Thread):
@@ -319,11 +353,11 @@ class RecheckAll(threading.Thread):
                 print "Recheck all: Already rechecking all services on all hosts on all servers."
                 
         
-    def __del__(self):
-        """
-        hopefully a __del__() method may make this object better collectable for gc
-        """
-        del(self)
+    #def __del__(self):
+    #    """
+    #    hopefully a __del__() method may make this object better collectable for gc
+    #    """
+    #    del(self)
         
         
 class Acknowledge(threading.Thread):
@@ -360,11 +394,11 @@ class Acknowledge(threading.Thread):
                 self.server.FetchURL(url, giveback="nothing", cgi_data=cgi_data)
 
         
-    def __del__(self):
-        """
-        hopefully a __del__() method may make this object better collectable for gc
-        """
-        del(self)
+    #def __del__(self):
+    #    """
+    #    hopefully a __del__() method may make this object better collectable for gc
+    #    """
+    #    del(self)
         
     
 class Downtime(threading.Thread):
@@ -408,11 +442,11 @@ class Downtime(threading.Thread):
             self.server.FetchURL(url, giveback="nothing", cgi_data=cgi_data)
             
 
-    def __del__(self):
-        """
-        hopefully a __del__() method may make this object better collectable for gc
-        """
-        del(self)
+    #def __del__(self):
+    #    """
+    #    hopefully a __del__() method may make this object better collectable for gc
+    #    """
+    #    del(self)
         
 
 def Downtime_get_start_end(server, host):
@@ -480,11 +514,11 @@ class CheckForNewVersion(threading.Thread):
                 s.CheckingForNewVersion = False
 
 
-    def __del__(self):
-        """
-        hopefully a __del__() method may make this object better collectable for gc
-        """
-        del(self)
+    #def __del__(self):
+    #    """
+    #    hopefully a __del__() method may make this object better collectable for gc
+    #    """
+    #    del(self)
     
 
 class PlaySound(threading.Thread):
@@ -518,11 +552,11 @@ class PlaySound(threading.Thread):
             self.Play(self.file)
     
     
-    def __del__(self):
-        """
-        hopefully a __del__() method may make this object better collectable for gc
-        """
-        del(self)
+    #def __del__(self):
+    #    """
+    #    hopefully a __del__() method may make this object better collectable for gc
+    #    """
+    #    del(self)
         
     
     def Play(self, file):
@@ -568,11 +602,11 @@ class FlashStatusbar(threading.Thread):
             pass
 
 
-    def __del__(self):
-        """
-        hopefully a __del__() method may make this object better collectable for gc
-        """
-        del(self)
+    #def __del__(self):
+    #   """
+    #    hopefully a __del__() method may make this object better collectable for gc
+    #    """
+    #    del(self)
 
 
 def OpenNagios(widget, server, output):

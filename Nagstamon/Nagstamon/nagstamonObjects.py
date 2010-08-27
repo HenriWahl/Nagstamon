@@ -161,13 +161,15 @@ class NagiosServer(object):
         self.warnings = 0
         self.status = ""
         self.Cookie = None
+        # needed for looping server thread
+        self.count = 0
 
     
-    def __del__(self):
-        """
-        hopefully a __del__() method may make this object better collectable for gc
-        """
-        del(self)
+    #def __del__(self):
+    #    """
+    #    hopefully a __del__() method may make this object better collectable for gc
+    #    """
+    #    del(self)
         
     
     def GetStatus(self):
@@ -835,11 +837,11 @@ class NagiosServer(object):
         return host
     
     
-    def __del__(self):
-        """
-        hopefully a __del__() method may make this object better collectable for gc
-        """
-        del(self)
+    #def __del__(self):
+    #    """
+    #    hopefully a __del__() method may make this object better collectable for gc
+    #    """
+    #    del(self)
 
 class NagiosObject(object):    
     def get_host_name(self):
@@ -870,11 +872,11 @@ class NagiosHost(NagiosObject):
     def get_host_name(self):
         return self.name
         
-    def __del__(self):
-        """
-        hopefully a __del__() method may make this object better collectable for gc
-        """
-        del(self)
+    #def __del__(self):
+    #    """
+    #    hopefully a __del__() method may make this object better collectable for gc
+    #    """
+    #    del(self)
         
         
 class NagiosService(NagiosObject):
@@ -896,9 +898,9 @@ class NagiosService(NagiosObject):
     def get_service_name(self):
         return self.name 
         
-    def __del__(self):
-        """
-        hopefully a __del__() method may make this object better collectable for gc
-        """
-        del(self)
+    #def __del__(self):
+    #    """
+    #    hopefully a __del__() method may make this object better collectable for gc
+    #    """
+    #    del(self)
  
