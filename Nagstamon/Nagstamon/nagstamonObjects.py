@@ -218,12 +218,12 @@ class NagiosServer(object):
             not (host.name in self.new_hosts_acknowledged and \
             str(self.conf.filter_acknowledged_hosts_services) == "True")) and \
             str(self.conf.filter_all_down_hosts) == "False": 
-                self.nagitems_filtered["hosts"]["DOWN"].append(host)
+                self.nagitems_filtered["hosts"]["DOWN"].append(copy.copy(host))
                 self.downs += 1
             if host.status == "UNREACHABLE" and nagstamonActions.HostIsFilteredOutByRE(host.name, self.conf) == False\
             and (not host.name in self.new_hosts_acknowledged and not host.name in self.new_hosts_in_maintenance) and \
             str(self.conf.filter_all_unreachable_hosts) == "False": 
-                self.nagitems_filtered["hosts"]["UNREACHABLE"].append(host)    
+                self.nagitems_filtered["hosts"]["UNREACHABLE"].append(copy.copy(host))    
                 self.unreachables += 1
 
             for service in host.services.values():
@@ -247,13 +247,13 @@ class NagiosServer(object):
                 nagstamonActions.ServiceIsFilteredOutByRE(service.name, self.conf) == False:
                     # sort by severity
                     if service.status == "CRITICAL" and str(self.conf.filter_all_critical_services) == "False": 
-                        self.nagitems_filtered["services"]["CRITICAL"].append(service)
+                        self.nagitems_filtered["services"]["CRITICAL"].append(copy.copy(service))
                         self.criticals += 1
                     if service.status == "WARNING" and str(self.conf.filter_all_warning_services) == "False": 
-                        self.nagitems_filtered["services"]["WARNING"].append(service)
+                        self.nagitems_filtered["services"]["WARNING"].append(copy.copy(service))
                         self.warnings += 1
                     if service.status == "UNKNOWN" and str(self.conf.filter_all_unknown_services) == "False": 
-                        self.nagitems_filtered["services"]["UNKNOWN"].append(service)
+                        self.nagitems_filtered["services"]["UNKNOWN"].append(copy.copy(service))
                         self.unknowns += 1
 
         # find out if there has been some status change to notify user
@@ -262,11 +262,11 @@ class NagiosServer(object):
         
         for i in self.nagitems_filtered["hosts"].values():
             for h in i:
-                new_nagitems_filtered_list.append((h.name, h.status))   
+                new_nagitems_filtered_list.append((copy.copy(h.name), copy.copy(h.status)))   
             
         for i in self.nagitems_filtered["services"].values():
             for s in i:
-                new_nagitems_filtered_list.append((s.host, s.name, s.status))  
+                new_nagitems_filtered_list.append((copy.copy(s.host), copy.copy(s.name), copy.copy(s.status)))  
                  
         # sort for better comparison
         new_nagitems_filtered_list.sort()
@@ -281,7 +281,7 @@ class NagiosServer(object):
             for i in new_nagitems_filtered_list:
                 if not i in self.nagitems_filtered_list:
                     # collect differences
-                    diff.append(i)
+                    diff.append(copy.copy(i))
             if len(diff) == 0:
                 self.WorstStatus = "UP"
             else:
@@ -289,7 +289,7 @@ class NagiosServer(object):
                 # get list of states for comparison
                 diff_states = []
                 for d in diff:
-                    diff_states.append(d[-1])
+                    diff_states.append(copy.copy(d[-1]))
                 # temporary worst state index   
                 worst = 0
                 for d in diff_states:
@@ -339,17 +339,17 @@ class NagiosServer(object):
                 hostdict = dict(host.items())
                 # if host is in downtime add it to known maintained hosts
                 if hostdict["downtime"] == "2":
-                    self.new_hosts_in_maintenance.append(hostdict["name"])
+                    self.new_hosts_in_maintenance.append(copy.copy(hostdict["name"]))
                 if hostdict.has_key("acknowledged"):
-                    self.new_hosts_acknowledged.append(hostdict["name"])
+                    self.new_hosts_acknowledged.append(copy.copy(hostdict["name"]))
                 self.new_hosts[hostdict["name"]] = NagiosHost()
-                self.new_hosts[hostdict["name"]].name = hostdict["name"]
+                self.new_hosts[hostdict["name"]].name = copy.copy(hostdict["name"])
                 # states come in lower case from Opsview
-                self.new_hosts[hostdict["name"]].status = hostdict["state"].upper()
-                self.new_hosts[hostdict["name"]].last_check = hostdict["last_check"]
-                self.new_hosts[hostdict["name"]].duration = nagstamonActions.HumanReadableDuration(hostdict["state_duration"])
-                self.new_hosts[hostdict["name"]].attempt = str(hostdict["current_check_attempt"])+ "/" + str(hostdict["max_check_attempts"])
-                self.new_hosts[hostdict["name"]].status_information= hostdict["output"]
+                self.new_hosts[hostdict["name"]].status = copy.copy(hostdict["state"]).upper()
+                self.new_hosts[hostdict["name"]].last_check = copy.copy(hostdict["last_check"])
+                self.new_hosts[hostdict["name"]].duration = nagstamonActions.HumanReadableDuration(copy.copy(hostdict["state_duration"]))
+                self.new_hosts[hostdict["name"]].attempt = str(copy.copy(hostdict["current_check_attempt"]))+ "/" + str(copy.copy(hostdict["max_check_attempts"]))
+                self.new_hosts[hostdict["name"]].status_information= copy.copy(hostdict["output"])
     
                 #services
                 for service in host.getchildren()[:-1]:
@@ -360,14 +360,14 @@ class NagiosServer(object):
                     and not (str(self.conf.filter_acknowledged_hosts_services) == "True" \
                     and servicedict.has_key("acknowledged")):
                         self.new_hosts[hostdict["name"]].services[servicedict["name"]] = NagiosService()
-                        self.new_hosts[hostdict["name"]].services[servicedict["name"]].host = hostdict["name"]
-                        self.new_hosts[hostdict["name"]].services[servicedict["name"]].name = servicedict["name"]
+                        self.new_hosts[hostdict["name"]].services[servicedict["name"]].host = copy.copy(hostdict["name"])
+                        self.new_hosts[hostdict["name"]].services[servicedict["name"]].name = copy.copy(servicedict["name"])
                         # states come in lower case from Opsview
-                        self.new_hosts[hostdict["name"]].services[servicedict["name"]].status = servicedict["state"].upper()
-                        self.new_hosts[hostdict["name"]].services[servicedict["name"]].last_check = servicedict["last_check"]
-                        self.new_hosts[hostdict["name"]].services[servicedict["name"]].duration = nagstamonActions.HumanReadableDuration(servicedict["state_duration"])
-                        self.new_hosts[hostdict["name"]].services[servicedict["name"]].attempt = str(servicedict["current_check_attempt"])+ "/" + str(servicedict["max_check_attempts"])
-                        self.new_hosts[hostdict["name"]].services[servicedict["name"]].status_information= servicedict["output"]
+                        self.new_hosts[hostdict["name"]].services[servicedict["name"]].status = copy.copy(servicedict["state"]).upper()
+                        self.new_hosts[hostdict["name"]].services[servicedict["name"]].last_check = copy.copy(servicedict["last_check"])
+                        self.new_hosts[hostdict["name"]].services[servicedict["name"]].duration = nagstamonActions.HumanReadableDuration(copy.copy(servicedict["state_duration"]))
+                        self.new_hosts[hostdict["name"]].services[servicedict["name"]].attempt = str(copy.copy(servicedict["current_check_attempt"]))+ "/" + str(copy.copy(servicedict["max_check_attempts"]))
+                        self.new_hosts[hostdict["name"]].services[servicedict["name"]].status_information= copy.copy(servicedict["output"])
         except:
             # set checking flag back to False
             self.isChecking = False
@@ -461,19 +461,21 @@ class NagiosServer(object):
                         n["attempt"] = "N/A"
                         
                         # add dictionary full of information about this host item to nagitems
-                        nagitems["hosts"].append(n)
+                        nagitems["hosts"].append(copy.copy(n))
                         # after collection data in nagitems create objects from its informations
                         # host objects contain service objects
                         if not self.new_hosts.has_key(n["host"]):
-                            self.new_hosts[n["host"]] = NagiosHost()
-                            self.new_hosts[n["host"]].name = n["host"]
-                            self.new_hosts[n["host"]].status = n["status"]
-                            self.new_hosts[n["host"]].last_check = n["last_check"]
-                            self.new_hosts[n["host"]].duration = n["duration"]
-                            self.new_hosts[n["host"]].attempt = n["attempt"]
-                            self.new_hosts[n["host"]].status_information= n["status_information"]
+                            new_host = copy.copy(n["host"])
+                            self.new_hosts[new_host] = NagiosHost()
+                            self.new_hosts[new_host].name = copy.copy(n["host"])
+                            self.new_hosts[new_host].status = copy.copy(n["status"])
+                            self.new_hosts[new_host].last_check = copy.copy(n["last_check"])
+                            self.new_hosts[new_host].duration = copy.copy(n["duration"])
+                            self.new_hosts[new_host].attempt = copy.copy(n["attempt"])
+                            self.new_hosts[new_host].status_information= copy.copy(n["status_information"])
                 except:
-                    pass
+                    import traceback
+                    traceback.print_exc(file=sys.stdout)
                 
             # do some cleanup
             del table
@@ -520,20 +522,22 @@ class NagiosServer(object):
                         # host objects contain service objects
                         if not self.new_hosts.has_key(n["host"]):
                             self.new_hosts[n["host"]] = NagiosHost()
-                            self.new_hosts[n["host"]].name = n["host"]
+                            self.new_hosts[n["host"]].name = copy.copy(n["host"])
                             self.new_hosts[n["host"]].status = "UP"
                         # if a service does not exist create its object
                         if not self.new_hosts[n["host"]].services.has_key(n["service"]):
-                            self.new_hosts[n["host"]].services[n["service"]] = NagiosService()
-                            self.new_hosts[n["host"]].services[n["service"]].host = n["host"]
-                            self.new_hosts[n["host"]].services[n["service"]].name = n["service"]
-                            self.new_hosts[n["host"]].services[n["service"]].status = n["status"]
-                            self.new_hosts[n["host"]].services[n["service"]].last_check = n["last_check"]
-                            self.new_hosts[n["host"]].services[n["service"]].duration = n["duration"]
-                            self.new_hosts[n["host"]].services[n["service"]].attempt = n["attempt"]
-                            self.new_hosts[n["host"]].services[n["service"]].status_information = n["status_information"]
+                            new_service = copy.copy(n["service"])
+                            self.new_hosts[n["host"]].services[new_service] = NagiosService()
+                            self.new_hosts[n["host"]].services[new_service].host = copy.copy(n["host"])
+                            self.new_hosts[n["host"]].services[new_service].name = copy.copy(n["service"])
+                            self.new_hosts[n["host"]].services[new_service].status = copy.copy(n["status"])
+                            self.new_hosts[n["host"]].services[new_service].last_check = copy.copy(n["last_check"])
+                            self.new_hosts[n["host"]].services[new_service].duration = copy.copy(n["duration"])
+                            self.new_hosts[n["host"]].services[new_service].attempt = copy.copy(n["attempt"])
+                            self.new_hosts[n["host"]].services[new_service].status_information = copy.copy(n["status_information"])
                 except:
-                    pass
+                    import traceback
+                    traceback.print_exc(file=sys.stdout)
                                 
             # do some cleanup
             del htobj
@@ -678,7 +682,8 @@ class NagiosServer(object):
                 urlcontent = urllib2.urlopen(self.nagios_url + "/login", logindata)
                 
             except:
-                pass
+                import traceback
+                traceback.print_exc(file=sys.stdout)
 
             # if something goes wrong with accessing the URL it can be caught
         try:
