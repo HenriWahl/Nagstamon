@@ -98,7 +98,7 @@ class RefreshLoopOneServer(threading.Thread):
                     if server_status == "ERROR":
                         # set server status for status field in popwin
                         # shorter error message - see https://sourceforge.net/tracker/?func=detail&aid=3017044&group_id=236865&atid=1101373
-                        if self.conf.long_display == str(True):
+                        if str(self.conf.long_display) == "True":
                             self.server.status = "ERROR"
                         else:
                             self.server.status = "ERR" 
@@ -146,7 +146,7 @@ class RefreshLoopOneServer(threading.Thread):
                                     # set server status for status field in popwin
                                     if server_status == "ERROR":
                                         # shorter error message - see https://sourceforge.net/tracker/?func=detail&aid=3017044&group_id=236865&atid=1101373
-                                        if self.conf.long_display == str(True):
+                                        if str(self.conf.long_display) == "True":
                                             self.server.status = "ERROR"
                                         else:
                                             self.server.status = "ERR" 
@@ -716,9 +716,9 @@ def HostIsFilteredOutByRE(host, conf=None):
     try:
         if str(conf.re_host_enabled) == "True":
             pattern = re.compile(conf.re_host_pattern)
-            result = pattern.findall(host)
+            #result = pattern.findall(host)
             
-            if len(result) > 0:
+            if len(pattern.findall(host)) > 0:
                 if str(conf.re_host_reverse) == "True":
                     return False
                 else:
@@ -742,8 +742,9 @@ def ServiceIsFilteredOutByRE(service, conf=None):
     try:
         if str(conf.re_service_enabled) == "True":
             pattern = re.compile(conf.re_service_pattern)
-            result = pattern.findall(service)
-            if len(result) > 0:
+            #result = pattern.findall(service)
+            
+            if len(pattern.findall(service)) > 0:
                 if str(conf.re_service_reverse) == "True":
                     return False
                 else:
