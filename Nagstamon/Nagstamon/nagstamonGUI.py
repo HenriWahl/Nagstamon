@@ -737,6 +737,7 @@ class StatusBar(object):
             self.StatusBar = gtk.Window(gtk.WINDOW_TOPLEVEL)
             self.StatusBar.set_decorated(False)
             self.StatusBar.set_keep_above(True)
+            self.StatusBar.stick()
             self.StatusBar.set_type_hint(gtk.gdk.WINDOW_TYPE_HINT_TOOLBAR)
             self.StatusBar.set_property("skip_taskbar_hint", True)
         else:
@@ -747,12 +748,14 @@ class StatusBar(object):
                     print "python gnome2 extras with egg.trayicon not installed so trayicon cannot be used. Using floating desktop status bar instead."
                     self.StatusBar = gtk.Window(gtk.WINDOW_TOPLEVEL)
                     self.StatusBar.set_decorated(False)
+                    self.StatusBar.stick()
                     self.StatusBar.set_type_hint(gtk.gdk.WINDOW_TYPE_HINT_TOOLBAR)
                     self.StatusBar.set_keep_above(True)
             else:
                 self.StatusBar = gtk.Window(gtk.WINDOW_TOPLEVEL)
                 self.StatusBar.set_decorated(False)
                 self.StatusBar.set_keep_above(True)
+                self.StatusBar.stick()
                 self.StatusBar.set_type_hint(gtk.gdk.WINDOW_TYPE_HINT_TOOLBAR)
                 self.StatusBar.set_property("skip_taskbar_hint", True)
         
