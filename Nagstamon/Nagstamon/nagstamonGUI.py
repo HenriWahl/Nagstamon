@@ -38,6 +38,8 @@ import sys
 import gc
 import time
 
+import custom # used for initialization of custom components
+
 class Sorting(object):
     """ Sorting persistence purpose class
     Stores tuple pairs in form of:
@@ -126,15 +128,25 @@ class GUI(object):
         self.AboutDialogOpen = False
         
         # saving sorting state between refresh
-        self.rows_reordered_handler = None
-        self.last_sorting = Sorting([(None, gtk.SORT_ASCENDING), (0, gtk.SORT_ASCENDING)],
-                                    max([len(x.COLUMNS) for x in self.servers.values()] or [0])+1) # stores sorting between table refresh
-        
+        self.rows_reordered_handler = {} 
+        self.last_sorting = {}
+        for server in self.servers.values():
+            self.last_sorting[server.name] = Sorting([(server.DEFAULT_SORT_COLUMN_ID, gtk.SORT_ASCENDING),
+                                                      (server.HOST_COLUMN_ID, gtk.SORT_ASCENDING)],
+                                                      len(server.COLUMNS)+1) # stores sorting between table refresh
+    
+    def get_last_sorting(self, server):
+        return self.last_sorting[server.name]
+    
+    def get_rows_reordered_handler(self, server):
+        return self.rows_reordered_handler.get(server.name)
+    
+    def set_rows_reordered_handler(self, server, handler):
+        self.rows_reordered_handler[server.name] = handler
+     
     def set_sorting(self, tab_model, server):
         """ Restores sorting after refresh """
-        for id, order in self.last_sorting.iteritems():
-            if id is None:
-                id = server.DEFAULT_SORT_COLUMN_ID
+        for id, order in self.get_last_sorting(server).iteritems():
             tab_model.set_sort_column_id(id, order)
             # this makes sorting arrows visible according to
             # sort order after refresh
@@ -142,21 +154,24 @@ class GUI(object):
             #if column is not None:
             #    column.set_property('sort-order', order)
 
-    def on_column_header_click(self, model, id, tab_model):
+    def on_column_header_click(self, model, id, tab_model, server):
         """ Sets current sorting according to column id """
         # makes column headers sortable by first time click (hack)
         order = model.get_sort_order()
         tab_model.set_sort_column_id(id, order)
         
-        if self.rows_reordered_handler is not None:
-            tab_model.disconnect(self.rows_reordered_handler)
-        self.rows_reordered_handler = tab_model.connect_after('rows-reordered', self.on_sorting_order_change, id, model)
+        rows_reordered_handler = self.get_rows_reordered_handler(server)
+        if rows_reordered_handler is not None:
+            tab_model.disconnect(rows_reordered_handler)
+        new_rows_reordered_handler = tab_model.connect_after('rows-reordered', self.on_sorting_order_change, id, model, server)
+        self.set_rows_reordered_handler(server, new_rows_reordered_handler)
         model.set_sort_column_id(id)
 
-    def on_sorting_order_change(self, tab_model, path, iter, new_order, id, model):
+    def on_sorting_order_change(self, tab_model, path, iter, new_order, id, model, server):
         """ Saves current sorting change in object property """
         order = model.get_sort_order()
-        self.last_sorting.add(id, order)
+        last_sorting = self.get_last_sorting(server)
+        last_sorting.add(id, order)
 
     #def __del__(self):
     #    """
@@ -244,7 +259,7 @@ class GUI(object):
         self.status_ok = False    
         
         # set handler to None for do not disconnecting it after display refresh
-        self.rows_reordered_handler = None
+        self.rows_reordered_handler = {}
         
         # local counters for summarize all miserable hosts
         downs = 0
@@ -328,7 +343,7 @@ class GUI(object):
                         # make table sortable by clicking on column headers
                         tab_column.set_clickable(True)
                         #tab_column.set_property('sort-indicator', True) # makes sorting arrows visible
-                        tab_column.connect('clicked', self.on_column_header_click, s, tab_model)
+                        tab_column.connect('clicked', self.on_column_header_click, s, tab_model, server)
                     
                     # restore sorting order from previous refresh
                     self.set_sorting(tab_model, server)
@@ -1950,9 +1965,30 @@ class Settings(object):
             sound.start()
         except:
             pass
-        
+
+
+class ServerDialogHelper(object):        
+    """ Contains common logic for server dialog """
+    
+    KNOWN_CONTROLS = set()
+    
+    def on_server_change(self, combobox):
+        """ Disables controls as it is set in server class """
+        servers = nagstamonActions.get_registered_servers()
+        server_class = servers[combobox.get_active_text()]
+        self.KNOWN_CONTROLS.update(server_class.DISABLED_CONTROLS)
+        for item_id in self.KNOWN_CONTROLS:
+            item = self.glade.get_widget(item_id)
+            if item is not None:
+                if item_id in server_class.DISABLED_CONTROLS:
+                    item.set_sensitive(False)
+                else:
+                    item.set_sensitive(True)
+            else:
+                print 'Invalid widget set for disable in %s: %s' % (server_class.__name__, item_id)
+                
             
-class NewServer(object):
+class NewServer(ServerDialogHelper):
     """
         settings of one particuliar new Nagios server
     """
@@ -1981,7 +2017,12 @@ class NewServer(object):
         
         # set server type combobox to Nagios as default
         combobox = self.glade.get_widget("input_combo_server_type")
+        for server in nagstamonActions.get_registered_servers():
+            combobox.append_text(server)
         combobox.set_active(0)
+        
+        combobox.connect('changed', self.on_server_change)
+        self.on_server_change(combobox)
         
         # show settings options for proxy - or not
         self.ToggleProxy()
@@ -2024,9 +2065,8 @@ class NewServer(object):
                     pass
                 
         # set server type combobox which cannot be set by above hazard method
-        server_types = {0:"Nagios", 1:"Opsview", 2:"Centreon"}
         combobox = self.glade.get_widget("input_combo_server_type")
-        new_server.__dict__["type"] = server_types[combobox.get_active()]                   
+        new_server.__dict__["type"] = combobox.get_active_text()                   
    
         # check if there is already a server named like the new one
         if new_server.name in self.conf.servers:
@@ -2035,12 +2075,14 @@ class NewServer(object):
             # put in new one
             self.conf.servers[new_server.name] = new_server
             # create new server thread
-            self.servers[new_server.name] = nagstamonActions.CreateServer(new_server, self.conf)
-            
-            if str(self.conf.servers[new_server.name].enabled) == "True":
-                # start new thread (should go to nagstamonActions!)
-                self.servers[new_server.name].thread = nagstamonActions.RefreshLoopOneServer(server=self.servers[new_server.name], output=self.output, conf=self.conf)
-                self.servers[new_server.name].thread.start()        
+            created_server = nagstamonActions.CreateServer(new_server, self.conf)
+            if created_server is not None:
+                self.servers[new_server.name] = created_server 
+                
+                if str(self.conf.servers[new_server.name].enabled) == "True":
+                    # start new thread (should go to nagstamonActions!)
+                    self.servers[new_server.name].thread = nagstamonActions.RefreshLoopOneServer(server=self.servers[new_server.name], output=self.output, conf=self.conf)
+                    self.servers[new_server.name].thread.start()        
                   
             # fill settings dialog treeview
             self.settingsdialog.FillTreeView()
@@ -2100,7 +2142,7 @@ class NewServer(object):
             item.set_sensitive(state)
                     
 
-class EditServer(object):
+class EditServer(ServerDialogHelper):
     """
         settings of one particuliar new Nagios server
     """
@@ -2149,9 +2191,15 @@ class EditServer(object):
                         pass
            
             # set server type combobox which cannot be set by above hazard method
-            server_types = {"Nagios":0, "Opsview":1, "Centreon":2}
+            servers = nagstamonActions.get_registered_servers()
+            server_types = dict([(x[1], x[0]) for x in enumerate(servers)])
             combobox = self.glade.get_widget("input_combo_server_type")
+            for server in servers:
+                combobox.append_text(server)
             combobox.set_active(server_types[self.conf.servers[self.server].type])
+            
+            combobox.connect('changed', self.on_server_change)
+            self.on_server_change(combobox)
                  
             # show settings options for proxy - or not
             self.ToggleProxy()
@@ -2194,9 +2242,8 @@ class EditServer(object):
                     pass
                 
         # set server type combobox which cannot be set by above hazard method
-        server_types = {0:"Nagios", 1:"Opsview", 2:"Centreon"}
         combobox = self.glade.get_widget("input_combo_server_type")
-        new_server.__dict__["type"] = server_types[combobox.get_active()]     
+        new_server.__dict__["type"] = combobox.get_active_text()     
         
         # check if there is already a server named like the new one
         if new_server.name in self.conf.servers and new_server.name != self.server:
@@ -2215,12 +2262,14 @@ class EditServer(object):
             # put in new one
             self.conf.servers[new_server.name] = new_server
             # create new server thread
-            self.servers[new_server.name] = nagstamonActions.CreateServer(new_server, self.conf)
-            
-            if str(self.conf.servers[new_server.name].enabled) == "True":  
-                # start new thread (should go to nagstamonActions)
-                self.servers[new_server.name].thread = nagstamonActions.RefreshLoopOneServer(server=self.servers[new_server.name], output=self.output, conf=self.conf)
-                self.servers[new_server.name].thread.start()   
+            created_server = nagstamonActions.CreateServer(new_server, self.conf)
+            if created_server is not None:
+                self.servers[new_server.name] = created_server 
+                
+                if str(self.conf.servers[new_server.name].enabled) == "True":  
+                    # start new thread (should go to nagstamonActions)
+                    self.servers[new_server.name].thread = nagstamonActions.RefreshLoopOneServer(server=self.servers[new_server.name], output=self.output, conf=self.conf)
+                    self.servers[new_server.name].thread.start()   
             
             # fill settings dialog treeview
             self.settingsdialog.FillTreeView()

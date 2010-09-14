@@ -7,6 +7,8 @@ import sys
 import socket
 import gc
 import copy
+import webbrowser
+import urllib
 
 try:
     import lxml.etree, lxml.objectify
@@ -97,12 +99,12 @@ class AttemptColumn(Column):
     
 class StatusInformationColumn(Column):
     ATTR_NAME = 'status_information'
+
+
+class GenericServer(object):
+    """ Abstract server """
     
-class NagiosServer(object):
-    """
-        object of Nagios server - when nagstamon will be able to poll various servers this
-        will be useful   
-    """
+    TYPE = 'Generic'
     
     DEFAULT_SORT_COLUMN_ID = 2
     COLOR_COLUMN_ID = 2
@@ -118,13 +120,16 @@ class NagiosServer(object):
         AttemptColumn,
         StatusInformationColumn
     ]
+    
+    DISABLED_CONTROLS = []
+    URL_SERVICE_SEPARATOR = '&service='
    
     @classmethod
     def get_columns(cls, row):
         """ Gets columns filled with row data """
         for column_class in cls.COLUMNS:
             yield column_class(row)
-    
+            
     def __init__(self, **kwds):
         # add all keywords to object, every mode searchs inside for its favorite arguments/keywords
         for k in kwds: self.__dict__[k] = kwds[k]
@@ -170,7 +175,112 @@ class NagiosServer(object):
     #    hopefully a __del__() method may make this object better collectable for gc
     #    """
     #    del(self)
+    
+    def set_recheck(self, thread_obj):
+        self._set_recheck(thread_obj.host, thread_obj.service)
         
+    def _set_recheck(self, host, service):
+        # decision about host or service - they have different URLs
+        if not service:
+            # host
+            # get start time from Nagios as HTML to use same timezone setting like the locally installed Nagios
+            html = self.server.FetchURL(self.nagios_cgi_url + "/cmd.cgi?" + urllib.urlencode({"cmd_typ":"96", "host":host}), giveback="raw")
+            start_time = html.split("NAME='start_time' VALUE='")[1].split("'></b></td></tr>")[0]
+            # fill and encode CGI data
+            cgi_data = urllib.urlencode({"cmd_typ":"96", "cmd_mod":"2", "host":host, "start_time":start_time, "force_check":"on", "btnSubmit":"Commit"})
+        else:
+            # service @ host
+            # get start time from Nagios as HTML to use same timezone setting like the locally instaled Nagios
+            html = self.FetchURL(self.nagios_cgi_url + "/cmd.cgi?" + urllib.urlencode({"cmd_typ":"7", "host":host, "service":service}), giveback="raw")
+            start_time = html.split("NAME='start_time' VALUE='")[1].split("'></b></td></tr>")[0]
+            # fill and encode CGI data
+            cgi_data = urllib.urlencode({"cmd_typ":"7", "cmd_mod":"2", "host":host, "service":service, "start_time":start_time, "force_check":"on", "btnSubmit":"Commit"})
+
+        # execute POST request
+        self.FetchURL(self.nagios_cgi_url + "/cmd.cgi", giveback="nothing", cgi_data=cgi_data)
+    
+    def set_acknowledge(self, thread_obj):
+        if thread_obj.acknowledge_all_services == True:
+            all_services = thread_obj.all_services
+        else:
+            all_services = []
+        self._set_acknowledge(thread_obj.host, thread_obj.service, thread_obj.author, thread_obj.comment, all_services)
+     
+    def _set_acknowledge(self, host, service, author, comment, all_services=[]):
+        url = self.nagios_cgi_url + "/cmd.cgi"
+        # decision about host or service - they have different URLs
+        # do not care about the doube %s (%s%s) - its ok, "flags" cares about the necessary "&"
+        if not service:
+            # host
+            cgi_data = urllib.urlencode({"cmd_typ":"33", "cmd_mod":"2", "host":host, "com_author":author, "com_data":comment, "btnSubmit":"Commit"})
+        else:
+            # service @ host
+            cgi_data = urllib.urlencode({"cmd_typ":"34", "cmd_mod":"2", "host":host, "service":service, "com_author":author, "com_data":comment, "btnSubmit":"Commit"})
+
+        # running remote cgi command        
+        self.FetchURL(url, giveback="nothing", cgi_data=cgi_data)
+
+        # acknowledge all services on a host
+        for s in all_services:
+            # service @ host
+            cgi_data = urllib.urlencode({"cmd_typ":"34", "cmd_mod":"2", "host":host, "service":s, "com_author":author, "com_data":comment, "btnSubmit":"Commit"})
+            #running remote cgi command        
+            self.FetchURL(url, giveback="nothing", cgi_data=cgi_data)
+    
+    def set_downtime(self, thread_obj):
+        self._set_downtime(thread_obj.host, thread_obj.service, thread_obj.author, thread_obj.comment, thread_obj.fixed,
+                           thread_obj.start_time, thread_obj.end_time, thread_obj.hours, thread_obj.minutes)
+    
+    def _set_downtime(self, host, service, author, comment, fixed, start_time, end_time, hours, minutes):
+        # decision about host or service - they have different URLs
+        if not service:
+            # host
+            cgi_data = urllib.urlencode({"cmd_typ":"55","cmd_mod":"2","trigger":"0","childoptions":"0","host":host,"com_author":author,"com_data":comment,"fixed":fixed,"start_time":start_time,"end_time":end_time,"hours":hours,"minutes":minutes,"btnSubmit":"Commit"})
+        else:
+            # service @ host
+            cgi_data = urllib.urlencode({"cmd_typ":"56","cmd_mod":"2","trigger":"0","childoptions":"0","host":host,"service":service,"com_author":author,"com_data":comment,"fixed":fixed,"start_time":start_time,"end_time":end_time,"hours":hours,"minutes":minutes,"btnSubmit":"Commit"})
+        url = self.nagios_cgi_url + "/cmd.cgi"
+    
+        # running remote cgi command
+        self.FetchURL(url, giveback="nothing", cgi_data=cgi_data)
+    
+    def get_start_end(self, host):
+        html = self.FetchURL(self.nagios_cgi_url + "/cmd.cgi?" + urllib.urlencode({"cmd_typ":"55", "host":host}), giveback="raw")
+        start_time = html.split("NAME='start_time' VALUE='")[1].split("'></b></td></tr>")[0]
+        end_time = html.split("NAME='end_time' VALUE='")[1].split("'></b></td></tr>")[0]
+        # give values back as tuple
+        return start_time, end_time
+     
+    def format_item(self, host, service=None):
+        if service is None:
+            return host
+        return ''.join([host, self.URL_SERVICE_SEPARATOR, service])
+        
+    def open_tree_view(self, host, service=None):
+        item = self.format_item(host, service)
+        self._open_tree_view(item)
+
+    def _open_tree_view(self, item):
+        webbrowser.open('%s/extinfo.cgi?type=2&host=%s' % (self.nagios_cgi_url, item))
+        
+    def open_nagios(self, debug_mode):
+        webbrowser.open(self.nagios_url)
+        # debug
+        if str(debug_mode) == "True":
+            print self.name, ":", "Open Nagios website", self.nagios_url        
+        
+    def open_services(self, debug_mode=False):
+        webbrowser.open(self.nagios_cgi_url + "/status.cgi?host=all&servicestatustypes=253")
+        # debug
+        if str(debug_mode) == "True":
+            print self.name, ":", "Open services website", self.nagios_url + "/status.cgi?host=all&servicestatustypes=253"  
+            
+        
+    def open_hosts(self, debug_mode=False):
+        webbrowser.open(self.nagios_cgi_url + "/status.cgi?hostgroup=all&style=hostdetail&hoststatustypes=12")
+        # debug
+        if str(debug_mode) == "True":
+            print self.name, ":", "Open hosts website", self.nagios_url + "/status.cgi?hostgroup=all&style=hostdetail&hoststatustypes=12"      
     
     def GetStatus(self):
         """
@@ -192,12 +302,8 @@ class NagiosServer(object):
         # decide which server type to use, both methods fill self.new_hosts et al. which
         # after this get filtered
         # some filtering is already done by the server specific GetStatus*() 
-        if self.type == "Opsview":
-            if self.GetStatusOpsview() == "ERROR":
-                return "ERROR"
-        if self.type == "Nagios" or self.type == "Centreon":
-            if self.GetStatusNagios() == "ERROR":
-                return "ERROR"
+        if self._get_status() == "ERROR":
+            return "ERROR"
 
         # this part has been before in GUI.RefreshDisplay() - wrong place, here it needs to be reset
         self.nagitems_filtered = {"services":{"CRITICAL":[], "WARNING":[], "UNKNOWN":[]}, "hosts":{"DOWN":[], "UNREACHABLE":[]}}
@@ -322,59 +428,243 @@ class NagiosServer(object):
         # return True if all worked well    
         return True
     
-    
-    def GetStatusOpsview(self):
+    def FetchURL(self, url, giveback="obj", cgi_data=None):
         """
-        Get status from Opsview Server
+        get content of given url, cgi_data only used if present
+        giveback may be "dict", "html" or "none" 
+        "dict" FetchURL gives back a dict full of miserable hosts/services,
+        "html" it gives back pure HTML - useful for finding out IP or new version
+        "none" it gives back pure nothing - useful if for example acknowledging a service
+        existence of cgi_data forces urllib to use POST instead of GET requests
         """
-        # following http://docs.opsview.org/doku.php?id=opsview3.4:api to get ALL services in ALL states except OK
-        # because we filter them out later
-        # the API seems not to let hosts information directly, we hope to get it from service informations
+        # using httppasswordmgrwithdefaultrealm because using password in plain
+        # url like http://username:password@nagios-server causes trouble with
+        # passwords containing special characters like "?"
+        # see http://www.voidspace.org.uk/python/articles/authentication.shtml#doing-it-properly
+        # attention: the example from above webseite is wrong, passman.add_password needs the 
+        # WHOLE URL, with protocol!
+
+        passman = urllib2.HTTPPasswordMgrWithDefaultRealm()
+        passman.add_password(None, url, self.username, self.password)
+        auth_handler = urllib2.HTTPBasicAuthHandler(passman)
+        digest_handler = urllib2.HTTPDigestAuthHandler(passman)
+        
+        # get my cookie to access Opsview web interface to access Opsviews Nagios part
+        if self.Cookie == None and self.type == "Opsview":
+            # put all necessary data into url string
+            logindata = urllib.urlencode({"login_username":self.username,\
+                             "login_password":self.password,\
+                             "back":"",\
+                             "app": "",\
+                             "login":"Log In"})
+            
+            # the cookie jar will contain Opsview web session and auth ticket cookies 
+            self.Cookie = cookielib.CookieJar()
+            
+            # the following is necessary for Opsview servers
+            # get cookie from login page via url retrieving as with other urls
+            try:
+                # if there should be no proxy used use an empty proxy_handler - only necessary in Windows,
+                # where IE proxy settings are used automatically if available
+                # In UNIX $HTTP_PROXY will be used
+                if str(self.use_proxy) == "False":
+                    proxy_handler = urllib2.ProxyHandler({})
+                    urlopener = urllib2.build_opener(auth_handler, digest_handler, proxy_handler, urllib2.HTTPCookieProcessor(self.Cookie))
+                elif str(self.use_proxy) == "True":
+                    if str(self.use_proxy_from_os) == "True":
+                        urlopener = urllib2.build_opener(auth_handler, digest_handler, urllib2.HTTPCookieProcessor(self.Cookie))
+                    else:
+                        # if proxy from OS is not used there is to add a authenticated proxy handler
+                        passman.add_password(None, self.proxy_address, self.proxy_username, self.proxy_password)
+                        proxy_handler = urllib2.ProxyHandler({"http": self.proxy_address, "https": self.proxy_address})
+                        proxy_auth_handler = urllib2.ProxyBasicAuthHandler(passman)
+                        urlopener = urllib2.build_opener(proxy_handler, proxy_auth_handler, auth_handler, digest_handler, urllib2.HTTPCookieProcessor(self.Cookie))
+                
+                # create url opener
+                urllib2.install_opener(urlopener)
+                # login and get cookie
+                urlcontent = urllib2.urlopen(self.nagios_url + "/login", logindata)
+                
+            except:
+                pass
+
+            # if something goes wrong with accessing the URL it can be caught
         try:
-            opsapiurl = self.nagios_url + "/api/status/service?state=1&state=2&state=3"
-            xobj = self.FetchURL(opsapiurl, giveback="opsxml")
+            # if there should be no proxy used use an empty proxy_handler - only necessary in Windows,
+            # where IE proxy settings are used automatically if available
+            # In UNIX $HTTP_PROXY will be used
+            # The MultipartPostHandler is needed for submitting multipart forms from Opsview
+            if str(self.use_proxy) == "False":
+                proxy_handler = urllib2.ProxyHandler({})
+                urlopener = urllib2.build_opener(auth_handler, digest_handler, proxy_handler, urllib2.HTTPCookieProcessor(self.Cookie), nagstamonActions.MultipartPostHandler)
+            elif str(self.use_proxy) == "True":
+                if str(self.use_proxy_from_os) == "True":
+                    urlopener = urllib2.build_opener(auth_handler, digest_handler, urllib2.HTTPCookieProcessor(self.Cookie), nagstamonActions.MultipartPostHandler)
+                else:
+                    # if proxy from OS is not used there is to add a authenticated proxy handler
+                    passman.add_password(None, self.proxy_address, self.proxy_username, self.proxy_password)
+                    proxy_handler = urllib2.ProxyHandler({"http": self.proxy_address, "https": self.proxy_address})
+                    proxy_auth_handler = urllib2.ProxyBasicAuthHandler(passman)
+                    urlopener = urllib2.build_opener(proxy_handler, proxy_auth_handler, auth_handler, digest_handler, urllib2.HTTPCookieProcessor(self.Cookie), nagstamonActions.MultipartPostHandler)
+            
+            # create url opener
+            urllib2.install_opener(urlopener)
+            try:
+                # special Opsview treatment, transmit username and passwort for XML requests
+                # http://docs.opsview.org/doku.php?id=opsview3.4:api
+                # this is only necessary when accessing the API and expecting a XML answer
+                if self.type == "Opsview" and giveback == "opsxml":
+                    headers = {"Content-Type":"text/xml", "X-Username":self.username, "X-Password":self.password}
+                    request = urllib2.Request(url, cgi_data, headers)
+                    urlcontent = urllib2.urlopen(request)            
+                else:
+                    # use opener - if cgi_data is not empty urllib uses a POST request
+                    urlcontent = urllib2.urlopen(url, cgi_data)
+            except:
+                import traceback
+                traceback.print_exc(file=sys.stdout)
+                return "ERROR"
+            
+            # give back pure HTML or XML in case giveback is "raw"
+            if giveback == "raw":
+                return urlcontent.read()
+            
+            # give back pure nothing if giveback is "nothing" - useful for POST requests
+            if giveback == "nothing":
+                # do some cleanup
+                del passman, auth_handler, digest_handler, urlcontent
+                return None   
+            
+            # give back lxml-objectified data
+            if giveback == "obj":
+                # the heart of the whole Nagios-status-monitoring engine:
+                # first step: parse the read HTML
+                html = lxml.etree.HTML(urlcontent.read())
+                    
+                # second step: make pretty HTML of it
+                prettyhtml = lxml.etree.tostring(copy.copy(html), pretty_print=True)
+                
+                # third step: clean HTML from tags which embarass libxml2 2.7
+                # only possible when module lxml.html.clean has been loaded
+                if sys.modules.has_key("lxml.html.clean"):
+                    # clean html from tags which libxml2 2.7 is worried about
+                    # this is the case with all tags that do not need a closing end tag like link, br, img
+                    cleaner = lxml.html.clean.Cleaner(remove_tags=["link", "br", "img"], page_structure=True, style=False)
+                    prettyhtml = copy.copy(cleaner.clean_html(prettyhtml))
+                    
+                    # lousy workaround for libxml2 2.7 which worries about attributes without value
+                    # we hope that nobody names a server '" nowrap>' - chances are pretty small because this "name"
+                    # contains unallowed characters and is far from common sense
+                    prettyhtml = prettyhtml.replace('" nowrap>', '">')
+                    
+                    # cleanup cleaner
+                    del cleaner
     
-            for host in xobj.data.getchildren()[:-1]:
-                # host
-                hostdict = dict(host.items())
-                # if host is in downtime add it to known maintained hosts
-                if hostdict["downtime"] == "2":
-                    self.new_hosts_in_maintenance.append(copy.copy(hostdict["name"]))
-                if hostdict.has_key("acknowledged"):
-                    self.new_hosts_acknowledged.append(copy.copy(hostdict["name"]))
-                self.new_hosts[hostdict["name"]] = NagiosHost()
-                self.new_hosts[hostdict["name"]].name = copy.copy(hostdict["name"])
-                # states come in lower case from Opsview
-                self.new_hosts[hostdict["name"]].status = copy.copy(hostdict["state"]).upper()
-                self.new_hosts[hostdict["name"]].last_check = copy.copy(hostdict["last_check"])
-                self.new_hosts[hostdict["name"]].duration = nagstamonActions.HumanReadableDuration(copy.copy(hostdict["state_duration"]))
-                self.new_hosts[hostdict["name"]].attempt = str(copy.copy(hostdict["current_check_attempt"]))+ "/" + str(copy.copy(hostdict["max_check_attempts"]))
-                self.new_hosts[hostdict["name"]].status_information= copy.copy(hostdict["output"])
-    
-                #services
-                for service in host.getchildren()[:-1]:
-                    servicedict = dict(service.items())
-                    # to get this filters to work they must be applied here - similar to Nagios servers
-                    if not (str(self.conf.filter_hosts_services_maintenance) == "True" \
-                    and servicedict["downtime"] == "2") \
-                    and not (str(self.conf.filter_acknowledged_hosts_services) == "True" \
-                    and servicedict.has_key("acknowledged")):
-                        self.new_hosts[hostdict["name"]].services[servicedict["name"]] = NagiosService()
-                        self.new_hosts[hostdict["name"]].services[servicedict["name"]].host = copy.copy(hostdict["name"])
-                        self.new_hosts[hostdict["name"]].services[servicedict["name"]].name = copy.copy(servicedict["name"])
-                        # states come in lower case from Opsview
-                        self.new_hosts[hostdict["name"]].services[servicedict["name"]].status = copy.copy(servicedict["state"]).upper()
-                        self.new_hosts[hostdict["name"]].services[servicedict["name"]].last_check = copy.copy(servicedict["last_check"])
-                        self.new_hosts[hostdict["name"]].services[servicedict["name"]].duration = nagstamonActions.HumanReadableDuration(copy.copy(servicedict["state_duration"]))
-                        self.new_hosts[hostdict["name"]].services[servicedict["name"]].attempt = str(copy.copy(servicedict["current_check_attempt"]))+ "/" + str(copy.copy(servicedict["max_check_attempts"]))
-                        self.new_hosts[hostdict["name"]].services[servicedict["name"]].status_information= copy.copy(servicedict["output"])
+                # fourth step: make objects of tags for easy access
+                htobj = copy.copy(lxml.objectify.fromstring(prettyhtml))
+                
+                #do some cleanup
+                del passman, auth_handler, digest_handler, urlcontent, html, prettyhtml
+        
+                # give back HTML object from Nagios webseite
+                return htobj
+                
+            elif self.type == "Opsview" and giveback == "opsxml":
+                # objectify the xml and give it back after some cleanup
+                xml = lxml.etree.XML(urlcontent.read())
+                xmlpretty = lxml.etree.tostring(xml, pretty_print=True)
+                xmlobj = copy.copy(lxml.objectify.fromstring(xmlpretty))
+                del passman, auth_handler, urlcontent, xml, xmlpretty
+                return xmlobj
+            
+            else:
+                # in case some error regarding the type occured raise exception
+                raise
+            
         except:
-            # set checking flag back to False
-            self.isChecking = False
+            import traceback
+            traceback.print_exc(file=sys.stdout)
+            # do some cleanup
+            del passman, auth_handler, digest_handler, urlcontent
             return "ERROR"
         
+        # in case the wrong giveback type has been specified return error
+        # do some cleanup
+        try:
+            del passman, auth_handler, digest_handler, urlcontent
+        except:
+            pass
+        return "ERROR"
+
+
+    def GetHost(self, host):
+        """
+        find out ip or hostname of given host to access hosts/devices which do not appear in DNS but
+        have their ip saved in Nagios
+        """
         
-    def GetStatusNagios(self):
+        # initialize ip string
+        ip = ""
+
+        # glue nagios cgi url and hostinfo 
+        nagcgiurl_host  = self.nagios_cgi_url + "/extinfo.cgi?type=1&host=" + host
+        
+        # get host info
+        htobj = self.FetchURL(nagcgiurl_host, giveback="obj")
+
+        try:
+            # take ip from object path
+            if self.type == "Opsview":
+                # Opsview puts a lot of Javascript into HTML page so the wanted
+                # information table is embedded in another DIV
+                ip = str(htobj.body.div[3].table.tr.td[1].getchildren()[-2])
+            else:
+                ip = str(htobj.body.table.tr.td[1].div[5].text)
+                # Workaround for Nagios 3.1 where there are groups listed whose the host is a member of
+                if ip == "Member of":
+                    ip = str(htobj.body.table.tr.td[1].div[7].text)
+            # workaround for URL-ified IP as described in SF bug 2967416
+            # https://sourceforge.net/tracker/?func=detail&aid=2967416&group_id=236865&atid=1101370
+            if not ip.find("://") == -1:
+                ip = ip.split("://")[1]
+            # print IP in debug mode
+            if str(self.conf.debug_mode) == "True":    
+                print "IP of %s:" % (host), ip
+            # when connection by DNS is not configured do it by IP
+            if str(self.conf.connect_by_dns_yes) == "True":
+                # try to get DNS name for ip, if not available use ip
+                try:
+                    host = socket.gethostbyaddr(ip)[0]
+                except:
+                    host = ip
+            else:
+                host = ip
+        except:
+            host = "ERROR"
+         
+        # do some cleanup
+        del htobj    
+
+        # give back host or ip
+        return host
+    
+    
+    def __del__(self):
+        """
+        hopefully a __del__() method may make this object better collectable for gc
+        """
+        del(self)
+    
+    
+class NagiosServer(GenericServer):
+    """
+        object of Nagios server - when nagstamon will be able to poll various servers this
+        will be useful   
+    """
+    
+    TYPE = 'Nagios'
+        
+    def _get_status(self):
         """
         Get status form Nagios Server
         """
@@ -481,6 +771,8 @@ class NagiosServer(object):
             del table
             
         except:
+            import traceback
+            traceback.print_exc(file=sys.stdout)
             # set checking flag back to False
             self.isChecking = False
             return "ERROR"
@@ -543,6 +835,8 @@ class NagiosServer(object):
             del htobj
             
         except:
+            import traceback
+            traceback.print_exc(file=sys.stdout)
             # set checking flag back to False
             self.isChecking = False
             return "ERROR"
@@ -581,6 +875,8 @@ class NagiosServer(object):
             del table
         
         except:
+            import traceback
+            traceback.print_exc(file=sys.stdout)
             # set checking flag back to False
             self.isChecking = False
             return "ERROR"
@@ -616,6 +912,8 @@ class NagiosServer(object):
             del table
 
         except:
+            import traceback
+            traceback.print_exc(file=sys.stdout)
             # set checking flag back to False
             self.isChecking = False
             return "ERROR"
@@ -623,230 +921,124 @@ class NagiosServer(object):
         # some cleanup
         del nagitems
                    
+nagstamonActions.register_server(NagiosServer)
+
+
+class OpsviewServer(GenericServer):
     
-    def FetchURL(self, url, giveback="obj", cgi_data=None):
-        """
-        get content of given url, cgi_data only used if present
-        giveback may be "dict", "html" or "none" 
-        "dict" FetchURL gives back a dict full of miserable hosts/services,
-        "html" it gives back pure HTML - useful for finding out IP or new version
-        "none" it gives back pure nothing - useful if for example acknowledging a service
-        existence of cgi_data forces urllib to use POST instead of GET requests
-        """
-        # using httppasswordmgrwithdefaultrealm because using password in plain
-        # url like http://username:password@nagios-server causes trouble with
-        # passwords containing special characters like "?"
-        # see http://www.voidspace.org.uk/python/articles/authentication.shtml#doing-it-properly
-        # attention: the example from above webseite is wrong, passman.add_password needs the 
-        # WHOLE URL, with protocol!
-
-        passman = urllib2.HTTPPasswordMgrWithDefaultRealm()
-        passman.add_password(None, url, self.username, self.password)
-        auth_handler = urllib2.HTTPBasicAuthHandler(passman)
-        digest_handler = urllib2.HTTPDigestAuthHandler(passman)
+    TYPE = 'Opsview'
+    
+    def _set_downtime(self, host, service, author, comment, fixed, start_time, end_time, hours, minutes):
+        # get action url for opsview downtime form
+        if service == "":
+            # host
+            cgi_data = urllib.urlencode({"cmd_typ":"55", "host":host})
+        else:
+            # service
+            cgi_data = urllib.urlencode({"cmd_typ":"56", "host":host, "service":service})
+        url = self.nagios_cgi_url + "/cmd.cgi"
+        html = self.FetchURL(url, giveback="raw", cgi_data=cgi_data)
+        # which opsview form action to call
+        action = html.split('" enctype="multipart/form-data">')[0].split('action="')[-1]
+        # this time cgi_data does not get encoded because it will be submitted via multipart
+        # to build value for hidden from field old cgi_data is used
+        cgi_data = { "from" : url + "?" + cgi_data, "comment": comment, "starttime": start_time, "endtime": end_time }
+        self.FetchURL(self.nagios_url + action, giveback="nothing", cgi_data=cgi_data)
         
-        # get my cookie to access Opsview web interface to access Opsviews Nagios part
-        if self.Cookie == None and self.type == "Opsview":
-            # put all necessary data into url string
-            logindata = urllib.urlencode({"login_username":self.username,\
-                             "login_password":self.password,\
-                             "back":"",\
-                             "app": "",\
-                             "login":"Log In"})
-            
-            # the cookie jar will contain Opsview web session and auth ticket cookies 
-            self.Cookie = cookielib.CookieJar()
-            
-            # the following is necessary for Opsview servers
-            # get cookie from login page via url retrieving as with other urls
-            try:
-                # if there should be no proxy used use an empty proxy_handler - only necessary in Windows,
-                # where IE proxy settings are used automatically if available
-                # In UNIX $HTTP_PROXY will be used
-                if str(self.use_proxy) == "False":
-                    proxy_handler = urllib2.ProxyHandler({})
-                    urlopener = urllib2.build_opener(auth_handler, digest_handler, proxy_handler, urllib2.HTTPCookieProcessor(self.Cookie))
-                elif str(self.use_proxy) == "True":
-                    if str(self.use_proxy_from_os) == "True":
-                        urlopener = urllib2.build_opener(auth_handler, digest_handler, urllib2.HTTPCookieProcessor(self.Cookie))
-                    else:
-                        # if proxy from OS is not used there is to add a authenticated proxy handler
-                        passman.add_password(None, self.proxy_address, self.proxy_username, self.proxy_password)
-                        proxy_handler = urllib2.ProxyHandler({"http": self.proxy_address, "https": self.proxy_address})
-                        proxy_auth_handler = urllib2.ProxyBasicAuthHandler(passman)
-                        urlopener = urllib2.build_opener(proxy_handler, proxy_auth_handler, auth_handler, digest_handler, urllib2.HTTPCookieProcessor(self.Cookie))
-                
-                # create url opener
-                urllib2.install_opener(urlopener)
-                # login and get cookie
-                urlcontent = urllib2.urlopen(self.nagios_url + "/login", logindata)
-                
-            except:
-                import traceback
-                traceback.print_exc(file=sys.stdout)
-
-            # if something goes wrong with accessing the URL it can be caught
+    def get_start_end(self, host):
+        html = self.FetchURL(self.nagios_cgi_url + "/cmd.cgi?" + urllib.urlencode({"cmd_typ":"55", "host":host}), giveback="raw")
+        start_time = html.split('name="starttime" value="')[1].split('"')[0]
+        end_time = html.split('name="endtime" value="')[1].split('"')[0]        
+        # give values back as tuple
+        return start_time, end_time
+        
+    def _get_status(self):
+        """
+        Get status from Opsview Server
+        """
+        # following http://docs.opsview.org/doku.php?id=opsview3.4:api to get ALL services in ALL states except OK
+        # because we filter them out later
+        # the API seems not to let hosts information directly, we hope to get it from service informations
         try:
-            # if there should be no proxy used use an empty proxy_handler - only necessary in Windows,
-            # where IE proxy settings are used automatically if available
-            # In UNIX $HTTP_PROXY will be used
-            # The MultipartPostHandler is needed for submitting multipart forms from Opsview
-            if str(self.use_proxy) == "False":
-                proxy_handler = urllib2.ProxyHandler({})
-                urlopener = urllib2.build_opener(auth_handler, digest_handler, proxy_handler, urllib2.HTTPCookieProcessor(self.Cookie), nagstamonActions.MultipartPostHandler)
-            elif str(self.use_proxy) == "True":
-                if str(self.use_proxy_from_os) == "True":
-                    urlopener = urllib2.build_opener(auth_handler, digest_handler, urllib2.HTTPCookieProcessor(self.Cookie), nagstamonActions.MultipartPostHandler)
-                else:
-                    # if proxy from OS is not used there is to add a authenticated proxy handler
-                    passman.add_password(None, self.proxy_address, self.proxy_username, self.proxy_password)
-                    proxy_handler = urllib2.ProxyHandler({"http": self.proxy_address, "https": self.proxy_address})
-                    proxy_auth_handler = urllib2.ProxyBasicAuthHandler(passman)
-                    urlopener = urllib2.build_opener(proxy_handler, proxy_auth_handler, auth_handler, digest_handler, urllib2.HTTPCookieProcessor(self.Cookie), nagstamonActions.MultipartPostHandler)
-            
-            # create url opener
-            urllib2.install_opener(urlopener)
-            try:
-                # special Opsview treatment, transmit username and passwort for XML requests
-                # http://docs.opsview.org/doku.php?id=opsview3.4:api
-                # this is only necessary when accessing the API and expecting a XML answer
-                if self.type == "Opsview" and giveback == "opsxml":
-                    headers = {"Content-Type":"text/xml", "X-Username":self.username, "X-Password":self.password}
-                    request = urllib2.Request(url, cgi_data, headers)
-                    urlcontent = urllib2.urlopen(request)            
-                else:
-                    # use opener - if cgi_data is not empty urllib uses a POST request
-                    urlcontent = urllib2.urlopen(url, cgi_data)
-            except:
-                return "ERROR"
-            
-            # give back pure HTML or XML in case giveback is "raw"
-            if giveback == "raw":
-                return urlcontent.read()
-            
-            # give back pure nothing if giveback is "nothing" - useful for POST requests
-            if giveback == "nothing":
-                # do some cleanup
-                del passman, auth_handler, digest_handler, urlcontent
-                return None   
-            
-            # give back lxml-objectified data
-            if giveback == "obj":
-                # the heart of the whole Nagios-status-monitoring engine:
-                # first step: parse the read HTML
-                html = lxml.etree.HTML(urlcontent.read())
-                    
-                # second step: make pretty HTML of it
-                prettyhtml = lxml.etree.tostring(copy.copy(html), pretty_print=True)
-                
-                # third step: clean HTML from tags which embarass libxml2 2.7
-                # only possible when module lxml.html.clean has been loaded
-                if sys.modules.has_key("lxml.html.clean"):
-                    # clean html from tags which libxml2 2.7 is worried about
-                    # this is the case with all tags that do not need a closing end tag like link, br, img
-                    cleaner = lxml.html.clean.Cleaner(remove_tags=["link", "br", "img"], page_structure=True, style=False)
-                    prettyhtml = copy.copy(cleaner.clean_html(prettyhtml))
-                    
-                    # lousy workaround for libxml2 2.7 which worries about attributes without value
-                    # we hope that nobody names a server '" nowrap>' - chances are pretty small because this "name"
-                    # contains unallowed characters and is far from common sense
-                    prettyhtml = prettyhtml.replace('" nowrap>', '">')
-                    
-                    # cleanup cleaner
-                    del cleaner
+            opsapiurl = self.nagios_url + "/api/status/service?state=1&state=2&state=3"
+            xobj = self.FetchURL(opsapiurl, giveback="opsxml")
     
-                # fourth step: make objects of tags for easy access
-                htobj = copy.copy(lxml.objectify.fromstring(prettyhtml))
-                
-                #do some cleanup
-                del passman, auth_handler, digest_handler, urlcontent, html, prettyhtml
-        
-                # give back HTML object from Nagios webseite
-                return htobj
-                
-            elif self.type == "Opsview" and giveback == "opsxml":
-                # objectify the xml and give it back after some cleanup
-                xml = lxml.etree.XML(urlcontent.read())
-                xmlpretty = lxml.etree.tostring(xml, pretty_print=True)
-                xmlobj = copy.copy(lxml.objectify.fromstring(xmlpretty))
-                del passman, auth_handler, urlcontent, xml, xmlpretty
-                return xmlobj
-            
-            else:
-                # in case some error regarding the type occured raise exception
-                raise
-            
+            for host in xobj.data.getchildren()[:-1]:
+                # host
+                hostdict = dict(host.items())
+                # if host is in downtime add it to known maintained hosts
+                if hostdict["downtime"] == "2":
+                    self.new_hosts_in_maintenance.append(hostdict["name"])
+                if hostdict.has_key("acknowledged"):
+                    self.new_hosts_acknowledged.append(hostdict["name"])
+                self.new_hosts[hostdict["name"]] = NagiosHost()
+                self.new_hosts[hostdict["name"]].name = hostdict["name"]
+                # states come in lower case from Opsview
+                self.new_hosts[hostdict["name"]].status = hostdict["state"].upper()
+                self.new_hosts[hostdict["name"]].last_check = hostdict["last_check"]
+                self.new_hosts[hostdict["name"]].duration = nagstamonActions.HumanReadableDuration(hostdict["state_duration"])
+                self.new_hosts[hostdict["name"]].attempt = str(hostdict["current_check_attempt"])+ "/" + str(hostdict["max_check_attempts"])
+                self.new_hosts[hostdict["name"]].status_information= hostdict["output"]
+    
+                #services
+                for service in host.getchildren()[:-1]:
+                    servicedict = dict(service.items())
+                    # to get this filters to work they must be applied here - similar to Nagios servers
+                    if not (str(self.conf.filter_hosts_services_maintenance) == "True" \
+                    and servicedict["downtime"] == "2") \
+                    and not (str(self.conf.filter_acknowledged_hosts_services) == "True" \
+                    and servicedict.has_key("acknowledged")):
+                        self.new_hosts[hostdict["name"]].services[servicedict["name"]] = NagiosService()
+                        self.new_hosts[hostdict["name"]].services[servicedict["name"]].host = hostdict["name"]
+                        self.new_hosts[hostdict["name"]].services[servicedict["name"]].name = servicedict["name"]
+                        # states come in lower case from Opsview
+                        self.new_hosts[hostdict["name"]].services[servicedict["name"]].status = servicedict["state"].upper()
+                        self.new_hosts[hostdict["name"]].services[servicedict["name"]].last_check = servicedict["last_check"]
+                        self.new_hosts[hostdict["name"]].services[servicedict["name"]].duration = nagstamonActions.HumanReadableDuration(servicedict["state_duration"])
+                        self.new_hosts[hostdict["name"]].services[servicedict["name"]].attempt = str(servicedict["current_check_attempt"])+ "/" + str(servicedict["max_check_attempts"])
+                        self.new_hosts[hostdict["name"]].services[servicedict["name"]].status_information= servicedict["output"]
         except:
-            # do some cleanup
-            del passman, auth_handler, digest_handler, urlcontent
+            import traceback
+            traceback.print_exc(file=sys.stdout)
+            # set checking flag back to False
+            self.isChecking = False
             return "ERROR"
         
-        # in case the wrong giveback type has been specified return error
-        # do some cleanup
-        try:
-            del passman, auth_handler, digest_handler, urlcontent
-        except:
-            pass
-        return "ERROR"
 
+nagstamonActions.register_server(OpsviewServer)
+
+
+class CentreonServer(OpsviewServer): 
+    TYPE = 'Centreon'
+    URL_SERVICE_SEPARATOR = ';'
     
-    def GetHost(self, host):
-        """
-        find out ip or hostname of given host to access hosts/devices which do not appear in DNS but
-        have their ip saved in Nagios
-        """
+    def _open_tree_view(self, item):
+        webbrowser.open('%s/main.php?autologin=1&useralias=%s&password=%s&p=4&mode=0&svc_id=%s' % \
+                        (self.nagios_url, nagstamonActions.MD5ify(self.username), nagstamonActions.MD5ify(self.password), item))
         
-        # initialize ip string
-        ip = ""
-
-        # glue nagios cgi url and hostinfo 
-        nagcgiurl_host  = self.nagios_cgi_url + "/extinfo.cgi?type=1&host=" + host
         
-        # get host info
-        htobj = self.FetchURL(nagcgiurl_host, giveback="obj")
+    def open_nagios(self, debug_mode):
+        webbrowser.open(self.nagios_url + "/main.php?autologin=1&useralias=" + MD5ify(self.username) + "&password=" + MD5ify(self.password))
+        # debug
+        if str(debug_mode) == "True":
+            print self.name, ":", "Open Nagios website", self.nagios_url        
+        
+        
+    def open_services(self, debug_mode=False):
+        webbrowser.open(self.nagios_url + "/main.php?autologin=1&useralias=" + MD5ify(self.username) + "&password=" + MD5ify(self.password) + "&p=20202&o=svcpb")
+        # debug
+        if str(debug_mode) == "True":
+            print self.name, ":", "Open hosts website", self.nagios_url + "/main.php?p=20202&o=svcpb"
+        
+    def open_hosts(self, debug_mode=False):
+        webbrowser.open(self.nagios_url + "/main.php?autologin=1&useralias=" + MD5ify(self.username) + "&password=" + MD5ify(self.password) + "&p=20103&o=hpb")
+        # debug
+        if str(debug_mode) == "True":
+            print self.name, ":", "Open hosts website", self.nagios_url + "/main.php?p=20103&o=hpb"
+        
 
-        try:
-            # take ip from object path
-            if self.type == "Opsview":
-                # Opsview puts a lot of Javascript into HTML page so the wanted
-                # information table is embedded in another DIV
-                ip = str(htobj.body.div[3].table.tr.td[1].getchildren()[-2])
-            else:
-                ip = str(htobj.body.table.tr.td[1].div[5].text)
-                # Workaround for Nagios 3.1 where there are groups listed whose the host is a member of
-                if ip == "Member of":
-                    ip = str(htobj.body.table.tr.td[1].div[7].text)
-            # workaround for URL-ified IP as described in SF bug 2967416
-            # https://sourceforge.net/tracker/?func=detail&aid=2967416&group_id=236865&atid=1101370
-            if not ip.find("://") == -1:
-                ip = ip.split("://")[1]
-            # print IP in debug mode
-            if str(self.conf.debug_mode) == "True":    
-                print "IP of %s:" % (host), ip
-            # when connection by DNS is not configured do it by IP
-            if str(self.conf.connect_by_dns_yes) == "True":
-                # try to get DNS name for ip, if not available use ip
-                try:
-                    host = socket.gethostbyaddr(ip)[0]
-                except:
-                    host = ip
-            else:
-                host = ip
-        except:
-            host = "ERROR"
-         
-        # do some cleanup
-        del htobj    
+nagstamonActions.register_server(CentreonServer)
 
-        # give back host or ip
-        return host
-    
-    
-    #def __del__(self):
-    #    """
-    #    hopefully a __del__() method may make this object better collectable for gc
-    #    """
-    #    del(self)
 
 class NagiosObject(object):    
     def get_host_name(self):

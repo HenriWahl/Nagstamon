@@ -189,9 +189,7 @@ Don't put any status.cgi in there.</property>
                         </child>
                         <child>
                             <widget class="GtkComboBox" id="input_combo_server_type">
-                                <property name="items" context="yes" translatable="yes">Nagios
-Opsview
-Centreon</property>
+                                <property name="items" context="yes" translatable="yes"></property>
                                 <property name="visible">True</property>
                                 <signal handler="input_combo_server_type_changed" name="changed"/>
                             </widget>
