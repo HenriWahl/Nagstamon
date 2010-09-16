@@ -2017,7 +2017,7 @@ class NewServer(ServerDialogHelper):
         
         # set server type combobox to Nagios as default
         combobox = self.glade.get_widget("input_combo_server_type")
-        for server in nagstamonActions.get_registered_servers():
+        for server in nagstamonActions.get_registered_server_type_list():
             combobox.append_text(server)
         combobox.set_active(0)
         
@@ -2191,7 +2191,7 @@ class EditServer(ServerDialogHelper):
                         pass
            
             # set server type combobox which cannot be set by above hazard method
-            servers = nagstamonActions.get_registered_servers()
+            servers = nagstamonActions.get_registered_server_type_list()
             server_types = dict([(x[1], x[0]) for x in enumerate(servers)])
             combobox = self.glade.get_widget("input_combo_server_type")
             for server in servers:

@@ -574,7 +574,7 @@ def TreeViewHTTP(host):
 # key is type of server, value is server class
 # used for automatic config generation
 # and holding this information in one place
-REGISTERED_SERVERS = {}
+REGISTERED_SERVERS = [] 
  
 def register_server(server):
     """ Once new server class in created,
@@ -582,13 +582,17 @@ def register_server(server):
     for being visible in config and
     accessible in application.
     """
-    REGISTERED_SERVERS[server.TYPE] = server
+    if server.TYPE not in [x[0] for x in REGISTERED_SERVERS]:
+        REGISTERED_SERVERS.append((server.TYPE, server))
 
 
 def get_registered_servers():
     """ Returns available server classes dict """
-    return REGISTERED_SERVERS
+    return dict(REGISTERED_SERVERS)
 
+def get_registered_server_type_list():
+    """ Returns available server type name list with order of registering """
+    return [x[0] for x in REGISTERED_SERVERS]
 
 def CreateServer(server=None, conf=None):
     # create Server from config

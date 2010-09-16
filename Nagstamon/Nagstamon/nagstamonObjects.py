@@ -921,7 +921,6 @@ class NagiosServer(GenericServer):
         # some cleanup
         del nagitems
                    
-nagstamonActions.register_server(NagiosServer)
 
 
 class OpsviewServer(GenericServer):
@@ -1005,7 +1004,6 @@ class OpsviewServer(GenericServer):
             return "ERROR"
         
 
-nagstamonActions.register_server(OpsviewServer)
 
 
 class CentreonServer(OpsviewServer): 
@@ -1037,6 +1035,9 @@ class CentreonServer(OpsviewServer):
             print self.name, ":", "Open hosts website", self.nagios_url + "/main.php?p=20103&o=hpb"
         
 
+# order of registering affects sorting in server type list in add new server dialog
+nagstamonActions.register_server(NagiosServer)
+nagstamonActions.register_server(OpsviewServer)
 nagstamonActions.register_server(CentreonServer)
 
 
