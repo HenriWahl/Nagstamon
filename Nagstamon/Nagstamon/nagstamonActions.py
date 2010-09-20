@@ -157,6 +157,7 @@ class RefreshLoopOneServer(threading.Thread):
                                     gc.collect()
                             except:
                                 import traceback
+                                import sys
                                 traceback.print_exc(file=sys.stdout)
                             
                             # reset refresh flag
@@ -533,7 +534,7 @@ def OpenNagios(widget, server, output):
     # first close popwin
     output.popwin.Close()
     # start browser with URL
-    server.open_nagios(output.conf.debug_mode)
+    server.open_nagios()
 
 
 def OpenServices(widget, server, output):
@@ -541,7 +542,7 @@ def OpenServices(widget, server, output):
     # first close popwin
     output.popwin.Close()
     # start browser with URL
-    server.open_services(output.conf.debug_mode)
+    server.open_services()
  
    
 def OpenHosts(widget, server, output):
@@ -549,7 +550,7 @@ def OpenHosts(widget, server, output):
     # first close popwin
     output.popwin.Close()
     # start browser with URL
-    server.open_hosts(output.conf.debug_mode)
+    server.open_hosts()
 
     
 def TreeViewNagios(server, host, service):

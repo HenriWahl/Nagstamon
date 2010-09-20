@@ -262,23 +262,23 @@ class GenericServer(object):
     def _open_tree_view(self, item):
         webbrowser.open('%s/extinfo.cgi?type=2&host=%s' % (self.nagios_cgi_url, item))
         
-    def open_nagios(self, debug_mode):
+    def open_nagios(self):
         webbrowser.open(self.nagios_url)
         # debug
-        if str(debug_mode) == "True":
-            print self.name, ":", "Open Nagios website", self.nagios_url        
+        if str(self.conf.debug_mode) == "True":
+            print self.name, ":", "Open Monitor website", self.nagios_url        
         
-    def open_services(self, debug_mode=False):
+    def open_services(self):
         webbrowser.open(self.nagios_cgi_url + "/status.cgi?host=all&servicestatustypes=253")
         # debug
-        if str(debug_mode) == "True":
+        if str(self.conf.debug_mode) == "True":
             print self.name, ":", "Open services website", self.nagios_url + "/status.cgi?host=all&servicestatustypes=253"  
             
         
-    def open_hosts(self, debug_mode=False):
+    def open_hosts(self):
         webbrowser.open(self.nagios_cgi_url + "/status.cgi?hostgroup=all&style=hostdetail&hoststatustypes=12")
         # debug
-        if str(debug_mode) == "True":
+        if str(self.conf.debug_mode) == "True":
             print self.name, ":", "Open hosts website", self.nagios_url + "/status.cgi?hostgroup=all&style=hostdetail&hoststatustypes=12"      
 
 
@@ -1015,9 +1015,15 @@ class OpsviewServer(GenericServer):
             return "ERROR"
         
     def _open_tree_view(self, item):
-        webbrowser.open('%s//status/service?host=%s' % (self.nagios_cgi_url, item))
+        webbrowser.open('%s/status/service?host=%s' % (self.nagios_cgi_url, item))
         
-
+        
+    def open_services(self):
+        webbrowser.open(self.nagios_cgi_url + "/status/service?hostgroupid=1&state=1&state=2&state=3")
+        # debug
+        if str(self.conf.debug_mode) == "True":
+            print self.name, ":", "Open services web page", self.nagios_url + "/status/service?hostgroupid=1&state=1&state=2&state=3"  
+            
 
 class CentreonServer(GenericServer): 
     TYPE = 'Centreon'
@@ -1028,23 +1034,23 @@ class CentreonServer(GenericServer):
                         (self.nagios_url, nagstamonActions.MD5ify(self.username), nagstamonActions.MD5ify(self.password), item))
         
         
-    def open_nagios(self, debug_mode):
+    def open_nagios(self):
         webbrowser.open(self.nagios_url + "/main.php?autologin=1&useralias=" + MD5ify(self.username) + "&password=" + MD5ify(self.password))
         # debug
-        if str(debug_mode) == "True":
+        if str(self.conf.debug_mode) == "True":
             print self.name, ":", "Open Nagios website", self.nagios_url        
         
         
-    def open_services(self, debug_mode=False):
+    def open_services(self):
         webbrowser.open(self.nagios_url + "/main.php?autologin=1&useralias=" + MD5ify(self.username) + "&password=" + MD5ify(self.password) + "&p=20202&o=svcpb")
         # debug
-        if str(debug_mode) == "True":
+        if str(self.conf.debug_mode) == "True":
             print self.name, ":", "Open hosts website", self.nagios_url + "/main.php?p=20202&o=svcpb"
         
-    def open_hosts(self, debug_mode=False):
+    def open_hosts(self):
         webbrowser.open(self.nagios_url + "/main.php?autologin=1&useralias=" + MD5ify(self.username) + "&password=" + MD5ify(self.password) + "&p=20103&o=hpb")
         # debug
-        if str(debug_mode) == "True":
+        if str(self.conf.debug_mode) == "True":
             print self.name, ":", "Open hosts website", self.nagios_url + "/main.php?p=20103&o=hpb"
         
 
