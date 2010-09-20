@@ -376,14 +376,7 @@ class Downtime(threading.Thread):
 
     def run(self):
         self.server.set_downtime(self)
-            
-
-    #def __del__(self):
-    #    """
-    #    hopefully a __del__() method may make this object better collectable for gc
-    #    """
-    #    del(self)
-        
+                   
 
 def Downtime_get_start_end(server, host):
     # get start and end time from Nagios as HTML - the objectified HTML does not contain the form elements :-(

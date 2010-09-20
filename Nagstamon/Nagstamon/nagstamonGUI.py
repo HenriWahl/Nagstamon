@@ -76,7 +76,7 @@ class GUI(object):
         
         # Meta
         self.name = "nagstamon"
-        self.version = "0.9.5pre"
+        self.version = "0.9.5pre3"
         self.website = "http://nagstamon.sourceforge.net/"
         self.copyright = "©2008-2010 Henri Wahl\nh.wahl@ifw-dresden.de"
         self.comments = "Nagios status monitor for your desktop"
@@ -749,7 +749,8 @@ class StatusBar(object):
         
         # TrayIcon - appears as status bar in Windows due to non existent egg.trayicon python module
         if platform.system() == "Windows":
-            self.StatusBar = gtk.Window(gtk.WINDOW_TOPLEVEL)
+            #self.StatusBar = gtk.Window(gtk.WINDOW_TOPLEVEL)
+            self.StatusBar = gtk.Window(gtk.WINDOW_POPUP)
             self.StatusBar.set_decorated(False)
             self.StatusBar.set_keep_above(True)
             self.StatusBar.stick()
@@ -761,13 +762,15 @@ class StatusBar(object):
                     self.StatusBar = egg.trayicon.TrayIcon(self.output.name)
                 except:
                     print "python gnome2 extras with egg.trayicon not installed so trayicon cannot be used. Using floating desktop status bar instead."
-                    self.StatusBar = gtk.Window(gtk.WINDOW_TOPLEVEL)
+                    #self.StatusBar = gtk.Window(gtk.WINDOW_TOPLEVEL)
+                    self.StatusBar = gtk.Window(gtk.WINDOW_POPUP)
                     self.StatusBar.set_decorated(False)
                     self.StatusBar.stick()
                     self.StatusBar.set_type_hint(gtk.gdk.WINDOW_TYPE_HINT_TOOLBAR)
                     self.StatusBar.set_keep_above(True)
             else:
-                self.StatusBar = gtk.Window(gtk.WINDOW_TOPLEVEL)
+                #self.StatusBar = gtk.Window(gtk.WINDOW_TOPLEVEL)
+                self.StatusBar = gtk.Window(gtk.WINDOW_POPUP)
                 self.StatusBar.set_decorated(False)
                 self.StatusBar.set_keep_above(True)
                 self.StatusBar.stick()
