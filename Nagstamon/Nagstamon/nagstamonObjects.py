@@ -183,7 +183,7 @@ class GenericServer(object):
         if not service:
             # host
             # get start time from Nagios as HTML to use same timezone setting like the locally installed Nagios
-            html = self.server.FetchURL(self.nagios_cgi_url + "/cmd.cgi?" + urllib.urlencode({"cmd_typ":"96", "host":host}), giveback="raw")
+            html = self.FetchURL(self.nagios_cgi_url + "/cmd.cgi?" + urllib.urlencode({"cmd_typ":"96", "host":host}), giveback="raw")
             start_time = html.split("NAME='start_time' VALUE='")[1].split("'></b></td></tr>")[0]
             # fill and encode CGI data
             cgi_data = urllib.urlencode({"cmd_typ":"96", "cmd_mod":"2", "host":host, "start_time":start_time, "force_check":"on", "btnSubmit":"Commit"})
