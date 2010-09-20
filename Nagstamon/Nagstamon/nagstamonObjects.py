@@ -127,6 +127,8 @@ class GenericServer(object):
     
     DISABLED_CONTROLS = []
     URL_SERVICE_SEPARATOR = '&service='
+    
+    BODY_TABLE_INDEX = 2 # used in Nagios _get_status method
    
     @classmethod
     def get_columns(cls, row):
@@ -397,10 +399,10 @@ class GenericServer(object):
         try:
             htobj = self.FetchURL(nagcgiurl_services)
 
-            for i in range(1, len(htobj.body.table[2].tr)):
+            for i in range(1, len(htobj.body.table[self.BODY_TABLE_INDEX].tr)):
                 try:
                     # ignore empty <tr> rows - there are a lot of them - a Nagios bug? 
-                    if not htobj.body.table[2].tr[i].countchildren() == 1:
+                    if not htobj.body.table[self.BODY_TABLE_INDEX].tr[i].countchildren() == 1:
                         n = {}
                         # host
                         # the resulting table of Nagios status.cgi table omits the
@@ -408,21 +410,21 @@ class GenericServer(object):
                         # so if the hostname is empty the nagios status item should get
                         # its hostname from the previuos item - one reason to keep "nagitems"
                         try:
-                            n["host"] = str(htobj.body.table[2].tr[i].td[0].table.tr.td.table.tr.td.a.text)
+                            n["host"] = str(htobj.body.table[self.BODY_TABLE_INDEX].tr[i].td[0].table.tr.td.table.tr.td.a.text)
                         except:
                             n["host"] = str(nagitems["services"][len(nagitems["services"])-1]["host"])
                         # service
-                        n["service"] = str(htobj.body.table[2].tr[i].td[1].table.tr.td.table.tr.td.a.text)
+                        n["service"] = str(htobj.body.table[self.BODY_TABLE_INDEX].tr[i].td[1].table.tr.td.table.tr.td.a.text)
                         # status
-                        n["status"] = str(htobj.body.table[2].tr[i].td[2].text)
+                        n["status"] = str(htobj.body.table[self.BODY_TABLE_INDEX].tr[i].td[2].text)
                         # last_check
-                        n["last_check"] = str(htobj.body.table[2].tr[i].td[3].text)
+                        n["last_check"] = str(htobj.body.table[self.BODY_TABLE_INDEX].tr[i].td[3].text)
                         # duration
-                        n["duration"] = str(htobj.body.table[2].tr[i].td[4].text)
+                        n["duration"] = str(htobj.body.table[self.BODY_TABLE_INDEX].tr[i].td[4].text)
                         # attempt
-                        n["attempt"] = str(htobj.body.table[2].tr[i].td[5].text)
+                        n["attempt"] = str(htobj.body.table[self.BODY_TABLE_INDEX].tr[i].td[5].text)
                         # status_information
-                        n["status_information"] = str(htobj.body.table[2].tr[i].td[6].text)
+                        n["status_information"] = str(htobj.body.table[self.BODY_TABLE_INDEX].tr[i].td[6].text)
                         # add dictionary full of information about this service item to nagitems - only if service
                         nagitems["services"].append(n)
                         
@@ -926,264 +928,7 @@ class IcingaServer(GenericServer):
     """
     
     TYPE = 'Icinga'
-    
-    def _get_status(self):
-        """
-        Get status form Icinga Server
-        """
-        # create Nagios items dictionary with to lists for services and hosts
-        # every list will contain a dictionary for every failed service/host
-        # this dictionary is only temporarily
-        nagitems = {"services":[], "hosts":[]}       
-        
-        # create filters like described in
-        # http://www.nagios-wiki.de/nagios/tips/host-_und_serviceproperties_fuer_status.cgi?s=servicestatustypes
-        # hoststatus
-        hoststatustypes = 12
-        if str(self.conf.filter_all_down_hosts) == "True":
-            hoststatustypes = hoststatustypes - 4
-        if str(self.conf.filter_all_unreachable_hosts) == "True":
-            hoststatustypes = hoststatustypes - 8
-        # servicestatus
-        servicestatustypes = 253
-        if str(self.conf.filter_all_unknown_services) == "True":
-            servicestatustypes = servicestatustypes - 8
-        if str(self.conf.filter_all_warning_services) == "True":
-            servicestatustypes = servicestatustypes - 4
-        if str(self.conf.filter_all_critical_services) == "True":
-            servicestatustypes = servicestatustypes - 16
-        # serviceprops & hostprops both have the same values for the same states so I
-        # group them together
-        hostserviceprops = 0
-        if str(self.conf.filter_acknowledged_hosts_services) == "True":
-            hostserviceprops = hostserviceprops + 8
-        if str(self.conf.filter_hosts_services_disabled_notifications) == "True":
-            hostserviceprops = hostserviceprops + 8192
-        if str(self.conf.filter_hosts_services_disabled_checks) == "True":
-            hostserviceprops = hostserviceprops + 32
-        if str(self.conf.filter_hosts_services_maintenance) == "True":
-            hostserviceprops = hostserviceprops + 2
-        
-        # services (unknown, warning or critical?)
-        nagcgiurl_services = self.nagios_cgi_url + "/status.cgi?host=all&servicestatustypes=" + str(servicestatustypes) + "&serviceprops=" + str(hostserviceprops)
-        # hosts (up or down or unreachable)
-        nagcgiurl_hosts = self.nagios_cgi_url + "/status.cgi?hostgroup=all&style=hostdetail&hoststatustypes=" + str(hoststatustypes) + "&hostprops=" + str(hostserviceprops)
-        # fetching hosts in downtime and acknowledged hosts at once is not possible because these 
-        # properties get added and nagios display ONLY hosts that have BOTH states
-        # hosts that are in scheduled downtime, we will later omit services on those hosts
-        # hostproperty 1 = HOST_SCHEDULED_DOWNTIME 
-        nagcgiurl_hosts_in_maintenance = self.nagios_cgi_url + "/status.cgi?hostgroup=all&style=hostdetail&hostprops=1"
-        # hosts that are acknowledged, we will later omit services on those hosts
-        # hostproperty 4 = HOST_STATE_ACKNOWLEDGED 
-        nagcgiurl_hosts_acknowledged = self.nagios_cgi_url + "/status.cgi?hostgroup=all&style=hostdetail&hostprops=4"
-
-        # hosts - mostly the down ones
-        # unfortunately the hosts status page has a different structure so
-        # hosts must be analyzed separately
-        try:
-            htobj = self.FetchURL(nagcgiurl_hosts)
-            # workaround for Nagios < 2.7 which has an <EMBED> in its output
-            # do a copy of a part of htobj into table to be able to delete htobj
-            try:
-                table = copy.copy(htobj.body.div.table)
-            except:
-                table = copy.copy(htobj.body.embed.div.table)
-            
-            # do some cleanup    
-            del htobj
-
-            for i in range(1, len(table.tr)):
-                try:
-                    # ignore empty <tr> rows
-                    if not table.tr[i].countchildren() == 1:
-                        n = {}
-                        # host
-                        try:
-                            n["host"] = str(table.tr[i].td[0].table.tr.td.table.tr.td.a.text)
-                        except:
-                            n["host"] = str(nagitems[len(nagitems)-1]["host"])
-                        # status
-                        n["status"] = str(table.tr[i].td[1].text)
-                        # last_check
-                        n["last_check"] = str(table.tr[i].td[2].text)
-                        # duration
-                        n["duration"] = str(table.tr[i].td[3].text)
-                        # status_information
-                        n["status_information"] = str(table.tr[i].td[4].text)
-                        # attempts are not shown in case of hosts so it defaults to "N/A"
-                        n["attempt"] = "N/A"
-                        
-                        # add dictionary full of information about this host item to nagitems
-                        nagitems["hosts"].append(copy.copy(n))
-                        # after collection data in nagitems create objects from its informations
-                        # host objects contain service objects
-                        if not self.new_hosts.has_key(n["host"]):
-                            new_host = copy.copy(n["host"])
-                            self.new_hosts[new_host] = NagiosHost()
-                            self.new_hosts[new_host].name = copy.copy(n["host"])
-                            self.new_hosts[new_host].status = copy.copy(n["status"])
-                            self.new_hosts[new_host].last_check = copy.copy(n["last_check"])
-                            self.new_hosts[new_host].duration = copy.copy(n["duration"])
-                            self.new_hosts[new_host].attempt = copy.copy(n["attempt"])
-                            self.new_hosts[new_host].status_information= copy.copy(n["status_information"])
-                except:
-                    import traceback
-                    traceback.print_exc(file=sys.stdout)
-                
-            # do some cleanup
-            del table
-            
-        except:
-            import traceback
-            traceback.print_exc(file=sys.stdout)
-            # set checking flag back to False
-            self.isChecking = False
-            return "ERROR"
-
-        # services
-        try:
-            htobj = self.FetchURL(nagcgiurl_services)
-
-            for i in range(1, len(htobj.body.table[3].tr)):
-                try:
-                    # ignore empty <tr> rows - there are a lot of them - a Nagios bug? 
-                    if not htobj.body.table[3].tr[i].countchildren() == 1:
-                        n = {}
-                        # host
-                        # the resulting table of Nagios status.cgi table omits the
-                        # hostname of a failing service if there are more than one
-                        # so if the hostname is empty the nagios status item should get
-                        # its hostname from the previuos item - one reason to keep "nagitems"
-                        try:
-                            n["host"] = str(htobj.body.table[3].tr[i].td[0].table.tr.td.table.tr.td.a.text)
-                        except:
-                            n["host"] = str(nagitems["services"][len(nagitems["services"])-1]["host"])
-                        # service
-                        n["service"] = str(htobj.body.table[3].tr[i].td[1].table.tr.td.table.tr.td.a.text)
-                        # status
-                        n["status"] = str(htobj.body.table[3].tr[i].td[2].text)
-                        # last_check
-                        n["last_check"] = str(htobj.body.table[3].tr[i].td[3].text)
-                        # duration
-                        n["duration"] = str(htobj.body.table[3].tr[i].td[4].text)
-                        # attempt
-                        n["attempt"] = str(htobj.body.table[3].tr[i].td[5].text)
-                        # status_information
-                        n["status_information"] = str(htobj.body.table[3].tr[i].td[6].text)
-                        # add dictionary full of information about this service item to nagitems - only if service
-                        nagitems["services"].append(n)
-                        
-                        # after collection data in nagitems create objects of its informations
-                        # host objects contain service objects
-                        if not self.new_hosts.has_key(n["host"]):
-                            self.new_hosts[n["host"]] = NagiosHost()
-                            self.new_hosts[n["host"]].name = copy.copy(n["host"])
-                            self.new_hosts[n["host"]].status = "UP"
-                        # if a service does not exist create its object
-                        if not self.new_hosts[n["host"]].services.has_key(n["service"]):
-                            new_service = copy.copy(n["service"])
-                            self.new_hosts[n["host"]].services[new_service] = NagiosService()
-                            self.new_hosts[n["host"]].services[new_service].host = copy.copy(n["host"])
-                            self.new_hosts[n["host"]].services[new_service].name = copy.copy(n["service"])
-                            self.new_hosts[n["host"]].services[new_service].status = copy.copy(n["status"])
-                            self.new_hosts[n["host"]].services[new_service].last_check = copy.copy(n["last_check"])
-                            self.new_hosts[n["host"]].services[new_service].duration = copy.copy(n["duration"])
-                            self.new_hosts[n["host"]].services[new_service].attempt = copy.copy(n["attempt"])
-                            self.new_hosts[n["host"]].services[new_service].status_information = copy.copy(n["status_information"])
-                except:
-                    import traceback
-                    traceback.print_exc(file=sys.stdout)
-                                
-            # do some cleanup
-            del htobj
-            
-        except:
-            import traceback
-            traceback.print_exc(file=sys.stdout)
-            # set checking flag back to False
-            self.isChecking = False
-            return "ERROR"
-       
-         # hosts which are in scheduled downtime
-        try:
-            htobj = self.FetchURL(nagcgiurl_hosts_in_maintenance)
-           
-            # workaround for Nagios < 2.7 which has an <EMBED> in its output
-            try:
-                table = copy.copy(htobj.body.div.table)
-            except:
-                table = copy.copy(htobj.body.embed.div.table)
-            
-            # do some cleanup    
-            del htobj
-
-            for i in range(1, len(table.tr)):
-                try:
-                    # ignore empty <tr> rows
-                    if not table.tr[i].countchildren() == 1:
-                        # host
-                        try:
-                            self.new_hosts_in_maintenance.append(str(table.tr[i].td[0].table.tr.td.table.tr.td.a.text))
-                            # get real status of maintained host
-                            #if self.new_hosts.has_key(self.new_hosts_acknowledged[-1]):
-                            #    self.new_hosts[self.new_hosts_acknowledged[-1]].status = str(table.tr[i].td[1].text)
-                            if self.new_hosts.has_key(self.new_hosts_in_maintenance[-1]):
-                                self.new_hosts[self.new_hosts_in_maintenance[-1]].status = str(table.tr[i].td[1].text)
-                        except:
-                            pass
-                except:
-                    pass
-
-            # do some cleanup
-            del table
-        
-        except:
-            import traceback
-            traceback.print_exc(file=sys.stdout)
-            # set checking flag back to False
-            self.isChecking = False
-            return "ERROR"
-        
-        # hosts which are acknowledged
-        try:
-            htobj = self.FetchURL(nagcgiurl_hosts_acknowledged)
-            # workaround for Nagios < 2.7 which has an <EMBED> in its output
-            try:
-                table = copy.copy(htobj.body.div.table)
-            except:
-                table = copy.copy(htobj.body.embed.div.table)
-            
-            # do some cleanup    
-            del htobj               
-
-            for i in range(1, len(table.tr)):
-                try:
-                    # ignore empty <tr> rows
-                    if not table.tr[i].countchildren() == 1:
-                        # host
-                        try:
-                            self.new_hosts_acknowledged.append(str(table.tr[i].td[0].table.tr.td.table.tr.td.a.text))
-                            # get real status of acknowledged host
-                            if self.new_hosts.has_key(self.new_hosts_acknowledged[-1]):
-                                self.new_hosts[self.new_hosts_acknowledged[-1]].status = str(table.tr[i].td[1].text)
-                        except:
-                            pass
-                except:
-                    pass
-
-            # do some cleanup
-            del table
-
-        except:
-            import traceback
-            traceback.print_exc(file=sys.stdout)
-            # set checking flag back to False
-            self.isChecking = False
-            return "ERROR"
-        
-        # some cleanup
-        del nagitems
-
+    BODY_TABLE_INDEX = 3
                   
 
 class OpsviewServer(GenericServer):
