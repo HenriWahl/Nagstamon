@@ -184,9 +184,10 @@ class GUI(object):
         """
             create output visuals
         """
-        # decide if the platform can handle SVG if not (Windows) use PNG - do not know
+        # decide if the platform can handle SVG if not (Windows and MacOSX) use PNG - do not know
         # why but in Windows there occurs an error like "svg_loader.dll could not be found"
-        if platform.system() == "Windows":
+        # something similar in MacOSX
+        if platform.system() == "Windows" or platform.system() == "Darwin":
             self.BitmapSuffix = ".png"
         else:
             self.BitmapSuffix = ".svg"
