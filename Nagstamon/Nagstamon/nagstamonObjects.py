@@ -1190,7 +1190,10 @@ class CentreonServer(GenericServer):
         # services
         try:
             htobj = self.FetchURL(nagcgiurl_services)
-
+            raw = self.FetchURL(nagcgiurl_services, giveback="raw")
+            fraw = open("raw.html", "w")
+            fraw.write(raw)
+            
             print "SERVICES:", nagcgiurl_services
             
             for i in range(1, len(htobj.body.table[self.BODY_TABLE_INDEX].tr)):
