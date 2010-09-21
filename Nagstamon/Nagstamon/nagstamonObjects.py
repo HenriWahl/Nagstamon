@@ -28,6 +28,8 @@ except:
     pass
     
 import nagstamonActions
+from nagstamonActions import MD5ify 
+
 
 class Column(object):
     ATTR_NAME = 'name'
@@ -1018,10 +1020,10 @@ class OpsviewServer(GenericServer):
         webbrowser.open('%s/status/service?host=%s' % (self.nagios_url, item))
         
     def open_nagios(self):
-        webbrowser.open(self.nagios_url + "/status/hostgroup")
+        webbrowser.open(self.nagios_url + "/status/service?filter=unhandled&includeunhandledhosts=1")
         # debug
         if str(self.conf.debug_mode) == "True":
-            print self.name, ":", "Open monitor web page", self.nagios_url + "/status/hostgroup"
+            print self.name, ":", "Open monitor web page", self.nagios_url + "/status/service?filter=unhandled&includeunhandledhosts=1"
                 
     def open_services(self):
         webbrowser.open(self.nagios_url + "/status/service?state=1&state=2&state=3")
@@ -1042,36 +1044,29 @@ class CentreonServer(GenericServer):
     URL_SERVICE_SEPARATOR = ';'
     
     def _open_tree_view(self, item):
-        webbrowser.open('%s/main.php?autologin=1&useralias=%s&password=%s&p=4&mode=0&svc_id=%s' % \
-                        (self.nagios_url, nagstamonActions.MD5ify(self.username), nagstamonActions.MD5ify(self.password), item))
+        webbrowser.open('%s/main.php?autologin=1&p=1&useralias=%s&password=%s&p=4&mode=0&svc_id=%s' % \
+                        (self.nagios_url, MD5ify(self.username), MD5ify(self.password), item))
         
         
     def open_nagios(self):
-        webbrowser.open(self.nagios_url + "/main.php?autologin=1&useralias=" + MD5ify(self.username) + "&password=" + MD5ify(self.password))
+        webbrowser.open(self.nagios_cgi_url + "/main.php?autologin=1&p=1&useralias=" + MD5ify(self.username) + "&password=" + MD5ify(self.password))
         # debug
         if str(self.conf.debug_mode) == "True":
-            print self.name, ":", "Open monitor web page", self.nagios_url        
+            print self.name, ":", "Open monitor web page", self.nagios_cgi_url + "/main.php?autologin=1&p=1&useralias=" + MD5ify(self.username) + "&password=" + MD5ify(self.password)
         
         
     def open_services(self):
-        webbrowser.open(self.nagios_url + "/main.php?autologin=1&useralias=" + MD5ify(self.username) + "&password=" + MD5ify(self.password) + "&p=20202&o=svcpb")
+        webbrowser.open(self.nagios_cgi_url + "/main.php?autologin=1&p=1&useralias=" + MD5ify(self.username) + "&password=" + MD5ify(self.password) + "&p=20202&o=svcpb")
         # debug
         if str(self.conf.debug_mode) == "True":
-            print self.name, ":", "Open hosts web page", self.nagios_url + "/main.php?p=20202&o=svcpb"
+            print self.name, ":", "Open hosts web page", self.nagios_cgi_url + "/main.php?p=20202&o=svcpb"
         
     def open_hosts(self):
-        webbrowser.open(self.nagios_url + "/main.php?autologin=1&useralias=" + MD5ify(self.username) + "&password=" + MD5ify(self.password) + "&p=20103&o=hpb")
+        webbrowser.open(self.nagios_cgi_url + "/main.php?autologin=1&p=1&useralias=" + MD5ify(self.username) + "&password=" + MD5ify(self.password) + "&p=20103&o=hpb")
         # debug
         if str(self.conf.debug_mode) == "True":
-            print self.name, ":", "Open hosts web page", self.nagios_url + "/main.php?p=20103&o=hpb"
+            print self.name, ":", "Open hosts web page", self.nagios_cgi_url + "/main.php?p=20103&o=hpb"
         
-
-# order of registering affects sorting in server type list in add new server dialog
-nagstamonActions.register_server(NagiosServer)
-nagstamonActions.register_server(IcingaServer)
-nagstamonActions.register_server(OpsviewServer)
-nagstamonActions.register_server(CentreonServer)
-
 
 class NagiosObject(object):    
     def get_host_name(self):
@@ -1121,3 +1116,10 @@ class NagiosService(NagiosObject):
     
     def get_service_name(self):
         return self.name 
+
+
+# order of registering affects sorting in server type list in add new server dialog
+nagstamonActions.register_server(NagiosServer)
+nagstamonActions.register_server(IcingaServer)
+nagstamonActions.register_server(OpsviewServer)
+nagstamonActions.register_server(CentreonServer)

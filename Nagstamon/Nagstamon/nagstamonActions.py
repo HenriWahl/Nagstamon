@@ -244,14 +244,7 @@ class Recheck(threading.Thread):
             import sys, traceback
             traceback.print_exc(file=sys.stdout)
             pass
-        
-
-    #def __del__(self):
-    #    """
-    #    hopefully a __del__() method may make this object better collectable for gc
-    #    """
-    #    del(self)
-        
+               
         
 class RecheckAll(threading.Thread):
     """
@@ -337,13 +330,6 @@ class RecheckAll(threading.Thread):
                 print "Recheck all: Already rechecking all services on all hosts on all servers."
                 
         
-    #def __del__(self):
-    #    """
-    #    hopefully a __del__() method may make this object better collectable for gc
-    #    """
-    #    del(self)
-        
-        
 class Acknowledge(threading.Thread):
     """
     exceute remote cgi command with parameters from acknowledge dialog 
@@ -356,13 +342,6 @@ class Acknowledge(threading.Thread):
 
     def run(self):
         self.server.set_acknowledge(self)
-
-        
-    #def __del__(self):
-    #    """
-    #    hopefully a __del__() method may make this object better collectable for gc
-    #    """
-    #    del(self)
         
     
 class Downtime(threading.Thread):
@@ -434,13 +413,6 @@ class CheckForNewVersion(threading.Thread):
                 s.CheckingForNewVersion = False
 
 
-    #def __del__(self):
-    #    """
-    #    hopefully a __del__() method may make this object better collectable for gc
-    #    """
-    #    del(self)
-    
-
 class PlaySound(threading.Thread):
     """
         play notification sound in a threadified way to omit hanging gui
@@ -470,14 +442,6 @@ class PlaySound(threading.Thread):
                 self.Play(self.conf.notification_custom_sound_down)
         elif self.sound =="FILE":
             self.Play(self.file)
-    
-    
-    #def __del__(self):
-    #    """
-    #    hopefully a __del__() method may make this object better collectable for gc
-    #    """
-    #    del(self)
-        
     
     def Play(self, file):
         """
@@ -522,19 +486,22 @@ class FlashStatusbar(threading.Thread):
             pass
 
 
-    #def __del__(self):
-    #   """
-    #    hopefully a __del__() method may make this object better collectable for gc
-    #    """
-    #    del(self)
-
-
 def OpenNagios(widget, server, output):
+    
+    print "************************************"
+    print
+    print
+    print widget, server
+    print dir(server)
+    print
+    print
+    print "************************************"
+    
     # open Nagios main page in your favorite web browser when nagios button is clicked
     # first close popwin
     output.popwin.Close()
     # start browser with URL
-    server.open_nagios()
+    print server.open_nagios()
 
 
 def OpenServices(widget, server, output):
