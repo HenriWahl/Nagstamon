@@ -672,7 +672,8 @@ def MD5ify(string):
     """
     makes something md5y of a given username or password for Centreon web interface access
     """
-    return hashlib.md5(string + "\n").hexdigest()
+    ###return hashlib.md5(string + "\n").hexdigest()
+    return hashlib.md5(string).hexdigest()
     
        
 # <IMPORT>
