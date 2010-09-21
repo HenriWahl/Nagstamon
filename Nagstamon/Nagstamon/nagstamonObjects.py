@@ -260,26 +260,26 @@ class GenericServer(object):
         self._open_tree_view(item)
 
     def _open_tree_view(self, item):
-        webbrowser.open('%s/extinfo.cgi?type=2&host=%s' % (self.nagios_cgi_url, item))
+        webbrowser.open('%s/extinfo.cgi?type=1&host=%s' % (self.nagios_cgi_url, item))
         
     def open_nagios(self):
         webbrowser.open(self.nagios_url)
         # debug
         if str(self.conf.debug_mode) == "True":
-            print self.name, ":", "Open Monitor website", self.nagios_url        
+            print self.name, ":", "Open monitor web page", self.nagios_url        
         
     def open_services(self):
         webbrowser.open(self.nagios_cgi_url + "/status.cgi?host=all&servicestatustypes=253")
         # debug
         if str(self.conf.debug_mode) == "True":
-            print self.name, ":", "Open services website", self.nagios_url + "/status.cgi?host=all&servicestatustypes=253"  
+            print self.name, ":", "Open services web page", self.nagios_url + "/status.cgi?host=all&servicestatustypes=253"  
             
         
     def open_hosts(self):
         webbrowser.open(self.nagios_cgi_url + "/status.cgi?hostgroup=all&style=hostdetail&hoststatustypes=12")
         # debug
         if str(self.conf.debug_mode) == "True":
-            print self.name, ":", "Open hosts website", self.nagios_url + "/status.cgi?hostgroup=all&style=hostdetail&hoststatustypes=12"      
+            print self.name, ":", "Open hosts web page", self.nagios_url + "/status.cgi?hostgroup=all&style=hostdetail&hoststatustypes=12"      
 
 
     def _get_status(self):
@@ -1015,14 +1015,26 @@ class OpsviewServer(GenericServer):
             return "ERROR"
         
     def _open_tree_view(self, item):
-        webbrowser.open('%s/status/service?host=%s' % (self.nagios_cgi_url, item))
+        webbrowser.open('%s/status/service?host=%s' % (self.nagios_url, item))
         
-        
-    def open_services(self):
-        webbrowser.open(self.nagios_cgi_url + "/status/service?hostgroupid=1&state=1&state=2&state=3")
+    def open_nagios(self):
+        webbrowser.open(self.nagios_url + "/status/hostgroup")
         # debug
         if str(self.conf.debug_mode) == "True":
-            print self.name, ":", "Open services web page", self.nagios_url + "/status/service?hostgroupid=1&state=1&state=2&state=3"  
+            print self.name, ":", "Open monitor web page", self.nagios_url + "/status/hostgroup"
+                
+    def open_services(self):
+        webbrowser.open(self.nagios_url + "/status/service?state=1&state=2&state=3")
+        # debug
+        if str(self.conf.debug_mode) == "True":
+            print self.name, ":", "Open hosts web page", self.nagios_url + "/status/service?state=1&state=2&state=3"  
+
+    def open_hosts(self):
+        webbrowser.open(self.nagios_url + "/status/host?hostgroupid=1&state=1")
+        # debug
+        if str(self.conf.debug_mode) == "True":
+            print self.name, ":", "Open hosts web page", self.nagios_url + "/status/host?hostgroupid=1&state=1"      
+            
             
 
 class CentreonServer(GenericServer): 
@@ -1038,20 +1050,20 @@ class CentreonServer(GenericServer):
         webbrowser.open(self.nagios_url + "/main.php?autologin=1&useralias=" + MD5ify(self.username) + "&password=" + MD5ify(self.password))
         # debug
         if str(self.conf.debug_mode) == "True":
-            print self.name, ":", "Open Nagios website", self.nagios_url        
+            print self.name, ":", "Open monitor web page", self.nagios_url        
         
         
     def open_services(self):
         webbrowser.open(self.nagios_url + "/main.php?autologin=1&useralias=" + MD5ify(self.username) + "&password=" + MD5ify(self.password) + "&p=20202&o=svcpb")
         # debug
         if str(self.conf.debug_mode) == "True":
-            print self.name, ":", "Open hosts website", self.nagios_url + "/main.php?p=20202&o=svcpb"
+            print self.name, ":", "Open hosts web page", self.nagios_url + "/main.php?p=20202&o=svcpb"
         
     def open_hosts(self):
         webbrowser.open(self.nagios_url + "/main.php?autologin=1&useralias=" + MD5ify(self.username) + "&password=" + MD5ify(self.password) + "&p=20103&o=hpb")
         # debug
         if str(self.conf.debug_mode) == "True":
-            print self.name, ":", "Open hosts website", self.nagios_url + "/main.php?p=20103&o=hpb"
+            print self.name, ":", "Open hosts web page", self.nagios_url + "/main.php?p=20103&o=hpb"
         
 
 # order of registering affects sorting in server type list in add new server dialog
