@@ -342,9 +342,9 @@ class GenericServer(object):
             # workaround for Nagios < 2.7 which has an <EMBED> in its output
             # do a copy of a part of htobj into table to be able to delete htobj
             try:
-                table = copy.copy(htobj.body.div.table)
+                table = htobj.body.div.table
             except:
-                table = copy.copy(htobj.body.embed.div.table)
+                table = htobj.body.embed.div.table
             
             # do some cleanup    
             del htobj
@@ -371,18 +371,18 @@ class GenericServer(object):
                         n["attempt"] = "N/A"
                         
                         # add dictionary full of information about this host item to nagitems
-                        nagitems["hosts"].append(copy.copy(n))
+                        nagitems["hosts"].append(n)
                         # after collection data in nagitems create objects from its informations
                         # host objects contain service objects
                         if not self.new_hosts.has_key(n["host"]):
-                            new_host = copy.copy(n["host"])
+                            new_host = n["host"]
                             self.new_hosts[new_host] = NagiosHost()
-                            self.new_hosts[new_host].name = copy.copy(n["host"])
-                            self.new_hosts[new_host].status = copy.copy(n["status"])
-                            self.new_hosts[new_host].last_check = copy.copy(n["last_check"])
-                            self.new_hosts[new_host].duration = copy.copy(n["duration"])
-                            self.new_hosts[new_host].attempt = copy.copy(n["attempt"])
-                            self.new_hosts[new_host].status_information= copy.copy(n["status_information"])
+                            self.new_hosts[new_host].name = n["host"]
+                            self.new_hosts[new_host].status = n["status"]
+                            self.new_hosts[new_host].last_check = n["last_check"]
+                            self.new_hosts[new_host].duration = n["duration"]
+                            self.new_hosts[new_host].attempt = n["attempt"]
+                            self.new_hosts[new_host].status_information= n["status_information"]
                 except:
                     import traceback
                     traceback.print_exc(file=sys.stdout)
@@ -434,19 +434,19 @@ class GenericServer(object):
                         # host objects contain service objects
                         if not self.new_hosts.has_key(n["host"]):
                             self.new_hosts[n["host"]] = NagiosHost()
-                            self.new_hosts[n["host"]].name = copy.copy(n["host"])
+                            self.new_hosts[n["host"]].name = n["host"]
                             self.new_hosts[n["host"]].status = "UP"
                         # if a service does not exist create its object
                         if not self.new_hosts[n["host"]].services.has_key(n["service"]):
-                            new_service = copy.copy(n["service"])
+                            new_service = n["service"]
                             self.new_hosts[n["host"]].services[new_service] = NagiosService()
-                            self.new_hosts[n["host"]].services[new_service].host = copy.copy(n["host"])
-                            self.new_hosts[n["host"]].services[new_service].name = copy.copy(n["service"])
-                            self.new_hosts[n["host"]].services[new_service].status = copy.copy(n["status"])
-                            self.new_hosts[n["host"]].services[new_service].last_check = copy.copy(n["last_check"])
-                            self.new_hosts[n["host"]].services[new_service].duration = copy.copy(n["duration"])
-                            self.new_hosts[n["host"]].services[new_service].attempt = copy.copy(n["attempt"])
-                            self.new_hosts[n["host"]].services[new_service].status_information = copy.copy(n["status_information"])
+                            self.new_hosts[n["host"]].services[new_service].host = n["host"]
+                            self.new_hosts[n["host"]].services[new_service].name = n["service"]
+                            self.new_hosts[n["host"]].services[new_service].status = n["status"]
+                            self.new_hosts[n["host"]].services[new_service].last_check = n["last_check"]
+                            self.new_hosts[n["host"]].services[new_service].duration = n["duration"]
+                            self.new_hosts[n["host"]].services[new_service].attempt = n["attempt"]
+                            self.new_hosts[n["host"]].services[new_service].status_information = n["status_information"]
                 except:
                     import traceback
                     traceback.print_exc(file=sys.stdout)
@@ -467,9 +467,9 @@ class GenericServer(object):
            
             # workaround for Nagios < 2.7 which has an <EMBED> in its output
             try:
-                table = copy.copy(htobj.body.div.table)
+                table = htobj.body.div.table
             except:
-                table = copy.copy(htobj.body.embed.div.table)
+                table = htobj.body.embed.div.table
             
             # do some cleanup    
             del htobj
@@ -506,10 +506,10 @@ class GenericServer(object):
             htobj = self.FetchURL(nagcgiurl_hosts_acknowledged)
             # workaround for Nagios < 2.7 which has an <EMBED> in its output
             try:
-                table = copy.copy(htobj.body.div.table)
+                table = htobj.body.div.table
             except:
-                table = copy.copy(htobj.body.embed.div.table)
-            
+                table = htobj.body.embed.div.table
+                
             # do some cleanup    
             del htobj               
 
@@ -582,12 +582,12 @@ class GenericServer(object):
             not (host.name in self.new_hosts_acknowledged and \
             str(self.conf.filter_acknowledged_hosts_services) == "True")) and \
             str(self.conf.filter_all_down_hosts) == "False": 
-                self.nagitems_filtered["hosts"]["DOWN"].append(copy.copy(host))
+                self.nagitems_filtered["hosts"]["DOWN"].append(host)
                 self.downs += 1
             if host.status == "UNREACHABLE" and nagstamonActions.HostIsFilteredOutByRE(host.name, self.conf) == False\
             and (not host.name in self.new_hosts_acknowledged and not host.name in self.new_hosts_in_maintenance) and \
             str(self.conf.filter_all_unreachable_hosts) == "False": 
-                self.nagitems_filtered["hosts"]["UNREACHABLE"].append(copy.copy(host))    
+                self.nagitems_filtered["hosts"]["UNREACHABLE"].append(host)  
                 self.unreachables += 1
 
             for service in host.services.values():
@@ -611,13 +611,13 @@ class GenericServer(object):
                 nagstamonActions.ServiceIsFilteredOutByRE(service.name, self.conf) == False:
                     # sort by severity
                     if service.status == "CRITICAL" and str(self.conf.filter_all_critical_services) == "False": 
-                        self.nagitems_filtered["services"]["CRITICAL"].append(copy.copy(service))
+                        self.nagitems_filtered["services"]["CRITICAL"].append(service)
                         self.criticals += 1
                     if service.status == "WARNING" and str(self.conf.filter_all_warning_services) == "False": 
-                        self.nagitems_filtered["services"]["WARNING"].append(copy.copy(service))
+                        self.nagitems_filtered["services"]["WARNING"].append(service)
                         self.warnings += 1
                     if service.status == "UNKNOWN" and str(self.conf.filter_all_unknown_services) == "False": 
-                        self.nagitems_filtered["services"]["UNKNOWN"].append(copy.copy(service))
+                        self.nagitems_filtered["services"]["UNKNOWN"].append(service)
                         self.unknowns += 1
 
         # find out if there has been some status change to notify user
@@ -626,11 +626,11 @@ class GenericServer(object):
         
         for i in self.nagitems_filtered["hosts"].values():
             for h in i:
-                new_nagitems_filtered_list.append((copy.copy(h.name), copy.copy(h.status)))   
+                new_nagitems_filtered_list.append((h.name, h.status))   
             
         for i in self.nagitems_filtered["services"].values():
             for s in i:
-                new_nagitems_filtered_list.append((copy.copy(s.host), copy.copy(s.name), copy.copy(s.status)))  
+                new_nagitems_filtered_list.append((s.host, s.name, s.status))  
                  
         # sort for better comparison
         new_nagitems_filtered_list.sort()
@@ -645,7 +645,7 @@ class GenericServer(object):
             for i in new_nagitems_filtered_list:
                 if not i in self.nagitems_filtered_list:
                     # collect differences
-                    diff.append(copy.copy(i))
+                    diff.append(i)
             if len(diff) == 0:
                 self.WorstStatus = "UP"
             else:
@@ -653,7 +653,7 @@ class GenericServer(object):
                 # get list of states for comparison
                 diff_states = []
                 for d in diff:
-                    diff_states.append(copy.copy(d[-1]))
+                    diff_states.append(d[-1])
                 # temporary worst state index   
                 worst = 0
                 for d in diff_states:
@@ -666,14 +666,14 @@ class GenericServer(object):
                 self.WorstStatus = self.States[worst]
             
         # copy of listed nagitems for next comparison
-        self.nagitems_filtered_list = copy.copy(new_nagitems_filtered_list)
+        self.nagitems_filtered_list = new_nagitems_filtered_list
 
         # do some cleanup
         self.hosts.clear()
         del self.hosts_acknowledged[::], self.hosts_in_maintenance[::]
 
         # put new informations into respective dictionaries      
-        self.hosts, self.hosts_acknowledged, self.hosts_in_maintenance = copy.copy(self.new_hosts), copy.copy(self.new_hosts_acknowledged), copy.copy(self.new_hosts_in_maintenance)
+        self.hosts, self.hosts_acknowledged, self.hosts_in_maintenance = self.new_hosts, self.new_hosts_acknowledged, self.new_hosts_in_maintenance
         
         # do some cleanup
         del self.new_hosts_acknowledged[::], self.new_hosts_in_maintenance[::]
@@ -800,7 +800,7 @@ class GenericServer(object):
                 html = lxml.etree.HTML(urlcontent.read())
                     
                 # second step: make pretty HTML of it
-                prettyhtml = lxml.etree.tostring(copy.copy(html), pretty_print=True)
+                prettyhtml = lxml.etree.tostring(html, pretty_print=True)
                 
                 # third step: clean HTML from tags which embarass libxml2 2.7
                 # only possible when module lxml.html.clean has been loaded
@@ -808,7 +808,7 @@ class GenericServer(object):
                     # clean html from tags which libxml2 2.7 is worried about
                     # this is the case with all tags that do not need a closing end tag like link, br, img
                     cleaner = lxml.html.clean.Cleaner(remove_tags=["link", "br", "img", "script", "hr"], page_structure=True, style=False)
-                    prettyhtml = copy.copy(cleaner.clean_html(prettyhtml))
+                    prettyhtml = cleaner.clean_html(prettyhtml)
                     
                     # lousy workaround for libxml2 2.7 which worries about attributes without value
                     # we hope that nobody names a server '" nowrap>' - chances are pretty small because this "name"
@@ -822,7 +822,7 @@ class GenericServer(object):
                 fpretty = open("pretty.html", "w")
                 fpretty.write(prettyhtml)
                 
-                htobj = copy.copy(lxml.objectify.fromstring(prettyhtml))
+                htobj = lxml.objectify.fromstring(prettyhtml)
                 
                 #do some cleanup
                 del passman, auth_handler, digest_handler, urlcontent, html, prettyhtml
@@ -834,7 +834,7 @@ class GenericServer(object):
                 # objectify the xml and give it back after some cleanup
                 xml = lxml.etree.XML(urlcontent.read())
                 xmlpretty = lxml.etree.tostring(xml, pretty_print=True)
-                xmlobj = copy.copy(lxml.objectify.fromstring(xmlpretty))
+                xmlobj = lxml.objectify.fromstring(xmlpretty)
                 del passman, auth_handler, urlcontent, xml, xmlpretty
                 return xmlobj
             
@@ -1110,7 +1110,9 @@ class CentreonServer(GenericServer):
         
         # services (unknown, warning or critical?)
         ###nagcgiurl_services = self.nagios_cgi_url + "/status.cgi?host=all&servicestatustypes=" + str(servicestatustypes) + "&serviceprops=" + str(hostserviceprops)
-        nagcgiurl_services = self.nagios_cgi_url + "/index.php?p=20202&o=svcpb&autologin=1&useralias=" + MD5ify(self.username) + "&password=" + MD5ify(self.password)
+        ##nagcgiurl_services = self.nagios_cgi_url + "/index.php?p=20202&o=svcpb&autologin=1&useralias=" + MD5ify(self.username) + "&password=" + MD5ify(self.password)
+        nagcgiurl_services = self.nagios_cgi_url + "/index.php?p=1&o=svcpb&autologin=1&useralias=" + MD5ify(self.username) + "&password=" + MD5ify(self.password)
+
         # hosts (up or down or unreachable)
         ###nagcgiurl_hosts = self.nagios_cgi_url + "/status.cgi?hostgroup=all&style=hostdetail&hoststatustypes=" + str(hoststatustypes) + "&hostprops=" + str(hostserviceprops)
         nagcgiurl_hosts = self.nagios_cgi_url + "/index.php?p=20103&o=hpb&autologin=1&useralias=" + MD5ify(self.username) + "&password=" + MD5ify(self.password)
@@ -1131,7 +1133,7 @@ class CentreonServer(GenericServer):
             
             print nagcgiurl_hosts
 
-            table = copy.copy(htobj.body.div[3].table)
+            table = htobj.body.div[3].table
             #print dir(table)
             
             
@@ -1161,18 +1163,18 @@ class CentreonServer(GenericServer):
                         n["attempt"] = "N/A"
                         
                         # add dictionary full of information about this host item to nagitems
-                        nagitems["hosts"].append(copy.copy(n))
+                        nagitems["hosts"].append(n)
                         # after collection data in nagitems create objects from its informations
                         # host objects contain service objects
                         if not self.new_hosts.has_key(n["host"]):
-                            new_host = copy.copy(n["host"])
+                            new_host = n["host"]
                             self.new_hosts[new_host] = NagiosHost()
-                            self.new_hosts[new_host].name = copy.copy(n["host"])
-                            self.new_hosts[new_host].status = copy.copy(n["status"])
-                            self.new_hosts[new_host].last_check = copy.copy(n["last_check"])
-                            self.new_hosts[new_host].duration = copy.copy(n["duration"])
-                            self.new_hosts[new_host].attempt = copy.copy(n["attempt"])
-                            self.new_hosts[new_host].status_information= copy.copy(n["status_information"])
+                            self.new_hosts[new_host].name = n["host"]
+                            self.new_hosts[new_host].status = n["status"]
+                            self.new_hosts[new_host].last_check = n["last_check"]
+                            self.new_hosts[new_host].duration = n["duration"]
+                            self.new_hosts[new_host].attempt = n["attempt"]
+                            self.new_hosts[new_host].status_information= n["status_information"]
                 except:
                     import traceback
                     traceback.print_exc(file=sys.stdout)
@@ -1229,19 +1231,19 @@ class CentreonServer(GenericServer):
                         # host objects contain service objects
                         if not self.new_hosts.has_key(n["host"]):
                             self.new_hosts[n["host"]] = NagiosHost()
-                            self.new_hosts[n["host"]].name = copy.copy(n["host"])
+                            self.new_hosts[n["host"]].name = n["host"]
                             self.new_hosts[n["host"]].status = "UP"
                         # if a service does not exist create its object
                         if not self.new_hosts[n["host"]].services.has_key(n["service"]):
-                            new_service = copy.copy(n["service"])
+                            new_service = n["service"]
                             self.new_hosts[n["host"]].services[new_service] = NagiosService()
-                            self.new_hosts[n["host"]].services[new_service].host = copy.copy(n["host"])
-                            self.new_hosts[n["host"]].services[new_service].name = copy.copy(n["service"])
-                            self.new_hosts[n["host"]].services[new_service].status = copy.copy(n["status"])
-                            self.new_hosts[n["host"]].services[new_service].last_check = copy.copy(n["last_check"])
-                            self.new_hosts[n["host"]].services[new_service].duration = copy.copy(n["duration"])
-                            self.new_hosts[n["host"]].services[new_service].attempt = copy.copy(n["attempt"])
-                            self.new_hosts[n["host"]].services[new_service].status_information = copy.copy(n["status_information"])
+                            self.new_hosts[n["host"]].services[new_service].host = n["host"]
+                            self.new_hosts[n["host"]].services[new_service].name = n["service"]
+                            self.new_hosts[n["host"]].services[new_service].status = n["status"]
+                            self.new_hosts[n["host"]].services[new_service].last_check = n["last_check"]
+                            self.new_hosts[n["host"]].services[new_service].duration = n["duration"]
+                            self.new_hosts[n["host"]].services[new_service].attempt = n["attempt"]
+                            self.new_hosts[n["host"]].services[new_service].status_information = n["status_information"]
                 except:
                     import traceback
                     traceback.print_exc(file=sys.stdout)
@@ -1262,9 +1264,9 @@ class CentreonServer(GenericServer):
            
             # workaround for Nagios < 2.7 which has an <EMBED> in its output
             try:
-                table = copy.copy(htobj.body.div.table)
+                table = htobj.body.div.table
             except:
-                table = copy.copy(htobj.body.embed.div.table)
+                table = htobj.body.embed.div.table
             
             # do some cleanup    
             del htobj
@@ -1301,9 +1303,9 @@ class CentreonServer(GenericServer):
             htobj = self.FetchURL(nagcgiurl_hosts_acknowledged)
             # workaround for Nagios < 2.7 which has an <EMBED> in its output
             try:
-                table = copy.copy(htobj.body.div.table)
+                table = htobj.body.div.table
             except:
-                table = copy.copy(htobj.body.embed.div.table)
+                table = htobj.body.embed.div.table
             
             # do some cleanup    
             del htobj               
