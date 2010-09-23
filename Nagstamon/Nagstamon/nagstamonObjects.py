@@ -744,7 +744,8 @@ class GenericServer(object):
                 urlcontent = urllib2.urlopen(self.nagios_url + "/login", logindata)
                 
             except:
-                pass
+                import traceback
+                traceback.print_exc(file=sys.stdout)
 
             # if something goes wrong with accessing the URL it can be caught
         try:
@@ -1045,6 +1046,8 @@ class OpsviewServer(GenericServer):
 class CentreonServer(GenericServer): 
     TYPE = 'Centreon'
     URL_SERVICE_SEPARATOR = ';'
+    # centreon generic web interface uses a sid which is needed to ask for news
+    SID = None
     
     def _open_tree_view(self, item):
         webbrowser.open('%s/index.php?autologin=1&p=1&useralias=%s&password=%s&p=4&mode=0&svc_id=%s' % \
@@ -1070,16 +1073,28 @@ class CentreonServer(GenericServer):
         if str(self.conf.debug_mode) == "True":
             print self.name, ":", "Open hosts web page", self.nagios_cgi_url + "/index.php?p=20103&o=hpb"
 
-
+    def _get_sid(self):
+        """
+        gets a shiny new SID for XML HTTP requests to Centreon ćutting it out via .partition() from raw HTML
+        """
+        #return self.FetchURL(self.nagios_cgi_url + "?p=1&autologin=1&useralias=" + MD5ify(self.username) + "&password=" + MD5ify(self.password), giveback="raw").partition("_sid='")[2].partition("'")[0]
+        return self.FetchURL(self.nagios_cgi_url + "?" + urllib.urlencode({"p":1, "autologin":1, "useralias":MD5ify(self.username), "password":MD5ify(self.password)}), giveback="raw").partition("_sid='")[2].partition("'")[0]
+        
     def _get_status(self):
         """
-        Get status from Nagios Server
+        Get status from Ćentreon Server
         """
         # create Nagios items dictionary with to lists for services and hosts
         # every list will contain a dictionary for every failed service/host
         # this dictionary is only temporarily
         nagitems = {"services":[], "hosts":[]}       
         
+        # get sid in case this has not yet been done
+        if self.SID == None:
+            self.SID = self._get_sid()     
+            
+        print self.SID
+                
         # create filters like described in
         # http://www.nagios-wiki.de/nagios/tips/host-_und_serviceproperties_fuer_status.cgi?s=servicestatustypes
         # hoststatus
@@ -1111,11 +1126,14 @@ class CentreonServer(GenericServer):
         # services (unknown, warning or critical?)
         ###nagcgiurl_services = self.nagios_cgi_url + "/status.cgi?host=all&servicestatustypes=" + str(servicestatustypes) + "&serviceprops=" + str(hostserviceprops)
         ##nagcgiurl_services = self.nagios_cgi_url + "/index.php?p=20202&o=svcpb&autologin=1&useralias=" + MD5ify(self.username) + "&password=" + MD5ify(self.password)
-        nagcgiurl_services = self.nagios_cgi_url + "/index.php?p=1&o=svcpb&autologin=1&useralias=" + MD5ify(self.username) + "&password=" + MD5ify(self.password)
+        #nagcgiurl_services = self.nagios_cgi_url + "/index.php?p=20202&o=svcpb&autologin=1&useralias=%(username)&password=%(password)&sid=%(sid)" % {"username":MD5ify(self.username), "password":MD5ify(self.password), "sid":self.SID}
+        #nagcgiurl_services = self.nagios_cgi_url + "/index.php?" + urllib.urlencode({"p":20202, "o":"svcpb", "autologin":1, "useralias":MD5ify(self.username), "password":MD5ify(self.password), "sid":self.SID})
+        nagcgiurl_services = self.nagios_cgi_url + "/include/monitoring/status/Services/xml/serviceXML.php?" + urllib.urlencode({"num":0, "limit":999, "o":"svcpb", "sort_type":"status", "sid":self.SID})
 
         # hosts (up or down or unreachable)
         ###nagcgiurl_hosts = self.nagios_cgi_url + "/status.cgi?hostgroup=all&style=hostdetail&hoststatustypes=" + str(hoststatustypes) + "&hostprops=" + str(hostserviceprops)
-        nagcgiurl_hosts = self.nagios_cgi_url + "/index.php?p=20103&o=hpb&autologin=1&useralias=" + MD5ify(self.username) + "&password=" + MD5ify(self.password)
+        ##nagcgiurl_hosts = self.nagios_cgi_url + "/index.php?p=20103&o=hpb&autologin=1&useralias=" + MD5ify(self.username) + "&password=" + MD5ify(self.password) 
+        nagcgiurl_hosts = self.nagios_cgi_url + "/include/monitoring/status/Hosts/xml/hostXML.php?" + urllib.urlencode({"num":0, "limit":999, "o":"hpb", "sort_type":"status", "sid":self.SID})
         # fetching hosts in downtime and acknowledged hosts at once is not possible because these 
         # properties get added and nagios display ONLY hosts that have BOTH states
         # hosts that are in scheduled downtime, we will later omit services on those hosts
@@ -1124,7 +1142,7 @@ class CentreonServer(GenericServer):
         # hosts that are acknowledged, we will later omit services on those hosts
         # hostproperty 4 = HOST_STATE_ACKNOWLEDGED 
         nagcgiurl_hosts_acknowledged = self.nagios_cgi_url + "/status.cgi?hostgroup=all&style=hostdetail&hostprops=4"
-
+                
         # hosts - mostly the down ones
         # unfortunately the hosts status page has a different structure so
         # hosts must be analyzed separately
@@ -1195,55 +1213,56 @@ class CentreonServer(GenericServer):
             raw = self.FetchURL(nagcgiurl_services, giveback="raw")
             fraw = open("raw.html", "w")
             fraw.write(raw)
+                         
+            htobj = lxml.objectify.fromstring(raw)
+            
+            print dir(htobj)
             
             print "SERVICES:", nagcgiurl_services
-            
-            for i in range(1, len(htobj.body.table[self.BODY_TABLE_INDEX].tr)):
+           
+            for l in htobj.l:
                 try:
-                    # ignore empty <tr> rows - there are a lot of them - a Nagios bug? 
-                    if not htobj.body.table[self.BODY_TABLE_INDEX].tr[i].countchildren() == 1:
-                        n = {}
-                        # host
-                        # the resulting table of Nagios status.cgi table omits the
-                        # hostname of a failing service if there are more than one
-                        # so if the hostname is empty the nagios status item should get
-                        # its hostname from the previuos item - one reason to keep "nagitems"
-                        try:
-                            n["host"] = str(htobj.body.table[self.BODY_TABLE_INDEX].tr[i].td[0].table.tr.td.table.tr.td.a.text)
-                        except:
-                            n["host"] = str(nagitems["services"][len(nagitems["services"])-1]["host"])
-                        # service
-                        n["service"] = str(htobj.body.table[self.BODY_TABLE_INDEX].tr[i].td[1].table.tr.td.table.tr.td.a.text)
-                        # status
-                        n["status"] = str(htobj.body.table[self.BODY_TABLE_INDEX].tr[i].td[2].text)
-                        # last_check
-                        n["last_check"] = str(htobj.body.table[self.BODY_TABLE_INDEX].tr[i].td[3].text)
-                        # duration
-                        n["duration"] = str(htobj.body.table[self.BODY_TABLE_INDEX].tr[i].td[4].text)
-                        # attempt
-                        n["attempt"] = str(htobj.body.table[self.BODY_TABLE_INDEX].tr[i].td[5].text)
-                        # status_information
-                        n["status_information"] = str(htobj.body.table[self.BODY_TABLE_INDEX].tr[i].td[6].text)
-                        # add dictionary full of information about this service item to nagitems - only if service
-                        nagitems["services"].append(n)
-                        
-                        # after collection data in nagitems create objects of its informations
-                        # host objects contain service objects
-                        if not self.new_hosts.has_key(n["host"]):
-                            self.new_hosts[n["host"]] = NagiosHost()
-                            self.new_hosts[n["host"]].name = n["host"]
-                            self.new_hosts[n["host"]].status = "UP"
-                        # if a service does not exist create its object
-                        if not self.new_hosts[n["host"]].services.has_key(n["service"]):
-                            new_service = n["service"]
-                            self.new_hosts[n["host"]].services[new_service] = NagiosService()
-                            self.new_hosts[n["host"]].services[new_service].host = n["host"]
-                            self.new_hosts[n["host"]].services[new_service].name = n["service"]
-                            self.new_hosts[n["host"]].services[new_service].status = n["status"]
-                            self.new_hosts[n["host"]].services[new_service].last_check = n["last_check"]
-                            self.new_hosts[n["host"]].services[new_service].duration = n["duration"]
-                            self.new_hosts[n["host"]].services[new_service].attempt = n["attempt"]
-                            self.new_hosts[n["host"]].services[new_service].status_information = n["status_information"]
+                    n = {}
+                    # host
+                    # the resulting table of Nagios status.cgi table omits the
+                    # hostname of a failing service if there are more than one
+                    # so if the hostname is empty the nagios status item should get
+                    # its hostname from the previuos item - one reason to keep "nagitems"
+                    print "l:", dir(l.hip)
+                    print "l.hip", l.hip.text
+                    n["host"] = l.hip.text
+                    # service
+                    n["service"] = l.sd.text
+                    # status
+                    n["status"] = l.cs.text
+                    # last_check
+                    n["last_check"] = l.lc.text
+                    # duration
+                    n["duration"] = l.d.text
+                    # attempt
+                    n["attempt"] = l.ca.text
+                    # status_information
+                    n["status_information"] = l.po.text
+                    # add dictionary full of information about this service item to nagitems - only if service
+                    nagitems["services"].append(n)
+                    
+                    # after collection data in nagitems create objects of its informations
+                    # host objects contain service objects
+                    if not self.new_hosts.has_key(n["host"]):
+                        self.new_hosts[n["host"]] = NagiosHost()
+                        self.new_hosts[n["host"]].name = n["host"]
+                        self.new_hosts[n["host"]].status = "UP"
+                    # if a service does not exist create its object
+                    if not self.new_hosts[n["host"]].services.has_key(n["service"]):
+                        new_service = n["service"]
+                        self.new_hosts[n["host"]].services[new_service] = NagiosService()
+                        self.new_hosts[n["host"]].services[new_service].host = n["host"]
+                        self.new_hosts[n["host"]].services[new_service].name = n["service"]
+                        self.new_hosts[n["host"]].services[new_service].status = n["status"]
+                        self.new_hosts[n["host"]].services[new_service].last_check = n["last_check"]
+                        self.new_hosts[n["host"]].services[new_service].duration = n["duration"]
+                        self.new_hosts[n["host"]].services[new_service].attempt = n["attempt"]
+                        self.new_hosts[n["host"]].services[new_service].status_information = n["status_information"]
                 except:
                     import traceback
                     traceback.print_exc(file=sys.stdout)
