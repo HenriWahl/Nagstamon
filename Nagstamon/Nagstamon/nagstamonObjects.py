@@ -1133,7 +1133,7 @@ class CentreonServer(GenericServer):
         # hosts (up or down or unreachable)
         ###nagcgiurl_hosts = self.nagios_cgi_url + "/status.cgi?hostgroup=all&style=hostdetail&hoststatustypes=" + str(hoststatustypes) + "&hostprops=" + str(hostserviceprops)
         ##nagcgiurl_hosts = self.nagios_cgi_url + "/index.php?p=20103&o=hpb&autologin=1&useralias=" + MD5ify(self.username) + "&password=" + MD5ify(self.password) 
-        nagcgiurl_hosts = self.nagios_cgi_url + "/include/monitoring/status/Hosts/xml/hostXML.php?" + urllib.urlencode({"num":0, "limit":999, "o":"hpb", "sort_type":"status", "sid":self.SID})
+        nagcgiurl_hosts = self.nagios_cgi_url + "/include/monitoring/status/Hosts/xml/hostXML.php?" + urllib.urlencode({"num":0, "limit":999, "o":"h", "sort_type":"status", "sid":self.SID})
         # fetching hosts in downtime and acknowledged hosts at once is not possible because these 
         # properties get added and nagios display ONLY hosts that have BOTH states
         # hosts that are in scheduled downtime, we will later omit services on those hosts
@@ -1150,55 +1150,47 @@ class CentreonServer(GenericServer):
             htobj = self.FetchURL(nagcgiurl_hosts)
             
             print nagcgiurl_hosts
-
-            table = htobj.body.div[3].table
-            #print dir(table)
             
-            
-            
-            # do some cleanup    
-            del htobj
-
-            for i in range(1, len(table.tr)):
+            raw = self.FetchURL(nagcgiurl_services, giveback="raw")
+            fraw = open("raw.html", "w")
+            fraw.write(raw)
+                                                  
+            htobj = lxml.objectify.fromstring(raw)
+                       
+            print "HOSTS:", nagcgiurl_hosts
+           
+            for l in htobj.l:
                 try:
-                    # ignore empty <tr> rows
-                    if not table.tr[i].countchildren() == 1:
-                        n = {}
-                        # host
-                        try:
-                            n["host"] = str(table.tr[i].td[0].table.tr.td.table.tr.td.a.text)
-                        except:
-                            n["host"] = str(nagitems[len(nagitems)-1]["host"])
-                        # status
-                        n["status"] = str(table.tr[i].td[1].text)
-                        # last_check
-                        n["last_check"] = str(table.tr[i].td[2].text)
-                        # duration
-                        n["duration"] = str(table.tr[i].td[3].text)
-                        # status_information
-                        n["status_information"] = str(table.tr[i].td[4].text)
-                        # attempts are not shown in case of hosts so it defaults to "N/A"
-                        n["attempt"] = "N/A"
-                        
-                        # add dictionary full of information about this host item to nagitems
-                        nagitems["hosts"].append(n)
-                        # after collection data in nagitems create objects from its informations
-                        # host objects contain service objects
-                        if not self.new_hosts.has_key(n["host"]):
-                            new_host = n["host"]
-                            self.new_hosts[new_host] = NagiosHost()
-                            self.new_hosts[new_host].name = n["host"]
-                            self.new_hosts[new_host].status = n["status"]
-                            self.new_hosts[new_host].last_check = n["last_check"]
-                            self.new_hosts[new_host].duration = n["duration"]
-                            self.new_hosts[new_host].attempt = n["attempt"]
-                            self.new_hosts[new_host].status_information= n["status_information"]
+                    n = {}
+                    # host
+                    n["host"] = l.hn.text
+                    # status
+                    n["status"] = l.cs.text
+                    # last_check
+                    n["last_check"] = l.lc.text
+                    # duration
+                    n["duration"] = l.d.text
+                    # status_information
+                    n["status_information"] = l.po.text
+                    # attempts are not shown in case of hosts so it defaults to "N/A"
+                    n["attempt"] = l.ca.text
+                    
+                    # add dictionary full of information about this host item to nagitems
+                    nagitems["hosts"].append(n)
+                    # after collection data in nagitems create objects from its informations
+                    # host objects contain service objects
+                    if not self.new_hosts.has_key(n["host"]):
+                        new_host = n["host"]
+                        self.new_hosts[new_host] = NagiosHost()
+                        self.new_hosts[new_host].name = n["host"]
+                        self.new_hosts[new_host].status = n["status"]
+                        self.new_hosts[new_host].last_check = n["last_check"]
+                        self.new_hosts[new_host].duration = n["duration"]
+                        self.new_hosts[new_host].attempt = n["attempt"]
+                        self.new_hosts[new_host].status_information= n["status_information"]
                 except:
                     import traceback
                     traceback.print_exc(file=sys.stdout)
-                
-            # do some cleanup
-            del table
             
         except:
             import traceback
@@ -1211,13 +1203,9 @@ class CentreonServer(GenericServer):
         try:
             htobj = self.FetchURL(nagcgiurl_services)
             raw = self.FetchURL(nagcgiurl_services, giveback="raw")
-            fraw = open("raw.html", "w")
-            fraw.write(raw)
-                         
+
             htobj = lxml.objectify.fromstring(raw)
-            
-            print dir(htobj)
-            
+
             print "SERVICES:", nagcgiurl_services
            
             for l in htobj.l:
@@ -1228,9 +1216,7 @@ class CentreonServer(GenericServer):
                     # hostname of a failing service if there are more than one
                     # so if the hostname is empty the nagios status item should get
                     # its hostname from the previuos item - one reason to keep "nagitems"
-                    print "l:", dir(l.hip)
-                    print "l.hip", l.hip.text
-                    n["host"] = l.hip.text
+                    n["host"] = l.hn.text
                     # service
                     n["service"] = l.sd.text
                     # status
@@ -1276,7 +1262,7 @@ class CentreonServer(GenericServer):
             # set checking flag back to False
             self.isChecking = False
             return "ERROR"
-       
+        """
          # hosts which are in scheduled downtime
         try:
             htobj = self.FetchURL(nagcgiurl_hosts_in_maintenance)
@@ -1353,6 +1339,7 @@ class CentreonServer(GenericServer):
             # set checking flag back to False
             self.isChecking = False
             return "ERROR"
+        """
         
         # some cleanup
         del nagitems
