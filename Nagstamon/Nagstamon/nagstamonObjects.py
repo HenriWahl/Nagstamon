@@ -673,7 +673,7 @@ class GenericServer(object):
         del self.hosts_acknowledged[::], self.hosts_in_maintenance[::]
 
         # put new informations into respective dictionaries      
-        self.hosts, self.hosts_acknowledged, self.hosts_in_maintenance = self.new_hosts, self.new_hosts_acknowledged, self.new_hosts_in_maintenance
+        self.hosts, self.hosts_acknowledged, self.hosts_in_maintenance = copy.copy(self.new_hosts), copy.copy(self.new_hosts_acknowledged), copy.copy(self.new_hosts_in_maintenance)
         
         # do some cleanup
         del self.new_hosts_acknowledged[::], self.new_hosts_in_maintenance[::]
@@ -819,10 +819,7 @@ class GenericServer(object):
                     # cleanup cleaner
                     del cleaner
     
-                # fourth step: make objects of tags for easy access
-                fpretty = open("pretty.html", "w")
-                fpretty.write(prettyhtml)
-                
+                # fourth step: make objects of tags for easy access              
                 htobj = lxml.objectify.fromstring(prettyhtml)
                 
                 #do some cleanup
@@ -1090,10 +1087,10 @@ class CentreonServer(GenericServer):
         nagitems = {"services":[], "hosts":[]}       
         
         # get sid in case this has not yet been done
-        if self.SID == None:
+        if self.SID == None or self.SID == "":
             self.SID = self._get_sid()     
             
-        print self.SID
+        print '"' + self.SID + '"'
                 
         # create filters like described in
         # http://www.nagios-wiki.de/nagios/tips/host-_und_serviceproperties_fuer_status.cgi?s=servicestatustypes
@@ -1149,47 +1146,50 @@ class CentreonServer(GenericServer):
         try:
             htobj = self.FetchURL(nagcgiurl_hosts)
             raw = self.FetchURL(nagcgiurl_hosts, giveback="raw")
-            fraw = open("raw.html", "w")
-            fraw.write(raw)
+            #fraw = open("raw.html", "w")
+            #fraw.write(raw)
                                                   
             htobj = lxml.objectify.fromstring(raw)
                        
             print "HOSTS:", nagcgiurl_hosts
             print htobj
-           
-            for l in htobj.l:
-                try:
-                    print l
-                    n = {}
-                    # host
-                    n["host"] = l.hn.text
-                    # status
-                    n["status"] = l.cs.text
-                    # last_check
-                    n["last_check"] = l.lc.text
-                    # duration
-                    n["duration"] = l.lsc.text
-                    # status_information
-                    n["status_information"] = l.ou.text
-                    # attempts are not shown in case of hosts so it defaults to "N/A"
-                    n["attempt"] = l.tr.text
-                    
-                    # add dictionary full of information about this host item to nagitems
-                    nagitems["hosts"].append(n)
-                    # after collection data in nagitems create objects from its informations
-                    # host objects contain service objects
-                    if not self.new_hosts.has_key(n["host"]):
-                        new_host = n["host"]
-                        self.new_hosts[new_host] = NagiosHost()
-                        self.new_hosts[new_host].name = n["host"]
-                        self.new_hosts[new_host].status = n["status"]
-                        self.new_hosts[new_host].last_check = n["last_check"]
-                        self.new_hosts[new_host].duration = n["duration"]
-                        self.new_hosts[new_host].attempt = n["attempt"]
-                        self.new_hosts[new_host].status_information= n["status_information"]
-                except:
-                    import traceback
-                    traceback.print_exc(file=sys.stdout)
+            
+            if htobj.__dict__.has_key("l"):
+                for l in htobj.l:
+                    try:
+                        n = {}
+                        # host
+                        n["host"] = l.hn.text
+                        # status
+                        n["status"] = l.cs.text
+                        # last_check
+                        n["last_check"] = l.lc.text
+                        # duration
+                        n["duration"] = l.lsc.text
+                        # status_information
+                        n["status_information"] = l.ou.text
+                        # attempts are not shown in case of hosts so it defaults to "N/A"
+                        n["attempt"] = l.tr.text
+                        # host acknowledged or not, has to be filtered
+                        n["is_acknowledged"] = l.ha.text
+                        if not(str(self.conf.filter_acknowledged_hosts_services) == "True" and \
+                           n["is_acknowledged"] == "1"):                    
+                            # add dictionary full of information about this host item to nagitems
+                            nagitems["hosts"].append(n)
+                            # after collection data in nagitems create objects from its informations
+                            # host objects contain service objects
+                            if not self.new_hosts.has_key(n["host"]):
+                                new_host = n["host"]
+                                self.new_hosts[new_host] = NagiosHost()
+                                self.new_hosts[new_host].name = n["host"]
+                                self.new_hosts[new_host].status = n["status"]
+                                self.new_hosts[new_host].last_check = n["last_check"]
+                                self.new_hosts[new_host].duration = n["duration"]
+                                self.new_hosts[new_host].attempt = n["attempt"]
+                                self.new_hosts[new_host].status_information= n["status_information"]
+                    except:
+                        import traceback
+                        traceback.print_exc(file=sys.stdout)
             
         except:
             import traceback
@@ -1202,55 +1202,64 @@ class CentreonServer(GenericServer):
         try:
             htobj = self.FetchURL(nagcgiurl_services)
             raw = self.FetchURL(nagcgiurl_services, giveback="raw")
-
+            fraw = open("raw.html", "w")
+            fraw.write(raw)
+            
             htobj = lxml.objectify.fromstring(raw)
 
             print "SERVICES:", nagcgiurl_services
            
-            for l in htobj.l:
-                try:
-                    n = {}
-                    # host
-                    # the resulting table of Nagios status.cgi table omits the
-                    # hostname of a failing service if there are more than one
-                    # so if the hostname is empty the nagios status item should get
-                    # its hostname from the previuos item - one reason to keep "nagitems"
-                    n["host"] = l.hn.text
-                    # service
-                    n["service"] = l.sd.text
-                    # status
-                    n["status"] = l.cs.text
-                    # last_check
-                    n["last_check"] = l.lc.text
-                    # duration
-                    n["duration"] = l.d.text
-                    # attempt
-                    n["attempt"] = l.ca.text
-                    # status_information
-                    n["status_information"] = l.po.text
-                    # add dictionary full of information about this service item to nagitems - only if service
-                    nagitems["services"].append(n)
+            if htobj.__dict__.has_key("l"):
+                for l in htobj.l:
+                    try:
+                        n = {}
+                        # host
+                        # the resulting table of Nagios status.cgi table omits the
+                        # hostname of a failing service if there are more than one
+                        # so if the hostname is empty the nagios status item should get
+                        # its hostname from the previuos item - one reason to keep "nagitems"
+                        n["host"] = l.hn.text
+                        # service
+                        n["service"] = l.sd.text
+                        # status
+                        n["status"] = l.cs.text
+                        # last_check
+                        n["last_check"] = l.lc.text
+                        # duration
+                        n["duration"] = l.d.text
+                        # attempt
+                        n["attempt"] = l.ca.text
+                        # status_information
+                        n["status_information"] = l.po.text
+                        # service is acknowledged or not, has to be filtered
+                        n["is_acknowledged"] = l.pa.text
+                        
+                        if not(str(self.conf.filter_acknowledged_hosts_services) == "True" and \
+                           n["is_acknowledged"] == "1"):
+                            # add dictionary full of information about this service item to nagitems - only if service
+                            nagitems["services"].append(n)
+                            
+                            # after collection data in nagitems create objects of its informations
+                            # host objects contain service objects
+                            if not self.new_hosts.has_key(n["host"]):
+                                self.new_hosts[n["host"]] = NagiosHost()
+                                self.new_hosts[n["host"]].name = n["host"]
+                                self.new_hosts[n["host"]].status = "UP"
+                            # if a service does not exist create its object
+                            if not self.new_hosts[n["host"]].services.has_key(n["service"]):
+                                new_service = n["service"]
+                                self.new_hosts[n["host"]].services[new_service] = NagiosService()
+                                self.new_hosts[n["host"]].services[new_service].host = n["host"]
+                                self.new_hosts[n["host"]].services[new_service].name = n["service"]
+                                self.new_hosts[n["host"]].services[new_service].status = n["status"]
+                                self.new_hosts[n["host"]].services[new_service].last_check = n["last_check"]
+                                self.new_hosts[n["host"]].services[new_service].duration = n["duration"]
+                                self.new_hosts[n["host"]].services[new_service].attempt = n["attempt"]
+                                self.new_hosts[n["host"]].services[new_service].status_information = n["status_information"]
                     
-                    # after collection data in nagitems create objects of its informations
-                    # host objects contain service objects
-                    if not self.new_hosts.has_key(n["host"]):
-                        self.new_hosts[n["host"]] = NagiosHost()
-                        self.new_hosts[n["host"]].name = n["host"]
-                        self.new_hosts[n["host"]].status = "UP"
-                    # if a service does not exist create its object
-                    if not self.new_hosts[n["host"]].services.has_key(n["service"]):
-                        new_service = n["service"]
-                        self.new_hosts[n["host"]].services[new_service] = NagiosService()
-                        self.new_hosts[n["host"]].services[new_service].host = n["host"]
-                        self.new_hosts[n["host"]].services[new_service].name = n["service"]
-                        self.new_hosts[n["host"]].services[new_service].status = n["status"]
-                        self.new_hosts[n["host"]].services[new_service].last_check = n["last_check"]
-                        self.new_hosts[n["host"]].services[new_service].duration = n["duration"]
-                        self.new_hosts[n["host"]].services[new_service].attempt = n["attempt"]
-                        self.new_hosts[n["host"]].services[new_service].status_information = n["status_information"]
-                except:
-                    import traceback
-                    traceback.print_exc(file=sys.stdout)
+                    except:
+                        import traceback
+                        traceback.print_exc(file=sys.stdout)
                                 
             # do some cleanup
             del htobj

@@ -8,6 +8,7 @@ import urllib
 import webbrowser
 import commands
 import re
+import sys
 # if running on windows import winsound
 import platform
 if platform.system() == "Windows":
@@ -54,13 +55,6 @@ class RefreshLoopOneServer(threading.Thread):
         threading.Thread.__init__(self, name=self.server.name)
         self.setDaemon(1)
 
-
-    #def __del__(self):
-    #    """
-    #    hopefully a __del__() method may make this object better collectable for gc
-    #    """
-    #    del(self)
-        
 
     def run(self):  
         """
@@ -133,7 +127,8 @@ class RefreshLoopOneServer(threading.Thread):
                         # wait for the doRefresh flag to be True, if it is, do a refresh
                         if self.doRefresh == True:
                             if str(self.conf.debug_mode) == "True":
-                                print self.server.name, ":", "Refreshing output - server is already checking:", self.server.isChecking         
+                                print self.server.name, ":", "Refreshing output - server is already checking:", self.server.isChecking                                        
+                            """
                             try:
                                 # check if server is already checked
                                 if self.server.isChecking == False:
@@ -159,7 +154,7 @@ class RefreshLoopOneServer(threading.Thread):
                                 import traceback
                                 import sys
                                 traceback.print_exc(file=sys.stdout)
-                            
+                            """
                             # reset refresh flag
                             self.doRefresh = False
                             # reset counter
@@ -258,7 +253,6 @@ class RecheckAll(threading.Thread):
         
 
     def run(self):
-        
         # get RecheckingAll flag to decide if rechecking all is possible (only if not already running)
         global RecheckingAll
         
@@ -270,8 +264,8 @@ class RecheckAll(threading.Thread):
                 # debug
                 if str(self.conf.debug_mode) == "True":
                     print "Recheck all: Rechecking all services on all hosts on all servers..."
-                    
-                for server in self.servers.values():
+
+                for server in self.servers.values():                
                     # only test enabled servers and only if not already 
                     if str(self.conf.servers[server.name].enabled):
                         # set server status for status field in popwin
@@ -292,7 +286,7 @@ class RecheckAll(threading.Thread):
                                 # debug
                                 if str(self.conf.debug_mode) == "True":
                                     print "Recheck all:", "rechecking", server.name + ": " + host.name + ": " + service.name
-                
+                                    
                 # wait until all rechecks have been done
                 while len(rechecks_dict) > 0:
                     # debug
@@ -322,7 +316,8 @@ class RecheckAll(threading.Thread):
                                
             except:
                 RecheckingAll = False
-                pass
+                import traceback
+                traceback.print_exc(file=sys.stdout)
            
         else:
             # debug
