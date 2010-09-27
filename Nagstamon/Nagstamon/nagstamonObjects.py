@@ -1202,8 +1202,8 @@ class CentreonServer(GenericServer):
         try:
             htobj = self.FetchURL(nagcgiurl_services)
             raw = self.FetchURL(nagcgiurl_services, giveback="raw")
-            fraw = open("raw.html", "w")
-            fraw.write(raw)
+            #fraw = open("raw.html", "w")
+            #fraw.write(raw)
             
             htobj = lxml.objectify.fromstring(raw)
 
