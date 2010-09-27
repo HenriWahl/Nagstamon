@@ -1133,7 +1133,7 @@ class CentreonServer(GenericServer):
         # hosts (up or down or unreachable)
         ###nagcgiurl_hosts = self.nagios_cgi_url + "/status.cgi?hostgroup=all&style=hostdetail&hoststatustypes=" + str(hoststatustypes) + "&hostprops=" + str(hostserviceprops)
         ##nagcgiurl_hosts = self.nagios_cgi_url + "/index.php?p=20103&o=hpb&autologin=1&useralias=" + MD5ify(self.username) + "&password=" + MD5ify(self.password) 
-        nagcgiurl_hosts = self.nagios_cgi_url + "/include/monitoring/status/Hosts/xml/hostXML.php?" + urllib.urlencode({"num":0, "limit":999, "o":"h", "sort_type":"status", "sid":self.SID})
+        nagcgiurl_hosts = self.nagios_cgi_url + "/include/monitoring/status/Hosts/xml/hostXML.php?" + urllib.urlencode({"num":0, "limit":999, "o":"hpb", "sort_type":"status", "sid":self.SID})
         # fetching hosts in downtime and acknowledged hosts at once is not possible because these 
         # properties get added and nagios display ONLY hosts that have BOTH states
         # hosts that are in scheduled downtime, we will later omit services on those hosts
@@ -1148,19 +1148,18 @@ class CentreonServer(GenericServer):
         # hosts must be analyzed separately
         try:
             htobj = self.FetchURL(nagcgiurl_hosts)
-            
-            print nagcgiurl_hosts
-            
-            raw = self.FetchURL(nagcgiurl_services, giveback="raw")
+            raw = self.FetchURL(nagcgiurl_hosts, giveback="raw")
             fraw = open("raw.html", "w")
             fraw.write(raw)
                                                   
             htobj = lxml.objectify.fromstring(raw)
                        
             print "HOSTS:", nagcgiurl_hosts
+            print htobj
            
             for l in htobj.l:
                 try:
+                    print l
                     n = {}
                     # host
                     n["host"] = l.hn.text
@@ -1169,11 +1168,11 @@ class CentreonServer(GenericServer):
                     # last_check
                     n["last_check"] = l.lc.text
                     # duration
-                    n["duration"] = l.d.text
+                    n["duration"] = l.lsc.text
                     # status_information
-                    n["status_information"] = l.po.text
+                    n["status_information"] = l.ou.text
                     # attempts are not shown in case of hosts so it defaults to "N/A"
-                    n["attempt"] = l.ca.text
+                    n["attempt"] = l.tr.text
                     
                     # add dictionary full of information about this host item to nagitems
                     nagitems["hosts"].append(n)
