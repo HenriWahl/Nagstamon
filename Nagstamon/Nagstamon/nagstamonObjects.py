@@ -482,8 +482,6 @@ class GenericServer(object):
                         try:
                             self.new_hosts_in_maintenance.append(str(table.tr[i].td[0].table.tr.td.table.tr.td.a.text))
                             # get real status of maintained host
-                            #if self.new_hosts.has_key(self.new_hosts_acknowledged[-1]):
-                            #    self.new_hosts[self.new_hosts_acknowledged[-1]].status = str(table.tr[i].td[1].text)
                             if self.new_hosts.has_key(self.new_hosts_in_maintenance[-1]):
                                 self.new_hosts[self.new_hosts_in_maintenance[-1]].status = str(table.tr[i].td[1].text)
                         except:
@@ -1046,10 +1044,15 @@ class CentreonServer(GenericServer):
     # centreon generic web interface uses a sid which is needed to ask for news
     SID = None
     
-    def _open_tree_view(self, item):
-        webbrowser.open('%s/index.php?autologin=1&p=1&useralias=%s&password=%s&p=4&mode=0&svc_id=%s' % \
-                        (self.nagios_url, MD5ify(self.username), MD5ify(self.password), item))
-        
+    def open_tree_view(self, host, service=None):
+        # must be a host if service is empty...
+        if service == "":
+            webbrowser.open(self.nagios_cgi_url + "/index.php?" + urllib.urlencode({"p":201, "autologin":1,\
+            "o":"hd", "useralias":MD5ify(self.username), "password":MD5ify(self.password), "host_name":host}))
+        else:
+            webbrowser.open(self.nagios_cgi_url + "/index.php?" + urllib.urlencode({"p":202, "autologin":1,\
+            "o":"svcd", "useralias":MD5ify(self.username), "password":MD5ify(self.password), "host_name":host,\
+             "service_description":service}))       
         
     def open_nagios(self):
         webbrowser.open(self.nagios_cgi_url + "/index.php?autologin=1&p=1&useralias=" + MD5ify(self.username) + "&password=" + MD5ify(self.password))
@@ -1074,7 +1077,6 @@ class CentreonServer(GenericServer):
         """
         gets a shiny new SID for XML HTTP requests to Centreon ćutting it out via .partition() from raw HTML
         """
-        #return self.FetchURL(self.nagios_cgi_url + "?p=1&autologin=1&useralias=" + MD5ify(self.username) + "&password=" + MD5ify(self.password), giveback="raw").partition("_sid='")[2].partition("'")[0]
         return self.FetchURL(self.nagios_cgi_url + "?" + urllib.urlencode({"p":1, "autologin":1, "useralias":MD5ify(self.username), "password":MD5ify(self.password)}), giveback="raw").partition("_sid='")[2].partition("'")[0]
         
     def _get_status(self):
@@ -1091,16 +1093,7 @@ class CentreonServer(GenericServer):
             self.SID = self._get_sid()     
             
         print '"' + self.SID + '"'
-                
-        # create filters like described in
-        # http://www.nagios-wiki.de/nagios/tips/host-_und_serviceproperties_fuer_status.cgi?s=servicestatustypes
-        # hoststatus
-        ###hoststatustypes = 12
-        ###if str(self.conf.filter_all_down_hosts) == "True":
-        ###    hoststatustypes = hoststatustypes - 4
-        ###if str(self.conf.filter_all_unreachable_hosts) == "True":
-        ###    hoststatustypes = hoststatustypes - 8
-        # servicestatus
+
         ###servicestatustypes = 253
         ###if str(self.conf.filter_all_unknown_services) == "True":
         ###    servicestatustypes = servicestatustypes - 8
@@ -1108,38 +1101,13 @@ class CentreonServer(GenericServer):
         ###    servicestatustypes = servicestatustypes - 4
         ###if str(self.conf.filter_all_critical_services) == "True":
         ###    servicestatustypes = servicestatustypes - 16
-        # serviceprops & hostprops both have the same values for the same states so I
-        # group them together
-        ###hostserviceprops = 0
-        ###if str(self.conf.filter_acknowledged_hosts_services) == "True":
-        ###    hostserviceprops = hostserviceprops + 8
-        ###if str(self.conf.filter_hosts_services_disabled_notifications) == "True":
-        ###    hostserviceprops = hostserviceprops + 8192
-        ###if str(self.conf.filter_hosts_services_disabled_checks) == "True":
-        ###    hostserviceprops = hostserviceprops + 32
-        ###if str(self.conf.filter_hosts_services_maintenance) == "True":
-        ###    hostserviceprops = hostserviceprops + 2
         
         # services (unknown, warning or critical?)
-        ###nagcgiurl_services = self.nagios_cgi_url + "/status.cgi?host=all&servicestatustypes=" + str(servicestatustypes) + "&serviceprops=" + str(hostserviceprops)
-        ##nagcgiurl_services = self.nagios_cgi_url + "/index.php?p=20202&o=svcpb&autologin=1&useralias=" + MD5ify(self.username) + "&password=" + MD5ify(self.password)
-        #nagcgiurl_services = self.nagios_cgi_url + "/index.php?p=20202&o=svcpb&autologin=1&useralias=%(username)&password=%(password)&sid=%(sid)" % {"username":MD5ify(self.username), "password":MD5ify(self.password), "sid":self.SID}
-        #nagcgiurl_services = self.nagios_cgi_url + "/index.php?" + urllib.urlencode({"p":20202, "o":"svcpb", "autologin":1, "useralias":MD5ify(self.username), "password":MD5ify(self.password), "sid":self.SID})
         nagcgiurl_services = self.nagios_cgi_url + "/include/monitoring/status/Services/xml/serviceXML.php?" + urllib.urlencode({"num":0, "limit":999, "o":"svcpb", "sort_type":"status", "sid":self.SID})
 
         # hosts (up or down or unreachable)
-        ###nagcgiurl_hosts = self.nagios_cgi_url + "/status.cgi?hostgroup=all&style=hostdetail&hoststatustypes=" + str(hoststatustypes) + "&hostprops=" + str(hostserviceprops)
-        ##nagcgiurl_hosts = self.nagios_cgi_url + "/index.php?p=20103&o=hpb&autologin=1&useralias=" + MD5ify(self.username) + "&password=" + MD5ify(self.password) 
         nagcgiurl_hosts = self.nagios_cgi_url + "/include/monitoring/status/Hosts/xml/hostXML.php?" + urllib.urlencode({"num":0, "limit":999, "o":"hpb", "sort_type":"status", "sid":self.SID})
-        # fetching hosts in downtime and acknowledged hosts at once is not possible because these 
-        # properties get added and nagios display ONLY hosts that have BOTH states
-        # hosts that are in scheduled downtime, we will later omit services on those hosts
-        # hostproperty 1 = HOST_SCHEDULED_DOWNTIME 
-        nagcgiurl_hosts_in_maintenance = self.nagios_cgi_url + "/status.cgi?hostgroup=all&style=hostdetail&hostprops=1"
-        # hosts that are acknowledged, we will later omit services on those hosts
-        # hostproperty 4 = HOST_STATE_ACKNOWLEDGED 
-        nagcgiurl_hosts_acknowledged = self.nagios_cgi_url + "/status.cgi?hostgroup=all&style=hostdetail&hostprops=4"
-                
+
         # hosts - mostly the down ones
         # unfortunately the hosts status page has a different structure so
         # hosts must be analyzed separately
@@ -1171,9 +1139,29 @@ class CentreonServer(GenericServer):
                         # attempts are not shown in case of hosts so it defaults to "N/A"
                         n["attempt"] = l.tr.text
                         # host acknowledged or not, has to be filtered
-                        n["is_acknowledged"] = l.ha.text
-                        if not(str(self.conf.filter_acknowledged_hosts_services) == "True" and \
-                           n["is_acknowledged"] == "1"):                    
+                        n["acknowledged"] = l.ha.text
+                        # host notification disabled or not, has to be filtered
+                        n["notification_enabled"] = l.ne.text
+                        # host check enabled or not, has to be filtered
+                        n["check_enabled"] = l.ace.text
+                        # host down for maintenance or not, has to be filtered
+                        n["in_downtime"] = l.hdtm.text
+                        
+                        # store information about acknowledged and down hosts for further reference
+                        if n["in_downtime"] == "1" : self.new_hosts_in_maintenance.append(n["host"])
+                        if n["acknowledged"] == "1" : self.new_hosts_acknowledged.append(n["host"])
+                         
+                        # what works in cgi-Nagios via cgi request has to be filtered out here "manually"
+                        if not (str(self.conf.filter_acknowledged_hosts_services) == "True" and \
+                           n["acknowledged"] == "1") and \
+                           not (str(self.conf.filter_hosts_services_disabled_notifications) == "True" and \
+                           n["notification_enabled"] == "0") and \
+                           not (str(self.conf.filter_hosts_services_disabled_checks) == "True" and \
+                           n["check_enabled"] == "0") and \
+                           not (str(self.conf.filter_hosts_services_maintenance) == "True" and \
+                           n["in_downtime"] == "1") and\
+                           not (str(self.conf.filter_all_down_hosts) == "True" and n["status"] == "DOWN") and\
+                           not (str(self.conf.filter_all_unreachable_hosts) == "True" and n["status"] == "UNREACHABLE"):
                             # add dictionary full of information about this host item to nagitems
                             nagitems["hosts"].append(n)
                             # after collection data in nagitems create objects from its informations
@@ -1232,10 +1220,26 @@ class CentreonServer(GenericServer):
                         # status_information
                         n["status_information"] = l.po.text
                         # service is acknowledged or not, has to be filtered
-                        n["is_acknowledged"] = l.pa.text
-                        
-                        if not(str(self.conf.filter_acknowledged_hosts_services) == "True" and \
-                           n["is_acknowledged"] == "1"):
+                        n["acknowledged"] = l.pa.text
+                        # service notification enabled or not, has to be filtered
+                        n["notification_enabled"] = l.ne.text
+                        # service check enabled or not, has to be filtered
+                        n["check_enabled"] = l.ac.text
+                        # service down for maintenance or not, has to be filtered
+                        n["in_downtime"] = l.dtm.text
+
+                        # what works in cgi-Nagios via cgi request has to be filtered out here "manually"
+                        if not (str(self.conf.filter_acknowledged_hosts_services) == "True" and \
+                           n["acknowledged"] == "1") and \
+                           not (str(self.conf.filter_hosts_services_disabled_notifications) == "True" and \
+                           n["notification_enabled"] == "0") and \
+                           not (str(self.conf.filter_hosts_services_disabled_checks) == "True" and \
+                           n["check_enabled"] == "0") and \
+                           not (str(self.conf.filter_hosts_services_maintenance) == "True" and \
+                           n["in_downtime"] == "1") and\
+                           not (str(self.conf.filter_all_unknown_services) == "True" and n["status"] == "UNKNOWN") and\
+                           not (str(self.conf.filter_all_warning_services) == "True" and n["status"] == "WARNING") and\
+                           not (str(self.conf.filter_all_critical_services) == "True" and n["status"] == "CRITICAL"): 
                             # add dictionary full of information about this service item to nagitems - only if service
                             nagitems["services"].append(n)
                             
@@ -1256,7 +1260,6 @@ class CentreonServer(GenericServer):
                                 self.new_hosts[n["host"]].services[new_service].duration = n["duration"]
                                 self.new_hosts[n["host"]].services[new_service].attempt = n["attempt"]
                                 self.new_hosts[n["host"]].services[new_service].status_information = n["status_information"]
-                    
                     except:
                         import traceback
                         traceback.print_exc(file=sys.stdout)
@@ -1270,84 +1273,6 @@ class CentreonServer(GenericServer):
             # set checking flag back to False
             self.isChecking = False
             return "ERROR"
-        """
-         # hosts which are in scheduled downtime
-        try:
-            htobj = self.FetchURL(nagcgiurl_hosts_in_maintenance)
-           
-            # workaround for Nagios < 2.7 which has an <EMBED> in its output
-            try:
-                table = htobj.body.div.table
-            except:
-                table = htobj.body.embed.div.table
-            
-            # do some cleanup    
-            del htobj
-
-            for i in range(1, len(table.tr)):
-                try:
-                    # ignore empty <tr> rows
-                    if not table.tr[i].countchildren() == 1:
-                        # host
-                        try:
-                            self.new_hosts_in_maintenance.append(str(table.tr[i].td[0].table.tr.td.table.tr.td.a.text))
-                            # get real status of maintained host
-                            #if self.new_hosts.has_key(self.new_hosts_acknowledged[-1]):
-                            #    self.new_hosts[self.new_hosts_acknowledged[-1]].status = str(table.tr[i].td[1].text)
-                            if self.new_hosts.has_key(self.new_hosts_in_maintenance[-1]):
-                                self.new_hosts[self.new_hosts_in_maintenance[-1]].status = str(table.tr[i].td[1].text)
-                        except:
-                            pass
-                except:
-                    pass
-
-            # do some cleanup
-            del table
-        
-        except:
-            import traceback
-            traceback.print_exc(file=sys.stdout)
-            # set checking flag back to False
-            self.isChecking = False
-            return "ERROR"
-        
-        # hosts which are acknowledged
-        try:
-            htobj = self.FetchURL(nagcgiurl_hosts_acknowledged)
-            # workaround for Nagios < 2.7 which has an <EMBED> in its output
-            try:
-                table = htobj.body.div.table
-            except:
-                table = htobj.body.embed.div.table
-            
-            # do some cleanup    
-            del htobj               
-
-            for i in range(1, len(table.tr)):
-                try:
-                    # ignore empty <tr> rows
-                    if not table.tr[i].countchildren() == 1:
-                        # host
-                        try:
-                            self.new_hosts_acknowledged.append(str(table.tr[i].td[0].table.tr.td.table.tr.td.a.text))
-                            # get real status of acknowledged host
-                            if self.new_hosts.has_key(self.new_hosts_acknowledged[-1]):
-                                self.new_hosts[self.new_hosts_acknowledged[-1]].status = str(table.tr[i].td[1].text)
-                        except:
-                            pass
-                except:
-                    pass
-
-            # do some cleanup
-            del table
-
-        except:
-            import traceback
-            traceback.print_exc(file=sys.stdout)
-            # set checking flag back to False
-            self.isChecking = False
-            return "ERROR"
-        """
         
         # some cleanup
         del nagitems
