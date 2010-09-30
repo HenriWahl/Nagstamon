@@ -69,10 +69,7 @@ class RefreshLoopOneServer(threading.Thread):
             # check if we have to leave update interval sleep
             #if count > int(self.conf.update_interval)*60: self.doRefresh = True
 
-            if self.server.count > int(self.conf.update_interval)*12: self.doRefresh = True
-            
-            #print "SELF.COUNT every Schleife", count, sys.getrefcount(count), sys.getsizeof(count)#, gc.get_referrers(count)
-
+            if self.server.count > int(self.conf.update_interval)*60: self.doRefresh = True
             
             # self.doRefresh could also been changed by RefreshAllServers()
             if self.doRefresh == True:

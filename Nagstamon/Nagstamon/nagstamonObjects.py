@@ -744,8 +744,8 @@ class GenericServer(object):
             except:
                 import traceback
                 traceback.print_exc(file=sys.stdout)
-
-            # if something goes wrong with accessing the URL it can be caught
+        
+        # if something goes wrong with accessing the URL it can be caught
         try:
             # if there should be no proxy used use an empty proxy_handler - only necessary in Windows,
             # where IE proxy settings are used automatically if available
@@ -1075,9 +1075,16 @@ class CentreonServer(GenericServer):
 
     def _get_sid(self):
         """
-        gets a shiny new SID for XML HTTP requests to Centreon ćutting it out via .partition() from raw HTML
+        gets a shiny new SID for XML HTTP requests to Centreon cutting it out via .partition() from raw HTML
+        additionally get php session cookie
         """
-        return self.FetchURL(self.nagios_cgi_url + "?" + urllib.urlencode({"p":1, "autologin":1, "useralias":MD5ify(self.username), "password":MD5ify(self.password)}), giveback="raw").partition("_sid='")[2].partition("'")[0]
+        try:
+            if self.Cookie == None:
+                # the cookie jar will contain Centreon 
+                self.Cookie = cookielib.CookieJar()
+            return self.FetchURL(self.nagios_cgi_url + "?" + urllib.urlencode({"p":1, "autologin":1, "useralias":MD5ify(self.username), "password":MD5ify(self.password)}), giveback="raw").partition("_sid='")[2].partition("'")[0]
+        except:
+            return None
         
     def _get_status(self):
         """
@@ -1093,14 +1100,6 @@ class CentreonServer(GenericServer):
             self.SID = self._get_sid()     
             
         print '"' + self.SID + '"'
-
-        ###servicestatustypes = 253
-        ###if str(self.conf.filter_all_unknown_services) == "True":
-        ###    servicestatustypes = servicestatustypes - 8
-        ###if str(self.conf.filter_all_warning_services) == "True":
-        ###    servicestatustypes = servicestatustypes - 4
-        ###if str(self.conf.filter_all_critical_services) == "True":
-        ###    servicestatustypes = servicestatustypes - 16
         
         # services (unknown, warning or critical?)
         nagcgiurl_services = self.nagios_cgi_url + "/include/monitoring/status/Services/xml/serviceXML.php?" + urllib.urlencode({"num":0, "limit":999, "o":"svcpb", "sort_type":"status", "sid":self.SID})
@@ -1112,15 +1111,13 @@ class CentreonServer(GenericServer):
         # unfortunately the hosts status page has a different structure so
         # hosts must be analyzed separately
         try:
-            htobj = self.FetchURL(nagcgiurl_hosts)
-            raw = self.FetchURL(nagcgiurl_hosts, giveback="raw")
-            #fraw = open("raw.html", "w")
-            #fraw.write(raw)
-                                                  
+            raw = self.FetchURL(nagcgiurl_hosts, giveback="raw")                    
             htobj = lxml.objectify.fromstring(raw)
+            if htobj == "bad session id":
+                print "BAD SESSION ID"
                        
             print "HOSTS:", nagcgiurl_hosts
-            print htobj
+            print "'''" + str(htobj) + "''''"
             
             if htobj.__dict__.has_key("l"):
                 for l in htobj.l:
@@ -1188,11 +1185,7 @@ class CentreonServer(GenericServer):
 
         # services
         try:
-            htobj = self.FetchURL(nagcgiurl_services)
             raw = self.FetchURL(nagcgiurl_services, giveback="raw")
-            #fraw = open("raw.html", "w")
-            #fraw.write(raw)
-            
             htobj = lxml.objectify.fromstring(raw)
 
             print "SERVICES:", nagcgiurl_services
@@ -1276,7 +1269,39 @@ class CentreonServer(GenericServer):
         
         # some cleanup
         del nagitems
- 
+        
+
+    def _set_acknowledge(self, host, service, author, comment, all_services=[]):
+        url = self.nagios_cgi_url + "/main.php"
+
+        # decision about host or service - they have different URLs
+        # do not care about the doube %s (%s%s) - its ok, "flags" cares about the necessary "&"
+
+        if not service:
+            # host
+            cgi_data = urllib.urlencode({"p":"20105", "cmd":"14", "host_name":host, \
+                    "author":author, "comment":comment, "submit":"Add", "notify":"1",\
+                    "persistent":"1", "sticky":"1", "ackhostservice":"0", "o":"hd", "en":"1"})
+        else:
+            # service @ host
+            #cgi_data = urllib.urlencode({"cmd_typ":"34", "cmd_mod":"2", "host":host, "service":service, "com_author":author, "com_data":comment, "btnSubmit":"Commit"})
+            cgi_data = urllib.urlencode({"p":"20215", "cmd":"15", "host_name":host, \
+                    "author":author, "comment":comment, "submit":"Add", "notify":"1",\
+                    "service_description":service, "force_check":"1", \
+                    "persistent":"1", "sticky":"1", "o":"svcd", "en":"1"})
+            print url + "?" + cgi_data
+            print self.Cookie
+            
+        # running remote cgi command        
+        self.FetchURL(url, giveback="nothing", cgi_data=cgi_data)
+
+        # acknowledge all services on a host
+        for s in all_services:
+            # service @ host
+            cgi_data = urllib.urlencode({"cmd_typ":"34", "cmd_mod":"2", "host":host, "service":s, "com_author":author, "com_data":comment, "btnSubmit":"Commit"})
+            #running remote cgi command        
+            self.FetchURL(url, giveback="nothing", cgi_data=cgi_data)
+            
 
 class NagiosObject(object):    
     def get_host_name(self):
