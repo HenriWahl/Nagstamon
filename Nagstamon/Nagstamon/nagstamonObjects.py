@@ -209,37 +209,25 @@ class GenericServer(object):
             all_services = thread_obj.all_services
         else:
             all_services = []
-        self._set_acknowledge(thread_obj.host, thread_obj.service, thread_obj.author, thread_obj.comment, all_services)
+        self._set_acknowledge(thread_obj.host, thread_obj.service, thread_obj.author, thread_obj.comment,\
+                              thread_obj.sticky, thread_obj.notify, thread_obj.persistent, all_services)
      
-    def _set_acknowledge(self, host, service, author, comment, all_services=[]):
+    def _set_acknowledge(self, host, service, author, comment, sticky, notify, persistent, all_services=[]):
 
-        url = self.nagios_cgi_url + "/cmd.cgi"
-        
-        # flags for comments as on Nagios web GUI, formerly in nagstamonGUI.Acknowledge()
-        # starting with "&" in case all flags are empty, so at least 
-        # the query will be glued by &
-        flags = "&"
-        if self.sticky == True:
-            flags = flags + "sticky_ack=on&"
-        if self.notify == True:
-            flags = flags + "send_notification=on&"
-        if self.persistent == True:
-            flags = flags + "persistent=on&"        
+        url = self.nagios_cgi_url + "/cmd.cgi"      
         
         # decision about host or service - they have different URLs
         # do not care about the doube %s (%s%s) - its ok, "flags" cares about the necessary "&"
         if not service:
             # host
-            cgi_data = urllib.urlencode({"cmd_typ":"33", "cmd_mod":"2", "host":host, "com_author":author, "com_data":comment, "btnSubmit":"Commit"})
+            cgi_data = urllib.urlencode({"cmd_typ":"33", "cmd_mod":"2", "host":host, "com_author":author,\
+                                         "sticky_ack":self.ACKFLAGS[sticky], "send_notification":self.ACKFLAGS[notify], "persistent":self.ACKFLAGS[persistent],\
+                                         "com_data":comment, "btnSubmit":"Commit"})
         else:
             # service @ host
-            cgi_data = urllib.urlencode({"cmd_typ":"34", "cmd_mod":"2", "host":host, "service":service, "com_author":author, "com_data":comment, "btnSubmit":"Commit"})   
-        
-        # add flags
-        cgi_data = cgi_data + flags
-        
-        print cgi_data
-        
+            cgi_data = urllib.urlencode({"cmd_typ":"34", "cmd_mod":"2", "host":host, "service":service,\
+                                         "sticky_ack":self.ACKFLAGS[sticky], "send_notification":self.ACKFLAGS[notify], "persistent":self.ACKFLAGS[persistent],\
+                                         "com_author":author, "com_data":comment, "btnSubmit":"Commit"})          
         # running remote cgi command        
         self.FetchURL(url, giveback="nothing", cgi_data=cgi_data)
 
@@ -1293,7 +1281,7 @@ class CentreonServer(GenericServer):
         del nagitems
         
 
-    def _set_acknowledge(self, host, service, author, comment, all_services=[]):
+    def _set_acknowledge(self, host, service, author, comment, sticky, notify, persistent, all_services=[]):
         url = self.nagios_cgi_url + "/main.php"
 
         # decision about host or service - they have different URLs
@@ -1302,29 +1290,28 @@ class CentreonServer(GenericServer):
         if not service:
             # host
             cgi_data = urllib.urlencode({"p":"20105", "cmd":"14", "host_name":host, \
-                    "author":author, "comment":comment, "submit":"Add", "notify":"1",\
-                    "persistent":"1", "sticky":"1", "ackhostservice":"0", "o":"hd", "en":"1"})
+                    "author":author, "comment":comment, "submit":"Add", "notify":int(notify),\
+                    "persistent":int(persistent), "sticky":int(sticky), "ackhostservice":"0", "o":"hd", "en":"1"})
+            # running remote cgi command, also possible with GET method     
+            self.FetchURL(url + "?" + cgi_data, giveback="nothing")        
         else:
-            # service @ host
-            cgi_data = urllib.urlencode({"p":"20215", "cmd":"15", "host_name":host, \
-                    "author":author, "comment":comment, "submit":"Add", "notify":"1",\
-                    "service_description":service, "force_check":"1", \
-                    "persistent":"1", "sticky":"1", "o":"svcd", "en":"1"})
-            print url + "?" + cgi_data
-            print self.Cookie
-            
-        # running remote cgi command, also possible with GET method     
-        self.FetchURL(url + "?" + cgi_data, giveback="nothing")        
-        #ackraw = self.FetchURL(url + "?" + cgi_data, giveback="raw")
-        #fackraw = open("ackraw.html", "w")
-        #fackraw.write(ackraw)
-        
-        # acknowledge all services on a host
-        for s in all_services:
-            # service @ host
-            cgi_data = urllib.urlencode({"cmd_typ":"34", "cmd_mod":"2", "host":host, "service":s, "com_author":author, "com_data":comment, "btnSubmit":"Commit"})
-            #running remote cgi command        
-            self.FetchURL(url, giveback="nothing", cgi_data=cgi_data)
+            # service(s) @ host
+            # if all_services is empty only one service has to be checked - the one clicked
+            # otherwise if there all services should be acknowledged
+            if len(all_services) == 0: all_services = [service]
+            # acknowledge all services on a host
+            for s in all_services:
+                # service @ host
+                cgi_data = urllib.urlencode({"p":"20215", "cmd":"15", "host_name":host, \
+                        "author":author, "comment":comment, "submit":"Add", "notify":int(notify),\
+                        "service_description":s, "force_check":"1", \
+                        "persistent":int(persistent), "sticky":int(sticky), "o":"svcd", "en":"1"}) 
+                # debug
+                if str(self.conf.debug_mode) == "True": 
+                    print self.name, host, s +": " + url + "?" + cgi_data            
+                
+                #running remote cgi command with GET method        
+                self.FetchURL(url + "?" + cgi_data, giveback="nothing") 
             
 
 class NagiosObject(object):    

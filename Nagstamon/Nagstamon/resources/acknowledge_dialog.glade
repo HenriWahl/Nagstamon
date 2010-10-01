@@ -130,7 +130,7 @@
                             <widget class="GtkCheckButton" id="input_checkbutton_sticky_acknowledgement">
                                 <property name="border_width">3</property>
                                 <property name="is_focus">True</property>
-                                <property name="label" context="yes" translatable="yes">Sticky Acknowledgement</property>
+                                <property name="label" context="yes" translatable="yes">Sticky acknowledgement</property>
                                 <property name="visible">True</property>
                             </widget>
                             <packing>
@@ -143,7 +143,7 @@
                         <child>
                             <widget class="GtkCheckButton" id="input_checkbutton_send_notification">
                                 <property name="border_width">3</property>
-                                <property name="label" context="yes" translatable="yes">Send Notification</property>
+                                <property name="label" context="yes" translatable="yes">Send notification</property>
                                 <property name="visible">True</property>
                             </widget>
                             <packing>

@@ -333,7 +333,6 @@ class Acknowledge(threading.Thread):
         self.setDaemon(1)
 
     def run(self):
-        print self.__dict__
         self.server.set_acknowledge(self)
         
     
