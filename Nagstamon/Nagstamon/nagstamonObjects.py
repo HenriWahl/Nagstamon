@@ -1284,7 +1284,6 @@ class CentreonServer(GenericServer):
                     "persistent":"1", "sticky":"1", "ackhostservice":"0", "o":"hd", "en":"1"})
         else:
             # service @ host
-            #cgi_data = urllib.urlencode({"cmd_typ":"34", "cmd_mod":"2", "host":host, "service":service, "com_author":author, "com_data":comment, "btnSubmit":"Commit"})
             cgi_data = urllib.urlencode({"p":"20215", "cmd":"15", "host_name":host, \
                     "author":author, "comment":comment, "submit":"Add", "notify":"1",\
                     "service_description":service, "force_check":"1", \
@@ -1292,9 +1291,12 @@ class CentreonServer(GenericServer):
             print url + "?" + cgi_data
             print self.Cookie
             
-        # running remote cgi command        
-        self.FetchURL(url, giveback="nothing", cgi_data=cgi_data)
-
+        # running remote cgi command, also possible with GET method     
+        self.FetchURL(url + "?" + cgi_data, giveback="nothing")        
+        #ackraw = self.FetchURL(url + "?" + cgi_data, giveback="raw")
+        #fackraw = open("ackraw.html", "w")
+        #fackraw.write(ackraw)
+        
         # acknowledge all services on a host
         for s in all_services:
             # service @ host
