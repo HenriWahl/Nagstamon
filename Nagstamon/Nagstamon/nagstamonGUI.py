@@ -45,7 +45,7 @@ class Sorting(object):
     Stores tuple pairs in form of:
     (<column_id>, <gtk.SORT_ASCENDING|gtk.SORT_DESCENDING)
     """
-    def __init__(self, sorting_tuple_list=[], max_remember=4):
+    def __init__(self, sorting_tuple_list=[], max_remember=8):
         self.sorting_tuple_list = sorting_tuple_list
         self.max_remember = max_remember
     
@@ -156,6 +156,7 @@ class GUI(object):
 
     def on_column_header_click(self, model, id, tab_model, server):
         """ Sets current sorting according to column id """
+        
         # makes column headers sortable by first time click (hack)
         order = model.get_sort_order()
         tab_model.set_sort_column_id(id, order)
@@ -164,16 +165,19 @@ class GUI(object):
         if rows_reordered_handler is not None:
             tab_model.disconnect(rows_reordered_handler)
             new_rows_reordered_handler = tab_model.connect_after('rows-reordered', self.on_sorting_order_change, id, model, server)
+            self.set_rows_reordered_handler(server, new_rows_reordered_handler)
         else:
+            new_rows_reordered_handler = tab_model.connect_after('rows-reordered', self.on_sorting_order_change, id, model, server, False)
+            self.set_rows_reordered_handler(server, new_rows_reordered_handler)
             self.on_sorting_order_change(tab_model, None, None, None, id, model, server)
-        self.set_rows_reordered_handler(server, new_rows_reordered_handler)
         model.set_sort_column_id(id)
 
-    def on_sorting_order_change(self, tab_model, path, iter, new_order, id, model, server):
+    def on_sorting_order_change(self, tab_model, path, iter, new_order, id, model, server, do_action=True):
         """ Saves current sorting change in object property """
-        order = model.get_sort_order()
-        last_sorting = self.get_last_sorting(server)
-        last_sorting.add(id, order)
+        if do_action:
+            order = model.get_sort_order()
+            last_sorting = self.get_last_sorting(server)
+            last_sorting.add(id, order)
 
     #def __del__(self):
     #    """
