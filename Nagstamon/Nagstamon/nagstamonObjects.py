@@ -1092,9 +1092,19 @@ class CentreonServer(GenericServer):
             if self.Cookie == None:
                 # the cookie jar will contain Centreon 
                 self.Cookie = cookielib.CookieJar()
-            return self.FetchURL(self.nagios_cgi_url + "?" + urllib.urlencode({"p":1, "autologin":1, "useralias":MD5ify(self.username), "password":MD5ify(self.password)}), giveback="raw").partition("_sid='")[2].partition("'")[0]
+            return self.FetchURL(self.nagios_cgi_url + "/index.php?" + urllib.urlencode({"p":1, "autologin":1, "useralias":MD5ify(self.username), "password":MD5ify(self.password)}), giveback="raw").partition("_sid='")[2].partition("'")[0]
         except:
             return None
+        
+        
+    def _get_host_id(self):
+        """
+        get host_id 
+        """
+        return self.FetchURL(self.nagios_cgi_url + "/main.php?" + urllib.urlencode({"p":201, "autologin":1,\
+                                    "o":"hd", "host_name":"sparky",\
+                                    "useralias":MD5ify(self.username), "password":MD5ify(self.password)}), giveback="raw").partition("host_id = '")[2].partition("'")[0]
+
         
     def _get_status(self):
         """
@@ -1109,8 +1119,10 @@ class CentreonServer(GenericServer):
         if self.SID == None or self.SID == "":
             self.SID = self._get_sid()     
             
-        print '"' + self.SID + '"'
-        
+            
+        print "HOST_ID", self._get_host_id()
+            
+
         # services (unknown, warning or critical?)
         nagcgiurl_services = self.nagios_cgi_url + "/include/monitoring/status/Services/xml/serviceXML.php?" + urllib.urlencode({"num":0, "limit":999, "o":"svcpb", "sort_type":"status", "sid":self.SID})
 
@@ -1282,16 +1294,17 @@ class CentreonServer(GenericServer):
         
 
     def _set_acknowledge(self, host, service, author, comment, sticky, notify, persistent, all_services=[]):
-        url = self.nagios_cgi_url + "/main.php"
-
         # decision about host or service - they have different URLs
         # do not care about the doube %s (%s%s) - its ok, "flags" cares about the necessary "&"
-
         if not service:
             # host
             cgi_data = urllib.urlencode({"p":"20105", "cmd":"14", "host_name":host, \
                     "author":author, "comment":comment, "submit":"Add", "notify":int(notify),\
                     "persistent":int(persistent), "sticky":int(sticky), "ackhostservice":"0", "o":"hd", "en":"1"})
+            # debug
+            if str(self.conf.debug_mode) == "True": 
+                print self.name, host, s +": " + self.nagios_cgi_url + "/main.php?"+ cgi_data     
+            
             # running remote cgi command, also possible with GET method     
             self.FetchURL(url + "?" + cgi_data, giveback="nothing")        
         else:
@@ -1308,10 +1321,33 @@ class CentreonServer(GenericServer):
                         "persistent":int(persistent), "sticky":int(sticky), "o":"svcd", "en":"1"}) 
                 # debug
                 if str(self.conf.debug_mode) == "True": 
-                    print self.name, host, s +": " + url + "?" + cgi_data            
+                    print self.name, host, s +": " + self.nagios_cgi_url + "/main.php?" + cgi_data            
                 
                 #running remote cgi command with GET method        
-                self.FetchURL(url + "?" + cgi_data, giveback="nothing") 
+                self.FetchURL(self.nagios_cgi_url + "/main.php?" + cgi_data, giveback="nothing") 
+                
+
+    def _set_recheck(self, host, service):
+        # decision about host or service - they have different URLs
+        #"./include/monitoring/objectDetails/xml/serviceSendCommand.php?cmd=" + cmd + "&host_id=" + host_id + "&service_id=" + svc_id + "&sid=" + _sid + "&actiontype=" + actiontype, true);
+        if not service:
+            # host
+            # get start time from Nagios as HTML to use same timezone setting like the locally installed Nagios
+            #html = self.FetchURL(self.nagios_cgi_url + "/cmd.cgi?" + urllib.urlencode({"cmd_typ":"96", "host":host}), giveback="raw")
+            #start_time = html.split("NAME='start_time' VALUE='")[1].split("'></b></td></tr>")[0]
+            # fill and encode CGI data
+            cgi_data = urllib.urlencode({"cmd":"service_schedule_check", "actiontype":1,\
+                                         "sid":self.SID})
+        else:
+            # service @ host
+            # get start time from Nagios as HTML to use same timezone setting like the locally instaled Nagios
+            html = self.FetchURL(self.nagios_cgi_url + "/cmd.cgi?" + urllib.urlencode({"cmd_typ":"7", "host":host, "service":service}), giveback="raw")
+            start_time = html.split("NAME='start_time' VALUE='")[1].split("'></b></td></tr>")[0]
+            # fill and encode CGI data
+            cgi_data = urllib.urlencode({"cmd_typ":"7", "cmd_mod":"2", "host":host, "service":service, "start_time":start_time, "force_check":"on", "btnSubmit":"Commit"})
+
+        # execute POST request
+        self.FetchURL(self.nagios_cgi_url + "/main.php?" + cgi_data, giveback="nothing")
             
 
 class NagiosObject(object):    
