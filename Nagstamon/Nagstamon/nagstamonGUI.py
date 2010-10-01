@@ -163,6 +163,7 @@ class GUI(object):
         rows_reordered_handler = self.get_rows_reordered_handler(server)
         if rows_reordered_handler is not None:
             tab_model.disconnect(rows_reordered_handler)
+        self.on_sorting_order_change(tab_model, None, None, None, id, model, server)
         new_rows_reordered_handler = tab_model.connect_after('rows-reordered', self.on_sorting_order_change, id, model, server)
         self.set_rows_reordered_handler(server, new_rows_reordered_handler)
         model.set_sort_column_id(id)
