@@ -130,8 +130,12 @@ class GenericServer(object):
     DISABLED_CONTROLS = []
     URL_SERVICE_SEPARATOR = '&service='
     
-    BODY_TABLE_INDEX = 2 # used in Nagios _get_status method
-   
+    # used in Nagios _get_status method
+    BODY_TABLE_INDEX = 2 
+    
+    # Nagios CGI flags translation dictionary for acknowledging hosts/services 
+    ACKFLAGS = {True:"on", False:"off"}
+    
     @classmethod
     def get_columns(cls, row):
         """ Gets columns filled with row data """
@@ -208,7 +212,20 @@ class GenericServer(object):
         self._set_acknowledge(thread_obj.host, thread_obj.service, thread_obj.author, thread_obj.comment, all_services)
      
     def _set_acknowledge(self, host, service, author, comment, all_services=[]):
+
         url = self.nagios_cgi_url + "/cmd.cgi"
+        
+        # flags for comments as on Nagios web GUI, formerly in nagstamonGUI.Acknowledge()
+        # starting with "&" in case all flags are empty, so at least 
+        # the query will be glued by &
+        flags = "&"
+        if self.sticky == True:
+            flags = flags + "sticky_ack=on&"
+        if self.notify == True:
+            flags = flags + "send_notification=on&"
+        if self.persistent == True:
+            flags = flags + "persistent=on&"        
+        
         # decision about host or service - they have different URLs
         # do not care about the doube %s (%s%s) - its ok, "flags" cares about the necessary "&"
         if not service:
@@ -216,8 +233,13 @@ class GenericServer(object):
             cgi_data = urllib.urlencode({"cmd_typ":"33", "cmd_mod":"2", "host":host, "com_author":author, "com_data":comment, "btnSubmit":"Commit"})
         else:
             # service @ host
-            cgi_data = urllib.urlencode({"cmd_typ":"34", "cmd_mod":"2", "host":host, "service":service, "com_author":author, "com_data":comment, "btnSubmit":"Commit"})
-
+            cgi_data = urllib.urlencode({"cmd_typ":"34", "cmd_mod":"2", "host":host, "service":service, "com_author":author, "com_data":comment, "btnSubmit":"Commit"})   
+        
+        # add flags
+        cgi_data = cgi_data + flags
+        
+        print cgi_data
+        
         # running remote cgi command        
         self.FetchURL(url, giveback="nothing", cgi_data=cgi_data)
 

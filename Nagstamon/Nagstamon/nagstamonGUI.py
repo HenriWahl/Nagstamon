@@ -163,7 +163,7 @@ class GUI(object):
         rows_reordered_handler = self.get_rows_reordered_handler(server)
         if rows_reordered_handler is not None:
             tab_model.disconnect(rows_reordered_handler)
-        self.on_sorting_order_change(tab_model, None, None, None, id, model, server)
+            self.on_sorting_order_change(tab_model, None, None, None, id, model, server)
         new_rows_reordered_handler = tab_model.connect_after('rows-reordered', self.on_sorting_order_change, id, model, server)
         self.set_rows_reordered_handler(server, new_rows_reordered_handler)
         model.set_sort_column_id(id)
@@ -514,8 +514,11 @@ class GUI(object):
         service = self.acknowledge_xml.get_widget("input_label_service").get_text()
         author = self.acknowledge_xml.get_widget("input_entry_author").get_text()
         comment = self.acknowledge_xml.get_widget("input_entry_comment").get_text()
-        # check if all services on host should be acknowledged too
         acknowledge_all_services = self.acknowledge_xml.get_widget("input_checkbutton_acknowledge_all_services").get_active()
+        sticky = self.acknowledge_xml.get_widget("input_checkbutton_sticky_acknowledgement").get_active()
+        notify = self.acknowledge_xml.get_widget("input_checkbutton_send_notification").get_active()
+        persistent = self.acknowledge_xml.get_widget("input_checkbutton_persistent_comment").get_active()
+        """
         # flags for comments as on Nagios web GUI
         # starting with "&" in case all flags are empty, so at least 
         # the query will be glued by &
@@ -526,7 +529,7 @@ class GUI(object):
             flags = flags + "send_notification=on&"
         if self.acknowledge_xml.get_widget("input_checkbutton_persistent_comment").get_active() == True:
             flags = flags + "persistent=on&"
-            
+        """    
         # create a list of all service of selected host to acknowledge them all
         all_services = list()
         if acknowledge_all_services == True:
@@ -536,8 +539,9 @@ class GUI(object):
                         all_services.append(s.name)
 
         # let thread execute POST request
-        acknowledge = nagstamonActions.Acknowledge(server=self.popwin.miserable_server, flags=flags, host=host, service=service, author=author,\
-                      comment=comment, acknowledge_all_services=acknowledge_all_services, all_services=all_services)
+        acknowledge = nagstamonActions.Acknowledge(server=self.popwin.miserable_server, host=host,\
+                      service=service, author=author, comment=comment, acknowledge_all_services=acknowledge_all_services,\
+                      all_services=all_services, sticky=sticky, notify=notify, persistent=persistent)
         acknowledge.start()
         
 
