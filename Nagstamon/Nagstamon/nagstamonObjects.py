@@ -1097,12 +1097,12 @@ class CentreonServer(GenericServer):
             return None
         
         
-    def _get_host_id(self):
+    def _get_host_id(self, host):
         """
-        get host_id 
+        get host_id via parsing raw html
         """
         return self.FetchURL(self.nagios_cgi_url + "/main.php?" + urllib.urlencode({"p":201, "autologin":1,\
-                                    "o":"hd", "host_name":"sparky",\
+                                    "o":"hd", "host_name":host,\
                                     "useralias":MD5ify(self.username), "password":MD5ify(self.password)}), giveback="raw").partition("host_id = '")[2].partition("'")[0]
 
         
@@ -1119,10 +1119,6 @@ class CentreonServer(GenericServer):
         if self.SID == None or self.SID == "":
             self.SID = self._get_sid()     
             
-            
-        print "HOST_ID", self._get_host_id()
-            
-
         # services (unknown, warning or critical?)
         nagcgiurl_services = self.nagios_cgi_url + "/include/monitoring/status/Services/xml/serviceXML.php?" + urllib.urlencode({"num":0, "limit":999, "o":"svcpb", "sort_type":"status", "sid":self.SID})
 
@@ -1136,11 +1132,11 @@ class CentreonServer(GenericServer):
             raw = self.FetchURL(nagcgiurl_hosts, giveback="raw")                    
             htobj = lxml.objectify.fromstring(raw)
             if htobj == "bad session id":
-                print "BAD SESSION ID"
-                       
-            print "HOSTS:", nagcgiurl_hosts
-            print "'''" + str(htobj) + "''''"
-            
+                # try again...
+                self.SID = self._get_sid()
+                raw = self.FetchURL(nagcgiurl_hosts, giveback="raw")                    
+                htobj = lxml.objectify.fromstring(raw)
+ 
             if htobj.__dict__.has_key("l"):
                 for l in htobj.l:
                     try:
@@ -1208,10 +1204,7 @@ class CentreonServer(GenericServer):
         # services
         try:
             raw = self.FetchURL(nagcgiurl_services, giveback="raw")
-            htobj = lxml.objectify.fromstring(raw)
-
-            print "SERVICES:", nagcgiurl_services
-           
+            htobj = lxml.objectify.fromstring(raw)           
             if htobj.__dict__.has_key("l"):
                 for l in htobj.l:
                     try:
@@ -1328,26 +1321,31 @@ class CentreonServer(GenericServer):
                 
 
     def _set_recheck(self, host, service):
-        # decision about host or service - they have different URLs
-        #"./include/monitoring/objectDetails/xml/serviceSendCommand.php?cmd=" + cmd + "&host_id=" + host_id + "&service_id=" + svc_id + "&sid=" + _sid + "&actiontype=" + actiontype, true);
-        if not service:
-            # host
-            # get start time from Nagios as HTML to use same timezone setting like the locally installed Nagios
-            #html = self.FetchURL(self.nagios_cgi_url + "/cmd.cgi?" + urllib.urlencode({"cmd_typ":"96", "host":host}), giveback="raw")
-            #start_time = html.split("NAME='start_time' VALUE='")[1].split("'></b></td></tr>")[0]
-            # fill and encode CGI data
-            cgi_data = urllib.urlencode({"cmd":"service_schedule_check", "actiontype":1,\
-                                         "sid":self.SID})
-        else:
-            # service @ host
-            # get start time from Nagios as HTML to use same timezone setting like the locally instaled Nagios
-            html = self.FetchURL(self.nagios_cgi_url + "/cmd.cgi?" + urllib.urlencode({"cmd_typ":"7", "host":host, "service":service}), giveback="raw")
-            start_time = html.split("NAME='start_time' VALUE='")[1].split("'></b></td></tr>")[0]
-            # fill and encode CGI data
-            cgi_data = urllib.urlencode({"cmd_typ":"7", "cmd_mod":"2", "host":host, "service":service, "start_time":start_time, "force_check":"on", "btnSubmit":"Commit"})
-
-        # execute POST request
-        self.FetchURL(self.nagios_cgi_url + "/main.php?" + cgi_data, giveback="nothing")
+            
+        host_id = self._get_host_id(host)
+        
+        if not host_id == "":
+            # decision about host or service - they have different URLs
+            #"./include/monitoring/objectDetails/xml/serviceSendCommand.php?cmd=" + cmd + "&host_id=" + host_id + "&service_id=" + svc_id + "&sid=" + _sid + "&actiontype=" + actiontype, true);
+            if not service:
+                # host
+                # get start time from Nagios as HTML to use same timezone setting like the locally installed Nagios
+                #html = self.FetchURL(self.nagios_cgi_url + "/cmd.cgi?" + urllib.urlencode({"cmd_typ":"96", "host":host}), giveback="raw")
+                #start_time = html.split("NAME='start_time' VALUE='")[1].split("'></b></td></tr>")[0]
+                # fill and encode CGI data
+                cgi_data = urllib.urlencode({"cmd":"service_schedule_check", "actiontype":1,\
+                                             "host_id":host_id, "sid":self.SID})
+            else:
+                # service @ host
+                # get start time from Nagios as HTML to use same timezone setting like the locally instaled Nagios
+                html = self.FetchURL(self.nagios_cgi_url + "/cmd.cgi?" + urllib.urlencode({"cmd_typ":"7", "host":host, "service":service}), giveback="raw")
+                start_time = html.split("NAME='start_time' VALUE='")[1].split("'></b></td></tr>")[0]
+                # fill and encode CGI data
+                cgi_data = urllib.urlencode({"cmd_typ":"7", "cmd_mod":"2", "host":host, "service":service, "start_time":start_time, "force_check":"on", "btnSubmit":"Commit"})
+    
+            # execute POST request
+            print self.nagios_cgi_url + "/main.php?" + cgi_data
+            self.FetchURL(self.nagios_cgi_url + "/main.php?" + cgi_data, giveback="nothing")
             
 
 class NagiosObject(object):    
