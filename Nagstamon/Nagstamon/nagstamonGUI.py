@@ -2019,6 +2019,7 @@ class NewServer(ServerDialogHelper):
         handlers_dict = { "button_ok_clicked" : self.OK,
         "button_cancel_clicked" : self.Cancel,
         "settings_dialog_close" : self.Cancel, 
+        "toggle_save_password" : self.ToggleSavePassword,
         "toggle_proxy" : self.ToggleProxy 
         }
         self.glade.signal_autoconnect(handlers_dict)
@@ -2038,6 +2039,8 @@ class NewServer(ServerDialogHelper):
         combobox.connect('changed', self.on_server_change)
         self.on_server_change(combobox)
         
+        # show password - or not
+        self.ToggleSavePassword()
         # show settings options for proxy - or not
         self.ToggleProxy()
         
@@ -2114,6 +2117,15 @@ class NewServer(ServerDialogHelper):
             sys.exit()
         
 
+    def ToggleSavePassword(self, widget=None):
+        """
+            Disable password input box
+        """
+        checkbutton = self.glade.get_widget("input_checkbutton_save_password")
+        sys.exit()
+        item = self.glade.get_widget("input_entry_password")
+        item.set_sensitive( checkbutton.get_active() )
+    
     def ToggleProxy(self, widget=None):
         """
             Disable proxy options
@@ -2173,6 +2185,7 @@ class EditServer(ServerDialogHelper):
         handlers_dict = { "button_ok_clicked" : self.OK,
         "button_cancel_clicked" : self.Cancel,
         "settings_dialog_close" : self.Cancel,
+        "toggle_save_password" : self.ToggleSavePassword,
         "toggle_proxy" : self.ToggleProxy    
          }
         self.glade.signal_autoconnect(handlers_dict)
@@ -2215,6 +2228,8 @@ class EditServer(ServerDialogHelper):
             combobox.connect('changed', self.on_server_change)
             self.on_server_change(combobox)
                  
+            # show password - or not
+            self.ToggleSavePassword()
             # show settings options for proxy - or not
             self.ToggleProxy()
             
@@ -2298,6 +2313,20 @@ class EditServer(ServerDialogHelper):
         self.dialog.destroy()
  
 
+    def ToggleSavePassword(self, widget=None):
+        """
+            Disable password input box
+        """
+        checkbutton = self.glade.get_widget("input_checkbutton_save_password")
+        is_active = checkbutton.get_active()
+        item = self.glade.get_widget("label_password")
+        item.set_sensitive( is_active )
+        item = self.glade.get_widget("input_entry_password")
+        item.set_sensitive( is_active )
+        if not is_active:
+            item.set_text("")
+    
+
     def ToggleProxy(self, widget=None):
         """
             Disable proxy options
@@ -2340,3 +2369,48 @@ class EditServer(ServerDialogHelper):
             item.set_sensitive(state)
             
         
+class PasswordDialog:
+
+    password = None
+    escaped = False
+
+    def __init__( self, prompt ):
+        dialog = gtk.MessageDialog(
+            None,
+            gtk.DIALOG_MODAL | gtk.DIALOG_DESTROY_WITH_PARENT,
+            gtk.MESSAGE_QUESTION,
+            gtk.BUTTONS_OK,
+            None)
+        dialog.set_markup(prompt)
+        # on close, we note that the user escaped the dialog
+        dialog.connect("close", self.dialog_close)
+        # on response, we check if the user confirmed or closed the dialog
+        dialog.connect("response", self.dialog_response)
+        # the password entry field
+        entry = gtk.Entry()
+        # password should not be shown
+        entry.set_visibility(False)
+        entry.connect("activate", self.entry_activate, dialog, gtk.RESPONSE_OK)
+        # a horizontal box to put in the input field and a label
+        hbox = gtk.HBox()
+        hbox.pack_start(gtk.Label("Password:"), False, 5, 5)
+        hbox.pack_end(entry)
+        # put all together
+        dialog.vbox.pack_end(hbox, True, True, 0)
+        # and show it
+        dialog.show_all()
+        dialog.run()
+        # only save the password if the user confirmed the entry
+        if not self.escaped:
+            self.password = entry.get_text()
+        dialog.destroy()
+        
+    def entry_activate(self, entry, dialog, response):
+        dialog.response(response)
+
+    def dialog_close(self, dialog):
+        self.escaped = True
+
+    def dialog_response(self, dialog, arg):
+        if arg != gtk.RESPONSE_OK:
+            self.escaped = True

@@ -21,6 +21,7 @@ import gc
 import urllib2
 import mimetools, mimetypes
 import os, stat
+import nagstamonGUI
 
 # import hashlib for centreon url autologin encoding
 import hashlib
@@ -559,7 +560,15 @@ def CreateServer(server=None, conf=None):
     nagiosserver.nagios_url = server.nagios_url
     nagiosserver.nagios_cgi_url = server.nagios_cgi_url
     nagiosserver.username = server.username
-    nagiosserver.password = server.password
+    if server.save_password:
+        nagiosserver.password = server.password
+    else:
+        pwdialog = nagstamonGUI.PasswordDialog(
+            "Password for "+server.username+" on "+server.nagios_url+": ")
+        if pwdialog.password == None:
+            nagiosserver.password = ""
+        else:
+            nagiosserver.password = pwdialog.password        
     nagiosserver.use_proxy = server.use_proxy
     nagiosserver.use_proxy_from_os = server.use_proxy_from_os
     nagiosserver.proxy_address = server.proxy_address

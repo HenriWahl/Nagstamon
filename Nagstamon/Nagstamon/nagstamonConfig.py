@@ -152,7 +152,10 @@ class Config(object):
                     # time saving config
                     try:
                         self.servers[server_name].username = self.DeObfuscate(self.servers[server_name].username)
-                        self.servers[server_name].password = self.DeObfuscate(self.servers[server_name].password)
+                        if self.servers[server_name].save_password == "False":
+                            self.servers[server_name].password = ""
+                        else:
+                            self.servers[server_name].password = self.DeObfuscate(self.servers[server_name].password)
                         self.servers[server_name].proxy_username = self.DeObfuscate(self.servers[server_name].proxy_username)
                         self.servers[server_name].proxy_password = self.DeObfuscate(self.servers[server_name].proxy_password)
                     except:
@@ -198,7 +201,11 @@ class Config(object):
                 for option in self.__dict__["servers"][server].__dict__:
                     # obfuscate certain entries in config file
                     if option == "username" or option == "password" or option == "proxy_username" or option == "proxy_password":
-                        config.set("Server_" + server, option, self.Obfuscate(self.__dict__["servers"][server].__dict__[option]))
+                        value = self.Obfuscate(self.__dict__["servers"][server].__dict__[option])
+                        if option == "password" \
+                           and self.servers[server].save_password == "False":
+                            value = ""
+                        config.set("Server_" + server, option, value)
                     else:
                         config.set("Server_" + server, option, self.__dict__["servers"][server].__dict__[option])
             # open, save and close config file
@@ -285,6 +292,7 @@ class Server(object):
         self.nagios_cgi_url = ""
         self.username = ""
         self.password = ""
+        self.save_password = True
         self.use_proxy = False
         self.use_proxy_from_os = False
         self.proxy_address = ""

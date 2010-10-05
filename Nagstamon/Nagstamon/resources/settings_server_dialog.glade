@@ -94,6 +94,18 @@ Don't put any status.cgi in there.</property>
                             </packing>
                         </child>
                         <child>
+                            <widget class="GtkCheckButton" id="input_checkbutton_save_password">
+                                <property name="is_focus">True</property>
+                                <property name="label" context="yes" translatable="yes">Save Password</property>
+                                <property name="visible">True</property>
+                                <signal handler="toggle_save_password" name="toggled"/>
+                            </widget>
+                            <packing>
+                                <property name="bottom_attach">7</property>
+                                <property name="top_attach">6</property>
+                            </packing>
+                        </child>
+                        <child>
                             <widget class="GtkLabel" id="label_password">
                                 <property name="has_tooltip">True</property>
                                 <property name="label" context="yes" translatable="yes">Password:</property>
@@ -103,22 +115,22 @@ Don't put any status.cgi in there.</property>
                                 <property name="xalign">0.0</property>
                             </widget>
                             <packing>
-                                <property name="bottom_attach">7</property>
-                                <property name="top_attach">6</property>
-                            </packing>
-                        </child>
-                        <child>
-                            <placeholder/>
-                            <packing>
-                                <property name="top_attach">7</property>
                                 <property name="bottom_attach">8</property>
+                                <property name="top_attach">7</property>
                             </packing>
                         </child>
                         <child>
                             <placeholder/>
                             <packing>
                                 <property name="top_attach">8</property>
-                                <property name="bottom_attach">9</property>
+                                <property name="bottom_attach">7</property>
+                            </packing>
+                        </child>
+                        <child>
+                            <placeholder/>
+                            <packing>
+                                <property name="top_attach">9</property>
+                                <property name="bottom_attach">10</property>
                             </packing>
                         </child>
                         <child>
@@ -129,8 +141,8 @@ Don't put any status.cgi in there.</property>
                                 <signal handler="toggle_proxy" name="toggled"/>
                             </widget>
                             <packing>
-                                <property name="bottom_attach">10</property>
-                                <property name="top_attach">9</property>
+                                <property name="bottom_attach">11</property>
+                                <property name="top_attach">10</property>
                             </packing>
                         </child>
                         <child>
@@ -140,8 +152,8 @@ Don't put any status.cgi in there.</property>
                                 <signal handler="toggle_proxy" name="toggled"/>
                             </widget>
                             <packing>
-                                <property name="bottom_attach">11</property>
-                                <property name="top_attach">10</property>
+                                <property name="bottom_attach">12</property>
+                                <property name="top_attach">11</property>
                             </packing>
                         </child>
                         <child>
@@ -152,8 +164,8 @@ Don't put any status.cgi in there.</property>
                                 <property name="xalign">0.0</property>
                             </widget>
                             <packing>
-                                <property name="bottom_attach">12</property>
-                                <property name="top_attach">11</property>
+                                <property name="bottom_attach">13</property>
+                                <property name="top_attach">12</property>
                             </packing>
                         </child>
                         <child>
@@ -164,8 +176,8 @@ Don't put any status.cgi in there.</property>
                                 <property name="xalign">0.0</property>
                             </widget>
                             <packing>
-                                <property name="bottom_attach">13</property>
-                                <property name="top_attach">12</property>
+                                <property name="bottom_attach">14</property>
+                                <property name="top_attach">13</property>
                             </packing>
                         </child>
                         <child>
@@ -176,8 +188,8 @@ Don't put any status.cgi in there.</property>
                                 <property name="xalign">0.0</property>
                             </widget>
                             <packing>
-                                <property name="bottom_attach">14</property>
-                                <property name="top_attach">13</property>
+                                <property name="bottom_attach">15</property>
+                                <property name="top_attach">14</property>
                             </packing>
                         </child>
                         <child>
@@ -254,6 +266,15 @@ Don't put any status.cgi in there.</property>
                             </packing>
                         </child>
                         <child>
+                            <placeholder/>
+                            <packing>
+                                <property name="left_attach">1</property>
+                                <property name="right_attach">2</property>
+                                <property name="top_attach">6</property>
+                                <property name="bottom_attach">7</property>
+                            </packing>
+                        </child>
+                        <child>
                             <widget class="GtkEntry" id="input_entry_password">
                                 <property name="is_focus">True</property>
                                 <property name="text" context="yes" translatable="yes">nagiospassword</property>
@@ -261,19 +282,10 @@ Don't put any status.cgi in there.</property>
                                 <property name="visible">True</property>
                             </widget>
                             <packing>
-                                <property name="bottom_attach">7</property>
-                                <property name="left_attach">1</property>
-                                <property name="right_attach">2</property>
-                                <property name="top_attach">6</property>
-                            </packing>
-                        </child>
-                        <child>
-                            <placeholder/>
-                            <packing>
+                                <property name="bottom_attach">8</property>
                                 <property name="left_attach">1</property>
                                 <property name="right_attach">2</property>
                                 <property name="top_attach">7</property>
-                                <property name="bottom_attach">8</property>
                             </packing>
                         </child>
                         <child>
@@ -304,16 +316,25 @@ Don't put any status.cgi in there.</property>
                             </packing>
                         </child>
                         <child>
+                            <placeholder/>
+                            <packing>
+                                <property name="left_attach">1</property>
+                                <property name="right_attach">2</property>
+                                <property name="top_attach">11</property>
+                                <property name="bottom_attach">12</property>
+                            </packing>
+                        </child>
+                        <child>
                             <widget class="GtkEntry" id="input_entry_proxy_address">
                                 <property name="text" context="yes" translatable="yes">http://proxy:port/</property>
                                 <property name="visible">True</property>
                                 <property name="width_chars">30</property>
                             </widget>
                             <packing>
-                                <property name="bottom_attach">12</property>
+                                <property name="bottom_attach">13</property>
                                 <property name="left_attach">1</property>
                                 <property name="right_attach">2</property>
-                                <property name="top_attach">11</property>
+                                <property name="top_attach">12</property>
                             </packing>
                         </child>
                         <child>
@@ -324,10 +345,10 @@ Don't put any status.cgi in there.</property>
                                 <property name="width_chars">25</property>
                             </widget>
                             <packing>
-                                <property name="bottom_attach">13</property>
+                                <property name="bottom_attach">14</property>
                                 <property name="left_attach">1</property>
                                 <property name="right_attach">2</property>
-                                <property name="top_attach">12</property>
+                                <property name="top_attach">13</property>
                             </packing>
                         </child>
                         <child>
@@ -339,10 +360,10 @@ Don't put any status.cgi in there.</property>
                                 <property name="width_chars">25</property>
                             </widget>
                             <packing>
-                                <property name="bottom_attach">14</property>
+                                <property name="bottom_attach">15</property>
                                 <property name="left_attach">1</property>
                                 <property name="right_attach">2</property>
-                                <property name="top_attach">13</property>
+                                <property name="top_attach">14</property>
                             </packing>
                         </child>
                     </widget>
