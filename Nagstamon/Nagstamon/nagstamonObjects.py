@@ -386,7 +386,7 @@ class GenericServer(object):
                         # host objects contain service objects
                         if not self.new_hosts.has_key(n["host"]):
                             new_host = n["host"]
-                            self.new_hosts[new_host] = NagiosHost()
+                            self.new_hosts[new_host] = GenericHost()
                             self.new_hosts[new_host].name = n["host"]
                             self.new_hosts[new_host].status = n["status"]
                             self.new_hosts[new_host].last_check = n["last_check"]
@@ -443,13 +443,13 @@ class GenericServer(object):
                         # after collection data in nagitems create objects of its informations
                         # host objects contain service objects
                         if not self.new_hosts.has_key(n["host"]):
-                            self.new_hosts[n["host"]] = NagiosHost()
+                            self.new_hosts[n["host"]] = GenericHost()
                             self.new_hosts[n["host"]].name = n["host"]
                             self.new_hosts[n["host"]].status = "UP"
                         # if a service does not exist create its object
                         if not self.new_hosts[n["host"]].services.has_key(n["service"]):
                             new_service = n["service"]
-                            self.new_hosts[n["host"]].services[new_service] = NagiosService()
+                            self.new_hosts[n["host"]].services[new_service] = GenericService()
                             self.new_hosts[n["host"]].services[new_service].host = n["host"]
                             self.new_hosts[n["host"]].services[new_service].name = n["service"]
                             self.new_hosts[n["host"]].services[new_service].status = n["status"]
@@ -992,7 +992,7 @@ class OpsviewServer(GenericServer):
                     self.new_hosts_in_maintenance.append(hostdict["name"])
                 if hostdict.has_key("acknowledged"):
                     self.new_hosts_acknowledged.append(hostdict["name"])
-                self.new_hosts[hostdict["name"]] = NagiosHost()
+                self.new_hosts[hostdict["name"]] = GenericHost()
                 self.new_hosts[hostdict["name"]].name = hostdict["name"]
                 # states come in lower case from Opsview
                 self.new_hosts[hostdict["name"]].status = hostdict["state"].upper()
@@ -1009,7 +1009,7 @@ class OpsviewServer(GenericServer):
                     and servicedict["downtime"] == "2") \
                     and not (str(self.conf.filter_acknowledged_hosts_services) == "True" \
                     and servicedict.has_key("acknowledged")):
-                        self.new_hosts[hostdict["name"]].services[servicedict["name"]] = NagiosService()
+                        self.new_hosts[hostdict["name"]].services[servicedict["name"]] = GenericService()
                         self.new_hosts[hostdict["name"]].services[servicedict["name"]].host = hostdict["name"]
                         self.new_hosts[hostdict["name"]].services[servicedict["name"]].name = servicedict["name"]
                         # states come in lower case from Opsview
@@ -1105,7 +1105,7 @@ class CentreonServer(GenericServer):
                                     "o":"hd", "host_name":host,\
                                     "useralias":MD5ify(self.username), "password":MD5ify(self.password)}), giveback="raw").partition("host_id = '")[2].partition("'")[0]
 
-        
+    
     def _get_status(self):
         """
         Get status from Ćentreon Server
@@ -1129,7 +1129,7 @@ class CentreonServer(GenericServer):
         # unfortunately the hosts status page has a different structure so
         # hosts must be analyzed separately
         try:
-            raw = self.FetchURL(nagcgiurl_hosts, giveback="raw")                    
+            raw = self.FetchURL(nagcgiurl_hosts, giveback="raw")    
             htobj = lxml.objectify.fromstring(raw)
             if htobj == "bad session id":
                 # try again...
@@ -1139,11 +1139,16 @@ class CentreonServer(GenericServer):
  
             if htobj.__dict__.has_key("l"):
                 for l in htobj.l:
-                    try:
+                    try:                       
                         n = {}
                         # host
                         n["host"] = l.hn.text
                         # status
+                        # demo.centreon.com give back a host id, some other not (?)
+                        if l.__dict__.has_key("hid"): 
+                            n["host_id"] = l.hid.text
+                            print "HOST_ID! --> ", l.hid.text
+                        else: n["host_id"] = ""
                         n["status"] = l.cs.text
                         # last_check
                         n["last_check"] = l.lc.text
@@ -1183,7 +1188,7 @@ class CentreonServer(GenericServer):
                             # host objects contain service objects
                             if not self.new_hosts.has_key(n["host"]):
                                 new_host = n["host"]
-                                self.new_hosts[new_host] = NagiosHost()
+                                self.new_hosts[new_host] = CentreonHost()
                                 self.new_hosts[new_host].name = n["host"]
                                 self.new_hosts[new_host].status = n["status"]
                                 self.new_hosts[new_host].last_check = n["last_check"]
@@ -1202,7 +1207,7 @@ class CentreonServer(GenericServer):
             return "ERROR"
 
         # services
-        try:
+        try:                       
             raw = self.FetchURL(nagcgiurl_services, giveback="raw")
             htobj = lxml.objectify.fromstring(raw)           
             if htobj.__dict__.has_key("l"):
@@ -1217,6 +1222,8 @@ class CentreonServer(GenericServer):
                         n["host"] = l.hn.text
                         # service
                         n["service"] = l.sd.text
+                        # service id - only in Centreon
+                        n["service_id"] = l.svc_id.text
                         # status
                         n["status"] = l.cs.text
                         # last_check
@@ -1254,15 +1261,17 @@ class CentreonServer(GenericServer):
                             # after collection data in nagitems create objects of its informations
                             # host objects contain service objects
                             if not self.new_hosts.has_key(n["host"]):
-                                self.new_hosts[n["host"]] = NagiosHost()
+                                self.new_hosts[n["host"]] = CentreonHost()
                                 self.new_hosts[n["host"]].name = n["host"]
                                 self.new_hosts[n["host"]].status = "UP"
                             # if a service does not exist create its object
                             if not self.new_hosts[n["host"]].services.has_key(n["service"]):
                                 new_service = n["service"]
-                                self.new_hosts[n["host"]].services[new_service] = NagiosService()
+                                #self.new_hosts[n["host"]].services[new_service] = GenericService()
+                                self.new_hosts[n["host"]].services[new_service] = CentreonService()                                
                                 self.new_hosts[n["host"]].services[new_service].host = n["host"]
                                 self.new_hosts[n["host"]].services[new_service].name = n["service"]
+                                self.new_hosts[n["host"]].services[new_service].id = n["service_id"]
                                 self.new_hosts[n["host"]].services[new_service].status = n["status"]
                                 self.new_hosts[n["host"]].services[new_service].last_check = n["last_check"]
                                 self.new_hosts[n["host"]].services[new_service].duration = n["duration"]
@@ -1321,34 +1330,32 @@ class CentreonServer(GenericServer):
                 
 
     def _set_recheck(self, host, service):
-            
-        host_id = self._get_host_id(host)
-        
-        if not host_id == "":
+        """
+        host and service ids are needed to tell Centreon what whe want
+        """
+        # if no host id has been stored before get it now ONCE, this should reduce requests to Centreon server
+        if self.hosts[host].id=="": self.hosts[host].id = self._get_host_id(host)
+
+        if not self.hosts[host].id == "":
             # decision about host or service - they have different URLs
             #"./include/monitoring/objectDetails/xml/serviceSendCommand.php?cmd=" + cmd + "&host_id=" + host_id + "&service_id=" + svc_id + "&sid=" + _sid + "&actiontype=" + actiontype, true);
             if not service:
-                # host
-                # get start time from Nagios as HTML to use same timezone setting like the locally installed Nagios
-                #html = self.FetchURL(self.nagios_cgi_url + "/cmd.cgi?" + urllib.urlencode({"cmd_typ":"96", "host":host}), giveback="raw")
-                #start_time = html.split("NAME='start_time' VALUE='")[1].split("'></b></td></tr>")[0]
+                # ... it can only be a host
                 # fill and encode CGI data
-                cgi_data = urllib.urlencode({"cmd":"service_schedule_check", "actiontype":1,\
-                                             "host_id":host_id, "sid":self.SID})
+                cgi_data = urllib.urlencode({"cmd":"host_schedule_check", "actiontype":1,\
+                                             "host_id":self.hosts[host].id, "sid":self.SID})
             else:
                 # service @ host
-                # get start time from Nagios as HTML to use same timezone setting like the locally instaled Nagios
-                html = self.FetchURL(self.nagios_cgi_url + "/cmd.cgi?" + urllib.urlencode({"cmd_typ":"7", "host":host, "service":service}), giveback="raw")
-                start_time = html.split("NAME='start_time' VALUE='")[1].split("'></b></td></tr>")[0]
                 # fill and encode CGI data
-                cgi_data = urllib.urlencode({"cmd_typ":"7", "cmd_mod":"2", "host":host, "service":service, "start_time":start_time, "force_check":"on", "btnSubmit":"Commit"})
-    
+                cgi_data = urllib.urlencode({"cmd":"service_schedule_check", "actiontype":1,\
+                                             "host_id":self.hosts[host].id, "svc_id":self.hosts[host].services[service].id, "sid":self.SID})
             # execute POST request
-            print self.nagios_cgi_url + "/main.php?" + cgi_data
-            self.FetchURL(self.nagios_cgi_url + "/main.php?" + cgi_data, giveback="nothing")
+            print self.nagios_cgi_url + "/include/monitoring/objectDetails/xml/hostSendCommand.php?" + cgi_data
+            self.FetchURL(self.nagios_cgi_url + "/include/monitoring/objectDetails/xml/hostSendCommand.php?" + cgi_data, giveback="raw")
+
             
 
-class NagiosObject(object):    
+class GenericObject(object):    
     def get_host_name(self):
         """ Extracts host name from status item.
         Presentation purpose.
@@ -1361,7 +1368,7 @@ class NagiosObject(object):
         """
         return ''
     
-class NagiosHost(NagiosObject):
+class GenericHost(GenericObject):
     """
         one host which is monitored by a Nagios server, gets populated with services
     """
@@ -1378,7 +1385,7 @@ class NagiosHost(NagiosObject):
         return self.name
 
     
-class NagiosService(NagiosObject):
+class GenericService(GenericObject):
     """
         one service which runs on a host
     """
@@ -1396,6 +1403,18 @@ class NagiosService(NagiosObject):
     
     def get_service_name(self):
         return self.name 
+    
+class CentreonHost(GenericHost):
+    def __init__(self):
+        GenericHost.__init__(self)
+        # additional info about host id, needed for xml http requests
+        self.id = ""
+    
+class CentreonService(GenericService):
+    def __init__(self):
+        GenericService.__init__(self)
+        # additional info about service id, needed for xml http requests
+        self.id = ""
 
 
 # order of registering affects sorting in server type list in add new server dialog

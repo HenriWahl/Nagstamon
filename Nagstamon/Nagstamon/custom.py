@@ -6,4 +6,4 @@ Imported in nagstamonGUI module.
 """
 
 from nagstamonActions import register_server
-from nagstamonObjects import GenericServer, NagiosHost, NagiosService
+from nagstamonObjects import GenericServer, GenericHost, GenericService

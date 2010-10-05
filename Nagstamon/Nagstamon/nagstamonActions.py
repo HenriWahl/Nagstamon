@@ -479,22 +479,12 @@ class FlashStatusbar(threading.Thread):
             pass
 
 
-def OpenNagios(widget, server, output):
-    
-    print "************************************"
-    print
-    print
-    print widget, server
-    print dir(server)
-    print
-    print
-    print "************************************"
-    
+def OpenNagios(widget, server, output):   
     # open Nagios main page in your favorite web browser when nagios button is clicked
     # first close popwin
     output.popwin.Close()
     # start browser with URL
-    print server.open_nagios()
+    server.open_nagios()
 
 
 def OpenServices(widget, server, output):

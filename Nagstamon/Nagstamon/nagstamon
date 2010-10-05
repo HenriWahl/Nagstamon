@@ -65,7 +65,7 @@ servers = dict()
 for server in conf.servers.values():
     if server.save_password == "False":
         pwdialog = nagstamonGUI.PasswordDialog(
-            "Password for "+server.username+" on "+server.nagios_url+": ")
+            "Password for " + server.username + " on " + server.nagios_url + ": ")
         if pwdialog.password == None:
             sys.exit(1)
         server.password = pwdialog.password
