@@ -550,7 +550,7 @@ def CreateServer(server=None, conf=None):
     nagiosserver.nagios_url = server.nagios_url
     nagiosserver.nagios_cgi_url = server.nagios_cgi_url
     nagiosserver.username = server.username
-    if server.save_password:
+    if server.save_password or not server.enabled:
         nagiosserver.password = server.password
     else:
         pwdialog = nagstamonGUI.PasswordDialog(

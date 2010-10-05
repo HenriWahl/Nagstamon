@@ -63,7 +63,7 @@ servers = dict()
 
 # create servers
 for server in conf.servers.values():
-    if server.save_password == "False":
+    if server.save_password == "False" and server.enabled == "True":
         pwdialog = nagstamonGUI.PasswordDialog(
             "Password for " + server.username + " on " + server.nagios_url + ": ")
         if pwdialog.password == None:

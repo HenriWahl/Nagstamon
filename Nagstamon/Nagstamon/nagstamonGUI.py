@@ -2122,9 +2122,13 @@ class NewServer(ServerDialogHelper):
             Disable password input box
         """
         checkbutton = self.glade.get_widget("input_checkbutton_save_password")
-        sys.exit()
+        is_active = checkbutton.get_active()
+        item = self.glade.get_widget("label_password")
+        item.set_sensitive( is_active )
         item = self.glade.get_widget("input_entry_password")
-        item.set_sensitive( checkbutton.get_active() )
+        item.set_sensitive( is_active )
+        if not is_active:
+            item.set_text("")
     
     def ToggleProxy(self, widget=None):
         """
