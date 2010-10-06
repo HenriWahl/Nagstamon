@@ -1101,11 +1101,19 @@ class CentreonServer(GenericServer):
         """
         get host_id via parsing raw html
         """
-        return self.FetchURL(self.nagios_cgi_url + "/main.php?" + urllib.urlencode({"p":201, "autologin":1,\
+        host_id = self.FetchURL(self.nagios_cgi_url + "/main.php?" + urllib.urlencode({"p":201, "autologin":1,\
                                     "o":"hd", "host_name":host,\
-                                    "useralias":MD5ify(self.username), "password":MD5ify(self.password)}), giveback="raw").partition("host_id = '")[2].partition("'")[0]
-
+                                    "useralias":MD5ify(self.username), "password":MD5ify(self.password)}), giveback="raw").partition("host_id=")[2].partition("&")[0]
+        # only if host_id is an usable integer return it
+        try:
+            if int(host_id):
+                return host_id
+            else:
+                return ""
+        except:
+            return ""
     
+        
     def _get_status(self):
         """
         Get status from Ćentreon Server
@@ -1147,7 +1155,6 @@ class CentreonServer(GenericServer):
                         # demo.centreon.com give back a host id, some other not (?)
                         if l.__dict__.has_key("hid"): 
                             n["host_id"] = l.hid.text
-                            print "HOST_ID! --> ", l.hid.text
                         else: n["host_id"] = ""
                         n["status"] = l.cs.text
                         # last_check
@@ -1334,8 +1341,13 @@ class CentreonServer(GenericServer):
         host and service ids are needed to tell Centreon what whe want
         """
         # if no host id has been stored before get it now ONCE, this should reduce requests to Centreon server
-        if self.hosts[host].id=="": self.hosts[host].id = self._get_host_id(host)
-
+        if self.hosts[host].id == "": 
+            self.hosts[host].id = self._get_host_id(host) 
+        
+        # debug
+        if str(self.conf.debug_mode) == "True":         
+            print "self.hosts[host].id:", '"' + self.hosts[host].id + '"'
+                
         if not self.hosts[host].id == "":
             # decision about host or service - they have different URLs
             #"./include/monitoring/objectDetails/xml/serviceSendCommand.php?cmd=" + cmd + "&host_id=" + host_id + "&service_id=" + svc_id + "&sid=" + _sid + "&actiontype=" + actiontype, true);
@@ -1344,15 +1356,17 @@ class CentreonServer(GenericServer):
                 # fill and encode CGI data
                 cgi_data = urllib.urlencode({"cmd":"host_schedule_check", "actiontype":1,\
                                              "host_id":self.hosts[host].id, "sid":self.SID})
+                url = self.nagios_cgi_url + "/include/monitoring/objectDetails/xml/hostSendCommand.php?" + cgi_data
+                
             else:
                 # service @ host
                 # fill and encode CGI data
                 cgi_data = urllib.urlencode({"cmd":"service_schedule_check", "actiontype":1,\
-                                             "host_id":self.hosts[host].id, "svc_id":self.hosts[host].services[service].id, "sid":self.SID})
+                                             "host_id":self.hosts[host].id, "service_id":self.hosts[host].services[service].id, "sid":self.SID})
+                url = self.nagios_cgi_url + "/include/monitoring/objectDetails/xml/serviceSendCommand.php?" + cgi_data
+                
             # execute POST request
-            print self.nagios_cgi_url + "/include/monitoring/objectDetails/xml/hostSendCommand.php?" + cgi_data
-            self.FetchURL(self.nagios_cgi_url + "/include/monitoring/objectDetails/xml/hostSendCommand.php?" + cgi_data, giveback="raw")
-
+            self.FetchURL(url, giveback="raw")
             
 
 class GenericObject(object):    
