@@ -133,6 +133,10 @@ class GenericServer(object):
     # used in Nagios _get_status method
     BODY_TABLE_INDEX = 2 
     
+    # it is getting worse... now there are different HTML layouts for Icinga and Nagios
+    # lets try the following with an exec statement
+    HTOBJ_TABLE = "htobj.body.div.table"
+    
     # Nagios CGI flags translation dictionary for acknowledging hosts/services 
     ACKFLAGS = {True:"on", False:"off"}
     
@@ -348,19 +352,30 @@ class GenericServer(object):
         # unfortunately the hosts status page has a different structure so
         # hosts must be analyzed separately
         try:
+            
+            
+            print "nagcgiurl_hosts:", nagcgiurl_hosts
+            
             htobj = self.FetchURL(nagcgiurl_hosts)
             # workaround for Nagios < 2.7 which has an <EMBED> in its output
-            # do a copy of a part of htobj into table to be able to delete htobj
+            # put a copy of a part of htobj into table to be able to delete htobj
             try:
-                table = htobj.body.div.table
+                #table = htobj.body.div.table
+                table = eval(self.HTOBJ_TABLE)
             except:
                 table = htobj.body.embed.div.table
             
             # do some cleanup    
             del htobj
+            
+            
+            print "table", dir(table), table.getchildren(), len(table.tr)
+            
 
             for i in range(1, len(table.tr)):
                 try:
+                    print "RATTERING durch HOSTS"
+                    
                     # ignore empty <tr> rows
                     if not table.tr[i].countchildren() == 1:
                         n = {}
@@ -409,9 +424,22 @@ class GenericServer(object):
 
         # services
         try:
+            print "nagcgiurl_services:", nagcgiurl_services
+            
+            #htraw = self.FetchURL(nagcgiurl_services, giveback="raw")
+            #fhtraw = open("htraw.html", "w")
+            #fhtraw.write(htraw)
+            
+            
             htobj = self.FetchURL(nagcgiurl_services)
-
+            #print "htobj:", htobj.body.table[1].tr.getchildren()
+            
+           # print "htobj.body.table[self.BODY_TABLE_INDEX].tr:", dir(htobj.body.table[self.BODY_TABLE_INDEX].tr)
+            
+            
             for i in range(1, len(htobj.body.table[self.BODY_TABLE_INDEX].tr)):
+                print i
+                
                 try:
                     # ignore empty <tr> rows - there are a lot of them - a Nagios bug? 
                     if not htobj.body.table[self.BODY_TABLE_INDEX].tr[i].countchildren() == 1:
@@ -439,6 +467,8 @@ class GenericServer(object):
                         n["status_information"] = str(htobj.body.table[self.BODY_TABLE_INDEX].tr[i].td[6].text)
                         # add dictionary full of information about this service item to nagitems - only if service
                         nagitems["services"].append(n)
+                        
+                        print n
                         
                         # after collection data in nagitems create objects of its informations
                         # host objects contain service objects
@@ -477,7 +507,8 @@ class GenericServer(object):
            
             # workaround for Nagios < 2.7 which has an <EMBED> in its output
             try:
-                table = htobj.body.div.table
+                #table = htobj.body.div.table
+                table = eval(self.HTOBJ_TABLE)
             except:
                 table = htobj.body.embed.div.table
             
@@ -514,7 +545,8 @@ class GenericServer(object):
             htobj = self.FetchURL(nagcgiurl_hosts_acknowledged)
             # workaround for Nagios < 2.7 which has an <EMBED> in its output
             try:
-                table = htobj.body.div.table
+                #table = htobj.body.div.table
+                table = eval(self.HTOBJ_TABLE)
             except:
                 table = htobj.body.embed.div.table
                 
@@ -810,7 +842,7 @@ class GenericServer(object):
                     
                 # second step: make pretty HTML of it
                 prettyhtml = lxml.etree.tostring(html, pretty_print=True)
-                
+                  
                 # third step: clean HTML from tags which embarass libxml2 2.7
                 # only possible when module lxml.html.clean has been loaded
                 if sys.modules.has_key("lxml.html.clean"):
@@ -823,9 +855,14 @@ class GenericServer(object):
                     # we hope that nobody names a server '" nowrap>' - chances are pretty small because this "name"
                     # contains unallowed characters and is far from common sense
                     prettyhtml = prettyhtml.replace('" nowrap>', '">')
+                    #prettyhtml = prettyhtml.replace(' nowrap', '')                    
                     
                     # cleanup cleaner
                     del cleaner
+                    
+                    
+                fpretty = open("prettyhtml.html", "w")
+                fpretty.write(prettyhtml)
     
                 # fourth step: make objects of tags for easy access              
                 htobj = lxml.objectify.fromstring(prettyhtml)
@@ -939,7 +976,10 @@ class IcingaServer(GenericServer):
     """
     
     TYPE = 'Icinga'
-    BODY_TABLE_INDEX = 3
+    BODY_TABLE_INDEX = 2
+    # it is getting worse... now there are different HTML layouts for Icinga and Nagios
+    # lets try the following with an exec statement
+    HTOBJ_TABLE = "htobj.body.table[2]"
                   
 
 class OpsviewServer(GenericServer):
