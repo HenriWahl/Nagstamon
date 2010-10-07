@@ -1117,10 +1117,29 @@ class CentreonServer(GenericServer):
         """
         get host_id via parsing raw html
         """
-        host_id = self.FetchURL(self.nagios_cgi_url + "/main.php?" + urllib.urlencode({"p":201, "autologin":1,\
+        
+        print "GETTING_HOST_ID..."
+        
+        #host_id = self.FetchURL(self.nagios_cgi_url + "/main.php?" + urllib.urlencode({"p":201, "autologin":1,\
+        #                            "o":"hd", "host_name":host,\
+        #                           "useralias":MD5ify(self.username), "password":MD5ify(self.password)}), giveback="raw").partition("host_id=")[2].partition("&")[0]
+        raw = self.FetchURL(self.nagios_cgi_url + "/main.php?" + urllib.urlencode({"p":201, "autologin":1,\
                                     "o":"hd", "host_name":host,\
-                                    "useralias":MD5ify(self.username), "password":MD5ify(self.password)}), giveback="raw").partition("host_id=")[2].partition("&")[0]
+                                    "useralias":MD5ify(self.username), "password":MD5ify(self.password)}), giveback="raw")
+        host_id = raw.partition("host_id=")[2].partition("&")[0]
+        
+        fraw = open("raw_hostid.html", "w")
+        fraw.write(raw)
+        
         # only if host_id is an usable integer return it
+        
+        print "GOT HOST_ID:", host_id, self.Cookie, self.SID
+        #print list(self.Cookie.__iter__())[0]
+        print dir(self.Cookie)
+        print self.Cookie._cookies
+
+
+        
         try:
             if int(host_id):
                 return host_id
@@ -1366,7 +1385,6 @@ class CentreonServer(GenericServer):
                 
         if not self.hosts[host].id == "":
             # decision about host or service - they have different URLs
-            #"./include/monitoring/objectDetails/xml/serviceSendCommand.php?cmd=" + cmd + "&host_id=" + host_id + "&service_id=" + svc_id + "&sid=" + _sid + "&actiontype=" + actiontype, true);
             if not service:
                 # ... it can only be a host
                 # fill and encode CGI data

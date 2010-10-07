@@ -633,6 +633,7 @@ class GUI(object):
         about.set_website(self.website)
         about.set_copyright(self.copyright)
         about.set_comments(self.comments)
+        about.set_authors(["In alphabetical order:", "Benoît Soenen", "Carl Chenet", "Emile Heitor ", "John Conroy", "Michał Rzeszut", "Patrick Cernko", "Pawel Połewicz", "Tobias Scheerbaum", "...and many more!"])
         # read LICENSE file
         license = ""
         try:

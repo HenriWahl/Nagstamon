@@ -554,7 +554,7 @@ def CreateServer(server=None, conf=None):
         nagiosserver.password = server.password
     else:
         pwdialog = nagstamonGUI.PasswordDialog(
-            "Password for "+server.username+" on "+server.nagios_url+": ")
+            "Password for " + server.username + " on " + server.nagios_url + ": ")
         if pwdialog.password == None:
             nagiosserver.password = ""
         else:
