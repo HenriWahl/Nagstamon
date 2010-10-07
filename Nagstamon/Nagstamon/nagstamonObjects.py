@@ -357,10 +357,15 @@ class GenericServer(object):
             print "nagcgiurl_hosts:", nagcgiurl_hosts
             
             htobj = self.FetchURL(nagcgiurl_hosts)
+            
+            print "htobj:", htobj
+            
+            
             # workaround for Nagios < 2.7 which has an <EMBED> in its output
             # put a copy of a part of htobj into table to be able to delete htobj
             try:
                 #table = htobj.body.div.table
+                print "eval(self.HTOBJ_TABLE):", eval(self.HTOBJ_TABLE)
                 table = eval(self.HTOBJ_TABLE)
             except:
                 table = htobj.body.embed.div.table
@@ -577,10 +582,11 @@ class GenericServer(object):
             # set checking flag back to False
             self.isChecking = False
             return "ERROR"
-        
+
+            
         # some cleanup
         del nagitems
-    
+        
         
     def GetStatus(self):
         """
@@ -842,24 +848,30 @@ class GenericServer(object):
                     
                 # second step: make pretty HTML of it
                 prettyhtml = lxml.etree.tostring(html, pretty_print=True)
+                
+                
+                print "URL:", url
+                
                   
                 # third step: clean HTML from tags which embarass libxml2 2.7
                 # only possible when module lxml.html.clean has been loaded
                 if sys.modules.has_key("lxml.html.clean"):
                     # clean html from tags which libxml2 2.7 is worried about
                     # this is the case with all tags that do not need a closing end tag like link, br, img
-                    cleaner = lxml.html.clean.Cleaner(remove_tags=["link", "br", "img", "script", "hr"], page_structure=True, style=False)
-                    prettyhtml = cleaner.clean_html(prettyhtml)
+                    cleaner = lxml.html.clean.Cleaner(remove_tags=["link", "br", "img", "hr", "a", "script", "th"],\
+                                                      page_structure=True, style=False, safe_attrs_only=False,\
+                                                      scripts=False, javascript=False)
+                    prettyhtml = cleaner.clean_html(prettyhtml)                  
                     
                     # lousy workaround for libxml2 2.7 which worries about attributes without value
                     # we hope that nobody names a server '" nowrap>' - chances are pretty small because this "name"
                     # contains unallowed characters and is far from common sense
-                    prettyhtml = prettyhtml.replace('" nowrap>', '">')
-                    #prettyhtml = prettyhtml.replace(' nowrap', '')                    
+                    prettyhtml = prettyhtml.replace(' nowrap', '')
+                    #prettyhtml = prettyhtml.replace(' nowrap', ' valign="center"')         
+                    #prettyhtml = prettyhtml.replace(' nowrap', ' blabla')  
                     
                     # cleanup cleaner
                     del cleaner
-                    
                     
                 fpretty = open("prettyhtml.html", "w")
                 fpretty.write(prettyhtml)
