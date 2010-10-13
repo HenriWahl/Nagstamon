@@ -1105,11 +1105,22 @@ class CentreonServer(GenericServer):
         additionally get php session cookie
         """
         try:
-            if self.Cookie == None:
+            if self.Cookie == None or self.Cookie == "":
                 # the cookie jar will contain Centreon 
                 self.Cookie = cookielib.CookieJar()
-            return self.FetchURL(self.nagios_cgi_url + "/index.php?" + urllib.urlencode({"p":1, "autologin":1, "useralias":MD5ify(self.username), "password":MD5ify(self.password)}), giveback="raw").partition("_sid='")[2].partition("'")[0]
+#            return self.FetchURL(self.nagios_cgi_url + "/index.php?" + urllib.urlencode({"p":1, "autologin":1, "useralias":MD5ify(self.username), "password":MD5ify(self.password)}), giveback="raw").partition("_sid='")[2].partition("'")[0]
+            self.FetchURL(self.nagios_cgi_url + "/index.php?" + urllib.urlencode({"p":1, "autologin":1, "useralias":MD5ify(self.username), "password":MD5ify(self.password)}), giveback="raw")
+            
+            print dir(self.Cookie._cookies.values()[0].values()[0]["PHPSESSID"])
+            sid = self.Cookie._cookies.values()[0].values()[0]["PHPSESSID"].value
+            
+            print sid
+            print self.Cookie._cookies.values()[0].values()[0]["PHPSESSID"].expires
+
+            return sid
         except:
+            import traceback
+            traceback.print_exc(file=sys.stdout)
             return None
         
         
@@ -1126,19 +1137,18 @@ class CentreonServer(GenericServer):
         raw = self.FetchURL(self.nagios_cgi_url + "/main.php?" + urllib.urlencode({"p":201, "autologin":1,\
                                     "o":"hd", "host_name":host,\
                                     "useralias":MD5ify(self.username), "password":MD5ify(self.password)}), giveback="raw")
-        host_id = raw.partition("host_id=")[2].partition("&")[0]
-        
-        fraw = open("raw_hostid.html", "w")
-        fraw.write(raw)
-        
-        # only if host_id is an usable integer return it
-        
-        print "GOT HOST_ID:", host_id, self.Cookie, self.SID
-        #print list(self.Cookie.__iter__())[0]
-        print dir(self.Cookie)
-        print self.Cookie._cookies
-
-
+        if not raw == "ERROR":
+            host_id = raw.partition("host_id=")[2].partition("&")[0]
+            
+            fraw = open("raw_hostid.html", "w")
+            fraw.write(raw)
+            
+            # only if host_id is an usable integer return it
+            
+            print "GOT HOST_ID:", host_id, self.Cookie, self.SID
+            print "dir(self.Cookie):", dir(self.Cookie)
+        else:
+            print "HOST ID GOT AN ERROR"
         
         try:
             if int(host_id):
@@ -1151,7 +1161,7 @@ class CentreonServer(GenericServer):
         
     def _get_status(self):
         """
-        Get status from Ćentreon Server
+        Get status from Centreon Server
         """
         # create Nagios items dictionary with to lists for services and hosts
         # every list will contain a dictionary for every failed service/host
@@ -1378,10 +1388,10 @@ class CentreonServer(GenericServer):
         # if no host id has been stored before get it now ONCE, this should reduce requests to Centreon server
         if self.hosts[host].id == "": 
             self.hosts[host].id = self._get_host_id(host) 
-        
+            
         # debug
         if str(self.conf.debug_mode) == "True":         
-            print "self.hosts[host].id:", '"' + self.hosts[host].id + '"'
+            print "self.hosts[host].id:", '"' + self.hosts[host].id + '"', type(self.hosts[host].id), dir(self.hosts[host].id)
                 
         if not self.hosts[host].id == "":
             # decision about host or service - they have different URLs
