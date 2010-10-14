@@ -1130,23 +1130,30 @@ class CentreonServer(GenericServer):
         """
         
         print "GETTING_HOST_ID..."
-        
-        #host_id = self.FetchURL(self.nagios_cgi_url + "/main.php?" + urllib.urlencode({"p":201, "autologin":1,\
-        #                            "o":"hd", "host_name":host,\
-        #                           "useralias":MD5ify(self.username), "password":MD5ify(self.password)}), giveback="raw").partition("host_id=")[2].partition("&")[0]
-        raw = self.FetchURL(self.nagios_cgi_url + "/main.php?" + urllib.urlencode({"p":201, "autologin":1,\
+
+        url = self.nagios_cgi_url + "/main.php?" + urllib.urlencode({"p":201, "autologin":1,\
                                     "o":"hd", "host_name":host,\
-                                    "useralias":MD5ify(self.username), "password":MD5ify(self.password)}), giveback="raw")
+                                    "useralias":MD5ify(self.username), "password":MD5ify(self.password)})
+        print url
+        
+        raw = self.FetchURL(url, giveback="raw")
         if not raw == "ERROR":
             host_id = raw.partition("host_id=")[2].partition("&")[0]
-            
+            # if for some reason host_id could not be retrieved because
+            # we get a login page clear cookies and SID and try again
+            if host_id == "":
+                print "Get NEW SESSION ID and Cookie!!!"
+                print self.Cookie
+                self.Cookie = None
+                self.SID = self._get_sid()
+                print self.Cookie
+                raw = self.FetchURL(url, giveback="raw")
+                host_id = raw.partition("host_id=")[2].partition("&")[0]
+      
             fraw = open("raw_hostid.html", "w")
             fraw.write(raw)
             
             # only if host_id is an usable integer return it
-            
-            print "GOT HOST_ID:", host_id, self.Cookie, self.SID
-            print "dir(self.Cookie):", dir(self.Cookie)
         else:
             print "HOST ID GOT AN ERROR"
         
@@ -1156,6 +1163,8 @@ class CentreonServer(GenericServer):
             else:
                 return ""
         except:
+            import traceback
+            traceback.print_exc(file=sys.stdout)
             return ""
     
         
@@ -1204,8 +1213,8 @@ class CentreonServer(GenericServer):
                         n["status"] = l.cs.text
                         # last_check
                         n["last_check"] = l.lc.text
-                        # duration
-                        n["duration"] = l.lsc.text
+                        # duration - has to be fixed to be sortable in popup columns
+                        n["duration"] = nagstamonActions.MachineSortableDuration(l.lsc.text)
                         # status_information
                         n["status_information"] = l.ou.text
                         # attempts are not shown in case of hosts so it defaults to "N/A"
@@ -1280,8 +1289,8 @@ class CentreonServer(GenericServer):
                         n["status"] = l.cs.text
                         # last_check
                         n["last_check"] = l.lc.text
-                        # duration
-                        n["duration"] = l.d.text
+                        # duration - has to be fixed to be sortable in popup columns
+                        n["duration"] = nagstamonActions.MachineSortableDuration(l.d.text)
                         # attempt
                         n["attempt"] = l.ca.text
                         # status_information
@@ -1391,7 +1400,7 @@ class CentreonServer(GenericServer):
             
         # debug
         if str(self.conf.debug_mode) == "True":         
-            print "self.hosts[host].id:", '"' + self.hosts[host].id + '"', type(self.hosts[host].id), dir(self.hosts[host].id)
+            print "self.hosts[host].id:", '"' + self.hosts[host].id + '"'
                 
         if not self.hosts[host].id == "":
             # decision about host or service - they have different URLs
@@ -1408,6 +1417,8 @@ class CentreonServer(GenericServer):
                 cgi_data = urllib.urlencode({"cmd":"service_schedule_check", "actiontype":1,\
                                              "host_id":self.hosts[host].id, "service_id":self.hosts[host].services[service].id, "sid":self.SID})
                 url = self.nagios_cgi_url + "/include/monitoring/objectDetails/xml/serviceSendCommand.php?" + cgi_data
+                
+            #print url
                 
             # execute POST request
             self.FetchURL(url, giveback="raw")

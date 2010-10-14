@@ -650,14 +650,37 @@ def HumanReadableDuration(seconds):
             else:
                 return "0d %sh %sm %ss" % (hms[0], hms[1], hms[2])
         else:
-            # waste is waste - does anyone nee
+            # waste is waste - does anyone need it?
             days, waste, hms = str(timedelta).split(" ")
             hms = hms.split(":")
             return "%sd %sh %sm %ss" % (days, hms[0], hms[1], hms[2])
     except:
         # in case of any error return seconds we got
         return seconds
+
     
+def MachineSortableDuration(raw):
+    """
+    Centreon gratefully shows duration even in weeks and months which confuse the
+    sorting of popup window sorting - this functions wants to fix that
+    """  
+    fixed = {"M":0, "w":0, "d":0, "h":0, "m":0, "s":0}
+    
+    for c in raw.split(" "):
+        number, period = c[0:-1],c[-1]
+        fixed[period] = int(number) 
+    
+    # add 28 days for every month...
+    if fixed["M"] > 0:
+        fixed["d"] = fixed["d"] + 28 * fixed["M"]
+        fixed.pop("M")
+    # ... and 7 days vor every week
+    if fixed ["w"] > 0:
+        fixed["d"] = fixed["d"] + 7 * fixed["w"]
+        fixed.pop("w")
+    
+    return "%(d)sd %(h)sh %(m)sm %(s)ss" % fixed
+
     
 def MD5ify(string):
     """
