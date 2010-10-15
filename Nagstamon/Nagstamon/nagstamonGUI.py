@@ -1747,14 +1747,7 @@ class Settings(object):
   
         # flag settings dialog as closed
         self.output.SettingsDialogOpen = False
-        
-
-    #def __del__(self):
-    #    """
-    #    hopefully a __del__() method may make this object better collectable for gc
-    #    """
-    #    del(self)
-        
+               
         
     def FillTreeView(self):
         # fill treeview containing servers
@@ -2375,7 +2368,9 @@ class EditServer(ServerDialogHelper):
             
         
 class PasswordDialog:
-
+    """
+    used in case password is not stored
+    """
     password = None
     escaped = False
 

@@ -1105,18 +1105,13 @@ class CentreonServer(GenericServer):
         additionally get php session cookie
         """
         try:
-            if self.Cookie == None or self.Cookie == "":
-                # the cookie jar will contain Centreon 
-                self.Cookie = cookielib.CookieJar()
-#            return self.FetchURL(self.nagios_cgi_url + "/index.php?" + urllib.urlencode({"p":1, "autologin":1, "useralias":MD5ify(self.username), "password":MD5ify(self.password)}), giveback="raw").partition("_sid='")[2].partition("'")[0]
+            #if self.Cookie == None or self.Cookie == "":
+            #    # the cookie jar will contain Centreon 
+            #    self.Cookie = cookielib.CookieJar()
+            # why not get a new cookie with every new session id?    
+            self.Cookie = cookielib.CookieJar()    
             self.FetchURL(self.nagios_cgi_url + "/index.php?" + urllib.urlencode({"p":1, "autologin":1, "useralias":MD5ify(self.username), "password":MD5ify(self.password)}), giveback="raw")
-            
-            print dir(self.Cookie._cookies.values()[0].values()[0]["PHPSESSID"])
             sid = self.Cookie._cookies.values()[0].values()[0]["PHPSESSID"].value
-            
-            print sid
-            print self.Cookie._cookies.values()[0].values()[0]["PHPSESSID"].expires
-
             return sid
         except:
             import traceback
@@ -1128,35 +1123,25 @@ class CentreonServer(GenericServer):
         """
         get host_id via parsing raw html
         """
-        
-        print "GETTING_HOST_ID..."
-
         url = self.nagios_cgi_url + "/main.php?" + urllib.urlencode({"p":201, "autologin":1,\
                                     "o":"hd", "host_name":host,\
                                     "useralias":MD5ify(self.username), "password":MD5ify(self.password)})
-        print url
-        
         raw = self.FetchURL(url, giveback="raw")
+        
         if not raw == "ERROR":
             host_id = raw.partition("host_id=")[2].partition("&")[0]
             # if for some reason host_id could not be retrieved because
             # we get a login page clear cookies and SID and try again
             if host_id == "":
-                print "Get NEW SESSION ID and Cookie!!!"
-                print self.Cookie
                 self.Cookie = None
                 self.SID = self._get_sid()
-                print self.Cookie
                 raw = self.FetchURL(url, giveback="raw")
-                host_id = raw.partition("host_id=")[2].partition("&")[0]
-      
-            fraw = open("raw_hostid.html", "w")
-            fraw.write(raw)
-            
-            # only if host_id is an usable integer return it
+                host_id = raw.partition("host_id=")[2].partition("&")[0]           
         else:
-            print "HOST ID GOT AN ERROR"
-        
+            if str(self.conf.debug_mode) == "True":
+                print self.name, ":", host, "ID could not be retrieved."
+
+        # only if host_id is an usable integer return it    
         try:
             if int(host_id):
                 return host_id
@@ -1417,9 +1402,7 @@ class CentreonServer(GenericServer):
                 cgi_data = urllib.urlencode({"cmd":"service_schedule_check", "actiontype":1,\
                                              "host_id":self.hosts[host].id, "service_id":self.hosts[host].services[service].id, "sid":self.SID})
                 url = self.nagios_cgi_url + "/include/monitoring/objectDetails/xml/serviceSendCommand.php?" + cgi_data
-                
-            #print url
-                
+
             # execute POST request
             self.FetchURL(url, giveback="raw")
             
