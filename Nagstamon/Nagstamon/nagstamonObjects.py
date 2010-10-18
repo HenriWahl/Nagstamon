@@ -268,11 +268,21 @@ class GenericServer(object):
         self.FetchURL(url, giveback="nothing", cgi_data=cgi_data)
     
     def get_start_end(self, host):
-        html = self.FetchURL(self.nagios_cgi_url + "/cmd.cgi?" + urllib.urlencode({"cmd_typ":"55", "host":host}), giveback="raw")
-        start_time = html.split("NAME='start_time' VALUE='")[1].split("'></b></td></tr>")[0]
-        end_time = html.split("NAME='end_time' VALUE='")[1].split("'></b></td></tr>")[0]
-        # give values back as tuple
-        return start_time, end_time
+        """
+        for GUI to get actual downtime start and end from server - they may vary so it's better to get
+        directly from web interface
+        """
+        try:
+            html = self.FetchURL(self.nagios_cgi_url + "/cmd.cgi?" + urllib.urlencode({"cmd_typ":"55", "host":host}), giveback="raw")
+            start_time = html.split("NAME='start_time' VALUE='")[1].split("'></b></td></tr>")[0]
+            end_time = html.split("NAME='end_time' VALUE='")[1].split("'></b></td></tr>")[0]
+            # give values back as tuple
+            return start_time, end_time
+        except:
+            import traceback
+            traceback.print_exc(file=sys.stdout)
+            return "n/a", "n/a"
+    
      
     def format_item(self, host, service=None):
         if service is None:
@@ -1210,8 +1220,7 @@ class CentreonServer(GenericServer):
                         n["status"] = l.cs.text
                         # last_check
                         n["last_check"] = l.lc.text
-                        # duration - has to be fixed to be sortable in popup columns
-                        #n["duration"] = nagstamonActions.MachineSortableDuration(l.lsc.text)
+                        # duration
                         n["duration"] = l.lsc.text
                         # status_information
                         n["status_information"] = l.ou.text
@@ -1287,8 +1296,7 @@ class CentreonServer(GenericServer):
                         n["status"] = l.cs.text
                         # last_check
                         n["last_check"] = l.lc.text
-                        # duration - has to be fixed to be sortable in popup columns
-                        #n["duration"] = nagstamonActions.MachineSortableDuration(l.d.text)
+                        # duration
                         n["duration"] = l.d.text
                         # attempt
                         n["attempt"] = l.ca.text
@@ -1421,6 +1429,21 @@ class CentreonServer(GenericServer):
 
             # execute POST request
             self.FetchURL(url, giveback="raw")
+            
+    def get_start_end(self, host):
+        """
+        get start and end time for downtime from Centreon server
+        """
+        try:
+            html = self.FetchURL(self.nagios_cgi_url + "/main.php?" + urllib.urlencode({"p":"20305", "o":"ah", "host_name":host}), giveback="raw")
+            start_time = html.split('name="start" type="text" value="')[1].split('"')[0]
+            end_time = html.split('name="end" type="text" value="')[1].split('"')[0]
+            # give values back as tuple      
+            return start_time, end_time
+        except:
+            import traceback
+            traceback.print_exc(file=sys.stdout)
+            return "n/a", "n/a"
             
 
 class GenericObject(object):    

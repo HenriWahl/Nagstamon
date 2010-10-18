@@ -523,18 +523,7 @@ class GUI(object):
         sticky = self.acknowledge_xml.get_widget("input_checkbutton_sticky_acknowledgement").get_active()
         notify = self.acknowledge_xml.get_widget("input_checkbutton_send_notification").get_active()
         persistent = self.acknowledge_xml.get_widget("input_checkbutton_persistent_comment").get_active()
-        """
-        # flags for comments as on Nagios web GUI
-        # starting with "&" in case all flags are empty, so at least 
-        # the query will be glued by &
-        flags = "&"
-        if self.acknowledge_xml.get_widget("input_checkbutton_sticky_acknowledgement").get_active() == True:
-            flags = flags + "sticky_ack=on&"
-        if self.acknowledge_xml.get_widget("input_checkbutton_send_notification").get_active() == True:
-            flags = flags + "send_notification=on&"
-        if self.acknowledge_xml.get_widget("input_checkbutton_persistent_comment").get_active() == True:
-            flags = flags + "persistent=on&"
-        """    
+ 
         # create a list of all service of selected host to acknowledge them all
         all_services = list()
         if acknowledge_all_services == True:
