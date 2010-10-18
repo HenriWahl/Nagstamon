@@ -1365,15 +1365,16 @@ class CentreonServer(GenericServer):
                     "persistent":int(persistent), "sticky":int(sticky), "ackhostservice":"0", "o":"hd", "en":"1"})
             # debug
             if str(self.conf.debug_mode) == "True": 
-                print self.name, host, s +": " + self.nagios_cgi_url + "/main.php?"+ cgi_data     
+                print self.name, host +": " + self.nagios_cgi_url + "/main.php?"+ cgi_data     
             
             # running remote cgi command, also possible with GET method     
-            self.FetchURL(url + "?" + cgi_data, giveback="nothing")        
+            self.FetchURL(self.nagios_cgi_url + "/main.php?" + cgi_data, giveback="raw")        
         else:
             # service(s) @ host
             # if all_services is empty only one service has to be checked - the one clicked
             # otherwise if there all services should be acknowledged
             if len(all_services) == 0: all_services = [service]
+
             # acknowledge all services on a host
             for s in all_services:
                 # service @ host
@@ -1384,10 +1385,11 @@ class CentreonServer(GenericServer):
                 # debug
                 if str(self.conf.debug_mode) == "True": 
                     print self.name, host, s +": " + self.nagios_cgi_url + "/main.php?" + cgi_data            
-                
-                #running remote cgi command with GET method        
-                self.FetchURL(self.nagios_cgi_url + "/main.php?" + cgi_data, giveback="nothing") 
-                
+                    
+                # running remote cgi command with GET method, for some strange reason only working i
+                # giveback="raw"
+                self.FetchURL(self.nagios_cgi_url + "/main.php?" + cgi_data, giveback="raw")
+
 
     def _set_recheck(self, host, service):
         """
