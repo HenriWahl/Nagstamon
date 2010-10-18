@@ -93,8 +93,20 @@ class ServiceColumn(Column):
 class LastCheckColumn(Column):
     ATTR_NAME = 'last_check'
     
-class DurationColumn(Column):
+class DurationColumn(CustomSortingColumn):
     ATTR_NAME = 'duration'
+    
+    @classmethod
+    def sort_function(cls, model, iter1, iter2, column):
+        """ Overrides default sorting behaviour """       
+        data1, data2 = [model.get_value(x, column) for x in (iter1, iter2)]
+        try:
+            first = nagstamonActions.MachineSortableDuration(data1) 
+            second = nagstamonActions.MachineSortableDuration(data2)
+        except ValueError:
+            return cmp(first, second)
+        return first - second
+
     
 class AttemptColumn(Column):
     ATTR_NAME = 'attempt'
@@ -1199,7 +1211,8 @@ class CentreonServer(GenericServer):
                         # last_check
                         n["last_check"] = l.lc.text
                         # duration - has to be fixed to be sortable in popup columns
-                        n["duration"] = nagstamonActions.MachineSortableDuration(l.lsc.text)
+                        #n["duration"] = nagstamonActions.MachineSortableDuration(l.lsc.text)
+                        n["duration"] = l.lsc.text
                         # status_information
                         n["status_information"] = l.ou.text
                         # attempts are not shown in case of hosts so it defaults to "N/A"
@@ -1275,7 +1288,8 @@ class CentreonServer(GenericServer):
                         # last_check
                         n["last_check"] = l.lc.text
                         # duration - has to be fixed to be sortable in popup columns
-                        n["duration"] = nagstamonActions.MachineSortableDuration(l.d.text)
+                        #n["duration"] = nagstamonActions.MachineSortableDuration(l.d.text)
+                        n["duration"] = l.d.text
                         # attempt
                         n["attempt"] = l.ca.text
                         # status_information

@@ -641,7 +641,7 @@ def HumanReadableDuration(seconds):
     """
     timedelta = str(datetime.timedelta(seconds=int(seconds)))
     try:
-        if timedelta.find("days") == -1:
+        if timedelta.find("day") == -1:
             hms = timedelta.split(":")
             if len(hms) == 1:
                 return "0d 0h 0m %ss" % (hms[0])
@@ -661,32 +661,25 @@ def HumanReadableDuration(seconds):
     
 def MachineSortableDuration(raw):
     """
-    Centreon gratefully shows duration even in weeks and months which confuse the
+    Monitors gratefully shows duration even in weeks and months which confuse the
     sorting of popup window sorting - this functions wants to fix that
-    """  
-    fixed = {"M":0, "w":0, "d":0, "h":0, "m":0, "s":0}
+    """
+    # dictionary for duration date string components
+    d = {"M":0, "w":0, "d":0, "h":0, "m":0, "s":0}
     
-    for c in raw.split(" "):
+    # strip and replace necessary for Nagios duration values,
+    # split components of duration into dictionary
+    for c in raw.strip().replace("  ", " ").split(" "):
         number, period = c[0:-1],c[-1]
-        fixed[period] = int(number) 
-    
-    # add 28 days for every month...
-    if fixed["M"] > 0:
-        fixed["d"] = fixed["d"] + 28 * fixed["M"]
-        fixed.pop("M")
-    # ... and 7 days vor every week
-    if fixed ["w"] > 0:
-        fixed["d"] = fixed["d"] + 7 * fixed["w"]
-        fixed.pop("w")
-    
-    return "%(d)sd %(h)sh %(m)sm %(s)ss" % fixed
+        d[period] = int(number) 
+    # convert collected duration data components into seconds for being comparable
+    return 16934400 * d["M"] + 604800 * d["w"] + 86400 * d["d"] + 3600 * d["h"] + 60 * d["m"] + d["s"]
 
     
 def MD5ify(string):
     """
     makes something md5y of a given username or password for Centreon web interface access
     """
-    ###return hashlib.md5(string + "\n").hexdigest()
     return hashlib.md5(string).hexdigest()
     
        
