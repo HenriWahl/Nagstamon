@@ -38,7 +38,7 @@ def StartRefreshLoop(servers=None, output=None, conf=None):
         if str(conf.servers[server.name].enabled) == "True":
             server.thread = RefreshLoopOneServer(server=server, output=output, conf=conf)
             server.thread.start()
-            
+
 
 class RefreshLoopOneServer(threading.Thread):
     """
@@ -56,20 +56,21 @@ class RefreshLoopOneServer(threading.Thread):
         threading.Thread.__init__(self, name=self.server.name)
         self.setDaemon(1)
 
-
+    def Stop(self):
+        # simply sets the stopped flag to True to let the above while stop this thread when checking next
+        self.stopped = True
+        
+    def Refresh(self):
+        # simply sets the stopped flag to True to let the above while stop this thread when checking next
+        self.doRefresh = True        
+        
     def run(self):  
         """
         loop until end of eternity or until server is stopped
         """
-       
-        ###import guppy
-        ###hp = guppy.hpy()
-        ###hp.setref()
               
         while self.stopped == False:          
             # check if we have to leave update interval sleep
-            #if count > int(self.conf.update_interval)*60: self.doRefresh = True
-
             if self.server.count > int(self.conf.update_interval)*60: self.doRefresh = True
             
             # self.doRefresh could also been changed by RefreshAllServers()
@@ -126,76 +127,20 @@ class RefreshLoopOneServer(threading.Thread):
                         if self.doRefresh == True:
                             if str(self.conf.debug_mode) == "True":
                                 print self.server.name, ":", "Refreshing output - server is already checking:", self.server.isChecking                                        
-                            """
-                            try:
-                                # check if server is already checked
-                                if self.server.isChecking == False:
-                                    # set server status for status field in popwin
-                                    self.server.status = "Refreshing"
-                                    gobject.idle_add(self.output.popwin.UpdateStatus, self.server)
-                                    # get current status of one given server
-                                    server_status = self.server.GetStatus()
-                                    # set server status for status field in popwin
-                                    if server_status == "ERROR":
-                                        # shorter error message - see https://sourceforge.net/tracker/?func=detail&aid=3017044&group_id=236865&atid=1101373
-                                        if str(self.conf.long_display) == "True":
-                                            self.server.status = "ERROR"
-                                        else:
-                                            self.server.status = "ERR" 
-                                    else:
-                                        self.server.status = "Connected"
-                                    # tell gobject to care about GUI stuff - refresh display status
-                                    gobject.idle_add(self.output.RefreshDisplayStatus)
-                                    # do some cleanup
-                                    gc.collect()
-                            except:
-                                import traceback
-                                import sys
-                                traceback.print_exc(file=sys.stdout)
-                            """
+
                             # reset refresh flag
                             self.doRefresh = False
-                            # reset counter
-                            #import sys
-                            #print "SELF.COUNT", self.server.count, sys.getrefcount(self.server.count)
-                            #import guppy
-                            #h = guppy.hpy()
-                            #h = hp.heap()
-                            #rint h.byclodo
-                            #print h.bysize
 
-                          
-                            ###del count
                             # do some cleanup
                             del self.server.count
                             gc.collect()
                             self.server.count = 0         
-                            
-                            #import objgraph
-                            #objgraph.show_refs([self])
-                            #objgraph.show_backrefs([self.server.count])
-     
+    
             else:
                 # sleep and count
                 time.sleep(3)
                 self.server.count += 3
                 gc.collect()
-                
-                #import objgraph
-                #objgraph.show_refs([self])
-                #objgraph.show_backrefs([self.server.count])
-                #objgraph.show_backrefs([count])
-                
-
-        
-    def Stop(self):
-        # simply sets the stopped flag to True to let the above while stop this thread when checking next
-        self.stopped = True
-        
-        
-    def Refresh(self):
-        # simply sets the stopped flag to True to let the above while stop this thread when checking next
-        self.doRefresh = True
 
                     
 def RefreshAllServers(servers=None, output=None, conf=None):

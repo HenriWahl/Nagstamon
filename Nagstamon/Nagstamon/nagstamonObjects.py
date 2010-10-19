@@ -256,16 +256,37 @@ class GenericServer(object):
     
     def _set_downtime(self, host, service, author, comment, fixed, start_time, end_time, hours, minutes):
         # decision about host or service - they have different URLs
+        
+        
+        print '"' + service + '"', "@", host        
+        
         if not service:
             # host
-            cgi_data = urllib.urlencode({"cmd_typ":"55","cmd_mod":"2","trigger":"0","childoptions":"0","host":host,"com_author":author,"com_data":comment,"fixed":fixed,"start_time":start_time,"end_time":end_time,"hours":hours,"minutes":minutes,"btnSubmit":"Commit"})
+            cmd_typ = "55"
+            #cgi_data = urllib.urlencode({"cmd_typ":"55","cmd_mod":"2","trigger":"0",\
+            #                             "childoptions":"0","host":host,\
+            #                             "com_author":author,"com_data":comment,"fixed":fixed,\
+            #                             "start_time":start_time,"end_time":end_time,\
+            #                             "hours":hours,"minutes":minutes,"btnSubmit":"Commit"})
         else:
             # service @ host
-            cgi_data = urllib.urlencode({"cmd_typ":"56","cmd_mod":"2","trigger":"0","childoptions":"0","host":host,"service":service,"com_author":author,"com_data":comment,"fixed":fixed,"start_time":start_time,"end_time":end_time,"hours":hours,"minutes":minutes,"btnSubmit":"Commit"})
+            cmd_typ = "56"
+            
+        cgi_data = urllib.urlencode({"cmd_typ":cmd_typ,"cmd_mod":"2","trigger":"0",\
+                                     "childoptions":"0","host":host,"service":service,\
+                                     "com_author":author,"com_data":comment,"fixed":fixed,\
+                                     "start_time":start_time,"end_time":end_time,\
+                                     "hours":hours,"minutes":minutes,"btnSubmit":"Commit"})
+
+            
         url = self.nagios_cgi_url + "/cmd.cgi"
+        print url + "?" + cgi_data
     
         # running remote cgi command
-        self.FetchURL(url, giveback="nothing", cgi_data=cgi_data)
+        #raw = self.FetchURL(url, giveback="raw", cgi_data=cgi_data)
+        raw = self.FetchURL(self.nagios_cgi_url + "/cmd.cgi", giveback="raw", cgi_data=cgi_data)        
+        fraw = open("downtime.html", "w")
+        fraw.write(raw)
     
     def get_start_end(self, host):
         """
@@ -742,7 +763,7 @@ class GenericServer(object):
         digest_handler = urllib2.HTTPDigestAuthHandler(passman)
         
         # get my cookie to access Opsview web interface to access Opsviews Nagios part
-        if self.Cookie == None and self.type == "Opsview":
+        if self.Cookie == None and self.type == "Opsview":         
             # put all necessary data into url string
             logindata = urllib.urlencode({"login_username":self.username,\
                              "login_password":self.password,\
@@ -1200,11 +1221,21 @@ class CentreonServer(GenericServer):
         try:
             raw = self.FetchURL(nagcgiurl_hosts, giveback="raw")    
             htobj = lxml.objectify.fromstring(raw)
+            
+            #fraw = open("centreon_session_id_1.html", "w")
+            #fraw.write(raw)
+            
             if htobj == "bad session id":
+                if str(self.conf.debug_mode) == "True": 
+                    print self.name, "bad session ID, retrieving new one..." 
                 # try again...
+                self.Cookie = None
                 self.SID = self._get_sid()
                 raw = self.FetchURL(nagcgiurl_hosts, giveback="raw")                    
                 htobj = lxml.objectify.fromstring(raw)
+                
+                #fraw = open("centreon_session_id_2.html", "w")
+                #fraw.write(raw)
  
             if htobj.__dict__.has_key("l"):
                 for l in htobj.l:
@@ -1277,7 +1308,17 @@ class CentreonServer(GenericServer):
         # services
         try:                       
             raw = self.FetchURL(nagcgiurl_services, giveback="raw")
-            htobj = lxml.objectify.fromstring(raw)           
+            htobj = lxml.objectify.fromstring(raw)   
+            if htobj == "bad session id":
+                # debug
+                if str(self.conf.debug_mode) == "True": 
+                    print self.name, "bad session ID, retrieving new one..." 
+                # try again...
+                self.Cookie = None
+                self.SID = self._get_sid()
+                raw = self.FetchURL(nagcgiurl_services, giveback="raw")                    
+                htobj = lxml.objectify.fromstring(raw)                        
+            
             if htobj.__dict__.has_key("l"):
                 for l in htobj.l:
                     try:

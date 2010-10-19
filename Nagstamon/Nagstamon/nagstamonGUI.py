@@ -16,8 +16,6 @@ import gtk.glade
 import gobject
 import os
 import platform
-# module pwd does not exist on Windows
-if platform.system() != "Windows": import pwd
 
 # module egg.trayicon doesnt exists on Windows
 if platform.system() != "Windows":
@@ -83,12 +81,6 @@ class GUI(object):
         
         # get resources directory from current directory - only if not being set before by pkg_resources
         if self.Resources == "": self.Resources = os.path.normcase(os.getcwd() + "/resources")
-            
-        # get and store local username for use with acknowledge + downtime actions
-        if platform.system() == "Windows":
-            self.username = os.environ["USERNAME"]
-        else:
-            self.username = pwd.getpwuid(os.getuid())[0]
 
         # initialize overall status flag
         self.status_ok = True
@@ -502,7 +494,7 @@ class GUI(object):
         self.acknowledge_xml.get_widget("input_checkbutton_acknowledge_all_services").set_active(False)
 
         # default author + comment
-        self.acknowledge_xml.get_widget("input_entry_author").set_text(self.username)
+        self.acknowledge_xml.get_widget("input_entry_author").set_text(server.username)        
         self.acknowledge_xml.get_widget("input_entry_comment").set_text("acknowledged")
 
         # show dialog
@@ -572,7 +564,7 @@ class GUI(object):
         start_time, end_time = nagstamonActions.Downtime_get_start_end(server=self.popwin.miserable_server, host=host)
             
         # default author + comment
-        self.downtime_xml.get_widget("input_entry_author").set_text(self.username)
+        self.downtime_xml.get_widget("input_entry_author").set_text(server.username)        
         self.downtime_xml.get_widget("input_entry_comment").set_text("scheduled downtime")
         # start and end time
         self.downtime_xml.get_widget("input_entry_start_time").set_text(start_time)
@@ -1881,7 +1873,15 @@ class Settings(object):
                 # delete server configuration entry
                 self.conf.servers.pop(server)
                 # stop thread
-                self.servers[server].thread.Stop()
+                try:
+                    self.servers[server].thread.Stop()
+                except:
+                    # most probably server has been disabled and that's why there is no thread running
+                    # debug
+                    if str(self.conf.debug_mode) == "True":
+                        print "Server:", server
+                        import traceback
+                        traceback.print_exc(file=sys.stdout)
                 # delete server from servers dictionary
                 self.servers.pop(server)
                 # fill settings dialog treeview
