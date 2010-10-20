@@ -256,42 +256,22 @@ class GenericServer(object):
     
     def _set_downtime(self, host, service, author, comment, fixed, start_time, end_time, hours, minutes):
         # decision about host or service - they have different URLs
-        
-        
-        print '"' + service + '"', "@", host        
-        
         if not service:
             # host
             cmd_typ = "55"
-            #cgi_data = urllib.urlencode({"cmd_typ":"55","cmd_mod":"2","trigger":"0",\
-            #                             "childoptions":"0","host":host,\
-            #                             "com_author":author,"com_data":comment,"fixed":fixed,\
-            #                             "start_time":start_time,"end_time":end_time,\
-            #                             "hours":hours,"minutes":minutes,"btnSubmit":"Commit"})
         else:
             # service @ host
             cmd_typ = "56"
             
         cgi_data = urllib.urlencode({"cmd_typ":cmd_typ,"cmd_mod":"2","trigger":"0",\
                                      "childoptions":"0","host":host,"service":service,\
-                                     # Icinga 1.2.0 bug has '"' on fixed value - doesn't help :-(
-                                     #"com_author":author,"com_data":comment,"fixed":str(fixed) + '"',\
                                      "com_author":author,"com_data":comment,"fixed":fixed,\
                                      "start_time":start_time,"end_time":end_time,\
                                      "hours":hours,"minutes":minutes,"btnSubmit":"Commit"})
 
-            
-        url = self.nagios_cgi_url + "/cmd.cgi"
-        print url + "?" + cgi_data
-    
         # running remote cgi command
-        #raw = self.FetchURL(url, giveback="raw", cgi_data=cgi_data)
-        # Referer: http://classic.demo.icinga.org/icinga/cgi-bin/cmd.cgi?cmd_typ=56&host=gmx-smtp&service=SMTP
-        raw = self.FetchURL(self.nagios_cgi_url + "/cmd.cgi", giveback="raw", cgi_data=cgi_data,\
-                            extra_header={"Referer":self.nagios_cgi_url+"/cmd.cgi?"+urllib.urlencode({"cmd_typ":cmd_typ,\
-                            "host":host, "service":service})})        
-        fraw = open("downtime.html", "w")
-        fraw.write(raw)
+        raw = self.FetchURL(self.nagios_cgi_url + "/cmd.cgi", giveback="raw", cgi_data=cgi_data)        
+        
     
     def get_start_end(self, host):
         """
@@ -1003,8 +983,8 @@ class IcingaServer(GenericServer):
         something changed in html layout so we need to get time somehow differently than in Nagios
         """
         html = self.FetchURL(self.nagios_cgi_url + "/cmd.cgi?" + urllib.urlencode({"cmd_typ":"55", "host":host}), giveback="raw")
-        start_time = html.split("NAME='start_time' VALUE='")[1].split("' SIZE=")[0]
-        end_time = html.split("NAME='end_time' VALUE='")[1].split("' SIZE=")[0]
+        start_time = html.split("NAME='start_time' VALUE='")[1].split("'")[0]
+        end_time = html.split("NAME='end_time' VALUE='")[1].split("'")[0]
         # give values back as tuple
         return start_time, end_time
     
@@ -1143,6 +1123,40 @@ class IcingaServer(GenericServer):
         except:
             pass
         return "ERROR"
+    
+    
+    def _set_downtime(self, host, service, author, comment, fixed, start_time, end_time, hours, minutes):
+        # decision about host or service - they have different URLs
+        
+        
+        print '"' + service + '"', "@", host, type(service)        
+        
+        if service == "":
+            # host
+            cmd_typ = "55"
+        else:
+            # service @ host
+            cmd_typ = "56"
+            
+        cgi_data = urllib.urlencode({"cmd_typ":cmd_typ,"cmd_mod":"2","trigger":"0",\
+                                     "childoptions":"0","host":host,"service":service,\
+                                     "com_author":author,"com_data":comment,"fixed":fixed,\
+                                     "start_time":start_time,"end_time":end_time,\
+                                     "hours":hours,"minutes":minutes,"btnSubmit":"Commit"})
+           
+        url = self.nagios_cgi_url + "/cmd.cgi"
+        print url + "?" + cgi_data
+    
+        # running remote cgi command
+        #raw = self.FetchURL(url, giveback="raw", cgi_data=cgi_data)
+        # Referer: http://classic.demo.icinga.org/icinga/cgi-bin/cmd.cgi?cmd_typ=56&host=gmx-smtp&service=SMTP
+        #extra_header = {"Referer":self.nagios_cgi_url+"/cmd.cgi?"+urllib.urlencode({"cmd_typ":cmd_typ,\
+        #                    "host":host, "service":service})}
+        raw = self.FetchURL(self.nagios_cgi_url + "/cmd.cgi", giveback="raw", cgi_data=cgi_data)
+        #raw = self.FetchURL(self.nagios_cgi_url + "/cmd.cgi?" + cgi_data, giveback="raw")        
+        
+        fraw = open("downtime.html", "w")
+        fraw.write(raw)    
 
 
 class OpsviewServer(GenericServer):
