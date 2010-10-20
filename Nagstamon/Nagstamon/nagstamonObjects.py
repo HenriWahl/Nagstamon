@@ -140,9 +140,9 @@ class GenericServer(object):
     ]
     
     DISABLED_CONTROLS = []
-    URL_SERVICE_SEPARATOR = '&service='
+    ###URL_SERVICE_SEPARATOR = '&service='
     
-    # used in Nagios _get_status method
+    # used in Nagios _get_status() method
     BODY_TABLE_INDEX = 2
     
     # Nagios CGI flags translation dictionary for acknowledging hosts/services 
@@ -308,25 +308,28 @@ class GenericServer(object):
             import traceback
             traceback.print_exc(file=sys.stdout)
             return "n/a", "n/a"
-    
-     
-    def format_item(self, host, service=None):
-        if service is None:
-            return host
-        return ''.join([host, self.URL_SERVICE_SEPARATOR, service])
-        
-    def open_tree_view(self, host, service=None):
-        item = self.format_item(host, service)
-        self._open_tree_view(item)
 
-    def _open_tree_view(self, item):
-        webbrowser.open('%s/extinfo.cgi?type=1&host=%s' % (self.nagios_cgi_url, item))
+        
+    def open_tree_view(self, host, service=""):
+        """
+        open monitor from treeview context menu
+        """
+        # only type is important so do not care of service "" in case of host monitor       
+        if service == "":
+            typ = 1
+        else:
+            typ = 2      
+        if str(self.conf.debug_mode) == "True":
+            print self.name, ":", "Open host/service monitor web page", self.nagios_cgi_url + '/extinfo.cgi?' + urllib.urlencode({"type":typ, "host":host, "service":service})
+        webbrowser.open(self.nagios_cgi_url + '/extinfo.cgi?' + urllib.urlencode({"type":typ, "host":host, "service":service}))
+
         
     def open_nagios(self):
         webbrowser.open(self.nagios_url)
         # debug
         if str(self.conf.debug_mode) == "True":
-            print self.name, ":", "Open monitor web page", self.nagios_url        
+            print self.name, ":", "Open monitor web page", self.nagios_url   
+            
         
     def open_services(self):
         webbrowser.open(self.nagios_cgi_url + "/status.cgi?host=all&servicestatustypes=253")
@@ -1250,7 +1253,7 @@ class OpsviewServer(GenericServer):
 
 class CentreonServer(GenericServer): 
     TYPE = 'Centreon'
-    URL_SERVICE_SEPARATOR = ';'
+    ###URL_SERVICE_SEPARATOR = ';'
     # centreon generic web interface uses a sid which is needed to ask for news
     SID = None
     
@@ -1365,8 +1368,9 @@ class CentreonServer(GenericServer):
             
             #fraw = open("centreon_session_id_1.html", "w")
             #fraw.write(raw)
-            
-            if htobj == "bad session id":
+
+            # in case there are no children session id is invalid
+            if htobj.getchildren() == []:
                 if str(self.conf.debug_mode) == "True": 
                     print self.name, "bad session ID, retrieving new one..." 
                 # try again...
@@ -1449,8 +1453,9 @@ class CentreonServer(GenericServer):
         # services
         try:                       
             raw = self.FetchURL(nagcgiurl_services, giveback="raw")
-            htobj = lxml.objectify.fromstring(raw)   
-            if htobj == "bad session id":
+            htobj = lxml.objectify.fromstring(raw)     
+            # in case there are no children session id is invalid
+            if htobj.getchildren == []:
                 # debug
                 if str(self.conf.debug_mode) == "True": 
                     print self.name, "bad session ID, retrieving new one..." 
