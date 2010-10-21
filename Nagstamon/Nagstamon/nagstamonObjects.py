@@ -1002,8 +1002,7 @@ class IcingaServer(GenericServer):
 class OpsviewServer(GenericServer):
     """  
        special treatment for Opsview XML based API
-    """
-    
+    """   
     TYPE = 'Opsview'
     
     def _set_downtime(self, host, service, author, comment, fixed, start_time, end_time, hours, minutes):
@@ -1023,12 +1022,22 @@ class OpsviewServer(GenericServer):
         cgi_data = { "from" : url + "?" + cgi_data, "comment": comment, "starttime": start_time, "endtime": end_time }
         self.FetchURL(self.nagios_url + action, giveback="nothing", cgi_data=cgi_data)
         
+
     def get_start_end(self, host):
-        html = self.FetchURL(self.nagios_cgi_url + "/cmd.cgi?" + urllib.urlencode({"cmd_typ":"55", "host":host}), giveback="raw")
-        start_time = html.split('name="starttime" value="')[1].split('"')[0]
-        end_time = html.split('name="endtime" value="')[1].split('"')[0]        
-        # give values back as tuple
-        return start_time, end_time
+        """
+        get start and end time for downtime from Opsview server
+        """
+        try:
+            html = self.FetchURL(self.nagios_cgi_url + "/cmd.cgi?" + urllib.urlencode({"cmd_typ":"55", "host":host}), giveback="raw")
+            start_time = html.split('name="starttime" value="')[1].split('"')[0]
+            end_time = html.split('name="endtime" value="')[1].split('"')[0]        
+            # give values back as tuple
+            return start_time, end_time
+        except:
+            import traceback
+            traceback.print_exc(file=sys.stdout)
+            return "n/a", "n/a"   
+        
         
     def _get_status(self):
         """
@@ -1146,9 +1155,6 @@ class CentreonServer(GenericServer):
         additionally get php session cookie
         """
         try:
-            #if self.Cookie == None or self.Cookie == "":
-            #    # the cookie jar will contain Centreon 
-            #    self.Cookie = cookielib.CookieJar()
             # why not get a new cookie with every new session id?    
             self.Cookie = cookielib.CookieJar()    
             self.FetchURL(self.nagios_cgi_url + "/index.php?" + urllib.urlencode({"p":1, "autologin":1, "useralias":MD5ify(self.username), "password":MD5ify(self.password)}), giveback="raw")
@@ -1219,22 +1225,15 @@ class CentreonServer(GenericServer):
         try:
             raw = self.FetchURL(nagcgiurl_hosts, giveback="raw")    
             htobj = lxml.objectify.fromstring(raw)
-            
-            #fraw = open("centreon_session_id_1.html", "w")
-            #fraw.write(raw)
 
             # in case there are no children session id is invalid
             if htobj.getchildren() == []:
                 if str(self.conf.debug_mode) == "True": 
                     print self.name, "bad session ID, retrieving new one..." 
                 # try again...
-                self.Cookie = None
                 self.SID = self._get_sid()
                 raw = self.FetchURL(nagcgiurl_hosts, giveback="raw")                    
                 htobj = lxml.objectify.fromstring(raw)
-                
-                #fraw = open("centreon_session_id_2.html", "w")
-                #fraw.write(raw)
  
             if htobj.__dict__.has_key("l"):
                 for l in htobj.l:
@@ -1307,6 +1306,12 @@ class CentreonServer(GenericServer):
         # services
         try:                       
             raw = self.FetchURL(nagcgiurl_services, giveback="raw")
+            
+            
+            fraw = open("services.html", "w")
+            fraw.write(raw)
+            
+            
             htobj = lxml.objectify.fromstring(raw)     
             # in case there are no children session id is invalid
             if htobj.getchildren == []:
@@ -1314,7 +1319,6 @@ class CentreonServer(GenericServer):
                 if str(self.conf.debug_mode) == "True": 
                     print self.name, "bad session ID, retrieving new one..." 
                 # try again...
-                self.Cookie = None
                 self.SID = self._get_sid()
                 raw = self.FetchURL(nagcgiurl_services, giveback="raw")                    
                 htobj = lxml.objectify.fromstring(raw)                        
@@ -1406,8 +1410,7 @@ class CentreonServer(GenericServer):
 
     def _set_acknowledge(self, host, service, author, comment, sticky, notify, persistent, all_services=[]):
         # decision about host or service - they have different URLs
-        # do not care about the doube %s (%s%s) - its ok, "flags" cares about the necessary "&"
-        if not service:
+        if service == "":
             # host
             cgi_data = urllib.urlencode({"p":"20105", "cmd":"14", "host_name":host, \
                     "author":author, "comment":comment, "submit":"Add", "notify":int(notify),\
@@ -1427,10 +1430,13 @@ class CentreonServer(GenericServer):
             # acknowledge all services on a host
             for s in all_services:
                 # service @ host
+                # in case the Centreon guys one day fix their typos "persistent" and 
+                # "persistent" will both be given (it is "persistant" in scheduling for downtime)
                 cgi_data = urllib.urlencode({"p":"20215", "cmd":"15", "host_name":host, \
                         "author":author, "comment":comment, "submit":"Add", "notify":int(notify),\
                         "service_description":s, "force_check":"1", \
-                        "persistent":int(persistent), "sticky":int(sticky), "o":"svcd", "en":"1"}) 
+                        "persistent":int(persistent), "persistant":int(persistent),\
+                        "sticky":int(sticky), "o":"svcd", "en":"1"}) 
                 # debug
                 if str(self.conf.debug_mode) == "True": 
                     print self.name, host, s +": " + self.nagios_cgi_url + "/main.php?" + cgi_data            
@@ -1485,8 +1491,49 @@ class CentreonServer(GenericServer):
             import traceback
             traceback.print_exc(file=sys.stdout)
             return "n/a", "n/a"
-            
+        
 
+    def _set_downtime(self, host, service, author, comment, fixed, start_time, end_time, hours, minutes):
+        # if no host id has been stored before get it now ONCE, this should reduce requests to Centreon server
+        if self.hosts[host].id == "": 
+            self.hosts[host].id = self._get_host_id(host)               
+
+        if service == "":
+            # host
+            cgi_data = urllib.urlencode({"p":"20305",\
+                                         "host_id":self.hosts[host].id,\
+                                         "submitA":"Save",\
+                                         #"persistent":int(fixed),\
+                                         "persistant":int(fixed),\
+                                         "start":start_time,\
+                                         "end":end_time,\
+                                         "comment":comment,\
+                                         "o":"ah"})
+            # debug
+            if str(self.conf.debug_mode) == "True": 
+                print self.name, host +": " + self.nagios_cgi_url + "/main.php?"+ cgi_data                
+
+        else:
+            # service
+            cgi_data = urllib.urlencode({"p":"20305",\
+                                         "host_id":self.hosts[host].id,\
+                                         "service_id":self.hosts[host].services[service].id,\
+                                         "submitA":"Save",\
+                                         #"persistent":int(fixed),\
+                                         "persistant":int(fixed),\
+                                         "start":start_time,\
+                                         "end":end_time,\
+                                         "comment":comment,\
+                                         "o":"as"})
+            # debug
+            if str(self.conf.debug_mode) == "True": 
+                print self.name, host +": " + self.nagios_cgi_url + "/main.php?"+ cgi_data
+       
+        # running remote cgi command
+        self.FetchURL(self.nagios_cgi_url + "/main.php", giveback="raw", cgi_data=cgi_data)      
+
+        
+        
 class GenericObject(object):    
     def get_host_name(self):
         """ Extracts host name from status item.
