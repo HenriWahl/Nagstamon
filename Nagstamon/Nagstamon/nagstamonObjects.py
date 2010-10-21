@@ -256,19 +256,29 @@ class GenericServer(object):
     
     def _set_downtime(self, host, service, author, comment, fixed, start_time, end_time, hours, minutes):
         # decision about host or service - they have different URLs
-        if not service:
+        if service == "":
             # host
             cmd_typ = "55"
         else:
             # service @ host
             cmd_typ = "56"
-            
-        cgi_data = urllib.urlencode({"cmd_typ":cmd_typ,"cmd_mod":"2","trigger":"0",\
-                                     "childoptions":"0","host":host,"service":service,\
-                                     "com_author":author,"com_data":comment,"fixed":fixed,\
-                                     "start_time":start_time,"end_time":end_time,\
-                                     "hours":hours,"minutes":minutes,"btnSubmit":"Commit"})
 
+        # for some reason Icinga is very fastidiuos about the order of CGI arguments, so please
+        # here we go... it took DAYS :-(
+        cgi_data = urllib.urlencode([("cmd_typ", cmd_typ),\
+                                     ("cmd_mod", "2"),\
+                                     ("trigger", "0"),\
+                                     ("childoptions", "0"),\
+                                     ("host", host),\
+                                     ("service", service),\
+                                     ("com_author", author),\
+                                     ("com_data", comment),\
+                                     ("fixed", fixed),\
+                                     ("start_time", start_time),\
+                                     ("end_time", end_time),\
+                                     ("hours", hours),\
+                                     ("minutes", minutes),\
+                                     ("btnSubmit","Commit")])        
         # running remote cgi command
         raw = self.FetchURL(self.nagios_cgi_url + "/cmd.cgi", giveback="raw", cgi_data=cgi_data)        
         
@@ -973,9 +983,9 @@ class NagiosServer(GenericServer):
 class IcingaServer(GenericServer):
     """
         object of Incinga server
-    """
-    
+    """   
     TYPE = 'Icinga'
+    # needed for parsing Icinga CGI HTML
     BODY_TABLE_INDEX = 3
     
     def get_start_end(self, host):
@@ -986,179 +996,9 @@ class IcingaServer(GenericServer):
         start_time = html.split("NAME='start_time' VALUE='")[1].split("'")[0]
         end_time = html.split("NAME='end_time' VALUE='")[1].split("'")[0]
         # give values back as tuple
-        return start_time, end_time
+        return start_time, end_time     
     
     
-    def FetchURL(self, url, giveback="obj", cgi_data=None, extra_header={}):
-        """
-        get content of given url, cgi_data only used if present
-        giveback may be "dict", "html" or "none" 
-        "dict" FetchURL gives back a dict full of miserable hosts/services,
-        "html" it gives back pure HTML - useful for finding out IP or new version
-        "none" it gives back pure nothing - useful if for example acknowledging a service
-        existence of cgi_data forces urllib to use POST instead of GET requests
-        """
-        # using httppasswordmgrwithdefaultrealm because using password in plain
-        # url like http://username:password@nagios-server causes trouble with
-        # passwords containing special characters like "?"
-        # see http://www.voidspace.org.uk/python/articles/authentication.shtml#doing-it-properly
-        # attention: the example from above webseite is wrong, passman.add_password needs the 
-        # WHOLE URL, with protocol!
-
-        passman = urllib2.HTTPPasswordMgrWithDefaultRealm()
-        passman.add_password(None, url, self.username, self.password)       
-        auth_handler = urllib2.HTTPBasicAuthHandler(passman)
-        digest_handler = urllib2.HTTPDigestAuthHandler(passman)
-        
-        print "EXTRA HEADER:", extra_header
-        
-        # if something goes wrong with accessing the URL it can be caught
-        try:
-            # if there should be no proxy used use an empty proxy_handler - only necessary in Windows,
-            # where IE proxy settings are used automatically if available
-            # In UNIX $HTTP_PROXY will be used
-            # The MultipartPostHandler is needed for submitting multipart forms from Opsview
-            if str(self.use_proxy) == "False":
-                proxy_handler = urllib2.ProxyHandler({})
-                urlopener = urllib2.build_opener(auth_handler, digest_handler, proxy_handler, urllib2.HTTPCookieProcessor(self.Cookie), nagstamonActions.MultipartPostHandler)
-            elif str(self.use_proxy) == "True":
-                if str(self.use_proxy_from_os) == "True":
-                    urlopener = urllib2.build_opener(auth_handler, digest_handler, urllib2.HTTPCookieProcessor(self.Cookie), nagstamonActions.MultipartPostHandler)
-                else:
-                    # if proxy from OS is not used there is to add a authenticated proxy handler
-                    passman.add_password(None, self.proxy_address, self.proxy_username, self.proxy_password)
-                    proxy_handler = urllib2.ProxyHandler({"http": self.proxy_address, "https": self.proxy_address})
-                    proxy_auth_handler = urllib2.ProxyBasicAuthHandler(passman)
-                    urlopener = urllib2.build_opener(proxy_handler, proxy_auth_handler, auth_handler, digest_handler, urllib2.HTTPCookieProcessor(self.Cookie), nagstamonActions.MultipartPostHandler)
-            
-            # create url opener
-            urllib2.install_opener(urlopener)
-            try:
-                # special Opsview treatment, transmit username and passwort for XML requests
-                # http://docs.opsview.org/doku.php?id=opsview3.4:api
-                # this is only necessary when accessing the API and expecting a XML answer
-                if self.type == "Opsview" and giveback == "opsxml":
-                    headers = {"Content-Type":"text/xml", "X-Username":self.username, "X-Password":self.password}
-                    request = urllib2.Request(url, cgi_data, headers)
-                    urlcontent = urllib2.urlopen(request)            
-                else:
-                    # use opener - if cgi_data is not empty urllib uses a POST request
-                    request = urllib2.Request(url, cgi_data, extra_header)
-                    urlcontent = urllib2.urlopen(request)
-                    #urlcontent = urllib2.urlopen(url, cgi_data)
-            except:
-                import traceback
-                traceback.print_exc(file=sys.stdout)
-                return "ERROR"
-            
-            # give back pure HTML or XML in case giveback is "raw"
-            if giveback == "raw":
-                return urlcontent.read()
-            
-            # give back pure nothing if giveback is "nothing" - useful for POST requests
-            if giveback == "nothing":
-                # do some cleanup
-                del passman, auth_handler, digest_handler, urlcontent
-                return None   
-            
-            # give back lxml-objectified data
-            if giveback == "obj":
-                # the heart of the whole Nagios-status-monitoring engine:
-                # first step: parse the read HTML
-                html = lxml.etree.HTML(urlcontent.read())
-                    
-                # second step: make pretty HTML of it
-                prettyhtml = lxml.etree.tostring(html, pretty_print=True)
-
-                # third step: clean HTML from tags which embarass libxml2 2.7
-                # only possible when module lxml.html.clean has been loaded
-                if sys.modules.has_key("lxml.html.clean"):
-                    # clean html from tags which libxml2 2.7 is worried about
-                    # this is the case with all tags that do not need a closing end tag like link, br, img
-                    cleaner = lxml.html.clean.Cleaner(remove_tags=["link", "br", "img", "hr", "script", "th", "form", "div", "p"],\
-                                                      page_structure=True, style=False, safe_attrs_only=True,\
-                                                      scripts=False, javascript=False)
-                    prettyhtml = cleaner.clean_html(prettyhtml)                  
-                    
-                    # lousy workaround for libxml2 2.7 which worries about attributes without value
-                    # we hope that nobody names a server '" nowrap>' - chances are pretty small because this "name"
-                    # contains unallowed characters and is far from common sense
-                    prettyhtml = prettyhtml.replace(' nowrap', '')
-                    
-                    # cleanup cleaner
-                    del cleaner
-    
-                # fourth step: make objects of tags for easy access              
-                htobj = lxml.objectify.fromstring(prettyhtml)
-                
-                #do some cleanup
-                del passman, auth_handler, digest_handler, urlcontent, html, prettyhtml
-        
-                # give back HTML object from Nagios webseite
-                return htobj
-                
-            elif self.type == "Opsview" and giveback == "opsxml":
-                # objectify the xml and give it back after some cleanup
-                xml = lxml.etree.XML(urlcontent.read())
-                xmlpretty = lxml.etree.tostring(xml, pretty_print=True)
-                xmlobj = lxml.objectify.fromstring(xmlpretty)
-                del passman, auth_handler, urlcontent, xml, xmlpretty
-                return xmlobj
-            
-            else:
-                # in case some error regarding the type occured raise exception
-                raise
-            
-        except:
-            import traceback
-            traceback.print_exc(file=sys.stdout)
-            # do some cleanup
-            del passman, auth_handler, digest_handler, urlcontent
-            return "ERROR"
-        
-        # in case the wrong giveback type has been specified return error
-        # do some cleanup
-        try:
-            del passman, auth_handler, digest_handler, urlcontent
-        except:
-            pass
-        return "ERROR"
-    
-    
-    def _set_downtime(self, host, service, author, comment, fixed, start_time, end_time, hours, minutes):
-        # decision about host or service - they have different URLs
-        
-        
-        print '"' + service + '"', "@", host, type(service)        
-        
-        if service == "":
-            # host
-            cmd_typ = "55"
-        else:
-            # service @ host
-            cmd_typ = "56"
-            
-        cgi_data = urllib.urlencode({"cmd_typ":cmd_typ,"cmd_mod":"2","trigger":"0",\
-                                     "childoptions":"0","host":host,"service":service,\
-                                     "com_author":author,"com_data":comment,"fixed":fixed,\
-                                     "start_time":start_time,"end_time":end_time,\
-                                     "hours":hours,"minutes":minutes,"btnSubmit":"Commit"})
-           
-        url = self.nagios_cgi_url + "/cmd.cgi"
-        print url + "?" + cgi_data
-    
-        # running remote cgi command
-        #raw = self.FetchURL(url, giveback="raw", cgi_data=cgi_data)
-        # Referer: http://classic.demo.icinga.org/icinga/cgi-bin/cmd.cgi?cmd_typ=56&host=gmx-smtp&service=SMTP
-        #extra_header = {"Referer":self.nagios_cgi_url+"/cmd.cgi?"+urllib.urlencode({"cmd_typ":cmd_typ,\
-        #                    "host":host, "service":service})}
-        raw = self.FetchURL(self.nagios_cgi_url + "/cmd.cgi", giveback="raw", cgi_data=cgi_data)
-        #raw = self.FetchURL(self.nagios_cgi_url + "/cmd.cgi?" + cgi_data, giveback="raw")        
-        
-        fraw = open("downtime.html", "w")
-        fraw.write(raw)    
-
-
 class OpsviewServer(GenericServer):
     """  
        special treatment for Opsview XML based API
