@@ -1464,7 +1464,7 @@ class CentreonServer(GenericServer):
                     if str(self.conf.debug_mode) == "True": 
                         print self.name, host, s +": " + self.nagios_cgi_url + "/main.php?" + cgi_data            
                         
-                    # running remote cgi command with GET method, for some strange reason only working i
+                    # running remote cgi command with GET method, for some strange reason only working if
                     # giveback="raw"
                     self.FetchURL(self.nagios_cgi_url + "/main.php?" + cgi_data, giveback="raw")
         except:
