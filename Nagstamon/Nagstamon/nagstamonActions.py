@@ -479,9 +479,11 @@ def get_registered_servers():
     """ Returns available server classes dict """
     return dict(REGISTERED_SERVERS)
 
+
 def get_registered_server_type_list():
     """ Returns available server type name list with order of registering """
     return [x[0] for x in REGISTERED_SERVERS]
+
 
 def CreateServer(server=None, conf=None):
     # create Server from config
@@ -489,8 +491,9 @@ def CreateServer(server=None, conf=None):
     if server.type not in registered_servers:
         print 'Server type not supported: %s' % server.type
         return
-    nagiosserver = registered_servers[server.type](conf=conf)
-    nagiosserver.name = server.name
+    # give argument servername so CentreonServer could use it for initializing MD5 cache
+    nagiosserver = registered_servers[server.type](conf=conf, name=server.name)
+    #nagiosserver.name = server.name
     nagiosserver.type = server.type
     nagiosserver.nagios_url = server.nagios_url
     nagiosserver.nagios_cgi_url = server.nagios_cgi_url

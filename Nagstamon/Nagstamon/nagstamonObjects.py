@@ -28,7 +28,6 @@ except:
     pass
     
 import nagstamonActions
-from nagstamonActions import MD5ify 
 
 
 class Column(object):
@@ -140,7 +139,6 @@ class GenericServer(object):
     ]
     
     DISABLED_CONTROLS = []
-    ###URL_SERVICE_SEPARATOR = '&service='
     
     # used in Nagios _get_status() method
     BODY_TABLE_INDEX = 2
@@ -157,8 +155,7 @@ class GenericServer(object):
     def __init__(self, **kwds):
         # add all keywords to object, every mode searchs inside for its favorite arguments/keywords
         for k in kwds: self.__dict__[k] = kwds[k]
-
-        self.name = ""
+        
         self.type = ""
         self.nagios_url = ""
         self.nagios_cgi_url = ""
@@ -216,6 +213,7 @@ class GenericServer(object):
         # execute POST request
         self.FetchURL(self.nagios_cgi_url + "/cmd.cgi", giveback="nothing", cgi_data=cgi_data)
     
+        
     def set_acknowledge(self, thread_obj):
         if thread_obj.acknowledge_all_services == True:
             all_services = thread_obj.all_services
@@ -1116,39 +1114,123 @@ class OpsviewServer(GenericServer):
 
 class CentreonServer(GenericServer): 
     TYPE = 'Centreon'
-    ###URL_SERVICE_SEPARATOR = ';'
     # centreon generic web interface uses a sid which is needed to ask for news
-    SID = None
+    SID = None   
+    
+    def __init__(self, **kwds):
+        # add all keywords to object, every mode searchs inside for its favorite arguments/keywords
+        for k in kwds: self.__dict__[k] = kwds[k]
+
+        GenericServer.__init__(self, **kwds)
+
+        # cache MD5 username + password to reduce load
+        self.MD5_username = nagstamonActions.MD5ify(self.conf.servers[self.name].username)   
+        self.MD5_password = nagstamonActions.MD5ify(self.conf.servers[self.name].password)
+        
     
     def open_tree_view(self, host, service=None):
         # must be a host if service is empty...
         if service == "":
             webbrowser.open(self.nagios_cgi_url + "/index.php?" + urllib.urlencode({"p":201, "autologin":1,\
-            "o":"hd", "useralias":MD5ify(self.username), "password":MD5ify(self.password), "host_name":host}))
+            "o":"hd", "useralias":self.MD5_username, "password":self.MD5_password, "host_name":host}))
         else:
             webbrowser.open(self.nagios_cgi_url + "/index.php?" + urllib.urlencode({"p":202, "autologin":1,\
-            "o":"svcd", "useralias":MD5ify(self.username), "password":MD5ify(self.password), "host_name":host,\
+            "o":"svcd", "useralias":self.MD5_username, "password":self.MD5_password, "host_name":host,\
              "service_description":service}))       
         
     def open_nagios(self):
-        webbrowser.open(self.nagios_cgi_url + "/index.php?autologin=1&p=1&useralias=" + MD5ify(self.username) + "&password=" + MD5ify(self.password))
+        webbrowser.open(self.nagios_cgi_url + "/index.php?autologin=1&p=1&useralias=" + self.MD5_username + "&password=" + self.MD5_password)
         # debug
         if str(self.conf.debug_mode) == "True":
-            print self.name, ":", "Open monitor web page", self.nagios_cgi_url + "/index.php?autologin=1&p=1&useralias=" + MD5ify(self.username) + "&password=" + MD5ify(self.password)
+            print self.name, ":", "Open monitor web page", self.nagios_cgi_url + "/index.php?autologin=1&p=1&useralias=" + self.MD5_username + "&password=" + self.MD5_password
         
         
     def open_services(self):
-        webbrowser.open(self.nagios_cgi_url + "/index.php?autologin=1&p=1&useralias=" + MD5ify(self.username) + "&password=" + MD5ify(self.password) + "&p=20202&o=svcpb")
+        webbrowser.open(self.nagios_cgi_url + "/index.php?autologin=1&p=1&useralias=" + self.MD5_username + "&password=" + self.MD5_password + "&p=20202&o=svcpb")
         # debug
         if str(self.conf.debug_mode) == "True":
             print self.name, ":", "Open hosts web page", self.nagios_cgi_url + "/index.php?p=20202&o=svcpb"
         
     def open_hosts(self):
-        webbrowser.open(self.nagios_cgi_url + "/index.php?autologin=1&p=1&useralias=" + MD5ify(self.username) + "&password=" + MD5ify(self.password) + "&p=20103&o=hpb")
+        webbrowser.open(self.nagios_cgi_url + "/index.php?autologin=1&p=1&useralias=" + self.MD5_username + "&password=" + self.MD5_password + "&p=20103&o=hpb")
         # debug
         if str(self.conf.debug_mode) == "True":
             print self.name, ":", "Open hosts web page", self.nagios_cgi_url + "/index.php?p=20103&o=hpb"
 
+            
+    def get_start_end(self, host):
+        """
+        get start and end time for downtime from Centreon server
+        """
+        try:
+            cgi_data = urllib.urlencode({"p":"20305",\
+                                         "o":"ah",\
+                                         "host_name":host})
+            raw = self.FetchURL(self.nagios_cgi_url + "/main.php?" + cgi_data, giveback="raw")
+            if not raw == "ERROR":
+                # session id might have been invalid, so if necessary get a new one
+                if raw.find('name="start" type="text" value="') == -1:
+                    self.SID = self._get_sid()
+                    raw = self.FetchURL(self.nagios_cgi_url + "/main.php?" + cgi_data, giveback="raw")
+                start_time = raw.split('name="start" type="text" value="')[1].split('"')[0]
+                end_time = raw.split('name="end" type="text" value="')[1].split('"')[0]
+                # give values back as tuple      
+                return start_time, end_time
+        except:
+            import traceback
+            traceback.print_exc(file=sys.stdout)
+            return "n/a", "n/a"            
+            
+    
+    def GetHost(self, host):
+        """
+        Centreonified way to get host ip - attribute "a" in down hosts xml is of now use for up
+        hosts so we need to get ip anyway from web page
+        """
+        # do a web interface search limited to only one result - the hostname
+        cgi_data = urllib.urlencode({"sid":self.SID,\
+                                    "search":host,\
+                                    "num":0,\
+                                    "limit":1,\
+                                    "sort_type":"hostname",\
+                                    "order":"ASC",\
+                                    "date_time_format_status":"d/m/Y H:i:s",\
+                                    "o":"h",\
+                                    "p":20102,\
+                                    "time":0})
+        
+        raw = self.FetchURL(self.nagios_cgi_url + "/include/monitoring/status/Hosts/xml/hostXML.php?"\
+                              + cgi_data, giveback="raw")
+        htobj = lxml.objectify.fromstring(raw)
+               
+        if htobj.__dict__.has_key("l"):   
+            # when connection by DNS is not configured do it by IP
+            try:
+                if str(self.conf.connect_by_dns_yes) == "True":
+                   # try to get DNS name for ip, if not available use ip
+                    try:
+                        address = socket.gethostbyaddr(htobj.l.a.text)[0]
+                    except:
+                        import traceback
+                        traceback.print_exc(file=sys.stdout)
+                        address = htobj.l.a.text
+                else:
+                    address = htobj.l.a.text
+            except:
+                import traceback
+                traceback.print_exc(file=sys.stdout)
+                address = "ERROR"
+        
+        else: address = "ERROR"    
+
+        # print IP in debug mode
+        if str(self.conf.debug_mode) == "True":    
+            print "Address of %s:" % (host), address
+        
+        # give back host or ip
+        return address
+        
+            
     def _get_sid(self):
         """
         gets a shiny new SID for XML HTTP requests to Centreon cutting it out via .partition() from raw HTML
@@ -1157,7 +1239,7 @@ class CentreonServer(GenericServer):
         try:
             # why not get a new cookie with every new session id?    
             self.Cookie = cookielib.CookieJar()    
-            self.FetchURL(self.nagios_cgi_url + "/index.php?" + urllib.urlencode({"p":1, "autologin":1, "useralias":MD5ify(self.username), "password":MD5ify(self.password)}), giveback="raw")
+            self.FetchURL(self.nagios_cgi_url + "/index.php?" + urllib.urlencode({"p":1, "autologin":1, "useralias":self.MD5_username, "password":self.MD5_password}), giveback="raw")
             sid = self.Cookie._cookies.values()[0].values()[0]["PHPSESSID"].value
             return sid
         except:
@@ -1172,18 +1254,21 @@ class CentreonServer(GenericServer):
         """
         cgi_data = urllib.urlencode({"p":201, "autologin":1,\
                                     "o":"hd", "host_name":host,\
-                                    "useralias":MD5ify(self.username), "password":MD5ify(self.password)})
+                                    "useralias":self.MD5_username,\
+                                    "password":self.MD5_password})
         raw = self.FetchURL(self.nagios_cgi_url + "/main.php?" + cgi_data, giveback="raw")
 
         if not raw == "ERROR":
-            host_id = raw.partition("host_id=")[2].partition("&")[0]
+            host_id = raw.partition("var host_id = '")[2].partition("'")[0]
             # if for some reason host_id could not be retrieved because
             # we get a login page clear cookies and SID and try again
             if host_id == "":
-                self.Cookie = None
+                if str(self.conf.debug_mode) == "True":
+                    print self.name, ":", host, "ID could not be retrieved, trying again..."                  
                 self.SID = self._get_sid()
-                raw = self.FetchURL(url, giveback="raw")
-                host_id = raw.partition("host_id=")[2].partition("&")[0]           
+                raw = self.FetchURL(self.nagios_cgi_url + "/main.php?" + cgi_data, giveback="raw")      
+                host_id = raw.partition("var host_id= '")[2].partition("'")[0]
+
         else:
             if str(self.conf.debug_mode) == "True":
                 print self.name, ":", host, "ID could not be retrieved."
@@ -1210,14 +1295,27 @@ class CentreonServer(GenericServer):
                                      "o":"as"})
         raw = self.FetchURL(self.nagios_cgi_url + "/main.php?"+ cgi_data, giveback="raw")
         
+        # ids to give back, should contain to items, a host and a service id
+        ids = []
+        
         if not raw == "ERROR":
-            # spit out ids via generator
+            if raw.find('selected="selected"') == -1:
+                # looks there was this old SID problem again - get a new one 
+                if str(self.conf.debug_mode) == "True":
+                    print self.name, ":", host, service, "IDs could not be retrieved, trying again..." 
+                self.SID = self._get_sid()
+                raw = self.FetchURL(self.nagios_cgi_url + "/main.php?"+ cgi_data, giveback="raw")
+                
+            # search ids
             for l in raw.splitlines():
                 if l.find('selected="selected"') <> -1:
-                    yield l.split('value="')[1].split('"')[0]
+                    ids.append(l.split('value="')[1].split('"')[0])
+            else:
+                return ids
         else:
             if str(self.conf.debug_mode) == "True":
                 print self.name, ":", host, service, "IDs could not be retrieved."
+            return "", ""    
         
         
     def _get_status(self):
@@ -1246,8 +1344,8 @@ class CentreonServer(GenericServer):
             raw = self.FetchURL(nagcgiurl_hosts, giveback="raw")    
             htobj = lxml.objectify.fromstring(raw)
             
-            fraw = open("hosts.xml", "w")
-            fraw.write(raw)
+            #fraw = open("hosts.xml", "w")
+            #fraw.write(raw)
 
             # in case there are no children session id is invalid
             if htobj.getchildren() == []:
@@ -1265,10 +1363,6 @@ class CentreonServer(GenericServer):
                         # host
                         n["host"] = l.hn.text
                         # status
-                        ## demo.centreon.com give back a host id, some other not (?)
-                        #if l.__dict__.has_key("hid"): 
-                        #    n["host_id"] = l.hid.text
-                        #else: n["host_id"] = ""
                         n["status"] = l.cs.text
                         # last_check
                         n["last_check"] = l.lc.text
@@ -1331,8 +1425,8 @@ class CentreonServer(GenericServer):
             raw = self.FetchURL(nagcgiurl_services, giveback="raw")
             
             
-            fraw = open("services.html", "w")
-            fraw.write(raw)
+            #fraw = open("services.xml", "w")
+            #fraw.write(raw)
             
             
             htobj = lxml.objectify.fromstring(raw)     
@@ -1358,8 +1452,6 @@ class CentreonServer(GenericServer):
                         n["host"] = l.hn.text
                         # service
                         n["service"] = l.sd.text
-                        ## service id - only in Centreon
-                        #n["service_id"] = l.svc_id.text
                         # status
                         n["status"] = l.cs.text
                         # last_check
@@ -1406,7 +1498,6 @@ class CentreonServer(GenericServer):
                                 self.new_hosts[n["host"]].services[new_service] = GenericService()
                                 self.new_hosts[n["host"]].services[new_service].host = n["host"]
                                 self.new_hosts[n["host"]].services[new_service].name = n["service"]
-                                #self.new_hosts[n["host"]].services[new_service].id = n["service_id"]
                                 self.new_hosts[n["host"]].services[new_service].status = n["status"]
                                 self.new_hosts[n["host"]].services[new_service].last_check = n["last_check"]
                                 self.new_hosts[n["host"]].services[new_service].duration = n["duration"]
@@ -1500,22 +1591,7 @@ class CentreonServer(GenericServer):
         except:
             import traceback
             traceback.print_exc(file=sys.stdout)
-            
-    def get_start_end(self, host):
-        """
-        get start and end time for downtime from Centreon server
-        """
-        try:
-            html = self.FetchURL(self.nagios_cgi_url + "/main.php?" + urllib.urlencode({"p":"20305", "o":"ah", "host_name":host}), giveback="raw")
-            start_time = html.split('name="start" type="text" value="')[1].split('"')[0]
-            end_time = html.split('name="end" type="text" value="')[1].split('"')[0]
-            # give values back as tuple      
-            return start_time, end_time
-        except:
-            import traceback
-            traceback.print_exc(file=sys.stdout)
-            return "n/a", "n/a"
-        
+       
 
     def _set_downtime(self, host, service, author, comment, fixed, start_time, end_time, hours, minutes):
         """
@@ -1610,18 +1686,6 @@ class GenericService(GenericObject):
     
     def get_service_name(self):
         return self.name 
-    
-#class CentreonHost(GenericHost):
-#    def __init__(self):
-#        GenericHost.__init__(self)
-#        # additional info about host id, needed for xml http requests
-#        self.id = ""
-#    
-#class CentreonService(GenericService):
-#    def __init__(self):
-#        GenericService.__init__(self)
-#        # additional info about service id, needed for xml http requests
-#        self.id = ""
 
 
 # order of registering affects sorting in server type list in add new server dialog
