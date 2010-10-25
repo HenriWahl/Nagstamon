@@ -141,10 +141,10 @@ class GenericServer(object):
     DISABLED_CONTROLS = []
     
     # used in Nagios _get_status() method
-    BODY_TABLE_INDEX = 2
+    HTML_BODY_TABLE_INDEX = 2
     
     # Nagios CGI flags translation dictionary for acknowledging hosts/services 
-    ACKFLAGS = {True:"on", False:"off"}
+    HTML_ACKFLAGS = {True:"on", False:"off"}
     
     @classmethod
     def get_columns(cls, row):
@@ -231,12 +231,12 @@ class GenericServer(object):
         if not service:
             # host
             cgi_data = urllib.urlencode({"cmd_typ":"33", "cmd_mod":"2", "host":host, "com_author":author,\
-                                         "sticky_ack":self.ACKFLAGS[sticky], "send_notification":self.ACKFLAGS[notify], "persistent":self.ACKFLAGS[persistent],\
+                                         "sticky_ack":self.HTML_ACKFLAGS[sticky], "send_notification":self.HTML_ACKFLAGS[notify], "persistent":self.HTML_ACKFLAGS[persistent],\
                                          "com_data":comment, "btnSubmit":"Commit"})
         else:
             # service @ host
             cgi_data = urllib.urlencode({"cmd_typ":"34", "cmd_mod":"2", "host":host, "service":service,\
-                                         "sticky_ack":self.ACKFLAGS[sticky], "send_notification":self.ACKFLAGS[notify], "persistent":self.ACKFLAGS[persistent],\
+                                         "sticky_ack":self.HTML_ACKFLAGS[sticky], "send_notification":self.HTML_ACKFLAGS[notify], "persistent":self.HTML_ACKFLAGS[persistent],\
                                          "com_author":author, "com_data":comment, "btnSubmit":"Commit"})          
         # running remote cgi command        
         self.FetchURL(url, giveback="nothing", cgi_data=cgi_data)
@@ -391,7 +391,7 @@ class GenericServer(object):
             # workaround for Nagios < 2.7 which has an <EMBED> in its output
             # put a copy of a part of htobj into table to be able to delete htobj
             try:
-                table = htobj.body.table[self.BODY_TABLE_INDEX]
+                table = htobj.body.table[self.HTML_BODY_TABLE_INDEX]
             except:
                 table = htobj.body.embed.table
             
@@ -450,7 +450,7 @@ class GenericServer(object):
         try:
             htobj = self.FetchURL(nagcgiurl_services)
             # put a copy of a part of htobj into table to be able to delete htobj
-            table = htobj.body.table[self.BODY_TABLE_INDEX]
+            table = htobj.body.table[self.HTML_BODY_TABLE_INDEX]
             
             # do some cleanup    
             del htobj
@@ -520,7 +520,7 @@ class GenericServer(object):
            
             # workaround for Nagios < 2.7 which has an <EMBED> in its output
             try:
-                table = htobj.body.table[self.BODY_TABLE_INDEX]
+                table = htobj.body.table[self.HTML_BODY_TABLE_INDEX]
             except:
                 table = htobj.body.embed.div.table
             
@@ -557,7 +557,7 @@ class GenericServer(object):
             htobj = self.FetchURL(nagcgiurl_hosts_acknowledged)
             # workaround for Nagios < 2.7 which has an <EMBED> in its output
             try:
-                table = htobj.body.table[self.BODY_TABLE_INDEX]
+                table = htobj.body.table[self.HTML_BODY_TABLE_INDEX]
             except:
                 table = htobj.body.embed.table
                 
@@ -737,7 +737,7 @@ class GenericServer(object):
         # return True if all worked well    
         return True
     
-    def FetchURL(self, url, giveback="obj", cgi_data=None):
+    def FetchURL(self, url, giveback="obj", cgi_data=None, remove_tags=["link", "br", "img", "hr", "script", "th", "form", "div", "p"]):
         """
         get content of given url, cgi_data only used if present
         giveback may be "dict", "html" or "none" 
@@ -745,6 +745,8 @@ class GenericServer(object):
         "html" it gives back pure HTML - useful for finding out IP or new version
         "none" it gives back pure nothing - useful if for example acknowledging a service
         existence of cgi_data forces urllib to use POST instead of GET requests
+        remove_tags became necessary for different expectations of GetStatus() and
+        GetHost() - one wants div elements, the other don't 
         """
         # using httppasswordmgrwithdefaultrealm because using password in plain
         # url like http://username:password@nagios-server causes trouble with
@@ -859,9 +861,8 @@ class GenericServer(object):
                 if sys.modules.has_key("lxml.html.clean"):
                     # clean html from tags which libxml2 2.7 is worried about
                     # this is the case with all tags that do not need a closing end tag like link, br, img
-                    cleaner = lxml.html.clean.Cleaner(remove_tags=["link", "br", "img", "hr", "script", "th", "form", "div", "p"],\
-                                                      page_structure=True, style=False, safe_attrs_only=True,\
-                                                      scripts=False, javascript=False)
+                    cleaner = lxml.html.clean.Cleaner(remove_tags=remove_tags, page_structure=True, style=False,\
+                                                      safe_attrs_only=True, scripts=False, javascript=False)
                     prettyhtml = cleaner.clean_html(prettyhtml)                  
                     
                     # lousy workaround for libxml2 2.7 which worries about attributes without value
@@ -922,7 +923,7 @@ class GenericServer(object):
         nagcgiurl_host  = self.nagios_cgi_url + "/extinfo.cgi?type=1&host=" + host
         
         # get host info
-        htobj = self.FetchURL(nagcgiurl_host, giveback="obj")
+        htobj = self.FetchURL(nagcgiurl_host, giveback="obj", remove_tags=["link", "br", "img", "hr", "script", "th", "form", "p"])
 
         try:
             # take ip from object path
@@ -935,6 +936,7 @@ class GenericServer(object):
                 # Workaround for Nagios 3.1 where there are groups listed whose the host is a member of
                 if ip == "Member of":
                     ip = str(htobj.body.table.tr.td[1].div[7].text)
+
             # workaround for URL-ified IP as described in SF bug 2967416
             # https://sourceforge.net/tracker/?func=detail&aid=2967416&group_id=236865&atid=1101370
             if not ip.find("://") == -1:
@@ -952,6 +954,8 @@ class GenericServer(object):
             else:
                 host = ip
         except:
+            import traceback
+            traceback.print_exc(file=sys.stdout)
             host = "ERROR"
          
         # do some cleanup
@@ -959,13 +963,6 @@ class GenericServer(object):
 
         # give back host or ip
         return host
-    
-    
-    def __del__(self):
-        """
-        hopefully a __del__() method may make this object better collectable for gc
-        """
-        del(self)
     
     
 class NagiosServer(GenericServer):
@@ -984,7 +981,7 @@ class IcingaServer(GenericServer):
     """   
     TYPE = 'Icinga'
     # needed for parsing Icinga CGI HTML
-    BODY_TABLE_INDEX = 3
+    HTML_BODY_TABLE_INDEX = 3
     
     def get_start_end(self, host):
         """
