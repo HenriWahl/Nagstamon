@@ -9,7 +9,7 @@ gc.enable()
 import sys
 import os
 import os.path
-import platform
+
 
 try:
     import pygtk
@@ -44,6 +44,10 @@ try:
 except Exception, err:
     # set resources to "" in case there are no resources available from setup.py
     Resources = ""
+
+# Resources on MacOS X, environment variable _MEIPASS2 comes from pyinstaller packed executable
+if "_MEIPASS2" in os.environ and sys.platform == "darwin":
+    Resources = os.path.dirname(os.path.dirname(sys.executable)) + "/Resources"
     
     
 # initialize GUI and actions

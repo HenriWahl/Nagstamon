@@ -128,7 +128,7 @@ class Config(object):
     
         # dictionary containing the config data for different servers
         self.servers = dict()
-            
+        
         if os.path.exists(self.configfile):
             # instantiate a Configparser to parse the conf file
             config = ConfigParser.ConfigParser()
