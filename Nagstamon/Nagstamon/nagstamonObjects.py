@@ -1086,8 +1086,8 @@ class OpsviewServer(GenericServer):
             self.isChecking = False
             return "ERROR"
         
-    def _open_tree_view(self, item):
-        webbrowser.open('%s/status/service?host=%s' % (self.nagios_url, item))
+    def open_tree_view(self, host, service):
+        webbrowser.open('%s/status/service?host=%s' % (self.nagios_url, host))
         
     def open_nagios(self):
         webbrowser.open(self.nagios_url + "/status/service?filter=unhandled&includeunhandledhosts=1")
