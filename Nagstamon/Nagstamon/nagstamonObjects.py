@@ -194,22 +194,25 @@ class GenericServer(object):
         self._set_recheck(thread_obj.host, thread_obj.service)
         
     def _set_recheck(self, host, service):
+        # get start time from Nagios as HTML to use same timezone setting like the locally installed Nagios
+        html = self.FetchURL(self.nagios_cgi_url + "/cmd.cgi?" + urllib.urlencode({"cmd_typ":"96", "host":host}), giveback="raw")
+        start_time = html.split("NAME='start_time' VALUE='")[1].split("'></b></td></tr>")[0]
+
         # decision about host or service - they have different URLs
-        if not service:
+        if service == None:
             # host
-            # get start time from Nagios as HTML to use same timezone setting like the locally installed Nagios
-            html = self.FetchURL(self.nagios_cgi_url + "/cmd.cgi?" + urllib.urlencode({"cmd_typ":"96", "host":host}), giveback="raw")
-            start_time = html.split("NAME='start_time' VALUE='")[1].split("'></b></td></tr>")[0]
-            # fill and encode CGI data
-            cgi_data = urllib.urlencode({"cmd_typ":"96", "cmd_mod":"2", "host":host, "start_time":start_time, "force_check":"on", "btnSubmit":"Commit"})
+            cmd_typ = "96"
         else:
             # service @ host
-            # get start time from Nagios as HTML to use same timezone setting like the locally instaled Nagios
-            html = self.FetchURL(self.nagios_cgi_url + "/cmd.cgi?" + urllib.urlencode({"cmd_typ":"7", "host":host, "service":service}), giveback="raw")
-            start_time = html.split("NAME='start_time' VALUE='")[1].split("'></b></td></tr>")[0]
-            # fill and encode CGI data
-            cgi_data = urllib.urlencode({"cmd_typ":"7", "cmd_mod":"2", "host":host, "service":service, "start_time":start_time, "force_check":"on", "btnSubmit":"Commit"})
-
+            cmd_typ = "7"
+        # ignore empty service in case of rechecking a host   
+        cgi_data = urllib.urlencode([("cmd_typ", cmd_typ),\
+                                     ("cmd_mod", "2"),\
+                                     ("host", host),\
+                                     ("service", service),\
+                                     ("start_time", start_time),\
+                                     ("force_check", "on"),\
+                                     ("btnSubmit", "Commit")])
         # execute POST request
         self.FetchURL(self.nagios_cgi_url + "/cmd.cgi", giveback="nothing", cgi_data=cgi_data)
     
@@ -228,7 +231,7 @@ class GenericServer(object):
         
         # decision about host or service - they have different URLs
         # do not care about the doube %s (%s%s) - its ok, "flags" cares about the necessary "&"
-        if not service:
+        if service == "":
             # host
             cgi_data = urllib.urlencode({"cmd_typ":"33", "cmd_mod":"2", "host":host, "com_author":author,\
                                          "sticky_ack":self.HTML_ACKFLAGS[sticky], "send_notification":self.HTML_ACKFLAGS[notify], "persistent":self.HTML_ACKFLAGS[persistent],\
