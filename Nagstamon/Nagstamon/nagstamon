@@ -7,6 +7,9 @@ import gc
 gc.enable()
 #gc.set_debug(gc.DEBUG_LEAK)
 import sys
+import os
+import os.path
+import platform
 
 try:
     import pygtk
@@ -21,6 +24,7 @@ except Exception, err:
     sys.exit()
 import gtk
 import gobject
+
 
 # Initiate Config
 # if modules are not available from central python install try the ones in the same directory
@@ -40,6 +44,7 @@ try:
 except Exception, err:
     # set resources to "" in case there are no resources available from setup.py
     Resources = ""
+    
     
 # initialize GUI and actions
 # if modules are not available from central python install try the ones in the same directory
