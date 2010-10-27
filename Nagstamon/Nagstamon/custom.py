@@ -6,12 +6,11 @@ Imported in nagstamonGUI module.
 """
 
 from nagstamonActions import register_server
-from nagstamonServer.Generic import GenericServer
 from nagstamonServer.Nagios import NagiosServer
 from nagstamonServer.Icinga import IcingaServer
 from nagstamonServer.Opsview import OpsviewServer
 from nagstamonServer.Centreon import CentreonServer
-from nagstamonObjects import GenericHost, GenericService
+
 
 # moved registration process because of circular dependencies
 # order of registering affects sorting in server type list in add new server dialog
