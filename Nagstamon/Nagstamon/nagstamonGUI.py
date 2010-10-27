@@ -171,13 +171,7 @@ class GUI(object):
             last_sorting = self.get_last_sorting(server)
             last_sorting.add(id, order)
 
-    #def __del__(self):
-    #    """
-    #    hopefully a __del__() method may make this object better collectable for gc
-    #    """
-    #    del(self)
-
-    
+            
     def CreateOutputVisuals(self):
         """
             create output visuals
