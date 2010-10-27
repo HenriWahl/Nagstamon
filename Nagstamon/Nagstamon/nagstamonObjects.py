@@ -199,7 +199,7 @@ class GenericServer(object):
         start_time = html.split("NAME='start_time' VALUE='")[1].split("'></b></td></tr>")[0]
 
         # decision about host or service - they have different URLs
-        if service == None:
+        if service == None or service == "":
             # host
             cmd_typ = "96"
         else:
