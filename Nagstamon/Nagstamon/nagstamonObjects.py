@@ -9,6 +9,7 @@ import gc
 import copy
 import webbrowser
 import urllib
+import time
 
 try:
     import lxml.etree, lxml.objectify
@@ -199,7 +200,7 @@ class GenericServer(object):
         start_time = html.split("NAME='start_time' VALUE='")[1].split("'></b></td></tr>")[0]
 
         # decision about host or service - they have different URLs
-        if service == None or service == "":
+        if service == "":
             # host
             cmd_typ = "96"
         else:
@@ -966,6 +967,14 @@ class GenericServer(object):
 
         # give back host or ip
         return host
+
+    
+    def Hook(self):
+        """
+        allows to add some extra actions for a monitor server to be executed in RefreshLoop
+        inspired by Centreon and its seemingly Alzheimer regarding session ID/Cookie/whatever
+        """
+        pass    
     
     
 class NagiosServer(GenericServer):
@@ -994,7 +1003,7 @@ class IcingaServer(GenericServer):
         start_time = html.split("NAME='start_time' VALUE='")[1].split("'")[0]
         end_time = html.split("NAME='end_time' VALUE='")[1].split("'")[0]
         # give values back as tuple
-        return start_time, end_time     
+        return start_time, end_time   
     
     
 class OpsviewServer(GenericServer):
@@ -1116,6 +1125,8 @@ class CentreonServer(GenericServer):
     TYPE = 'Centreon'
     # centreon generic web interface uses a sid which is needed to ask for news
     SID = None   
+    # count for SID regeneration
+    SIDcount = 0
     
     def __init__(self, **kwds):
         # add all keywords to object, every mode searchs inside for its favorite arguments/keywords
@@ -1128,7 +1139,7 @@ class CentreonServer(GenericServer):
         self.MD5_password = nagstamonActions.MD5ify(self.conf.servers[self.name].password)
         
     
-    def open_tree_view(self, host, service=None):
+    def open_tree_view(self, host, service=""):
         # must be a host if service is empty...
         if service == "":
             webbrowser.open(self.nagios_cgi_url + "/index.php?" + urllib.urlencode({"p":201, "autologin":1,\
@@ -1343,18 +1354,16 @@ class CentreonServer(GenericServer):
         try:
             raw = self.FetchURL(nagcgiurl_hosts, giveback="raw")    
             htobj = lxml.objectify.fromstring(raw)
-            
-            #fraw = open("hosts.xml", "w")
-            #fraw.write(raw)
-
             # in case there are no children session id is invalid
             if htobj.getchildren() == []:
+            #while htobj.getchildren() == []:
                 if str(self.conf.debug_mode) == "True": 
                     print self.name, "bad session ID, retrieving new one..." 
                 # try again...
                 self.SID = self._get_sid()
                 raw = self.FetchURL(nagcgiurl_hosts, giveback="raw")                    
                 htobj = lxml.objectify.fromstring(raw)
+                time.sleep(1)
                  
             if htobj.__dict__.has_key("l"):
                 for l in htobj.l:
@@ -1423,15 +1432,10 @@ class CentreonServer(GenericServer):
         # services
         try:                       
             raw = self.FetchURL(nagcgiurl_services, giveback="raw")
-            
-            
-            #fraw = open("services.xml", "w")
-            #fraw.write(raw)
-            
-            
             htobj = lxml.objectify.fromstring(raw)     
             # in case there are no children session id is invalid
             if htobj.getchildren == []:
+            #while htobj.getchildren == []:  
                 # debug
                 if str(self.conf.debug_mode) == "True": 
                     print self.name, "bad session ID, retrieving new one..." 
@@ -1557,7 +1561,7 @@ class CentreonServer(GenericServer):
                         
                     # running remote cgi command with GET method, for some strange reason only working if
                     # giveback="raw"
-                    self.FetchURL(self.nagios_cgi_url + "/main.php?" + cgi_data, giveback="raw")
+                    print "CENTREON ACKNOWLEDGE RESULT:", self.FetchURL(self.nagios_cgi_url + "/main.php?" + cgi_data, giveback="raw")
         except:
             import traceback
             traceback.print_exc(file=sys.stdout)
@@ -1636,7 +1640,24 @@ class CentreonServer(GenericServer):
         except:
             import traceback
             traceback.print_exc(file=sys.stdout)
+
         
+    def Hook(self):
+        """
+        in case count is down get a new SID, just in case
+        """
+        # a SIDcount of 300 should make 15 min when being run every 3 secs as it is at 
+        # the moment in nagstamonActions.RefreshLoopOneServer()
+        if self.SIDcount >= 300:
+            if str(self.conf.debug_mode) == "True":
+                print self.name + ":", "old SID:", self.SID, self.Cookie
+            self.SID = self._get_sid()
+            if str(self.conf.debug_mode) == "True":
+                print self.name + ":", "new SID:", self.SID, self.Cookie
+            self.SIDcount = 0
+        else:
+            self.SIDcount += 1          
+            
         
 class GenericObject(object):    
     def get_host_name(self):

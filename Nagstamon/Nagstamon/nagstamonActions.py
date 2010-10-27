@@ -134,13 +134,17 @@ class RefreshLoopOneServer(threading.Thread):
                             # do some cleanup
                             del self.server.count
                             gc.collect()
-                            self.server.count = 0         
+                            self.server.count = 0
+                            # call Hook() for extra action
+                            self.server.Hook()
     
             else:
                 # sleep and count
                 time.sleep(3)
                 self.server.count += 3
                 gc.collect()
+                # call Hook() for extra action
+                self.server.Hook()
 
                     
 def RefreshAllServers(servers=None, output=None, conf=None):
