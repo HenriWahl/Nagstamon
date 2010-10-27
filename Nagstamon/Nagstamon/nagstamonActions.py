@@ -9,6 +9,7 @@ import webbrowser
 import commands
 import re
 import sys
+import traceback
 # if running on windows import winsound
 import platform
 if platform.system() == "Windows":
@@ -263,7 +264,6 @@ class RecheckAll(threading.Thread):
                                
             except:
                 RecheckingAll = False
-                import traceback
                 traceback.print_exc(file=sys.stdout)
            
         else:
@@ -634,7 +634,14 @@ def MD5ify(string):
     """
     return hashlib.md5(string).hexdigest()
     
-       
+
+def Error(error):
+    """
+    Handle errors somehow - print them or later log them into not yet existing log file
+    """
+    return "ERROR", traceback.format_exception_only(error[0], error[1])[0]
+    
+
 # <IMPORT>
 # Borrowed from http://pipe.scs.fsu.edu/PostHandler/MultipartPostHandler.py
 # Released under LGPL

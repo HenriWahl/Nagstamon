@@ -9,6 +9,7 @@ import copy
 import webbrowser
 import urllib
 import time
+import traceback
 
 try:
     import lxml.etree, lxml.objectify
@@ -28,7 +29,9 @@ except:
     pass
     
 import nagstamonActions                         
+from nagstamonActions import Error
 from nagstamonObjects import *
+
 
 class GenericServer(object):
     """
@@ -212,7 +215,6 @@ class GenericServer(object):
             # give values back as tuple
             return start_time, end_time
         except:
-            import traceback
             traceback.print_exc(file=sys.stdout)
             return "n/a", "n/a"
 
@@ -352,14 +354,12 @@ class GenericServer(object):
                             self.new_hosts[new_host].attempt = n["attempt"]
                             self.new_hosts[new_host].status_information= n["status_information"]
                 except:
-                    import traceback
                     traceback.print_exc(file=sys.stdout)
                 
             # do some cleanup
             del table
             
         except:
-            import traceback
             traceback.print_exc(file=sys.stdout)
             # set checking flag back to False
             self.isChecking = False
@@ -420,14 +420,12 @@ class GenericServer(object):
                             self.new_hosts[n["host"]].services[new_service].attempt = n["attempt"]
                             self.new_hosts[n["host"]].services[new_service].status_information = n["status_information"]
                 except:
-                    import traceback
                     traceback.print_exc(file=sys.stdout)
                                 
             # do some cleanup
             del table
             
         except:
-            import traceback
             traceback.print_exc(file=sys.stdout)
             # set checking flag back to False
             self.isChecking = False
@@ -465,7 +463,6 @@ class GenericServer(object):
             del table
         
         except:
-            import traceback
             traceback.print_exc(file=sys.stdout)
             # set checking flag back to False
             self.isChecking = False
@@ -502,7 +499,6 @@ class GenericServer(object):
             del table
 
         except:
-            import traceback
             traceback.print_exc(file=sys.stdout)
             # set checking flag back to False
             self.isChecking = False
@@ -659,7 +655,7 @@ class GenericServer(object):
     def FetchURL(self, url, giveback="obj", cgi_data=None, remove_tags=["link", "br", "img", "hr", "script", "th", "form", "div", "p"]):
         """
         get content of given url, cgi_data only used if present
-        giveback may be "dict", "html" or "none" 
+        giveback may be "dict", "raw" or "none" 
         "dict" FetchURL gives back a dict full of miserable hosts/services,
         "html" it gives back pure HTML - useful for finding out IP or new version
         "none" it gives back pure nothing - useful if for example acknowledging a service
@@ -716,9 +712,9 @@ class GenericServer(object):
                 urlcontent = urllib2.urlopen(self.nagios_url + "/login", logindata)
                 
             except:
-                import traceback
+                print Error(sys.exc_info())
                 traceback.print_exc(file=sys.stdout)
-        
+                
         # if something goes wrong with accessing the URL it can be caught
         try:
             # if there should be no proxy used use an empty proxy_handler - only necessary in Windows,
@@ -752,7 +748,6 @@ class GenericServer(object):
                     # use opener - if cgi_data is not empty urllib uses a POST request
                     urlcontent = urllib2.urlopen(url, cgi_data)
             except:
-                import traceback
                 traceback.print_exc(file=sys.stdout)
                 return "ERROR"
             
@@ -814,7 +809,6 @@ class GenericServer(object):
                 raise
             
         except:
-            import traceback
             traceback.print_exc(file=sys.stdout)
             # do some cleanup
             del passman, auth_handler, digest_handler, urlcontent
@@ -873,7 +867,6 @@ class GenericServer(object):
             else:
                 host = ip
         except:
-            import traceback
             traceback.print_exc(file=sys.stdout)
             host = "ERROR"
          
