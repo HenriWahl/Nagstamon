@@ -1,7 +1,33 @@
 # encoding: utf-8
 
-from Generic import GenericServer
+import urllib
+import webbrowser
+import socket
+import time
+import sys
+import cookielib
+
+try:
+    import lxml.etree, lxml.objectify
+except Exception, err:
+    print
+    print err
+    print
+    print "Could not load lxml.etree, lxml.objectify and lxml.html.clean, maybe you need to install python lxml."
+    print
+    sys.exit()
+# fedora 8 and maybe others use lxml 2 which is more careful and offers more modules
+# but which also makes necessary to clean Nagios html output
+# if not available should be ok because not needed
+try:
+    import lxml.html.clean
+except:
+    pass
+
 import nagstamonActions
+from nagstamonObjects import GenericHost, GenericService
+from Generic import GenericServer
+
 
 class CentreonServer(GenericServer): 
     TYPE = 'Centreon'
@@ -443,6 +469,7 @@ class CentreonServer(GenericServer):
                         
                     # running remote cgi command with GET method, for some strange reason only working if
                     # giveback="raw"
+                    #debug
                     print "CENTREON ACKNOWLEDGE RESULT:", self.FetchURL(self.nagios_cgi_url + "/main.php?" + cgi_data, giveback="raw")
         except:
             import traceback

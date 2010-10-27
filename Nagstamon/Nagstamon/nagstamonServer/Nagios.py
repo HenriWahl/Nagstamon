@@ -1,10 +1,9 @@
 # encoding: utf-8
 
-import Generic
+from Generic import GenericServer
 
-print dir(Generic)
 
-class NagiosServer(Generic.GenericServer):
+class NagiosServer(GenericServer):
     """
         object of Nagios server - when nagstamon will be able to poll various servers this
         will be useful   

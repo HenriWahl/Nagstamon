@@ -3,6 +3,9 @@
 import sys
 import urllib
 import webbrowser
+
+import nagstamonActions
+from nagstamonObjects import GenericHost, GenericService
 from Generic import GenericServer
 
 
