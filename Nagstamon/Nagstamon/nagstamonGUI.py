@@ -74,7 +74,7 @@ class GUI(object):
         
         # Meta
         self.name = "nagstamon"
-        self.version = "0.9.5-SVN-r166"
+        self.version = "0.9.5-SVN-r179"
         self.website = "http://nagstamon.sourceforge.net/"
         self.copyright = "©2008-2010 Henri Wahl\nh.wahl@ifw-dresden.de"
         self.comments = "Nagios status monitor for your desktop"
@@ -277,21 +277,24 @@ class GUI(object):
                     unreachables += server.unreachables
                     unknowns += server.unknowns
                     criticals += server.criticals
-                    warnings += server.warnings    
+                    warnings += server.warnings
                     
                     # if there is no trouble...
                     if len(server.nagitems_filtered["hosts"]["DOWN"]) == 0 and \
                         len(server.nagitems_filtered["hosts"]["UNREACHABLE"]) == 0 and \
                         len(server.nagitems_filtered["services"]["CRITICAL"]) == 0 and \
                         len(server.nagitems_filtered["services"]["WARNING"]) == 0 and \
-                        len(server.nagitems_filtered["services"]["UNKNOWN"]) == 0:
+                        len(server.nagitems_filtered["services"]["UNKNOWN"]) == 0 and \
+                        server.status != "ERROR":
                         # ... there is no need to show a label or treeview...
                         self.popwin.ServerVBoxes[server.name].hide()
                         self.popwin.ServerVBoxes[server.name].set_no_show_all(True)
+                        self.status_ok = True
                     else:
                         # otherwise it must be shown, full of problems
                         self.popwin.ServerVBoxes[server.name].show()
-                        self.popwin.ServerVBoxes[server.name].set_no_show_all(False)                
+                        self.popwin.ServerVBoxes[server.name].set_no_show_all(False)      
+                        self.status_ok = False
                     
                     # fill treeview for popwin
                     # create a model for treeview where the table headers all are strings
@@ -345,8 +348,7 @@ class GUI(object):
                     self.popwin.UpdateStatus(server)
                     
                 except:
-                    import traceback
-                    traceback.print_exc(file=sys.stdout)
+                    server.Error(sys.exc_info())
 
         # show and resize popwin
         self.popwin.VBox.hide_all()
@@ -354,7 +356,7 @@ class GUI(object):
         self.popwin.Resize()
         
         # everything OK
-        if unknowns == 0 and warnings == 0 and criticals == 0 and unreachables == 0 and downs == 0:
+        if unknowns == 0 and warnings == 0 and criticals == 0 and unreachables == 0 and downs == 0 :
             self.statusbar.statusbar_labeltext = '<span size="%s" background="darkgreen" foreground="white"> OK </span>' % (self.fontsize)
             self.statusbar.statusbar_labeltext_inverted = self.statusbar.statusbar_labeltext
             self.statusbar.Label.set_markup(self.statusbar.statusbar_labeltext)
@@ -363,13 +365,13 @@ class GUI(object):
             # if all is OK there is no need to pop up popwin so set self.showPopwin to False
             self.popwin.showPopwin = False
             self.popwin.Close()
-            self.status_ok = True
+            #self.status_ok = True
             # set systray icon to green aka OK
             self.statusbar.SysTray.set_from_file(self.Resources + "/nagstamon_green" + self.BitmapSuffix)
             # switch notification off
             self.NotificationOff()
-        else:
-            self.status_ok = False
+        ###else:
+        ###    self.status_ok = False
             
             # put text for label together
 
@@ -405,6 +407,7 @@ class GUI(object):
                 self.statusbar.Resize()
                 
             # choose icon for systray  - the worst case decides the shown color
+            color = "green" 
             if warnings > 0: color = "yellow"
             if unknowns > 0: color = "orange"
             if criticals > 0: color = "red"
@@ -1229,7 +1232,8 @@ class Popwin(gtk.Window):
         # otherwise there is no sense in showing an empty popwin
         # for some reason the painting will lag behind popping up popwin if not getting resized twice -
         # seems like a strange workaround
-        if self.showPopwin and not self.output.status_ok:
+        #if self.showPopwin and not self.output.status_ok:
+        if self.showPopwin:
             # position and resize...
             self.Resize()
             # ...show
@@ -1461,7 +1465,7 @@ class Popwin(gtk.Window):
         try:
             if remoteservice == "SSH":
                 # get host ip to connect to be independent of dns resolver
-                host = self.miserable_server.GetHost(self.miserable_host)
+                host = self.miserable_server.GetHost(self.miserable_host)[0]
                 if host != "ERROR":
                     # workaround for bug 2080503@sf.net
                     if self.conf.app_ssh_options == "": args = self.conf.app_ssh_bin + " " + host
@@ -1469,7 +1473,7 @@ class Popwin(gtk.Window):
                     sub = subprocess.Popen(args.split(" "))
             elif remoteservice == "RDP":
                 # get host ip to connect to be independent of dns resolver
-                host = self.miserable_server.GetHost(self.miserable_host)
+                host = self.miserable_server.GetHost(self.miserable_host)[0]
                 if host != "ERROR":
                     # workaround for bug 2080503@sf.net
                     if self.conf.app_rdp_options == "": args = self.conf.app_rdp_bin + " " + host
@@ -1477,7 +1481,7 @@ class Popwin(gtk.Window):
                     sub = subprocess.Popen(args.split(" "))
             elif remoteservice == "VNC":
                 # get host ip to connect to be independent of dns resolver
-                host = self.miserable_server.GetHost(self.miserable_host)
+                host = self.miserable_server.GetHost(self.miserable_host)[0]
                 if host != "ERROR":
                     # workaround for bug 2080503@sf.net
                     if self.conf.app_vnc_options == "": args = self.conf.app_vnc_bin + " " + host
@@ -1485,7 +1489,7 @@ class Popwin(gtk.Window):
                     sub = subprocess.Popen(args.split(" "))
             elif remoteservice == "HTTP":
                 # get host ip to connect to be independent of dns resolver
-                host = self.miserable_server.GetHost(self.miserable_host)
+                host = self.miserable_server.GetHost(self.miserable_host)[0]
                 if host != "ERROR":
                     nagstamonActions.TreeViewHTTP(host)
             elif remoteservice == "Monitor":
@@ -1874,8 +1878,7 @@ class Settings(object):
                     # debug
                     if str(self.conf.debug_mode) == "True":
                         print "Server:", server
-                        import traceback
-                        traceback.print_exc(file=sys.stdout)
+                        self.servers[server].Error(sys.exc_info())
                 # delete server from servers dictionary
                 self.servers.pop(server)
                 # fill settings dialog treeview

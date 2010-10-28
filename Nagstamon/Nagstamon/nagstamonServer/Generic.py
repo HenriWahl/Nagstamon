@@ -8,6 +8,7 @@ import gc
 import copy
 import webbrowser
 import urllib
+import datetime
 import time
 import traceback
 
@@ -29,7 +30,6 @@ except:
     pass
     
 import nagstamonActions                         
-from nagstamonActions import Error
 from nagstamonObjects import *
 
 
@@ -64,13 +64,8 @@ class GenericServer(object):
     
     # Nagios CGI flags translation dictionary for acknowledging hosts/services 
     HTML_ACKFLAGS = {True:"on", False:"off"}
+
     
-    @classmethod
-    def get_columns(cls, row):
-        """ Gets columns filled with row data """
-        for column_class in cls.COLUMNS:
-            yield column_class(row)
-            
     def __init__(self, **kwds):
         # add all keywords to object, every mode searchs inside for its favorite arguments/keywords
         for k in kwds: self.__dict__[k] = kwds[k]
@@ -108,13 +103,22 @@ class GenericServer(object):
         self.Cookie = None
         # needed for looping server thread
         self.count = 0
-    
+        
+
+    @classmethod
+    def get_columns(cls, row):
+        """ Gets columns filled with row data """
+        for column_class in cls.COLUMNS:
+            yield column_class(row)        
+        
+        
     def set_recheck(self, thread_obj):
         self._set_recheck(thread_obj.host, thread_obj.service)
         
+        
     def _set_recheck(self, host, service):
         # get start time from Nagios as HTML to use same timezone setting like the locally installed Nagios
-        html = self.FetchURL(self.nagios_cgi_url + "/cmd.cgi?" + urllib.urlencode({"cmd_typ":"96", "host":host}), giveback="raw")
+        html = self.FetchURL(self.nagios_cgi_url + "/cmd.cgi?" + urllib.urlencode({"cmd_typ":"96", "host":host}), giveback="raw")[0]
         start_time = html.split("NAME='start_time' VALUE='")[1].split("'></b></td></tr>")[0]
 
         # decision about host or service - they have different URLs
@@ -209,13 +213,13 @@ class GenericServer(object):
         directly from web interface
         """
         try:
-            html = self.FetchURL(self.nagios_cgi_url + "/cmd.cgi?" + urllib.urlencode({"cmd_typ":"55", "host":host}), giveback="raw")
+            html = self.FetchURL(self.nagios_cgi_url + "/cmd.cgi?" + urllib.urlencode({"cmd_typ":"55", "host":host}), giveback="raw")[0]
             start_time = html.split("NAME='start_time' VALUE='")[1].split("'></b></td></tr>")[0]
             end_time = html.split("NAME='end_time' VALUE='")[1].split("'></b></td></tr>")[0]
             # give values back as tuple
             return start_time, end_time
         except:
-            traceback.print_exc(file=sys.stdout)
+            self.Error(sys.exc_info())
             return "n/a", "n/a"
 
         
@@ -308,7 +312,8 @@ class GenericServer(object):
         # unfortunately the hosts status page has a different structure so
         # hosts must be analyzed separately
         try:
-            htobj = self.FetchURL(nagcgiurl_hosts)
+            htobj = self.FetchURL(nagcgiurl_hosts)[0]
+
             # workaround for Nagios < 2.7 which has an <EMBED> in its output
             # put a copy of a part of htobj into table to be able to delete htobj
             try:
@@ -354,20 +359,20 @@ class GenericServer(object):
                             self.new_hosts[new_host].attempt = n["attempt"]
                             self.new_hosts[new_host].status_information= n["status_information"]
                 except:
-                    traceback.print_exc(file=sys.stdout)
+                    self.Error(sys.exc_info())
                 
             # do some cleanup
             del table
             
         except:
-            traceback.print_exc(file=sys.stdout)
             # set checking flag back to False
             self.isChecking = False
-            return "ERROR"
+            return self.Error(sys.exc_info())
 
         # services
         try:
-            htobj = self.FetchURL(nagcgiurl_services)
+            htobj = self.FetchURL(nagcgiurl_services)[0]
+
             # put a copy of a part of htobj into table to be able to delete htobj
             table = htobj.body.table[self.HTML_BODY_TABLE_INDEX]
             
@@ -420,20 +425,19 @@ class GenericServer(object):
                             self.new_hosts[n["host"]].services[new_service].attempt = n["attempt"]
                             self.new_hosts[n["host"]].services[new_service].status_information = n["status_information"]
                 except:
-                    traceback.print_exc(file=sys.stdout)
+                    self.Error(sys.exc_info())
                                 
             # do some cleanup
             del table
             
         except:
-            traceback.print_exc(file=sys.stdout)
             # set checking flag back to False
             self.isChecking = False
-            return "ERROR"
+            return self.Error(sys.exc_info())
        
          # hosts which are in scheduled downtime
         try:
-            htobj = self.FetchURL(nagcgiurl_hosts_in_maintenance)
+            htobj = self.FetchURL(nagcgiurl_hosts_in_maintenance)[0]
            
             # workaround for Nagios < 2.7 which has an <EMBED> in its output
             try:
@@ -463,14 +467,13 @@ class GenericServer(object):
             del table
         
         except:
-            traceback.print_exc(file=sys.stdout)
             # set checking flag back to False
             self.isChecking = False
-            return "ERROR"
+            return self.Error(sys.exc_info())
         
         # hosts which are acknowledged
         try:
-            htobj = self.FetchURL(nagcgiurl_hosts_acknowledged)
+            htobj = self.FetchURL(nagcgiurl_hosts_acknowledged)[0]
             # workaround for Nagios < 2.7 which has an <EMBED> in its output
             try:
                 table = htobj.body.table[self.HTML_BODY_TABLE_INDEX]
@@ -499,13 +502,15 @@ class GenericServer(object):
             del table
 
         except:
-            traceback.print_exc(file=sys.stdout)
             # set checking flag back to False
             self.isChecking = False
-            return "ERROR"
+            return self.Error(sys.exc_info())
             
         # some cleanup
         del nagitems
+        
+        #dummy return in case all is OK
+        return [True]
         
         
     def GetStatus(self):
@@ -523,11 +528,11 @@ class GenericServer(object):
             # dummy filtered items
             self.nagitems_filtered = {"services":{"CRITICAL":[], "WARNING":[], "UNKNOWN":[]}, "hosts":{"DOWN":[], "UNREACHABLE":[]}}
             self.isChecking = False          
-            return True      
+            return [True]     
 
         # some filtering is already done by the server specific _get_status() 
-        if self._get_status() == "ERROR":
-            return "ERROR"
+        if self._get_status()[0] == "ERROR":
+            return self.Error(sys.exc_info())
 
         # this part has been before in GUI.RefreshDisplay() - wrong place, here it needs to be reset
         self.nagitems_filtered = {"services":{"CRITICAL":[], "WARNING":[], "UNKNOWN":[]}, "hosts":{"DOWN":[], "UNREACHABLE":[]}}
@@ -650,7 +655,8 @@ class GenericServer(object):
         self.isChecking = False
         
         # return True if all worked well    
-        return True
+        return [True]
+    
     
     def FetchURL(self, url, giveback="obj", cgi_data=None, remove_tags=["link", "br", "img", "hr", "script", "th", "form", "div", "p"]):
         """
@@ -662,6 +668,7 @@ class GenericServer(object):
         existence of cgi_data forces urllib to use POST instead of GET requests
         remove_tags became necessary for different expectations of GetStatus() and
         GetHost() - one wants div elements, the other don't 
+        NEW: gives back a list containing result and, if necessary, a more clear error description
         """
         # using httppasswordmgrwithdefaultrealm because using password in plain
         # url like http://username:password@nagios-server causes trouble with
@@ -712,8 +719,7 @@ class GenericServer(object):
                 urlcontent = urllib2.urlopen(self.nagios_url + "/login", logindata)
                 
             except:
-                print Error(sys.exc_info())
-                traceback.print_exc(file=sys.stdout)
+                self.Error(sys.exc_info())
                 
         # if something goes wrong with accessing the URL it can be caught
         try:
@@ -748,18 +754,17 @@ class GenericServer(object):
                     # use opener - if cgi_data is not empty urllib uses a POST request
                     urlcontent = urllib2.urlopen(url, cgi_data)
             except:
-                traceback.print_exc(file=sys.stdout)
-                return "ERROR"
+                return self.Error(sys.exc_info())
             
             # give back pure HTML or XML in case giveback is "raw"
             if giveback == "raw":
-                return urlcontent.read()
+                return [urlcontent.read()]
             
             # give back pure nothing if giveback is "nothing" - useful for POST requests
             if giveback == "nothing":
                 # do some cleanup
                 del passman, auth_handler, digest_handler, urlcontent
-                return None   
+                return [None] 
             
             # give back lxml-objectified data
             if giveback == "obj":
@@ -794,7 +799,7 @@ class GenericServer(object):
                 del passman, auth_handler, digest_handler, urlcontent, html, prettyhtml
         
                 # give back HTML object from Nagios webseite
-                return htobj
+                return [htobj]
                 
             elif self.type == "Opsview" and giveback == "opsxml":
                 # objectify the xml and give it back after some cleanup
@@ -802,17 +807,13 @@ class GenericServer(object):
                 xmlpretty = lxml.etree.tostring(xml, pretty_print=True)
                 xmlobj = lxml.objectify.fromstring(xmlpretty)
                 del passman, auth_handler, urlcontent, xml, xmlpretty
-                return xmlobj
-            
-            else:
-                # in case some error regarding the type occured raise exception
-                raise
-            
+                return [xmlobj]
+           
         except:
-            traceback.print_exc(file=sys.stdout)
             # do some cleanup
-            del passman, auth_handler, digest_handler, urlcontent
-            return "ERROR"
+            del passman, auth_handler, digest_handler
+            return self.Error(sys.exc_info())
+            
         
         # in case the wrong giveback type has been specified return error
         # do some cleanup
@@ -820,8 +821,8 @@ class GenericServer(object):
             del passman, auth_handler, digest_handler, urlcontent
         except:
             pass
-        return "ERROR"
-
+        return self.Error(sys.exc_info())
+    
 
     def GetHost(self, host):
         """
@@ -836,7 +837,7 @@ class GenericServer(object):
         nagcgiurl_host  = self.nagios_cgi_url + "/extinfo.cgi?type=1&host=" + host
         
         # get host info
-        htobj = self.FetchURL(nagcgiurl_host, giveback="obj", remove_tags=["link", "br", "img", "hr", "script", "th", "form", "p"])
+        htobj = self.FetchURL(nagcgiurl_host, giveback="obj", remove_tags=["link", "br", "img", "hr", "script", "th", "form", "p"])[0]
 
         try:
             # take ip from object path
@@ -861,20 +862,19 @@ class GenericServer(object):
             if str(self.conf.connect_by_dns_yes) == "True":
                 # try to get DNS name for ip, if not available use ip
                 try:
-                    host = socket.gethostbyaddr(ip)[0]
+                    address = socket.gethostbyaddr(ip)[0]
                 except:
-                    host = ip
+                    address = ip
             else:
-                host = ip
+                address = ip
         except:
-            traceback.print_exc(file=sys.stdout)
-            host = "ERROR"
+            return self.Error(sys.exc_info())
          
         # do some cleanup
         del htobj    
 
         # give back host or ip
-        return host
+        return [address]
 
     
     def Hook(self):
@@ -883,3 +883,11 @@ class GenericServer(object):
         inspired by Centreon and its seemingly Alzheimer regarding session ID/Cookie/whatever
         """
         pass    
+    
+    
+    def Error(self, error):
+        """
+        Handle errors somehow - print them or later log them into not yet existing log file
+        """
+        print datetime.datetime.now(), self.name + ": ", traceback.print_exception(error[0], error[1], error[2], 5, file=sys.stdout)
+        return ["ERROR", traceback.format_exception_only(error[0], error[1])[0]]

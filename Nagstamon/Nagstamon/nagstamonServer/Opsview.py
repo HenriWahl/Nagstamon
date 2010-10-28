@@ -3,6 +3,7 @@
 import sys
 import urllib
 import webbrowser
+import traceback
 
 import nagstamonActions
 from nagstamonObjects import GenericHost, GenericService
@@ -24,7 +25,7 @@ class OpsviewServer(GenericServer):
             # service
             cgi_data = urllib.urlencode({"cmd_typ":"56", "host":host, "service":service})
         url = self.nagios_cgi_url + "/cmd.cgi"
-        html = self.FetchURL(url, giveback="raw", cgi_data=cgi_data)
+        html = self.FetchURL(url, giveback="raw", cgi_data=cgi_data)[0]
         # which opsview form action to call
         action = html.split('" enctype="multipart/form-data">')[0].split('action="')[-1]
         # this time cgi_data does not get encoded because it will be submitted via multipart
@@ -38,14 +39,13 @@ class OpsviewServer(GenericServer):
         get start and end time for downtime from Opsview server
         """
         try:
-            html = self.FetchURL(self.nagios_cgi_url + "/cmd.cgi?" + urllib.urlencode({"cmd_typ":"55", "host":host}), giveback="raw")
+            html = self.FetchURL(self.nagios_cgi_url + "/cmd.cgi?" + urllib.urlencode({"cmd_typ":"55", "host":host}), giveback="raw")[0]
             start_time = html.split('name="starttime" value="')[1].split('"')[0]
             end_time = html.split('name="endtime" value="')[1].split('"')[0]        
             # give values back as tuple
             return start_time, end_time
         except:
-            import traceback
-            traceback.print_exc(file=sys.stdout)
+            self.Error(sys.exc_info())
             return "n/a", "n/a"   
         
         
@@ -58,7 +58,7 @@ class OpsviewServer(GenericServer):
         # the API seems not to let hosts information directly, we hope to get it from service informations
         try:
             opsapiurl = self.nagios_url + "/api/status/service?state=1&state=2&state=3"
-            xobj = self.FetchURL(opsapiurl, giveback="opsxml")
+            xobj = self.FetchURL(opsapiurl, giveback="opsxml")[0]
     
             for host in xobj.data.getchildren()[:-1]:
                 # host
@@ -95,11 +95,13 @@ class OpsviewServer(GenericServer):
                         self.new_hosts[hostdict["name"]].services[servicedict["name"]].attempt = str(servicedict["current_check_attempt"])+ "/" + str(servicedict["max_check_attempts"])
                         self.new_hosts[hostdict["name"]].services[servicedict["name"]].status_information= servicedict["output"]
         except:
-            import traceback
-            traceback.print_exc(file=sys.stdout)
             # set checking flag back to False
             self.isChecking = False
-            return "ERROR"
+            return self.Error(sys.exc_info())
+        
+        #dummy return in case all is OK
+        return [True]
+
         
     def open_tree_view(self, host, service):
         webbrowser.open('%s/status/service?host=%s' % (self.nagios_url, host))

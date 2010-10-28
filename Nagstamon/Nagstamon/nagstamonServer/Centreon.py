@@ -6,6 +6,7 @@ import socket
 import time
 import sys
 import cookielib
+import traceback
 
 try:
     import lxml.etree, lxml.objectify
@@ -85,19 +86,18 @@ class CentreonServer(GenericServer):
             cgi_data = urllib.urlencode({"p":"20305",\
                                          "o":"ah",\
                                          "host_name":host})
-            raw = self.FetchURL(self.nagios_cgi_url + "/main.php?" + cgi_data, giveback="raw")
+            raw = self.FetchURL(self.nagios_cgi_url + "/main.php?" + cgi_data, giveback="raw")[0]
             if not raw == "ERROR":
                 # session id might have been invalid, so if necessary get a new one
                 if raw.find('name="start" type="text" value="') == -1:
                     self.SID = self._get_sid()
-                    raw = self.FetchURL(self.nagios_cgi_url + "/main.php?" + cgi_data, giveback="raw")
+                    raw = self.FetchURL(self.nagios_cgi_url + "/main.php?" + cgi_data, giveback="raw")[0]
                 start_time = raw.split('name="start" type="text" value="')[1].split('"')[0]
                 end_time = raw.split('name="end" type="text" value="')[1].split('"')[0]
                 # give values back as tuple      
                 return start_time, end_time
         except:
-            import traceback
-            traceback.print_exc(file=sys.stdout)
+            self.Error(sys.exc_info())
             return "n/a", "n/a"            
             
     
@@ -119,7 +119,7 @@ class CentreonServer(GenericServer):
                                     "time":0})
         
         raw = self.FetchURL(self.nagios_cgi_url + "/include/monitoring/status/Hosts/xml/hostXML.php?"\
-                              + cgi_data, giveback="raw")
+                              + cgi_data, giveback="raw")[0]
         htobj = lxml.objectify.fromstring(raw)
                
         if htobj.__dict__.has_key("l"):   
@@ -130,14 +130,12 @@ class CentreonServer(GenericServer):
                     try:
                         address = socket.gethostbyaddr(htobj.l.a.text)[0]
                     except:
-                        import traceback
-                        traceback.print_exc(file=sys.stdout)
+                        self.Error(sys.exc_info())
                         address = htobj.l.a.text
                 else:
                     address = htobj.l.a.text
             except:
-                import traceback
-                traceback.print_exc(file=sys.stdout)
+                self.Error(sys.exc_info())
                 address = "ERROR"
         
         else: address = "ERROR"    
@@ -147,7 +145,7 @@ class CentreonServer(GenericServer):
             print "Address of %s:" % (host), address
         
         # give back host or ip
-        return address
+        return [address]
         
             
     def _get_sid(self):
@@ -158,12 +156,11 @@ class CentreonServer(GenericServer):
         try:
             # why not get a new cookie with every new session id?    
             self.Cookie = cookielib.CookieJar()    
-            self.FetchURL(self.nagios_cgi_url + "/index.php?" + urllib.urlencode({"p":1, "autologin":1, "useralias":self.MD5_username, "password":self.MD5_password}), giveback="raw")
+            self.FetchURL(self.nagios_cgi_url + "/index.php?" + urllib.urlencode({"p":1, "autologin":1, "useralias":self.MD5_username, "password":self.MD5_password}), giveback="raw")[0]
             sid = self.Cookie._cookies.values()[0].values()[0]["PHPSESSID"].value
             return sid
         except:
-            import traceback
-            traceback.print_exc(file=sys.stdout)
+            self.Error(sys.exc_info())
             return None
         
         
@@ -175,7 +172,7 @@ class CentreonServer(GenericServer):
                                     "o":"hd", "host_name":host,\
                                     "useralias":self.MD5_username,\
                                     "password":self.MD5_password})
-        raw = self.FetchURL(self.nagios_cgi_url + "/main.php?" + cgi_data, giveback="raw")
+        raw = self.FetchURL(self.nagios_cgi_url + "/main.php?" + cgi_data, giveback="raw")[0]
 
         if not raw == "ERROR":
             host_id = raw.partition("var host_id = '")[2].partition("'")[0]
@@ -185,7 +182,7 @@ class CentreonServer(GenericServer):
                 if str(self.conf.debug_mode) == "True":
                     print self.name, ":", host, "ID could not be retrieved, trying again..."                  
                 self.SID = self._get_sid()
-                raw = self.FetchURL(self.nagios_cgi_url + "/main.php?" + cgi_data, giveback="raw")      
+                raw = self.FetchURL(self.nagios_cgi_url + "/main.php?" + cgi_data, giveback="raw")[0]      
                 host_id = raw.partition("var host_id= '")[2].partition("'")[0]
 
         else:
@@ -199,7 +196,6 @@ class CentreonServer(GenericServer):
             else:
                 return ""
         except:
-            import traceback
             print "host_id:", host_id
             return ""
         
@@ -212,7 +208,7 @@ class CentreonServer(GenericServer):
                                      "host_name":host,\
                                      "service_description":service,\
                                      "o":"as"})
-        raw = self.FetchURL(self.nagios_cgi_url + "/main.php?"+ cgi_data, giveback="raw")
+        raw = self.FetchURL(self.nagios_cgi_url + "/main.php?"+ cgi_data, giveback="raw")[0]
         
         # ids to give back, should contain to items, a host and a service id
         ids = []
@@ -223,7 +219,7 @@ class CentreonServer(GenericServer):
                 if str(self.conf.debug_mode) == "True":
                     print self.name, ":", host, service, "IDs could not be retrieved, trying again..." 
                 self.SID = self._get_sid()
-                raw = self.FetchURL(self.nagios_cgi_url + "/main.php?"+ cgi_data, giveback="raw")
+                raw = self.FetchURL(self.nagios_cgi_url + "/main.php?"+ cgi_data, giveback="raw")[0]
                 
             # search ids
             for l in raw.splitlines():
@@ -260,16 +256,15 @@ class CentreonServer(GenericServer):
         # unfortunately the hosts status page has a different structure so
         # hosts must be analyzed separately
         try:
-            raw = self.FetchURL(nagcgiurl_hosts, giveback="raw")    
+            raw = self.FetchURL(nagcgiurl_hosts, giveback="raw")[0]    
             htobj = lxml.objectify.fromstring(raw)
             # in case there are no children session id is invalid
             if htobj.getchildren() == []:
-            #while htobj.getchildren() == []:
                 if str(self.conf.debug_mode) == "True": 
                     print self.name, "bad session ID, retrieving new one..." 
                 # try again...
                 self.SID = self._get_sid()
-                raw = self.FetchURL(nagcgiurl_hosts, giveback="raw")                    
+                raw = self.FetchURL(nagcgiurl_hosts, giveback="raw")[0]                    
                 htobj = lxml.objectify.fromstring(raw)
                 time.sleep(1)
                  
@@ -327,29 +322,26 @@ class CentreonServer(GenericServer):
                                 self.new_hosts[new_host].attempt = n["attempt"]
                                 self.new_hosts[new_host].status_information= n["status_information"]
                     except:
-                        import traceback
-                        traceback.print_exc(file=sys.stdout)
+                        self.Error(sys.exc_info())
             
         except:
-            import traceback
-            traceback.print_exc(file=sys.stdout)
+            self.Error(sys.exc_info())
             # set checking flag back to False
             self.isChecking = False
             return "ERROR"
 
         # services
         try:                       
-            raw = self.FetchURL(nagcgiurl_services, giveback="raw")
+            raw = self.FetchURL(nagcgiurl_services, giveback="raw")[0]
             htobj = lxml.objectify.fromstring(raw)     
             # in case there are no children session id is invalid
             if htobj.getchildren == []:
-            #while htobj.getchildren == []:  
                 # debug
                 if str(self.conf.debug_mode) == "True": 
                     print self.name, "bad session ID, retrieving new one..." 
                 # try again...
                 self.SID = self._get_sid()
-                raw = self.FetchURL(nagcgiurl_services, giveback="raw")                    
+                raw = self.FetchURL(nagcgiurl_services, giveback="raw")[0]                    
                 htobj = lxml.objectify.fromstring(raw)                        
             
             if htobj.__dict__.has_key("l"):
@@ -416,21 +408,22 @@ class CentreonServer(GenericServer):
                                 self.new_hosts[n["host"]].services[new_service].attempt = n["attempt"]
                                 self.new_hosts[n["host"]].services[new_service].status_information = n["status_information"]
                     except:
-                        import traceback
-                        traceback.print_exc(file=sys.stdout)
+                        self.Error(sys.exc_info())
                                 
             # do some cleanup
             del htobj
             
         except:
-            import traceback
-            traceback.print_exc(file=sys.stdout)
+            self.Error(sys.exc_info())
             # set checking flag back to False
             self.isChecking = False
             return "ERROR"
         
         # some cleanup
         del nagitems
+        
+        # return True if all worked well    
+        return [True]        
         
 
     def _set_acknowledge(self, host, service, author, comment, sticky, notify, persistent, all_services=[]):
@@ -446,7 +439,7 @@ class CentreonServer(GenericServer):
                     print self.name, host +": " + self.nagios_cgi_url + "/main.php?"+ cgi_data     
                 
                 # running remote cgi command, also possible with GET method     
-                self.FetchURL(self.nagios_cgi_url + "/main.php?" + cgi_data, giveback="raw")        
+                self.FetchURL(self.nagios_cgi_url + "/main.php?" + cgi_data, giveback="raw")[0]       
             else:
                 # service(s) @ host
                 # if all_services is empty only one service has to be checked - the one clicked
@@ -469,11 +462,9 @@ class CentreonServer(GenericServer):
                         
                     # running remote cgi command with GET method, for some strange reason only working if
                     # giveback="raw"
-                    #debug
-                    print "CENTREON ACKNOWLEDGE RESULT:", self.FetchURL(self.nagios_cgi_url + "/main.php?" + cgi_data, giveback="raw")
+                    self.FetchURL(self.nagios_cgi_url + "/main.php?" + cgi_data, giveback="raw")[0]
         except:
-            import traceback
-            traceback.print_exc(file=sys.stdout)
+            self.Error(sys.exc_info())
             
 
     def _set_recheck(self, host, service):
@@ -500,10 +491,9 @@ class CentreonServer(GenericServer):
                 url = self.nagios_cgi_url + "/include/monitoring/objectDetails/xml/serviceSendCommand.php?" + cgi_data
 
             # execute POST request
-            self.FetchURL(url, giveback="raw")
+            self.FetchURL(url, giveback="raw")[0]
         except:
-            import traceback
-            traceback.print_exc(file=sys.stdout)
+            self.Error(sys.exc_info())
        
 
     def _set_downtime(self, host, service, author, comment, fixed, start_time, end_time, hours, minutes):
@@ -545,10 +535,9 @@ class CentreonServer(GenericServer):
                     print self.name, host +": " + self.nagios_cgi_url + "/main.php?"+ cgi_data
            
             # running remote cgi command
-            self.FetchURL(self.nagios_cgi_url + "/main.php", giveback="raw", cgi_data=cgi_data)      
+            self.FetchURL(self.nagios_cgi_url + "/main.php", giveback="raw", cgi_data=cgi_data)[0]     
         except:
-            import traceback
-            traceback.print_exc(file=sys.stdout)
+            self.Error(sys.exc_info())
 
         
     def Hook(self):

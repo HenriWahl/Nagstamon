@@ -82,7 +82,7 @@ class RefreshLoopOneServer(threading.Thread):
                     self.server.status = "Refreshing"
                     gobject.idle_add(self.output.popwin.UpdateStatus, self.server)
                     # get current status
-                    server_status = self.server.GetStatus()
+                    server_status = self.server.GetStatus()[0]
     
                     # debug
                     if str(self.conf.debug_mode) == "True":
@@ -184,8 +184,7 @@ class Recheck(threading.Thread):
         try:
             self.server.set_recheck(self)
         except:
-            import sys, traceback
-            traceback.print_exc(file=sys.stdout)
+            self.server.Error(sys.exc_info())
             pass
                
         
@@ -263,9 +262,7 @@ class RecheckAll(threading.Thread):
                 gc.collect()
                                
             except:
-                RecheckingAll = False
-                traceback.print_exc(file=sys.stdout)
-           
+                RecheckingAll = False          
         else:
             # debug
             if str(self.conf.debug_mode) == "True":
@@ -323,7 +320,7 @@ class CheckForNewVersion(threading.Thread):
         
         # debug
         if str(self.output.conf.debug_mode) == "True":
-           print "Checking for new version..."
+            print "Checking for new version..."
         
         for s in self.servers.values():
             # if connecton of a server is not yet used do it now
@@ -331,11 +328,11 @@ class CheckForNewVersion(threading.Thread):
                 # set the flag to lock that connection
                 s.CheckingForNewVersion = True
                 # remove newline
-                version = s.FetchURL("http://nagstamon.sourceforge.net/latest_version", giveback="raw").split("\n")[0]
+                version = s.FetchURL("http://nagstamon.sourceforge.net/latest_version", giveback="raw")[0].split("\n")[0]
                 
                 # debug
                 if str(self.output.conf.debug_mode) == "True":
-                   print "Latest version from sourceforge.net:", version
+                    print "Latest version from sourceforge.net:", version
                 
                 # if we got a result notify user
                 if version != "ERROR":
@@ -633,14 +630,7 @@ def MD5ify(string):
     makes something md5y of a given username or password for Centreon web interface access
     """
     return hashlib.md5(string).hexdigest()
-    
-
-def Error(error):
-    """
-    Handle errors somehow - print them or later log them into not yet existing log file
-    """
-    return "ERROR", traceback.format_exception_only(error[0], error[1])[0]
-    
+        
 
 # <IMPORT>
 # Borrowed from http://pipe.scs.fsu.edu/PostHandler/MultipartPostHandler.py
