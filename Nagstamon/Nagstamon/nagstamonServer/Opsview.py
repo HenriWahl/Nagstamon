@@ -58,8 +58,8 @@ class OpsviewServer(GenericServer):
         # the API seems not to let hosts information directly, we hope to get it from service informations
         try:
             opsapiurl = self.nagios_url + "/api/status/service?state=1&state=2&state=3"
-            xobj = self.FetchURL(opsapiurl, giveback="opsxml")[0]
-    
+            xobj, error = self.FetchURL(opsapiurl, giveback="opsxml")[0:2]
+            if xobj == "ERROR": return [xobj, error]
             for host in xobj.data.getchildren()[:-1]:
                 # host
                 hostdict = dict(host.items())
@@ -100,7 +100,7 @@ class OpsviewServer(GenericServer):
             return self.Error(sys.exc_info())
         
         #dummy return in case all is OK
-        return [True]
+        return [True, ""]
 
         
     def open_tree_view(self, host, service):

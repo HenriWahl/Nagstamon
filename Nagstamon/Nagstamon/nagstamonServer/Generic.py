@@ -100,6 +100,7 @@ class GenericServer(object):
         self.criticals = 0
         self.warnings = 0
         self.status = ""
+        self.status_description = ""
         self.Cookie = None
         # needed for looping server thread
         self.count = 0
@@ -312,8 +313,8 @@ class GenericServer(object):
         # unfortunately the hosts status page has a different structure so
         # hosts must be analyzed separately
         try:
-            htobj = self.FetchURL(nagcgiurl_hosts)[0]
-
+            htobj, error = self.FetchURL(nagcgiurl_hosts)[0:2]
+            if error == "ERROR": return [htobj, error]
             # workaround for Nagios < 2.7 which has an <EMBED> in its output
             # put a copy of a part of htobj into table to be able to delete htobj
             try:
@@ -371,8 +372,8 @@ class GenericServer(object):
 
         # services
         try:
-            htobj = self.FetchURL(nagcgiurl_services)[0]
-
+            htobj, error = self.FetchURL(nagcgiurl_services)[0:2]
+            if error == "ERROR": return [htobj, error]
             # put a copy of a part of htobj into table to be able to delete htobj
             table = htobj.body.table[self.HTML_BODY_TABLE_INDEX]
             
@@ -437,8 +438,8 @@ class GenericServer(object):
        
          # hosts which are in scheduled downtime
         try:
-            htobj = self.FetchURL(nagcgiurl_hosts_in_maintenance)[0]
-           
+            htobj, error = self.FetchURL(nagcgiurl_hosts_in_maintenance)[0:2]
+            if error == "ERROR": return [htobj, error]
             # workaround for Nagios < 2.7 which has an <EMBED> in its output
             try:
                 table = htobj.body.table[self.HTML_BODY_TABLE_INDEX]
@@ -473,7 +474,8 @@ class GenericServer(object):
         
         # hosts which are acknowledged
         try:
-            htobj = self.FetchURL(nagcgiurl_hosts_acknowledged)[0]
+            htobj, error = self.FetchURL(nagcgiurl_hosts_acknowledged)[0:2]
+            if error == "ERROR": return [htobj, error]
             # workaround for Nagios < 2.7 which has an <EMBED> in its output
             try:
                 table = htobj.body.table[self.HTML_BODY_TABLE_INDEX]
@@ -510,7 +512,7 @@ class GenericServer(object):
         del nagitems
         
         #dummy return in case all is OK
-        return [True]
+        return [True, ""]
         
         
     def GetStatus(self):
@@ -528,11 +530,12 @@ class GenericServer(object):
             # dummy filtered items
             self.nagitems_filtered = {"services":{"CRITICAL":[], "WARNING":[], "UNKNOWN":[]}, "hosts":{"DOWN":[], "UNREACHABLE":[]}}
             self.isChecking = False          
-            return [True]     
+            return [True, ""]     
 
-        # some filtering is already done by the server specific _get_status() 
-        if self._get_status()[0] == "ERROR":
-            return self.Error(sys.exc_info())
+        # some filtering is already done by the server specific _get_status()
+        status, status_description = self._get_status()
+        if status == "ERROR":
+            return [status, status_description]
 
         # this part has been before in GUI.RefreshDisplay() - wrong place, here it needs to be reset
         self.nagitems_filtered = {"services":{"CRITICAL":[], "WARNING":[], "UNKNOWN":[]}, "hosts":{"DOWN":[], "UNREACHABLE":[]}}
@@ -655,7 +658,7 @@ class GenericServer(object):
         self.isChecking = False
         
         # return True if all worked well    
-        return [True]
+        return [True, ""]
     
     
     def FetchURL(self, url, giveback="obj", cgi_data=None, remove_tags=["link", "br", "img", "hr", "script", "th", "form", "div", "p"]):
@@ -719,7 +722,7 @@ class GenericServer(object):
                 urlcontent = urllib2.urlopen(self.nagios_url + "/login", logindata)
                 
             except:
-                self.Error(sys.exc_info())
+                pass
                 
         # if something goes wrong with accessing the URL it can be caught
         try:
@@ -758,13 +761,13 @@ class GenericServer(object):
             
             # give back pure HTML or XML in case giveback is "raw"
             if giveback == "raw":
-                return [urlcontent.read()]
+                return [urlcontent.read(), ""]
             
             # give back pure nothing if giveback is "nothing" - useful for POST requests
             if giveback == "nothing":
                 # do some cleanup
                 del passman, auth_handler, digest_handler, urlcontent
-                return [None] 
+                return [True, ""] 
             
             # give back lxml-objectified data
             if giveback == "obj":
@@ -799,7 +802,7 @@ class GenericServer(object):
                 del passman, auth_handler, digest_handler, urlcontent, html, prettyhtml
         
                 # give back HTML object from Nagios webseite
-                return [htobj]
+                return [htobj, ""]
                 
             elif self.type == "Opsview" and giveback == "opsxml":
                 # objectify the xml and give it back after some cleanup
@@ -807,7 +810,7 @@ class GenericServer(object):
                 xmlpretty = lxml.etree.tostring(xml, pretty_print=True)
                 xmlobj = lxml.objectify.fromstring(xmlpretty)
                 del passman, auth_handler, urlcontent, xml, xmlpretty
-                return [xmlobj]
+                return [xmlobj, ""]
            
         except:
             # do some cleanup

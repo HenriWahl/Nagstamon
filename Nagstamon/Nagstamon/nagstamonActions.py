@@ -82,8 +82,12 @@ class RefreshLoopOneServer(threading.Thread):
                     self.server.status = "Refreshing"
                     gobject.idle_add(self.output.popwin.UpdateStatus, self.server)
                     # get current status
-                    server_status = self.server.GetStatus()[0]
-    
+                    server_status = self.server.GetStatus()
+                    # GTK does not like tag brackets < and >, so clean them out from description
+                    server_status[1] = server_status[1].replace("<", "").replace(">", "")
+                    
+                    print self.name, server_status
+                    
                     # debug
                     if str(self.conf.debug_mode) == "True":
                         print self.server.name, ": server return value :", server_status 
@@ -95,6 +99,8 @@ class RefreshLoopOneServer(threading.Thread):
                             self.server.status = "ERROR"
                         else:
                             self.server.status = "ERR" 
+                        # give server status description for future usage    
+                        self.server.status_description = server_status[1]
                         gobject.idle_add(self.output.popwin.UpdateStatus, self.server)
                         # tell gobject to care about GUI stuff - refresh display status
                         # use a flag to prevent all threads at once to write to statusbar label in case

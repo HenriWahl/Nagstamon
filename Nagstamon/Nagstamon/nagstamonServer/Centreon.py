@@ -158,10 +158,11 @@ class CentreonServer(GenericServer):
             self.Cookie = cookielib.CookieJar()    
             self.FetchURL(self.nagios_cgi_url + "/index.php?" + urllib.urlencode({"p":1, "autologin":1, "useralias":self.MD5_username, "password":self.MD5_password}), giveback="raw")[0]
             sid = self.Cookie._cookies.values()[0].values()[0]["PHPSESSID"].value
+            print self.name, sid
             return sid
         except:
-            self.Error(sys.exc_info())
-            return None
+            return self.Error(sys.exc_info())
+            #return None
         
         
     def _get_host_id(self, host):
@@ -255,8 +256,11 @@ class CentreonServer(GenericServer):
         # hosts - mostly the down ones
         # unfortunately the hosts status page has a different structure so
         # hosts must be analyzed separately
-        try:
-            raw = self.FetchURL(nagcgiurl_hosts, giveback="raw")[0]    
+        try:           
+            raw, error = self.FetchURL(nagcgiurl_hosts, giveback="raw")[0:2]
+
+            if raw == "ERROR": return [raw, error]
+
             htobj = lxml.objectify.fromstring(raw)
             # in case there are no children session id is invalid
             if htobj.getchildren() == []:
@@ -264,7 +268,8 @@ class CentreonServer(GenericServer):
                     print self.name, "bad session ID, retrieving new one..." 
                 # try again...
                 self.SID = self._get_sid()
-                raw = self.FetchURL(nagcgiurl_hosts, giveback="raw")[0]                    
+                raw, error = self.FetchURL(nagcgiurl_hosts, giveback="raw")[0:2]
+                if raw == "ERROR": return [raw, error]
                 htobj = lxml.objectify.fromstring(raw)
                 time.sleep(1)
                  
@@ -322,17 +327,19 @@ class CentreonServer(GenericServer):
                                 self.new_hosts[new_host].attempt = n["attempt"]
                                 self.new_hosts[new_host].status_information= n["status_information"]
                     except:
-                        self.Error(sys.exc_info())
+                        # set checking flag back to False
+                        self.isChecking = False
+                        return self.Error(sys.exc_info())
             
         except:
-            self.Error(sys.exc_info())
             # set checking flag back to False
             self.isChecking = False
-            return "ERROR"
+            return self.Error(sys.exc_info())
 
         # services
         try:                       
-            raw = self.FetchURL(nagcgiurl_services, giveback="raw")[0]
+            raw, error = self.FetchURL(nagcgiurl_services, giveback="raw")[0:2]
+            if raw == "ERROR": return [raw, error]
             htobj = lxml.objectify.fromstring(raw)     
             # in case there are no children session id is invalid
             if htobj.getchildren == []:
@@ -342,7 +349,8 @@ class CentreonServer(GenericServer):
                 # try again...
                 self.SID = self._get_sid()
                 raw = self.FetchURL(nagcgiurl_services, giveback="raw")[0]                    
-                htobj = lxml.objectify.fromstring(raw)                        
+                if raw == "ERROR": return [raw, error]
+                htobj = lxml.objectify.fromstring(raw)                           
             
             if htobj.__dict__.has_key("l"):
                 for l in htobj.l:
@@ -408,22 +416,23 @@ class CentreonServer(GenericServer):
                                 self.new_hosts[n["host"]].services[new_service].attempt = n["attempt"]
                                 self.new_hosts[n["host"]].services[new_service].status_information = n["status_information"]
                     except:
-                        self.Error(sys.exc_info())
+                        # set checking flag back to False
+                        self.isChecking = False
+                        return self.Error(sys.exc_info())
                                 
             # do some cleanup
             del htobj
             
         except:
-            self.Error(sys.exc_info())
             # set checking flag back to False
             self.isChecking = False
-            return "ERROR"
+            return self.Error(sys.exc_info())
         
         # some cleanup
         del nagitems
         
         # return True if all worked well    
-        return [True]        
+        return [True, ""]        
         
 
     def _set_acknowledge(self, host, service, author, comment, sticky, notify, persistent, all_services=[]):

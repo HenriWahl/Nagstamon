@@ -201,7 +201,7 @@ class GUI(object):
             x,y = self.statusbar.HBox.size_request()
             self.statusbar.StatusBar.resize(x, y)
             
-        # connect events to actions
+        # connect events to actions                 host = self.miserable_server.GetHost(s
         # when talking about "systray" the Windows variant of upper left desktop corner
         # statusbar is meant synonymical
         # if pointer on systray do popup the long-summary-status-window aka popwin
@@ -278,7 +278,7 @@ class GUI(object):
                     unknowns += server.unknowns
                     criticals += server.criticals
                     warnings += server.warnings
-                    
+
                     # if there is no trouble...
                     if len(server.nagitems_filtered["hosts"]["DOWN"]) == 0 and \
                         len(server.nagitems_filtered["hosts"]["UNREACHABLE"]) == 0 and \
@@ -365,13 +365,13 @@ class GUI(object):
             # if all is OK there is no need to pop up popwin so set self.showPopwin to False
             self.popwin.showPopwin = False
             self.popwin.Close()
-            #self.status_ok = True
+            self.status_ok = True
             # set systray icon to green aka OK
             self.statusbar.SysTray.set_from_file(self.Resources + "/nagstamon_green" + self.BitmapSuffix)
             # switch notification off
             self.NotificationOff()
-        ###else:
-        ###    self.status_ok = False
+        else:
+            self.status_ok = False
             
             # put text for label together
 
@@ -407,7 +407,6 @@ class GUI(object):
                 self.statusbar.Resize()
                 
             # choose icon for systray  - the worst case decides the shown color
-            color = "green" 
             if warnings > 0: color = "yellow"
             if unknowns > 0: color = "orange"
             if criticals > 0: color = "red"
@@ -1232,8 +1231,7 @@ class Popwin(gtk.Window):
         # otherwise there is no sense in showing an empty popwin
         # for some reason the painting will lag behind popping up popwin if not getting resized twice -
         # seems like a strange workaround
-        #if self.showPopwin and not self.output.status_ok:
-        if self.showPopwin:
+        if self.showPopwin and not self.output.status_ok:
             # position and resize...
             self.Resize()
             # ...show
@@ -1526,7 +1524,7 @@ class Popwin(gtk.Window):
         """
         # status field in server vbox in popwin    
         try:
-            self.ServerVBoxes[server.name].LabelStatus.set_markup('<span>Status: ' + server.status + '</span>')
+            self.ServerVBoxes[server.name].LabelStatus.set_markup('<span>Status: ' + server.status + ' ' + server.status_description + '</span>')
         except:
             pass
     
@@ -1599,7 +1597,7 @@ class ServerVBox(gtk.VBox):
         
         self.AlignmentMonitor = gtk.Alignment(xalign=0, xscale=0.05, yalign=0)
         self.AlignmentMonitor.add(self.HBoxMonitor)
-        self.AlignmentStatus = gtk.Alignment(xalign=0.8, xscale=0.05, yalign=0.5)
+        self.AlignmentStatus = gtk.Alignment(xalign=0, xscale=0.05, yalign=0.5)
         self.AlignmentStatus.add(self.HBoxStatus)
 
         self.HBox.add(self.AlignmentMonitor)
