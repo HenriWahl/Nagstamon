@@ -162,4 +162,16 @@ class GenericService(GenericObject):
     
     def get_service_name(self):
         return self.name 
+    
+
+class FetchURLResult(object):
+    """
+    a given back object might be easier enriched with ERROR information than a string or worse, a list
+    """
+    result = ""
+    is_failed = False
+    error_message = ""
+    
+    def __init__(self, **kwds):
+        print kwds
 

@@ -802,7 +802,8 @@ class GenericServer(object):
                 del passman, auth_handler, digest_handler, urlcontent, html, prettyhtml
         
                 # give back HTML object from Nagios webseite
-                return [htobj, ""]
+                
+                return FetchURLResult(result=copy.copy(htobj), error_message="")
                 
             elif self.type == "Opsview" and giveback == "opsxml":
                 # objectify the xml and give it back after some cleanup
@@ -810,12 +811,13 @@ class GenericServer(object):
                 xmlpretty = lxml.etree.tostring(xml, pretty_print=True)
                 xmlobj = lxml.objectify.fromstring(xmlpretty)
                 del passman, auth_handler, urlcontent, xml, xmlpretty
-                return [xmlobj, ""]
+                return FetchURLResult(result=copy.copy(xmlobj), error_message="")
            
         except:
             # do some cleanup
             del passman, auth_handler, digest_handler
             return self.Error(sys.exc_info())
+        
             
         
         # in case the wrong giveback type has been specified return error
@@ -894,3 +896,4 @@ class GenericServer(object):
         """
         print datetime.datetime.now(), self.name + ": ", traceback.print_exception(error[0], error[1], error[2], 5, file=sys.stdout)
         return ["ERROR", traceback.format_exception_only(error[0], error[1])[0]]
+    
