@@ -1,7 +1,7 @@
 # encoding: utf-8
 
 from Generic import GenericServer
-
+import urllib
 
 class IcingaServer(GenericServer):
     """
@@ -15,7 +15,8 @@ class IcingaServer(GenericServer):
         """
         something changed in html layout so we need to get time somehow differently than in Nagios
         """
-        html = self.FetchURL(self.nagios_cgi_url + "/cmd.cgi?" + urllib.urlencode({"cmd_typ":"55", "host":host}), giveback="raw")
+        result = self.FetchURL(self.nagios_cgi_url + "/cmd.cgi?" + urllib.urlencode({"cmd_typ":"55", "host":host}), giveback="raw")
+        html = result.result
         start_time = html.split("NAME='start_time' VALUE='")[1].split("'")[0]
         end_time = html.split("NAME='end_time' VALUE='")[1].split("'")[0]
         # give values back as tuple

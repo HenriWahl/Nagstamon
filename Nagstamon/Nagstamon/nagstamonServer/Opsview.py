@@ -25,7 +25,8 @@ class OpsviewServer(GenericServer):
             # service
             cgi_data = urllib.urlencode({"cmd_typ":"56", "host":host, "service":service})
         url = self.nagios_cgi_url + "/cmd.cgi"
-        html = self.FetchURL(url, giveback="raw", cgi_data=cgi_data)[0]
+        result = self.FetchURL(url, giveback="raw", cgi_data=cgi_data)
+        html = result.result
         # which opsview form action to call
         action = html.split('" enctype="multipart/form-data">')[0].split('action="')[-1]
         # this time cgi_data does not get encoded because it will be submitted via multipart
@@ -39,7 +40,8 @@ class OpsviewServer(GenericServer):
         get start and end time for downtime from Opsview server
         """
         try:
-            html = self.FetchURL(self.nagios_cgi_url + "/cmd.cgi?" + urllib.urlencode({"cmd_typ":"55", "host":host}), giveback="raw")[0]
+            result = self.FetchURL(self.nagios_cgi_url + "/cmd.cgi?" + urllib.urlencode({"cmd_typ":"55", "host":host}), giveback="raw")
+            html = result.result
             start_time = html.split('name="starttime" value="')[1].split('"')[0]
             end_time = html.split('name="endtime" value="')[1].split('"')[0]        
             # give values back as tuple
@@ -58,7 +60,8 @@ class OpsviewServer(GenericServer):
         # the API seems not to let hosts information directly, we hope to get it from service informations
         try:
             opsapiurl = self.nagios_url + "/api/status/service?state=1&state=2&state=3"
-            xobj, error = self.FetchURL(opsapiurl, giveback="opsxml")[0:2]
+            result = self.FetchURL(opsapiurl, giveback="opsxml")
+            xobj, error = result.result, result.error
             if xobj == "ERROR": return [xobj, error]
             for host in xobj.data.getchildren()[:-1]:
                 # host

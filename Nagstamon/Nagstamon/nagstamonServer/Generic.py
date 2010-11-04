@@ -119,7 +119,8 @@ class GenericServer(object):
         
     def _set_recheck(self, host, service):
         # get start time from Nagios as HTML to use same timezone setting like the locally installed Nagios
-        html = self.FetchURL(self.nagios_cgi_url + "/cmd.cgi?" + urllib.urlencode({"cmd_typ":"96", "host":host}), giveback="raw")[0]
+        result = self.FetchURL(self.nagios_cgi_url + "/cmd.cgi?" + urllib.urlencode({"cmd_typ":"96", "host":host}), giveback="raw")
+        html = result.result
         start_time = html.split("NAME='start_time' VALUE='")[1].split("'></b></td></tr>")[0]
 
         # decision about host or service - they have different URLs
@@ -205,7 +206,8 @@ class GenericServer(object):
                                      ("minutes", minutes),\
                                      ("btnSubmit","Commit")])        
         # running remote cgi command
-        raw = self.FetchURL(self.nagios_cgi_url + "/cmd.cgi", giveback="raw", cgi_data=cgi_data)        
+        result = self.FetchURL(self.nagios_cgi_url + "/cmd.cgi", giveback="raw", cgi_data=cgi_data)
+        raw = result.result
         
     
     def get_start_end(self, host):
@@ -214,7 +216,8 @@ class GenericServer(object):
         directly from web interface
         """
         try:
-            html = self.FetchURL(self.nagios_cgi_url + "/cmd.cgi?" + urllib.urlencode({"cmd_typ":"55", "host":host}), giveback="raw")[0]
+            result = self.FetchURL(self.nagios_cgi_url + "/cmd.cgi?" + urllib.urlencode({"cmd_typ":"55", "host":host}), giveback="raw")
+            html = result.result
             start_time = html.split("NAME='start_time' VALUE='")[1].split("'></b></td></tr>")[0]
             end_time = html.split("NAME='end_time' VALUE='")[1].split("'></b></td></tr>")[0]
             # give values back as tuple
@@ -313,8 +316,9 @@ class GenericServer(object):
         # unfortunately the hosts status page has a different structure so
         # hosts must be analyzed separately
         try:
-            htobj, error = self.FetchURL(nagcgiurl_hosts)[0:2]
-            if error == "ERROR": return [htobj, error]
+            result = self.FetchURL(nagcgiurl_hosts)
+            htobj, error = result.result, result.error
+            if error != "": return [htobj, error]
             # workaround for Nagios < 2.7 which has an <EMBED> in its output
             # put a copy of a part of htobj into table to be able to delete htobj
             try:
@@ -372,8 +376,9 @@ class GenericServer(object):
 
         # services
         try:
-            htobj, error = self.FetchURL(nagcgiurl_services)[0:2]
-            if error == "ERROR": return [htobj, error]
+            result = self.FetchURL(nagcgiurl_services)
+            htobj, error = result.result, result.error          
+            if error != "": return [htobj, error]
             # put a copy of a part of htobj into table to be able to delete htobj
             table = htobj.body.table[self.HTML_BODY_TABLE_INDEX]
             
@@ -392,7 +397,8 @@ class GenericServer(object):
                         # its hostname from the previuos item - one reason to keep "nagitems"
                         try:
                             n["host"] = str(table.tr[i].td[0].table.tr.td.table.tr.td.a.text)
-                        except:
+                        except Exception, err:
+                            #print err
                             n["host"] = str(nagitems["services"][len(nagitems["services"])-1]["host"])
                         # service
                         n["service"] = str(table.tr[i].td[1].table.tr.td.table.tr.td.a.text)
@@ -438,8 +444,9 @@ class GenericServer(object):
        
          # hosts which are in scheduled downtime
         try:
-            htobj, error = self.FetchURL(nagcgiurl_hosts_in_maintenance)[0:2]
-            if error == "ERROR": return [htobj, error]
+            result = self.FetchURL(nagcgiurl_hosts_in_maintenance)
+            htobj, error = result.result, result.error
+            if error != "": return [htobj, error]
             # workaround for Nagios < 2.7 which has an <EMBED> in its output
             try:
                 table = htobj.body.table[self.HTML_BODY_TABLE_INDEX]
@@ -474,8 +481,9 @@ class GenericServer(object):
         
         # hosts which are acknowledged
         try:
-            htobj, error = self.FetchURL(nagcgiurl_hosts_acknowledged)[0:2]
-            if error == "ERROR": return [htobj, error]
+            result = self.FetchURL(nagcgiurl_hosts_acknowledged)
+            htobj, error = result.result, result.error
+            if error != "": return [htobj, error]
             # workaround for Nagios < 2.7 which has an <EMBED> in its output
             try:
                 table = htobj.body.table[self.HTML_BODY_TABLE_INDEX]
@@ -757,17 +765,18 @@ class GenericServer(object):
                     # use opener - if cgi_data is not empty urllib uses a POST request
                     urlcontent = urllib2.urlopen(url, cgi_data)
             except:
-                return self.Error(sys.exc_info())
+                result, error = self.Error(sys.exc_info())
+                return Result(result=result, error=error)
             
             # give back pure HTML or XML in case giveback is "raw"
             if giveback == "raw":
-                return [urlcontent.read(), ""]
+                return Result(result=urlcontent.read())
             
             # give back pure nothing if giveback is "nothing" - useful for POST requests
             if giveback == "nothing":
                 # do some cleanup
                 del passman, auth_handler, digest_handler, urlcontent
-                return [True, ""] 
+                return Result() 
             
             # give back lxml-objectified data
             if giveback == "obj":
@@ -803,7 +812,7 @@ class GenericServer(object):
         
                 # give back HTML object from Nagios webseite
                 
-                return FetchURLResult(result=copy.copy(htobj), error_message="")
+                return Result(result=htobj)
                 
             elif self.type == "Opsview" and giveback == "opsxml":
                 # objectify the xml and give it back after some cleanup
@@ -811,13 +820,13 @@ class GenericServer(object):
                 xmlpretty = lxml.etree.tostring(xml, pretty_print=True)
                 xmlobj = lxml.objectify.fromstring(xmlpretty)
                 del passman, auth_handler, urlcontent, xml, xmlpretty
-                return FetchURLResult(result=copy.copy(xmlobj), error_message="")
+                return Result(result=xmlobj)
            
         except:
             # do some cleanup
             del passman, auth_handler, digest_handler
-            return self.Error(sys.exc_info())
-        
+            result, error = self.Error(sys.exc_info())
+            return Result(result=result, error=error)      
             
         
         # in case the wrong giveback type has been specified return error
@@ -826,7 +835,8 @@ class GenericServer(object):
             del passman, auth_handler, digest_handler, urlcontent
         except:
             pass
-        return self.Error(sys.exc_info())
+        result, error = self.Error(sys.exc_info())
+        return Result(result=result, error=error)   
     
 
     def GetHost(self, host):
@@ -842,7 +852,8 @@ class GenericServer(object):
         nagcgiurl_host  = self.nagios_cgi_url + "/extinfo.cgi?type=1&host=" + host
         
         # get host info
-        htobj = self.FetchURL(nagcgiurl_host, giveback="obj", remove_tags=["link", "br", "img", "hr", "script", "th", "form", "p"])[0]
+        result = self.FetchURL(nagcgiurl_host, giveback="obj", remove_tags=["link", "br", "img", "hr", "script", "th", "form", "p"])
+        htobj = result.result
 
         try:
             # take ip from object path

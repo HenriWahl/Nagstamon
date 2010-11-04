@@ -86,12 +86,14 @@ class CentreonServer(GenericServer):
             cgi_data = urllib.urlencode({"p":"20305",\
                                          "o":"ah",\
                                          "host_name":host})
-            raw = self.FetchURL(self.nagios_cgi_url + "/main.php?" + cgi_data, giveback="raw")[0]
-            if not raw == "ERROR":
+            result = self.FetchURL(self.nagios_cgi_url + "/main.php?" + cgi_data, giveback="raw")
+            raw, error = result.result, result.error
+            if error == "":
                 # session id might have been invalid, so if necessary get a new one
                 if raw.find('name="start" type="text" value="') == -1:
                     self.SID = self._get_sid()
-                    raw = self.FetchURL(self.nagios_cgi_url + "/main.php?" + cgi_data, giveback="raw")[0]
+                    result = self.FetchURL(self.nagios_cgi_url + "/main.php?" + cgi_data, giveback="raw")
+                    raw, error = result.result, result.error
                 start_time = raw.split('name="start" type="text" value="')[1].split('"')[0]
                 end_time = raw.split('name="end" type="text" value="')[1].split('"')[0]
                 # give values back as tuple      
@@ -118,8 +120,9 @@ class CentreonServer(GenericServer):
                                     "p":20102,\
                                     "time":0})
         
-        raw = self.FetchURL(self.nagios_cgi_url + "/include/monitoring/status/Hosts/xml/hostXML.php?"\
-                              + cgi_data, giveback="raw")[0]
+        result = self.FetchURL(self.nagios_cgi_url + "/include/monitoring/status/Hosts/xml/hostXML.php?"\
+                              + cgi_data, giveback="raw")
+        raw = result.result
         htobj = lxml.objectify.fromstring(raw)
                
         if htobj.__dict__.has_key("l"):   
@@ -156,7 +159,7 @@ class CentreonServer(GenericServer):
         try:
             # why not get a new cookie with every new session id?    
             self.Cookie = cookielib.CookieJar()    
-            self.FetchURL(self.nagios_cgi_url + "/index.php?" + urllib.urlencode({"p":1, "autologin":1, "useralias":self.MD5_username, "password":self.MD5_password}), giveback="raw")[0]
+            self.FetchURL(self.nagios_cgi_url + "/index.php?" + urllib.urlencode({"p":1, "autologin":1, "useralias":self.MD5_username, "password":self.MD5_password}), giveback="raw")
             sid = self.Cookie._cookies.values()[0].values()[0]["PHPSESSID"].value
             print self.name, sid
             return sid
@@ -173,9 +176,10 @@ class CentreonServer(GenericServer):
                                     "o":"hd", "host_name":host,\
                                     "useralias":self.MD5_username,\
                                     "password":self.MD5_password})
-        raw = self.FetchURL(self.nagios_cgi_url + "/main.php?" + cgi_data, giveback="raw")[0]
+        result = self.FetchURL(self.nagios_cgi_url + "/main.php?" + cgi_data, giveback="raw")
+        raw, error = result.result, result.error
 
-        if not raw == "ERROR":
+        if error == "":
             host_id = raw.partition("var host_id = '")[2].partition("'")[0]
             # if for some reason host_id could not be retrieved because
             # we get a login page clear cookies and SID and try again
@@ -183,7 +187,8 @@ class CentreonServer(GenericServer):
                 if str(self.conf.debug_mode) == "True":
                     print self.name, ":", host, "ID could not be retrieved, trying again..."                  
                 self.SID = self._get_sid()
-                raw = self.FetchURL(self.nagios_cgi_url + "/main.php?" + cgi_data, giveback="raw")[0]      
+                result = self.FetchURL(self.nagios_cgi_url + "/main.php?" + cgi_data, giveback="raw")
+                raw, error = result.result, result.error
                 host_id = raw.partition("var host_id= '")[2].partition("'")[0]
 
         else:
@@ -209,18 +214,20 @@ class CentreonServer(GenericServer):
                                      "host_name":host,\
                                      "service_description":service,\
                                      "o":"as"})
-        raw = self.FetchURL(self.nagios_cgi_url + "/main.php?"+ cgi_data, giveback="raw")[0]
+        result = self.FetchURL(self.nagios_cgi_url + "/main.php?"+ cgi_data, giveback="raw")
+        raw, error = result.result, result.error
         
         # ids to give back, should contain to items, a host and a service id
         ids = []
         
-        if not raw == "ERROR":
+        if error == "":
             if raw.find('selected="selected"') == -1:
                 # looks there was this old SID problem again - get a new one 
                 if str(self.conf.debug_mode) == "True":
                     print self.name, ":", host, service, "IDs could not be retrieved, trying again..." 
                 self.SID = self._get_sid()
-                raw = self.FetchURL(self.nagios_cgi_url + "/main.php?"+ cgi_data, giveback="raw")[0]
+                result = self.FetchURL(self.nagios_cgi_url + "/main.php?"+ cgi_data, giveback="raw")
+                raw, error = result.result, result.error
                 
             # search ids
             for l in raw.splitlines():
@@ -257,9 +264,10 @@ class CentreonServer(GenericServer):
         # unfortunately the hosts status page has a different structure so
         # hosts must be analyzed separately
         try:           
-            raw, error = self.FetchURL(nagcgiurl_hosts, giveback="raw")[0:2]
-
-            if raw == "ERROR": return [raw, error]
+            result = self.FetchURL(nagcgiurl_hosts, giveback="raw")
+            raw, error = result.result, result.error
+            
+            if error != "": return [raw, error]
 
             htobj = lxml.objectify.fromstring(raw)
             # in case there are no children session id is invalid
@@ -268,8 +276,9 @@ class CentreonServer(GenericServer):
                     print self.name, "bad session ID, retrieving new one..." 
                 # try again...
                 self.SID = self._get_sid()
-                raw, error = self.FetchURL(nagcgiurl_hosts, giveback="raw")[0:2]
-                if raw == "ERROR": return [raw, error]
+                result = self.FetchURL(nagcgiurl_hosts, giveback="raw")
+                raw, error = result.result, result.error
+                if error != "": return [raw, error]
                 htobj = lxml.objectify.fromstring(raw)
                 time.sleep(1)
                  
@@ -337,9 +346,10 @@ class CentreonServer(GenericServer):
             return self.Error(sys.exc_info())
 
         # services
-        try:                       
-            raw, error = self.FetchURL(nagcgiurl_services, giveback="raw")[0:2]
-            if raw == "ERROR": return [raw, error]
+        try:
+            result = self.FetchURL(nagcgiurl_services, giveback="raw")
+            raw, error = result.result, result.error
+            if error != "": return [raw, error]
             htobj = lxml.objectify.fromstring(raw)     
             # in case there are no children session id is invalid
             if htobj.getchildren == []:
@@ -348,8 +358,11 @@ class CentreonServer(GenericServer):
                     print self.name, "bad session ID, retrieving new one..." 
                 # try again...
                 self.SID = self._get_sid()
-                raw = self.FetchURL(nagcgiurl_services, giveback="raw")[0]                    
-                if raw == "ERROR": return [raw, error]
+                result = self.FetchURL(nagcgiurl_services, giveback="raw")  
+                raw, error = result.result, result.error               
+                
+                if error != "": return [raw, error]
+
                 htobj = lxml.objectify.fromstring(raw)                           
             
             if htobj.__dict__.has_key("l"):
@@ -448,7 +461,7 @@ class CentreonServer(GenericServer):
                     print self.name, host +": " + self.nagios_cgi_url + "/main.php?"+ cgi_data     
                 
                 # running remote cgi command, also possible with GET method     
-                self.FetchURL(self.nagios_cgi_url + "/main.php?" + cgi_data, giveback="raw")[0]       
+                self.FetchURL(self.nagios_cgi_url + "/main.php?" + cgi_data, giveback="raw")      
             else:
                 # service(s) @ host
                 # if all_services is empty only one service has to be checked - the one clicked
@@ -471,7 +484,7 @@ class CentreonServer(GenericServer):
                         
                     # running remote cgi command with GET method, for some strange reason only working if
                     # giveback="raw"
-                    self.FetchURL(self.nagios_cgi_url + "/main.php?" + cgi_data, giveback="raw")[0]
+                    self.FetchURL(self.nagios_cgi_url + "/main.php?" + cgi_data, giveback="raw")
         except:
             self.Error(sys.exc_info())
             
@@ -500,7 +513,7 @@ class CentreonServer(GenericServer):
                 url = self.nagios_cgi_url + "/include/monitoring/objectDetails/xml/serviceSendCommand.php?" + cgi_data
 
             # execute POST request
-            self.FetchURL(url, giveback="raw")[0]
+            self.FetchURL(url, giveback="raw")
         except:
             self.Error(sys.exc_info())
        
@@ -544,7 +557,7 @@ class CentreonServer(GenericServer):
                     print self.name, host +": " + self.nagios_cgi_url + "/main.php?"+ cgi_data
            
             # running remote cgi command
-            self.FetchURL(self.nagios_cgi_url + "/main.php", giveback="raw", cgi_data=cgi_data)[0]     
+            self.FetchURL(self.nagios_cgi_url + "/main.php", giveback="raw", cgi_data=cgi_data)   
         except:
             self.Error(sys.exc_info())
 
