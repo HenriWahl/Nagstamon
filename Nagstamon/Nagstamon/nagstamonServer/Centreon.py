@@ -26,7 +26,7 @@ except:
     pass
 
 import nagstamonActions
-from nagstamonObjects import GenericHost, GenericService
+from nagstamonObjects import *
 from Generic import GenericServer
 
 
@@ -148,7 +148,8 @@ class CentreonServer(GenericServer):
             print "Address of %s:" % (host), address
         
         # give back host or ip
-        return [address]
+        #return [address]
+        return Result(result=address)
         
             
     def _get_sid(self):
@@ -161,11 +162,13 @@ class CentreonServer(GenericServer):
             self.Cookie = cookielib.CookieJar()    
             self.FetchURL(self.nagios_cgi_url + "/index.php?" + urllib.urlencode({"p":1, "autologin":1, "useralias":self.MD5_username, "password":self.MD5_password}), giveback="raw")
             sid = self.Cookie._cookies.values()[0].values()[0]["PHPSESSID"].value
+            #debug
             print self.name, sid
-            return sid
+            return Result(result=sid)
         except:
-            return self.Error(sys.exc_info())
-            #return None
+            #return self.Error(sys.exc_info())
+            result, error = self.Error(sys.exc_info())
+            return Result(result=result, error=error)
         
         
     def _get_host_id(self, host):
@@ -202,6 +205,7 @@ class CentreonServer(GenericServer):
             else:
                 return ""
         except:
+            #debug
             print "host_id:", host_id
             return ""
         
@@ -267,7 +271,7 @@ class CentreonServer(GenericServer):
             result = self.FetchURL(nagcgiurl_hosts, giveback="raw")
             raw, error = result.result, result.error
             
-            if error != "": return [raw, error]
+            if error != "": return Result(result=raw, error=error)
 
             htobj = lxml.objectify.fromstring(raw)
             # in case there are no children session id is invalid
@@ -278,7 +282,7 @@ class CentreonServer(GenericServer):
                 self.SID = self._get_sid()
                 result = self.FetchURL(nagcgiurl_hosts, giveback="raw")
                 raw, error = result.result, result.error
-                if error != "": return [raw, error]
+                if error != "": return Result(result=raw, error=error)
                 htobj = lxml.objectify.fromstring(raw)
                 time.sleep(1)
                  
@@ -338,18 +342,22 @@ class CentreonServer(GenericServer):
                     except:
                         # set checking flag back to False
                         self.isChecking = False
-                        return self.Error(sys.exc_info())
+                        #return self.Error(sys.exc_info())
+                        result, error = self.Error(sys.exc_info())
+                        return Result(result=result, error=error)
             
         except:
             # set checking flag back to False
             self.isChecking = False
-            return self.Error(sys.exc_info())
-
+            #return self.Error(sys.exc_info())
+            result, error = self.Error(sys.exc_info())
+            return Result(result=result, error=error)
+      
         # services
         try:
             result = self.FetchURL(nagcgiurl_services, giveback="raw")
             raw, error = result.result, result.error
-            if error != "": return [raw, error]
+            if error != "": return Result(result=raw, error=error)
             htobj = lxml.objectify.fromstring(raw)     
             # in case there are no children session id is invalid
             if htobj.getchildren == []:
@@ -361,7 +369,7 @@ class CentreonServer(GenericServer):
                 result = self.FetchURL(nagcgiurl_services, giveback="raw")  
                 raw, error = result.result, result.error               
                 
-                if error != "": return [raw, error]
+                if error != "": return Result(result=raw, error=error)
 
                 htobj = lxml.objectify.fromstring(raw)                           
             
@@ -431,21 +439,25 @@ class CentreonServer(GenericServer):
                     except:
                         # set checking flag back to False
                         self.isChecking = False
-                        return self.Error(sys.exc_info())
-                                
+                        #return self.Error(sys.exc_info())
+                        result, error = self.Error(sys.exc_info())
+                        return Result(result=result, error=error)
+                                            
             # do some cleanup
             del htobj
             
         except:
             # set checking flag back to False
             self.isChecking = False
-            return self.Error(sys.exc_info())
+            #return self.Error(sys.exc_info())
+            result, error = self.Error(sys.exc_info())
+            return Result(result=result, error=error)
         
         # some cleanup
         del nagitems
         
         # return True if all worked well    
-        return [True, ""]        
+        return Result()        
         
 
     def _set_acknowledge(self, host, service, author, comment, sticky, notify, persistent, all_services=[]):

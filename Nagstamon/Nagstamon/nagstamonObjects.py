@@ -164,14 +164,14 @@ class GenericService(GenericObject):
         return self.name 
     
 
-class FetchURLResult(object):
+class Result(object):
     """
-    a given back object might be easier enriched with ERROR information than a string or worse, a list
+    multi purpose result object
     """
     result = ""
-    is_failed = False
-    error_message = ""
+    error = ""
     
     def __init__(self, **kwds):
-        print kwds
+        # add all keywords to object, every mode searchs inside for its favorite arguments/keywords
+        for k in kwds: self.__dict__[k] = kwds[k]
 

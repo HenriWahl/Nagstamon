@@ -318,7 +318,8 @@ class GenericServer(object):
         try:
             result = self.FetchURL(nagcgiurl_hosts)
             htobj, error = result.result, result.error
-            if error != "": return [htobj, error]
+            #if error != "": return [htobj, error]
+            if error != "": return Result(result=htobj, error=error)            
             # workaround for Nagios < 2.7 which has an <EMBED> in its output
             # put a copy of a part of htobj into table to be able to delete htobj
             try:
@@ -372,13 +373,16 @@ class GenericServer(object):
         except:
             # set checking flag back to False
             self.isChecking = False
-            return self.Error(sys.exc_info())
+            #return self.Error(sys.exc_info())
+            result, error = self.Error(sys.exc_info())
+            return Result(result=result, error=error)
 
         # services
         try:
             result = self.FetchURL(nagcgiurl_services)
             htobj, error = result.result, result.error          
-            if error != "": return [htobj, error]
+            #if error != "": return [htobj, error]
+            if error != "": return Result(result=htobj, error=error)
             # put a copy of a part of htobj into table to be able to delete htobj
             table = htobj.body.table[self.HTML_BODY_TABLE_INDEX]
             
@@ -440,13 +444,16 @@ class GenericServer(object):
         except:
             # set checking flag back to False
             self.isChecking = False
-            return self.Error(sys.exc_info())
+            #return self.Error(sys.exc_info())
+            result, error = self.Error(sys.exc_info())
+            return Result(result=result, error=error)
        
          # hosts which are in scheduled downtime
         try:
             result = self.FetchURL(nagcgiurl_hosts_in_maintenance)
             htobj, error = result.result, result.error
-            if error != "": return [htobj, error]
+            #if error != "": return [htobj, error]
+            if error != "": return Result(result=htobj, error=error)
             # workaround for Nagios < 2.7 which has an <EMBED> in its output
             try:
                 table = htobj.body.table[self.HTML_BODY_TABLE_INDEX]
@@ -477,13 +484,16 @@ class GenericServer(object):
         except:
             # set checking flag back to False
             self.isChecking = False
-            return self.Error(sys.exc_info())
+            #return self.Error(sys.exc_info())
+            result, error = self.Error(sys.exc_info())
+            return Result(result=result, error=error)
         
         # hosts which are acknowledged
         try:
             result = self.FetchURL(nagcgiurl_hosts_acknowledged)
             htobj, error = result.result, result.error
-            if error != "": return [htobj, error]
+            #if error != "": return [htobj, error]
+            if error != "": return Result(result=htobj, error=error)
             # workaround for Nagios < 2.7 which has an <EMBED> in its output
             try:
                 table = htobj.body.table[self.HTML_BODY_TABLE_INDEX]
@@ -514,13 +524,15 @@ class GenericServer(object):
         except:
             # set checking flag back to False
             self.isChecking = False
-            return self.Error(sys.exc_info())
+            #return self.Error(sys.exc_info())
+            result, error = self.Error(sys.exc_info())
+            return Result(result=result, error=error)
             
         # some cleanup
         del nagitems
         
         #dummy return in case all is OK
-        return [True, ""]
+        return Result()
         
         
     def GetStatus(self):
@@ -538,12 +550,12 @@ class GenericServer(object):
             # dummy filtered items
             self.nagitems_filtered = {"services":{"CRITICAL":[], "WARNING":[], "UNKNOWN":[]}, "hosts":{"DOWN":[], "UNREACHABLE":[]}}
             self.isChecking = False          
-            return [True, ""]     
+            return Result()    
 
         # some filtering is already done by the server specific _get_status()
-        status, status_description = self._get_status()
-        if status == "ERROR":
-            return [status, status_description]
+        status = self._get_status()
+        if status.error != "":
+            return Result(result=status.result, error=status.error)
 
         # this part has been before in GUI.RefreshDisplay() - wrong place, here it needs to be reset
         self.nagitems_filtered = {"services":{"CRITICAL":[], "WARNING":[], "UNKNOWN":[]}, "hosts":{"DOWN":[], "UNREACHABLE":[]}}
@@ -666,7 +678,7 @@ class GenericServer(object):
         self.isChecking = False
         
         # return True if all worked well    
-        return [True, ""]
+        return Result()
     
     
     def FetchURL(self, url, giveback="obj", cgi_data=None, remove_tags=["link", "br", "img", "hr", "script", "th", "form", "div", "p"]):
@@ -884,13 +896,17 @@ class GenericServer(object):
             else:
                 address = ip
         except:
-            return self.Error(sys.exc_info())
+            result, error = self.Error(sys.exc_info())
+            return Result(result=result, error=error)
+            #return self.Error(sys.exc_info())
          
         # do some cleanup
         del htobj    
 
         # give back host or ip
-        return [address]
+        #return [address]
+        return Result(result=address)
+
 
     
     def Hook(self):

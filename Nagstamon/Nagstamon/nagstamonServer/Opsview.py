@@ -6,7 +6,7 @@ import webbrowser
 import traceback
 
 import nagstamonActions
-from nagstamonObjects import GenericHost, GenericService
+from nagstamonObjects import *
 from Generic import GenericServer
 
 
@@ -62,7 +62,7 @@ class OpsviewServer(GenericServer):
             opsapiurl = self.nagios_url + "/api/status/service?state=1&state=2&state=3"
             result = self.FetchURL(opsapiurl, giveback="opsxml")
             xobj, error = result.result, result.error
-            if xobj == "ERROR": return [xobj, error]
+            if xobj == "ERROR": return Result(result=xobj, error=error)
             for host in xobj.data.getchildren()[:-1]:
                 # host
                 hostdict = dict(host.items())
@@ -100,10 +100,12 @@ class OpsviewServer(GenericServer):
         except:
             # set checking flag back to False
             self.isChecking = False
-            return self.Error(sys.exc_info())
+            #return self.Error(sys.exc_info())
+            result, error = self.Error(sys.exc_info())
+            return Result(result=result, error=error)
         
         #dummy return in case all is OK
-        return [True, ""]
+        return Result()
 
         
     def open_tree_view(self, host, service):

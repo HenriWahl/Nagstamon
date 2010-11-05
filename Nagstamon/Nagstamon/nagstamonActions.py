@@ -83,8 +83,8 @@ class RefreshLoopOneServer(threading.Thread):
                     gobject.idle_add(self.output.popwin.UpdateStatus, self.server)
                     # get current status
                     server_status = self.server.GetStatus()
-                    # GTK does not like tag brackets < and >, so clean them out from description
-                    server_status[1] = server_status[1].replace("<", "").replace(">", "")
+                    # GTK/Pango does not like tag brackets < and >, so clean them out from description
+                    server_status.error = server_status.error.replace("<", "").replace(">", "").replace("\n", " ")
                     
                     print self.name, server_status
                     
@@ -92,7 +92,11 @@ class RefreshLoopOneServer(threading.Thread):
                     if str(self.conf.debug_mode) == "True":
                         print self.server.name, ": server return value :", server_status 
 
-                    if server_status == "ERROR":
+                    if server_status.error != "":
+                        
+                        
+                        print 'server_status.error != "":', self.server.name
+                        
                         # set server status for status field in popwin
                         # shorter error message - see https://sourceforge.net/tracker/?func=detail&aid=3017044&group_id=236865&atid=1101373
                         if str(self.conf.long_display) == "True":
@@ -100,7 +104,7 @@ class RefreshLoopOneServer(threading.Thread):
                         else:
                             self.server.status = "ERR" 
                         # give server status description for future usage    
-                        self.server.status_description = server_status[1]
+                        self.server.status_description = server_status.error
                         gobject.idle_add(self.output.popwin.UpdateStatus, self.server)
                         # tell gobject to care about GUI stuff - refresh display status
                         # use a flag to prevent all threads at once to write to statusbar label in case
@@ -109,6 +113,9 @@ class RefreshLoopOneServer(threading.Thread):
                             gobject.idle_add(self.output.RefreshDisplayStatus)
                             # wait a moment
                             time.sleep(5)
+                            
+                            print self.server.name, "Scheiße"
+                            
                             # change statusbar to the following error message
                             # show error message in statusbar
                             gobject.idle_add(self.output.statusbar.ShowErrorMessage, self.server.status)
@@ -116,6 +123,7 @@ class RefreshLoopOneServer(threading.Thread):
                             time.sleep(5) 
                             # set statusbar error message status back
                             self.output.statusbar.isShowingError = False
+                            print self.server.name, "Scheiße 2"
                             
                         # wait a moment
                         time.sleep(10)
@@ -148,6 +156,7 @@ class RefreshLoopOneServer(threading.Thread):
             else:
                 # sleep and count
                 time.sleep(3)
+                print self.server.name + str(self.server.count)
                 self.server.count += 3
                 gc.collect()
                 # call Hook() for extra action
