@@ -91,7 +91,7 @@ class CentreonServer(GenericServer):
             if error == "":
                 # session id might have been invalid, so if necessary get a new one
                 if raw.find('name="start" type="text" value="') == -1:
-                    self.SID = self._get_sid()
+                    self.SID = self._get_sid().result
                     result = self.FetchURL(self.nagios_cgi_url + "/main.php?" + cgi_data, giveback="raw")
                     raw, error = result.result, result.error
                 start_time = raw.split('name="start" type="text" value="')[1].split('"')[0]
@@ -105,7 +105,7 @@ class CentreonServer(GenericServer):
     
     def GetHost(self, host):
         """
-        Centreonified way to get host ip - attribute "a" in down hosts xml is of now use for up
+        Centreonified way to get host ip - attribute "a" in down hosts xml is of no use for up
         hosts so we need to get ip anyway from web page
         """
         # do a web interface search limited to only one result - the hostname
@@ -138,11 +138,16 @@ class CentreonServer(GenericServer):
                 else:
                     address = htobj.l.a.text
             except:
-                self.Error(sys.exc_info())
-                address = "ERROR"
+                #self.Error(sys.exc_info())
+                #address = "ERROR"
+                result, error = self.Error(sys.exc_info())
+                return Result(error=error)
         
-        else: address = "ERROR"    
-
+        else: 
+            #address = "ERROR"    
+            result, error = self.Error(sys.exc_info())
+            return Result(error=error)
+        
         # print IP in debug mode
         if str(self.conf.debug_mode) == "True":    
             print "Address of %s:" % (host), address
@@ -189,7 +194,7 @@ class CentreonServer(GenericServer):
             if host_id == "":
                 if str(self.conf.debug_mode) == "True":
                     print self.name, ":", host, "ID could not be retrieved, trying again..."                  
-                self.SID = self._get_sid()
+                self.SID = self._get_sid().result
                 result = self.FetchURL(self.nagios_cgi_url + "/main.php?" + cgi_data, giveback="raw")
                 raw, error = result.result, result.error
                 host_id = raw.partition("var host_id= '")[2].partition("'")[0]
@@ -229,7 +234,7 @@ class CentreonServer(GenericServer):
                 # looks there was this old SID problem again - get a new one 
                 if str(self.conf.debug_mode) == "True":
                     print self.name, ":", host, service, "IDs could not be retrieved, trying again..." 
-                self.SID = self._get_sid()
+                self.SID = self._get_sid().result
                 result = self.FetchURL(self.nagios_cgi_url + "/main.php?"+ cgi_data, giveback="raw")
                 raw, error = result.result, result.error
                 
@@ -256,7 +261,7 @@ class CentreonServer(GenericServer):
         
         # get sid in case this has not yet been done
         if self.SID == None or self.SID == "":
-            self.SID = self._get_sid()     
+            self.SID = self._get_sid().result     
             
         # services (unknown, warning or critical?)
         nagcgiurl_services = self.nagios_cgi_url + "/include/monitoring/status/Services/xml/serviceXML.php?" + urllib.urlencode({"num":0, "limit":999, "o":"svcpb", "sort_type":"status", "sid":self.SID})
@@ -279,7 +284,7 @@ class CentreonServer(GenericServer):
                 if str(self.conf.debug_mode) == "True": 
                     print self.name, "bad session ID, retrieving new one..." 
                 # try again...
-                self.SID = self._get_sid()
+                self.SID = self._get_sid().result
                 result = self.FetchURL(nagcgiurl_hosts, giveback="raw")
                 raw, error = result.result, result.error
                 if error != "": return Result(result=raw, error=error)
@@ -365,7 +370,7 @@ class CentreonServer(GenericServer):
                 if str(self.conf.debug_mode) == "True": 
                     print self.name, "bad session ID, retrieving new one..." 
                 # try again...
-                self.SID = self._get_sid()
+                self.SID = self._get_sid().result
                 result = self.FetchURL(nagcgiurl_services, giveback="raw")  
                 raw, error = result.result, result.error               
                 
@@ -583,7 +588,7 @@ class CentreonServer(GenericServer):
         if self.SIDcount >= 300:
             if str(self.conf.debug_mode) == "True":
                 print self.name + ":", "old SID:", self.SID, self.Cookie
-            self.SID = self._get_sid()
+            self.SID = self._get_sid().result
             if str(self.conf.debug_mode) == "True":
                 print self.name + ":", "new SID:", self.SID, self.Cookie
             self.SIDcount = 0

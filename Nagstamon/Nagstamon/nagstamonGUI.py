@@ -285,7 +285,7 @@ class GUI(object):
                         len(server.nagitems_filtered["services"]["CRITICAL"]) == 0 and \
                         len(server.nagitems_filtered["services"]["WARNING"]) == 0 and \
                         len(server.nagitems_filtered["services"]["UNKNOWN"]) == 0 and \
-                        server.status != "ERROR":
+                        server.status_description == "":
                         # ... there is no need to show a label or treeview...
                         self.popwin.ServerVBoxes[server.name].hide()
                         self.popwin.ServerVBoxes[server.name].set_no_show_all(True)
@@ -374,7 +374,6 @@ class GUI(object):
             self.status_ok = False
             
             # put text for label together
-
             self.statusbar.statusbar_labeltext = self.statusbar.statusbar_labeltext_inverted = ""
             
             if downs > 0:
@@ -470,8 +469,8 @@ class GUI(object):
         handlers_dict = { "button_ok_clicked" : self.Acknowledge }
         self.acknowledge_xml.signal_autoconnect(handlers_dict)
         
-        # if service is None it must be a host
-        if service == None:
+        # if service is "" it must be a host
+        if service == "":
             # set label for acknowledging a host
             self.acknowledge_xml.get_widget("input_label_host").set_text(host)
             self.acknowledge_xml.get_widget("label_service").hide()
@@ -544,7 +543,7 @@ class GUI(object):
         self.downtime_xml.signal_autoconnect(handlers_dict)
         
         # if service is None it must be a host
-        if service == None:
+        if service == "":
             # set label for acknowledging a host
             self.downtime_xml.get_widget("input_label_host").set_text(host)
             self.downtime_xml.get_widget("label_service").hide()
@@ -1463,32 +1462,44 @@ class Popwin(gtk.Window):
         try:
             if remoteservice == "SSH":
                 # get host ip to connect to be independent of dns resolver
-                host = self.miserable_server.GetHost(self.miserable_host)[0]
-                if host != "ERROR":
+                #host = self.miserable_server.GetHost(self.miserable_host)[0]
+                result = self.miserable_server.GetHost(self.miserable_host)
+                host, error = result.result, result.error
+                #if host != "ERROR":
+                if error == "":
                     # workaround for bug 2080503@sf.net
                     if self.conf.app_ssh_options == "": args = self.conf.app_ssh_bin + " " + host
                     else: args = self.conf.app_ssh_bin + " " + self.conf.app_ssh_options + " " + host
                     sub = subprocess.Popen(args.split(" "))
             elif remoteservice == "RDP":
                 # get host ip to connect to be independent of dns resolver
-                host = self.miserable_server.GetHost(self.miserable_host)[0]
-                if host != "ERROR":
+                #host = self.miserable_server.GetHost(self.miserable_host)[0]
+                result = self.miserable_server.GetHost(self.miserable_host)
+                host, error = result.result, result.error
+                #if host != "ERROR":
+                if error == "":
                     # workaround for bug 2080503@sf.net
                     if self.conf.app_rdp_options == "": args = self.conf.app_rdp_bin + " " + host
                     else: args = self.conf.app_rdp_bin + " " + self.conf.app_rdp_options + " " + host
                     sub = subprocess.Popen(args.split(" "))
             elif remoteservice == "VNC":
                 # get host ip to connect to be independent of dns resolver
-                host = self.miserable_server.GetHost(self.miserable_host)[0]
-                if host != "ERROR":
+                #host = self.miserable_server.GetHost(self.miserable_host)[0]
+                result = self.miserable_server.GetHost(self.miserable_host)
+                host, error = result.result, result.error
+                #if host != "ERROR":
+                if error == "":
                     # workaround for bug 2080503@sf.net
                     if self.conf.app_vnc_options == "": args = self.conf.app_vnc_bin + " " + host
                     else: args = self.conf.app_vnc_bin + " " + self.conf.app_vnc_options + " " + host
                     sub = subprocess.Popen(args.split(" "))
             elif remoteservice == "HTTP":
                 # get host ip to connect to be independent of dns resolver
-                host = self.miserable_server.GetHost(self.miserable_host)[0]
-                if host != "ERROR":
+                #host = self.miserable_server.GetHost(self.miserable_host)[0]
+                result = self.miserable_server.GetHost(self.miserable_host)
+                host, error = result.result, result.error
+                #if host != "ERROR":
+                if error == "":
                     nagstamonActions.TreeViewHTTP(host)
             elif remoteservice == "Monitor":
                 # let nagstamonActions.TreeViewNagios do the work to open a webbrowser with nagios informations
@@ -1597,7 +1608,7 @@ class ServerVBox(gtk.VBox):
         
         self.AlignmentMonitor = gtk.Alignment(xalign=0, xscale=0.05, yalign=0)
         self.AlignmentMonitor.add(self.HBoxMonitor)
-        self.AlignmentStatus = gtk.Alignment(xalign=0, xscale=0.05, yalign=0.5)
+        self.AlignmentStatus = gtk.Alignment(xalign=0, xscale=0.0, yalign=0.5)
         self.AlignmentStatus.add(self.HBoxStatus)
 
         self.HBox.add(self.AlignmentMonitor)

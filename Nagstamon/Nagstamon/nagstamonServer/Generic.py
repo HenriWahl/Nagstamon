@@ -319,7 +319,7 @@ class GenericServer(object):
             result = self.FetchURL(nagcgiurl_hosts)
             htobj, error = result.result, result.error
             #if error != "": return [htobj, error]
-            if error != "": return Result(result=htobj, error=error)            
+            if error != "": return Result(result=copy.copy(htobj), error=error)            
             # workaround for Nagios < 2.7 which has an <EMBED> in its output
             # put a copy of a part of htobj into table to be able to delete htobj
             try:
@@ -382,7 +382,7 @@ class GenericServer(object):
             result = self.FetchURL(nagcgiurl_services)
             htobj, error = result.result, result.error          
             #if error != "": return [htobj, error]
-            if error != "": return Result(result=htobj, error=error)
+            if error != "": return Result(result=copy.copy(htobj), error=error)
             # put a copy of a part of htobj into table to be able to delete htobj
             table = htobj.body.table[self.HTML_BODY_TABLE_INDEX]
             
@@ -401,8 +401,7 @@ class GenericServer(object):
                         # its hostname from the previuos item - one reason to keep "nagitems"
                         try:
                             n["host"] = str(table.tr[i].td[0].table.tr.td.table.tr.td.a.text)
-                        except Exception, err:
-                            #print err
+                        except:
                             n["host"] = str(nagitems["services"][len(nagitems["services"])-1]["host"])
                         # service
                         n["service"] = str(table.tr[i].td[1].table.tr.td.table.tr.td.a.text)
@@ -453,7 +452,7 @@ class GenericServer(object):
             result = self.FetchURL(nagcgiurl_hosts_in_maintenance)
             htobj, error = result.result, result.error
             #if error != "": return [htobj, error]
-            if error != "": return Result(result=htobj, error=error)
+            if error != "": return Result(result=copy.copy(htobj), error=error)
             # workaround for Nagios < 2.7 which has an <EMBED> in its output
             try:
                 table = htobj.body.table[self.HTML_BODY_TABLE_INDEX]
@@ -493,7 +492,7 @@ class GenericServer(object):
             result = self.FetchURL(nagcgiurl_hosts_acknowledged)
             htobj, error = result.result, result.error
             #if error != "": return [htobj, error]
-            if error != "": return Result(result=htobj, error=error)
+            if error != "": return Result(result=copy.copy(htobj), error=error)
             # workaround for Nagios < 2.7 which has an <EMBED> in its output
             try:
                 table = htobj.body.table[self.HTML_BODY_TABLE_INDEX]
@@ -554,8 +553,11 @@ class GenericServer(object):
 
         # some filtering is already done by the server specific _get_status()
         status = self._get_status()
+        self.status, self.status_description = status.result, status.error
+
         if status.error != "":
-            return Result(result=status.result, error=status.error)
+            self.isChecking = False
+            return Result(result=self.status, error=self.status_description)
 
         # this part has been before in GUI.RefreshDisplay() - wrong place, here it needs to be reset
         self.nagitems_filtered = {"services":{"CRITICAL":[], "WARNING":[], "UNKNOWN":[]}, "hosts":{"DOWN":[], "UNREACHABLE":[]}}
@@ -823,8 +825,7 @@ class GenericServer(object):
                 del passman, auth_handler, digest_handler, urlcontent, html, prettyhtml
         
                 # give back HTML object from Nagios webseite
-                
-                return Result(result=htobj)
+                return Result(result=copy.copy(htobj))
                 
             elif self.type == "Opsview" and giveback == "opsxml":
                 # objectify the xml and give it back after some cleanup
@@ -832,7 +833,7 @@ class GenericServer(object):
                 xmlpretty = lxml.etree.tostring(xml, pretty_print=True)
                 xmlobj = lxml.objectify.fromstring(xmlpretty)
                 del passman, auth_handler, urlcontent, xml, xmlpretty
-                return Result(result=xmlobj)
+                return Result(result=copy.copy(xmlobj))
            
         except:
             # do some cleanup

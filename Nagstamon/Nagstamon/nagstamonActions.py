@@ -75,7 +75,7 @@ class RefreshLoopOneServer(threading.Thread):
             if self.server.count > int(self.conf.update_interval)*60: self.doRefresh = True
             
             # self.doRefresh could also been changed by RefreshAllServers()
-            if self.doRefresh == True:
+            if self.doRefresh == True:              
                 # check if server is already checked
                 if self.server.isChecking == False:              
                     # set server status for status field in popwin
@@ -85,24 +85,13 @@ class RefreshLoopOneServer(threading.Thread):
                     server_status = self.server.GetStatus()
                     # GTK/Pango does not like tag brackets < and >, so clean them out from description
                     server_status.error = server_status.error.replace("<", "").replace(">", "").replace("\n", " ")
-                    
-                    print self.name, server_status
-                    
                     # debug
                     if str(self.conf.debug_mode) == "True":
-                        print self.server.name, ": server return value :", server_status 
+                        print self.server.name, ": server return values:", server_status.result, server_status.error 
 
                     if server_status.error != "":
-                        
-                        
-                        print 'server_status.error != "":', self.server.name
-                        
-                        # set server status for status field in popwin
-                        # shorter error message - see https://sourceforge.net/tracker/?func=detail&aid=3017044&group_id=236865&atid=1101373
-                        if str(self.conf.long_display) == "True":
-                            self.server.status = "ERROR"
-                        else:
-                            self.server.status = "ERR" 
+                        # set server status for status field in popwin 
+                        self.server.status = "ERROR"
                         # give server status description for future usage    
                         self.server.status_description = server_status.error
                         gobject.idle_add(self.output.popwin.UpdateStatus, self.server)
@@ -113,21 +102,18 @@ class RefreshLoopOneServer(threading.Thread):
                             gobject.idle_add(self.output.RefreshDisplayStatus)
                             # wait a moment
                             time.sleep(5)
-                            
-                            print self.server.name, "Scheiße"
-                            
                             # change statusbar to the following error message
                             # show error message in statusbar
-                            gobject.idle_add(self.output.statusbar.ShowErrorMessage, self.server.status)
+                            # shorter error message - see https://sourceforge.net/tracker/?func=detail&aid=3017044&group_id=236865&atid=1101373
+                            gobject.idle_add(self.output.statusbar.ShowErrorMessage, {"True":"ERROR", "False":"ERR"}[str(self.conf.long_display)])
                             # wait some seconds
                             time.sleep(5) 
                             # set statusbar error message status back
                             self.output.statusbar.isShowingError = False
-                            print self.server.name, "Scheiße 2"
                             
                         # wait a moment
                         time.sleep(10)
-                            
+
                         # do some cleanup
                         gc.collect()
 
@@ -156,7 +142,6 @@ class RefreshLoopOneServer(threading.Thread):
             else:
                 # sleep and count
                 time.sleep(3)
-                print self.server.name + str(self.server.count)
                 self.server.count += 3
                 gc.collect()
                 # call Hook() for extra action
@@ -343,14 +328,15 @@ class CheckForNewVersion(threading.Thread):
                 # set the flag to lock that connection
                 s.CheckingForNewVersion = True
                 # remove newline
-                version = s.FetchURL("http://nagstamon.sourceforge.net/latest_version", giveback="raw")[0].split("\n")[0]
+                result = s.FetchURL("http://nagstamon.sourceforge.net/latest_version", giveback="raw")
+                version, error = result.result.split("\n")[0], result.error
                 
                 # debug
                 if str(self.output.conf.debug_mode) == "True":
                     print "Latest version from sourceforge.net:", version
                 
                 # if we got a result notify user
-                if version != "ERROR":
+                if error == "":
                     if version == self.output.version:
                         version_status = "latest"
                     else:

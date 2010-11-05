@@ -62,7 +62,7 @@ class OpsviewServer(GenericServer):
             opsapiurl = self.nagios_url + "/api/status/service?state=1&state=2&state=3"
             result = self.FetchURL(opsapiurl, giveback="opsxml")
             xobj, error = result.result, result.error
-            if xobj == "ERROR": return Result(result=xobj, error=error)
+            if error != "": return Result(result=xobj, error=error)
             for host in xobj.data.getchildren()[:-1]:
                 # host
                 hostdict = dict(host.items())
