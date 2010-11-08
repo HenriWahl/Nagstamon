@@ -296,25 +296,25 @@ class CentreonServer(GenericServer):
                     try:                       
                         n = {}
                         # host
-                        n["host"] = l.hn.text
+                        n["host"] = str(l.hn.text)
                         # status
-                        n["status"] = l.cs.text
+                        n["status"] = str(l.cs.text)
                         # last_check
-                        n["last_check"] = l.lc.text
+                        n["last_check"] = str(l.lc.text)
                         # duration
-                        n["duration"] = l.lsc.text
+                        n["duration"] = str(l.lsc.text)
                         # status_information
-                        n["status_information"] = l.ou.text
+                        n["status_information"] = str(l.ou.text)
                         # attempts are not shown in case of hosts so it defaults to "N/A"
-                        n["attempt"] = l.tr.text
+                        n["attempt"] = str(l.tr.text)
                         # host acknowledged or not, has to be filtered
-                        n["acknowledged"] = l.ha.text
+                        n["acknowledged"] = str(l.ha.text)
                         # host notification disabled or not, has to be filtered
-                        n["notification_enabled"] = l.ne.text
+                        n["notification_enabled"] = str(l.ne.text)
                         # host check enabled or not, has to be filtered
-                        n["check_enabled"] = l.ace.text
+                        n["check_enabled"] = str(l.ace.text)
                         # host down for maintenance or not, has to be filtered
-                        n["in_downtime"] = l.hdtm.text
+                        n["in_downtime"] = str(l.hdtm.text)
                         
                         # store information about acknowledged and down hosts for further reference
                         if n["in_downtime"] == "1" : self.new_hosts_in_maintenance.append(n["host"])
@@ -387,27 +387,27 @@ class CentreonServer(GenericServer):
                         # hostname of a failing service if there are more than one
                         # so if the hostname is empty the nagios status item should get
                         # its hostname from the previuos item - one reason to keep "nagitems"
-                        n["host"] = l.hn.text
+                        n["host"] = str(l.hn.text)
                         # service
-                        n["service"] = l.sd.text
+                        n["service"] = str(l.sd.text)
                         # status
-                        n["status"] = l.cs.text
+                        n["status"] = str(l.cs.text)
                         # last_check
-                        n["last_check"] = l.lc.text
+                        n["last_check"] = str(l.lc.text)
                         # duration
-                        n["duration"] = l.d.text
+                        n["duration"] = str(l.d.text)
                         # attempt
-                        n["attempt"] = l.ca.text
+                        n["attempt"] = str(l.ca.text)
                         # status_information
-                        n["status_information"] = l.po.text
+                        n["status_information"] = str(l.po.text)
                         # service is acknowledged or not, has to be filtered
-                        n["acknowledged"] = l.pa.text
+                        n["acknowledged"] = str(l.pa.text)
                         # service notification enabled or not, has to be filtered
-                        n["notification_enabled"] = l.ne.text
+                        n["notification_enabled"] = str(l.ne.text)
                         # service check enabled or not, has to be filtered
-                        n["check_enabled"] = l.ac.text
+                        n["check_enabled"] = str(l.ac.text)
                         # service down for maintenance or not, has to be filtered
-                        n["in_downtime"] = l.dtm.text
+                        n["in_downtime"] = str(l.dtm.text)
 
                         # what works in cgi-Nagios via cgi request has to be filtered out here "manually"
                         if not (str(self.conf.filter_acknowledged_hosts_services) == "True" and \
@@ -478,8 +478,11 @@ class CentreonServer(GenericServer):
                     print self.name, host +": " + self.nagios_cgi_url + "/main.php?"+ cgi_data     
                 
                 # running remote cgi command, also possible with GET method     
-                self.FetchURL(self.nagios_cgi_url + "/main.php?" + cgi_data, giveback="raw")      
-            else:
+                self.FetchURL(self.nagios_cgi_url + "/main.php?" + cgi_data, giveback="raw") 
+            
+            # if host is acknowledged and all services should be to or if a service is acknowledged
+            # (and all other on this host too)
+            if service != "" or len(all_services) > 0:
                 # service(s) @ host
                 # if all_services is empty only one service has to be checked - the one clicked
                 # otherwise if there all services should be acknowledged

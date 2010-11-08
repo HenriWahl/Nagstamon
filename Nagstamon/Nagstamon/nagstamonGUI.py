@@ -74,7 +74,7 @@ class GUI(object):
         
         # Meta
         self.name = "nagstamon"
-        self.version = "0.9.5-SVN-r179"
+        self.version = "0.9.5pre-SVN"
         self.website = "http://nagstamon.sourceforge.net/"
         self.copyright = "©2008-2010 Henri Wahl\nh.wahl@ifw-dresden.de"
         self.comments = "Nagios status monitor for your desktop"
@@ -294,8 +294,8 @@ class GUI(object):
                         # otherwise it must be shown, full of problems
                         self.popwin.ServerVBoxes[server.name].show()
                         self.popwin.ServerVBoxes[server.name].set_no_show_all(False)      
-                        self.status_ok = False
-                    
+                        self.status_ok = False                       
+                        
                     # fill treeview for popwin
                     # create a model for treeview where the table headers all are strings
                     tab_model = gtk.ListStore(*[gobject.TYPE_STRING]*(len(server.COLUMNS)+2))
@@ -349,7 +349,7 @@ class GUI(object):
                     
                 except:
                     server.Error(sys.exc_info())
-
+                    
         # show and resize popwin
         self.popwin.VBox.hide_all()
         self.popwin.VBox.show_all()
@@ -441,6 +441,14 @@ class GUI(object):
             
             # set self.showPopwin to True because there is something to show
             self.popwin.showPopwin = True   
+            
+        # if only one monitor cannot be reached show popwin to inform about its trouble
+        for server in self.servers.values():
+            print server.name, self.status_ok, '"' + server.status_description + '"'
+            if server.status_description != "":
+                self.status_ok = False   
+                self.popwin.showPopwin = True
+            print self.status_ok
             
         # try to fix Debian bug #591875: eventually ends up lower in the window stacking order, and can't be raised
         # raising statusbar window with every refresh should do the job
@@ -804,19 +812,28 @@ class StatusBar(object):
         submenu_items.sort(key=str.lower)
         for i in submenu_items:
             menu_item = gtk.MenuItem(i)
-            menu_item.connect("activate", self.MonitorSubmenuResponse, i)
+            menu_item.connect("activate", self.MenuResponseMonitors, i)
             self.MonitorSubmenu.add(menu_item)
         self.MonitorSubmenu.show_all()
 
         # Popup menu for statusbar
         self.Menu = gtk.Menu()
-        for i in ["Refresh", "Recheck all", "Monitor", "Settings...", "Save position", "About", "Exit"]:
-            menu_item = gtk.MenuItem(i)
-            if i == "Monitor":
-                menu_item.set_submenu(self.MonitorSubmenu) 
+        for i in ["Refresh", "Recheck all", "-----", "Monitors", "-----", "Settings...", "Save position", "About", "Exit"]:
+            if i == "-----":
+                menu_item = gtk.SeparatorMenuItem()
+                self.Menu.append(menu_item)
             else:
-                menu_item.connect("activate", self.MenuResponse, i)
-            self.Menu.append(menu_item)
+                if i == "Monitors":
+                    monitor_items = list(self.output.servers)
+                    monitor_items.sort(key=str.lower)
+                    for m in monitor_items:
+                        menu_item = gtk.MenuItem(m)
+                        menu_item.connect("activate", self.MenuResponseMonitors, m)
+                        self.Menu.append(menu_item)
+                else:
+                    menu_item = gtk.MenuItem(i)
+                    menu_item.connect("activate", self.MenuResponse, i)
+                    self.Menu.append(menu_item)
         self.Menu.show_all()
         
         # put Systray icon into statusbar object
@@ -845,7 +862,7 @@ class StatusBar(object):
             self.output.fontsize = 10000
 
 
-    def MonitorSubmenuResponse(self, widget, menu_entry):
+    def MenuResponseMonitors(self, widget, menu_entry):
         """
             open responding Nagios status web page
         """
@@ -1535,7 +1552,7 @@ class Popwin(gtk.Window):
         """
         # status field in server vbox in popwin    
         try:
-            self.ServerVBoxes[server.name].LabelStatus.set_markup('<span>Status: ' + server.status + ' ' + server.status_description + '</span>')
+            self.ServerVBoxes[server.name].LabelStatus.set_markup('<span>Status: ' + server.status + ' <span color="darkred">' + server.status_description + '</span></span>')
         except:
             pass
     

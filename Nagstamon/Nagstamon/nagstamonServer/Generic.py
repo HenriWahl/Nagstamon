@@ -161,7 +161,10 @@ class GenericServer(object):
             cgi_data = urllib.urlencode({"cmd_typ":"33", "cmd_mod":"2", "host":host, "com_author":author,\
                                          "sticky_ack":self.HTML_ACKFLAGS[sticky], "send_notification":self.HTML_ACKFLAGS[notify], "persistent":self.HTML_ACKFLAGS[persistent],\
                                          "com_data":comment, "btnSubmit":"Commit"})
-        else:
+            
+        # if host is acknowledged and all services should be to or if a service is acknowledged
+        # (and all other on this host too)
+        if service != "" or len(all_services) > 0:
             # service @ host
             cgi_data = urllib.urlencode({"cmd_typ":"34", "cmd_mod":"2", "host":host, "service":service,\
                                          "sticky_ack":self.HTML_ACKFLAGS[sticky], "send_notification":self.HTML_ACKFLAGS[notify], "persistent":self.HTML_ACKFLAGS[persistent],\
@@ -237,7 +240,8 @@ class GenericServer(object):
         else:
             typ = 2      
         if str(self.conf.debug_mode) == "True":
-            print self.name, ":", "Open host/service monitor web page", self.nagios_cgi_url + '/extinfo.cgi?' + urllib.urlencode({"type":typ, "host":host, "service":service})
+            #print self.name, ":", "Open host/service monitor web page", self.nagios_cgi_url + '/extinfo.cgi?' + urllib.urlencode({"type":typ, "host":host, "service":service})
+            self.Debug(server=self.name, debug="Open host/service monitor web page " + self.nagios_cgi_url + '/extinfo.cgi?' + urllib.urlencode({"type":typ, "host":host, "service":service}))
         webbrowser.open(self.nagios_cgi_url + '/extinfo.cgi?' + urllib.urlencode({"type":typ, "host":host, "service":service}))
 
         
@@ -245,22 +249,24 @@ class GenericServer(object):
         webbrowser.open(self.nagios_url)
         # debug
         if str(self.conf.debug_mode) == "True":
-            print self.name, ":", "Open monitor web page", self.nagios_url   
-            
+            #print self.name, ":", "Open monitor web page", self.nagios_url 
+            self.Debug(server=self.name, debug="Open monitor web page " + self.nagios_url)
+
         
     def open_services(self):
         webbrowser.open(self.nagios_cgi_url + "/status.cgi?host=all&servicestatustypes=253")
         # debug
         if str(self.conf.debug_mode) == "True":
-            print self.name, ":", "Open services web page", self.nagios_url + "/status.cgi?host=all&servicestatustypes=253"  
-            
+            #print self.name, ":", "Open services web page", self.nagios_url + "/status.cgi?host=all&servicestatustypes=253"  
+            self.Debug(server=self.name, debug="Open services web page " + self.nagios_url + "/status.cgi?host=all&servicestatustypes=253")
         
+            
     def open_hosts(self):
         webbrowser.open(self.nagios_cgi_url + "/status.cgi?hostgroup=all&style=hostdetail&hoststatustypes=12")
         # debug
         if str(self.conf.debug_mode) == "True":
-            print self.name, ":", "Open hosts web page", self.nagios_url + "/status.cgi?hostgroup=all&style=hostdetail&hoststatustypes=12"      
-
+            #print self.name, ":", "Open hosts web page", self.nagios_url + "/status.cgi?hostgroup=all&style=hostdetail&hoststatustypes=12"      
+            self.Debug(server=self.name, debug="Open hosts web page " + self.nagios_url + "/status.cgi?hostgroup=all&style=hostdetail&hoststatustypes=12")
 
     def _get_status(self):
         """
@@ -323,9 +329,9 @@ class GenericServer(object):
             # workaround for Nagios < 2.7 which has an <EMBED> in its output
             # put a copy of a part of htobj into table to be able to delete htobj
             try:
-                table = htobj.body.table[self.HTML_BODY_TABLE_INDEX]
+                table = copy.copy(htobj.body.table[self.HTML_BODY_TABLE_INDEX])
             except:
-                table = htobj.body.embed.table
+                table = copy.copy(htobj.body.embed.table)
             
             # do some cleanup    
             del htobj
@@ -384,7 +390,7 @@ class GenericServer(object):
             #if error != "": return [htobj, error]
             if error != "": return Result(result=copy.copy(htobj), error=error)
             # put a copy of a part of htobj into table to be able to delete htobj
-            table = htobj.body.table[self.HTML_BODY_TABLE_INDEX]
+            table = copy.copy(htobj.body.table[self.HTML_BODY_TABLE_INDEX])
             
             # do some cleanup    
             del htobj
@@ -455,9 +461,9 @@ class GenericServer(object):
             if error != "": return Result(result=copy.copy(htobj), error=error)
             # workaround for Nagios < 2.7 which has an <EMBED> in its output
             try:
-                table = htobj.body.table[self.HTML_BODY_TABLE_INDEX]
+                table = copy.copy(htobj.body.table[self.HTML_BODY_TABLE_INDEX])
             except:
-                table = htobj.body.embed.div.table
+                table = copy.copy(htobj.body.embed.div.table)
             
             # do some cleanup    
             del htobj
@@ -495,9 +501,9 @@ class GenericServer(object):
             if error != "": return Result(result=copy.copy(htobj), error=error)
             # workaround for Nagios < 2.7 which has an <EMBED> in its output
             try:
-                table = htobj.body.table[self.HTML_BODY_TABLE_INDEX]
+                table = copy.copy(htobj.body.table[self.HTML_BODY_TABLE_INDEX])
             except:
-                table = htobj.body.embed.table
+                table = copy.copy(htobj.body.embed.table)
                 
             # do some cleanup    
             del htobj               
@@ -886,7 +892,8 @@ class GenericServer(object):
                 ip = ip.split("://")[1]
             # print IP in debug mode
             if str(self.conf.debug_mode) == "True":    
-                print "IP of %s:" % (host), ip
+                #print "IP of %s:" % (host), ip
+                self.Debug(server=self.name, host=host, debug ="IP of %s:" % (host) + " " + ip)
             # when connection by DNS is not configured do it by IP
             if str(self.conf.connect_by_dns_yes) == "True":
                 # try to get DNS name for ip, if not available use ip
@@ -924,4 +931,11 @@ class GenericServer(object):
         """
         print datetime.datetime.now(), self.name + ": ", traceback.print_exception(error[0], error[1], error[2], 5, file=sys.stdout)
         return ["ERROR", traceback.format_exception_only(error[0], error[1])[0]]
+    
+    
+    def Debug(self, server="", host="", service="", debug=""):
+        """
+        centralized debugging
+        """
+        print "DEBUG:", server, host, service, debug
     
