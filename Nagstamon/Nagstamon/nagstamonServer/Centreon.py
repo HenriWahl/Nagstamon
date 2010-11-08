@@ -62,21 +62,25 @@ class CentreonServer(GenericServer):
         webbrowser.open(self.nagios_cgi_url + "/index.php?autologin=1&p=1&useralias=" + self.MD5_username + "&password=" + self.MD5_password)
         # debug
         if str(self.conf.debug_mode) == "True":
-            print self.name, ":", "Open monitor web page", self.nagios_cgi_url + "/index.php?autologin=1&p=1&useralias=" + self.MD5_username + "&password=" + self.MD5_password
-        
+            #print self.name, ":", "Open monitor web page", self.nagios_cgi_url + "/index.php?autologin=1&p=1&useralias=" + self.MD5_username + "&password=" + self.MD5_password
+            self.Debug(server=self.name, debug="Open monitor web page " + self.nagios_url + "/index.php?autologin=1&p=1&useralias=" + self.MD5_username + "&password=" + self.MD5_password)
+
         
     def open_services(self):
         webbrowser.open(self.nagios_cgi_url + "/index.php?autologin=1&p=1&useralias=" + self.MD5_username + "&password=" + self.MD5_password + "&p=20202&o=svcpb")
         # debug
         if str(self.conf.debug_mode) == "True":
-            print self.name, ":", "Open hosts web page", self.nagios_cgi_url + "/index.php?p=20202&o=svcpb"
-        
+            #print self.name, ":", "Open hosts web page", self.nagios_cgi_url + "/index.php?p=20202&o=svcpb"
+            self.Debug(server=self.name, debug="Open services web page " + "/index.php?p=20202&o=svcpb")
+
+            
     def open_hosts(self):
         webbrowser.open(self.nagios_cgi_url + "/index.php?autologin=1&p=1&useralias=" + self.MD5_username + "&password=" + self.MD5_password + "&p=20103&o=hpb")
         # debug
         if str(self.conf.debug_mode) == "True":
-            print self.name, ":", "Open hosts web page", self.nagios_cgi_url + "/index.php?p=20103&o=hpb"
-
+            #print self.name, ":", "Open hosts web page", self.nagios_cgi_url + "/index.php?p=20103&o=hpb"
+            self.Debug(server=self.name, debug="Open hosts web page " + self.nagios_url + "/index.php?autologin=1&p=1&useralias=" + self.MD5_username + "&password=" + self.MD5_password + "&p=20103&o=hpb")
+            
             
     def get_start_end(self, host):
         """
@@ -150,8 +154,8 @@ class CentreonServer(GenericServer):
         
         # print IP in debug mode
         if str(self.conf.debug_mode) == "True":    
-            print "Address of %s:" % (host), address
-        
+            #print "Address of %s:" % (host), address
+            self.Debug(server=self.name, host=host, debug ="IP of %s:" % (host) + " " + address)
         # give back host or ip
         #return [address]
         return Result(result=address)
@@ -167,8 +171,6 @@ class CentreonServer(GenericServer):
             self.Cookie = cookielib.CookieJar()    
             self.FetchURL(self.nagios_cgi_url + "/index.php?" + urllib.urlencode({"p":1, "autologin":1, "useralias":self.MD5_username, "password":self.MD5_password}), giveback="raw")
             sid = self.Cookie._cookies.values()[0].values()[0]["PHPSESSID"].value
-            #debug
-            print self.name, sid
             return Result(result=sid)
         except:
             #return self.Error(sys.exc_info())
@@ -193,7 +195,8 @@ class CentreonServer(GenericServer):
             # we get a login page clear cookies and SID and try again
             if host_id == "":
                 if str(self.conf.debug_mode) == "True":
-                    print self.name, ":", host, "ID could not be retrieved, trying again..."                  
+                    #print self.name, ":", host, "ID could not be retrieved, trying again..."                  
+                    self.Debug(server=self.name, debug = "Host ID could not be retrieved, trying again...")
                 self.SID = self._get_sid().result
                 result = self.FetchURL(self.nagios_cgi_url + "/main.php?" + cgi_data, giveback="raw")
                 raw, error = result.result, result.error
@@ -201,17 +204,19 @@ class CentreonServer(GenericServer):
 
         else:
             if str(self.conf.debug_mode) == "True":
-                print self.name, ":", host, "ID could not be retrieved."
+                #print self.name, ":", host, "ID could not be retrieved."
+                self.Debug(server=self.name, debug = "Host ID could not be retrieved.")
+
 
         # only if host_id is an usable integer return it    
         try:
             if int(host_id):
+                if str(self.conf.debug_mode) == "True":
+                    self.Debug(server=self.name, host=host, debug = "Host ID is " + host_id)
                 return host_id
             else:
                 return ""
         except:
-            #debug
-            print "host_id:", host_id
             return ""
         
 
@@ -233,7 +238,8 @@ class CentreonServer(GenericServer):
             if raw.find('selected="selected"') == -1:
                 # looks there was this old SID problem again - get a new one 
                 if str(self.conf.debug_mode) == "True":
-                    print self.name, ":", host, service, "IDs could not be retrieved, trying again..." 
+                    #print self.name, ":", host, service, "IDs could not be retrieved, trying again..." 
+                    self.Debug(server=self.name, host=host, service=service, debug = "IDs could not be retrieved, trying again...")                
                 self.SID = self._get_sid().result
                 result = self.FetchURL(self.nagios_cgi_url + "/main.php?"+ cgi_data, giveback="raw")
                 raw, error = result.result, result.error
@@ -246,7 +252,9 @@ class CentreonServer(GenericServer):
                 return ids
         else:
             if str(self.conf.debug_mode) == "True":
-                print self.name, ":", host, service, "IDs could not be retrieved."
+                #print self.name, ":", host, service, "IDs could not be retrieved."
+                self.Debug(server=self.name, host=host, service=service, debug = "IDs could not be retrieved.")                
+
             return "", ""    
         
         
@@ -282,7 +290,9 @@ class CentreonServer(GenericServer):
             # in case there are no children session id is invalid
             if htobj.getchildren() == []:
                 if str(self.conf.debug_mode) == "True": 
-                    print self.name, "bad session ID, retrieving new one..." 
+                    #print self.name, "bad session ID, retrieving new one..." 
+                    self.Debug(server=self.name, debug="Bad session ID, retrieving new one...")                
+
                 # try again...
                 self.SID = self._get_sid().result
                 result = self.FetchURL(nagcgiurl_hosts, giveback="raw")
@@ -368,7 +378,8 @@ class CentreonServer(GenericServer):
             if htobj.getchildren == []:
                 # debug
                 if str(self.conf.debug_mode) == "True": 
-                    print self.name, "bad session ID, retrieving new one..." 
+                    #print self.name, "bad session ID, retrieving new one..." 
+                    self.Debug(server=self.name, debug="Bad session ID, retrieving new one...")                                
                 # try again...
                 self.SID = self._get_sid().result
                 result = self.FetchURL(nagcgiurl_services, giveback="raw")  
@@ -475,8 +486,9 @@ class CentreonServer(GenericServer):
                         "persistent":int(persistent), "sticky":int(sticky), "ackhostservice":"0", "o":"hd", "en":"1"})
                 # debug
                 if str(self.conf.debug_mode) == "True": 
-                    print self.name, host +": " + self.nagios_cgi_url + "/main.php?"+ cgi_data     
-                
+                    #print self.name, host +": " + self.nagios_cgi_url + "/main.php?"+ cgi_data     
+                    self.Debug(server=self.name, host=host, debug=self.nagios_cgi_url + "/main.php?"+ cgi_data)                
+
                 # running remote cgi command, also possible with GET method     
                 self.FetchURL(self.nagios_cgi_url + "/main.php?" + cgi_data, giveback="raw") 
             
@@ -500,8 +512,9 @@ class CentreonServer(GenericServer):
                             "sticky":int(sticky), "o":"svcd", "en":"1"}) 
                     # debug
                     if str(self.conf.debug_mode) == "True": 
-                        print self.name, host, s +": " + self.nagios_cgi_url + "/main.php?" + cgi_data            
-                        
+                        #print self.name, host, s +": " + self.nagios_cgi_url + "/main.php?" + cgi_data            
+                        self.Debug(server=self.name, host=host, service=s, debug=self.nagios_cgi_url + "/main.php?" + cgi_data)                
+
                     # running remote cgi command with GET method, for some strange reason only working if
                     # giveback="raw"
                     self.FetchURL(self.nagios_cgi_url + "/main.php?" + cgi_data, giveback="raw")
@@ -557,8 +570,9 @@ class CentreonServer(GenericServer):
                                              "o":"ah"})
                 # debug
                 if str(self.conf.debug_mode) == "True": 
-                    print self.name, host +": " + self.nagios_cgi_url + "/main.php?"+ cgi_data                
-    
+                    #print self.name, host +": " + self.nagios_cgi_url + "/main.php?"+ cgi_data                
+                    self.Debug(server=self.name, host=host, debug=self.nagios_cgi_url + "/main.php?" + cgi_data)                
+
             else:
                 # service
                 host_id, service_id = self._get_host_and_service_id(host, service)
@@ -574,8 +588,9 @@ class CentreonServer(GenericServer):
                                              "o":"as"})
                 # debug
                 if str(self.conf.debug_mode) == "True": 
-                    print self.name, host +": " + self.nagios_cgi_url + "/main.php?"+ cgi_data
-           
+                    #print self.name, host +": " + self.nagios_cgi_url + "/main.php?"+ cgi_data
+                    self.Debug(server=self.name, host=host, service=s, debug=self.nagios_cgi_url + "/main.php?" + cgi_data)                
+
             # running remote cgi command
             self.FetchURL(self.nagios_cgi_url + "/main.php", giveback="raw", cgi_data=cgi_data)   
         except:
@@ -590,10 +605,13 @@ class CentreonServer(GenericServer):
         # the moment in nagstamonActions.RefreshLoopOneServer()
         if self.SIDcount >= 300:
             if str(self.conf.debug_mode) == "True":
-                print self.name + ":", "old SID:", self.SID, self.Cookie
+                #print self.name + ":", "old SID:", self.SID, self.Cookie
+                self.Debug(server=self.name, debug="Old SID: " + self.SID + " " + self.Cookie)                
+
             self.SID = self._get_sid().result
             if str(self.conf.debug_mode) == "True":
-                print self.name + ":", "new SID:", self.SID, self.Cookie
+                #print self.name + ":", "new SID:", self.SID, self.Cookie
+                self.Debug(server=self.name, debug="New SID: " +  self.SID + " " + self.Cookie)
             self.SIDcount = 0
         else:
             self.SIDcount += 1          

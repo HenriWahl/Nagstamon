@@ -87,8 +87,9 @@ class RefreshLoopOneServer(threading.Thread):
                     server_status.error = server_status.error.replace("<", "").replace(">", "").replace("\n", " ")
                     # debug
                     if str(self.conf.debug_mode) == "True":
-                        print self.server.name, ": server return values:", server_status.result, server_status.error 
-
+                        #print self.server.name, ": server return values:", server_status.result, server_status.error 
+                        self.server.Debug(server=self.server.name, debug="server return values: " + server_status.result + " " + server_status.error)
+                        
                     if server_status.error != "":
                         # set server status for status field in popwin 
                         self.server.status = "ERROR"
@@ -127,8 +128,8 @@ class RefreshLoopOneServer(threading.Thread):
                         # wait for the doRefresh flag to be True, if it is, do a refresh
                         if self.doRefresh == True:
                             if str(self.conf.debug_mode) == "True":
-                                print self.server.name, ":", "Refreshing output - server is already checking:", self.server.isChecking                                        
-
+                                #print self.server.name, ":", "Refreshing output - server is already checking:", self.server.isChecking                                        
+                                self.server.Debug(server=self.server.name, debug="Refreshing output - server is already checking: " + str(self.server.isChecking))
                             # reset refresh flag
                             self.doRefresh = False
 
@@ -157,7 +158,8 @@ def RefreshAllServers(servers=None, output=None, conf=None):
         if server.isChecking == False and str(conf.servers[server.name].enabled) == "True":
             #debug
             if str(conf.debug_mode) == "True":
-                print "Checking server:", server.name
+                #print "Checking server:", server.name
+                server.Debug(server=server.name, debug="Checking server...")
     
             server.thread.Refresh()
 
@@ -210,8 +212,9 @@ class RecheckAll(threading.Thread):
             try:
                 # debug
                 if str(self.conf.debug_mode) == "True":
-                    print "Recheck all: Rechecking all services on all hosts on all servers..."
-
+                    #print "Recheck all: Rechecking all services on all hosts on all servers..."
+                    # workaround, take Debug method from first server reachable
+                    self.servers.values()[0].Debug(debug="Recheck all: Rechecking all services on all hosts on all servers...")
                 for server in self.servers.values():                
                     # only test enabled servers and only if not already 
                     if str(self.conf.servers[server.name].enabled):
@@ -225,21 +228,25 @@ class RecheckAll(threading.Thread):
                             rechecks_dict[server.name + ": " + host.name].start()
                             # debug
                             if str(self.conf.debug_mode) == "True":
-                                print "Recheck all:", "rechecking", server.name + ": " + host.name
+                                #print "Recheck all:", "rechecking", server.name + ": " + host.name                                
+                                server.Debug(server=server.name, host=host.name, debug="Rechecking...")
                             for service in host.services.values():
                                 # dito
                                 rechecks_dict[server.name + ": " + host.name + ": " + service.name] = Recheck(server=server, host=host.name, service=service.name)
                                 rechecks_dict[server.name + ": " + host.name + ": " + service.name].start()
                                 # debug
                                 if str(self.conf.debug_mode) == "True":
-                                    print "Recheck all:", "rechecking", server.name + ": " + host.name + ": " + service.name
-                                    
+                                    #print "Recheck all:", "rechecking", server.name + ": " + host.name + ": " + service.name
+                                    server.Debug(server=server.name, host=host.name, service=service.name, debug="Rechecking...")
+
                 # wait until all rechecks have been done
                 while len(rechecks_dict) > 0:
                     # debug
                     if str(self.conf.debug_mode) == "True":
-                        print "Recheck all: # of checks which still need to be done:", len(rechecks_dict)
-                    
+                        #print "Recheck all: # of checks which still need to be done:", len(rechecks_dict)
+                        # once again taking .Debug() from first server
+                        self.servers.values()[0].Debug(server=server.name, debug="Recheck all: # of checks which still need to be done: " + str(len(rechecks_dict)))
+
                     for i in rechecks_dict.copy():
                         # if a thread is stopped pop it out of the dictionary
                         if rechecks_dict[i].isAlive() == False:
@@ -249,8 +256,9 @@ class RecheckAll(threading.Thread):
                     
                 # debug
                 if str(self.conf.debug_mode) == "True":
-                    print "Recheck all: All servers, hosts and services are rechecked."
-                
+                    #print "Recheck all: All servers, hosts and services are rechecked."
+                    # once again taking .Debug() from first server
+                    self.servers.values()[0].Debug(server=server.name, debug="Recheck all: All servers, hosts and services are rechecked.")                
                 # reset global flag
                 RecheckingAll = False
                 
@@ -266,8 +274,10 @@ class RecheckAll(threading.Thread):
         else:
             # debug
             if str(self.conf.debug_mode) == "True":
-                print "Recheck all: Already rechecking all services on all hosts on all servers."
-                
+                #print "Recheck all: Already rechecking all services on all hosts on all servers."
+                # once again taking .Debug() from first server
+                self.servers.values()[0].Debug(server=server.name, debug="Recheck all: Already rechecking all services on all hosts on all servers.")                
+
         
 class Acknowledge(threading.Thread):
     """
@@ -320,7 +330,10 @@ class CheckForNewVersion(threading.Thread):
         
         # debug
         if str(self.output.conf.debug_mode) == "True":
-            print "Checking for new version..."
+            #print "Checking for new version..."
+            # once again taking .Debug() from first server
+            self.servers.values()[0].Debug(debug="Checking for new version...")
+
         
         for s in self.servers.values():
             # if connecton of a server is not yet used do it now
@@ -333,7 +346,9 @@ class CheckForNewVersion(threading.Thread):
                 
                 # debug
                 if str(self.output.conf.debug_mode) == "True":
-                    print "Latest version from sourceforge.net:", version
+                    #print "Latest version from sourceforge.net:", version
+                    # once again taking .Debug() from first server
+                    self.servers.values()[0].Debug(debug="Latest version from sourceforge.net: " + str(version))
                 
                 # if we got a result notify user
                 if error == "":
@@ -389,7 +404,9 @@ class PlaySound(threading.Thread):
         """
         # debug
         if str(self.conf.debug_mode) == "True":
-            print "Playing sound:", file
+            #print "Playing sound:", file
+            # once again taking .Debug() from first server
+            self.servers.values()[0].Debug(debug="Playing sound: " + file)
         try:
             if not platform.system() == "Windows":
                 commands.getoutput("play -q %s" % file)
@@ -517,7 +534,8 @@ def CreateServer(server=None, conf=None):
     
     # debug
     if str(conf.debug_mode) == "True":
-        print "Created Server", server.name
+        #print "Created Server", server.name
+        nagiosserver.Debug(server=server.name, debug="Created server.")
 
     return nagiosserver
 

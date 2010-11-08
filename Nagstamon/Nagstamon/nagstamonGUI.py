@@ -444,11 +444,9 @@ class GUI(object):
             
         # if only one monitor cannot be reached show popwin to inform about its trouble
         for server in self.servers.values():
-            print server.name, self.status_ok, '"' + server.status_description + '"'
             if server.status_description != "":
                 self.status_ok = False   
                 self.popwin.showPopwin = True
-            print self.status_ok
             
         # try to fix Debian bug #591875: eventually ends up lower in the window stacking order, and can't be raised
         # raising statusbar window with every refresh should do the job
@@ -699,7 +697,7 @@ class GUI(object):
                             flash.start()
                         # if wanted play notification sound
                         if str(self.conf.notification_sound) == "True":
-                            sound = nagstamonActions.PlaySound(sound=status, Resources=self.Resources, conf=self.conf)
+                            sound = nagstamonActions.PlaySound(sound=status, Resources=self.Resources, conf=self.conf, servers=self.servers)
                             sound.start()
                         # if desired pop up status window
                         # sorry but does absolutely not work with windows and systray icon so I prefer to let it be
@@ -1981,7 +1979,7 @@ class Settings(object):
         """
         try:
             filechooser = self.glade.get_widget("input_filechooser_notification_custom_sound_" + playbutton.name)
-            sound = nagstamonActions.PlaySound(sound="FILE", file=filechooser.get_filename(), conf=self.conf)
+            sound = nagstamonActions.PlaySound(sound="FILE", file=filechooser.get_filename(), conf=self.conf, servers=self.servers)
             sound.start()
         except:
             pass

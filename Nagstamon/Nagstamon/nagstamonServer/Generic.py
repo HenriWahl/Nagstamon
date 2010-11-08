@@ -241,7 +241,7 @@ class GenericServer(object):
             typ = 2      
         if str(self.conf.debug_mode) == "True":
             #print self.name, ":", "Open host/service monitor web page", self.nagios_cgi_url + '/extinfo.cgi?' + urllib.urlencode({"type":typ, "host":host, "service":service})
-            self.Debug(server=self.name, debug="Open host/service monitor web page " + self.nagios_cgi_url + '/extinfo.cgi?' + urllib.urlencode({"type":typ, "host":host, "service":service}))
+            self.Debug(server=self.name, host=host, service=service, debug="Open host/service monitor web page " + self.nagios_cgi_url + '/extinfo.cgi?' + urllib.urlencode({"type":typ, "host":host, "service":service}))
         webbrowser.open(self.nagios_cgi_url + '/extinfo.cgi?' + urllib.urlencode({"type":typ, "host":host, "service":service}))
 
         
@@ -929,13 +929,20 @@ class GenericServer(object):
         """
         Handle errors somehow - print them or later log them into not yet existing log file
         """
-        print datetime.datetime.now(), self.name + ": ", traceback.print_exception(error[0], error[1], error[2], 5, file=sys.stdout)
+        if str(self.conf.debug_mode) == "True":
+            #print self.name + ": ", traceback.print_exception(error[0], error[1], error[2], 5, file=sys.stdout)
+            #self.Debug(server=self.name, debug=str(traceback.format_exception(error[0], error[1], error[2], 5)))
+            debug = ""
+            for line in traceback.format_exception(error[0], error[1], error[2], 5):
+                debug += line
+            self.Debug(server=self.name, debug=debug, head="ERROR")
+            
         return ["ERROR", traceback.format_exception_only(error[0], error[1])[0]]
     
     
-    def Debug(self, server="", host="", service="", debug=""):
+    def Debug(self, server="", host="", service="", debug="", head="DEBUG"):
         """
         centralized debugging
         """
-        print "DEBUG:", server, host, service, debug
+        print head + ":", datetime.datetime.now(), server, host, service, debug
     
