@@ -32,7 +32,7 @@ class OpsviewServer(GenericServer):
         # this time cgi_data does not get encoded because it will be submitted via multipart
         # to build value for hidden from field old cgi_data is used
         cgi_data = { "from" : url + "?" + cgi_data, "comment": comment, "starttime": start_time, "endtime": end_time }
-        self.FetchURL(self.nagios_url + action, giveback="nothing", cgi_data=cgi_data)
+        self.FetchURL(self.nagios_url + action, giveback="raw", cgi_data=cgi_data)
         
 
     def get_start_end(self, host):
@@ -115,18 +115,21 @@ class OpsviewServer(GenericServer):
         webbrowser.open(self.nagios_url + "/status/service?filter=unhandled&includeunhandledhosts=1")
         # debug
         if str(self.conf.debug_mode) == "True":
-            print self.name, ":", "Open monitor web page", self.nagios_url + "/status/service?filter=unhandled&includeunhandledhosts=1"
-                
+            #print self.name, ":", "Open monitor web page", self.nagios_url + "/status/service?filter=unhandled&includeunhandledhosts=1"
+            self.Debug(server=self.name, debug="Open monitor web page " + self.nagios_url + "/status/service?filter=unhandled&includeunhandledhosts=1")   
+            
     def open_services(self):
         webbrowser.open(self.nagios_url + "/status/service?state=1&state=2&state=3")
         # debug
         if str(self.conf.debug_mode) == "True":
-            print self.name, ":", "Open hosts web page", self.nagios_url + "/status/service?state=1&state=2&state=3"  
+            #print self.name, ":", "Open hosts web page", self.nagios_url + "/status/service?state=1&state=2&state=3"  
+            self.Debug(server=self.name, debug="Open services web page " + self.nagios_url + "/status/service?state=1&state=2&state=3")
 
     def open_hosts(self):
         webbrowser.open(self.nagios_url + "/status/host?hostgroupid=1&state=1")
         # debug
         if str(self.conf.debug_mode) == "True":
-            print self.name, ":", "Open hosts web page", self.nagios_url + "/status/host?hostgroupid=1&state=1"      
-            
+            #print self.name, ":", "Open hosts web page", self.nagios_url + "/status/host?hostgroupid=1&state=1"      
+            self.Debug(server=self.name, debug="Open hosts web page " + self.nagios_url + "/status/host?hostgroupid=1&state=1")
+
             

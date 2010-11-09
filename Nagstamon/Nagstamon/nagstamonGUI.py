@@ -434,7 +434,8 @@ class GUI(object):
                     
                 # debug
                 if str(self.conf.debug_mode) == "True":
-                    print server.name + ":", "new worst status:", worst_status
+                    #print server.name + ":", "new worst status:", worst_status
+                    server.Debug(server=server.name, debug="New worst status: " + worst_status)
                     
                 if not worst_status == "UP" and str(self.conf.notification)== "True":
                     self.NotificationOn(status=worst_status)
@@ -638,7 +639,7 @@ class GUI(object):
 
     def ErrorDialog(self, error):
         """
-            versatile Debug Dialog
+            versatile error dialog
         """        
         # close popwin to make sure the error dialog will not be covered by popwin
         self.popwin.Close()
@@ -687,8 +688,9 @@ class GUI(object):
                     if self.Notifying == False:
                         self.Notifying = True
                         # debug
-                        if str(self.conf.debug_mode) == "True":
-                            print "Notification on"
+                        if str(self.conf.debug_mode) == "True":                            
+                            #print "Notification on"
+                            self.servers.values()[0].Debug(debug="Notification on.")
                         # threaded statusbar flash
                         if str(self.conf.notification_flashing) == "True":
                             self.statusbar.SysTray.set_blinking(True)
@@ -716,7 +718,8 @@ class GUI(object):
             self.Notifying = False
             # debug
             if str(self.conf.debug_mode) == "True":
-                print "Notification off"
+                #print "Notification off"
+                self.servers.values()[0].Debug(debug="Notification on.")
             self.statusbar.SysTray.set_blinking(False)
             self.statusbar.Flashing = False
             self.statusbar.Label.set_markup(self.statusbar.statusbar_labeltext)
@@ -1469,7 +1472,8 @@ class Popwin(gtk.Window):
         
         #debug    
         if str(self.conf.debug_mode) == "True":
-            print self.miserable_server.name, ":", remoteservice, self.miserable_host, self.miserable_service
+            #print self.miserable_server.name, ":", remoteservice, self.miserable_host, self.miserable_service
+            self.miserable_server.Debug(server=self.miserable_server.name, host=self.miserable_host, service=self.miserable_service, debug="Clicked context menu: " + remoteservice)
             
         # choose appropriate service for menu entry
         # it seems to be more responsive especially while rechecking if every service
@@ -1901,7 +1905,6 @@ class Settings(object):
                     # most probably server has been disabled and that's why there is no thread running
                     # debug
                     if str(self.conf.debug_mode) == "True":
-                        print "Server:", server
                         self.servers[server].Error(sys.exc_info())
                 # delete server from servers dictionary
                 self.servers.pop(server)

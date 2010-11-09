@@ -5,6 +5,7 @@
         <property name="allow_grow">False</property>
         <property name="default_height">260</property>
         <property name="default_width">320</property>
+        <property name="mnemonics_visible">False</property>
         <property name="resizable">False</property>
         <property name="title" context="yes" translatable="yes">nagstamon settings</property>
         <property name="type_hint">normal</property>
@@ -24,7 +25,7 @@
                             <widget class="GtkTable" id="table_server">
                                 <property name="border_width">5</property>
                                 <property name="n_columns">2</property>
-                                <property name="n_rows">4</property>
+                                <property name="n_rows">5</property>
                                 <property name="visible">True</property>
                                 <child>
                                     <widget class="GtkScrolledWindow" id="scrolledwindow1">
@@ -66,14 +67,24 @@
                                     </packing>
                                 </child>
                                 <child>
+                                    <widget class="GtkCheckButton" id="input_checkbutton_debug_to_file">
+                                        <property name="label" context="yes" translatable="yes">Debug to file:</property>
+                                        <property name="visible">True</property>
+                                    </widget>
+                                    <packing>
+                                        <property name="bottom_attach">4</property>
+                                        <property name="top_attach">3</property>
+                                    </packing>
+                                </child>
+                                <child>
                                     <widget class="GtkCheckButton" id="input_checkbutton_check_for_new_version">
                                         <property name="is_focus">True</property>
                                         <property name="label" context="yes" translatable="yes">Check for new version at startup</property>
                                         <property name="visible">True</property>
                                     </widget>
                                     <packing>
-                                        <property name="bottom_attach">4</property>
-                                        <property name="top_attach">3</property>
+                                        <property name="bottom_attach">5</property>
+                                        <property name="top_attach">4</property>
                                     </packing>
                                 </child>
                                 <child>
@@ -139,6 +150,17 @@
                                     </packing>
                                 </child>
                                 <child>
+                                    <widget class="GtkFileChooserButton" id="input_filechooser_debug_file">
+                                        <property name="visible">True</property>
+                                    </widget>
+                                    <packing>
+                                        <property name="bottom_attach">4</property>
+                                        <property name="left_attach">1</property>
+                                        <property name="right_attach">2</property>
+                                        <property name="top_attach">3</property>
+                                    </packing>
+                                </child>
+                                <child>
                                     <widget class="GtkButton" id="button_check_for_new_version_now">
                                         <property name="is_focus">True</property>
                                         <property name="label" context="yes" translatable="yes">Check for new version now</property>
@@ -146,10 +168,10 @@
                                         <signal handler="button_check_for_new_version_now" name="pressed"/>
                                     </widget>
                                     <packing>
-                                        <property name="bottom_attach">4</property>
+                                        <property name="bottom_attach">5</property>
                                         <property name="left_attach">1</property>
                                         <property name="right_attach">2</property>
-                                        <property name="top_attach">3</property>
+                                        <property name="top_attach">4</property>
                                     </packing>
                                 </child>
                             </widget>
@@ -1188,7 +1210,7 @@
                     </widget>
                     <packing>
                         <property name="pack_type">end</property>
-                        <property name="position">2</property>
+                        <property name="position">1</property>
                     </packing>
                 </child>
                 <child internal-child="action_area">

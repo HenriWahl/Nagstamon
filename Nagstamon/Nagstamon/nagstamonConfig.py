@@ -39,6 +39,8 @@ class Config(object):
         self.connect_by_dns_yes = True
         self.connect_by_dns_no = False
         self.debug_mode = False
+        self.debug_to_file = False
+        self.debug_file = ""
         self.check_for_new_version = True
         self.notification = True
         self.notification_flashing = True

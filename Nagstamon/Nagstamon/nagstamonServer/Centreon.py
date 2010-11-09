@@ -606,12 +606,12 @@ class CentreonServer(GenericServer):
         if self.SIDcount >= 300:
             if str(self.conf.debug_mode) == "True":
                 #print self.name + ":", "old SID:", self.SID, self.Cookie
-                self.Debug(server=self.name, debug="Old SID: " + self.SID + " " + self.Cookie)                
+                self.Debug(server=self.name, debug="Old SID: " + self.SID + " " + str(self.Cookie))                
 
             self.SID = self._get_sid().result
             if str(self.conf.debug_mode) == "True":
                 #print self.name + ":", "new SID:", self.SID, self.Cookie
-                self.Debug(server=self.name, debug="New SID: " +  self.SID + " " + self.Cookie)
+                self.Debug(server=self.name, debug="New SID: " +  self.SID + " " + str(self.Cookie))
             self.SIDcount = 0
         else:
             self.SIDcount += 1          

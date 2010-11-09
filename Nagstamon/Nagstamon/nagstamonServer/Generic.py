@@ -139,7 +139,7 @@ class GenericServer(object):
                                      ("force_check", "on"),\
                                      ("btnSubmit", "Commit")])
         # execute POST request
-        self.FetchURL(self.nagios_cgi_url + "/cmd.cgi", giveback="nothing", cgi_data=cgi_data)
+        self.FetchURL(self.nagios_cgi_url + "/cmd.cgi", giveback="raw", cgi_data=cgi_data)
     
         
     def set_acknowledge(self, thread_obj):
@@ -170,14 +170,14 @@ class GenericServer(object):
                                          "sticky_ack":self.HTML_ACKFLAGS[sticky], "send_notification":self.HTML_ACKFLAGS[notify], "persistent":self.HTML_ACKFLAGS[persistent],\
                                          "com_author":author, "com_data":comment, "btnSubmit":"Commit"})          
         # running remote cgi command        
-        self.FetchURL(url, giveback="nothing", cgi_data=cgi_data)
+        self.FetchURL(url, giveback="raw", cgi_data=cgi_data)        
 
         # acknowledge all services on a host
         for s in all_services:
             # service @ host
             cgi_data = urllib.urlencode({"cmd_typ":"34", "cmd_mod":"2", "host":host, "service":s, "com_author":author, "com_data":comment, "btnSubmit":"Commit"})
             #running remote cgi command        
-            self.FetchURL(url, giveback="nothing", cgi_data=cgi_data)
+            self.FetchURL(url, giveback="raw", cgi_data=cgi_data)
     
     def set_downtime(self, thread_obj):
         self._set_downtime(thread_obj.host, thread_obj.service, thread_obj.author, thread_obj.comment, thread_obj.fixed,
