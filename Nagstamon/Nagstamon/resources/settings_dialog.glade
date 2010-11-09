@@ -60,6 +60,7 @@
                                     <widget class="GtkCheckButton" id="input_checkbutton_debug_mode">
                                         <property name="label" context="yes" translatable="yes">Debug mode</property>
                                         <property name="visible">True</property>
+                                        <signal handler="checkbutton_debug_mode" name="toggled"/>
                                     </widget>
                                     <packing>
                                         <property name="bottom_attach">3</property>
@@ -70,6 +71,7 @@
                                     <widget class="GtkCheckButton" id="input_checkbutton_debug_to_file">
                                         <property name="label" context="yes" translatable="yes">Debug to file:</property>
                                         <property name="visible">True</property>
+                                        <signal handler="checkbutton_debug_to_file" name="toggled"/>
                                     </widget>
                                     <packing>
                                         <property name="bottom_attach">4</property>
@@ -150,7 +152,7 @@
                                     </packing>
                                 </child>
                                 <child>
-                                    <widget class="GtkFileChooserButton" id="input_filechooser_debug_file">
+                                    <widget class="GtkEntry" id="input_entry_debug_file">
                                         <property name="visible">True</property>
                                     </widget>
                                     <packing>

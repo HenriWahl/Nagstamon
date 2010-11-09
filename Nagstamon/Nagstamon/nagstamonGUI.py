@@ -1668,7 +1668,9 @@ class Settings(object):
                           "togglebutton_use_custom_sounds": self.ToggleCustomSoundOptions,
                           "checkbutton_re_host_enabled": self.ToggleREHostOptions,
                           "checkbutton_re_service_enabled": self.ToggleREServiceOptions,
-                          "button_play_sound": self.PlaySound}
+                          "button_play_sound": self.PlaySound,
+                          "checkbutton_debug_mode": self.ToggleDebugOptions,
+                          "checkbutton_debug_to_file": self.ToggleDebugOptions}
         self.glade.signal_autoconnect(handlers_dict)
         
         # walk through all relevant input types to fill dialog with existing settings
@@ -1720,6 +1722,9 @@ class Settings(object):
         # fill treeview
         self.FillTreeView()
         
+        # toggle debug options
+        self.ToggleDebugOptions()
+
         # toggle custom sounds options
         self.ToggleCustomSoundOptions()
         
@@ -1930,6 +1935,18 @@ class Settings(object):
                 # if one of the servers is not used to check for new version this is enough
                 break
             
+    def ToggleDebugOptions(self, widget=None):
+        """
+        allow to use a file for debug output
+        """
+        debug_to_file = self.glade.get_widget("input_checkbutton_debug_to_file")
+        debug_file = self.glade.get_widget("input_entry_debug_file")
+        debug_mode = self.glade.get_widget("input_checkbutton_debug_mode")
+        debug_to_file.set_sensitive(debug_mode.get_active())
+        debug_file.set_sensitive(debug_to_file.get_active())
+        if debug_to_file.get_state() == gtk.STATE_INSENSITIVE:
+            debug_file.set_sensitive(False)
+        
             
     def ToggleNotification(self, widget=None):
         """
@@ -2054,13 +2071,6 @@ class NewServer(ServerDialogHelper):
         # show filled settings dialog and wait thanks to gtk.run()
         self.dialog.run()
         self.dialog.destroy()       
-
-        
-    #def __del__(self):
-    #    """
-    #    hopefully a __del__() method may make this object better collectable for gc
-    #    """
-    #    del(self)
  
 
     def OK(self, widget):

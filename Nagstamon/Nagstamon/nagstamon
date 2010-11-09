@@ -80,8 +80,8 @@ for server in conf.servers.values():
         server.password = pwdialog.password
     created_server = nagstamonActions.CreateServer(server, conf)
     if created_server is not None:
-        servers[server.name] = created_server 
-
+        servers[server.name] = created_server     
+        
 # Initiate Output
 output = nagstamonGUI.GUI(conf=conf, servers=servers, Resources=Resources)
 
