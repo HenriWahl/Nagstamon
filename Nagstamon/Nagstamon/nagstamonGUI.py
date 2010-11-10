@@ -1555,7 +1555,8 @@ class Popwin(gtk.Window):
         # status field in server vbox in popwin    
         try:
             self.ServerVBoxes[server.name].LabelStatus.set_markup('<span>Status: ' + server.status + ' <span color="darkred">' + server.status_description + '</span></span>')
-        except:
+        except Exception, err:
+            print err
             pass
     
 
@@ -1875,7 +1876,7 @@ class Settings(object):
             
             # start debugging loop if wanted
             if str(self.conf.debug_mode) == "True":
-                debugloop = nagstamonActions.DebugLoop(conf=self.conf, debug_queue=self.servers.values()[0].debug_queue, output=self.output)
+                debugloop = nagstamonActions.DebugLoop(conf=self.conf, debug_queue=self.output.debug_queue, output=self.output)
                 debugloop.start()
             
             # force refresh
@@ -2317,7 +2318,7 @@ class EditServer(ServerDialogHelper):
             # put in new one
             self.conf.servers[new_server.name] = new_server
             # create new server thread
-            created_server = nagstamonActions.CreateServer(new_server, self.conf)
+            created_server = nagstamonActions.CreateServer(new_server, self.conf, self.output.debug_queue)
             if created_server is not None:
                 self.servers[new_server.name] = created_server 
                 

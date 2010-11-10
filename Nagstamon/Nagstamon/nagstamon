@@ -87,7 +87,7 @@ for server in conf.servers.values():
         servers[server.name] = created_server     
         
 # Initiate Output
-output = nagstamonGUI.GUI(conf=conf, servers=servers, Resources=Resources)
+output = nagstamonGUI.GUI(conf=conf, servers=servers, Resources=Resources, debug_queue=debug_queue)
 
 # Start debugging loop
 debugloop = nagstamonActions.DebugLoop(conf=conf, debug_queue=debug_queue, output=output)

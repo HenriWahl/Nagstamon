@@ -786,7 +786,8 @@ class GenericServer(object):
                     urlcontent = urllib2.urlopen(url, cgi_data)
             except:
                 result, error = self.Error(sys.exc_info())
-                return Result(result=result, error=error + " " + str(url) + "?" + str(cgi_data))
+                #return Result(result=result, error=error + " " + str(url) + "?" + str(cgi_data))
+                return Result(result=result, error=error)
             
             # give back pure HTML or XML in case giveback is "raw"
             if giveback == "raw":
