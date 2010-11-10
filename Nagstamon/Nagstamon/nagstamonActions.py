@@ -213,14 +213,11 @@ class DebugLoop(threading.Thread):
             try:
                 debug_string = self.debug_queue.get(True, 1)
                 print debug_string
-                if str(self.conf.debug_to_file) == "True" and self.__dict__.has_key("debug_file"):
+                if str(self.conf.debug_to_file) == "True" and self.__dict__.has_key("debug_file") and debug_string != "":
                     self.debug_file.write(debug_string + "\n")
             except:
                 pass
 
-            if str(self.conf.debug_to_file) == "True" and self.__dict__.has_key("debug_file") and debug_string != "":
-                self.debug_file.write(debug_string + "\n")
-                
             # if no debugging is needed anymore stop it
             if str(self.conf.debug_mode) == "False": self.stopped = True
             
