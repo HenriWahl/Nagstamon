@@ -786,7 +786,7 @@ class GenericServer(object):
                     urlcontent = urllib2.urlopen(url, cgi_data)
             except:
                 result, error = self.Error(sys.exc_info())
-                return Result(result=result, error=error)
+                return Result(result=result, error=error + " " + str(url) + "?" + str(cgi_data))
             
             # give back pure HTML or XML in case giveback is "raw"
             if giveback == "raw":
@@ -915,12 +915,11 @@ class GenericServer(object):
         #return [address]
         return Result(result=address)
 
-
     
     def Hook(self):
         """
         allows to add some extra actions for a monitor server to be executed in RefreshLoop
-        inspired by Centreon and its seemingly Alzheimer regarding session ID/Cookie/whatever
+        inspired by Centreon and its seemingly Alzheimer desease regarding session ID/Cookie/whatever
         """
         pass    
     
@@ -944,5 +943,8 @@ class GenericServer(object):
         """
         centralized debugging
         """
-        print head + ":", datetime.datetime.now(), server, host, service, debug
+        debug_string =  " ".join((head + ":",  str(datetime.datetime.now()), server, host, service, debug))     
+        # give debug info to debug loop for thread-save log-file writing
+        self.debug_queue.put(debug_string)
+
     

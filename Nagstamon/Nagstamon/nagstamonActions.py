@@ -35,6 +35,7 @@ def StartRefreshLoop(servers=None, output=None, conf=None):
     """
     the everlasting refresh cycle - starts refresh cycle for every server as thread
     """
+
     for server in servers.values():
         if str(conf.servers[server.name].enabled) == "True":
             server.thread = RefreshLoopOneServer(server=server, output=output, conf=conf)
@@ -170,7 +171,65 @@ def RefreshAllServers(servers=None, output=None, conf=None):
     # do some cleanup
     gc.collect()
     
+    
+class DebugLoop(threading.Thread):    
+    """
+    run and empty debug_queue into debug log file
+    """
+    # stop flag
+    stopped = False
+    
+    def __init__(self, **kwds):
+        # add all keywords to object, every mode searchs inside for its favorite arguments/keywords
+        for k in kwds: self.__dict__[k] = kwds[k]
+        
+        # check if DebugLoop is already looping - if it does do not run another one
+        for t in threading.enumerate():
+            if t.name == "DebugLoop": 
+                # loop gets stopped as soon as it starts - maybe waste
+                self.stopped = True
 
+        # initiate Loop
+        try:
+            threading.Thread.__init__(self, name="DebugLoop")
+            self.setDaemon(1)
+        except Exception, err:
+            print err
+        
+        # open debug file if needed
+        if str(self.conf.debug_to_file) == "True" and self.stopped == False:
+            try:
+                self.debug_file = open(self.conf.debug_file, "w")
+            except Exception, err:
+                # if path to file does not exist tell user
+                self.output.ErrorDialog(err) 
+        
+        
+    def run(self):       
+        # as long as debugging is wanted do it
+        while self.stopped == False and str(self.conf.debug_mode) == "True":
+            # .get() waits until there is something to get - needs timeout in case no debug messages fly in
+            debug_string = ""
+            try:
+                debug_string = self.debug_queue.get(True, 1)
+                print debug_string
+                if str(self.conf.debug_to_file) == "True" and self.__dict__.has_key("debug_file"):
+                    self.debug_file.write(debug_string + "\n")
+            except:
+                pass
+
+            if str(self.conf.debug_to_file) == "True" and self.__dict__.has_key("debug_file") and debug_string != "":
+                self.debug_file.write(debug_string + "\n")
+                
+            # if no debugging is needed anymore stop it
+            if str(self.conf.debug_mode) == "False": self.stopped = True
+            
+            
+    def Stop(self):
+        # simply sets the stopped flag to True to let the above while stop this thread when checking next
+        self.stopped = True
+
+            
 class Recheck(threading.Thread):
     """
     recheck a clicked service/host
@@ -224,7 +283,7 @@ class RecheckAll(threading.Thread):
                         
                         for host in server.hosts.values():
                             # construct an unique key which refers to rechecking thread in dictionary
-                            rechecks_dict[server.name + ": " + host.name] = Recheck(server=server, host=host.name, service=None)
+                            rechecks_dict[server.name + ": " + host.name] = Recheck(server=server, host=host.name, service="")
                             rechecks_dict[server.name + ": " + host.name].start()
                             # debug
                             if str(self.conf.debug_mode) == "True":
@@ -504,7 +563,7 @@ def get_registered_server_type_list():
     return [x[0] for x in REGISTERED_SERVERS]
 
 
-def CreateServer(server=None, conf=None):
+def CreateServer(server=None, conf=None, debug_queue=None):
     # create Server from config
     registered_servers = get_registered_servers()
     if server.type not in registered_servers:
@@ -531,6 +590,8 @@ def CreateServer(server=None, conf=None):
     nagiosserver.proxy_address = server.proxy_address
     nagiosserver.proxy_username = server.proxy_username
     nagiosserver.proxy_password = server.proxy_password
+    
+    nagiosserver.debug_queue = debug_queue
     
     # debug
     if str(conf.debug_mode) == "True":

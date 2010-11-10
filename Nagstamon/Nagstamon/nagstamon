@@ -9,6 +9,7 @@ gc.enable()
 import sys
 import os
 import os.path
+import Queue
 
 
 try:
@@ -70,6 +71,9 @@ gobject.threads_init()
 # dictinary for servers
 servers = dict()
 
+# queue for debugging
+debug_queue = Queue.Queue()
+
 # create servers
 for server in conf.servers.values():
     if server.save_password == "False" and server.enabled == "True":
@@ -78,12 +82,16 @@ for server in conf.servers.values():
         if pwdialog.password == None:
             sys.exit(1)
         server.password = pwdialog.password
-    created_server = nagstamonActions.CreateServer(server, conf)
+    created_server = nagstamonActions.CreateServer(server, conf, debug_queue)
     if created_server is not None:
         servers[server.name] = created_server     
         
 # Initiate Output
 output = nagstamonGUI.GUI(conf=conf, servers=servers, Resources=Resources)
+
+# Start debugging loop
+debugloop = nagstamonActions.DebugLoop(conf=conf, debug_queue=debug_queue, output=output)
+debugloop.start()
 
 # start threaded nagios server checking loop
 nagstamonActions.StartRefreshLoop(servers=servers, conf=conf, output=output)

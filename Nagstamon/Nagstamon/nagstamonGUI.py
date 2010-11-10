@@ -433,9 +433,9 @@ class GUI(object):
                     server.WorstStatus = "UP"
                     
                 # debug
-                if str(self.conf.debug_mode) == "True":
-                    #print server.name + ":", "new worst status:", worst_status
-                    server.Debug(server=server.name, debug="New worst status: " + worst_status)
+                #if str(self.conf.debug_mode) == "True":
+                    ##print server.name + ":", "new worst status:", worst_status
+                    #server.Debug(server=server.name, debug="New worst status: " + worst_status)
                     
                 if not worst_status == "UP" and str(self.conf.notification)== "True":
                     self.NotificationOn(status=worst_status)
@@ -1873,11 +1873,16 @@ class Settings(object):
             # re-initialize output with new settings
             self.output.__init__()
             
+            # start debugging loop if wanted
+            if str(self.conf.debug_mode) == "True":
+                debugloop = nagstamonActions.DebugLoop(conf=self.conf, debug_queue=self.servers.values()[0].debug_queue, output=self.output)
+                debugloop.start()
+            
             # force refresh
             nagstamonActions.RefreshAllServers(servers=self.servers, output=self.output, conf=self.conf)
             
         except:
-            pass
+            self.servers.values()[0].Error(sys.exc_info())
 
         
     def Cancel(self, widget):
