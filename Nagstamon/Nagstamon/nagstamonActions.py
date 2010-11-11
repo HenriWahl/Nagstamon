@@ -185,7 +185,7 @@ class DebugLoop(threading.Thread):
         
         # check if DebugLoop is already looping - if it does do not run another one
         for t in threading.enumerate():
-            if t.name == "DebugLoop": 
+            if t.getName() == "DebugLoop": 
                 # loop gets stopped as soon as it starts - maybe waste
                 self.stopped = True
 

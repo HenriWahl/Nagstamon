@@ -1715,7 +1715,8 @@ class Settings(object):
         self.dialog.set_title(self.output.name + " " + self.output.version + " settings")
         
         # workaround for gazpacho-made glade-file - dunno why tab labels do not get named as they should be
-        notebook = self.dialog.get_children()[0].get_children()[0]
+        notebook = self.glade.get_widget("notebook")
+        #notebook = self.dialog.get_children()[0].get_children()[0]
         notebook_tabs =  ["Servers", "Display", "Filters", "Executables", "Notification"]
         for c in notebook.get_children():
             notebook.set_tab_label_text(c, notebook_tabs.pop(0))
