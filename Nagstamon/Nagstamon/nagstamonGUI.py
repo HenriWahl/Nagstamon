@@ -1951,7 +1951,8 @@ class Settings(object):
         debug_mode = self.glade.get_widget("input_checkbutton_debug_mode")
         debug_to_file.set_sensitive(debug_mode.get_active())
         debug_file.set_sensitive(debug_to_file.get_active())
-        if debug_to_file.get_state() == gtk.STATE_INSENSITIVE:
+        
+        if debug_to_file.state == gtk.STATE_INSENSITIVE:
             debug_file.set_sensitive(False)
         
             
