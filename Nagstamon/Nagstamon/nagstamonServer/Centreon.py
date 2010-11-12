@@ -7,6 +7,7 @@ import time
 import sys
 import cookielib
 import traceback
+import gc
 
 try:
     import lxml.etree, lxml.objectify
@@ -207,7 +208,9 @@ class CentreonServer(GenericServer):
                 #print self.name, ":", host, "ID could not be retrieved."
                 self.Debug(server=self.name, debug = "Host ID could not be retrieved.")
 
-
+        # some cleanup        
+        del result, raw, error        
+        
         # only if host_id is an usable integer return it    
         try:
             if int(host_id):
@@ -614,5 +617,16 @@ class CentreonServer(GenericServer):
                 self.Debug(server=self.name, debug="New SID: " +  self.SID + " " + str(self.Cookie))
             self.SIDcount = 0
         else:
-            self.SIDcount += 1          
+            self.SIDcount += 1         
+        
+        gc.collect(2)
+            
+        #debug
+        print
+        print "************************************************************"
+        print
+        print self.name, gc.get_threshold(), gc.get_count(), gc.garbage
+        print
+        print "************************************************************"
+        print
             

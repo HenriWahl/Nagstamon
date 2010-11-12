@@ -454,7 +454,7 @@ class GUI(object):
         self.statusbar.StatusBar.window.raise_()
         
         # do some cleanup
-        gc.collect()
+        #gc.collect()
         
         # return False to get removed as gobject idle source
         return False

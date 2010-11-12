@@ -117,7 +117,7 @@ class RefreshLoopOneServer(threading.Thread):
                         time.sleep(10)
 
                         # do some cleanup
-                        gc.collect()
+                        #gc.collect()
 
                     else:
                         # set server status for status field in popwin
@@ -125,7 +125,7 @@ class RefreshLoopOneServer(threading.Thread):
                         # tell gobject to care about GUI stuff - refresh display status
                         gobject.idle_add(self.output.RefreshDisplayStatus)
                         # do some cleanup
-                        gc.collect()
+                        #gc.collect()
                         # wait for the doRefresh flag to be True, if it is, do a refresh
                         if self.doRefresh == True:
                             if str(self.conf.debug_mode) == "True":
@@ -136,7 +136,7 @@ class RefreshLoopOneServer(threading.Thread):
 
                             # do some cleanup
                             del self.server.count
-                            gc.collect()
+                            #gc.collect()
                             self.server.count = 0
                             # call Hook() for extra action
                             self.server.Hook()
@@ -145,7 +145,7 @@ class RefreshLoopOneServer(threading.Thread):
                 # sleep and count
                 time.sleep(3)
                 self.server.count += 3
-                gc.collect()
+                #gc.collect()
                 # call Hook() for extra action
                 self.server.Hook()
 
@@ -169,7 +169,7 @@ def RefreshAllServers(servers=None, output=None, conf=None):
             gobject.idle_add(output.popwin.UpdateStatus, server)
             
     # do some cleanup
-    gc.collect()
+    #gc.collect()
     
     
 class DebugLoop(threading.Thread):    
@@ -323,7 +323,7 @@ class RecheckAll(threading.Thread):
                 RefreshAllServers(servers=self.servers, output=self.output, conf=self.conf)
                 # do some cleanup
                 del rechecks_dict
-                gc.collect()
+                #gc.collect()
                                
             except:
                 RecheckingAll = False          
