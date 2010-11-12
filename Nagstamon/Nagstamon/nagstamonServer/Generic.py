@@ -680,7 +680,7 @@ class GenericServer(object):
         # do some cleanup
         del self.new_hosts_acknowledged[::], self.new_hosts_in_maintenance[::]
         self.new_hosts.clear()
-        gc.collect()
+        #gc.collect()
         
         # after all checks are done unset checking flag
         self.isChecking = False
@@ -780,10 +780,12 @@ class GenericServer(object):
                 if self.type == "Opsview" and giveback == "opsxml":
                     headers = {"Content-Type":"text/xml", "X-Username":self.username, "X-Password":self.password}
                     request = urllib2.Request(url, cgi_data, headers)
-                    urlcontent = urllib2.urlopen(request)            
+                    urlcontent = urllib2.urlopen(request)
+                    del headers, request, url, cgi_data
                 else:
                     # use opener - if cgi_data is not empty urllib uses a POST request
                     urlcontent = urllib2.urlopen(url, cgi_data)
+                    del url, cgi_data
             except:
                 result, error = self.Error(sys.exc_info())
                 #return Result(result=result, error=error + " " + str(url) + "?" + str(cgi_data))
@@ -804,9 +806,13 @@ class GenericServer(object):
                 # the heart of the whole Nagios-status-monitoring engine:
                 # first step: parse the read HTML
                 html = lxml.etree.HTML(urlcontent.read())
+                del urlcontent
                     
                 # second step: make pretty HTML of it
-                prettyhtml = lxml.etree.tostring(html, pretty_print=True)
+                #prettyhtml = lxml.etree.tostring(html, pretty_print=True)
+                prettyhtml = lxml.etree.tostring(html, pretty_print=False)
+                
+                del html
 
                 # third step: clean HTML from tags which embarass libxml2 2.7
                 # only possible when module lxml.html.clean has been loaded
@@ -815,21 +821,19 @@ class GenericServer(object):
                     # this is the case with all tags that do not need a closing end tag like link, br, img
                     cleaner = lxml.html.clean.Cleaner(remove_tags=remove_tags, page_structure=True, style=False,\
                                                       safe_attrs_only=True, scripts=False, javascript=False)
-                    prettyhtml = cleaner.clean_html(prettyhtml)                  
+                    prettyhtml = cleaner.clean_html(prettyhtml)
+                    del cleaner
                     
                     # lousy workaround for libxml2 2.7 which worries about attributes without value
                     # we hope that nobody names a server '" nowrap>' - chances are pretty small because this "name"
                     # contains unallowed characters and is far from common sense
                     prettyhtml = prettyhtml.replace(' nowrap', '')
-                    
-                    # cleanup cleaner
-                    del cleaner
     
                 # fourth step: make objects of tags for easy access              
                 htobj = lxml.objectify.fromstring(prettyhtml)
                 
                 #do some cleanup
-                del passman, auth_handler, digest_handler, urlcontent, html, prettyhtml
+                del passman, auth_handler, digest_handler, prettyhtml
         
                 # give back HTML object from Nagios webseite
                 return Result(result=copy.copy(htobj))

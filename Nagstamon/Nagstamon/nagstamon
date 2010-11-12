@@ -5,10 +5,13 @@
 # Garbage collection
 import gc
 gc.enable()
+#gc.disable()
 #gc.set_debug(gc.DEBUG_LEAK)
 #gc.set_debug(gc.DEBUG_UNCOLLECTABLE | gc.DEBUG_INSTANCES)
-gc.set_debug(gc.DEBUG_STATS)
-gc.set_threshold(10,10,10)
+#gc.set_debug(gc.DEBUG_STATS | gc.DEBUG_UNCOLLECTABLE | gc.DEBUG_SAVEALL )
+gc.set_debug(gc.DEBUG_STATS | gc.DEBUG_UNCOLLECTABLE)
+
+gc.set_threshold(10,5,2)
 import sys
 import os
 import os.path

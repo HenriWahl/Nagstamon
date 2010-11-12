@@ -129,6 +129,7 @@ class CentreonServer(GenericServer):
                               + cgi_data, giveback="raw")
         raw = result.result
         htobj = lxml.objectify.fromstring(raw)
+        del raw
                
         if htobj.__dict__.has_key("l"):   
             # when connection by DNS is not configured do it by IP
@@ -137,11 +138,14 @@ class CentreonServer(GenericServer):
                    # try to get DNS name for ip, if not available use ip
                     try:
                         address = socket.gethostbyaddr(htobj.l.a.text)[0]
+                        del htobj
                     except:
                         self.Error(sys.exc_info())
                         address = htobj.l.a.text
+                        del htobj
                 else:
                     address = htobj.l.a.text
+                    del htobj
             except:
                 #self.Error(sys.exc_info())
                 #address = "ERROR"
@@ -170,7 +174,8 @@ class CentreonServer(GenericServer):
         try:
             # why not get a new cookie with every new session id?    
             self.Cookie = cookielib.CookieJar()    
-            self.FetchURL(self.nagios_cgi_url + "/index.php?" + urllib.urlencode({"p":1, "autologin":1, "useralias":self.MD5_username, "password":self.MD5_password}), giveback="raw")
+            raw = self.FetchURL(self.nagios_cgi_url + "/index.php?" + urllib.urlencode({"p":1, "autologin":1, "useralias":self.MD5_username, "password":self.MD5_password}), giveback="raw")
+            del raw
             sid = self.Cookie._cookies.values()[0].values()[0]["PHPSESSID"].value
             return Result(result=sid)
         except:
@@ -290,6 +295,8 @@ class CentreonServer(GenericServer):
             if error != "": return Result(result=raw, error=error)
 
             htobj = lxml.objectify.fromstring(raw)
+            del raw
+            
             # in case there are no children session id is invalid
             if htobj.getchildren() == []:
                 if str(self.conf.debug_mode) == "True": 
@@ -302,6 +309,7 @@ class CentreonServer(GenericServer):
                 raw, error = result.result, result.error
                 if error != "": return Result(result=raw, error=error)
                 htobj = lxml.objectify.fromstring(raw)
+                del raw
                 time.sleep(1)
                  
             if htobj.__dict__.has_key("l"):
@@ -377,6 +385,7 @@ class CentreonServer(GenericServer):
             raw, error = result.result, result.error
             if error != "": return Result(result=raw, error=error)
             htobj = lxml.objectify.fromstring(raw)     
+            del raw
             # in case there are no children session id is invalid
             if htobj.getchildren == []:
                 # debug
@@ -390,7 +399,8 @@ class CentreonServer(GenericServer):
                 
                 if error != "": return Result(result=raw, error=error)
 
-                htobj = lxml.objectify.fromstring(raw)                           
+                htobj = lxml.objectify.fromstring(raw) 
+                del raw
             
             if htobj.__dict__.has_key("l"):
                 for l in htobj.l:
@@ -493,8 +503,9 @@ class CentreonServer(GenericServer):
                     self.Debug(server=self.name, host=host, debug=self.nagios_cgi_url + "/main.php?"+ cgi_data)                
 
                 # running remote cgi command, also possible with GET method     
-                self.FetchURL(self.nagios_cgi_url + "/main.php?" + cgi_data, giveback="raw") 
-            
+                raw = self.FetchURL(self.nagios_cgi_url + "/main.php?" + cgi_data, giveback="raw") 
+                del raw
+                
             # if host is acknowledged and all services should be to or if a service is acknowledged
             # (and all other on this host too)
             if service != "" or len(all_services) > 0:
@@ -520,7 +531,8 @@ class CentreonServer(GenericServer):
 
                     # running remote cgi command with GET method, for some strange reason only working if
                     # giveback="raw"
-                    self.FetchURL(self.nagios_cgi_url + "/main.php?" + cgi_data, giveback="raw")
+                    raw = self.FetchURL(self.nagios_cgi_url + "/main.php?" + cgi_data, giveback="raw")
+                    del raw
         except:
             self.Error(sys.exc_info())
             
@@ -539,7 +551,7 @@ class CentreonServer(GenericServer):
                 cgi_data = urllib.urlencode({"cmd":"host_schedule_check", "actiontype":1,\
                                              "host_id":host_id, "sid":self.SID})
                 url = self.nagios_cgi_url + "/include/monitoring/objectDetails/xml/hostSendCommand.php?" + cgi_data
-                
+                del host_id
             else:
                 # service @ host
                 host_id, service_id = self._get_host_and_service_id(host, service)
@@ -547,9 +559,10 @@ class CentreonServer(GenericServer):
                 cgi_data = urllib.urlencode({"cmd":"service_schedule_check", "actiontype":1,\
                                              "host_id":host_id, "service_id":service_id, "sid":self.SID})
                 url = self.nagios_cgi_url + "/include/monitoring/objectDetails/xml/serviceSendCommand.php?" + cgi_data
-
+                del host_id, service_id
             # execute POST request
-            self.FetchURL(url, giveback="raw")
+            raw = self.FetchURL(url, giveback="raw")
+            del raw
         except:
             self.Error(sys.exc_info())
        
@@ -595,7 +608,8 @@ class CentreonServer(GenericServer):
                     self.Debug(server=self.name, host=host, service=s, debug=self.nagios_cgi_url + "/main.php?" + cgi_data)                
 
             # running remote cgi command
-            self.FetchURL(self.nagios_cgi_url + "/main.php", giveback="raw", cgi_data=cgi_data)   
+            raw = self.FetchURL(self.nagios_cgi_url + "/main.php", giveback="raw", cgi_data=cgi_data)   
+            del raw
         except:
             self.Error(sys.exc_info())
 
@@ -619,14 +633,14 @@ class CentreonServer(GenericServer):
         else:
             self.SIDcount += 1         
         
-        gc.collect(2)
+        gc.collect()
             
         #debug
-        print
-        print "************************************************************"
-        print
-        print self.name, gc.get_threshold(), gc.get_count(), gc.garbage
-        print
-        print "************************************************************"
-        print
+        #print
+        #print "************************************************************"
+        #print
+        #print self.name, gc.get_count(), len(gc.garbage)
+        #print
+        #print "************************************************************"
+        #print
             

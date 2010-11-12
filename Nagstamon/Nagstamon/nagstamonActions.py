@@ -332,7 +332,7 @@ class RecheckAll(threading.Thread):
             if str(self.conf.debug_mode) == "True":
                 #print "Recheck all: Already rechecking all services on all hosts on all servers."
                 # once again taking .Debug() from first server
-                self.servers.values()[0].Debug(server=server.name, debug="Recheck all: Already rechecking all services on all hosts on all servers.")                
+                self.servers.values()[0].Debug(debug="Recheck all: Already rechecking all services on all hosts on all servers.")                
 
         
 class Acknowledge(threading.Thread):
