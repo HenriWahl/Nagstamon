@@ -37,7 +37,7 @@ def StartRefreshLoop(servers=None, output=None, conf=None):
     """
 
     for server in servers.values():
-        if str(conf.servers[server.name].enabled) == "True":
+        if str(conf.servers[server.get_name()].enabled) == "True":
             server.thread = RefreshLoopOneServer(server=server, output=output, conf=conf)
             server.thread.start()
 
@@ -55,7 +55,7 @@ class RefreshLoopOneServer(threading.Thread):
         # add all keywords to object, every mode searchs inside for its favorite arguments/keywords
         for k in kwds: self.__dict__[k] = kwds[k]
         # include threading mechanism
-        threading.Thread.__init__(self, name=self.server.name)
+        threading.Thread.__init__(self, name=self.server.get_name())
         self.setDaemon(1)
 
     def Stop(self):
@@ -88,8 +88,8 @@ class RefreshLoopOneServer(threading.Thread):
                     server_status.error = server_status.error.replace("<", "").replace(">", "").replace("\n", " ")
                     # debug
                     if str(self.conf.debug_mode) == "True":
-                        #print self.server.name, ": server return values:", server_status.result, server_status.error 
-                        self.server.Debug(server=self.server.name, debug="server return values: " + server_status.result + " " + server_status.error)
+                        #print self.server.get_name(), ": server return values:", server_status.result, server_status.error 
+                        self.server.Debug(server=self.server.get_name(), debug="server return values: " + server_status.result + " " + server_status.error)
                         
                     if server_status.error != "":
                         # set server status for status field in popwin 
@@ -129,8 +129,8 @@ class RefreshLoopOneServer(threading.Thread):
                         # wait for the doRefresh flag to be True, if it is, do a refresh
                         if self.doRefresh == True:
                             if str(self.conf.debug_mode) == "True":
-                                #print self.server.name, ":", "Refreshing output - server is already checking:", self.server.isChecking                                        
-                                self.server.Debug(server=self.server.name, debug="Refreshing output - server is already checking: " + str(self.server.isChecking))
+                                #print self.server.get_name(), ":", "Refreshing output - server is already checking:", self.server.isChecking                                        
+                                self.server.Debug(server=self.server.get_name(), debug="Refreshing output - server is already checking: " + str(self.server.isChecking))
                             # reset refresh flag
                             self.doRefresh = False
 
@@ -156,11 +156,11 @@ def RefreshAllServers(servers=None, output=None, conf=None):
     """    
     for server in servers.values():        
         # check if server is already checked
-        if server.isChecking == False and str(conf.servers[server.name].enabled) == "True":
+        if server.isChecking == False and str(conf.servers[server.get_name()].enabled) == "True":
             #debug
             if str(conf.debug_mode) == "True":
-                #print "Checking server:", server.name
-                server.Debug(server=server.name, debug="Checking server...")
+                #print "Checking server:", server.get_name()
+                server.Debug(server=server.get_name(), debug="Checking server...")
     
             server.thread.Refresh()
 
@@ -234,7 +234,7 @@ class Recheck(threading.Thread):
     def __init__(self, **kwds):
         # add all keywords to object, every mode searchs inside for its favorite arguments/keywords
         for k in kwds: self.__dict__[k] = kwds[k]
-        threading.Thread.__init__(self, name=self.server.name + "-Recheck")
+        threading.Thread.__init__(self, name=self.server.get_name() + "-Recheck")
         self.setDaemon(1)
         
 
@@ -273,27 +273,27 @@ class RecheckAll(threading.Thread):
                     self.servers.values()[0].Debug(debug="Recheck all: Rechecking all services on all hosts on all servers...")
                 for server in self.servers.values():                
                     # only test enabled servers and only if not already 
-                    if str(self.conf.servers[server.name].enabled):
+                    if str(self.conf.servers[server.get_name()].enabled):
                         # set server status for status field in popwin
                         server.status = "Rechecking all started"
                         gobject.idle_add(self.output.popwin.UpdateStatus, server)
-                        
+
                         for host in server.hosts.values():
                             # construct an unique key which refers to rechecking thread in dictionary
-                            rechecks_dict[server.name + ": " + host.name] = Recheck(server=server, host=host.name, service="")
-                            rechecks_dict[server.name + ": " + host.name].start()
+                            rechecks_dict[server.get_name() + ": " + host.get_name()] = Recheck(server=server, host=host.get_name(), service="")
+                            rechecks_dict[server.get_name() + ": " + host.get_name()].start()
                             # debug
                             if str(self.conf.debug_mode) == "True":
-                                #print "Recheck all:", "rechecking", server.name + ": " + host.name                                
-                                server.Debug(server=server.name, host=host.name, debug="Rechecking...")
+                                #print "Recheck all:", "rechecking", server.get_name() + ": " + host.get_name()                                
+                                server.Debug(server=server.get_name(), host=host.get_name(), debug="Rechecking...")
                             for service in host.services.values():
                                 # dito
-                                rechecks_dict[server.name + ": " + host.name + ": " + service.name] = Recheck(server=server, host=host.name, service=service.name)
-                                rechecks_dict[server.name + ": " + host.name + ": " + service.name].start()
+                                rechecks_dict[server.get_name() + ": " + host.get_name() + ": " + service.get_name()] = Recheck(server=server, host=host.get_name(), service=service.get_name())
+                                rechecks_dict[server.get_name() + ": " + host.get_name() + ": " + service.get_name()].start()
                                 # debug
                                 if str(self.conf.debug_mode) == "True":
-                                    #print "Recheck all:", "rechecking", server.name + ": " + host.name + ": " + service.name
-                                    server.Debug(server=server.name, host=host.name, service=service.name, debug="Rechecking...")
+                                    #print "Recheck all:", "rechecking", server.get_name() + ": " + host.get_name() + ": " + service.get_name()
+                                    server.Debug(server=server.get_name(), host=host.get_name(), service=service.get_name(), debug="Rechecking...")
 
                 # wait until all rechecks have been done
                 while len(rechecks_dict) > 0:
@@ -301,7 +301,7 @@ class RecheckAll(threading.Thread):
                     if str(self.conf.debug_mode) == "True":
                         #print "Recheck all: # of checks which still need to be done:", len(rechecks_dict)
                         # once again taking .Debug() from first server
-                        self.servers.values()[0].Debug(server=server.name, debug="Recheck all: # of checks which still need to be done: " + str(len(rechecks_dict)))
+                        self.servers.values()[0].Debug(server=server.get_name(), debug="Recheck all: # of checks which still need to be done: " + str(len(rechecks_dict)))
 
                     for i in rechecks_dict.copy():
                         # if a thread is stopped pop it out of the dictionary
@@ -314,7 +314,7 @@ class RecheckAll(threading.Thread):
                 if str(self.conf.debug_mode) == "True":
                     #print "Recheck all: All servers, hosts and services are rechecked."
                     # once again taking .Debug() from first server
-                    self.servers.values()[0].Debug(server=server.name, debug="Recheck all: All servers, hosts and services are rechecked.")                
+                    self.servers.values()[0].Debug(server=server.get_name(), debug="Recheck all: All servers, hosts and services are rechecked.")                
                 # reset global flag
                 RecheckingAll = False
                 

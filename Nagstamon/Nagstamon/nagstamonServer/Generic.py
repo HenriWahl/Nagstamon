@@ -104,6 +104,29 @@ class GenericServer(object):
         self.Cookie = None
         # needed for looping server thread
         self.count = 0
+        # needed for RecheckAll - save start_time once for not having to get it for every recheck
+        self.start_time = None
+        
+    
+    def get_name(self):
+        """
+        return stringified name
+        """
+        return str(self.name)    
+    
+    
+    def get_username(self):
+        """
+        return stringified username
+        """
+        return str(self.username)  
+        
+    
+    def get_password(self):
+        """
+        return stringified username
+        """
+        return str(self.password)  
         
 
     @classmethod
@@ -118,11 +141,13 @@ class GenericServer(object):
         
         
     def _set_recheck(self, host, service):
+
         # get start time from Nagios as HTML to use same timezone setting like the locally installed Nagios
         result = self.FetchURL(self.nagios_cgi_url + "/cmd.cgi?" + urllib.urlencode({"cmd_typ":"96", "host":host}), giveback="raw")
         html = result.result
-        start_time = html.split("NAME='start_time' VALUE='")[1].split("'></b></td></tr>")[0]
-
+        self.start_time = html.split("NAME='start_time' VALUE='")[1].split("'></b></td></tr>")[0]
+           
+            
         # decision about host or service - they have different URLs
         if service == "":
             # host
@@ -135,7 +160,7 @@ class GenericServer(object):
                                      ("cmd_mod", "2"),\
                                      ("host", host),\
                                      ("service", service),\
-                                     ("start_time", start_time),\
+                                     ("start_time", self.start_time),\
                                      ("force_check", "on"),\
                                      ("btnSubmit", "Commit")])
         # execute POST request
@@ -150,8 +175,8 @@ class GenericServer(object):
         self._set_acknowledge(thread_obj.host, thread_obj.service, thread_obj.author, thread_obj.comment,\
                               thread_obj.sticky, thread_obj.notify, thread_obj.persistent, all_services)
      
+        
     def _set_acknowledge(self, host, service, author, comment, sticky, notify, persistent, all_services=[]):
-
         url = self.nagios_cgi_url + "/cmd.cgi"      
         
         # decision about host or service - they have different URLs
@@ -178,11 +203,13 @@ class GenericServer(object):
             cgi_data = urllib.urlencode({"cmd_typ":"34", "cmd_mod":"2", "host":host, "service":s, "com_author":author, "com_data":comment, "btnSubmit":"Commit"})
             #running remote cgi command        
             self.FetchURL(url, giveback="raw", cgi_data=cgi_data)
+            
     
     def set_downtime(self, thread_obj):
         self._set_downtime(thread_obj.host, thread_obj.service, thread_obj.author, thread_obj.comment, thread_obj.fixed,
                            thread_obj.start_time, thread_obj.end_time, thread_obj.hours, thread_obj.minutes)
     
+        
     def _set_downtime(self, host, service, author, comment, fixed, start_time, end_time, hours, minutes):
         # decision about host or service - they have different URLs
         if service == "":
@@ -610,7 +637,7 @@ class GenericServer(object):
                 not (host.status == "UNREACHABLE" and \
                 str(self.conf.filter_services_on_unreachable_hosts) == "True") and \
                 nagstamonActions.HostIsFilteredOutByRE(host.name, self.conf) == False and \
-                nagstamonActions.ServiceIsFilteredOutByRE(service.name, self.conf) == False:
+                nagstamonActions.ServiceIsFilteredOutByRE(service.get_name(), self.conf) == False:
                     # sort by severity
                     if service.status == "CRITICAL" and str(self.conf.filter_all_critical_services) == "False": 
                         self.nagitems_filtered["services"]["CRITICAL"].append(service)
@@ -709,15 +736,15 @@ class GenericServer(object):
         # WHOLE URL, with protocol!
 
         passman = urllib2.HTTPPasswordMgrWithDefaultRealm()
-        passman.add_password(None, url, self.username, self.password)       
+        passman.add_password(None, url, self.get_username(), self.get_password())       
         auth_handler = urllib2.HTTPBasicAuthHandler(passman)
         digest_handler = urllib2.HTTPDigestAuthHandler(passman)
         
         # get my cookie to access Opsview web interface to access Opsviews Nagios part
         if self.Cookie == None and self.type == "Opsview":         
             # put all necessary data into url string
-            logindata = urllib.urlencode({"login_username":self.username,\
-                             "login_password":self.password,\
+            logindata = urllib.urlencode({"login_username":self.get_username(),\
+                             "login_password":self.get_password(),\
                              "back":"",\
                              "app": "",\
                              "login":"Log In"})
@@ -778,7 +805,7 @@ class GenericServer(object):
                 # http://docs.opsview.org/doku.php?id=opsview3.4:api
                 # this is only necessary when accessing the API and expecting a XML answer
                 if self.type == "Opsview" and giveback == "opsxml":
-                    headers = {"Content-Type":"text/xml", "X-Username":self.username, "X-Password":self.password}
+                    headers = {"Content-Type":"text/xml", "X-Username":self.get_username(), "X-Password":self.get_password()}
                     request = urllib2.Request(url, cgi_data, headers)
                     urlcontent = urllib2.urlopen(request)
                     del headers, request, url, cgi_data

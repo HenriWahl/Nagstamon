@@ -435,7 +435,7 @@ class GUI(object):
                 # debug
                 #if str(self.conf.debug_mode) == "True":
                     ##print server.name + ":", "new worst status:", worst_status
-                    #server.Debug(server=server.name, debug="New worst status: " + worst_status)
+                    #server.Debug(server=server.get_name(), debug="New worst status: " + worst_status)
                     
                 if not worst_status == "UP" and str(self.conf.notification)== "True":
                     self.NotificationOn(status=worst_status)
@@ -1210,30 +1210,30 @@ class Popwin(gtk.Window):
             # get the servers alphabetically sorted
             server = self.output.servers[item]
             # put all infos into one VBox object
-            self.ServerVBoxes[server.name] = ServerVBox(output=self.output)
-            self.ServerVBoxes[server.name].Label.set_markup('<span weight="bold" size="large">' + server.name + '</span>')
-            self.ServerVBoxes[server.name].Label.set_alignment(0,0)
+            self.ServerVBoxes[server.get_name()] = ServerVBox(output=self.output)
+            self.ServerVBoxes[server.get_name()].Label.set_markup('<span weight="bold" size="large">' + server.get_name() + '</span>')
+            self.ServerVBoxes[server.get_name()].Label.set_alignment(0,0)
              # set no show all to be able to hide label and treeview if it is empty in case of no hassle
-            self.ServerVBoxes[server.name].set_no_show_all(True)
+            self.ServerVBoxes[server.get_name()].set_no_show_all(True)
             
             # connect buttons with actions
             # open Nagios main page in your favorite web browser when nagios button is clicked
-            self.ServerVBoxes[server.name].ButtonMonitor.connect("clicked", nagstamonActions.OpenNagios, server, self.output)
+            self.ServerVBoxes[server.get_name()].ButtonMonitor.connect("clicked", nagstamonActions.OpenNagios, server, self.output)
             # open Nagios services in your favorite web browser when service button is clicked
-            self.ServerVBoxes[server.name].ButtonServices.connect("clicked", nagstamonActions.OpenServices, server, self.output)
+            self.ServerVBoxes[server.get_name()].ButtonServices.connect("clicked", nagstamonActions.OpenServices, server, self.output)
             # open Nagios hosts in your favorite web browser when hosts button is clicked
-            self.ServerVBoxes[server.name].ButtonHosts.connect("clicked", nagstamonActions.OpenHosts, server, self.output)
+            self.ServerVBoxes[server.get_name()].ButtonHosts.connect("clicked", nagstamonActions.OpenHosts, server, self.output)
             
             # windows workaround - see above
             # connect Server_EventBox with leave-notify-event to get popwin popping down when leaving it
-            self.ServerVBoxes[server.name].Server_EventBox.connect("leave-notify-event", self.PopDown)
+            self.ServerVBoxes[server.get_name()].Server_EventBox.connect("leave-notify-event", self.PopDown)
             # sorry folks, but this only works at the border of the treeviews 
-            self.ServerVBoxes[server.name].TreeView.connect("leave-notify-event", self.PopDown)
+            self.ServerVBoxes[server.get_name()].TreeView.connect("leave-notify-event", self.PopDown)
             # connect the treeviews of the servers to mouse clicks
-            self.ServerVBoxes[server.name].TreeView.connect("button-press-event", self.TreeviewPopupMenu, self.ServerVBoxes[server.name].TreeView, self.output.servers[server.name])
+            self.ServerVBoxes[server.get_name()].TreeView.connect("button-press-event", self.TreeviewPopupMenu, self.ServerVBoxes[server.get_name()].TreeView, self.output.servers[server.get_name()])
            
             # add box to the other ones
-            self.ScrolledVBox.add(self.ServerVBoxes[server.name])
+            self.ScrolledVBox.add(self.ServerVBoxes[server.get_name()])
 
         # Initialize show_popwin - show it or not, if everything is OK
         # it is not necessary to pop it up
@@ -1472,8 +1472,8 @@ class Popwin(gtk.Window):
         
         #debug    
         if str(self.conf.debug_mode) == "True":
-            #print self.miserable_server.name, ":", remoteservice, self.miserable_host, self.miserable_service
-            self.miserable_server.Debug(server=self.miserable_server.name, host=self.miserable_host, service=self.miserable_service, debug="Clicked context menu: " + remoteservice)
+            #print self.miserable_server.get_name(), ":", remoteservice, self.miserable_host, self.miserable_service
+            self.miserable_server.Debug(server=self.miserable_server.get_name(), host=self.miserable_host, service=self.miserable_service, debug="Clicked context menu: " + remoteservice)
             
         # choose appropriate service for menu entry
         # it seems to be more responsive especially while rechecking if every service
@@ -1554,7 +1554,7 @@ class Popwin(gtk.Window):
         """
         # status field in server vbox in popwin    
         try:
-            self.ServerVBoxes[server.name].LabelStatus.set_markup('<span>Status: ' + server.status + ' <span color="darkred">' + server.status_description + '</span></span>')
+            self.ServerVBoxes[server.get_name()].LabelStatus.set_markup('<span>Status: ' + server.status + ' <span color="darkred">' + server.status_description + '</span></span>')
         except Exception, err:
             print err
             pass

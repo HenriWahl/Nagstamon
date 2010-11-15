@@ -127,6 +127,7 @@ class GenericObject(object):
         """
         return ''
     
+    
 class GenericHost(GenericObject):
     """
         one host which is monitored by a Nagios server, gets populated with services
@@ -142,6 +143,14 @@ class GenericHost(GenericObject):
         
     def get_host_name(self):
         return self.name
+    
+    
+    def get_name(self):
+        """
+        return stringified name
+        """
+        return str(self.name)      
+        
 
     
 class GenericService(GenericObject):
@@ -157,12 +166,21 @@ class GenericService(GenericObject):
         self.attempt = ""
         self.status_information = ""
         
+
     def get_host_name(self):
         return self.host
     
+
     def get_service_name(self):
         return self.name 
     
+    
+    def get_name(self):
+        """
+        return stringified name
+        """
+        return str(self.name)      
+            
 
 class Result(object):
     """
