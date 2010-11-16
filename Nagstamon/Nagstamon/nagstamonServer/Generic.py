@@ -145,8 +145,7 @@ class GenericServer(object):
         # get start time from Nagios as HTML to use same timezone setting like the locally installed Nagios
         result = self.FetchURL(self.nagios_cgi_url + "/cmd.cgi?" + urllib.urlencode({"cmd_typ":"96", "host":host}), giveback="raw")
         html = result.result
-        self.start_time = html.split("NAME='start_time' VALUE='")[1].split("'></b></td></tr>")[0]
-           
+        self.start_time = html.split("NAME='start_time' VALUE='")[1].split("'></b></td></tr>")[0]          
             
         # decision about host or service - they have different URLs
         if service == "":
@@ -267,8 +266,8 @@ class GenericServer(object):
         else:
             typ = 2      
         if str(self.conf.debug_mode) == "True":
-            #print self.name, ":", "Open host/service monitor web page", self.nagios_cgi_url + '/extinfo.cgi?' + urllib.urlencode({"type":typ, "host":host, "service":service})
-            self.Debug(server=self.name, host=host, service=service, debug="Open host/service monitor web page " + self.nagios_cgi_url + '/extinfo.cgi?' + urllib.urlencode({"type":typ, "host":host, "service":service}))
+            #print self.get_name(), ":", "Open host/service monitor web page", self.nagios_cgi_url + '/extinfo.cgi?' + urllib.urlencode({"type":typ, "host":host, "service":service})
+            self.Debug(server=self.get_name(), host=host, service=service, debug="Open host/service monitor web page " + self.nagios_cgi_url + '/extinfo.cgi?' + urllib.urlencode({"type":typ, "host":host, "service":service}))
         webbrowser.open(self.nagios_cgi_url + '/extinfo.cgi?' + urllib.urlencode({"type":typ, "host":host, "service":service}))
 
         
@@ -276,24 +275,24 @@ class GenericServer(object):
         webbrowser.open(self.nagios_url)
         # debug
         if str(self.conf.debug_mode) == "True":
-            #print self.name, ":", "Open monitor web page", self.nagios_url 
-            self.Debug(server=self.name, debug="Open monitor web page " + self.nagios_url)
+            #print self.get_name(), ":", "Open monitor web page", self.nagios_url 
+            self.Debug(server=self.get_name(), debug="Open monitor web page " + self.nagios_url)
 
         
     def open_services(self):
         webbrowser.open(self.nagios_cgi_url + "/status.cgi?host=all&servicestatustypes=253")
         # debug
         if str(self.conf.debug_mode) == "True":
-            #print self.name, ":", "Open services web page", self.nagios_url + "/status.cgi?host=all&servicestatustypes=253"  
-            self.Debug(server=self.name, debug="Open services web page " + self.nagios_url + "/status.cgi?host=all&servicestatustypes=253")
+            #print self.get_name(), ":", "Open services web page", self.nagios_url + "/status.cgi?host=all&servicestatustypes=253"  
+            self.Debug(server=self.get_name(), debug="Open services web page " + self.nagios_url + "/status.cgi?host=all&servicestatustypes=253")
         
             
     def open_hosts(self):
         webbrowser.open(self.nagios_cgi_url + "/status.cgi?hostgroup=all&style=hostdetail&hoststatustypes=12")
         # debug
         if str(self.conf.debug_mode) == "True":
-            #print self.name, ":", "Open hosts web page", self.nagios_url + "/status.cgi?hostgroup=all&style=hostdetail&hoststatustypes=12"      
-            self.Debug(server=self.name, debug="Open hosts web page " + self.nagios_url + "/status.cgi?hostgroup=all&style=hostdetail&hoststatustypes=12")
+            #print self.get_name(), ":", "Open hosts web page", self.nagios_url + "/status.cgi?hostgroup=all&style=hostdetail&hoststatustypes=12"      
+            self.Debug(server=self.get_name(), debug="Open hosts web page " + self.nagios_url + "/status.cgi?hostgroup=all&style=hostdetail&hoststatustypes=12")
 
     def _get_status(self):
         """
@@ -577,7 +576,7 @@ class GenericServer(object):
         self.isChecking = True        
         
         # check if server is enabled, if not, do not get any status
-        if str(self.conf.servers[self.name].enabled) == "False":
+        if str(self.conf.servers[self.get_name()].enabled) == "False":
             self.WorstStatus = "UP"
             # dummy filtered items
             self.nagitems_filtered = {"services":{"CRITICAL":[], "WARNING":[], "UNKNOWN":[]}, "hosts":{"DOWN":[], "UNREACHABLE":[]}}
@@ -837,8 +836,7 @@ class GenericServer(object):
                     
                 # second step: make pretty HTML of it
                 #prettyhtml = lxml.etree.tostring(html, pretty_print=True)
-                prettyhtml = lxml.etree.tostring(html, pretty_print=False)
-                
+                prettyhtml = lxml.etree.tostring(html, pretty_print=False)               
                 del html
 
                 # third step: clean HTML from tags which embarass libxml2 2.7
@@ -925,7 +923,7 @@ class GenericServer(object):
             # print IP in debug mode
             if str(self.conf.debug_mode) == "True":    
                 #print "IP of %s:" % (host), ip
-                self.Debug(server=self.name, host=host, debug ="IP of %s:" % (host) + " " + ip)
+                self.Debug(server=self.get_name(), host=host, debug ="IP of %s:" % (host) + " " + ip)
             # when connection by DNS is not configured do it by IP
             if str(self.conf.connect_by_dns_yes) == "True":
                 # try to get DNS name for ip, if not available use ip
@@ -953,7 +951,8 @@ class GenericServer(object):
         allows to add some extra actions for a monitor server to be executed in RefreshLoop
         inspired by Centreon and its seemingly Alzheimer desease regarding session ID/Cookie/whatever
         """
-        pass    
+        # do some garbage collection
+        gc.collect()  
     
     
     def Error(self, error):
@@ -961,12 +960,12 @@ class GenericServer(object):
         Handle errors somehow - print them or later log them into not yet existing log file
         """
         if str(self.conf.debug_mode) == "True":
-            #print self.name + ": ", traceback.print_exception(error[0], error[1], error[2], 5, file=sys.stdout)
-            #self.Debug(server=self.name, debug=str(traceback.format_exception(error[0], error[1], error[2], 5)))
+            #print self.get_name() + ": ", traceback.print_exception(error[0], error[1], error[2], 5, file=sys.stdout)
+            #self.Debug(server=self.get_name(), debug=str(traceback.format_exception(error[0], error[1], error[2], 5)))
             debug = ""
             for line in traceback.format_exception(error[0], error[1], error[2], 5):
                 debug += line
-            self.Debug(server=self.name, debug=debug, head="ERROR")
+            self.Debug(server=self.get_name(), debug=debug, head="ERROR")
             
         return ["ERROR", traceback.format_exception_only(error[0], error[1])[0]]
     

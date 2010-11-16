@@ -115,21 +115,21 @@ class OpsviewServer(GenericServer):
         webbrowser.open(self.nagios_url + "/status/service?filter=unhandled&includeunhandledhosts=1")
         # debug
         if str(self.conf.debug_mode) == "True":
-            #print self.name, ":", "Open monitor web page", self.nagios_url + "/status/service?filter=unhandled&includeunhandledhosts=1"
-            self.Debug(server=self.name, debug="Open monitor web page " + self.nagios_url + "/status/service?filter=unhandled&includeunhandledhosts=1")   
+            #print self.get_name(), ":", "Open monitor web page", self.nagios_url + "/status/service?filter=unhandled&includeunhandledhosts=1"
+            self.Debug(server=self.get_name(), debug="Open monitor web page " + self.nagios_url + "/status/service?filter=unhandled&includeunhandledhosts=1")   
             
     def open_services(self):
         webbrowser.open(self.nagios_url + "/status/service?state=1&state=2&state=3")
         # debug
         if str(self.conf.debug_mode) == "True":
-            #print self.name, ":", "Open hosts web page", self.nagios_url + "/status/service?state=1&state=2&state=3"  
-            self.Debug(server=self.name, debug="Open services web page " + self.nagios_url + "/status/service?state=1&state=2&state=3")
+            #print self.get_name(), ":", "Open hosts web page", self.nagios_url + "/status/service?state=1&state=2&state=3"  
+            self.Debug(server=self.get_name(), debug="Open services web page " + self.nagios_url + "/status/service?state=1&state=2&state=3")
 
     def open_hosts(self):
         webbrowser.open(self.nagios_url + "/status/host?hostgroupid=1&state=1")
         # debug
         if str(self.conf.debug_mode) == "True":
-            #print self.name, ":", "Open hosts web page", self.nagios_url + "/status/host?hostgroupid=1&state=1"      
-            self.Debug(server=self.name, debug="Open hosts web page " + self.nagios_url + "/status/host?hostgroupid=1&state=1")
+            #print self.get_name(), ":", "Open hosts web page", self.nagios_url + "/status/host?hostgroupid=1&state=1"      
+            self.Debug(server=self.get_name(), debug="Open hosts web page " + self.nagios_url + "/status/host?hostgroupid=1&state=1")
 
             

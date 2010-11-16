@@ -142,7 +142,7 @@ class GenericHost(GenericObject):
         self.services = dict()
         
     def get_host_name(self):
-        return self.name
+        return str(self.name)
     
     
     def get_name(self):
@@ -168,11 +168,11 @@ class GenericService(GenericObject):
         
 
     def get_host_name(self):
-        return self.host
+        return str(self.host)
     
 
     def get_service_name(self):
-        return self.name 
+        return str(self.name) 
     
     
     def get_name(self):
@@ -192,4 +192,15 @@ class Result(object):
     def __init__(self, **kwds):
         # add all keywords to object, every mode searchs inside for its favorite arguments/keywords
         for k in kwds: self.__dict__[k] = kwds[k]
-
+        
+        
+class XMLNode()(object):
+    """
+    used to reconstruct objectified XML structures
+    """
+    def __init__(self):
+        pass
+    
+    
+    def add(self, element):
+        self.__dict__[element] = XMLlet()

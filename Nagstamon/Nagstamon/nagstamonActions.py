@@ -116,9 +116,6 @@ class RefreshLoopOneServer(threading.Thread):
                         # wait a moment
                         time.sleep(10)
 
-                        # do some cleanup
-                        #gc.collect()
-
                     else:
                         # set server status for status field in popwin
                         self.server.status = "Connected"
@@ -136,7 +133,6 @@ class RefreshLoopOneServer(threading.Thread):
 
                             # do some cleanup
                             del self.server.count
-                            #gc.collect()
                             self.server.count = 0
                             # call Hook() for extra action
                             self.server.Hook()
@@ -145,7 +141,6 @@ class RefreshLoopOneServer(threading.Thread):
                 # sleep and count
                 time.sleep(3)
                 self.server.count += 3
-                #gc.collect()
                 # call Hook() for extra action
                 self.server.Hook()
 
@@ -167,9 +162,6 @@ def RefreshAllServers(servers=None, output=None, conf=None):
             # set server status for status field in popwin
             server.status = "Refreshing"
             gobject.idle_add(output.popwin.UpdateStatus, server)
-            
-    # do some cleanup
-    #gc.collect()
     
     
 class DebugLoop(threading.Thread):    
@@ -318,7 +310,7 @@ class RecheckAll(threading.Thread):
                 # reset global flag
                 RecheckingAll = False
                 
-                # after all and after a short delay to let Nagios apply the recheck requests refresh all to make changes visible soon
+                # after all and after a short delay to let the monitor apply the recheck requests refresh all to make changes visible soon
                 time.sleep(5)
                 RefreshAllServers(servers=self.servers, output=self.output, conf=self.conf)
                 # do some cleanup
