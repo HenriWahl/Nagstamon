@@ -308,11 +308,15 @@ class CentreonServer(GenericServer):
             raw, error = result.result, result.error
             if error != "": return Result(result=raw, error=error)
             #htobj = lxml.objectify.fromstring(raw)
-
+            
+            xmlobj = list()
             # cut off <xml blabla>
-            xmlraw = ElementTree.fromstring(raw.split("\n")[1])
-            xmlobj = nagstamonActions.ObjectifyXML(xmlraw)            
-            del raw, xmlraw, error
+            try:
+                xmlraw = ElementTree.fromstring(raw.split("\n")[1])
+                xmlobj = nagstamonActions.ObjectifyXML(xmlraw)            
+                del raw, xmlraw, error
+            except:
+                self.Error(sys.exc_info())
                        
             # in case there are no children session id is invalid
             #if htobj.getchildren() == []:
@@ -409,11 +413,14 @@ class CentreonServer(GenericServer):
             
             #htobj = lxml.objectify.fromstring(raw)     
 
+            xmlobj = list()
             # cut off <xml blabla>
-            xmlraw = ElementTree.fromstring(raw.split("\n")[1])
-            xmlobj = nagstamonActions.ObjectifyXML(xmlraw)                                 
-            
-            del raw, xmlraw, error
+            try:
+                xmlraw = ElementTree.fromstring(raw.split("\n")[1])
+                xmlobj = nagstamonActions.ObjectifyXML(xmlraw)            
+                del raw, xmlraw, error
+            except:
+                self.Error(sys.exc_info())
             
             # in case there are no children session id is invalid
             #if htobj.getchildren == []:
@@ -675,8 +682,7 @@ class CentreonServer(GenericServer):
         #print
         #print "************************************************************"
         #print
-        #print self.get_name(), gc.get_count(), len(gc.garbage)
-        #print
+        #print self.get_name(), gc.get_count(), len(gc.garbage), gc.get_objects()
         #print "************************************************************"
         #print
             
