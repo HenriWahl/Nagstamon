@@ -194,13 +194,14 @@ class Result(object):
         for k in kwds: self.__dict__[k] = kwds[k]
         
         
-class XMLNode()(object):
+class XMLNode(object):
     """
     used to reconstruct objectified XML structures
     """
-    def __init__(self):
+    def __init__(self, *args):
         pass
     
     
     def add(self, element):
-        self.__dict__[element] = XMLlet()
+        return XMLNode(element)
+        

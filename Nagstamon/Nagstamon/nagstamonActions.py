@@ -23,6 +23,7 @@ import urllib2
 import mimetools, mimetypes
 import os, stat
 import nagstamonGUI
+from nagstamonObjects import XMLNode
 
 # import hashlib for centreon url autologin encoding
 import hashlib
@@ -699,6 +700,25 @@ def MD5ify(string):
     makes something md5y of a given username or password for Centreon web interface access
     """
     return hashlib.md5(string).hexdigest()
+
+
+def ObjectifyXML(xmlraw):
+    """
+    replacement for lxml.objectify
+    """
+    try:
+        nodes = []
+        for l in xmlraw.getchildren():
+            # only take l-nodes because they contain valuable information
+            if l.tag == "l":
+                node = XMLNode()
+                for e in l.getchildren():
+                    node.__dict__[e.tag] = node.add("text")
+                    node.__dict__[e.tag].text = e.text
+                nodes.append(node)
+        return nodes
+    except:
+        traceback.print_exc(sys.exc_info)
         
 
 # <IMPORT>

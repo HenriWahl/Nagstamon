@@ -9,22 +9,22 @@ import cookielib
 import traceback
 import gc
 
-try:
-    import lxml.etree, lxml.objectify
-except Exception, err:
-    print
-    print err
-    print
-    print "Could not load lxml.etree, lxml.objectify and lxml.html.clean, maybe you need to install python lxml."
-    print
-    sys.exit()
+#try:
+#    import lxml.etree, lxml.objectify
+#except Exception, err:
+#    print
+#    print err
+#    print
+#    print "Could not load lxml.etree, lxml.objectify and lxml.html.clean, maybe you need to install python lxml."
+#    print
+#    sys.exit()
 # fedora 8 and maybe others use lxml 2 which is more careful and offers more modules
 # but which also makes necessary to clean Nagios html output
 # if not available should be ok because not needed
-try:
-    import lxml.html.clean
-except:
-    pass
+#try:
+#    import lxml.html.clean
+#except:
+#    pass
 
 # new trial to replace memory eating lxml
 from xml.etree import ElementTree
@@ -104,6 +104,7 @@ class CentreonServer(GenericServer):
                     raw, error = result.result, result.error
                 start_time = raw.split('name="start" type="text" value="')[1].split('"')[0]
                 end_time = raw.split('name="end" type="text" value="')[1].split('"')[0]
+                del raw
                 # give values back as tuple      
                 return start_time, end_time
         except:
@@ -131,24 +132,36 @@ class CentreonServer(GenericServer):
         result = self.FetchURL(self.nagios_cgi_url + "/include/monitoring/status/Hosts/xml/hostXML.php?"\
                               + cgi_data, giveback="raw")
         raw = result.result
-        htobj = lxml.objectify.fromstring(raw)
-        del raw
+        #htobj = lxml.objectify.fromstring(raw)
+        # cut off <xml blabla>
+        xmlraw = ElementTree.fromstring(raw.split("\n")[1])
+        xmlobj = nagstamonActions.ObjectifyXML(xmlraw)   
+        del raw, xmlraw
                
-        if htobj.__dict__.has_key("l"):   
+        print xmlobj[0]
+        
+        #if htobj.__dict__.has_key("l"):   
+        if len(xmlobj) != 0:
             # when connection by DNS is not configured do it by IP
             try:
                 if str(self.conf.connect_by_dns_yes) == "True":
                    # try to get DNS name for ip, if not available use ip
                     try:
-                        address = socket.gethostbyaddr(htobj.l.a.text)[0]
-                        del htobj
+                        #address = socket.gethostbyaddr(htobj.a.text)[0]
+                        address = socket.gethostbyaddr(xmlobj[0].a.text)[0]
+                        #del htobj
+                        del xmlobj
                     except:
                         self.Error(sys.exc_info())
-                        address = htobj.l.a.text
-                        del htobj
+                        #address = htobj.l.a.text
+                        address = str(xmlobj[0].a.text)                        
+                        #del htobj
+                        del xmlobj
                 else:
-                    address = htobj.l.a.text
-                    del htobj
+                    #address = htobj.l.a.text
+                    address = str(xmlobj[0].a.text)
+                    #del htobj
+                    del xmlobj
             except:
                 #self.Error(sys.exc_info())
                 #address = "ERROR"
@@ -294,37 +307,16 @@ class CentreonServer(GenericServer):
             result = self.FetchURL(nagcgiurl_hosts, giveback="raw")
             raw, error = result.result, result.error
             if error != "": return Result(result=raw, error=error)
-            htobj = lxml.objectify.fromstring(raw)
+            #htobj = lxml.objectify.fromstring(raw)
 
             # cut off <xml blabla>
             xmlraw = ElementTree.fromstring(raw.split("\n")[1])
-#            print dir(xmlobj)
-            #for e in xmlobj.getiterator():
-            hosts = []
-            host = {}
-            xmlobj = XMLNode()
-            hosts = []
-            for l in xmlraw.getchildren():
-                # only take l-nodes
-                if l.tag == "l":
-                    host = XMLNode()
-                    for e in l.getchildren():
-                        print e.tag
-                        host.__dict__[e.tag] = e.text
-                    hosts.append(host)
-            
-            print hosts
-                #hosts.append(
-                #xmlobj.add(e.tag)
-                #print e, e.tag, ":", e.text, e.getchildren()
-                #if e.tag == "hn":
-                
-                    
-            
-            del raw, error
-            
+            xmlobj = nagstamonActions.ObjectifyXML(xmlraw)            
+            del raw, xmlraw, error
+                       
             # in case there are no children session id is invalid
-            if htobj.getchildren() == []:
+            #if htobj.getchildren() == []:
+            if len(xmlobj) == 0:
                 if str(self.conf.debug_mode) == "True": 
                     #print self.get_name(), "bad session ID, retrieving new one..." 
                     self.Debug(server=self.get_name(), debug="Bad session ID, retrieving new one...")                
@@ -334,68 +326,73 @@ class CentreonServer(GenericServer):
                 result = self.FetchURL(nagcgiurl_hosts, giveback="raw")
                 raw, error = result.result, result.error
                 if error != "": return Result(result=raw, error=error)
-                htobj = lxml.objectify.fromstring(raw)
-                del raw, error
+                #htobj = lxml.objectify.fromstring(raw)
+                # cut off <xml blabla>
+                xmlraw = ElementTree.fromstring(raw.split("\n")[1])
+                xmlobj = nagstamonActions.ObjectifyXML(xmlraw)
+                
+                del raw, xmlraw, error
                  
-            if htobj.__dict__.has_key("l"):
-                for l in htobj.l:
-                    try:                       
-                        n = {}
-                        # host
-                        n["host"] = str(l.hn.text)
-                        # status
-                        n["status"] = str(l.cs.text)
-                        # last_check
-                        n["last_check"] = str(l.lc.text)
-                        # duration
-                        n["duration"] = str(l.lsc.text)
-                        # status_information
-                        n["status_information"] = str(l.ou.text)
-                        # attempts are not shown in case of hosts so it defaults to "N/A"
-                        n["attempt"] = str(l.tr.text)
-                        # host acknowledged or not, has to be filtered
-                        n["acknowledged"] = str(l.ha.text)
-                        # host notification disabled or not, has to be filtered
-                        n["notification_enabled"] = str(l.ne.text)
-                        # host check enabled or not, has to be filtered
-                        n["check_enabled"] = str(l.ace.text)
-                        # host down for maintenance or not, has to be filtered
-                        n["in_downtime"] = str(l.hdtm.text)
-                        
-                        # store information about acknowledged and down hosts for further reference
-                        if n["in_downtime"] == "1" : self.new_hosts_in_maintenance.append(n["host"])
-                        if n["acknowledged"] == "1" : self.new_hosts_acknowledged.append(n["host"])
-                         
-                        # what works in cgi-Nagios via cgi request has to be filtered out here "manually"
-                        if not (str(self.conf.filter_acknowledged_hosts_services) == "True" and \
-                           n["acknowledged"] == "1") and \
-                           not (str(self.conf.filter_hosts_services_disabled_notifications) == "True" and \
-                           n["notification_enabled"] == "0") and \
-                           not (str(self.conf.filter_hosts_services_disabled_checks) == "True" and \
-                           n["check_enabled"] == "0") and \
-                           not (str(self.conf.filter_hosts_services_maintenance) == "True" and \
-                           n["in_downtime"] == "1") and\
-                           not (str(self.conf.filter_all_down_hosts) == "True" and n["status"] == "DOWN") and\
-                           not (str(self.conf.filter_all_unreachable_hosts) == "True" and n["status"] == "UNREACHABLE"):
-                            # add dictionary full of information about this host item to nagitems
-                            nagitems["hosts"].append(n)
-                            # after collection data in nagitems create objects from its informations
-                            # host objects contain service objects
-                            if not self.new_hosts.has_key(n["host"]):
-                                new_host = n["host"]
-                                self.new_hosts[new_host] = GenericHost()
-                                self.new_hosts[new_host].name = n["host"]
-                                self.new_hosts[new_host].status = n["status"]
-                                self.new_hosts[new_host].last_check = n["last_check"]
-                                self.new_hosts[new_host].duration = n["duration"]
-                                self.new_hosts[new_host].attempt = n["attempt"]
-                                self.new_hosts[new_host].status_information= n["status_information"]
-                    except:
-                        # set checking flag back to False
-                        self.isChecking = False
-                        #return self.Error(sys.exc_info())
-                        result, error = self.Error(sys.exc_info())
-                        return Result(result=result, error=error)
+            # if htobj.__dict__.has_key("l"):
+            #     for l in htobj.l:
+            for l in xmlobj:
+                try:                       
+                    n = {}
+                    # host
+                    n["host"] = str(l.hn.text)
+                    # status
+                    n["status"] = str(l.cs.text)
+                    # last_check
+                    n["last_check"] = str(l.lc.text)
+                    # duration
+                    n["duration"] = str(l.lsc.text)
+                    # status_information
+                    n["status_information"] = str(l.ou.text)
+                    # attempts are not shown in case of hosts so it defaults to "N/A"
+                    n["attempt"] = str(l.tr.text)
+                    # host acknowledged or not, has to be filtered
+                    n["acknowledged"] = str(l.ha.text)
+                    # host notification disabled or not, has to be filtered
+                    n["notification_enabled"] = str(l.ne.text)
+                    # host check enabled or not, has to be filtered
+                    n["check_enabled"] = str(l.ace.text)
+                    # host down for maintenance or not, has to be filtered
+                    n["in_downtime"] = str(l.hdtm.text)
+                    
+                    # store information about acknowledged and down hosts for further reference
+                    if n["in_downtime"] == "1" : self.new_hosts_in_maintenance.append(n["host"])
+                    if n["acknowledged"] == "1" : self.new_hosts_acknowledged.append(n["host"])
+                     
+                    # what works in cgi-Nagios via cgi request has to be filtered out here "manually"
+                    if not (str(self.conf.filter_acknowledged_hosts_services) == "True" and \
+                       n["acknowledged"] == "1") and \
+                       not (str(self.conf.filter_hosts_services_disabled_notifications) == "True" and \
+                       n["notification_enabled"] == "0") and \
+                       not (str(self.conf.filter_hosts_services_disabled_checks) == "True" and \
+                       n["check_enabled"] == "0") and \
+                       not (str(self.conf.filter_hosts_services_maintenance) == "True" and \
+                       n["in_downtime"] == "1") and\
+                       not (str(self.conf.filter_all_down_hosts) == "True" and n["status"] == "DOWN") and\
+                       not (str(self.conf.filter_all_unreachable_hosts) == "True" and n["status"] == "UNREACHABLE"):
+                        # add dictionary full of information about this host item to nagitems
+                        nagitems["hosts"].append(n)
+                        # after collection data in nagitems create objects from its informations
+                        # host objects contain service objects
+                        if not self.new_hosts.has_key(n["host"]):
+                            new_host = n["host"]
+                            self.new_hosts[new_host] = GenericHost()
+                            self.new_hosts[new_host].name = n["host"]
+                            self.new_hosts[new_host].status = n["status"]
+                            self.new_hosts[new_host].last_check = n["last_check"]
+                            self.new_hosts[new_host].duration = n["duration"]
+                            self.new_hosts[new_host].attempt = n["attempt"]
+                            self.new_hosts[new_host].status_information= n["status_information"]
+                except:
+                    # set checking flag back to False
+                    self.isChecking = False
+                    #return self.Error(sys.exc_info())
+                    result, error = self.Error(sys.exc_info())
+                    return Result(result=result, error=error)
             
         except:
             # set checking flag back to False
@@ -409,10 +406,18 @@ class CentreonServer(GenericServer):
             result = self.FetchURL(nagcgiurl_services, giveback="raw")
             raw, error = result.result, result.error
             if error != "": return Result(result=raw, error=error)
-            htobj = lxml.objectify.fromstring(raw)     
-            del raw
+            
+            #htobj = lxml.objectify.fromstring(raw)     
+
+            # cut off <xml blabla>
+            xmlraw = ElementTree.fromstring(raw.split("\n")[1])
+            xmlobj = nagstamonActions.ObjectifyXML(xmlraw)                                 
+            
+            del raw, xmlraw, error
+            
             # in case there are no children session id is invalid
-            if htobj.getchildren == []:
+            #if htobj.getchildren == []:
+            if len(xmlobj) == 0:
                 # debug
                 if str(self.conf.debug_mode) == "True": 
                     #print self.get_name(), "bad session ID, retrieving new one..." 
@@ -422,81 +427,88 @@ class CentreonServer(GenericServer):
                 result = self.FetchURL(nagcgiurl_services, giveback="raw")  
                 raw, error = result.result, result.error                
                 if error != "": return Result(result=raw, error=error)
-                htobj = lxml.objectify.fromstring(raw) 
-                del raw, error
-            
-            if htobj.__dict__.has_key("l"):
-                for l in htobj.l:
-                    try:
-                        n = {}
-                        # host
-                        # the resulting table of Nagios status.cgi table omits the
-                        # hostname of a failing service if there are more than one
-                        # so if the hostname is empty the nagios status item should get
-                        # its hostname from the previuos item - one reason to keep "nagitems"
-                        n["host"] = str(l.hn.text)
-                        # service
-                        n["service"] = str(l.sd.text)
-                        # status
-                        n["status"] = str(l.cs.text)
-                        # last_check
-                        n["last_check"] = str(l.lc.text)
-                        # duration
-                        n["duration"] = str(l.d.text)
-                        # attempt
-                        n["attempt"] = str(l.ca.text)
-                        # status_information
-                        n["status_information"] = str(l.po.text)
-                        # service is acknowledged or not, has to be filtered
-                        n["acknowledged"] = str(l.pa.text)
-                        # service notification enabled or not, has to be filtered
-                        n["notification_enabled"] = str(l.ne.text)
-                        # service check enabled or not, has to be filtered
-                        n["check_enabled"] = str(l.ac.text)
-                        # service down for maintenance or not, has to be filtered
-                        n["in_downtime"] = str(l.dtm.text)
+                #htobj = lxml.objectify.fromstring(raw) 
+                # cut off <xml blabla>
+                xmlraw = ElementTree.fromstring(raw.split("\n")[1])
+                xmlobj = nagstamonActions.ObjectifyXML(xmlraw)
+                
+                del raw, xmlraw, error
 
-                        # what works in cgi-Nagios via cgi request has to be filtered out here "manually"
-                        if not (str(self.conf.filter_acknowledged_hosts_services) == "True" and \
-                           n["acknowledged"] == "1") and \
-                           not (str(self.conf.filter_hosts_services_disabled_notifications) == "True" and \
-                           n["notification_enabled"] == "0") and \
-                           not (str(self.conf.filter_hosts_services_disabled_checks) == "True" and \
-                           n["check_enabled"] == "0") and \
-                           not (str(self.conf.filter_hosts_services_maintenance) == "True" and \
-                           n["in_downtime"] == "1") and\
-                           not (str(self.conf.filter_all_unknown_services) == "True" and n["status"] == "UNKNOWN") and\
-                           not (str(self.conf.filter_all_warning_services) == "True" and n["status"] == "WARNING") and\
-                           not (str(self.conf.filter_all_critical_services) == "True" and n["status"] == "CRITICAL"): 
-                            # add dictionary full of information about this service item to nagitems - only if service
-                            nagitems["services"].append(n)
-                            
-                            # after collection data in nagitems create objects of its informations
-                            # host objects contain service objects
-                            if not self.new_hosts.has_key(n["host"]):
-                                self.new_hosts[n["host"]] = GenericHost()
-                                self.new_hosts[n["host"]].name = n["host"]
-                                self.new_hosts[n["host"]].status = "UP"
-                            # if a service does not exist create its object
-                            if not self.new_hosts[n["host"]].services.has_key(n["service"]):
-                                new_service = n["service"]
-                                self.new_hosts[n["host"]].services[new_service] = GenericService()
-                                self.new_hosts[n["host"]].services[new_service].host = n["host"]
-                                self.new_hosts[n["host"]].services[new_service].name = n["service"]
-                                self.new_hosts[n["host"]].services[new_service].status = n["status"]
-                                self.new_hosts[n["host"]].services[new_service].last_check = n["last_check"]
-                                self.new_hosts[n["host"]].services[new_service].duration = n["duration"]
-                                self.new_hosts[n["host"]].services[new_service].attempt = n["attempt"]
-                                self.new_hosts[n["host"]].services[new_service].status_information = n["status_information"]
-                    except:
-                        # set checking flag back to False
-                        self.isChecking = False
-                        #return self.Error(sys.exc_info())
-                        result, error = self.Error(sys.exc_info())
-                        return Result(result=result, error=error)
-                                            
+            
+            #if htobj.__dict__.has_key("l"):
+                #for l in htobj.l:
+            for l in xmlobj:
+                try:
+                    n = {}
+                    # host
+                    # the resulting table of Nagios status.cgi table omits the
+                    # hostname of a failing service if there are more than one
+                    # so if the hostname is empty the nagios status item should get
+                    # its hostname from the previuos item - one reason to keep "nagitems"
+                    n["host"] = str(l.hn.text)
+                    # service
+                    n["service"] = str(l.sd.text)
+                    # status
+                    n["status"] = str(l.cs.text)
+                    # last_check
+                    n["last_check"] = str(l.lc.text)
+                    # duration
+                    n["duration"] = str(l.d.text)
+                    # attempt
+                    n["attempt"] = str(l.ca.text)
+                    # status_information
+                    n["status_information"] = str(l.po.text)
+                    # service is acknowledged or not, has to be filtered
+                    n["acknowledged"] = str(l.pa.text)
+                    # service notification enabled or not, has to be filtered
+                    n["notification_enabled"] = str(l.ne.text)
+                    # service check enabled or not, has to be filtered
+                    n["check_enabled"] = str(l.ac.text)
+                    # service down for maintenance or not, has to be filtered
+                    n["in_downtime"] = str(l.dtm.text)
+
+                    # what works in cgi-Nagios via cgi request has to be filtered out here "manually"
+                    if not (str(self.conf.filter_acknowledged_hosts_services) == "True" and \
+                       n["acknowledged"] == "1") and \
+                       not (str(self.conf.filter_hosts_services_disabled_notifications) == "True" and \
+                       n["notification_enabled"] == "0") and \
+                       not (str(self.conf.filter_hosts_services_disabled_checks) == "True" and \
+                       n["check_enabled"] == "0") and \
+                       not (str(self.conf.filter_hosts_services_maintenance) == "True" and \
+                       n["in_downtime"] == "1") and\
+                       not (str(self.conf.filter_all_unknown_services) == "True" and n["status"] == "UNKNOWN") and\
+                       not (str(self.conf.filter_all_warning_services) == "True" and n["status"] == "WARNING") and\
+                       not (str(self.conf.filter_all_critical_services) == "True" and n["status"] == "CRITICAL"): 
+                        # add dictionary full of information about this service item to nagitems - only if service
+                        nagitems["services"].append(n)
+                        
+                        # after collection data in nagitems create objects of its informations
+                        # host objects contain service objects
+                        if not self.new_hosts.has_key(n["host"]):
+                            self.new_hosts[n["host"]] = GenericHost()
+                            self.new_hosts[n["host"]].name = n["host"]
+                            self.new_hosts[n["host"]].status = "UP"
+                        # if a service does not exist create its object
+                        if not self.new_hosts[n["host"]].services.has_key(n["service"]):
+                            new_service = n["service"]
+                            self.new_hosts[n["host"]].services[new_service] = GenericService()
+                            self.new_hosts[n["host"]].services[new_service].host = n["host"]
+                            self.new_hosts[n["host"]].services[new_service].name = n["service"]
+                            self.new_hosts[n["host"]].services[new_service].status = n["status"]
+                            self.new_hosts[n["host"]].services[new_service].last_check = n["last_check"]
+                            self.new_hosts[n["host"]].services[new_service].duration = n["duration"]
+                            self.new_hosts[n["host"]].services[new_service].attempt = n["attempt"]
+                            self.new_hosts[n["host"]].services[new_service].status_information = n["status_information"]
+                except:
+                    # set checking flag back to False
+                    self.isChecking = False
+                    #return self.Error(sys.exc_info())
+                    result, error = self.Error(sys.exc_info())
+                    return Result(result=result, error=error)
+                                        
             # do some cleanup
-            del htobj
+            #del htobj
+            del xmlobj
             
         except:
             # set checking flag back to False
