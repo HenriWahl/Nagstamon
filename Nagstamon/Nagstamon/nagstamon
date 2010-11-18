@@ -8,9 +8,9 @@ gc.enable()
 #gc.disable()
 #gc.set_debug(gc.DEBUG_LEAK)
 #gc.set_debug(gc.DEBUG_UNCOLLECTABLE | gc.DEBUG_INSTANCES)
-#gc.set_debug(gc.DEBUG_STATS | gc.DEBUG_UNCOLLECTABLE | gc.DEBUG_SAVEALL )
+gc.set_debug(gc.DEBUG_UNCOLLECTABLE | gc.DEBUG_SAVEALL )
 #gc.set_debug(gc.DEBUG_STATS | gc.DEBUG_UNCOLLECTABLE)
-gc.set_threshold(100,10,10)
+#gc.set_threshold(100,100,100)
 
 import sys
 import os

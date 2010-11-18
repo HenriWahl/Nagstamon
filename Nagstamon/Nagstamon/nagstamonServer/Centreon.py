@@ -189,6 +189,7 @@ class CentreonServer(GenericServer):
         """
         try:
             # why not get a new cookie with every new session id?    
+            del self.Cookie
             self.Cookie = cookielib.CookieJar()    
             raw = self.FetchURL(self.nagios_cgi_url + "/index.php?" + urllib.urlencode({"p":1, "autologin":1, "useralias":self.MD5_username, "password":self.MD5_password}), giveback="raw")
             del raw
@@ -213,6 +214,7 @@ class CentreonServer(GenericServer):
 
         if error == "":
             host_id = raw.partition("var host_id = '")[2].partition("'")[0]
+            del raw
             # if for some reason host_id could not be retrieved because
             # we get a login page clear cookies and SID and try again
             if host_id == "":
@@ -223,13 +225,14 @@ class CentreonServer(GenericServer):
                 result = self.FetchURL(self.nagios_cgi_url + "/main.php?" + cgi_data, giveback="raw")
                 raw, error = result.result, result.error
                 host_id = raw.partition("var host_id= '")[2].partition("'")[0]
+                del raw
         else:
             if str(self.conf.debug_mode) == "True":
                 #print self.get_name(), ":", host, "ID could not be retrieved."
                 self.Debug(server=self.get_name(), debug = "Host ID could not be retrieved.")
 
         # some cleanup        
-        del result, raw, error        
+        del result, error        
         
         # only if host_id is an usable integer return it    
         try:
@@ -314,13 +317,17 @@ class CentreonServer(GenericServer):
             try:
                 xmlraw = ElementTree.fromstring(raw.split("\n")[1])
                 xmlobj = nagstamonActions.ObjectifyXML(xmlraw)            
-                del raw, xmlraw, error
+                ####del raw, xmlraw, error
             except:
                 self.Error(sys.exc_info())
+                
+            print self.get_name() + " XMLOBJ:", xmlobj    
                        
             # in case there are no children session id is invalid
             #if htobj.getchildren() == []:
-            if len(xmlobj) == 0:
+            #if len(xmlobj) == 0:
+            if xmlraw == "bad session id":    
+                print raw, xmlraw
                 if str(self.conf.debug_mode) == "True": 
                     #print self.get_name(), "bad session ID, retrieving new one..." 
                     self.Debug(server=self.get_name(), debug="Bad session ID, retrieving new one...")                
@@ -362,7 +369,7 @@ class CentreonServer(GenericServer):
                     n["check_enabled"] = str(l.ace.text)
                     # host down for maintenance or not, has to be filtered
                     n["in_downtime"] = str(l.hdtm.text)
-                    
+                                       
                     # store information about acknowledged and down hosts for further reference
                     if n["in_downtime"] == "1" : self.new_hosts_in_maintenance.append(n["host"])
                     if n["acknowledged"] == "1" : self.new_hosts_acknowledged.append(n["host"])
@@ -398,6 +405,8 @@ class CentreonServer(GenericServer):
                     result, error = self.Error(sys.exc_info())
                     return Result(result=result, error=error)
             
+            del xmlobj                
+                
         except:
             # set checking flag back to False
             self.isChecking = False
@@ -418,13 +427,14 @@ class CentreonServer(GenericServer):
             try:
                 xmlraw = ElementTree.fromstring(raw.split("\n")[1])
                 xmlobj = nagstamonActions.ObjectifyXML(xmlraw)            
-                del raw, xmlraw, error
+                ###del raw, xmlraw, error
             except:
                 self.Error(sys.exc_info())
             
             # in case there are no children session id is invalid
             #if htobj.getchildren == []:
-            if len(xmlobj) == 0:
+            #if len(xmlobj) == 0:
+            if xmlraw == "bad session id": 
                 # debug
                 if str(self.conf.debug_mode) == "True": 
                     #print self.get_name(), "bad session ID, retrieving new one..." 
@@ -675,14 +685,19 @@ class CentreonServer(GenericServer):
         else:
             self.SIDcount += 1         
         
-        # do some garbage collection
-        gc.collect()
+
             
         #debug
         #print
         #print "************************************************************"
         #print
-        #print self.get_name(), gc.get_count(), len(gc.garbage), gc.get_objects()
-        #print "************************************************************"
+        #print self.get_name(), gc.get_count(), len(gc.garbage)
+        #for g in gc.garbage:
+        #    print g
+        #    print "************************************************************"
+        #print "LENGTH GARBAGE:", len(gc.garbage), self.get_name()
+        #del gc.garbage[:]
+        # do some garbage collection
+        #gc.collect()
         #print
-            
+        #print gc.get_objects()    

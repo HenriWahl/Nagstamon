@@ -351,13 +351,13 @@ class GenericServer(object):
             result = self.FetchURL(nagcgiurl_hosts)
             htobj, error = result.result, result.error
             #if error != "": return [htobj, error]
-            if error != "": return Result(result=copy.copy(htobj), error=error)            
+            if error != "": return Result(result=copy.deepcopy(htobj), error=error)            
             # workaround for Nagios < 2.7 which has an <EMBED> in its output
             # put a copy of a part of htobj into table to be able to delete htobj
             try:
-                table = copy.copy(htobj.body.table[self.HTML_BODY_TABLE_INDEX])
+                table = copy.deepcopy(htobj.body.table[self.HTML_BODY_TABLE_INDEX])
             except:
-                table = copy.copy(htobj.body.embed.table)
+                table = copy.deepcopy(htobj.body.embed.table)
             
             # do some cleanup    
             del htobj
@@ -414,9 +414,9 @@ class GenericServer(object):
             result = self.FetchURL(nagcgiurl_services)
             htobj, error = result.result, result.error          
             #if error != "": return [htobj, error]
-            if error != "": return Result(result=copy.copy(htobj), error=error)
+            if error != "": return Result(result=copy.deepcopy(htobj), error=error)
             # put a copy of a part of htobj into table to be able to delete htobj
-            table = copy.copy(htobj.body.table[self.HTML_BODY_TABLE_INDEX])
+            table = copy.deepcopy(htobj.body.table[self.HTML_BODY_TABLE_INDEX])
             
             # do some cleanup    
             del htobj
@@ -484,12 +484,12 @@ class GenericServer(object):
             result = self.FetchURL(nagcgiurl_hosts_in_maintenance)
             htobj, error = result.result, result.error
             #if error != "": return [htobj, error]
-            if error != "": return Result(result=copy.copy(htobj), error=error)
+            if error != "": return Result(result=copy.deepcopy(htobj), error=error)
             # workaround for Nagios < 2.7 which has an <EMBED> in its output
             try:
-                table = copy.copy(htobj.body.table[self.HTML_BODY_TABLE_INDEX])
+                table = copy.deepcopy(htobj.body.table[self.HTML_BODY_TABLE_INDEX])
             except:
-                table = copy.copy(htobj.body.embed.div.table)
+                table = copy.deepcopy(htobj.body.embed.div.table)
             
             # do some cleanup    
             del htobj
@@ -524,12 +524,12 @@ class GenericServer(object):
             result = self.FetchURL(nagcgiurl_hosts_acknowledged)
             htobj, error = result.result, result.error
             #if error != "": return [htobj, error]
-            if error != "": return Result(result=copy.copy(htobj), error=error)
+            if error != "": return Result(result=copy.deepcopy(htobj), error=error)
             # workaround for Nagios < 2.7 which has an <EMBED> in its output
             try:
-                table = copy.copy(htobj.body.table[self.HTML_BODY_TABLE_INDEX])
+                table = copy.deepcopy(htobj.body.table[self.HTML_BODY_TABLE_INDEX])
             except:
-                table = copy.copy(htobj.body.embed.table)
+                table = copy.deepcopy(htobj.body.embed.table)
                 
             # do some cleanup    
             del htobj               
@@ -698,15 +698,17 @@ class GenericServer(object):
 
         # do some cleanup
         self.hosts.clear()
-        del self.hosts_acknowledged[::], self.hosts_in_maintenance[::]
+        #del self.hosts
+        del self.hosts_acknowledged[:], self.hosts_in_maintenance[:]
 
         # put new informations into respective dictionaries      
-        self.hosts, self.hosts_acknowledged, self.hosts_in_maintenance = copy.copy(self.new_hosts), copy.copy(self.new_hosts_acknowledged), copy.copy(self.new_hosts_in_maintenance)
+        self.hosts, self.hosts_acknowledged, self.hosts_in_maintenance = copy.deepcopy(self.new_hosts), copy.deepcopy(self.new_hosts_acknowledged), copy.deepcopy(self.new_hosts_in_maintenance)
+        #self.hosts, self.hosts_acknowledged, self.hosts_in_maintenance = self.new_hosts, self.new_hosts_acknowledged, self.new_hosts_in_maintenance
         
         # do some cleanup
-        del self.new_hosts_acknowledged[::], self.new_hosts_in_maintenance[::]
+        del self.new_hosts_acknowledged[:], self.new_hosts_in_maintenance[:]
         self.new_hosts.clear()
-        #gc.collect()
+        #del self.new_hosts
         
         # after all checks are done unset checking flag
         self.isChecking = False
@@ -774,7 +776,7 @@ class GenericServer(object):
                 urllib2.install_opener(urlopener)
                 # login and get cookie
                 urlcontent = urllib2.urlopen(self.nagios_url + "/login", logindata)
-                
+                urlcontent.close()
             except:
                 pass
                 
@@ -814,16 +816,20 @@ class GenericServer(object):
                     del url, cgi_data
             except:
                 result, error = self.Error(sys.exc_info())
-                #return Result(result=result, error=error + " " + str(url) + "?" + str(cgi_data))
                 return Result(result=result, error=error)
             
             # give back pure HTML or XML in case giveback is "raw"
             if giveback == "raw":
-                return Result(result=urlcontent.read())
+                raw = str(urlcontent.read())
+                result = Result(result=raw)
+                urlcontent.close()
+                del urlcontent, raw
+                return result
             
             # give back pure nothing if giveback is "nothing" - useful for POST requests
             if giveback == "nothing":
                 # do some cleanup
+                urlcontent.close()
                 del passman, auth_handler, digest_handler, urlcontent
                 return Result() 
             
@@ -832,6 +838,7 @@ class GenericServer(object):
                 # the heart of the whole Nagios-status-monitoring engine:
                 # first step: parse the read HTML
                 html = lxml.etree.HTML(urlcontent.read())
+                urlcontent.close()
                 del urlcontent
                     
                 # second step: make pretty HTML of it
@@ -861,7 +868,8 @@ class GenericServer(object):
                 del passman, auth_handler, digest_handler, prettyhtml
         
                 # give back HTML object from Nagios webseite
-                return Result(result=copy.copy(htobj))
+                #return Result(result=copy.deepcopy(htobj))
+                return Result(result=htobj)            
                 
             elif self.type == "Opsview" and giveback == "opsxml":
                 # objectify the xml and give it back after some cleanup
@@ -869,7 +877,7 @@ class GenericServer(object):
                 xmlpretty = lxml.etree.tostring(xml, pretty_print=True)
                 xmlobj = lxml.objectify.fromstring(xmlpretty)
                 del passman, auth_handler, urlcontent, xml, xmlpretty
-                return Result(result=copy.copy(xmlobj))
+                return Result(result=copy.deepcopy(xmlobj))
            
         except:
             # do some cleanup
@@ -883,6 +891,7 @@ class GenericServer(object):
         try:
             del passman, auth_handler, digest_handler, urlcontent
         except:
+            self.Error(sys.exc_info())
             pass
         result, error = self.Error(sys.exc_info())
         return Result(result=result, error=error)   

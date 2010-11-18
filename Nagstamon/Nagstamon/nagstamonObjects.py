@@ -11,22 +11,22 @@ import webbrowser
 import urllib
 import time
 
-try:
-    import lxml.etree, lxml.objectify
-except Exception, err:
-    print
-    print err
-    print
-    print "Could not load lxml.etree, lxml.objectify and lxml.html.clean, maybe you need to install python lxml."
-    print
-    sys.exit()
-# fedora 8 and maybe others use lxml 2 which is more careful and offers more modules
-# but which also makes necessary to clean Nagios html output
-# if not available should be ok because not needed
-try:
-    import lxml.html.clean
-except:
-    pass
+#try:
+#    import lxml.etree, lxml.objectify
+#except Exception, err:
+#    print
+#    print err
+#    print
+#    print "Could not load lxml.etree, lxml.objectify and lxml.html.clean, maybe you need to install python lxml."
+#    print
+#    sys.exit()
+## fedora 8 and maybe others use lxml 2 which is more careful and offers more modules
+## but which also makes necessary to clean Nagios html output
+## if not available should be ok because not needed
+#try:
+#    import lxml.html.clean
+#except:
+#    pass
     
 import nagstamonActions
 

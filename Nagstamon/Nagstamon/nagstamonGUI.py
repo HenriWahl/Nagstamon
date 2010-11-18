@@ -2267,13 +2267,6 @@ class EditServer(ServerDialogHelper):
             self.dialog.destroy()
 
             
-    #def __del__(self):
-    #    """
-    #    hopefully a __del__() method may make this object better collectable for gc
-    #    """
-    #    del(self)
-            
-            
     def OK(self, widget):
         """
             settings dialog got OK-ed
