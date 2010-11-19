@@ -1,13 +1,15 @@
 # encoding: utf-8
 import urllib
-import urllib2
+#import urllib2
+
+import mechanize
+
 import cookielib
 import sys
 import socket
 import gc
 import copy
 import webbrowser
-import urllib
 import datetime
 import time
 import traceback
@@ -101,11 +103,17 @@ class GenericServer(object):
         self.warnings = 0
         self.status = ""
         self.status_description = ""
-        self.Cookie = None
         # needed for looping server thread
         self.count = 0
         # needed for RecheckAll - save start_time once for not having to get it for every recheck
         self.start_time = None
+        # test with mechanize - this server's own browser
+        #self.Browser = mechanize.Browser(history=NoHistory())
+        self.Browser = mechanize.Browser()        
+        # ignore robots.txt
+        self.Browser.set_handle_robots(False)
+        self.Cookie = cookielib.LWPCookieJar()
+        self.Browser.set_cookiejar(self.Cookie)
         
     
     def get_name(self):
@@ -736,13 +744,17 @@ class GenericServer(object):
         # attention: the example from above webseite is wrong, passman.add_password needs the 
         # WHOLE URL, with protocol!
 
+        
+        print url
+        
         passman = urllib2.HTTPPasswordMgrWithDefaultRealm()
         passman.add_password(None, url, self.get_username(), self.get_password())       
         auth_handler = urllib2.HTTPBasicAuthHandler(passman)
         digest_handler = urllib2.HTTPDigestAuthHandler(passman)
         
         # get my cookie to access Opsview web interface to access Opsviews Nagios part
-        if self.Cookie == None and self.type == "Opsview":         
+        ###if self.Cookie == None and self.type == "Opsview":         
+        if len(self.Cookie) == 0 and self.type == "Opsview":         
             # put all necessary data into url string
             logindata = urllib.urlencode({"login_username":self.get_username(),\
                              "login_password":self.get_password(),\
@@ -750,8 +762,8 @@ class GenericServer(object):
                              "app": "",\
                              "login":"Log In"})
             
-            # the cookie jar will contain Opsview web session and auth ticket cookies 
-            self.Cookie = cookielib.CookieJar()
+            ##### the cookie jar will contain Opsview web session and auth ticket cookies 
+            ###self.Cookie = cookielib.CookieJar()
             
             # the following is necessary for Opsview servers
             # get cookie from login page via url retrieving as with other urls
@@ -808,22 +820,25 @@ class GenericServer(object):
                 if self.type == "Opsview" and giveback == "opsxml":
                     headers = {"Content-Type":"text/xml", "X-Username":self.get_username(), "X-Password":self.get_password()}
                     request = urllib2.Request(url, cgi_data, headers)
-                    urlcontent = urllib2.urlopen(request)
-                    del headers, request, url, cgi_data
+                    #urlcontent = urllib2.urlopen(request)
+                    #del headers, request, url, cgi_data
                 else:
                     # use opener - if cgi_data is not empty urllib uses a POST request
-                    urlcontent = urllib2.urlopen(url, cgi_data)
-                    del url, cgi_data
+                    #urlcontent = urllib2.urlopen(url, cgi_data)
+                    #del url, cgi_data
+                    pass
             except:
                 result, error = self.Error(sys.exc_info())
                 return Result(result=result, error=error)
             
             # give back pure HTML or XML in case giveback is "raw"
             if giveback == "raw":
-                raw = str(urlcontent.read())
+                #raw = str(urlcontent.read())
+                self.Browser.open(url, cgi_data)
+                raw = self.Browser.response().read()
                 result = Result(result=raw)
-                urlcontent.close()
-                del urlcontent, raw
+                #urlcontent.close()
+                #del urlcontent, raw
                 return result
             
             # give back pure nothing if giveback is "nothing" - useful for POST requests

@@ -8,6 +8,7 @@ import sys
 import cookielib
 import traceback
 import gc
+import mechanize
 
 #try:
 #    import lxml.etree, lxml.objectify
@@ -189,10 +190,11 @@ class CentreonServer(GenericServer):
         """
         try:
             # why not get a new cookie with every new session id?    
-            del self.Cookie
-            self.Cookie = cookielib.CookieJar()    
+            #del self.Cookie
+            #self.Cookie = cookielib.CookieJar()    
             raw = self.FetchURL(self.nagios_cgi_url + "/index.php?" + urllib.urlencode({"p":1, "autologin":1, "useralias":self.MD5_username, "password":self.MD5_password}), giveback="raw")
             del raw
+            print "SSEELLFF..CCOOOOKKIIEE::", self.Cookie
             sid = str(self.Cookie._cookies.values()[0].values()[0]["PHPSESSID"].value)
             return Result(result=sid)
         except:
@@ -664,6 +666,142 @@ class CentreonServer(GenericServer):
             del raw
         except:
             self.Error(sys.exc_info())
+            
+
+    def FetchURL(self, url, giveback="obj", cgi_data=None, remove_tags=["link", "br", "img", "hr", "script", "th", "form", "div", "p"]):
+        """
+        get content of given url, cgi_data only used if present
+        giveback may be "dict", "raw" or "none" 
+        "dict" FetchURL gives back a dict full of miserable hosts/services,
+        "html" it gives back pure HTML - useful for finding out IP or new version
+        "none" it gives back pure nothing - useful if for example acknowledging a service
+        existence of cgi_data forces urllib to use POST instead of GET requests
+        remove_tags became necessary for different expectations of GetStatus() and
+        GetHost() - one wants div elements, the other don't 
+        NEW: gives back a list containing result and, if necessary, a more clear error description
+        """
+        # using httppasswordmgrwithdefaultrealm because using password in plain
+        # url like http://username:password@nagios-server causes trouble with
+        # passwords containing special characters like "?"
+        # see http://www.voidspace.org.uk/python/articles/authentication.shtml#doing-it-properly
+        # attention: the example from above webseite is wrong, passman.add_password needs the 
+        # WHOLE URL, with protocol!
+
+        
+        print url
+        
+        """
+        passman = urllib2.HTTPPasswordMgrWithDefaultRealm()
+        passman.add_password(None, url, self.get_username(), self.get_password())       
+        auth_handler = urllib2.HTTPBasicAuthHandler(passman)
+        digest_handler = urllib2.HTTPDigestAuthHandler(passman)
+        
+        # get my cookie to access Opsview web interface to access Opsviews Nagios part
+        ###if self.Cookie == None and self.type == "Opsview":         
+        if len(self.Cookie) == 0 and self.type == "Opsview":         
+            # put all necessary data into url string
+            logindata = urllib.urlencode({"login_username":self.get_username(),\
+                             "login_password":self.get_password(),\
+                             "back":"",\
+                             "app": "",\
+                             "login":"Log In"})
+            
+            ##### the cookie jar will contain Opsview web session and auth ticket cookies 
+            ###self.Cookie = cookielib.CookieJar()
+            
+            # the following is necessary for Opsview servers
+            # get cookie from login page via url retrieving as with other urls
+            try:
+                # if there should be no proxy used use an empty proxy_handler - only necessary in Windows,
+                # where IE proxy settings are used automatically if available
+                # In UNIX $HTTP_PROXY will be used
+                if str(self.use_proxy) == "False":
+                    proxy_handler = urllib2.ProxyHandler({})
+                    urlopener = urllib2.build_opener(auth_handler, digest_handler, proxy_handler, urllib2.HTTPCookieProcessor(self.Cookie))
+                elif str(self.use_proxy) == "True":
+                    if str(self.use_proxy_from_os) == "True":
+                        urlopener = urllib2.build_opener(auth_handler, digest_handler, urllib2.HTTPCookieProcessor(self.Cookie))
+                    else:
+                        # if proxy from OS is not used there is to add a authenticated proxy handler
+                        passman.add_password(None, self.proxy_address, self.proxy_username, self.proxy_password)
+                        proxy_handler = urllib2.ProxyHandler({"http": self.proxy_address, "https": self.proxy_address})
+                        proxy_auth_handler = urllib2.ProxyBasicAuthHandler(passman)
+                        urlopener = urllib2.build_opener(proxy_handler, proxy_auth_handler, auth_handler, digest_handler, urllib2.HTTPCookieProcessor(self.Cookie))
+                
+                # create url opener
+                urllib2.install_opener(urlopener)
+                # login and get cookie
+                urlcontent = urllib2.urlopen(self.nagios_url + "/login", logindata)
+                urlcontent.close()
+            except:
+                pass
+                
+        # if something goes wrong with accessing the URL it can be caught
+        try:
+            # if there should be no proxy used use an empty proxy_handler - only necessary in Windows,
+            # where IE proxy settings are used automatically if available
+            # In UNIX $HTTP_PROXY will be used
+            # The MultipartPostHandler is needed for submitting multipart forms from Opsview
+            if str(self.use_proxy) == "False":
+                proxy_handler = urllib2.ProxyHandler({})
+                urlopener = urllib2.build_opener(auth_handler, digest_handler, proxy_handler, urllib2.HTTPCookieProcessor(self.Cookie), nagstamonActions.MultipartPostHandler)
+            elif str(self.use_proxy) == "True":
+                if str(self.use_proxy_from_os) == "True":
+                    urlopener = urllib2.build_opener(auth_handler, digest_handler, urllib2.HTTPCookieProcessor(self.Cookie), nagstamonActions.MultipartPostHandler)
+                else:
+                    # if proxy from OS is not used there is to add a authenticated proxy handler
+                    passman.add_password(None, self.proxy_address, self.proxy_username, self.proxy_password)
+                    proxy_handler = urllib2.ProxyHandler({"http": self.proxy_address, "https": self.proxy_address})
+                    proxy_auth_handler = urllib2.ProxyBasicAuthHandler(passman)
+                    urlopener = urllib2.build_opener(proxy_handler, proxy_auth_handler, auth_handler, digest_handler, urllib2.HTTPCookieProcessor(self.Cookie), nagstamonActions.MultipartPostHandler)
+            
+            # create url opener
+            urllib2.install_opener(urlopener)
+            try:
+                # special Opsview treatment, transmit username and passwort for XML requests
+                # http://docs.opsview.org/doku.php?id=opsview3.4:api
+                # this is only necessary when accessing the API and expecting a XML answer
+                if self.type == "Opsview" and giveback == "opsxml":
+                    headers = {"Content-Type":"text/xml", "X-Username":self.get_username(), "X-Password":self.get_password()}
+                    request = urllib2.Request(url, cgi_data, headers)
+                    #urlcontent = urllib2.urlopen(request)
+                    #del headers, request, url, cgi_data
+                else:
+                    # use opener - if cgi_data is not empty urllib uses a POST request
+                    #urlcontent = urllib2.urlopen(url, cgi_data)
+                    #del url, cgi_data
+                    pass
+            except:
+                result, error = self.Error(sys.exc_info())
+                return Result(result=result, error=error)
+            """
+        try:
+            # give back pure HTML or XML in case giveback is "raw"
+            if giveback == "raw":
+                self.Browser = mechanize.Browser()        
+                # ignore robots.txt
+                self.Browser.set_handle_robots(False)
+                self.Browser.set_cookiejar(self.Cookie)
+                response = self.Browser.open(url, cgi_data)
+                result = Result(result=response.read())
+                response.close()
+                self.Browser.close()
+                #urlcontent.close()
+                #del urlcontent, raw
+                return result
+           
+        except Exception, err:
+            # do some cleanup
+            #del passman, auth_handler, digest_handler
+            print err
+            result, error = self.Error(sys.exc_info())
+            return Result(result=result, error=error)      
+            
+        
+        # in case the wrong giveback type has been specified return error
+        result, error = self.Error(sys.exc_info())
+        return Result(result=result, error=error)   
+    
 
         
     def Hook(self):
@@ -676,7 +814,6 @@ class CentreonServer(GenericServer):
             if str(self.conf.debug_mode) == "True":
                 #print self.get_name() + ":", "old SID:", self.SID, self.Cookie
                 self.Debug(server=self.get_name(), debug="Old SID: " + self.SID + " " + str(self.Cookie))                
-
             self.SID = self._get_sid().result
             if str(self.conf.debug_mode) == "True":
                 #print self.get_name() + ":", "new SID:", self.SID, self.Cookie
@@ -695,9 +832,9 @@ class CentreonServer(GenericServer):
         #for g in gc.garbage:
         #    print g
         #    print "************************************************************"
-        #print "LENGTH GARBAGE:", len(gc.garbage), self.get_name()
+        #print "LENGTH GARBAGE:", len(gc.garbage), gc.garbage, self.get_name()
         #del gc.garbage[:]
         # do some garbage collection
-        #gc.collect()
+        gc.collect()
         #print
         #print gc.get_objects()    

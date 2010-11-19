@@ -580,7 +580,14 @@ def CreateServer(server=None, conf=None, debug_queue=None):
     nagiosserver.proxy_address = server.proxy_address
     nagiosserver.proxy_username = server.proxy_username
     nagiosserver.proxy_password = server.proxy_password
+    # add browser credentials
+    nagiosserver.Browser.add_password(nagiosserver.nagios_url, nagiosserver.username, nagiosserver.password)
+    nagiosserver.Browser.add_password(nagiosserver.nagios_cgi_url, nagiosserver.username, nagiosserver.password)
+    if str(nagiosserver.use_proxy) == "True":
+        nagiosserver.Browser.set_proxies({"http":nagiosserver.proxy_address, "https":nagiosserver.proxy_address})
+        nagiosserver.Browser.add_proxy_password(nagiosserver.proxy_username, nagiosserver.proxy_password)
     
+    # access to thread-safe debug queue
     nagiosserver.debug_queue = debug_queue
     
     # debug

@@ -1,14 +1,10 @@
 # encoding: utf-8
 
-import urllib
-import urllib2
-import cookielib
 import sys
 import socket
 import gc
 import copy
 import webbrowser
-import urllib
 import time
 
 #try:
@@ -205,3 +201,8 @@ class XMLNode(object):
     def add(self, element):
         return XMLNode(element)
         
+
+# necessary for mechanize browser history, inspired by http://stackoverflow.com/questions/2393299/how-do-i-disable-history-in-python-mechanize-module
+class NoHistory(object):
+    def add(self, *a, **k): pass
+    def clear(self): pass
