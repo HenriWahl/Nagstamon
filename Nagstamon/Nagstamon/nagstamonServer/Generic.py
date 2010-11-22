@@ -1,6 +1,6 @@
 # encoding: utf-8
 import urllib
-#import urllib2
+import urllib2
 
 import mechanize
 
@@ -14,22 +14,22 @@ import datetime
 import time
 import traceback
 
-#try:
-#    import lxml.etree, lxml.objectify
-#except Exception, err:
-#    print
-#    print err
-#    print
-#    print "Could not load lxml.etree, lxml.objectify and lxml.html.clean, maybe you need to install python lxml."
-#    print
-#    sys.exit()
+try:
+    import lxml.etree, lxml.objectify
+except Exception, err:
+    print
+    print err
+    print
+    print "Could not load lxml.etree, lxml.objectify and lxml.html.clean, maybe you need to install python lxml."
+    print
+    sys.exit()
 # fedora 8 and maybe others use lxml 2 which is more careful and offers more modules
 # but which also makes necessary to clean Nagios html output
-# if not available should be ok because not needed
-#try:
-#    import lxml.html.clean
-#except:
-#    pass
+# if not available should be ok beause not needed
+try:
+    import lxml.html.clean
+except:
+    pass
     
 import nagstamonActions                         
 from nagstamonObjects import *
@@ -820,12 +820,12 @@ class GenericServer(object):
                 if self.type == "Opsview" and giveback == "opsxml":
                     headers = {"Content-Type":"text/xml", "X-Username":self.get_username(), "X-Password":self.get_password()}
                     request = urllib2.Request(url, cgi_data, headers)
-                    #urlcontent = urllib2.urlopen(request)
-                    #del headers, request, url, cgi_data
+                    urlcontent = urllib2.urlopen(request)
+                    del headers, request, url, cgi_data
                 else:
                     # use opener - if cgi_data is not empty urllib uses a POST request
-                    #urlcontent = urllib2.urlopen(url, cgi_data)
-                    #del url, cgi_data
+                    urlcontent = urllib2.urlopen(url, cgi_data)
+                    del url, cgi_data
                     pass
             except:
                 result, error = self.Error(sys.exc_info())
@@ -833,12 +833,12 @@ class GenericServer(object):
             
             # give back pure HTML or XML in case giveback is "raw"
             if giveback == "raw":
-                #raw = str(urlcontent.read())
-                self.Browser.open(url, cgi_data)
-                raw = self.Browser.response().read()
+                raw = str(urlcontent.read())
+                #self.Browser.open(url, cgi_data)
+                #raw = self.Browser.response().read()
                 result = Result(result=raw)
-                #urlcontent.close()
-                #del urlcontent, raw
+                urlcontent.close()
+                del urlcontent, raw
                 return result
             
             # give back pure nothing if giveback is "nothing" - useful for POST requests

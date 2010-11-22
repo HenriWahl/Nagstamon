@@ -668,7 +668,7 @@ class CentreonServer(GenericServer):
             self.Error(sys.exc_info())
             
 
-    def FetchURL(self, url, giveback="obj", cgi_data=None, remove_tags=["link", "br", "img", "hr", "script", "th", "form", "div", "p"]):
+    def FetchURLCentreon(self, url, giveback="obj", cgi_data=None, remove_tags=["link", "br", "img", "hr", "script", "th", "form", "div", "p"]):
         """
         get content of given url, cgi_data only used if present
         giveback may be "dict", "raw" or "none" 

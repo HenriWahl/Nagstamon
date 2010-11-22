@@ -297,7 +297,15 @@ class GUI(object):
                         self.popwin.ServerVBoxes[server.get_name()].set_no_show_all(False)      
                         self.status_ok = False                       
                         
-                    # fill treeview for popwin
+                    # delete and recreate Treeview because it seems to be a huge memory eater
+                    self.popwin.ServerVBoxes[server.get_name()].remove(self.popwin.ServerVBoxes[server.get_name()].TreeView)
+                    del self.popwin.ServerVBoxes[server.get_name()].TreeView                    
+                    gc.collect()                    
+                    self.popwin.ServerVBoxes[server.get_name()].TreeView = gtk.TreeView()
+                    self.popwin.ServerVBoxes[server.get_name()].add(self.popwin.ServerVBoxes[server.get_name()].TreeView)
+                        
+                        
+                    # fill treeview for popwin    
                     # create a model for treeview where the table headers all are strings
                     tab_model = gtk.ListStore(*[gobject.TYPE_STRING]*(len(server.COLUMNS)+2))
                     
@@ -312,19 +320,26 @@ class GUI(object):
                                 iter = tab_model.insert_before(None, None)
                                 columns = list(server.get_columns(item))
                                 for i, column in enumerate(columns):
+                                    print i, column
                                     tab_model.set_value(iter, str(i), str(column))
                                 tab_model.set_value(iter, number_of_columns, self.tab_bg_colors[str(columns[server.COLOR_COLUMN_ID])])
                                 tab_model.set_value(iter, number_of_columns+1, self.tab_fg_colors[str(columns[server.COLOR_COLUMN_ID])])
                     
                     # http://www.pygtk.org/pygtk2reference/class-gtktreeview.html#method-gtktreeview--set-model         
                     # clear treeviews columns
-                    for c in self.popwin.ServerVBoxes[server.get_name()].TreeView.get_columns():
-                        self.popwin.ServerVBoxes[server.get_name()].TreeView.remove_column(c)
+                    ###for c in self.popwin.ServerVBoxes[server.get_name()].TreeView.get_columns():
+                    ###    self.popwin.ServerVBoxes[server.get_name()].TreeView.remove_column(c)
 
                     # give new model to the view, overwrites the old one automatically
-                    #del self.popwin.ServerVBoxes[server.get_name()].TreeView 
-                    #self.popwin.ServerVBoxes[server.get_name()].TreeView = gtk.TreeView()
+                    ###self.popwin.ServerVBoxes[server.get_name()].remove(self.popwin.ServerVBoxes[server.get_name()].TreeView)
+                    ###del self.popwin.ServerVBoxes[server.get_name()].TreeView                    
+                    ###gc.collect()                    
+                    ###self.popwin.ServerVBoxes[server.get_name()].TreeView = gtk.TreeView()
+                    ###self.popwin.ServerVBoxes[server.get_name()].add(self.popwin.ServerVBoxes[server.get_name()].TreeView)
+                    
                     self.popwin.ServerVBoxes[server.get_name()].TreeView.set_model(tab_model)
+                    
+                    print self.popwin.ServerVBoxes[server.get_name()].TreeView
                     
                     # render aka create table view
                     tab_renderer = gtk.CellRendererText()
@@ -354,7 +369,7 @@ class GUI(object):
                     print err
                     #debug
                     print "SSSEEERRRVVVEEERRR  ERERRROORRR!"
-                    #server.Error(sys.exc_info())
+                    server.Error(sys.exc_info())
                     
         # show and resize popwin
         self.popwin.VBox.hide_all()
