@@ -123,18 +123,18 @@ class GUI(object):
         self.rows_reordered_handler = {} 
         self.last_sorting = {}
         for server in self.servers.values():
-            self.last_sorting[server.name] = Sorting([(server.DEFAULT_SORT_COLUMN_ID, gtk.SORT_ASCENDING),
+            self.last_sorting[server.get_name()] = Sorting([(server.DEFAULT_SORT_COLUMN_ID, gtk.SORT_ASCENDING),
                                                       (server.HOST_COLUMN_ID, gtk.SORT_ASCENDING)],
                                                       len(server.COLUMNS)+1) # stores sorting between table refresh
     
     def get_last_sorting(self, server):
-        return self.last_sorting[server.name]
+        return self.last_sorting[server.get_name()]
     
     def get_rows_reordered_handler(self, server):
-        return self.rows_reordered_handler.get(server.name)
+        return self.rows_reordered_handler.get(server.get_name())
     
     def set_rows_reordered_handler(self, server, handler):
-        self.rows_reordered_handler[server.name] = handler
+        self.rows_reordered_handler[server.get_name()] = handler
      
     def set_sorting(self, tab_model, server):
         """ Restores sorting after refresh """
@@ -142,7 +142,7 @@ class GUI(object):
             tab_model.set_sort_column_id(id, order)
             # this makes sorting arrows visible according to
             # sort order after refresh
-            #column = self.popwin.ServerVBoxes[server.name].TreeView.get_column(id)
+            #column = self.popwin.ServerVBoxes[server.get_name()].TreeView.get_column(id)
             #if column is not None:
             #    column.set_property('sort-order', order)
 
@@ -264,11 +264,12 @@ class GUI(object):
         # walk through all servers, their hosts and their services
         for server in self.servers.values():
             # only refresh monitor server output if enabled
-            if str(self.conf.servers[server.name].enabled) == "True":
+            if str(self.conf.servers[server.get_name()].enabled) == "True":
                 try:
                     # otherwise it must be shown, full of problems
-                    self.popwin.ServerVBoxes[server.name].show()
-                    self.popwin.ServerVBoxes[server.name].set_no_show_all(False)
+                    self.popwin.ServerVBoxes[server.get_name()].show()
+                    self.popwin.ServerVBoxes[server.get_name()].set_no_show_all(False)
+                    
                     # use a bunch of filtered nagitems, services and hosts sorted by different
                     # grades of severity
                     
@@ -287,13 +288,13 @@ class GUI(object):
                         len(server.nagitems_filtered["services"]["UNKNOWN"]) == 0 and \
                         server.status_description == "":
                         # ... there is no need to show a label or treeview...
-                        self.popwin.ServerVBoxes[server.name].hide()
-                        self.popwin.ServerVBoxes[server.name].set_no_show_all(True)
+                        self.popwin.ServerVBoxes[server.get_name()].hide()
+                        self.popwin.ServerVBoxes[server.get_name()].set_no_show_all(True)
                         self.status_ok = True
                     else:
                         # otherwise it must be shown, full of problems
-                        self.popwin.ServerVBoxes[server.name].show()
-                        self.popwin.ServerVBoxes[server.name].set_no_show_all(False)      
+                        self.popwin.ServerVBoxes[server.get_name()].show()
+                        self.popwin.ServerVBoxes[server.get_name()].set_no_show_all(False)      
                         self.status_ok = False                       
                         
                     # fill treeview for popwin
@@ -307,21 +308,23 @@ class GUI(object):
                     number_of_columns = len(server.COLUMNS)
                     for item_type, status_dict in server.nagitems_filtered.iteritems():
                         for status, item_list in status_dict.iteritems():
-                            for item in item_list:
+                            for item in list(item_list):
                                 iter = tab_model.insert_before(None, None)
                                 columns = list(server.get_columns(item))
                                 for i, column in enumerate(columns):
-                                    tab_model.set_value(iter, i, str(column))
+                                    tab_model.set_value(iter, str(i), str(column))
                                 tab_model.set_value(iter, number_of_columns, self.tab_bg_colors[str(columns[server.COLOR_COLUMN_ID])])
                                 tab_model.set_value(iter, number_of_columns+1, self.tab_fg_colors[str(columns[server.COLOR_COLUMN_ID])])
                     
                     # http://www.pygtk.org/pygtk2reference/class-gtktreeview.html#method-gtktreeview--set-model         
                     # clear treeviews columns
-                    for c in self.popwin.ServerVBoxes[server.name].TreeView.get_columns():
-                        self.popwin.ServerVBoxes[server.name].TreeView.remove_column(c)
+                    for c in self.popwin.ServerVBoxes[server.get_name()].TreeView.get_columns():
+                        self.popwin.ServerVBoxes[server.get_name()].TreeView.remove_column(c)
 
                     # give new model to the view, overwrites the old one automatically
-                    self.popwin.ServerVBoxes[server.name].TreeView.set_model(tab_model)
+                    #del self.popwin.ServerVBoxes[server.get_name()].TreeView 
+                    #self.popwin.ServerVBoxes[server.get_name()].TreeView = gtk.TreeView()
+                    self.popwin.ServerVBoxes[server.get_name()].TreeView.set_model(tab_model)
                     
                     # render aka create table view
                     tab_renderer = gtk.CellRendererText()
@@ -330,7 +333,7 @@ class GUI(object):
                         # the color information from the last to colums of the model
                         tab_column = gtk.TreeViewColumn(column.get_label(), tab_renderer, text=s,
                                                         background=number_of_columns, foreground=number_of_columns+1)
-                        self.popwin.ServerVBoxes[server.name].TreeView.append_column(tab_column)
+                        self.popwin.ServerVBoxes[server.get_name()].TreeView.append_column(tab_column)
                        
                         # set customized sorting
                         if column.has_customized_sorting():
@@ -347,8 +350,11 @@ class GUI(object):
                     # status field in server vbox in popwin    
                     self.popwin.UpdateStatus(server)
                     
-                except:
-                    server.Error(sys.exc_info())
+                except Exception, err:
+                    print err
+                    #debug
+                    print "SSSEEERRRVVVEEERRR  ERERRROORRR!"
+                    #server.Error(sys.exc_info())
                     
         # show and resize popwin
         self.popwin.VBox.hide_all()
@@ -412,7 +418,8 @@ class GUI(object):
             if unreachables > 0: color = "darkred"
             if downs > 0: color = "black"
 
-            self.statusbar.SysTray.set_from_file(self.Resources + "/nagstamon_" + color + self.BitmapSuffix)
+            # should be solved somehow different
+            ###self.statusbar.SysTray.set_from_file(self.Resources + "/nagstamon_" + color + self.BitmapSuffix)
             
             # if there has been any status change notify user
             # first find out which of all servers states is the worst similar to nagstamonObjects.GetStatus()
@@ -434,7 +441,7 @@ class GUI(object):
                     
                 # debug
                 #if str(self.conf.debug_mode) == "True":
-                    ##print server.name + ":", "new worst status:", worst_status
+                    ##print server.get_name() + ":", "new worst status:", worst_status
                     #server.Debug(server=server.get_name(), debug="New worst status: " + worst_status)
                     
                 if not worst_status == "UP" and str(self.conf.notification)== "True":
@@ -451,7 +458,7 @@ class GUI(object):
             
         # try to fix Debian bug #591875: eventually ends up lower in the window stacking order, and can't be raised
         # raising statusbar window with every refresh should do the job
-        self.statusbar.StatusBar.window.raise_()
+        ###self.statusbar.StatusBar.window.raise_()
         
         # do some cleanup
         #gc.collect()
@@ -616,7 +623,17 @@ class GUI(object):
         about.set_website(self.website)
         about.set_copyright(self.copyright)
         about.set_comments(self.comments)
-        about.set_authors(["In alphabetical order:", "Benoît Soenen", "Carl Chenet", "Emile Heitor ", "John Conroy", "Michał Rzeszut", "Patrick Cernko", "Pawel Połewicz", "Tobias Scheerbaum", "...and many more!"])
+        about.set_authors(["In alphabetical order:",\
+                           "Benoît Soenen",\
+                           "Carl Chenet",\
+                           "Emile Heitor ",\
+                           "Henri Wahl",\
+                           "John Conroy",\
+                           "Michał Rzeszut",\
+                           "Patrick Cernko",\
+                           "Pawel Połewicz",\
+                           "Tobias Scheerbaum",\
+                           "...and many more!"])
         # read LICENSE file
         license = ""
         try:
@@ -695,8 +712,8 @@ class GUI(object):
                         if str(self.conf.notification_flashing) == "True":
                             self.statusbar.SysTray.set_blinking(True)
                             self.statusbar.Flashing = True
-                            flash = nagstamonActions.FlashStatusbar(output=self)
-                            flash.start()
+                            #flash = nagstamonActions.FlashStatusbar(output=self)
+                            #flash.start()
                         # if wanted play notification sound
                         if str(self.conf.notification_sound) == "True":
                             sound = nagstamonActions.PlaySound(sound=status, Resources=self.Resources, conf=self.conf, servers=self.servers)
@@ -1554,7 +1571,7 @@ class Popwin(gtk.Window):
         """
         # status field in server vbox in popwin    
         try:
-            self.ServerVBoxes[server.get_name()].LabelStatus.set_markup('<span>Status: ' + server.status + ' <span color="darkred">' + server.status_description + '</span></span>')
+            self.ServerVBoxes[server.get_name()].LabelStatus.set_markup('<span>Status: ' + str(server.status) + ' <span color="darkred">' + str(server.status_description) + '</span></span>')
         except Exception, err:
             print err
             pass
@@ -1576,6 +1593,7 @@ class ServerVBox(gtk.VBox):
         # once again a Windows(TM) workaround
         self.Server_EventBox = gtk.EventBox()
         self.TreeView = gtk.TreeView()
+        
         # server related Buttons
         # Button Monitor - HBox is necessary because gtk.Button allows only one child
         self.ButtonMonitor_HBox = gtk.HBox()

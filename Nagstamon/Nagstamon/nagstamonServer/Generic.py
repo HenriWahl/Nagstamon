@@ -109,11 +109,11 @@ class GenericServer(object):
         self.start_time = None
         # test with mechanize - this server's own browser
         #self.Browser = mechanize.Browser(history=NoHistory())
-        self.Browser = mechanize.Browser()        
+        #self.Browser = mechanize.Browser()        
         # ignore robots.txt
-        self.Browser.set_handle_robots(False)
+        #self.Browser.set_handle_robots(False)
         self.Cookie = cookielib.LWPCookieJar()
-        self.Browser.set_cookiejar(self.Cookie)
+        #self.Browser.set_cookiejar(self.Cookie)
         
     
     def get_name(self):

@@ -1,6 +1,7 @@
 # encoding: utf-8
 
 import threading
+import multiprocessing
 import gobject
 import time
 import datetime
@@ -10,6 +11,9 @@ import commands
 import re
 import sys
 import traceback
+
+import mechanize
+
 # if running on windows import winsound
 import platform
 if platform.system() == "Windows":
@@ -23,7 +27,7 @@ import urllib2
 import mimetools, mimetypes
 import os, stat
 import nagstamonGUI
-from nagstamonObjects import XMLNode
+from nagstamonObjects import XMLNode, Result
 
 # import hashlib for centreon url autologin encoding
 import hashlib
@@ -74,7 +78,9 @@ class RefreshLoopOneServer(threading.Thread):
               
         while self.stopped == False:          
             # check if we have to leave update interval sleep
-            if self.server.count > int(self.conf.update_interval)*60: self.doRefresh = True
+####            if self.server.count > int(self.conf.update_interval)*60: self.doRefresh = True
+            if self.server.count > int(self.conf.update_interval)*1: self.doRefresh = True
+            
             
             # self.doRefresh could also been changed by RefreshAllServers()
             if self.doRefresh == True:              
@@ -96,7 +102,7 @@ class RefreshLoopOneServer(threading.Thread):
                         # set server status for status field in popwin 
                         self.server.status = "ERROR"
                         # give server status description for future usage    
-                        self.server.status_description = server_status.error
+                        self.server.status_description = str(server_status.error)
                         gobject.idle_add(self.output.popwin.UpdateStatus, self.server)
                         # tell gobject to care about GUI stuff - refresh display status
                         # use a flag to prevent all threads at once to write to statusbar label in case
@@ -104,19 +110,22 @@ class RefreshLoopOneServer(threading.Thread):
                         if self.output.statusbar.isShowingError == False:
                             gobject.idle_add(self.output.RefreshDisplayStatus)
                             # wait a moment
+####                            time.sleep(5)
                             time.sleep(5)
                             # change statusbar to the following error message
                             # show error message in statusbar
                             # shorter error message - see https://sourceforge.net/tracker/?func=detail&aid=3017044&group_id=236865&atid=1101373
                             gobject.idle_add(self.output.statusbar.ShowErrorMessage, {"True":"ERROR", "False":"ERR"}[str(self.conf.long_display)])
                             # wait some seconds
-                            time.sleep(5) 
+####                            time.sleep(5) 
+                            time.sleep(1) 
+
                             # set statusbar error message status back
                             self.output.statusbar.isShowingError = False
                             
                         # wait a moment
-                        time.sleep(10)
-
+####                        time.sleep(10)
+                            time.sleep(1)
                     else:
                         # set server status for status field in popwin
                         self.server.status = "Connected"
@@ -140,8 +149,10 @@ class RefreshLoopOneServer(threading.Thread):
     
             else:
                 # sleep and count
-                time.sleep(3)
-                self.server.count += 3
+###                time.sleep(3)
+                time.sleep(1)
+####                self.server.count += 3
+                self.server.count += 1
                 # call Hook() for extra action
                 self.server.Hook()
 
@@ -218,6 +229,7 @@ class DebugLoop(threading.Thread):
     def Stop(self):
         # simply sets the stopped flag to True to let the above while stop this thread when checking next
         self.stopped = True
+        s
 
             
 class Recheck(threading.Thread):
@@ -415,6 +427,45 @@ class CheckForNewVersion(threading.Thread):
                     break
                 # reset the servers CheckingForNewVersion flag to allow a later check
                 s.CheckingForNewVersion = False
+                
+
+#class FetchURLThread(threading.Thread):
+class FetchURLProcess(multiprocessing.Process):
+    """
+    attempt to close memory leak via thread/process
+    """
+    def __init__(self, **kwds):
+        # add all keywords to object, every mode searchs inside for its favorite arguments/keywords
+        for k in kwds: self.__dict__[k] = kwds[k]
+#        threading.Thread.__init__(self)
+        multiprocessing.Process.__init__(self)        
+        #self.setDaemon(1)
+        
+        #self.Browser = mechanize.Browser(history=NoHistory())
+        self.Browser = mechanize.Browser()        
+        # ignore robots.txt
+        self.Browser.set_handle_robots(False)
+        self.Browser.set_cookiejar(self.server.Cookie)
+        self.Browser.add_password(self.server.nagios_url, self.server.username, self.server.password)
+        self.Browser.add_password(self.server.nagios_cgi_url, self.server.username, self.server.password)
+        if str(self.server.use_proxy) == "True":
+            self.Browser.set_proxies({"http": self.server.proxy_address, "https":self.server.proxy_address})
+            self.Browser.add_proxy_password(self.server.proxy_username, self.server.proxy_password)
+            
+        
+    def run(self):
+        response = self.Browser.open(self.url, self.cgi_data)
+        result = Result(result=str(response.read()))
+        response.close()
+        
+        print self.queue
+        
+        print "selfqueue", self.queue.put(result)
+        print "und wie weiter?"
+        self.Browser.clear_history()
+        self.Browser.close()
+        print "TTTEEREEEERRRRRRRMIIIIITTTTEEENNNN!!!"
+        print dir(self)
 
 
 class PlaySound(threading.Thread):
@@ -581,11 +632,11 @@ def CreateServer(server=None, conf=None, debug_queue=None):
     nagiosserver.proxy_username = server.proxy_username
     nagiosserver.proxy_password = server.proxy_password
     # add browser credentials
-    nagiosserver.Browser.add_password(nagiosserver.nagios_url, nagiosserver.username, nagiosserver.password)
-    nagiosserver.Browser.add_password(nagiosserver.nagios_cgi_url, nagiosserver.username, nagiosserver.password)
-    if str(nagiosserver.use_proxy) == "True":
-        nagiosserver.Browser.set_proxies({"http":nagiosserver.proxy_address, "https":nagiosserver.proxy_address})
-        nagiosserver.Browser.add_proxy_password(nagiosserver.proxy_username, nagiosserver.proxy_password)
+    #nagiosserver.Browser.add_password(nagiosserver.nagios_url, nagiosserver.username, nagiosserver.password)
+    #nagiosserver.Browser.add_password(nagiosserver.nagios_cgi_url, nagiosserver.username, nagiosserver.password)
+    #if str(nagiosserver.use_proxy) == "True":
+    #    nagiosserver.Browser.set_proxies({"http":nagiosserver.proxy_address, "https":nagiosserver.proxy_address})
+    #    nagiosserver.Browser.add_proxy_password(nagiosserver.proxy_username, nagiosserver.proxy_password)
     
     # access to thread-safe debug queue
     nagiosserver.debug_queue = debug_queue
@@ -715,6 +766,10 @@ def ObjectifyXML(xmlraw):
     """
     try:
         nodes = []
+        
+        return nodes
+        
+        
         for l in xmlraw.getchildren():
             # only take l-nodes because they contain valuable information
             if l.tag == "l":

@@ -9,6 +9,7 @@ import cookielib
 import traceback
 import gc
 import mechanize
+import Queue
 
 #try:
 #    import lxml.etree, lxml.objectify
@@ -345,7 +346,7 @@ class CentreonServer(GenericServer):
                 xmlobj = nagstamonActions.ObjectifyXML(xmlraw)
                 
                 del raw, xmlraw, error
-                 
+  
             # if htobj.__dict__.has_key("l"):
             #     for l in htobj.l:
             for l in xmlobj:
@@ -415,7 +416,7 @@ class CentreonServer(GenericServer):
             #return self.Error(sys.exc_info())
             result, error = self.Error(sys.exc_info())
             return Result(result=result, error=error)
-      
+
         # services
         try:
             result = self.FetchURL(nagcgiurl_services, giveback="raw")
@@ -450,7 +451,6 @@ class CentreonServer(GenericServer):
                 # cut off <xml blabla>
                 xmlraw = ElementTree.fromstring(raw.split("\n")[1])
                 xmlobj = nagstamonActions.ObjectifyXML(xmlraw)
-                
                 del raw, xmlraw, error
 
             
@@ -535,7 +535,7 @@ class CentreonServer(GenericServer):
             #return self.Error(sys.exc_info())
             result, error = self.Error(sys.exc_info())
             return Result(result=result, error=error)
-        
+     
         # some cleanup
         del nagitems
         
@@ -778,22 +778,38 @@ class CentreonServer(GenericServer):
         try:
             # give back pure HTML or XML in case giveback is "raw"
             if giveback == "raw":
-                self.Browser = mechanize.Browser()        
+                #self.Browser = mechanize.Browser()        
                 # ignore robots.txt
-                self.Browser.set_handle_robots(False)
-                self.Browser.set_cookiejar(self.Cookie)
+                #self.Browser.set_handle_robots(False)
+                #self.Browser.set_cookiejar(self.Cookie)
+                """
                 response = self.Browser.open(url, cgi_data)
                 result = Result(result=response.read())
                 response.close()
-                self.Browser.close()
+                """
+                queue = Queue.Queue()
+                
+                #FetchURLThread = nagstamonActions.FetchURLThread(url=url, cgi_data=cgi_data, server=self, resultqueue=resultqueue)
+                #FetchURLThread.start()
+                
+                #FetchURLProcess = nagstamonActions.FetchURLProcess(url=url, cgi_data=cgi_data, server=self, queue=queue)
+                #print "start process", FetchURLProcess.start()
+                
+                print "WAAAAAAAAAAAAAAAIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIITTTTTTTTTTTTTTTTTTTTTTTTTTIIINNGG:::"
+                result = queue.get(False)
+                
+                #FetchURLProcess.terminate()
+                print result
+                print "GGGGGOOOOOOOOOOOOOOT ITTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTT"
+                
+                #self.Browser.close()
                 #urlcontent.close()
                 #del urlcontent, raw
                 return result
            
-        except Exception, err:
+        except:
             # do some cleanup
             #del passman, auth_handler, digest_handler
-            print err
             result, error = self.Error(sys.exc_info())
             return Result(result=result, error=error)      
             
