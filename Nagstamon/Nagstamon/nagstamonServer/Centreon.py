@@ -8,7 +8,7 @@ import sys
 import cookielib
 import traceback
 import gc
-import mechanize
+#import mechanize
 import Queue
 
 #try:
@@ -320,7 +320,7 @@ class CentreonServer(GenericServer):
             try:
                 xmlraw = ElementTree.fromstring(raw.split("\n")[1])
                 xmlobj = nagstamonActions.ObjectifyXML(xmlraw)            
-                ####del raw, xmlraw, error
+                del raw, error
             except:
                 self.Error(sys.exc_info())
                 
@@ -329,7 +329,7 @@ class CentreonServer(GenericServer):
             # in case there are no children session id is invalid
             #if htobj.getchildren() == []:
             #if len(xmlobj) == 0:
-            if xmlraw == "bad session id":    
+            if xmlraw == "<response>bad session id</response>":    
                 print raw, xmlraw
                 if str(self.conf.debug_mode) == "True": 
                     #print self.get_name(), "bad session ID, retrieving new one..." 
@@ -346,7 +346,9 @@ class CentreonServer(GenericServer):
                 xmlobj = nagstamonActions.ObjectifyXML(xmlraw)
                 
                 del raw, xmlraw, error
-  
+            else:
+                del xmlraw
+                
             # if htobj.__dict__.has_key("l"):
             #     for l in htobj.l:
             for l in xmlobj:
@@ -430,14 +432,14 @@ class CentreonServer(GenericServer):
             try:
                 xmlraw = ElementTree.fromstring(raw.split("\n")[1])
                 xmlobj = nagstamonActions.ObjectifyXML(xmlraw)            
-                ###del raw, xmlraw, error
+                del raw, error
             except:
                 self.Error(sys.exc_info())
             
             # in case there are no children session id is invalid
             #if htobj.getchildren == []:
             #if len(xmlobj) == 0:
-            if xmlraw == "bad session id": 
+            if xmlraw == "<response>bad session id</response>": 
                 # debug
                 if str(self.conf.debug_mode) == "True": 
                     #print self.get_name(), "bad session ID, retrieving new one..." 
@@ -452,7 +454,9 @@ class CentreonServer(GenericServer):
                 xmlraw = ElementTree.fromstring(raw.split("\n")[1])
                 xmlobj = nagstamonActions.ObjectifyXML(xmlraw)
                 del raw, xmlraw, error
-
+            else:
+                del xmlraw                
+                
             
             #if htobj.__dict__.has_key("l"):
                 #for l in htobj.l:
@@ -668,7 +672,7 @@ class CentreonServer(GenericServer):
             self.Error(sys.exc_info())
             
 
-    def FetchURLCentreon(self, url, giveback="obj", cgi_data=None, remove_tags=["link", "br", "img", "hr", "script", "th", "form", "div", "p"]):
+    def FetchURLCENTREON(self, url, giveback="obj", cgi_data=None, remove_tags=["link", "br", "img", "hr", "script", "th", "form", "div", "p"]):
         """
         get content of given url, cgi_data only used if present
         giveback may be "dict", "raw" or "none" 
@@ -792,8 +796,8 @@ class CentreonServer(GenericServer):
                 #FetchURLThread = nagstamonActions.FetchURLThread(url=url, cgi_data=cgi_data, server=self, resultqueue=resultqueue)
                 #FetchURLThread.start()
                 
-                #FetchURLProcess = nagstamonActions.FetchURLProcess(url=url, cgi_data=cgi_data, server=self, queue=queue)
-                #print "start process", FetchURLProcess.start()
+                FetchURLProcess = nagstamonActions.FetchURLProcess(url=url, cgi_data=cgi_data, server=self, queue=queue)
+                print "start process", FetchURLProcess.start()
                 
                 print "WAAAAAAAAAAAAAAAIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIITTTTTTTTTTTTTTTTTTTTTTTTTTIIINNGG:::"
                 result = queue.get(False)
@@ -853,4 +857,4 @@ class CentreonServer(GenericServer):
         # do some garbage collection
         gc.collect()
         #print
-        #print gc.get_objects()    
+        #print len(gc.get_objects())    

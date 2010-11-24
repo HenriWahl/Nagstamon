@@ -12,7 +12,7 @@ import re
 import sys
 import traceback
 
-import mechanize
+###import mechanize
 
 # if running on windows import winsound
 import platform
@@ -79,11 +79,13 @@ class RefreshLoopOneServer(threading.Thread):
         while self.stopped == False:          
             # check if we have to leave update interval sleep
 ####            if self.server.count > int(self.conf.update_interval)*60: self.doRefresh = True
-            if self.server.count > int(self.conf.update_interval)*1: self.doRefresh = True
+            if self.server.count > int(self.conf.update_interval)*10: self.doRefresh = True
             
             
             # self.doRefresh could also been changed by RefreshAllServers()
             if self.doRefresh == True:              
+                # reset server count
+                self.server.count = 0
                 # check if server is already checked
                 if self.server.isChecking == False:              
                     # set server status for status field in popwin
@@ -91,6 +93,7 @@ class RefreshLoopOneServer(threading.Thread):
                     gobject.idle_add(self.output.popwin.UpdateStatus, self.server)
                     # get current status
                     server_status = self.server.GetStatus()
+                    ###server_status = Result(result="", error="")
                     # GTK/Pango does not like tag brackets < and >, so clean them out from description
                     server_status.error = server_status.error.replace("<", "").replace(">", "").replace("\n", " ")
                     # debug
@@ -141,12 +144,11 @@ class RefreshLoopOneServer(threading.Thread):
                             # reset refresh flag
                             self.doRefresh = False
 
-                            # do some cleanup
-                            del self.server.count
-                            self.server.count = 0
+                            #### do some cleanup
+                            ###del self.server.count
+                            ###self.server.count = 0
                             # call Hook() for extra action
                             self.server.Hook()
-    
             else:
                 # sleep and count
 ###                time.sleep(3)
@@ -640,7 +642,30 @@ def CreateServer(server=None, conf=None, debug_queue=None):
     
     # access to thread-safe debug queue
     nagiosserver.debug_queue = debug_queue
-    
+
+    # use server-owned attributes instead of redefining them with every request
+    nagiosserver.passman = urllib2.HTTPPasswordMgrWithDefaultRealm()
+    nagiosserver.passman.add_password(None, server.nagios_url, server.username, server.password)
+    nagiosserver.passman.add_password(None, server.nagios_cgi_url, server.username, server.password)       
+    nagiosserver.auth_handler = urllib2.HTTPBasicAuthHandler(nagiosserver.passman)
+    nagiosserver.digest_handler = urllib2.HTTPDigestAuthHandler(nagiosserver.passman)
+    # if there should be no proxy used use an empty proxy_handler - only necessary in Windows,
+    # where IE proxy settings are used automatically if available
+    # In UNIX $HTTP_PROXY will be used
+    # The MultipartPostHandler is needed for submitting multipart forms from Opsview
+    if str(server.use_proxy) == "False":
+        nagiosserver.proxy_handler = urllib2.ProxyHandler({})
+        nagiosserver.urlopener = urllib2.build_opener(nagiosserver.auth_handler, nagiosserver.digest_handler, nagiosserver.proxy_handler, urllib2.HTTPCookieProcessor(nagiosserver.Cookie), MultipartPostHandler)
+    elif str(server.use_proxy) == "True":
+        if str(server.use_proxy_from_os) == "True":
+            urlopener = urllib2.build_opener(nagiosserver.auth_handler, nagiosserver.digest_handler, urllib2.HTTPCookieProcessor(nagiosserver.Cookie), MultipartPostHandler)
+        else:
+            # if proxy from OS is not used there is to add a authenticated proxy handler
+            nagiosserver.passman.add_password(None, nagiosserver.proxy_address, nagiosserver.proxy_username, nagiosserver.proxy_password)
+            nagiosserver.proxy_handler = urllib2.ProxyHandler({"http": nagiosserver.proxy_address, "https": nagiosserver.proxy_address})
+            nagiosserver.proxy_auth_handler = urllib2.ProxyBasicAuthHandler(nagiosserver.passman)
+            nagiosserver.urlopener = urllib2.build_opener(nagiosserver.proxy_handler, nagiosserver.proxy_auth_handler, nagiosserver.auth_handler, nagiosserver.digest_handler, urllib2.HTTPCookieProcessor(nagiosserver.Cookie), MultipartPostHandler)
+
     # debug
     if str(conf.debug_mode) == "True":
         #print "Created Server", server.name
@@ -764,12 +789,11 @@ def ObjectifyXML(xmlraw):
     """
     replacement for lxml.objectify
     """
+    
+    #return []
+    
     try:
         nodes = []
-        
-        return nodes
-        
-        
         for l in xmlraw.getchildren():
             # only take l-nodes because they contain valuable information
             if l.tag == "l":
@@ -778,8 +802,10 @@ def ObjectifyXML(xmlraw):
                     node.__dict__[e.tag] = node.add("text")
                     node.__dict__[e.tag].text = e.text
                 nodes.append(node)
+        del xmlraw
         return nodes
     except:
+        del xmlraw
         traceback.print_exc(sys.exc_info)
         
 

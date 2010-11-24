@@ -53,9 +53,10 @@ class Column(object):
     @classmethod
     def has_customized_sorting(cls):
         return hasattr(cls, cls.SORT_FUNCTION_NAME)
+
     
 class CustomSortingColumn(Column):
-    CHOICES = [] # list of expcted values with expected order
+    CHOICES = [] # list of expected values with expected order
     
     @classmethod
     def sort_function(cls, model, iter1, iter2, column):
@@ -64,20 +65,27 @@ class CustomSortingColumn(Column):
         try:
             first = cls.CHOICES.index(data1) 
             second = cls.CHOICES.index(data2)
-        except ValueError: # value not in CHOICES
+            print "CCCCCCCCOOOOOMMPPPAAARRRIISSSOOONNN", "data1:", data1, "data2:", data2, "Model", model
+        except ValueError, err: # value not in CHOICES
             return cmp(first, second)
-        return first - second
+        try:
+            return first - second
+        except:
+            return first
+
     
 class StatusColumn(CustomSortingColumn):
     ATTR_NAME = 'status'
     CHOICES = ['DOWN', 'UNREACHABLE', 'CRITICAL', 'UNKNOWN', 'WARNING']
 
+    
 class HostColumn(Column):
     ATTR_NAME = 'host'
     
     def _get_value(self, row):
        return row.get_host_name() 
- 
+
+   
 class ServiceColumn(Column):
     def _get_value(self, row):
         return row.get_service_name()
@@ -85,9 +93,11 @@ class ServiceColumn(Column):
     @classmethod
     def get_label(cls):
         return 'Service'
+
     
 class LastCheckColumn(Column):
     ATTR_NAME = 'last_check'
+
     
 class DurationColumn(CustomSortingColumn):
     ATTR_NAME = 'duration'
@@ -106,10 +116,12 @@ class DurationColumn(CustomSortingColumn):
     
 class AttemptColumn(Column):
     ATTR_NAME = 'attempt'
+
     
 class StatusInformationColumn(Column):
     ATTR_NAME = 'status_information'
 
+    
 class GenericObject(object):    
     def get_host_name(self):
         """ Extracts host name from status item.
@@ -202,7 +214,7 @@ class XMLNode(object):
         return XMLNode(element)
         
 
-# necessary for mechanize browser history, inspired by http://stackoverflow.com/questions/2393299/how-do-i-disable-history-in-python-mechanize-module
-class NoHistory(object):
-    def add(self, *a, **k): pass
-    def clear(self): pass
+#### necessary for mechanize browser history, inspired by http://stackoverflow.com/questions/2393299/how-do-i-disable-history-in-python-mechanize-module
+###class NoHistory(object):
+###    def add(self, *a, **k): pass
+###    def clear(self): pass
