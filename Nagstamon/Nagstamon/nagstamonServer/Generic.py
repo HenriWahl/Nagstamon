@@ -121,7 +121,12 @@ class GenericServer(object):
         self.digest_handler = None
         self.proxy_handler = None
         self.urlopener = None
-
+        # attempt to use only one bound list of TreeViewColumns instead of ever increasing one
+        self.TreeView = None
+        self.TreeViewColumns = list()
+        self.ListStore = None
+        self.ListStoreColumns = list()
+        
 
     def get_name(self):
         """
@@ -713,7 +718,6 @@ class GenericServer(object):
 
         # do some cleanup
         self.hosts.clear()
-        #del self.hosts
         del self.hosts_acknowledged[:], self.hosts_in_maintenance[:]
 
         # put new informations into respective dictionaries      
@@ -743,17 +747,7 @@ class GenericServer(object):
         remove_tags became necessary for different expectations of GetStatus() and
         GetHost() - one wants div elements, the other don't 
         NEW: gives back a list containing result and, if necessary, a more clear error description
-        """
-        # using httppasswordmgrwithdefaultrealm because using password in plain
-        # url like http://username:password@nagios-server causes trouble with
-        # passwords containing special characters like "?"
-        # see http://www.voidspace.org.uk/python/articles/authentication.shtml#doing-it-properly
-        # attention: the example from above webseite is wrong, passman.add_password needs the 
-        # WHOLE URL, with protocol!
-
-        
-        print url
-        
+        """        
         # get my cookie to access Opsview web interface to access Opsviews Nagios part       
         if len(self.Cookie) == 0 and self.type == "Opsview":         
             # put all necessary data into url string
@@ -771,10 +765,9 @@ class GenericServer(object):
                 # login and get cookie
                 urlcontent = urllib2.urlopen(self.nagios_url + "/login", logindata)
                 urlcontent.close()
-            except Exception, err:
-                print err
-                pass
-                
+            except:
+                self.Error(sys.exc_info())
+
         # if something goes wrong with accessing the URL it can be caught
         try:
             # create url opener

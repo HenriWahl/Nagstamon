@@ -10,8 +10,7 @@ import commands
 import re
 import sys
 import traceback
-
-###import mechanize
+import gtk
 
 # if running on windows import winsound
 import platform
@@ -110,7 +109,7 @@ class RefreshLoopOneServer(threading.Thread):
                         # use a flag to prevent all threads at once to write to statusbar label in case
                         # of lost network connectivity - this leads to a mysterious pango crash
                         if self.output.statusbar.isShowingError == False:
-                            ###gobject.idle_add(self.output.RefreshDisplayStatus)
+                            gobject.idle_add(self.output.RefreshDisplayStatus)
                             # wait a moment
 ####                            time.sleep(5)
                             time.sleep(5)
@@ -132,7 +131,7 @@ class RefreshLoopOneServer(threading.Thread):
                         # set server status for status field in popwin
                         self.server.status = "Connected"
                         # tell gobject to care about GUI stuff - refresh display status
-                        ###gobject.idle_add(self.output.RefreshDisplayStatus)
+                        gobject.idle_add(self.output.RefreshDisplayStatus)
                         # do some cleanup
                         #gc.collect()
                         # wait for the doRefresh flag to be True, if it is, do a refresh
@@ -624,7 +623,29 @@ def CreateServer(server=None, conf=None, debug_queue=None):
             nagiosserver.proxy_handler = urllib2.ProxyHandler({"http": nagiosserver.proxy_address, "https": nagiosserver.proxy_address})
             nagiosserver.proxy_auth_handler = urllib2.ProxyBasicAuthHandler(nagiosserver.passman)
             nagiosserver.urlopener = urllib2.build_opener(nagiosserver.proxy_handler, nagiosserver.proxy_auth_handler, nagiosserver.auth_handler, nagiosserver.digest_handler, urllib2.HTTPCookieProcessor(nagiosserver.Cookie), MultipartPostHandler)
- 
+
+    """        
+    # the whole TreeView memory leaky complex...        
+    nagiosserver.TreeView = gtk.TreeView()      
+    nagiosserver.ListStore = gtk.ListStore(*[gobject.TYPE_STRING]*(len(nagiosserver.COLUMNS)+2))                        
+            
+    # create columns for treeview
+    tab_renderer = gtk.CellRendererText()
+    for s, column in enumerate(nagiosserver.COLUMNS):
+        print s, column
+        # fill columns of view with content of model and squeeze it through the renderer, using
+        # the color information from the last two colums of the liststore
+        tab_column = gtk.TreeViewColumn(column.get_label(), tab_renderer, text=s,
+                                        background=len(nagiosserver.COLUMNS), foreground=len(nagiosserver.COLUMNS) + 1)               
+        nagiosserver.TreeView.append_column(tab_column)    
+        
+        # make table sortable by clicking on column headers
+        tab_column.set_clickable(True)
+        #tab_column.set_property('sort-indicator', True) # makes sorting arrows visible
+        ####tab_column.connect('clicked', self.on_column_header_click, s, self.popwin.ServerVBoxes[server.get_name()].ListStore, server)
+        #tab_column.connect('clicked', self.on_column_header_click, s, nagiosserver.ListStore, server)
+    """        
+            
     # debug
     if str(conf.debug_mode) == "True":
         #print "Created Server", server.name

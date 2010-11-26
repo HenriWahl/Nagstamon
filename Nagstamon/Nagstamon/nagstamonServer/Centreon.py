@@ -195,7 +195,6 @@ class CentreonServer(GenericServer):
             #self.Cookie = cookielib.CookieJar()    
             raw = self.FetchURL(self.nagios_cgi_url + "/index.php?" + urllib.urlencode({"p":1, "autologin":1, "useralias":self.MD5_username, "password":self.MD5_password}), giveback="raw")
             del raw
-            print "SSEELLFF..CCOOOOKKIIEE::", self.Cookie
             sid = str(self.Cookie._cookies.values()[0].values()[0]["PHPSESSID"].value)
             return Result(result=sid)
         except:
@@ -313,8 +312,7 @@ class CentreonServer(GenericServer):
             result = self.FetchURL(nagcgiurl_hosts, giveback="raw")
             raw, error = result.result, result.error
             if error != "": return Result(result=raw, error=error)
-            #htobj = lxml.objectify.fromstring(raw)
-            
+            #htobj = lxml.objectify.fromstring(raw)   
             xmlobj = list()
             # cut off <xml blabla>
             try:
