@@ -322,6 +322,8 @@ class CentreonServer(GenericServer):
                 xmlobj = nagstamonActions.ObjectifyXML(xmlraw)            
                 del raw, error
             except:
+                # in case we got nothing back
+                xmlraw = ""
                 self.Error(sys.exc_info())
                        
             # in case there are no children session id is invalid
@@ -431,6 +433,8 @@ class CentreonServer(GenericServer):
                 xmlobj = nagstamonActions.ObjectifyXML(xmlraw)            
                 del raw, error
             except:
+                # in case we got nothing back
+                xmlraw = ""                
                 self.Error(sys.exc_info())
             
             # in case there are no children session id is invalid
