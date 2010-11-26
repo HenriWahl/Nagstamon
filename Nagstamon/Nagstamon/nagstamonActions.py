@@ -1,7 +1,6 @@
 # encoding: utf-8
 
 import threading
-import multiprocessing
 import gobject
 import time
 import datetime
@@ -429,45 +428,6 @@ class CheckForNewVersion(threading.Thread):
                 # reset the servers CheckingForNewVersion flag to allow a later check
                 s.CheckingForNewVersion = False
                 
-
-#class FetchURLThread(threading.Thread):
-class FetchURLProcess(multiprocessing.Process):
-    """
-    attempt to close memory leak via thread/process
-    """
-    def __init__(self, **kwds):
-        # add all keywords to object, every mode searchs inside for its favorite arguments/keywords
-        for k in kwds: self.__dict__[k] = kwds[k]
-#        threading.Thread.__init__(self)
-        multiprocessing.Process.__init__(self)        
-        #self.setDaemon(1)
-        
-        #self.Browser = mechanize.Browser(history=NoHistory())
-        self.Browser = mechanize.Browser()        
-        # ignore robots.txt
-        self.Browser.set_handle_robots(False)
-        self.Browser.set_cookiejar(self.server.Cookie)
-        self.Browser.add_password(self.server.nagios_url, self.server.username, self.server.password)
-        self.Browser.add_password(self.server.nagios_cgi_url, self.server.username, self.server.password)
-        if str(self.server.use_proxy) == "True":
-            self.Browser.set_proxies({"http": self.server.proxy_address, "https":self.server.proxy_address})
-            self.Browser.add_proxy_password(self.server.proxy_username, self.server.proxy_password)
-            
-        
-    def run(self):
-        response = self.Browser.open(self.url, self.cgi_data)
-        result = Result(result=str(response.read()))
-        response.close()
-        
-        print self.queue
-        
-        print "selfqueue", self.queue.put(result)
-        print "und wie weiter?"
-        self.Browser.clear_history()
-        self.Browser.close()
-        print "TTTEEREEEERRRRRRRMIIIIITTTTEEENNNN!!!"
-        print dir(self)
-
 
 class PlaySound(threading.Thread):
     """
