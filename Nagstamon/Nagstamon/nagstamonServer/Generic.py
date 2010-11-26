@@ -1,9 +1,6 @@
 # encoding: utf-8
 import urllib
 import urllib2
-
-#import mechanize
-
 import cookielib
 import sys
 import socket
@@ -14,22 +11,22 @@ import datetime
 import time
 import traceback
 
-#try:
-#    import lxml.etree, lxml.objectify
-#except Exception, err:
-#    print
-#    print err
-#    print
-#    print "Could not load lxml.etree, lxml.objectify and lxml.html.clean, maybe you need to install python lxml."
-#    print
-#    sys.exit()
+try:
+    import lxml.etree, lxml.objectify
+except Exception, err:
+    print
+    print err
+    print
+    print "Could not load lxml.etree, lxml.objectify and lxml.html.clean, maybe you need to install python lxml."
+    print
+    sys.exit()
 # fedora 8 and maybe others use lxml 2 which is more careful and offers more modules
 # but which also makes necessary to clean Nagios html output
 # if not available should be ok because not needed
-#try:
-#    import lxml.html.clean
-#except:
-#    pass
+try:
+    import lxml.html.clean
+except:
+    pass
     
 import nagstamonActions                         
 from nagstamonObjects import *
@@ -901,7 +898,6 @@ class GenericServer(object):
                 ip = ip.split("://")[1]
             # print IP in debug mode
             if str(self.conf.debug_mode) == "True":    
-                #print "IP of %s:" % (host), ip
                 self.Debug(server=self.get_name(), host=host, debug ="IP of %s:" % (host) + " " + ip)
             # when connection by DNS is not configured do it by IP
             if str(self.conf.connect_by_dns_yes) == "True":
@@ -920,7 +916,6 @@ class GenericServer(object):
         del htobj    
 
         # give back host or ip
-        #return [address]
         return Result(result=address)
 
     
@@ -938,8 +933,6 @@ class GenericServer(object):
         Handle errors somehow - print them or later log them into not yet existing log file
         """
         if str(self.conf.debug_mode) == "True":
-            #print self.get_name() + ": ", traceback.print_exception(error[0], error[1], error[2], 5, file=sys.stdout)
-            #self.Debug(server=self.get_name(), debug=str(traceback.format_exception(error[0], error[1], error[2], 5)))
             debug = ""
             for line in traceback.format_exception(error[0], error[1], error[2], 5):
                 debug += line

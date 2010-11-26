@@ -8,27 +8,9 @@ import sys
 import cookielib
 import traceback
 import gc
-#import mechanize
 import Queue
 
-#try:
-#    import lxml.etree, lxml.objectify
-#except Exception, err:
-#    print
-#    print err
-#    print
-#    print "Could not load lxml.etree, lxml.objectify and lxml.html.clean, maybe you need to install python lxml."
-#    print
-#    sys.exit()
-# fedora 8 and maybe others use lxml 2 which is more careful and offers more modules
-# but which also makes necessary to clean Nagios html output
-# if not available should be ok because not needed
-#try:
-#    import lxml.html.clean
-#except:
-#    pass
-
-# new trial to replace memory eating lxml
+# new attempt to replace memory eating lxml
 from xml.etree import ElementTree
 
 import nagstamonActions
@@ -68,7 +50,6 @@ class CentreonServer(GenericServer):
         webbrowser.open(self.nagios_cgi_url + "/index.php?autologin=1&p=1&useralias=" + self.MD5_username + "&password=" + self.MD5_password)
         # debug
         if str(self.conf.debug_mode) == "True":
-            #print self.get_name(), ":", "Open monitor web page", self.nagios_cgi_url + "/index.php?autologin=1&p=1&useralias=" + self.MD5_username + "&password=" + self.MD5_password
             self.Debug(server=self.get_name(), debug="Open monitor web page " + self.nagios_url + "/index.php?autologin=1&p=1&useralias=" + self.MD5_username + "&password=" + self.MD5_password)
 
         
@@ -76,7 +57,6 @@ class CentreonServer(GenericServer):
         webbrowser.open(self.nagios_cgi_url + "/index.php?autologin=1&p=1&useralias=" + self.MD5_username + "&password=" + self.MD5_password + "&p=20202&o=svcpb")
         # debug
         if str(self.conf.debug_mode) == "True":
-            #print self.get_name(), ":", "Open hosts web page", self.nagios_cgi_url + "/index.php?p=20202&o=svcpb"
             self.Debug(server=self.get_name(), debug="Open services web page " + "/index.php?p=20202&o=svcpb")
 
             
@@ -84,7 +64,6 @@ class CentreonServer(GenericServer):
         webbrowser.open(self.nagios_cgi_url + "/index.php?autologin=1&p=1&useralias=" + self.MD5_username + "&password=" + self.MD5_password + "&p=20103&o=hpb")
         # debug
         if str(self.conf.debug_mode) == "True":
-            #print self.get_name(), ":", "Open hosts web page", self.nagios_cgi_url + "/index.php?p=20103&o=hpb"
             self.Debug(server=self.get_name(), debug="Open hosts web page " + self.nagios_url + "/index.php?autologin=1&p=1&useralias=" + self.MD5_username + "&password=" + self.MD5_password + "&p=20103&o=hpb")
             
             
@@ -134,53 +113,38 @@ class CentreonServer(GenericServer):
         result = self.FetchURL(self.nagios_cgi_url + "/include/monitoring/status/Hosts/xml/hostXML.php?"\
                               + cgi_data, giveback="raw")
         raw = result.result
-        #htobj = lxml.objectify.fromstring(raw)
         # cut off <xml blabla>
         xmlraw = ElementTree.fromstring(raw.split("\n")[1])
         xmlobj = nagstamonActions.ObjectifyXML(xmlraw)   
         del raw, xmlraw
-               
-        print xmlobj[0]
-        
-        #if htobj.__dict__.has_key("l"):   
+
         if len(xmlobj) != 0:
             # when connection by DNS is not configured do it by IP
             try:
                 if str(self.conf.connect_by_dns_yes) == "True":
                    # try to get DNS name for ip, if not available use ip
                     try:
-                        #address = socket.gethostbyaddr(htobj.a.text)[0]
                         address = socket.gethostbyaddr(xmlobj[0].a.text)[0]
-                        #del htobj
                         del xmlobj
                     except:
                         self.Error(sys.exc_info())
-                        #address = htobj.l.a.text
                         address = str(xmlobj[0].a.text)                        
-                        #del htobj
                         del xmlobj
                 else:
-                    #address = htobj.l.a.text
                     address = str(xmlobj[0].a.text)
-                    #del htobj
                     del xmlobj
             except:
-                #self.Error(sys.exc_info())
-                #address = "ERROR"
                 result, error = self.Error(sys.exc_info())
                 return Result(error=error)
         
-        else: 
-            #address = "ERROR"    
+        else:   
             result, error = self.Error(sys.exc_info())
             return Result(error=error)
         
         # print IP in debug mode
         if str(self.conf.debug_mode) == "True":    
-            #print "Address of %s:" % (host), address
             self.Debug(server=self.get_name(), host=host, debug ="IP of %s:" % (host) + " " + address)
         # give back host or ip
-        #return [address]
         return Result(result=address)
         
             
@@ -190,15 +154,11 @@ class CentreonServer(GenericServer):
         additionally get php session cookie
         """
         try:
-            # why not get a new cookie with every new session id?    
-            #del self.Cookie
-            #self.Cookie = cookielib.CookieJar()    
             raw = self.FetchURL(self.nagios_cgi_url + "/index.php?" + urllib.urlencode({"p":1, "autologin":1, "useralias":self.MD5_username, "password":self.MD5_password}), giveback="raw")
             del raw
             sid = str(self.Cookie._cookies.values()[0].values()[0]["PHPSESSID"].value)
             return Result(result=sid)
         except:
-            #return self.Error(sys.exc_info())
             result, error = self.Error(sys.exc_info())
             return Result(result=result, error=error)
         
@@ -221,7 +181,6 @@ class CentreonServer(GenericServer):
             # we get a login page clear cookies and SID and try again
             if host_id == "":
                 if str(self.conf.debug_mode) == "True":
-                    #print self.get_name(), ":", host, "ID could not be retrieved, trying again..."                  
                     self.Debug(server=self.get_name(), debug = "Host ID could not be retrieved, trying again...")
                 self.SID = self._get_sid().result
                 result = self.FetchURL(self.nagios_cgi_url + "/main.php?" + cgi_data, giveback="raw")
@@ -230,7 +189,6 @@ class CentreonServer(GenericServer):
                 del raw
         else:
             if str(self.conf.debug_mode) == "True":
-                #print self.get_name(), ":", host, "ID could not be retrieved."
                 self.Debug(server=self.get_name(), debug = "Host ID could not be retrieved.")
 
         # some cleanup        
@@ -266,7 +224,6 @@ class CentreonServer(GenericServer):
             if raw.find('selected="selected"') == -1:
                 # looks there was this old SID problem again - get a new one 
                 if str(self.conf.debug_mode) == "True":
-                    #print self.get_name(), ":", host, service, "IDs could not be retrieved, trying again..." 
                     self.Debug(server=self.get_name(), host=host, service=service, debug = "IDs could not be retrieved, trying again...")                
                 self.SID = self._get_sid().result
                 result = self.FetchURL(self.nagios_cgi_url + "/main.php?"+ cgi_data, giveback="raw")
@@ -280,7 +237,6 @@ class CentreonServer(GenericServer):
                 return ids
         else:
             if str(self.conf.debug_mode) == "True":
-                #print self.get_name(), ":", host, service, "IDs could not be retrieved."
                 self.Debug(server=self.get_name(), host=host, service=service, debug = "IDs could not be retrieved.")                
 
             return "", ""    
@@ -312,7 +268,6 @@ class CentreonServer(GenericServer):
             result = self.FetchURL(nagcgiurl_hosts, giveback="raw")
             raw, error = result.result, result.error
             if error != "": return Result(result=raw, error=error)
-            #htobj = lxml.objectify.fromstring(raw)   
             xmlobj = list()
             # cut off <xml blabla>
             try:
@@ -325,12 +280,9 @@ class CentreonServer(GenericServer):
                 self.Error(sys.exc_info())
                        
             # in case there are no children session id is invalid
-            #if htobj.getchildren() == []:
-            #if len(xmlobj) == 0:
             if xmlraw == "<response>bad session id</response>":    
                 del raw, xmlraw
                 if str(self.conf.debug_mode) == "True": 
-                    #print self.get_name(), "bad session ID, retrieving new one..." 
                     self.Debug(server=self.get_name(), debug="Bad session ID, retrieving new one...")                
 
                 # try again...
@@ -338,7 +290,6 @@ class CentreonServer(GenericServer):
                 result = self.FetchURL(nagcgiurl_hosts, giveback="raw")
                 raw, error = result.result, result.error
                 if error != "": return Result(result=raw, error=error)
-                #htobj = lxml.objectify.fromstring(raw)
                 # cut off <xml blabla>
                 xmlraw = ElementTree.fromstring(raw.split("\n")[1])
                 xmlobj = nagstamonActions.ObjectifyXML(xmlraw)
@@ -346,8 +297,6 @@ class CentreonServer(GenericServer):
             else:
                 del xmlraw
                 
-            # if htobj.__dict__.has_key("l"):
-            #     for l in htobj.l:
             for l in xmlobj:
                 try:                       
                     n = {}
@@ -412,7 +361,6 @@ class CentreonServer(GenericServer):
         except:
             # set checking flag back to False
             self.isChecking = False
-            #return self.Error(sys.exc_info())
             result, error = self.Error(sys.exc_info())
             return Result(result=result, error=error)
 
@@ -421,9 +369,6 @@ class CentreonServer(GenericServer):
             result = self.FetchURL(nagcgiurl_services, giveback="raw")
             raw, error = result.result, result.error
             if error != "": return Result(result=raw, error=error)
-            
-            #htobj = lxml.objectify.fromstring(raw)     
-
             xmlobj = list()
             # cut off <xml blabla>
             try:
@@ -436,29 +381,22 @@ class CentreonServer(GenericServer):
                 self.Error(sys.exc_info())
             
             # in case there are no children session id is invalid
-            #if htobj.getchildren == []:
-            #if len(xmlobj) == 0:
             if xmlraw == "<response>bad session id</response>": 
                 # debug
                 if str(self.conf.debug_mode) == "True": 
-                    #print self.get_name(), "bad session ID, retrieving new one..." 
                     self.Debug(server=self.get_name(), debug="Bad session ID, retrieving new one...")                                
                 # try again...
                 self.SID = self._get_sid().result
                 result = self.FetchURL(nagcgiurl_services, giveback="raw")  
                 raw, error = result.result, result.error                
                 if error != "": return Result(result=raw, error=error)
-                #htobj = lxml.objectify.fromstring(raw) 
                 # cut off <xml blabla>
                 xmlraw = ElementTree.fromstring(raw.split("\n")[1])
                 xmlobj = nagstamonActions.ObjectifyXML(xmlraw)
                 del raw, xmlraw, error
             else:
                 del xmlraw                
-                
-            
-            #if htobj.__dict__.has_key("l"):
-                #for l in htobj.l:
+
             for l in xmlobj:
                 try:
                     n = {}
@@ -524,18 +462,15 @@ class CentreonServer(GenericServer):
                 except:
                     # set checking flag back to False
                     self.isChecking = False
-                    #return self.Error(sys.exc_info())
                     result, error = self.Error(sys.exc_info())
                     return Result(result=result, error=error)
                                         
             # do some cleanup
-            #del htobj
             del xmlobj
             
         except:
             # set checking flag back to False
             self.isChecking = False
-            #return self.Error(sys.exc_info())
             result, error = self.Error(sys.exc_info())
             return Result(result=result, error=error)
      
@@ -583,7 +518,6 @@ class CentreonServer(GenericServer):
                             "sticky":int(sticky), "o":"svcd", "en":"1"}) 
                     # debug
                     if str(self.conf.debug_mode) == "True": 
-                        #print self.get_name(), host, s +": " + self.nagios_cgi_url + "/main.php?" + cgi_data            
                         self.Debug(server=self.get_name(), host=host, service=s, debug=self.nagios_cgi_url + "/main.php?" + cgi_data)                
 
                     # running remote cgi command with GET method, for some strange reason only working if
@@ -643,7 +577,6 @@ class CentreonServer(GenericServer):
                                              "o":"ah"})
                 # debug
                 if str(self.conf.debug_mode) == "True": 
-                    #print self.get_name(), host +": " + self.nagios_cgi_url + "/main.php?"+ cgi_data                
                     self.Debug(server=self.get_name(), host=host, debug=self.nagios_cgi_url + "/main.php?" + cgi_data)                
 
             else:
@@ -653,7 +586,6 @@ class CentreonServer(GenericServer):
                                              "host_id":host_id,\
                                              "service_id":service_id,\
                                              "submitA":"Save",\
-                                             #"persistent":int(fixed),\
                                              "persistant":int(fixed),\
                                              "start":start_time,\
                                              "end":end_time,\
@@ -661,7 +593,6 @@ class CentreonServer(GenericServer):
                                              "o":"as"})
                 # debug
                 if str(self.conf.debug_mode) == "True": 
-                    #print self.get_name(), host +": " + self.nagios_cgi_url + "/main.php?"+ cgi_data
                     self.Debug(server=self.get_name(), host=host, service=s, debug=self.nagios_cgi_url + "/main.php?" + cgi_data)                
 
             # running remote cgi command
@@ -679,29 +610,14 @@ class CentreonServer(GenericServer):
         # the moment in nagstamonActions.RefreshLoopOneServer()
         if self.SIDcount >= 300:
             if str(self.conf.debug_mode) == "True":
-                #print self.get_name() + ":", "old SID:", self.SID, self.Cookie
                 self.Debug(server=self.get_name(), debug="Old SID: " + self.SID + " " + str(self.Cookie))                
             self.SID = self._get_sid().result
             if str(self.conf.debug_mode) == "True":
-                #print self.get_name() + ":", "new SID:", self.SID, self.Cookie
                 self.Debug(server=self.get_name(), debug="New SID: " +  self.SID + " " + str(self.Cookie))
             self.SIDcount = 0
         else:
             self.SIDcount += 1         
         
-
-            
-        #debug
-        #print
-        #print "************************************************************"
-        #print
-        #print self.get_name(), gc.get_count(), len(gc.garbage)
-        #for g in gc.garbage:
-        #    print g
-        #    print "************************************************************"
-        #print "LENGTH GARBAGE:", len(gc.garbage), gc.garbage, self.get_name()
-        #del gc.garbage[:]
         # do some garbage collection
         gc.collect()
-        #print
-        #print len(gc.get_objects())    
+ 

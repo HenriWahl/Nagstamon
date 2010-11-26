@@ -88,6 +88,13 @@ class RefreshLoopOneServer(threading.Thread):
                 if self.server.isChecking == False:              
                     # set server status for status field in popwin
                     self.server.status = "Refreshing"
+                    ##########
+                    #
+                    #
+                    # as we use now threads is gobject.idle_add really necessary?
+                    #
+                    #
+                    ##########
                     gobject.idle_add(self.output.popwin.UpdateStatus, self.server)
                     # get current status
                     server_status = self.server.GetStatus()
@@ -132,8 +139,6 @@ class RefreshLoopOneServer(threading.Thread):
                         self.server.status = "Connected"
                         # tell gobject to care about GUI stuff - refresh display status
                         gobject.idle_add(self.output.RefreshDisplayStatus)
-                        # do some cleanup
-                        #gc.collect()
                         # wait for the doRefresh flag to be True, if it is, do a refresh
                         if self.doRefresh == True:
                             if str(self.conf.debug_mode) == "True":
@@ -142,9 +147,6 @@ class RefreshLoopOneServer(threading.Thread):
                             # reset refresh flag
                             self.doRefresh = False
 
-                            #### do some cleanup
-                            ###del self.server.count
-                            ###self.server.count = 0
                             # call Hook() for extra action
                             self.server.Hook()
             else:
@@ -591,12 +593,6 @@ def CreateServer(server=None, conf=None, debug_queue=None):
     nagiosserver.proxy_address = server.proxy_address
     nagiosserver.proxy_username = server.proxy_username
     nagiosserver.proxy_password = server.proxy_password
-    # add browser credentials
-    #nagiosserver.Browser.add_password(nagiosserver.nagios_url, nagiosserver.username, nagiosserver.password)
-    #nagiosserver.Browser.add_password(nagiosserver.nagios_cgi_url, nagiosserver.username, nagiosserver.password)
-    #if str(nagiosserver.use_proxy) == "True":
-    #    nagiosserver.Browser.set_proxies({"http":nagiosserver.proxy_address, "https":nagiosserver.proxy_address})
-    #    nagiosserver.Browser.add_proxy_password(nagiosserver.proxy_username, nagiosserver.proxy_password)
     
     # access to thread-safe debug queue
     nagiosserver.debug_queue = debug_queue
@@ -624,28 +620,6 @@ def CreateServer(server=None, conf=None, debug_queue=None):
             nagiosserver.proxy_auth_handler = urllib2.ProxyBasicAuthHandler(nagiosserver.passman)
             nagiosserver.urlopener = urllib2.build_opener(nagiosserver.proxy_handler, nagiosserver.proxy_auth_handler, nagiosserver.auth_handler, nagiosserver.digest_handler, urllib2.HTTPCookieProcessor(nagiosserver.Cookie), MultipartPostHandler)
 
-    """        
-    # the whole TreeView memory leaky complex...        
-    nagiosserver.TreeView = gtk.TreeView()      
-    nagiosserver.ListStore = gtk.ListStore(*[gobject.TYPE_STRING]*(len(nagiosserver.COLUMNS)+2))                        
-            
-    # create columns for treeview
-    tab_renderer = gtk.CellRendererText()
-    for s, column in enumerate(nagiosserver.COLUMNS):
-        print s, column
-        # fill columns of view with content of model and squeeze it through the renderer, using
-        # the color information from the last two colums of the liststore
-        tab_column = gtk.TreeViewColumn(column.get_label(), tab_renderer, text=s,
-                                        background=len(nagiosserver.COLUMNS), foreground=len(nagiosserver.COLUMNS) + 1)               
-        nagiosserver.TreeView.append_column(tab_column)    
-        
-        # make table sortable by clicking on column headers
-        tab_column.set_clickable(True)
-        #tab_column.set_property('sort-indicator', True) # makes sorting arrows visible
-        ####tab_column.connect('clicked', self.on_column_header_click, s, self.popwin.ServerVBoxes[server.get_name()].ListStore, server)
-        #tab_column.connect('clicked', self.on_column_header_click, s, nagiosserver.ListStore, server)
-    """        
-            
     # debug
     if str(conf.debug_mode) == "True":
         #print "Created Server", server.name

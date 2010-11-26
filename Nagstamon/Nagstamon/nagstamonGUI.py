@@ -300,101 +300,27 @@ class GUI(object):
                         
                     # fill treeview for popwin only if necessary
                     if server.count == 0:
-                        # create a model for treeview where the table headers all are strings
-                        #self.popwin.ServerVBoxes[server.get_name()].ListStore = gtk.ListStore(*[gobject.TYPE_STRING]*(len(server.COLUMNS)+2))
-                        
-                        ###self.popwin.ServerVBoxes[server.get_name()].ListStore.clear()
-                        ###del self.popwin.ServerVBoxes[server.get_name()].ListStoreColumns[:]
-                        
-                        print server.ListStore
+                        # use a liststore for treeview where the table headers all are strings - first empty it
                         server.ListStore.clear()
-                        #del server.ListStoreColumns[:]
-                        print server.ListStore
 
                         # apart from status informations there we need two columns which
                         # hold the color information, which is derived from status which
-                        # is used as key at the above color dictionaries
-                        
+                        # is used as key at the above color dictionaries                      
                         number_of_columns = len(server.COLUMNS)
 
                         for item_type, status_dict in server.nagitems_filtered.iteritems():
                             for status, item_list in status_dict.iteritems():
                                 for item in list(item_list):
-                                    ###iter = self.popwin.ServerVBoxes[server.get_name()].ListStore.insert_before(None, None)
                                     iter = server.ListStore.insert_before(None, None)
-                                    ###columns = list(server.get_columns(item))
-                                    #if len(self.popwin.ServerVBoxes[server.get_name()].ListStoreColumns) == 0:
-                                    #    self.popwin.ServerVBoxes[server.get_name()].ListStoreColumns = list(server.get_columns(item))                                    
-                                    ###self.popwin.ServerVBoxes[server.get_name()].ListStoreColumns = list(server.get_columns(item))                                    
                                     server.ListStoreColumns = list(server.get_columns(item))                                    
-                                    ###print self.popwin.ServerVBoxes[server.get_name()].ListStoreColumns 
-                                    #print server.ListStoreColumns 
-                                    ###for i, column in enumerate(columns):
-                                    ###for i, column in enumerate(self.popwin.ServerVBoxes[server.get_name()].ListStoreColumns):
                                     for i, column in enumerate(server.ListStoreColumns):
-                                    #for i, column in enumerate(list(server.get_columns(item))):
-                                        ###self.popwin.ServerVBoxes[server.get_name()].ListStore.set_value(iter, i, str(column))
                                         server.ListStore.set_value(iter, i, str(column))
                                         del i, column
-                                    ###self.popwin.ServerVBoxes[server.get_name()].ListStore.set_value(iter, number_of_columns, self.tab_bg_colors[str(self.popwin.ServerVBoxes[server.get_name()].ListStoreColumns[server.COLOR_COLUMN_ID])])
-                                    ###self.popwin.ServerVBoxes[server.get_name()].ListStore.set_value(iter, number_of_columns + 1, self.tab_fg_colors[str(self.popwin.ServerVBoxes[server.get_name()].ListStoreColumns[server.COLOR_COLUMN_ID])])
                                     server.ListStore.set_value(iter, number_of_columns, self.tab_bg_colors[str(server.ListStoreColumns[server.COLOR_COLUMN_ID])])
                                     server.ListStore.set_value(iter, number_of_columns + 1, self.tab_fg_colors[str(server.ListStoreColumns[server.COLOR_COLUMN_ID])])
-        
-                        # http://www.pygtk.org/pygtk2reference/class-gtktreeview.html#method-gtktreeview--set-model         
-                        # clear treeviews columns
                         
-                        ###for i in dir(self.popwin.ServerVBoxes[server.get_name()].TreeView):
-                        ###    print i
-                        
-                        #print self.popwin.ServerVBoxes[server.get_name()].TreeView.get_columns()
-                        
-                        ###for i, c in enumerate(self.popwin.ServerVBoxes[server.get_name()].TreeView.get_columns()):
-                        ###    print i, c, c.clear()
-                        ###    del c
-                        
-                        # give new ListStore to the view, overwrites the old one automatically
-                        #del self.popwin.ServerVBoxes[server.get_name()].TreeView 
-                        #self.popwin.ServerVBoxes[server.get_name()].remove(self.popwin.ServerVBoxes[server.get_name()].TreeView)
-                        #self.popwin.ServerVBoxes[server.get_name()].TreeView = gtk.TreeView()
-                        #self.popwin.ServerVBoxes[server.get_name()].add(self.popwin.ServerVBoxes[server.get_name()].TreeView)
-                        #self.popwin.ServerVBoxes[server.get_name()].TreeView.set_model(None)
-                            
-                        ###self.popwin.ServerVBoxes[server.get_name()].TreeView.set_model(self.popwin.ServerVBoxes[server.get_name()].ListStore)
-                        ###print server.get_name(), self.popwin.ServerVBoxes[server.get_name()].TreeView.get_model()
+                        # give new ListStore to the view, overwrites the old one automatically - theoretically
                         server.TreeView.set_model(server.ListStore)
-                        print server.get_name(), server.TreeView.get_model()             
-             
-                        """
-                        # render aka create table view
-                        tab_renderer = gtk.CellRendererText()
-                        for s, column in enumerate(server.COLUMNS):
-                            print s, column
-                            # fill columns of view with content of model and squeeze it through the renderer, using
-                            # the color information from the last two colums of the liststore
-                            tab_column = gtk.TreeViewColumn(column.get_label(), tab_renderer, text=s,
-                                                            background=number_of_columns, foreground=number_of_columns+1)
-                        
-                        for tab_column in server.TreeViewColumns:
-                            self.popwin.ServerVBoxes[server.get_name()].TreeView.append_column(tab_column)
-                          
-
-                        print "server.TreeView:", server.TreeView, server.get_name()
-
-                        for s, column in enumerate(server.COLUMNS):
-                            print "TTTTTTTAAAAABBBBB___CCCOOOLLLUUUMMMNNNN:", column
-                            # set customized sorting
-                            if column.has_customized_sorting():
-                                ###self.popwin.ServerVBoxes[server.get_name()].ListStore.set_sort_func(s, column.sort_function, s)
-                                server.ListStore.set_sort_func(s, column.sort_function, s)
-                                
-                            # make table sortable by clicking on column headers
-                            column.set_clickable(True)
-                            #tab_column.set_property('sort-indicator', True) # makes sorting arrows visible
-                            ####tab_column.connect('clicked', self.on_column_header_click, s, self.popwin.ServerVBoxes[server.get_name()].ListStore, server)
-                            column.connect('clicked', self.on_column_header_click, s, server.ListStore, server)
-                        
-                        """
 
                         # restore sorting order from previous refresh
                         self.set_sorting(server.ListStore, server)
@@ -402,12 +328,7 @@ class GUI(object):
                         # status field in server vbox in popwin    
                         self.popwin.UpdateStatus(server)
     
-                except Exception, err:
-                    print err
-                    #debug
-                    print "SSSEEERRRVVVEEERRR  ERERRROORRR!"
-                    import traceback
-                    print traceback.print_exc(sys.exc_info)
+                except:
                     server.Error(sys.exc_info())
                     
         # show and resize popwin
@@ -427,7 +348,7 @@ class GUI(object):
             self.popwin.Close()
             self.status_ok = True
             # set systray icon to green aka OK
-            ###self.statusbar.SysTray.set_from_file(self.Resources + "/nagstamon_green" + self.BitmapSuffix)
+            self.statusbar.SysTray.set_from_file(self.Resources + "/nagstamon_green" + self.BitmapSuffix)
             # switch notification off
             self.NotificationOff()
         else:
@@ -473,7 +394,7 @@ class GUI(object):
             if downs > 0: color = "black"
 
             # should be solved somehow different
-            ###self.statusbar.SysTray.set_from_file(self.Resources + "/nagstamon_" + color + self.BitmapSuffix)
+            self.statusbar.SysTray.set_from_file(self.Resources + "/nagstamon_" + color + self.BitmapSuffix)
             
             # if there has been any status change notify user
             # first find out which of all servers states is the worst similar to nagstamonObjects.GetStatus()
@@ -491,13 +412,7 @@ class GUI(object):
                     if server.States.index(server.WorstStatus) > worst:
                             worst_status = server.WorstStatus
                     # reset status of the server for only processing it once
-                    server.WorstStatus = "UP"
-                    
-                # debug
-                #if str(self.conf.debug_mode) == "True":
-                    ##print server.get_name() + ":", "new worst status:", worst_status
-                    #server.Debug(server=server.get_name(), debug="New worst status: " + worst_status)
-                    
+                    server.WorstStatus = "UP"                    
                 if not worst_status == "UP" and str(self.conf.notification)== "True":
                     self.NotificationOn(status=worst_status)
             
@@ -513,9 +428,6 @@ class GUI(object):
         # try to fix Debian bug #591875: eventually ends up lower in the window stacking order, and can't be raised
         # raising statusbar window with every refresh should do the job
         self.statusbar.StatusBar.window.raise_()
-        
-        # do some cleanup
-        #gc.collect()
         
         # return False to get removed as gobject idle source
         return False
@@ -1705,10 +1617,9 @@ class ServerVBox(gtk.VBox):
         self.HBox.add(self.AlignmentStatus)
 
         self.Server_EventBox.add(self.HBox)
-        self.add(self.Server_EventBox)
-        #self.add(self.TreeView)
-            
+        self.add(self.Server_EventBox)            
 
+        # new TreeView handling, not genereating new itmes with every refresh cycle
         self.server.TreeView = gtk.TreeView()      
         self.server.ListStore = gtk.ListStore(*[gobject.TYPE_STRING]*(len(self.server.COLUMNS)+2))                        
                 
@@ -1725,13 +1636,10 @@ class ServerVBox(gtk.VBox):
             # make table sortable by clicking on column headers
             tab_column.set_clickable(True)
             #tab_column.set_property('sort-indicator', True) # makes sorting arrows visible
-            ####tab_column.connect('clicked', self.on_column_header_click, s, self.popwin.ServerVBoxes[server.get_name()].ListStore, server)
             tab_column.connect('clicked', self.output.on_column_header_click, s, self.server.ListStore, self.server)
      
         # the whole TreeView memory leaky complex...  
-        ###self.TreeView = gtk.TreeView()    
         self.TreeView = self.server.TreeView
-        ###self.ListStore = gtk.ListStore(*[gobject.TYPE_STRING]*(len(self.server.COLUMNS)+2))
         self.ListStore = self.server.ListStore
      
         self.add(self.TreeView)
