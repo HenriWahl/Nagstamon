@@ -754,13 +754,7 @@ class GenericServer(object):
         
         print url
         
-        ###passman = urllib2.HTTPPasswordMgrWithDefaultRealm()
-        ###passman.add_password(None, url, self.get_username(), self.get_password())       
-        ###auth_handler = urllib2.HTTPBasicAuthHandler(passman)
-        ###digest_handler = urllib2.HTTPDigestAuthHandler(passman)
-        
-        # get my cookie to access Opsview web interface to access Opsviews Nagios part
-        ###if self.Cookie == None and self.type == "Opsview":         
+        # get my cookie to access Opsview web interface to access Opsviews Nagios part       
         if len(self.Cookie) == 0 and self.type == "Opsview":         
             # put all necessary data into url string
             logindata = urllib.urlencode({"login_username":self.get_username(),\
@@ -768,30 +762,10 @@ class GenericServer(object):
                              "back":"",\
                              "app": "",\
                              "login":"Log In"})
-            
-            ##### the cookie jar will contain Opsview web session and auth ticket cookies 
-            ###self.Cookie = cookielib.CookieJar()
-            
+
             # the following is necessary for Opsview servers
             # get cookie from login page via url retrieving as with other urls
             try:
-                """
-                # if there should be no proxy used use an empty proxy_handler - only necessary in Windows,
-                # where IE proxy settings are used automatically if available
-                # In UNIX $HTTP_PROXY will be used
-                if str(self.use_proxy) == "False":
-                    proxy_handler = urllib2.ProxyHandler({})
-                    urlopener = urllib2.build_opener(auth_handler, digest_handler, proxy_handler, urllib2.HTTPCookieProcessor(self.Cookie))
-                elif str(self.use_proxy) == "True":
-                    if str(self.use_proxy_from_os) == "True":
-                        urlopener = urllib2.build_opener(auth_handler, digest_handler, urllib2.HTTPCookieProcessor(self.Cookie))
-                    else:
-                        # if proxy from OS is not used there is to add a authenticated proxy handler
-                        self.passman.add_password(None, self.proxy_address, self.proxy_username, self.proxy_password)
-                        proxy_handler = urllib2.ProxyHandler({"http": self.proxy_address, "https": self.proxy_address})
-                        proxy_auth_handler = urllib2.ProxyBasicAuthHandler(self.passman)
-                        urlopener = urllib2.build_opener(proxy_handler, proxy_auth_handler, auth_handler, digest_handler, urllib2.HTTPCookieProcessor(self.Cookie))
-                """
                 # create url opener
                 urllib2.install_opener(self.urlopener)
                 # login and get cookie
@@ -803,24 +777,6 @@ class GenericServer(object):
                 
         # if something goes wrong with accessing the URL it can be caught
         try:
-            """
-            # if there should be no proxy used use an empty proxy_handler - only necessary in Windows,
-            # where IE proxy settings are used automatically if available
-            # In UNIX $HTTP_PROXY will be used
-            # The MultipartPostHandler is needed for submitting multipart forms from Opsview
-            if str(self.use_proxy) == "False":
-                proxy_handler = urllib2.ProxyHandler({})
-                urlopener = urllib2.build_opener(auth_handler, digest_handler, proxy_handler, urllib2.HTTPCookieProcessor(self.Cookie), nagstamonActions.MultipartPostHandler)
-            elif str(self.use_proxy) == "True":
-                if str(self.use_proxy_from_os) == "True":
-                    urlopener = urllib2.build_opener(auth_handler, digest_handler, urllib2.HTTPCookieProcessor(self.Cookie), nagstamonActions.MultipartPostHandler)
-                else:
-                    # if proxy from OS is not used there is to add a authenticated proxy handler
-                    passman.add_password(None, self.proxy_address, self.proxy_username, self.proxy_password)
-                    proxy_handler = urllib2.ProxyHandler({"http": self.proxy_address, "https": self.proxy_address})
-                    proxy_auth_handler = urllib2.ProxyBasicAuthHandler(passman)
-                    urlopener = urllib2.build_opener(proxy_handler, proxy_auth_handler, auth_handler, digest_handler, urllib2.HTTPCookieProcessor(self.Cookie), nagstamonActions.MultipartPostHandler)
-            """
             # create url opener
             urllib2.install_opener(self.urlopener)
             try:
@@ -839,14 +795,9 @@ class GenericServer(object):
             except:
                 result, error = self.Error(sys.exc_info())
                 return Result(result=result, error=error)
-
            
             # give back pure HTML or XML in case giveback is "raw"
-            if giveback == "raw":               
-                #raw = str(urlcontent.read())
-                #self.Browser.open(url, cgi_data)
-                #raw = self.Browser.response().read()
-                #result = Result(result=raw)                
+            if giveback == "raw":                           
                 result = Result(result=urlcontent.read())
                 urlcontent.close()
                 del urlcontent
@@ -856,7 +807,7 @@ class GenericServer(object):
             if giveback == "nothing":
                 # do some cleanup
                 urlcontent.close()
-                ####del passman, auth_handler, digest_handler, urlcontent
+                del urlcontent
                 return Result() 
             
             # give back lxml-objectified data
@@ -891,11 +842,9 @@ class GenericServer(object):
                 htobj = lxml.objectify.fromstring(prettyhtml)
                 
                 #do some cleanup
-                ###del passman, auth_handler, digest_handler, prettyhtml
                 del prettyhtml
         
                 # give back HTML object from Nagios webseite
-                #return Result(result=copy.deepcopy(htobj))
                 return Result(result=htobj)            
                 
             elif self.type == "Opsview" and giveback == "opsxml":
@@ -903,13 +852,12 @@ class GenericServer(object):
                 xml = lxml.etree.XML(urlcontent.read())
                 xmlpretty = lxml.etree.tostring(xml, pretty_print=True)
                 xmlobj = lxml.objectify.fromstring(xmlpretty)
-                ###del passman, auth_handler, 
+                urlcontent.close()
                 del urlcontent, xml, xmlpretty
                 return Result(result=copy.deepcopy(xmlobj))
            
         except:
-            # do some cleanup
-            ###del passman, auth_handler, digest_handler           
+            # do some cleanup        
             result, error = self.Error(sys.exc_info())
             return Result(result=result, error=error)      
             
@@ -917,10 +865,11 @@ class GenericServer(object):
         # in case the wrong giveback type has been specified return error
         # do some cleanup
         try:
+            urlcontent.close()
             del urlcontent
         except:
             self.Error(sys.exc_info())
-            pass
+
         result, error = self.Error(sys.exc_info())
         return Result(result=result, error=error)   
     
@@ -973,7 +922,6 @@ class GenericServer(object):
         except:
             result, error = self.Error(sys.exc_info())
             return Result(result=result, error=error)
-            #return self.Error(sys.exc_info())
          
         # do some cleanup
         del htobj    

@@ -31,6 +31,7 @@ if platform.system() != "Windows":
 # needed for actions e.g. triggered by pressed buttons
 import nagstamonActions
 import nagstamonConfig
+import nagstamonObjects
 import subprocess
 import sys
 import gc
@@ -303,22 +304,28 @@ class GUI(object):
                         #self.popwin.ServerVBoxes[server.get_name()].ListStore = gtk.ListStore(*[gobject.TYPE_STRING]*(len(server.COLUMNS)+2))
                         
                         self.popwin.ServerVBoxes[server.get_name()].ListStore.clear()
+                        del self.popwin.ServerVBoxes[server.get_name()].ListStoreColumns[:]
                         
                         # apart from status informations there we need two columns which
                         # hold the color information, which is derived from status which
                         # is used as key at the above color dictionaries
                         
                         number_of_columns = len(server.COLUMNS)
-                        
+                        """
                         for item_type, status_dict in server.nagitems_filtered.iteritems():
                             for status, item_list in status_dict.iteritems():
                                 for item in list(item_list):
                                     iter = self.popwin.ServerVBoxes[server.get_name()].ListStore.insert_before(None, None)
-                                    columns = list(server.get_columns(item))
-                                    for i, column in enumerate(columns):
-                                        self.popwin.ServerVBoxes[server.get_name()].ListStore.set_value(iter, i, column)
-                                    self.popwin.ServerVBoxes[server.get_name()].ListStore.set_value(iter, number_of_columns, self.tab_bg_colors[str(columns[server.COLOR_COLUMN_ID])])
-                                    self.popwin.ServerVBoxes[server.get_name()].ListStore.set_value(iter, number_of_columns + 1, self.tab_fg_colors[str(columns[server.COLOR_COLUMN_ID])])
+                                    ###columns = list(server.get_columns(item))
+                                    self.popwin.ServerVBoxes[server.get_name()].ListStoreColumns = list(server.get_columns(item))                                    
+                                    print self.popwin.ServerVBoxes[server.get_name()].ListStoreColumns 
+                                    ###for i, column in enumerate(columns):
+                                    for i, column in enumerate(self.popwin.ServerVBoxes[server.get_name()].ListStoreColumns):
+                                    #for i, column in enumerate(list(server.get_columns(item))):
+                                        print iter, column
+                                        self.popwin.ServerVBoxes[server.get_name()].ListStore.set_value(iter, i, str(column))
+                                    self.popwin.ServerVBoxes[server.get_name()].ListStore.set_value(iter, number_of_columns, self.tab_bg_colors[str(self.popwin.ServerVBoxes[server.get_name()].ListStoreColumns[server.COLOR_COLUMN_ID])])
+                                    self.popwin.ServerVBoxes[server.get_name()].ListStore.set_value(iter, number_of_columns + 1, self.tab_fg_colors[str(self.popwin.ServerVBoxes[server.get_name()].ListStoreColumns[server.COLOR_COLUMN_ID])])
     
                         # http://www.pygtk.org/pygtk2reference/class-gtktreeview.html#method-gtktreeview--set-model         
                         # clear treeviews columns
@@ -331,8 +338,7 @@ class GUI(object):
                         #self.popwin.ServerVBoxes[server.get_name()].TreeView = gtk.TreeView()
                         #self.popwin.ServerVBoxes[server.get_name()].add(self.popwin.ServerVBoxes[server.get_name()].TreeView)
                         #self.popwin.ServerVBoxes[server.get_name()].TreeView.set_model(None)
-    
-                        
+                            
                         self.popwin.ServerVBoxes[server.get_name()].TreeView.set_model(self.popwin.ServerVBoxes[server.get_name()].ListStore)
                         print server.get_name(), self.popwin.ServerVBoxes[server.get_name()].TreeView.get_model()
                                             
@@ -346,9 +352,7 @@ class GUI(object):
                             self.popwin.ServerVBoxes[server.get_name()].TreeView.append_column(tab_column)
                            
                             # set customized sorting
-                            print "column.has_customized_sorting()", column.has_customized_sorting(), column
                             if column.has_customized_sorting():
-                                print s
                                 self.popwin.ServerVBoxes[server.get_name()].ListStore.set_sort_func(s, column.sort_function, s)
                                 
                             # make table sortable by clicking on column headers
@@ -358,10 +362,15 @@ class GUI(object):
                         
                         # restore sorting order from previous refresh
                         self.set_sorting(self.popwin.ServerVBoxes[server.get_name()].ListStore, server)
+
+                        """
+                        
                         
                         # status field in server vbox in popwin    
                         self.popwin.UpdateStatus(server)
                     
+                        
+                        
                 except Exception, err:
                     print err
                     #debug
@@ -385,7 +394,7 @@ class GUI(object):
             self.popwin.Close()
             self.status_ok = True
             # set systray icon to green aka OK
-            self.statusbar.SysTray.set_from_file(self.Resources + "/nagstamon_green" + self.BitmapSuffix)
+            ###self.statusbar.SysTray.set_from_file(self.Resources + "/nagstamon_green" + self.BitmapSuffix)
             # switch notification off
             self.NotificationOff()
         else:
@@ -470,7 +479,7 @@ class GUI(object):
             
         # try to fix Debian bug #591875: eventually ends up lower in the window stacking order, and can't be raised
         # raising statusbar window with every refresh should do the job
-        ###self.statusbar.StatusBar.window.raise_()
+        self.statusbar.StatusBar.window.raise_()
         
         # do some cleanup
         #gc.collect()
@@ -1574,7 +1583,7 @@ class Popwin(gtk.Window):
         try:
             nagstamonActions.OpenNagios(widget=None, server=self.output.servers[widget.get_active_text()], output=self.output)
         except:
-            pass
+            self.output.servers[widget.get_active_text()].Error(sys.exc_info())
             
     
     def UpdateStatus(self, server):
@@ -1584,9 +1593,8 @@ class Popwin(gtk.Window):
         # status field in server vbox in popwin    
         try:
             self.ServerVBoxes[server.get_name()].LabelStatus.set_markup('<span>Status: ' + str(server.status) + ' <span color="darkred">' + str(server.status_description) + '</span></span>')
-        except Exception, err:
-            print err
-            pass
+        except:
+            server.Error(sys.exc_info())
     
 
 class ServerVBox(gtk.VBox):
@@ -1606,6 +1614,9 @@ class ServerVBox(gtk.VBox):
         self.Server_EventBox = gtk.EventBox()
         self.TreeView = gtk.TreeView()      
         self.ListStore = gtk.ListStore(*[gobject.TYPE_STRING]*(len(self.server.COLUMNS)+2))
+
+        # attempt to store ListStore Columns as attribute and do not create them every time new
+        self.ListStoreColumns = list()       
         
         # server related Buttons
         # Button Monitor - HBox is necessary because gtk.Button allows only one child

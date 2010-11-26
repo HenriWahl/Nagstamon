@@ -61,18 +61,28 @@ class CustomSortingColumn(Column):
     @classmethod
     def sort_function(cls, model, iter1, iter2, column):
         """ Overrides default sorting behaviour """
-        data1, data2 = [model.get_value(x, column) for x in (iter1, iter2)]
+        data1, data2 = [model.get_value(x, column) for x in (iter1, iter2)]      
+        # this happens since liststore (aka tab_model) is an attribute of server and not created every time
+        # new, so sometimes data2 is simply "None"
+        if data2 == None: return cls.CHOICES.index(data1)
+        ###try:
+        ###    first = cls.CHOICES.index(data1) 
+        ###    second = cls.CHOICES.index(data2)
+        ###    print "CCCCCCCCOOOOOMMPPPAAARRRIISSSOOONNN", "data1:", data1, "data2:", data2, "Model", model
+        ###except ValueError, err: # value not in CHOICES
+        ###    return cmp(first, second)
+        ###return first - second
         try:
-            first = cls.CHOICES.index(data1) 
-            second = cls.CHOICES.index(data2)
-            print "CCCCCCCCOOOOOMMPPPAAARRRIISSSOOONNN", "data1:", data1, "data2:", data2, "Model", model
+            return cls.CHOICES.index(data1) - cls.CHOICES.index(data2)
         except ValueError, err: # value not in CHOICES
-            return cmp(first, second)
-        try:
-            return first - second
-        except:
-            return first
-
+            try:
+                return cmp(cls.CHOICES.index(data1), cls.CHOICES.index(data2))
+            except:
+                try:
+                    return cls.CHOICES.index(data1)
+                except:
+                    return cls.CHOICES.index(data2)
+                
     
 class StatusColumn(CustomSortingColumn):
     ATTR_NAME = 'status'
@@ -83,7 +93,7 @@ class HostColumn(Column):
     ATTR_NAME = 'host'
     
     def _get_value(self, row):
-       return row.get_host_name() 
+        return row.get_host_name() 
 
    
 class ServiceColumn(Column):

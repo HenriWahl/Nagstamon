@@ -111,7 +111,7 @@ class RefreshLoopOneServer(threading.Thread):
                         # use a flag to prevent all threads at once to write to statusbar label in case
                         # of lost network connectivity - this leads to a mysterious pango crash
                         if self.output.statusbar.isShowingError == False:
-                            gobject.idle_add(self.output.RefreshDisplayStatus)
+                            ###gobject.idle_add(self.output.RefreshDisplayStatus)
                             # wait a moment
 ####                            time.sleep(5)
                             time.sleep(5)
@@ -133,7 +133,7 @@ class RefreshLoopOneServer(threading.Thread):
                         # set server status for status field in popwin
                         self.server.status = "Connected"
                         # tell gobject to care about GUI stuff - refresh display status
-                        gobject.idle_add(self.output.RefreshDisplayStatus)
+                        ###gobject.idle_add(self.output.RefreshDisplayStatus)
                         # do some cleanup
                         #gc.collect()
                         # wait for the doRefresh flag to be True, if it is, do a refresh
@@ -250,7 +250,6 @@ class Recheck(threading.Thread):
             self.server.set_recheck(self)
         except:
             self.server.Error(sys.exc_info())
-            pass
                
         
 class RecheckAll(threading.Thread):
@@ -665,7 +664,7 @@ def CreateServer(server=None, conf=None, debug_queue=None):
             nagiosserver.proxy_handler = urllib2.ProxyHandler({"http": nagiosserver.proxy_address, "https": nagiosserver.proxy_address})
             nagiosserver.proxy_auth_handler = urllib2.ProxyBasicAuthHandler(nagiosserver.passman)
             nagiosserver.urlopener = urllib2.build_opener(nagiosserver.proxy_handler, nagiosserver.proxy_auth_handler, nagiosserver.auth_handler, nagiosserver.digest_handler, urllib2.HTTPCookieProcessor(nagiosserver.Cookie), MultipartPostHandler)
-
+ 
     # debug
     if str(conf.debug_mode) == "True":
         #print "Created Server", server.name

@@ -323,14 +323,12 @@ class CentreonServer(GenericServer):
                 del raw, error
             except:
                 self.Error(sys.exc_info())
-                
-            print self.get_name() + " XMLOBJ:", xmlobj    
                        
             # in case there are no children session id is invalid
             #if htobj.getchildren() == []:
             #if len(xmlobj) == 0:
             if xmlraw == "<response>bad session id</response>":    
-                print raw, xmlraw
+                del raw, xmlraw
                 if str(self.conf.debug_mode) == "True": 
                     #print self.get_name(), "bad session ID, retrieving new one..." 
                     self.Debug(server=self.get_name(), debug="Bad session ID, retrieving new one...")                
@@ -344,7 +342,6 @@ class CentreonServer(GenericServer):
                 # cut off <xml blabla>
                 xmlraw = ElementTree.fromstring(raw.split("\n")[1])
                 xmlobj = nagstamonActions.ObjectifyXML(xmlraw)
-                
                 del raw, xmlraw, error
             else:
                 del xmlraw
