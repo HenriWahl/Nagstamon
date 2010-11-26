@@ -326,7 +326,7 @@ class GUI(object):
                                     #if len(self.popwin.ServerVBoxes[server.get_name()].ListStoreColumns) == 0:
                                     #    self.popwin.ServerVBoxes[server.get_name()].ListStoreColumns = list(server.get_columns(item))                                    
                                     ###self.popwin.ServerVBoxes[server.get_name()].ListStoreColumns = list(server.get_columns(item))                                    
-                                    sserver.ListStoreColumns = list(server.get_columns(item))                                    
+                                    server.ListStoreColumns = list(server.get_columns(item))                                    
                                     ###print self.popwin.ServerVBoxes[server.get_name()].ListStoreColumns 
                                     #print server.ListStoreColumns 
                                     ###for i, column in enumerate(columns):
