@@ -104,14 +104,7 @@ class GenericServer(object):
         self.count = 0
         # needed for RecheckAll - save start_time once for not having to get it for every recheck
         self.start_time = None
-        # test with mechanize - this server's own browser
-        #self.Browser = mechanize.Browser(history=NoHistory())
-        #self.Browser = mechanize.Browser()        
-        # ignore robots.txt
-        #self.Browser.set_handle_robots(False)
-        #self.Cookie = cookielib.LWPCookieJar()
         self.Cookie = cookielib.CookieJar()        
-        #self.Browser.set_cookiejar(self.Cookie)
         # use server-owned attributes instead of redefining them with every request
         self.passman = None   
         self.auth_handler = None
@@ -283,7 +276,6 @@ class GenericServer(object):
         else:
             typ = 2      
         if str(self.conf.debug_mode) == "True":
-            #print self.get_name(), ":", "Open host/service monitor web page", self.nagios_cgi_url + '/extinfo.cgi?' + urllib.urlencode({"type":typ, "host":host, "service":service})
             self.Debug(server=self.get_name(), host=host, service=service, debug="Open host/service monitor web page " + self.nagios_cgi_url + '/extinfo.cgi?' + urllib.urlencode({"type":typ, "host":host, "service":service}))
         webbrowser.open(self.nagios_cgi_url + '/extinfo.cgi?' + urllib.urlencode({"type":typ, "host":host, "service":service}))
 
@@ -292,7 +284,6 @@ class GenericServer(object):
         webbrowser.open(self.nagios_url)
         # debug
         if str(self.conf.debug_mode) == "True":
-            #print self.get_name(), ":", "Open monitor web page", self.nagios_url 
             self.Debug(server=self.get_name(), debug="Open monitor web page " + self.nagios_url)
 
         
@@ -300,7 +291,6 @@ class GenericServer(object):
         webbrowser.open(self.nagios_cgi_url + "/status.cgi?host=all&servicestatustypes=253")
         # debug
         if str(self.conf.debug_mode) == "True":
-            #print self.get_name(), ":", "Open services web page", self.nagios_url + "/status.cgi?host=all&servicestatustypes=253"  
             self.Debug(server=self.get_name(), debug="Open services web page " + self.nagios_url + "/status.cgi?host=all&servicestatustypes=253")
         
             
@@ -308,9 +298,9 @@ class GenericServer(object):
         webbrowser.open(self.nagios_cgi_url + "/status.cgi?hostgroup=all&style=hostdetail&hoststatustypes=12")
         # debug
         if str(self.conf.debug_mode) == "True":
-            #print self.get_name(), ":", "Open hosts web page", self.nagios_url + "/status.cgi?hostgroup=all&style=hostdetail&hoststatustypes=12"      
             self.Debug(server=self.get_name(), debug="Open hosts web page " + self.nagios_url + "/status.cgi?hostgroup=all&style=hostdetail&hoststatustypes=12")
 
+            
     def _get_status(self):
         """
         Get status from Nagios Server
@@ -367,7 +357,6 @@ class GenericServer(object):
         try:
             result = self.FetchURL(nagcgiurl_hosts)
             htobj, error = result.result, result.error
-            #if error != "": return [htobj, error]
             if error != "": return Result(result=copy.deepcopy(htobj), error=error)            
             # workaround for Nagios < 2.7 which has an <EMBED> in its output
             # put a copy of a part of htobj into table to be able to delete htobj
@@ -422,7 +411,6 @@ class GenericServer(object):
         except:
             # set checking flag back to False
             self.isChecking = False
-            #return self.Error(sys.exc_info())
             result, error = self.Error(sys.exc_info())
             return Result(result=result, error=error)
 
@@ -430,7 +418,6 @@ class GenericServer(object):
         try:
             result = self.FetchURL(nagcgiurl_services)
             htobj, error = result.result, result.error          
-            #if error != "": return [htobj, error]
             if error != "": return Result(result=copy.deepcopy(htobj), error=error)
             # put a copy of a part of htobj into table to be able to delete htobj
             table = copy.deepcopy(htobj.body.table[self.HTML_BODY_TABLE_INDEX])
@@ -492,7 +479,6 @@ class GenericServer(object):
         except:
             # set checking flag back to False
             self.isChecking = False
-            #return self.Error(sys.exc_info())
             result, error = self.Error(sys.exc_info())
             return Result(result=result, error=error)
        
@@ -500,7 +486,6 @@ class GenericServer(object):
         try:
             result = self.FetchURL(nagcgiurl_hosts_in_maintenance)
             htobj, error = result.result, result.error
-            #if error != "": return [htobj, error]
             if error != "": return Result(result=copy.deepcopy(htobj), error=error)
             # workaround for Nagios < 2.7 which has an <EMBED> in its output
             try:
@@ -532,7 +517,6 @@ class GenericServer(object):
         except:
             # set checking flag back to False
             self.isChecking = False
-            #return self.Error(sys.exc_info())
             result, error = self.Error(sys.exc_info())
             return Result(result=result, error=error)
         
@@ -540,7 +524,6 @@ class GenericServer(object):
         try:
             result = self.FetchURL(nagcgiurl_hosts_acknowledged)
             htobj, error = result.result, result.error
-            #if error != "": return [htobj, error]
             if error != "": return Result(result=copy.deepcopy(htobj), error=error)
             # workaround for Nagios < 2.7 which has an <EMBED> in its output
             try:
@@ -572,7 +555,6 @@ class GenericServer(object):
         except:
             # set checking flag back to False
             self.isChecking = False
-            #return self.Error(sys.exc_info())
             result, error = self.Error(sys.exc_info())
             return Result(result=result, error=error)
             
@@ -719,12 +701,10 @@ class GenericServer(object):
 
         # put new informations into respective dictionaries      
         self.hosts, self.hosts_acknowledged, self.hosts_in_maintenance = copy.deepcopy(self.new_hosts), copy.deepcopy(self.new_hosts_acknowledged), copy.deepcopy(self.new_hosts_in_maintenance)
-        #self.hosts, self.hosts_acknowledged, self.hosts_in_maintenance = self.new_hosts, self.new_hosts_acknowledged, self.new_hosts_in_maintenance
         
         # do some cleanup
         del self.new_hosts_acknowledged[:], self.new_hosts_in_maintenance[:]
         self.new_hosts.clear()
-        #del self.new_hosts
         
         # after all checks are done unset checking flag
         self.isChecking = False

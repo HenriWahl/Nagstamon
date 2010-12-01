@@ -521,7 +521,7 @@ class CentreonServer(GenericServer):
                         self.Debug(server=self.get_name(), host=host, service=s, debug=self.nagios_cgi_url + "/main.php?" + cgi_data)                
 
                     # running remote cgi command with GET method, for some strange reason only working if
-                    # giveback="raw"
+                    # giveback is "raw"
                     raw = self.FetchURL(self.nagios_cgi_url + "/main.php?" + cgi_data, giveback="raw")
                     del raw
         except:

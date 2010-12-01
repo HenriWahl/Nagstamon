@@ -656,7 +656,7 @@ class GUI(object):
                     nagstamonActions.OpenNagstamonDownload(output=self)
                 dialog.destroy()               
         except:
-            pass
+            self.servers.values()[0].Error(sys.exc_info())
 
     
     def NotificationOn(self, status="UP"):
@@ -672,14 +672,11 @@ class GUI(object):
                         self.Notifying = True
                         # debug
                         if str(self.conf.debug_mode) == "True":                            
-                            #print "Notification on"
                             self.servers.values()[0].Debug(debug="Notification on.")
                         # threaded statusbar flash
                         if str(self.conf.notification_flashing) == "True":
                             self.statusbar.SysTray.set_blinking(True)
                             self.statusbar.Flashing = True
-                            #flash = nagstamonActions.FlashStatusbar(output=self)
-                            #flash.start()
                         # if wanted play notification sound
                         if str(self.conf.notification_sound) == "True":
                             sound = nagstamonActions.PlaySound(sound=status, Resources=self.Resources, conf=self.conf, servers=self.servers)
@@ -690,7 +687,7 @@ class GUI(object):
                         #    self.popwin.showPopwin = True
                         #    self.popwin.PopUp()
         except:
-            pass
+            self.servers.values()[0].Error(sys.exc_info())
             
     
     def NotificationOff(self):
@@ -701,7 +698,6 @@ class GUI(object):
             self.Notifying = False
             # debug
             if str(self.conf.debug_mode) == "True":
-                #print "Notification off"
                 self.servers.values()[0].Debug(debug="Notification on.")
             self.statusbar.SysTray.set_blinking(False)
             self.statusbar.Flashing = False
@@ -1010,7 +1006,7 @@ class StatusBar(object):
             # Windows workaround for non-shrinking desktop statusbar
             self.Resize()
         except:
-            pass
+            self.servers.values()[0].Error(sys.exc_info())
             
 
     def Flash(self):
@@ -1028,7 +1024,7 @@ class StatusBar(object):
             try:
                 self.Resize()
             except:
-                pass
+                self.servers.values()[0].Error(sys.exc_info())
 
         # return False to get removed as gobject idle source
         return False
@@ -1135,7 +1131,7 @@ class Popwin(gtk.Window):
         # put the HBox full of buttons full of HBoxes into the aligned HBox...
         self.AlMenu.add(self.HBoxMenu)     
         
-        # HBoxen en masse...
+        # HBoxensen masse...
         self.HBoxAllButtons.add(self.AlMonitorLabel)
         self.HBoxAllButtons.add(self.AlMonitorComboBox)
         self.HBoxAllButtons.add(self.AlMenu)
@@ -1455,7 +1451,6 @@ class Popwin(gtk.Window):
         
         #debug    
         if str(self.conf.debug_mode) == "True":
-            #print self.miserable_server.get_name(), ":", remoteservice, self.miserable_host, self.miserable_service
             self.miserable_server.Debug(server=self.miserable_server.get_name(), host=self.miserable_host, service=self.miserable_service, debug="Clicked context menu: " + remoteservice)
             
         # choose appropriate service for menu entry
@@ -1467,7 +1462,6 @@ class Popwin(gtk.Window):
                 #host = self.miserable_server.GetHost(self.miserable_host)[0]
                 result = self.miserable_server.GetHost(self.miserable_host)
                 host, error = result.result, result.error
-                #if host != "ERROR":
                 if error == "":
                     # workaround for bug 2080503@sf.net
                     if self.conf.app_ssh_options == "": args = self.conf.app_ssh_bin + " " + host
@@ -1475,10 +1469,8 @@ class Popwin(gtk.Window):
                     sub = subprocess.Popen(args.split(" "))
             elif remoteservice == "RDP":
                 # get host ip to connect to be independent of dns resolver
-                #host = self.miserable_server.GetHost(self.miserable_host)[0]
                 result = self.miserable_server.GetHost(self.miserable_host)
                 host, error = result.result, result.error
-                #if host != "ERROR":
                 if error == "":
                     # workaround for bug 2080503@sf.net
                     if self.conf.app_rdp_options == "": args = self.conf.app_rdp_bin + " " + host
@@ -1486,10 +1478,8 @@ class Popwin(gtk.Window):
                     sub = subprocess.Popen(args.split(" "))
             elif remoteservice == "VNC":
                 # get host ip to connect to be independent of dns resolver
-                #host = self.miserable_server.GetHost(self.miserable_host)[0]
                 result = self.miserable_server.GetHost(self.miserable_host)
                 host, error = result.result, result.error
-                #if host != "ERROR":
                 if error == "":
                     # workaround for bug 2080503@sf.net
                     if self.conf.app_vnc_options == "": args = self.conf.app_vnc_bin + " " + host
@@ -1497,10 +1487,8 @@ class Popwin(gtk.Window):
                     sub = subprocess.Popen(args.split(" "))
             elif remoteservice == "HTTP":
                 # get host ip to connect to be independent of dns resolver
-                #host = self.miserable_server.GetHost(self.miserable_host)[0]
                 result = self.miserable_server.GetHost(self.miserable_host)
                 host, error = result.result, result.error
-                #if host != "ERROR":
                 if error == "":
                     nagstamonActions.TreeViewHTTP(host)
             elif remoteservice == "Monitor":
@@ -1626,7 +1614,6 @@ class ServerVBox(gtk.VBox):
         # create columns for treeview
         tab_renderer = gtk.CellRendererText()
         for s, column in enumerate(self.server.COLUMNS):
-            print s, column
             # fill columns of view with content of model and squeeze it through the renderer, using
             # the color information from the last two colums of the liststore
             tab_column = gtk.TreeViewColumn(column.get_label(), tab_renderer, text=s,
@@ -1684,8 +1671,7 @@ class Settings(object):
         for i in ["input_entry_", "input_checkbutton_", "input_radiobutton_", "input_spinbutton_", "input_filechooser_"]: 
             for j in self.glade.get_widget_prefix(i):
                 # some hazard, every widget has other methods to fill it with desired content
-                # so we try them all, one of them should work
-                
+                # so we try them all, one of them should work                
                 # help gtk.filechooser on windows
                 if str(self.conf.__dict__[j.name.split(i)[1]]) == "None":
                     self.conf.__dict__[j.name.split(i)[1]] = None
@@ -1722,7 +1708,6 @@ class Settings(object):
         
         # workaround for gazpacho-made glade-file - dunno why tab labels do not get named as they should be
         notebook = self.glade.get_widget("notebook")
-        #notebook = self.dialog.get_children()[0].get_children()[0]
         notebook_tabs =  ["Servers", "Display", "Filters", "Executables", "Notification"]
         for c in notebook.get_children():
             notebook.set_tab_label_text(c, notebook_tabs.pop(0))
@@ -1876,7 +1861,6 @@ class Settings(object):
             # create output visuals again because they might have changed (systray/free floating status bar)
             self.output.statusbar.StatusBar.destroy()    
             self.output.statusbar.SysTray.set_visible(False)       
-            #del self.output.statusbar
             self.output.popwin.destroy()
             # re-initialize output with new settings
             self.output.__init__()

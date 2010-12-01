@@ -76,10 +76,7 @@ class RefreshLoopOneServer(threading.Thread):
               
         while self.stopped == False:          
             # check if we have to leave update interval sleep
-####            if self.server.count > int(self.conf.update_interval)*60: self.doRefresh = True
-            if self.server.count > int(self.conf.update_interval)*10: self.doRefresh = True
-            
-            
+            if self.server.count > int(self.conf.update_interval)*60: self.doRefresh = True       
             # self.doRefresh could also been changed by RefreshAllServers()
             if self.doRefresh == True:              
                 # reset server count
@@ -88,22 +85,13 @@ class RefreshLoopOneServer(threading.Thread):
                 if self.server.isChecking == False:              
                     # set server status for status field in popwin
                     self.server.status = "Refreshing"
-                    ##########
-                    #
-                    #
-                    # as we use now threads is gobject.idle_add really necessary?
-                    #
-                    #
-                    ##########
                     gobject.idle_add(self.output.popwin.UpdateStatus, self.server)
                     # get current status
                     server_status = self.server.GetStatus()
-                    ###server_status = Result(result="", error="")
                     # GTK/Pango does not like tag brackets < and >, so clean them out from description
                     server_status.error = server_status.error.replace("<", "").replace(">", "").replace("\n", " ")
                     # debug
                     if str(self.conf.debug_mode) == "True":
-                        #print self.server.get_name(), ": server return values:", server_status.result, server_status.error 
                         self.server.Debug(server=self.server.get_name(), debug="server return values: " + server_status.result + " " + server_status.error)
                         
                     if server_status.error != "":
@@ -118,22 +106,17 @@ class RefreshLoopOneServer(threading.Thread):
                         if self.output.statusbar.isShowingError == False:
                             gobject.idle_add(self.output.RefreshDisplayStatus)
                             # wait a moment
-####                            time.sleep(5)
                             time.sleep(5)
                             # change statusbar to the following error message
                             # show error message in statusbar
                             # shorter error message - see https://sourceforge.net/tracker/?func=detail&aid=3017044&group_id=236865&atid=1101373
                             gobject.idle_add(self.output.statusbar.ShowErrorMessage, {"True":"ERROR", "False":"ERR"}[str(self.conf.long_display)])
                             # wait some seconds
-####                            time.sleep(5) 
-                            time.sleep(1) 
-
+                            time.sleep(5) 
                             # set statusbar error message status back
-                            self.output.statusbar.isShowingError = False
-                            
+                            self.output.statusbar.isShowingError = False                           
                         # wait a moment
-####                        time.sleep(10)
-                            time.sleep(1)
+                        time.sleep(10)
                     else:
                         # set server status for status field in popwin
                         self.server.status = "Connected"
@@ -574,7 +557,6 @@ def CreateServer(server=None, conf=None, debug_queue=None):
         return
     # give argument servername so CentreonServer could use it for initializing MD5 cache
     nagiosserver = registered_servers[server.type](conf=conf, name=server.name)
-    #nagiosserver.name = server.name
     nagiosserver.type = server.type
     nagiosserver.nagios_url = server.nagios_url
     nagiosserver.nagios_cgi_url = server.nagios_cgi_url
@@ -619,10 +601,9 @@ def CreateServer(server=None, conf=None, debug_queue=None):
             nagiosserver.proxy_handler = urllib2.ProxyHandler({"http": nagiosserver.proxy_address, "https": nagiosserver.proxy_address})
             nagiosserver.proxy_auth_handler = urllib2.ProxyBasicAuthHandler(nagiosserver.passman)
             nagiosserver.urlopener = urllib2.build_opener(nagiosserver.proxy_handler, nagiosserver.proxy_auth_handler, nagiosserver.auth_handler, nagiosserver.digest_handler, urllib2.HTTPCookieProcessor(nagiosserver.Cookie), MultipartPostHandler)
-
+            
     # debug
     if str(conf.debug_mode) == "True":
-        #print "Created Server", server.name
         nagiosserver.Debug(server=server.name, debug="Created server.")
 
     return nagiosserver
@@ -644,9 +625,7 @@ def HostIsFilteredOutByRE(host, conf=None):
     """
     try:
         if str(conf.re_host_enabled) == "True":
-            pattern = re.compile(conf.re_host_pattern)
-            #result = pattern.findall(host)
-            
+            pattern = re.compile(conf.re_host_pattern)           
             if len(pattern.findall(host)) > 0:
                 if str(conf.re_host_reverse) == "True":
                     return False
@@ -670,9 +649,7 @@ def ServiceIsFilteredOutByRE(service, conf=None):
     """
     try:
         if str(conf.re_service_enabled) == "True":
-            pattern = re.compile(conf.re_service_pattern)
-            #result = pattern.findall(service)
-            
+            pattern = re.compile(conf.re_service_pattern)           
             if len(pattern.findall(service)) > 0:
                 if str(conf.re_service_reverse) == "True":
                     return False
@@ -742,10 +719,7 @@ def MD5ify(string):
 def ObjectifyXML(xmlraw):
     """
     replacement for lxml.objectify
-    """
-    
-    #return []
-    
+    """    
     try:
         nodes = []
         for l in xmlraw.getchildren():

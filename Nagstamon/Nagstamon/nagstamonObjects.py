@@ -6,24 +6,7 @@ import gc
 import copy
 import webbrowser
 import time
-
-#try:
-#    import lxml.etree, lxml.objectify
-#except Exception, err:
-#    print
-#    print err
-#    print
-#    print "Could not load lxml.etree, lxml.objectify and lxml.html.clean, maybe you need to install python lxml."
-#    print
-#    sys.exit()
-## fedora 8 and maybe others use lxml 2 which is more careful and offers more modules
-## but which also makes necessary to clean Nagios html output
-## if not available should be ok because not needed
-#try:
-#    import lxml.html.clean
-#except:
-#    pass
-    
+   
 import nagstamonActions
 
 
@@ -65,13 +48,6 @@ class CustomSortingColumn(Column):
         # this happens since liststore (aka tab_model) is an attribute of server and not created every time
         # new, so sometimes data2 is simply "None"
         if data2 == None: return cls.CHOICES.index(data1)
-        ###try:
-        ###    first = cls.CHOICES.index(data1) 
-        ###    second = cls.CHOICES.index(data2)
-        ###    print "CCCCCCCCOOOOOMMPPPAAARRRIISSSOOONNN", "data1:", data1, "data2:", data2, "Model", model
-        ###except ValueError, err: # value not in CHOICES
-        ###    return cmp(first, second)
-        ###return first - second
         try:
             return cls.CHOICES.index(data1) - cls.CHOICES.index(data2)
         except ValueError, err: # value not in CHOICES
@@ -223,8 +199,3 @@ class XMLNode(object):
     def add(self, element):
         return XMLNode(element)
         
-
-#### necessary for mechanize browser history, inspired by http://stackoverflow.com/questions/2393299/how-do-i-disable-history-in-python-mechanize-module
-###class NoHistory(object):
-###    def add(self, *a, **k): pass
-###    def clear(self): pass
