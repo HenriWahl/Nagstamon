@@ -1,6 +1,7 @@
 # encoding: utf-8
 
 from Generic import GenericServer
+import base64
 
 
 class NagiosServer(GenericServer):
@@ -11,3 +12,10 @@ class NagiosServer(GenericServer):
     """
     
     TYPE = 'Nagios'
+    
+    # used in Nagios + Icinga _get_status() method
+    HTML_BODY_TABLE_INDEX = 2
+        
+    
+    def _init_HTTPheaders(self):
+        self.HTTPheaders = {"Authorization": "Basic " + base64.b64encode(self.get_username() + ":" + self.get_password())}

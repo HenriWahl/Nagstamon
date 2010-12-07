@@ -6,6 +6,7 @@ import gc
 import copy
 import webbrowser
 import time
+import HTMLParser
    
 import nagstamonActions
 
@@ -188,14 +189,29 @@ class Result(object):
         for k in kwds: self.__dict__[k] = kwds[k]
         
         
-class XMLNode(object):
+class Node(object):
     """
-    used to reconstruct objectified XML structures
+    used to reconstruct objectified ML structures
     """
     def __init__(self, *args):
         pass
     
     
     def add(self, element):
-        return XMLNode(element)
+        return Node(element)
+
+    
+class ParseHTML(HTMLParser.HTMLParser):
+    """
+    test non-lxml-dependant HTML parsing
+    """
+    def __init__(self, htmlraw):
+        HTMLParser.HTMLParser.__init__(self)
+        self.feed(htmlraw)
+        
+    def handle_starttag(self, tag, attrs):
+        print "Encountered the beginning of a %s tag" % tag
+
+    def handle_endtag(self, tag):
+        print "Encountered the end of a %s tag" % tag
         

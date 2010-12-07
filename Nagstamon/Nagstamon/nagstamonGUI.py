@@ -413,7 +413,7 @@ class GUI(object):
                             worst_status = server.WorstStatus
                     # reset status of the server for only processing it once
                     server.WorstStatus = "UP"                    
-                if not worst_status == "UP" and str(self.conf.notification)== "True":
+                if not worst_status == "UP" and str(self.conf.notification) == "True":
                     self.NotificationOn(status=worst_status)
             
             # set self.showPopwin to True because there is something to show
@@ -427,7 +427,8 @@ class GUI(object):
             
         # try to fix Debian bug #591875: eventually ends up lower in the window stacking order, and can't be raised
         # raising statusbar window with every refresh should do the job
-        self.statusbar.StatusBar.window.raise_()
+        
+        if str(self.conf.statusbar_floating) == "True": self.statusbar.StatusBar.window.raise_()
         
         # return False to get removed as gobject idle source
         return False

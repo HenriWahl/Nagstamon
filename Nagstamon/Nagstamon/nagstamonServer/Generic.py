@@ -10,6 +10,7 @@ import webbrowser
 import datetime
 import time
 import traceback
+import base64
 
 try:
     import lxml.etree, lxml.objectify
@@ -30,6 +31,9 @@ except:
     
 import nagstamonActions                         
 from nagstamonObjects import *
+
+# new attempt to replace memory eating lxml
+from xml.etree import ElementTree
 
 
 class GenericServer(object):
@@ -57,10 +61,7 @@ class GenericServer(object):
     ]
     
     DISABLED_CONTROLS = []
-    
-    # used in Nagios _get_status() method
-    HTML_BODY_TABLE_INDEX = 2
-    
+
     # Nagios CGI flags translation dictionary for acknowledging hosts/services 
     HTML_ACKFLAGS = {True:"on", False:"off"}
 
@@ -110,13 +111,23 @@ class GenericServer(object):
         self.auth_handler = None
         self.digest_handler = None
         self.proxy_handler = None
+        self.proxy_auth_handler = None        
         self.urlopener = None
+        # headers for HTTP requests, might be needed for authorization on Nagios/Icinga Hosts
+        self.HTTPheaders = {}
         # attempt to use only one bound list of TreeViewColumns instead of ever increasing one
         self.TreeView = None
         self.TreeViewColumns = list()
         self.ListStore = None
         self.ListStoreColumns = list()
         
+    
+    def _init_HTTPheaders(self):
+        """ 
+        dummy, needed for server specifig HTTP headers initialization
+        """
+        pass
+    
 
     def get_name(self):
         """
@@ -355,8 +366,30 @@ class GenericServer(object):
         # unfortunately the hosts status page has a different structure so
         # hosts must be analyzed separately
         try:
+            """
+            result = self.FetchURL(nagcgiurl_hosts, giveback="raw")
+            
+            raw = result.result
+            
+            #print raw.split("\n")[0:10]
+            
+            # cut off <xml blabla>
+            #htmlraw = ElementTree.fromstring(raw.split("\n")[1])
+            #htmlraw = ElementTree.fromstring(raw)
+            
+            print raw
+            
+            #xmlobj = nagstamonActions.ObjectifyHTML(htmlraw)   
+            
+            parser = ParseHTML(raw)
+            """
             result = self.FetchURL(nagcgiurl_hosts)
             htobj, error = result.result, result.error
+            
+            
+            print "RESULT:", result.result, "\nERROR---->:", result.error
+            
+            
             if error != "": return Result(result=copy.deepcopy(htobj), error=error)            
             # workaround for Nagios < 2.7 which has an <EMBED> in its output
             # put a copy of a part of htobj into table to be able to delete htobj
@@ -416,6 +449,7 @@ class GenericServer(object):
 
         # services
         try:
+            #result = Result()
             result = self.FetchURL(nagcgiurl_services)
             htobj, error = result.result, result.error          
             if error != "": return Result(result=copy.deepcopy(htobj), error=error)
@@ -480,12 +514,13 @@ class GenericServer(object):
             # set checking flag back to False
             self.isChecking = False
             result, error = self.Error(sys.exc_info())
-            return Result(result=result, error=error)
-       
+            return Result(result=result, error=error) 
+                
          # hosts which are in scheduled downtime
         try:
-            result = self.FetchURL(nagcgiurl_hosts_in_maintenance)
-            htobj, error = result.result, result.error
+            #result = Result()
+            result = self.FetchURL(nagcgiurl_hosts_in_maintenance)           
+            htobj, error = result.result, result.error                
             if error != "": return Result(result=copy.deepcopy(htobj), error=error)
             # workaround for Nagios < 2.7 which has an <EMBED> in its output
             try:
@@ -507,9 +542,9 @@ class GenericServer(object):
                             if self.new_hosts.has_key(self.new_hosts_in_maintenance[-1]):
                                 self.new_hosts[self.new_hosts_in_maintenance[-1]].status = str(table.tr[i].td[1].text)
                         except:
-                            pass
+                            self.Error(sys.exc_info())
                 except:
-                    pass
+                    self.Error(sys.exc_info())
 
             # do some cleanup
             del table
@@ -519,10 +554,11 @@ class GenericServer(object):
             self.isChecking = False
             result, error = self.Error(sys.exc_info())
             return Result(result=result, error=error)
-        
+       
         # hosts which are acknowledged
         try:
-            result = self.FetchURL(nagcgiurl_hosts_acknowledged)
+            #result = Result()
+            result = self.FetchURL(nagcgiurl_hosts_acknowledged)                                              
             htobj, error = result.result, result.error
             if error != "": return Result(result=copy.deepcopy(htobj), error=error)
             # workaround for Nagios < 2.7 which has an <EMBED> in its output
@@ -545,9 +581,9 @@ class GenericServer(object):
                             if self.new_hosts.has_key(self.new_hosts_acknowledged[-1]):
                                 self.new_hosts[self.new_hosts_acknowledged[-1]].status = str(table.tr[i].td[1].text)
                         except:
-                            pass
+                            self.Error(sys.exc_info())
                 except:
-                    pass
+                    self.Error(sys.exc_info())
 
             # do some cleanup
             del table
@@ -557,13 +593,14 @@ class GenericServer(object):
             self.isChecking = False
             result, error = self.Error(sys.exc_info())
             return Result(result=result, error=error)
-            
+                
         # some cleanup
         del nagitems
         
         #dummy return in case all is OK
         return Result()
-        
+    
+
         
     def GetStatus(self):
         """
@@ -737,47 +774,52 @@ class GenericServer(object):
             # the following is necessary for Opsview servers
             # get cookie from login page via url retrieving as with other urls
             try:
-                # create url opener
-                urllib2.install_opener(self.urlopener)
                 # login and get cookie
-                urlcontent = urllib2.urlopen(self.nagios_url + "/login", logindata)
+                urlcontent = self.urlopener.open(self.nagios_url + "/login", logindata)
                 urlcontent.close()
             except:
                 self.Error(sys.exc_info())
 
         # if something goes wrong with accessing the URL it can be caught
         try:
-            # create url opener
-            urllib2.install_opener(self.urlopener)
             try:
                 # special Opsview treatment, transmit username and passwort for XML requests
                 # http://docs.opsview.org/doku.php?id=opsview3.4:api
                 # this is only necessary when accessing the API and expecting a XML answer
-                if self.type == "Opsview" and giveback == "opsxml":
+                if self.type == "Opsview" and giveback == "opxxxxxxxxxxxxxxsxml":
                     headers = {"Content-Type":"text/xml", "X-Username":self.get_username(), "X-Password":self.get_password()}
                     request = urllib2.Request(url, cgi_data, headers)
-                    urlcontent = urllib2.urlopen(request)
-                    del headers, request, url, cgi_data
+                    urlcontent = self.urlopener.open(request)
+                    del url, cgi_data, request
                 else:
+                    print self.HTTPheaders
+                    request = urllib2.Request(url, cgi_data, self.HTTPheaders)
+                    urlcontent = self.urlopener.open(request)
                     # use opener - if cgi_data is not empty urllib uses a POST request
-                    urlcontent = urllib2.urlopen(url, cgi_data)
-                    del url, cgi_data
+                    del url, cgi_data, request
             except:
                 result, error = self.Error(sys.exc_info())
                 return Result(result=result, error=error)
+            
+            print urlcontent.info()
+            print urlcontent.geturl()
+            
            
             # give back pure HTML or XML in case giveback is "raw"
             if giveback == "raw":                           
                 result = Result(result=urlcontent.read())
+                
+                print result.result
+                
                 urlcontent.close()
-                del urlcontent
+                #del urlcontent
                 return result
             
             # give back pure nothing if giveback is "nothing" - useful for POST requests
             if giveback == "nothing":
                 # do some cleanup
                 urlcontent.close()
-                del urlcontent
+                #del urlcontent
                 return Result() 
             
             # give back lxml-objectified data
@@ -785,8 +827,6 @@ class GenericServer(object):
                 # the heart of the whole Nagios-status-monitoring engine:
                 # first step: parse the read HTML
                 html = lxml.etree.HTML(urlcontent.read())
-                urlcontent.close()
-                del urlcontent
                     
                 # second step: make pretty HTML of it
                 #prettyhtml = lxml.etree.tostring(html, pretty_print=True)
@@ -823,22 +863,13 @@ class GenericServer(object):
                 xmlpretty = lxml.etree.tostring(xml, pretty_print=True)
                 xmlobj = lxml.objectify.fromstring(xmlpretty)
                 urlcontent.close()
-                del urlcontent, xml, xmlpretty
+                del urlcontent, xml, xmlpretty               
                 return Result(result=copy.deepcopy(xmlobj))
            
         except:
             # do some cleanup        
             result, error = self.Error(sys.exc_info())
             return Result(result=result, error=error)      
-            
-        
-        # in case the wrong giveback type has been specified return error
-        # do some cleanup
-        try:
-            urlcontent.close()
-            del urlcontent
-        except:
-            self.Error(sys.exc_info())
 
         result, error = self.Error(sys.exc_info())
         return Result(result=result, error=error)   
@@ -929,4 +960,5 @@ class GenericServer(object):
         # give debug info to debug loop for thread-save log-file writing
         self.debug_queue.put(debug_string)
 
+        
     

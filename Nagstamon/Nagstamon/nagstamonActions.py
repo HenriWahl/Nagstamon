@@ -25,7 +25,7 @@ import urllib2
 import mimetools, mimetypes
 import os, stat
 import nagstamonGUI
-from nagstamonObjects import XMLNode, Result
+from nagstamonObjects import Node, Result
 
 # import hashlib for centreon url autologin encoding
 import hashlib
@@ -93,7 +93,6 @@ class RefreshLoopOneServer(threading.Thread):
                     # debug
                     if str(self.conf.debug_mode) == "True":
                         self.server.Debug(server=self.server.get_name(), debug="server return values: " + server_status.result + " " + server_status.error)
-                        
                     if server_status.error != "":
                         # set server status for status field in popwin 
                         self.server.status = "ERROR"
@@ -134,10 +133,8 @@ class RefreshLoopOneServer(threading.Thread):
                             self.server.Hook()
             else:
                 # sleep and count
-###                time.sleep(3)
-                time.sleep(1)
-####                self.server.count += 3
-                self.server.count += 1
+                time.sleep(3)
+                self.server.count += 3
                 # call Hook() for extra action
                 self.server.Hook()
 
@@ -577,36 +574,69 @@ def CreateServer(server=None, conf=None, debug_queue=None):
     nagiosserver.proxy_password = server.proxy_password
     
     # access to thread-safe debug queue
-    nagiosserver.debug_queue = debug_queue
-
+    nagiosserver.debug_queue = debug_queue     
+    
     # use server-owned attributes instead of redefining them with every request
     nagiosserver.passman = urllib2.HTTPPasswordMgrWithDefaultRealm()
     nagiosserver.passman.add_password(None, server.nagios_url, server.username, server.password)
-    nagiosserver.passman.add_password(None, server.nagios_cgi_url, server.username, server.password)       
+    nagiosserver.passman.add_password(None, server.nagios_cgi_url, server.username, server.password)  
     nagiosserver.auth_handler = urllib2.HTTPBasicAuthHandler(nagiosserver.passman)
-    nagiosserver.digest_handler = urllib2.HTTPDigestAuthHandler(nagiosserver.passman)
-    # if there should be no proxy used use an empty proxy_handler - only necessary in Windows,
-    # where IE proxy settings are used automatically if available
-    # In UNIX $HTTP_PROXY will be used
-    # The MultipartPostHandler is needed for submitting multipart forms from Opsview
-    if str(server.use_proxy) == "False":
+    nagiosserver.digest_handler = urllib2.HTTPDigestAuthHandler(nagiosserver.passman)  
+    nagiosserver.proxy_auth_handler = urllib2.ProxyBasicAuthHandler(nagiosserver.passman)    
+    
+    if str(nagiosserver.use_proxy) == "False":
+        # use empty proxyhandler
         nagiosserver.proxy_handler = urllib2.ProxyHandler({})
-        nagiosserver.urlopener = urllib2.build_opener(nagiosserver.auth_handler, nagiosserver.digest_handler, nagiosserver.proxy_handler, urllib2.HTTPCookieProcessor(nagiosserver.Cookie), MultipartPostHandler)
-    elif str(server.use_proxy) == "True":
-        if str(server.use_proxy_from_os) == "True":
-            urlopener = urllib2.build_opener(nagiosserver.auth_handler, nagiosserver.digest_handler, urllib2.HTTPCookieProcessor(nagiosserver.Cookie), MultipartPostHandler)
-        else:
-            # if proxy from OS is not used there is to add a authenticated proxy handler
-            nagiosserver.passman.add_password(None, nagiosserver.proxy_address, nagiosserver.proxy_username, nagiosserver.proxy_password)
-            nagiosserver.proxy_handler = urllib2.ProxyHandler({"http": nagiosserver.proxy_address, "https": nagiosserver.proxy_address})
-            nagiosserver.proxy_auth_handler = urllib2.ProxyBasicAuthHandler(nagiosserver.passman)
-            nagiosserver.urlopener = urllib2.build_opener(nagiosserver.proxy_handler, nagiosserver.proxy_auth_handler, nagiosserver.auth_handler, nagiosserver.digest_handler, urllib2.HTTPCookieProcessor(nagiosserver.Cookie), MultipartPostHandler)
-            
+    elif str(server.use_proxy_from_os) == "False":
+        # if proxy from OS is not used there is to add a authenticated proxy handler
+        nagiosserver.passman.add_password(None, nagiosserver.proxy_address, nagiosserver.proxy_username, nagiosserver.proxy_password)
+        nagiosserver.proxy_handler = urllib2.ProxyHandler({"http": nagiosserver.proxy_address, "https": nagiosserver.proxy_address})
+        nagiosserver.proxy_auth_handler = urllib2.ProxyBasicAuthHandler(nagiosserver.passman)
+    
+        
+    nagiosserver._init_HTTPheaders()    
+    nagiosserver.urlopener = BuildURLOpener(nagiosserver)
+
     # debug
     if str(conf.debug_mode) == "True":
         nagiosserver.Debug(server=server.name, debug="Created server.")
 
     return nagiosserver
+
+
+def BuildURLOpener(server):
+    # if there should be no proxy used use an empty proxy_handler - only necessary in Windows,
+    # where IE proxy settings are used automatically if available
+    # In UNIX $HTTP_PROXY will be used
+    # The MultipartPostHandler is needed for submitting multipart forms from Opsview
+    
+    print "BuildURLOPener"    
+    
+    if str(server.use_proxy) == "False":
+        ###server.proxy_handler = urllib2.ProxyHandler({})
+        urlopener = urllib2.build_opener(server.auth_handler,\
+                                        server.digest_handler,\
+                                        server.proxy_handler,\
+                                        urllib2.HTTPCookieProcessor(server.Cookie),\
+                                        MultipartPostHandler)
+    elif str(server.use_proxy) == "True":
+        if str(server.use_proxy_from_os) == "True":
+            urlopener = urllib2.build_opener(server.auth_handler,\
+                                            server.digest_handler,\
+                                            urllib2.HTTPCookieProcessor(server.Cookie),\
+                                            MultipartPostHandler)
+        else:
+            # if proxy from OS is not used there is to add a authenticated proxy handler
+            ###server.passman.add_password(None, server.proxy_address, server.proxy_username, server.proxy_password)
+            ###server.proxy_handler = urllib2.ProxyHandler({"http": server.proxy_address, "https": server.proxy_address})
+            ###server.proxy_auth_handler = urllib2.ProxyBasicAuthHandler(server.passman)
+            urlopener = urllib2.build_opener(server.proxy_handler,\
+                                            server.proxy_auth_handler,\
+                                            server.auth_handler,\
+                                            server.digest_handler,\
+                                            urllib2.HTTPCookieProcessor(server.Cookie),\
+                                            MultipartPostHandler)
+    return urlopener
 
 
 def OpenNagstamonDownload(output=None):
@@ -724,8 +754,9 @@ def ObjectifyXML(xmlraw):
         nodes = []
         for l in xmlraw.getchildren():
             # only take l-nodes because they contain valuable information
+            # this is only valid for Centreon 
             if l.tag == "l":
-                node = XMLNode()
+                node = Node()
                 for e in l.getchildren():
                     node.__dict__[e.tag] = node.add("text")
                     node.__dict__[e.tag].text = e.text
@@ -735,6 +766,32 @@ def ObjectifyXML(xmlraw):
     except:
         del xmlraw
         traceback.print_exc(sys.exc_info)
+        
+
+def ObjectifyHTML(htmlraw):
+    """
+    replacement for lxml.objectify
+    """    
+    try:
+        nodes = []
+        for l in htmlraw.getchildren():
+
+            print l
+            
+            # only take l-nodes because they contain valuable information
+            # this is only valid for Centreon 
+            if l.tag == "l":
+                node = Node()
+                for e in l.getchildren():
+                    node.__dict__[e.tag] = node.add("text")
+                    node.__dict__[e.tag].text = e.text
+                nodes.append(node)
+        del htmlraw
+        return nodes
+    except:
+        del htmlraw
+        traceback.print_exc(sys.exc_info)
+        
         
 
 # <IMPORT>

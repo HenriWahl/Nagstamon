@@ -16,6 +16,10 @@ class OpsviewServer(GenericServer):
     """   
     TYPE = 'Opsview'
     
+    def __init_HTTPheaders(self):       
+        self.HTTPheaders = {"Content-Type":"text/xml", "X-Username":self.get_username(), "X-Password":self.get_password()}
+        
+    
     def _set_downtime(self, host, service, author, comment, fixed, start_time, end_time, hours, minutes):
         # get action url for opsview downtime form
         if service == "":
@@ -100,7 +104,6 @@ class OpsviewServer(GenericServer):
         except:
             # set checking flag back to False
             self.isChecking = False
-            #return self.Error(sys.exc_info())
             result, error = self.Error(sys.exc_info())
             return Result(result=result, error=error)
         
