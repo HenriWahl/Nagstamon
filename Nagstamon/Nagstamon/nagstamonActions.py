@@ -591,10 +591,9 @@ def CreateServer(server=None, conf=None, debug_queue=None):
         # if proxy from OS is not used there is to add a authenticated proxy handler
         nagiosserver.passman.add_password(None, nagiosserver.proxy_address, nagiosserver.proxy_username, nagiosserver.proxy_password)
         nagiosserver.proxy_handler = urllib2.ProxyHandler({"http": nagiosserver.proxy_address, "https": nagiosserver.proxy_address})
-        nagiosserver.proxy_auth_handler = urllib2.ProxyBasicAuthHandler(nagiosserver.passman)
-    
+        nagiosserver.proxy_auth_handler = urllib2.ProxyBasicAuthHandler(nagiosserver.passman)   
         
-    nagiosserver._init_HTTPheaders()    
+    nagiosserver._init_HTTP()    
     nagiosserver.urlopener = BuildURLOpener(nagiosserver)
 
     # debug

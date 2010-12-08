@@ -13,11 +13,6 @@ class IcingaServer(GenericServer):
     # needed for parsing Icinga CGI HTML
     HTML_BODY_TABLE_INDEX = 3
     
-    
-    def _init_HTTPheaders(self):
-        self.HTTPheaders = {"Authorization": "Basic " + base64.b64encode(self.get_username() + ":" + self.get_password())}    
-    
-    
     def get_start_end(self, host):
         """
         something changed in html layout so we need to get time somehow differently than in Nagios

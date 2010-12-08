@@ -4,6 +4,7 @@ import sys
 import urllib
 import webbrowser
 import traceback
+import base64
 
 import nagstamonActions
 from nagstamonObjects import *
@@ -16,10 +17,34 @@ class OpsviewServer(GenericServer):
     """   
     TYPE = 'Opsview'
     
-    def __init_HTTPheaders(self):       
-        self.HTTPheaders = {"Content-Type":"text/xml", "X-Username":self.get_username(), "X-Password":self.get_password()}
-        
-    
+    def _init_HTTP(self):      
+        if self.HTTPheaders == {}:
+            for giveback in ["raw", "obj"]:
+                self.HTTPheaders[giveback] = {"Authorization": "Basic " + base64.b64encode(self.get_username() + ":" + self.get_password())}        
+            # special Opsview treatment, transmit username and passwort for XML requests
+            # http://docs.opsview.org/doku.php?id=opsview3.4:api
+            # this is only necessary when accessing the API and expecting a XML answer
+            self.HTTPheaders["opsxml"] = {"Content-Type":"text/xml", "X-Username":self.get_username(), "X-Password":self.get_password()}
+
+        # get my cookie to access Opsview web interface to access Opsviews Nagios part       
+        if len(self.Cookie) == 0:         
+            # put all necessary data into url string
+            logindata = urllib.urlencode({"login_username":self.get_username(),\
+                             "login_password":self.get_password(),\
+                             "back":"",\
+                             "app": "",\
+                             "login":"Log In"})
+
+            # the following is necessary for Opsview servers
+            # get cookie from login page via url retrieving as with other urls
+            try:
+                # login and get cookie
+                urlcontent = self.urlopener.open(self.nagios_url + "/login", logindata)
+                urlcontent.close()
+            except:
+                self.Error(sys.exc_info())
+            
+            
     def _set_downtime(self, host, service, author, comment, fixed, start_time, end_time, hours, minutes):
         # get action url for opsview downtime form
         if service == "":

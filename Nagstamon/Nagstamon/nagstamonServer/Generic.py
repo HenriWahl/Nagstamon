@@ -122,12 +122,15 @@ class GenericServer(object):
         self.ListStoreColumns = list()
         
     
-    def _init_HTTPheaders(self):
-        """ 
-        dummy, needed for server specifig HTTP headers initialization
+    def _init_HTTP(self):
         """
-        pass
-    
+        partly not constantly working Basic Authorization requires extra Autorization headers,
+        different between various server types
+        """
+        if self.HTTPheaders == {}:
+            for giveback in ["raw", "obj"]:
+                self.HTTPheaders[giveback] = {"Authorization": "Basic " + base64.b64encode(self.get_username() + ":" + self.get_password())}
+        
 
     def get_name(self):
         """
@@ -753,17 +756,18 @@ class GenericServer(object):
     def FetchURL(self, url, giveback="obj", cgi_data=None, remove_tags=["link", "br", "img", "hr", "script", "th", "form", "div", "p"]):
         """
         get content of given url, cgi_data only used if present
-        giveback may be "dict", "raw" or "none" 
-        "dict" FetchURL gives back a dict full of miserable hosts/services,
-        "html" it gives back pure HTML - useful for finding out IP or new version
-        "none" it gives back pure nothing - useful if for example acknowledging a service
+        "obj" FetchURL gives back a dict full of miserable hosts/services,
+        "raw" it gives back pure HTML - useful for finding out IP or new version
         existence of cgi_data forces urllib to use POST instead of GET requests
         remove_tags became necessary for different expectations of GetStatus() and
         GetHost() - one wants div elements, the other don't 
         NEW: gives back a list containing result and, if necessary, a more clear error description
         """        
         # get my cookie to access Opsview web interface to access Opsviews Nagios part       
-        if len(self.Cookie) == 0 and self.type == "Opsview":         
+        ###if len(self.Cookie) == 0 and self.type == "Opsview":    
+        ###self._init_HTTP()
+        self._init_HTTP()
+        """
             # put all necessary data into url string
             logindata = urllib.urlencode({"login_username":self.get_username(),\
                              "login_password":self.get_password(),\
@@ -779,13 +783,14 @@ class GenericServer(object):
                 urlcontent.close()
             except:
                 self.Error(sys.exc_info())
-
+        """    
         # if something goes wrong with accessing the URL it can be caught
         try:
             try:
                 # special Opsview treatment, transmit username and passwort for XML requests
                 # http://docs.opsview.org/doku.php?id=opsview3.4:api
                 # this is only necessary when accessing the API and expecting a XML answer
+                """
                 if self.type == "Opsview" and giveback == "opxxxxxxxxxxxxxxsxml":
                     headers = {"Content-Type":"text/xml", "X-Username":self.get_username(), "X-Password":self.get_password()}
                     request = urllib2.Request(url, cgi_data, headers)
@@ -793,10 +798,21 @@ class GenericServer(object):
                     del url, cgi_data, request
                 else:
                     print self.HTTPheaders
-                    request = urllib2.Request(url, cgi_data, self.HTTPheaders)
+                    request = urllib2.Request(url, cgi_data, self.HTTPheaders[giveback])
                     urlcontent = self.urlopener.open(request)
                     # use opener - if cgi_data is not empty urllib uses a POST request
                     del url, cgi_data, request
+               """
+                print self.HTTPheaders
+
+                request = urllib2.Request(url, cgi_data, self.HTTPheaders[giveback])
+                print request.get_full_url()
+                
+                urlcontent = self.urlopener.open(request)
+                # use opener - if cgi_data is not empty urllib uses a POST request
+                del url, cgi_data, request                
+                
+                
             except:
                 result, error = self.Error(sys.exc_info())
                 return Result(result=result, error=error)
@@ -809,18 +825,11 @@ class GenericServer(object):
             if giveback == "raw":                           
                 result = Result(result=urlcontent.read())
                 
-                print result.result
+               # print result.result
                 
                 urlcontent.close()
                 #del urlcontent
                 return result
-            
-            # give back pure nothing if giveback is "nothing" - useful for POST requests
-            if giveback == "nothing":
-                # do some cleanup
-                urlcontent.close()
-                #del urlcontent
-                return Result() 
             
             # give back lxml-objectified data
             if giveback == "obj":
@@ -859,7 +868,13 @@ class GenericServer(object):
                 
             elif self.type == "Opsview" and giveback == "opsxml":
                 # objectify the xml and give it back after some cleanup
-                xml = lxml.etree.XML(urlcontent.read())
+                #xml = lxml.etree.XML(urlcontent.read())
+                
+                content = urlcontent.read()
+                ###print content
+                
+                xml = lxml.etree.XML(content)
+                
                 xmlpretty = lxml.etree.tostring(xml, pretty_print=True)
                 xmlobj = lxml.objectify.fromstring(xmlpretty)
                 urlcontent.close()

@@ -36,6 +36,15 @@ class CentreonServer(GenericServer):
         self.MD5_password = nagstamonActions.MD5ify(self.conf.servers[self.get_name()].password)
         
     
+    def _init_HTTP(self):
+        """
+        Centreon does not need Basic authorization
+        """
+        if self.HTTPheaders == {}:
+            self.HTTPheaders["raw"] = self.HTTPheaders["obj"] = {}
+                
+        
+    
     def open_tree_view(self, host, service=""):
         # must be a host if service is empty...
         if service == "":
