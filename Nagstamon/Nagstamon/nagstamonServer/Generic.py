@@ -122,7 +122,7 @@ class GenericServer(object):
         self.ListStoreColumns = list()
         
     
-    def _init_HTTP(self):
+    def init_HTTP(self):
         """
         partly not constantly working Basic Authorization requires extra Autorization headers,
         different between various server types
@@ -763,72 +763,25 @@ class GenericServer(object):
         GetHost() - one wants div elements, the other don't 
         NEW: gives back a list containing result and, if necessary, a more clear error description
         """        
-        # get my cookie to access Opsview web interface to access Opsviews Nagios part       
-        ###if len(self.Cookie) == 0 and self.type == "Opsview":    
-        ###self._init_HTTP()
-        self._init_HTTP()
-        """
-            # put all necessary data into url string
-            logindata = urllib.urlencode({"login_username":self.get_username(),\
-                             "login_password":self.get_password(),\
-                             "back":"",\
-                             "app": "",\
-                             "login":"Log In"})
+        
+        # run this method which checks itself if there is some action to take for initializing connection
+        self.init_HTTP()
 
-            # the following is necessary for Opsview servers
-            # get cookie from login page via url retrieving as with other urls
-            try:
-                # login and get cookie
-                urlcontent = self.urlopener.open(self.nagios_url + "/login", logindata)
-                urlcontent.close()
-            except:
-                self.Error(sys.exc_info())
-        """    
-        # if something goes wrong with accessing the URL it can be caught
         try:
             try:
-                # special Opsview treatment, transmit username and passwort for XML requests
-                # http://docs.opsview.org/doku.php?id=opsview3.4:api
-                # this is only necessary when accessing the API and expecting a XML answer
-                """
-                if self.type == "Opsview" and giveback == "opxxxxxxxxxxxxxxsxml":
-                    headers = {"Content-Type":"text/xml", "X-Username":self.get_username(), "X-Password":self.get_password()}
-                    request = urllib2.Request(url, cgi_data, headers)
-                    urlcontent = self.urlopener.open(request)
-                    del url, cgi_data, request
-                else:
-                    print self.HTTPheaders
-                    request = urllib2.Request(url, cgi_data, self.HTTPheaders[giveback])
-                    urlcontent = self.urlopener.open(request)
-                    # use opener - if cgi_data is not empty urllib uses a POST request
-                    del url, cgi_data, request
-               """
-                print self.HTTPheaders
-
                 request = urllib2.Request(url, cgi_data, self.HTTPheaders[giveback])
-                print request.get_full_url()
-                
                 urlcontent = self.urlopener.open(request)
                 # use opener - if cgi_data is not empty urllib uses a POST request
-                del url, cgi_data, request                
-                
-                
+                del url, cgi_data, request                               
             except:
                 result, error = self.Error(sys.exc_info())
                 return Result(result=result, error=error)
-            
-            print urlcontent.info()
-            print urlcontent.geturl()
-            
            
             # give back pure HTML or XML in case giveback is "raw"
             if giveback == "raw":                           
                 result = Result(result=urlcontent.read())
-                
-               # print result.result
-                
                 urlcontent.close()
-                #del urlcontent
+                del urlcontent
                 return result
             
             # give back lxml-objectified data
@@ -861,20 +814,16 @@ class GenericServer(object):
                 htobj = lxml.objectify.fromstring(prettyhtml)
                 
                 #do some cleanup
-                del prettyhtml
+                urlcontent.close()
+                del urlcontent, prettyhtml
         
                 # give back HTML object from Nagios webseite
                 return Result(result=htobj)            
                 
-            elif self.type == "Opsview" and giveback == "opsxml":
+            # special Opsview XML
+            elif giveback == "opsxml":
                 # objectify the xml and give it back after some cleanup
-                #xml = lxml.etree.XML(urlcontent.read())
-                
-                content = urlcontent.read()
-                ###print content
-                
-                xml = lxml.etree.XML(content)
-                
+                xml = lxml.etree.XML(urlcontent.read())
                 xmlpretty = lxml.etree.tostring(xml, pretty_print=True)
                 xmlobj = lxml.objectify.fromstring(xmlpretty)
                 urlcontent.close()

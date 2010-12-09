@@ -128,7 +128,6 @@ class RefreshLoopOneServer(threading.Thread):
                                 self.server.Debug(server=self.server.get_name(), debug="Refreshing output - server is already checking: " + str(self.server.isChecking))
                             # reset refresh flag
                             self.doRefresh = False
-
                             # call Hook() for extra action
                             self.server.Hook()
             else:
@@ -211,7 +210,6 @@ class DebugLoop(threading.Thread):
     def Stop(self):
         # simply sets the stopped flag to True to let the above while stop this thread when checking next
         self.stopped = True
-        s
 
             
 class Recheck(threading.Thread):
@@ -446,16 +444,12 @@ class PlaySound(threading.Thread):
         """
         # debug
         if str(self.conf.debug_mode) == "True":
-            #print "Playing sound:", file
             # once again taking .Debug() from first server
             self.servers.values()[0].Debug(debug="Playing sound: " + file)
-        try:
-            if not platform.system() == "Windows":
-                commands.getoutput("play -q %s" % file)
-            else:
-                winsound.PlaySound(file, winsound.SND_FILENAME)
-        except:
-            pass
+        if not platform.system() == "Windows":
+            commands.getoutput("play -q %s" % file)
+        else:
+            winsound.PlaySound(file, winsound.SND_FILENAME)
             
                     
 class FlashStatusbar(threading.Thread):
@@ -471,18 +465,15 @@ class FlashStatusbar(threading.Thread):
 
     def run(self):
         # in case of notifying in statusbar do some flashing
-        try:
-            if self.output.Notifying == True:
-                # as long as flashing flag is set statusbar flashes until someone takes care
-                while self.output.statusbar.Flashing == True:
-                    if self.output.statusbar.isShowingError == False:
-                        # check again because in the mean time this flag could have been changed by NotificationOff()
-                        gobject.idle_add(self.output.statusbar.Flash)
-                        time.sleep(0.5)
-            # reset statusbar
-            self.output.statusbar.Label.set_markup(self.output.statusbar.statusbar_labeltext)
-        except:
-            pass
+        if self.output.Notifying == True:
+            # as long as flashing flag is set statusbar flashes until someone takes care
+            while self.output.statusbar.Flashing == True:
+                if self.output.statusbar.isShowingError == False:
+                    # check again because in the mean time this flag could have been changed by NotificationOff()
+                    gobject.idle_add(self.output.statusbar.Flash)
+                    time.sleep(0.5)
+        # reset statusbar
+        self.output.statusbar.Label.set_markup(self.output.statusbar.statusbar_labeltext)
 
 
 def OpenNagios(widget, server, output):   
@@ -593,7 +584,7 @@ def CreateServer(server=None, conf=None, debug_queue=None):
         nagiosserver.proxy_handler = urllib2.ProxyHandler({"http": nagiosserver.proxy_address, "https": nagiosserver.proxy_address})
         nagiosserver.proxy_auth_handler = urllib2.ProxyBasicAuthHandler(nagiosserver.passman)   
         
-    nagiosserver._init_HTTP()    
+    nagiosserver.init_HTTP()    
     nagiosserver.urlopener = BuildURLOpener(nagiosserver)
 
     # debug
@@ -604,15 +595,15 @@ def CreateServer(server=None, conf=None, debug_queue=None):
 
 
 def BuildURLOpener(server):
-    # if there should be no proxy used use an empty proxy_handler - only necessary in Windows,
-    # where IE proxy settings are used automatically if available
-    # In UNIX $HTTP_PROXY will be used
-    # The MultipartPostHandler is needed for submitting multipart forms from Opsview
-    
-    print "BuildURLOPener"    
-    
+    """
+    if there should be no proxy used use an empty proxy_handler - only necessary in Windows,
+    where IE proxy settings are used automatically if available
+    In UNIX $HTTP_PROXY will be used
+    The MultipartPostHandler is needed for submitting multipart forms from Opsview
+    """
+
     if str(server.use_proxy) == "False":
-        ###server.proxy_handler = urllib2.ProxyHandler({})
+        server.proxy_handler = urllib2.ProxyHandler({})
         urlopener = urllib2.build_opener(server.auth_handler,\
                                         server.digest_handler,\
                                         server.proxy_handler,\
@@ -626,9 +617,9 @@ def BuildURLOpener(server):
                                             MultipartPostHandler)
         else:
             # if proxy from OS is not used there is to add a authenticated proxy handler
-            ###server.passman.add_password(None, server.proxy_address, server.proxy_username, server.proxy_password)
-            ###server.proxy_handler = urllib2.ProxyHandler({"http": server.proxy_address, "https": server.proxy_address})
-            ###server.proxy_auth_handler = urllib2.ProxyBasicAuthHandler(server.passman)
+            server.passman.add_password(None, server.proxy_address, server.proxy_username, server.proxy_password)
+            server.proxy_handler = urllib2.ProxyHandler({"http": server.proxy_address, "https": server.proxy_address})
+            server.proxy_auth_handler = urllib2.ProxyBasicAuthHandler(server.passman)
             urlopener = urllib2.build_opener(server.proxy_handler,\
                                             server.proxy_auth_handler,\
                                             server.auth_handler,\
@@ -729,6 +720,9 @@ def MachineSortableDuration(raw):
     # dictionary for duration date string components
     d = {"M":0, "w":0, "d":0, "h":0, "m":0, "s":0}
     
+    # if for some reason the value is empty/none make it compatible: 0s
+    if raw == None: raw = "0s"
+
     # strip and replace necessary for Nagios duration values,
     # split components of duration into dictionary
     for c in raw.strip().replace("  ", " ").split(" "):
@@ -747,7 +741,7 @@ def MD5ify(string):
 
 def ObjectifyXML(xmlraw):
     """
-    replacement for lxml.objectify
+    replacement for lxml.objectify, until now only used for Centreon
     """    
     try:
         nodes = []
@@ -769,7 +763,7 @@ def ObjectifyXML(xmlraw):
 
 def ObjectifyHTML(htmlraw):
     """
-    replacement for lxml.objectify
+    replacement for lxml.objectify, not really used yet
     """    
     try:
         nodes = []

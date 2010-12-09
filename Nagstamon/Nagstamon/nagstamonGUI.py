@@ -298,35 +298,33 @@ class GUI(object):
                         self.popwin.ServerVBoxes[server.get_name()].set_no_show_all(False)      
                         self.status_ok = False                       
                         
-                    # fill treeview for popwin only if necessary
-                    if server.count == 0:
-                        # use a liststore for treeview where the table headers all are strings - first empty it
-                        server.ListStore.clear()
+                    # use a liststore for treeview where the table headers all are strings - first empty it
+                    server.ListStore.clear()
 
-                        # apart from status informations there we need two columns which
-                        # hold the color information, which is derived from status which
-                        # is used as key at the above color dictionaries                      
-                        number_of_columns = len(server.COLUMNS)
+                    # apart from status informations there we need two columns which
+                    # hold the color information, which is derived from status which
+                    # is used as key at the above color dictionaries    
+                    number_of_columns = len(server.COLUMNS)
 
-                        for item_type, status_dict in server.nagitems_filtered.iteritems():
-                            for status, item_list in status_dict.iteritems():
-                                for item in list(item_list):
-                                    iter = server.ListStore.insert_before(None, None)
-                                    server.ListStoreColumns = list(server.get_columns(item))                                    
-                                    for i, column in enumerate(server.ListStoreColumns):
-                                        server.ListStore.set_value(iter, i, str(column))
-                                        del i, column
-                                    server.ListStore.set_value(iter, number_of_columns, self.tab_bg_colors[str(server.ListStoreColumns[server.COLOR_COLUMN_ID])])
-                                    server.ListStore.set_value(iter, number_of_columns + 1, self.tab_fg_colors[str(server.ListStoreColumns[server.COLOR_COLUMN_ID])])
-                        
-                        # give new ListStore to the view, overwrites the old one automatically - theoretically
-                        server.TreeView.set_model(server.ListStore)
+                    for item_type, status_dict in server.nagitems_filtered.iteritems():
+                        for status, item_list in status_dict.iteritems():
+                            for item in list(item_list):
+                                iter = server.ListStore.insert_before(None, None)
+                                server.ListStoreColumns = list(server.get_columns(item))                                    
+                                for i, column in enumerate(server.ListStoreColumns):
+                                    server.ListStore.set_value(iter, i, str(column))
+                                    del i, column
+                                server.ListStore.set_value(iter, number_of_columns, self.tab_bg_colors[str(server.ListStoreColumns[server.COLOR_COLUMN_ID])])
+                                server.ListStore.set_value(iter, number_of_columns + 1, self.tab_fg_colors[str(server.ListStoreColumns[server.COLOR_COLUMN_ID])])
+                    
+                    # give new ListStore to the view, overwrites the old one automatically - theoretically
+                    server.TreeView.set_model(server.ListStore)
 
-                        # restore sorting order from previous refresh
-                        self.set_sorting(server.ListStore, server)
-                        
-                        # status field in server vbox in popwin    
-                        self.popwin.UpdateStatus(server)
+                    # restore sorting order from previous refresh
+                    self.set_sorting(server.ListStore, server)
+                    
+                    # status field in server vbox in popwin    
+                    self.popwin.UpdateStatus(server)
     
                 except:
                     server.Error(sys.exc_info())
@@ -393,7 +391,7 @@ class GUI(object):
             if unreachables > 0: color = "darkred"
             if downs > 0: color = "black"
 
-            # should be solved somehow different
+            # should be solved somehow differently
             self.statusbar.SysTray.set_from_file(self.Resources + "/nagstamon_" + color + self.BitmapSuffix)
             
             # if there has been any status change notify user
@@ -426,8 +424,7 @@ class GUI(object):
                 self.popwin.showPopwin = True
             
         # try to fix Debian bug #591875: eventually ends up lower in the window stacking order, and can't be raised
-        # raising statusbar window with every refresh should do the job
-        
+        # raising statusbar window with every refresh should do the job        
         if str(self.conf.statusbar_floating) == "True": self.statusbar.StatusBar.window.raise_()
         
         # return False to get removed as gobject idle source
@@ -678,6 +675,8 @@ class GUI(object):
                         if str(self.conf.notification_flashing) == "True":
                             self.statusbar.SysTray.set_blinking(True)
                             self.statusbar.Flashing = True
+                            flash = nagstamonActions.FlashStatusbar(output=self)
+                            flash.start()   
                         # if wanted play notification sound
                         if str(self.conf.notification_sound) == "True":
                             sound = nagstamonActions.PlaySound(sound=status, Resources=self.Resources, conf=self.conf, servers=self.servers)
@@ -1517,7 +1516,7 @@ class Popwin(gtk.Window):
         try:
             nagstamonActions.OpenNagios(widget=None, server=self.output.servers[widget.get_active_text()], output=self.output)
         except:
-            self.output.servers[widget.get_active_text()].Error(sys.exc_info())
+            self.output.servers.values[0].Error(sys.exc_info())
             
     
     def UpdateStatus(self, server):
@@ -1619,7 +1618,11 @@ class ServerVBox(gtk.VBox):
             # the color information from the last two colums of the liststore
             tab_column = gtk.TreeViewColumn(column.get_label(), tab_renderer, text=s,
                                             background=len(self.server.COLUMNS), foreground=len(self.server.COLUMNS) + 1)               
-            self.server.TreeView.append_column(tab_column)    
+            self.server.TreeView.append_column(tab_column)  
+            
+            # set customized sorting
+            if column.has_customized_sorting():
+                self.server.ListStore.set_sort_func(s, column.sort_function, s)           
             
             # make table sortable by clicking on column headers
             tab_column.set_clickable(True)

@@ -36,14 +36,13 @@ class CentreonServer(GenericServer):
         self.MD5_password = nagstamonActions.MD5ify(self.conf.servers[self.get_name()].password)
         
     
-    def _init_HTTP(self):
+    def init_HTTP(self):
         """
         Centreon does not need Basic authorization
         """
         if self.HTTPheaders == {}:
             self.HTTPheaders["raw"] = self.HTTPheaders["obj"] = {}
-                
-        
+
     
     def open_tree_view(self, host, service=""):
         # must be a host if service is empty...
@@ -602,7 +601,7 @@ class CentreonServer(GenericServer):
                                              "o":"as"})
                 # debug
                 if str(self.conf.debug_mode) == "True": 
-                    self.Debug(server=self.get_name(), host=host, service=s, debug=self.nagios_cgi_url + "/main.php?" + cgi_data)                
+                    self.Debug(server=self.get_name(), host=host, service=service, debug=self.nagios_cgi_url + "/main.php?" + cgi_data)                
 
             # running remote cgi command
             raw = self.FetchURL(self.nagios_cgi_url + "/main.php", giveback="raw", cgi_data=cgi_data)   

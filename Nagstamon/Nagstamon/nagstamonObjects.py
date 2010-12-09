@@ -59,7 +59,7 @@ class CustomSortingColumn(Column):
                     return cls.CHOICES.index(data1)
                 except:
                     return cls.CHOICES.index(data2)
-                
+                    
     
 class StatusColumn(CustomSortingColumn):
     ATTR_NAME = 'status'
@@ -203,7 +203,7 @@ class Node(object):
     
 class ParseHTML(HTMLParser.HTMLParser):
     """
-    test non-lxml-dependant HTML parsing
+    test non-lxml-dependent HTML parsing
     """
     def __init__(self, htmlraw):
         HTMLParser.HTMLParser.__init__(self)

@@ -17,15 +17,15 @@ class OpsviewServer(GenericServer):
     """   
     TYPE = 'Opsview'
     
-    def _init_HTTP(self):      
+    def init_HTTP(self):      
         if self.HTTPheaders == {}:
             for giveback in ["raw", "obj"]:
                 self.HTTPheaders[giveback] = {"Authorization": "Basic " + base64.b64encode(self.get_username() + ":" + self.get_password())}        
             # special Opsview treatment, transmit username and passwort for XML requests
             # http://docs.opsview.org/doku.php?id=opsview3.4:api
             # this is only necessary when accessing the API and expecting a XML answer
-            self.HTTPheaders["opsxml"] = {"Content-Type":"text/xml", "X-Username":self.get_username(), "X-Password":self.get_password()}
-
+            self.HTTPheaders["opsxml"] = {"Content-Type":"text/xml", "X-Username":self.get_username(), "X-Password":self.get_password()}          
+            
         # get my cookie to access Opsview web interface to access Opsviews Nagios part       
         if len(self.Cookie) == 0:         
             # put all necessary data into url string
