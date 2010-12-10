@@ -58,7 +58,6 @@ try:
     from Nagstamon import nagstamonActions
 except:
     import nagstamonActions
-
     
 ###### MAIN ##############
 

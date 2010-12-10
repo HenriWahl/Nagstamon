@@ -13,9 +13,20 @@ import Queue
 # new attempt to replace memory eating lxml
 from xml.etree import ElementTree
 
-import nagstamonActions
-from nagstamonObjects import *
-from Generic import GenericServer
+try:
+    from Nagstamon import nagstamonActions
+except:
+    import nagstamonActions
+
+try:
+    from Nagstamon.nagstamonObjects import *
+except:
+    from nagstamonObjects import *
+
+try:
+    from Nagstamon.nagstamonServer.Generic import GenericServer
+except:
+    from nagstamonServer.Generic import GenericServer
 
 
 class CentreonServer(GenericServer): 

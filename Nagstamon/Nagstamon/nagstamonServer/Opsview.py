@@ -6,11 +6,22 @@ import webbrowser
 import traceback
 import base64
 
-import nagstamonActions
-from nagstamonObjects import *
-from Generic import GenericServer
+try:
+    from Nagstamon import nagstamonActions
+except:
+    import nagstamonActions
 
+try:
+    from Nagstamon.nagstamonObjects import *
+except:
+    from nagstamonObjects import *
 
+try:
+    from Nagstamon.nagstamonServer.Generic import GenericServer
+except:
+    from nagstamonServer.Generic import GenericServer
+
+    
 class OpsviewServer(GenericServer):
     """  
        special treatment for Opsview XML based API

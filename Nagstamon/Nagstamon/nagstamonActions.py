@@ -24,8 +24,19 @@ import gc
 import urllib2
 import mimetools, mimetypes
 import os, stat
-import nagstamonGUI
-from nagstamonObjects import Node, Result
+
+try:
+    from Nagstamon import nagstamonObjects
+    from Nagstamon.nagstamonObjects import Node, Result
+except:
+    import nagstamonObjects
+    from nagstamonObjects import Node, Result
+    
+try:
+    from Nagstamon import nagstamonGUI
+except:
+    import nagstamonGUI     
+
 
 # import hashlib for centreon url autologin encoding
 import hashlib
@@ -583,9 +594,9 @@ def CreateServer(server=None, conf=None, debug_queue=None):
         nagiosserver.passman.add_password(None, nagiosserver.proxy_address, nagiosserver.proxy_username, nagiosserver.proxy_password)
         nagiosserver.proxy_handler = urllib2.ProxyHandler({"http": nagiosserver.proxy_address, "https": nagiosserver.proxy_address})
         nagiosserver.proxy_auth_handler = urllib2.ProxyBasicAuthHandler(nagiosserver.passman)   
-        
+
+    nagiosserver.urlopener = BuildURLOpener(nagiosserver)        
     nagiosserver.init_HTTP()    
-    nagiosserver.urlopener = BuildURLOpener(nagiosserver)
 
     # debug
     if str(conf.debug_mode) == "True":

@@ -1,3 +1,10 @@
+nagstamon (0.9.5pre-3) unstable; urgency=low
+
+  * Enhancements, fixes and so on...
+
+ -- Henri Wahl <h.wahl@ifw-dresden.de>  Tue, 9 Dec 2010 15:20:32 +0200
+
+
 nagstamon (0.9.5pre-2) unstable; urgency=low
 
   * Possibility of custom server implementation

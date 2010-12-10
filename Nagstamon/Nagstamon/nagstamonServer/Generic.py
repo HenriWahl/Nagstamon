@@ -11,6 +11,7 @@ import datetime
 import time
 import traceback
 import base64
+import re
 
 try:
     import lxml.etree, lxml.objectify
@@ -28,9 +29,17 @@ try:
     import lxml.html.clean
 except:
     pass
-    
-import nagstamonActions                         
-from nagstamonObjects import *
+
+
+try:
+    from Nagstamon.nagstamonActions import HostIsFilteredOutByRE, ServiceIsFilteredOutByRE
+except:
+    from nagstamonActions import HostIsFilteredOutByRE, ServiceIsFilteredOutByRE
+
+try:
+    from Nagstamon.nagstamonObjects import *
+except:
+    from nagstamonObjects import *
 
 # new attempt to replace memory eating lxml
 from xml.etree import ElementTree
@@ -369,29 +378,8 @@ class GenericServer(object):
         # unfortunately the hosts status page has a different structure so
         # hosts must be analyzed separately
         try:
-            """
-            result = self.FetchURL(nagcgiurl_hosts, giveback="raw")
-            
-            raw = result.result
-            
-            #print raw.split("\n")[0:10]
-            
-            # cut off <xml blabla>
-            #htmlraw = ElementTree.fromstring(raw.split("\n")[1])
-            #htmlraw = ElementTree.fromstring(raw)
-            
-            print raw
-            
-            #xmlobj = nagstamonActions.ObjectifyHTML(htmlraw)   
-            
-            parser = ParseHTML(raw)
-            """
             result = self.FetchURL(nagcgiurl_hosts)
             htobj, error = result.result, result.error
-            
-            
-            print "RESULT:", result.result, "\nERROR---->:", result.error
-            
             
             if error != "": return Result(result=copy.deepcopy(htobj), error=error)            
             # workaround for Nagios < 2.7 which has an <EMBED> in its output
@@ -643,7 +631,7 @@ class GenericServer(object):
 
         for host in self.new_hosts.values():
             # filtering out hosts, sorting by severity
-            if host.status == "DOWN" and nagstamonActions.HostIsFilteredOutByRE(host.name, self.conf) == False\
+            if host.status == "DOWN" and HostIsFilteredOutByRE(host.name, self.conf) == False\
             and (not (host.name in self.new_hosts_in_maintenance and \
             str(self.conf.filter_hosts_services_maintenance) == "True") and \
             not (host.name in self.new_hosts_acknowledged and \
@@ -651,7 +639,7 @@ class GenericServer(object):
             str(self.conf.filter_all_down_hosts) == "False": 
                 self.nagitems_filtered["hosts"]["DOWN"].append(host)
                 self.downs += 1
-            if host.status == "UNREACHABLE" and nagstamonActions.HostIsFilteredOutByRE(host.name, self.conf) == False\
+            if host.status == "UNREACHABLE" and HostIsFilteredOutByRE(host.name, self.conf) == False\
             and (not host.name in self.new_hosts_acknowledged and not host.name in self.new_hosts_in_maintenance) and \
             str(self.conf.filter_all_unreachable_hosts) == "False": 
                 self.nagitems_filtered["hosts"]["UNREACHABLE"].append(host)  
@@ -674,8 +662,8 @@ class GenericServer(object):
                 str(self.conf.filter_services_on_down_hosts) == "True") and \
                 not (host.status == "UNREACHABLE" and \
                 str(self.conf.filter_services_on_unreachable_hosts) == "True") and \
-                nagstamonActions.HostIsFilteredOutByRE(host.name, self.conf) == False and \
-                nagstamonActions.ServiceIsFilteredOutByRE(service.get_name(), self.conf) == False:
+                HostIsFilteredOutByRE(host.name, self.conf) == False and \
+                ServiceIsFilteredOutByRE(service.get_name(), self.conf) == False:
                     # sort by severity
                     if service.status == "CRITICAL" and str(self.conf.filter_all_critical_services) == "False": 
                         self.nagitems_filtered["services"]["CRITICAL"].append(service)
@@ -923,6 +911,4 @@ class GenericServer(object):
         debug_string =  " ".join((head + ":",  str(datetime.datetime.now()), server, host, service, debug))     
         # give debug info to debug loop for thread-save log-file writing
         self.debug_queue.put(debug_string)
-
         
-    

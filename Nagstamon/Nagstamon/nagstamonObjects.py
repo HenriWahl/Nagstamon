@@ -8,8 +8,10 @@ import webbrowser
 import time
 import HTMLParser
    
-import nagstamonActions
-
+try:
+    from Nagstamon import nagstamonActions
+except:
+    import nagstamonActions
 
 class Column(object):
     ATTR_NAME = 'name'

@@ -29,15 +29,28 @@ if platform.system() != "Windows":
         print
 
 # needed for actions e.g. triggered by pressed buttons
-import nagstamonActions
-import nagstamonConfig
-import nagstamonObjects
+try:
+    from Nagstamon import nagstamonConfig
+except:
+    import nagstamonConfig
+try:
+    from Nagstamon import nagstamonActions
+except:
+    import nagstamonActions
+try:
+    from Nagstamon import nagstamonObjects
+except:
+    import nagstamonObjects    
+try:
+    from Nagstamon import custom # used for initialization of custom components
+except:
+    import custom      
+
 import subprocess
 import sys
 import gc
 import time
 
-import custom # used for initialization of custom components
 
 class Sorting(object):
     """ Sorting persistence purpose class
@@ -60,6 +73,7 @@ class Sorting(object):
             if id == self.sorting_tuple_list[0][0]:
                 self.sorting_tuple_list.remove(self.sorting_tuple_list[0])
         self.sorting_tuple_list.insert(0, (id, order))
+        
 
 class GUI(object):
     """

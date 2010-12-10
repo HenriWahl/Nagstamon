@@ -4,12 +4,26 @@
 columns and other stuff.
 Imported in nagstamonGUI module.
 """
+try:
+    from Nagstamon.nagstamonActions import register_server
+except:
+    from nagstamonActions import register_server
 
-from nagstamonActions import register_server
-from nagstamonServer.Nagios import NagiosServer
-from nagstamonServer.Icinga import IcingaServer
-from nagstamonServer.Opsview import OpsviewServer
-from nagstamonServer.Centreon import CentreonServer
+try:
+    from Nagstamon.nagstamonServer.Nagios import NagiosServer
+    from Nagstamon.nagstamonServer.Icinga import IcingaServer
+    from Nagstamon.nagstamonServer.Opsview import OpsviewServer
+    from Nagstamon.nagstamonServer.Centreon import CentreonServer
+except:
+    from nagstamonServer.Nagios import NagiosServer
+    from nagstamonServer.Icinga import IcingaServer
+    from nagstamonServer.Opsview import OpsviewServer
+    from nagstamonServer.Centreon import CentreonServer
+
+#from nagstamonServer.Nagios import NagiosServer
+#from nagstamonServer.Icinga import IcingaServer
+#from nagstamonServer.Opsview import OpsviewServer
+#from nagstamonServer.Centreon import CentreonServer
 
 
 # moved registration process because of circular dependencies
