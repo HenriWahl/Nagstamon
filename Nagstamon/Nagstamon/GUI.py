@@ -83,7 +83,7 @@ class GUI(object):
         self.comments = "Nagios status monitor for your desktop"
         
         # get resources directory from current directory - only if not being set before by pkg_resources
-        if self.Resources == "": self.Resources = os.path.normcase(os.getcwd() + "/resources")
+        if self.Resources == "": self.Resources = os.path.normcase(os.getcwd() + "/Nagstamon/resources")
 
         # initialize overall status flag
         self.status_ok = True
