@@ -17,6 +17,5 @@ Depends: ${python:Depends}, ${misc:Depends}, python-gtk2, python-lxml, python-pk
 Description: Nagios status monitor which takes place in systray or on desktop
  Nagstamon is a Nagios status monitor which takes place in systray or 
  on desktop (GNOME, KDE), as floating statusbar to inform you in 
- realtime about the status of your Nagios monitored network. 
- It allows to connect to multiple Nagios servers and supports Opsview
- servers.
+ realtime about the status of your Nagios and some of its derivatives monitored network. 
+ It allows to connect to multiple Nagios, Icinga, Opsview and Centreon servers.

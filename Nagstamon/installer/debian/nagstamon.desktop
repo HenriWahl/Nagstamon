@@ -2,7 +2,7 @@
 Type=Application
 Name=nagstamon
 Comment=Nagios status monitor 
-Icon=/usr/share/pyshared/Nagstamon/resources/nagstamon.svg
+Icon=/usr/share/nagstamon/Nagstamon/resources/nagstamon.svg
 Exec=nagstamon
 Terminal=false
 Categories=System;Monitor;GTK;
