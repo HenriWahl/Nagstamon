@@ -8,10 +8,8 @@ import webbrowser
 import time
 import HTMLParser
    
-try:
-    from Nagstamon import nagstamonActions
-except:
-    import nagstamonActions
+#from Nagstamon import Actions
+import Actions
 
 class Column(object):
     ATTR_NAME = 'name'
@@ -96,8 +94,8 @@ class DurationColumn(CustomSortingColumn):
         """ Overrides default sorting behaviour """       
         data1, data2 = [model.get_value(x, column) for x in (iter1, iter2)]
         try:
-            first = nagstamonActions.MachineSortableDuration(data1) 
-            second = nagstamonActions.MachineSortableDuration(data2)
+            first = Actions.MachineSortableDuration(data1) 
+            second = Actions.MachineSortableDuration(data2)
         except ValueError:
             return cmp(first, second)
         return first - second

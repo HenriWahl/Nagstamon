@@ -6,22 +6,11 @@ import webbrowser
 import traceback
 import base64
 
-try:
-    from Nagstamon import nagstamonActions
-except:
-    import nagstamonActions
+from Nagstamon import Actions
+from Nagstamon.Objects import *
+from Nagstamon.Server.Generic import GenericServer
 
-try:
-    from Nagstamon.nagstamonObjects import *
-except:
-    from nagstamonObjects import *
 
-try:
-    from Nagstamon.nagstamonServer.Generic import GenericServer
-except:
-    from nagstamonServer.Generic import GenericServer
-
-    
 class OpsviewServer(GenericServer):
     """  
        special treatment for Opsview XML based API
@@ -116,7 +105,7 @@ class OpsviewServer(GenericServer):
                 # states come in lower case from Opsview
                 self.new_hosts[hostdict["name"]].status = hostdict["state"].upper()
                 self.new_hosts[hostdict["name"]].last_check = hostdict["last_check"]
-                self.new_hosts[hostdict["name"]].duration = nagstamonActions.HumanReadableDuration(hostdict["state_duration"])
+                self.new_hosts[hostdict["name"]].duration = Actions.HumanReadableDuration(hostdict["state_duration"])
                 self.new_hosts[hostdict["name"]].attempt = str(hostdict["current_check_attempt"])+ "/" + str(hostdict["max_check_attempts"])
                 self.new_hosts[hostdict["name"]].status_information= hostdict["output"]
     
@@ -134,7 +123,7 @@ class OpsviewServer(GenericServer):
                         # states come in lower case from Opsview
                         self.new_hosts[hostdict["name"]].services[servicedict["name"]].status = servicedict["state"].upper()
                         self.new_hosts[hostdict["name"]].services[servicedict["name"]].last_check = servicedict["last_check"]
-                        self.new_hosts[hostdict["name"]].services[servicedict["name"]].duration = nagstamonActions.HumanReadableDuration(servicedict["state_duration"])
+                        self.new_hosts[hostdict["name"]].services[servicedict["name"]].duration = Actions.HumanReadableDuration(servicedict["state_duration"])
                         self.new_hosts[hostdict["name"]].services[servicedict["name"]].attempt = str(servicedict["current_check_attempt"])+ "/" + str(servicedict["max_check_attempts"])
                         self.new_hosts[hostdict["name"]].services[servicedict["name"]].status_information= servicedict["output"]
         except:

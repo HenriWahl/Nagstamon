@@ -30,16 +30,8 @@ try:
 except:
     pass
 
-
-try:
-    from Nagstamon.nagstamonActions import HostIsFilteredOutByRE, ServiceIsFilteredOutByRE
-except:
-    from nagstamonActions import HostIsFilteredOutByRE, ServiceIsFilteredOutByRE
-
-try:
-    from Nagstamon.nagstamonObjects import *
-except:
-    from nagstamonObjects import *
+from Nagstamon.Actions import HostIsFilteredOutByRE, ServiceIsFilteredOutByRE
+from Nagstamon.Objects import *
 
 # new attempt to replace memory eating lxml
 from xml.etree import ElementTree

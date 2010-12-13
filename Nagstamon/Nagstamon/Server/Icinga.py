@@ -1,9 +1,6 @@
 # encoding: utf-8
 
-try:
-    from Nagstamon.nagstamonServer.Generic import GenericServer
-except:
-    from nagstamonServer.Generic import GenericServer
+from Nagstamon.Server.Generic import GenericServer
     
 import urllib
 import base64

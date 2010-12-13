@@ -2,29 +2,14 @@
 
 """ Module for implementing custom servers,
 columns and other stuff.
-Imported in nagstamonGUI module.
+Imported in GUI module.
 """
-try:
-    from Nagstamon.nagstamonActions import register_server
-except:
-    from nagstamonActions import register_server
+from Nagstamon.Actions import register_server
 
-try:
-    from Nagstamon.nagstamonServer.Nagios import NagiosServer
-    from Nagstamon.nagstamonServer.Icinga import IcingaServer
-    from Nagstamon.nagstamonServer.Opsview import OpsviewServer
-    from Nagstamon.nagstamonServer.Centreon import CentreonServer
-except:
-    from nagstamonServer.Nagios import NagiosServer
-    from nagstamonServer.Icinga import IcingaServer
-    from nagstamonServer.Opsview import OpsviewServer
-    from nagstamonServer.Centreon import CentreonServer
-
-#from nagstamonServer.Nagios import NagiosServer
-#from nagstamonServer.Icinga import IcingaServer
-#from nagstamonServer.Opsview import OpsviewServer
-#from nagstamonServer.Centreon import CentreonServer
-
+from Nagstamon.Server.Nagios import NagiosServer
+from Nagstamon.Server.Icinga import IcingaServer
+from Nagstamon.Server.Opsview import OpsviewServer
+from Nagstamon.Server.Centreon import CentreonServer
 
 # moved registration process because of circular dependencies
 # order of registering affects sorting in server type list in add new server dialog

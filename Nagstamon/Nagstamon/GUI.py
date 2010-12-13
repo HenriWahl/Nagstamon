@@ -29,22 +29,10 @@ if platform.system() != "Windows":
         print
 
 # needed for actions e.g. triggered by pressed buttons
-try:
-    from Nagstamon import nagstamonConfig
-except:
-    import nagstamonConfig
-try:
-    from Nagstamon import nagstamonActions
-except:
-    import nagstamonActions
-try:
-    from Nagstamon import nagstamonObjects
-except:
-    import nagstamonObjects    
-try:
-    from Nagstamon import custom # used for initialization of custom components
-except:
-    import custom      
+from Nagstamon import Config
+from Nagstamon import Actions
+from Nagstamon import Objects
+from Nagstamon import Custom # used for initialization of custom components 
 
 import subprocess
 import sys
@@ -246,7 +234,7 @@ class GUI(object):
         # threaded recheck all when refresh is clicked
         self.popwin.ButtonRecheckAll.connect("clicked", self.RecheckAll)
         # threaded refresh status information when refresh is clicked
-        self.popwin.ButtonRefresh.connect("clicked", lambda r: nagstamonActions.RefreshAllServers(servers=self.servers, output=self, conf=self.conf))
+        self.popwin.ButtonRefresh.connect("clicked", lambda r: Actions.RefreshAllServers(servers=self.servers, output=self, conf=self.conf))
         # open settings dialog when settings is clicked
         self.popwin.ButtonSettings.connect("clicked", lambda s: Settings(servers=self.servers, output=self, conf=self.conf))        
         
@@ -512,7 +500,7 @@ class GUI(object):
                         all_services.append(s.name)
 
         # let thread execute POST request
-        acknowledge = nagstamonActions.Acknowledge(server=self.popwin.miserable_server, host=host,\
+        acknowledge = Actions.Acknowledge(server=self.popwin.miserable_server, host=host,\
                       service=service, author=author, comment=comment, acknowledge_all_services=acknowledge_all_services,\
                       all_services=all_services, sticky=sticky, notify=notify, persistent=persistent)
         acknowledge.start()
@@ -547,8 +535,8 @@ class GUI(object):
             self.downtime_xml.get_widget("input_label_service").set_text(service)
             self.downtime_dialog.set_title("Downtime for service")
        
-        # get start_time and end_time externally from nagstamonActions.Downtime_get_start_end() for not mixing GUI and actions too much
-        start_time, end_time = nagstamonActions.Downtime_get_start_end(server=self.popwin.miserable_server, host=host)
+        # get start_time and end_time externally from Actions.Downtime_get_start_end() for not mixing GUI and actions too much
+        start_time, end_time = Actions.Downtime_get_start_end(server=self.popwin.miserable_server, host=host)
             
         # default author + comment
         self.downtime_xml.get_widget("input_entry_author").set_text(server.username)        
@@ -587,7 +575,7 @@ class GUI(object):
         minutes = self.downtime_xml.get_widget("input_spinbutton_duration_minutes").get_value()
 
         # execute POST request with cgi_data, in this case threaded
-        downtime = nagstamonActions.Downtime(server=self.popwin.miserable_server, host=host, service=service, author=author, comment=comment, fixed=fixed, start_time=start_time, end_time=end_time, hours=int(hours), minutes=int(minutes))
+        downtime = Actions.Downtime(server=self.popwin.miserable_server, host=host, service=service, author=author, comment=comment, fixed=fixed, start_time=start_time, end_time=end_time, hours=int(hours), minutes=int(minutes))
         downtime.start()
 
 
@@ -665,7 +653,7 @@ class GUI(object):
                 message_format="You are not using the latest version of Nagstamon.\n\nYour version:\t\t%s\nLatest version:\t%s\n\nDo you want to download the latest version?" % (self.version, version))
                 response = dialog.run()
                 if response == gtk.RESPONSE_YES:
-                    nagstamonActions.OpenNagstamonDownload(output=self)
+                    Actions.OpenNagstamonDownload(output=self)
                 dialog.destroy()               
         except:
             self.servers.values()[0].Error(sys.exc_info())
@@ -689,11 +677,11 @@ class GUI(object):
                         if str(self.conf.notification_flashing) == "True":
                             self.statusbar.SysTray.set_blinking(True)
                             self.statusbar.Flashing = True
-                            flash = nagstamonActions.FlashStatusbar(output=self)
+                            flash = Actions.FlashStatusbar(output=self)
                             flash.start()   
                         # if wanted play notification sound
                         if str(self.conf.notification_sound) == "True":
-                            sound = nagstamonActions.PlaySound(sound=status, Resources=self.Resources, conf=self.conf, servers=self.servers)
+                            sound = Actions.PlaySound(sound=status, Resources=self.Resources, conf=self.conf, servers=self.servers)
                             sound.start()
                         # if desired pop up status window
                         # sorry but does absolutely not work with windows and systray icon so I prefer to let it be
@@ -725,7 +713,7 @@ class GUI(object):
         """
         call threaded recheck all action
         """
-        recheckall = nagstamonActions.RecheckAll(servers=self.servers, output=self, conf=self.conf)
+        recheckall = Actions.RecheckAll(servers=self.servers, output=self, conf=self.conf)
         recheckall.start()
        
 
@@ -860,14 +848,14 @@ class StatusBar(object):
         """
             open responding Nagios status web page
         """
-        nagstamonActions.OpenNagios(None, self.output.servers[menu_entry], self.output)
+        Actions.OpenNagios(None, self.output.servers[menu_entry], self.output)
         
         
     def MenuResponse(self, widget, menu_entry):
         """
             responses for the context menu for label in statusbar
         """
-        if menu_entry == "Refresh": nagstamonActions.RefreshAllServers(servers=self.output.servers, output=self.output, conf=self.conf)
+        if menu_entry == "Refresh": Actions.RefreshAllServers(servers=self.output.servers, output=self.output, conf=self.conf)
         if menu_entry == "Recheck all": self.output.RecheckAll()
         if menu_entry == "Settings...": Settings(servers=self.output.servers, output=self.output, conf=self.conf)
         if menu_entry == "Save position": self.conf.SaveConfig()
@@ -1211,11 +1199,11 @@ class Popwin(gtk.Window):
             
             # connect buttons with actions
             # open Nagios main page in your favorite web browser when nagios button is clicked
-            self.ServerVBoxes[server.get_name()].ButtonMonitor.connect("clicked", nagstamonActions.OpenNagios, server, self.output)
+            self.ServerVBoxes[server.get_name()].ButtonMonitor.connect("clicked", Actions.OpenNagios, server, self.output)
             # open Nagios services in your favorite web browser when service button is clicked
-            self.ServerVBoxes[server.get_name()].ButtonServices.connect("clicked", nagstamonActions.OpenServices, server, self.output)
+            self.ServerVBoxes[server.get_name()].ButtonServices.connect("clicked", Actions.OpenServices, server, self.output)
             # open Nagios hosts in your favorite web browser when hosts button is clicked
-            self.ServerVBoxes[server.get_name()].ButtonHosts.connect("clicked", nagstamonActions.OpenHosts, server, self.output)
+            self.ServerVBoxes[server.get_name()].ButtonHosts.connect("clicked", Actions.OpenHosts, server, self.output)
             
             # windows workaround - see above
             # connect Server_EventBox with leave-notify-event to get popwin popping down when leaving it
@@ -1504,13 +1492,13 @@ class Popwin(gtk.Window):
                 result = self.miserable_server.GetHost(self.miserable_host)
                 host, error = result.result, result.error
                 if error == "":
-                    nagstamonActions.TreeViewHTTP(host)
+                    Actions.TreeViewHTTP(host)
             elif remoteservice == "Monitor":
-                # let nagstamonActions.TreeViewNagios do the work to open a webbrowser with nagios informations
-                nagstamonActions.TreeViewNagios(self.miserable_server, self.miserable_host, self.miserable_service)
+                # let Actions.TreeViewNagios do the work to open a webbrowser with nagios informations
+                Actions.TreeViewNagios(self.miserable_server, self.miserable_host, self.miserable_service)
             elif remoteservice == "Recheck":
                 # start new rechecking thread
-                recheck = nagstamonActions.Recheck(server=self.miserable_server, host=self.miserable_host, service=self.miserable_service)
+                recheck = Actions.Recheck(server=self.miserable_server, host=self.miserable_host, service=self.miserable_service)
                 recheck.start()
             elif remoteservice == "Acknowledge":
                 self.output.AcknowledgeDialogShow(server=self.miserable_server, host=self.miserable_host, service=self.miserable_service)
@@ -1528,7 +1516,7 @@ class Popwin(gtk.Window):
             open Nagios webseite from selected server
         """
         try:
-            nagstamonActions.OpenNagios(widget=None, server=self.output.servers[widget.get_active_text()], output=self.output)
+            Actions.OpenNagios(widget=None, server=self.output.servers[widget.get_active_text()], output=self.output)
         except:
             self.output.servers.values[0].Error(sys.exc_info())
             
@@ -1885,11 +1873,11 @@ class Settings(object):
             
             # start debugging loop if wanted
             if str(self.conf.debug_mode) == "True":
-                debugloop = nagstamonActions.DebugLoop(conf=self.conf, debug_queue=self.output.debug_queue, output=self.output)
+                debugloop = Actions.DebugLoop(conf=self.conf, debug_queue=self.output.debug_queue, output=self.output)
                 debugloop.start()
             
             # force refresh
-            nagstamonActions.RefreshAllServers(servers=self.servers, output=self.output, conf=self.conf)
+            Actions.RefreshAllServers(servers=self.servers, output=self.output, conf=self.conf)
             
         except:
             self.servers.values()[0].Error(sys.exc_info())
@@ -1945,7 +1933,7 @@ class Settings(object):
                 break
             else:
                 # start thread which checks for updates
-                self.check = nagstamonActions.CheckForNewVersion(servers=self.servers, output=self.output, mode="normal")
+                self.check = Actions.CheckForNewVersion(servers=self.servers, output=self.output, mode="normal")
                 self.check.start()
                 # if one of the servers is not used to check for new version this is enough
                 break
@@ -2015,7 +2003,7 @@ class Settings(object):
         """
         try:
             filechooser = self.glade.get_widget("input_filechooser_notification_custom_sound_" + playbutton.name)
-            sound = nagstamonActions.PlaySound(sound="FILE", file=filechooser.get_filename(), conf=self.conf, servers=self.servers)
+            sound = Actions.PlaySound(sound="FILE", file=filechooser.get_filename(), conf=self.conf, servers=self.servers)
             sound.start()
         except:
             pass
@@ -2028,7 +2016,7 @@ class ServerDialogHelper(object):
     
     def on_server_change(self, combobox):
         """ Disables controls as it is set in server class """
-        servers = nagstamonActions.get_registered_servers()
+        servers = Actions.get_registered_servers()
         server_class = servers[combobox.get_active_text()]
         self.KNOWN_CONTROLS.update(server_class.DISABLED_CONTROLS)
         for item_id in self.KNOWN_CONTROLS:
@@ -2072,7 +2060,7 @@ class NewServer(ServerDialogHelper):
         
         # set server type combobox to Nagios as default
         combobox = self.glade.get_widget("input_combo_server_type")
-        for server in nagstamonActions.get_registered_server_type_list():
+        for server in Actions.get_registered_server_type_list():
             combobox.append_text(server)
         combobox.set_active(0)
         
@@ -2095,7 +2083,7 @@ class NewServer(ServerDialogHelper):
         """
         # put changed data into new server, which will get into the servers dictionary after the old
         # one has been deleted
-        new_server = nagstamonConfig.Server()
+        new_server = Config.Server()
         
         for i in ["input_entry_", "input_checkbutton_", "input_radiobutton_", "input_spinbutton_", "input_filechooser_"]:
             for j in self.glade.get_widget_prefix(i):
@@ -2125,13 +2113,13 @@ class NewServer(ServerDialogHelper):
             # put in new one
             self.conf.servers[new_server.name] = new_server
             # create new server thread
-            created_server = nagstamonActions.CreateServer(new_server, self.conf)
+            created_server = Actions.CreateServer(new_server, self.conf)
             if created_server is not None:
                 self.servers[new_server.name] = created_server 
                 
                 if str(self.conf.servers[new_server.name].enabled) == "True":
-                    # start new thread (should go to nagstamonActions!)
-                    self.servers[new_server.name].thread = nagstamonActions.RefreshLoopOneServer(server=self.servers[new_server.name], output=self.output, conf=self.conf)
+                    # start new thread (should go to Actions!)
+                    self.servers[new_server.name].thread = Actions.RefreshLoopOneServer(server=self.servers[new_server.name], output=self.output, conf=self.conf)
                     self.servers[new_server.name].thread.start()        
                   
             # fill settings dialog treeview
@@ -2255,7 +2243,7 @@ class EditServer(ServerDialogHelper):
                         pass
            
             # set server type combobox which cannot be set by above hazard method
-            servers = nagstamonActions.get_registered_server_type_list()
+            servers = Actions.get_registered_server_type_list()
             server_types = dict([(x[1], x[0]) for x in enumerate(servers)])
             combobox = self.glade.get_widget("input_combo_server_type")
             for server in servers:
@@ -2281,7 +2269,7 @@ class EditServer(ServerDialogHelper):
         """
         # put changed data into new server, which will get into the servers dictionary after the old
         # one has been deleted
-        new_server = nagstamonConfig.Server()
+        new_server = Config.Server()
         
         for i in ["input_entry_", "input_checkbutton_", "input_radiobutton_", "input_spinbutton_", "input_filechooser_"]:
             for j in self.glade.get_widget_prefix(i):
@@ -2321,13 +2309,13 @@ class EditServer(ServerDialogHelper):
             # put in new one
             self.conf.servers[new_server.name] = new_server
             # create new server thread
-            created_server = nagstamonActions.CreateServer(new_server, self.conf, self.output.debug_queue)
+            created_server = Actions.CreateServer(new_server, self.conf, self.output.debug_queue)
             if created_server is not None:
                 self.servers[new_server.name] = created_server 
                 
                 if str(self.conf.servers[new_server.name].enabled) == "True":  
-                    # start new thread (should go to nagstamonActions)
-                    self.servers[new_server.name].thread = nagstamonActions.RefreshLoopOneServer(server=self.servers[new_server.name], output=self.output, conf=self.conf)
+                    # start new thread (should go to Actions)
+                    self.servers[new_server.name].thread = Actions.RefreshLoopOneServer(server=self.servers[new_server.name], output=self.output, conf=self.conf)
                     self.servers[new_server.name].thread.start()   
             
             # fill settings dialog treeview

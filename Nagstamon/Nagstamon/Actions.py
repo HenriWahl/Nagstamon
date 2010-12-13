@@ -25,18 +25,11 @@ import urllib2
 import mimetools, mimetypes
 import os, stat
 
-try:
-    from Nagstamon import nagstamonObjects
-    from Nagstamon.nagstamonObjects import Node, Result
-except:
-    import nagstamonObjects
-    from nagstamonObjects import Node, Result
+from Nagstamon import Objects
+from Nagstamon.Objects import Node, Result
     
-try:
-    from Nagstamon import nagstamonGUI
-except:
-    import nagstamonGUI     
-
+#from Nagstamon import GUI
+import GUI
 
 # import hashlib for centreon url autologin encoding
 import hashlib
@@ -563,7 +556,7 @@ def CreateServer(server=None, conf=None, debug_queue=None):
     if server.save_password or not server.enabled:
         nagiosserver.password = server.password
     else:
-        pwdialog = nagstamonGUI.PasswordDialog(
+        pwdialog = GUI.PasswordDialog(
             "Password for " + server.username + " on " + server.nagios_url + ": ")
         if pwdialog.password == None:
             nagiosserver.password = ""

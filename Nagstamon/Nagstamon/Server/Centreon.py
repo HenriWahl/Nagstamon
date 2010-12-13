@@ -13,20 +13,9 @@ import Queue
 # new attempt to replace memory eating lxml
 from xml.etree import ElementTree
 
-try:
-    from Nagstamon import nagstamonActions
-except:
-    import nagstamonActions
-
-try:
-    from Nagstamon.nagstamonObjects import *
-except:
-    from nagstamonObjects import *
-
-try:
-    from Nagstamon.nagstamonServer.Generic import GenericServer
-except:
-    from nagstamonServer.Generic import GenericServer
+from Nagstamon import Actions
+from Nagstamon.Objects import *
+from Nagstamon.Server.Generic import GenericServer
 
 
 class CentreonServer(GenericServer): 
@@ -43,8 +32,8 @@ class CentreonServer(GenericServer):
         GenericServer.__init__(self, **kwds)
 
         # cache MD5 username + password to reduce load
-        self.MD5_username = nagstamonActions.MD5ify(self.conf.servers[self.get_name()].username)   
-        self.MD5_password = nagstamonActions.MD5ify(self.conf.servers[self.get_name()].password)
+        self.MD5_username = Actions.MD5ify(self.conf.servers[self.get_name()].username)   
+        self.MD5_password = Actions.MD5ify(self.conf.servers[self.get_name()].password)
         
     
     def init_HTTP(self):
@@ -134,7 +123,7 @@ class CentreonServer(GenericServer):
         raw = result.result
         # cut off <xml blabla>
         xmlraw = ElementTree.fromstring(raw.split("\n")[1])
-        xmlobj = nagstamonActions.ObjectifyXML(xmlraw)   
+        xmlobj = Actions.ObjectifyXML(xmlraw)   
         del raw, xmlraw
 
         if len(xmlobj) != 0:
@@ -291,7 +280,7 @@ class CentreonServer(GenericServer):
             # cut off <xml blabla>
             try:
                 xmlraw = ElementTree.fromstring(raw.split("\n")[1])
-                xmlobj = nagstamonActions.ObjectifyXML(xmlraw)            
+                xmlobj = Actions.ObjectifyXML(xmlraw)            
                 del raw, error
             except:
                 # in case we got nothing back
@@ -311,7 +300,7 @@ class CentreonServer(GenericServer):
                 if error != "": return Result(result=raw, error=error)
                 # cut off <xml blabla>
                 xmlraw = ElementTree.fromstring(raw.split("\n")[1])
-                xmlobj = nagstamonActions.ObjectifyXML(xmlraw)
+                xmlobj = Actions.ObjectifyXML(xmlraw)
                 del raw, xmlraw, error
             else:
                 del xmlraw
@@ -392,7 +381,7 @@ class CentreonServer(GenericServer):
             # cut off <xml blabla>
             try:
                 xmlraw = ElementTree.fromstring(raw.split("\n")[1])
-                xmlobj = nagstamonActions.ObjectifyXML(xmlraw)            
+                xmlobj = Actions.ObjectifyXML(xmlraw)            
                 del raw, error
             except:
                 # in case we got nothing back
@@ -411,7 +400,7 @@ class CentreonServer(GenericServer):
                 if error != "": return Result(result=raw, error=error)
                 # cut off <xml blabla>
                 xmlraw = ElementTree.fromstring(raw.split("\n")[1])
-                xmlobj = nagstamonActions.ObjectifyXML(xmlraw)
+                xmlobj = Actions.ObjectifyXML(xmlraw)
                 del raw, xmlraw, error
             else:
                 del xmlraw                
@@ -626,7 +615,7 @@ class CentreonServer(GenericServer):
         in case count is down get a new SID, just in case
         """
         # a SIDcount of 300 should make 15 min when being run every 3 secs as it is at 
-        # the moment in nagstamonActions.RefreshLoopOneServer()
+        # the moment in Actions.RefreshLoopOneServer()
         if self.SIDcount >= 300:
             if str(self.conf.debug_mode) == "True":
                 self.Debug(server=self.get_name(), debug="Old SID: " + self.SID + " " + str(self.Cookie))                

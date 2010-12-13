@@ -47,9 +47,10 @@ setup(name = 'nagstamon',
     author_email = 'h.wahl@ifw-dresden.de',
     url = 'http://nagstamon.sourceforge.net',
     download_url = 'http://sourceforge.net/projects/nagstamon/',
-    scripts = ['Nagstamon/nagstamon'],
-    packages = ['Nagstamon', 'Nagstamon.nagstamonServer'],
-    package_data = {'': ['resources/*']},
+    scripts = ['nagstamon'],
+    packages = ['Nagstamon', 'Nagstamon.Server'],
+    package_dir = {'Nagstamon':'Nagstamon'},
+    package_data = {'Nagstamon':['resources/*']},
     data_files = [('%s/share/man/man1' % sys.prefix, ['Nagstamon/resources/nagstamon.1'])]
 )
 
