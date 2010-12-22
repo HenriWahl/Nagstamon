@@ -11,7 +11,12 @@ import gc
 import Queue
 
 # new attempt to replace memory eating lxml
-from xml.etree import ElementTree
+try:
+    # from python 2.5 on it is in xml
+    from xml.etree import ElementTree
+except:
+    # older pythons will find it in elementtree
+    from elementtree import ElementTree
 
 from Nagstamon import Actions
 from Nagstamon.Objects import *

@@ -33,9 +33,6 @@ except:
 from Nagstamon.Actions import HostIsFilteredOutByRE, ServiceIsFilteredOutByRE
 from Nagstamon.Objects import *
 
-# new attempt to replace memory eating lxml
-from xml.etree import ElementTree
-
 
 class GenericServer(object):
     """
