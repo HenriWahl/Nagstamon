@@ -31,8 +31,13 @@ from Nagstamon.Objects import Node, Result
 #from Nagstamon import GUI
 import GUI
 
-# import hashlib for centreon url autologin encoding
-import hashlib
+# import md5 for centreon url autologin encoding
+try:
+    #from python 2.5 md5 is in hashlib
+    from hashlib import md5
+except:
+    # older pythons use md5 lib
+    from md5 import md5
 
 # flag which indicates if already rechecking all
 RecheckingAll = False
@@ -740,7 +745,7 @@ def MD5ify(string):
     """
     makes something md5y of a given username or password for Centreon web interface access
     """
-    return hashlib.md5(string).hexdigest()
+    return md5(string).hexdigest()
 
 
 def ObjectifyXML(xmlraw):
