@@ -40,13 +40,13 @@ class CentreonServer(GenericServer):
         self.MD5_username = Actions.MD5ify(self.conf.servers[self.get_name()].username)   
         self.MD5_password = Actions.MD5ify(self.conf.servers[self.get_name()].password)
         
-    
-    def init_HTTP(self):
-        """
-        Centreon does not need Basic authorization
-        """
-        if self.HTTPheaders == {}:
-            self.HTTPheaders["raw"] = self.HTTPheaders["obj"] = {}
+    # as Martin Soltis wrote it might indeed be necessary for Centreon to have Auth headers... 
+    #def init_HTTP(self):
+    #    """
+    #    Centreon does not need Basic authorization
+    #    """
+    #    if self.HTTPheaders == {}:
+    #        self.HTTPheaders["raw"] = self.HTTPheaders["obj"] = {}
 
     
     def open_tree_view(self, host, service=""):
