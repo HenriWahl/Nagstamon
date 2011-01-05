@@ -475,8 +475,8 @@ class GenericServer(object):
                         if table.tr[i].__dict__.has_key("td"): 
                             if table.tr[i].td[1].table.tr.td[1].table.tr.__dict__.has_key("td"):
                                 if table.tr[i].td[1].table.tr.td[1].table.tr.td[0].a.text != None and \
-                                    table.tr[i].td[1].table.tr.td[1].table.tr.td[0].a.text.find("[PASSIVE_ONLY]") != -1:
-                                        n["passiveonly"] = True
+                                    table.tr[i].td[1].table.tr.td[1].table.tr.td[0].a.text.find('/passive.gif"') != -1:
+                                    n["passiveonly"] = True
                         # add dictionary full of information about this service item to nagitems - only if service
                         nagitems["services"].append(n)
                         # after collection data in nagitems create objects of its informations
@@ -784,8 +784,6 @@ class GenericServer(object):
                 #prettyhtml = lxml.etree.tostring(html, pretty_print=True)
                 prettyhtml = lxml.etree.tostring(html, pretty_print=False)               
                 del html
-                # search for extra flag, in this case passive only
-                prettyhtml = re.sub(r"<img\ssrc=\"[^\"]*/passiveonly\.gif\"[^>]+>", "[PASSIVE_ONLY]", prettyhtml)
 
                 # third step: clean HTML from tags which embarass libxml2 2.7
                 # only possible when module lxml.html.clean has been loaded
