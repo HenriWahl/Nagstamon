@@ -475,7 +475,7 @@ class GenericServer(object):
                         if table.tr[i].__dict__.has_key("td"): 
                             if table.tr[i].td[1].table.tr.td[1].table.tr.__dict__.has_key("td"):
                                 if table.tr[i].td[1].table.tr.td[1].table.tr.td[0].a.text != None and \
-                                    table.tr[i].td[1].table.tr.td[1].table.tr.td[0].a.text.find('/passive.gif"') != -1:
+                                    table.tr[i].td[1].table.tr.td[1].table.tr.td[0].a.text.find('[PASSIVE_ONLY]') != -1:
                                     n["passiveonly"] = True
                         # add dictionary full of information about this service item to nagitems - only if service
                         nagitems["services"].append(n)
@@ -743,7 +743,7 @@ class GenericServer(object):
         return Result()
     
     
-    def FetchURL(self, url, giveback="obj", cgi_data=None, remove_tags=["link", "br", "img", "hr", "script", "th", "form", "div", "p"]):
+    def FetchURL(self, url, giveback="obj", cgi_data=None, remove_tags=["link", "br", "img", "hr", "script", "th", "form", "div", "p"]):   
         """
         get content of given url, cgi_data only used if present
         "obj" FetchURL gives back a dict full of miserable hosts/services,
@@ -784,7 +784,8 @@ class GenericServer(object):
                 #prettyhtml = lxml.etree.tostring(html, pretty_print=True)
                 prettyhtml = lxml.etree.tostring(html, pretty_print=False)               
                 del html
-
+                prettyhtml = re.sub(r"<img\ssrc=\"[^\"]*/passiveonly\.gif\"[^>]+>", "[PASSIVE_ONLY]", prettyhtml)
+                
                 # third step: clean HTML from tags which embarass libxml2 2.7
                 # only possible when module lxml.html.clean has been loaded
                 if sys.modules.has_key("lxml.html.clean"):
