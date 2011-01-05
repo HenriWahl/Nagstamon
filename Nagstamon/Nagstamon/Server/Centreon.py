@@ -39,14 +39,6 @@ class CentreonServer(GenericServer):
         # cache MD5 username + password to reduce load
         self.MD5_username = Actions.MD5ify(self.conf.servers[self.get_name()].username)   
         self.MD5_password = Actions.MD5ify(self.conf.servers[self.get_name()].password)
-        
-    # as Martin Soltis wrote it might indeed be necessary for Centreon to have Auth headers... 
-    #def init_HTTP(self):
-    #    """
-    #    Centreon does not need Basic authorization
-    #    """
-    #    if self.HTTPheaders == {}:
-    #        self.HTTPheaders["raw"] = self.HTTPheaders["obj"] = {}
 
     
     def open_tree_view(self, host, service=""):
@@ -58,7 +50,8 @@ class CentreonServer(GenericServer):
             webbrowser.open(self.nagios_cgi_url + "/index.php?" + urllib.urlencode({"p":202, "autologin":1,\
             "o":"svcd", "useralias":self.MD5_username, "password":self.MD5_password, "host_name":host,\
              "service_description":service}))       
-        
+
+            
     def open_nagios(self):
         webbrowser.open(self.nagios_cgi_url + "/index.php?autologin=1&p=1&useralias=" + self.MD5_username + "&password=" + self.MD5_password)
         # debug

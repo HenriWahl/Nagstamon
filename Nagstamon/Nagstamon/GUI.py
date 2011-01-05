@@ -1167,6 +1167,9 @@ class Popwin(gtk.Window):
         for i in ["Recheck", "Acknowledge", "Downtime"]:
             menu_item = gtk.MenuItem(i)
             menu_item.connect("activate", self.TreeviewPopupMenuResponse, i)
+            if i == "Recheck":
+                menu_item.set_sensitive(False)
+                self.recheck_item = menu_item
             self.popupmenu.append(menu_item)
         self.popupmenu.show_all()
         
@@ -1437,7 +1440,11 @@ class Popwin(gtk.Window):
             self.miserable_server = server
             self.miserable_host = treeview.get_model()[path[0]][server.HOST_COLUMN_ID]
             self.miserable_service = treeview.get_model()[path[0]][server.SERVICE_COLUMN_ID]
-            # popup the relevant contect menu
+            # popup the relevant content menu
+            if self.miserable_service and server.hosts[self.miserable_host].services[self.miserable_service].is_passive_only():
+                self.recheck_item.set_sensitive(False)
+            else:
+                self.recheck_item.set_sensitive(True)
             self.popupmenu.popup(None, None, None, event.button, event.time)
         except:
             pass

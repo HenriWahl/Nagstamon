@@ -163,7 +163,10 @@ class GenericServer(object):
         
         
     def _set_recheck(self, host, service):
-
+        if service != "":
+            if self.hosts[host].services[service].is_passive_only():
+                # Do not check passive only checks
+                return
         # get start time from Nagios as HTML to use same timezone setting like the locally installed Nagios
         result = self.FetchURL(self.nagios_cgi_url + "/cmd.cgi?" + urllib.urlencode({"cmd_typ":"96", "host":host}), giveback="raw")
         html = result.result
@@ -465,6 +468,15 @@ class GenericServer(object):
                         n["attempt"] = str(table.tr[i].td[5].text)
                         # status_information
                         n["status_information"] = str(table.tr[i].td[6].text)
+                        # passive-only service or not
+                        # due to unreliable HTML structure of Nagios/Icinga check first if there is any sign
+                        # of any table parts which might be evaluated
+                        n["passiveonly"] = False
+                        if table.tr[i].__dict__.has_key("td"): 
+                            if table.tr[i].td[1].table.tr.td[1].table.tr.__dict__.has_key("td"):
+                                if table.tr[i].td[1].table.tr.td[1].table.tr.td[0].a.text != None and \
+                                    table.tr[i].td[1].table.tr.td[1].table.tr.td[0].a.text.find("[PASSIVE_ONLY]") != -1:
+                                        n["passiveonly"] = True
                         # add dictionary full of information about this service item to nagitems - only if service
                         nagitems["services"].append(n)
                         # after collection data in nagitems create objects of its informations
@@ -484,6 +496,7 @@ class GenericServer(object):
                             self.new_hosts[n["host"]].services[new_service].duration = n["duration"]
                             self.new_hosts[n["host"]].services[new_service].attempt = n["attempt"]
                             self.new_hosts[n["host"]].services[new_service].status_information = n["status_information"]
+                            self.new_hosts[n["host"]].services[new_service].passiveonly = n["passiveonly"]
                 except:
                     self.Error(sys.exc_info())
                                 
@@ -771,6 +784,8 @@ class GenericServer(object):
                 #prettyhtml = lxml.etree.tostring(html, pretty_print=True)
                 prettyhtml = lxml.etree.tostring(html, pretty_print=False)               
                 del html
+                # search for extra flag, in this case passive only
+                prettyhtml = re.sub(r"<img\ssrc=\"[^\"]*/passiveonly\.gif\"[^>]+>", "[PASSIVE_ONLY]", prettyhtml)
 
                 # third step: clean HTML from tags which embarass libxml2 2.7
                 # only possible when module lxml.html.clean has been loaded

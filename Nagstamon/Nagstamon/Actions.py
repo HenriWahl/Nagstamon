@@ -281,11 +281,12 @@ class RecheckAll(threading.Thread):
                                 server.Debug(server=server.get_name(), host=host.get_name(), debug="Rechecking...")
                             for service in host.services.values():
                                 # dito
+                                if service.is_passive_only() == True:
+                                    continue
                                 rechecks_dict[server.get_name() + ": " + host.get_name() + ": " + service.get_name()] = Recheck(server=server, host=host.get_name(), service=service.get_name())
                                 rechecks_dict[server.get_name() + ": " + host.get_name() + ": " + service.get_name()].start()
                                 # debug
                                 if str(self.conf.debug_mode) == "True":
-                                    #print "Recheck all:", "rechecking", server.get_name() + ": " + host.get_name() + ": " + service.get_name()
                                     server.Debug(server=server.get_name(), host=host.get_name(), service=service.get_name(), debug="Rechecking...")
 
                 # wait until all rechecks have been done

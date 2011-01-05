@@ -160,6 +160,7 @@ class GenericService(GenericObject):
         self.duration = ""
         self.attempt = ""
         self.status_information = ""
+        self.passiveonly = False
         
 
     def get_host_name(self):
@@ -168,6 +169,10 @@ class GenericService(GenericObject):
 
     def get_service_name(self):
         return str(self.name) 
+    
+
+    def is_passive_only(self):
+        return bool(self.passiveonly)    
     
     
     def get_name(self):
