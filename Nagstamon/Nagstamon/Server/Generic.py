@@ -468,15 +468,22 @@ class GenericServer(object):
                         n["attempt"] = str(table.tr[i].td[5].text)
                         # status_information
                         n["status_information"] = str(table.tr[i].td[6].text)
-                        # passive-only service or not
-                        # due to unreliable HTML structure of Nagios/Icinga check first if there is any sign
-                        # of any table parts which might be evaluated
                         n["passiveonly"] = False
-                        if table.tr[i].__dict__.has_key("td"): 
-                            if table.tr[i].td[1].table.tr.td[1].table.tr.__dict__.has_key("td"):
-                                if table.tr[i].td[1].table.tr.td[1].table.tr.td[0].a.text != None and \
-                                    table.tr[i].td[1].table.tr.td[1].table.tr.td[0].a.text.find('[PASSIVE_ONLY]') != -1:
-                                    n["passiveonly"] = True
+                        n["notifications"] = True
+                        n["flapping"] = False
+                        td_html = lxml.etree.tostring(table.tr[i].td[1].table.tr.td[1]);
+                        icons = re.findall(">\[{2}([a-z]+)\]{2}<", td_html)
+                        # e.g. ['comment', 'passiveonly', 'ndisabled', 'flapping']
+                        for icon in icons:
+                            if (icon == "passiveonly"):
+                                n["passiveonly"] = True
+                            elif (icon == "ndisabled"):
+                                n["notifications"] = False
+                            elif (icon == "flapping"):
+                                n["flapping"] = True
+                        # cleaning        
+                        del td_html, icons
+
                         # add dictionary full of information about this service item to nagitems - only if service
                         nagitems["services"].append(n)
                         # after collection data in nagitems create objects of its informations
@@ -784,7 +791,7 @@ class GenericServer(object):
                 #prettyhtml = lxml.etree.tostring(html, pretty_print=True)
                 prettyhtml = lxml.etree.tostring(html, pretty_print=False)               
                 del html
-                prettyhtml = re.sub(r"<img\ssrc=\"[^\"]*/passiveonly\.gif\"[^>]+>", "[PASSIVE_ONLY]", prettyhtml)
+                prettyhtml = re.sub(r"<img\ssrc=\"[^\"]*/([a-z]+)\.gif\"[^>]+>", "[[\\1]]", prettyhtml)
                 
                 # third step: clean HTML from tags which embarass libxml2 2.7
                 # only possible when module lxml.html.clean has been loaded

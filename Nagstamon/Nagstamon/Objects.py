@@ -161,6 +161,8 @@ class GenericService(GenericObject):
         self.attempt = ""
         self.status_information = ""
         self.passiveonly = False
+        self.notifications = True
+        self.flapping = False
         
 
     def get_host_name(self):
@@ -173,6 +175,14 @@ class GenericService(GenericObject):
 
     def is_passive_only(self):
         return bool(self.passiveonly)    
+    
+    
+    def is_flapping(self):
+        return bool(self.flapping)    
+    
+    
+    def sends_notifications(self):
+        return bool(self.notifications)    
     
     
     def get_name(self):
