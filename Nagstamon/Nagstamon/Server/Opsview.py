@@ -158,3 +158,54 @@ class OpsviewServer(GenericServer):
             self.Debug(server=self.get_name(), debug="Open hosts web page " + self.nagios_url + "/status/host?hostgroupid=1&state=1")
 
             
+    def GetHost(self, host):
+        """
+        find out ip or hostname of given host to access hosts/devices which do not appear in DNS but
+        have their ip saved in Nagios
+        """
+        
+        # initialize ip string
+        ip = ""
+
+        # glue nagios cgi url and hostinfo 
+        nagcgiurl_host  = self.nagios_cgi_url + "/extinfo.cgi?type=1&host=" + host
+        
+        # get host info
+        result = self.FetchURL(nagcgiurl_host, giveback="obj", remove_tags=["link", "br", "img", "hr", "script", "th", "form", "p"])
+        htobj = result.result
+
+        try:
+            # take ip from object path
+            # Opsview puts a lot of Javascript into HTML page so the wanted
+            # information table is embedded in another DIV
+            # it seems they changed somethin in newer version (at least 3.11) so
+            # for backward compatibility lets try various divs
+            try:
+                ip = str(htobj.body.div[3].table.tr.td[1].getchildren()[-2])
+            except:
+                ip = str(htobj.body.div[4].table.tr.td[1].getchildren()[-2])
+            # workaround for URL-ified IP as described in SF bug 2967416
+            # https://sourceforge.net/tracker/?func=detail&aid=2967416&group_id=236865&atid=1101370
+            if not ip.find("://") == -1:
+                ip = ip.split("://")[1]
+            # print IP in debug mode
+            if str(self.conf.debug_mode) == "True":    
+                self.Debug(server=self.get_name(), host=host, debug ="IP of %s:" % (host) + " " + ip)
+            # when connection by DNS is not configured do it by IP
+            if str(self.conf.connect_by_dns_yes) == "True":
+                # try to get DNS name for ip, if not available use ip
+                try:
+                    address = socket.gethostbyaddr(ip)[0]
+                except:
+                    address = ip
+            else:
+                address = ip
+        except:
+            result, error = self.Error(sys.exc_info())
+            return Result(result=result, error=error)
+         
+        # do some cleanup
+        del htobj    
+
+        # give back host or ip
+        return Result(result=address)

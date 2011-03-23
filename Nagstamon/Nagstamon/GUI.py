@@ -77,9 +77,9 @@ class GUI(object):
         
         # Meta
         self.name = "nagstamon"
-        self.version = "0.9.5-RC1"
+        self.version = "0.9.5"
         self.website = "http://nagstamon.sourceforge.net/"
-        self.copyright = "©2008-2010 Henri Wahl\nh.wahl@ifw-dresden.de"
+        self.copyright = "©2008-2011 Henri Wahl\nh.wahl@ifw-dresden.de"
         self.comments = "Nagios status monitor for your desktop"
         
         # get resources directory from current directory - only if not being set before by pkg_resources

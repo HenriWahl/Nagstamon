@@ -8,7 +8,6 @@ import sys
 import cookielib
 import traceback
 import gc
-import Queue
 
 # new attempt to replace memory eating lxml
 try:

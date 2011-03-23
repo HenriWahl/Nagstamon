@@ -793,6 +793,10 @@ class GenericServer(object):
                 del html
                 prettyhtml = re.sub(r"<img\ssrc=\"[^\"]*/([a-z]+)\.gif\"[^>]+>", "[[\\1]]", prettyhtml)
                 
+                hier dann einfach <a href= blabla durch "" ersetzen, dito das </a>
+                
+                print prettyhtml
+
                 # third step: clean HTML from tags which embarass libxml2 2.7
                 # only possible when module lxml.html.clean has been loaded
                 if sys.modules.has_key("lxml.html.clean"):
@@ -855,15 +859,10 @@ class GenericServer(object):
 
         try:
             # take ip from object path
-            if self.type == "Opsview":
-                # Opsview puts a lot of Javascript into HTML page so the wanted
-                # information table is embedded in another DIV
-                ip = str(htobj.body.div[3].table.tr.td[1].getchildren()[-2])
-            else:
-                ip = str(htobj.body.table.tr.td[1].div[5].text)
-                # Workaround for Nagios 3.1 where there are groups listed whose the host is a member of
-                if ip == "Member of":
-                    ip = str(htobj.body.table.tr.td[1].div[7].text)
+            ip = str(htobj.body.table.tr.td[1].div[5].text)
+            # Workaround for Nagios 3.1 where there are groups listed whose the host is a member of
+            if ip == "Member of":
+                ip = str(htobj.body.table.tr.td[1].div[7].text)
 
             # workaround for URL-ified IP as described in SF bug 2967416
             # https://sourceforge.net/tracker/?func=detail&aid=2967416&group_id=236865&atid=1101370
