@@ -404,8 +404,9 @@ class GenericServer(object):
                         # duration
                         n["duration"] = str(table.tr[i].td[3].text)
                         # division between Nagios and Icinga in real life... where
-                        # Nagios has only 5 columns there are 7 in Icinga...
-                        if len(table.tr[i].td) == 5:
+                        # Nagios has only 5 columns there are 7 in Icinga 1.3...
+                        # ... and 6 in Icinga 1.2 :-)
+                        if len(table.tr[i].td) < 7:
                             # the old Nagios table
                             # status_information
                             n["status_information"] = str(table.tr[i].td[4].text)
@@ -810,8 +811,11 @@ class GenericServer(object):
                 # patch for passive checks, identified in Nagios and Icinga by icon
                 prettyhtml = re.sub(r"<img\ssrc=\"[^\"]*/([a-z]+)\.gif\"[^>]+>", "[[\\1]]", prettyhtml)
                 # remove <a> tags to avoid not-shown-links in status information
+                # when removing </a> it is also necessary to remove &nbsp; because
+                # it might be added to hostname
                 prettyhtml = re.sub(r'(?i)<a .*=".*">', '', prettyhtml)
                 prettyhtml = re.sub(r'(?i)</a>', '', prettyhtml)
+                prettyhtml = re.sub(r'(?i)&nbsp;|&#160;', '', prettyhtml)
 
                 # third step: clean HTML from tags which embarass libxml2 2.7
                 # only possible when module lxml.html.clean has been loaded
