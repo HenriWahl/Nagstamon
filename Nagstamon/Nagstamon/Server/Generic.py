@@ -378,7 +378,8 @@ class GenericServer(object):
             # put a copy of a part of htobj into table to be able to delete htobj
             try:
                 table = copy.deepcopy(htobj.body.table[self.HTML_BODY_TABLE_INDEX])
-            except:
+            except Exception, err:
+                print err
                 table = copy.deepcopy(htobj.body.embed.table)
             
             # do some cleanup    
@@ -391,7 +392,9 @@ class GenericServer(object):
                         n = {}
                         # host
                         try:
-                            n["host"] = str(table.tr[i].td[0].table.tr.td.table.tr.td.a.text)
+                            #n["host"] = str(table.tr[i].td[0].table.tr.td.table.tr.td.a.text)
+                            n["host"] = str(table.tr[i].td[0].table.tr.td.table.tr.td.text)
+                            
                         except:
                             n["host"] = str(nagitems[len(nagitems)-1]["host"])
                         # status
@@ -400,10 +403,20 @@ class GenericServer(object):
                         n["last_check"] = str(table.tr[i].td[2].text)
                         # duration
                         n["duration"] = str(table.tr[i].td[3].text)
-                        # status_information
-                        n["status_information"] = str(table.tr[i].td[4].text)
-                        # attempts are not shown in case of hosts so it defaults to "N/A"
-                        n["attempt"] = "N/A"
+                        # division between Nagios and Icinga in real life... where
+                        # Nagios has only 5 columns there are 7 in Icinga...
+                        if len(table.tr[i].td) == 5:
+                            # the old Nagios table
+                            # status_information
+                            n["status_information"] = str(table.tr[i].td[4].text)
+                            # attempts are not shown in case of hosts so it defaults to "N/A"
+                            n["attempt"] = "N/A"
+                        else:
+                            # attempts are shown for hosts
+                            n["attempt"] = str(table.tr[i].td[4].text)
+                            # status_information
+                            n["status_information"] = str(table.tr[i].td[5].text)
+
                         
                         # add dictionary full of information about this host item to nagitems
                         nagitems["hosts"].append(n)
@@ -453,11 +466,13 @@ class GenericServer(object):
                         # so if the hostname is empty the nagios status item should get
                         # its hostname from the previuos item - one reason to keep "nagitems"
                         try:
-                            n["host"] = str(table.tr[i].td[0].table.tr.td.table.tr.td.a.text)
+                            #n["host"] = str(table.tr[i].td[0].table.tr.td.table.tr.td.a.text)
+                            n["host"] = str(table.tr[i].td[0].table.tr.td.table.tr.td.text)        
                         except:
                             n["host"] = str(nagitems["services"][len(nagitems["services"])-1]["host"])
                         # service
-                        n["service"] = str(table.tr[i].td[1].table.tr.td.table.tr.td.a.text)
+                        #n["service"] = str(table.tr[i].td[1].table.tr.td.table.tr.td.a.text)
+                        n["service"] = str(table.tr[i].td[1].table.tr.td.table.tr.td.text)
                         # status
                         n["status"] = str(table.tr[i].td[2].text)
                         # last_check
@@ -537,7 +552,8 @@ class GenericServer(object):
                     if not table.tr[i].countchildren() == 1:
                         # host
                         try:
-                            self.new_hosts_in_maintenance.append(str(table.tr[i].td[0].table.tr.td.table.tr.td.a.text))
+                            #self.new_hosts_in_maintenance.append(str(table.tr[i].td[0].table.tr.td.table.tr.td.a.text))
+                            self.new_hosts_in_maintenance.append(str(table.tr[i].td[0].table.tr.td.table.tr.td.text))
                             # get real status of maintained host
                             if self.new_hosts.has_key(self.new_hosts_in_maintenance[-1]):
                                 self.new_hosts[self.new_hosts_in_maintenance[-1]].status = str(table.tr[i].td[1].text)
@@ -576,8 +592,8 @@ class GenericServer(object):
                     if not table.tr[i].countchildren() == 1:
                         # host
                         try:
-                            self.new_hosts_acknowledged.append(str(table.tr[i].td[0].table.tr.td.table.tr.td.a.text))
-                            # get real status of acknowledged host
+                            #self.new_hosts_acknowledged.append(str(table.tr[i].td[0].table.tr.td.table.tr.td.a.text))
+                            self.new_hosts_acknowledged.append(str(table.tr[i].td[0].table.tr.td.table.tr.td.text))                            # get real status of acknowledged host
                             if self.new_hosts.has_key(self.new_hosts_acknowledged[-1]):
                                 self.new_hosts[self.new_hosts_acknowledged[-1]].status = str(table.tr[i].td[1].text)
                         except:
@@ -791,11 +807,11 @@ class GenericServer(object):
                 #prettyhtml = lxml.etree.tostring(html, pretty_print=True)
                 prettyhtml = lxml.etree.tostring(html, pretty_print=False)               
                 del html
+                # patch for passive checks, identified in Nagios and Icinga by icon
                 prettyhtml = re.sub(r"<img\ssrc=\"[^\"]*/([a-z]+)\.gif\"[^>]+>", "[[\\1]]", prettyhtml)
-                
-                hier dann einfach <a href= blabla durch "" ersetzen, dito das </a>
-                
-                print prettyhtml
+                # remove <a> tags to avoid not-shown-links in status information
+                prettyhtml = re.sub(r'(?i)<a .*=".*">', '', prettyhtml)
+                prettyhtml = re.sub(r'(?i)</a>', '', prettyhtml)
 
                 # third step: clean HTML from tags which embarass libxml2 2.7
                 # only possible when module lxml.html.clean has been loaded
