@@ -38,10 +38,10 @@ class NinjaServer(GenericServer):
     HTML_BODY_TABLE_INDEX = 2
 
     def open_tree_view(self, host, service):
-	if not service:
-           webbrowser.open('%s/index.php/extinfo/details/host/%s' % (self.nagios_url, host))
-	else:
-           webbrowser.open('%s/index.php/extinfo/details/service/%s?service=%s' % (self.nagios_url, host, service))
+        if not service:
+            webbrowser.open('%s/index.php/extinfo/details/host/%s' % (self.nagios_url, host))
+        else:
+            webbrowser.open('%s/index.php/extinfo/details/service/%s?service=%s' % (self.nagios_url, host, service))
 
     def open_services(self):
         webbrowser.open('%s/index.php/status/service/all?servicestatustypes=14' % (self.nagios_url))
