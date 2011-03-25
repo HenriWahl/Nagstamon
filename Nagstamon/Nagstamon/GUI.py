@@ -732,34 +732,47 @@ class StatusBar(object):
         
         # TrayIcon - appears as status bar in Windows due to non existent egg.trayicon python module
         if platform.system() == "Windows":
-            #self.StatusBar = gtk.Window(gtk.WINDOW_TOPLEVEL)
-            self.StatusBar = gtk.Window(gtk.WINDOW_POPUP)
-            self.StatusBar.set_decorated(False)
+            """
+            self.StatusBar = gtk.Window(gtk.WINDOW_TOPLEVEL)
+            #self.StatusBar = gtk.Window(gtk.WINDOW_POPUP)
+            self.StatusBar.set_decorated(False)          
             self.StatusBar.set_keep_above(True)
             self.StatusBar.stick()
-            self.StatusBar.set_type_hint(gtk.gdk.WINDOW_TYPE_HINT_TOOLBAR)
+            self.StatusBar.set_type_hint(gtk.gdk.WINDOW_TYPE_HINT_UTILITY)
+            #self.StatusBar.set_type_hint(gtk.gdk.WINDOW_TYPE_HINT_TOOLBAR)
             self.StatusBar.set_property("skip_taskbar_hint", True)
+            """
+            self._CreateFloatingStatusbar()
         else:
             if str(self.conf.statusbar_systray) == "True":
                 try:
                     self.StatusBar = egg.trayicon.TrayIcon(self.output.name)
                 except:
                     print "python gnome2 extras with egg.trayicon not installed so trayicon cannot be used. Using floating desktop status bar instead."
-                    #self.StatusBar = gtk.Window(gtk.WINDOW_TOPLEVEL)
-                    self.StatusBar = gtk.Window(gtk.WINDOW_POPUP)
-                    self.StatusBar.set_decorated(False)
+                    """
+                    self.StatusBar = gtk.Window(gtk.WINDOW_TOPLEVEL)
+                    #self.StatusBar = gtk.Window(gtk.WINDOW_POPUP)
+                    self.StatusBar.set_decorated(False)                  
                     self.StatusBar.stick()
-                    self.StatusBar.set_type_hint(gtk.gdk.WINDOW_TYPE_HINT_TOOLBAR)
+                    self.StatusBar.set_type_hint(gtk.gdk.WINDOW_TYPE_HINT_UTILITY)
+                    #self.StatusBar.set_type_hint(gtk.gdk.WINDOW_TYPE_HINT_TOOLBAR)                    
                     self.StatusBar.set_keep_above(True)
+                    self.StatusBar.set_property("skip_taskbar_hint", True)
+                    """
+                    self._CreateFloatingStatusbar()
             else:
-                #self.StatusBar = gtk.Window(gtk.WINDOW_TOPLEVEL)
-                self.StatusBar = gtk.Window(gtk.WINDOW_POPUP)
+                """
+                self.StatusBar = gtk.Window(gtk.WINDOW_TOPLEVEL)
+                #self.StatusBar = gtk.Window(gtk.WINDOW_POPUP)
                 self.StatusBar.set_decorated(False)
                 self.StatusBar.set_keep_above(True)
                 self.StatusBar.stick()
-                self.StatusBar.set_type_hint(gtk.gdk.WINDOW_TYPE_HINT_TOOLBAR)
+                self.StatusBar.set_type_hint(gtk.gdk.WINDOW_TYPE_HINT_UTILITY)
+                #self.StatusBar.set_type_hint(gtk.gdk.WINDOW_TYPE_HINT_TOOLBAR)
                 self.StatusBar.set_property("skip_taskbar_hint", True)
-        
+                """
+                self._CreateFloatingStatusbar()
+                
         # image for logo in statusbar
         self.nagstamonLogo = gtk.Image()
         self.nagstamonLogo.set_from_file(self.output.Resources + "/nagstamon_small" + self.output.BitmapSuffix)
@@ -848,6 +861,23 @@ class StatusBar(object):
             # in case of error define fixed fontsize
             self.output.fontsize = 10000
 
+    def _CreateFloatingStatusbar(self):
+        """
+        create statusbar as floating window
+        """
+        # TOPLEVEL seems to be more standard compliant
+        self.StatusBar = gtk.Window(gtk.WINDOW_TOPLEVEL)
+        #self.StatusBar = gtk.Window(gtk.WINDOW_POPUP)
+        self.StatusBar.set_decorated(False)
+        self.StatusBar.set_keep_above(True)
+        self.StatusBar.stick()
+        # at http://www.pygtk.org/docs/pygtk/gdk-constants.html#gdk-window-type-hint-constants
+        # there are some hint types to experiment with
+        self.StatusBar.set_type_hint(gtk.gdk.WINDOW_TYPE_HINT_DOCK)
+        #self.StatusBar.set_type_hint(gtk.gdk.WINDOW_TYPE_HINT_TOOLBAR)
+        self.StatusBar.set_property("skip_taskbar_hint", True)
+            
+            
 
     def MenuResponseMonitors(self, widget, menu_entry):
         """
@@ -1884,9 +1914,9 @@ class Settings(object):
             self.output.__init__()
             
             # start debugging loop if wanted
-            if str(self.conf.debug_mode) == "True":
-                debugloop = Actions.DebugLoop(conf=self.conf, debug_queue=self.output.debug_queue, output=self.output)
-                debugloop.start()
+            #if str(self.conf.debug_mode) == "True":
+            #    debugloop = Actions.DebugLoop(conf=self.conf, debug_queue=self.output.debug_queue, output=self.output)
+            #    debugloop.start()
             
             # force refresh
             Actions.RefreshAllServers(servers=self.servers, output=self.output, conf=self.conf)
@@ -2125,7 +2155,7 @@ class NewServer(ServerDialogHelper):
             # put in new one
             self.conf.servers[new_server.name] = new_server
             # create new server thread
-            created_server = Actions.CreateServer(new_server, self.conf)
+            created_server = Actions.CreateServer(new_server, self.conf, self.output.debug_queue)
             if created_server is not None:
                 self.servers[new_server.name] = created_server 
                 

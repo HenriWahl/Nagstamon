@@ -26,7 +26,7 @@ class OpsviewServer(GenericServer):
             # this is only necessary when accessing the API and expecting a XML answer
             self.HTTPheaders["opsxml"] = {"Content-Type":"text/xml", "X-Username":self.get_username(), "X-Password":self.get_password()}          
             
-        # get my cookie to access Opsview web interface to access Opsviews Nagios part       
+        # get cookie to access Opsview web interface to access Opsviews Nagios part       
         if len(self.Cookie) == 0:         
             # put all necessary data into url string
             logindata = urllib.urlencode({"login_username":self.get_username(),\
