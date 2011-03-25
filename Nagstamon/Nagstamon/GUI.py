@@ -84,10 +84,10 @@ class GUI(object):
         
         # get resources directory from current directory - only if not being set before by pkg_resources
         if self.Resources == "":
-            if os.path.exists(os.path.normcase(os.getcwd() + "/Nagstamon/resources")):
-                self.Resources = os.path.normcase(os.getcwd() + "/Nagstamon/resources")
+            if os.path.exists(os.path.normcase(os.getcwd() + os.sep + "Nagstamon" + os.sep + "resources")):
+                self.Resources = os.path.normcase(os.getcwd() + os.sep + "Nagstamon" + os.sep + "resources")
             else:
-                self.Resources = os.path.normcase(os.getcwd() + "/resources")
+                self.Resources = os.path.normcase(os.getcwd() + os.sep + "resources")
 
 
         # initialize overall status flag
@@ -193,7 +193,7 @@ class GUI(object):
             self.BitmapSuffix = ".svg"
             
         # set app icon for all app windows
-        gtk.window_set_default_icon_from_file(self.Resources + "/nagstamon" + self.BitmapSuffix)
+        gtk.window_set_default_icon_from_file(self.Resources + os.sep + "nagstamon" + self.BitmapSuffix)
         
         # Icon in systray and statusbar both get created but
         # only one of them depending on the settings will
@@ -353,7 +353,7 @@ class GUI(object):
             self.popwin.Close()
             self.status_ok = True
             # set systray icon to green aka OK
-            self.statusbar.SysTray.set_from_file(self.Resources + "/nagstamon_green" + self.BitmapSuffix)
+            self.statusbar.SysTray.set_from_file(self.Resources + os.sep + "nagstamon_green" + self.BitmapSuffix)
             # switch notification off
             self.NotificationOff()
         else:
@@ -399,7 +399,7 @@ class GUI(object):
             if downs > 0: color = "black"
 
             # should be solved somehow differently
-            self.statusbar.SysTray.set_from_file(self.Resources + "/nagstamon_" + color + self.BitmapSuffix)
+            self.statusbar.SysTray.set_from_file(self.Resources + os.sep +"nagstamon_" + color + self.BitmapSuffix)
             
             # if there has been any status change notify user
             # first find out which of all servers states is the worst similar to nagstamonObjects.GetStatus()
@@ -444,7 +444,7 @@ class GUI(object):
         """
             
         # set the glade file
-        self.gladefile = self.Resources + "/acknowledge_dialog.glade"  
+        self.gladefile = self.Resources + os.sep + "acknowledge_dialog.glade"  
         self.acknowledge_xml = gtk.glade.XML(self.gladefile) 
         self.acknowledge_dialog = self.acknowledge_xml.get_widget("acknowledge_dialog")
 
@@ -517,7 +517,7 @@ class GUI(object):
         """
             
         # set the glade file
-        self.gladefile = self.Resources + "/downtime_dialog.glade"  
+        self.gladefile = self.Resources + os.sep + "downtime_dialog.glade"  
         self.downtime_xml = gtk.glade.XML(self.gladefile) 
         self.downtime_dialog = self.downtime_xml.get_widget("downtime_dialog")
 
@@ -594,22 +594,31 @@ class GUI(object):
         about.set_website(self.website)
         about.set_copyright(self.copyright)
         about.set_comments(self.comments)
-        about.set_authors(["In alphabetical order:",\
+        about.set_authors(["Henri Wahl",\
+                           " ",\
+                           "Thank you very much for code",\
+                           "contributions, patches, packaging,",\
+                           "testing, hints and ideas:",\
+                           " ",\
                            "Benoît Soenen",\
                            "Carl Chenet",\
                            "Emile Heitor ",\
                            "Henri Wahl",\
                            "John Conroy",\
+                           "Mattias Ryrlén",\
                            "Michał Rzeszut",\
                            "Patrick Cernko",\
                            "Pawel Połewicz",\
+                           "Thomas Gelf",\
                            "Tobias Scheerbaum",\
-                           "...and many more!"])
+                           "Yannick Charton",\
+                           " ",\
+                           "(And those I forgot to mention)"])
         # read LICENSE file
         license = ""
         try:
             # try to find license file in resource directory
-            f = open(self.Resources + "/LICENSE", "r")
+            f = open(self.Resources + os.sep + "LICENSE", "r")
             s = f.readlines()
             f.close()
             for line in s:
@@ -775,7 +784,7 @@ class StatusBar(object):
                 
         # image for logo in statusbar
         self.nagstamonLogo = gtk.Image()
-        self.nagstamonLogo.set_from_file(self.output.Resources + "/nagstamon_small" + self.output.BitmapSuffix)
+        self.nagstamonLogo.set_from_file(self.output.Resources + + os.sep + "nagstamon_small" + self.output.BitmapSuffix)
         
         # 2 versions of label text for notification
         self.statusbar_labeltext = ""
@@ -838,7 +847,7 @@ class StatusBar(object):
         
         # put Systray icon into statusbar object
         self.SysTray = gtk.StatusIcon()
-        self.SysTray.set_from_file(self.output.Resources + "/nagstamon" + self.output.BitmapSuffix)
+        self.SysTray.set_from_file(self.output.Resources + os.sep + "nagstamon" + self.output.BitmapSuffix)
         
         # if systray icon should be shown show it
         if str(self.conf.icon_in_systray) == "False": self.SysTray.set_visible(False)
@@ -1039,7 +1048,7 @@ class StatusBar(object):
             # Windows workaround for non-shrinking desktop statusbar
             self.Resize()
             # change systray icon to error
-            self.SysTray.set_from_file(self.output.Resources + "/nagstamon_error" + self.output.BitmapSuffix)
+            self.SysTray.set_from_file(self.output.Resources + os.sep + "nagstamon_error" + self.output.BitmapSuffix)
             # Windows workaround for non-shrinking desktop statusbar
             self.Resize()
         except:
@@ -1103,7 +1112,7 @@ class Popwin(gtk.Window):
         # put a name tag where there buttons had been before
         # image for logo in statusbar
         self.NagstamonLabel = gtk.Image()
-        self.NagstamonLabel.set_from_file(self.output.Resources + "/nagstamon_label.png")     
+        self.NagstamonLabel.set_from_file(self.output.Resources + os.sep + "nagstamon_label.png")     
         self.HBoxNagiosButtons.add(self.NagstamonLabel)
         self.AlMonitorLabel.add(self.HBoxNagiosButtons)
         
@@ -1122,7 +1131,7 @@ class Popwin(gtk.Window):
         # Button Recheck All - HBox is necessary because gtk.Button allows only one child
         self.ButtonRecheckAll_HBox = gtk.HBox()
         self.ButtonRecheckAll_Icon = gtk.Image()
-        self.ButtonRecheckAll_Icon.set_from_file(self.output.Resources + "/recheckall.png")
+        self.ButtonRecheckAll_Icon.set_from_file(self.output.Resources + + ose.sep + "recheckall.png")
         self.ButtonRecheckAll_Label = gtk.Label("Recheck all and refresh")
         self.ButtonRecheckAll_HBox.add(self.ButtonRecheckAll_Icon)
         self.ButtonRecheckAll_HBox.add(self.ButtonRecheckAll_Label)
@@ -1134,7 +1143,7 @@ class Popwin(gtk.Window):
         # Button Refresh - HBox is necessary because gtk.Button allows only one child
         self.ButtonRefresh_HBox = gtk.HBox()
         self.ButtonRefresh_Icon = gtk.Image()
-        self.ButtonRefresh_Icon.set_from_file(self.output.Resources + "/refresh.png")
+        self.ButtonRefresh_Icon.set_from_file(self.output.Resources + os.sep + "refresh.png")
         self.ButtonRefresh_Label = gtk.Label("Refresh")
         self.ButtonRefresh_HBox.add(self.ButtonRefresh_Icon)
         self.ButtonRefresh_HBox.add(self.ButtonRefresh_Label)
@@ -1146,7 +1155,7 @@ class Popwin(gtk.Window):
         # Button Settings - HBox is necessary because gtk.Button allows only one child
         self.ButtonSettings_HBox = gtk.HBox()
         self.ButtonSettings_Icon = gtk.Image()
-        self.ButtonSettings_Icon.set_from_file(self.output.Resources + "/settings.png")
+        self.ButtonSettings_Icon.set_from_file(self.output.Resources + os.sep + "settings.png")
         self.ButtonSettings_Label = gtk.Label("Settings")
         self.ButtonSettings_HBox.add(self.ButtonSettings_Icon)
         self.ButtonSettings_HBox.add(self.ButtonSettings_Label)
@@ -1158,7 +1167,7 @@ class Popwin(gtk.Window):
         # Button Close - HBox is necessary because gtk.Button allows only one child
         self.ButtonClose_HBox = gtk.HBox()
         self.ButtonClose_Icon = gtk.Image()
-        self.ButtonClose_Icon.set_from_file(self.output.Resources + "/close.png")
+        self.ButtonClose_Icon.set_from_file(self.output.Resources + os.sep + "close.png")
         self.ButtonClose_HBox.add(self.ButtonClose_Icon)
         self.ButtonClose = gtk.Button()
         self.ButtonClose.set_relief(gtk.RELIEF_NONE)
@@ -1594,7 +1603,7 @@ class ServerVBox(gtk.VBox):
         # Button Monitor - HBox is necessary because gtk.Button allows only one child
         self.ButtonMonitor_HBox = gtk.HBox()
         self.ButtonMonitor_Icon = gtk.Image()
-        self.ButtonMonitor_Icon.set_from_file(self.output.Resources + "/nagios.png")
+        self.ButtonMonitor_Icon.set_from_file(self.output.Resources + os.sep + "nagios.png")
         self.ButtonMonitor_Label = gtk.Label("Monitor")
         self.ButtonMonitor_HBox.add(self.ButtonMonitor_Icon)
         self.ButtonMonitor_HBox.add(self.ButtonMonitor_Label)
@@ -1605,7 +1614,7 @@ class ServerVBox(gtk.VBox):
         # Button Services - HBox is necessary because gtk.Button allows only one child
         self.ButtonServices_HBox = gtk.HBox()
         self.ButtonServices_Icon = gtk.Image()
-        self.ButtonServices_Icon.set_from_file(self.output.Resources + "/services.png")
+        self.ButtonServices_Icon.set_from_file(self.output.Resources + os.sep + "services.png")
         self.ButtonServices_Label = gtk.Label("Services")
         self.ButtonServices_HBox.add(self.ButtonServices_Icon)
         self.ButtonServices_HBox.add(self.ButtonServices_Label)
@@ -1616,7 +1625,7 @@ class ServerVBox(gtk.VBox):
         # Button Hosts - HBox is necessary because gtk.Button allows only one child
         self.ButtonHosts_HBox = gtk.HBox()
         self.ButtonHosts_Icon = gtk.Image()
-        self.ButtonHosts_Icon.set_from_file(self.output.Resources + "/hosts.png")
+        self.ButtonHosts_Icon.set_from_file(self.output.Resources + os.sep + "hosts.png")
         self.ButtonHosts_Label = gtk.Label("Hosts")
         self.ButtonHosts_HBox.add(self.ButtonHosts_Icon)
         self.ButtonHosts_HBox.add(self.ButtonHosts_Label)
@@ -1693,7 +1702,7 @@ class Settings(object):
         self.output.SettingsDialogOpen = True
         
         # set the glade files
-        self.gladefile = self.output.Resources + "/settings_dialog.glade"  
+        self.gladefile = self.output.Resources + os.sep + "settings_dialog.glade"  
         self.glade = gtk.glade.XML(self.gladefile) 
         self.dialog = self.glade.get_widget("settings_dialog")
         
@@ -2081,7 +2090,7 @@ class NewServer(ServerDialogHelper):
         for k in kwds: self.__dict__[k] = kwds[k]
         
         # set the glade files
-        self.gladefile = self.output.Resources + "/settings_server_dialog.glade"  
+        self.gladefile = self.output.Resources + os.sep + "settings_server_dialog.glade"  
         self.glade = gtk.glade.XML(self.gladefile) 
         self.dialog = self.glade.get_widget("settings_server_dialog")
         
@@ -2244,7 +2253,7 @@ class EditServer(ServerDialogHelper):
         for k in kwds: self.__dict__[k] = kwds[k]
 
         # set the glade files
-        self.gladefile = self.output.Resources + "/settings_server_dialog.glade"  
+        self.gladefile = self.output.Resources + os.sep + "settings_server_dialog.glade"  
         self.glade = gtk.glade.XML(self.gladefile) 
         self.dialog = self.glade.get_widget("settings_server_dialog")
         
