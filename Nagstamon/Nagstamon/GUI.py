@@ -784,7 +784,7 @@ class StatusBar(object):
                 
         # image for logo in statusbar
         self.nagstamonLogo = gtk.Image()
-        self.nagstamonLogo.set_from_file(self.output.Resources + + os.sep + "nagstamon_small" + self.output.BitmapSuffix)
+        self.nagstamonLogo.set_from_file(self.output.Resources + os.sep + "nagstamon_small" + self.output.BitmapSuffix)
         
         # 2 versions of label text for notification
         self.statusbar_labeltext = ""
@@ -1131,7 +1131,7 @@ class Popwin(gtk.Window):
         # Button Recheck All - HBox is necessary because gtk.Button allows only one child
         self.ButtonRecheckAll_HBox = gtk.HBox()
         self.ButtonRecheckAll_Icon = gtk.Image()
-        self.ButtonRecheckAll_Icon.set_from_file(self.output.Resources + + ose.sep + "recheckall.png")
+        self.ButtonRecheckAll_Icon.set_from_file(self.output.Resources + os.sep + "recheckall.png")
         self.ButtonRecheckAll_Label = gtk.Label("Recheck all and refresh")
         self.ButtonRecheckAll_HBox.add(self.ButtonRecheckAll_Icon)
         self.ButtonRecheckAll_HBox.add(self.ButtonRecheckAll_Label)
