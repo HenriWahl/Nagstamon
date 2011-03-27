@@ -217,7 +217,7 @@ class GenericServer(object):
             
         # if host is acknowledged and all services should be to or if a service is acknowledged
         # (and all other on this host too)
-        if service != "" or len(all_services) > 0:
+        if service != "":
             # service @ host
             cgi_data = urllib.urlencode({"cmd_typ":"34", "cmd_mod":"2", "host":host, "service":service,\
                                          "sticky_ack":self.HTML_ACKFLAGS[sticky], "send_notification":self.HTML_ACKFLAGS[notify], "persistent":self.HTML_ACKFLAGS[persistent],\
@@ -229,16 +229,17 @@ class GenericServer(object):
             self.FetchURL(url + "?" + cgi_data, giveback="raw") 
 
         # acknowledge all services on a host
-        for s in all_services:
-            # service @ host
-            cgi_data = urllib.urlencode({"cmd_typ":"34", "cmd_mod":"2", "host":host, "service":s,\
-                                         "sticky_ack":self.HTML_ACKFLAGS[sticky], "send_notification":self.HTML_ACKFLAGS[notify], "persistent":self.HTML_ACKFLAGS[persistent],\
-                                         "com_author":author, "com_data":comment, "btnSubmit":"Commit"})
-            #running remote cgi command        
-            # now with GET because did not work with POST and (obsolete?) Icinga 1.2
-            # seems to work with all other flavours (Nagios, Opsview) too
-            #self.FetchURL(url, giveback="raw", cgi_data=cgi_data)
-            self.FetchURL(url + "?" + cgi_data, giveback="raw") 
+        if len(all_services) > 0:
+            for s in all_services:
+                # service @ host
+                cgi_data = urllib.urlencode({"cmd_typ":"34", "cmd_mod":"2", "host":host, "service":s,\
+                                             "sticky_ack":self.HTML_ACKFLAGS[sticky], "send_notification":self.HTML_ACKFLAGS[notify], "persistent":self.HTML_ACKFLAGS[persistent],\
+                                             "com_author":author, "com_data":comment, "btnSubmit":"Commit"})
+                #running remote cgi command        
+                # now with GET because did not work with POST and (obsolete?) Icinga 1.2
+                # seems to work with all other flavours (Nagios, Opsview) too
+                #self.FetchURL(url, giveback="raw", cgi_data=cgi_data)
+                self.FetchURL(url + "?" + cgi_data, giveback="raw") 
             
     
     def set_downtime(self, thread_obj):
@@ -795,6 +796,10 @@ class GenericServer(object):
 
         try:
             try:
+                # debug
+                if str(self.conf.debug_mode) == "True":
+                    self.Debug(server=self.get_name(), debug="FetchURL: " + url + " CGI Data: " + str(cgi_data))
+                    
                 request = urllib2.Request(url, cgi_data, self.HTTPheaders[giveback])
                 urlcontent = self.urlopener.open(request)
                 # use opener - if cgi_data is not empty urllib uses a POST request

@@ -603,7 +603,6 @@ class GUI(object):
                            "Benoît Soenen",\
                            "Carl Chenet",\
                            "Emile Heitor ",\
-                           "Henri Wahl",\
                            "John Conroy",\
                            "Mattias Ryrlén",\
                            "Michał Rzeszut",\
