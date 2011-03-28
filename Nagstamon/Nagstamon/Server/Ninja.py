@@ -56,22 +56,27 @@ class NinjaServer(GenericServer):
             values = {"requested_command": "SCHEDULE_SVC_CHECK"}
             values.update({"cmd_param[service]": host + ";" + service})
 
-        check_time = self.send_http_command("time")
+        content = self.FetchURL(self.time_url, giveback="raw").result
+        pos = content.find('<span id="page_last_updated">')
+        remote_time = content[pos+len('<span id="page_last_updated">'):content.find('<', pos+1)]
+        if remote_time:
+            magic_tuple = datetime.datetime.strptime(str(remote_time), "%Y-%m-%d %H:%M:%S")
+            time_diff = datetime.timedelta(0, 10)
+            remote_time = magic_tuple + time_diff
 
-        if not check_time:
-            if str(self.conf.debug_mode) == "True":
-                self.Debug(server=self.get_name(), debug="Recheck failed, didn't got any 'time' from server")
-            return
+        if str(self.conf.debug_mode) == "True":
+            self.Debug(server=self.get_name(), debug="Get Remote time: " + str(remote_time))     
 
-        values.update({"cmd_param[check_time]": check_time})
+        values.update({"cmd_param[check_time]": remote_time})
         values.update({"cmd_param[_force]": "1"})
 
         if str(self.conf.debug_mode) == "True":
             self.Debug(server=self.get_name(), debug="Sending Recheck")
-
-        if self.send_http_command("commit", values):
-            if str(self.conf.debug_mode) == "True":
-                self.Debug(server=self.get_name(), debug="Recheck Success")
+  
+        #if self.send_http_command("commit", values):
+        #    if str(self.conf.debug_mode) == "True":
+        #        self.Debug(server=self.get_name(), debug="Recheck Success")
+        self.FetchURL(self.commit_url, cgi_data=urllib.urlencode(values), giveback="raw")
 
 
     def _set_acknowledge(self, host, service, author, comment, sticky, notify, persistent, all_services):
@@ -107,6 +112,7 @@ class NinjaServer(GenericServer):
             self.Debug(server=self.get_name(), debug="Sending ACKNOWLEDGE Values: " + str(values) )
 
         self.send_http_command("commit", values)
+        
 
     def _set_downtime(self, host, service, author, comment, fixed, start_time, end_time, hours, minutes):
         if not service:
