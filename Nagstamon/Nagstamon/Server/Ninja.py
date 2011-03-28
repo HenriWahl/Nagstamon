@@ -29,26 +29,10 @@ class NinjaServer(GenericServer):
     commit_url = False
     login_url = False
     time_url = False
-    #headers = False
-
-    # Session Cookies
-    ###cj = cookielib.LWPCookieJar()
 
     # used in Nagios _get_status() method
     HTML_BODY_TABLE_INDEX = 2
-    
-    
-    def __init__(self, **kwds):
-        # add all keywords to object, every mode searchs inside for its favorite arguments/keywords
-        for k in kwds: self.__dict__[k] = kwds[k]
-
-        GenericServer.__init__(self, **kwds)
-        
-        # Ninja Settings
-        self.commit_url = self.nagios_url + '/index.php/command/commit'
-        self.login_url = self.nagios_url + '/index.php/default/do_login'
-        self.time_url = self.nagios_url + '/index.php/extinfo/show_process_info'
-    
+   
 
     def open_tree_view(self, host, service):
         if not service:
@@ -152,12 +136,6 @@ class NinjaServer(GenericServer):
 
         if str(self.conf.debug_mode) == "True":
             self.Debug(server=self.get_name(), debug="Enter _init_HTTP" )
-
-            
-        #if self.cj != None:
-        #    self.opener = urllib2.build_opener(urllib2.HTTPCookieProcessor(self.cj))
-        #    urllib2.install_opener(self.opener)
-        
         
         print "self.Cookie:", self.Cookie
         
@@ -166,20 +144,12 @@ class NinjaServer(GenericServer):
                 # Ninja Settings
                 
                 
-                print "RELOGGIN IN"
+                print "RELOGGIN' IN"
                 
                 self.commit_url = self.nagios_url + '/index.php/command/commit'
                 self.login_url = self.nagios_url + '/index.php/default/do_login'
                 self.time_url = self.nagios_url + '/index.php/extinfo/show_process_info'
-                        
-                
-                # Try to login
-                #login_values = {'username': self.get_username(), 'password': self.get_password()}
-                #login_data = urllib.urlencode(login_values)
-                #req = Request(self.login_url, login_data, self.headers)
-                #req = Request(self.login_url, login_data)            
-                #handle = urlopen(req)
-                #self.FetchURL(self.login_url, cgi_data=urllib.urlencode({'username': self.get_username(), 'password': self.get_password()}))
+
                 handle = self.urlopener.open(self.login_url, urllib.urlencode({'username': self.get_username(), 'password': self.get_password()}))
 
                 
@@ -211,16 +181,17 @@ class NinjaServer(GenericServer):
 
         # Lets send the commit string
         if mode == "commit":
-            data = urllib.urlencode(values)
-            req = Request(self.commit_url, data, self.headers)
-            handle = urlopen(req)
+            #data = urllib.urlencode(values)
+            #req = Request(self.commit_url, data, self.headers)
+            #handle = urlopen(req)
+            self.FetchURL(self.commit_url, cgi_data=urllib.urlencode(values), giveback="raw")
             return True
 
         if mode == "time":
-            data = None
+            #data = None
             remote_time = None
-            req = Request(self.time_url, data, self.headers)
-            handle = urlopen(req)
+            #req = Request(self.time_url, data, self.headers)
+            #handle = urlopen(req)
 
             if str(self.conf.debug_mode) == "True":
                 self.Debug(server=self.get_name(), debug="Url: " + handle.geturl())
@@ -231,7 +202,7 @@ class NinjaServer(GenericServer):
             #    if remote_time != False:
             #        return remote_time
 
-            content = handle.read()
+            content = self.FetchURL(self.time_url, giveback="raw")
             pos = content.find('<span id="page_last_updated">')
             remote_time = content[pos+len('<span id="page_last_updated">'):content.find('<', pos+1)]
             if remote_time:
