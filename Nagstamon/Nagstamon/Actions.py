@@ -594,7 +594,9 @@ def CreateServer(server=None, conf=None, debug_queue=None):
         nagiosserver.proxy_handler = urllib2.ProxyHandler({"http": nagiosserver.proxy_address, "https": nagiosserver.proxy_address})
         nagiosserver.proxy_auth_handler = urllib2.ProxyBasicAuthHandler(nagiosserver.passman)   
 
+    # create permanent urlopener for server to avoid memory leak with millions of openers    
     nagiosserver.urlopener = BuildURLOpener(nagiosserver)        
+    # server's individual preparations for HTTP connections (for esample cookie creation)
     nagiosserver.init_HTTP()    
 
     # debug

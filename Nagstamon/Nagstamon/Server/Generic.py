@@ -128,6 +128,8 @@ class GenericServer(object):
         partly not constantly working Basic Authorization requires extra Autorization headers,
         different between various server types
         """
+        print "INIT_HTTP"
+        
         if self.HTTPheaders == {}:
             for giveback in ["raw", "obj"]:
                 self.HTTPheaders[giveback] = {"Authorization": "Basic " + base64.b64encode(self.get_username() + ":" + self.get_password())}
@@ -213,7 +215,8 @@ class GenericServer(object):
             cgi_data = urllib.urlencode({"cmd_typ":"33", "cmd_mod":"2", "host":host, "com_author":author,\
                                          "sticky_ack":self.HTML_ACKFLAGS[sticky], "send_notification":self.HTML_ACKFLAGS[notify], "persistent":self.HTML_ACKFLAGS[persistent],\
                                          "com_data":comment, "btnSubmit":"Commit"})
-            self.FetchURL(url + "?" + cgi_data, giveback="raw")
+            #self.FetchURL(url + "?" + cgi_data, giveback="raw")
+            self.FetchURL(url, giveback="raw", cgi_data=cgi_data) 
             
         # if host is acknowledged and all services should be to or if a service is acknowledged
         # (and all other on this host too)
@@ -225,8 +228,8 @@ class GenericServer(object):
             # running remote cgi command        
             # now with GET because did not work with POST and (obsolete?) Icinga 1.2
             # seems to work with all other flavours (Nagios, Opsview) too
-            #self.FetchURL(url, giveback="raw", cgi_data=cgi_data) 
-            self.FetchURL(url + "?" + cgi_data, giveback="raw") 
+            self.FetchURL(url, giveback="raw", cgi_data=cgi_data) 
+            #self.FetchURL(url + "?" + cgi_data, giveback="raw") 
 
         # acknowledge all services on a host
         if len(all_services) > 0:
@@ -238,8 +241,8 @@ class GenericServer(object):
                 #running remote cgi command        
                 # now with GET because did not work with POST and (obsolete?) Icinga 1.2
                 # seems to work with all other flavours (Nagios, Opsview) too
-                #self.FetchURL(url, giveback="raw", cgi_data=cgi_data)
-                self.FetchURL(url + "?" + cgi_data, giveback="raw") 
+                self.FetchURL(url, giveback="raw", cgi_data=cgi_data)
+                #self.FetchURL(url + "?" + cgi_data, giveback="raw") 
             
     
     def set_downtime(self, thread_obj):

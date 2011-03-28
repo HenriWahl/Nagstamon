@@ -32,7 +32,7 @@ class NinjaServer(GenericServer):
     headers = False
 
     # Session Cookies
-    cj = cookielib.LWPCookieJar()
+    ###cj = cookielib.LWPCookieJar()
 
     # used in Nagios _get_status() method
     HTML_BODY_TABLE_INDEX = 2
@@ -131,11 +131,13 @@ class NinjaServer(GenericServer):
             self.Debug(server=self.get_name(), debug="Sending DOWNTIME Values: " + str(values) )
 
         self.send_http_command("commit", values)
+        
 
     def init_HTTP(self):
         GenericServer.init_HTTP(self)
         self._init_HTTP()
 
+        
     def _init_HTTP(self):
         if str(self.conf.debug_mode) == "True":
             self.Debug(server=self.get_name(), debug="Enter _init_HTTP" )
@@ -144,17 +146,17 @@ class NinjaServer(GenericServer):
         self.commit_url = self.nagios_url + '/index.php/command/commit'
         self.login_url = self.nagios_url + '/index.php/default/do_login'
         self.time_url = self.nagios_url + '/index.php/extinfo/show_process_info'
-        self.headers =  {'User-agent' : 'Mozilla/4.0 (compatible; MSIE 5.5; Windows NT)'}
 
-        if self.cj != None:
-            self.opener = urllib2.build_opener(urllib2.HTTPCookieProcessor(self.cj))
-            urllib2.install_opener(self.opener)
+        #if self.cj != None:
+        #    self.opener = urllib2.build_opener(urllib2.HTTPCookieProcessor(self.cj))
+        #    urllib2.install_opener(self.opener)
 
         try:
             # Try to login
             login_values = {'username': self.get_username(), 'password': self.get_password()}
             login_data = urllib.urlencode(login_values)
-            req = Request(self.login_url, login_data, self.headers)
+            #req = Request(self.login_url, login_data, self.headers)
+            req = Request(self.login_url, login_data)            
             handle = urlopen(req)
 
         except IOError, e:
@@ -174,10 +176,11 @@ class NinjaServer(GenericServer):
             else:
                 # Cookie should be set by now lets return ok.
                 return True
+            
 
     def send_http_command(self, mode, values=False):
-        if not self.login_url:
-            self._init_HTTP()
+        #if not self.login_url:
+        #    self._init_HTTP()
 
         if mode == "commit" and not values:
             return False
