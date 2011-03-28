@@ -32,7 +32,28 @@ class NinjaServer(GenericServer):
 
     # used in Nagios _get_status() method
     HTML_BODY_TABLE_INDEX = 2
-   
+    
+
+    def init_HTTP(self):
+        # add default auth for monitor.old 
+        GenericServer.init_HTTP(self)
+
+        # self.Cookie is a CookieJar which is a list of cookies - if 0 then emtpy
+        if len(self.Cookie) == 0: 
+            try:
+                # Ninja Settings
+                self.commit_url = self.nagios_url + '/index.php/command/commit'
+                self.login_url = self.nagios_url + '/index.php/default/do_login'
+                self.time_url = self.nagios_url + '/index.php/extinfo/show_process_info'
+                # get a Ninja cookie via own method
+                self.urlopener.open(self.login_url, urllib.urlencode({'username': self.get_username(), 'password': self.get_password()}))
+
+                if str(self.conf.debug_mode) == "True":
+                    self.Debug(server=self.get_name(), debug="Cookie:" + str(self.Cookie))
+
+            except:
+                self.Error(sys.exc_info())
+      
 
     def open_tree_view(self, host, service):
         if not service:
@@ -70,12 +91,6 @@ class NinjaServer(GenericServer):
         values.update({"cmd_param[check_time]": remote_time})
         values.update({"cmd_param[_force]": "1"})
 
-        if str(self.conf.debug_mode) == "True":
-            self.Debug(server=self.get_name(), debug="Sending Recheck")
-  
-        #if self.send_http_command("commit", values):
-        #    if str(self.conf.debug_mode) == "True":
-        #        self.Debug(server=self.get_name(), debug="Recheck Success")
         self.FetchURL(self.commit_url, cgi_data=urllib.urlencode(values), giveback="raw")
 
 
@@ -102,16 +117,13 @@ class NinjaServer(GenericServer):
             values = {"requested_command": "ACKNOWLEDGE_SVC_PROBLEM"}
             values.update({"cmd_param[service]": host + ";" + service})
 
-        values.update({"cmd_param[sticky]": sticky})
-        values.update({"cmd_param[notify]": notify})
-        values.update({"cmd_param[persistent]": persistent})
+        values.update({"cmd_param[sticky]": int(sticky)})
+        values.update({"cmd_param[notify]": int(notify)})
+        values.update({"cmd_param[persistent]": int(persistent)})
         values.update({"cmd_param[author]": self.get_username()})
         values.update({"cmd_param[comment]": comment})
 
-        if str(self.conf.debug_mode) == "True":
-            self.Debug(server=self.get_name(), debug="Sending ACKNOWLEDGE Values: " + str(values) )
-
-        self.send_http_command("commit", values)
+        self.FetchURL(self.commit_url, cgi_data=urllib.urlencode(values), giveback="raw")
         
 
     def _set_downtime(self, host, service, author, comment, fixed, start_time, end_time, hours, minutes):
@@ -130,98 +142,6 @@ class NinjaServer(GenericServer):
         values.update({"cmd_param[end_time]": end_time})
         values.update({"cmd_param[duration]": str(hours) + "." + str(minutes)})
 
-        if str(self.conf.debug_mode) == "True":
-            self.Debug(server=self.get_name(), debug="Sending DOWNTIME Values: " + str(values) )
-
-        self.send_http_command("commit", values)
+        self.FetchURL(self.commit_url, cgi_data=urllib.urlencode(values), giveback="raw")
         
-
-    def init_HTTP(self):
-        # add default auth for monitor.old 
-        GenericServer.init_HTTP(self)
-
-        if str(self.conf.debug_mode) == "True":
-            self.Debug(server=self.get_name(), debug="Enter _init_HTTP" )
-        
-        print "self.Cookie:", self.Cookie
-        
-        if len(self.Cookie) == 0: 
-            try:
-                # Ninja Settings
-                
-                
-                print "RELOGGIN' IN"
-                
-                self.commit_url = self.nagios_url + '/index.php/command/commit'
-                self.login_url = self.nagios_url + '/index.php/default/do_login'
-                self.time_url = self.nagios_url + '/index.php/extinfo/show_process_info'
-
-                handle = self.urlopener.open(self.login_url, urllib.urlencode({'username': self.get_username(), 'password': self.get_password()}))
-
-                
-            except IOError, e:
-                print 'We failed to open "%s".' % self.login_url
-                if hasattr(e, 'code'):
-                    print 'We failed with error code - %s.' % e.code
-                    return False
-            else:
-                if handle.geturl() == self.login_url:
-                    # If we get back to show_login somethings wrong, prob username/password
-                    #while (1):
-                    #    if self._init_HTTP():
-                    #       return True
-                    #    if str(self.conf.debug_mode) == "True":
-                    #       self.Debug(server=self.get_name(), debug="Failed login, retrying...")
-                    return False
-                else:
-                    # Cookie should be set by now lets return ok.
-                    return True
             
-
-    def send_http_command(self, mode, values=False):
-        #if not self.login_url:
-        #    self._init_HTTP()
-
-        if mode == "commit" and not values:
-            return False
-
-        # Lets send the commit string
-        if mode == "commit":
-            #data = urllib.urlencode(values)
-            #req = Request(self.commit_url, data, self.headers)
-            #handle = urlopen(req)
-            self.FetchURL(self.commit_url, cgi_data=urllib.urlencode(values), giveback="raw")
-            return True
-
-        if mode == "time":
-            #data = None
-            remote_time = None
-            #req = Request(self.time_url, data, self.headers)
-            #handle = urlopen(req)
-
-            if str(self.conf.debug_mode) == "True":
-                self.Debug(server=self.get_name(), debug="Url: " + handle.geturl())
-
-            #if handle.geturl() == self.login_url:
-            #    self._init_HTTP()
-            #    remote_time = self.send_http_command(mode, values)
-            #    if remote_time != False:
-            #        return remote_time
-
-            content = self.FetchURL(self.time_url, giveback="raw")
-            pos = content.find('<span id="page_last_updated">')
-            remote_time = content[pos+len('<span id="page_last_updated">'):content.find('<', pos+1)]
-            if remote_time:
-                magic_tuple = datetime.datetime.strptime(str(remote_time), "%Y-%m-%d %H:%M:%S")
-                time_diff = datetime.timedelta(0, 10)
-                remote_time = magic_tuple + time_diff
-
-            if str(self.conf.debug_mode) == "True":
-                self.Debug(server=self.get_name(), debug="Get Remote time: " + str(remote_time))
-
-            if not remote_time:
-                return False
-            else:
-                return str(remote_time)
-
-        return False

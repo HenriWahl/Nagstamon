@@ -128,8 +128,6 @@ class GenericServer(object):
         partly not constantly working Basic Authorization requires extra Autorization headers,
         different between various server types
         """
-        print "INIT_HTTP"
-        
         if self.HTTPheaders == {}:
             for giveback in ["raw", "obj"]:
                 self.HTTPheaders[giveback] = {"Authorization": "Basic " + base64.b64encode(self.get_username() + ":" + self.get_password())}
