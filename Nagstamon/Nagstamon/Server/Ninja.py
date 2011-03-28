@@ -12,7 +12,7 @@ import os.path
 import urllib
 import cookielib
 
-from urllib2 import urlopen, Request, build_opener, HTTPCookieProcessor, install_opener
+#from urllib2 import urlopen, Request, build_opener, HTTPCookieProcessor, install_opener
 from Nagstamon import Actions
 from Nagstamon.Objects import *
 from Nagstamon.Server.Generic import GenericServer
@@ -26,9 +26,9 @@ class NinjaServer(GenericServer):
     TYPE = 'Ninja'
 
     # Ninja variables to be used later
-    #commit_url = False
-    #login_url = False
-    #time_url = False
+    commit_url = False
+    login_url = False
+    time_url = False
     #headers = False
 
     # Session Cookies
@@ -153,35 +153,53 @@ class NinjaServer(GenericServer):
         if str(self.conf.debug_mode) == "True":
             self.Debug(server=self.get_name(), debug="Enter _init_HTTP" )
 
+            
         #if self.cj != None:
         #    self.opener = urllib2.build_opener(urllib2.HTTPCookieProcessor(self.cj))
         #    urllib2.install_opener(self.opener)
+        
+        
+        print "self.Cookie:", self.Cookie
+        
+        if len(self.Cookie) == 0: 
+            try:
+                # Ninja Settings
+                
+                
+                print "RELOGGIN IN"
+                
+                self.commit_url = self.nagios_url + '/index.php/command/commit'
+                self.login_url = self.nagios_url + '/index.php/default/do_login'
+                self.time_url = self.nagios_url + '/index.php/extinfo/show_process_info'
+                        
+                
+                # Try to login
+                #login_values = {'username': self.get_username(), 'password': self.get_password()}
+                #login_data = urllib.urlencode(login_values)
+                #req = Request(self.login_url, login_data, self.headers)
+                #req = Request(self.login_url, login_data)            
+                #handle = urlopen(req)
+                #self.FetchURL(self.login_url, cgi_data=urllib.urlencode({'username': self.get_username(), 'password': self.get_password()}))
+                handle = self.urlopener.open(self.login_url, urllib.urlencode({'username': self.get_username(), 'password': self.get_password()}))
 
-        try:
-            # Try to login
-            login_values = {'username': self.get_username(), 'password': self.get_password()}
-            login_data = urllib.urlencode(login_values)
-            #req = Request(self.login_url, login_data, self.headers)
-            req = Request(self.login_url, login_data)            
-            handle = urlopen(req)
-
-        except IOError, e:
-            print 'We failed to open "%s".' % self.login_url
-            if hasattr(e, 'code'):
-                print 'We failed with error code - %s.' % e.code
-                return False
-        else:
-            if handle.geturl() == self.login_url:
-                # If we get back to show_login somethings wrong, prob username/password
-                #while (1):
-                #    if self._init_HTTP():
-                #       return True
-                #    if str(self.conf.debug_mode) == "True":
-                #       self.Debug(server=self.get_name(), debug="Failed login, retrying...")
-                return False
+                
+            except IOError, e:
+                print 'We failed to open "%s".' % self.login_url
+                if hasattr(e, 'code'):
+                    print 'We failed with error code - %s.' % e.code
+                    return False
             else:
-                # Cookie should be set by now lets return ok.
-                return True
+                if handle.geturl() == self.login_url:
+                    # If we get back to show_login somethings wrong, prob username/password
+                    #while (1):
+                    #    if self._init_HTTP():
+                    #       return True
+                    #    if str(self.conf.debug_mode) == "True":
+                    #       self.Debug(server=self.get_name(), debug="Failed login, retrying...")
+                    return False
+                else:
+                    # Cookie should be set by now lets return ok.
+                    return True
             
 
     def send_http_command(self, mode, values=False):
