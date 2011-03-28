@@ -26,16 +26,29 @@ class NinjaServer(GenericServer):
     TYPE = 'Ninja'
 
     # Ninja variables to be used later
-    commit_url = False
-    login_url = False
-    time_url = False
-    headers = False
+    #commit_url = False
+    #login_url = False
+    #time_url = False
+    #headers = False
 
     # Session Cookies
     ###cj = cookielib.LWPCookieJar()
 
     # used in Nagios _get_status() method
     HTML_BODY_TABLE_INDEX = 2
+    
+    
+    def __init__(self, **kwds):
+        # add all keywords to object, every mode searchs inside for its favorite arguments/keywords
+        for k in kwds: self.__dict__[k] = kwds[k]
+
+        GenericServer.__init__(self, **kwds)
+        
+        # Ninja Settings
+        self.commit_url = self.nagios_url + '/index.php/command/commit'
+        self.login_url = self.nagios_url + '/index.php/default/do_login'
+        self.time_url = self.nagios_url + '/index.php/extinfo/show_process_info'
+    
 
     def open_tree_view(self, host, service):
         if not service:
@@ -134,18 +147,11 @@ class NinjaServer(GenericServer):
         
 
     def init_HTTP(self):
+        # add default auth for monitor.old 
         GenericServer.init_HTTP(self)
-        self._init_HTTP()
 
-        
-    def _init_HTTP(self):
         if str(self.conf.debug_mode) == "True":
             self.Debug(server=self.get_name(), debug="Enter _init_HTTP" )
-
-        # Ninja Settings
-        self.commit_url = self.nagios_url + '/index.php/command/commit'
-        self.login_url = self.nagios_url + '/index.php/default/do_login'
-        self.time_url = self.nagios_url + '/index.php/extinfo/show_process_info'
 
         #if self.cj != None:
         #    self.opener = urllib2.build_opener(urllib2.HTTPCookieProcessor(self.cj))
