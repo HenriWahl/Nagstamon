@@ -95,21 +95,6 @@ class NinjaServer(GenericServer):
 
 
     def _set_acknowledge(self, host, service, author, comment, sticky, notify, persistent, all_services):
-        if sticky == True:
-            sticky = "1"
-        else:
-            sticky = "0"
-
-        if notify == True:
-            notify = "1"
-        else:
-            notify = "0"
-
-        if persistent == True:
-            persistent = "1"
-        else:
-            persistent = "0"
-
         if not service:
             values = {"requested_command": "ACKNOWLEDGE_HOST_PROBLEM"}
             values.update({"cmd_param[service]": host})
@@ -143,5 +128,3 @@ class NinjaServer(GenericServer):
         values.update({"cmd_param[duration]": str(hours) + "." + str(minutes)})
 
         self.FetchURL(self.commit_url, cgi_data=urllib.urlencode(values), giveback="raw")
-        
-            

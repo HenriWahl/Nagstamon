@@ -381,8 +381,8 @@ class GUI(object):
             if warnings > 0:
                 if str(self.conf.long_display) == "True": warnings = str(warnings) + " WARNING"
                 self.statusbar.statusbar_labeltext = self.statusbar.statusbar_labeltext + '<span size="%s" background="yellow" foreground="black"> ' % (self.fontsize) + str(warnings) + ' </span>'
-                self.statusbar.statusbar_labeltext_inverted = self.statusbar.statusbar_labeltext_inverted + '<span size="%s" background="black" foreground="yellow"> ' % (self.fontsize) + str(warnings) + ' </span>'
-
+                self.statusbar.statusbar_labeltext_inverted = self.statusbar.statusbar_labeltext_inverted + '<span size="%s" background="black" foreground="yellow"> ' % (self.fontsize) + str(warnings) + ' </span>'               
+                
             # put text into label in statusbar, only if not already flashing
             if self.statusbar.Flashing == False:
                 self.statusbar.Label.set_markup(self.statusbar.statusbar_labeltext)
@@ -740,16 +740,6 @@ class StatusBar(object):
         
         # TrayIcon - appears as status bar in Windows due to non existent egg.trayicon python module
         if platform.system() == "Windows":
-            """
-            self.StatusBar = gtk.Window(gtk.WINDOW_TOPLEVEL)
-            #self.StatusBar = gtk.Window(gtk.WINDOW_POPUP)
-            self.StatusBar.set_decorated(False)          
-            self.StatusBar.set_keep_above(True)
-            self.StatusBar.stick()
-            self.StatusBar.set_type_hint(gtk.gdk.WINDOW_TYPE_HINT_UTILITY)
-            #self.StatusBar.set_type_hint(gtk.gdk.WINDOW_TYPE_HINT_TOOLBAR)
-            self.StatusBar.set_property("skip_taskbar_hint", True)
-            """
             self._CreateFloatingStatusbar()
         else:
             if str(self.conf.statusbar_systray) == "True":
@@ -757,28 +747,8 @@ class StatusBar(object):
                     self.StatusBar = egg.trayicon.TrayIcon(self.output.name)
                 except:
                     print "python gnome2 extras with egg.trayicon not installed so trayicon cannot be used. Using floating desktop status bar instead."
-                    """
-                    self.StatusBar = gtk.Window(gtk.WINDOW_TOPLEVEL)
-                    #self.StatusBar = gtk.Window(gtk.WINDOW_POPUP)
-                    self.StatusBar.set_decorated(False)                  
-                    self.StatusBar.stick()
-                    self.StatusBar.set_type_hint(gtk.gdk.WINDOW_TYPE_HINT_UTILITY)
-                    #self.StatusBar.set_type_hint(gtk.gdk.WINDOW_TYPE_HINT_TOOLBAR)                    
-                    self.StatusBar.set_keep_above(True)
-                    self.StatusBar.set_property("skip_taskbar_hint", True)
-                    """
                     self._CreateFloatingStatusbar()
             else:
-                """
-                self.StatusBar = gtk.Window(gtk.WINDOW_TOPLEVEL)
-                #self.StatusBar = gtk.Window(gtk.WINDOW_POPUP)
-                self.StatusBar.set_decorated(False)
-                self.StatusBar.set_keep_above(True)
-                self.StatusBar.stick()
-                self.StatusBar.set_type_hint(gtk.gdk.WINDOW_TYPE_HINT_UTILITY)
-                #self.StatusBar.set_type_hint(gtk.gdk.WINDOW_TYPE_HINT_TOOLBAR)
-                self.StatusBar.set_property("skip_taskbar_hint", True)
-                """
                 self._CreateFloatingStatusbar()
                 
         # image for logo in statusbar
