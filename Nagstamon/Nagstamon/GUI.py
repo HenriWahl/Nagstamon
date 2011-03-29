@@ -209,7 +209,7 @@ class GUI(object):
             x,y = self.statusbar.HBox.size_request()
             self.statusbar.StatusBar.resize(x, y)
             
-        # connect events to actions                 host = self.miserable_server.GetHost(s
+        # connect events to actions                
         # when talking about "systray" the Windows variant of upper left desktop corner
         # statusbar is meant synonymical
         # if pointer on systray do popup the long-summary-status-window aka popwin
@@ -883,7 +883,7 @@ class StatusBar(object):
             see what happens if statusbar is clicked
         """
         # check if settings etc. are not already open
-        if self.output.SettingsDialogOpen == False and self.output.AboutDialogOpen == False:
+        if self.output.popwin.IsWanted() == True:
             # if left mousebutton is pressed
             if event.button == 1:
                 # if popping up on click is true...
@@ -903,7 +903,8 @@ class StatusBar(object):
             # if right mousebutton is pressed show statusbar menu
             if event.button == 3:
                 self.output.popwin.Close()
-                self.Menu.popup(None, None, None, event.button, event.time)
+                self.MenuPopup(widget=self.Menu, event=event)
+                #self.Menu.popup(None, None, None, event.button, event.time)
         
         # switch off Notification    
         self.output.NotificationOff()
@@ -947,7 +948,7 @@ class StatusBar(object):
         # switch notification off
         self.output.NotificationOff()
         # check if settings ar not already open
-        if self.output.SettingsDialogOpen == False and self.output.AboutDialogOpen == False:
+        if self.output.popwin.IsWanted() == True:
             # if popwin is not shown pop it up
             if self.output.popwin.get_properties("visible")[0] == False:
                 self.output.popwin.PopUp()
@@ -960,8 +961,8 @@ class StatusBar(object):
             see what happens if statusbar is hovered
         """
         # check if settings ar not already open
-        if self.output.SettingsDialogOpen == False and self.output.AboutDialogOpen == False:
-            if str(self.conf.popup_details_hover) == "True":
+        if self.output.popwin.IsWanted() == True and\
+           str(self.conf.popup_details_hover) == "True":
                 self.output.popwin.PopUp()
            
 
@@ -969,17 +970,16 @@ class StatusBar(object):
         """
             context menu for label in statusbar
         """
+        
         self.output.popwin.Close()
-        
-        # for some reason StatusIcon delivers another event (type int) than
-        # egg.trayicon (type object) so it must be checked which one has
-        # been calling
-        # to make it even worse there are different integer types given back
-        # in Windows and Unix
-        # systray icon
-        
+
         # check if settings ar not already open
         if self.output.SettingsDialogOpen == False:
+            # for some reason StatusIcon delivers another event (type int) than
+            # egg.trayicon (type object) so it must be checked which one has
+            # been calling
+            # to make it even worse there are different integer types given back
+            # in Windows and Unix
             if isinstance(event, int) or isinstance(event, long):
                 # right button
                 if event == 3:
@@ -991,7 +991,7 @@ class StatusBar(object):
                 if event.button == 3:
                     widget.popup(None, None, None, event.button, event.time)
 
-    
+                    
     def Move(self, widget, event):
         """
             moving statusbar
@@ -1550,6 +1550,19 @@ class Popwin(gtk.Window):
             self.ServerVBoxes[server.get_name()].LabelStatus.set_markup('<span>Status: ' + str(server.status) + ' <span color="darkred">' + str(server.status_description) + '</span></span>')
         except:
             server.Error(sys.exc_info())
+            
+    
+    def IsWanted(self):
+        """
+        check if no other dialog/menu is shown which would not like to be
+        covered by the popup window
+        """
+        if self.output.SettingsDialogOpen == False and\
+           self.output.AboutDialogOpen == False and\
+           self.output.statusbar.Menu.get_visible() == False:
+            return True
+        else:
+            return False
     
 
 class ServerVBox(gtk.VBox):
@@ -1892,9 +1905,9 @@ class Settings(object):
             self.output.__init__()
             
             # start debugging loop if wanted
-            #if str(self.conf.debug_mode) == "True":
-            #    debugloop = Actions.DebugLoop(conf=self.conf, debug_queue=self.output.debug_queue, output=self.output)
-            #    debugloop.start()
+            if str(self.conf.debug_mode) == "True":
+                debugloop = Actions.DebugLoop(conf=self.conf, debug_queue=self.output.debug_queue, output=self.output)
+                debugloop.start()
             
             # force refresh
             Actions.RefreshAllServers(servers=self.servers, output=self.output, conf=self.conf)

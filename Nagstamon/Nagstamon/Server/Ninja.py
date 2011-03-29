@@ -86,7 +86,7 @@ class NinjaServer(GenericServer):
             remote_time = magic_tuple + time_diff
 
         if str(self.conf.debug_mode) == "True":
-            self.Debug(server=self.get_name(), debug="Get Remote time: " + str(remote_time))     
+            self.Debug(server=self.get_name(), debug="Get Remote time: " + str(remote_time))
 
         values.update({"cmd_param[check_time]": remote_time})
         values.update({"cmd_param[_force]": "1"})

@@ -204,6 +204,7 @@ class DebugLoop(threading.Thread):
         while self.stopped == False and str(self.conf.debug_mode) == "True":
             # .get() waits until there is something to get - needs timeout in case no debug messages fly in
             debug_string = ""
+            
             try:
                 debug_string = self.debug_queue.get(True, 1)
                 print debug_string
