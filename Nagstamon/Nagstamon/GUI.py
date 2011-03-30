@@ -865,7 +865,6 @@ class StatusBar(object):
         self.StatusBar.set_property("skip-taskbar-hint", True)
         self.StatusBar.set_skip_taskbar_hint(True)
             
-            
 
     def MenuResponseMonitors(self, widget, menu_entry):
         """
