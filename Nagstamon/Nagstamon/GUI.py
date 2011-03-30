@@ -997,7 +997,7 @@ class StatusBar(object):
                     widget.popup(None, None, None, event.button, event.time)
                     self.MenuOpen = True
                     
-           self.MenuOpen = False
+            self.MenuOpen = False
            
                     
     def Move(self, widget, event):
