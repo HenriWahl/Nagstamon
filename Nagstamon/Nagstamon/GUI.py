@@ -122,8 +122,7 @@ class GUI(object):
         self.Notifying = False
         
         # flag if settings dialog is already open to omit various open settings dialogs after systray icon context menu click
-        self.SettingsDialogOpen = False
-        
+        self.SettingsDialogOpen = False       
         # flag if about box is shown
         self.AboutDialogOpen = False
         
@@ -794,18 +793,7 @@ class StatusBar(object):
             self.StatusBar.show_all()
         else:
             self.StatusBar.hide_all()
-
-        # submenu for menuitem "Monitor" in statusbar menu which contains all the known Nagios servers
-        # first get and sort servers
-        self.MonitorSubmenu = gtk.Menu()
-        submenu_items = list(self.output.servers)
-        submenu_items.sort(key=str.lower)
-        for i in submenu_items:
-            menu_item = gtk.MenuItem(i)
-            menu_item.connect("activate", self.MenuResponseMonitors, i)
-            self.MonitorSubmenu.add(menu_item)
-        self.MonitorSubmenu.show_all()
-
+        
         # Popup menu for statusbar
         self.Menu = gtk.Menu()
         for i in ["Refresh", "Recheck all", "-----", "Monitors", "-----", "Settings...", "Save position", "About", "Exit"]:
@@ -825,6 +813,10 @@ class StatusBar(object):
                     menu_item.connect("activate", self.MenuResponse, i)
                     self.Menu.append(menu_item)
         self.Menu.show_all()
+        
+        # due to different GTK versions on different OS with different capabilities those 
+        # flags are used instead of for example gtk.Menu.get_visible()
+        self.MenuOpen = False
         
         # put Systray icon into statusbar object
         self.SysTray = gtk.StatusIcon()
@@ -997,12 +989,16 @@ class StatusBar(object):
                 if event == 3:
                     # 'time' is important (wherever it comes from) for Linux/Gtk to let
                     # the popup be shown even after releasing the mouse button
-                    self.Menu.popup(None, None, None, event, time)
+                    self.Menu.popup(None, None, None, event, time)                          
+                    self.MenuOpen = True
             else:
                 # right button
                 if event.button == 3:
                     widget.popup(None, None, None, event.button, event.time)
-
+                    self.MenuOpen = True
+                    
+           self.MenuOpen = False
+           
                     
     def Move(self, widget, event):
         """
@@ -1571,7 +1567,7 @@ class Popwin(gtk.Window):
         """
         if self.output.SettingsDialogOpen == False and\
            self.output.AboutDialogOpen == False and\
-           self.output.statusbar.Menu.get_visible() == False:
+           self.output.statusbar.MenuOpen == False:
             return True
         else:
             return False
@@ -1759,7 +1755,7 @@ class Settings(object):
         
         # workaround for gazpacho-made glade-file - dunno why tab labels do not get named as they should be
         notebook = self.glade.get_widget("notebook")
-        notebook_tabs =  ["Servers", "Display", "Filters", "Executables", "Notification"]
+        notebook_tabs =  ["Servers", "Display", "Filters", "Executables", "Notification", "Custom"]
         for c in notebook.get_children():
             notebook.set_tab_label_text(c, notebook_tabs.pop(0))
         

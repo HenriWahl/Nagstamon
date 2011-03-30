@@ -1209,6 +1209,13 @@
                                 <property name="tab_label" context="yes" translatable="yes">Notification</property>
                             </packing>
                         </child>
+                        <child>
+                            <placeholder/>
+                            <packing>
+                                <property name="tab_label">Page 6</property>
+                                <property name="position">5</property>
+                            </packing>
+                        </child>
                     </widget>
                     <packing>
                         <property name="pack_type">end</property>
