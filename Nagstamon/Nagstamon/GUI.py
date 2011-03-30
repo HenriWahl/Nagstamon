@@ -267,7 +267,9 @@ class GUI(object):
         unreachables = 0
         unknowns = 0
         criticals = 0
-        warnings = 0    
+        warnings = 0
+        # display "ERROR" in case of startup connection trouble
+        errors = ""
         
         # walk through all servers, their hosts and their services
         for server in self.servers.values():
@@ -342,7 +344,7 @@ class GUI(object):
         self.popwin.Resize()
         
         # everything OK
-        if unknowns == 0 and warnings == 0 and criticals == 0 and unreachables == 0 and downs == 0 :
+        if unknowns == 0 and warnings == 0 and criticals == 0 and unreachables == 0 and downs == 0 and self.status_ok is not False:
             self.statusbar.statusbar_labeltext = '<span size="%s" background="darkgreen" foreground="white"> OK </span>' % (self.fontsize)
             self.statusbar.statusbar_labeltext_inverted = self.statusbar.statusbar_labeltext
             self.statusbar.Label.set_markup(self.statusbar.statusbar_labeltext)
@@ -382,6 +384,16 @@ class GUI(object):
                 if str(self.conf.long_display) == "True": warnings = str(warnings) + " WARNING"
                 self.statusbar.statusbar_labeltext = self.statusbar.statusbar_labeltext + '<span size="%s" background="yellow" foreground="black"> ' % (self.fontsize) + str(warnings) + ' </span>'
                 self.statusbar.statusbar_labeltext_inverted = self.statusbar.statusbar_labeltext_inverted + '<span size="%s" background="black" foreground="yellow"> ' % (self.fontsize) + str(warnings) + ' </span>'               
+            
+            # if connections fails at starting do not display OK - Debian bug #617490
+            if unknowns == 0 and warnings == 0 and criticals == 0 and unreachables == 0 and downs == 0 and self.status_ok is False:
+                if str(self.conf.long_display) == "True":
+                    errors = "ERROR"
+                else:
+                    errors = "ERR"
+                self.statusbar.statusbar_labeltext = self.statusbar.statusbar_labeltext + '<span size="%s" background="black" foreground="white"> ' % (self.fontsize) + str(errors) + ' </span>'
+                self.statusbar.statusbar_labeltext_inverted = self.statusbar.statusbar_labeltext_inverted + '<span size="%s" background="white" foreground="black"> ' % (self.fontsize) + str(errors) + ' </span>'
+                color = "error"     
                 
             # put text into label in statusbar, only if not already flashing
             if self.statusbar.Flashing == False:
