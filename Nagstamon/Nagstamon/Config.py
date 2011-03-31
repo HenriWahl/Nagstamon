@@ -63,7 +63,7 @@ class Config(object):
         self.re_service_enabled = False
         self.re_service_pattern = ""
         self.re_service_reverse = False
-        self.color_ok_text = "black"
+        self.color_ok_text = "FFFFFF"
         self.color_ok_background = "black"
         self.color_warning_text = "black"
         self.color_warning_background = "black"
@@ -71,6 +71,8 @@ class Config(object):
         self.color_critical_background = "black"
         self.color_unknown_text = "black"
         self.color_unknown_background = "black"
+        self.color_unreachable_text = "black"
+        self.color_unreachable_background = "black"        
         self.color_down_text = "black"
         self.color_down_background = "black"
         self.color_error_text = "black"
