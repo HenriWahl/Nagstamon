@@ -365,24 +365,24 @@ class GUI(object):
             
             if downs > 0:
                 if str(self.conf.long_display) == "True": downs = str(downs) + " DOWN"
-                self.statusbar.statusbar_labeltext = '<span size="%s" background="black" foreground="white"> ' % (self.fontsize) + str(downs) + ' </span>'
-                self.statusbar.statusbar_labeltext_inverted = '<span size="%s" background="white" foreground="black"> ' % (self.fontsize) + str(downs) + ' </span>'
+                self.statusbar.statusbar_labeltext = '<span size="' + str(self.fontsize) + '" background="' + str(self.conf.color_down_background) + '" foreground="' + str(self.conf.color_down_text) + '"> ' + str(downs) + ' </span>'
+                self.statusbar.statusbar_labeltext_inverted = '<span size="' + str(self.fontsize) + '" background="' + str(self.conf.color_down_text) + '" foreground="' + str(self.conf.color_down_background) + '"> ' + str(downs) + ' </span>'
             if unreachables > 0:
                 if str(self.conf.long_display) == "True": unreachables = str(unreachables) + " UNREACHABLE"
-                self.statusbar.statusbar_labeltext = self.statusbar.statusbar_labeltext + '<span size="%s" background="darkred" foreground="white"> ' % (self.fontsize) + str(unreachables) + ' </span>'
-                self.statusbar.statusbar_labeltext_inverted = self.statusbar.statusbar_labeltext_inverted + '<span size="%s" background="white" foreground="darkred"> ' % (self.fontsize) + str(unreachables) + ' </span>'
+                self.statusbar.statusbar_labeltext = self.statusbar.statusbar_labeltext + '<span size="' + str(self.fontsize) + '" background="' + str(self.conf.color_unreachable_background) + '" foreground="' + str(self.conf.color_unreachable_text) + '"> ' + str(unreachables) + ' </span>'
+                self.statusbar.statusbar_labeltext_inverted = self.statusbar.statusbar_labeltext_inverted + '<span size="' + str(self.fontsize) + '" background="' + str(self.conf.color_unreachable_text) + '" foreground="' + str(self.conf.color_unreachable_background) + '"> ' + str(unreachables) + ' </span>'
             if criticals > 0:
                 if str(self.conf.long_display) == "True": criticals = str(criticals) + " CRITICAL"
-                self.statusbar.statusbar_labeltext = self.statusbar.statusbar_labeltext + '<span size="%s" background="red" foreground="white"> ' % (self.fontsize) + str(criticals) + ' </span>'
-                self.statusbar.statusbar_labeltext_inverted = self.statusbar.statusbar_labeltext_inverted + '<span size="%s" background="white" foreground="red"> ' % (self.fontsize) + str(criticals) + ' </span>'
+                self.statusbar.statusbar_labeltext = self.statusbar.statusbar_labeltext + '<span size="' + str(self.fontsize) + '" background="' + str(self.conf.color_critical_background) + '" foreground="' + str(self.conf.color_critical_text) + '"> ' + str(criticals) + ' </span>'
+                self.statusbar.statusbar_labeltext_inverted = self.statusbar.statusbar_labeltext_inverted + '<span size="' + str(self.fontsize) + '" background="' + str(self.conf.color_critical_text) + '" foreground="' + str(self.conf.color_critical_background) + '"> ' + str(criticals) + ' </span>'
             if unknowns > 0:
                 if str(self.conf.long_display) == "True": unknowns = str(unknowns) + " UNKNOWN"
-                self.statusbar.statusbar_labeltext = self.statusbar.statusbar_labeltext + '<span size="%s" background="orange" foreground="black"> ' % (self.fontsize) + str(unknowns) + ' </span>'
-                self.statusbar.statusbar_labeltext_inverted = self.statusbar.statusbar_labeltext_inverted + '<span size="%s" background="black" foreground="orange"> ' % (self.fontsize) + str(unknowns) + ' </span>'
+                self.statusbar.statusbar_labeltext = self.statusbar.statusbar_labeltext + '<span size="' + str(self.fontsize) + '" background="' + str(self.conf.color_unknown_background) + '" foreground="' + str(self.conf.color_unknown_text) + '"> ' + str(unknowns) + ' </span>'
+                self.statusbar.statusbar_labeltext_inverted = self.statusbar.statusbar_labeltext_inverted + '<span size="' + str(self.fontsize) + '" background="' + str(self.conf.color_unknown_text) + '" foreground="' + str(self.conf.color_unknown_background) + '"> ' + str(unknowns) + ' </span>'
             if warnings > 0:
                 if str(self.conf.long_display) == "True": warnings = str(warnings) + " WARNING"
-                self.statusbar.statusbar_labeltext = self.statusbar.statusbar_labeltext + '<span size="%s" background="yellow" foreground="black"> ' % (self.fontsize) + str(warnings) + ' </span>'
-                self.statusbar.statusbar_labeltext_inverted = self.statusbar.statusbar_labeltext_inverted + '<span size="%s" background="black" foreground="yellow"> ' % (self.fontsize) + str(warnings) + ' </span>'               
+                self.statusbar.statusbar_labeltext = self.statusbar.statusbar_labeltext + '<span size="' + str(self.fontsize) + '" background="' + str(self.conf.color_warning_background) + '" foreground="' + str(self.conf.color_warning_text) + '"> ' + str(warnings) + ' </span>'
+                self.statusbar.statusbar_labeltext_inverted = self.statusbar.statusbar_labeltext_inverted + '<span size="' + str(self.fontsize) + '" background="' + str(self.conf.color_warning_text) + '" foreground="' + str(self.conf.color_warning_background) + '"> ' + str(warnings) + ' </span>'               
             
             # if connections fails at starting do not display OK - Debian bug #617490
             if unknowns == 0 and warnings == 0 and criticals == 0 and unreachables == 0 and downs == 0 and self.status_ok is False:
@@ -390,8 +390,8 @@ class GUI(object):
                     errors = "ERROR"
                 else:
                     errors = "ERR"
-                self.statusbar.statusbar_labeltext = self.statusbar.statusbar_labeltext + '<span size="%s" background="black" foreground="white"> ' % (self.fontsize) + str(errors) + ' </span>'
-                self.statusbar.statusbar_labeltext_inverted = self.statusbar.statusbar_labeltext_inverted + '<span size="%s" background="white" foreground="black"> ' % (self.fontsize) + str(errors) + ' </span>'
+                self.statusbar.statusbar_labeltext = self.statusbar.statusbar_labeltext + '<span size="' + str(self.fontsize) + '" background="' + str(self.conf.color_error_background) + '" foreground="' + str(self.conf.color_error_text) + '"> ' + str(errors) + ' </span>'
+                self.statusbar.statusbar_labeltext_inverted = self.statusbar.statusbar_labeltext_inverted + '<span size="' + str(self.fontsize) + '" background="' + str(self.conf.color_error_text) + '" foreground="' + str(self.conf.color_error_background) + '"> ' + str(errors) + ' </span>'
                 color = "error"     
                 
             # put text into label in statusbar, only if not already flashing
