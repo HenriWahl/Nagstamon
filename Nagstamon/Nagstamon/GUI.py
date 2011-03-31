@@ -115,8 +115,8 @@ class GUI(object):
         self.popwin.Resize()
         
         # define colors for detailed status table in dictionaries
-        self.tab_bg_colors = { "UNKNOWN":self.conf.color_unknown_background, "CRITICAL":self.conf.color_critical_background, "WARNING":self.conf.color_warning_background, "DOWN":self.conf.color_down_background, "UNREACHABLE":"darkred"  }
-        self.tab_fg_colors = { "UNKNOWN":self.conf.color_unknown_text, "CRITICAL":self.conf.color_critical_text, "WARNING":self.conf.color_warning_text, "DOWN":self.conf.color_down_text, "UNREACHABLE":"white" }
+        self.tab_bg_colors = { "UNKNOWN":str(self.conf.color_unknown_background), "CRITICAL":str(self.conf.color_critical_background), "WARNING":str(self.conf.color_warning_background), "DOWN":str(self.conf.color_down_background), "UNREACHABLE":str(self.conf.color_unreachable_background)  }
+        self.tab_fg_colors = { "UNKNOWN":str(self.conf.color_unknown_text), "CRITICAL":str(self.conf.color_critical_text), "WARNING":str(self.conf.color_warning_text), "DOWN":str(self.conf.color_down_text), "UNREACHABLE":str(self.conf.color_unreachable_text) }
     
         # flag which is set True if already notifying
         self.Notifying = False
