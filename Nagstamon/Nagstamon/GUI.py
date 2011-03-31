@@ -1760,7 +1760,7 @@ class Settings(object):
         
         # workaround for gazpacho-made glade-file - dunno why tab labels do not get named as they should be
         notebook = self.glade.get_widget("notebook")
-        notebook_tabs =  ["Servers", "Display", "Filters", "Executables", "Notification", "Custom"]
+        notebook_tabs =  ["Servers", "Display", "Filters", "Executables", "Notification", "Colors"]
         for c in notebook.get_children():
             notebook.set_tab_label_text(c, notebook_tabs.pop(0))
         

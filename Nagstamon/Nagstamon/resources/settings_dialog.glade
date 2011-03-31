@@ -1420,7 +1420,7 @@
                                             </packing>
                                         </child>
                                         <child>
-                                            <widget class="GtkEntry" id="input_entry_color_unknow_background">
+                                            <widget class="GtkEntry" id="input_entry_color_unknown_background">
                                                 <property name="visible">True</property>
                                             </widget>
                                             <packing>
