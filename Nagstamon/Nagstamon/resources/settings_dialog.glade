@@ -1233,7 +1233,7 @@
                                         </child>
                                         <child>
                                             <widget class="GtkLabel" id="label_color_ok">
-                                                <property name="label" context="yes" translatable="yes">OK:</property>
+                                                <property name="label" context="yes" translatable="yes"> OK: </property>
                                                 <property name="visible">True</property>
                                                 <property name="xalign">0.0</property>
                                             </widget>
@@ -1244,7 +1244,7 @@
                                         </child>
                                         <child>
                                             <widget class="GtkLabel" id="label_color_warning">
-                                                <property name="label" context="yes" translatable="yes">WARNING:</property>
+                                                <property name="label" context="yes" translatable="yes"> WARNING: </property>
                                                 <property name="visible">True</property>
                                                 <property name="xalign">0.0</property>
                                             </widget>
@@ -1255,7 +1255,7 @@
                                         </child>
                                         <child>
                                             <widget class="GtkLabel" id="label_color_critical">
-                                                <property name="label" context="yes" translatable="yes">CRITICAL:</property>
+                                                <property name="label" context="yes" translatable="yes"> CRITICAL: </property>
                                                 <property name="visible">True</property>
                                                 <property name="xalign">0.0</property>
                                             </widget>
@@ -1266,7 +1266,7 @@
                                         </child>
                                         <child>
                                             <widget class="GtkLabel" id="label_color_unknown">
-                                                <property name="label" context="yes" translatable="yes">UNKNOWN:</property>
+                                                <property name="label" context="yes" translatable="yes"> UNKNOWN: </property>
                                                 <property name="visible">True</property>
                                                 <property name="xalign">0.0</property>
                                             </widget>
@@ -1277,7 +1277,7 @@
                                         </child>
                                         <child>
                                             <widget class="GtkLabel" id="label_color_unreachable">
-                                                <property name="label" context="yes" translatable="yes">UNREACHABLE:</property>
+                                                <property name="label" context="yes" translatable="yes"> UNREACHABLE: </property>
                                                 <property name="visible">True</property>
                                                 <property name="xalign">0.0</property>
                                             </widget>
@@ -1288,7 +1288,7 @@
                                         </child>
                                         <child>
                                             <widget class="GtkLabel" id="label_color_down">
-                                                <property name="label" context="yes" translatable="yes">DOWN:</property>
+                                                <property name="label" context="yes" translatable="yes"> DOWN: </property>
                                                 <property name="visible">True</property>
                                                 <property name="xalign">0.0</property>
                                             </widget>
@@ -1299,7 +1299,7 @@
                                         </child>
                                         <child>
                                             <widget class="GtkLabel" id="label_color_error">
-                                                <property name="label" context="yes" translatable="yes">ERROR:</property>
+                                                <property name="label" context="yes" translatable="yes"> ERROR: </property>
                                                 <property name="visible">True</property>
                                                 <property name="xalign">0.0</property>
                                             </widget>

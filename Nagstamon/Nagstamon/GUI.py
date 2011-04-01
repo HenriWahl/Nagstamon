@@ -1955,7 +1955,7 @@ class Settings(object):
        
         for c in self.glade.get_widget_prefix("label_color_"):
             state = c.get_name().split("_")[2]
-            c.set_markup('<span foreground="%s" background="%s">%s:</span>' %\
+            c.set_markup('<span foreground="%s" background="%s"> %s: </span>' %\
             (states[state]["text"], states[state]["background"], state.upper()))
             
         
