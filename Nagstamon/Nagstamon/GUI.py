@@ -1716,7 +1716,8 @@ class Settings(object):
                           "checkbutton_re_service_enabled": self.ToggleREServiceOptions,
                           "button_play_sound": self.PlaySound,
                           "checkbutton_debug_mode": self.ToggleDebugOptions,
-                          "checkbutton_debug_to_file": self.ToggleDebugOptions}
+                          "checkbutton_debug_to_file": self.ToggleDebugOptions,
+                          "button_colors_preview": self.ColorsPreview}
         self.glade.signal_autoconnect(handlers_dict)
         
         # walk through all relevant input types to fill dialog with existing settings
@@ -1798,6 +1799,9 @@ class Settings(object):
         if str(self.conf.unconfigured) == "True":
             NewServer(servers=self.servers, output=self.output, settingsdialog=self, conf=self.conf)
            
+        # produce color previews
+        self.ColorsPreview()
+            
         # show filled settings dialog and wait thanks to gtk.run()
         self.dialog.run()
         self.dialog.destroy()
@@ -1939,7 +1943,22 @@ class Settings(object):
         # without settings there is not much nagstamon can do
         if self.output.firstrun == True:
             sys.exit()
+            
+            
+    def ColorsPreview(self, widget=None):
+        states = dict()
+        for c in self.glade.get_widget_prefix("input_entry_color_"):
+            dummy, dummy, dummy, state, property =  c.get_name().split("_")
+            if not states.has_key(state):
+                states[state] = dict()
+            states[state][property] = c.get_text()
        
+        for c in self.glade.get_widget_prefix("label_color_"):
+            state = c.get_name().split("_")[2]
+            c.set_markup('<span foreground="%s" background="%s">%s:</span>' %\
+            (states[state]["text"], states[state]["background"], state.upper()))
+            
+        
             
     def DeleteServer(self, server=None):
         """

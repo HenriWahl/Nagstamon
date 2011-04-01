@@ -1217,7 +1217,7 @@
                                 <property name="visible">True</property>
                                 <child>
                                     <widget class="GtkLabel" id="label_colors">
-                                        <property name="label" context="yes" translatable="yes">Set colors via hexcodes (#000000) or plain color names (black):</property>
+                                        <property name="label" context="yes" translatable="yes">Set hexcodes (e.g. #000000) or plain color names (e.g. black):</property>
                                         <property name="visible">True</property>
                                         <property name="xalign">0.0</property>
                                     </widget>
@@ -1225,7 +1225,7 @@
                                 <child>
                                     <widget class="GtkTable" id="table_colors_input">
                                         <property name="n_columns">3</property>
-                                        <property name="n_rows">8</property>
+                                        <property name="n_rows">9</property>
                                         <property name="visible">True</property>
                                         <child>
                                             <placeholder/>
@@ -1309,7 +1309,18 @@
                                             </packing>
                                         </child>
                                         <child>
-                                            <widget class="GtkLabel" id="label_color_tablehead_text">
+                                            <widget class="GtkButton" id="button_colors_preview">
+                                                <property name="label" context="yes" translatable="yes">Preview</property>
+                                                <property name="visible">True</property>
+                                                <signal handler="button_colors_preview" name="clicked"/>
+                                            </widget>
+                                            <packing>
+                                                <property name="bottom_attach">9</property>
+                                                <property name="top_attach">8</property>
+                                            </packing>
+                                        </child>
+                                        <child>
+                                            <widget class="GtkLabel" id="label_colors_tablehead_text">
                                                 <property name="label" context="yes" translatable="yes">Text</property>
                                                 <property name="visible">True</property>
                                                 <property name="xalign">0.0</property>
@@ -1397,7 +1408,16 @@
                                             </packing>
                                         </child>
                                         <child>
-                                            <widget class="GtkLabel" id="label_color_tablehead_background">
+                                            <placeholder/>
+                                            <packing>
+                                                <property name="left_attach">1</property>
+                                                <property name="right_attach">2</property>
+                                                <property name="top_attach">8</property>
+                                                <property name="bottom_attach">9</property>
+                                            </packing>
+                                        </child>
+                                        <child>
+                                            <widget class="GtkLabel" id="label_colors_tablehead_background">
                                                 <property name="label" context="yes" translatable="yes">Background</property>
                                                 <property name="visible">True</property>
                                                 <property name="xalign">0.0</property>
@@ -1484,6 +1504,15 @@
                                                 <property name="left_attach">2</property>
                                                 <property name="right_attach">3</property>
                                                 <property name="top_attach">7</property>
+                                            </packing>
+                                        </child>
+                                        <child>
+                                            <placeholder/>
+                                            <packing>
+                                                <property name="left_attach">2</property>
+                                                <property name="right_attach">3</property>
+                                                <property name="top_attach">8</property>
+                                                <property name="bottom_attach">9</property>
                                             </packing>
                                         </child>
                                     </widget>
