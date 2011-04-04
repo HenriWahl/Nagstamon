@@ -1800,15 +1800,29 @@ class Settings(object):
             NewServer(servers=self.servers, output=self.output, settingsdialog=self, conf=self.conf)
            
         # produce color previews
-        self.ColorsPreview()
-
+        #self.ColorsPreview()
         
-        print dir(self.glade)
-        
+        # all this colorbuttons stuff is only because glade editor gazpacho doesn't know about
+        # gtk.ColorButton
+        # put colorbuttons into table after creation, store them in colorbuttons list to access
+        # them later
         tci = self.glade.get_widget("table_colors_input")
-        cs = gtk.ColorButton()
-        cs.show()
-        tci.attach(cs, 1, 2, 8, 9)
+        self.colorbuttons = list()
+        self.colorbuttons_colors = [[self.conf.color_ok_text, self.conf.color_ok_background],\
+                                    [self.conf.color_warning_text, self.conf.color_warning_background],\
+                                    [self.conf.color_critical_text, self.conf.color_critical_background],\
+                                    [self.conf.color_unknown_text, self.conf.color_unknown_background],\
+                                    [self.conf.color_unreachable_text, self.conf.color_unreachable_background],\
+                                    [self.conf.color_down_text, self.conf.color_down_background],\
+                                    [self.conf.color_error_text, self.conf.color_error_background]]                      
+                                    
+        # cruise table horizontally and vertically 
+        for h in range(2):        
+            for v in range(7):
+                cb = gtk.ColorButton(color=gtk.gdk.color_parse(self.colorbuttons_colors[v][h]))
+                cb.show()
+                self.colorbuttons.append(cb)
+                tci.attach(cb, 1 + h, 2 + h , 1 + v, 2 + v)
         
         # show filled settings dialog and wait thanks to gtk.run()
         self.dialog.run()
