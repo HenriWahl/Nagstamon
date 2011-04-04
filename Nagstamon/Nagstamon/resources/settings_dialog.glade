@@ -1310,10 +1310,10 @@
                                             </packing>
                                         </child>
                                         <child>
-                                            <widget class="GtkButton" id="button_colors_preview">
-                                                <property name="label" context="yes" translatable="yes">Preview</property>
+                                            <widget class="GtkButton" id="button_colors_defaults">
+                                                <property name="label" context="yes" translatable="yes">Defaults</property>
                                                 <property name="visible">True</property>
-                                                <signal handler="button_colors_preview" name="clicked"/>
+                                                <signal handler="button_colors_default" name="clicked"/>
                                             </widget>
                                             <packing>
                                                 <property name="bottom_attach">9</property>

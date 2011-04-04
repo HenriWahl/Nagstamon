@@ -1717,7 +1717,7 @@ class Settings(object):
                           "button_play_sound": self.PlaySound,
                           "checkbutton_debug_mode": self.ToggleDebugOptions,
                           "checkbutton_debug_to_file": self.ToggleDebugOptions,
-                          "button_colors_preview": self.ColorsPreview}
+                          "button_colors_default": self.ColorsDefault}
         self.glade.signal_autoconnect(handlers_dict)
         
         # walk through all relevant input types to fill dialog with existing settings
@@ -1818,6 +1818,7 @@ class Settings(object):
             for h in range(2):
                 cb = gtk.ColorButton(color=gtk.gdk.color_parse(self.colorbuttons_colors[v][h + 1]))
                 cb.show()
+                cb.connect("color-set", self.ColorsPreview)
                 self.colorbuttons.append(cb)
                 tci.attach(cb, 1 + h, 2 + h , 1 + v, 2 + v)    
 
@@ -1915,15 +1916,32 @@ class Settings(object):
                             except:
                                 pass
 
+        # get non-glade-color settings
+        self.conf.color_ok_text = str(self.colorbuttons[0].get_color())
+        self.conf.color_ok_background = str(self.colorbuttons[1].get_color())
+        self.conf.color_warning_text = str(self.colorbuttons[2].get_color())
+        self.conf.color_warning_background = str(self.colorbuttons[3].get_color())
+        self.conf.color_critical_text = str(self.colorbuttons[4].get_color())
+        self.conf.color_critical_background = str(self.colorbuttons[5].get_color())
+        self.conf.color_unknown_text = str(self.colorbuttons[6].get_color())
+        self.conf.color_unknown_background = str(self.colorbuttons[7].get_color())
+        self.conf.color_unreachable_text = str(self.colorbuttons[8].get_color())
+        self.conf.color_unreachable_background = str(self.colorbuttons[9].get_color())
+        self.conf.color_down_text = str(self.colorbuttons[10].get_color())
+        self.conf.color_down_background = str(self.colorbuttons[11].get_color())
+        self.conf.color_error_text = str(self.colorbuttons[12].get_color())
+        self.conf.color_error_background = str(self.colorbuttons[13].get_color())
+        
         # close settings dialog 
         self.dialog.destroy()
+        
         # close popwin
         # catch Exception at first run when there cannot exist a popwin
         try:
             self.output.popwin.hide_all()
         except:
-            pass
-
+            pass            
+     
         if int(self.conf.update_interval) == 0:
             self.conf.update_interval = 1
         
@@ -1977,6 +1995,32 @@ class Settings(object):
             label.set_markup('<span foreground="%s" background="%s"> %s: </span>' %\
             (text, background, self.colorbuttons_colors[c/2][0].upper()))
             
+            
+    def ColorsDefault(self, widget=None):
+        """
+        reset default colors
+        """
+        self.colorbuttons_colors = [["ok", self.conf.default_color_ok_text, self.conf.default_color_ok_background],\
+                                    ["warning", self.conf.default_color_warning_text, self.conf.default_color_warning_background],\
+                                    ["critical", self.conf.default_color_critical_text, self.conf.default_color_critical_background],\
+                                    ["unknown", self.conf.default_color_unknown_text, self.conf.default_color_unknown_background],\
+                                    ["unreachable", self.conf.default_color_unreachable_text, self.conf.default_color_unreachable_background],\
+                                    ["down", self.conf.default_color_down_text, self.conf.default_color_down_background],\
+                                    ["error", self.conf.default_color_error_text, self.conf.default_color_error_background]]                      
+
+        # cruise table horizontally and vertically 
+        count = 0
+        for v in range(7):        
+            for h in range(2):
+                cb = self.colorbuttons[count]
+                #cb = gtk.ColorButton(color=gtk.gdk.color_parse(self.colorbuttons_colors[v][h + 1]))
+                cb.set_color(color=gtk.gdk.color_parse(self.colorbuttons_colors[v][h + 1]))
+                count += 1
+    
+        # renew preview
+        self.ColorsPreview()
+        
+                
             
     def DeleteServer(self, server=None):
         """
