@@ -1717,7 +1717,8 @@ class Settings(object):
                           "button_play_sound": self.PlaySound,
                           "checkbutton_debug_mode": self.ToggleDebugOptions,
                           "checkbutton_debug_to_file": self.ToggleDebugOptions,
-                          "button_colors_default": self.ColorsDefault}
+                          "button_colors_default": self.ColorsDefault,
+                          "button_colors_reset": self.ColorsReset}
         self.glade.signal_autoconnect(handlers_dict)
         
         # walk through all relevant input types to fill dialog with existing settings
@@ -2020,6 +2021,30 @@ class Settings(object):
         # renew preview
         self.ColorsPreview()
         
+
+    def ColorsReset(self, widget=None):
+        """
+        reset to previous colors
+        """
+        self.colorbuttons_colors = [["ok", self.conf.color_ok_text, self.conf.color_ok_background],\
+                                    ["warning", self.conf.color_warning_text, self.conf.color_warning_background],\
+                                    ["critical", self.conf.color_critical_text, self.conf.color_critical_background],\
+                                    ["unknown", self.conf.color_unknown_text, self.conf.color_unknown_background],\
+                                    ["unreachable", self.conf.color_unreachable_text, self.conf.color_unreachable_background],\
+                                    ["down", self.conf.color_down_text, self.conf.color_down_background],\
+                                    ["error", self.conf.color_error_text, self.conf.color_error_background]]                      
+
+        # cruise table horizontally and vertically 
+        count = 0
+        for v in range(7):        
+            for h in range(2):
+                cb = self.colorbuttons[count]
+                #cb = gtk.ColorButton(color=gtk.gdk.color_parse(self.colorbuttons_colors[v][h + 1]))
+                cb.set_color(color=gtk.gdk.color_parse(self.colorbuttons_colors[v][h + 1]))
+                count += 1
+    
+        # renew preview
+        self.ColorsPreview()        
                 
             
     def DeleteServer(self, server=None):

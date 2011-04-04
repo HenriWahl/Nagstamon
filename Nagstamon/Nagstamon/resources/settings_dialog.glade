@@ -1226,7 +1226,7 @@
                                 <child>
                                     <widget class="GtkTable" id="table_colors_input">
                                         <property name="n_columns">3</property>
-                                        <property name="n_rows">9</property>
+                                        <property name="n_rows">10</property>
                                         <property name="visible">True</property>
                                         <child>
                                             <placeholder/>
@@ -1310,20 +1310,33 @@
                                             </packing>
                                         </child>
                                         <child>
+                                            <widget class="GtkButton" id="button_colors_reset">
+                                                <property name="label" context="yes" translatable="yes">Reset to previous</property>
+                                                <property name="visible">True</property>
+                                                <signal handler="button_colors_reset" name="clicked"/>
+                                            </widget>
+                                            <packing>
+                                                <property name="bottom_attach">9</property>
+                                                <property name="top_attach">8</property>
+                                            </packing>
+                                        </child>
+                                        <child>
                                             <widget class="GtkButton" id="button_colors_defaults">
+                                                <property name="is_focus">True</property>
                                                 <property name="label" context="yes" translatable="yes">Defaults</property>
                                                 <property name="visible">True</property>
                                                 <signal handler="button_colors_default" name="clicked"/>
                                             </widget>
                                             <packing>
-                                                <property name="bottom_attach">9</property>
-                                                <property name="top_attach">8</property>
+                                                <property name="bottom_attach">10</property>
+                                                <property name="top_attach">9</property>
                                             </packing>
                                         </child>
                                         <child>
                                             <widget class="GtkLabel" id="label_table_text">
                                                 <property name="label" context="yes" translatable="yes">Text:</property>
                                                 <property name="visible">True</property>
+                                                <property name="width_chars">10</property>
                                             </widget>
                                             <packing>
                                                 <property name="left_attach">1</property>
@@ -1400,12 +1413,22 @@
                                                 <property name="right_attach">2</property>
                                                 <property name="top_attach">8</property>
                                                 <property name="bottom_attach">9</property>
+                                            </packing>
+                                        </child>
+                                        <child>
+                                            <placeholder/>
+                                            <packing>
+                                                <property name="left_attach">1</property>
+                                                <property name="right_attach">2</property>
+                                                <property name="top_attach">9</property>
+                                                <property name="bottom_attach">10</property>
                                             </packing>
                                         </child>
                                         <child>
                                             <widget class="GtkLabel" id="label_table_background">
                                                 <property name="label" context="yes" translatable="yes">Background:</property>
                                                 <property name="visible">True</property>
+                                                <property name="width_chars">10</property>
                                             </widget>
                                             <packing>
                                                 <property name="left_attach">2</property>
@@ -1482,6 +1505,15 @@
                                                 <property name="right_attach">3</property>
                                                 <property name="top_attach">8</property>
                                                 <property name="bottom_attach">9</property>
+                                            </packing>
+                                        </child>
+                                        <child>
+                                            <placeholder/>
+                                            <packing>
+                                                <property name="left_attach">2</property>
+                                                <property name="right_attach">3</property>
+                                                <property name="top_attach">9</property>
+                                                <property name="bottom_attach">10</property>
                                             </packing>
                                         </child>
                                     </widget>
