@@ -1217,7 +1217,8 @@
                                 <property name="visible">True</property>
                                 <child>
                                     <widget class="GtkLabel" id="label_colors">
-                                        <property name="label" context="yes" translatable="yes">Set colors for text and background of status information:</property>
+                                        <property name="label" context="yes" translatable="yes">Set colors for text and background of status information:
+</property>
                                         <property name="visible">True</property>
                                         <property name="xalign">0.0</property>
                                     </widget>

@@ -1814,12 +1814,12 @@ class Settings(object):
                                     ["error", self.conf.color_error_text, self.conf.color_error_background]]                      
                                     
         # cruise table horizontally and vertically 
-        for h in range(2):        
-            for v in range(7):
+        for v in range(7):        
+            for h in range(2):
                 cb = gtk.ColorButton(color=gtk.gdk.color_parse(self.colorbuttons_colors[v][h + 1]))
                 cb.show()
                 self.colorbuttons.append(cb)
-                tci.attach(cb, 1 + h, 2 + h , 1 + v, 2 + v)
+                tci.attach(cb, 1 + h, 2 + h , 1 + v, 2 + v)    
 
         # produce color previews
         self.ColorsPreview()                
@@ -1971,19 +1971,11 @@ class Settings(object):
         """
         preview for status information colors
         """
-        """
-        count = 0
-        for c in self.glade.get_widget_prefix("label_color_"):
-            state = c.get_name().split("_")[2]
-            c.set_markup('<span foreground="%s" background="%s"> %s: </span>' %\
-            (self.colorbuttons_colors[count][0], self.colorbuttons_colors[count][1], state.upper()))
-            count += 1
-        """
-        for c in range(7):
-            label = self.glade.get_widget_prefix("label_color_" + self.colorbuttons_colors[c][0])[0]
+        for c in range(0, 14, 2):
+            text, background = self.colorbuttons[c].get_color(), self.colorbuttons[c + 1].get_color()
+            label = self.glade.get_widget_prefix("label_color_" + self.colorbuttons_colors[c/2][0])[0]
             label.set_markup('<span foreground="%s" background="%s"> %s: </span>' %\
-            (self.colorbuttons_colors[c][1], self.colorbuttons_colors[c][2],\
-             self.colorbuttons_colors[c][0].upper()))
+            (text, background, self.colorbuttons_colors[c/2][0].upper()))
             
             
     def DeleteServer(self, server=None):
