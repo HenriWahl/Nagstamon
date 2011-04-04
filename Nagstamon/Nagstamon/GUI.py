@@ -1801,7 +1801,15 @@ class Settings(object):
            
         # produce color previews
         self.ColorsPreview()
-            
+
+        
+        print dir(self.glade)
+        
+        tci = self.glade.get_widget("table_colors_input")
+        cs = gtk.ColorButton()
+        cs.show()
+        tci.attach(cs, 1, 2, 8, 9)
+        
         # show filled settings dialog and wait thanks to gtk.run()
         self.dialog.run()
         self.dialog.destroy()
