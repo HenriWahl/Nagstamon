@@ -1798,10 +1798,7 @@ class Settings(object):
         # in case nagstamon runs the first time it should display a new server dialog
         if str(self.conf.unconfigured) == "True":
             NewServer(servers=self.servers, output=self.output, settingsdialog=self, conf=self.conf)
-           
-        # produce color previews
-        #self.ColorsPreview()
-        
+                   
         # all this colorbuttons stuff is only because glade editor gazpacho doesn't know about
         # gtk.ColorButton
         # put colorbuttons into table after creation, store them in colorbuttons list to access
@@ -1823,7 +1820,10 @@ class Settings(object):
                 cb.show()
                 self.colorbuttons.append(cb)
                 tci.attach(cb, 1 + h, 2 + h , 1 + v, 2 + v)
-        
+
+        # produce color previews
+        self.ColorsPreview()                
+                
         # show filled settings dialog and wait thanks to gtk.run()
         self.dialog.run()
         self.dialog.destroy()
@@ -1968,19 +1968,15 @@ class Settings(object):
             
             
     def ColorsPreview(self, widget=None):
-        states = dict()
-        for c in self.glade.get_widget_prefix("input_entry_color_"):
-            dummy, dummy, dummy, state, property =  c.get_name().split("_")
-            if not states.has_key(state):
-                states[state] = dict()
-            states[state][property] = c.get_text()
-       
+        """
+        preview for status information colors
+        """
+        count = 0
         for c in self.glade.get_widget_prefix("label_color_"):
             state = c.get_name().split("_")[2]
             c.set_markup('<span foreground="%s" background="%s"> %s: </span>' %\
-            (states[state]["text"], states[state]["background"], state.upper()))
-            
-        
+            (self.colorbuttons_colors[count][0], self.colorbuttons_colors[count][1], state.upper()))
+            count += 1
             
     def DeleteServer(self, server=None):
         """

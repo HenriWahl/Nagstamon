@@ -1320,7 +1320,10 @@
                                             </packing>
                                         </child>
                                         <child>
-                                            <placeholder/>
+                                            <widget class="GtkLabel" id="label_table_text">
+                                                <property name="label" context="yes" translatable="yes">Text:</property>
+                                                <property name="visible">True</property>
+                                            </widget>
                                             <packing>
                                                 <property name="left_attach">1</property>
                                                 <property name="right_attach">2</property>
@@ -1399,7 +1402,10 @@
                                             </packing>
                                         </child>
                                         <child>
-                                            <placeholder/>
+                                            <widget class="GtkLabel" id="label_table_background">
+                                                <property name="label" context="yes" translatable="yes">Background:</property>
+                                                <property name="visible">True</property>
+                                            </widget>
                                             <packing>
                                                 <property name="left_attach">2</property>
                                                 <property name="right_attach">3</property>
