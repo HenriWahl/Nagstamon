@@ -1919,20 +1919,20 @@ class Settings(object):
                                 pass
 
         # get non-glade-color settings
-        self.conf.color_ok_text = str(self.colorbuttons[0].get_color())
-        self.conf.color_ok_background = str(self.colorbuttons[1].get_color())
-        self.conf.color_warning_text = str(self.colorbuttons[2].get_color())
-        self.conf.color_warning_background = str(self.colorbuttons[3].get_color())
-        self.conf.color_critical_text = str(self.colorbuttons[4].get_color())
-        self.conf.color_critical_background = str(self.colorbuttons[5].get_color())
-        self.conf.color_unknown_text = str(self.colorbuttons[6].get_color())
-        self.conf.color_unknown_background = str(self.colorbuttons[7].get_color())
-        self.conf.color_unreachable_text = str(self.colorbuttons[8].get_color())
-        self.conf.color_unreachable_background = str(self.colorbuttons[9].get_color())
-        self.conf.color_down_text = str(self.colorbuttons[10].get_color())
-        self.conf.color_down_background = str(self.colorbuttons[11].get_color())
-        self.conf.color_error_text = str(self.colorbuttons[12].get_color())
-        self.conf.color_error_background = str(self.colorbuttons[13].get_color())
+        self.conf.color_ok_text = self.colorbuttons[0].get_color().to_string()
+        self.conf.color_ok_background = self.colorbuttons[1].get_color().to_string()
+        self.conf.color_warning_text = self.colorbuttons[2].get_color().to_string()
+        self.conf.color_warning_background = self.colorbuttons[3].get_color().to_string()
+        self.conf.color_critical_text = self.colorbuttons[4].get_color().to_string()
+        self.conf.color_critical_background = self.colorbuttons[5].get_color().to_string()
+        self.conf.color_unknown_text = self.colorbuttons[6].get_color().to_string()
+        self.conf.color_unknown_background = self.colorbuttons[7].get_color().to_string()
+        self.conf.color_unreachable_text = self.colorbuttons[8].get_color().to_string()
+        self.conf.color_unreachable_background = self.colorbuttons[9].get_color().to_string()
+        self.conf.color_down_text = self.colorbuttons[10].get_color().to_string()
+        self.conf.color_down_background = self.colorbuttons[11].get_color().to_string()
+        self.conf.color_error_text = self.colorbuttons[12].get_color().to_string()
+        self.conf.color_error_background = self.colorbuttons[13].get_color().to_string()
         
         # close settings dialog 
         self.dialog.destroy()
@@ -1994,7 +1994,7 @@ class Settings(object):
         # colorbuttons are serially stored in self.colorbuttons, alway one text and one 
         # background color of one state following, this is why there is step 2 in range()
         for c in range(0, 14, 2):
-            text, background = str(self.colorbuttons[c].get_color()), str(self.colorbuttons[c + 1].get_color())
+            text, background = self.colorbuttons[c].get_color().to_string(), self.colorbuttons[c + 1].get_color().to_string()
             label = self.glade.get_widget_prefix("label_color_" + self.colorbuttons_colors[c/2][0])[0]
             label.set_markup('<span foreground="%s" background="%s"> %s: </span>' %\
             (text, background, self.colorbuttons_colors[c/2][0].upper()))
