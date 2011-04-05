@@ -50,41 +50,48 @@ class MultisiteServer(GenericServer):
 
     def __init__(self, **kwds):
         GenericServer.__init__(self, **kwds)
+        
+        # Prepare all urls needed by nagstamon - 
+        self.urls = {}
+        self.statemap = {}
+        
 
     def init_HTTP(self):
         # Fix eventually missing tailing "/" in url
         if self.nagios_url[-1] != '/':
             self.nagios_url += '/'
-
-        # Prepare all urls needed by nagstamon
-        self.urls = {
-          'api_services':    self.nagios_url + "view.py?view_name=nagstamon_svc&output_format=python",
-          'human_services':  self.nagios_url + "index.py?%s" % \
-                                               urllib.urlencode({'start_url': 'view.py?view_name=nagstamon_svc'}),
-          'human_service':   self.nagios_url + "index.py?%s" %
-                                               urllib.urlencode({'start_url': 'view.py?view_name=service'}),
-
-          'api_hosts':       self.nagios_url + "view.py?view_name=nagstamon_hosts&output_format=python",
-          'human_hosts':     self.nagios_url + "index.py?%s" %
-                                               urllib.urlencode({'start_url': 'view.py?view_name=nagstamon_hosts'}),
-          'human_host':      self.nagios_url + "index.py?%s" %
-                                               urllib.urlencode({'start_url': 'view.py?view_name=hoststatus'}),
-
-          'api_reschedule':  self.nagios_url + 'nagios_action.py?action=reschedule',
-          'api_host_act':    self.nagios_url + 'view.py?_transid=-1&_do_actions=yes&_do_confirm=Yes!&output_format=python&view_name=hoststatus',
-          'api_service_act': self.nagios_url + 'view.py?_transid=-1&_do_actions=yes&_do_confirm=Yes!&output_format=python&view_name=service',
-        }
-
-        self.statemap = {
-            'UNREACH': 'UNREACHABLE',
-            'CRIT':    'CRITICAL',
-            'WARN':    'WARNING',
-            'UNKN':    'UNKNOWN',
-            'PEND':    'PENDING',
-        }
+        
+        # Prepare all urls needed by nagstamon if not yet done
+        if len(self.urls) == len(self.statemap):
+            self.urls = {
+              'api_services':    self.nagios_url + "view.py?view_name=nagstamon_svc&output_format=python",
+              'human_services':  self.nagios_url + "index.py?%s" % \
+                                                   urllib.urlencode({'start_url': 'view.py?view_name=nagstamon_svc'}),
+              'human_service':   self.nagios_url + "index.py?%s" %
+                                                   urllib.urlencode({'start_url': 'view.py?view_name=service'}),
+    
+              'api_hosts':       self.nagios_url + "view.py?view_name=nagstamon_hosts&output_format=python",
+              'human_hosts':     self.nagios_url + "index.py?%s" %
+                                                   urllib.urlencode({'start_url': 'view.py?view_name=nagstamon_hosts'}),
+              'human_host':      self.nagios_url + "index.py?%s" %
+                                                   urllib.urlencode({'start_url': 'view.py?view_name=hoststatus'}),
+    
+              'api_reschedule':  self.nagios_url + 'nagios_action.py?action=reschedule',
+              'api_host_act':    self.nagios_url + 'view.py?_transid=-1&_do_actions=yes&_do_confirm=Yes!&output_format=python&view_name=hoststatus',
+              'api_service_act': self.nagios_url + 'view.py?_transid=-1&_do_actions=yes&_do_confirm=Yes!&output_format=python&view_name=service',
+            }
+    
+            self.statemap = {
+                'UNREACH': 'UNREACHABLE',
+                'CRIT':    'CRITICAL',
+                'WARN':    'WARNING',
+                'UNKN':    'UNKNOWN',
+                'PEND':    'PENDING',
+            }            
 
         GenericServer.init_HTTP(self)
 
+        
     def _get_url(self, url):
         result = self.FetchURL(url, 'raw')
         content, error = result.result, result.error
@@ -107,6 +114,7 @@ class MultisiteServer(GenericServer):
 
         return eval(content)
 
+    
     def _get_status(self):
         """
         Get status from Nagios Server

@@ -615,6 +615,7 @@ class GUI(object):
                            "Carl Chenet",\
                            "Emile Heitor ",\
                            "John Conroy",\
+                           "Lars Michelsen",\
                            "Mattias Ryrlén",\
                            "Michał Rzeszut",\
                            "Patrick Cernko",\
