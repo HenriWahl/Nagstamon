@@ -1800,10 +1800,10 @@ class Settings(object):
         if str(self.conf.unconfigured) == "True":
             NewServer(servers=self.servers, output=self.output, settingsdialog=self, conf=self.conf)
                    
-        # all this colorbuttons stuff is only because glade editor gazpacho doesn't know about
-        # gtk.ColorButton
-        # put colorbuttons into table after creation, store them in colorbuttons list to access
-        # them later
+        # all this colorbuttons stuff is only because glade editor gazpacho 
+        # doesn't know about gtk.ColorButton
+        # put colorbuttons into table after creation, store them in colorbuttons list
+        # to access them later
         tci = self.glade.get_widget("table_colors_input")
         self.colorbuttons = list()
         self.colorbuttons_colors = [["ok", self.conf.color_ok_text, self.conf.color_ok_background],\
@@ -1820,6 +1820,7 @@ class Settings(object):
                 cb = gtk.ColorButton(color=gtk.gdk.color_parse(self.colorbuttons_colors[v][h + 1]))
                 cb.show()
                 cb.connect("color-set", self.ColorsPreview)
+                # put all colorbuttons into self.colorbuttons list, text and background following serially
                 self.colorbuttons.append(cb)
                 tci.attach(cb, 1 + h, 2 + h , 1 + v, 2 + v)    
 
@@ -1990,8 +1991,10 @@ class Settings(object):
         """
         preview for status information colors
         """
+        # colorbuttons are serially stored in self.colorbuttons, alway one text and one 
+        # background color of one state following, this is why there is step 2 in range()
         for c in range(0, 14, 2):
-            text, background = self.colorbuttons[c].get_color(), self.colorbuttons[c + 1].get_color()
+            text, background = str(self.colorbuttons[c].get_color()), str(self.colorbuttons[c + 1].get_color())
             label = self.glade.get_widget_prefix("label_color_" + self.colorbuttons_colors[c/2][0])[0]
             label.set_markup('<span foreground="%s" background="%s"> %s: </span>' %\
             (text, background, self.colorbuttons_colors[c/2][0].upper()))
@@ -2014,7 +2017,6 @@ class Settings(object):
         for v in range(7):        
             for h in range(2):
                 cb = self.colorbuttons[count]
-                #cb = gtk.ColorButton(color=gtk.gdk.color_parse(self.colorbuttons_colors[v][h + 1]))
                 cb.set_color(color=gtk.gdk.color_parse(self.colorbuttons_colors[v][h + 1]))
                 count += 1
     
