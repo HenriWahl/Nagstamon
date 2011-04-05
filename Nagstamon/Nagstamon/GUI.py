@@ -611,6 +611,7 @@ class GUI(object):
                            "contributions, patches, packaging,",\
                            "testing, hints and ideas:",\
                            " ",\
+                           "Antoine Jacoutot",\
                            "Benoît Soenen",\
                            "Carl Chenet",\
                            "Emile Heitor ",\
@@ -620,11 +621,12 @@ class GUI(object):
                            "Michał Rzeszut",\
                            "Patrick Cernko",\
                            "Pawel Połewicz",\
+                           "Sandro Tosi",\
                            "Thomas Gelf",\
                            "Tobias Scheerbaum",\
                            "Yannick Charton",\
                            " ",\
-                           "(And those I forgot to mention)"])
+                           "...and those I forgot to mention but who helped a lot..."])
         # read LICENSE file
         license = ""
         try:

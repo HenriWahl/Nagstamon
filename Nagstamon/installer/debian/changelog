@@ -1,28 +1,17 @@
-nagstamon (0.9.5-rc1) unstable; urgency=low
+nagstamon (0.9.5-1) unstable; urgency=low
+ 
+  * New upstream release
+    - added op5 Ninja support
+    - added Check_MK Multisite support
+    - improved Icinga support (compatibility with Icinga 1.3)
+    - improved Centreon support (compatible with Centreon 2.1)
+    - added sortable columns in status overview
+    - added customizable colors
+    - better debugging and error messages
+    - password must not be stored in config file
+    - major memory leak closed, various bugs fixed
 
-  * RC1
-
- -- Henri Wahl <h.wahl@ifw-dresden.de>  Tue, 22 Dec 2010 07:55:32 +0200
-
-
-nagstamon (0.9.5pre-3) unstable; urgency=low
-
-  * Enhancements, fixes and so on...
-
- -- Henri Wahl <h.wahl@ifw-dresden.de>  Tue, 9 Dec 2010 15:20:32 +0200
-
-
-nagstamon (0.9.5pre-2) unstable; urgency=low
-
-  * Possibility of custom server implementation
-
- -- Henri Wahl <h.wahl@ifw-dresden.de>  Tue, 14 Sep 2010 10:52:32 +0200
-
-nagstamon (0.9.5pre-1) unstable; urgency=low
-
-  * New upstream release 
-
- -- Henri Wahl <h.wahl@ifw-dresden.de>  Mon, 16 Aug 2010 7:00:00 +0200
+ -- Henri Wahl <h.wahl@ifw-dresden.de>  Tue, 05 Apr 2011 13:23:00 +0200
 
 nagstamon (0.9.4-1) unstable; urgency=low
 
