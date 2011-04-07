@@ -16,6 +16,8 @@ Architecture: all
 Depends: ${python:Depends}, ${misc:Depends}, python-gtk2, python-lxml, python-pkg-resources, python-glade2, python-eggtrayicon, librsvg2-common, sox
 Description: Nagios status monitor which takes place in systray or on desktop
  Nagstamon is a Nagios status monitor which takes place in systray or 
- on desktop (GNOME, KDE), as floating statusbar to inform you in 
+ on desktop (GNOME, KDE) as floating statusbar to inform you in 
  realtime about the status of your Nagios and some of its derivatives monitored network. 
- It allows to connect to multiple Nagios, Icinga, Opsview and Centreon servers.
+ It allows to connect to multiple Nagios, Icinga, Opsview, Centreon, Op5/Ninja and
+ Check_MK Multisite servers. Events could be handled by instant access to failed hosts/services.
+ 
