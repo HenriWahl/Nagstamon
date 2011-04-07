@@ -97,7 +97,7 @@ class NinjaServer(GenericServer):
     def _set_acknowledge(self, host, service, author, comment, sticky, notify, persistent, all_services):
         if not service:
             values = {"requested_command": "ACKNOWLEDGE_HOST_PROBLEM"}
-            values.update({"cmd_param[service]": host})
+            values.update({"cmd_param[host_name]": host})
         else:
             values = {"requested_command": "ACKNOWLEDGE_SVC_PROBLEM"}
             values.update({"cmd_param[service]": host + ";" + service})
