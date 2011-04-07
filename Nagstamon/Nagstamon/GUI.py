@@ -856,20 +856,18 @@ class StatusBar(object):
         create statusbar as floating window
         """
         # TOPLEVEL seems to be more standard compliant
-        self.StatusBar = gtk.Window(gtk.WINDOW_TOPLEVEL)
-        #self.StatusBar = gtk.Window(gtk.WINDOW_POPUP)
+        #self.StatusBar = gtk.Window(gtk.WINDOW_TOPLEVEL)
+        # WINDOWS_POPUP works
+        self.StatusBar = gtk.Window(gtk.WINDOW_POPUP)
         self.StatusBar.set_decorated(False)
         self.StatusBar.set_keep_above(True)
         self.StatusBar.stick()
         # at http://www.pygtk.org/docs/pygtk/gdk-constants.html#gdk-window-type-hint-constants
         # there are some hint types to experiment with
-        #self.StatusBar.set_type_hint(gtk.gdk.WINDOW_TYPE_HINT_SPLASHSCREEN)
-        #self.StatusBar.set_type_hint(gtk.gdk.WINDOW_TYPE_HINT_DOCK)        
-        #self.StatusBar.set_type_hint(gtk.gdk.WINDOW_TYPE_HINT_TOOLBAR)
         if platform.system() == "Windows":
-            self.StatusBar.set_type_hint(gtk.gdk.WINDOW_TYPE_HINT_UTILITY) 
+            self.StatusBar.set_type_hint(gtk.gdk.WINDOW_TYPE_HINT_UTILITY)
         else:
-            self.StatusBar.set_type_hint(gtk.gdk.WINDOW_TYPE_HINT_DOCK) 
+            self.StatusBar.set_type_hint(gtk.gdk.WINDOW_TYPE_HINT_DOCK)
         self.StatusBar.set_property("skip-taskbar-hint", True)
         self.StatusBar.set_skip_taskbar_hint(True)
             
