@@ -25,7 +25,7 @@ if platform.system() != "Windows":
         print
         print err
         print
-        print "Could not load egg.trayicon, so you cannot put nagstamon into systray."
+        print "Could not load egg.trayicon, so you cannot put nagstamon statusbar into systray."
         print
 
 # needed for actions e.g. triggered by pressed buttons
