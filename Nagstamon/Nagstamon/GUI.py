@@ -245,9 +245,10 @@ class GUI(object):
         # server combobox 
         self.popwin.ComboboxMonitor.connect("changed", self.popwin.ComboboxClicked)
 
-        # attempt to place statusbar where it belongs to in Windows - workaround
+        # attempt to place and resize statusbar where it belongs to in Windows - workaround
         self.statusbar.StatusBar.move(int(self.conf.position_x), int(self.conf.position_y))
-
+        self.statusbar.Resize()
+        
 
     def RefreshDisplayStatus(self):
         """
@@ -866,9 +867,7 @@ class StatusBar(object):
         #self.StatusBar.set_type_hint(gtk.gdk.WINDOW_TYPE_HINT_DOCK)        
         #self.StatusBar.set_type_hint(gtk.gdk.WINDOW_TYPE_HINT_TOOLBAR)
         if platform.system() == "Windows":
-            self.StatusBar.set_type_hint(gtk.gdk.WINDOW_TYPE_HINT_UTILITY)
-            #self.StatusBar.set_type_hint(gtk.gdk.WINDOW_TYPE_HINT_NORMAL)
-            #self.StatusBar.set_type_hint(gtk.gdk.WINDOW_TYPE_HINT_DOCK)  
+            self.StatusBar.set_type_hint(gtk.gdk.WINDOW_TYPE_HINT_UTILITY) 
         else:
             self.StatusBar.set_type_hint(gtk.gdk.WINDOW_TYPE_HINT_DOCK) 
         self.StatusBar.set_property("skip-taskbar-hint", True)
@@ -1074,7 +1073,7 @@ class StatusBar(object):
         try:
             x,y = self.Label.size_request()
             self.StatusBar.resize(x, y)
-        except:
+        except:   
             self.StatusBar.resize(1, 1)
 
 
@@ -2054,7 +2053,6 @@ class Settings(object):
         for v in range(7):        
             for h in range(2):
                 cb = self.colorbuttons[count]
-                #cb = gtk.ColorButton(color=gtk.gdk.color_parse(self.colorbuttons_colors[v][h + 1]))
                 cb.set_color(color=gtk.gdk.color_parse(self.colorbuttons_colors[v][h + 1]))
                 count += 1
     
