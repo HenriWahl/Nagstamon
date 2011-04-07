@@ -1802,7 +1802,7 @@ class Settings(object):
         
         # in case nagstamon runs the first time it should display a new server dialog
         if str(self.conf.unconfigured) == "True":
-            self.output.statusbar.Statusbar.set_visible(False)
+            self.output.statusbar.StatusBar.set_visible(False)
             NewServer(servers=self.servers, output=self.output, settingsdialog=self, conf=self.conf)
                    
         # all this colorbuttons stuff is only because glade editor gazpacho 
