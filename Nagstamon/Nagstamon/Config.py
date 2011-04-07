@@ -223,8 +223,8 @@ class Config(object):
             config.write(f)
             f.close()
             
-        except:
-            pass
+        except Exception, err:
+            print err
 
 
     def Convert_Conf_to_Multiple_Servers(self):

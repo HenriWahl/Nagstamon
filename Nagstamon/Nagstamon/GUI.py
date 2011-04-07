@@ -245,6 +245,9 @@ class GUI(object):
         # server combobox 
         self.popwin.ComboboxMonitor.connect("changed", self.popwin.ComboboxClicked)
 
+        # attempt to place statusbar where it belongs to in Windows - workaround
+        self.statusbar.StatusBar.move(int(self.conf.position_x), int(self.conf.position_y))
+
 
     def RefreshDisplayStatus(self):
         """
@@ -864,6 +867,8 @@ class StatusBar(object):
         #self.StatusBar.set_type_hint(gtk.gdk.WINDOW_TYPE_HINT_TOOLBAR)
         if platform.system() == "Windows":
             self.StatusBar.set_type_hint(gtk.gdk.WINDOW_TYPE_HINT_UTILITY)
+            #self.StatusBar.set_type_hint(gtk.gdk.WINDOW_TYPE_HINT_NORMAL)
+            #self.StatusBar.set_type_hint(gtk.gdk.WINDOW_TYPE_HINT_DOCK)  
         else:
             self.StatusBar.set_type_hint(gtk.gdk.WINDOW_TYPE_HINT_DOCK) 
         self.StatusBar.set_property("skip-taskbar-hint", True)
@@ -1802,7 +1807,7 @@ class Settings(object):
         
         # in case nagstamon runs the first time it should display a new server dialog
         if str(self.conf.unconfigured) == "True":
-            self.output.statusbar.StatusBar.set_visible(False)
+            self.output.statusbar.StatusBar.hide()
             NewServer(servers=self.servers, output=self.output, settingsdialog=self, conf=self.conf)
                    
         # all this colorbuttons stuff is only because glade editor gazpacho 
@@ -1967,6 +1972,9 @@ class Settings(object):
             self.output.popwin.destroy()
             # re-initialize output with new settings
             self.output.__init__()
+            # in Windows the statusbar with gtk.gdk.WINDOW_TYPE_HINT_UTILITY places itself somewhere
+            # this way it should be disciplined
+            self.output.statusbar.StatusBar.move(int(self.conf.position_x), int(self.conf.position_y))
             
             # start debugging loop if wanted
             if str(self.conf.debug_mode) == "True":
