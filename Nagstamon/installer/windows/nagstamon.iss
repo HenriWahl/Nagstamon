@@ -1,13 +1,13 @@
 [Setup]
 AppName=nagstamon
-AppVerName=nagstamon 0.9.5-RC1
+AppVerName=nagstamon 0.9.5
 DefaultDirName={pf}\nagstamon
 DefaultGroupName=nagstamon
 AlwaysUsePersonalGroup=false
 ShowLanguageDialog=no
 SetupIconFile=C:\Dokumente und Einstellungen\Administrator\Desktop\nagstamon_build\Nagstamon\pyinstaller\nagstamon.ico
 UsePreviousGroup=false
-OutputBaseFilename=nagstamon_0.9.5-RC1_setup
+OutputBaseFilename=nagstamon_0.9.5_setup
 UninstallDisplayIcon=
 UsePreviousAppDir=false
 AppID={{44F7CFFB-4776-4DA4-9930-A07178069517}
