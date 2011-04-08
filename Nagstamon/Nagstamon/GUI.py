@@ -625,6 +625,7 @@ class GUI(object):
                            "Michał Rzeszut",\
                            "Patrick Cernko",\
                            "Pawel Połewicz",\
+                           "Robin Sonefors",\
                            "Sandro Tosi",\
                            "Thomas Gelf",\
                            "Tobias Scheerbaum",\
