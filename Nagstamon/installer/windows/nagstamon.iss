@@ -1,13 +1,13 @@
 [Setup]
-AppName=nagstamon
-AppVerName=nagstamon 0.9.5
-DefaultDirName={pf}\nagstamon
-DefaultGroupName=nagstamon
+AppName=Nagstamon
+AppVerName=Nagstamon 0.9.5
+DefaultDirName={pf}\Nagstamon
+DefaultGroupName=Nagstamon
 AlwaysUsePersonalGroup=false
 ShowLanguageDialog=no
-SetupIconFile=C:\Dokumente und Einstellungen\Administrator\Desktop\nagstamon_build\Nagstamon\pyinstaller\nagstamon.ico
+SetupIconFile=C:\Dokumente und Einstellungen\Administrator\Desktop\svn\trunk\Nagstamon\Nagstamon\resources\nagstamon.ico
 UsePreviousGroup=false
-OutputBaseFilename=nagstamon_0.9.5_setup
+OutputBaseFilename=Nagstamon_0.9.5_setup
 UninstallDisplayIcon=
 UsePreviousAppDir=false
 AppID={{44F7CFFB-4776-4DA4-9930-A07178069517}
@@ -20,8 +20,8 @@ InternalCompressLevel=max
 Compression=lzma
 SolidCompression=true
 [Icons]
-Name: {group}\nagstamon; Filename: {app}\nagstamon.exe; WorkingDir: {app}; IconFilename: {app}\resources\nagstamon.ico; IconIndex: 0
-Name: {commonstartup}\nagstamon; Filename: {app}\nagstamon.exe; WorkingDir: {app}; IconFilename: {app}\resources\nagstamon.ico; IconIndex: 0
+Name: {group}\Nagstamon; Filename: {app}\nagstamon.exe; WorkingDir: {app}; IconFilename: {app}\resources\nagstamon.ico; IconIndex: 0
+Name: {commonstartup}\Nagstamon; Filename: {app}\nagstamon.exe; WorkingDir: {app}; IconFilename: {app}\resources\nagstamon.ico; IconIndex: 0
 [Files]
 Source: ..\..\..\..\dist\nagstamon\atk.pyd; DestDir: {app}
 Source: ..\..\..\..\dist\nagstamon\bz2.pyd; DestDir: {app}
