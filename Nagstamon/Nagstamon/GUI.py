@@ -2206,6 +2206,7 @@ class NewServer(ServerDialogHelper):
         self.gladefile = self.output.Resources + os.sep + "settings_server_dialog.glade"  
         self.glade = gtk.glade.XML(self.gladefile) 
         self.dialog = self.glade.get_widget("settings_server_dialog")
+        self.dialog.set_keep_above(True)
         
         # assign handlers
         handlers_dict = { "button_ok_clicked" : self.OK,
@@ -2369,6 +2370,7 @@ class EditServer(ServerDialogHelper):
         self.gladefile = self.output.Resources + os.sep + "settings_server_dialog.glade"  
         self.glade = gtk.glade.XML(self.gladefile) 
         self.dialog = self.glade.get_widget("settings_server_dialog")
+        self.dialog.set_keep_above(True)
         
         # assign handlers
         handlers_dict = { "button_ok_clicked" : self.OK,

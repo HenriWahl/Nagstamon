@@ -7,7 +7,7 @@
         <property name="default_width">320</property>
         <property name="resizable">False</property>
         <property name="title" context="yes" translatable="yes">Server settings</property>
-        <property name="urgency_hint">True</property>
+        <property name="type_hint">normal</property>
         <child internal-child="vbox">
             <widget class="GtkVBox" id="dialog1-vbox">
                 <property name="border_width">2</property>

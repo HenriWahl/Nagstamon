@@ -8,7 +8,7 @@
         <property name="mnemonics_visible">False</property>
         <property name="resizable">False</property>
         <property name="title" context="yes" translatable="yes">nagstamon settings</property>
-        <property name="urgency_hint">True</property>
+        <property name="type_hint">normal</property>
         <property name="visible">True</property>
         <property name="window_position">center-always</property>
         <signal handler="settings_dialog_close" name="close"/>
