@@ -7,7 +7,7 @@
         <property name="default_width">320</property>
         <property name="resizable">False</property>
         <property name="title" context="yes" translatable="yes">Server settings</property>
-        <property name="type_hint">normal</property>
+        <property name="urgency_hint">True</property>
         <child internal-child="vbox">
             <widget class="GtkVBox" id="dialog1-vbox">
                 <property name="border_width">2</property>
@@ -16,7 +16,7 @@
                     <widget class="GtkTable" id="table_server_settings">
                         <property name="border_width">3</property>
                         <property name="n_columns">2</property>
-                        <property name="n_rows">14</property>
+                        <property name="n_rows">15</property>
                         <property name="visible">True</property>
                         <child>
                             <widget class="GtkCheckButton" id="input_checkbutton_enabled">
@@ -94,6 +94,13 @@ Don't put any status.cgi in there.</property>
                             </packing>
                         </child>
                         <child>
+                            <placeholder/>
+                            <packing>
+                                <property name="top_attach">6</property>
+                                <property name="bottom_attach">7</property>
+                            </packing>
+                        </child>
+                        <child>
                             <widget class="GtkCheckButton" id="input_checkbutton_save_password">
                                 <property name="is_focus">True</property>
                                 <property name="label" context="yes" translatable="yes">Save Password</property>
@@ -117,13 +124,6 @@ Don't put any status.cgi in there.</property>
                             <packing>
                                 <property name="bottom_attach">8</property>
                                 <property name="top_attach">7</property>
-                            </packing>
-                        </child>
-                        <child>
-                            <placeholder/>
-                            <packing>
-                                <property name="top_attach">8</property>
-                                <property name="bottom_attach">7</property>
                             </packing>
                         </child>
                         <child>
@@ -201,7 +201,6 @@ Don't put any status.cgi in there.</property>
                         </child>
                         <child>
                             <widget class="GtkComboBox" id="input_combo_server_type">
-                                <property name="items" context="yes" translatable="yes"></property>
                                 <property name="visible">True</property>
                                 <signal handler="input_combo_server_type_changed" name="changed"/>
                             </widget>
@@ -368,7 +367,7 @@ Don't put any status.cgi in there.</property>
                         </child>
                     </widget>
                     <packing>
-                        <property name="position">2</property>
+                        <property name="position">1</property>
                     </packing>
                 </child>
                 <child internal-child="action_area">

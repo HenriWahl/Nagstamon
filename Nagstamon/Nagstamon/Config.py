@@ -40,7 +40,7 @@ class Config(object):
         self.connect_by_dns_no = False
         self.debug_mode = False
         self.debug_to_file = False
-        self.debug_file = os.path.expanduser('~') + "/nagstamon.log"
+        self.debug_file = os.path.expanduser('~') + os.sep + "nagstamon.log"
         self.check_for_new_version = True
         self.notification = True
         self.notification_flashing = True
