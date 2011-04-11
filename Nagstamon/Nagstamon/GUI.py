@@ -12,7 +12,6 @@ except Exception, err:
     import sys
     sys.exit()
 import gtk
-import gtk.glade
 import gobject
 import os
 import platform
@@ -455,42 +454,44 @@ class GUI(object):
 
     def AcknowledgeDialogShow(self, server, host, service=None):
         """
-            create and show acknowledge_dialog from glade file
+            create and show acknowledge_dialog from gtkbuilder file
         """
             
         # set the glade file
-        self.gladefile = self.Resources + os.sep + "acknowledge_dialog.glade"  
-        self.acknowledge_xml = gtk.glade.XML(self.gladefile) 
-        self.acknowledge_dialog = self.acknowledge_xml.get_widget("acknowledge_dialog")
+        self.builderfile = self.Resources + os.sep + "acknowledge_dialog.ui"
+        self.acknowledge_xml = gtk.Builder()
+        self.acknowledge_xml.add_from_file(self.builderfile)
+        self.acknowledge_dialog = self.acknowledge_xml.get_object("acknowledge_dialog")
 
         # connect with action
         # only OK needs to be connected - if this action gets canceled nothing happens
-        # use signal_autoconnect to assign methods to handlers
+        # use connect_signals to assign methods to handlers
         handlers_dict = { "button_ok_clicked" : self.Acknowledge }
-        self.acknowledge_xml.signal_autoconnect(handlers_dict)
+        self.acknowledge_xml.connect_signals(handlers_dict)
         
         # if service is "" it must be a host
         if service == "":
             # set label for acknowledging a host
-            self.acknowledge_xml.get_widget("input_label_host").set_text(host)
-            self.acknowledge_xml.get_widget("label_service").hide()
-            self.acknowledge_xml.get_widget("input_label_service").hide()
+            self.acknowledge_xml.get_object("input_label_host").set_text(host)
+            self.acknowledge_xml.get_object("label_service").hide()
+            self.acknowledge_xml.get_object("input_label_service").hide()
             self.acknowledge_dialog.set_title("Acknowledge host")
         else: 
             # set label for acknowledging a service on host
-            self.acknowledge_xml.get_widget("input_label_host").set_text(host)
-            self.acknowledge_xml.get_widget("input_label_service").set_text(service)
+            self.acknowledge_xml.get_object("input_label_host").set_text(host)
+            self.acknowledge_xml.get_object("input_label_service").set_text(service)
             self.acknowledge_dialog.set_title("Acknowledge service")
         
         # default flags of Nagios acknowledgement
-        self.acknowledge_xml.get_widget("input_checkbutton_sticky_acknowledgement").set_active(True)
-        self.acknowledge_xml.get_widget("input_checkbutton_send_notification").set_active(True)
-        self.acknowledge_xml.get_widget("input_checkbutton_persistent_comment").set_active(True)
-        self.acknowledge_xml.get_widget("input_checkbutton_acknowledge_all_services").set_active(False)
+        self.acknowledge_xml.get_object("input_checkbutton_sticky_acknowledgement").set_active(True)
+        self.acknowledge_xml.get_object("input_checkbutton_send_notification").set_active(True)
+        self.acknowledge_xml.get_object("input_checkbutton_persistent_comment").set_active(True)
+        self.acknowledge_xml.get_object("input_checkbutton_acknowledge_all_services").set_active(False)
 
         # default author + comment
-        self.acknowledge_xml.get_widget("input_entry_author").set_text(server.username)        
-        self.acknowledge_xml.get_widget("input_entry_comment").set_text("acknowledged")
+        self.acknowledge_xml.get_object("input_entry_author").set_text(server.username)        
+        self.acknowledge_xml.get_object("input_entry_comment").set_text("acknowledged")
+
 
         # show dialog
         self.acknowledge_dialog.run()
@@ -502,14 +503,14 @@ class GUI(object):
             acknowledge miserable host/service
         """
         # various parameters vor the CGI request
-        host = self.acknowledge_xml.get_widget("input_label_host").get_text()
-        service = self.acknowledge_xml.get_widget("input_label_service").get_text()
-        author = self.acknowledge_xml.get_widget("input_entry_author").get_text()
-        comment = self.acknowledge_xml.get_widget("input_entry_comment").get_text()
-        acknowledge_all_services = self.acknowledge_xml.get_widget("input_checkbutton_acknowledge_all_services").get_active()
-        sticky = self.acknowledge_xml.get_widget("input_checkbutton_sticky_acknowledgement").get_active()
-        notify = self.acknowledge_xml.get_widget("input_checkbutton_send_notification").get_active()
-        persistent = self.acknowledge_xml.get_widget("input_checkbutton_persistent_comment").get_active()
+        host = self.acknowledge_xml.get_object("input_label_host").get_text()
+        service = self.acknowledge_xml.get_object("input_label_service").get_text()
+        author = self.acknowledge_xml.get_object("input_entry_author").get_text()
+        comment = self.acknowledge_xml.get_object("input_entry_comment").get_text()
+        acknowledge_all_services = self.acknowledge_xml.get_object("input_checkbutton_acknowledge_all_services").get_active()
+        sticky = self.acknowledge_xml.get_object("input_checkbutton_sticky_acknowledgement").get_active()
+        notify = self.acknowledge_xml.get_object("input_checkbutton_send_notification").get_active()
+        persistent = self.acknowledge_xml.get_object("input_checkbutton_persistent_comment").get_active()
  
         # create a list of all service of selected host to acknowledge them all
         all_services = list()
@@ -528,45 +529,46 @@ class GUI(object):
 
     def DowntimeDialogShow(self, server, host, service=None):
         """
-            create and show downtime_dialog from glade file
+            create and show downtime_dialog from gtkbuilder file
         """
             
-        # set the glade file
-        self.gladefile = self.Resources + os.sep + "downtime_dialog.glade"  
-        self.downtime_xml = gtk.glade.XML(self.gladefile) 
-        self.downtime_dialog = self.downtime_xml.get_widget("downtime_dialog")
-
+        # set the gtkbuilder file
+        self.builderfile = self.Resources + os.sep + "downtime_dialog.ui"
+        self.downtime_xml = gtk.Builder()
+        self.downtime_xml.add_from_file(self.builderfile)
+        self.downtime_dialog = self.downtime_xml.get_object("downtime_dialog")
+        
         # connect with action
         # only OK needs to be connected - if this action gets canceled nothing happens
-        # use signal_autoconnect to assign methods to handlers
+        # use connect_signals to assign methods to handlers
         handlers_dict = { "button_ok_clicked" : self.Downtime }
-        self.downtime_xml.signal_autoconnect(handlers_dict)
+        self.downtime_xml.connect_signals(handlers_dict)
         
         # if service is None it must be a host
         if service == "":
             # set label for acknowledging a host
-            self.downtime_xml.get_widget("input_label_host").set_text(host)
-            self.downtime_xml.get_widget("label_service").hide()
-            self.downtime_xml.get_widget("input_label_service").hide()
+            self.downtime_xml.get_object("input_label_host").set_text(host)
+            self.downtime_xml.get_object("label_service").hide()
+            self.downtime_xml.get_object("input_label_service").hide()
             self.downtime_dialog.set_title("Downtime for host")
         else: 
             # set label for acknowledging a service on host
-            self.downtime_xml.get_widget("input_label_host").set_text(host)
-            self.downtime_xml.get_widget("input_label_service").set_text(service)
+            self.downtime_xml.get_object("input_label_host").set_text(host)
+            self.downtime_xml.get_object("input_label_service").set_text(service)
             self.downtime_dialog.set_title("Downtime for service")
        
         # get start_time and end_time externally from Actions.Downtime_get_start_end() for not mixing GUI and actions too much
         start_time, end_time = Actions.Downtime_get_start_end(server=self.popwin.miserable_server, host=host)
             
         # default author + comment
-        self.downtime_xml.get_widget("input_entry_author").set_text(server.username)        
-        self.downtime_xml.get_widget("input_entry_comment").set_text("scheduled downtime")
+        self.downtime_xml.get_object("input_entry_author").set_text(server.username)        
+        self.downtime_xml.get_object("input_entry_comment").set_text("scheduled downtime")
         # start and end time
-        self.downtime_xml.get_widget("input_entry_start_time").set_text(start_time)
-        self.downtime_xml.get_widget("input_entry_end_time").set_text(end_time)
+        self.downtime_xml.get_object("input_entry_start_time").set_text(start_time)
+        self.downtime_xml.get_object("input_entry_end_time").set_text(end_time)
         # flexible downtime duration
-        self.downtime_xml.get_widget("input_spinbutton_duration_hours").set_value(2)
-        self.downtime_xml.get_widget("input_spinbutton_duration_minutes").set_value(0)
+        self.downtime_xml.get_object("input_spinbutton_duration_hours").set_value(2)
+        self.downtime_xml.get_object("input_spinbutton_duration_minutes").set_value(0)
         
         # show dialog
         self.downtime_dialog.run()
@@ -579,20 +581,20 @@ class GUI(object):
         """
         
         # various parameters for the CGI request
-        host = self.downtime_xml.get_widget("input_label_host").get_text()
-        service = self.downtime_xml.get_widget("input_label_service").get_text()
-        author = self.downtime_xml.get_widget("input_entry_author").get_text()
-        comment = self.downtime_xml.get_widget("input_entry_comment").get_text()
+        host = self.downtime_xml.get_object("input_label_host").get_text()
+        service = self.downtime_xml.get_object("input_label_service").get_text()
+        author = self.downtime_xml.get_object("input_entry_author").get_text()
+        comment = self.downtime_xml.get_object("input_entry_comment").get_text()
         
         # start and end time
-        start_time = self.downtime_xml.get_widget("input_entry_start_time").get_text()
-        end_time = self.downtime_xml.get_widget("input_entry_end_time").get_text()
+        start_time = self.downtime_xml.get_object("input_entry_start_time").get_text()
+        end_time = self.downtime_xml.get_object("input_entry_end_time").get_text()
         # type of downtime - fixed or flexible
-        if self.downtime_xml.get_widget("input_radiobutton_type_fixed").get_active() == True: fixed = 1
+        if self.downtime_xml.get_object("input_radiobutton_type_fixed").get_active() == True: fixed = 1
         else: fixed = 0
         # duration of downtime if flexible
-        hours = self.downtime_xml.get_widget("input_spinbutton_duration_hours").get_value()
-        minutes = self.downtime_xml.get_widget("input_spinbutton_duration_minutes").get_value()
+        hours = self.downtime_xml.get_object("input_spinbutton_duration_hours").get_value()
+        minutes = self.downtime_xml.get_object("input_spinbutton_duration_minutes").get_value()
 
         # execute POST request with cgi_data, in this case threaded
         downtime = Actions.Downtime(server=self.popwin.miserable_server, host=host, service=service, author=author, comment=comment, fixed=fixed, start_time=start_time, end_time=end_time, hours=int(hours), minutes=int(minutes))
@@ -1553,12 +1555,14 @@ class Popwin(gtk.Window):
 
     def ComboboxClicked(self, widget=None):
         """
-            open Nagios webseite from selected server
+            open web interface of selected server
         """
         try:
-            Actions.OpenNagios(widget=None, server=self.output.servers[widget.get_active_text()], output=self.output)
+            active = widget.get_active_iter()
+            model = widget.get_model()
+            Actions.OpenNagios(widget=None, server=self.output.servers[model.get_value(active, 0)], output=self.output)
         except:
-            self.output.servers.values[0].Error(sys.exc_info())
+            self.output.servers.values()[0].Error(sys.exc_info())
             
     
     def UpdateStatus(self, server):
@@ -1703,12 +1707,13 @@ class Settings(object):
         # flag settings dialog as opened
         self.output.SettingsDialogOpen = True
         
-        # set the glade files
-        self.gladefile = self.output.Resources + os.sep + "settings_dialog.glade"  
-        self.glade = gtk.glade.XML(self.gladefile) 
-        self.dialog = self.glade.get_widget("settings_dialog")
+        # set the gtkbuilder files
+        self.builderfile = self.output.Resources + os.sep + "settings_dialog.ui"
+        self.builder = gtk.Builder()
+        self.builder.add_from_file(self.builderfile)
+        self.dialog = self.builder.get_object("settings_dialog")
         
-        # use signal_autoconnect to assign methods to handlers
+        # use connect_signals to assign methods to handlers
         handlers_dict = { "button_ok_clicked": self.OK, 
                           "settings_dialog_close": self.Cancel,
                           "button_cancel_clicked": self.Cancel,
@@ -1726,34 +1731,38 @@ class Settings(object):
                           "checkbutton_debug_to_file": self.ToggleDebugOptions,
                           "button_colors_default": self.ColorsDefault,
                           "button_colors_reset": self.ColorsReset}
-        self.glade.signal_autoconnect(handlers_dict)
-        
+        self.builder.connect_signals(handlers_dict)      
+
+        keys = self.conf.__dict__.keys()        
         # walk through all relevant input types to fill dialog with existing settings
         for i in ["input_entry_", "input_checkbutton_", "input_radiobutton_", "input_spinbutton_", "input_filechooser_"]: 
-            for j in self.glade.get_widget_prefix(i):
+            for key in keys:
+                j = self.builder.get_object(i + key)
+                if not j:
+                    continue
                 # some hazard, every widget has other methods to fill it with desired content
                 # so we try them all, one of them should work                
                 # help gtk.filechooser on windows
-                if str(self.conf.__dict__[j.name.split(i)[1]]) == "None":
-                    self.conf.__dict__[j.name.split(i)[1]] = None
+                if str(self.conf.__dict__[key]) == "None":
+                    self.conf.__dict__[key] = None
                 try:
                     # filechooser
-                    j.set_filename(self.conf.__dict__[j.name.split(i)[1]])
+                    j.set_filename(self.conf.__dict__[key])
                 except:
                     pass
                 try:
-                    j.set_text(self.conf.__dict__[j.get_name().split(i)[1]])
+                    j.set_text(self.conf.__dict__[key])
                 except:
                     pass
                 try:
-                    if str(self.conf.__dict__[j.get_name().split(i)[1]]) == "True":
+                    if str(self.conf.__dict__[key]) == "True":
                         j.set_active(True)
-                    if str(self.conf.__dict__[j.get_name().split(i)[1]]) == "False":
+                    if str(self.conf.__dict__[key]) == "False":
                         j.set_active(False)
                 except:
                     pass
                 try:
-                    j.set_value(int(self.conf.__dict__[j.get_name().split(i)[1]]))
+                    j.set_value(int(self.conf.__dict__[key]))
                 except:
                     pass
 
@@ -1768,7 +1777,7 @@ class Settings(object):
         self.dialog.set_title(self.output.name + " " + self.output.version + " settings")
         
         # workaround for gazpacho-made glade-file - dunno why tab labels do not get named as they should be
-        notebook = self.glade.get_widget("notebook")
+        notebook = self.builder.get_object("notebook")
         notebook_tabs =  ["Servers", "Display", "Filters", "Executables", "Notification", "Colors"]
         for c in notebook.get_children():
             notebook.set_tab_label_text(c, notebook_tabs.pop(0))
@@ -1798,7 +1807,7 @@ class Settings(object):
             filters["ogg"].add_pattern("*.OGG")
 
         for f in ["warning", "critical", "down"]:
-            filechooser = self.glade.get_widget("input_filechooser_notification_custom_sound_" + f)
+            filechooser = self.builder.get_object("input_filechooser_notification_custom_sound_" + f)            
             for f in filters: filechooser.add_filter(filters[f])
             # for some reason does not show wanted effect
             filechooser.set_filter(filters["wav"])
@@ -1862,7 +1871,7 @@ class Settings(object):
                 liststore.set_value(iter, 1, "darkgrey")
                 liststore.set_value(iter, 2, True)
         # give model to the view
-        self.glade.get_widget("servers_treeview").set_model(liststore)
+        self.builder.get_object("servers_treeview").set_model(liststore)
         
         # render aka create table view
         tab_renderer = gtk.CellRendererText()
@@ -1870,21 +1879,21 @@ class Settings(object):
         # somehow idiotic, but less effort... try to delete which column ever, to create a new one
         # this will throw an exception at the first time the options dialog is opened because no column exists
         try:
-            self.glade.get_widget("servers_treeview").remove_column(self.glade.get_widget("servers_treeview").get_column(0))
+            self.builder.get_object("servers_treeview").remove_column(self.builder.get_object("servers_treeview").get_column(0))
         except:
             pass
-        self.glade.get_widget("servers_treeview").append_column(tab_column)
+        self.builder.get_object("servers_treeview").append_column(tab_column)
         
         # in case there are no servers yet because it runs the first time do a try-except
         try:
             # selected server to edit or delete, defaults to first one of server list
             self.selected_server = server_list[0]
             # select first server entry
-            self.glade.get_widget("servers_treeview").set_cursor_on_cell((0,))
+            self.builder.get_object("servers_treeview").set_cursor_on_cell((0,))
         except:
             pass
         # connect treeview with mouseclicks
-        self.glade.get_widget("servers_treeview").connect("button-press-event", self.SelectedServer)
+        self.builder.get_object("servers_treeview").connect("button-press-event", self.SelectedServer)
 
 
     def SelectedServer(self, widget=None, event=None):
@@ -1894,9 +1903,9 @@ class Settings(object):
         """
         try:
             # get path to clicked cell
-            path, obj, x, y = self.glade.get_widget("servers_treeview").get_path_at_pos(int(event.x), int(event.y))
+            path, obj, x, y = self.builder.get_object("servers_treeview").get_path_at_pos(int(event.x), int(event.y))
             # access content of rendered view model via normal python lists
-            self.selected_server = self.glade.get_widget("servers_treeview").get_model()[path[0]][0]
+            self.selected_server = self.builder.get_object("servers_treeview").get_model()[path[0]][0]
         except:
             pass
 
@@ -1907,24 +1916,29 @@ class Settings(object):
             values of the config object
             after this the config file gets saved.
         """
+        keys = self.conf.__dict__.keys()       
         for i in ["input_entry_", "input_checkbutton_", "input_radiobutton_", "input_spinbutton_", "input_filechooser_"]:
-            for j in self.glade.get_widget_prefix(i):
+            for key in keys:
+                j = self.builder.get_object(i + key)
+                if not j:
+                    continue
                 # some hazard, every widget has other methods to get its content
                 # so we try them all, one of them should work
                 try:
-                    self.conf.__dict__[j.get_name().split(i)[1]] = j.get_text()
+                    self.conf.__dict__[key] = j.get_text()
                 except:
                     try:
-                        self.conf.__dict__[j.get_name().split(i)[1]] = j.get_active()
+                        self.conf.__dict__[key] = j.get_active()
                     except:
                         try:
-                            self.conf.__dict__[j.get_name().split(i)[1]] = int(j.get_value())
+                            self.conf.__dict__[key] = int(j.get_value())
                         except:
                             try:
                                 # filechooser
-                                self.conf.__dict__[j.name.split(i)[1]] = j.get_filename()
+                                self.conf.__dict__[key] = j.get_filename()
                             except:
                                 pass
+
 
         # get non-glade-color settings
         self.conf.color_ok_text = self.colorbuttons[0].get_color().to_string()
@@ -2106,9 +2120,9 @@ class Settings(object):
         """
         allow to use a file for debug output
         """
-        debug_to_file = self.glade.get_widget("input_checkbutton_debug_to_file")
-        debug_file = self.glade.get_widget("input_entry_debug_file")
-        debug_mode = self.glade.get_widget("input_checkbutton_debug_mode")
+        debug_to_file = self.builder.get_object("input_checkbutton_debug_to_file")
+        debug_file = self.builder.get_object("input_entry_debug_file")
+        debug_mode = self.builder.get_object("input_checkbutton_debug_mode")
         debug_to_file.set_sensitive(debug_mode.get_active())
         debug_file.set_sensitive(debug_to_file.get_active())
         
@@ -2120,8 +2134,8 @@ class Settings(object):
         """
             Disable notifications at all
         """
-        options = self.glade.get_widget("table_notification_options")
-        checkbutton = self.glade.get_widget("input_checkbutton_notification")
+        options = self.builder.get_object("table_notification_options")
+        checkbutton = self.builder.get_object("input_checkbutton_notification")
         options.set_sensitive(checkbutton.get_active())
         
 
@@ -2129,8 +2143,8 @@ class Settings(object):
         """
             Disable notification sound when not using sound is enabled
         """
-        options = self.glade.get_widget("table_notification_options_sound_options")
-        checkbutton = self.glade.get_widget("input_checkbutton_notification_sound")
+        options = self.builder.get_object("table_notification_options")
+        checkbutton = self.builder.get_object("input_checkbutton_notification")
         options.set_sensitive(checkbutton.get_active())
 
 
@@ -2138,8 +2152,8 @@ class Settings(object):
         """
             Disable custom notification sound
         """
-        options = self.glade.get_widget("table_notification_sound_options_custom_sounds_files")
-        checkbutton = self.glade.get_widget("input_radiobutton_notification_custom_sound")
+        options = self.builder.get_object("table_notification_sound_options_custom_sounds_files")
+        checkbutton = self.builder.get_object("input_radiobutton_notification_custom_sound")
         options.set_sensitive(checkbutton.get_active())
         
         
@@ -2147,8 +2161,8 @@ class Settings(object):
         """
             Disable notification sound when not using sound is enabled
         """
-        options = self.glade.get_widget("hbox_re_host")
-        checkbutton = self.glade.get_widget("input_checkbutton_re_host_enabled")
+        options = self.builder.get_object("hbox_re_host")
+        checkbutton = self.builder.get_object("input_checkbutton_re_host_enabled")
         options.set_sensitive(checkbutton.get_active())
         
 
@@ -2156,8 +2170,8 @@ class Settings(object):
         """
             Disable notification sound when not using sound is enabled
         """
-        options = self.glade.get_widget("hbox_re_service")
-        checkbutton = self.glade.get_widget("input_checkbutton_re_service_enabled")
+        options = self.builder.get_object("hbox_re_service")
+        checkbutton = self.builder.get_object("input_checkbutton_re_service_enabled")
         options.set_sensitive(checkbutton.get_active())
         
     
@@ -2166,7 +2180,7 @@ class Settings(object):
             play sample of selected sound for Nagios Event
         """
         try:
-            filechooser = self.glade.get_widget("input_filechooser_notification_custom_sound_" + playbutton.name)
+            filechooser = self.builder.get_object("input_filechooser_notification_custom_sound_" + playbutton.name)
             sound = Actions.PlaySound(sound="FILE", file=filechooser.get_filename(), conf=self.conf, servers=self.servers)
             sound.start()
         except:
@@ -2181,10 +2195,14 @@ class ServerDialogHelper(object):
     def on_server_change(self, combobox):
         """ Disables controls as it is set in server class """
         servers = Actions.get_registered_servers()
-        server_class = servers[combobox.get_active_text()]
+        active = combobox.get_active_iter()
+        model = combobox.get_model()
+        if not model:
+            return
+        server_class = servers[model.get_value(active, 0)]
         self.KNOWN_CONTROLS.update(server_class.DISABLED_CONTROLS)
         for item_id in self.KNOWN_CONTROLS:
-            item = self.glade.get_widget(item_id)
+            item = self.builder.get_object(item_id)
             if item is not None:
                 if item_id in server_class.DISABLED_CONTROLS:
                     item.set_sensitive(False)
@@ -2215,18 +2233,23 @@ class NewServer(ServerDialogHelper):
         "toggle_save_password" : self.ToggleSavePassword,
         "toggle_proxy" : self.ToggleProxy 
         }
-        self.glade.signal_autoconnect(handlers_dict)
+        self.builder.connect_signals(handlers_dict)
         
         # set title of settings dialog 
         self.dialog.set_title("New Server")
         
         # enable server by default
-        self.glade.get_widget("input_checkbutton_enabled").set_active(True)
+        self.builder.get_object("input_checkbutton_enabled").set_active(True)
         
         # set server type combobox to Nagios as default
-        combobox = self.glade.get_widget("input_combo_server_type")
+        combobox = self.builder.get_object("input_combo_server_type")
+        combomodel = gtk.ListStore(gobject.TYPE_STRING)
+        cr = gtk.CellRendererText()
+        combobox.pack_start(cr, True)
+        combobox.set_attributes(cr, text=0)
         for server in Actions.get_registered_server_type_list():
-            combobox.append_text(server)
+            combomodel.append((server,))
+        combobox.set_model(combomodel)
         combobox.set_active(0)
         
         combobox.connect('changed', self.on_server_change)
@@ -2250,26 +2273,32 @@ class NewServer(ServerDialogHelper):
         # one has been deleted
         new_server = Config.Server()
         
+        keys = new_server.__dict__.keys()
         for i in ["input_entry_", "input_checkbutton_", "input_radiobutton_", "input_spinbutton_", "input_filechooser_"]:
-            for j in self.glade.get_widget_prefix(i):
+            for key in keys:
+                j = self.builder.get_object(i + key)
+                if not j:
+                    continue
                 # some hazard, every widget has other methods to get its content
                 # so we try them all, one of them should work
                 try:
-                    new_server.__dict__[j.get_name().split(i)[1]] = j.get_text()
+                    new_server.__dict__[key] = j.get_text()
                 except:
                     pass
                 try:
-                    new_server.__dict__[j.get_name().split(i)[1]] = j.get_active()
+                    new_server.__dict__[key] = j.get_active()
                 except:
                     pass
                 try:
-                    new_server.__dict__[j.get_name().split(i)[1]] = int(j.get_value())
+                    new_server.__dict__[key] = int(j.get_value())
                 except:
                     pass
                 
         # set server type combobox which cannot be set by above hazard method
-        combobox = self.glade.get_widget("input_combo_server_type")
-        new_server.__dict__["type"] = combobox.get_active_text()                   
+        combobox = self.builder.get_object("input_combo_server_type")
+        active = combobox.get_active_iter()
+        model = combobox.get_model()
+        new_server.__dict__["type"] = model.get_value(active, 0)                 
    
         # check if there is already a server named like the new one
         if new_server.name in self.conf.servers:
@@ -2307,20 +2336,21 @@ class NewServer(ServerDialogHelper):
         """
             Disable password input box
         """
-        checkbutton = self.glade.get_widget("input_checkbutton_save_password")
+        checkbutton = self.builder.get_object("input_checkbutton_save_password")
         is_active = checkbutton.get_active()
-        item = self.glade.get_widget("label_password")
+        item = self.builder.get_object("label_password")
         item.set_sensitive( is_active )
-        item = self.glade.get_widget("input_entry_password")
+        item = self.builder.get_object("input_entry_password")
         item.set_sensitive( is_active )
         if not is_active:
             item.set_text("")
+            
     
     def ToggleProxy(self, widget=None):
         """
             Disable proxy options
         """
-        checkbutton = self.glade.get_widget("input_checkbutton_use_proxy")
+        checkbutton = self.builder.get_object("input_checkbutton_use_proxy")
 
         self.ToggleProxyFromOS(checkbutton)
         self.ToggleProxyAddress(checkbutton)  
@@ -2329,18 +2359,17 @@ class NewServer(ServerDialogHelper):
     def ToggleProxyFromOS(self, widget=None):
         """
             toggle proxy from OS when using proxy is enabled
-        """
-        
-        checkbutton = self.glade.get_widget("input_checkbutton_use_proxy_from_os")
-        checkbutton.set_sensitive(self.glade.get_widget("input_checkbutton_use_proxy").get_active())
+        """       
+        checkbutton = self.builder.get_object("input_checkbutton_use_proxy_from_os")
+        checkbutton.set_sensitive(self.builder.get_object("input_checkbutton_use_proxy").get_active())
 
             
     def ToggleProxyAddress(self, widget=None):
         """
             toggle proxy address options when not using proxy is enabled
         """
-        use_proxy = self.glade.get_widget("input_checkbutton_use_proxy")
-        use_proxy_from_os = self.glade.get_widget("input_checkbutton_use_proxy_from_os")
+        use_proxy = self.builder.get_object("input_checkbutton_use_proxy")
+        use_proxy_from_os = self.builder.get_object("input_checkbutton_use_proxy_from_os")
         # depending on checkbox state address fields wil be active
         if use_proxy.get_active() == True:
             # always the opposite of os proxy selection
@@ -2354,7 +2383,7 @@ class NewServer(ServerDialogHelper):
                     "input_entry_proxy_username",
                     "label_proxy_password",
                     "input_entry_proxy_password"):
-            item = self.glade.get_widget(n)
+            item = self.builder.get_object(n)
             item.set_sensitive(state)
                     
 
@@ -2366,11 +2395,11 @@ class EditServer(ServerDialogHelper):
         # add all keywords to object
         for k in kwds: self.__dict__[k] = kwds[k]
 
-        # set the glade files
-        self.gladefile = self.output.Resources + os.sep + "settings_server_dialog.glade"  
-        self.glade = gtk.glade.XML(self.gladefile) 
-        self.dialog = self.glade.get_widget("settings_server_dialog")
-        self.dialog.set_keep_above(True)
+        # set the gtkbuilder files
+        self.builderfile = self.output.Resources + os.sep + "settings_server_dialog.ui"
+        self.builder = gtk.Builder()
+        self.builder.add_from_file(self.builderfile)
+        self.dialog = self.builder.get_object("settings_server_dialog")
         
         # assign handlers
         handlers_dict = { "button_ok_clicked" : self.OK,
@@ -2379,39 +2408,47 @@ class EditServer(ServerDialogHelper):
         "toggle_save_password" : self.ToggleSavePassword,
         "toggle_proxy" : self.ToggleProxy    
          }
-        self.glade.signal_autoconnect(handlers_dict)
+        self.builder.connect_signals(handlers_dict)
         
         # in case server has been selected do nothing
         if not self.server == None:
             # set title of settings dialog 
             self.dialog.set_title("Edit Server " + self.server)
             
+            keys = self.conf.servers[self.server].__dict__.keys()            
             # walk through all relevant input types to fill dialog with existing settings
             for i in ["input_entry_", "input_checkbutton_", "input_radiobutton_", "input_spinbutton_"]: 
-                for j in self.glade.get_widget_prefix(i):
-                    
+                for key in keys:
+                    j = self.builder.get_object(i + key)
+                    if not j:
+                        continue
                     # some hazard, every widget has other methods to fill it with desired content
                     # so we try them all, one of them should work
                     try:
-                        j.set_text(self.conf.servers[self.server].__dict__[j.get_name().split(i)[1]])
+                        j.set_text(self.conf.servers[self.server].__dict__[key])
                     except:
                         pass
                     try:
-                        if str(self.conf.servers[self.server].__dict__[j.get_name().split(i)[1]]) == "True":
+                        if str(self.conf.servers[self.server].__dict__[key]) == "True":
                             j.set_active(True)
-                        if str(self.conf.servers[self.server].__dict__[j.get_name().split(i)[1]]) == "False":
+                        if str(self.conf.servers[self.server].__dict__[key]) == "False":
                             j.set_active(False)
                     except:
                         pass
                     try:
-                        j.set_value(int(self.conf.servers[self.server].__dict__[j.get_name().split(i)[1]]))
+                        j.set_value(int(self.conf.servers[self.server].__dict__[key]))
                     except:
                         pass
            
             # set server type combobox which cannot be set by above hazard method
             servers = Actions.get_registered_server_type_list()
             server_types = dict([(x[1], x[0]) for x in enumerate(servers)])
-            combobox = self.glade.get_widget("input_combo_server_type")
+            combobox = self.builder.get_object("input_combo_server_type")
+            combomodel = gtk.ListStore(gobject.TYPE_STRING)
+            cr = gtk.CellRendererText()
+            combobox.pack_start(cr, True)
+            combobox.set_attributes(cr, text=0)
+            combobox.set_model(combomodel)
             for server in servers:
                 combobox.append_text(server)
             combobox.set_active(server_types[self.conf.servers[self.server].type])
@@ -2437,26 +2474,32 @@ class EditServer(ServerDialogHelper):
         # one has been deleted
         new_server = Config.Server()
         
+        keys = new_server.__dict__.keys()
         for i in ["input_entry_", "input_checkbutton_", "input_radiobutton_", "input_spinbutton_", "input_filechooser_"]:
-            for j in self.glade.get_widget_prefix(i):
+            for key in keys:
+                j = self.builder.get_object(i + key)
+                if not j:
+                    continue
                 # some hazard, every widget has other methods to get its content
                 # so we try them all, one of them should work
                 try:
-                    new_server.__dict__[j.get_name().split(i)[1]] = j.get_text()
+                    new_server.__dict__[key] = j.get_text()
                 except:
                     pass
                 try:
-                    new_server.__dict__[j.get_name().split(i)[1]] = j.get_active()
+                    new_server.__dict__[key] = j.get_active()
                 except:
                     pass
                 try:
-                    new_server.__dict__[j.get_name().split(i)[1]] = int(j.get_value())
+                    new_server.__dict__[key] = int(j.get_value())
                 except:
                     pass
                 
         # set server type combobox which cannot be set by above hazard method
-        combobox = self.glade.get_widget("input_combo_server_type")
-        new_server.__dict__["type"] = combobox.get_active_text()     
+        combobox = self.builder.get_object("input_combo_server_type")
+        active = combobox.get_active_iter()
+        model = combobox.get_model()
+        new_server.__dict__["type"] = model.get_value(active, 0)   
         
         # check if there is already a server named like the new one
         if new_server.name in self.conf.servers and new_server.name != self.server:
@@ -2501,11 +2544,11 @@ class EditServer(ServerDialogHelper):
         """
             Disable password input box
         """
-        checkbutton = self.glade.get_widget("input_checkbutton_save_password")
+        checkbutton = self.builder.get_object("input_checkbutton_save_password")
         is_active = checkbutton.get_active()
-        item = self.glade.get_widget("label_password")
+        item = self.builder.get_object("label_password")
         item.set_sensitive( is_active )
-        item = self.glade.get_widget("input_entry_password")
+        item = self.builder.get_object("input_entry_password")
         item.set_sensitive( is_active )
         if not is_active:
             item.set_text("")
@@ -2515,7 +2558,7 @@ class EditServer(ServerDialogHelper):
         """
             Disable proxy options
         """
-        checkbutton = self.glade.get_widget("input_checkbutton_use_proxy")
+        checkbutton = self.builder.get_object("input_checkbutton_use_proxy")
 
         self.ToggleProxyFromOS(checkbutton)
         self.ToggleProxyAddress(checkbutton)  
@@ -2525,17 +2568,16 @@ class EditServer(ServerDialogHelper):
         """
             toggle proxy from OS when using proxy is enabled
         """
-        
-        checkbutton = self.glade.get_widget("input_checkbutton_use_proxy_from_os")
-        checkbutton.set_sensitive(self.glade.get_widget("input_checkbutton_use_proxy").get_active())
-
+        checkbutton = self.builder.get_object("input_checkbutton_use_proxy_from_os")
+        checkbutton.set_sensitive(self.builder.get_object("input_checkbutton_use_proxy").get_active())
             
+        
     def ToggleProxyAddress(self, widget=None):
         """
             toggle proxy address options when not using proxy is enabled
         """
-        use_proxy = self.glade.get_widget("input_checkbutton_use_proxy")
-        use_proxy_from_os = self.glade.get_widget("input_checkbutton_use_proxy_from_os")
+        use_proxy = self.builder.get_object("input_checkbutton_use_proxy")
+        use_proxy_from_os = self.builder.get_object("input_checkbutton_use_proxy_from_os")
         # depending on checkbox state address fields wil be active
         if use_proxy.get_active() == True:
             # always the opposite of os proxy selection
@@ -2549,7 +2591,7 @@ class EditServer(ServerDialogHelper):
                     "input_entry_proxy_username",
                     "label_proxy_password",
                     "input_entry_proxy_password"):
-            item = self.glade.get_widget(n)
+            item = self.builder.get_object(n)
             item.set_sensitive(state)
             
         
