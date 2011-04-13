@@ -457,7 +457,7 @@ class GUI(object):
             create and show acknowledge_dialog from gtkbuilder file
         """
             
-        # set the glade file
+        # set the gtkbuilder file
         self.builderfile = self.Resources + os.sep + "acknowledge_dialog.ui"
         self.acknowledge_xml = gtk.Builder()
         self.acknowledge_xml.add_from_file(self.builderfile)
@@ -1821,7 +1821,7 @@ class Settings(object):
         # doesn't know about gtk.ColorButton
         # put colorbuttons into table after creation, store them in colorbuttons list
         # to access them later
-        tci = self.glade.get_widget("table_colors_input")
+        tci = self.builder.get_object("table_colors_input")
         self.colorbuttons = list()
         self.colorbuttons_colors = [["ok", self.conf.color_ok_text, self.conf.color_ok_background],\
                                     ["warning", self.conf.color_warning_text, self.conf.color_warning_background],\
@@ -2020,7 +2020,7 @@ class Settings(object):
         # background color of one state following, this is why there is step 2 in range()
         for c in range(0, 14, 2):
             text, background = self.colorbuttons[c].get_color().to_string(), self.colorbuttons[c + 1].get_color().to_string()
-            label = self.glade.get_widget_prefix("label_color_" + self.colorbuttons_colors[c/2][0])[0]
+            label = self.builder.get_object("label_color_" + self.colorbuttons_colors[c/2][0])
             label.set_markup('<span foreground="%s" background="%s"> %s: </span>' %\
             (text, background, self.colorbuttons_colors[c/2][0].upper()))
             
@@ -2220,11 +2220,11 @@ class NewServer(ServerDialogHelper):
         # add all keywords to object
         for k in kwds: self.__dict__[k] = kwds[k]
         
-        # set the glade files
-        self.gladefile = self.output.Resources + os.sep + "settings_server_dialog.glade"  
-        self.glade = gtk.glade.XML(self.gladefile) 
-        self.dialog = self.glade.get_widget("settings_server_dialog")
-        self.dialog.set_keep_above(True)
+        # set the gtkbuilder files
+        self.builderfile = self.output.Resources + os.sep + "settings_server_dialog.ui"
+        self.builder = gtk.Builder()
+        self.builder.add_from_file(self.builderfile)
+        self.dialog = self.builder.get_object("settings_server_dialog")
         
         # assign handlers
         handlers_dict = { "button_ok_clicked" : self.OK,
