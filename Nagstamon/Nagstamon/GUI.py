@@ -1730,7 +1730,8 @@ class Settings(object):
                           "checkbutton_debug_mode": self.ToggleDebugOptions,
                           "checkbutton_debug_to_file": self.ToggleDebugOptions,
                           "button_colors_default": self.ColorsDefault,
-                          "button_colors_reset": self.ColorsReset}
+                          "button_colors_reset": self.ColorsReset,
+                          "color-set": self.ColorsPreview}
         self.builder.connect_signals(handlers_dict)      
 
         keys = self.conf.__dict__.keys()        
@@ -1816,33 +1817,9 @@ class Settings(object):
         if str(self.conf.unconfigured) == "True":
             self.output.statusbar.StatusBar.hide()
             NewServer(servers=self.servers, output=self.output, settingsdialog=self, conf=self.conf)
-                   
-        # all this colorbuttons stuff is only because glade editor gazpacho 
-        # doesn't know about gtk.ColorButton
-        # put colorbuttons into table after creation, store them in colorbuttons list
-        # to access them later
-        tci = self.builder.get_object("table_colors_input")
-        self.colorbuttons = list()
-        self.colorbuttons_colors = [["ok", self.conf.color_ok_text, self.conf.color_ok_background],\
-                                    ["warning", self.conf.color_warning_text, self.conf.color_warning_background],\
-                                    ["critical", self.conf.color_critical_text, self.conf.color_critical_background],\
-                                    ["unknown", self.conf.color_unknown_text, self.conf.color_unknown_background],\
-                                    ["unreachable", self.conf.color_unreachable_text, self.conf.color_unreachable_background],\
-                                    ["down", self.conf.color_down_text, self.conf.color_down_background],\
-                                    ["error", self.conf.color_error_text, self.conf.color_error_background]]                      
-                                    
-        # cruise table horizontally and vertically 
-        for v in range(7):        
-            for h in range(2):
-                cb = gtk.ColorButton(color=gtk.gdk.color_parse(self.colorbuttons_colors[v][h + 1]))
-                cb.show()
-                cb.connect("color-set", self.ColorsPreview)
-                # put all colorbuttons into self.colorbuttons list, text and background following serially
-                self.colorbuttons.append(cb)
-                tci.attach(cb, 1 + h, 2 + h , 1 + v, 2 + v)    
 
-        # produce color previews
-        self.ColorsPreview()                
+        # prepare colors and preview them
+        self.ColorsReset()              
                 
         # show filled settings dialog and wait thanks to gtk.run()
         self.dialog.run()
@@ -1938,24 +1915,12 @@ class Settings(object):
                                 self.conf.__dict__[key] = j.get_filename()
                             except:
                                 pass
-
-
-        # get non-glade-color settings
-        self.conf.color_ok_text = self.colorbuttons[0].get_color().to_string()
-        self.conf.color_ok_background = self.colorbuttons[1].get_color().to_string()
-        self.conf.color_warning_text = self.colorbuttons[2].get_color().to_string()
-        self.conf.color_warning_background = self.colorbuttons[3].get_color().to_string()
-        self.conf.color_critical_text = self.colorbuttons[4].get_color().to_string()
-        self.conf.color_critical_background = self.colorbuttons[5].get_color().to_string()
-        self.conf.color_unknown_text = self.colorbuttons[6].get_color().to_string()
-        self.conf.color_unknown_background = self.colorbuttons[7].get_color().to_string()
-        self.conf.color_unreachable_text = self.colorbuttons[8].get_color().to_string()
-        self.conf.color_unreachable_background = self.colorbuttons[9].get_color().to_string()
-        self.conf.color_down_text = self.colorbuttons[10].get_color().to_string()
-        self.conf.color_down_background = self.colorbuttons[11].get_color().to_string()
-        self.conf.color_error_text = self.colorbuttons[12].get_color().to_string()
-        self.conf.color_error_background = self.colorbuttons[13].get_color().to_string()
         
+        # evaluate and apply colors
+        for state in ["ok", "warning", "critical", "unknown", "unreachable", "down", "error"]:
+            self.conf.__dict__["color_" + state + "_text"] = self.builder.get_object("input_colorbutton_" + state + "_text").get_color().to_string()
+            self.conf.__dict__["color_" + state + "_background"] = self.builder.get_object("input_colorbutton_" + state + "_background").get_color().to_string()     
+                                                    
         # close settings dialog 
         self.dialog.destroy()
         
@@ -2016,35 +1981,23 @@ class Settings(object):
         """
         preview for status information colors
         """
-        # colorbuttons are serially stored in self.colorbuttons, alway one text and one 
-        # background color of one state following, this is why there is step 2 in range()
-        for c in range(0, 14, 2):
-            text, background = self.colorbuttons[c].get_color().to_string(), self.colorbuttons[c + 1].get_color().to_string()
-            label = self.builder.get_object("label_color_" + self.colorbuttons_colors[c/2][0])
+        for state in ["ok", "warning", "critical", "unknown", "unreachable", "down", "error"]:
+            text = self.builder.get_object("input_colorbutton_" + state + "_text").get_color().to_string()
+            background = self.builder.get_object("input_colorbutton_" + state + "_background").get_color().to_string()
+            label = self.builder.get_object("label_color_" + state)
             label.set_markup('<span foreground="%s" background="%s"> %s: </span>' %\
-            (text, background, self.colorbuttons_colors[c/2][0].upper()))
+                (text, background, state.upper()))
             
             
     def ColorsDefault(self, widget=None):
         """
         reset default colors
         """
-        self.colorbuttons_colors = [["ok", self.conf.default_color_ok_text, self.conf.default_color_ok_background],\
-                                    ["warning", self.conf.default_color_warning_text, self.conf.default_color_warning_background],\
-                                    ["critical", self.conf.default_color_critical_text, self.conf.default_color_critical_background],\
-                                    ["unknown", self.conf.default_color_unknown_text, self.conf.default_color_unknown_background],\
-                                    ["unreachable", self.conf.default_color_unreachable_text, self.conf.default_color_unreachable_background],\
-                                    ["down", self.conf.default_color_down_text, self.conf.default_color_down_background],\
-                                    ["error", self.conf.default_color_error_text, self.conf.default_color_error_background]]                      
-
-        # cruise table horizontally and vertically 
-        count = 0
-        for v in range(7):        
-            for h in range(2):
-                cb = self.colorbuttons[count]
-                cb.set_color(color=gtk.gdk.color_parse(self.colorbuttons_colors[v][h + 1]))
-                count += 1
-    
+        # text and background colors of all states get set to defaults
+        for state in ["ok", "warning", "critical", "unknown", "unreachable", "down", "error"]:
+            self.builder.get_object("input_colorbutton_" + state + "_text").set_color(gtk.gdk.color_parse(self.conf.__dict__["default_color_" + state + "_text"]))     
+            self.builder.get_object("input_colorbutton_" + state + "_background").set_color(gtk.gdk.color_parse(self.conf.__dict__["default_color_" + state + "_background"]))     
+                    
         # renew preview
         self.ColorsPreview()
         
@@ -2053,22 +2006,11 @@ class Settings(object):
         """
         reset to previous colors
         """
-        self.colorbuttons_colors = [["ok", self.conf.color_ok_text, self.conf.color_ok_background],\
-                                    ["warning", self.conf.color_warning_text, self.conf.color_warning_background],\
-                                    ["critical", self.conf.color_critical_text, self.conf.color_critical_background],\
-                                    ["unknown", self.conf.color_unknown_text, self.conf.color_unknown_background],\
-                                    ["unreachable", self.conf.color_unreachable_text, self.conf.color_unreachable_background],\
-                                    ["down", self.conf.color_down_text, self.conf.color_down_background],\
-                                    ["error", self.conf.color_error_text, self.conf.color_error_background]]                      
-
-        # cruise table horizontally and vertically 
-        count = 0
-        for v in range(7):        
-            for h in range(2):
-                cb = self.colorbuttons[count]
-                cb.set_color(color=gtk.gdk.color_parse(self.colorbuttons_colors[v][h + 1]))
-                count += 1
-    
+        # text and background colors of all states get set to defaults
+        for state in ["ok", "warning", "critical", "unknown", "unreachable", "down", "error"]:
+            self.builder.get_object("input_colorbutton_" + state + "_text").set_color(gtk.gdk.color_parse(self.conf.__dict__["color_" + state + "_text"]))     
+            self.builder.get_object("input_colorbutton_" + state + "_background").set_color(gtk.gdk.color_parse(self.conf.__dict__["color_" + state + "_background"]))                                   
+                
         # renew preview
         self.ColorsPreview()        
                 
