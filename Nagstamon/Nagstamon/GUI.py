@@ -1659,7 +1659,7 @@ class ServerVBox(gtk.VBox):
         self.AlignmentMonitor.add(self.HBoxMonitor)
         self.AlignmentStatus = gtk.Alignment(xalign=0, xscale=0.0, yalign=0.5)
         self.AlignmentStatus.add(self.HBoxStatus)
-
+        
         self.HBox.add(self.AlignmentMonitor)
         self.HBox.add(self.AlignmentStatus)
 
