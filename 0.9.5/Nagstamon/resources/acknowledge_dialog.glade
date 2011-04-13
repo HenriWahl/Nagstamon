@@ -1,0 +1,242 @@
+<?xml version="1.0" standalone="no"?> <!--*- mode: xml -*-->
+<!DOCTYPE glade-interface SYSTEM "http://gazpacho.sicem.biz/gazpacho-0.1.dtd">
+<glade-interface>
+    <widget class="GtkDialog" id="acknowledge_dialog">
+        <property name="allow_grow">False</property>
+        <property name="default_height">260</property>
+        <property name="default_width">320</property>
+        <property name="resizable">False</property>
+        <property name="title" context="yes" translatable="yes">Acknowledge</property>
+        <property name="type_hint">normal</property>
+        <property name="window_position">center-always</property>
+        <child internal-child="vbox">
+            <widget class="GtkVBox" id="dialog1-vbox">
+                <property name="border_width">2</property>
+                <property name="visible">True</property>
+                <child>
+                    <widget class="GtkTable" id="table2">
+                        <property name="n_columns">2</property>
+                        <property name="n_rows">8</property>
+                        <property name="visible">True</property>
+                        <child>
+                            <widget class="GtkLabel" id="label_host">
+                                <property name="label" context="yes" translatable="yes">Host:</property>
+                                <property name="visible">True</property>
+                                <property name="xalign">0.0</property>
+                                <property name="xpad">3</property>
+                                <property name="ypad">3</property>
+                            </widget>
+                        </child>
+                        <child>
+                            <widget class="GtkLabel" id="label_service">
+                                <property name="label" context="yes" translatable="yes">Service:</property>
+                                <property name="visible">True</property>
+                                <property name="xalign">0.0</property>
+                                <property name="xpad">3</property>
+                                <property name="ypad">3</property>
+                            </widget>
+                            <packing>
+                                <property name="bottom_attach">2</property>
+                                <property name="top_attach">1</property>
+                            </packing>
+                        </child>
+                        <child>
+                            <widget class="GtkLabel" id="label_options">
+                                <property name="label" context="yes" translatable="yes">Options:</property>
+                                <property name="visible">True</property>
+                                <property name="xalign">0.0</property>
+                                <property name="xpad">3</property>
+                                <property name="ypad">3</property>
+                            </widget>
+                            <packing>
+                                <property name="bottom_attach">3</property>
+                                <property name="top_attach">2</property>
+                            </packing>
+                        </child>
+                        <child>
+                            <placeholder/>
+                            <packing>
+                                <property name="top_attach">3</property>
+                                <property name="bottom_attach">4</property>
+                            </packing>
+                        </child>
+                        <child>
+                            <placeholder/>
+                            <packing>
+                                <property name="top_attach">4</property>
+                                <property name="bottom_attach">5</property>
+                            </packing>
+                        </child>
+                        <child>
+                            <placeholder/>
+                            <packing>
+                                <property name="top_attach">5</property>
+                                <property name="bottom_attach">6</property>
+                            </packing>
+                        </child>
+                        <child>
+                            <widget class="GtkLabel" id="label_author">
+                                <property name="label" context="yes" translatable="yes">Author:</property>
+                                <property name="visible">True</property>
+                                <property name="xalign">0.0</property>
+                                <property name="xpad">3</property>
+                                <property name="ypad">3</property>
+                            </widget>
+                            <packing>
+                                <property name="bottom_attach">7</property>
+                                <property name="top_attach">6</property>
+                            </packing>
+                        </child>
+                        <child>
+                            <widget class="GtkLabel" id="label_comment">
+                                <property name="label" context="yes" translatable="yes">Comment:</property>
+                                <property name="visible">True</property>
+                                <property name="xalign">0.0</property>
+                                <property name="xpad">3</property>
+                                <property name="ypad">3</property>
+                            </widget>
+                            <packing>
+                                <property name="bottom_attach">8</property>
+                                <property name="top_attach">7</property>
+                            </packing>
+                        </child>
+                        <child>
+                            <widget class="GtkLabel" id="input_label_host">
+                                <property name="visible">True</property>
+                                <property name="xalign">0.0</property>
+                                <property name="xpad">3</property>
+                                <property name="ypad">3</property>
+                            </widget>
+                            <packing>
+                                <property name="left_attach">1</property>
+                                <property name="right_attach">2</property>
+                            </packing>
+                        </child>
+                        <child>
+                            <widget class="GtkLabel" id="input_label_service">
+                                <property name="visible">True</property>
+                                <property name="xalign">0.0</property>
+                                <property name="xpad">3</property>
+                                <property name="ypad">3</property>
+                            </widget>
+                            <packing>
+                                <property name="bottom_attach">2</property>
+                                <property name="left_attach">1</property>
+                                <property name="right_attach">2</property>
+                                <property name="top_attach">1</property>
+                            </packing>
+                        </child>
+                        <child>
+                            <widget class="GtkCheckButton" id="input_checkbutton_sticky_acknowledgement">
+                                <property name="border_width">3</property>
+                                <property name="is_focus">True</property>
+                                <property name="label" context="yes" translatable="yes">Sticky acknowledgement</property>
+                                <property name="visible">True</property>
+                            </widget>
+                            <packing>
+                                <property name="bottom_attach">3</property>
+                                <property name="left_attach">1</property>
+                                <property name="right_attach">2</property>
+                                <property name="top_attach">2</property>
+                            </packing>
+                        </child>
+                        <child>
+                            <widget class="GtkCheckButton" id="input_checkbutton_send_notification">
+                                <property name="border_width">3</property>
+                                <property name="label" context="yes" translatable="yes">Send notification</property>
+                                <property name="visible">True</property>
+                            </widget>
+                            <packing>
+                                <property name="bottom_attach">4</property>
+                                <property name="left_attach">1</property>
+                                <property name="right_attach">2</property>
+                                <property name="top_attach">3</property>
+                            </packing>
+                        </child>
+                        <child>
+                            <widget class="GtkCheckButton" id="input_checkbutton_persistent_comment">
+                                <property name="border_width">3</property>
+                                <property name="label" context="yes" translatable="yes">Persistent comment</property>
+                                <property name="visible">True</property>
+                            </widget>
+                            <packing>
+                                <property name="bottom_attach">5</property>
+                                <property name="left_attach">1</property>
+                                <property name="right_attach">2</property>
+                                <property name="top_attach">4</property>
+                            </packing>
+                        </child>
+                        <child>
+                            <widget class="GtkCheckButton" id="input_checkbutton_acknowledge_all_services">
+                                <property name="border_width">3</property>
+                                <property name="label" context="yes" translatable="yes">Acknowledge all services on host</property>
+                                <property name="visible">True</property>
+                            </widget>
+                            <packing>
+                                <property name="bottom_attach">6</property>
+                                <property name="left_attach">1</property>
+                                <property name="right_attach">2</property>
+                                <property name="top_attach">5</property>
+                            </packing>
+                        </child>
+                        <child>
+                            <widget class="GtkEntry" id="input_entry_author">
+                                <property name="is_focus">True</property>
+                                <property name="visible">True</property>
+                            </widget>
+                            <packing>
+                                <property name="bottom_attach">7</property>
+                                <property name="left_attach">1</property>
+                                <property name="right_attach">2</property>
+                                <property name="top_attach">6</property>
+                            </packing>
+                        </child>
+                        <child>
+                            <widget class="GtkEntry" id="input_entry_comment">
+                                <property name="visible">True</property>
+                            </widget>
+                            <packing>
+                                <property name="bottom_attach">8</property>
+                                <property name="left_attach">1</property>
+                                <property name="right_attach">2</property>
+                                <property name="top_attach">7</property>
+                            </packing>
+                        </child>
+                    </widget>
+                    <packing>
+                        <property name="position">2</property>
+                    </packing>
+                </child>
+                <child internal-child="action_area">
+                    <widget class="GtkHButtonBox" id="dialog1-action_area">
+                        <property name="border_width">5</property>
+                        <property name="layout_style">end</property>
+                        <property name="spacing">6</property>
+                        <property name="visible">True</property>
+                        <child>
+                            <widget class="GtkButton" id="button_">
+                                <property name="is_focus">True</property>
+                                <property name="label" context="yes" translatable="yes">OK</property>
+                                <property name="visible">True</property>
+                                <signal handler="button_ok_clicked" name="clicked"/>
+                            </widget>
+                        </child>
+                        <child>
+                            <widget class="GtkButton" id="button_cance">
+                                <property name="label" context="yes" translatable="yes">Cancel</property>
+                                <property name="visible">True</property>
+                            </widget>
+                            <packing>
+                                <property name="position">1</property>
+                            </packing>
+                        </child>
+                    </widget>
+                    <packing>
+                        <property name="expand">False</property>
+                        <property name="pack_type">end</property>
+                    </packing>
+                </child>
+            </widget>
+        </child>
+    </widget>
+</glade-interface>
