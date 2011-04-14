@@ -3,7 +3,7 @@
 import sys
 import re
 from Nagstamon.Server.Generic import GenericServer
-from BeautifulSoup import BeautifulSoup
+from Nagstamon.BeautifulSoup import BeautifulSoup
 from Nagstamon.Objects import *
 import urllib2
 
@@ -40,6 +40,7 @@ class LxmlFreeGenericServer(GenericServer):
                 return Result(result=result, error=error)
         else:
             return GenericServer.FetchURL(self, url, giveback, cgi_data, remove_Tags)
+        
     
     def _get_status(self):
         """
@@ -98,8 +99,17 @@ class LxmlFreeGenericServer(GenericServer):
             result = self.FetchURL(nagcgiurl_hosts)
             htobj, error = result.result, result.error
             
+            
+            print type(htobj)
+            print dir(htobj)
+            
+            print htobj.tr
+            
+            import sys
+            sys.exit()
+                        
             if error != "": return Result(result=copy.deepcopy(htobj), error=error)            
-            # workaround for Nagios < 2.7 which has an <EMBED> in its output
+
             # put a copy of a part of htobj into table to be able to delete htobj
             table = copy.deepcopy(htobj('table', {'class': self.STATUS_CLASS})[0])
 
@@ -107,18 +117,20 @@ class LxmlFreeGenericServer(GenericServer):
             del htobj
 
             trs = table('tr', recursive=False)
+            # table heads?
             trs.pop(0)
+            
             for tr in trs:
                 try:
                     # ignore empty <tr> rows
                     if len(tr('td', recursive=False)) > 1:
                         n = {}
+                        # get tds in one tr
                         tds = tr('td', recursive=False)
                         # host
                         try:
                             #n["host"] = str(table.tr[i].td[0].table.tr.td.table.tr.td.a.text)
                             n["host"] = str(tds[0].table.tr.td.table.tr.td.string)
-
                         except:
                             n["host"] = str(nagitems[len(nagitems)-1]["host"])
                         # status
@@ -142,7 +154,6 @@ class LxmlFreeGenericServer(GenericServer):
                             # status_information
                             n["status_information"] = str(tds[5].string)
 
-                        
                         # add dictionary full of information about this host item to nagitems
                         nagitems["hosts"].append(n)
                         # after collection data in nagitems create objects from its informations
