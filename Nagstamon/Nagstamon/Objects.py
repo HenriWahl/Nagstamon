@@ -135,6 +135,10 @@ class GenericHost(GenericObject):
         self.attempt = ""
         self.status_information = ""
         self.services = dict()
+        self.passive = False
+        self.acknowledged = False
+        self.notifications_disabled = False
+        self.flapping = False
         
     def get_host_name(self):
         return str(self.name)
@@ -147,7 +151,6 @@ class GenericHost(GenericObject):
         return str(self.name)      
         
 
-    
 class GenericService(GenericObject):
     """
         one service which runs on a host
@@ -161,7 +164,8 @@ class GenericService(GenericObject):
         self.attempt = ""
         self.status_information = ""
         self.passiveonly = False
-        self.notifications = True
+        self.acknowledged = False
+        self.notifications_disabled = False
         self.flapping = False
         
 

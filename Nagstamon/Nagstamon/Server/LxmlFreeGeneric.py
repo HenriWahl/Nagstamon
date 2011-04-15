@@ -7,9 +7,11 @@ from Nagstamon.BeautifulSoup import BeautifulSoup
 from Nagstamon.Objects import *
 import urllib2
 
+
 def not_empty(x):
     '''tiny helper function to filter text elements'''
     return bool(x.replace('&nbsp;', '').strip())
+
 
 class LxmlFreeGenericServer(GenericServer):
     '''This is a version of GenericServer that only replaces the use of lxml
@@ -17,6 +19,14 @@ class LxmlFreeGenericServer(GenericServer):
     '''
     def __init__(self, **kwds):
         GenericServer.__init__(self, **kwds)
+        
+        # dictionary to translate status bitmaps on webinterface into status flags
+        # this are defaults from Nagios
+        self.STATUS_MAPPING = { "ack.gif" : "acknowledged",\
+                                  "passiveonly.gif" : "passive",\
+                                  "ndisabled.gif" : "notifications_disabled",\
+                                  "downtime.gif" : "scheduled_downtime",\
+                                  "flapping.gif" : "flapping" }
 
     def FetchURL(self, url, giveback='soup', cgi_data=None, remove_tags=None):
         if not remove_tags:
@@ -33,7 +43,7 @@ class LxmlFreeGenericServer(GenericServer):
                 # use opener - if cgi_data is not empty urllib uses a POST request
                 urlcontent = self.urlopener.open(request)
                 del url, cgi_data, request
-                doc = BeautifulSoup(urlcontent)
+                doc = BeautifulSoup(urlcontent, convertEntities=BeautifulSoup.ALL_ENTITIES)
                 return Result(result=doc)
             except:
                 result, error = self.Error(sys.exc_info())
@@ -98,26 +108,18 @@ class LxmlFreeGenericServer(GenericServer):
         try:
             result = self.FetchURL(nagcgiurl_hosts)
             htobj, error = result.result, result.error
-            
-            
-            print type(htobj)
-            print dir(htobj)
-            
-            print htobj.tr
-            
-            import sys
-            sys.exit()
-                        
+
             if error != "": return Result(result=copy.deepcopy(htobj), error=error)            
 
             # put a copy of a part of htobj into table to be able to delete htobj
-            table = copy.deepcopy(htobj('table', {'class': self.STATUS_CLASS})[0])
+            table = copy.deepcopy(htobj('table', {'class': 'status'})[0])
 
             # do some cleanup
             del htobj
-
+            
+            # access table rows
             trs = table('tr', recursive=False)
-            # table heads?
+            # kick out table heads
             trs.pop(0)
             
             for tr in trs:
@@ -127,10 +129,9 @@ class LxmlFreeGenericServer(GenericServer):
                         n = {}
                         # get tds in one tr
                         tds = tr('td', recursive=False)
-                        # host
+                        # host                        
                         try:
-                            #n["host"] = str(table.tr[i].td[0].table.tr.td.table.tr.td.a.text)
-                            n["host"] = str(tds[0].table.tr.td.table.tr.td.string)
+                            n["host"] = str(tds[0].table.tr.td.table.tr.td.a.string)
                         except:
                             n["host"] = str(nagitems[len(nagitems)-1]["host"])
                         # status
@@ -153,6 +154,24 @@ class LxmlFreeGenericServer(GenericServer):
                             n["attempt"] = str(tds[4].string)
                             # status_information
                             n["status_information"] = str(tds[5].string)
+                            
+                        # status flags 
+                        n["passiveonly"] = False
+                        n["notifications_disabled"] = False
+                        n["flapping"] = False
+                        n["scheduled_downtime"] = False
+                        
+                        print "\n", 15*"#", "\n"
+                        icons = tds[0].findAll('img')
+                        for i in icons:
+                            icon = i["src"].split("/")[-1]
+                            if icon in self.STATUS_MAPPING:
+                                print self.STATUS_MAPPING[i["src"].split("/")[-1]]
+                                n[icon] = True
+                        print "\n", 15*"#", "\n"
+                        
+                        # cleaning
+                        del icons                            
 
                         # add dictionary full of information about this host item to nagitems
                         nagitems["hosts"].append(n)
@@ -167,11 +186,15 @@ class LxmlFreeGenericServer(GenericServer):
                             self.new_hosts[new_host].duration = n["duration"]
                             self.new_hosts[new_host].attempt = n["attempt"]
                             self.new_hosts[new_host].status_information= n["status_information"]
+                            self.new_hosts[new_host].passiveonly = n["passiveonly"]
+                            self.new_hosts[new_host].notifications_disabled = n["notifications_disabled"]
+                            self.new_hosts[new_host].flapping = n["flapping"]
+                            self.new_hosts[new_host].scheduled_downtime = n["scheduled_downtime"]
                 except:
                     self.Error(sys.exc_info())
                 
             # do some cleanup
-            del table
+            del table, tr, trs
             
         except:
             # set checking flag back to False
@@ -185,8 +208,9 @@ class LxmlFreeGenericServer(GenericServer):
             result = self.FetchURL(nagcgiurl_services)
             htobj, error = result.result, result.error          
             if error != "": return Result(result=copy.deepcopy(htobj), error=error)
+            
             # put a copy of a part of htobj into table to be able to delete htobj
-            table = copy.deepcopy(htobj('table', {'class': self.STATUS_CLASS})[0])
+            table = copy.deepcopy(htobj('table', {'class': 'status'})[0])
             
             # do some cleanup    
             del htobj
@@ -205,39 +229,40 @@ class LxmlFreeGenericServer(GenericServer):
                         # so if the hostname is empty the nagios status item should get
                         # its hostname from the previuos item - one reason to keep "nagitems"
                         try:
-                            #n["host"] = str(table.tr[i].td[0].table.tr.td.table.tr.td.a.text)
-                            n["host"] = str(tds[0](text=not_empty)[0])
+                            n["host"] = tds[0](text=not_empty)[0]
                         except:
-                            n["host"] = str(nagitems["services"][len(nagitems["services"])-1]["host"])
-                        # service
+                            n["host"] = nagitems["services"][len(nagitems["services"])-1]["host"]
+                        # service                                             
                         #n["service"] = str(table.tr[i].td[1].table.tr.td.table.tr.td.a.string)
-                        n["service"] = str(tds[1](text=not_empty)[0])
+                        n["service"] = tds[1](text=not_empty)[0]
                         # status
-                        n["status"] = str(tds[2].string)
+                        n["status"] = tds[2](text=not_empty)[0]
                         # last_check
-                        n["last_check"] = str(tds[3].string)
+                        n["last_check"] = tds[3](text=not_empty)[0]
                         # duration
-                        n["duration"] = str(tds[4].string)
+                        n["duration"] = tds[4](text=not_empty)[0]
                         # attempt
-                        n["attempt"] = str(tds[5].string)
-                        # status_information
-                        n["status_information"] = str(tds[6].string.replace('&nbsp;', ''))
+                        n["attempt"] = tds[5](text=not_empty)[0]
+                        # status_information - might contain <a> tags which get ignored
+                        n["status_information"] = tds[6](text=not_empty)[0] 
+                        # status flags 
                         n["passiveonly"] = False
-                        n["notifications"] = True
+                        n["notifications_disabled"] = False
                         n["flapping"] = False
-                        td_html = str(tds[1].table.tr('td', recursive=False)[1])
-                        icons = re.findall(">\[{2}([a-z]+)\]{2}<", td_html)
-                        # e.g. ['comment', 'passiveonly', 'ndisabled', 'flapping']
-                        for icon in icons:
-                            if (icon == "passiveonly"):
-                                n["passiveonly"] = True
-                            elif (icon == "ndisabled"):
-                                n["notifications"] = False
-                            elif (icon == "flapping"):
-                                n["flapping"] = True
-                        # cleaning        
-                        del td_html, icons
-
+                        n["scheduled_downtime"] = False
+                        
+                        print "\n", 30*"#", "\n"
+                        icons = tds[1].findAll('img')
+                        for i in icons:
+                            icon = i["src"].split("/")[-1]
+                            if icon in self.STATUS_MAPPING:
+                                print self.STATUS_MAPPING[i["src"].split("/")[-1]]
+                                n[icon] = True
+                        print "\n", 30*"#", "\n"
+                        
+                        # cleaning
+                        del icons
+                        
                         # add dictionary full of information about this service item to nagitems - only if service
                         nagitems["services"].append(n)
                         # after collection data in nagitems create objects of its informations
@@ -258,6 +283,9 @@ class LxmlFreeGenericServer(GenericServer):
                             self.new_hosts[n["host"]].services[new_service].attempt = n["attempt"]
                             self.new_hosts[n["host"]].services[new_service].status_information = n["status_information"]
                             self.new_hosts[n["host"]].services[new_service].passiveonly = n["passiveonly"]
+                            self.new_hosts[n["host"]].services[new_service].notifications_disabled = n["notifications_disabled"]
+                            self.new_hosts[n["host"]].services[new_service].flapping = n["flapping"]
+                            self.new_hosts[n["host"]].services[new_service].scheduled_downtime = n["scheduled_downtime"]
                 except:
                     self.Error(sys.exc_info())
                                 
@@ -276,11 +304,8 @@ class LxmlFreeGenericServer(GenericServer):
             result = self.FetchURL(nagcgiurl_hosts_in_maintenance)           
             htobj, error = result.result, result.error                
             if error != "": return Result(result=copy.deepcopy(htobj), error=error)
-            # workaround for Nagios < 2.7 which has an <EMBED> in its output
-            try:
-                table = copy.deepcopy(htobj('table', {'class': self.STATUS_CLASS})[0])
-            except:
-                table = copy.deepcopy(htobj.body.embed.div.table)
+
+            table = copy.deepcopy(htobj('table', {'class': 'status'})[0])
             
             # do some cleanup    
             del htobj
@@ -318,11 +343,8 @@ class LxmlFreeGenericServer(GenericServer):
             result = self.FetchURL(nagcgiurl_hosts_acknowledged)                                              
             htobj, error = result.result, result.error
             if error != "": return Result(result=copy.deepcopy(htobj), error=error)
-            # workaround for Nagios < 2.7 which has an <EMBED> in its output
-            try:
-                table = copy.deepcopy(htobj('table', {'class': self.STATUS_CLASS})[0])
-            except:
-                table = copy.deepcopy(htobj.body.embed.table)
+
+            table = copy.deepcopy(htobj('table', {'class': 'status'})[0])
                 
             # do some cleanup    
             del htobj               
