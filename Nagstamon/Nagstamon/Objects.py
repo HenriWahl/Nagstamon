@@ -109,13 +109,59 @@ class StatusInformationColumn(Column):
     ATTR_NAME = 'status_information'
 
     
-class GenericObject(object):    
+class GenericObject(object): 
+    """
+    template for hosts and services
+    """
+
+    def __init__(self):
+        self.name = ""
+        self.status = ""
+        self.last_check = ""
+        self.duration = ""
+        self.attempt = ""
+        self.status_information = ""
+        self.passive = False
+        self.acknowledged = False
+        self.notifications_disabled = False
+        self.flapping = False
+        self.scheduled_downtime = False    
+    
+
+    def is_passive_only(self):
+        return bool(self.passiveonly)    
+    
+    
+    def is_flapping(self):
+        return bool(self.flapping)    
+    
+    
+    def has_notifications_disabled(self):
+        return bool(self.notifications)  
+    
+    
+    def is_acknowledged(self):
+        return bool(self.acknowledged)  
+    
+    
+    def is_in_scheduled_downtime(self):
+        return bool(self.scheduled_downtime)      
+    
+    
+    def get_name(self):
+        """
+        return stringified name
+        """
+        return str(self.name)             
+    
+
     def get_host_name(self):
         """ Extracts host name from status item.
         Presentation purpose.
         """
         return ''
     
+
     def get_service_name(self):
         """ Extracts service name from status item.
         Presentation purpose.
@@ -127,73 +173,32 @@ class GenericHost(GenericObject):
     """
         one host which is monitored by a Nagios server, gets populated with services
     """
+
     def __init__(self):
-        self.name = ""
-        self.status = ""
-        self.last_check = ""
-        self.duration = ""
-        self.attempt = ""
-        self.status_information = ""
+        GenericObject.__init__(self)
+        # take all the faulty services on host
         self.services = dict()
-        self.passive = False
-        self.acknowledged = False
-        self.notifications_disabled = False
-        self.flapping = False
+        
         
     def get_host_name(self):
         return str(self.name)
     
-    
-    def get_name(self):
-        """
-        return stringified name
-        """
-        return str(self.name)      
-        
 
 class GenericService(GenericObject):
     """
         one service which runs on a host
     """
-    def __init__(self):
-        self.name = ""
-        self.host = ""
-        self.status = ""
-        self.last_check = ""
-        self.duration = ""
-        self.attempt = ""
-        self.status_information = ""
-        self.passiveonly = False
-        self.acknowledged = False
-        self.notifications_disabled = False
-        self.flapping = False
-        
 
+    def __init__(self):
+        GenericObject.__init__(self)
+
+        
     def get_host_name(self):
         return str(self.host)
     
 
     def get_service_name(self):
         return str(self.name) 
-    
-
-    def is_passive_only(self):
-        return bool(self.passiveonly)    
-    
-    
-    def is_flapping(self):
-        return bool(self.flapping)    
-    
-    
-    def sends_notifications(self):
-        return bool(self.notifications)    
-    
-    
-    def get_name(self):
-        """
-        return stringified name
-        """
-        return str(self.name)      
             
 
 class Result(object):

@@ -3,7 +3,7 @@
 from Nagstamon.Server.Generic import GenericServer
 from Nagstamon.Server.LxmlFreeGeneric import LxmlFreeGenericServer
 
-    
+
 import urllib
 import base64
 
@@ -16,7 +16,7 @@ class IcingaServer(LxmlFreeGenericServer):
     # needed for parsing Icinga CGI HTML
     HTML_BODY_TABLE_INDEX = 3
     
-    def get_start_end(self, host):
+    def DISABLEDFORTESTINGget_start_end(self, host):
         """
         something changed in html layout so we need to get time somehow differently than in Nagios
         """

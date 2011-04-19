@@ -3,8 +3,9 @@
 import sys
 import re
 from Nagstamon.Server.Generic import GenericServer
-from Nagstamon.BeautifulSoup import BeautifulSoup
+from Nagstamon.BeautifulSoup import BeautifulSoup, BeautifulStoneSoup
 from Nagstamon.Objects import *
+import urllib
 import urllib2
 
 
@@ -48,8 +49,29 @@ class LxmlFreeGenericServer(GenericServer):
             except:
                 result, error = self.Error(sys.exc_info())
                 return Result(result=result, error=error)
+            
+        # special Opsview XML
+        elif giveback == "opsxml":
+            self.init_HTTP()
+            # objectify the xml and give it back after some cleanup
+            #xml = lxml.etree.XML(urlcontent.read())
+            #xmlpretty = lxml.etree.tostring(xml, pretty_print=True)
+            #xmlobj = lxml.objectify.fromstring(xmlpretty)
+            
+            request = urllib2.Request(url, cgi_data, self.HTTPheaders['opsxml'])
+            # use opener - if cgi_data is not empty urllib uses a POST request
+            urlcontent = self.urlopener.open(request)
+            
+            xmlobj = BeautifulStoneSoup(urlcontent.read(), convertEntities=BeautifulStoneSoup.XML_ENTITIES)
+
+            urlcontent.close()
+
+            del urlcontent
+            
+            return Result(result=copy.deepcopy(xmlobj))            
+            
         else:
-            return GenericServer.FetchURL(self, url, giveback, cgi_data, remove_Tags)
+            return GenericServer.FetchURL(self, url, giveback, cgi_data, remove_tags)
         
     
     def _get_status(self):
@@ -229,22 +251,22 @@ class LxmlFreeGenericServer(GenericServer):
                         # so if the hostname is empty the nagios status item should get
                         # its hostname from the previuos item - one reason to keep "nagitems"
                         try:
-                            n["host"] = tds[0](text=not_empty)[0]
+                            n["host"] = str(tds[0](text=not_empty)[0])
                         except:
                             n["host"] = nagitems["services"][len(nagitems["services"])-1]["host"]
                         # service                                             
                         #n["service"] = str(table.tr[i].td[1].table.tr.td.table.tr.td.a.string)
-                        n["service"] = tds[1](text=not_empty)[0]
+                        n["service"] = str(tds[1](text=not_empty)[0])
                         # status
-                        n["status"] = tds[2](text=not_empty)[0]
+                        n["status"] = str(tds[2](text=not_empty)[0])
                         # last_check
-                        n["last_check"] = tds[3](text=not_empty)[0]
+                        n["last_check"] = str(tds[3](text=not_empty)[0])
                         # duration
-                        n["duration"] = tds[4](text=not_empty)[0]
+                        n["duration"] = str(tds[4](text=not_empty)[0])
                         # attempt
-                        n["attempt"] = tds[5](text=not_empty)[0]
-                        # status_information - might contain <a> tags which get ignored
-                        n["status_information"] = tds[6](text=not_empty)[0] 
+                        n["attempt"] = str(tds[5](text=not_empty)[0])
+                        # status_information
+                        n["status_information"] = str(tds[6](text=not_empty)[0])
                         # status flags 
                         n["passiveonly"] = False
                         n["notifications_disabled"] = False
@@ -297,86 +319,93 @@ class LxmlFreeGenericServer(GenericServer):
             self.isChecking = False
             result, error = self.Error(sys.exc_info())
             return Result(result=result, error=error) 
-                
-         # hosts which are in scheduled downtime
-        try:
-            #result = Result()
-            result = self.FetchURL(nagcgiurl_hosts_in_maintenance)           
-            htobj, error = result.result, result.error                
-            if error != "": return Result(result=copy.deepcopy(htobj), error=error)
-
-            table = copy.deepcopy(htobj('table', {'class': 'status'})[0])
-            
-            # do some cleanup    
-            del htobj
-
-            trs = table('tr', recursive=False)
-            trs.pop(0)
-            for tr in trs:
-                try:
-                    # ignore empty <tr> rows
-                    if tr('td', recursive=False) > 1:
-                        # host
-                        try:
-                            #self.new_hosts_in_maintenance.append(str(table.tr[i].td[0].table.tr.td.table.tr.td.a.text))
-                            self.new_hosts_in_maintenance.append(str(tr('td', recursive=False)[0].table.tr.td.table.tr.td.string))
-                            # get real status of maintained host
-                            if self.new_hosts.has_key(self.new_hosts_in_maintenance[-1]):
-                                self.new_hosts[self.new_hosts_in_maintenance[-1]].status = str(tr('td')[1].string)
-                        except:
-                            self.Error(sys.exc_info())
-                except:
-                    self.Error(sys.exc_info())
-
-            # do some cleanup
-            del table
         
-        except:
-            # set checking flag back to False
-            self.isChecking = False
-            result, error = self.Error(sys.exc_info())
-            return Result(result=result, error=error)
-       
-        # hosts which are acknowledged
-        try:
-            #result = Result()
-            result = self.FetchURL(nagcgiurl_hosts_acknowledged)                                              
-            htobj, error = result.result, result.error
-            if error != "": return Result(result=copy.deepcopy(htobj), error=error)
-
-            table = copy.deepcopy(htobj('table', {'class': 'status'})[0])
+        ### the following is just for checking if .property flags work - will vanish soon
                 
-            # do some cleanup    
-            del htobj               
-
-            trs = table('tr', recursive=False)
-            trs.pop(0)
-            for tr in trs:
-                try:
-                    # ignore empty <tr> rows
-                    if len(tr('td', recursive=False)) > 1:
-                        # host
-                        try:
-                            #self.new_hosts_acknowledged.append(str(table.tr[i].td[0].table.tr.td.table.tr.td.a.text))
-                            self.new_hosts_acknowledged.append(str(tr.td.table.tr.td.table.tr.td.string))                            # get real status of acknowledged host
-                            if self.new_hosts.has_key(self.new_hosts_acknowledged[-1]):
-                                self.new_hosts[self.new_hosts_acknowledged[-1]].status = str(tr.td[1].string)
-                        except:
-                            self.Error(sys.exc_info())
-                except:
-                    self.Error(sys.exc_info())
-
-            # do some cleanup
-            del table
-
-        except:
-            # set checking flag back to False
-            self.isChecking = False
-            result, error = self.Error(sys.exc_info())
-            return Result(result=result, error=error)
+        # hosts which are in scheduled downtime
+        for host in self.new_hosts.values():
+            if host.is_in_scheduled_downtime():
+                self.new_hosts_in_maintenance.append(host.name)    
+                
+        # hosts which are acknowledged       
+        for host in self.new_hosts.values():
+            if host.is_acknowledged():
+                self.new_hosts_acknowledged.append(host.name)            
+    
                 
         # some cleanup
         del nagitems
         
         #dummy return in case all is OK
         return Result()
+    
+
+    def get_start_end(self, host):
+        """
+        for GUI to get actual downtime start and end from server - they may vary so it's better to get
+        directly from web interface
+        """
+        try:
+            #result = self.FetchURL(self.nagios_cgi_url + "/cmd.cgi?" + urllib.urlencode({"cmd_typ":"55", "host":host}), giveback="raw")
+            result = self.FetchURL(self.nagios_cgi_url + "/cmd.cgi?" + urllib.urlencode({"cmd_typ":"55", "host":host}), giveback="soup")
+            html = result.result
+            print html.find(attrs={"name":"start_time"}).attrMap["value"]
+            ###rint dir(html.find(attrs={"name":"start_time"}))            
+            #start_time = html.split("NAME='start_time' VALUE='")[1].split("'></b></td></tr>")[0]
+            #end_time = html.split("NAME='end_time' VALUE='")[1].split("'></b></td></tr>")[0]
+            start_time = html.find(attrs={"name":"start_time"}).attrMap["value"]
+            end_time = html.find(attrs={"name":"end_time"}).attrMap["value"]            
+            # give values back as tuple
+            return start_time, end_time
+        except:
+            self.Error(sys.exc_info())
+            return "n/a", "n/a"    
+        
+
+    def GetHost(self, host):
+        """
+        find out ip or hostname of given host to access hosts/devices which do not appear in DNS but
+        have their ip saved in Nagios
+        """
+        
+        # initialize ip string
+        ip = ""
+
+        # glue nagios cgi url and hostinfo 
+        nagcgiurl_host  = self.nagios_cgi_url + "/extinfo.cgi?type=1&host=" + host
+        
+        # get host info
+        result = self.FetchURL(nagcgiurl_host, giveback="soup", remove_tags=["link", "br", "img", "hr", "script", "th", "form", "p"])
+        htobj = result.result
+
+        try:
+            # take ip from html soup
+            ip = htobj.findAll(name="div", attrs={"class":"data"})[-1].text    
+
+            # workaround for URL-ified IP as described in SF bug 2967416
+            # https://sourceforge.net/tracker/?func=detail&aid=2967416&group_id=236865&atid=1101370
+            if not ip.find("://") == -1:
+                ip = ip.split("://")[1]
+                
+            # print IP in debug mode
+            if str(self.conf.debug_mode) == "True":    
+                self.Debug(server=self.get_name(), host=host, debug ="IP of %s:" % (host) + " " + ip)
+            # when connection by DNS is not configured do it by IP
+            if str(self.conf.connect_by_dns_yes) == "True":
+                # try to get DNS name for ip, if not available use ip
+                try:
+                    address = socket.gethostbyaddr(ip)[0]
+                except:
+                    address = ip
+            else:
+                address = ip
+        except:
+            result, error = self.Error(sys.exc_info())
+            return Result(result=result, error=error)
+         
+        # do some cleanup
+        del htobj    
+
+        # give back host or ip
+        return Result(result=address)
+        

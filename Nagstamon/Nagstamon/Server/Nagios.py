@@ -3,8 +3,6 @@
 from Nagstamon.Server.Generic import GenericServer
 from Nagstamon.Server.LxmlFreeGeneric import LxmlFreeGenericServer
 
-import base64
-
 
 #class NagiosServer(GenericServer):
 class NagiosServer(LxmlFreeGenericServer):    

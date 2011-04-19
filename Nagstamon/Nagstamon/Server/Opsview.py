@@ -9,9 +9,11 @@ import base64
 from Nagstamon import Actions
 from Nagstamon.Objects import *
 from Nagstamon.Server.Generic import GenericServer
+from Nagstamon.Server.LxmlFreeGeneric import LxmlFreeGenericServer
 
 
-class OpsviewServer(GenericServer):
+#class OpsviewServer(GenericServer):
+class OpsviewServer(LxmlFreeGenericServer):    
     """  
        special treatment for Opsview XML based API
     """   
@@ -92,7 +94,19 @@ class OpsviewServer(GenericServer):
             result = self.FetchURL(opsapiurl, giveback="opsxml")
             xobj, error = result.result, result.error
             if error != "": return Result(result=xobj, error=error)
-            for host in xobj.data.getchildren()[:-1]:
+            
+            print "\n","$"*20, "\n"
+            
+            print type(xobj)
+            #print dir(xobj)
+            for c in xobj.data.childGenerator():
+                print c
+            
+            print "\n","$"*20, "\n"
+
+            
+            ###for host in xobj.data.getchildren()[:-1]:
+            for host in xobj.data.childGenerator():                
                 # host
                 hostdict = dict(host.items())
                 # if host is in downtime add it to known maintained hosts
@@ -110,7 +124,8 @@ class OpsviewServer(GenericServer):
                 self.new_hosts[hostdict["name"]].status_information= hostdict["output"]
     
                 #services
-                for service in host.getchildren()[:-1]:
+                #for service in host.getchildren()[:-1]:
+                for service in host.childGenerator():                    
                     servicedict = dict(service.items())
                     # to get this filters to work they must be applied here - similar to Nagios servers
                     if not (str(self.conf.filter_hosts_services_maintenance) == "True" \
