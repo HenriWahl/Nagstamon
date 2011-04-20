@@ -12,10 +12,8 @@ import gc
 from Nagstamon import Actions
 from Nagstamon.Objects import *
 from Nagstamon.Server.Generic import GenericServer
-#from Nagstamon.Server.LxmlFreeGeneric import LxmlFreeGenericServer
 
 class CentreonServer(GenericServer): 
-#class CentreonServer(LxmlFreeGenericServer): 
     TYPE = 'Centreon'
     # centreon generic web interface uses a sid which is needed to ask for news
     SID = None   
@@ -273,23 +271,10 @@ class CentreonServer(GenericServer):
         # unfortunately the hosts status page has a different structure so
         # hosts must be analyzed separately
         try:           
-            ###result = self.FetchURL(nagcgiurl_hosts, giveback="raw")  
-            ###raw, error = result.result, result.error
             result = self.FetchURL(nagcgiurl_hosts, giveback="xml")  
             xmlobj, error = result.result, result.error            
             if error != "": return Result(result=xmlobj, error=error)
-            """
-            xmlobj = list()
-            # cut off <xml blabla>
-            try:
-                xmlraw = ElementTree.fromstring(raw.split("\n")[1])
-                xmlobj = Actions.ObjectifyXML(xmlraw)            
-                del raw, error
-            except:
-                # in case we got nothing back
-                xmlraw = ""
-                self.Error(sys.exc_info())
-            """           
+
             # in case there are no children session id is invalid
             if xmlobj == "<response>bad session id</response>":    
                 del xmlobj
@@ -301,12 +286,6 @@ class CentreonServer(GenericServer):
                 result = self.FetchURL(nagcgiurl_hosts, giveback="xml")
                 xmlobj, error = result.result, result.error
                 if error != "": return Result(result=xmlobj, error=error)
-                # cut off <xml blabla>
-                ####xmlraw = ElementTree.fromstring(raw.split("\n")[1])
-                ###xmlobj = Actions.ObjectifyXML(xmlraw)
-                ###del raw, xmlraw, error
-            ###else:
-                ###del xmlraw
                 
             for l in xmlobj.findAll("l"):
                 try:                       
@@ -382,23 +361,9 @@ class CentreonServer(GenericServer):
 
         # services
         try:
-            ###result = self.FetchURL(nagcgiurl_services, giveback="raw")
             result = self.FetchURL(nagcgiurl_services, giveback="xml")            
-            ###raw, error = result.result, result.error
             xmlobj, error = result.result, result.error
             if error != "": return Result(result=xmlobj, error=error)
-            ###xmlobj = list()
-            """
-            # cut off <xml blabla>
-            try:
-                xmlraw = ElementTree.fromstring(raw.split("\n")[1])
-                xmlobj = Actions.ObjectifyXML(xmlraw)            
-                del raw, error
-            except:
-                # in case we got nothing back
-                xmlraw = ""                
-                self.Error(sys.exc_info())
-            """
             
             # in case there are no children session id is invalid
             if xmlobj == "<response>bad session id</response>": 
@@ -411,12 +376,6 @@ class CentreonServer(GenericServer):
                 result = self.FetchURL(nagcgiurl_services, giveback="xml")                
                 xmlobj, error = result.result, result.error                
                 if error != "": return Result(result=xmlobj, error=error)
-                # cut off <xml blabla>
-                ###xmlraw = ElementTree.fromstring(raw.split("\n")[1])
-                ###xmlobj = Actions.ObjectifyXML(xmlraw)
-                ###del raw, xmlraw, error
-            ###else:
-                ###del xmlraw                
 
             for l in xmlobj.findAll("l"):
                 try:

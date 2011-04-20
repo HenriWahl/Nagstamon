@@ -62,6 +62,9 @@ class MultisiteServer(GenericServer):
             self.nagios_url += '/'
         
         # Prepare all urls needed by nagstamon if not yet done
+        
+        print len(self.urls), len(self.statemap)
+        
         if len(self.urls) == len(self.statemap):
             self.urls = {
               'api_services':    self.nagios_url + "view.py?view_name=nagstamon_svc&output_format=python",
