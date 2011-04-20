@@ -12,10 +12,10 @@ import gc
 from Nagstamon import Actions
 from Nagstamon.Objects import *
 from Nagstamon.Server.Generic import GenericServer
-from Nagstamon.Server.LxmlFreeGeneric import LxmlFreeGenericServer
+#from Nagstamon.Server.LxmlFreeGeneric import LxmlFreeGenericServer
 
-###class CentreonServer(GenericServer): 
-class CentreonServer(LxmlFreeGenericServer): 
+class CentreonServer(GenericServer): 
+#class CentreonServer(LxmlFreeGenericServer): 
     TYPE = 'Centreon'
     # centreon generic web interface uses a sid which is needed to ask for news
     SID = None   
@@ -32,6 +32,16 @@ class CentreonServer(LxmlFreeGenericServer):
         self.MD5_username = Actions.MD5ify(self.conf.servers[self.get_name()].username)   
         self.MD5_password = Actions.MD5ify(self.conf.servers[self.get_name()].password)
 
+        
+    def init_HTTP(self):  
+        """
+        initialize HTTP connection
+        """
+        if self.HTTPheaders == {}:
+            GenericServer.init_HTTP(self)
+            # Centreon xml giveback method just should exist
+            self.HTTPheaders["xml"] = {}                             
+        
     
     def open_tree_view(self, host, service=""):
         # must be a host if service is empty...
@@ -267,7 +277,7 @@ class CentreonServer(LxmlFreeGenericServer):
             ###raw, error = result.result, result.error
             result = self.FetchURL(nagcgiurl_hosts, giveback="xml")  
             xmlobj, error = result.result, result.error            
-            if error != "": return Result(result=raw, error=error)
+            if error != "": return Result(result=xmlobj, error=error)
             """
             xmlobj = list()
             # cut off <xml blabla>
@@ -376,7 +386,7 @@ class CentreonServer(LxmlFreeGenericServer):
             result = self.FetchURL(nagcgiurl_services, giveback="xml")            
             ###raw, error = result.result, result.error
             xmlobj, error = result.result, result.error
-            if error != "": return Result(result=raw, error=error)
+            if error != "": return Result(result=xmlobj, error=error)
             ###xmlobj = list()
             """
             # cut off <xml blabla>
@@ -410,15 +420,6 @@ class CentreonServer(LxmlFreeGenericServer):
 
             for l in xmlobj.findAll("l"):
                 try:
-                    
-                    
-                    print "****************************"
-                    
-                    print l.contents
-                    
-                    print "****************************"
-                    
-                    
                     n = {}
                     # host
                     # the resulting table of Nagios status.cgi table omits the

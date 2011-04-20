@@ -9,11 +9,11 @@ import base64
 from Nagstamon import Actions
 from Nagstamon.Objects import *
 from Nagstamon.Server.Generic import GenericServer
-from Nagstamon.Server.LxmlFreeGeneric import LxmlFreeGenericServer
+#from Nagstamon.Server.LxmlFreeGeneric import LxmlFreeGenericServer
 
 
-#class OpsviewServer(GenericServer):
-class OpsviewServer(LxmlFreeGenericServer):    
+class OpsviewServer(GenericServer):
+#class OpsviewServer(LxmlFreeGenericServer):    
     """  
        special treatment for Opsview XML based API
     """   
@@ -21,12 +21,11 @@ class OpsviewServer(LxmlFreeGenericServer):
     
     def init_HTTP(self):      
         if self.HTTPheaders == {}:
-            for giveback in ["raw", "obj"]:
-                self.HTTPheaders[giveback] = {"Authorization": "Basic " + base64.b64encode(self.get_username() + ":" + self.get_password())}        
+            GenericServer.init_HTTP(self)
             # special Opsview treatment, transmit username and passwort for XML requests
             # http://docs.opsview.org/doku.php?id=opsview3.4:api
             # this is only necessary when accessing the API and expecting a XML answer
-            self.HTTPheaders["opsxml"] = {"Content-Type":"text/xml", "X-Username":self.get_username(), "X-Password":self.get_password()}          
+            self.HTTPheaders["xml"] = {"Content-Type":"text/xml", "X-Username":self.get_username(), "X-Password":self.get_password()}          
             
         # get cookie to access Opsview web interface to access Opsviews Nagios part       
         if len(self.Cookie) == 0:         
@@ -91,8 +90,7 @@ class OpsviewServer(LxmlFreeGenericServer):
         # the API seems not to let hosts information directly, we hope to get it from service informations
         try:
             opsapiurl = self.nagios_url + "/api/status/service?state=1&state=2&state=3"
-            result = self.FetchURL(opsapiurl, giveback="opsxml")
-            #result = self.FetchURL(opsapiurl, giveback="soup")
+            result = self.FetchURL(opsapiurl, giveback="xml")
             xmlobj, error = result.result, result.error
             if error != "": return Result(result=xmlobj, error=error)
             

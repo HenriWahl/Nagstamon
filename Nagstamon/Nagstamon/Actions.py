@@ -26,7 +26,7 @@ import mimetools, mimetypes
 import os, stat
 
 from Nagstamon import Objects
-from Nagstamon.Objects import Node, Result
+from Nagstamon.Objects import Result
     
 #from Nagstamon import GUI
 import GUI
@@ -606,6 +606,11 @@ def CreateServer(server=None, conf=None, debug_queue=None):
         nagiosserver.Debug(server=server.name, debug="Created server.")
 
     return nagiosserver
+
+
+def not_empty(x):
+    '''tiny helper function for BeautifulSoup in GenericServer.py to filter text elements'''
+    return bool(x.replace('&nbsp;', '').strip())
 
 
 def BuildURLOpener(server):

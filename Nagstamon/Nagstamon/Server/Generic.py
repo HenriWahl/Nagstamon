@@ -13,7 +13,8 @@ import traceback
 import base64
 import re
 
-from Nagstamon.Actions import HostIsFilteredOutByRE, ServiceIsFilteredOutByRE
+from Nagstamon.BeautifulSoup import BeautifulSoup, BeautifulStoneSoup
+from Nagstamon.Actions import HostIsFilteredOutByRE, ServiceIsFilteredOutByRE, not_empty
 from Nagstamon.Objects import *
 
 # fix/patch for https://bugs.launchpad.net/ubuntu/+source/nagstamon/+bug/732544
@@ -104,6 +105,14 @@ class GenericServer(object):
         self.TreeViewColumns = list()
         self.ListStore = None
         self.ListStoreColumns = list()
+        
+        # dictionary to translate status bitmaps on webinterface into status flags
+        # this are defaults from Nagios
+        self.STATUS_MAPPING = { "ack.gif" : "acknowledged",\
+                                "passiveonly.gif" : "passive",\
+                                "ndisabled.gif" : "notifications_disabled",\
+                                "downtime.gif" : "scheduled_downtime",\
+                                "flapping.gif" : "flapping" }
         
     
     def init_HTTP(self):
@@ -260,15 +269,18 @@ class GenericServer(object):
         directly from web interface
         """
         try:
-            result = self.FetchURL(self.nagios_cgi_url + "/cmd.cgi?" + urllib.urlencode({"cmd_typ":"55", "host":host}), giveback="raw")
+            result = self.FetchURL(self.nagios_cgi_url + "/cmd.cgi?" + urllib.urlencode({"cmd_typ":"55", "host":host}), giveback="soup")
             html = result.result
-            start_time = html.split("NAME='start_time' VALUE='")[1].split("'></b></td></tr>")[0]
-            end_time = html.split("NAME='end_time' VALUE='")[1].split("'></b></td></tr>")[0]
+            print html.find(attrs={"name":"start_time"}).attrMap["value"]
+            #start_time = html.split("NAME='start_time' VALUE='")[1].split("'></b></td></tr>")[0]
+            #end_time = html.split("NAME='end_time' VALUE='")[1].split("'></b></td></tr>")[0]
+            start_time = html.find(attrs={"name":"start_time"}).attrMap["value"]
+            end_time = html.find(attrs={"name":"end_time"}).attrMap["value"]            
             # give values back as tuple
             return start_time, end_time
         except:
             self.Error(sys.exc_info())
-            return "n/a", "n/a"
+            return "n/a", "n/a"    
 
         
     def open_tree_view(self, host, service=""):
@@ -362,53 +374,69 @@ class GenericServer(object):
         try:
             result = self.FetchURL(nagcgiurl_hosts)
             htobj, error = result.result, result.error
-            
+
             if error != "": return Result(result=copy.deepcopy(htobj), error=error)            
-            # workaround for Nagios < 2.7 which has an <EMBED> in its output
+
             # put a copy of a part of htobj into table to be able to delete htobj
-            try:
-                table = copy.deepcopy(htobj.body.table[self.HTML_BODY_TABLE_INDEX])
-            except Exception, err:
-                print err
-                table = copy.deepcopy(htobj.body.embed.table)
-            
-            # do some cleanup    
+            table = copy.deepcopy(htobj('table', {'class': 'status'})[0])
+
+            # do some cleanup
             del htobj
             
-            for i in range(1, len(table.tr)):
+            # access table rows
+            trs = table('tr', recursive=False)
+            # kick out table heads
+            trs.pop(0)
+            
+            for tr in trs:
                 try:
                     # ignore empty <tr> rows
-                    if not table.tr[i].countchildren() == 1:
+                    if len(tr('td', recursive=False)) > 1:
                         n = {}
-                        # host
+                        # get tds in one tr
+                        tds = tr('td', recursive=False)
+                        # host                        
                         try:
-                            #n["host"] = str(table.tr[i].td[0].table.tr.td.table.tr.td.a.text)
-                            n["host"] = str(table.tr[i].td[0].table.tr.td.table.tr.td.text)
-                            
+                            n["host"] = str(tds[0].table.tr.td.table.tr.td.a.string)
                         except:
                             n["host"] = str(nagitems[len(nagitems)-1]["host"])
                         # status
-                        n["status"] = str(table.tr[i].td[1].text)
+                        n["status"] = str(tds[1].string)
                         # last_check
-                        n["last_check"] = str(table.tr[i].td[2].text)
+                        n["last_check"] = str(tds[2].string)
                         # duration
-                        n["duration"] = str(table.tr[i].td[3].text)
+                        n["duration"] = str(tds[3].string)
                         # division between Nagios and Icinga in real life... where
                         # Nagios has only 5 columns there are 7 in Icinga 1.3...
                         # ... and 6 in Icinga 1.2 :-)
-                        if len(table.tr[i].td) < 7:
+                        if len(tds) < 7:
                             # the old Nagios table
                             # status_information
-                            n["status_information"] = str(table.tr[i].td[4].text)
+                            n["status_information"] = str(tds[4].string)
                             # attempts are not shown in case of hosts so it defaults to "N/A"
                             n["attempt"] = "N/A"
                         else:
                             # attempts are shown for hosts
-                            n["attempt"] = str(table.tr[i].td[4].text)
+                            n["attempt"] = str(tds[4].string)
                             # status_information
-                            n["status_information"] = str(table.tr[i].td[5].text)
-
+                            n["status_information"] = str(tds[5].string)
+                            
+                        # status flags 
+                        n["passiveonly"] = False
+                        n["notifications_disabled"] = False
+                        n["flapping"] = False
+                        n["scheduled_downtime"] = False
                         
+                        # map status icons to status flags                       
+                        icons = tds[0].findAll('img')
+                        for i in icons:
+                            icon = i["src"].split("/")[-1]
+                            if icon in self.STATUS_MAPPING:
+                                n[icon] = True
+                        
+                        # cleaning
+                        del icons                            
+
                         # add dictionary full of information about this host item to nagitems
                         nagitems["hosts"].append(n)
                         # after collection data in nagitems create objects from its informations
@@ -422,11 +450,15 @@ class GenericServer(object):
                             self.new_hosts[new_host].duration = n["duration"]
                             self.new_hosts[new_host].attempt = n["attempt"]
                             self.new_hosts[new_host].status_information= n["status_information"]
+                            self.new_hosts[new_host].passiveonly = n["passiveonly"]
+                            self.new_hosts[new_host].notifications_disabled = n["notifications_disabled"]
+                            self.new_hosts[new_host].flapping = n["flapping"]
+                            self.new_hosts[new_host].scheduled_downtime = n["scheduled_downtime"]
                 except:
                     self.Error(sys.exc_info())
                 
             # do some cleanup
-            del table
+            del table, tr, trs, tds
             
         except:
             # set checking flag back to False
@@ -440,16 +472,20 @@ class GenericServer(object):
             result = self.FetchURL(nagcgiurl_services)
             htobj, error = result.result, result.error          
             if error != "": return Result(result=copy.deepcopy(htobj), error=error)
+            
             # put a copy of a part of htobj into table to be able to delete htobj
-            table = copy.deepcopy(htobj.body.table[self.HTML_BODY_TABLE_INDEX])
+            table = copy.deepcopy(htobj('table', {'class': 'status'})[0])
             
             # do some cleanup    
             del htobj
             
-            for i in range(1, len(table.tr)):
+            trs = table('tr', recursive=False)
+            trs.pop(0)
+            for tr in trs:
                 try:
                     # ignore empty <tr> rows - there are a lot of them - a Nagios bug? 
-                    if not table.tr[i].countchildren() == 1:
+                    tds = tr('td', recursive=False)
+                    if len(tds) > 1:
                         n = {}
                         # host
                         # the resulting table of Nagios status.cgi table omits the
@@ -457,27 +493,37 @@ class GenericServer(object):
                         # so if the hostname is empty the nagios status item should get
                         # its hostname from the previuos item - one reason to keep "nagitems"
                         try:
-                            #n["host"] = str(table.tr[i].td[0].table.tr.td.table.tr.td.a.text)
-                            n["host"] = str(table.tr[i].td[0].table.tr.td.table.tr.td.text)        
+                            n["host"] = str(tds[0](text=not_empty)[0])
                         except:
-                            n["host"] = str(nagitems["services"][len(nagitems["services"])-1]["host"])
-                        # service
-                        #n["service"] = str(table.tr[i].td[1].table.tr.td.table.tr.td.a.text)
-                        n["service"] = str(table.tr[i].td[1].table.tr.td.table.tr.td.text)
+                            n["host"] = nagitems["services"][len(nagitems["services"])-1]["host"]
+                        # service                                             
+                        n["service"] = str(tds[1](text=not_empty)[0])
                         # status
-                        n["status"] = str(table.tr[i].td[2].text)
+                        n["status"] = str(tds[2](text=not_empty)[0])
                         # last_check
-                        n["last_check"] = str(table.tr[i].td[3].text)
+                        n["last_check"] = str(tds[3](text=not_empty)[0])
                         # duration
-                        n["duration"] = str(table.tr[i].td[4].text)
+                        n["duration"] = str(tds[4](text=not_empty)[0])
                         # attempt
-                        n["attempt"] = str(table.tr[i].td[5].text)
+                        n["attempt"] = str(tds[5](text=not_empty)[0])
                         # status_information
-                        n["status_information"] = str(table.tr[i].td[6].text)
+                        n["status_information"] = str(tds[6](text=not_empty)[0])
+                        # status flags 
                         n["passiveonly"] = False
-                        n["notifications"] = True
+                        n["notifications_disabled"] = False
                         n["flapping"] = False
-
+                        n["scheduled_downtime"] = False
+                        
+                        # map status icons to status flags
+                        icons = tds[1].findAll('img')
+                        for i in icons:
+                            icon = i["src"].split("/")[-1]
+                            if icon in self.STATUS_MAPPING:
+                                n[icon] = True
+                        
+                        # cleaning
+                        del icons
+                        
                         # add dictionary full of information about this service item to nagitems - only if service
                         nagitems["services"].append(n)
                         # after collection data in nagitems create objects of its informations
@@ -498,96 +544,33 @@ class GenericServer(object):
                             self.new_hosts[n["host"]].services[new_service].attempt = n["attempt"]
                             self.new_hosts[n["host"]].services[new_service].status_information = n["status_information"]
                             self.new_hosts[n["host"]].services[new_service].passiveonly = n["passiveonly"]
+                            self.new_hosts[n["host"]].services[new_service].notifications_disabled = n["notifications_disabled"]
+                            self.new_hosts[n["host"]].services[new_service].flapping = n["flapping"]
+                            self.new_hosts[n["host"]].services[new_service].scheduled_downtime = n["scheduled_downtime"]
                 except:
                     self.Error(sys.exc_info())
                                 
             # do some cleanup
-            del table
+            del table, tr, trs, tds
             
         except:
             # set checking flag back to False
             self.isChecking = False
             result, error = self.Error(sys.exc_info())
             return Result(result=result, error=error) 
-                
-         # hosts which are in scheduled downtime
-        try:
-            #result = Result()
-            result = self.FetchURL(nagcgiurl_hosts_in_maintenance)           
-            htobj, error = result.result, result.error                
-            if error != "": return Result(result=copy.deepcopy(htobj), error=error)
-            # workaround for Nagios < 2.7 which has an <EMBED> in its output
-            try:
-                table = copy.deepcopy(htobj.body.table[self.HTML_BODY_TABLE_INDEX])
-            except:
-                table = copy.deepcopy(htobj.body.embed.div.table)
-            
-            # do some cleanup    
-            del htobj
-
-            for i in range(1, len(table.tr)):
-                try:
-                    # ignore empty <tr> rows
-                    if not table.tr[i].countchildren() == 1:
-                        # host
-                        try:
-                            #self.new_hosts_in_maintenance.append(str(table.tr[i].td[0].table.tr.td.table.tr.td.a.text))
-                            self.new_hosts_in_maintenance.append(str(table.tr[i].td[0].table.tr.td.table.tr.td.text))
-                            # get real status of maintained host
-                            if self.new_hosts.has_key(self.new_hosts_in_maintenance[-1]):
-                                self.new_hosts[self.new_hosts_in_maintenance[-1]].status = str(table.tr[i].td[1].text)
-                        except:
-                            self.Error(sys.exc_info())
-                except:
-                    self.Error(sys.exc_info())
-
-            # do some cleanup
-            del table
         
-        except:
-            # set checking flag back to False
-            self.isChecking = False
-            result, error = self.Error(sys.exc_info())
-            return Result(result=result, error=error)
-       
-        # hosts which are acknowledged
-        try:
-            #result = Result()
-            result = self.FetchURL(nagcgiurl_hosts_acknowledged)                                              
-            htobj, error = result.result, result.error
-            if error != "": return Result(result=copy.deepcopy(htobj), error=error)
-            # workaround for Nagios < 2.7 which has an <EMBED> in its output
-            try:
-                table = copy.deepcopy(htobj.body.table[self.HTML_BODY_TABLE_INDEX])
-            except:
-                table = copy.deepcopy(htobj.body.embed.table)
+        ### the following is just for checking if .property flags work - will vanish soon
                 
-            # do some cleanup    
-            del htobj               
-
-            for i in range(1, len(table.tr)):
-                try:
-                    # ignore empty <tr> rows
-                    if not table.tr[i].countchildren() == 1:
-                        # host
-                        try:
-                            #self.new_hosts_acknowledged.append(str(table.tr[i].td[0].table.tr.td.table.tr.td.a.text))
-                            self.new_hosts_acknowledged.append(str(table.tr[i].td[0].table.tr.td.table.tr.td.text))                            # get real status of acknowledged host
-                            if self.new_hosts.has_key(self.new_hosts_acknowledged[-1]):
-                                self.new_hosts[self.new_hosts_acknowledged[-1]].status = str(table.tr[i].td[1].text)
-                        except:
-                            self.Error(sys.exc_info())
-                except:
-                    self.Error(sys.exc_info())
-
-            # do some cleanup
-            del table
-
-        except:
-            # set checking flag back to False
-            self.isChecking = False
-            result, error = self.Error(sys.exc_info())
-            return Result(result=result, error=error)
+        # hosts which are in scheduled downtime
+        for host in self.new_hosts.values():
+            if host.is_in_scheduled_downtime():
+                self.new_hosts_in_maintenance.append(host.name)    
+                
+        # hosts which are acknowledged       
+        for host in self.new_hosts.values():
+            if host.is_acknowledged():
+                self.new_hosts_acknowledged.append(host.name)            
+    
                 
         # some cleanup
         del nagitems
@@ -595,7 +578,6 @@ class GenericServer(object):
         #dummy return in case all is OK
         return Result()
     
-
         
     def GetStatus(self):
         """
@@ -746,7 +728,7 @@ class GenericServer(object):
     
     
 ###    def FetchURL(self, url, giveback="obj", cgi_data=None, remove_tags=["link", "br", "img", "hr", "script", "th", "form", "div", "p"]):   
-    def FetchURL(self, url, giveback="soup", cgi_data=None, remove_tags=["link", "br", "img", "hr", "script", "th", "form", "div", "p"]):   
+    def FetchURL(self, url, giveback="obj", cgi_data=None, remove_tags=["link", "br", "img", "hr", "script", "th", "form", "div", "p"]):   
 
         """
         get content of given url, cgi_data only used if present
@@ -766,11 +748,10 @@ class GenericServer(object):
                 # debug
                 if str(self.conf.debug_mode) == "True":
                     self.Debug(server=self.get_name(), debug="FetchURL: " + url + " CGI Data: " + str(cgi_data))
-                    
                 request = urllib2.Request(url, cgi_data, self.HTTPheaders[giveback])
                 urlcontent = self.urlopener.open(request)
                 # use opener - if cgi_data is not empty urllib uses a POST request
-                del url, cgi_data, request                               
+                #del url, cgi_data, request                               
             except:
                 result, error = self.Error(sys.exc_info())
                 return Result(result=result, error=error)
@@ -782,59 +763,33 @@ class GenericServer(object):
                 del urlcontent
                 return result
             
-            # give back lxml-objectified data
-            if giveback == "objsala":
-                # the heart of the whole Nagios-status-monitoring engine:
-                # first step: parse the read HTML
-                html = lxml.etree.HTML(urlcontent.read())
-                    
-                # second step: make pretty HTML of it
-                #prettyhtml = lxml.etree.tostring(html, pretty_print=True)
-                prettyhtml = lxml.etree.tostring(html, pretty_print=False)               
-                del html
-                # patch for passive checks, identified in Nagios and Icinga by icon
-                prettyhtml = re.sub(r"<img\ssrc=\"[^\"]*/([a-z]+)\.gif\"[^>]+>", "[[\\1]]", prettyhtml)
-                # remove <a> tags to avoid not-shown-links in status information
-                # when removing </a> it is also necessary to remove &nbsp; because
-                # it might be added to hostname
-                prettyhtml = re.sub(r'(?i)<a .*=".*">', '', prettyhtml)
-                prettyhtml = re.sub(r'(?i)</a>', '', prettyhtml)
-                prettyhtml = re.sub(r'(?i)&nbsp;|&#160;', '', prettyhtml)
+            # objectified HTML
+            if giveback == 'obj':
+                request = urllib2.Request(url, cgi_data, self.HTTPheaders['obj'])
+                # use opener - if cgi_data is not empty urllib uses a POST request
+                urlcontent = self.urlopener.open(request)
+                soup = BeautifulSoup(urlcontent, convertEntities=BeautifulSoup.ALL_ENTITIES)
+                urlcontent.close()                
+                del url, cgi_data, request, urlcontent
+                return Result(result=copy.deepcopy(soup))
 
-                # third step: clean HTML from tags which embarass libxml2 2.7
-                # only possible when module lxml.html.clean has been loaded
-                if sys.modules.has_key("lxml.html.clean"):
-                    # clean html from tags which libxml2 2.7 is worried about
-                    # this is the case with all tags that do not need a closing end tag like link, br, img
-                    cleaner = lxml.html.clean.Cleaner(remove_tags=remove_tags, page_structure=True, style=False,\
-                                                      safe_attrs_only=True, scripts=False, javascript=False)
-                    prettyhtml = cleaner.clean_html(prettyhtml)
-                    del cleaner
-                    
-                    # lousy workaround for libxml2 2.7 which worries about attributes without value
-                    # we hope that nobody names a server '" nowrap>' - chances are pretty small because this "name"
-                    # contains unallowed characters and is far from common sense
-                    prettyhtml = prettyhtml.replace(' nowrap', '')
-    
-                # fourth step: make objects of tags for easy access              
-                htobj = lxml.objectify.fromstring(prettyhtml)
-                
-                #do some cleanup
+            # objectified generic XML, valid at least for Opsview and Centreon
+            elif giveback == "xml":
+                request = urllib2.Request(url, cgi_data, self.HTTPheaders[giveback])
+                urlcontent = self.urlopener.open(request)
+                xmlobj = BeautifulStoneSoup(urlcontent.read(), convertEntities=BeautifulStoneSoup.XML_ENTITIES)
                 urlcontent.close()
-                del urlcontent, prettyhtml
-        
-                # give back HTML object from Nagios webseite
-                return Result(result=htobj)            
+                del url, cgi_data, request, urlcontent        
+                return Result(result=copy.deepcopy(xmlobj))   
                 
-            # special Opsview XML
-            elif giveback == "opsxml":
-                # objectify the xml and give it back after some cleanup
-                xml = lxml.etree.XML(urlcontent.read())
-                xmlpretty = lxml.etree.tostring(xml, pretty_print=True)
-                xmlobj = lxml.objectify.fromstring(xmlpretty)
+            # special Opsview XML - needed for own Opsview HTTP headers
+            elif giveback == "ovxcvxvcpsxml":
+                request = urllib2.Request(url, cgi_data, self.HTTPheaders[giveback])
+                urlcontent = self.urlopener.open(request)
+                xmlobj = BeautifulStoneSoup(urlcontent.read(), convertEntities=BeautifulStoneSoup.XML_ENTITIES)
                 urlcontent.close()
-                del urlcontent, xml, xmlpretty               
-                return Result(result=copy.deepcopy(xmlobj))
+                del url, cgi_data, request, urlcontent              
+                return Result(result=copy.deepcopy(xmlobj))   
            
         except:
             # do some cleanup        
@@ -844,6 +799,7 @@ class GenericServer(object):
         result, error = self.Error(sys.exc_info())
         return Result(result=result, error=error)   
     
+
 
     def GetHost(self, host):
         """
@@ -862,16 +818,14 @@ class GenericServer(object):
         htobj = result.result
 
         try:
-            # take ip from object path
-            ip = str(htobj.body.table.tr.td[1].div[5].text)
-            # Workaround for Nagios 3.1 where there are groups listed whose the host is a member of
-            if ip == "Member of":
-                ip = str(htobj.body.table.tr.td[1].div[7].text)
+            # take ip from html soup
+            ip = htobj.findAll(name="div", attrs={"class":"data"})[-1].text    
 
             # workaround for URL-ified IP as described in SF bug 2967416
             # https://sourceforge.net/tracker/?func=detail&aid=2967416&group_id=236865&atid=1101370
             if not ip.find("://") == -1:
                 ip = ip.split("://")[1]
+                
             # print IP in debug mode
             if str(self.conf.debug_mode) == "True":    
                 self.Debug(server=self.get_name(), host=host, debug ="IP of %s:" % (host) + " " + ip)
@@ -902,6 +856,8 @@ class GenericServer(object):
         """
         # do some garbage collection
         gc.collect()  
+        
+        
     
     
     def Error(self, error):

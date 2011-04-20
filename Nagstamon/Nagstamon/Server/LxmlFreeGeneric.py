@@ -9,7 +9,7 @@ import urllib
 import urllib2
 
 
-def not_empty(x):
+def NOTUSEDANYMOREnot_empty(x):
     '''tiny helper function to filter text elements'''
     return bool(x.replace('&nbsp;', '').strip())
 
@@ -29,7 +29,7 @@ class LxmlFreeGenericServer(GenericServer):
                                   "downtime.gif" : "scheduled_downtime",\
                                   "flapping.gif" : "flapping" }
 
-    def FetchURL(self, url, giveback='soup', cgi_data=None, remove_tags=None):
+    def NOTUSEDANYMOREFetchURL(self, url, giveback='soup', cgi_data=None, remove_tags=None):
         """
         Multipurpose URL fetching method, usable everywhere where URLS are retrieved
         """
@@ -76,7 +76,7 @@ class LxmlFreeGenericServer(GenericServer):
             return GenericServer.FetchURL(self, url, giveback, cgi_data, remove_tags)
         
     
-    def _get_status(self):
+    def NOTNEEDEDANYMOREASFORNOW_get_status(self):
         """
         Get status from Nagios Server
         """
@@ -337,7 +337,7 @@ class LxmlFreeGenericServer(GenericServer):
         return Result()
     
 
-    def get_start_end(self, host):
+    def OBSOLETEFROMNOWONget_start_end(self, host):
         """
         for GUI to get actual downtime start and end from server - they may vary so it's better to get
         directly from web interface
@@ -359,7 +359,7 @@ class LxmlFreeGenericServer(GenericServer):
             return "n/a", "n/a"    
         
 
-    def GetHost(self, host):
+    def UNUSEDFROMNOWGetHost(self, host):
         """
         find out ip or hostname of given host to access hosts/devices which do not appear in DNS but
         have their ip saved in Nagios
