@@ -753,28 +753,6 @@ def MD5ify(string):
     return md5(string).hexdigest()
 
 
-def SHOULDBECONSIDEREDOBSOLETEINFAVOUROFBEAUTIFULSOUPObjectifyXML(xmlraw):
-    """
-    replacement for lxml.objectify, until now only used for Centreon
-    """    
-    try:
-        nodes = []
-        for l in xmlraw.getchildren():
-            # only take l-nodes because they contain valuable information
-            # this is only valid for Centreon 
-            if l.tag == "l":
-                node = Node()
-                for e in l.getchildren():
-                    node.__dict__[e.tag] = node.add("text")
-                    node.__dict__[e.tag].text = e.text
-                nodes.append(node)
-        del xmlraw
-        return nodes
-    except:
-        del xmlraw
-        traceback.print_exc(sys.exc_info)     
-        
-
 # <IMPORT>
 # Borrowed from http://pipe.scs.fsu.edu/PostHandler/MultipartPostHandler.py
 # Released under LGPL

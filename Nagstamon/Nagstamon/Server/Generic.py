@@ -13,23 +13,6 @@ import traceback
 import base64
 import re
 
-try:
-    import lxml.etree, lxml.objectify
-except Exception, err:
-    print
-    print err
-    print
-    print "Could not load lxml.etree, lxml.objectify and lxml.html.clean, maybe you need to install python lxml."
-    print
-    sys.exit()
-# fedora 8 and maybe others use lxml 2 which is more careful and offers more modules
-# but which also makes necessary to clean Nagios html output
-# if not available should be ok because not needed
-try:
-    import lxml.html.clean
-except:
-    pass
-
 from Nagstamon.Actions import HostIsFilteredOutByRE, ServiceIsFilteredOutByRE
 from Nagstamon.Objects import *
 
@@ -131,8 +114,8 @@ class GenericServer(object):
         if self.HTTPheaders == {}:
             for giveback in ["raw", "obj"]:
                 self.HTTPheaders[giveback] = {"Authorization": "Basic " + base64.b64encode(self.get_username() + ":" + self.get_password())}
-        
 
+                
     def get_name(self):
         """
         return stringified name
@@ -494,18 +477,6 @@ class GenericServer(object):
                         n["passiveonly"] = False
                         n["notifications"] = True
                         n["flapping"] = False
-                        td_html = lxml.etree.tostring(table.tr[i].td[1].table.tr.td[1]);
-                        icons = re.findall(">\[{2}([a-z]+)\]{2}<", td_html)
-                        # e.g. ['comment', 'passiveonly', 'ndisabled', 'flapping']
-                        for icon in icons:
-                            if (icon == "passiveonly"):
-                                n["passiveonly"] = True
-                            elif (icon == "ndisabled"):
-                                n["notifications"] = False
-                            elif (icon == "flapping"):
-                                n["flapping"] = True
-                        # cleaning        
-                        del td_html, icons
 
                         # add dictionary full of information about this service item to nagitems - only if service
                         nagitems["services"].append(n)
@@ -774,7 +745,9 @@ class GenericServer(object):
         return Result()
     
     
-    def FetchURL(self, url, giveback="obj", cgi_data=None, remove_tags=["link", "br", "img", "hr", "script", "th", "form", "div", "p"]):   
+###    def FetchURL(self, url, giveback="obj", cgi_data=None, remove_tags=["link", "br", "img", "hr", "script", "th", "form", "div", "p"]):   
+    def FetchURL(self, url, giveback="soup", cgi_data=None, remove_tags=["link", "br", "img", "hr", "script", "th", "form", "div", "p"]):   
+
         """
         get content of given url, cgi_data only used if present
         "obj" FetchURL gives back a dict full of miserable hosts/services,
@@ -810,7 +783,7 @@ class GenericServer(object):
                 return result
             
             # give back lxml-objectified data
-            if giveback == "obj":
+            if giveback == "objsala":
                 # the heart of the whole Nagios-status-monitoring engine:
                 # first step: parse the read HTML
                 html = lxml.etree.HTML(urlcontent.read())

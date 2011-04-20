@@ -13,10 +13,3 @@ class NagiosServer(LxmlFreeGenericServer):
     """
     
     TYPE = 'Nagios'
-    
-    # used in Nagios + Icinga _get_status() method
-    HTML_BODY_TABLE_INDEX = 2
-    
-    # used for LxmlFreeGenericServer/BeautifulSoup
-    STATUS_CLASS = 'status'
-        

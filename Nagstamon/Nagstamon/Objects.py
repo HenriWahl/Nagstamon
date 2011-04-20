@@ -121,7 +121,7 @@ class GenericObject(object):
         self.duration = ""
         self.attempt = ""
         self.status_information = ""
-        self.passive = False
+        self.passiveonly = False
         self.acknowledged = False
         self.notifications_disabled = False
         self.flapping = False
@@ -129,7 +129,7 @@ class GenericObject(object):
     
 
     def is_passive_only(self):
-        return bool(self.passive)    
+        return bool(self.passiveonly)    
     
     
     def is_flapping(self):
@@ -211,31 +211,3 @@ class Result(object):
     def __init__(self, **kwds):
         # add all keywords to object, every mode searchs inside for its favorite arguments/keywords
         for k in kwds: self.__dict__[k] = kwds[k]
-        
-        
-class Node(object):
-    """
-    used to reconstruct objectified ML structures
-    """
-    def __init__(self, *args):
-        pass
-    
-    
-    def add(self, element):
-        return Node(element)
-
-    
-class ParseHTML(HTMLParser.HTMLParser):
-    """
-    test non-lxml-dependent HTML parsing
-    """
-    def __init__(self, htmlraw):
-        HTMLParser.HTMLParser.__init__(self)
-        self.feed(htmlraw)
-        
-    def handle_starttag(self, tag, attrs):
-        print "Encountered the beginning of a %s tag" % tag
-
-    def handle_endtag(self, tag):
-        print "Encountered the end of a %s tag" % tag
-        

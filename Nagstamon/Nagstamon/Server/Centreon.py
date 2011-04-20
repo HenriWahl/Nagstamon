@@ -8,17 +8,7 @@ import sys
 import cookielib
 import traceback
 import gc
-
-"""
-# new attempt to replace memory eating lxml
-try:
-    # from python 2.5 on it is in xml
-    from xml.etree import ElementTree
-except:
-    # older pythons will find it in elementtree
-    from elementtree import ElementTree
-"""
-    
+   
 from Nagstamon import Actions
 from Nagstamon.Objects import *
 from Nagstamon.Server.Generic import GenericServer

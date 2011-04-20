@@ -39,9 +39,10 @@ class LxmlFreeGenericServer(GenericServer):
         
         if not remove_tags:
             remove_tags = ["link", "br", "img", "hr", "script", "th", "form", "div", "p"]
+            
+        self.init_HTTP()            
+            
         if giveback == 'soup':
-            self.init_HTTP()
-
             try:
                 request = urllib2.Request(url, cgi_data, self.HTTPheaders['obj'])
                 # use opener - if cgi_data is not empty urllib uses a POST request
@@ -55,7 +56,6 @@ class LxmlFreeGenericServer(GenericServer):
             
         # generic XML
         elif giveback == "xml":
-            self.init_HTTP()
             request = urllib2.Request(url, cgi_data)
             urlcontent = self.urlopener.open(request)
             xmlobj = BeautifulStoneSoup(urlcontent.read(), convertEntities=BeautifulStoneSoup.XML_ENTITIES)
@@ -65,7 +65,6 @@ class LxmlFreeGenericServer(GenericServer):
             
         # special Opsview XML
         elif giveback == "opsxml":
-            self.init_HTTP()
             request = urllib2.Request(url, cgi_data, self.HTTPheaders['opsxml'])
             urlcontent = self.urlopener.open(request)
             xmlobj = BeautifulStoneSoup(urlcontent.read(), convertEntities=BeautifulStoneSoup.XML_ENTITIES)
@@ -186,14 +185,12 @@ class LxmlFreeGenericServer(GenericServer):
                         n["flapping"] = False
                         n["scheduled_downtime"] = False
                         
-                        print "\n", 15*"#", "\n"
+                        # map status icons to status flags                       
                         icons = tds[0].findAll('img')
                         for i in icons:
                             icon = i["src"].split("/")[-1]
                             if icon in self.STATUS_MAPPING:
-                                print self.STATUS_MAPPING[i["src"].split("/")[-1]]
                                 n[icon] = True
-                        print "\n", 15*"#", "\n"
                         
                         # cleaning
                         del icons                            
@@ -219,7 +216,7 @@ class LxmlFreeGenericServer(GenericServer):
                     self.Error(sys.exc_info())
                 
             # do some cleanup
-            del table, tr, trs
+            del table, tr, trs, tds
             
         except:
             # set checking flag back to False
@@ -258,7 +255,6 @@ class LxmlFreeGenericServer(GenericServer):
                         except:
                             n["host"] = nagitems["services"][len(nagitems["services"])-1]["host"]
                         # service                                             
-                        #n["service"] = str(table.tr[i].td[1].table.tr.td.table.tr.td.a.string)
                         n["service"] = str(tds[1](text=not_empty)[0])
                         # status
                         n["status"] = str(tds[2](text=not_empty)[0])
@@ -276,14 +272,12 @@ class LxmlFreeGenericServer(GenericServer):
                         n["flapping"] = False
                         n["scheduled_downtime"] = False
                         
-                        print "\n", 30*"#", "\n"
+                        # map status icons to status flags
                         icons = tds[1].findAll('img')
                         for i in icons:
                             icon = i["src"].split("/")[-1]
                             if icon in self.STATUS_MAPPING:
-                                print self.STATUS_MAPPING[i["src"].split("/")[-1]]
                                 n[icon] = True
-                        print "\n", 30*"#", "\n"
                         
                         # cleaning
                         del icons
@@ -315,7 +309,7 @@ class LxmlFreeGenericServer(GenericServer):
                     self.Error(sys.exc_info())
                                 
             # do some cleanup
-            del table
+            del table, tr, trs, tds
             
         except:
             # set checking flag back to False
