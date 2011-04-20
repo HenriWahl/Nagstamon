@@ -30,16 +30,19 @@ class LxmlFreeGenericServer(GenericServer):
                                   "flapping.gif" : "flapping" }
 
     def FetchURL(self, url, giveback='soup', cgi_data=None, remove_tags=None):
+        """
+        Multipurpose URL fetching method, usable everywhere where URLS are retrieved
+        """
+        # debug
+        if str(self.conf.debug_mode) == "True":
+            self.Debug(server=self.get_name(), debug="FetchURL: " + url + " CGI Data: " + str(cgi_data))
+        
         if not remove_tags:
             remove_tags = ["link", "br", "img", "hr", "script", "th", "form", "div", "p"]
         if giveback == 'soup':
             self.init_HTTP()
 
             try:
-                # debug
-                if str(self.conf.debug_mode) == "True":
-                    self.Debug(server=self.get_name(), debug="FetchURL: " + url + " CGI Data: " + str(cgi_data))
-
                 request = urllib2.Request(url, cgi_data, self.HTTPheaders['obj'])
                 # use opener - if cgi_data is not empty urllib uses a POST request
                 urlcontent = self.urlopener.open(request)
@@ -50,26 +53,26 @@ class LxmlFreeGenericServer(GenericServer):
                 result, error = self.Error(sys.exc_info())
                 return Result(result=result, error=error)
             
+        # generic XML
+        elif giveback == "xml":
+            self.init_HTTP()
+            request = urllib2.Request(url, cgi_data)
+            urlcontent = self.urlopener.open(request)
+            xmlobj = BeautifulStoneSoup(urlcontent.read(), convertEntities=BeautifulStoneSoup.XML_ENTITIES)
+            urlcontent.close()
+            del urlcontent          
+            return Result(result=copy.deepcopy(xmlobj))   
+            
         # special Opsview XML
         elif giveback == "opsxml":
             self.init_HTTP()
-            # objectify the xml and give it back after some cleanup
-            #xml = lxml.etree.XML(urlcontent.read())
-            #xmlpretty = lxml.etree.tostring(xml, pretty_print=True)
-            #xmlobj = lxml.objectify.fromstring(xmlpretty)
-            
             request = urllib2.Request(url, cgi_data, self.HTTPheaders['opsxml'])
-            # use opener - if cgi_data is not empty urllib uses a POST request
             urlcontent = self.urlopener.open(request)
-            
             xmlobj = BeautifulStoneSoup(urlcontent.read(), convertEntities=BeautifulStoneSoup.XML_ENTITIES)
-
             urlcontent.close()
-
-            del urlcontent
-            
-            return Result(result=copy.deepcopy(xmlobj))            
-            
+            del urlcontent          
+            return Result(result=copy.deepcopy(xmlobj))   
+        
         else:
             return GenericServer.FetchURL(self, url, giveback, cgi_data, remove_tags)
         

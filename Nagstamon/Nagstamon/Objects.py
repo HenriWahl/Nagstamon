@@ -129,7 +129,7 @@ class GenericObject(object):
     
 
     def is_passive_only(self):
-        return bool(self.passiveonly)    
+        return bool(self.passive)    
     
     
     def is_flapping(self):

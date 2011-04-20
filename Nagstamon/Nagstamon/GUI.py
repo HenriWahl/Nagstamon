@@ -76,7 +76,7 @@ class GUI(object):
         
         # Meta
         self.name = "nagstamon"
-        self.version = "0.9.5"
+        self.version = "0.9.6pre"
         self.website = "http://nagstamon.ifw-dresden.de/"
         self.copyright = "©2008-2011 Henri Wahl\nh.wahl@ifw-dresden.de"
         self.comments = "Nagios status monitor for your desktop"
@@ -1476,8 +1476,8 @@ class Popwin(gtk.Window):
             else:
                 self.recheck_item.set_sensitive(True)
             self.popupmenu.popup(None, None, None, event.button, event.time)
-        except:
-            pass
+        except Exception, err:
+            print err
         
 
     def TreeviewPopupMenuResponse(self, widget, remoteservice):

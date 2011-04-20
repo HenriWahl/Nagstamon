@@ -61,12 +61,12 @@ class OpsviewServer(LxmlFreeGenericServer):
         # which opsview form action to call
         action = html.split('" enctype="multipart/form-data">')[0].split('action="')[-1]
         # this time cgi_data does not get encoded because it will be submitted via multipart
-        # to build value for hidden from field old cgi_data is used
+        # to build value for hidden form field old cgi_data is used
         cgi_data = { "from" : url + "?" + cgi_data, "comment": comment, "starttime": start_time, "endtime": end_time }
         self.FetchURL(self.nagios_url + action, giveback="raw", cgi_data=cgi_data)
         
 
-    def get_start_end(self, host):
+    def THEORETICALLYNOTNECESSARYANYMOREget_start_end(self, host):
         """
         get start and end time for downtime from Opsview server
         """
@@ -92,55 +92,52 @@ class OpsviewServer(LxmlFreeGenericServer):
         try:
             opsapiurl = self.nagios_url + "/api/status/service?state=1&state=2&state=3"
             result = self.FetchURL(opsapiurl, giveback="opsxml")
-            xobj, error = result.result, result.error
-            if error != "": return Result(result=xobj, error=error)
+            #result = self.FetchURL(opsapiurl, giveback="soup")
+            xmlobj, error = result.result, result.error
+            if error != "": return Result(result=xmlobj, error=error)
             
-            print "\n","$"*20, "\n"
-            
-            print type(xobj)
-            #print dir(xobj)
-            for c in xobj.data.childGenerator():
-                print c
-            
-            print "\n","$"*20, "\n"
-
-            
-            ###for host in xobj.data.getchildren()[:-1]:
-            for host in xobj.data.childGenerator():                
+            for host in xmlobj.data.findAll("list"):                
                 # host
-                hostdict = dict(host.items())
-                # if host is in downtime add it to known maintained hosts
-                if hostdict["downtime"] == "2":
-                    self.new_hosts_in_maintenance.append(hostdict["name"])
-                if hostdict.has_key("acknowledged"):
-                    self.new_hosts_acknowledged.append(hostdict["name"])
+                hostdict = dict(host._getAttrMap())
                 self.new_hosts[hostdict["name"]] = GenericHost()
-                self.new_hosts[hostdict["name"]].name = hostdict["name"]
+                self.new_hosts[hostdict["name"]].name = str(hostdict["name"])
                 # states come in lower case from Opsview
-                self.new_hosts[hostdict["name"]].status = hostdict["state"].upper()
-                self.new_hosts[hostdict["name"]].last_check = hostdict["last_check"]
+                self.new_hosts[hostdict["name"]].status = str(hostdict["state"].upper())
+                self.new_hosts[hostdict["name"]].last_check = str(hostdict["last_check"])
                 self.new_hosts[hostdict["name"]].duration = Actions.HumanReadableDuration(hostdict["state_duration"])
                 self.new_hosts[hostdict["name"]].attempt = str(hostdict["current_check_attempt"])+ "/" + str(hostdict["max_check_attempts"])
-                self.new_hosts[hostdict["name"]].status_information= hostdict["output"]
-    
+                self.new_hosts[hostdict["name"]].status_information = str(hostdict["output"].replace("\n", " "))
+                # if host is in downtime add it to known maintained hosts
+                if hostdict["downtime"] == "2":
+                    self.new_hosts_in_maintenance.append(str(hostdict["name"]))
+                    self.new_hosts[hostdict["name"]].scheduled_downtime = True
+                if hostdict.has_key("acknowledged"):
+                    self.new_hosts_acknowledged.append(str(hostdict["name"]))
+                    self.new_hosts[hostdict["name"]].acknowledged = True
+
                 #services
                 #for service in host.getchildren()[:-1]:
-                for service in host.childGenerator():                    
-                    servicedict = dict(service.items())
+                for service in host.findAll("services"):   
+                    servicedict = dict(service._getAttrMap())
                     # to get this filters to work they must be applied here - similar to Nagios servers
                     if not (str(self.conf.filter_hosts_services_maintenance) == "True" \
                     and servicedict["downtime"] == "2") \
                     and not (str(self.conf.filter_acknowledged_hosts_services) == "True" \
                     and servicedict.has_key("acknowledged")):
                         self.new_hosts[hostdict["name"]].services[servicedict["name"]] = GenericService()
-                        self.new_hosts[hostdict["name"]].services[servicedict["name"]].host = hostdict["name"]
-                        self.new_hosts[hostdict["name"]].services[servicedict["name"]].name = servicedict["name"]
+                        self.new_hosts[hostdict["name"]].services[servicedict["name"]].host = str(hostdict["name"])
+                        self.new_hosts[hostdict["name"]].services[servicedict["name"]].name = str(servicedict["name"])
                         # states come in lower case from Opsview
-                        self.new_hosts[hostdict["name"]].services[servicedict["name"]].status = servicedict["state"].upper()
-                        self.new_hosts[hostdict["name"]].services[servicedict["name"]].last_check = servicedict["last_check"]
+                        self.new_hosts[hostdict["name"]].services[servicedict["name"]].status = str(servicedict["state"].upper())
+                        self.new_hosts[hostdict["name"]].services[servicedict["name"]].last_check = str(servicedict["last_check"])
                         self.new_hosts[hostdict["name"]].services[servicedict["name"]].duration = Actions.HumanReadableDuration(servicedict["state_duration"])
                         self.new_hosts[hostdict["name"]].services[servicedict["name"]].attempt = str(servicedict["current_check_attempt"])+ "/" + str(servicedict["max_check_attempts"])
-                        self.new_hosts[hostdict["name"]].services[servicedict["name"]].status_information= servicedict["output"]
+                        self.new_hosts[hostdict["name"]].services[servicedict["name"]].status_information= str(servicedict["output"].replace("\n", " "))
+                        if servicedict["downtime"] == "2":
+                            self.new_hosts[hostdict["name"]].services[servicedict["name"]].scheduled_downtime = True
+                        if hostdict.has_key("acknowledged"):
+                            self.new_hosts[hostdict["name"]].services[servicedict["name"]].acknowledged = True
+
         except:
             # set checking flag back to False
             self.isChecking = False
@@ -173,7 +170,7 @@ class OpsviewServer(LxmlFreeGenericServer):
             self.Debug(server=self.get_name(), debug="Open hosts web page " + self.nagios_url + "/status/host?hostgroupid=1&state=1")
 
             
-    def GetHost(self, host):
+    def DEACTIVATEDINFAVOUROFBEAUTIFULSOUPGetHost(self, host):
         """
         find out ip or hostname of given host to access hosts/devices which do not appear in DNS but
         have their ip saved in Nagios

@@ -753,7 +753,7 @@ def MD5ify(string):
     return md5(string).hexdigest()
 
 
-def ObjectifyXML(xmlraw):
+def SHOULDBECONSIDEREDOBSOLETEINFAVOUROFBEAUTIFULSOUPObjectifyXML(xmlraw):
     """
     replacement for lxml.objectify, until now only used for Centreon
     """    
@@ -772,33 +772,7 @@ def ObjectifyXML(xmlraw):
         return nodes
     except:
         del xmlraw
-        traceback.print_exc(sys.exc_info)
-        
-
-def ObjectifyHTML(htmlraw):
-    """
-    replacement for lxml.objectify, not really used yet
-    """    
-    try:
-        nodes = []
-        for l in htmlraw.getchildren():
-
-            print l
-            
-            # only take l-nodes because they contain valuable information
-            # this is only valid for Centreon 
-            if l.tag == "l":
-                node = Node()
-                for e in l.getchildren():
-                    node.__dict__[e.tag] = node.add("text")
-                    node.__dict__[e.tag].text = e.text
-                nodes.append(node)
-        del htmlraw
-        return nodes
-    except:
-        del htmlraw
-        traceback.print_exc(sys.exc_info)
-        
+        traceback.print_exc(sys.exc_info)     
         
 
 # <IMPORT>

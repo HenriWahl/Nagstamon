@@ -9,6 +9,7 @@ import cookielib
 import traceback
 import gc
 
+"""
 # new attempt to replace memory eating lxml
 try:
     # from python 2.5 on it is in xml
@@ -16,13 +17,15 @@ try:
 except:
     # older pythons will find it in elementtree
     from elementtree import ElementTree
-
+"""
+    
 from Nagstamon import Actions
 from Nagstamon.Objects import *
 from Nagstamon.Server.Generic import GenericServer
+from Nagstamon.Server.LxmlFreeGeneric import LxmlFreeGenericServer
 
-
-class CentreonServer(GenericServer): 
+###class CentreonServer(GenericServer): 
+class CentreonServer(LxmlFreeGenericServer): 
     TYPE = 'Centreon'
     # centreon generic web interface uses a sid which is needed to ask for news
     SID = None   
@@ -270,9 +273,12 @@ class CentreonServer(GenericServer):
         # unfortunately the hosts status page has a different structure so
         # hosts must be analyzed separately
         try:           
-            result = self.FetchURL(nagcgiurl_hosts, giveback="raw")
-            raw, error = result.result, result.error
+            ###result = self.FetchURL(nagcgiurl_hosts, giveback="raw")  
+            ###raw, error = result.result, result.error
+            result = self.FetchURL(nagcgiurl_hosts, giveback="xml")  
+            xmlobj, error = result.result, result.error            
             if error != "": return Result(result=raw, error=error)
+            """
             xmlobj = list()
             # cut off <xml blabla>
             try:
@@ -283,26 +289,26 @@ class CentreonServer(GenericServer):
                 # in case we got nothing back
                 xmlraw = ""
                 self.Error(sys.exc_info())
-                       
+            """           
             # in case there are no children session id is invalid
-            if xmlraw == "<response>bad session id</response>":    
-                del raw, xmlraw
+            if xmlobj == "<response>bad session id</response>":    
+                del xmlobj
                 if str(self.conf.debug_mode) == "True": 
                     self.Debug(server=self.get_name(), debug="Bad session ID, retrieving new one...")                
 
                 # try again...
                 self.SID = self._get_sid().result
-                result = self.FetchURL(nagcgiurl_hosts, giveback="raw")
-                raw, error = result.result, result.error
-                if error != "": return Result(result=raw, error=error)
+                result = self.FetchURL(nagcgiurl_hosts, giveback="xml")
+                xmlobj, error = result.result, result.error
+                if error != "": return Result(result=xmlobj, error=error)
                 # cut off <xml blabla>
-                xmlraw = ElementTree.fromstring(raw.split("\n")[1])
-                xmlobj = Actions.ObjectifyXML(xmlraw)
-                del raw, xmlraw, error
-            else:
-                del xmlraw
+                ####xmlraw = ElementTree.fromstring(raw.split("\n")[1])
+                ###xmlobj = Actions.ObjectifyXML(xmlraw)
+                ###del raw, xmlraw, error
+            ###else:
+                ###del xmlraw
                 
-            for l in xmlobj:
+            for l in xmlobj.findAll("l"):
                 try:                       
                     n = {}
                     # host
@@ -327,9 +333,11 @@ class CentreonServer(GenericServer):
                     n["in_downtime"] = str(l.hdtm.text)
                                        
                     # store information about acknowledged and down hosts for further reference
-                    if n["in_downtime"] == "1" : self.new_hosts_in_maintenance.append(n["host"])
-                    if n["acknowledged"] == "1" : self.new_hosts_acknowledged.append(n["host"])
-                     
+                    if n["in_downtime"] == "1": 
+                        self.new_hosts_in_maintenance.append(n["host"])
+                    if n["acknowledged"] == "1":
+                        self.new_hosts_acknowledged.append(n["host"])
+
                     # what works in cgi-Nagios via cgi request has to be filtered out here "manually"
                     if not (str(self.conf.filter_acknowledged_hosts_services) == "True" and \
                        n["acknowledged"] == "1") and \
@@ -354,6 +362,9 @@ class CentreonServer(GenericServer):
                             self.new_hosts[new_host].duration = n["duration"]
                             self.new_hosts[new_host].attempt = n["attempt"]
                             self.new_hosts[new_host].status_information= n["status_information"]
+                            self.new_hosts[new_host].acknowledged = bool(n["acknowledged"])
+                            self.new_hosts[new_host].scheduled_downtime = n["in_downtime"]
+                            self.new_hosts[new_host].notifications_disabled = not bool(n["notification_enabled"])
                 except:
                     # set checking flag back to False
                     self.isChecking = False
@@ -371,10 +382,13 @@ class CentreonServer(GenericServer):
 
         # services
         try:
-            result = self.FetchURL(nagcgiurl_services, giveback="raw")
-            raw, error = result.result, result.error
+            ###result = self.FetchURL(nagcgiurl_services, giveback="raw")
+            result = self.FetchURL(nagcgiurl_services, giveback="xml")            
+            ###raw, error = result.result, result.error
+            xmlobj, error = result.result, result.error
             if error != "": return Result(result=raw, error=error)
-            xmlobj = list()
+            ###xmlobj = list()
+            """
             # cut off <xml blabla>
             try:
                 xmlraw = ElementTree.fromstring(raw.split("\n")[1])
@@ -384,26 +398,37 @@ class CentreonServer(GenericServer):
                 # in case we got nothing back
                 xmlraw = ""                
                 self.Error(sys.exc_info())
+            """
             
             # in case there are no children session id is invalid
-            if xmlraw == "<response>bad session id</response>": 
+            if xmlobj == "<response>bad session id</response>": 
                 # debug
                 if str(self.conf.debug_mode) == "True": 
                     self.Debug(server=self.get_name(), debug="Bad session ID, retrieving new one...")                                
                 # try again...
                 self.SID = self._get_sid().result
-                result = self.FetchURL(nagcgiurl_services, giveback="raw")  
-                raw, error = result.result, result.error                
-                if error != "": return Result(result=raw, error=error)
+                #result = self.FetchURL(nagcgiurl_services, giveback="raw")  
+                result = self.FetchURL(nagcgiurl_services, giveback="xml")                
+                xmlobj, error = result.result, result.error                
+                if error != "": return Result(result=xmlobj, error=error)
                 # cut off <xml blabla>
-                xmlraw = ElementTree.fromstring(raw.split("\n")[1])
-                xmlobj = Actions.ObjectifyXML(xmlraw)
-                del raw, xmlraw, error
-            else:
-                del xmlraw                
+                ###xmlraw = ElementTree.fromstring(raw.split("\n")[1])
+                ###xmlobj = Actions.ObjectifyXML(xmlraw)
+                ###del raw, xmlraw, error
+            ###else:
+                ###del xmlraw                
 
-            for l in xmlobj:
+            for l in xmlobj.findAll("l"):
                 try:
+                    
+                    
+                    print "****************************"
+                    
+                    print l.contents
+                    
+                    print "****************************"
+                    
+                    
                     n = {}
                     # host
                     # the resulting table of Nagios status.cgi table omits the
@@ -464,6 +489,9 @@ class CentreonServer(GenericServer):
                             self.new_hosts[n["host"]].services[new_service].duration = n["duration"]
                             self.new_hosts[n["host"]].services[new_service].attempt = n["attempt"]
                             self.new_hosts[n["host"]].services[new_service].status_information = n["status_information"]
+                            self.new_hosts[n["host"]].services[new_service].acknowledged = bool(n["acknowledged"])
+                            self.new_hosts[n["host"]].services[new_service].scheduled_downtime = n["in_downtime"]
+                            self.new_hosts[n["host"]].services[new_service].notifications_disabled = not bool(n["notification_enabled"])
                 except:
                     # set checking flag back to False
                     self.isChecking = False
