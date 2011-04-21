@@ -124,16 +124,19 @@ class Config(object):
         # try to use a given config file - there must be one given
         # if sys.argv is larger than 1
         if len(sys.argv) > 1:
-            # allow to give a config file
-            self.configfile = sys.argv[1]
+            if sys.argv[1].find("-psn") != -1:
+                self.configfile = os.path.expanduser('~') + os.sep + ".nagstamon.conf"
+            else:
+                # allow to give a config file
+                self.configfile = sys.argv[1]
         # otherwise if there exits a configfile in current working directory it should be used
-        elif os.path.exists(os.getcwd() + "/nagstamon.conf"):
-            self.configfile = os.getcwd() + "/nagstamon.conf"
+        elif os.path.exists(os.getcwd() + os.sep + "nagstamon.conf"):
+            self.configfile = os.getcwd() + os.sep + "nagstamon.conf"
         else:
             # ~/.nagstamon.conf is the user conf file
             # os.path.expanduser('~') finds out the user HOME dir where 
             # nagstamon expects its conf file to be
-            self.configfile = os.path.expanduser('~') + "/.nagstamon.conf"
+            self.configfile = os.path.expanduser('~') + os.sep + ".nagstamon.conf"
 
         # make path fit for actual os, normcase for letters and normpath for path
         self.configfile = os.path.normpath(os.path.normcase(self.configfile))
