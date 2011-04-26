@@ -269,11 +269,8 @@ class GenericServer(object):
         directly from web interface
         """
         try:
-            result = self.FetchURL(self.nagios_cgi_url + "/cmd.cgi?" + urllib.urlencode({"cmd_typ":"55", "host":host}), giveback="soup")
+            result = self.FetchURL(self.nagios_cgi_url + "/cmd.cgi?" + urllib.urlencode({"cmd_typ":"55", "host":host}))
             html = result.result
-            print html.find(attrs={"name":"start_time"}).attrMap["value"]
-            #start_time = html.split("NAME='start_time' VALUE='")[1].split("'></b></td></tr>")[0]
-            #end_time = html.split("NAME='end_time' VALUE='")[1].split("'></b></td></tr>")[0]
             start_time = html.find(attrs={"name":"start_time"}).attrMap["value"]
             end_time = html.find(attrs={"name":"end_time"}).attrMap["value"]            
             # give values back as tuple
@@ -331,21 +328,26 @@ class GenericServer(object):
         # http://www.nagios-wiki.de/nagios/tips/host-_und_serviceproperties_fuer_status.cgi?s=servicestatustypes
         # hoststatus
         hoststatustypes = 12
+        """
         if str(self.conf.filter_all_down_hosts) == "True":
             hoststatustypes = hoststatustypes - 4
         if str(self.conf.filter_all_unreachable_hosts) == "True":
             hoststatustypes = hoststatustypes - 8
+        """    
         # servicestatus
         servicestatustypes = 253
+        """
         if str(self.conf.filter_all_unknown_services) == "True":
             servicestatustypes = servicestatustypes - 8
         if str(self.conf.filter_all_warning_services) == "True":
             servicestatustypes = servicestatustypes - 4
         if str(self.conf.filter_all_critical_services) == "True":
             servicestatustypes = servicestatustypes - 16
+        """    
         # serviceprops & hostprops both have the same values for the same states so I
         # group them together
         hostserviceprops = 0
+        """
         if str(self.conf.filter_acknowledged_hosts_services) == "True":
             hostserviceprops = hostserviceprops + 8
         if str(self.conf.filter_hosts_services_disabled_notifications) == "True":
@@ -354,7 +356,7 @@ class GenericServer(object):
             hostserviceprops = hostserviceprops + 32
         if str(self.conf.filter_hosts_services_maintenance) == "True":
             hostserviceprops = hostserviceprops + 2
-        
+        """
         # services (unknown, warning or critical?)
         nagcgiurl_services = self.nagios_cgi_url + "/status.cgi?host=all&servicestatustypes=" + str(servicestatustypes) + "&serviceprops=" + str(hostserviceprops)
         # hosts (up or down or unreachable)
@@ -363,10 +365,10 @@ class GenericServer(object):
         # properties get added and nagios display ONLY hosts that have BOTH states
         # hosts that are in scheduled downtime, we will later omit services on those hosts
         # hostproperty 1 = HOST_SCHEDULED_DOWNTIME 
-        nagcgiurl_hosts_in_maintenance = self.nagios_cgi_url + "/status.cgi?hostgroup=all&style=hostdetail&hostprops=1"
+        ###nagcgiurl_hosts_in_maintenance = self.nagios_cgi_url + "/status.cgi?hostgroup=all&style=hostdetail&hostprops=1"
         # hosts that are acknowledged, we will later omit services on those hosts
         # hostproperty 4 = HOST_STATE_ACKNOWLEDGED 
-        nagcgiurl_hosts_acknowledged = self.nagios_cgi_url + "/status.cgi?hostgroup=all&style=hostdetail&hostprops=4"
+        ###nagcgiurl_hosts_acknowledged = self.nagios_cgi_url + "/status.cgi?hostgroup=all&style=hostdetail&hostprops=4"
 
         # hosts - mostly the down ones
         # unfortunately the hosts status page has a different structure so
@@ -425,6 +427,7 @@ class GenericServer(object):
                         n["passiveonly"] = False
                         n["notifications_disabled"] = False
                         n["flapping"] = False
+                        n["acknowledged"] = False
                         n["scheduled_downtime"] = False
                         
                         # map status icons to status flags                       
@@ -432,7 +435,7 @@ class GenericServer(object):
                         for i in icons:
                             icon = i["src"].split("/")[-1]
                             if icon in self.STATUS_MAPPING:
-                                n[icon] = True
+                                n[self.STATUS_MAPPING[icon]] = True
                         
                         # cleaning
                         del icons                            
@@ -453,6 +456,7 @@ class GenericServer(object):
                             self.new_hosts[new_host].passiveonly = n["passiveonly"]
                             self.new_hosts[new_host].notifications_disabled = n["notifications_disabled"]
                             self.new_hosts[new_host].flapping = n["flapping"]
+                            self.new_hosts[new_host].acknowledged = n["acknowledged"]
                             self.new_hosts[new_host].scheduled_downtime = n["scheduled_downtime"]
                 except:
                     self.Error(sys.exc_info())
@@ -512,6 +516,7 @@ class GenericServer(object):
                         n["passiveonly"] = False
                         n["notifications_disabled"] = False
                         n["flapping"] = False
+                        n["acknowledged"] = False
                         n["scheduled_downtime"] = False
                         
                         # map status icons to status flags
@@ -519,7 +524,7 @@ class GenericServer(object):
                         for i in icons:
                             icon = i["src"].split("/")[-1]
                             if icon in self.STATUS_MAPPING:
-                                n[icon] = True
+                                n[self.STATUS_MAPPING[icon]] = True
                         
                         # cleaning
                         del icons
@@ -546,6 +551,7 @@ class GenericServer(object):
                             self.new_hosts[n["host"]].services[new_service].passiveonly = n["passiveonly"]
                             self.new_hosts[n["host"]].services[new_service].notifications_disabled = n["notifications_disabled"]
                             self.new_hosts[n["host"]].services[new_service].flapping = n["flapping"]
+                            self.new_hosts[n["host"]].services[new_service].acknowledged = n["acknowledged"]
                             self.new_hosts[n["host"]].services[new_service].scheduled_downtime = n["scheduled_downtime"]
                 except:
                     self.Error(sys.exc_info())
@@ -616,6 +622,7 @@ class GenericServer(object):
         self.warnings = 0
 
         for host in self.new_hosts.values():
+            """
             # filtering out hosts, sorting by severity
             if host.status == "DOWN" and HostIsFilteredOutByRE(host.name, self.conf) == False\
             and (not (host.name in self.new_hosts_in_maintenance and \
@@ -660,6 +667,138 @@ class GenericServer(object):
                     if service.status == "UNKNOWN" and str(self.conf.filter_all_unknown_services) == "False": 
                         self.nagitems_filtered["services"]["UNKNOWN"].append(service)
                         self.unknowns += 1
+                        
+            """
+            # Don't enter the loop if we don't have a problem. Jump down to your problem services
+            if not host.status == "UP":
+                # Some generic filters
+                if host.acknowledged == True and str(self.conf.filter_acknowledged_hosts_services) == "True":
+                    if str(self.conf.debug_mode) == "True":
+                        self.Debug(server=self.get_name(), debug="Filter: ACKNOWLEDGED " + str(host.name))
+                    host.visible = False
+    
+                if host.notifications_disabled == True and str(self.conf.filter_hosts_services_disabled_notifications) == "True":
+                    if str(self.conf.debug_mode) == "True":
+                        self.Debug(server=self.get_name(), debug="Filter: NOTIFICATIONS " + str(host.name))
+                    host.visible = False
+    
+                if host.passiveonly == True and str(self.conf.filter_hosts_services_disabled_checks) == "True":
+                    if str(self.conf.debug_mode) == "True":
+                        self.Debug(server=self.get_name(), debug="Filter: PASSIVEONLY " + str(host.name))
+                    host.visible = False
+    
+                if host.scheduled_downtime == True and str(self.conf.filter_hosts_services_maintenance) == "True":
+                    if str(self.conf.debug_mode) == "True":
+                        self.Debug(server=self.get_name(), debug="Filter: DOWNTIME " + str(host.name))
+                    host.visible = False
+    
+                if HostIsFilteredOutByRE(host.name, self.conf) == True:
+                    if str(self.conf.debug_mode) == "True":
+                        self.Debug(server=self.get_name(), debug="Filter: REGEXP " + str(host.name))
+                    host.visible = False
+    
+                # Finegrain for the specific State
+                if host.status == "DOWN":
+                    if str(self.conf.filter_all_down_hosts) == "True":
+                        if str(self.conf.debug_mode) == "True":
+                            self.Debug(server=self.get_name(), debug="Filter: DOWN " + str(host.name))
+                        host.visible = False
+    
+                    if host.visible:
+                        self.nagitems_filtered["hosts"]["DOWN"].append(host)
+                        self.downs += 1
+    
+                if host.status == "UNREACHABLE":
+                    if str(self.conf.filter_all_unreachable_hosts) == "True":
+                        if str(self.conf.debug_mode) == "True":
+                            self.Debug(server=self.get_name(), debug="Filter: UNREACHABLE " + str(host.name))
+                        host.visible = False
+    
+                    if host.visible:
+                        self.nagitems_filtered["hosts"]["UNREACHABLE"].append(host)
+                        self.unreachables += 1
+    
+            for service in host.services.values():
+                # Some generic filtering
+                if service.acknowledged == True and str(self.conf.filter_acknowledged_hosts_services) == "True":
+                    if str(self.conf.debug_mode) == "True":
+                        self.Debug(server=self.get_name(), debug="Filter: ACKNOWLEDGED " + str(host.name) + ";" + str(service.name))
+                    service.visible = False
+    
+                if service.notifications_disabled == True and str(self.conf.filter_hosts_services_disabled_notifications) == "True":
+                    if str(self.conf.debug_mode) == "True":
+                        self.Debug(server=self.get_name(), debug="Filter: NOTIFICATIONS " + str(host.name) + ";" + str(service.name))
+                    service.visible = False
+    
+                if service.passiveonly == True and str(self.conf.filter_hosts_services_disabled_checks) == "True":
+                    if str(self.conf.debug_mode) == "True":
+                        self.Debug(server=self.get_name(), debug="Filter: PASSIVEONLY " + str(host.name) + ";" + str(service.name))
+                    service.visible = False
+    
+                if service.scheduled_downtime == True and str(self.conf.filter_hosts_services_maintenance) == "True":
+                    if str(self.conf.debug_mode) == "True":
+                        self.Debug(server=self.get_name(), debug="Filter: DONWTIME " + str(host.name) + ";" + str(service.name))
+                    service.visible = False
+    
+                if host.scheduled_downtime == True and str(self.conf.filter_services_on_hosts_in_maintenance) == "True":
+                    if str(self.conf.debug_mode) == "True":
+                        self.Debug(server=self.get_name(), debug="Filter: Service on Host in DONWTIME " + str(host.name) + ";" + str(service.name))
+                    service.visible = False
+    
+                if host.status == "DOWN" and str(self.conf.filter_services_on_down_hosts) == "True":
+                    if str(self.conf.debug_mode) == "True":
+                        self.Debug(server=self.get_name(), debug="Filter: Service on Host in DONW " + str(host.name) + ";" + str(service.name))
+                    service.visible = False
+    
+                if host.status == "UNREACHABLE" and str(self.conf.filter_services_on_unreachable_hosts) == "True":
+                    if str(self.conf.debug_mode) == "True":
+                        self.Debug(server=self.get_name(), debug="Filter: Service on Host in UNREACHABLE " + str(host.name) + ";" + str(service.name))
+                    service.visible = False
+    
+                real_attempt, max_attempt = service.attempt.split("/")
+                if real_attempt <> max_attempt and str(self.conf.filter_services_in_soft_state) == "True":
+                    if str(self.conf.debug_mode) == "True":
+                        self.Debug(server=self.get_name(), debug="Filter: SOFT STATE " + str(host.name) + ";" + str(service.name))
+                    service.visible = False
+    
+                if HostIsFilteredOutByRE(host.name, self.conf) == True:
+                    if str(self.conf.debug_mode) == "True":
+                        self.Debug(server=self.get_name(), debug="Filter: REGEXP " + str(host.name) + ";" + str(service.name))
+                    service.visible = False
+    
+                if ServiceIsFilteredOutByRE(service.get_name(), self.conf) == True:
+                    if str(self.conf.debug_mode) == "True":
+                        self.Debug(server=self.get_name(), debug="Filter: REGEXP " + str(host.name) + ";" + str(service.name))
+                    service.visible = False
+    
+                # Finegrain for the specific state
+                if service.visible:
+                    if service.status == "CRITICAL":
+                        if str(self.conf.filter_all_critical_services) == "True":
+                            if str(self.conf.debug_mode) == "True":
+                                self.Debug(server=self.get_name(), debug="Filter: CRITICAL " + str(host.name) + ";" + str(service.name))
+                            service.visible = False
+                        else:
+                            self.nagitems_filtered["services"]["CRITICAL"].append(service)
+                            self.criticals += 1
+    
+                    if service.status == "WARNING":
+                        if str(self.conf.filter_all_warning_services) == "True":
+                            if str(self.conf.debug_mode) == "True":
+                                self.Debug(server=self.get_name(), debug="Filter: WARNING " + str(host.name) + ";" + str(service.name))
+                            service.visible = False
+                        else:
+                            self.nagitems_filtered["services"]["WARNING"].append(service)
+                            self.warnings += 1
+    
+                    if service.status == "UNKNOWN":
+                        if str(self.conf.filter_all_unknown_services) == "True":
+                            if str(self.conf.debug_mode) == "True":
+                                self.Debug(server=self.get_name(), debug="Filter: UNKNOWN " + str(host.name) + ";" + str(service.name))
+                            service.visible = False
+                        else:
+                            self.nagitems_filtered["services"]["UNKNOWN"].append(service)
+                            self.unknowns += 1
 
         # find out if there has been some status change to notify user
         # compare sorted lists of filtered nagios items

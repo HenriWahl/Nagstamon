@@ -125,7 +125,8 @@ class GenericObject(object):
         self.acknowledged = False
         self.notifications_disabled = False
         self.flapping = False
-        self.scheduled_downtime = False    
+        self.scheduled_downtime = False
+        self.visible = True
     
 
     def is_passive_only(self):
@@ -145,8 +146,12 @@ class GenericObject(object):
     
     
     def is_in_scheduled_downtime(self):
-        return bool(self.scheduled_downtime)      
+        return bool(self.scheduled_downtime)     
     
+    
+    def is_visible(self):
+        return bool(self.visible)  
+            
     
     def get_name(self):
         """
