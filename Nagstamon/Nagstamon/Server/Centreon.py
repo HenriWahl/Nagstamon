@@ -285,7 +285,7 @@ class CentreonServer(GenericServer):
                 self.SID = self._get_sid().result
                 result = self.FetchURL(nagcgiurl_hosts, giveback="xml")
                 xmlobj, error = result.result, result.error
-                if error != "": return Result(result=xmlobj, error=error)
+                if error != "": return Result(result=xmlobj, error=error)   
                 
             for l in xmlobj.findAll("l"):
                 try:                       
@@ -309,14 +309,16 @@ class CentreonServer(GenericServer):
                     # host check enabled or not, has to be filtered
                     n["check_enabled"] = str(l.ace.text)
                     # host down for maintenance or not, has to be filtered
-                    n["in_downtime"] = str(l.hdtm.text)
-                                       
+                    n["scheduled_downtime"] = str(l.hdtm.text)
+                    
+                    """
                     # store information about acknowledged and down hosts for further reference
-                    if n["in_downtime"] == "1": 
+                    if n["scheduled_downtime"] == "1": 
                         self.new_hosts_in_maintenance.append(n["host"])
                     if n["acknowledged"] == "1":
                         self.new_hosts_acknowledged.append(n["host"])
-
+                   """
+                    """
                     # what works in cgi-Nagios via cgi request has to be filtered out here "manually"
                     if not (str(self.conf.filter_acknowledged_hosts_services) == "True" and \
                        n["acknowledged"] == "1") and \
@@ -325,25 +327,26 @@ class CentreonServer(GenericServer):
                        not (str(self.conf.filter_hosts_services_disabled_checks) == "True" and \
                        n["check_enabled"] == "0") and \
                        not (str(self.conf.filter_hosts_services_maintenance) == "True" and \
-                       n["in_downtime"] == "1") and\
+                       n["scheduled_downtime"] == "1") and\
                        not (str(self.conf.filter_all_down_hosts) == "True" and n["status"] == "DOWN") and\
                        not (str(self.conf.filter_all_unreachable_hosts) == "True" and n["status"] == "UNREACHABLE"):
-                        # add dictionary full of information about this host item to nagitems
-                        nagitems["hosts"].append(n)
-                        # after collection data in nagitems create objects from its informations
-                        # host objects contain service objects
-                        if not self.new_hosts.has_key(n["host"]):
-                            new_host = n["host"]
-                            self.new_hosts[new_host] = GenericHost()
-                            self.new_hosts[new_host].name = n["host"]
-                            self.new_hosts[new_host].status = n["status"]
-                            self.new_hosts[new_host].last_check = n["last_check"]
-                            self.new_hosts[new_host].duration = n["duration"]
-                            self.new_hosts[new_host].attempt = n["attempt"]
-                            self.new_hosts[new_host].status_information= n["status_information"]
-                            self.new_hosts[new_host].acknowledged = bool(n["acknowledged"])
-                            self.new_hosts[new_host].scheduled_downtime = n["in_downtime"]
-                            self.new_hosts[new_host].notifications_disabled = not bool(n["notification_enabled"])
+                    """
+                    # add dictionary full of information about this host item to nagitems
+                    nagitems["hosts"].append(n)
+                    # after collection data in nagitems create objects from its informations
+                    # host objects contain service objects
+                    if not self.new_hosts.has_key(n["host"]):
+                        new_host = n["host"]
+                        self.new_hosts[new_host] = GenericHost()
+                        self.new_hosts[new_host].name = n["host"]
+                        self.new_hosts[new_host].status = n["status"]
+                        self.new_hosts[new_host].last_check = n["last_check"]
+                        self.new_hosts[new_host].duration = n["duration"]
+                        self.new_hosts[new_host].attempt = n["attempt"]
+                        self.new_hosts[new_host].status_information= n["status_information"]
+                        self.new_hosts[new_host].acknowledged = bool(int(n["acknowledged"]))
+                        self.new_hosts[new_host].scheduled_downtime = bool(int(n["scheduled_downtime"]))
+                        self.new_hosts[new_host].notifications_disabled = not bool(int(n["notification_enabled"]))
                 except:
                     # set checking flag back to False
                     self.isChecking = False
@@ -405,8 +408,9 @@ class CentreonServer(GenericServer):
                     # service check enabled or not, has to be filtered
                     n["check_enabled"] = str(l.ac.text)
                     # service down for maintenance or not, has to be filtered
-                    n["in_downtime"] = str(l.dtm.text)
-
+                    n["scheduled_downtime"] = str(l.dtm.text)
+                    
+                    """
                     # what works in cgi-Nagios via cgi request has to be filtered out here "manually"
                     if not (str(self.conf.filter_acknowledged_hosts_services) == "True" and \
                        n["acknowledged"] == "1") and \
@@ -415,33 +419,34 @@ class CentreonServer(GenericServer):
                        not (str(self.conf.filter_hosts_services_disabled_checks) == "True" and \
                        n["check_enabled"] == "0") and \
                        not (str(self.conf.filter_hosts_services_maintenance) == "True" and \
-                       n["in_downtime"] == "1") and\
+                       n["scheduled_downtime"] == "1") and\
                        not (str(self.conf.filter_all_unknown_services) == "True" and n["status"] == "UNKNOWN") and\
                        not (str(self.conf.filter_all_warning_services) == "True" and n["status"] == "WARNING") and\
                        not (str(self.conf.filter_all_critical_services) == "True" and n["status"] == "CRITICAL"): 
-                        # add dictionary full of information about this service item to nagitems - only if service
-                        nagitems["services"].append(n)
-                        
-                        # after collection data in nagitems create objects of its informations
-                        # host objects contain service objects
-                        if not self.new_hosts.has_key(n["host"]):
-                            self.new_hosts[n["host"]] = GenericHost()
-                            self.new_hosts[n["host"]].name = n["host"]
-                            self.new_hosts[n["host"]].status = "UP"
-                        # if a service does not exist create its object
-                        if not self.new_hosts[n["host"]].services.has_key(n["service"]):
-                            new_service = n["service"]
-                            self.new_hosts[n["host"]].services[new_service] = GenericService()
-                            self.new_hosts[n["host"]].services[new_service].host = n["host"]
-                            self.new_hosts[n["host"]].services[new_service].name = n["service"]
-                            self.new_hosts[n["host"]].services[new_service].status = n["status"]
-                            self.new_hosts[n["host"]].services[new_service].last_check = n["last_check"]
-                            self.new_hosts[n["host"]].services[new_service].duration = n["duration"]
-                            self.new_hosts[n["host"]].services[new_service].attempt = n["attempt"]
-                            self.new_hosts[n["host"]].services[new_service].status_information = n["status_information"]
-                            self.new_hosts[n["host"]].services[new_service].acknowledged = bool(n["acknowledged"])
-                            self.new_hosts[n["host"]].services[new_service].scheduled_downtime = n["in_downtime"]
-                            self.new_hosts[n["host"]].services[new_service].notifications_disabled = not bool(n["notification_enabled"])
+                    """
+                    # add dictionary full of information about this service item to nagitems - only if service
+                    nagitems["services"].append(n)
+                    
+                    # after collection data in nagitems create objects of its informations
+                    # host objects contain service objects
+                    if not self.new_hosts.has_key(n["host"]):
+                        self.new_hosts[n["host"]] = GenericHost()
+                        self.new_hosts[n["host"]].name = n["host"]
+                        self.new_hosts[n["host"]].status = "UP"
+                    # if a service does not exist create its object
+                    if not self.new_hosts[n["host"]].services.has_key(n["service"]):
+                        new_service = n["service"]
+                        self.new_hosts[n["host"]].services[new_service] = GenericService()
+                        self.new_hosts[n["host"]].services[new_service].host = n["host"]
+                        self.new_hosts[n["host"]].services[new_service].name = n["service"]
+                        self.new_hosts[n["host"]].services[new_service].status = n["status"]
+                        self.new_hosts[n["host"]].services[new_service].last_check = n["last_check"]
+                        self.new_hosts[n["host"]].services[new_service].duration = n["duration"]
+                        self.new_hosts[n["host"]].services[new_service].attempt = n["attempt"]
+                        self.new_hosts[n["host"]].services[new_service].status_information = n["status_information"]
+                        self.new_hosts[n["host"]].services[new_service].acknowledged = bool(int(n["acknowledged"]))
+                        self.new_hosts[n["host"]].services[new_service].scheduled_downtime = bool(int(n["scheduled_downtime"]))
+                        self.new_hosts[n["host"]].services[new_service].notifications_disabled = not bool(int(n["notification_enabled"]))
                 except:
                     # set checking flag back to False
                     self.isChecking = False

@@ -566,7 +566,7 @@ class GenericServer(object):
             return Result(result=result, error=error) 
         
         ### the following is just for checking if .property flags work - will vanish soon
-                
+        """        
         # hosts which are in scheduled downtime
         for host in self.new_hosts.values():
             if host.is_in_scheduled_downtime():
@@ -575,9 +575,9 @@ class GenericServer(object):
         # hosts which are acknowledged       
         for host in self.new_hosts.values():
             if host.is_acknowledged():
-                self.new_hosts_acknowledged.append(host.name)            
-    
-                
+                self.new_hosts_acknowledged.append(host.name)                
+        """
+        
         # some cleanup
         del nagitems
         
@@ -604,7 +604,7 @@ class GenericServer(object):
 
         # some filtering is already done by the server specific _get_status()
         status = self._get_status()
-        self.status, self.status_description = status.result, status.error
+        self.status, self.status_description = status.result, status.error     
 
         if status.error != "":
             self.isChecking = False
@@ -622,6 +622,10 @@ class GenericServer(object):
         self.warnings = 0
 
         for host in self.new_hosts.values():
+            
+            
+            print host.name, host.status
+            
             """
             # filtering out hosts, sorting by severity
             if host.status == "DOWN" and HostIsFilteredOutByRE(host.name, self.conf) == False\
@@ -719,6 +723,10 @@ class GenericServer(object):
                         self.unreachables += 1
     
             for service in host.services.values():
+                
+
+                print service.host, service.name, service.status, service.acknowledged
+                
                 # Some generic filtering
                 if service.acknowledged == True and str(self.conf.filter_acknowledged_hosts_services) == "True":
                     if str(self.conf.debug_mode) == "True":
@@ -737,7 +745,7 @@ class GenericServer(object):
     
                 if service.scheduled_downtime == True and str(self.conf.filter_hosts_services_maintenance) == "True":
                     if str(self.conf.debug_mode) == "True":
-                        self.Debug(server=self.get_name(), debug="Filter: DONWTIME " + str(host.name) + ";" + str(service.name))
+                        self.Debug(server=self.get_name(), debug="Filter: DOWNTIME " + str(host.name) + ";" + str(service.name))
                     service.visible = False
     
                 if host.scheduled_downtime == True and str(self.conf.filter_services_on_hosts_in_maintenance) == "True":
