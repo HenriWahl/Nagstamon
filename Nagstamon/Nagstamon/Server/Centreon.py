@@ -310,27 +310,6 @@ class CentreonServer(GenericServer):
                     n["check_enabled"] = str(l.ace.text)
                     # host down for maintenance or not, has to be filtered
                     n["scheduled_downtime"] = str(l.hdtm.text)
-                    
-                    """
-                    # store information about acknowledged and down hosts for further reference
-                    if n["scheduled_downtime"] == "1": 
-                        self.new_hosts_in_maintenance.append(n["host"])
-                    if n["acknowledged"] == "1":
-                        self.new_hosts_acknowledged.append(n["host"])
-                   """
-                    """
-                    # what works in cgi-Nagios via cgi request has to be filtered out here "manually"
-                    if not (str(self.conf.filter_acknowledged_hosts_services) == "True" and \
-                       n["acknowledged"] == "1") and \
-                       not (str(self.conf.filter_hosts_services_disabled_notifications) == "True" and \
-                       n["notification_enabled"] == "0") and \
-                       not (str(self.conf.filter_hosts_services_disabled_checks) == "True" and \
-                       n["check_enabled"] == "0") and \
-                       not (str(self.conf.filter_hosts_services_maintenance) == "True" and \
-                       n["scheduled_downtime"] == "1") and\
-                       not (str(self.conf.filter_all_down_hosts) == "True" and n["status"] == "DOWN") and\
-                       not (str(self.conf.filter_all_unreachable_hosts) == "True" and n["status"] == "UNREACHABLE"):
-                    """
                     # add dictionary full of information about this host item to nagitems
                     nagitems["hosts"].append(n)
                     # after collection data in nagitems create objects from its informations

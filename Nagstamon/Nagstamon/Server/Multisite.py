@@ -127,6 +127,8 @@ class MultisiteServer(GenericServer):
 
         # Create URLs for the configured filters
         url_params = ''
+        
+        """
         if str(self.conf.filter_all_down_hosts) == "True":
             url_params += '&hst1=0'
         if str(self.conf.filter_all_unreachable_hosts) == "True":
@@ -138,7 +140,7 @@ class MultisiteServer(GenericServer):
             url_params += '&st2=0'
         if str(self.conf.filter_all_warning_services) == "True":
             url_params += '&st1=0'
-
+        
         # Hide all acked hosts/services
         if str(self.conf.filter_acknowledged_hosts_services) == "True":
             url_params += '&is_host_acknowledged=0&is_service_acknowledged=0'
@@ -151,7 +153,14 @@ class MultisiteServer(GenericServer):
         # Hide all hosts/services in downtime
         if str(self.conf.filter_hosts_services_maintenance) == "True":
             url_params += '&host_scheduled_downtime_depth=0&is_in_downtime=0'
+        """     
 
+        url_params += '&is_host_acknowledged=-1&is_service_acknowledged=-1'
+        url_params += '&is_host_notifications_enabled=-1&is_service_notifications_enabled=-1'
+        url_params += '&is_host_active_checks_enabled=-1&is_service_active_checks_enabled=-1'
+        url_params += '&host_scheduled_downtime_depth=-1&is_in_downtime=-1'
+
+        
         try:
             response = []
             try:
@@ -162,6 +171,9 @@ class MultisiteServer(GenericServer):
 
             for row in response[1:]:
                 host= dict(zip(response[0], row))
+                
+                print host
+                
                 n = {
                     'host':               host['host'],
                     'status':             self.statemap.get(host['host_state'], host['host_state']),
@@ -172,12 +184,6 @@ class MultisiteServer(GenericServer):
                     'site':               host['sitename_plain'],
                     'address':            host['host_address'],
                 }
-
-                if host['host_in_downtime'] == 'yes':
-                    self.new_hosts_in_maintenance.append(host['host'])
-
-                if host['host_acknowledged'] == 'yes':
-                    self.new_hosts_acknowledged.append(host['host'])
 
                 # add dictionary full of information about this host item to nagitems
                 nagitems["hosts"].append(n)
@@ -194,7 +200,11 @@ class MultisiteServer(GenericServer):
                     self.new_hosts[new_host].status_information= n["status_information"]
                     self.new_hosts[new_host].site    = n["site"]
                     self.new_hosts[new_host].address = n["address"]
-
+                    if host['host_in_downtime'] == 'yes':
+                        self.new_hosts[new_host].scheduled_downtime = True
+                    if host['host_acknowledged'] == 'yes':
+                        self.new_hosts[new_host].acknowledged = True
+                        
         except:
             self.isChecking = False
             result, error = self.Error(sys.exc_info())
@@ -216,10 +226,12 @@ class MultisiteServer(GenericServer):
                     return e.result
                 else:
                     response = e.result.content
-                    ret = e.result
-
+                    ret = e.result   
+                    
             for row in response[1:]:
                 service = dict(zip(response[0], row))
+                
+                print service
 
                 n = {
                     'host':               service['host'],
@@ -231,7 +243,7 @@ class MultisiteServer(GenericServer):
                     'status_information': service['svc_plugin_output'],
                     # Check_MK passive services can be re-scheduled by using the Check_MK service
                     'passiveonly':        service['svc_is_active'] == 'no' and not service['svc_check_command'].startswith('check_mk'),
-                    'notifications':      service['svc_flapping'] == 'yes',
+                    'notifications':      service['svc_notifications_enabled'] == 'yes',
                     'flapping':           service['svc_flapping'] == 'yes',
                     'site':               service['sitename_plain'],
                     'address':            service['host_address'],
@@ -260,6 +272,7 @@ class MultisiteServer(GenericServer):
                     self.new_hosts[n["host"]].services[new_service].attempt = n["attempt"]
                     self.new_hosts[n["host"]].services[new_service].status_information = n["status_information"]
                     self.new_hosts[n["host"]].services[new_service].passiveonly = n["passiveonly"]
+                    self.new_hosts[n["host"]].services[new_service].flapping = n["flapping"]                    
                     self.new_hosts[n["host"]].services[new_service].site = n["site"]
                     self.new_hosts[n["host"]].services[new_service].address = n["address"]
                     self.new_hosts[n["host"]].services[new_service].command = n["command"]

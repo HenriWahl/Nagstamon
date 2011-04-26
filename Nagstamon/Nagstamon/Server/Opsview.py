@@ -89,23 +89,14 @@ class OpsviewServer(GenericServer):
                 self.new_hosts[hostdict["name"]].status_information = str(hostdict["output"].replace("\n", " "))
                 # if host is in downtime add it to known maintained hosts
                 if hostdict["downtime"] == "2":
-                    ###self.new_hosts_in_maintenance.append(str(hostdict["name"]))
                     self.new_hosts[hostdict["name"]].scheduled_downtime = True
                 if hostdict.has_key("acknowledged"):
-                    ###self.new_hosts_acknowledged.append(str(hostdict["name"]))
                     self.new_hosts[hostdict["name"]].acknowledged = True
 
                 #services
                 #for service in host.getchildren()[:-1]:
                 for service in host.findAll("services"):   
                     servicedict = dict(service._getAttrMap())
-                    """
-                    # to get this filters to work they must be applied here - similar to Nagios servers
-                    if not (str(self.conf.filter_hosts_services_maintenance) == "True" \
-                    and servicedict["downtime"] == "2") \
-                    and not (str(self.conf.filter_acknowledged_hosts_services) == "True" \
-                    and servicedict.has_key("acknowledged")):
-                    """
                     self.new_hosts[hostdict["name"]].services[servicedict["name"]] = GenericService()
                     self.new_hosts[hostdict["name"]].services[servicedict["name"]].host = str(hostdict["name"])
                     self.new_hosts[hostdict["name"]].services[servicedict["name"]].name = str(servicedict["name"])

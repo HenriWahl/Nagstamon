@@ -66,11 +66,7 @@ class GenericServer(object):
         self.proxy_username = ""
         self.proxy_password = ""        
         self.hosts = dict()
-        self.hosts_in_maintenance = list()
-        self.hosts_acknowledged = list()
         self.new_hosts = dict()
-        self.new_hosts_in_maintenance = list()
-        self.new_hosts_acknowledged = list()
         self.thread = ""
         self.isChecking = False
         self.debug = False
@@ -361,14 +357,6 @@ class GenericServer(object):
         nagcgiurl_services = self.nagios_cgi_url + "/status.cgi?host=all&servicestatustypes=" + str(servicestatustypes) + "&serviceprops=" + str(hostserviceprops)
         # hosts (up or down or unreachable)
         nagcgiurl_hosts = self.nagios_cgi_url + "/status.cgi?hostgroup=all&style=hostdetail&hoststatustypes=" + str(hoststatustypes) + "&hostprops=" + str(hostserviceprops)
-        # fetching hosts in downtime and acknowledged hosts at once is not possible because these 
-        # properties get added and nagios display ONLY hosts that have BOTH states
-        # hosts that are in scheduled downtime, we will later omit services on those hosts
-        # hostproperty 1 = HOST_SCHEDULED_DOWNTIME 
-        ###nagcgiurl_hosts_in_maintenance = self.nagios_cgi_url + "/status.cgi?hostgroup=all&style=hostdetail&hostprops=1"
-        # hosts that are acknowledged, we will later omit services on those hosts
-        # hostproperty 4 = HOST_STATE_ACKNOWLEDGED 
-        ###nagcgiurl_hosts_acknowledged = self.nagios_cgi_url + "/status.cgi?hostgroup=all&style=hostdetail&hostprops=4"
 
         # hosts - mostly the down ones
         # unfortunately the hosts status page has a different structure so
@@ -564,20 +552,7 @@ class GenericServer(object):
             self.isChecking = False
             result, error = self.Error(sys.exc_info())
             return Result(result=result, error=error) 
-        
-        ### the following is just for checking if .property flags work - will vanish soon
-        """        
-        # hosts which are in scheduled downtime
-        for host in self.new_hosts.values():
-            if host.is_in_scheduled_downtime():
-                self.new_hosts_in_maintenance.append(host.name)    
-                
-        # hosts which are acknowledged       
-        for host in self.new_hosts.values():
-            if host.is_acknowledged():
-                self.new_hosts_acknowledged.append(host.name)                
-        """
-        
+
         # some cleanup
         del nagitems
         
@@ -622,57 +597,6 @@ class GenericServer(object):
         self.warnings = 0
 
         for host in self.new_hosts.values():
-            
-            
-            print host.name, host.status
-            
-            """
-            # filtering out hosts, sorting by severity
-            if host.status == "DOWN" and HostIsFilteredOutByRE(host.name, self.conf) == False\
-            and (not (host.name in self.new_hosts_in_maintenance and \
-            str(self.conf.filter_hosts_services_maintenance) == "True") and \
-            not (host.name in self.new_hosts_acknowledged and \
-            str(self.conf.filter_acknowledged_hosts_services) == "True")) and \
-            str(self.conf.filter_all_down_hosts) == "False": 
-                self.nagitems_filtered["hosts"]["DOWN"].append(host)
-                self.downs += 1
-            if host.status == "UNREACHABLE" and HostIsFilteredOutByRE(host.name, self.conf) == False\
-            and (not host.name in self.new_hosts_acknowledged and not host.name in self.new_hosts_in_maintenance) and \
-            str(self.conf.filter_all_unreachable_hosts) == "False": 
-                self.nagitems_filtered["hosts"]["UNREACHABLE"].append(host)  
-                self.unreachables += 1
-
-            for service in host.services.values():
-                # check hard/soft state, find out number of attempts and max attempts for
-                # checking if soft state services should be shown
-                real_attempt, max_attempt = service.attempt.split("/")
-                # omit services on hosts in maintenance and acknowledged hosts
-                if (not (host.name in self.new_hosts_in_maintenance and \
-                str(self.conf.filter_hosts_services_maintenance) == "True") or \
-                not (host.name in self.new_hosts_acknowledged and \
-                str(self.conf.filter_acknowledged_hosts_services) == "True")) and \
-                not (host.name in self.new_hosts_in_maintenance and\
-                str(self.conf.filter_services_on_hosts_in_maintenance) == "True") and \
-                not (real_attempt <> max_attempt and \
-                str(self.conf.filter_services_in_soft_state) == "True") and \
-                not (host.status == "DOWN" and \
-                str(self.conf.filter_services_on_down_hosts) == "True") and \
-                not (host.status == "UNREACHABLE" and \
-                str(self.conf.filter_services_on_unreachable_hosts) == "True") and \
-                HostIsFilteredOutByRE(host.name, self.conf) == False and \
-                ServiceIsFilteredOutByRE(service.get_name(), self.conf) == False:
-                    # sort by severity
-                    if service.status == "CRITICAL" and str(self.conf.filter_all_critical_services) == "False": 
-                        self.nagitems_filtered["services"]["CRITICAL"].append(service)
-                        self.criticals += 1
-                    if service.status == "WARNING" and str(self.conf.filter_all_warning_services) == "False": 
-                        self.nagitems_filtered["services"]["WARNING"].append(service)
-                        self.warnings += 1
-                    if service.status == "UNKNOWN" and str(self.conf.filter_all_unknown_services) == "False": 
-                        self.nagitems_filtered["services"]["UNKNOWN"].append(service)
-                        self.unknowns += 1
-                        
-            """
             # Don't enter the loop if we don't have a problem. Jump down to your problem services
             if not host.status == "UP":
                 # Some generic filters
@@ -722,11 +646,7 @@ class GenericServer(object):
                         self.nagitems_filtered["hosts"]["UNREACHABLE"].append(host)
                         self.unreachables += 1
     
-            for service in host.services.values():
-                
-
-                print service.host, service.name, service.status, service.acknowledged
-                
+            for service in host.services.values():                
                 # Some generic filtering
                 if service.acknowledged == True and str(self.conf.filter_acknowledged_hosts_services) == "True":
                     if str(self.conf.debug_mode) == "True":
@@ -858,13 +778,11 @@ class GenericServer(object):
 
         # do some cleanup
         self.hosts.clear()
-        del self.hosts_acknowledged[:], self.hosts_in_maintenance[:]
 
         # put new informations into respective dictionaries      
-        self.hosts, self.hosts_acknowledged, self.hosts_in_maintenance = copy.deepcopy(self.new_hosts), copy.deepcopy(self.new_hosts_acknowledged), copy.deepcopy(self.new_hosts_in_maintenance)
+        self.hosts = copy.deepcopy(self.new_hosts)
         
         # do some cleanup
-        del self.new_hosts_acknowledged[:], self.new_hosts_in_maintenance[:]
         self.new_hosts.clear()
         
         # after all checks are done unset checking flag
@@ -874,16 +792,13 @@ class GenericServer(object):
         return Result()
     
     
-###    def FetchURL(self, url, giveback="obj", cgi_data=None, remove_tags=["link", "br", "img", "hr", "script", "th", "form", "div", "p"]):   
-    def FetchURL(self, url, giveback="obj", cgi_data=None, remove_tags=["link", "br", "img", "hr", "script", "th", "form", "div", "p"]):   
-
+    def FetchURL(self, url, giveback="obj", cgi_data=None):   
         """
         get content of given url, cgi_data only used if present
         "obj" FetchURL gives back a dict full of miserable hosts/services,
+        "xml" giving back as objectified xml
         "raw" it gives back pure HTML - useful for finding out IP or new version
         existence of cgi_data forces urllib to use POST instead of GET requests
-        remove_tags became necessary for different expectations of GetStatus() and
-        GetHost() - one wants div elements, the other don't 
         NEW: gives back a list containing result and, if necessary, a more clear error description
         """        
         
@@ -928,16 +843,7 @@ class GenericServer(object):
                 urlcontent.close()
                 del url, cgi_data, request, urlcontent        
                 return Result(result=copy.deepcopy(xmlobj))   
-                
-            # special Opsview XML - needed for own Opsview HTTP headers
-            elif giveback == "ovxcvxvcpsxml":
-                request = urllib2.Request(url, cgi_data, self.HTTPheaders[giveback])
-                urlcontent = self.urlopener.open(request)
-                xmlobj = BeautifulStoneSoup(urlcontent.read(), convertEntities=BeautifulStoneSoup.XML_ENTITIES)
-                urlcontent.close()
-                del url, cgi_data, request, urlcontent              
-                return Result(result=copy.deepcopy(xmlobj))   
-           
+
         except:
             # do some cleanup        
             result, error = self.Error(sys.exc_info())
@@ -961,7 +867,7 @@ class GenericServer(object):
         nagcgiurl_host  = self.nagios_cgi_url + "/extinfo.cgi?type=1&host=" + host
         
         # get host info
-        result = self.FetchURL(nagcgiurl_host, giveback="obj", remove_tags=["link", "br", "img", "hr", "script", "th", "form", "p"])
+        result = self.FetchURL(nagcgiurl_host, giveback="obj")
         htobj = result.result
 
         try:
