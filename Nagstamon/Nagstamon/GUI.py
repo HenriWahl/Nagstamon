@@ -2563,6 +2563,11 @@ class PasswordDialog:
             gtk.MESSAGE_QUESTION,
             gtk.BUTTONS_OK,
             None)
+        
+        dialog.present()
+        dialog.stick()
+        dialog.set_keep_above(True)
+        
         dialog.set_markup(prompt)
         # on close, we note that the user escaped the dialog
         dialog.connect("close", self.dialog_close)
@@ -2587,11 +2592,14 @@ class PasswordDialog:
             self.password = entry.get_text()
         dialog.destroy()
         
+        
     def entry_activate(self, entry, dialog, response):
         dialog.response(response)
 
+        
     def dialog_close(self, dialog):
         self.escaped = True
+        
 
     def dialog_response(self, dialog, arg):
         if arg != gtk.RESPONSE_OK:
