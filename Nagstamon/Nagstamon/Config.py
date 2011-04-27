@@ -77,7 +77,9 @@ class Config(object):
         self.color_down_background = self.default_color_down_background = "#000000"
         self.color_error_text = self.default_color_error_text= "#000000"
         self.color_error_background = self.default_color_error_background = "#D3D3D3"
-                        
+        self.statusbar_systray = False
+        self.statusbar_floating = True
+        self.icon_in_systray = False                        
 
         # those are example Windows settings, almost certainly a
         # user will have to fix them for his computer
@@ -88,9 +90,6 @@ class Config(object):
             self.app_ssh_options = "-l root"
             self.app_rdp_options = "/v:"
             self.app_vnc_options = ""
-            self.statusbar_systray = False
-            self.statusbar_floating = True
-            self.icon_in_systray = False
         else:
             # the Linux settings
             self.app_ssh_bin = "/usr/bin/gnome-terminal -x ssh"
@@ -99,24 +98,7 @@ class Config(object):
             self.app_ssh_options = "-l root"
             self.app_rdp_options = "-g 1024x768"
             self.app_vnc_options = ""
-            # if running in GNOME defaulting to systray statusbar, otherwise
-            # to floating statusbar
-            if os.environ.has_key("DESKTOP_SESSION"):
-                if os.environ["DESKTOP_SESSION"] == "gnome":
-                    self.statusbar_systray = True
-                    self.statusbar_floating = False
-                    self.icon_in_systray = False
-                else:
-                    self.statusbar_systray = False
-                    self.statusbar_floating = True
-                    self.icon_in_systray = False
-            else:
-                # in case nagstamon is run from console without any desktop session
-                # choose floating statusbar as default
-                self.statusbar_systray = False
-                self.statusbar_floating = True
-                self.icon_in_systray = False
-        
+
         # the app is unconfigured by default and will stay so if it
         # would not find a config file
         self.unconfigured = True

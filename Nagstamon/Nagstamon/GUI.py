@@ -357,7 +357,8 @@ class GUI(object):
             self.popwin.Close()
             self.status_ok = True
             # set systray icon to green aka OK
-            self.statusbar.SysTray.set_from_file(self.Resources + os.sep + "nagstamon_green" + self.BitmapSuffix)
+            self.statusbar.SysTray.set_from_pixbuf(self.statusbar.SYSTRAY_ICONS["green"])
+
             # switch notification off
             self.NotificationOff()
         else:
@@ -412,8 +413,7 @@ class GUI(object):
             if unreachables > 0: color = "darkred"
             if downs > 0: color = "black"
 
-            # should be solved somehow differently
-            self.statusbar.SysTray.set_from_file(self.Resources + os.sep +"nagstamon_" + color + self.BitmapSuffix)
+            self.statusbar.SysTray.set_from_pixbuf(self.statusbar.SYSTRAY_ICONS[color])
             
             # if there has been any status change notify user
             # first find out which of all servers states is the worst similar to nagstamonObjects.GetStatus()
@@ -776,6 +776,11 @@ class StatusBar(object):
         self.nagstamonLogo = gtk.Image()
         self.nagstamonLogo.set_from_file(self.output.Resources + os.sep + "nagstamon_small" + self.output.BitmapSuffix)
         
+        # icons for systray
+        self.SYSTRAY_ICONS = dict()
+        for color in ["green", "yellow", "red", "darkred", "orange", "black","error"]:
+            self.SYSTRAY_ICONS[color] = gtk.gdk.pixbuf_new_from_file(self.output.Resources + os.sep + "nagstamon_" + color + self.output.BitmapSuffix)
+                
         # 2 versions of label text for notification
         self.statusbar_labeltext = ""
         self.statusbar_labeltext_inverted = ""
@@ -1039,7 +1044,7 @@ class StatusBar(object):
             # Windows workaround for non-shrinking desktop statusbar
             self.Resize()
             # change systray icon to error
-            self.SysTray.set_from_file(self.output.Resources + os.sep + "nagstamon_error" + self.output.BitmapSuffix)
+            self.SysTray.set_from_pixbuf(self.SYSTRAY_ICONS["error"])
             # Windows workaround for non-shrinking desktop statusbar
             self.Resize()
         except:
