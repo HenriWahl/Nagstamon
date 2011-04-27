@@ -2567,6 +2567,7 @@ class PasswordDialog:
         dialog.present()
         dialog.stick()
         dialog.set_keep_above(True)
+        dialog.set_position(gtk.WIN_POS_CENTER_ALWAYS)
         
         dialog.set_markup(prompt)
         # on close, we note that the user escaped the dialog
