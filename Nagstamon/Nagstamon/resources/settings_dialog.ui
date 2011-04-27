@@ -262,7 +262,7 @@
                 </child>
                 <child>
                   <object class="GtkRadioButton" id="input_radiobutton_statusbar_floating">
-                    <property name="label" translatable="yes">Statusbar floating (GNOME, KDE, Windows)</property>
+                    <property name="label" translatable="yes">Statusbar floating</property>
                     <property name="visible">True</property>
                     <property name="can_focus">False</property>
                     <property name="is_focus">True</property>
@@ -278,7 +278,7 @@
                 </child>
                 <child>
                   <object class="GtkRadioButton" id="input_radiobutton_statusbar_systray">
-                    <property name="label" translatable="yes">Statusbar in systray (GNOME only!)</property>
+                    <property name="label" translatable="yes">Statusbar in systray</property>
                     <property name="visible">True</property>
                     <property name="can_focus">False</property>
                     <property name="is_focus">True</property>
@@ -295,7 +295,7 @@
                 </child>
                 <child>
                   <object class="GtkRadioButton" id="input_radiobutton_icon_in_systray">
-                    <property name="label" translatable="yes">Icon in systray (GNOME, KDE, Windows)</property>
+                    <property name="label" translatable="yes">Icon in systray</property>
                     <property name="visible">True</property>
                     <property name="can_focus">False</property>
                     <property name="is_focus">True</property>

@@ -1824,8 +1824,15 @@ class Settings(object):
             NewServer(servers=self.servers, output=self.output, settingsdialog=self, conf=self.conf)
 
         # prepare colors and preview them
-        self.ColorsReset()              
-                
+        self.ColorsReset()      
+        
+        # disable non useful gui settings
+        # statusbar in trayicon is only useful if GNOME egg trayicon is loaded
+        if not sys.modules.has_key("egg.trayicon"):
+            self.builder.get_object("input_radiobutton_statusbar_systray").hide()
+        if platform.system() == "Darwin":
+            self.builder.get_object("input_radiobutton_icon_in_systray").hide()
+              
         # show filled settings dialog and wait thanks to gtk.run()
         self.dialog.run()
         self.dialog.destroy()
