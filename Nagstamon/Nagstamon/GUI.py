@@ -217,7 +217,8 @@ class GUI(object):
         # if pointer clicks on logo move stautsbar
         self.statusbar.LogoEventbox.connect("motion-notify-event", self.statusbar.Move)
         self.statusbar.LogoEventbox.connect("button-press-event", self.statusbar.LogoClicked)
-        self.statusbar.LogoEventbox.connect("button-release-event", self.popwin.setShowable)
+        #self.statusbar.LogoEventbox.connect("button-release-event", self.popwin.setShowable)
+        self.statusbar.LogoEventbox.connect("button-release-event", self.statusbar.LogoReleased)
     
         # if pointer hovers or clicks statusbar show details
         self.statusbar.EventBoxLabel.connect("enter-notify-event", self.statusbar.Hovered)
@@ -795,11 +796,14 @@ class StatusBar(object):
         # Use EventBox because Label cannot get events
         self.LogoEventbox = gtk.EventBox()
         self.LogoEventbox.add(self.nagstamonLogo)
+        #self.LogoEventbox.set_events(gtk.gdk.BUTTON_MOTION_MASK|gtk.gdk.BUTTON1_MOTION_MASK)
         self.EventBoxLabel = gtk.EventBox()
         self.EventBoxLabel.add(self.Label)
         self.HBox.add(self.LogoEventbox)
         self.HBox.add(self.EventBoxLabel)
         self.StatusBar.add(self.HBox)
+        # trying a workaround for windows gtk 2.22 not letting statusbar being dragged around
+        self.Moving = False
 
         # if statusbar is enabled...
         self.StatusBar.move(int(self.conf.position_x), int(self.conf.position_y))
@@ -937,6 +941,12 @@ class StatusBar(object):
         """
             see what happens if statusbar is clicked
         """
+        
+        print "\n", "LOGO CLICKED", self.LogoEventbox.get_events(), "\n"
+        
+        gtk.gdk.pointer_grab(self.nagstamonLogo)
+        self.Moving = True
+        
         # check if settings etc. are not already open
         if self.output.SettingsDialogOpen == False and self.output.AboutDialogOpen == False:
             # get position of statusbar
@@ -962,6 +972,29 @@ class StatusBar(object):
             if event.button == 3:
                 self.output.popwin.Close()
                 self.Menu.popup(None, None, None, event.button, event.time)
+        """        
+        while self.Moving == True:
+            print "Mooooovviiiinng", self.Moving
+            # access to rootwindow to get the pointers coordinates
+            rootwin = self.StatusBar.get_screen().get_root_window()
+            # get position of the pointer
+            mousex, mousey, foo = rootwin.get_pointer()
+            print mousex, mousey
+            #self.Move(widget, event)
+            self.conf.position_x = int(mousex - self.StatusBar.x)
+            self.conf.position_y = int(mousey - self.StatusBar.y)
+            self.StatusBar.move(self.conf.position_x, self.conf.position_y)
+            time.sleep(.5)
+        """
+        
+                
+    def LogoReleased(self, widget=None, event=None):
+        """
+        used when button click on logo is released
+        """
+        print "\n", "RELEASED", "\n"
+        self.output.popwin.setShowable()
+        self.Moving = False
                 
             
     def SysTrayClicked(self, widget=None, event=None):
@@ -1023,13 +1056,21 @@ class StatusBar(object):
         """
             moving statusbar
         """
+        
+        print "\n", "MOOOOOVE", "\n"
+        
         # avoid flickering popwin while moving statusbar around
         # gets re-enabled from popwin.setShowable()
         self.output.popwin.Close()
         self.output.popwin.showPopwin = False
+
+        print event.x_root, event.y_root
         
-        self.conf.position_x = int(event.x_root - self.StatusBar.x)
-        self.conf.position_y = int(event.y_root - self.StatusBar.y)
+        
+        #self.conf.position_x = int(event.x_root - self.StatusBar.x)
+        #self.conf.position_y = int(event.y_root - self.StatusBar.y)
+        self.conf.position_x = int(event.x_root)
+        self.conf.position_y = int(event.y_root)        
         self.StatusBar.move(self.conf.position_x, self.conf.position_y)
         
         
@@ -2564,7 +2605,7 @@ class PasswordDialog:
             gtk.BUTTONS_OK,
             None)
         
-        # present password dialog in an safe way
+        # present password dialog in a safe way
         dialog.present()
         dialog.stick()
         dialog.set_keep_above(True)
