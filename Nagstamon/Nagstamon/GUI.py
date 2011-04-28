@@ -216,6 +216,7 @@ class GUI(object):
 
         # if pointer clicks on logo move stautsbar
         self.statusbar.LogoEventbox.connect("motion-notify-event", self.statusbar.Move)
+        self.statusbar.LogoEventbox.connect("leave-notify-event", self.statusbar.Move)
         self.statusbar.LogoEventbox.connect("button-press-event", self.statusbar.LogoClicked)
         #self.statusbar.LogoEventbox.connect("button-release-event", self.popwin.setShowable)
         self.statusbar.LogoEventbox.connect("button-release-event", self.statusbar.LogoReleased)
@@ -944,8 +945,13 @@ class StatusBar(object):
         
         print "\n", "LOGO CLICKED", self.LogoEventbox.get_events(), "\n"
         
-        gtk.gdk.pointer_grab(self.nagstamonLogo)
+        #gtk.gdk.pointer_grab(self.nagstamonLogo)
         self.Moving = True
+        
+        # avoid flickering popwin while moving statusbar around
+        # gets re-enabled from popwin.setShowable()
+        self.output.popwin.Close()
+        self.output.popwin.showPopwin = False        
         
         # check if settings etc. are not already open
         if self.output.SettingsDialogOpen == False and self.output.AboutDialogOpen == False:
@@ -1059,18 +1065,21 @@ class StatusBar(object):
         
         print "\n", "MOOOOOVE", "\n"
         
+        """
         # avoid flickering popwin while moving statusbar around
         # gets re-enabled from popwin.setShowable()
         self.output.popwin.Close()
         self.output.popwin.showPopwin = False
-
-        print event.x_root, event.y_root
+        """
         
+        print event, event.x_root, event.y_root
         
-        #self.conf.position_x = int(event.x_root - self.StatusBar.x)
-        #self.conf.position_y = int(event.y_root - self.StatusBar.y)
-        self.conf.position_x = int(event.x_root)
-        self.conf.position_y = int(event.y_root)        
+        self.conf.position_x = int(event.x_root - self.StatusBar.x)
+        self.conf.position_y = int(event.y_root - self.StatusBar.y)         
+        
+        #self.conf.position_x = int(event.x_root - 8)
+        #self.conf.position_y = int(event.y_root - 8)  
+        
         self.StatusBar.move(self.conf.position_x, self.conf.position_y)
         
         
