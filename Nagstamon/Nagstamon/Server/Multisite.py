@@ -97,7 +97,8 @@ class MultisiteServer(GenericServer):
         content, error = result.result, result.error
 
         if error != "":
-            raise MultisiteError(True, Result(result = copy.deepcopy(content), error = error))
+            #raise MultisiteError(True, Result(result = copy.deepcopy(content), error = error))
+            raise MultisiteError(True, Result(result = content, error = error))
 
         if content.startswith('WARNING:'):
             c = content.split("\n")
@@ -170,10 +171,7 @@ class MultisiteServer(GenericServer):
                     return e.result
 
             for row in response[1:]:
-                host= dict(zip(response[0], row))
-                
-                print host
-                
+                host= dict(zip(response[0], row))               
                 n = {
                     'host':               host['host'],
                     'status':             self.statemap.get(host['host_state'], host['host_state']),
@@ -230,9 +228,6 @@ class MultisiteServer(GenericServer):
                     
             for row in response[1:]:
                 service = dict(zip(response[0], row))
-                
-                print service
-
                 n = {
                     'host':               service['host'],
                     'service':            service['service_description'],

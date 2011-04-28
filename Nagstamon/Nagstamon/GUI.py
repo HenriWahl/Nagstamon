@@ -2564,6 +2564,7 @@ class PasswordDialog:
             gtk.BUTTONS_OK,
             None)
         
+        # present password dialog in an safe way
         dialog.present()
         dialog.stick()
         dialog.set_keep_above(True)

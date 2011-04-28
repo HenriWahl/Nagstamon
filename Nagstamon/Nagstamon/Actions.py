@@ -265,7 +265,7 @@ class RecheckAll(threading.Thread):
                     #print "Recheck all: Rechecking all services on all hosts on all servers..."
                     # workaround, take Debug method from first server reachable
                     self.servers.values()[0].Debug(debug="Recheck all: Rechecking all services on all hosts on all servers...")
-                for server in self.servers.values():                
+                for server in self.servers.values():      
                     # only test enabled servers and only if not already 
                     if str(self.conf.servers[server.get_name()].enabled):
                         # set server status for status field in popwin
@@ -289,7 +289,7 @@ class RecheckAll(threading.Thread):
                                 # debug
                                 if str(self.conf.debug_mode) == "True":
                                     server.Debug(server=server.get_name(), host=host.get_name(), service=service.get_name(), debug="Rechecking...")
-
+        
                 # wait until all rechecks have been done
                 while len(rechecks_dict) > 0:
                     # debug

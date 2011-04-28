@@ -365,10 +365,12 @@ class GenericServer(object):
             result = self.FetchURL(nagcgiurl_hosts)
             htobj, error = result.result, result.error
 
-            if error != "": return Result(result=copy.deepcopy(htobj), error=error)            
+            #if error != "": return Result(result=copy.deepcopy(htobj), error=error)       
+            if error != "": return Result(result=htobj, error=error) 
 
             # put a copy of a part of htobj into table to be able to delete htobj
-            table = copy.deepcopy(htobj('table', {'class': 'status'})[0])
+            #table = copy.deepcopy(htobj('table', {'class': 'status'})[0])
+            table = htobj('table', {'class': 'status'})[0]
 
             # do some cleanup
             del htobj
@@ -463,10 +465,12 @@ class GenericServer(object):
             #result = Result()
             result = self.FetchURL(nagcgiurl_services)
             htobj, error = result.result, result.error          
-            if error != "": return Result(result=copy.deepcopy(htobj), error=error)
+            #if error != "": return Result(result=copy.deepcopy(htobj), error=error)
+            if error != "": return Result(result=htobj, error=error)
             
             # put a copy of a part of htobj into table to be able to delete htobj
-            table = copy.deepcopy(htobj('table', {'class': 'status'})[0])
+            #table = copy.deepcopy(htobj('table', {'class': 'status'})[0])            
+            table = htobj('table', {'class': 'status'})[0]
             
             # do some cleanup    
             del htobj
@@ -780,10 +784,11 @@ class GenericServer(object):
         self.hosts.clear()
 
         # put new informations into respective dictionaries      
-        self.hosts = copy.deepcopy(self.new_hosts)
+        ###self.hosts = copy.deepcopy(self.new_hosts)
+        self.hosts = self.new_hosts
         
         # do some cleanup
-        self.new_hosts.clear()
+        ###self.new_hosts.clear()
         
         # after all checks are done unset checking flag
         self.isChecking = False
@@ -830,10 +835,11 @@ class GenericServer(object):
                 request = urllib2.Request(url, cgi_data, self.HTTPheaders['obj'])
                 # use opener - if cgi_data is not empty urllib uses a POST request
                 urlcontent = self.urlopener.open(request)
-                soup = BeautifulSoup(urlcontent, convertEntities=BeautifulSoup.ALL_ENTITIES)
+                yummysoup = BeautifulSoup(urlcontent, convertEntities=BeautifulSoup.ALL_ENTITIES)
                 urlcontent.close()                
                 del url, cgi_data, request, urlcontent
-                return Result(result=copy.deepcopy(soup))
+                #return Result(result=copy.deepcopy(yummysoup))
+                return Result(result=yummysoup)
 
             # objectified generic XML, valid at least for Opsview and Centreon
             elif giveback == "xml":
@@ -841,8 +847,9 @@ class GenericServer(object):
                 urlcontent = self.urlopener.open(request)
                 xmlobj = BeautifulStoneSoup(urlcontent.read(), convertEntities=BeautifulStoneSoup.XML_ENTITIES)
                 urlcontent.close()
-                del url, cgi_data, request, urlcontent        
-                return Result(result=copy.deepcopy(xmlobj))   
+                del url, cgi_data, request, urlcontent  
+                #return Result(result=copy.deepcopy(xmlobj)) 
+                return Result(result=xmlobj)   
 
         except:
             # do some cleanup        
