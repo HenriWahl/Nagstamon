@@ -880,7 +880,10 @@ class StatusBar(object):
         if platform.system() == "Windows":
             self.StatusBar.set_type_hint(gtk.gdk.WINDOW_TYPE_HINT_UTILITY)
         else:
-            self.StatusBar.set_type_hint(gtk.gdk.WINDOW_TYPE_HINT_DOCK)
+            #self.StatusBar.set_type_hint(gtk.gdk.WINDOW_TYPE_HINT_DOCK)
+            # trying as _HINT_UTILITY in Linux too as it gets a size modify element
+            # in GNOME 3
+            self.StatusBar.set_type_hint(gtk.gdk.WINDOW_TYPE_HINT_UTILITY)
         self.StatusBar.set_property("skip-taskbar-hint", True)
         self.StatusBar.set_skip_taskbar_hint(True)
             

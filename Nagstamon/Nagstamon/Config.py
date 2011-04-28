@@ -32,8 +32,8 @@ class Config(object):
         self.filter_services_on_hosts_in_maintenance = False
         self.filter_services_on_unreachable_hosts = False
         self.filter_services_in_soft_state = False
-        self.position_x = 0
-        self.position_y = 0
+        self.position_x = 30
+        self.position_y = 30
         self.popup_details_hover = True
         self.popup_details_clicking = False
         self.connect_by_dns_yes = True
