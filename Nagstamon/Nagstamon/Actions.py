@@ -485,6 +485,29 @@ class FlashStatusbar(threading.Thread):
                     time.sleep(0.5)
         # reset statusbar
         self.output.statusbar.Label.set_markup(self.output.statusbar.statusbar_labeltext)
+        
+
+class MoveStatusbar(threading.Thread):
+    """
+        Move statusbar in a threadified way to omit hanging gui and Windows-GTK 2.22 trouble
+    """
+    def __init__(self, **kwds):
+        # add all keywords to object, every mode searchs inside for its favorite arguments/keywords
+        for k in kwds: self.__dict__[k] = kwds[k]
+        threading.Thread.__init__(self)
+        self.setDaemon(1)
+
+
+    def run(self):
+        # avoid flickering popwin while moving statusbar around
+        # gets re-enabled from popwin.setShowable()
+        self.output.popwin.Close()
+        self.output.popwin.showPopwin = False  
+        # in case of moving statusbar do some moves
+        while self.output.statusbar.Moving == True:
+            gobject.idle_add(self.output.statusbar.Move)
+            time.sleep(0.01)
+        
 
 
 def OpenNagios(widget, server, output):   

@@ -215,8 +215,8 @@ class GUI(object):
         self.statusbar.SysTray.connect("popup-menu", self.statusbar.MenuPopup, self.statusbar.Menu)
 
         # if pointer clicks on logo move stautsbar
-        self.statusbar.LogoEventbox.connect("motion-notify-event", self.statusbar.Move)
-        self.statusbar.LogoEventbox.connect("leave-notify-event", self.statusbar.Move)
+        #self.statusbar.LogoEventbox.connect("motion-notify-event", self.statusbar.Move)
+        #self.statusbar.LogoEventbox.connect("leave-notify-event", self.statusbar.Move)
         self.statusbar.LogoEventbox.connect("button-press-event", self.statusbar.LogoClicked)
         #self.statusbar.LogoEventbox.connect("button-release-event", self.popwin.setShowable)
         self.statusbar.LogoEventbox.connect("button-release-event", self.statusbar.LogoReleased)
@@ -797,7 +797,6 @@ class StatusBar(object):
         # Use EventBox because Label cannot get events
         self.LogoEventbox = gtk.EventBox()
         self.LogoEventbox.add(self.nagstamonLogo)
-        #self.LogoEventbox.set_events(gtk.gdk.BUTTON_MOTION_MASK|gtk.gdk.BUTTON1_MOTION_MASK)
         self.EventBoxLabel = gtk.EventBox()
         self.EventBoxLabel.add(self.Label)
         self.HBox.add(self.LogoEventbox)
@@ -934,6 +933,7 @@ class StatusBar(object):
             # if right mousebutton is pressed show statusbar menu
             if event.button == 3:
                 self.output.popwin.Close()
+                self.Moving = False
                 self.MenuPopup(widget=self.Menu, event=event)
                 #self.Menu.popup(None, None, None, event.button, event.time)
         
@@ -945,63 +945,30 @@ class StatusBar(object):
         """
             see what happens if statusbar is clicked
         """
-        
-        print "\n", "LOGO CLICKED", self.LogoEventbox.get_events(), "\n"
-        
-        #gtk.gdk.pointer_grab(self.nagstamonLogo)
-        self.Moving = True
-        
-        # avoid flickering popwin while moving statusbar around
-        # gets re-enabled from popwin.setShowable()
-        self.output.popwin.Close()
-        self.output.popwin.showPopwin = False        
-        
         # check if settings etc. are not already open
         if self.output.SettingsDialogOpen == False and self.output.AboutDialogOpen == False:
             # get position of statusbar
             self.StatusBar.x = event.x
             self.StatusBar.y = event.y
             # if left mousebutton is pressed
-            if event == 1:
-                # if popping up on click is true...
-                if str(self.conf.popup_details_clicking) == "True":
-                    #... and summary popup not shown yet...
-                    if self.output.popwin.get_properties("visible")[0] == False:
-                        #...show it...
-                        self.output.popwin.PopUp()
-                    else:
-                        #...otherwise close it
-                        self.output.popwin.Close()
-                # if hovering is set, popwin is open and statusbar gets clicked...
-                else:
-                    # close popwin for convinience
-                    if self.output.popwin.get_properties("visible")[0] == True:
-                        self.output.popwin.Close()
+            if event.button == 1:
+                self.output.popwin.Close()
+     
+                self.Moving = True   
+                move = Actions.MoveStatusbar(output=self.output)
+                move.start()
+                
             # if right mousebutton is pressed show statusbar menu
             if event.button == 3:
                 self.output.popwin.Close()
+                self.Moving = False
                 self.Menu.popup(None, None, None, event.button, event.time)
-        """        
-        while self.Moving == True:
-            print "Mooooovviiiinng", self.Moving
-            # access to rootwindow to get the pointers coordinates
-            rootwin = self.StatusBar.get_screen().get_root_window()
-            # get position of the pointer
-            mousex, mousey, foo = rootwin.get_pointer()
-            print mousex, mousey
-            #self.Move(widget, event)
-            self.conf.position_x = int(mousex - self.StatusBar.x)
-            self.conf.position_y = int(mousey - self.StatusBar.y)
-            self.StatusBar.move(self.conf.position_x, self.conf.position_y)
-            time.sleep(.5)
-        """
         
                 
     def LogoReleased(self, widget=None, event=None):
         """
         used when button click on logo is released
         """
-        print "\n", "RELEASED", "\n"
         self.output.popwin.setShowable()
         self.Moving = False
                 
@@ -1037,6 +1004,9 @@ class StatusBar(object):
         """
         
         self.output.popwin.Close()
+        
+        # no dragging of statusbar anymore if menu pops up
+        self.Moving = False
 
         # check if settings ar not already open
         if self.output.SettingsDialogOpen == False:
@@ -1061,30 +1031,20 @@ class StatusBar(object):
             self.MenuOpen = False
            
                     
-    def Move(self, widget, event):
+    def Move(self, widget=None, event=None):
         """
             moving statusbar
         """
-        
-        print "\n", "MOOOOOVE", "\n"
-        
-        """
-        # avoid flickering popwin while moving statusbar around
-        # gets re-enabled from popwin.setShowable()
-        self.output.popwin.Close()
-        self.output.popwin.showPopwin = False
-        """
-        
-        print event, event.x_root, event.y_root
-        
-        self.conf.position_x = int(event.x_root - self.StatusBar.x)
-        self.conf.position_y = int(event.y_root - self.StatusBar.y)         
-        
-        #self.conf.position_x = int(event.x_root - 8)
-        #self.conf.position_y = int(event.y_root - 8)  
-        
+        # access to rootwindow to get the pointers coordinates
+        rootwin = self.StatusBar.get_screen().get_root_window()
+        # get position of the pointer
+        mousex, mousey, foo = rootwin.get_pointer()
+        #print mousex, mousey
+        #self.Move(widget, event)
+        self.conf.position_x = int(mousex - self.StatusBar.x)
+        self.conf.position_y = int(mousey - self.StatusBar.y)
         self.StatusBar.move(self.conf.position_x, self.conf.position_y)
-        
+
         
     def ShowErrorMessage(self, message):
         """
@@ -1326,6 +1286,7 @@ class Popwin(gtk.Window):
         # for some reason the painting will lag behind popping up popwin if not getting resized twice -
         # seems like a strange workaround
         if self.showPopwin and not self.output.status_ok:
+            self.output.statusbar.Moving = False
             # position and resize...
             self.Resize()
             # ...show
