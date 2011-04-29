@@ -215,10 +215,7 @@ class GUI(object):
         self.statusbar.SysTray.connect("popup-menu", self.statusbar.MenuPopup, self.statusbar.Menu)
 
         # if pointer clicks on logo move stautsbar
-        #self.statusbar.LogoEventbox.connect("motion-notify-event", self.statusbar.Move)
-        #self.statusbar.LogoEventbox.connect("leave-notify-event", self.statusbar.Move)
         self.statusbar.LogoEventbox.connect("button-press-event", self.statusbar.LogoClicked)
-        #self.statusbar.LogoEventbox.connect("button-release-event", self.popwin.setShowable)
         self.statusbar.LogoEventbox.connect("button-release-event", self.statusbar.LogoReleased)
     
         # if pointer hovers or clicks statusbar show details
@@ -1531,7 +1528,7 @@ class Popwin(gtk.Window):
                     else: args = self.conf.app_ssh_bin + " " + self.conf.app_ssh_options + " " + host
                     sub = subprocess.Popen(args.split(" "))
             elif remoteservice == "RDP":
-                # get host ip to connect to be independent of dns resolver
+                # get host ip to connect to be independent of dns resolver               
                 result = self.miserable_server.GetHost(self.miserable_host)
                 host, error = result.result, result.error
                 if error == "":

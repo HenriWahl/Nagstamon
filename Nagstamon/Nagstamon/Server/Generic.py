@@ -320,6 +320,9 @@ class GenericServer(object):
         # this dictionary is only temporarily
         nagitems = {"services":[], "hosts":[]}       
         
+        # new_hosts dictionary
+        self.new_hosts = dict()
+        
         # create filters like described in
         # http://www.nagios-wiki.de/nagios/tips/host-_und_serviceproperties_fuer_status.cgi?s=servicestatustypes
         # hoststatus
@@ -780,15 +783,8 @@ class GenericServer(object):
         # copy of listed nagitems for next comparison
         self.nagitems_filtered_list = new_nagitems_filtered_list
 
-        # do some cleanup
-        self.hosts.clear()
-
         # put new informations into respective dictionaries      
-        ###self.hosts = copy.deepcopy(self.new_hosts)
         self.hosts = self.new_hosts
-        
-        # do some cleanup
-        ###self.new_hosts.clear()
         
         # after all checks are done unset checking flag
         self.isChecking = False
