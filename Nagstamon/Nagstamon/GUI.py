@@ -309,7 +309,15 @@ class GUI(object):
                         self.status_ok = False                       
                         
                     # use a liststore for treeview where the table headers all are strings - first empty it
-                    server.ListStore.clear()
+                    # now added with some simple repair after settings dialog has been used
+                    # because sometimes after settings changes ListStore and TreeView become NoneType
+                    # would be more logical to do this in Actions.CreateServer() but this gives a segfault :-(
+                    if not type(server.ListStore) == type(None):
+                        server.ListStore.clear()
+                    else:
+                        server.ListStore = gtk.ListStore(*[gobject.TYPE_STRING]*(len(server.COLUMNS)+2))                        
+                    if type(server.TreeView) == type(None):
+                        server.TreeView = gtk.TreeView() 
 
                     # apart from status informations there we need two columns which
                     # hold the color information, which is derived from status which
@@ -1682,7 +1690,7 @@ class ServerVBox(gtk.VBox):
         self.Server_EventBox.add(self.HBox)
         self.add(self.Server_EventBox)            
 
-        # new TreeView handling, not genereating new itmes with every refresh cycle
+        # new TreeView handling, not generating new items with every refresh cycle
         self.server.TreeView = gtk.TreeView()      
         self.server.ListStore = gtk.ListStore(*[gobject.TYPE_STRING]*(len(self.server.COLUMNS)+2))                        
                 
@@ -2475,8 +2483,8 @@ class EditServer(ServerDialogHelper):
             try:
                 # stop thread
                 self.servers[self.server].thread.Stop()
-            except:
-                pass
+            except Exception, err:
+                print err
             # delete server from servers dictionary
             self.servers.pop(self.server)
     
