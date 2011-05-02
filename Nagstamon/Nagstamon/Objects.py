@@ -13,7 +13,6 @@ import Actions
 
 class Column(object):
     ATTR_NAME = 'name'
-    LABEL = 'Name'
     DEFAULT_VALUE = ''
     SORT_FUNCTION_NAME = 'sort_function'
     
@@ -80,7 +79,23 @@ class ServiceColumn(Column):
     @classmethod
     def get_label(cls):
         return 'Service'
+    
+"""    
+class AcknowledgedColumn(Column):
+    ATTR_NAME = 'attempt' 
+    
+    @classmethod
+    def get_label(cls):
+        return ''
 
+    
+class ScheduledDowntimeColumn(Column):
+    ATTR_NAME = 'scheduleddowntime' 
+    
+    @classmethod
+    def get_label(cls):
+        return ''
+"""    
     
 class LastCheckColumn(Column):
     ATTR_NAME = 'last_check'

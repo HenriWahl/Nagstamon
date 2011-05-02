@@ -107,15 +107,24 @@ class GUI(object):
         self.monitors = dict()
         self.current_monitor = 0
         
+        # define colors for detailed status table in dictionaries
+        self.TAB_BG_COLORS = { "UNKNOWN":str(self.conf.color_unknown_background), "CRITICAL":str(self.conf.color_critical_background), "WARNING":str(self.conf.color_warning_background), "DOWN":str(self.conf.color_down_background), "UNREACHABLE":str(self.conf.color_unreachable_background)  }
+        self.TAB_FG_COLORS = { "UNKNOWN":str(self.conf.color_unknown_text), "CRITICAL":str(self.conf.color_critical_text), "WARNING":str(self.conf.color_warning_text), "DOWN":str(self.conf.color_down_text), "UNREACHABLE":str(self.conf.color_unreachable_text) }
+
+        # define popwin table column types
+        ###self.TAB_COLUMNS = [gobject.TYPE_STRING, gobject.TYPE_STRING, gobject.TYPE_STRING,\
+        #                   gtk.gdk.Pixbuf, gtk.gdk.Pixbuf, gobject.TYPE_STRING,\
+        #                   gobject.TYPE_STRING, gobject.TYPE_STRING, gobject.TYPE_STRING,\
+        #                   gobject.TYPE_STRING, gobject.TYPE_STRING]
+        self.TAB_COLUMNS = [gobject.TYPE_STRING, gobject.TYPE_STRING, gobject.TYPE_STRING,\
+                            gobject.TYPE_STRING, gobject.TYPE_STRING, gobject.TYPE_STRING,\
+                            gobject.TYPE_STRING, gobject.TYPE_STRING, gobject.TYPE_STRING]           
+        
         # create all GUI widgets
         self.CreateOutputVisuals()
 
         # set size of popup-window
         self.popwin.Resize()
-        
-        # define colors for detailed status table in dictionaries
-        self.tab_bg_colors = { "UNKNOWN":str(self.conf.color_unknown_background), "CRITICAL":str(self.conf.color_critical_background), "WARNING":str(self.conf.color_warning_background), "DOWN":str(self.conf.color_down_background), "UNREACHABLE":str(self.conf.color_unreachable_background)  }
-        self.tab_fg_colors = { "UNKNOWN":str(self.conf.color_unknown_text), "CRITICAL":str(self.conf.color_critical_text), "WARNING":str(self.conf.color_warning_text), "DOWN":str(self.conf.color_down_text), "UNREACHABLE":str(self.conf.color_unreachable_text) }
     
         # flag which is set True if already notifying
         self.Notifying = False
@@ -315,7 +324,7 @@ class GUI(object):
                     if not type(server.ListStore) == type(None):
                         server.ListStore.clear()
                     else:
-                        server.ListStore = gtk.ListStore(*[gobject.TYPE_STRING]*(len(server.COLUMNS)+2))                        
+                        server.ListStore = gtk.ListStore(*self.TAB_COLUMNS)                        
                     if type(server.TreeView) == type(None):
                         server.TreeView = gtk.TreeView() 
 
@@ -330,10 +339,14 @@ class GUI(object):
                                 iter = server.ListStore.insert_before(None, None)
                                 server.ListStoreColumns = list(server.get_columns(item))                                    
                                 for i, column in enumerate(server.ListStoreColumns):
-                                    server.ListStore.set_value(iter, i, str(column))
-                                    del i, column
-                                server.ListStore.set_value(iter, number_of_columns, self.tab_bg_colors[str(server.ListStoreColumns[server.COLOR_COLUMN_ID])])
-                                server.ListStore.set_value(iter, number_of_columns + 1, self.tab_fg_colors[str(server.ListStoreColumns[server.COLOR_COLUMN_ID])])
+                                    if i in [0, 1]:
+                                        #server.ListStore.set_value(iter, i, self.statusbar.SYSTRAY_ICONS["green"], str(column))
+                                        server.ListStore.set_value(iter, i, (self.statusbar.SYSTRAY_ICONS["green"], str(column))) 
+                                    else:
+                                        server.ListStore.set_value(iter, i, str(column))
+                
+                                server.ListStore.set_value(iter, number_of_columns, self.TAB_BG_COLORS[str(server.ListStoreColumns[server.COLOR_COLUMN_ID])])
+                                server.ListStore.set_value(iter, number_of_columns + 1, self.TAB_FG_COLORS[str(server.ListStoreColumns[server.COLOR_COLUMN_ID])])
                     
                     # give new ListStore to the view, overwrites the old one automatically - theoretically
                     server.TreeView.set_model(server.ListStore)
@@ -1692,21 +1705,35 @@ class ServerVBox(gtk.VBox):
 
         # new TreeView handling, not generating new items with every refresh cycle
         self.server.TreeView = gtk.TreeView()      
-        self.server.ListStore = gtk.ListStore(*[gobject.TYPE_STRING]*(len(self.server.COLUMNS)+2))                        
+        self.server.ListStore = gtk.ListStore(*self.output.TAB_COLUMNS)
                 
         # create columns for treeview
-        tab_renderer = gtk.CellRendererText()
+        renderer_text = gtk.CellRendererText()
+        renderer_img = gtk.CellRendererPixbuf()
+        
         for s, column in enumerate(self.server.COLUMNS):
             # fill columns of view with content of model and squeeze it through the renderer, using
             # the color information from the last two colums of the liststore
-            tab_column = gtk.TreeViewColumn(column.get_label(), tab_renderer, text=s,
-                                            background=len(self.server.COLUMNS), foreground=len(self.server.COLUMNS) + 1)               
+            if s in [0, 1]:
+                tab_column = gtk.TreeViewColumn(column.get_label())
+                ack = renderer_img
+                text = renderer_text
+                tab_column.pack_start(text)
+                tab_column.pack_start(ack)
+                
+                #print s, column.__dict__
+                
+            else:
+                tab_column = gtk.TreeViewColumn(column.get_label(), renderer_text, text=s,\
+                                                background=len(self.server.COLUMNS),\
+                                                foreground=len(self.server.COLUMNS) + 1)               
             self.server.TreeView.append_column(tab_column)  
             
+            """
             # set customized sorting
             if column.has_customized_sorting():
                 self.server.ListStore.set_sort_func(s, column.sort_function, s)           
-            
+            """
             # make table sortable by clicking on column headers
             tab_column.set_clickable(True)
             #tab_column.set_property('sort-indicator', True) # makes sorting arrows visible
@@ -1882,8 +1909,8 @@ class Settings(object):
         self.builder.get_object("servers_treeview").set_model(liststore)
         
         # render aka create table view
-        tab_renderer = gtk.CellRendererText()
-        tab_column = gtk.TreeViewColumn("Servers", tab_renderer, text=0, foreground=1, strikethrough=2)
+        renderer_text = gtk.CellRendererText()
+        tab_column = gtk.TreeViewColumn("Servers", renderer_text, text=0, foreground=1, strikethrough=2)
         # somehow idiotic, but less effort... try to delete which column ever, to create a new one
         # this will throw an exception at the first time the options dialog is opened because no column exists
         try:
