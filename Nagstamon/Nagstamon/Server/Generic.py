@@ -39,8 +39,6 @@ class GenericServer(object):
         HostColumn,
         ServiceColumn,
         StatusColumn,
-        #AcknowledgedColumn,
-        #ScheduledDowntimeColumn,
         LastCheckColumn,
         DurationColumn,
         AttemptColumn,

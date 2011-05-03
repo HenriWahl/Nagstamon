@@ -42,6 +42,23 @@ class OpsviewServer(GenericServer):
                 urlcontent.close()
             except:
                 self.Error(sys.exc_info())
+               
+                
+    def get_start_end(self, host):
+        """
+        for GUI to get actual downtime start and end from server - they may vary so it's better to get
+        directly from web interface
+        """
+        try:
+            result = self.FetchURL(self.nagios_cgi_url + "/cmd.cgi?" + urllib.urlencode({"cmd_typ":"55", "host":host}))
+            html = result.result
+            start_time = html.find(attrs={"name":"starttime"}).attrMap["value"]
+            end_time = html.find(attrs={"name":"endtime"}).attrMap["value"]            
+            # give values back as tuple
+            return start_time, end_time
+        except:
+            self.Error(sys.exc_info())
+            return "n/a", "n/a"                 
             
             
     def _set_downtime(self, host, service, author, comment, fixed, start_time, end_time, hours, minutes):

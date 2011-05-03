@@ -111,14 +111,11 @@ class GUI(object):
         self.TAB_BG_COLORS = { "UNKNOWN":str(self.conf.color_unknown_background), "CRITICAL":str(self.conf.color_critical_background), "WARNING":str(self.conf.color_warning_background), "DOWN":str(self.conf.color_down_background), "UNREACHABLE":str(self.conf.color_unreachable_background)  }
         self.TAB_FG_COLORS = { "UNKNOWN":str(self.conf.color_unknown_text), "CRITICAL":str(self.conf.color_critical_text), "WARNING":str(self.conf.color_warning_text), "DOWN":str(self.conf.color_down_text), "UNREACHABLE":str(self.conf.color_unreachable_text) }
 
-        # define popwin table column types
-        ###self.TAB_COLUMNS = [gobject.TYPE_STRING, gobject.TYPE_STRING, gobject.TYPE_STRING,\
-        #                   gtk.gdk.Pixbuf, gtk.gdk.Pixbuf, gobject.TYPE_STRING,\
-        #                   gobject.TYPE_STRING, gobject.TYPE_STRING, gobject.TYPE_STRING,\
-        #                   gobject.TYPE_STRING, gobject.TYPE_STRING]
-        self.TAB_COLUMNS = [gobject.TYPE_STRING, gobject.TYPE_STRING, gobject.TYPE_STRING,\
-                            gobject.TYPE_STRING, gobject.TYPE_STRING, gobject.TYPE_STRING,\
-                            gobject.TYPE_STRING, gobject.TYPE_STRING, gobject.TYPE_STRING]           
+        # define popwin table liststore types
+        self.LISTSTORE_COLUMNS = [gobject.TYPE_STRING, gobject.TYPE_STRING, gobject.TYPE_STRING,\
+                                  gobject.TYPE_STRING, gobject.TYPE_STRING, gobject.TYPE_STRING,\
+                                  gobject.TYPE_STRING, gobject.TYPE_STRING, gobject.TYPE_STRING,\
+                                  gtk.gdk.Pixbuf, gtk.gdk.Pixbuf, gtk.gdk.Pixbuf, gtk.gdk.Pixbuf]           
         
         # create all GUI widgets
         self.CreateOutputVisuals()
@@ -145,22 +142,26 @@ class GUI(object):
     def get_last_sorting(self, server):
         return self.last_sorting[server.get_name()]
     
+
     def get_rows_reordered_handler(self, server):
         return self.rows_reordered_handler.get(server.get_name())
     
+
     def set_rows_reordered_handler(self, server, handler):
         self.rows_reordered_handler[server.get_name()] = handler
      
+
     def set_sorting(self, liststore, server):
         """ Restores sorting after refresh """
-        for id, order in self.get_last_sorting(server).iteritems():
+        for id, order in self.get_last_sorting(server).iteritems():           
             liststore.set_sort_column_id(id, order)
             # this makes sorting arrows visible according to
             # sort order after refresh
-            #column = self.popwin.ServerVBoxes[server.get_name()].TreeView.get_column(id)
-            #if column is not None:
-            #    column.set_property('sort-order', order)
+            column = self.popwin.ServerVBoxes[server.get_name()].TreeView.get_column(id)
+            if column is not None:
+                column.set_property('sort-order', order)
 
+            
     def on_column_header_click(self, model, id, liststore, server):
         """ Sets current sorting according to column id """
         
@@ -324,30 +325,43 @@ class GUI(object):
                     if not type(server.ListStore) == type(None):
                         server.ListStore.clear()
                     else:
-                        server.ListStore = gtk.ListStore(*self.TAB_COLUMNS)                        
+                        server.ListStore = gtk.ListStore(*self.LISTSTORE_COLUMNS)                        
                     if type(server.TreeView) == type(None):
                         server.TreeView = gtk.TreeView() 
 
                     # apart from status informations there we need two columns which
                     # hold the color information, which is derived from status which
                     # is used as key at the above color dictionaries    
-                    number_of_columns = len(server.COLUMNS)
-
+                    # Update: new columns added which contain pixbufs of flag indicators if needed                   
                     for item_type, status_dict in server.nagitems_filtered.iteritems():
                         for status, item_list in status_dict.iteritems():
                             for item in list(item_list):
-                                iter = server.ListStore.insert_before(None, None)
-                                server.ListStoreColumns = list(server.get_columns(item))                                    
-                                for i, column in enumerate(server.ListStoreColumns):
-                                    if i in [0, 1]:
-                                        #server.ListStore.set_value(iter, i, self.statusbar.SYSTRAY_ICONS["green"], str(column))
-                                        server.ListStore.set_value(iter, i, (self.statusbar.SYSTRAY_ICONS["green"], str(column))) 
-                                    else:
-                                        server.ListStore.set_value(iter, i, str(column))
-                
-                                server.ListStore.set_value(iter, number_of_columns, self.TAB_BG_COLORS[str(server.ListStoreColumns[server.COLOR_COLUMN_ID])])
-                                server.ListStore.set_value(iter, number_of_columns + 1, self.TAB_FG_COLORS[str(server.ListStoreColumns[server.COLOR_COLUMN_ID])])
-                    
+                                tuned_list = list(server.get_columns(item))
+                                tuned_list.append(self.TAB_FG_COLORS[item.status])
+                                tuned_list.append(self.TAB_BG_COLORS[item.status])
+                                
+                                if item.is_acknowledged() and item.is_host():
+                                    tuned_list.append(self.popwin.ICONS["acknowledged"])
+                                else:    
+                                    tuned_list.append(None)
+                                                                        
+                                if item.is_in_scheduled_downtime() and item.is_host():
+                                    tuned_list.append(self.popwin.ICONS["downtime"])   
+                                else:    
+                                    tuned_list.append(None)
+                                    
+                                if item.is_acknowledged() and not item.is_host():
+                                    tuned_list.append(self.popwin.ICONS["acknowledged"])
+                                else:    
+                                    tuned_list.append(None)
+                                                                        
+                                if item.is_in_scheduled_downtime() and not item.is_host():
+                                    tuned_list.append(self.popwin.ICONS["downtime"])   
+                                else:    
+                                    tuned_list.append(None)
+                                    
+                                server.ListStore.append(tuned_list)     
+                                
                     # give new ListStore to the view, overwrites the old one automatically - theoretically
                     server.TreeView.set_model(server.ListStore)
 
@@ -1204,7 +1218,7 @@ class Popwin(gtk.Window):
         # put the HBox full of buttons full of HBoxes into the aligned HBox...
         self.AlMenu.add(self.HBoxMenu)     
         
-        # HBoxensen masse...
+        # HBoxes en masse...
         self.HBoxAllButtons.add(self.AlMonitorLabel)
         self.HBoxAllButtons.add(self.AlMonitorComboBox)
         self.HBoxAllButtons.add(self.AlMenu)
@@ -1239,6 +1253,11 @@ class Popwin(gtk.Window):
             self.popupmenu.append(menu_item)
         self.popupmenu.show_all()
         
+        # icons for acknowledgement/downtime visualization
+        self.ICONS = dict()
+        for color in ["acknowledged", "downtime"]:
+            self.ICONS[color] = gtk.gdk.pixbuf_new_from_file_at_size(self.output.Resources + os.sep + "nagstamon_" + color + self.output.BitmapSuffix, 16, 16)
+            
         # create a scrollable area for the treeview in case it is larger than the screen
         # in case there are too many failed services and hosts
         self.ScrolledWindow = gtk.ScrolledWindow()
@@ -1687,8 +1706,8 @@ class ServerVBox(gtk.VBox):
         # leave some space around the label
         self.Label.set_padding(5, 5)
         self.HBoxMonitor.add(self.ButtonMonitor)
-        self.HBoxMonitor.add(self.ButtonServices)
         self.HBoxMonitor.add(self.ButtonHosts)
+        self.HBoxMonitor.add(self.ButtonServices)
         
         self.HBoxStatus.add(self.LabelStatus)
         
@@ -1705,35 +1724,42 @@ class ServerVBox(gtk.VBox):
 
         # new TreeView handling, not generating new items with every refresh cycle
         self.server.TreeView = gtk.TreeView()      
-        self.server.ListStore = gtk.ListStore(*self.output.TAB_COLUMNS)
-                
-        # create columns for treeview
-        renderer_text = gtk.CellRendererText()
-        renderer_img = gtk.CellRendererPixbuf()
-        
-        for s, column in enumerate(self.server.COLUMNS):
-            # fill columns of view with content of model and squeeze it through the renderer, using
-            # the color information from the last two colums of the liststore
-            if s in [0, 1]:
-                tab_column = gtk.TreeViewColumn(column.get_label())
-                ack = renderer_img
-                text = renderer_text
-                tab_column.pack_start(text)
-                tab_column.pack_start(ack)
-                
-                #print s, column.__dict__
-                
-            else:
-                tab_column = gtk.TreeViewColumn(column.get_label(), renderer_text, text=s,\
-                                                background=len(self.server.COLUMNS),\
-                                                foreground=len(self.server.COLUMNS) + 1)               
-            self.server.TreeView.append_column(tab_column)  
+        self.server.ListStore = gtk.ListStore(*self.output.LISTSTORE_COLUMNS)
+
+        # offset to access host and service flag icons separately, stored in grand liststore
+        offset = {0:0, 1:2}
             
-            """
+        for s, column in enumerate(self.server.COLUMNS):
+            tab_column = gtk.TreeViewColumn(column.get_label())
+            self.server.TreeView.append_column(tab_column)  
+            # the first and second column hold hosts and service name which will get acknowledged/downtime flag
+            # indicators added
+            if s in [0, 1]:
+                # pixbuf for little icon
+                cell_img_ack = gtk.CellRendererPixbuf()
+                cell_img_down = gtk.CellRendererPixbuf()
+                # host/service name
+                cell_txt = gtk.CellRendererText()
+                # stuff all renders into one cell
+                tab_column.pack_start(cell_txt)
+                tab_column.pack_start(cell_img_ack)
+                tab_column.pack_start(cell_img_down)
+                # set text from liststore and flag icons if existing
+                tab_column.set_attributes(cell_txt, foreground=7, background=8, text=s)
+                tab_column.set_attributes(cell_img_ack, pixbuf=9+offset[s])
+                tab_column.add_attribute(cell_img_ack, "cell-background", 8)
+                tab_column.set_attributes(cell_img_down, pixbuf=10+offset[s])
+                tab_column.add_attribute(cell_img_down, "cell-background", 8)
+            else:
+                # normal way for all other columns
+                cell_txt = gtk.CellRendererText()
+                tab_column.pack_start(cell_txt, False)
+                tab_column.set_attributes(cell_txt, foreground=7, background=8, text=s)
+                
             # set customized sorting
             if column.has_customized_sorting():
                 self.server.ListStore.set_sort_func(s, column.sort_function, s)           
-            """
+
             # make table sortable by clicking on column headers
             tab_column.set_clickable(True)
             #tab_column.set_property('sort-indicator', True) # makes sorting arrows visible

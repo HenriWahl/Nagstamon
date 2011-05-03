@@ -80,22 +80,6 @@ class ServiceColumn(Column):
     def get_label(cls):
         return 'Service'
     
-"""    
-class AcknowledgedColumn(Column):
-    ATTR_NAME = 'attempt' 
-    
-    @classmethod
-    def get_label(cls):
-        return ''
-
-    
-class ScheduledDowntimeColumn(Column):
-    ATTR_NAME = 'scheduleddowntime' 
-    
-    @classmethod
-    def get_label(cls):
-        return ''
-"""    
     
 class LastCheckColumn(Column):
     ATTR_NAME = 'last_check'
@@ -203,6 +187,13 @@ class GenericHost(GenericObject):
     def get_host_name(self):
         return str(self.name)
     
+    
+    def is_host(self):
+        """
+        decides where to put acknowledged/downtime pixbufs in Liststore for Treeview in Popwin
+        """
+        return True
+    
 
 class GenericService(GenericObject):
     """
@@ -219,6 +210,12 @@ class GenericService(GenericObject):
 
     def get_service_name(self):
         return str(self.name) 
+    
+    def is_host(self):
+        """
+        decides where to put acknowledged/downtime pixbufs in Liststore for Treeview in Popwin
+        """
+        return False
             
 
 class Result(object):
