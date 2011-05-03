@@ -192,10 +192,8 @@ class GUI(object):
         """
             create output visuals
         """
-        # decide if the platform can handle SVG if not (Windows and MacOSX) use PNG - do not know
-        # why but in Windows there occurs an error like "svg_loader.dll could not be found"
-        # something similar in MacOSX
-        if platform.system() == "Windows" or platform.system() == "Darwin":
+        # decide if the platform can handle SVG if not (MacOSX) use PNG
+        if platform.system() == "Darwin":
             self.BitmapSuffix = ".png"
         else:
             self.BitmapSuffix = ".svg"
@@ -1256,7 +1254,9 @@ class Popwin(gtk.Window):
         # icons for acknowledgement/downtime visualization
         self.ICONS = dict()
         for color in ["acknowledged", "downtime"]:
-            self.ICONS[color] = gtk.gdk.pixbuf_new_from_file_at_size(self.output.Resources + os.sep + "nagstamon_" + color + self.output.BitmapSuffix, 16, 16)
+            self.ICONS[color] = gtk.gdk.pixbuf_new_from_file_at_size(self.output.Resources\
+                                + os.sep + "nagstamon_" + color + self.output.BitmapSuffix,\
+                                int(self.output.fontsize/750), int(self.output.fontsize/750))
             
         # create a scrollable area for the treeview in case it is larger than the screen
         # in case there are too many failed services and hosts
@@ -1745,7 +1745,10 @@ class ServerVBox(gtk.VBox):
                 tab_column.pack_start(cell_img_ack)
                 tab_column.pack_start(cell_img_down)
                 # set text from liststore and flag icons if existing
-                tab_column.set_attributes(cell_txt, foreground=7, background=8, text=s)
+                # why ever, in Windows(TM) the background looks better if applied separately
+                # to be honest, even looks better in Linux
+                tab_column.set_attributes(cell_txt, foreground=7, text=s)
+                tab_column.add_attribute(cell_txt, "cell-background", 8)
                 tab_column.set_attributes(cell_img_ack, pixbuf=9+offset[s])
                 tab_column.add_attribute(cell_img_ack, "cell-background", 8)
                 tab_column.set_attributes(cell_img_down, pixbuf=10+offset[s])
@@ -1754,7 +1757,8 @@ class ServerVBox(gtk.VBox):
                 # normal way for all other columns
                 cell_txt = gtk.CellRendererText()
                 tab_column.pack_start(cell_txt, False)
-                tab_column.set_attributes(cell_txt, foreground=7, background=8, text=s)
+                tab_column.set_attributes(cell_txt, foreground=7, text=s)
+                tab_column.add_attribute(cell_txt, "cell-background", 8)
                 
             # set customized sorting
             if column.has_customized_sorting():
