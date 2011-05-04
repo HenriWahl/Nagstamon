@@ -330,7 +330,7 @@ class GUI(object):
                     # apart from status informations there we need two columns which
                     # hold the color information, which is derived from status which
                     # is used as key at the above color dictionaries    
-                    # Update: new columns added which contain pixbufs of flag indicators if needed                   
+                    # Update: new columns added which contain pixbufs of flag indicators if needed                       
                     for item_type, status_dict in server.nagitems_filtered.iteritems():
                         for status, item_list in status_dict.iteritems():
                             for item in list(item_list):
@@ -338,6 +338,7 @@ class GUI(object):
                                 tuned_list.append(self.TAB_FG_COLORS[item.status])
                                 tuned_list.append(self.TAB_BG_COLORS[item.status])
                                 
+                                # icons for hosts
                                 if item.is_acknowledged() and item.is_host():
                                     tuned_list.append(self.popwin.ICONS["acknowledged"])
                                 else:    
@@ -347,7 +348,8 @@ class GUI(object):
                                     tuned_list.append(self.popwin.ICONS["downtime"])   
                                 else:    
                                     tuned_list.append(None)
-                                    
+                                
+                                # icons for services    
                                 if item.is_acknowledged() and not item.is_host():
                                     tuned_list.append(self.popwin.ICONS["acknowledged"])
                                 else:    
@@ -358,7 +360,10 @@ class GUI(object):
                                 else:    
                                     tuned_list.append(None)
                                     
-                                server.ListStore.append(tuned_list)     
+                                server.ListStore.append(tuned_list)   
+                    
+                    # after all data from server has been put into Liststore it should be deleted
+                    ###server.nagitems_filtered.clear()
                                 
                     # give new ListStore to the view, overwrites the old one automatically - theoretically
                     server.TreeView.set_model(server.ListStore)
@@ -1256,7 +1261,7 @@ class Popwin(gtk.Window):
         for color in ["acknowledged", "downtime"]:
             self.ICONS[color] = gtk.gdk.pixbuf_new_from_file_at_size(self.output.Resources\
                                 + os.sep + "nagstamon_" + color + self.output.BitmapSuffix,\
-                                int(self.output.fontsize/750), int(self.output.fontsize/750))
+                                int(self.output.fontsize/650), int(self.output.fontsize/650))
             
         # create a scrollable area for the treeview in case it is larger than the screen
         # in case there are too many failed services and hosts

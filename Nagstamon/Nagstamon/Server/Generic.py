@@ -327,35 +327,11 @@ class GenericServer(object):
         # http://www.nagios-wiki.de/nagios/tips/host-_und_serviceproperties_fuer_status.cgi?s=servicestatustypes
         # hoststatus
         hoststatustypes = 12
-        """
-        if str(self.conf.filter_all_down_hosts) == "True":
-            hoststatustypes = hoststatustypes - 4
-        if str(self.conf.filter_all_unreachable_hosts) == "True":
-            hoststatustypes = hoststatustypes - 8
-        """    
         # servicestatus
         servicestatustypes = 253
-        """
-        if str(self.conf.filter_all_unknown_services) == "True":
-            servicestatustypes = servicestatustypes - 8
-        if str(self.conf.filter_all_warning_services) == "True":
-            servicestatustypes = servicestatustypes - 4
-        if str(self.conf.filter_all_critical_services) == "True":
-            servicestatustypes = servicestatustypes - 16
-        """    
         # serviceprops & hostprops both have the same values for the same states so I
         # group them together
         hostserviceprops = 0
-        """
-        if str(self.conf.filter_acknowledged_hosts_services) == "True":
-            hostserviceprops = hostserviceprops + 8
-        if str(self.conf.filter_hosts_services_disabled_notifications) == "True":
-            hostserviceprops = hostserviceprops + 8192
-        if str(self.conf.filter_hosts_services_disabled_checks) == "True":
-            hostserviceprops = hostserviceprops + 32
-        if str(self.conf.filter_hosts_services_maintenance) == "True":
-            hostserviceprops = hostserviceprops + 2
-        """
         # services (unknown, warning or critical?)
         nagcgiurl_services = self.nagios_cgi_url + "/status.cgi?host=all&servicestatustypes=" + str(servicestatustypes) + "&serviceprops=" + str(hostserviceprops)
         # hosts (up or down or unreachable)
@@ -576,15 +552,17 @@ class GenericServer(object):
         # set checking flag to be sure only one thread cares about this server
         self.isChecking = True        
         
+        
+        # this part has been before in GUI.RefreshDisplay() - wrong place, here it needs to be reset
+        self.nagitems_filtered = {"services":{"CRITICAL":[], "WARNING":[], "UNKNOWN":[]}, "hosts":{"DOWN":[], "UNREACHABLE":[]}}
+        
         # check if server is enabled, if not, do not get any status
         if str(self.conf.servers[self.get_name()].enabled) == "False":
             self.WorstStatus = "UP"
-            # dummy filtered items
-            self.nagitems_filtered = {"services":{"CRITICAL":[], "WARNING":[], "UNKNOWN":[]}, "hosts":{"DOWN":[], "UNREACHABLE":[]}}
             self.isChecking = False          
             return Result()    
 
-        # some filtering is already done by the server specific _get_status()
+        # get all trouble hosts/services from server specific _get_status()
         status = self._get_status()
         self.status, self.status_description = status.result, status.error     
 
@@ -592,9 +570,6 @@ class GenericServer(object):
             self.isChecking = False
             return Result(result=self.status, error=self.status_description)
 
-        # this part has been before in GUI.RefreshDisplay() - wrong place, here it needs to be reset
-        self.nagitems_filtered = {"services":{"CRITICAL":[], "WARNING":[], "UNKNOWN":[]}, "hosts":{"DOWN":[], "UNREACHABLE":[]}}
-        
         # initialize counts for various service/hosts states
         # count them with every miserable host/service respective to their meaning
         self.downs = 0
@@ -781,10 +756,11 @@ class GenericServer(object):
                 self.WorstStatus = self.States[worst]
             
         # copy of listed nagitems for next comparison
-        self.nagitems_filtered_list = new_nagitems_filtered_list
+        self.nagitems_filtered_list = copy.copy(new_nagitems_filtered_list)
 
         # put new informations into respective dictionaries      
-        self.hosts = self.new_hosts
+        self.hosts = copy.copy(self.new_hosts)
+        self.new_hosts.clear()
         
         # after all checks are done unset checking flag
         self.isChecking = False
