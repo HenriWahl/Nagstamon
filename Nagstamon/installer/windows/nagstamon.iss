@@ -29,7 +29,6 @@ Source: ..\..\..\..\dist\nagstamon\cairo._cairo.pyd; DestDir: {app}
 Source: ..\..\..\..\dist\nagstamon\freetype6.dll; DestDir: {app}
 Source: ..\..\..\..\dist\nagstamon\gobject._gobject.pyd; DestDir: {app}
 Source: ..\..\..\..\dist\nagstamon\gtk._gtk.pyd; DestDir: {app}
-Source: ..\..\..\..\dist\nagstamon\gtk.glade.pyd; DestDir: {app}
 Source: ..\..\..\..\dist\nagstamon\iconv.dll; DestDir: {app}
 Source: ..\..\..\..\dist\nagstamon\intl.dll; DestDir: {app}
 Source: ..\..\..\..\dist\nagstamon\libatk-1.0-0.dll; DestDir: {app}
@@ -39,7 +38,6 @@ Source: ..\..\..\..\dist\nagstamon\libfontconfig-1.dll; DestDir: {app}
 Source: ..\..\..\..\dist\nagstamon\libgdk_pixbuf-2.0-0.dll; DestDir: {app}
 Source: ..\..\..\..\dist\nagstamon\libgdk-win32-2.0-0.dll; DestDir: {app}
 Source: ..\..\..\..\dist\nagstamon\libgio-2.0-0.dll; DestDir: {app}
-Source: ..\..\..\..\dist\nagstamon\libglade-2.0-0.dll; DestDir: {app}
 Source: ..\..\..\..\dist\nagstamon\libglib-2.0-0.dll; DestDir: {app}
 Source: ..\..\..\..\dist\nagstamon\libgmodule-2.0-0.dll; DestDir: {app}
 Source: ..\..\..\..\dist\nagstamon\libgobject-2.0-0.dll; DestDir: {app}
@@ -66,11 +64,11 @@ Source: ..\..\..\..\dist\nagstamon\win32api.pyd; DestDir: {app}
 Source: ..\..\..\..\dist\nagstamon\win32pipe.pyd; DestDir: {app}
 Source: ..\..\..\..\dist\nagstamon\winsound.pyd; DestDir: {app}
 Source: ..\..\..\..\dist\nagstamon\zlib1.dll; DestDir: {app}
-Source: ..\..\..\..\dist\nagstamon\resources\acknowledge_dialog.glade; DestDir: {app}\resources\
+Source: ..\..\..\..\dist\nagstamon\resources\acknowledge_dialog.ui; DestDir: {app}\resources\
 Source: ..\..\..\..\dist\nagstamon\resources\close.png; DestDir: {app}\resources\
 Source: ..\..\..\..\dist\nagstamon\resources\close.svg; DestDir: {app}\resources\
 Source: ..\..\..\..\dist\nagstamon\resources\critical.wav; DestDir: {app}\resources\
-Source: ..\..\..\..\dist\nagstamon\resources\downtime_dialog.glade; DestDir: {app}\resources\
+Source: ..\..\..\..\dist\nagstamon\resources\downtime_dialog.ui; DestDir: {app}\resources\
 Source: ..\..\..\..\dist\nagstamon\resources\hostdown.wav; DestDir: {app}\resources\
 Source: ..\..\..\..\dist\nagstamon\resources\hosts.png; DestDir: {app}\resources\
 Source: ..\..\..\..\dist\nagstamon\resources\hosts.svg; DestDir: {app}\resources\
@@ -88,6 +86,10 @@ Source: ..\..\..\..\dist\nagstamon\resources\nagstamon_darkred.png; DestDir: {ap
 Source: ..\..\..\..\dist\nagstamon\resources\nagstamon_darkred.svg; DestDir: {app}\resources\
 Source: ..\..\..\..\dist\nagstamon\resources\nagstamon_error.png; DestDir: {app}\resources\
 Source: ..\..\..\..\dist\nagstamon\resources\nagstamon_error.svg; DestDir: {app}\resources\
+Source: ..\..\..\..\dist\nagstamon\resources\nagstamon_acknowledged.png; DestDir: {app}\resources\
+Source: ..\..\..\..\dist\nagstamon\resources\nagstamon_acknowledged.svg; DestDir: {app}\resources\
+Source: ..\..\..\..\dist\nagstamon\resources\nagstamon_downtime.png; DestDir: {app}\resources\
+Source: ..\..\..\..\dist\nagstamon\resources\nagstamon_downtime.svg; DestDir: {app}\resources\
 Source: ..\..\..\..\dist\nagstamon\resources\nagstamon_green.png; DestDir: {app}\resources\
 Source: ..\..\..\..\dist\nagstamon\resources\nagstamon_green.svg; DestDir: {app}\resources\
 Source: ..\..\..\..\dist\nagstamon\resources\nagstamon_label.png; DestDir: {app}\resources\
@@ -108,8 +110,8 @@ Source: ..\..\..\..\dist\nagstamon\resources\services.png; DestDir: {app}\resour
 Source: ..\..\..\..\dist\nagstamon\resources\services.svg; DestDir: {app}\resources\
 Source: ..\..\..\..\dist\nagstamon\resources\settings.png; DestDir: {app}\resources\
 Source: ..\..\..\..\dist\nagstamon\resources\settings.svg; DestDir: {app}\resources\
-Source: ..\..\..\..\dist\nagstamon\resources\settings_dialog.glade; DestDir: {app}\resources\
-Source: ..\..\..\..\dist\nagstamon\resources\settings_server_dialog.glade; DestDir: {app}\resources\
+Source: ..\..\..\..\dist\nagstamon\resources\settings_dialog.ui; DestDir: {app}\resources\
+Source: ..\..\..\..\dist\nagstamon\resources\settings_server_dialog.ui; DestDir: {app}\resources\
 Source: ..\..\..\..\dist\nagstamon\resources\warning.wav; DestDir: {app}\resources\
 Source: ..\..\..\..\dist\nagstamon\etc\gtk-2.0\gdk-pixbuf.loaders; DestDir: {app}\etc\gtk-2.0
 Source: ..\..\..\..\dist\nagstamon\etc\gtk-2.0\gtk.immodules; DestDir: {app}\etc\gtk-2.0
@@ -121,7 +123,6 @@ Source: ..\..\..\..\dist\nagstamon\lib\gtk-2.0\2.10.0\engines\libwimp.dll; DestD
 Source: ..\..\..\..\dist\nagstamon\lib\gtk-2.0\2.10.0\loaders\libpixbufloader-png.dll; DestDir: {app}\lib\gtk-2.0\2.10.0\loaders
 Source: ..\..\..\..\dist\nagstamon\lib\pango\1.6.0\modules\pango-basic-win32.dll; DestDir: {app}\lib\pango\1.6.0\modules
 Source: ..\..\..\..\dist\nagstamon\share\themes\MS-Windows\gtk-2.0\gtkrc; DestDir: {app}\share\themes\MS-Windows\gtk-2.0
-Source: ..\..\..\..\dist\nagstamon\share\xml\libglade\glade-2.0.dtd; DestDir: {app}\share\xml\libglade
 Source: ..\..\..\..\dist\nagstamon\_hashlib.pyd; DestDir: {app}
 Source: ..\..\..\..\dist\nagstamon\_socket.pyd; DestDir: {app}
 Source: ..\..\..\..\dist\nagstamon\_ssl.pyd; DestDir: {app}

@@ -1746,9 +1746,9 @@ class ServerVBox(gtk.VBox):
                 # host/service name
                 cell_txt = gtk.CellRendererText()
                 # stuff all renders into one cell
-                tab_column.pack_start(cell_txt)
-                tab_column.pack_start(cell_img_ack)
-                tab_column.pack_start(cell_img_down)
+                tab_column.pack_start(cell_txt, False)
+                tab_column.pack_start(cell_img_ack, False)
+                tab_column.pack_start(cell_img_down, False)
                 # set text from liststore and flag icons if existing
                 # why ever, in Windows(TM) the background looks better if applied separately
                 # to be honest, even looks better in Linux

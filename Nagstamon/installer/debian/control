@@ -13,7 +13,7 @@ Vcs-Browser: http://svn.debian.org/viewsvn/python-apps/packages/nagstamon/trunk/
 
 Package: nagstamon
 Architecture: all
-Depends: ${python:Depends}, ${misc:Depends}, python-gtk2, python-lxml, python-pkg-resources, python-glade2, python-eggtrayicon, librsvg2-common, sox
+Depends: ${python:Depends}, ${misc:Depends}, python-gtk2, python-pkg-resources, python-eggtrayicon, librsvg2-common, sox
 Description: Nagios status monitor which takes place in systray or on desktop
  Nagstamon is a Nagios status monitor which takes place in systray or 
  on desktop (GNOME, KDE) as floating statusbar to inform you in 
