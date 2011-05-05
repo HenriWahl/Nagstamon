@@ -1728,7 +1728,10 @@ class ServerVBox(gtk.VBox):
         self.add(self.Server_EventBox)            
 
         # new TreeView handling, not generating new items with every refresh cycle
-        self.server.TreeView = gtk.TreeView()      
+        self.server.TreeView = gtk.TreeView() 
+        # enable hover effect
+        self.server.TreeView.set_hover_selection(True)
+        # Liststore
         self.server.ListStore = gtk.ListStore(*self.output.LISTSTORE_COLUMNS)
 
         # offset to access host and service flag icons separately, stored in grand liststore
