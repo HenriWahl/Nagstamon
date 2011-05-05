@@ -668,12 +668,12 @@ class GenericServer(object):
                     if str(self.conf.debug_mode) == "True":
                         self.Debug(server=self.get_name(), debug="Filter: Service on Host in UNREACHABLE " + str(host.name) + ";" + str(service.name))
                     service.visible = False
-
+    
+                real_attempt, max_attempt = service.attempt.split("/")
                 if real_attempt <> max_attempt and str(self.conf.filter_services_in_soft_state) == "True":
                     if str(self.conf.debug_mode) == "True":
                         self.Debug(server=self.get_name(), debug="Filter: SOFT STATE " + str(host.name) + ";" + str(service.name))
                     service.visible = False
-                print "*"*30
                 
                 if HostIsFilteredOutByRE(host.name, self.conf) == True:
                     if str(self.conf.debug_mode) == "True":
