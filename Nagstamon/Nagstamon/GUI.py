@@ -1706,23 +1706,18 @@ class ServerVBox(gtk.VBox):
         # order the elements
         self.HBox = gtk.HBox(homogeneous=True)
         self.HBoxMonitor = gtk.HBox()
-        self.HBoxStatus = gtk.HBox()
         self.HBoxMonitor.add(self.Label)
         # leave some space around the label
         self.Label.set_padding(5, 5)
         self.HBoxMonitor.add(self.ButtonMonitor)
         self.HBoxMonitor.add(self.ButtonHosts)
         self.HBoxMonitor.add(self.ButtonServices)
-        
-        self.HBoxStatus.add(self.LabelStatus)
+        self.HBoxMonitor.add(self.LabelStatus)
         
         self.AlignmentMonitor = gtk.Alignment(xalign=0, xscale=0.05, yalign=0)
         self.AlignmentMonitor.add(self.HBoxMonitor)
-        self.AlignmentStatus = gtk.Alignment(xalign=0, xscale=0.0, yalign=0.5)
-        self.AlignmentStatus.add(self.HBoxStatus)
         
         self.HBox.add(self.AlignmentMonitor)
-        self.HBox.add(self.AlignmentStatus)
 
         self.Server_EventBox.add(self.HBox)
         self.add(self.Server_EventBox)            
