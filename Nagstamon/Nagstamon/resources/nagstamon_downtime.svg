@@ -78,14 +78,14 @@
      borderopacity="1.0"
      inkscape:pageopacity="0.0"
      inkscape:pageshadow="2"
-     inkscape:zoom="0.87327687"
-     inkscape:cx="-166.47469"
-     inkscape:cy="312.53978"
+     inkscape:zoom="1.7465537"
+     inkscape:cx="179.62869"
+     inkscape:cy="164.39857"
      inkscape:document-units="px"
      inkscape:current-layer="g3518"
      showgrid="true"
      showguides="true"
-     inkscape:snap-global="true"
+     inkscape:snap-global="false"
      inkscape:snap-guide="true"
      inkscape:snap-bbox="true"
      inkscape:object-paths="true"
@@ -97,8 +97,8 @@
      guidetolerance="10"
      inkscape:snap-intersection-line-segments="true"
      inkscape:snap-center="true"
-     inkscape:window-width="1440"
-     inkscape:window-height="843"
+     inkscape:window-width="1920"
+     inkscape:window-height="1025"
      inkscape:window-x="0"
      inkscape:window-y="26"
      gridtolerance="10"
@@ -126,10 +126,6 @@
        orientation="0,1"
        position="54.054032,62.541882"
        id="guide3190" />
-    <sodipodi:guide
-       orientation="1,0"
-       position="345.94588,62.541882"
-       id="guide3192" />
   </sodipodi:namedview>
   <metadata
      id="metadata7">
@@ -154,41 +150,40 @@
        id="g3518"
        inkscape:export-xdpi="34.611824"
        inkscape:export-ydpi="34.611824">
-      <path
-         sodipodi:type="arc"
-         style="fill:#ffffff;fill-opacity:1;stroke:#000000;stroke-width:20.90954973;stroke-linecap:round;stroke-linejoin:round;stroke-miterlimit:4;stroke-opacity:1;stroke-dasharray:none"
-         id="path3024"
-         sodipodi:cx="235.62753"
-         sodipodi:cy="270.44534"
-         sodipodi:rx="147.36842"
-         sodipodi:ry="147.36842"
-         d="m 382.99596,270.44534 c 0,81.38934 -65.97909,147.36843 -147.36843,147.36843 -81.38933,0 -147.368421,-65.97909 -147.368421,-147.36843 0,-81.38933 65.979091,-147.36842 147.368421,-147.36842 81.38934,0 147.36843,65.97909 147.36843,147.36842 z"
-         transform="matrix(1.1478009,0,0,1.1478009,95.488156,142.92977)" />
+      <rect
+         style="fill:#ffffff;fill-opacity:1;stroke:#000000;stroke-width:24;stroke-linecap:round;stroke-linejoin:round;stroke-miterlimit:4;stroke-opacity:1;stroke-dasharray:none"
+         id="rect3010"
+         width="385.6517"
+         height="386.439"
+         x="178.04523"
+         y="260.59189"
+         rx="72.714622"
+         ry="72.714622" />
       <rect
          style="fill:#000000;fill-opacity:1;stroke:#000000;stroke-width:0;stroke-linecap:round;stroke-linejoin:round;stroke-miterlimit:4;stroke-opacity:1;stroke-dasharray:none"
          id="rect3794-5"
-         width="24.399929"
-         height="125"
-         x="441.14722"
-         y="-473.44165"
-         rx="0.19764024"
-         ry="0.2681118"
+         width="33.560825"
+         height="151.91013"
+         x="436.56677"
+         y="-500.92435"
+         rx="0.27184382"
+         ry="0.3258312"
          transform="matrix(0,1,-1,0,0,0)" />
       <rect
          style="fill:#000000;fill-opacity:1;stroke:#000000;stroke-width:0;stroke-linecap:round;stroke-linejoin:round;stroke-miterlimit:4;stroke-opacity:1;stroke-dasharray:none"
          id="rect3794"
-         width="15.049744"
-         height="145.86485"
+         width="25.355753"
+         height="174.49266"
          x="358.41678"
-         y="325.41476"
-         rx="0.12190342"
-         ry="0.31286472" />
+         y="305.94785"
+         rx="0.20538244"
+         ry="0.37426832" />
       <rect
          style="fill:#585858;fill-opacity:1;stroke:#000000;stroke-width:0;stroke-linecap:round;stroke-linejoin:round;stroke-miterlimit:4;stroke-opacity:1;stroke-dasharray:none"
          id="rect3904"
          width="20"
          height="20"
-         x="210.94165"
+         x="194.33752"
          y="443.34717"
          rx="0.11128867"
          ry="0.024012806" />
@@ -197,8 +192,8 @@
          id="rect3904-9"
          width="20"
          height="20"
-         x="355.94165"
-         y="588.34717"
+         x="361.09467"
+         y="607.81409"
          rx="0.11128867"
          ry="0.024012806" />
       <rect
@@ -206,7 +201,7 @@
          id="rect3904-8"
          width="20"
          height="20"
-         x="500.94165"
+         x="524.98901"
          y="443.34717"
          rx="0.11128867"
          ry="0.024012806" />
@@ -215,8 +210,8 @@
          id="rect3904-5"
          width="20"
          height="20"
-         x="355.94165"
-         y="298.34714"
+         x="361.09467"
+         y="278.30768"
          rx="0.11128867"
          ry="0.024012806" />
     </g>
