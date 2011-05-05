@@ -670,7 +670,12 @@ class GUI(object):
                            "Tobias Scheerbaum",\
                            "Yannick Charton",\
                            " ",\
-                           "...and those I forgot to mention but who helped a lot..."])
+                           "...and those I forgot to mention but who helped a lot...",
+                           " ",\
+                           "Third party software used by Nagstamon",\
+                           "under their respective license:",\
+                           "BeautifulSoup - http://www.crummy.com/software/BeautifulSoup",\
+                           "Pyinstaller - http://www.pyinstaller.org"])
         # read LICENSE file
         license = ""
         try:
@@ -1699,26 +1704,31 @@ class ServerVBox(gtk.VBox):
         self.ButtonHosts = gtk.Button()
         self.ButtonHosts.set_relief(gtk.RELIEF_NONE)
         self.ButtonHosts.add(self.ButtonHosts_HBox)
+        print self.ButtonHosts_Label.get_size_request()
         
         # Label with status information
         self.LabelStatus = gtk.Label("")
         
         # order the elements
         self.HBox = gtk.HBox(homogeneous=True)
-        self.HBoxMonitor = gtk.HBox()
-        self.HBoxMonitor.add(self.Label)
+        self.HBoxLeft = gtk.HBox()
+        self.HBoxRight = gtk.HBox()
+        self.HBoxLeft.add(self.Label)
         # leave some space around the label
         self.Label.set_padding(5, 5)
-        self.HBoxMonitor.add(self.ButtonMonitor)
-        self.HBoxMonitor.add(self.ButtonHosts)
-        self.HBoxMonitor.add(self.ButtonServices)
-        self.HBoxMonitor.add(self.LabelStatus)
+        self.HBoxLeft.add(self.ButtonMonitor)
+        self.HBoxLeft.add(self.ButtonHosts)
+        self.HBoxLeft.add(self.ButtonServices)
+        self.HBoxLeft.add(self.LabelStatus)
         
-        self.AlignmentMonitor = gtk.Alignment(xalign=0, xscale=0.05, yalign=0)
-        self.AlignmentMonitor.add(self.HBoxMonitor)
+        self.AlignmentLeft = gtk.Alignment(xalign=0, xscale=0.05, yalign=0)
+        self.AlignmentLeft.add(self.HBoxLeft)
+        self.AlignmentRight = gtk.Alignment(xalign=0, xscale=0.0, yalign=0.5)
+        self.AlignmentRight.add(self.HBoxRight)
         
-        self.HBox.add(self.AlignmentMonitor)
-
+        self.HBox.add(self.AlignmentLeft)
+        self.HBox.add(self.AlignmentRight)
+        
         self.Server_EventBox.add(self.HBox)
         self.add(self.Server_EventBox)            
 

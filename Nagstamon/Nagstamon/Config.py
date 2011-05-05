@@ -47,6 +47,7 @@ class Config(object):
         # because of nonexistent windows systray popup support I'll let it be now
         #self.notification_popup = False
         self.notification_sound = True
+        self.notification_sound_repeat = False
         self.notification_default_sound = True
         self.notification_custom_sound = False      
         self.notification_custom_sound_warning = None
