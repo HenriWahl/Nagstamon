@@ -388,7 +388,9 @@ class GenericServer(object):
                             n["attempt"] = "N/A"
                         else:
                             # attempts are shown for hosts
-                            n["attempt"] = str(tds[4].string)
+                            # to fix http://sourceforge.net/tracker/?func=detail&atid=1101370&aid=3280961&group_id=236865 .attempt needs
+                            # to be stripped
+                            n["attempt"] = str(tds[4].string).strip()
                             # status_information
                             n["status_information"] = str(tds[5].string)
                             
@@ -480,7 +482,9 @@ class GenericServer(object):
                         # duration
                         n["duration"] = str(tds[4](text=not_empty)[0])
                         # attempt
-                        n["attempt"] = str(tds[5](text=not_empty)[0])
+                        # to fix http://sourceforge.net/tracker/?func=detail&atid=1101370&aid=3280961&group_id=236865 .attempt needs
+                        # to be stripped
+                        n["attempt"] = str(tds[5](text=not_empty)[0]).strip()
                         # status_information
                         n["status_information"] = str(tds[6](text=not_empty)[0])
                         # status flags 
@@ -657,7 +661,7 @@ class GenericServer(object):
     
                 if host.status == "DOWN" and str(self.conf.filter_services_on_down_hosts) == "True":
                     if str(self.conf.debug_mode) == "True":
-                        self.Debug(server=self.get_name(), debug="Filter: Service on Host in DONW " + str(host.name) + ";" + str(service.name))
+                        self.Debug(server=self.get_name(), debug="Filter: Service on Host in DOWN " + str(host.name) + ";" + str(service.name))
                     service.visible = False
     
                 if host.status == "UNREACHABLE" and str(self.conf.filter_services_on_unreachable_hosts) == "True":
@@ -666,11 +670,14 @@ class GenericServer(object):
                     service.visible = False
     
                 real_attempt, max_attempt = service.attempt.split("/")
+                print "*"*30
+                print '"' + service.attempt + '"'
                 if real_attempt <> max_attempt and str(self.conf.filter_services_in_soft_state) == "True":
                     if str(self.conf.debug_mode) == "True":
                         self.Debug(server=self.get_name(), debug="Filter: SOFT STATE " + str(host.name) + ";" + str(service.name))
                     service.visible = False
-    
+                print "*"*30
+                
                 if HostIsFilteredOutByRE(host.name, self.conf) == True:
                     if str(self.conf.debug_mode) == "True":
                         self.Debug(server=self.get_name(), debug="Filter: REGEXP " + str(host.name) + ";" + str(service.name))
