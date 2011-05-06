@@ -1,10 +1,22 @@
+nagstamon (0.9.6.1-1) unstable; urgency=low
+
+  * fix for sf.net bug 3298321 - displaying error when all is OK
+
+ -- Henri Wahl <h.wahl@ifw-dresden.de>  Fri, 06 May 2011 16:01:00 +0200
+
 nagstamon (0.9.6-1) unstable; urgency=low
   
-  * mostly underlying architectural changes
-    - BeautifulSoup instead of lxml
-    - GTK UI Builder instead of glade
+  * New upstreeam release 
+    - improved, full Ninja support
+    - rewritten filtering mechanism allows new features
+    - displaying icons in status overview popup indicating states "acknowledged" and "scheduled downtime"
+    - added option to play notification sounds more than once
+    - small UI improvements
+    - uses BeautifulSoup instead of lxml
+    - uses GTK UI Builder instead of glade
+    - as always: bugfixes
 
- -- Henri Wahl <h.wahl@ifw-dresden.de>  Tue, 27 Apr 2011 16:01:00 +0200
+ -- Henri Wahl <h.wahl@ifw-dresden.de>  Fri, 06 May 2011 16:01:00 +0200
 
 nagstamon (0.9.5-1) unstable; urgency=low
  
