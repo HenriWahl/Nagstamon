@@ -2187,8 +2187,8 @@ class Settings(object):
         """
             Disable notification sound when not using sound is enabled
         """
-        options = self.builder.get_object("table_notification_options")
-        checkbutton = self.builder.get_object("input_checkbutton_notification")
+        options = self.builder.get_object("table_notification_options_sound_options")
+        checkbutton = self.builder.get_object("input_checkbutton_notification_sound")
         options.set_sensitive(checkbutton.get_active())
 
 
