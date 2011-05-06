@@ -1,3 +1,449 @@
+2011-05-06 21:24  henriwww
+
+	* Nagstamon/Server/Generic.py: fix for
+	  https://sourceforge.net/tracker/index.php?func=detail&aid=3298321&group_id=236865&atid=1101370
+
+2011-05-06 10:02  henriwww
+
+	* Nagstamon/GUI.py: another fix with sound options settings
+
+2011-05-06 09:40  henriwww
+
+	* Nagstamon/resources/settings_dialog.ui: fix in sound repeat gui
+	  settings
+
+2011-05-06 09:05  henriwww
+
+	* Nagstamon/Actions.py, Nagstamon/GUI.py,
+	  Nagstamon/resources/nagstamon_acknowledged.png,
+	  Nagstamon/resources/nagstamon_downtime.png: added repeated
+	  soundnotification, solves
+	  https://sourceforge.net/tracker/index.php?func=detail&aid=2947902&group_id=236865&atid=1101373
+	  and
+	  https://sourceforge.net/tracker/?func=detail&atid=1101373&aid=3016972&group_id=236865
+
+2011-05-05 14:26  henriwww
+
+	* Nagstamon/Config.py, Nagstamon/GUI.py,
+	  Nagstamon/resources/settings_dialog.ui: readded alighnbox in
+	  server_vbox in popwin to keep buttons kind of normally stretched
+	  started with repeating acustical notification
+
+2011-05-05 13:24  henriwww
+
+	* Nagstamon/GUI.py: put connection status info in popwin more into
+	  center
+
+2011-05-05 13:08  henriwww
+
+	* Nagstamon/GUI.py, Nagstamon/resources/nagstamon_acknowledged.png,
+	  Nagstamon/resources/nagstamon_acknowledged.svg: small changes
+	  leading to beta4
+
+2011-05-05 10:11  henriwww
+
+	* Nagstamon/Server/Generic.py: fix for last fix
+
+2011-05-05 10:07  henriwww
+
+	* Nagstamon/Server/Generic.py: removed debug information
+
+2011-05-05 09:52  henriwww
+
+	* Nagstamon/GUI.py, Nagstamon/Server/Generic.py: switched Windows
+	  back to PNG - sorry but seems to be SVG resistant
+	  fixed
+	  http://sourceforge.net/tracker/?func=detail&atid=1101370&aid=3280961&group_id=236865
+
+2011-05-05 08:48  henriwww
+
+	* Nagstamon/resources/nagstamon_acknowledged.png,
+	  Nagstamon/resources/nagstamon_acknowledged.svg,
+	  Nagstamon/resources/nagstamon_downtime.png,
+	  Nagstamon/resources/nagstamon_downtime.svg: new colorless
+	  indicator icons
+
+2011-05-04 19:20  henriwww
+
+	* Nagstamon/resources/nagstamon_downtime.svg: playing with svg icon
+
+2011-05-04 13:37  henriwww
+
+	* Nagstamon/GUI.py, installer/debian/control,
+	  installer/windows/nagstamon.iss,
+	  installer/windows/nagstamon_0.9.4.iss: small fixes for creating
+	  executables
+
+2011-05-04 10:26  henriwww
+
+	* installer/windows/nagstamon.iss: updated ISS file for 0.9.6 beta4
+
+2011-05-04 10:08  henriwww
+
+	* Nagstamon/GUI.py, Nagstamon/Server/Generic.py,
+	  Nagstamon/resources/nagstamon_downtime.png,
+	  Nagstamon/resources/nagstamon_downtime.svg: fixing never-ending
+	  hosts list, introduced with fix for
+	  http://sourceforge.net/tracker/?func=detail&atid=1101370&aid=3293649&group_id=236865
+
+2011-05-03 21:43  henriwww
+
+	* Nagstamon/GUI.py, Nagstamon/resources/nagstamon_acknowledged.png,
+	  Nagstamon/resources/nagstamon_acknowledged.svg,
+	  Nagstamon/resources/nagstamon_downtime.png,
+	  Nagstamon/resources/nagstamon_downtime.svg: fixed windows trouble
+	  with flag indicator icons
+
+2011-05-03 16:15  henriwww
+
+	* Nagstamon/GUI.py, Nagstamon/Objects.py,
+	  Nagstamon/Server/Generic.py, Nagstamon/Server/Opsview.py,
+	  Nagstamon/resources/nagstamon_acknowledged.png,
+	  Nagstamon/resources/nagstamon_acknowledged.svg,
+	  Nagstamon/resources/nagstamon_downtime.png,
+	  Nagstamon/resources/nagstamon_downtime.svg: popwin hosts/services
+	  overview now shows indicators for state (acknowledged/downtime)
+	  for Nagios/Icinga/Opsview/Ninja
+
+2011-05-02 13:27  henriwww
+
+	* Nagstamon/GUI.py, Nagstamon/Objects.py,
+	  Nagstamon/Server/Generic.py: playing with showing ack/downtime
+	  state in popwin - not working yet
+
+2011-04-29 23:49  henriwww
+
+	* Nagstamon/GUI.py: fixed crash after settings changes and
+	  not-applied-status-changes-in-popwin
+
+2011-04-29 14:44  henriwww
+
+	* installer/windows/nagstamon.iss: adjusted ISTool file
+
+2011-04-29 14:05  henriwww
+
+	* Nagstamon/GUI.py, Nagstamon/Server/Generic.py: hopefully fixed
+	  new trouble in
+	  http://sourceforge.net/tracker/?func=detail&atid=1101370&aid=3293649&group_id=236865
+
+2011-04-29 13:00  henriwww
+
+	* Nagstamon/Actions.py, Nagstamon/GUI.py: solved problem with
+	  undraggable statusbar in windows with gtk 2.22
+
+2011-04-28 21:34  henriwww
+
+	* Nagstamon/Config.py, Nagstamon/GUI.py: changing a little to be
+	  prepared for GNOME3
+
+2011-04-28 21:24  henriwww
+
+	* Nagstamon/GUI.py: trying and erroring with windows gtk 2.22
+	  statusbar dragging... not really working
+
+2011-04-28 13:33  henriwww
+
+	* Nagstamon/GUI.py: fiddling with
+	  statusbar-not-draggable-in-windows-with-gtk-2.22
+
+2011-04-28 09:33  henriwww
+
+	* Nagstamon/Actions.py, Nagstamon/GUI.py,
+	  Nagstamon/Server/Generic.py, Nagstamon/Server/Multisite.py,
+	  installer/debian/changelog, setup.py: testing without
+	  copy.deepcopy() to fix
+	  http://sourceforge.net/tracker/?func=detail&atid=1101370&aid=3293649&group_id=236865
+
+2011-04-27 13:55  henriwww
+
+	* Nagstamon/GUI.py: placing password dialog on center of screen
+
+2011-04-27 13:47  henriwww
+
+	* Nagstamon/GUI.py: playing wih password dialog gui
+
+2011-04-27 13:29  henriwww
+
+	* Nagstamon/GUI.py, Nagstamon/resources/settings_dialog.ui: changed
+	  display options to show only appliable on platform
+
+2011-04-27 10:24  henriwww
+
+	* Nagstamon/Config.py, Nagstamon/GUI.py: don't load systray icons
+	  with every status change from file but keep them as pixbufs
+
+2011-04-27 09:21  henriwww
+
+	* Nagstamon/Server/Ninja.py: Ninja seems to work with op5 filters
+	  too
+
+2011-04-26 14:37  henriwww
+
+	* Nagstamon/Server/Centreon.py, Nagstamon/Server/Generic.py,
+	  Nagstamon/Server/Multisite.py, Nagstamon/Server/Opsview.py:
+	  cleaned Servers from old filtering, now working Opsview,
+	  Centreon, Nagios + Icinga. In Multisite there are some
+	  informations missing, does not worke completely yet.
+
+2011-04-26 13:07  henriwww
+
+	* Nagstamon/Server/Centreon.py, Nagstamon/Server/Generic.py,
+	  Nagstamon/Server/Opsview.py: centreon kind of works with
+	  op5-filters too
+
+2011-04-26 12:10  henriwww
+
+	* Nagstamon/Objects.py, Nagstamon/Server/Generic.py: started
+	  applying filter rewrite from op5-devel, Nagios + Icinga already
+	  working
+
+2011-04-21 07:30  op5-team
+
+	* Nagstamon/Config.py: Add changes to Config.py to actuallt work
+	  when running as .app under OSX
+
+2011-04-20 14:03  henriwww
+
+	* Nagstamon/Actions.py, Nagstamon/Server/Multisite.py: fixed bug in
+	  multisite integration (mea culpa)
+
+2011-04-20 13:35  henriwww
+
+	* Nagstamon/Server/Centreon.py, Nagstamon/Server/Icinga.py,
+	  Nagstamon/Server/LxmlFreeGeneric.py,
+	  Nagstamon/Server/Multisite.py, Nagstamon/Server/Nagios.py,
+	  Nagstamon/Server/Opsview.py: got finally rid of lxml
+
+2011-04-20 13:27  henriwww
+
+	* Nagstamon/Actions.py, Nagstamon/Server/Centreon.py,
+	  Nagstamon/Server/Generic.py, Nagstamon/Server/Icinga.py,
+	  Nagstamon/Server/LxmlFreeGeneric.py, Nagstamon/Server/Nagios.py,
+	  Nagstamon/Server/Opsview.py: ported everything from
+	  LxmlFreeGeneric.py to Generic.py
+
+2011-04-20 12:47  henriwww
+
+	* Nagstamon/Actions.py, Nagstamon/Objects.py,
+	  Nagstamon/Server/Centreon.py, Nagstamon/Server/Generic.py,
+	  Nagstamon/Server/Icinga.py, Nagstamon/Server/LxmlFreeGeneric.py,
+	  Nagstamon/Server/Nagios.py: purging all occurrences of lxml
+
+2011-04-20 10:27  henriwww
+
+	* Nagstamon/Actions.py, Nagstamon/GUI.py, Nagstamon/Objects.py,
+	  Nagstamon/Server/Centreon.py,
+	  Nagstamon/Server/LxmlFreeGeneric.py, Nagstamon/Server/Opsview.py:
+	  Opsview and Centreon do clumsily work with BeautifulSoup
+
+2011-04-19 13:28  henriwww
+
+	* Nagstamon/Objects.py, Nagstamon/Server/Icinga.py,
+	  Nagstamon/Server/LxmlFreeGeneric.py, Nagstamon/Server/Nagios.py,
+	  Nagstamon/Server/Opsview.py: further beautifulsoupization,
+	  finished Nagios/Icinga, now on Opsview
+
+2011-04-19 10:34  op5-team
+
+	* installer/darwin, installer/darwin/Makefile,
+	  installer/darwin/nagstamon.spec, installer/darwin/src,
+	  installer/darwin/src/COPYRIGHT, installer/darwin/src/LICENSE,
+	  installer/darwin/template, installer/darwin/template.dmg.bz2:
+	  MacBuild: Proof of concept
+	  
+	  Added files to build .dmg and .app for OSX
+	  
+	  Signed-off-by: Mattias Ryrlén <mattiasr@op5.com>
+
+2011-04-15 13:15  henriwww
+
+	* Nagstamon/Objects.py, Nagstamon/Server/Icinga.py,
+	  Nagstamon/Server/LxmlFreeGeneric.py: proof of concept for status
+	  flags of hosts/services based on beautifulsoup
+
+2011-04-14 13:55  henriwww
+
+	* Nagstamon/Server/LxmlFreeGeneric.py, Nagstamon/Server/Nagios.py:
+	  non-working lxml free test with nagios
+
+2011-04-14 12:41  henriwww
+
+	* Nagstamon/Server/LxmlFreeGeneric.py: added op5 LxmlFreeGeneric.py
+	  to trunk for playing with it
+
+2011-04-14 12:25  henriwww
+
+	* Nagstamon/BeautifulSoup.py: starting applying op5 beautifulsoup
+	  prrof of concept into trunk
+
+2011-04-13 12:50  henriwww
+
+	* Nagstamon/GUI.py: some GUI...
+
+2011-04-13 09:13  henriwww
+
+	* Nagstamon/GUI.py, Nagstamon/resources/settings_dialog.ui:
+	  finetuning gtkbuilder ui stuff and colorbuttons
+
+2011-04-13 07:26  henriwww
+
+	* Nagstamon/GUI.py, Nagstamon/resources/acknowledge_dialog.glade,
+	  Nagstamon/resources/acknowledge_dialog.ui,
+	  Nagstamon/resources/downtime_dialog.glade,
+	  Nagstamon/resources/downtime_dialog.ui,
+	  Nagstamon/resources/settings_dialog.glade,
+	  Nagstamon/resources/settings_dialog.ui,
+	  Nagstamon/resources/settings_server_dialog.glade,
+	  Nagstamon/resources/settings_server_dialog.ui: port to gtkbuilder
+	  works
+
+2011-04-13 06:53  henriwww
+
+	* Nagstamon/resources/nagstamon.1: manpage patch by carl chenet
+
+2011-04-11 13:41  henriwww
+
+	* Nagstamon/GUI.py: added gtkbuilder patch from op5 branch to trunk
+	  - not working yet :-(
+
+2011-04-08 09:38  henriwww
+
+	* Nagstamon/resources/settings_server_dialog.glade: like before..
+
+2011-04-08 09:35  henriwww
+
+	* Nagstamon/GUI.py, Nagstamon/resources/settings_dialog.glade,
+	  Nagstamon/resources/settings_server_dialog.glade: still fixing
+	  windows setup dialog behaviour
+
+2011-04-08 09:17  henriwww
+
+	* Nagstamon/Config.py, Nagstamon/resources/settings_dialog.glade,
+	  Nagstamon/resources/settings_server_dialog.glade: trying to fix
+	  windows settings dialog misbehavior...
+
+2011-04-08 09:05  henriwww
+
+	* Nagstamon/GUI.py: added Robin Sonefors to contributors list
+
+2011-04-08 09:04  henriwww
+
+	* installer/windows/nagstamon.iss: inno setup fixes
+
+2011-04-07 22:25  henriwww
+
+	* Nagstamon/GUI.py: hopefully fixed regression bug with
+	  dissapearing statusbar...
+
+2011-04-07 21:57  henriwww
+
+	* installer/debian/control, installer/debian/copyright,
+	  installer/debian/nagstamon.desktop: some debian file fixes
+
+2011-04-07 21:36  henriwww
+
+	* Nagstamon/GUI.py: gui fix, strangely stretching statusbar in
+	  windows
+
+2011-04-07 14:49  henriwww
+
+	* Nagstamon/Config.py, Nagstamon/GUI.py: fixed jumping statusbar in
+	  Windows
+
+2011-04-07 13:39  henriwww
+
+	* Nagstamon/GUI.py: gui fixes...
+
+2011-04-07 13:37  henriwww
+
+	* Nagstamon/GUI.py: gui fixes...
+
+2011-04-07 13:17  henriwww
+
+	* Nagstamon/GUI.py: new homepage address corrected
+
+2011-04-07 12:35  henriwww
+
+	* installer/windows/nagstamon.iss: .iss file for nagstamon 0.9.5
+
+2011-04-07 11:35  henriwww
+
+	* Nagstamon/Server/Ninja.py: added ninja.py fix from op5 r295 to
+	  trunk
+
+2011-04-07 11:22  henriwww
+
+	* Nagstamon/Actions.py, Nagstamon/GUI.py: fixed
+	  disabled-server-gets-cookies-bug
+
+2011-04-05 12:26  henriwww
+
+	* ChangeLog, Nagstamon/GUI.py, installer/debian/changelog,
+	  setup.py: release preparations
+
+2011-04-05 09:49  henriwww
+
+	* Nagstamon/Actions.py, Nagstamon/GUI.py,
+	  Nagstamon/Server/Multisite.py: Multisite finally added
+
+2011-04-05 06:56  henriwww
+
+	* Nagstamon/GUI.py: fixed last fix
+
+2011-04-05 06:40  henriwww
+
+	* Nagstamon/GUI.py: fixed color preview in windows
+
+2011-04-04 14:12  henriwww
+
+	* Nagstamon/Custom.py, Nagstamon/Server/Multisite.py: Check_MK
+	  Multisite server type added
+
+2011-04-04 13:54  henriwww
+
+	* Nagstamon/GUI.py, Nagstamon/resources/settings_dialog.glade:
+	  added reset button to color settings
+
+2011-04-04 13:35  henriwww
+
+	* Nagstamon/Config.py, Nagstamon/GUI.py,
+	  Nagstamon/resources/settings_dialog.glade: finally color picking
+	  works
+
+2011-04-04 12:38  henriwww
+
+	* Nagstamon/GUI.py, Nagstamon/resources/settings_dialog.glade:
+	  color preview funktioniert
+
+2011-04-04 11:32  henriwww
+
+	* Nagstamon/GUI.py: color preview works
+
+2011-04-04 10:34  henriwww
+
+	* Nagstamon/GUI.py, Nagstamon/resources/settings_dialog.glade:
+	  colors getting better
+
+2011-04-04 10:18  henriwww
+
+	* Nagstamon/Config.py, Nagstamon/GUI.py,
+	  Nagstamon/resources/settings_dialog.glade: colorbuttons exist
+	  without functions
+
+2011-04-04 09:20  henriwww
+
+	* Nagstamon/GUI.py: colorpicker proof of concept
+
+2011-04-01 14:34  henriwww
+
+	* Nagstamon/GUI.py, Nagstamon/resources/settings_dialog.glade:
+	  minor changes on color preview
+
+2011-04-01 14:28  henriwww
+
+	* Nagstamon/GUI.py, Nagstamon/resources/settings_dialog.glade:
+	  color preview in settings
+
 2011-03-31 14:15  op5-team
 
 	* Nagstamon/GUI.py: GUI.py: added logic so it displays the
