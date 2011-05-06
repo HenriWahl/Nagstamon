@@ -1500,7 +1500,8 @@
                               <object class="GtkCheckButton" id="input_checkbutton_notification_sound_repeat">
                                 <property name="label" translatable="yes">Repeat sound until notification has been noticed</property>
                                 <property name="visible">True</property>
-                                <property name="can_focus">True</property>
+                                <property name="can_focus">False</property>
+                                <property name="is_focus">True</property>
                                 <property name="receives_default">False</property>
                                 <property name="use_action_appearance">False</property>
                                 <property name="draw_indicator">True</property>
