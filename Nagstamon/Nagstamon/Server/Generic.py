@@ -433,7 +433,7 @@ class GenericServer(object):
                     self.Error(sys.exc_info())
                 
             # do some cleanup
-            del table, tr, trs, tds
+            del table, trs
             
         except:
             # set checking flag back to False
@@ -532,7 +532,7 @@ class GenericServer(object):
                     self.Error(sys.exc_info())
                                 
             # do some cleanup
-            del table, tr, trs, tds
+            del table, trs
             
         except:
             # set checking flag back to False
