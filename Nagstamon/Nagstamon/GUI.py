@@ -753,12 +753,12 @@ class GUI(object):
                         if str(self.conf.notification_flashing) == "True":
                             self.statusbar.SysTray.set_blinking(True)
                             self.statusbar.Flashing = True
-                            flash = Actions.FlashStatusbar(output=self)
+                            flash = Actions.Notification(output=self, sound=status, Resources=self.Resources, conf=self.conf, servers=self.servers)
                             flash.start()   
                         # if wanted play notification sound
-                        if str(self.conf.notification_sound) == "True":
-                            sound = Actions.PlaySound(sound=status, Resources=self.Resources, conf=self.conf, servers=self.servers)
-                            sound.start()
+                        ###if str(self.conf.notification_sound) == "True":
+                        ###    sound = Actions.PlaySound(sound=status, Resources=self.Resources, conf=self.conf, servers=self.servers)
+                        ###    sound.start()
                         # if desired pop up status window
                         # sorry but does absolutely not work with windows and systray icon so I prefer to let it be
                         #if str(self.conf.notification_popup) == "True":
@@ -1079,8 +1079,6 @@ class StatusBar(object):
         rootwin = self.StatusBar.get_screen().get_root_window()
         # get position of the pointer
         mousex, mousey, foo = rootwin.get_pointer()
-        #print mousex, mousey
-        #self.Move(widget, event)
         self.conf.position_x = int(mousex - self.StatusBar.x)
         self.conf.position_y = int(mousey - self.StatusBar.y)
         self.StatusBar.move(self.conf.position_x, self.conf.position_y)
@@ -1704,7 +1702,6 @@ class ServerVBox(gtk.VBox):
         self.ButtonHosts = gtk.Button()
         self.ButtonHosts.set_relief(gtk.RELIEF_NONE)
         self.ButtonHosts.add(self.ButtonHosts_HBox)
-        print self.ButtonHosts_Label.get_size_request()
         
         # Label with status information
         self.LabelStatus = gtk.Label("")
@@ -1766,12 +1763,16 @@ class ServerVBox(gtk.VBox):
                 tab_column.add_attribute(cell_img_ack, "cell-background", 8)
                 tab_column.set_attributes(cell_img_down, pixbuf=10+offset[s])
                 tab_column.add_attribute(cell_img_down, "cell-background", 8)
+                
+                tab_column.set_sizing(gtk.TREE_VIEW_COLUMN_AUTOSIZE)                
             else:
                 # normal way for all other columns
                 cell_txt = gtk.CellRendererText()
                 tab_column.pack_start(cell_txt, False)
                 tab_column.set_attributes(cell_txt, foreground=7, text=s)
                 tab_column.add_attribute(cell_txt, "cell-background", 8)
+                
+                tab_column.set_sizing(gtk.TREE_VIEW_COLUMN_AUTOSIZE)
                 
             # set customized sorting
             if column.has_customized_sorting():

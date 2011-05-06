@@ -463,7 +463,7 @@ class PlaySound(threading.Thread):
             winsound.PlaySound(file, winsound.SND_FILENAME)
             
                     
-class FlashStatusbar(threading.Thread):
+class Notification(threading.Thread):
     """
         Flash statusbar in a threadified way to omit hanging gui
     """
@@ -475,14 +475,26 @@ class FlashStatusbar(threading.Thread):
 
 
     def run(self):
-        # in case of notifying in statusbar do some flashing
-        if self.output.Notifying == True:
+        # counter for repeated sound
+        soundcount = 0
+        # in case of notifying in statusbar do some flashing and honking
+        while self.output.Notifying == True:
             # as long as flashing flag is set statusbar flashes until someone takes care
-            while self.output.statusbar.Flashing == True:
+            if self.output.statusbar.Flashing == True:
                 if self.output.statusbar.isShowingError == False:
                     # check again because in the mean time this flag could have been changed by NotificationOff()
                     gobject.idle_add(self.output.statusbar.Flash)
-                    time.sleep(0.5)
+            # if wanted play notification sound, if it should be repeated every minute (2*interval/0.5=interval) do so.
+            if str(self.conf.notification_sound) == "True":
+                if soundcount == 0:
+                    sound = PlaySound(sound=self.sound, Resources=self.Resources, conf=self.conf, servers=self.servers)
+                    sound.start()
+                    soundcount += 1
+                elif str(self.conf.notification_sound_repeat) == "True" and soundcount >= 2*int(self.conf.update_interval)*60:
+                    soundcount = 0
+                else:
+                    soundcount += 1       
+            time.sleep(0.5)
         # reset statusbar
         self.output.statusbar.Label.set_markup(self.output.statusbar.statusbar_labeltext)
         
