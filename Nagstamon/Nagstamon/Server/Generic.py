@@ -555,11 +555,7 @@ class GenericServer(object):
 
         # set checking flag to be sure only one thread cares about this server
         self.isChecking = True        
-        
-        
-        # this part has been before in GUI.RefreshDisplay() - wrong place, here it needs to be reset
-        self.nagitems_filtered = {"services":{"CRITICAL":[], "WARNING":[], "UNKNOWN":[]}, "hosts":{"DOWN":[], "UNREACHABLE":[]}}
-        
+    
         # check if server is enabled, if not, do not get any status
         if str(self.conf.servers[self.get_name()].enabled) == "False":
             self.WorstStatus = "UP"
@@ -573,6 +569,9 @@ class GenericServer(object):
         if status.error != "":
             self.isChecking = False
             return Result(result=self.status, error=self.status_description)
+        
+        # this part has been before in GUI.RefreshDisplay() - wrong place, here it needs to be reset
+        self.nagitems_filtered = {"services":{"CRITICAL":[], "WARNING":[], "UNKNOWN":[]}, "hosts":{"DOWN":[], "UNREACHABLE":[]}}      
 
         # initialize counts for various service/hosts states
         # count them with every miserable host/service respective to their meaning
