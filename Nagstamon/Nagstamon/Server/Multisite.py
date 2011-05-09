@@ -198,10 +198,13 @@ class MultisiteServer(GenericServer):
                     self.new_hosts[new_host].status_information= n["status_information"]
                     self.new_hosts[new_host].site    = n["site"]
                     self.new_hosts[new_host].address = n["address"]
-                    if host['host_in_downtime'] == 'yes':
-                        self.new_hosts[new_host].scheduled_downtime = True
-                    if host['host_acknowledged'] == 'yes':
-                        self.new_hosts[new_host].acknowledged = True
+                    # transisition to Check_MK 1.1.10p2
+                    if host.has_key('host_in_downtime'):
+                        if host['host_in_downtime'] == 'yes':
+                            self.new_hosts[new_host].scheduled_downtime = True
+                    if host.has_key('host_acknowledged'):
+                        if host['host_acknowledged'] == 'yes':
+                            self.new_hosts[new_host].acknowledged = True
                         
         except:
             self.isChecking = False
@@ -271,6 +274,13 @@ class MultisiteServer(GenericServer):
                     self.new_hosts[n["host"]].services[new_service].site = n["site"]
                     self.new_hosts[n["host"]].services[new_service].address = n["address"]
                     self.new_hosts[n["host"]].services[new_service].command = n["command"]
+                    # transisition to Check_MK 1.1.10p2
+                    if service.has_key('svc_in_downtime'):
+                        if service['svc_in_downtime'] == 'yes':
+                            self.new_hosts[n["host"]].services[new_service].scheduled_downtime = True
+                    if service.has_key('svc_acknowledged'):
+                        if service['svc_acknowledged'] == 'yes':
+                            self.new_hosts[n["host"]].services[new_service].acknowledged = True
         except:
             # set checking flag back to False
             self.isChecking = False
