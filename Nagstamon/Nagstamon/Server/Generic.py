@@ -520,7 +520,6 @@ class GenericServer(object):
                                     self.new_hosts[n["host"]].__dict__[self.STATUS_MAPPING[icon]] = True
                             # cleaning
                             del icons
-                            print self.new_hosts[n["host"]].name, self.new_hosts[n["host"]].scheduled_downtime
                         # if a service does not exist create its object
                         if not self.new_hosts[n["host"]].services.has_key(n["service"]):
                             new_service = n["service"]

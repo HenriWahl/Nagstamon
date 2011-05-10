@@ -338,39 +338,61 @@ class GUI(object):
                                 tuned_list = list(server.get_columns(item))
                                 tuned_list.append(self.TAB_FG_COLORS[item.status])
                                 tuned_list.append(self.TAB_BG_COLORS[item.status])
-                                
+
                                 # icons for hosts
-                                if item.is_acknowledged() and item.is_host():
-                                    tuned_list.append(self.popwin.ICONS["acknowledged"])
-                                else:    
-                                    tuned_list.append(None)
-                                                                        
-                                if item.is_in_scheduled_downtime() and item.is_host():
-                                    tuned_list.append(self.popwin.ICONS["downtime"])   
-                                else:    
-                                    tuned_list.append(None)
-                                
-                                if item.is_flapping() and item.is_host():
-                                    tuned_list.append(self.popwin.ICONS["flapping"])   
-                                else:    
-                                    tuned_list.append(None)                                    
+                                if item.is_host():                                
+                                    if item.is_acknowledged():
+                                        tuned_list.append(self.popwin.ICONS["acknowledged"])
+                                    else:    
+                                        tuned_list.append(None)
+                                                                            
+                                    if item.is_in_scheduled_downtime():
+                                        tuned_list.append(self.popwin.ICONS["downtime"])   
+                                    else:    
+                                        tuned_list.append(None)
                                     
-                                # icons for services    
-                                if item.is_acknowledged() and not item.is_host():
-                                    tuned_list.append(self.popwin.ICONS["acknowledged"])
-                                else:    
-                                    tuned_list.append(None)
-                                                                        
-                                if item.is_in_scheduled_downtime() and not item.is_host():
-                                    tuned_list.append(self.popwin.ICONS["downtime"])   
-                                else:    
-                                    tuned_list.append(None)
+                                    if item.is_flapping():
+                                        tuned_list.append(self.popwin.ICONS["flapping"])   
+                                    else:    
+                                        tuned_list.append(None)   
                                     
-                                if item.is_flapping() and not item.is_host():
-                                    tuned_list.append(self.popwin.ICONS["flapping"])   
-                                else:    
-                                    tuned_list.append(None)                                    
+                                    # fill tuned_list with dummmy values because there will 
+                                    # be none for services if this is a host
+                                    tuned_list.extend([None, None, None])                                        
                                     
+                                # icons for services 
+                                else:
+                                    # if the hosting host of a service has any flags display them too
+                                    if server.hosts[item.host].is_acknowledged():
+                                        tuned_list.append(self.popwin.ICONS["acknowledged"])
+                                    else:    
+                                        tuned_list.append(None)
+                                                                            
+                                    if server.hosts[item.host].is_in_scheduled_downtime():
+                                        tuned_list.append(self.popwin.ICONS["downtime"])   
+                                    else:    
+                                        tuned_list.append(None)
+                                    
+                                    if server.hosts[item.host].is_flapping():
+                                        tuned_list.append(self.popwin.ICONS["flapping"])   
+                                    else:    
+                                        tuned_list.append(None)                                    
+                                    
+                                    if item.is_acknowledged():
+                                        tuned_list.append(self.popwin.ICONS["acknowledged"])
+                                    else:    
+                                        tuned_list.append(None)
+                                                                            
+                                    if item.is_in_scheduled_downtime():
+                                        tuned_list.append(self.popwin.ICONS["downtime"])   
+                                    else:    
+                                        tuned_list.append(None)
+                                        
+                                    if item.is_flapping():
+                                        tuned_list.append(self.popwin.ICONS["flapping"])   
+                                    else:    
+                                        tuned_list.append(None)                                    
+      
                                 server.ListStore.append(tuned_list)   
                     
                     # after all data from server has been put into Liststore it should be deleted
@@ -1748,7 +1770,8 @@ class ServerVBox(gtk.VBox):
         self.server.ListStore = gtk.ListStore(*self.output.LISTSTORE_COLUMNS)
 
         # offset to access host and service flag icons separately, stored in grand liststore
-        offset = {0:0, 1:2}
+        # may grow with more supported flags
+        offset = {0:0, 1:3}
             
         for s, column in enumerate(self.server.COLUMNS):
             tab_column = gtk.TreeViewColumn(column.get_label())
@@ -1759,12 +1782,14 @@ class ServerVBox(gtk.VBox):
                 # pixbuf for little icon
                 cell_img_ack = gtk.CellRendererPixbuf()
                 cell_img_down = gtk.CellRendererPixbuf()
+                cell_img_flap = gtk.CellRendererPixbuf()
                 # host/service name
                 cell_txt = gtk.CellRendererText()
                 # stuff all renders into one cell
                 tab_column.pack_start(cell_txt, False)
                 tab_column.pack_start(cell_img_ack, False)
                 tab_column.pack_start(cell_img_down, False)
+                tab_column.pack_start(cell_img_flap, False)
                 # set text from liststore and flag icons if existing
                 # why ever, in Windows(TM) the background looks better if applied separately
                 # to be honest, even looks better in Linux
@@ -1774,7 +1799,8 @@ class ServerVBox(gtk.VBox):
                 tab_column.add_attribute(cell_img_ack, "cell-background", 8)
                 tab_column.set_attributes(cell_img_down, pixbuf=10+offset[s])
                 tab_column.add_attribute(cell_img_down, "cell-background", 8)
-                
+                tab_column.set_attributes(cell_img_flap, pixbuf=11+offset[s])
+                tab_column.add_attribute(cell_img_flap, "cell-background", 8)
                 tab_column.set_sizing(gtk.TREE_VIEW_COLUMN_AUTOSIZE)                
             else:
                 # normal way for all other columns
