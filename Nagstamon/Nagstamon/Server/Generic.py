@@ -336,7 +336,7 @@ class GenericServer(object):
         nagcgiurl_services = self.nagios_cgi_url + "/status.cgi?host=all&servicestatustypes=" + str(servicestatustypes) + "&serviceprops=" + str(hostserviceprops)
         # hosts (up or down or unreachable)
         nagcgiurl_hosts = self.nagios_cgi_url + "/status.cgi?hostgroup=all&style=hostdetail&hoststatustypes=" + str(hoststatustypes) + "&hostprops=" + str(hostserviceprops)
-
+        
         # hosts - mostly the down ones
         # unfortunately the hosts status page has a different structure so
         # hosts must be analyzed separately
@@ -344,11 +344,9 @@ class GenericServer(object):
             result = self.FetchURL(nagcgiurl_hosts)
             htobj, error = result.result, result.error
 
-            #if error != "": return Result(result=copy.deepcopy(htobj), error=error)       
             if error != "": return Result(result=htobj, error=error) 
 
             # put a copy of a part of htobj into table to be able to delete htobj
-            #table = copy.deepcopy(htobj('table', {'class': 'status'})[0])
             table = htobj('table', {'class': 'status'})[0]
 
             # do some cleanup
@@ -512,6 +510,17 @@ class GenericServer(object):
                             self.new_hosts[n["host"]] = GenericHost()
                             self.new_hosts[n["host"]].name = n["host"]
                             self.new_hosts[n["host"]].status = "UP"
+                            # trying to fix https://sourceforge.net/tracker/index.php?func=detail&aid=3299790&group_id=236865&atid=1101370
+                            # if host is not down but in downtime or any other flag this should be evaluated too
+                            # map status icons to status flags
+                            icons = tds[0].findAll('img')
+                            for i in icons:
+                                icon = i["src"].split("/")[-1]
+                                if icon in self.STATUS_MAPPING:
+                                    self.new_hosts[n["host"]].__dict__[self.STATUS_MAPPING[icon]] = True
+                            # cleaning
+                            del icons
+                            print self.new_hosts[n["host"]].name, self.new_hosts[n["host"]].scheduled_downtime
                         # if a service does not exist create its object
                         if not self.new_hosts[n["host"]].services.has_key(n["service"]):
                             new_service = n["service"]
@@ -652,7 +661,7 @@ class GenericServer(object):
                     if str(self.conf.debug_mode) == "True":
                         self.Debug(server=self.get_name(), debug="Filter: DOWNTIME " + str(host.name) + ";" + str(service.name))
                     service.visible = False
-    
+
                 if host.scheduled_downtime == True and str(self.conf.filter_services_on_hosts_in_maintenance) == "True":
                     if str(self.conf.debug_mode) == "True":
                         self.Debug(server=self.get_name(), debug="Filter: Service on Host in DONWTIME " + str(host.name) + ";" + str(service.name))

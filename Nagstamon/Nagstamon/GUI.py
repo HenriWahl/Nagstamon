@@ -76,7 +76,7 @@ class GUI(object):
         
         # Meta
         self.name = "nagstamon"
-        self.version = "0.9.6.1"
+        self.version = "0.9.7pre"
         self.website = "http://nagstamon.ifw-dresden.de/"
         self.copyright = "©2008-2011 Henri Wahl\nh.wahl@ifw-dresden.de"
         self.comments = "Nagios status monitor for your desktop"
@@ -115,7 +115,8 @@ class GUI(object):
         self.LISTSTORE_COLUMNS = [gobject.TYPE_STRING, gobject.TYPE_STRING, gobject.TYPE_STRING,\
                                   gobject.TYPE_STRING, gobject.TYPE_STRING, gobject.TYPE_STRING,\
                                   gobject.TYPE_STRING, gobject.TYPE_STRING, gobject.TYPE_STRING,\
-                                  gtk.gdk.Pixbuf, gtk.gdk.Pixbuf, gtk.gdk.Pixbuf, gtk.gdk.Pixbuf]           
+                                  gtk.gdk.Pixbuf, gtk.gdk.Pixbuf, gtk.gdk.Pixbuf, gtk.gdk.Pixbuf,\
+                                  gtk.gdk.Pixbuf, gtk.gdk.Pixbuf]           
         
         # create all GUI widgets
         self.CreateOutputVisuals()
@@ -349,6 +350,11 @@ class GUI(object):
                                 else:    
                                     tuned_list.append(None)
                                 
+                                if item.is_flapping() and item.is_host():
+                                    tuned_list.append(self.popwin.ICONS["flapping"])   
+                                else:    
+                                    tuned_list.append(None)                                    
+                                    
                                 # icons for services    
                                 if item.is_acknowledged() and not item.is_host():
                                     tuned_list.append(self.popwin.ICONS["acknowledged"])
@@ -359,6 +365,11 @@ class GUI(object):
                                     tuned_list.append(self.popwin.ICONS["downtime"])   
                                 else:    
                                     tuned_list.append(None)
+                                    
+                                if item.is_flapping() and not item.is_host():
+                                    tuned_list.append(self.popwin.ICONS["flapping"])   
+                                else:    
+                                    tuned_list.append(None)                                    
                                     
                                 server.ListStore.append(tuned_list)   
                     
@@ -1261,7 +1272,7 @@ class Popwin(gtk.Window):
         
         # icons for acknowledgement/downtime visualization
         self.ICONS = dict()
-        for color in ["acknowledged", "downtime"]:
+        for color in ["acknowledged", "downtime", "flapping"]:
             self.ICONS[color] = gtk.gdk.pixbuf_new_from_file_at_size(self.output.Resources\
                                 + os.sep + "nagstamon_" + color + self.output.BitmapSuffix,\
                                 int(self.output.fontsize/650), int(self.output.fontsize/650))

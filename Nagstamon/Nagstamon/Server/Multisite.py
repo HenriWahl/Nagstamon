@@ -128,33 +128,6 @@ class MultisiteServer(GenericServer):
 
         # Create URLs for the configured filters
         url_params = ''
-        
-        """
-        if str(self.conf.filter_all_down_hosts) == "True":
-            url_params += '&hst1=0'
-        if str(self.conf.filter_all_unreachable_hosts) == "True":
-            url_params += '&hst2=0'
-
-        if str(self.conf.filter_all_unknown_services) == "True":
-            url_params += '&st3=0'
-        if str(self.conf.filter_all_critical_services) == "True":
-            url_params += '&st2=0'
-        if str(self.conf.filter_all_warning_services) == "True":
-            url_params += '&st1=0'
-        
-        # Hide all acked hosts/services
-        if str(self.conf.filter_acknowledged_hosts_services) == "True":
-            url_params += '&is_host_acknowledged=0&is_service_acknowledged=0'
-        # Hide all hosts/services with disabled notifications
-        if str(self.conf.filter_hosts_services_disabled_notifications) == "True":
-            url_params += '&is_host_notifications_enabled=1&is_service_notifications_enabled=1'
-        # Hide all hosts/services with disabled checks
-        if str(self.conf.filter_hosts_services_disabled_checks) == "True":
-            url_params += '&is_host_active_checks_enabled=1&is_service_active_checks_enabled=1'
-        # Hide all hosts/services in downtime
-        if str(self.conf.filter_hosts_services_maintenance) == "True":
-            url_params += '&host_scheduled_downtime_depth=0&is_in_downtime=0'
-        """     
 
         url_params += '&is_host_acknowledged=-1&is_service_acknowledged=-1'
         url_params += '&is_host_notifications_enabled=-1&is_service_notifications_enabled=-1'
