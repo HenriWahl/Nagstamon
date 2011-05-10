@@ -835,7 +835,7 @@ class GUI(object):
         recheckall.start()
         
         
-    def _GetAlternateColor(self, color, diff=4096):
+    def _GetAlternateColor(self, color, diff=2048):
         """
         helper for treeview table colors to get a slightly different color
         """
