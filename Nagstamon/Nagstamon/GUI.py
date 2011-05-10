@@ -115,6 +115,7 @@ class GUI(object):
         self.LISTSTORE_COLUMNS = [gobject.TYPE_STRING, gobject.TYPE_STRING, gobject.TYPE_STRING,\
                                   gobject.TYPE_STRING, gobject.TYPE_STRING, gobject.TYPE_STRING,\
                                   gobject.TYPE_STRING, gobject.TYPE_STRING, gobject.TYPE_STRING,\
+                                  gobject.TYPE_STRING,\
                                   gtk.gdk.Pixbuf, gtk.gdk.Pixbuf, gtk.gdk.Pixbuf, gtk.gdk.Pixbuf,\
                                   gtk.gdk.Pixbuf, gtk.gdk.Pixbuf]           
         
@@ -331,13 +332,21 @@ class GUI(object):
                     # apart from status informations there we need two columns which
                     # hold the color information, which is derived from status which
                     # is used as key at the above color dictionaries    
-                    # Update: new columns added which contain pixbufs of flag indicators if needed                       
+                    # Update: new columns added which contain pixbufs of flag indicators if needed                      
                     for item_type, status_dict in server.nagitems_filtered.iteritems():
                         for status, item_list in status_dict.iteritems():
                             for item in list(item_list):
                                 tuned_list = list(server.get_columns(item))
                                 tuned_list.append(self.TAB_FG_COLORS[item.status])
                                 tuned_list.append(self.TAB_BG_COLORS[item.status])
+                                
+                                # add a slightly changed version of bg_color for better recognition in treeview
+                                color = gtk.gdk.color_parse(self.TAB_BG_COLORS[item.status])
+                                color = gtk.gdk.Color(red = self._GetAlternateColor(color.red),\
+                                                      green = self._GetAlternateColor(color.green),\
+                                                      blue = self._GetAlternateColor(color.blue),\
+                                                      pixel = color.pixel)
+                                tuned_list.append(color.to_string())
 
                                 # icons for hosts
                                 if item.is_host():                                
@@ -824,7 +833,18 @@ class GUI(object):
         """
         recheckall = Actions.RecheckAll(servers=self.servers, output=self, conf=self.conf)
         recheckall.start()
-       
+        
+        
+    def _GetAlternateColor(self, color, diff=4096):
+        """
+        helper for treeview table colors to get a slightly different color
+        """
+        if color > (65535 - diff):
+            color = color - diff
+        else:
+            color = color + diff
+        return color
+   
 
 class StatusBar(object):
     """
@@ -1771,8 +1791,11 @@ class ServerVBox(gtk.VBox):
 
         # offset to access host and service flag icons separately, stored in grand liststore
         # may grow with more supported flags
-        offset = {0:0, 1:3}
-            
+        offset_img = {0:0, 1:3}
+        # offset for alternate column colors could increase readability 
+        # even and odd columns are calculated by column number
+        offset_color = {0:8, 1:9}
+        
         for s, column in enumerate(self.server.COLUMNS):
             tab_column = gtk.TreeViewColumn(column.get_label())
             self.server.TreeView.append_column(tab_column)  
@@ -1794,21 +1817,20 @@ class ServerVBox(gtk.VBox):
                 # why ever, in Windows(TM) the background looks better if applied separately
                 # to be honest, even looks better in Linux
                 tab_column.set_attributes(cell_txt, foreground=7, text=s)
-                tab_column.add_attribute(cell_txt, "cell-background", 8)
-                tab_column.set_attributes(cell_img_ack, pixbuf=9+offset[s])
-                tab_column.add_attribute(cell_img_ack, "cell-background", 8)
-                tab_column.set_attributes(cell_img_down, pixbuf=10+offset[s])
-                tab_column.add_attribute(cell_img_down, "cell-background", 8)
-                tab_column.set_attributes(cell_img_flap, pixbuf=11+offset[s])
-                tab_column.add_attribute(cell_img_flap, "cell-background", 8)
-                tab_column.set_sizing(gtk.TREE_VIEW_COLUMN_AUTOSIZE)                
+                tab_column.add_attribute(cell_txt, "cell-background", offset_color[s % 2 ])
+                tab_column.set_attributes(cell_img_ack, pixbuf=10+offset_img[s])
+                tab_column.add_attribute(cell_img_ack, "cell-background", offset_color[s % 2 ])
+                tab_column.set_attributes(cell_img_down, pixbuf=11+offset_img[s])
+                tab_column.add_attribute(cell_img_down, "cell-background", offset_color[s % 2 ])
+                tab_column.set_attributes(cell_img_flap, pixbuf=12+offset_img[s])
+                tab_column.add_attribute(cell_img_flap, "cell-background", offset_color[s % 2 ])
+                tab_column.set_sizing(gtk.TREE_VIEW_COLUMN_AUTOSIZE)                            
             else:
                 # normal way for all other columns
                 cell_txt = gtk.CellRendererText()
                 tab_column.pack_start(cell_txt, False)
                 tab_column.set_attributes(cell_txt, foreground=7, text=s)
-                tab_column.add_attribute(cell_txt, "cell-background", 8)
-                
+                tab_column.add_attribute(cell_txt, "cell-background", offset_color[s % 2 ])
                 tab_column.set_sizing(gtk.TREE_VIEW_COLUMN_AUTOSIZE)
                 
             # set customized sorting
