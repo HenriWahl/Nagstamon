@@ -115,9 +115,9 @@ class GUI(object):
         self.LISTSTORE_COLUMNS = [gobject.TYPE_STRING, gobject.TYPE_STRING, gobject.TYPE_STRING,\
                                   gobject.TYPE_STRING, gobject.TYPE_STRING, gobject.TYPE_STRING,\
                                   gobject.TYPE_STRING, gobject.TYPE_STRING, gobject.TYPE_STRING,\
-                                  gobject.TYPE_STRING, gobject.TYPE_UINT,\
+                                  gobject.TYPE_STRING,\
                                   gtk.gdk.Pixbuf, gtk.gdk.Pixbuf, gtk.gdk.Pixbuf, gtk.gdk.Pixbuf,\
-                                  gtk.gdk.Pixbuf, gtk.gdk.Pixbuf]           
+                                  gtk.gdk.Pixbuf, gtk.gdk.Pixbuf, gtk.gdk.Pixbuf, gtk.gdk.Pixbuf]           
         
         # create all GUI widgets
         self.CreateOutputVisuals()
@@ -347,9 +347,6 @@ class GUI(object):
                                                       blue = self._GetAlternateColor(color.blue),\
                                                       pixel = color.pixel)
                                 line.append(color.to_string())
-                                
-                                # some parameter, first used for testing grid lines, now usable for something else...
-                                line.append(0)
 
                                 # icons for hosts
                                 if item.is_host():                                
@@ -367,10 +364,16 @@ class GUI(object):
                                         line.append(self.popwin.ICONS["flapping"])   
                                     else:    
                                         line.append(None)   
+
+                                    if item.is_passive_only():
+                                        line.append(self.popwin.ICONS["passive"])   
+                                    else:    
+                                        line.append(None)   
+                                        
                                     
                                     # fill line with dummmy values because there will 
                                     # be none for services if this is a host
-                                    line.extend([None, None, None])                                        
+                                    line.extend([None, None, None, None])                                        
                                     
                                 # icons for services 
                                 else:
@@ -388,8 +391,14 @@ class GUI(object):
                                     if server.hosts[item.host].is_flapping():
                                         line.append(self.popwin.ICONS["flapping"])   
                                     else:    
-                                        line.append(None)                                    
-                                    
+                                        line.append(None)           
+                                        
+                                    if server.hosts[item.host].is_passive_only():
+                                        line.append(self.popwin.ICONS["passive"])   
+                                    else:    
+                                        line.append(None)   
+                                        
+                                    # now the service...                                    
                                     if item.is_acknowledged():
                                         line.append(self.popwin.ICONS["acknowledged"])
                                     else:    
@@ -403,7 +412,12 @@ class GUI(object):
                                     if item.is_flapping():
                                         line.append(self.popwin.ICONS["flapping"])   
                                     else:    
-                                        line.append(None)                                    
+                                        line.append(None)               
+                                        
+                                    if item.is_passive_only():
+                                        line.append(self.popwin.ICONS["passive"])   
+                                    else:    
+                                        line.append(None)    
       
                                 server.ListStore.append(line)   
                     
@@ -1317,9 +1331,9 @@ class Popwin(gtk.Window):
         
         # icons for acknowledgement/downtime visualization
         self.ICONS = dict()
-        for color in ["acknowledged", "downtime", "flapping"]:
-            self.ICONS[color] = gtk.gdk.pixbuf_new_from_file_at_size(self.output.Resources\
-                                + os.sep + "nagstamon_" + color + self.output.BitmapSuffix,\
+        for icon in ["acknowledged", "downtime", "flapping", "passive"]:
+            self.ICONS[icon] = gtk.gdk.pixbuf_new_from_file_at_size(self.output.Resources\
+                                + os.sep + "nagstamon_" + icon + self.output.BitmapSuffix,\
                                 int(self.output.fontsize/650), int(self.output.fontsize/650))
             
         # create a scrollable area for the treeview in case it is larger than the screen
@@ -1799,7 +1813,7 @@ class ServerVBox(gtk.VBox):
 
         # offset to access host and service flag icons separately, stored in grand liststore
         # may grow with more supported flags
-        offset_img = {0:0, 1:3}
+        offset_img = {0:0, 1:4}
         # offset for alternate column colors could increase readability 
         # even and odd columns are calculated by column number
         offset_color = {0:8, 1:9}
@@ -1814,6 +1828,7 @@ class ServerVBox(gtk.VBox):
                 cell_img_ack = gtk.CellRendererPixbuf()
                 cell_img_down = gtk.CellRendererPixbuf()
                 cell_img_flap = gtk.CellRendererPixbuf()
+                cell_img_pass = gtk.CellRendererPixbuf()
                 # host/service name
                 cell_txt = gtk.CellRendererText()
                 # stuff all renders into one cell
@@ -1821,17 +1836,20 @@ class ServerVBox(gtk.VBox):
                 tab_column.pack_start(cell_img_ack, False)
                 tab_column.pack_start(cell_img_down, False)
                 tab_column.pack_start(cell_img_flap, False)
+                tab_column.pack_start(cell_img_pass, False)
                 # set text from liststore and flag icons if existing
                 # why ever, in Windows(TM) the background looks better if applied separately
                 # to be honest, even looks better in Linux
                 tab_column.set_attributes(cell_txt, foreground=7, text=s)
                 tab_column.add_attribute(cell_txt, "cell-background", offset_color[s % 2])
-                tab_column.set_attributes(cell_img_ack, pixbuf=11+offset_img[s])
+                tab_column.set_attributes(cell_img_ack, pixbuf=10+offset_img[s])
                 tab_column.add_attribute(cell_img_ack, "cell-background", offset_color[s % 2])
-                tab_column.set_attributes(cell_img_down, pixbuf=12+offset_img[s])
+                tab_column.set_attributes(cell_img_down, pixbuf=11+offset_img[s])
                 tab_column.add_attribute(cell_img_down, "cell-background", offset_color[s % 2])
-                tab_column.set_attributes(cell_img_flap, pixbuf=13+offset_img[s])
+                tab_column.set_attributes(cell_img_flap, pixbuf=12+offset_img[s])
                 tab_column.add_attribute(cell_img_flap, "cell-background", offset_color[s % 2])
+                tab_column.set_attributes(cell_img_pass, pixbuf=13+offset_img[s])
+                tab_column.add_attribute(cell_img_pass, "cell-background", offset_color[s % 2])
                 tab_column.set_sizing(gtk.TREE_VIEW_COLUMN_AUTOSIZE)                            
             else:
                 # normal way for all other columns

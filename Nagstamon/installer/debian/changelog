@@ -1,3 +1,9 @@
+nagstamon (0.9.7-1) unstable; urgency=low
+
+  * New upstream
+
+ -- Henri Wahl <h.wahl@ifw-dresden.de>  Fri, 11 May 2011 10:01:00 +0200
+
 nagstamon (0.9.6.1-1) unstable; urgency=low
 
   * fix for sf.net bug 3298321 - displaying error when all is OK

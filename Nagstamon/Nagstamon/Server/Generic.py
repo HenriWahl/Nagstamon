@@ -105,7 +105,7 @@ class GenericServer(object):
         # dictionary to translate status bitmaps on webinterface into status flags
         # this are defaults from Nagios
         self.STATUS_MAPPING = { "ack.gif" : "acknowledged",\
-                                "passiveonly.gif" : "passive",\
+                                "passiveonly.gif" : "passiveonly",\
                                 "ndisabled.gif" : "notifications_disabled",\
                                 "downtime.gif" : "scheduled_downtime",\
                                 "flapping.gif" : "flapping" }
