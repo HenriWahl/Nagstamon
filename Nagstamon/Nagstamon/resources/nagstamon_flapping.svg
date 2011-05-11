@@ -15,9 +15,12 @@
    id="svg2"
    sodipodi:version="0.32"
    inkscape:version="0.48.1 r9760"
-   sodipodi:docname="nagstamon_acknowledged.svg"
+   sodipodi:docname="nagstamon_flapping.svg"
    inkscape:output_extension="org.inkscape.output.svg.inkscape"
-   version="1.0">
+   version="1.0"
+   inkscape:export-filename="/home/henri/Data/Projekte/nagstamon/svn/trunk/Nagstamon/Nagstamon/resources/nagstamon_flapping.png"
+   inkscape:export-xdpi="5.4000001"
+   inkscape:export-ydpi="5.4000001">
   <defs
      id="defs4">
     <linearGradient
@@ -27,7 +30,7 @@
          offset="0"
          id="stop4229" />
       <stop
-         style="stop-color:#feff00;stop-opacity:1;"
+         style="stop-color:#00e600;stop-opacity:1;"
          offset="1"
          id="stop4231" />
     </linearGradient>
@@ -101,7 +104,7 @@
      inkscape:pageopacity="0.0"
      inkscape:pageshadow="2"
      inkscape:zoom="1.7465537"
-     inkscape:cx="257.58443"
+     inkscape:cx="118.45329"
      inkscape:cy="181.35312"
      inkscape:document-units="px"
      inkscape:current-layer="g3518"

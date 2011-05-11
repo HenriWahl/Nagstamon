@@ -115,7 +115,7 @@ class GUI(object):
         self.LISTSTORE_COLUMNS = [gobject.TYPE_STRING, gobject.TYPE_STRING, gobject.TYPE_STRING,\
                                   gobject.TYPE_STRING, gobject.TYPE_STRING, gobject.TYPE_STRING,\
                                   gobject.TYPE_STRING, gobject.TYPE_STRING, gobject.TYPE_STRING,\
-                                  gobject.TYPE_STRING,\
+                                  gobject.TYPE_STRING, gobject.TYPE_UINT,\
                                   gtk.gdk.Pixbuf, gtk.gdk.Pixbuf, gtk.gdk.Pixbuf, gtk.gdk.Pixbuf,\
                                   gtk.gdk.Pixbuf, gtk.gdk.Pixbuf]           
         
@@ -336,9 +336,9 @@ class GUI(object):
                     for item_type, status_dict in server.nagitems_filtered.iteritems():
                         for status, item_list in status_dict.iteritems():
                             for item in list(item_list):
-                                tuned_list = list(server.get_columns(item))
-                                tuned_list.append(self.TAB_FG_COLORS[item.status])
-                                tuned_list.append(self.TAB_BG_COLORS[item.status])
+                                line = list(server.get_columns(item))
+                                line.append(self.TAB_FG_COLORS[item.status])
+                                line.append(self.TAB_BG_COLORS[item.status])
                                 
                                 # add a slightly changed version of bg_color for better recognition in treeview
                                 color = gtk.gdk.color_parse(self.TAB_BG_COLORS[item.status])
@@ -346,63 +346,66 @@ class GUI(object):
                                                       green = self._GetAlternateColor(color.green),\
                                                       blue = self._GetAlternateColor(color.blue),\
                                                       pixel = color.pixel)
-                                tuned_list.append(color.to_string())
+                                line.append(color.to_string())
+                                
+                                # some parameter, first used for testing grid lines, now usable for something else...
+                                line.append(0)
 
                                 # icons for hosts
                                 if item.is_host():                                
                                     if item.is_acknowledged():
-                                        tuned_list.append(self.popwin.ICONS["acknowledged"])
+                                        line.append(self.popwin.ICONS["acknowledged"])
                                     else:    
-                                        tuned_list.append(None)
+                                        line.append(None)
                                                                             
                                     if item.is_in_scheduled_downtime():
-                                        tuned_list.append(self.popwin.ICONS["downtime"])   
+                                        line.append(self.popwin.ICONS["downtime"])   
                                     else:    
-                                        tuned_list.append(None)
+                                        line.append(None)
                                     
                                     if item.is_flapping():
-                                        tuned_list.append(self.popwin.ICONS["flapping"])   
+                                        line.append(self.popwin.ICONS["flapping"])   
                                     else:    
-                                        tuned_list.append(None)   
+                                        line.append(None)   
                                     
-                                    # fill tuned_list with dummmy values because there will 
+                                    # fill line with dummmy values because there will 
                                     # be none for services if this is a host
-                                    tuned_list.extend([None, None, None])                                        
+                                    line.extend([None, None, None])                                        
                                     
                                 # icons for services 
                                 else:
                                     # if the hosting host of a service has any flags display them too
                                     if server.hosts[item.host].is_acknowledged():
-                                        tuned_list.append(self.popwin.ICONS["acknowledged"])
+                                        line.append(self.popwin.ICONS["acknowledged"])
                                     else:    
-                                        tuned_list.append(None)
+                                        line.append(None)
                                                                             
                                     if server.hosts[item.host].is_in_scheduled_downtime():
-                                        tuned_list.append(self.popwin.ICONS["downtime"])   
+                                        line.append(self.popwin.ICONS["downtime"])   
                                     else:    
-                                        tuned_list.append(None)
+                                        line.append(None)
                                     
                                     if server.hosts[item.host].is_flapping():
-                                        tuned_list.append(self.popwin.ICONS["flapping"])   
+                                        line.append(self.popwin.ICONS["flapping"])   
                                     else:    
-                                        tuned_list.append(None)                                    
+                                        line.append(None)                                    
                                     
                                     if item.is_acknowledged():
-                                        tuned_list.append(self.popwin.ICONS["acknowledged"])
+                                        line.append(self.popwin.ICONS["acknowledged"])
                                     else:    
-                                        tuned_list.append(None)
+                                        line.append(None)
                                                                             
                                     if item.is_in_scheduled_downtime():
-                                        tuned_list.append(self.popwin.ICONS["downtime"])   
+                                        line.append(self.popwin.ICONS["downtime"])   
                                     else:    
-                                        tuned_list.append(None)
+                                        line.append(None)
                                         
                                     if item.is_flapping():
-                                        tuned_list.append(self.popwin.ICONS["flapping"])   
+                                        line.append(self.popwin.ICONS["flapping"])   
                                     else:    
-                                        tuned_list.append(None)                                    
+                                        line.append(None)                                    
       
-                                server.ListStore.append(tuned_list)   
+                                server.ListStore.append(line)   
                     
                     # after all data from server has been put into Liststore it should be deleted
                     ###server.nagitems_filtered.clear()
@@ -1786,6 +1789,8 @@ class ServerVBox(gtk.VBox):
         self.server.TreeView = gtk.TreeView() 
         # enable hover effect
         self.server.TreeView.set_hover_selection(True)
+        # enable grid lines
+        self.server.TreeView.set_grid_lines(gtk.TREE_VIEW_GRID_LINES_HORIZONTAL)
         # Liststore
         self.server.ListStore = gtk.ListStore(*self.output.LISTSTORE_COLUMNS)
 
@@ -1817,13 +1822,13 @@ class ServerVBox(gtk.VBox):
                 # why ever, in Windows(TM) the background looks better if applied separately
                 # to be honest, even looks better in Linux
                 tab_column.set_attributes(cell_txt, foreground=7, text=s)
-                tab_column.add_attribute(cell_txt, "cell-background", offset_color[s % 2 ])
-                tab_column.set_attributes(cell_img_ack, pixbuf=10+offset_img[s])
-                tab_column.add_attribute(cell_img_ack, "cell-background", offset_color[s % 2 ])
-                tab_column.set_attributes(cell_img_down, pixbuf=11+offset_img[s])
-                tab_column.add_attribute(cell_img_down, "cell-background", offset_color[s % 2 ])
-                tab_column.set_attributes(cell_img_flap, pixbuf=12+offset_img[s])
-                tab_column.add_attribute(cell_img_flap, "cell-background", offset_color[s % 2 ])
+                tab_column.add_attribute(cell_txt, "cell-background", offset_color[s % 2])
+                tab_column.set_attributes(cell_img_ack, pixbuf=11+offset_img[s])
+                tab_column.add_attribute(cell_img_ack, "cell-background", offset_color[s % 2])
+                tab_column.set_attributes(cell_img_down, pixbuf=12+offset_img[s])
+                tab_column.add_attribute(cell_img_down, "cell-background", offset_color[s % 2])
+                tab_column.set_attributes(cell_img_flap, pixbuf=13+offset_img[s])
+                tab_column.add_attribute(cell_img_flap, "cell-background", offset_color[s % 2])
                 tab_column.set_sizing(gtk.TREE_VIEW_COLUMN_AUTOSIZE)                            
             else:
                 # normal way for all other columns
