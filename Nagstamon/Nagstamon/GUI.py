@@ -87,7 +87,7 @@ class GUI(object):
                 self.Resources = os.path.normcase(os.getcwd() + os.sep + "Nagstamon" + os.sep + "resources")
             else:
                 self.Resources = os.path.normcase(os.getcwd() + os.sep + "resources")
-
+                           
 
         # initialize overall status flag
         self.status_ok = True
@@ -202,6 +202,13 @@ class GUI(object):
             
         # set app icon for all app windows
         gtk.window_set_default_icon_from_file(self.Resources + os.sep + "nagstamon" + self.BitmapSuffix)
+        
+        # icons for acknowledgement/downtime visualization
+        self.STATE_ICONS = dict()
+        for icon in ["acknowledged", "downtime", "flapping", "passive"]:
+            self.STATE_ICONS[icon] = gtk.gdk.pixbuf_new_from_file_at_size(self.Resources\
+                                + os.sep + "nagstamon_" + icon + self.BitmapSuffix,\
+                                int(self.fontsize/650), int(self.fontsize/650))            
         
         # Icon in systray and statusbar both get created but
         # only one of them depending on the settings will
@@ -351,22 +358,22 @@ class GUI(object):
                                 # icons for hosts
                                 if item.is_host():                                
                                     if item.is_acknowledged():
-                                        line.append(self.popwin.ICONS["acknowledged"])
+                                        line.append(self.STATE_ICONS["acknowledged"])
                                     else:    
                                         line.append(None)
                                                                             
                                     if item.is_in_scheduled_downtime():
-                                        line.append(self.popwin.ICONS["downtime"])   
+                                        line.append(self.STATE_ICONS["downtime"])   
                                     else:    
                                         line.append(None)
                                     
                                     if item.is_flapping():
-                                        line.append(self.popwin.ICONS["flapping"])   
+                                        line.append(self.STATE_ICONS["flapping"])   
                                     else:    
                                         line.append(None)   
 
                                     if item.is_passive_only():
-                                        line.append(self.popwin.ICONS["passive"])   
+                                        line.append(self.STATE_ICONS["passive"])   
                                     else:    
                                         line.append(None)   
                                         
@@ -379,43 +386,43 @@ class GUI(object):
                                 else:
                                     # if the hosting host of a service has any flags display them too
                                     if server.hosts[item.host].is_acknowledged():
-                                        line.append(self.popwin.ICONS["acknowledged"])
+                                        line.append(self.STATE_ICONS["acknowledged"])
                                     else:    
                                         line.append(None)
                                                                             
                                     if server.hosts[item.host].is_in_scheduled_downtime():
-                                        line.append(self.popwin.ICONS["downtime"])   
+                                        line.append(self.STATE_ICONS["downtime"])   
                                     else:    
                                         line.append(None)
                                     
                                     if server.hosts[item.host].is_flapping():
-                                        line.append(self.popwin.ICONS["flapping"])   
+                                        line.append(self.STATE_ICONS["flapping"])   
                                     else:    
                                         line.append(None)           
                                         
                                     if server.hosts[item.host].is_passive_only():
-                                        line.append(self.popwin.ICONS["passive"])   
+                                        line.append(self.STATE_ICONS["passive"])   
                                     else:    
                                         line.append(None)   
                                         
                                     # now the service...                                    
                                     if item.is_acknowledged():
-                                        line.append(self.popwin.ICONS["acknowledged"])
+                                        line.append(self.STATE_ICONS["acknowledged"])
                                     else:    
                                         line.append(None)
                                                                             
                                     if item.is_in_scheduled_downtime():
-                                        line.append(self.popwin.ICONS["downtime"])   
+                                        line.append(self.STATE_ICONS["downtime"])   
                                     else:    
                                         line.append(None)
                                         
                                     if item.is_flapping():
-                                        line.append(self.popwin.ICONS["flapping"])   
+                                        line.append(self.STATE_ICONS["flapping"])   
                                     else:    
                                         line.append(None)               
                                         
                                     if item.is_passive_only():
-                                        line.append(self.popwin.ICONS["passive"])   
+                                        line.append(self.STATE_ICONS["passive"])   
                                     else:    
                                         line.append(None)    
       
@@ -1328,14 +1335,7 @@ class Popwin(gtk.Window):
                 self.recheck_item = menu_item
             self.popupmenu.append(menu_item)
         self.popupmenu.show_all()
-        
-        # icons for acknowledgement/downtime visualization
-        self.ICONS = dict()
-        for icon in ["acknowledged", "downtime", "flapping", "passive"]:
-            self.ICONS[icon] = gtk.gdk.pixbuf_new_from_file_at_size(self.output.Resources\
-                                + os.sep + "nagstamon_" + icon + self.output.BitmapSuffix,\
-                                int(self.output.fontsize/650), int(self.output.fontsize/650))
-            
+                    
         # create a scrollable area for the treeview in case it is larger than the screen
         # in case there are too many failed services and hosts
         self.ScrolledWindow = gtk.ScrolledWindow()
@@ -1813,7 +1813,8 @@ class ServerVBox(gtk.VBox):
 
         # offset to access host and service flag icons separately, stored in grand liststore
         # may grow with more supported flags
-        offset_img = {0:0, 1:4}
+        
+        offset_img = {0:0, 1:len(self.output.STATE_ICONS)}
         # offset for alternate column colors could increase readability 
         # even and odd columns are calculated by column number
         offset_color = {0:8, 1:9}

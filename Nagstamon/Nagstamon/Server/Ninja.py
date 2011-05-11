@@ -27,7 +27,19 @@ class NinjaServer(GenericServer):
     login_url = False
     time_url = False
 
-
+    
+    def __init__(self, **kwds):
+        GenericServer.__init__(self, **kwds)
+        
+        # dictionary to translate status bitmaps on webinterface into status flags
+        # this are defaults from Nagios
+        self.STATUS_MAPPING = { "acknowledged.png" : "acknowledged",\
+                                "active-checks-disabled.png" : "passiveonly",\
+                                "notify-disabled.png" : "notifications_disabled",\
+                                "scheduled_downtime.png" : "scheduled_downtime",\
+                                "flapping.gif" : "flapping" }    
+    
+        
     def init_HTTP(self):
         # add default auth for monitor.old 
         GenericServer.init_HTTP(self)
@@ -161,7 +173,7 @@ class NinjaServer(GenericServer):
         for i in range(len(state_list)):
             if (1 << i) & n:
                 state_list[i][1] = True
-
+                
         return dict(state_list)
 
 
@@ -195,21 +207,31 @@ class NinjaServer(GenericServer):
                         n = {}
                         # host
                         try:
-                            n["host"] = tds[2](text=not_empty)
-                            n["host_args"] = self.calc_current_state(int(n["host"][1].strip()))
-                            if not n["host_args"]:
-                                n["host_args"] = False
-
+                            n["host"] = tds[2](text=not_empty)  
                             n["host"] = n["host"][0].strip()
                             n["status"] = str(tds[0](text=not_empty)[0].strip())
                             n["last_check"] = str(tds[5](text=not_empty)[0].strip())
                             n["duration"] = str(tds[6](text=not_empty)[0].strip())
                             n["attempt"] = "N/A"
                             n["status_information"] = str(tds[7](text=not_empty)[0].strip())
-
-                            #print "Host: " + n["host"] + ", Args: " + str(n["host_args"]) + ", " + str(n["host_args"])
-
-                            # add dictionary full of information about this host item to nagitems
+                            
+                            # status flags 
+                            n["passiveonly"] = False
+                            n["notifications_disabled"] = False
+                            n["flapping"] = False
+                            n["acknowledged"] = False
+                            n["scheduled_downtime"] = False                            
+                                
+                            # map status icons to status flags
+                            icons = tds[1].findAll('img')
+                            for i in icons:
+                                icon = i["src"].split("/")[-1]
+                                if icon in self.STATUS_MAPPING:
+                                    n[self.STATUS_MAPPING[icon]] = True
+                            # cleaning
+                            del icons
+                                                       
+                           # add dictionary full of information about this host item to nagitems
                             nagitems["hosts"].append(n)
                             # after collection data in nagitems create objects from its informations
                             # host objects contain service objects
@@ -240,6 +262,13 @@ class NinjaServer(GenericServer):
                                         self.new_hosts[new_host].passiveonly = True
                                     else:
                                         self.new_hosts[new_host].passiveonly = False
+
+                                    if n["host_args"]["is_flapping"]:
+                                        self.new_hosts[new_host].flapping = True
+                                    else:
+                                        self.new_hosts[new_host].flapping = False
+                                        
+                                        
                         except:
                             n["host"] = str(nagitems[len(nagitems)-1]["host"])
                             print "Except: " + str(nagitems[len(nagitems)-1]["host"])
@@ -270,8 +299,6 @@ class NinjaServer(GenericServer):
                     tds = tr('td')
                     if len(tds) > 1:
                         n = {}
-                        # host
-                        #print [x.text for x in table.tr[i].td]
                         try:
                             n["host"] = tds[1](text=not_empty)[0]
                             if n["host"]:
@@ -288,46 +315,27 @@ class NinjaServer(GenericServer):
                             if n["service"][i]:
                                 n["service_args"] = n["service"][i].strip()
                                 i+=1
-
-                        if n["service_args"]:
-                            n["service_args"] = self.calc_current_state(int(n["service_args"]))
-                        else:
-                            n["service_args"] = False
-
                         n["service"] = str(n["service"][0])
                         n["last_check"] = str(tds[6](text=not_empty)[0].strip())
                         n["duration"] = str(tds[7](text=not_empty)[0].strip())
                         n["attempt"] = str(tds[8](text=not_empty)[0].strip())
                         n["status_information"] = str(tds[9](text=not_empty)[0].strip())
 
-                        # Add some logic here for parsing out the icons so we know state of the service
-                        #print str(n["service_args"])
-                        if n["service_args"]:
-                            if n["service_args"]["active_checks_disabled"] == True:
-                                n["passiveonly"] = True
-                            else:
-                                n["passiveonly"] = False
-
-                            if n["service_args"]["notifications_enabled"]:
-                                n["notifications"] = False
-                            else:
-                                n["notifications"] = True
-
-                            if n["service_args"]["is_flapping"]:
-                                n["flapping"] = True
-                            else:
-                                n["flapping"] = False
-
-                            if n["service_args"]["problem_has_been_acknowledged"]:
-                                n["acknowledged"] = True
-                            else:
-                                n["acknowledged"] = False
-
-                            if n["service_args"]["scheduled_downtime"]:
-                                n["scheduled_downtime"] = True
-                            else:
-                                n["scheduled_downtime"] = False
-
+                        # status flags 
+                        n["passiveonly"] = False
+                        n["notifications_disabled"] = False
+                        n["flapping"] = False
+                        n["acknowledged"] = False
+                        n["scheduled_downtime"] = False
+                        
+                        # map status icons to status flags
+                        icons = tds[4].findAll('img')                        
+                        for i in icons:
+                            icon = i["src"].split("/")[-1]
+                            if icon in self.STATUS_MAPPING:
+                                n[self.STATUS_MAPPING[icon]] = True
+                        # cleaning
+                        del icons                        
 
                         nagitems["services"].append(n)
                         # after collection data in nagitems create objects of its informations
@@ -337,6 +345,19 @@ class NinjaServer(GenericServer):
                             self.new_hosts[n["host"]].name = n["host"]
                             self.new_hosts[n["host"]].status = "UP"
                             self.new_hosts[n["host"]].visible = False
+                            
+                            # trying to fix https://sourceforge.net/tracker/index.php?func=detail&aid=3299790&group_id=236865&atid=1101370
+                            # if host is not down but in downtime or any other flag this should be evaluated too
+                            # map status icons to status flags
+                            icons = tds[1].findAll('img')
+                            for i in icons:
+                                icon = i["src"].split("/")[-1]
+                                if icon in self.STATUS_MAPPING:
+                                    self.new_hosts[n["host"]].__dict__[self.STATUS_MAPPING[icon]] = True
+                            # cleaning
+                            del icons                            
+                            
+                            
                         # if a service does not exist create its object
                         if not self.new_hosts[n["host"]].services.has_key(n["service"]):
                             new_service = n["service"]
@@ -349,8 +370,9 @@ class NinjaServer(GenericServer):
                             self.new_hosts[n["host"]].services[new_service].attempt = n["attempt"]
                             self.new_hosts[n["host"]].services[new_service].status_information = n["status_information"]
                             self.new_hosts[n["host"]].services[new_service].passiveonly = n["passiveonly"]
+                            self.new_hosts[n["host"]].services[new_service].flapping = n["flapping"]
                             self.new_hosts[n["host"]].services[new_service].acknowledged = n["acknowledged"]
-                            self.new_hosts[n["host"]].services[new_service].notifications_disabled = n["notifications"]
+                            self.new_hosts[n["host"]].services[new_service].notifications_disabled = n["notifications_disabled"]
                             self.new_hosts[n["host"]].services[new_service].scheduled_downtime = n["scheduled_downtime"]
                             self.new_hosts[n["host"]].services[new_service].visible = True
 

@@ -498,7 +498,6 @@ class GenericServer(object):
                             icon = i["src"].split("/")[-1]
                             if icon in self.STATUS_MAPPING:
                                 n[self.STATUS_MAPPING[icon]] = True
-                        
                         # cleaning
                         del icons
                         
