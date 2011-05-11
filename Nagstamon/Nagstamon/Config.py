@@ -19,6 +19,7 @@ class Config(object):
         self.update_interval = 1
         self.short_display = False
         self.long_display = True
+        self.show_grid = True
         self.filter_all_down_hosts = False
         self.filter_all_unreachable_hosts = False
         self.filter_all_unknown_services = False

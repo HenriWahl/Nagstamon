@@ -1790,7 +1790,10 @@ class ServerVBox(gtk.VBox):
         # enable hover effect
         self.server.TreeView.set_hover_selection(True)
         # enable grid lines
-        self.server.TreeView.set_grid_lines(gtk.TREE_VIEW_GRID_LINES_HORIZONTAL)
+        if str(self.output.conf.show_grid) == "True":
+            self.server.TreeView.set_grid_lines(gtk.TREE_VIEW_GRID_LINES_BOTH)
+        else:
+            self.server.TreeView.set_grid_lines(gtk.TREE_VIEW_GRID_LINES_NONE)
         # Liststore
         self.server.ListStore = gtk.ListStore(*self.output.LISTSTORE_COLUMNS)
 
