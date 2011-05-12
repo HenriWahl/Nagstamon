@@ -570,7 +570,7 @@ class GUI(object):
         # only OK needs to be connected - if this action gets canceled nothing happens
         # use connect_signals to assign methods to handlers
         handlers_dict = { "button_ok_clicked" : self.Acknowledge }
-        self.acknowledge_xml.connect_signals(handlers_dict)
+        self.acknowledge_xml.connect_signals(handlers_dict, server)
         
         # if service is "" it must be a host
         if service == "":
@@ -601,11 +601,11 @@ class GUI(object):
         self.acknowledge_dialog.destroy()
 
         
-    def Acknowledge(self, widget):
+    def Acknowledge(self, widget, server):
         """
             acknowledge miserable host/service
         """
-        # various parameters vor the CGI request
+        # various parameters for the CGI request
         host = self.acknowledge_xml.get_object("input_label_host").get_text()
         service = self.acknowledge_xml.get_object("input_label_service").get_text()
         author = self.acknowledge_xml.get_object("input_entry_author").get_text()
@@ -614,20 +614,20 @@ class GUI(object):
         sticky = self.acknowledge_xml.get_object("input_checkbutton_sticky_acknowledgement").get_active()
         notify = self.acknowledge_xml.get_object("input_checkbutton_send_notification").get_active()
         persistent = self.acknowledge_xml.get_object("input_checkbutton_persistent_comment").get_active()
- 
+
         # create a list of all service of selected host to acknowledge them all
         all_services = list()
         if acknowledge_all_services == True:
-            for i in self.popwin.miserable_server.nagitems_filtered["services"].values():
+            for i in server.nagitems_filtered["services"].values():
                 for s in i:
                     if s.host == host:
                         all_services.append(s.name)
 
         # let thread execute POST request
-        acknowledge = Actions.Acknowledge(server=self.popwin.miserable_server, host=host,\
+        acknowledge = Actions.Acknowledge(server=server, host=host,\
                       service=service, author=author, comment=comment, acknowledge_all_services=acknowledge_all_services,\
                       all_services=all_services, sticky=sticky, notify=notify, persistent=persistent)
-        acknowledge.start()
+        acknowledge.start()        
         
 
     def DowntimeDialogShow(self, server, host, service=None):
@@ -645,7 +645,7 @@ class GUI(object):
         # only OK needs to be connected - if this action gets canceled nothing happens
         # use connect_signals to assign methods to handlers
         handlers_dict = { "button_ok_clicked" : self.Downtime }
-        self.downtime_xml.connect_signals(handlers_dict)
+        self.downtime_xml.connect_signals(handlers_dict, server)
         
         # if service is None it must be a host
         if service == "":
@@ -661,7 +661,7 @@ class GUI(object):
             self.downtime_dialog.set_title("Downtime for service")
        
         # get start_time and end_time externally from Actions.Downtime_get_start_end() for not mixing GUI and actions too much
-        start_time, end_time = Actions.Downtime_get_start_end(server=self.popwin.miserable_server, host=host)
+        start_time, end_time = Actions.Downtime_get_start_end(server=server, host=host)
             
         # default author + comment
         self.downtime_xml.get_object("input_entry_author").set_text(server.username)        
@@ -678,7 +678,7 @@ class GUI(object):
         self.downtime_dialog.destroy()
 
 
-    def Downtime(self, widget):
+    def Downtime(self, widget, server):
         """
             schedule downtime for miserable host/service
         """
@@ -700,10 +700,87 @@ class GUI(object):
         minutes = self.downtime_xml.get_object("input_spinbutton_duration_minutes").get_value()
 
         # execute POST request with cgi_data, in this case threaded
-        downtime = Actions.Downtime(server=self.popwin.miserable_server, host=host, service=service, author=author, comment=comment, fixed=fixed, start_time=start_time, end_time=end_time, hours=int(hours), minutes=int(minutes))
+        downtime = Actions.Downtime(server=server, host=host, service=service, author=author, comment=comment, fixed=fixed, start_time=start_time, end_time=end_time, hours=int(hours), minutes=int(minutes))
         downtime.start()
+        
 
+    def SubmitCheckResultDialogShow(self, server, host, service=None):
+        """
+            create and show acknowledge_dialog from gtkbuilder file
+        """
+            
+        # set the gtkbuilder file
+        self.builderfile = self.Resources + os.sep + "submit_check_result_dialog.ui"
+        self.submitcheckresult_xml = gtk.Builder()
+        self.submitcheckresult_xml.add_from_file(self.builderfile)
+        self.submitcheckresult_dialog = self.submitcheckresult_xml.get_object("submit_check_result_dialog")
 
+        # connect with action
+        # only OK needs to be connected - if this action gets canceled nothing happens
+        # use connect_signals to assign methods to handlers
+        handlers_dict = { "button_ok_clicked" : self.SubmitCheckResultOK,\
+                          "button_cancel_clicked": self.SubmitCheckResultCancel}
+        self.submitcheckresult_xml.connect_signals(handlers_dict, server)
+        
+        # if service is "" it must be a host
+        if service == "":
+            # set label for submitting results to an host
+            self.submitcheckresult_xml.get_object("input_label_host").set_text(host)
+            self.submitcheckresult_xml.get_object("label_service").hide()
+            self.submitcheckresult_xml.get_object("input_label_service").hide()
+            self.submitcheckresult_dialog.set_title("Submit check result for host")
+            self.submitcheckresult_xml.get_object("label_service").hide()
+            self.submitcheckresult_xml.get_object("input_radiobutton_result_unknown").hide()
+        else: 
+            # set label for submitting results to a service on host
+            self.submitcheckresult_xml.get_object("input_label_host").set_text(host)
+            self.submitcheckresult_xml.get_object("input_label_service").set_text(service)
+            self.submitcheckresult_dialog.set_title("Submit check result for service")
+            self.submitcheckresult_xml.get_object("input_radiobutton_result_unreachable").hide()
+            self.submitcheckresult_xml.get_object("input_radiobutton_result_down").hide()
+        for i in server.SUBMIT_CHECK_RESULT_ARGS:
+            self.submitcheckresult_xml.get_object("label_" + i).show()     
+            self.submitcheckresult_xml.get_object("input_entry_" + i).show()        
+
+        # show dialog
+        self.submitcheckresult_dialog.run()
+       
+        
+    def SubmitCheckResultOK(self, widget, server):
+        """
+            submit check result
+        """
+        # various parameters for the CGI request
+        host = self.submitcheckresult_xml.get_object("input_label_host").get_text()
+        service = self.submitcheckresult_xml.get_object("input_label_service").get_text()
+        comment = self.submitcheckresult_xml.get_object("input_entry_comment").get_text()
+        check_output = self.submitcheckresult_xml.get_object("input_entry_check_output").get_text()
+        performance_data = self.submitcheckresult_xml.get_object("input_entry_performance_data").get_text()
+
+        # dummy default state
+        state = "ok"
+        
+        for s in ["ok", "warning", "critical", "unreachable", "unknown", "down"]:
+            if self.submitcheckresult_xml.get_object("input_radiobutton_result_" + s).get_active() == True:
+                state = s
+                break
+
+        if "check_output" in server.SUBMIT_CHECK_RESULT_ARGS and len(check_output) == 0:
+            self.ErrorDialog("Submit check result needs a check output.")
+        else:    
+            # let thread execute POST request
+            submit_check_result = Actions.SubmitCheckResult(server=server, host=host,\
+                          service=service, comment=comment, check_output=check_output,\
+                          performance_data=performance_data, state=state)
+            submit_check_result.start()               
+            # only close dialog if input was correct
+            self.submitcheckresult_dialog.destroy()
+            
+            
+    def SubmitCheckResultCancel(self, widget, server):    
+        self.submitcheckresult_dialog.destroy()
+
+            
     def AboutDialog(self):
         """
             about nagstamon
@@ -1315,26 +1392,7 @@ class Popwin(gtk.Window):
         self.VBox.add(self.HBoxAllButtons)
 
         # put this vbox into popwin
-        self.add(self.VBox)
-        
-        # context menu for detailed status overview, opens with a mouse click onto a listed item
-        self.popupmenu = gtk.Menu()
-        # first add connections
-        for i in ["Monitor", "SSH", "RDP", "VNC", "HTTP"]:
-            menu_item = gtk.MenuItem(i)
-            menu_item.connect("activate", self.TreeviewPopupMenuResponse, i)
-            self.popupmenu.append(menu_item)
-        # add separator to separate between connections and actions
-        self.popupmenu.append(gtk.SeparatorMenuItem())
-        # after the separatior add actions
-        for i in ["Recheck", "Acknowledge", "Downtime"]:
-            menu_item = gtk.MenuItem(i)
-            menu_item.connect("activate", self.TreeviewPopupMenuResponse, i)
-            if i == "Recheck":
-                menu_item.set_sensitive(False)
-                self.recheck_item = menu_item
-            self.popupmenu.append(menu_item)
-        self.popupmenu.show_all()
+        self.add(self.VBox)        
                     
         # create a scrollable area for the treeview in case it is larger than the screen
         # in case there are too many failed services and hosts
@@ -1382,7 +1440,7 @@ class Popwin(gtk.Window):
             # sorry folks, but this only works at the border of the treeviews 
             self.ServerVBoxes[server.get_name()].TreeView.connect("leave-notify-event", self.PopDown)
             # connect the treeviews of the servers to mouse clicks
-            self.ServerVBoxes[server.get_name()].TreeView.connect("button-press-event", self.TreeviewPopupMenu, self.ServerVBoxes[server.get_name()].TreeView, self.output.servers[server.get_name()])
+            self.ServerVBoxes[server.get_name()].TreeView.connect("button-press-event", self.ServerVBoxes[server.get_name()].TreeviewPopupMenu, self.ServerVBoxes[server.get_name()].TreeView, self.output.servers[server.get_name()])
            
             # add box to the other ones
             self.ScrolledVBox.add(self.ServerVBoxes[server.get_name()])
@@ -1591,11 +1649,11 @@ class Popwin(gtk.Window):
         """
         self.showPopwin = True
         
-
+    """    
     def TreeviewPopupMenu(self, widget, event, treeview, server):
-        """
-            context menu for treeview detailed status items
-        """
+    """
+            #context menu for treeview detailed status items
+    """
         # catch exception in case of clicking outside treeview
         try:
             # get path to clicked cell
@@ -1615,12 +1673,12 @@ class Popwin(gtk.Window):
         
 
     def TreeviewPopupMenuResponse(self, widget, remoteservice):
-        """
-            responses to the menu items
-            binaries get called by subprocess.Popen to beware nagstamon of hanging while
-            waiting for the called binary exit code
-            the requested binary and its arguments are given by a list
-        """
+    """
+          #  responses to the menu items
+          #  binaries get called by subprocess.Popen to beware nagstamon of hanging while
+          #  waiting for the called binary exit code
+          #  the requested binary and its arguments are given by a list
+    """
         
         # closing popwin is innecessary in case of rechecking, otherwise it must be done
         # because the dialog/app window will stay under the popwin   
@@ -1678,6 +1736,8 @@ class Popwin(gtk.Window):
                 recheck.start()
             elif remoteservice == "Acknowledge":
                 self.output.AcknowledgeDialogShow(server=self.miserable_server, host=self.miserable_host, service=self.miserable_service)
+            elif remoteservice == "Submit check result":
+                self.output.SubmitCheckResultDialogShow(server=self.miserable_server, host=self.miserable_host, service=self.miserable_service)
             elif remoteservice == "Downtime":
                 self.output.DowntimeDialogShow(server=self.miserable_server, host=self.miserable_host, service=self.miserable_service)
             # close popwin
@@ -1685,7 +1745,7 @@ class Popwin(gtk.Window):
                 
         except Exception, err:
             self.output.ErrorDialog(err)
-            
+    """     
 
     def ComboboxClicked(self, widget=None):
         """
@@ -1798,7 +1858,26 @@ class ServerVBox(gtk.VBox):
         
         self.Server_EventBox.add(self.HBox)
         self.add(self.Server_EventBox)            
-
+        
+        # context menu for detailed status overview, opens with a mouse click onto a listed item
+        self.popupmenu = gtk.Menu()
+        # first add connections
+        for i in ["Monitor", "SSH", "RDP", "VNC", "HTTP"]:
+            menu_item = gtk.MenuItem(i)
+            menu_item.connect("activate", self.TreeviewPopupMenuResponse, i)
+            self.popupmenu.append(menu_item)
+        # add separator to separate between connections and actions
+        self.popupmenu.append(gtk.SeparatorMenuItem())
+        # after the separatior add actions
+        #for i in ["Recheck", "Acknowledge", "Submit check result", "Downtime"]:
+        for i in self.server.MENU_ACTIONS:
+            menu_item = gtk.MenuItem(i)
+            menu_item.connect("activate", self.TreeviewPopupMenuResponse, i)
+            if i == "Recheck":
+                self.recheck_item = menu_item
+            self.popupmenu.append(menu_item)
+        self.popupmenu.show_all()
+                    
         # new TreeView handling, not generating new items with every refresh cycle
         self.server.TreeView = gtk.TreeView() 
         # enable hover effect
@@ -1874,7 +1953,104 @@ class ServerVBox(gtk.VBox):
         self.ListStore = self.server.ListStore
      
         self.add(self.TreeView)
+        
+
+    def TreeviewPopupMenu(self, widget, event, treeview, server):
+        """
+            context menu for treeview detailed status items
+        """
+        # catch exception in case of clicking outside treeview
+        try:
+            # get path to clicked cell
+            path, obj, x, y = treeview.get_path_at_pos(int(event.x), int(event.y))
+            # access content of rendered view model via normal python lists
+            self.miserable_server = server
+            self.miserable_host = treeview.get_model()[path[0]][server.HOST_COLUMN_ID]
+            self.miserable_service = treeview.get_model()[path[0]][server.SERVICE_COLUMN_ID]
+            # popup the relevant content menu
+            if self.miserable_service and server.hosts[self.miserable_host].services[self.miserable_service].is_passive_only():
+                self.recheck_item.hide()
+            else:
+                self.recheck_item.show()
+            self.popupmenu.popup(None, None, None, event.button, event.time)
+        except Exception, err:
+            print err
+        
+
+    def TreeviewPopupMenuResponse(self, widget, remoteservice):
+        """
+            responses to the menu items
+            binaries get called by subprocess.Popen to beware nagstamon of hanging while
+            waiting for the called binary exit code
+            the requested binary and its arguments are given by a list
+        """
+        
+        # closing popwin is innecessary in case of rechecking, otherwise it must be done
+        # because the dialog/app window will stay under the popwin   
+        if not remoteservice == "Recheck":
+            self.output.popwin.Close()  
+        
+        #debug    
+        if str(self.output.conf.debug_mode) == "True":
+            self.miserable_server.Debug(server=self.miserable_server.get_name(), host=self.miserable_host, service=self.miserable_service, debug="Clicked context menu: " + remoteservice)
+            
+        # choose appropriate service for menu entry
+        # it seems to be more responsive especially while rechecking if every service
+        # looks for its own for the miserable host's ip if it is needed
+        try:
+            if remoteservice == "SSH":
+                # get host ip to connect to be independent of dns resolver
+                #host = self.miserable_server.GetHost(self.miserable_host)[0]
+                result = self.miserable_server.GetHost(self.miserable_host)
+                host, error = result.result, result.error
+                if error == "":
+                    # workaround for bug 2080503@sf.net
+                    if self.conf.app_ssh_options == "": args = self.conf.app_ssh_bin + " " + host
+                    else: args = self.conf.app_ssh_bin + " " + self.conf.app_ssh_options + " " + host
+                    sub = subprocess.Popen(args.split(" "))
+            elif remoteservice == "RDP":
+                # get host ip to connect to be independent of dns resolver               
+                result = self.miserable_server.GetHost(self.miserable_host)
+                host, error = result.result, result.error
+                if error == "":
+                    # workaround for bug 2080503@sf.net
+                    if self.conf.app_rdp_options == "": args = self.conf.app_rdp_bin + " " + host
+                    else: args = self.conf.app_rdp_bin + " " + self.conf.app_rdp_options + " " + host
+                    sub = subprocess.Popen(args.split(" "))
+            elif remoteservice == "VNC":
+                # get host ip to connect to be independent of dns resolver
+                result = self.miserable_server.GetHost(self.miserable_host)
+                host, error = result.result, result.error
+                if error == "":
+                    # workaround for bug 2080503@sf.net
+                    if self.conf.app_vnc_options == "": args = self.conf.app_vnc_bin + " " + host
+                    else: args = self.conf.app_vnc_bin + " " + self.conf.app_vnc_options + " " + host
+                    sub = subprocess.Popen(args.split(" "))
+            elif remoteservice == "HTTP":
+                # get host ip to connect to be independent of dns resolver
+                result = self.miserable_server.GetHost(self.miserable_host)
+                host, error = result.result, result.error
+                if error == "":
+                    Actions.TreeViewHTTP(host)
+            elif remoteservice == "Monitor":
+                # let Actions.TreeViewNagios do the work to open a webbrowser with nagios informations
+                Actions.TreeViewNagios(self.miserable_server, self.miserable_host, self.miserable_service)
+            elif remoteservice == "Recheck":
+                # start new rechecking thread
+                recheck = Actions.Recheck(server=self.miserable_server, host=self.miserable_host, service=self.miserable_service)
+                recheck.start()
+            elif remoteservice == "Acknowledge":
+                self.output.AcknowledgeDialogShow(server=self.miserable_server, host=self.miserable_host, service=self.miserable_service)
+            elif remoteservice == "Submit check result":
+                self.output.SubmitCheckResultDialogShow(server=self.miserable_server, host=self.miserable_host, service=self.miserable_service)
+            elif remoteservice == "Downtime":
+                self.output.DowntimeDialogShow(server=self.miserable_server, host=self.miserable_host, service=self.miserable_service)
+            # close popwin
+            self.output.popwin.PopDown()
                 
+        except Exception, err:
+            self.output.ErrorDialog(err)
+            
         
 class Settings(object):
     """

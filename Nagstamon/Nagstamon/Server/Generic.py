@@ -49,7 +49,21 @@ class GenericServer(object):
 
     # Nagios CGI flags translation dictionary for acknowledging hosts/services 
     HTML_ACKFLAGS = {True:"on", False:"off"}
-
+    
+    # dictionary to translate status bitmaps on webinterface into status flags
+    # this are defaults from Nagios
+    STATUS_MAPPING = { "ack.gif" : "acknowledged",\
+                       "passiveonly.gif" : "passiveonly",\
+                       "ndisabled.gif" : "notifications_disabled",\
+                       "downtime.gif" : "scheduled_downtime",\
+                       "flapping.gif" : "flapping" }
+    
+    # Entries for monitor default actions in context menu
+    MENU_ACTIONS = ["Recheck", "Acknowledge", "Submit check result", "Downtime"]
+    
+    # Arguments available for submitting check results 
+    SUBMIT_CHECK_RESULT_ARGS = ["check_output", "performance_data"]
+   
     
     def __init__(self, **kwds):
         # add all keywords to object, every mode searchs inside for its favorite arguments/keywords
@@ -101,14 +115,6 @@ class GenericServer(object):
         self.TreeViewColumns = list()
         self.ListStore = None
         self.ListStoreColumns = list()
-        
-        # dictionary to translate status bitmaps on webinterface into status flags
-        # this are defaults from Nagios
-        self.STATUS_MAPPING = { "ack.gif" : "acknowledged",\
-                                "passiveonly.gif" : "passiveonly",\
-                                "ndisabled.gif" : "notifications_disabled",\
-                                "downtime.gif" : "scheduled_downtime",\
-                                "flapping.gif" : "flapping" }
         
     
     def init_HTTP(self):
@@ -258,6 +264,13 @@ class GenericServer(object):
         result = self.FetchURL(self.nagios_cgi_url + "/cmd.cgi", giveback="raw", cgi_data=cgi_data)
         raw = result.result
         
+    
+    def set_submit_check_result(self, thread_obj):
+        print "SUUUBBBMMIITTIING"
+        """
+        self._set_downtime(thread_obj.host, thread_obj.service, thread_obj.author, thread_obj.comment, thread_obj.fixed,
+                   thread_obj.start_time, thread_obj.end_time, thread_obj.hours, thread_obj.minutes)
+        """
     
     def get_start_end(self, host):
         """
@@ -662,7 +675,7 @@ class GenericServer(object):
 
                 if host.scheduled_downtime == True and str(self.conf.filter_services_on_hosts_in_maintenance) == "True":
                     if str(self.conf.debug_mode) == "True":
-                        self.Debug(server=self.get_name(), debug="Filter: Service on Host in DONWTIME " + str(host.name) + ";" + str(service.name))
+                        self.Debug(server=self.get_name(), debug="Filter: Service on Host in DOWNTIME " + str(host.name) + ";" + str(service.name))
                     service.visible = False
     
                 if host.status == "DOWN" and str(self.conf.filter_services_on_down_hosts) == "True":

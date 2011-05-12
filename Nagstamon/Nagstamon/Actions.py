@@ -362,6 +362,20 @@ def Downtime_get_start_end(server, host):
     # get start and end time from Nagios as HTML - the objectified HTML does not contain the form elements :-(
     # this used to happen in GUI.action_downtime_dialog_show but for a more strict separation it better stays here
     return server.get_start_end(host)
+
+
+class SubmitCheckResult(threading.Thread):
+    """
+    exceute remote cgi command with parameters from submit check result dialog 
+    """
+    def __init__(self, **kwds):
+        # add all keywords to object, every mode searchs inside for its favorite arguments/keywords
+        for k in kwds: self.__dict__[k] = kwds[k]
+        threading.Thread.__init__(self)
+        self.setDaemon(1)
+
+    def run(self):
+        self.server.set_submit_check_result(self)
         
 
 class CheckForNewVersion(threading.Thread):
@@ -448,6 +462,7 @@ class PlaySound(threading.Thread):
                 self.Play(self.conf.notification_custom_sound_down)
         elif self.sound =="FILE":
             self.Play(self.file)
+            
     
     def Play(self, file):
         """

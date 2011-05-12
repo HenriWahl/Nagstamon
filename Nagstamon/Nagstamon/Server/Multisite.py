@@ -55,6 +55,9 @@ class MultisiteServer(GenericServer):
         self.urls = {}
         self.statemap = {}
         
+        # Entries for monitor default actions in context menu
+        self.MENU_ACTIONS = ["Recheck", "Acknowledge", "Downtime"]
+        
 
     def init_HTTP(self):
         # Fix eventually missing tailing "/" in url
@@ -254,6 +257,12 @@ class MultisiteServer(GenericServer):
                     if service.has_key('svc_acknowledged'):
                         if service['svc_acknowledged'] == 'yes':
                             self.new_hosts[n["host"]].services[new_service].acknowledged = True
+                    if service.has_key('svc_is_active'):
+                        if service['svc_is_active'] == 'no':
+                            self.new_hosts[n["host"]].services[new_service].passiveonly = True
+                    if service.has_key('svc_flapping'):
+                        if service['svc_flapping'] == 'yes':
+                            self.new_hosts[n["host"]].services[new_service].flapping = True
         except:
             # set checking flag back to False
             self.isChecking = False

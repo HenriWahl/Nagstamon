@@ -17,6 +17,10 @@ class OpsviewServer(GenericServer):
     """   
     TYPE = 'Opsview'
     
+    # Arguments available for submitting check results 
+    SUBMIT_CHECK_RESULT_ARGS = ["comment"]  
+    
+    
     def init_HTTP(self):      
         if self.HTTPheaders == {}:
             GenericServer.init_HTTP(self)

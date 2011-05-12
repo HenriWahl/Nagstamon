@@ -38,7 +38,6 @@ class NinjaServer(GenericServer):
                                 "notify-disabled.png" : "notifications_disabled",\
                                 "scheduled_downtime.png" : "scheduled_downtime",\
                                 "flapping.gif" : "flapping" }    
-    
         
     def init_HTTP(self):
         # add default auth for monitor.old 
