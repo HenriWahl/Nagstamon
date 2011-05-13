@@ -6,10 +6,17 @@ import webbrowser
 import traceback
 import base64
 
-from Nagstamon import Actions
+from Nagstamon import Actions 
 from Nagstamon.Objects import *
 from Nagstamon.Server.Generic import GenericServer
 
+
+class OpsviewService(GenericService):
+    """
+    add Opsview specific service property to generic service class
+    """
+    service_object_id = ""
+    
 
 class OpsviewServer(GenericServer):   
     """  
@@ -84,6 +91,28 @@ class OpsviewServer(GenericServer):
         self.FetchURL(self.nagios_url + action, giveback="raw", cgi_data=cgi_data)
         
         
+    def _set_submit_check_result(self, host, service, state, comment, check_output, performance_data):
+        """
+        worker for submitting check result
+        """ 
+        # decision about host or service - they have different URLs
+        if service == "":
+            # host - here Opsview uses the plain oldschool Nagios way of CGI
+            url = self.nagios_cgi_url + "/cmd.cgi"   
+            cgi_data = urllib.urlencode({"cmd_typ":"87", "cmd_mod":"2", "host":host,\
+                                         "plugin_state":{"up":"0", "down":"1", "unreachable":"2"}[state], "plugin_output":check_output,\
+                                         "performance_data":performance_data, "btnSubmit":"Commit"})  
+            self.FetchURL(url, giveback="raw", cgi_data=cgi_data) 
+            
+        if service != "":
+            # service @ host - here Opsview brews something own            
+            url = self.nagios_url + "/state/service/" + self.hosts[host].services[service].service_object_id + "/change"
+            cgi_data = urllib.urlencode({"state":{"ok":"0", "warning":"1", "critical":"2", "unknown":"3"}[state],\
+                                         "comment":comment, "submit":"Commit"})          
+            # running remote cgi command        
+            self.FetchURL(url, giveback="raw", cgi_data=cgi_data) 
+            
+        
     def _get_status(self):
         """
         Get status from Opsview Server
@@ -118,7 +147,7 @@ class OpsviewServer(GenericServer):
                 #for service in host.getchildren()[:-1]:
                 for service in host.findAll("services"):   
                     servicedict = dict(service._getAttrMap())
-                    self.new_hosts[hostdict["name"]].services[servicedict["name"]] = GenericService()
+                    self.new_hosts[hostdict["name"]].services[servicedict["name"]] = OpsviewService()
                     self.new_hosts[hostdict["name"]].services[servicedict["name"]].host = str(hostdict["name"])
                     self.new_hosts[hostdict["name"]].services[servicedict["name"]].name = str(servicedict["name"])
                     # states come in lower case from Opsview
@@ -131,6 +160,9 @@ class OpsviewServer(GenericServer):
                         self.new_hosts[hostdict["name"]].services[servicedict["name"]].scheduled_downtime = True
                     if servicedict.has_key("acknowledged"):
                         self.new_hosts[hostdict["name"]].services[servicedict["name"]].acknowledged = True
+                    # extra opsview id for service, needed for submitting check results
+                    self.new_hosts[hostdict["name"]].services[servicedict["name"]].service_object_id = str(servicedict["service_object_id"])
+
 
         except:
             # set checking flag back to False

@@ -266,12 +266,33 @@ class GenericServer(object):
         
     
     def set_submit_check_result(self, thread_obj):
-        print "SUUUBBBMMIITTIING"
+        self._set_submit_check_result(thread_obj.host, thread_obj.service, thread_obj.state, thread_obj.comment,\
+                                  thread_obj.check_output, thread_obj.performance_data)
+        
+        
+    def _set_submit_check_result(self, host, service, state, comment, check_output, performance_data):
         """
-        self._set_downtime(thread_obj.host, thread_obj.service, thread_obj.author, thread_obj.comment, thread_obj.fixed,
-                   thread_obj.start_time, thread_obj.end_time, thread_obj.hours, thread_obj.minutes)
+        worker for submitting check result
         """
-    
+        url = self.nagios_cgi_url + "/cmd.cgi"      
+        
+        # decision about host or service - they have different URLs
+        if service == "":
+            # host
+            cgi_data = urllib.urlencode({"cmd_typ":"87", "cmd_mod":"2", "host":host,\
+                                         "plugin_state":state.upper(), "plugin_output":check_output,\
+                                         "performance_data":performance_data, "btnSubmit":"Commit"})  
+            self.FetchURL(url, giveback="raw", cgi_data=cgi_data) 
+            
+        if service != "":
+            # service @ host
+            cgi_data = urllib.urlencode({"cmd_typ":"30", "cmd_mod":"2", "host":host, "service":service,\
+                                         "plugin_state":state.upper(), "plugin_output":check_output,\
+                                         "performance_data":performance_data, "btnSubmit":"Commit"})          
+            # running remote cgi command        
+            self.FetchURL(url, giveback="raw", cgi_data=cgi_data) 
+
+        
     def get_start_end(self, host):
         """
         for GUI to get actual downtime start and end from server - they may vary so it's better to get

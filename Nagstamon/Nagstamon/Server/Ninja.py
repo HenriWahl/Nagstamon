@@ -37,7 +37,11 @@ class NinjaServer(GenericServer):
                                 "active-checks-disabled.png" : "passiveonly",\
                                 "notify-disabled.png" : "notifications_disabled",\
                                 "scheduled_downtime.png" : "scheduled_downtime",\
-                                "flapping.gif" : "flapping" }    
+                                "flapping.gif" : "flapping" }   
+
+        # Entries for monitor default actions in context menu
+        self.MENU_ACTIONS = ["Recheck", "Acknowledge", "Downtime"]      
+
         
     def init_HTTP(self):
         # add default auth for monitor.old 

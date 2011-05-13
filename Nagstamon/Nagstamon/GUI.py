@@ -730,13 +730,18 @@ class GUI(object):
             self.submitcheckresult_xml.get_object("input_label_service").hide()
             self.submitcheckresult_dialog.set_title("Submit check result for host")
             self.submitcheckresult_xml.get_object("label_service").hide()
+            self.submitcheckresult_xml.get_object("input_radiobutton_result_ok").hide()
+            self.submitcheckresult_xml.get_object("input_radiobutton_result_warning").hide()
+            self.submitcheckresult_xml.get_object("input_radiobutton_result_critical").hide()
             self.submitcheckresult_xml.get_object("input_radiobutton_result_unknown").hide()
+            self.submitcheckresult_xml.get_object("input_radiobutton_result_up").set_active(True)
         else: 
             # set label for submitting results to a service on host
             self.submitcheckresult_xml.get_object("input_label_host").set_text(host)
             self.submitcheckresult_xml.get_object("input_label_service").set_text(service)
             self.submitcheckresult_dialog.set_title("Submit check result for service")
             self.submitcheckresult_xml.get_object("input_radiobutton_result_unreachable").hide()
+            self.submitcheckresult_xml.get_object("input_radiobutton_result_up").hide()
             self.submitcheckresult_xml.get_object("input_radiobutton_result_down").hide()
         for i in server.SUBMIT_CHECK_RESULT_ARGS:
             self.submitcheckresult_xml.get_object("label_" + i).show()     
@@ -2005,8 +2010,8 @@ class ServerVBox(gtk.VBox):
                 host, error = result.result, result.error
                 if error == "":
                     # workaround for bug 2080503@sf.net
-                    if self.conf.app_ssh_options == "": args = self.conf.app_ssh_bin + " " + host
-                    else: args = self.conf.app_ssh_bin + " " + self.conf.app_ssh_options + " " + host
+                    if self.output.conf.app_ssh_options == "": args = self.output.conf.app_ssh_bin + " " + host
+                    else: args = self.output.conf.app_ssh_bin + " " + self.output.conf.app_ssh_options + " " + host
                     sub = subprocess.Popen(args.split(" "))
             elif remoteservice == "RDP":
                 # get host ip to connect to be independent of dns resolver               
@@ -2014,8 +2019,8 @@ class ServerVBox(gtk.VBox):
                 host, error = result.result, result.error
                 if error == "":
                     # workaround for bug 2080503@sf.net
-                    if self.conf.app_rdp_options == "": args = self.conf.app_rdp_bin + " " + host
-                    else: args = self.conf.app_rdp_bin + " " + self.conf.app_rdp_options + " " + host
+                    if self.ouptut.conf.app_rdp_options == "": args = self.output.conf.app_rdp_bin + " " + host
+                    else: args = self.conf.app_rdp_bin + " " + self.output.conf.app_rdp_options + " " + host
                     sub = subprocess.Popen(args.split(" "))
             elif remoteservice == "VNC":
                 # get host ip to connect to be independent of dns resolver
@@ -2023,8 +2028,8 @@ class ServerVBox(gtk.VBox):
                 host, error = result.result, result.error
                 if error == "":
                     # workaround for bug 2080503@sf.net
-                    if self.conf.app_vnc_options == "": args = self.conf.app_vnc_bin + " " + host
-                    else: args = self.conf.app_vnc_bin + " " + self.conf.app_vnc_options + " " + host
+                    if self.output.conf.app_vnc_options == "": args = self.output.conf.app_vnc_bin + " " + host
+                    else: args = self.output.conf.app_vnc_bin + " " + self.output.conf.app_vnc_options + " " + host
                     sub = subprocess.Popen(args.split(" "))
             elif remoteservice == "HTTP":
                 # get host ip to connect to be independent of dns resolver
