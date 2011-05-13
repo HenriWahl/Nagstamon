@@ -280,14 +280,14 @@ class GenericServer(object):
         if service == "":
             # host
             cgi_data = urllib.urlencode({"cmd_typ":"87", "cmd_mod":"2", "host":host,\
-                                         "plugin_state":state.upper(), "plugin_output":check_output,\
+                                         "plugin_state":{"up":"0", "down":"1", "unreachable":"2"}[state], "plugin_output":check_output,\
                                          "performance_data":performance_data, "btnSubmit":"Commit"})  
             self.FetchURL(url, giveback="raw", cgi_data=cgi_data) 
             
         if service != "":
             # service @ host
             cgi_data = urllib.urlencode({"cmd_typ":"30", "cmd_mod":"2", "host":host, "service":service,\
-                                         "plugin_state":state.upper(), "plugin_output":check_output,\
+                                         "plugin_state":{"ok":"0", "warning":"1", "critical":"2", "unknown":"3"}[state], "plugin_output":check_output,\
                                          "performance_data":performance_data, "btnSubmit":"Commit"})          
             # running remote cgi command        
             self.FetchURL(url, giveback="raw", cgi_data=cgi_data) 
