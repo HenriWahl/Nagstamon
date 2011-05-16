@@ -13,7 +13,12 @@ import traceback
 import base64
 import re
 
-from Nagstamon.BeautifulSoup import BeautifulSoup, BeautifulStoneSoup
+# to let Linux distributions use their own BeautifulSoup if existent try importing local BeautifulSoup first
+# see https://sourceforge.net/tracker/?func=detail&atid=1101370&aid=3302612&group_id=236865
+try:
+    from BeautifulSoup import BeautifulSoup, BeautifulStoneSoup
+except:
+    from Nagstamon.BeautifulSoup import BeautifulSoup, BeautifulStoneSoup
 from Nagstamon.Actions import HostIsFilteredOutByRE, ServiceIsFilteredOutByRE, not_empty
 from Nagstamon.Objects import *
 

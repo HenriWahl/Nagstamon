@@ -174,7 +174,7 @@
                 <child>
                   <object class="GtkSpinButton" id="input_spinbutton_update_interval">
                     <property name="visible">True</property>
-                    <property name="can_focus">False</property>
+                    <property name="can_focus">True</property>
                     <property name="is_focus">True</property>
                     <property name="primary_icon_activatable">False</property>
                     <property name="secondary_icon_activatable">False</property>
@@ -190,7 +190,7 @@
                 <child>
                   <object class="GtkEntry" id="input_entry_debug_file">
                     <property name="visible">True</property>
-                    <property name="can_focus">False</property>
+                    <property name="can_focus">True</property>
                     <property name="primary_icon_activatable">False</property>
                     <property name="secondary_icon_activatable">False</property>
                   </object>
@@ -681,7 +681,7 @@
                     <child>
                       <object class="GtkEntry" id="input_entry_re_host_pattern">
                         <property name="visible">True</property>
-                        <property name="can_focus">False</property>
+                        <property name="can_focus">True</property>
                         <property name="width_chars">20</property>
                         <property name="primary_icon_activatable">False</property>
                         <property name="secondary_icon_activatable">False</property>
@@ -723,7 +723,7 @@
                     <child>
                       <object class="GtkEntry" id="input_entry_re_service_pattern">
                         <property name="visible">True</property>
-                        <property name="can_focus">False</property>
+                        <property name="can_focus">True</property>
                         <property name="is_focus">True</property>
                         <property name="width_chars">20</property>
                         <property name="primary_icon_activatable">False</property>
@@ -886,10 +886,8 @@
                 <child>
                   <object class="GtkEntry" id="input_entry_app_ssh_bin">
                     <property name="visible">True</property>
-                    <property name="can_focus">False</property>
+                    <property name="can_focus">True</property>
                     <property name="is_focus">True</property>
-                    <property name="primary_icon_activatable">False</property>
-                    <property name="secondary_icon_activatable">False</property>
                   </object>
                   <packing>
                     <property name="left_attach">1</property>
@@ -901,7 +899,7 @@
                 <child>
                   <object class="GtkEntry" id="input_entry_app_ssh_options">
                     <property name="visible">True</property>
-                    <property name="can_focus">False</property>
+                    <property name="can_focus">True</property>
                     <property name="primary_icon_activatable">False</property>
                     <property name="secondary_icon_activatable">False</property>
                   </object>
@@ -915,7 +913,7 @@
                 <child>
                   <object class="GtkEntry" id="input_entry_app_rdp_bin">
                     <property name="visible">True</property>
-                    <property name="can_focus">False</property>
+                    <property name="can_focus">True</property>
                     <property name="primary_icon_activatable">False</property>
                     <property name="secondary_icon_activatable">False</property>
                   </object>
@@ -929,7 +927,7 @@
                 <child>
                   <object class="GtkEntry" id="input_entry_app_rdp_options">
                     <property name="visible">True</property>
-                    <property name="can_focus">False</property>
+                    <property name="can_focus">True</property>
                     <property name="is_focus">True</property>
                     <property name="primary_icon_activatable">False</property>
                     <property name="secondary_icon_activatable">False</property>
@@ -944,7 +942,7 @@
                 <child>
                   <object class="GtkEntry" id="input_entry_app_vnc_bin">
                     <property name="visible">True</property>
-                    <property name="can_focus">False</property>
+                    <property name="can_focus">True</property>
                     <property name="primary_icon_activatable">False</property>
                     <property name="secondary_icon_activatable">False</property>
                   </object>
@@ -958,7 +956,7 @@
                 <child>
                   <object class="GtkEntry" id="input_entry_app_vnc_options">
                     <property name="visible">True</property>
-                    <property name="can_focus">False</property>
+                    <property name="can_focus">True</property>
                     <property name="is_focus">True</property>
                     <property name="primary_icon_activatable">False</property>
                     <property name="secondary_icon_activatable">False</property>
