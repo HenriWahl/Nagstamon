@@ -304,7 +304,7 @@ class CentreonServer(GenericServer):
                     # status_information
                     n["status_information"] = str(l.ou.text)
                     # attempts are not shown in case of hosts so it defaults to "N/A"
-                    n["attempt"] = str(l.tr.text)
+                    n["attempt"] = str(l.tr.text).split(" ")[0]
                     # host acknowledged or not, has to be filtered
                     n["acknowledged"] = str(l.ha.text)
                     # host notification disabled or not, has to be filtered
@@ -380,7 +380,7 @@ class CentreonServer(GenericServer):
                     # duration
                     n["duration"] = str(l.d.text)
                     # attempt
-                    n["attempt"] = str(l.ca.text)
+                    n["attempt"] = str(l.ca.text).split(" ")[0]
                     # status_information
                     n["status_information"] = str(l.po.text)
                     # service is acknowledged or not, has to be filtered
