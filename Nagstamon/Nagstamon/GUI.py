@@ -2019,8 +2019,8 @@ class ServerVBox(gtk.VBox):
                 host, error = result.result, result.error
                 if error == "":
                     # workaround for bug 2080503@sf.net
-                    if self.ouptut.conf.app_rdp_options == "": args = self.output.conf.app_rdp_bin + " " + host
-                    else: args = self.conf.app_rdp_bin + " " + self.output.conf.app_rdp_options + " " + host
+                    if self.output.conf.app_rdp_options == "": args = self.output.conf.app_rdp_bin + " " + host
+                    else: args = self.output.conf.app_rdp_bin + " " + self.output.conf.app_rdp_options + " " + host
                     sub = subprocess.Popen(args.split(" "))
             elif remoteservice == "VNC":
                 # get host ip to connect to be independent of dns resolver
