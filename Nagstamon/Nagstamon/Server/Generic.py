@@ -108,7 +108,7 @@ class GenericServer(object):
         self.Cookie = cookielib.CookieJar()        
         # use server-owned attributes instead of redefining them with every request
         self.passman = None   
-        self.auth_handler = None
+        self.basic_handler = None
         self.digest_handler = None
         self.proxy_handler = None
         self.proxy_auth_handler = None        
@@ -373,9 +373,9 @@ class GenericServer(object):
         hostserviceprops = 0
         # services (unknown, warning or critical?)
         nagcgiurl_services = self.nagios_cgi_url + "/status.cgi?host=all&servicestatustypes=" + str(servicestatustypes) + "&serviceprops=" + str(hostserviceprops)
+
         # hosts (up or down or unreachable)
         nagcgiurl_hosts = self.nagios_cgi_url + "/status.cgi?hostgroup=all&style=hostdetail&hoststatustypes=" + str(hoststatustypes) + "&hostprops=" + str(hostserviceprops)
-               
         # hosts - mostly the down ones
         # unfortunately the hosts status page has a different structure so
         # hosts must be analyzed separately
@@ -384,7 +384,6 @@ class GenericServer(object):
             htobj, error = result.result, result.error
 
             if error != "": return Result(result=htobj, error=error) 
-
             # put a copy of a part of htobj into table to be able to delete htobj
             table = htobj('table', {'class': 'status'})[0]
 
@@ -392,7 +391,14 @@ class GenericServer(object):
             del htobj
             
             # access table rows
-            trs = table('tr', recursive=False)
+            # some Icinga versions have a <tbody> tag in cgi output HTML which
+            # omits the <tr> tags being found
+            if len(table('tbody')) == 0:
+                trs = table('tr', recursive=False)
+            else:
+                tbody = table('tbody')[0]
+                trs = tbody('tr', recursive=False)
+            
             # kick out table heads
             trs.pop(0)
             
@@ -485,16 +491,23 @@ class GenericServer(object):
             htobj, error = result.result, result.error          
             #if error != "": return Result(result=copy.deepcopy(htobj), error=error)
             if error != "": return Result(result=htobj, error=error)
-            
-            # put a copy of a part of htobj into table to be able to delete htobj
-            #table = copy.deepcopy(htobj('table', {'class': 'status'})[0])            
+          
             table = htobj('table', {'class': 'status'})[0]
-            
+
+            # some Icinga versions have a <tbody> tag in cgi output HTML which
+            # omits the <tr> tags being found
+            if len(table('tbody')) == 0:
+                trs = table('tr', recursive=False)
+            else:
+                tbody = table('tbody')[0]
+                trs = tbody('tr', recursive=False)
+
             # do some cleanup    
             del htobj
             
-            trs = table('tr', recursive=False)
+            # kick out table heads
             trs.pop(0)
+
             for tr in trs:
                 try:
                     # ignore empty <tr> rows - there are a lot of them - a Nagios bug? 

@@ -632,7 +632,7 @@ def CreateServer(server=None, conf=None, debug_queue=None):
     nagiosserver.passman = urllib2.HTTPPasswordMgrWithDefaultRealm()
     nagiosserver.passman.add_password(None, server.nagios_url, server.username, server.password)
     nagiosserver.passman.add_password(None, server.nagios_cgi_url, server.username, server.password)  
-    nagiosserver.auth_handler = urllib2.HTTPBasicAuthHandler(nagiosserver.passman)
+    nagiosserver.basic_handler = urllib2.HTTPBasicAuthHandler(nagiosserver.passman)
     nagiosserver.digest_handler = urllib2.HTTPDigestAuthHandler(nagiosserver.passman)  
     nagiosserver.proxy_auth_handler = urllib2.ProxyBasicAuthHandler(nagiosserver.passman)    
     
@@ -670,20 +670,21 @@ def BuildURLOpener(server):
     In UNIX $HTTP_PROXY will be used
     The MultipartPostHandler is needed for submitting multipart forms from Opsview
     """
-
+    # trying with changed digest/basic auth order as some digest auth servers do not
+    # seem to work wi the previous way
     if str(server.use_proxy) == "False":
         server.proxy_handler = urllib2.ProxyHandler({})
-        urlopener = urllib2.build_opener(server.auth_handler,\
-                                        server.digest_handler,\
-                                        server.proxy_handler,\
-                                        urllib2.HTTPCookieProcessor(server.Cookie),\
-                                        MultipartPostHandler)
+        urlopener = urllib2.build_opener(server.digest_handler,\
+                                         server.basic_handler,\
+                                         server.proxy_handler,\
+                                         urllib2.HTTPCookieProcessor(server.Cookie),\
+                                         MultipartPostHandler)
     elif str(server.use_proxy) == "True":
         if str(server.use_proxy_from_os) == "True":
-            urlopener = urllib2.build_opener(server.auth_handler,\
-                                            server.digest_handler,\
-                                            urllib2.HTTPCookieProcessor(server.Cookie),\
-                                            MultipartPostHandler)
+            urlopener = urllib2.build_opener(server.digest_handler,\
+                                             server.basic_handler,\
+                                             urllib2.HTTPCookieProcessor(server.Cookie),\
+                                             MultipartPostHandler)
         else:
             # if proxy from OS is not used there is to add a authenticated proxy handler
             server.passman.add_password(None, server.proxy_address, server.proxy_username, server.proxy_password)
@@ -691,7 +692,7 @@ def BuildURLOpener(server):
             server.proxy_auth_handler = urllib2.ProxyBasicAuthHandler(server.passman)
             urlopener = urllib2.build_opener(server.proxy_handler,\
                                             server.proxy_auth_handler,\
-                                            server.auth_handler,\
+                                            server.basic_handler,\
                                             server.digest_handler,\
                                             urllib2.HTTPCookieProcessor(server.Cookie),\
                                             MultipartPostHandler)
