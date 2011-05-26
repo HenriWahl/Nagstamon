@@ -29,6 +29,7 @@ class Config(object):
         self.filter_hosts_services_disabled_notifications = False
         self.filter_hosts_services_disabled_checks = False
         self.filter_hosts_services_maintenance = False
+        self.filter_services_on_acknowledged_hosts = False        
         self.filter_services_on_down_hosts = False
         self.filter_services_on_hosts_in_maintenance = False
         self.filter_services_on_unreachable_hosts = False

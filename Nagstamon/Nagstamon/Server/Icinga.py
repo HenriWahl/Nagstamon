@@ -2,8 +2,6 @@
 
 from Nagstamon.Server.Generic import GenericServer
 
-import urllib
-import base64
 
 class IcingaServer(GenericServer):    
     """

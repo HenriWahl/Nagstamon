@@ -373,7 +373,6 @@ class GenericServer(object):
         hostserviceprops = 0
         # services (unknown, warning or critical?)
         nagcgiurl_services = self.nagios_cgi_url + "/status.cgi?host=all&servicestatustypes=" + str(servicestatustypes) + "&serviceprops=" + str(hostserviceprops)
-
         # hosts (up or down or unreachable)
         nagcgiurl_hosts = self.nagios_cgi_url + "/status.cgi?hostgroup=all&style=hostdetail&hoststatustypes=" + str(hoststatustypes) + "&hostprops=" + str(hostserviceprops)
         # hosts - mostly the down ones
@@ -714,17 +713,22 @@ class GenericServer(object):
 
                 if host.scheduled_downtime == True and str(self.conf.filter_services_on_hosts_in_maintenance) == "True":
                     if str(self.conf.debug_mode) == "True":
-                        self.Debug(server=self.get_name(), debug="Filter: Service on Host in DOWNTIME " + str(host.name) + ";" + str(service.name))
+                        self.Debug(server=self.get_name(), debug="Filter: Service on host in DOWNTIME " + str(host.name) + ";" + str(service.name))
                     service.visible = False
-    
+
+                if host.acknowledged == True and str(self.conf.filter_services_on_acknowledged_hosts) == "True":
+                    if str(self.conf.debug_mode) == "True":
+                        self.Debug(server=self.get_name(), debug="Filter: Service on acknowledged host" + str(host.name) + ";" + str(service.name))
+                    service.visible = False                    
+                    
                 if host.status == "DOWN" and str(self.conf.filter_services_on_down_hosts) == "True":
                     if str(self.conf.debug_mode) == "True":
-                        self.Debug(server=self.get_name(), debug="Filter: Service on Host in DOWN " + str(host.name) + ";" + str(service.name))
+                        self.Debug(server=self.get_name(), debug="Filter: Service on host in DOWN " + str(host.name) + ";" + str(service.name))
                     service.visible = False
     
                 if host.status == "UNREACHABLE" and str(self.conf.filter_services_on_unreachable_hosts) == "True":
                     if str(self.conf.debug_mode) == "True":
-                        self.Debug(server=self.get_name(), debug="Filter: Service on Host in UNREACHABLE " + str(host.name) + ";" + str(service.name))
+                        self.Debug(server=self.get_name(), debug="Filter: Service on host in UNREACHABLE " + str(host.name) + ";" + str(service.name))
                     service.visible = False
     
                 real_attempt, max_attempt = service.attempt.split("/")
