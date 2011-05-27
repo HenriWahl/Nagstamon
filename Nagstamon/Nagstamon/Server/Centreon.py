@@ -313,6 +313,10 @@ class CentreonServer(GenericServer):
                     n["check_enabled"] = str(l.ace.text)
                     # host down for maintenance or not, has to be filtered
                     n["scheduled_downtime"] = str(l.hdtm.text)
+                    # is host flapping?
+                    n["flapping"] = str(l.f.text)
+                    # active checks enabled or passiveonly?
+                    n["passiveonly"] = str(l.ace.text)
                     # add dictionary full of information about this host item to nagitems
                     nagitems["hosts"].append(n)
                     # after collection data in nagitems create objects from its informations
@@ -328,7 +332,9 @@ class CentreonServer(GenericServer):
                         self.new_hosts[new_host].status_information= n["status_information"]
                         self.new_hosts[new_host].acknowledged = bool(int(n["acknowledged"]))
                         self.new_hosts[new_host].scheduled_downtime = bool(int(n["scheduled_downtime"]))
+                        self.new_hosts[new_host].flapping = bool(int(n["flapping"]))
                         self.new_hosts[new_host].notifications_disabled = not bool(int(n["notification_enabled"]))
+                        self.new_hosts[new_host].passiveonly = not bool(int(n["passiveonly"]))
                 except:
                     # set checking flag back to False
                     self.isChecking = False
@@ -387,25 +393,13 @@ class CentreonServer(GenericServer):
                     n["acknowledged"] = str(l.pa.text)
                     # service notification enabled or not, has to be filtered
                     n["notification_enabled"] = str(l.ne.text)
-                    # service check enabled or not, has to be filtered
-                    n["check_enabled"] = str(l.ac.text)
+                    # active service check enabled or not, has to be filtered
+                    n["passiveonly"] = str(l.ac.text)
                     # service down for maintenance or not, has to be filtered
                     n["scheduled_downtime"] = str(l.dtm.text)
+                    # is service flapping?
+                    n["flapping"] = str(l.f.text)
                     
-                    """
-                    # what works in cgi-Nagios via cgi request has to be filtered out here "manually"
-                    if not (str(self.conf.filter_acknowledged_hosts_services) == "True" and \
-                       n["acknowledged"] == "1") and \
-                       not (str(self.conf.filter_hosts_services_disabled_notifications) == "True" and \
-                       n["notification_enabled"] == "0") and \
-                       not (str(self.conf.filter_hosts_services_disabled_checks) == "True" and \
-                       n["check_enabled"] == "0") and \
-                       not (str(self.conf.filter_hosts_services_maintenance) == "True" and \
-                       n["scheduled_downtime"] == "1") and\
-                       not (str(self.conf.filter_all_unknown_services) == "True" and n["status"] == "UNKNOWN") and\
-                       not (str(self.conf.filter_all_warning_services) == "True" and n["status"] == "WARNING") and\
-                       not (str(self.conf.filter_all_critical_services) == "True" and n["status"] == "CRITICAL"): 
-                    """
                     # add dictionary full of information about this service item to nagitems - only if service
                     nagitems["services"].append(n)
                     
@@ -428,7 +422,9 @@ class CentreonServer(GenericServer):
                         self.new_hosts[n["host"]].services[new_service].status_information = n["status_information"]
                         self.new_hosts[n["host"]].services[new_service].acknowledged = bool(int(n["acknowledged"]))
                         self.new_hosts[n["host"]].services[new_service].scheduled_downtime = bool(int(n["scheduled_downtime"]))
+                        self.new_hosts[n["host"]].services[new_service].flapping = bool(int(n["flapping"]))
                         self.new_hosts[n["host"]].services[new_service].notifications_disabled = not bool(int(n["notification_enabled"]))
+                        self.new_hosts[n["host"]].services[new_service].passiveonly = not bool(int(n["passiveonly"]))
                 except:
                     # set checking flag back to False
                     self.isChecking = False

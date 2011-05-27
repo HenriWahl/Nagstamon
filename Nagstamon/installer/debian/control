@@ -7,7 +7,7 @@ Uploaders: Carl Chenet <chaica@ohmytux.com>
 Build-Depends: debhelper (>= 7.0.50~), python (>= 2.5), quilt (>= 0.46-7~)
 Build-Depends-Indep: python-support
 Standards-Version: 3.8.4
-Homepage: http://nagstamon.sourceforge.net
+Homepage: http://nagstamon.ifw-dresden.de
 Vcs-Svn: svn://svn.debian.org/python-apps/packages/nagstamon/trunk/
 Vcs-Browser: http://svn.debian.org/viewsvn/python-apps/packages/nagstamon/trunk/
 

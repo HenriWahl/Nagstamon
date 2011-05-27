@@ -17,7 +17,7 @@ import os
 import platform
 
 # module egg.trayicon doesnt exists on Windows
-if platform.system() != "Windows":
+if platform.system() != "Windows" and platform.system() != "Darwin":
     try:
         import egg.trayicon
     except Exception, err:
@@ -76,7 +76,7 @@ class GUI(object):
         
         # Meta
         self.name = "nagstamon"
-        self.version = "0.9.7pre"
+        self.version = "0.9.7"
         self.website = "http://nagstamon.ifw-dresden.de/"
         self.copyright = "©2008-2011 Henri Wahl\nh.wahl@ifw-dresden.de"
         self.comments = "Nagios status monitor for your desktop"

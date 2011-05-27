@@ -1,3 +1,135 @@
+2011-05-25 11:34  henriwww
+
+	* Nagstamon/Actions.py, Nagstamon/Server/Generic.py: seemingly
+	  fixed
+	  https://sourceforge.net/tracker/?func=detail&atid=1101370&aid=3307344&group_id=236865
+
+2011-05-21 20:10  henriwww
+
+	* Nagstamon/GUI.py: fixed typo which rendered remote rdp
+	  connectuion unusable
+
+2011-05-18 12:11  henriwww
+
+	* Nagstamon/Server/Centreon.py: fixed Centreon Soft state bug
+	  https://sourceforge.net/tracker/index.php?func=detail&aid=3303861&group_id=236865&atid=1101370
+
+2011-05-16 10:27  henriwww
+
+	* Nagstamon/Server/Generic.py,
+	  Nagstamon/resources/settings_dialog.ui,
+	  Nagstamon/resources/settings_server_dialog.ui: saved world peace
+	  (https://sourceforge.net/tracker/?func=detail&atid=1101370&aid=3302612&group_id=236865)
+	  :-) and added tag for 0.9.6.1 as well as fixes in .ui files where
+	  it was impossible to type text into textentry fields
+
+2011-05-13 13:08  henriwww
+
+	* Nagstamon/Server/Generic.py: fix for submit check result - wrong
+	  states in generic
+
+2011-05-13 13:03  henriwww
+
+	* Nagstamon/resources/submit_check_result_dialog.ui: missing dialog
+	  ui for submitting check results
+
+2011-05-13 13:00  henriwww
+
+	* Nagstamon/GUI.py, Nagstamon/Server/Centreon.py,
+	  Nagstamon/Server/Generic.py, Nagstamon/Server/Ninja.py,
+	  Nagstamon/Server/Opsview.py: submitting check results working for
+	  Nagios, Icinga, Opsview
+
+2011-05-12 13:23  henriwww
+
+	* Nagstamon/Actions.py, Nagstamon/GUI.py,
+	  Nagstamon/Server/Generic.py, Nagstamon/Server/Multisite.py,
+	  Nagstamon/Server/Ninja.py, Nagstamon/Server/Opsview.py: added
+	  multisite icon detection for flapping/passive, started working on
+	  submit check result
+
+2011-05-11 13:49  henriwww
+
+	* Nagstamon/Server/Ninja.py: icon detection works for hosts on
+	  Ninja
+
+2011-05-11 13:25  henriwww
+
+	* Nagstamon/GUI.py, Nagstamon/Server/Generic.py,
+	  Nagstamon/Server/Ninja.py: changed ninja host/service flag
+	  detection to generic <img> tag based way
+
+2011-05-11 12:17  henriwww
+
+	* Nagstamon/GUI.py, Nagstamon/Server/Generic.py,
+	  Nagstamon/resources/nagstamon_downtime.png,
+	  Nagstamon/resources/nagstamon_downtime.svg,
+	  Nagstamon/resources/nagstamon_passive.png,
+	  Nagstamon/resources/nagstamon_passive.svg,
+	  installer/debian/changelog: added passive_only detection
+
+2011-05-11 06:54  henriwww
+
+	* Nagstamon/Config.py, Nagstamon/GUI.py,
+	  Nagstamon/resources/settings_dialog.ui: grid is toggable
+
+2011-05-11 06:11  henriwww
+
+	* Nagstamon/GUI.py, Nagstamon/resources/nagstamon_flapping.png,
+	  Nagstamon/resources/nagstamon_flapping.svg: added grid lines in
+	  popwin
+
+2011-05-10 13:45  henriwww
+
+	* Nagstamon/GUI.py, Nagstamon/Server/Generic.py: adjusting column
+	  color alternation difference
+
+2011-05-10 13:24  henriwww
+
+	* Nagstamon/GUI.py: added alternating column colors in overview
+
+2011-05-10 11:37  henriwww
+
+	* Nagstamon/GUI.py, Nagstamon/Server/Generic.py,
+	  Nagstamon/resources/nagstamon_flapping.png,
+	  Nagstamon/resources/nagstamon_flapping.svg: added displaying flag
+	  on hosts even if they are not down (in service line), added
+	  flapping icon/detection
+
+2011-05-10 09:45  henriwww
+
+	* Nagstamon/GUI.py, Nagstamon/Server/Generic.py,
+	  Nagstamon/Server/Multisite.py,
+	  Nagstamon/resources/nagstamon_acknowledged.svg,
+	  installer/windows/nagstamon.iss: trying to fix
+	  https://sourceforge.net/tracker/index.php?func=detail&aid=3299790&group_id=236865&atid=1101370
+
+2011-05-09 09:13  henriwww
+
+	* Nagstamon/Server/Multisite.py: added detection of flags for
+	  services (ack/downtime) on Multisite
+
+2011-05-08 13:14  henriwww
+
+	* Nagstamon/Server/Generic.py: fixed bug that treeview in popwin
+	  got empty if connection errors occured
+
+2011-05-06 23:03  henriwww
+
+	* installer/windows/nagstamon.iss: windows ISS file for 0.9.6.1
+
+2011-05-06 22:32  henriwww
+
+	* ChangeLog: updated Changelog
+
+2011-05-06 22:17  henriwww
+
+	* installer/debian/changelog: debian changelog corrected
+
+2011-05-06 22:10  henriwww
+
+	* Nagstamon/GUI.py, setup.py: cosmetics for 0.9.6.1
+
 2011-05-06 21:24  henriwww
 
 	* Nagstamon/Server/Generic.py: fix for

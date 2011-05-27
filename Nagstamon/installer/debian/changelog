@@ -1,8 +1,15 @@
 nagstamon (0.9.7-1) unstable; urgency=low
 
   * New upstream
+    - on some servers now context menu allows submitting check results for hosts and services
+    - added filter for services on acknowledged hosts
+    - added icons for "passiveonly" and "flapping" hosts and services
+    - fix for uneditable text entry fields in settings dialog - sf.net bug 3300873
+    - fix for not working filter "services on hosts in maintenance" - sf.net bug 3299790
+    - fix for soft state detection in Centreon - sf.net bug 3303861
+    - fix for not filtered services which should have been filtered - sf.net bug 3308008
 
- -- Henri Wahl <h.wahl@ifw-dresden.de>  Fri, 11 May 2011 10:01:00 +0200
+ -- Henri Wahl <h.wahl@ifw-dresden.de>  Fri, 27 May 2011 16:01:00 +0200
 
 nagstamon (0.9.6.1-1) unstable; urgency=low
 
