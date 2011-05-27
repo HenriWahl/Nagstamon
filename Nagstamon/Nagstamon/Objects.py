@@ -125,8 +125,9 @@ class GenericObject(object):
         self.notifications_disabled = False
         self.flapping = False
         self.scheduled_downtime = False
+        self.disabled = False
         self.visible = True
-    
+        
 
     def is_passive_only(self):
         return bool(self.passiveonly)    

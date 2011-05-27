@@ -692,8 +692,8 @@ def BuildURLOpener(server):
             server.proxy_auth_handler = urllib2.ProxyBasicAuthHandler(server.passman)
             urlopener = urllib2.build_opener(server.proxy_handler,\
                                             server.proxy_auth_handler,\
-                                            server.basic_handler,\
                                             server.digest_handler,\
+                                            server.basic_handler,\
                                             urllib2.HTTPCookieProcessor(server.Cookie),\
                                             MultipartPostHandler)
     return urlopener

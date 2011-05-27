@@ -61,7 +61,8 @@ class GenericServer(object):
                        "passiveonly.gif" : "passiveonly",\
                        "ndisabled.gif" : "notifications_disabled",\
                        "downtime.gif" : "scheduled_downtime",\
-                       "flapping.gif" : "flapping" }
+                       "flapping.gif" : "flapping",\
+                       "disabled.gif" : "disabled"}
     
     # Entries for monitor default actions in context menu
     MENU_ACTIONS = ["Recheck", "Acknowledge", "Submit check result", "Downtime"]
@@ -442,6 +443,7 @@ class GenericServer(object):
                         n["flapping"] = False
                         n["acknowledged"] = False
                         n["scheduled_downtime"] = False
+                        n["disabled"] = False                        
                         
                         # map status icons to status flags                       
                         icons = tds[0].findAll('img')
@@ -471,6 +473,7 @@ class GenericServer(object):
                             self.new_hosts[new_host].flapping = n["flapping"]
                             self.new_hosts[new_host].acknowledged = n["acknowledged"]
                             self.new_hosts[new_host].scheduled_downtime = n["scheduled_downtime"]
+                            self.new_hosts[new_host].disabled = n["disabled"]
                 except:
                     self.Error(sys.exc_info())
                 
@@ -652,10 +655,12 @@ class GenericServer(object):
                     if str(self.conf.debug_mode) == "True":
                         self.Debug(server=self.get_name(), debug="Filter: NOTIFICATIONS " + str(host.name))
                     host.visible = False
-    
-                if host.passiveonly == True and str(self.conf.filter_hosts_services_disabled_checks) == "True":
+ 
+                #if host.passiveonly == True and str(self.conf.filter_hosts_services_disabled_checks) == "True": 
+                # the "disabled" flag seems fitting better with filter_hosts_services_disabled_checks
+                if host.disabled == True and str(self.conf.filter_hosts_services_disabled_checks) == "True":
                     if str(self.conf.debug_mode) == "True":
-                        self.Debug(server=self.get_name(), debug="Filter: PASSIVEONLY " + str(host.name))
+                        self.Debug(server=self.get_name(), debug="Filter: DISABLED " + str(host.name))
                     host.visible = False
     
                 if host.scheduled_downtime == True and str(self.conf.filter_hosts_services_maintenance) == "True":
@@ -701,9 +706,11 @@ class GenericServer(object):
                         self.Debug(server=self.get_name(), debug="Filter: NOTIFICATIONS " + str(host.name) + ";" + str(service.name))
                     service.visible = False
     
-                if service.passiveonly == True and str(self.conf.filter_hosts_services_disabled_checks) == "True":
+                #if service.passiveonly == True and str(self.conf.filter_hosts_services_disabled_checks) == "True":
+                # the "disabled" flag seems fitting better with filter_hosts_services_disabled_checks
+                if service.disabled == True and str(self.conf.filter_hosts_services_disabled_checks) == "True":                
                     if str(self.conf.debug_mode) == "True":
-                        self.Debug(server=self.get_name(), debug="Filter: PASSIVEONLY " + str(host.name) + ";" + str(service.name))
+                        self.Debug(server=self.get_name(), debug="Filter: DISABLED " + str(host.name) + ";" + str(service.name))
                     service.visible = False
     
                 if service.scheduled_downtime == True and str(self.conf.filter_hosts_services_maintenance) == "True":
