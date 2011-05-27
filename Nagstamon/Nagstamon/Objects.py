@@ -125,7 +125,6 @@ class GenericObject(object):
         self.notifications_disabled = False
         self.flapping = False
         self.scheduled_downtime = False
-        self.disabled = False
         self.visible = True
         
 
@@ -146,8 +145,7 @@ class GenericObject(object):
     
     
     def is_in_scheduled_downtime(self):
-        return bool(self.scheduled_downtime)     
-    
+        return bool(self.scheduled_downtime)    
     
     def is_visible(self):
         return bool(self.visible)  

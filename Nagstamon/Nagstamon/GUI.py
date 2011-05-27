@@ -1851,6 +1851,7 @@ class ServerVBox(gtk.VBox):
         self.HBoxLeft.add(self.ButtonMonitor)
         self.HBoxLeft.add(self.ButtonHosts)
         self.HBoxLeft.add(self.ButtonServices)
+        self.HBoxLeft.add(gtk.VSeparator())
         self.HBoxLeft.add(self.LabelStatus)
         
         self.AlignmentLeft = gtk.Alignment(xalign=0, xscale=0.05, yalign=0)
