@@ -1,3 +1,10 @@
+nagstamon (0.9.7.1-1) unstable; urgency=low
+
+  * New upstream
+    - hot fix for broken Centreon support - sf.net bug 3309166
+
+ -- Henri Wahl <h.wahl@ifw-dresden.de>  Fri, 30 May 2011 12:01:00 +0200
+
 nagstamon (0.9.7-1) unstable; urgency=low
 
   * New upstream
