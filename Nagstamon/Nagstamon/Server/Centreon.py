@@ -314,7 +314,12 @@ class CentreonServer(GenericServer):
                     # host down for maintenance or not, has to be filtered
                     n["scheduled_downtime"] = str(l.hdtm.text)
                     # is host flapping?
-                    n["flapping"] = str(l.f.text)
+                    # the "is" flag indicates "is_flapping"... and doesn't seem to exist on hosts
+                    # because python whines when l.is.text is used we go the .find() way
+                    if l.find("is") != None:
+                        n["flapping"] = str(l.find("is").text)
+                    else:
+                        n["flapping"] = "0"
                     # active checks enabled or passiveonly?
                     n["passiveonly"] = str(l.ace.text)
                     # add dictionary full of information about this host item to nagitems
@@ -398,8 +403,9 @@ class CentreonServer(GenericServer):
                     # service down for maintenance or not, has to be filtered
                     n["scheduled_downtime"] = str(l.dtm.text)
                     # is service flapping?
-                    n["flapping"] = str(l.f.text)
-                    
+                    # the "is" flag indicates "is_flapping"... and python whines when using l.is.text so we need to
+                    # use .find("is") instead
+                    n["flapping"] = str(l.find("is").text)
                     # add dictionary full of information about this service item to nagitems - only if service
                     nagitems["services"].append(n)
                     
