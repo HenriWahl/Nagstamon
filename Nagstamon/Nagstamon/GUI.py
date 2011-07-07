@@ -2492,11 +2492,11 @@ class Settings(object):
             play sample of selected sound for Nagios Event
         """
         try:
-            filechooser = self.builder.get_object("input_filechooser_notification_custom_sound_" + playbutton.name)
+            filechooser = self.builder.get_object("input_filechooser_notification_custom_sound_" + gtk.Buildable.get_name(playbutton))
             sound = Actions.PlaySound(sound="FILE", file=filechooser.get_filename(), conf=self.conf, servers=self.servers)
             sound.start()
-        except:
-            pass
+        except Exception, err:
+            print err
 
 
 class ServerDialogHelper(object):        

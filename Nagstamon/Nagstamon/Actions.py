@@ -471,9 +471,9 @@ class PlaySound(threading.Thread):
         # debug
         if str(self.conf.debug_mode) == "True":
             # once again taking .Debug() from first server
-            self.servers.values()[0].Debug(debug="Playing sound: " + file)
+            self.servers.values()[0].Debug(debug="Playing sound: " + str(file))
         if not platform.system() == "Windows":
-            commands.getoutput("play -q %s" % file)
+            commands.getoutput("play -q %s" % str(file))
         else:
             winsound.PlaySound(file, winsound.SND_FILENAME)
             

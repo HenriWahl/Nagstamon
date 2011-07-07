@@ -1487,7 +1487,7 @@
                                         <property name="use_action_appearance">False</property>
                                         <signal name="clicked" handler="button_play_sound" swapped="no"/>
                                         <child>
-                                          <object class="GtkImage" id="image4">
+                                          <object class="GtkImage" id="image_play_down">
                                             <property name="visible">True</property>
                                             <property name="can_focus">False</property>
                                             <property name="stock">gtk-media-play</property>
