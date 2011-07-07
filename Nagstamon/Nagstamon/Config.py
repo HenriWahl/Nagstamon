@@ -6,6 +6,7 @@ import sys
 import ConfigParser
 import base64
 import zlib
+import sys
 
 class Config(object):
     """
@@ -136,7 +137,12 @@ class Config(object):
         
         if os.path.exists(self.configfile):
             # instantiate a Configparser to parse the conf file
-            config = ConfigParser.ConfigParser()
+            # SF.net bug #3304423 could be fixed with allow_no_value argument which
+            # is only available since Python 2.7
+            if sys.version_info[0] < 3 and sys.version_info[1] < 7:
+                config = ConfigParser.ConfigParser()
+            else:
+                config = ConfigParser.ConfigParser(allow_no_value=True)
             config.read(self.configfile)
             
             # go through all sections of the conf file
