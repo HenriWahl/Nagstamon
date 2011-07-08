@@ -808,6 +808,7 @@ class GUI(object):
                            "Emile Heitor ",\
                            "John Conroy",\
                            "Lars Michelsen",\
+                           "M. Cigdem Cebe",\
                            "Mattias Ryrlén",\
                            "Michał Rzeszut",\
                            "Patrick Cernko",\
@@ -2089,6 +2090,7 @@ class Settings(object):
                           "togglebutton_use_custom_sounds": self.ToggleCustomSoundOptions,
                           "checkbutton_re_host_enabled": self.ToggleREHostOptions,
                           "checkbutton_re_service_enabled": self.ToggleREServiceOptions,
+                          "checkbutton_re_status_information_enabled": self.ToggleREStatusInformationOptions,
                           "button_play_sound": self.PlaySound,
                           "checkbutton_debug_mode": self.ToggleDebugOptions,
                           "checkbutton_debug_to_file": self.ToggleDebugOptions,
@@ -2471,8 +2473,8 @@ class Settings(object):
         
     def ToggleREHostOptions(self, widget=None):
         """
-            Disable notification sound when not using sound is enabled
-        """
+            Toggle regular expression filter for hosts
+        """        
         options = self.builder.get_object("hbox_re_host")
         checkbutton = self.builder.get_object("input_checkbutton_re_host_enabled")
         options.set_sensitive(checkbutton.get_active())
@@ -2480,12 +2482,21 @@ class Settings(object):
 
     def ToggleREServiceOptions(self, widget=None):
         """
-            Disable notification sound when not using sound is enabled
+            Toggle regular expression filter for services
         """
         options = self.builder.get_object("hbox_re_service")
         checkbutton = self.builder.get_object("input_checkbutton_re_service_enabled")
         options.set_sensitive(checkbutton.get_active())
         
+        
+    def ToggleREStatusInformationOptions(self, widget=None):
+        """
+            Disable notification sound when not using sound is enabled
+        """
+        options = self.builder.get_object("hbox_re_status_information")
+        checkbutton = self.builder.get_object("input_checkbutton_re_status_information_enabled")
+        options.set_sensitive(checkbutton.get_active())
+
     
     def PlaySound(self, playbutton=None):
         """

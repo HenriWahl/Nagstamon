@@ -19,7 +19,7 @@ try:
     from BeautifulSoup import BeautifulSoup, BeautifulStoneSoup
 except:
     from Nagstamon.BeautifulSoup import BeautifulSoup, BeautifulStoneSoup
-from Nagstamon.Actions import HostIsFilteredOutByRE, ServiceIsFilteredOutByRE, not_empty
+from Nagstamon.Actions import HostIsFilteredOutByRE, ServiceIsFilteredOutByRE, StatusInformationIsFilteredOutByRE, not_empty
 from Nagstamon.Objects import *
 
 # fix/patch for https://bugs.launchpad.net/ubuntu/+source/nagstamon/+bug/732544
@@ -669,6 +669,11 @@ class GenericServer(object):
                     if str(self.conf.debug_mode) == "True":
                         self.Debug(server=self.get_name(), debug="Filter: REGEXP " + str(host.name))
                     host.visible = False
+                    
+                if StatusInformationIsFilteredOutByRE(host.status_information, self.conf) == True:
+                    if str(self.conf.debug_mode) == "True":
+                        self.Debug(server=self.get_name(), debug="Filter: REGEXP " + str(host.name))
+                    host.visible = False 
     
                 # Finegrain for the specific State
                 if host.status == "DOWN":
@@ -748,6 +753,11 @@ class GenericServer(object):
                     if str(self.conf.debug_mode) == "True":
                         self.Debug(server=self.get_name(), debug="Filter: REGEXP " + str(host.name) + ";" + str(service.name))
                     service.visible = False
+                    
+                if StatusInformationIsFilteredOutByRE(service.status_information, self.conf) == True:
+                    if str(self.conf.debug_mode) == "True":
+                        self.Debug(server=self.get_name(), debug="Filter: REGEXP " + str(host.name) + ";" + str(service.name))
+                    service.visible = False                     
     
                 # Finegrain for the specific state
                 if service.visible:

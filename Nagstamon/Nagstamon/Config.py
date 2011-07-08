@@ -67,6 +67,9 @@ class Config(object):
         self.re_service_enabled = False
         self.re_service_pattern = ""
         self.re_service_reverse = False
+        self.re_status_information_enabled = False
+        self.re_status_information_pattern = ""
+        self.re_status_information_reverse = False
         self.color_ok_text = self.default_color_ok_text = "#FFFFFF"
         self.color_ok_background = self.default_color_ok_background = "#006400"
         self.color_warning_text = self.default_color_warning_text = "#000000"

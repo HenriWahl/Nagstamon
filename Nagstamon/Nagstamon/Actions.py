@@ -711,7 +711,7 @@ def OpenNagstamonDownload(output=None):
 
 def HostIsFilteredOutByRE(host, conf=None):
     """
-        helper for applying RE filters in nagstamonGUI.RefreshDisplay()
+        helper for applying RE filters in Generic.GetStatus()
     """
     try:
         if str(conf.re_host_enabled) == "True":
@@ -735,7 +735,7 @@ def HostIsFilteredOutByRE(host, conf=None):
         
 def ServiceIsFilteredOutByRE(service, conf=None):
     """
-        helper for applying RE filters in nagstamonGUI.RefreshDisplay()
+        helper for applying RE filters in Generic.GetStatus()
     """
     try:
         if str(conf.re_service_enabled) == "True":
@@ -755,7 +755,29 @@ def ServiceIsFilteredOutByRE(service, conf=None):
         return False
     except:
         pass
+
     
+def StatusInformationIsFilteredOutByRE(status_information, conf=None):
+    """
+        helper for applying RE filters in Generic.GetStatus()
+    """
+    try:
+        if str(conf.re_status_information_enabled) == "True":
+            pattern = re.compile(conf.re_status_information_pattern)       
+            if len(pattern.findall(status_information)) > 0:
+                if str(conf.re_status_information_reverse) == "True":
+                    return False
+                else:
+                    return True
+            else:
+                if str(conf.re_status_information_reverse) == "True":
+                    return True 
+                else:
+                    return False    
+        return False
+    except:
+        pass 
+
 
 def HumanReadableDuration(seconds):
     """
