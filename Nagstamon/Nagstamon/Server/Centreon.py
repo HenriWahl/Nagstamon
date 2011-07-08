@@ -119,28 +119,27 @@ class CentreonServer(GenericServer):
                                     "p":20102,\
                                     "time":0})
         
+        ###result = self.FetchURL(self.nagios_cgi_url + "/include/monitoring/status/Hosts/xml/hostXML.php?"\
+        ###                      + cgi_data, giveback="raw")
+        
         result = self.FetchURL(self.nagios_cgi_url + "/include/monitoring/status/Hosts/xml/hostXML.php?"\
-                              + cgi_data, giveback="raw")
-        raw = result.result
-        # cut off <xml blabla>
-        xmlraw = ElementTree.fromstring(raw.split("\n")[1])
-        xmlobj = Actions.ObjectifyXML(xmlraw)   
-        del raw, xmlraw
-
+                              + cgi_data, giveback="xml")        
+        xmlobj = result.result
+        
         if len(xmlobj) != 0:
             # when connection by DNS is not configured do it by IP
             try:
                 if str(self.conf.connect_by_dns_yes) == "True":
                    # try to get DNS name for ip, if not available use ip
                     try:
-                        address = socket.gethostbyaddr(xmlobj[0].a.text)[0]
+                        address = socket.gethostbyaddr(xmlobj.l.a.text)[0]
                         del xmlobj
                     except:
                         self.Error(sys.exc_info())
-                        address = str(xmlobj[0].a.text)                        
+                        address = str(xmlobj.l.a.text)                        
                         del xmlobj
                 else:
-                    address = str(xmlobj[0].a.text)
+                    address = str(xmlobj.l.a.text)
                     del xmlobj
             except:
                 result, error = self.Error(sys.exc_info())
