@@ -5,6 +5,7 @@ nagstamon (0.9.8.1-1) unstable; urgency=low
     - kicked out lines 95-97 from Nagstamon/resources/settings_dialog.ui which seems to solve problem sf.net 3310224
     - added regexp filter for statusinformation column
     - added version-dependent update-check for that test versions don't tell there is an older "update"
+    - added ability to keep status detail popup open despite hovering away
 
  -- Henri Wahl <h.wahl@ifw-dresden.de>  Wed, 03 Jul 2011 14:29:00 +0200
 

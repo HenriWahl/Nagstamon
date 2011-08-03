@@ -39,6 +39,8 @@ class Config(object):
         self.position_y = 30
         self.popup_details_hover = True
         self.popup_details_clicking = False
+        self.close_details_hover = True
+        self.close_details_clicking = False
         self.connect_by_dns_yes = True
         self.connect_by_dns_no = False
         self.debug_mode = False

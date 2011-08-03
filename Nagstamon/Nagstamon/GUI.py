@@ -376,7 +376,6 @@ class GUI(object):
                                         line.append(self.STATE_ICONS["passive"])   
                                     else:    
                                         line.append(None)   
-                                        
                                     
                                     # fill line with dummmy values because there will 
                                     # be none for services if this is a host
@@ -427,10 +426,7 @@ class GUI(object):
                                         line.append(None)    
       
                                 server.ListStore.append(line)   
-                    
-                    # after all data from server has been put into Liststore it should be deleted
-                    ###server.nagitems_filtered.clear()
-                                
+
                     # give new ListStore to the view, overwrites the old one automatically - theoretically
                     server.TreeView.set_model(server.ListStore)
 
@@ -1504,9 +1500,11 @@ class Popwin(gtk.Window):
             # to support Windows(TM)'s slow and event-loosing behaviour use some margin (10px) to be more tolerant to get popwin closed
             # y-axis dooes not get extra 10 px on top for sake of combobox and x-axis on right side not because of scrollbar -
             # so i wonder if it has any use left...
-            if mousex <= popwinx0 + 10 or mousex >= (popwinx0 + self.popwinwidth) or mousey <= popwiny0 or mousey >= (popwiny0 + self.popwinheight) - 10 :
-                self.Close()
-        except:
+            if str(self.conf.close_details_hover) == "True":
+                if mousex <= popwinx0 + 10 or mousex >= (popwinx0 + self.popwinwidth) or mousey <= popwiny0 or mousey >= (popwiny0 + self.popwinheight) - 10 :
+                    self.Close()
+        except Exception, err:
+            print err
             pass
         
 
