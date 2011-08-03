@@ -76,7 +76,7 @@ class GUI(object):
         
         # Meta
         self.name = "nagstamon"
-        self.version = "0.9.7.1"
+        self.version = "0.9.8-SVN"
         self.website = "http://nagstamon.ifw-dresden.de/"
         self.copyright = "©2008-2011 Henri Wahl\nh.wahl@ifw-dresden.de"
         self.comments = "Nagios status monitor for your desktop"
@@ -549,8 +549,9 @@ class GUI(object):
             
         # try to fix Debian bug #591875: eventually ends up lower in the window stacking order, and can't be raised
         # raising statusbar window with every refresh should do the job        
-        if str(self.conf.statusbar_floating) == "True": self.statusbar.StatusBar.window.raise_()
-        
+        if str(self.conf.statusbar_floating) == "True": 
+            self.statusbar.StatusBar.window.raise_()
+            
         # return False to get removed as gobject idle source
         return False
 
@@ -1304,6 +1305,9 @@ class Popwin(gtk.Window):
         
         # Initialize type popup
         gtk.Window.__init__(self, type=gtk.WINDOW_POPUP)
+        # for not letting statusbar throw a shadow onto popwin in any composition-window-manager this helps to
+        # keep a more consistent look
+        self.set_type_hint(gtk.gdk.WINDOW_TYPE_HINT_UTILITY)
         # initialize the coordinates of left upper corner of the popwin
         self.popwinx0 = self.popwiny0 = 0
 
