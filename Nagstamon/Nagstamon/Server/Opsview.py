@@ -142,6 +142,8 @@ class OpsviewServer(GenericServer):
                     self.new_hosts[hostdict["name"]].scheduled_downtime = True
                 if hostdict.has_key("acknowledged"):
                     self.new_hosts[hostdict["name"]].acknowledged = True
+                if hostdict.has_key("flapping"):
+                    self.new_hosts[hostdict["name"]].flapping = True                    
 
                 #services
                 #for service in host.getchildren()[:-1]:
@@ -160,6 +162,8 @@ class OpsviewServer(GenericServer):
                         self.new_hosts[hostdict["name"]].services[servicedict["name"]].scheduled_downtime = True
                     if servicedict.has_key("acknowledged"):
                         self.new_hosts[hostdict["name"]].services[servicedict["name"]].acknowledged = True
+                    if servicedict.has_key("flapping"):
+                        self.new_hosts[hostdict["name"]].services[servicedict["name"]].flapping = True
                     # extra opsview id for service, needed for submitting check results
                     self.new_hosts[hostdict["name"]].services[servicedict["name"]].service_object_id = str(servicedict["service_object_id"])
 
