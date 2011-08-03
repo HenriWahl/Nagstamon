@@ -406,7 +406,7 @@ class CheckForNewVersion(threading.Thread):
                 # set the flag to lock that connection
                 s.CheckingForNewVersion = True
                 # remove newline
-                result = s.FetchURL("http://nagstamon.sourceforge.net/latest_version", giveback="raw")
+                result = s.FetchURL("http://nagstamon.sourceforge.net/latest_version_" + self.output.version, giveback="raw")
                 version, error = result.result.split("\n")[0], result.error
                 
                 # debug
