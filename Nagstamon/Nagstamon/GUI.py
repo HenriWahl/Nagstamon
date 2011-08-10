@@ -195,7 +195,7 @@ class GUI(object):
             create output visuals
         """
         # decide if the platform can handle SVG if not (MacOSX or Windows) use PNG
-        if platform.system() == "Darwin" or platform.system() == "Windows":
+        if platform.system() == "Darwin":
             self.BitmapSuffix = ".png"
         else:
             self.BitmapSuffix = ".svg"

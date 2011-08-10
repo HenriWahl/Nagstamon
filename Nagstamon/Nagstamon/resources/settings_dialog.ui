@@ -456,7 +456,7 @@
                 </child>
                 <child>
                   <object class="GtkRadioButton" id="input_radiobutton_close_details_hover">
-                    <property name="label" translatable="yes">Close when hovering out of 	statusbar</property>
+                    <property name="label" translatable="yes">Close when hovering out of statusbar</property>
                     <property name="visible">True</property>
                     <property name="can_focus">True</property>
                     <property name="receives_default">False</property>
