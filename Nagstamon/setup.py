@@ -19,7 +19,6 @@
 
 
 from distutils.core import setup
-import os.path
 import sys
 
 CLASSIFIERS = [

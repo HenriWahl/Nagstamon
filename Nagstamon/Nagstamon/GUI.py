@@ -194,7 +194,7 @@ class GUI(object):
         """
             create output visuals
         """
-        # decide if the platform can handle SVG if not(MacOSX) use PNG
+        # decide if the platform can handle SVG if not (MacOSX) use PNG
         if platform.system() == "Darwin":
             self.BitmapSuffix = ".png"
         else:
@@ -1079,6 +1079,8 @@ class StatusBar(object):
             #self.StatusBar.set_type_hint(gtk.gdk.WINDOW_TYPE_HINT_DOCK)
             # trying as _HINT_UTILITY in Linux too as it gets a size modify element
             # in GNOME 3
+            # after some experimenting it is in all OSs gtk.gdk.WINDOW_TYPE_HINT_UTILITY
+            # so if..else should be unnecessary
             self.StatusBar.set_type_hint(gtk.gdk.WINDOW_TYPE_HINT_UTILITY)
         self.StatusBar.set_property("skip-taskbar-hint", True)
         self.StatusBar.set_skip_taskbar_hint(True)
@@ -1301,9 +1303,17 @@ class Popwin(gtk.Window):
         
         # Initialize type popup
         gtk.Window.__init__(self, type=gtk.WINDOW_POPUP)
+        """
         # for not letting statusbar throw a shadow onto popwin in any composition-window-manager this helps to
-        # keep a more consistent look
+        # keep a more consistent look - copied from StatusBar... anyway, doesn't work...
         self.set_type_hint(gtk.gdk.WINDOW_TYPE_HINT_UTILITY)
+        self.set_decorated(False)
+        self.set_keep_above(True)
+        self.stick()
+        self.set_property("skip-taskbar-hint", True)
+        self.set_skip_taskbar_hint(True)  
+        """      
+        
         # initialize the coordinates of left upper corner of the popwin
         self.popwinx0 = self.popwiny0 = 0
 
