@@ -1,0 +1,18 @@
+<?xml version="1.0" ?>
+<?xml-stylesheet type='text/xsl' href='interface.xsl'?>
+<interface uri="http://nagstamon.sourceforge.net/0install/Nagstamon.xml" xmlns="http://zero-install.sourceforge.net/2004/injector/interface">
+  <name>Nagstamon</name>
+  <summary>Nagios status monitor</summary>
+  <description>
+</description>
+  <homepage>http://nagstamon.ifw-dresden.de</homepage>
+  <category>Network</category>
+  <implementation id="sha1new=65ed5603a151204979134c0e220a8be298ca5524" license="OSI Approved :: GNU General Public License v2" main="nagstamon.py" released="2011-08-30" stability="stable" version="0.9.7.1">
+    <archive extract="Nagstamon" href="http://downloads.sourceforge.net/project/nagstamon/nagstamon/nagstamon%200.9.7.1/nagstamon_0.9.7.1.tar.gz" size="376267" type="application/x-compressed-tar"/>
+  </implementation>
+</interface>
+<!-- Base64 Signature
+iEYEABECAAYFAk5cwasACgkQnmb3Nh+6CUKGKACdGHy6A8oe6IFItmfy0z6pIdQox/cAnRULhiuy
+7R3ZGL5md3+4Xzo4TcVf
+
+-->
