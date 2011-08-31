@@ -1,18 +1,26 @@
 <?xml version="1.0" ?>
 <?xml-stylesheet type='text/xsl' href='interface.xsl'?>
-<interface uri="http://nagstamon.sourceforge.net/0install/Nagstamon.xml" xmlns="http://zero-install.sourceforge.net/2004/injector/interface">
+<interface uri="http://nagstamon.ifw-dresden.de/0install/Nagstamon.xml" xmlns="http://zero-install.sourceforge.net/2004/injector/interface">
   <name>Nagstamon</name>
   <summary>Nagios status monitor</summary>
   <description>
-</description>
+Nagstamon is a Nagios status monitor for the desktop. It connects to multiple
+Nagios, Icinga, Opsview, Centreon, Op5 Monitor/Ninja and Check_MK Multisite
+monitoring servers and resides in systray or as a floating statusbar at the
+desktop showing a brief summary of critical, warning, unknown, unreachable and
+down hosts and services and pops up a detailed status overview when moving the
+mouse pointer over it. Connecting to displayed hosts and services is easily
+established by context menu via SSH, RDP and VNC. Users can be notified by
+sound. Hosts and services can be filtered by category and regular expressions.</description>
   <homepage>http://nagstamon.ifw-dresden.de</homepage>
   <category>Network</category>
-  <implementation id="sha1new=65ed5603a151204979134c0e220a8be298ca5524" license="OSI Approved :: GNU General Public License v2" main="nagstamon.py" released="2011-08-30" stability="stable" version="0.9.7.1">
-    <archive extract="Nagstamon" href="http://downloads.sourceforge.net/project/nagstamon/nagstamon/nagstamon%200.9.7.1/nagstamon_0.9.7.1.tar.gz" size="376267" type="application/x-compressed-tar"/>
+  <icon href="http://nagstamon.ifw-dresden.de/0install/nagstamon.png" type="image/png"/>
+  <implementation id="sha1new=4071aac0eccc5884806f0c047fe9fc39ce6a0711" license="OSI Approved :: GNU General Public License v2" main="nagstamon.py" released="2011-08-31" version="430">
+    <archive extract="Nagstamon" href="http://nagstamon.ifw-dresden.de/0install/nagstamon_svn_430.tar.gz" size="474349" type="application/x-compressed-tar"/>
   </implementation>
 </interface>
 <!-- Base64 Signature
-iEYEABECAAYFAk5cwasACgkQnmb3Nh+6CUKGKACdGHy6A8oe6IFItmfy0z6pIdQox/cAnRULhiuy
-7R3ZGL5md3+4Xzo4TcVf
+iEYEABECAAYFAk5egtMACgkQnmb3Nh+6CUL8SACcD5kvPi2hi8YSofu9vY/eY4JcV8EAn2uYKlpX
+bfVGgTZLU+jomAeqdM8p
 
 -->
