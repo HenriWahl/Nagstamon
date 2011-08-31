@@ -1,6 +1,6 @@
 <?xml version="1.0" ?>
 <?xml-stylesheet type='text/xsl' href='interface.xsl'?>
-<interface uri="http://nagstamon.ifw-dresden.de/0install/Nagstamon.xml" xmlns="http://zero-install.sourceforge.net/2004/injector/interface">
+<interface uri="http://nagstamon.ifw-dresden.de/0install/nagstamon.xml" xmlns="http://zero-install.sourceforge.net/2004/injector/interface">
   <name>Nagstamon</name>
   <summary>Nagios status monitor</summary>
   <description>
@@ -20,7 +20,7 @@ sound. Hosts and services can be filtered by category and regular expressions.</
   </implementation>
 </interface>
 <!-- Base64 Signature
-iEYEABECAAYFAk5egtMACgkQnmb3Nh+6CUL8SACcD5kvPi2hi8YSofu9vY/eY4JcV8EAn2uYKlpX
-bfVGgTZLU+jomAeqdM8p
+iEYEABECAAYFAk5ehoEACgkQnmb3Nh+6CUKi+gCfa89Q3N7z94h9iOyf3amwXz8OR7YAn3c4T9z5
+776BO+BZsxWfR4tVQMIb
 
 -->
