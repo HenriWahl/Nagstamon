@@ -159,7 +159,7 @@ class GenericServer(object):
     def get_columns(cls, row):
         """ Gets columns filled with row data """
         for column_class in cls.COLUMNS:
-            yield column_class(row)        
+            yield str(column_class(row))        
         
         
     def set_recheck(self, thread_obj):
