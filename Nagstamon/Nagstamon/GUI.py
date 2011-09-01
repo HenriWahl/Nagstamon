@@ -1035,9 +1035,11 @@ class StatusBar(object):
         self.MenuOpen = False
         
         # put Systray icon into statusbar object
-        i#self.SysTray = gtk.StatusIcon()
-        self.SysTray = DummyStatusIcon()
-        print self.SysTray
+        # on MacOSX use only dummy
+        if platform.system() == "Darwin":
+            self.SysTray = DummyStatusIcon()
+        else:
+            self.SysTray = gtk.StatusIcon()
         self.SysTray.set_from_file(self.output.Resources + os.sep + "nagstamon" + self.output.BitmapSuffix)
         
         # if systray icon should be shown show it
