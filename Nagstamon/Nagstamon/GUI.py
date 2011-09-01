@@ -1035,7 +1035,9 @@ class StatusBar(object):
         self.MenuOpen = False
         
         # put Systray icon into statusbar object
-        self.SysTray = gtk.StatusIcon()
+        i#self.SysTray = gtk.StatusIcon()
+        self.SysTray = DummyStatusIcon()
+        print self.SysTray
         self.SysTray.set_from_file(self.output.Resources + os.sep + "nagstamon" + self.output.BitmapSuffix)
         
         # if systray icon should be shown show it
@@ -2987,3 +2989,32 @@ class PasswordDialog:
     def dialog_response(self, dialog, arg):
         if arg != gtk.RESPONSE_OK:
             self.escaped = True
+            
+
+class DummyStatusIcon(object):
+    """
+    trayicon for MacOSX - only purpose is not showing trayicon because making it work
+    as on Windows or Linux seems to need too much efford
+    """
+    def __init__(self):
+        pass
+    
+    def set_from_file(self, *args, **kwds):
+        pass
+    
+    def set_visible(self, *args, **kwds):
+        pass
+    
+    def get_geometry(self, *args, **kwds):
+        pass
+    
+    def connect(self, *args, **kwds):
+        pass
+    
+    def set_from_pixbuf(self, *args, **kwds):
+        pass
+    
+    def set_blinking(self, *args, **kwds):
+        pass
+    
+    

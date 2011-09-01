@@ -159,6 +159,7 @@ class GenericServer(object):
     def get_columns(cls, row):
         """ Gets columns filled with row data """
         for column_class in cls.COLUMNS:
+            # str() necessary because MacOSX Python cries otherwise
             yield str(column_class(row))        
         
         
