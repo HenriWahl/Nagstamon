@@ -246,7 +246,7 @@ class GUI(object):
         self.popwin.ButtonRefresh.connect("leave-notify-event", self.popwin.PopDown)
         self.popwin.ButtonSettings.connect("leave-notify-event", self.popwin.PopDown)
         self.popwin.ButtonClose.connect("leave-notify-event", self.popwin.PopDown)
-        self.popwin.connect("leave-notify-event", self.popwin.PopDown)
+        self.popwin.Window.connect("leave-notify-event", self.popwin.PopDown)
 
         # close popwin when its close button is pressed
         self.popwin.ButtonClose.connect("clicked", self.popwin.Close)
@@ -546,7 +546,9 @@ class GUI(object):
         # try to fix Debian bug #591875: eventually ends up lower in the window stacking order, and can't be raised
         # raising statusbar window with every refresh should do the job        
         if str(self.conf.statusbar_floating) == "True": 
+            print type(self.statusbar.StatusBar), type(self.popwin.Window)
             self.statusbar.StatusBar.window.raise_()
+            self.popwin.Window.window.raise_()
             
         # return False to get removed as gobject idle source
         return False
@@ -889,7 +891,7 @@ class GUI(object):
             # check if notification for status is wanted
             if not status == "UP" and str(self.conf.__dict__["notify_if_" + status.lower()]) == "True":
                 # only notify if popwin not already popped up
-                if self.popwin.get_properties("visible")[0] == False:
+                if self.popwin.Window.get_properties("visible")[0] == False:
                     if self.Notifying == False:
                         self.Notifying = True
                         # debug
@@ -901,10 +903,6 @@ class GUI(object):
                             self.statusbar.Flashing = True
                             flash = Actions.Notification(output=self, sound=status, Resources=self.Resources, conf=self.conf, servers=self.servers)
                             flash.start()   
-                        # if wanted play notification sound
-                        ###if str(self.conf.notification_sound) == "True":
-                        ###    sound = Actions.PlaySound(sound=status, Resources=self.Resources, conf=self.conf, servers=self.servers)
-                        ###    sound.start()
                         # if desired pop up status window
                         # sorry but does absolutely not work with windows and systray icon so I prefer to let it be
                         #if str(self.conf.notification_popup) == "True":
@@ -1070,7 +1068,7 @@ class StatusBar(object):
         """
         # TOPLEVEL seems to be more standard compliant
         #self.StatusBar = gtk.Window(gtk.WINDOW_TOPLEVEL)
-        # WINDOWS_POPUP works
+        # WINDOW_POPUP works
         self.StatusBar = gtk.Window(gtk.WINDOW_POPUP)
         self.StatusBar.set_decorated(False)
         self.StatusBar.set_keep_above(True)
@@ -1122,7 +1120,7 @@ class StatusBar(object):
                 # if popping up on click is true...
                 if str(self.conf.popup_details_clicking) == "True":
                     #... and summary popup not shown yet...
-                    if self.output.popwin.get_properties("visible")[0] == False:
+                    if self.output.popwin.Window.get_properties("visible")[0] == False:
                         #...show it...
                         self.output.popwin.PopUp()
                     else:
@@ -1131,7 +1129,7 @@ class StatusBar(object):
                 # if hovering is set, popwin is open and statusbar gets clicked...
                 else:
                     # close popwin for convinience
-                    if self.output.popwin.get_properties("visible")[0] == True:
+                    if self.output.popwin.Window.get_properties("visible")[0] == True:
                         self.output.popwin.Close()
             # if right mousebutton is pressed show statusbar menu
             if event.button == 3:
@@ -1185,7 +1183,7 @@ class StatusBar(object):
         # check if settings ar not already open
         if self.output.popwin.IsWanted() == True:
             # if popwin is not shown pop it up
-            if self.output.popwin.get_properties("visible")[0] == False:
+            if self.output.popwin.Window.get_properties("visible")[0] == False:
                 self.output.popwin.PopUp()
             else:
                 self.output.popwin.Close()
@@ -1297,7 +1295,8 @@ class StatusBar(object):
             self.StatusBar.resize(1, 1)
 
 
-class Popwin(gtk.Window):
+#class Popwin(gtk.Window):
+class Popwin(object):
     """
     Popwin object
     """
@@ -1306,17 +1305,15 @@ class Popwin(gtk.Window):
         for k in kwds: self.__dict__[k] = kwds[k]
         
         # Initialize type popup
-        gtk.Window.__init__(self, type=gtk.WINDOW_POPUP)
-        """
+        self.Window = gtk.Window(gtk.WINDOW_POPUP)
         # for not letting statusbar throw a shadow onto popwin in any composition-window-manager this helps to
-        # keep a more consistent look - copied from StatusBar... anyway, doesn't work...
-        self.set_type_hint(gtk.gdk.WINDOW_TYPE_HINT_UTILITY)
-        self.set_decorated(False)
-        self.set_keep_above(True)
-        self.stick()
-        self.set_property("skip-taskbar-hint", True)
-        self.set_skip_taskbar_hint(True)  
-        """      
+        # keep a more consistent look - copied from StatusBar... anyway, doesn't work... well, next attempt:
+        self.Window.set_type_hint(gtk.gdk.WINDOW_TYPE_HINT_UTILITY)
+        self.Window.set_decorated(False)
+        self.Window.set_keep_above(True)
+        self.Window.stick()
+        self.Window.set_property("skip-taskbar-hint", True)
+        self.Window.set_skip_taskbar_hint(True)    
         
         # initialize the coordinates of left upper corner of the popwin
         self.popwinx0 = self.popwiny0 = 0
@@ -1412,7 +1409,7 @@ class Popwin(gtk.Window):
         self.VBox.add(self.HBoxAllButtons)
 
         # put this vbox into popwin
-        self.add(self.VBox)        
+        self.Window.add(self.VBox)        
                     
         # create a scrollable area for the treeview in case it is larger than the screen
         # in case there are too many failed services and hosts
@@ -1483,7 +1480,7 @@ class Popwin(gtk.Window):
             # position and resize...
             self.Resize()
             # ...show
-            self.show_all()
+            self.Window.show_all()
             # position and resize...
             self.Resize()
             # set combobox to default value
@@ -1505,10 +1502,10 @@ class Popwin(gtk.Window):
             # get position of the pointer
             mousex, mousey, foo = rootwin.get_pointer()
             # get position of popwin
-            popwinx0, popwiny0 = self.get_position()
+            popwinx0, popwiny0 = self.Window.get_position()
 
             # actualize values for width and height
-            self.popwinwidth, self.popwinheight = self.get_size()
+            self.popwinwidth, self.popwinheight = self.Window.get_size()
 
             # If pointer is outside popwin close it
             # to support Windows(TM)'s slow and event-loosing behaviour use some margin (10px) to be more tolerant to get popwin closed
@@ -1526,7 +1523,7 @@ class Popwin(gtk.Window):
         """
             hide popwin
         """
-        self.hide_all()
+        self.Window.hide_all()
         # notification off because user had a look to hosts/services recently
         self.output.NotificationOff()        
 
@@ -1549,7 +1546,7 @@ class Popwin(gtk.Window):
             # to root window and to trayicon and subtract them and save the values in the
             # self.statusbar object to avoid jumping popwin in case it is open, the status 
             # refreshed and the pointer has moved
-            if self.get_properties("visible")[0] == False:
+            if self.Window.get_properties("visible")[0] == False:
                 
                 # check if icon in systray or statusbar 
                 if str(self.conf.icon_in_systray) == "True":
@@ -1654,13 +1651,13 @@ class Popwin(gtk.Window):
                 self.popwinx0 = statusbarx0 + (screenx0 + statusbarwidth) / 2 - (self.popwinwidth + screenx0) / 2
 
             # move popwin to its position
-            self.move(self.popwinx0, self.popwiny0)
+            self.Window.move(self.popwinx0, self.popwiny0)
             
             # set size request of popwin
-            self.set_size_request(self.popwinwidth, self.popwinheight)
+            self.Window.set_size_request(self.popwinwidth, self.popwinheight)
             
             # set size REALLY because otherwise it stays to large
-            self.resize(self.popwinwidth, self.popwinheight)
+            self.Window.resize(self.popwinwidth, self.popwinheight)
         except:
             pass
 
@@ -2151,7 +2148,7 @@ class Settings(object):
         # hide open popwin in try/except clause because at first start there
         # cannot be a popwin object
         try:
-            self.output.popwin.hide_all()
+            self.output.popwin.Window.hide_all()
         except:
             pass
         
@@ -2315,7 +2312,7 @@ class Settings(object):
         # close popwin
         # catch Exception at first run when there cannot exist a popwin
         try:
-            self.output.popwin.hide_all()
+            self.output.popwin.Window.hide_all()
         except:
             pass            
      
@@ -2334,7 +2331,7 @@ class Settings(object):
             # create output visuals again because they might have changed (systray/free floating status bar)
             self.output.statusbar.StatusBar.destroy()    
             self.output.statusbar.SysTray.set_visible(False)       
-            self.output.popwin.destroy()
+            self.output.popwin.Window.destroy()
             # re-initialize output with new settings
             self.output.__init__()
             # in Windows the statusbar with gtk.gdk.WINDOW_TYPE_HINT_UTILITY places itself somewhere
