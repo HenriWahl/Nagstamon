@@ -546,9 +546,7 @@ class GUI(object):
         # try to fix Debian bug #591875: eventually ends up lower in the window stacking order, and can't be raised
         # raising statusbar window with every refresh should do the job        
         if str(self.conf.statusbar_floating) == "True": 
-            print type(self.statusbar.StatusBar), type(self.popwin.Window)
             self.statusbar.StatusBar.window.raise_()
-            self.popwin.Window.window.raise_()
             
         # return False to get removed as gobject idle source
         return False
