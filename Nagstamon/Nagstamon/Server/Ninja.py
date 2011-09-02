@@ -190,7 +190,7 @@ class NinjaServer(GenericServer):
         # this dictionary is only temporarily
         nagitems = {"services":[], "hosts":[]}
 
-        nagiosurl_services = self.nagios_url + "/index.php/status/service/all?servicestatustypes=78&hoststatustypes=71"
+        nagiosurl_services = self.nagios_url + "/index.php/status/service/all?servicestatustypes=78&hoststatustypes=71&items_per_page=10000"
         nagiosurl_hosts = self.nagios_url + "/index.php/status/host/all/6"
 
         # Hosts
