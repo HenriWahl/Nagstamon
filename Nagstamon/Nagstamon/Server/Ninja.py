@@ -36,7 +36,7 @@ class NinjaServer(GenericServer):
         self.STATUS_MAPPING = { "acknowledged.png" : "acknowledged",\
                                 "active-checks-disabled.png" : "passiveonly",\
                                 "notify-disabled.png" : "notifications_disabled",\
-                                "scheduled_downtime.png" : "scheduled_downtime",\
+                                "scheduled-downtime.png" : "scheduled_downtime",\
                                 "flapping.gif" : "flapping" }   
 
         # Entries for monitor default actions in context menu
