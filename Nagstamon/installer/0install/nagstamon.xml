@@ -21,9 +21,12 @@ sound. Hosts and services can be filtered by category and regular expressions.</
   <implementation id="sha1new=484a8487f137d913c9a3eccdd375b0059bdad3a9" license="OSI Approved :: GNU General Public License v2" main="nagstamon.py" released="2011-09-02" version="439">
     <archive extract="Nagstamon" href="http://nagstamon.ifw-dresden.de/0install/nagstamon_svn_439.tar.gz" size="474770" type="application/x-compressed-tar"/>
   </implementation>
+  <implementation id="sha1new=310c7dc55163b09da603c7a261bc6e00826090cc" license="OSI Approved :: GNU General Public License v2" main="nagstamon.py" released="2011-09-02" version="440">
+    <archive extract="Nagstamon" href="http://nagstamon.ifw-dresden.de/0install/nagstamon_svn_440.tar.gz" size="474582" type="application/x-compressed-tar"/>
+  </implementation>
 </interface>
 <!-- Base64 Signature
-iEYEABECAAYFAk5gs1UACgkQnmb3Nh+6CULRaACfY8Bu2qT8BbS9eZYFlvufdQR9BMkAn0VxZHKV
-nYxK2i9HM1kpvqc+S0zQ
+iEYEABECAAYFAk5gy8EACgkQnmb3Nh+6CUL2jQCfRyUleAsfbkLGr35Z39KA8cr9kpQAn1EsLV3U
+vnYnYy3mwPpQUjVU1bTc
 
 -->
