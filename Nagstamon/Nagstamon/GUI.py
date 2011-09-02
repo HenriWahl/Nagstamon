@@ -1473,6 +1473,9 @@ class Popwin(object):
         # Initialize show_popwin - show it or not, if everything is OK
         # it is not necessary to pop it up
         self.showPopwin = False
+        
+        # measure against artefactional popwin
+        self.pointer_left_popwin = False
                
         
     def PopUp(self, widget=None, event=None):
@@ -1495,6 +1498,14 @@ class Popwin(object):
             self.ComboboxMonitor.set_active(0)
             # switch off Notification    
             self.output.NotificationOff()
+            
+    
+    def LeavePopWin(self, widget=None, event=None):
+        """
+        when pointer leaves popwin the pointer_left_popwin flag has to be set
+        """
+        self.pointer_left_popwin = True
+        self.PopDown(widget, event)
 
 
     def PopDown(self, widget=None, event=None):
@@ -1522,6 +1533,7 @@ class Popwin(object):
             if str(self.conf.close_details_hover) == "True":
                 if mousex <= popwinx0 + 10 or mousex >= (popwinx0 + self.popwinwidth) or mousey <= popwiny0 or mousey >= (popwiny0 + self.popwinheight) - 10 :
                     self.Close()
+                    
         except Exception, err:
             print err
             pass
@@ -1666,7 +1678,8 @@ class Popwin(object):
             
             # set size REALLY because otherwise it stays to large
             self.Window.resize(self.popwinwidth, self.popwinheight)
-        except:
+        except Exception, err:
+            print err
             pass
 
 
@@ -1675,104 +1688,7 @@ class Popwin(object):
         stub method to set popwin showable after button-release-event after moving statusbar
         """
         self.showPopwin = True
-        
-    """    
-    def TreeviewPopupMenu(self, widget, event, treeview, server):
-    """
-            #context menu for treeview detailed status items
-    """
-        # catch exception in case of clicking outside treeview
-        try:
-            # get path to clicked cell
-            path, obj, x, y = treeview.get_path_at_pos(int(event.x), int(event.y))
-            # access content of rendered view model via normal python lists
-            self.miserable_server = server
-            self.miserable_host = treeview.get_model()[path[0]][server.HOST_COLUMN_ID]
-            self.miserable_service = treeview.get_model()[path[0]][server.SERVICE_COLUMN_ID]
-            # popup the relevant content menu
-            if self.miserable_service and server.hosts[self.miserable_host].services[self.miserable_service].is_passive_only():
-                self.recheck_item.set_sensitive(False)
-            else:
-                self.recheck_item.set_sensitive(True)
-            self.popupmenu.popup(None, None, None, event.button, event.time)
-        except Exception, err:
-            print err
-        
-
-    def TreeviewPopupMenuResponse(self, widget, remoteservice):
-    """
-          #  responses to the menu items
-          #  binaries get called by subprocess.Popen to beware nagstamon of hanging while
-          #  waiting for the called binary exit code
-          #  the requested binary and its arguments are given by a list
-    """
-        
-        # closing popwin is innecessary in case of rechecking, otherwise it must be done
-        # because the dialog/app window will stay under the popwin   
-        if not remoteservice == "Recheck":
-            self.Close()  
-        
-        #debug    
-        if str(self.conf.debug_mode) == "True":
-            self.miserable_server.Debug(server=self.miserable_server.get_name(), host=self.miserable_host, service=self.miserable_service, debug="Clicked context menu: " + remoteservice)
-            
-        # choose appropriate service for menu entry
-        # it seems to be more responsive especially while rechecking if every service
-        # looks for its own for the miserable host's ip if it is needed
-        try:
-            if remoteservice == "SSH":
-                # get host ip to connect to be independent of dns resolver
-                #host = self.miserable_server.GetHost(self.miserable_host)[0]
-                result = self.miserable_server.GetHost(self.miserable_host)
-                host, error = result.result, result.error
-                if error == "":
-                    # workaround for bug 2080503@sf.net
-                    if self.conf.app_ssh_options == "": args = self.conf.app_ssh_bin + " " + host
-                    else: args = self.conf.app_ssh_bin + " " + self.conf.app_ssh_options + " " + host
-                    sub = subprocess.Popen(args.split(" "))
-            elif remoteservice == "RDP":
-                # get host ip to connect to be independent of dns resolver               
-                result = self.miserable_server.GetHost(self.miserable_host)
-                host, error = result.result, result.error
-                if error == "":
-                    # workaround for bug 2080503@sf.net
-                    if self.conf.app_rdp_options == "": args = self.conf.app_rdp_bin + " " + host
-                    else: args = self.conf.app_rdp_bin + " " + self.conf.app_rdp_options + " " + host
-                    sub = subprocess.Popen(args.split(" "))
-            elif remoteservice == "VNC":
-                # get host ip to connect to be independent of dns resolver
-                result = self.miserable_server.GetHost(self.miserable_host)
-                host, error = result.result, result.error
-                if error == "":
-                    # workaround for bug 2080503@sf.net
-                    if self.conf.app_vnc_options == "": args = self.conf.app_vnc_bin + " " + host
-                    else: args = self.conf.app_vnc_bin + " " + self.conf.app_vnc_options + " " + host
-                    sub = subprocess.Popen(args.split(" "))
-            elif remoteservice == "HTTP":
-                # get host ip to connect to be independent of dns resolver
-                result = self.miserable_server.GetHost(self.miserable_host)
-                host, error = result.result, result.error
-                if error == "":
-                    Actions.TreeViewHTTP(host)
-            elif remoteservice == "Monitor":
-                # let Actions.TreeViewNagios do the work to open a webbrowser with nagios informations
-                Actions.TreeViewNagios(self.miserable_server, self.miserable_host, self.miserable_service)
-            elif remoteservice == "Recheck":
-                # start new rechecking thread
-                recheck = Actions.Recheck(server=self.miserable_server, host=self.miserable_host, service=self.miserable_service)
-                recheck.start()
-            elif remoteservice == "Acknowledge":
-                self.output.AcknowledgeDialogShow(server=self.miserable_server, host=self.miserable_host, service=self.miserable_service)
-            elif remoteservice == "Submit check result":
-                self.output.SubmitCheckResultDialogShow(server=self.miserable_server, host=self.miserable_host, service=self.miserable_service)
-            elif remoteservice == "Downtime":
-                self.output.DowntimeDialogShow(server=self.miserable_server, host=self.miserable_host, service=self.miserable_service)
-            # close popwin
-            self.PopDown()
-                
-        except Exception, err:
-            self.output.ErrorDialog(err)
-    """     
+           
 
     def ComboboxClicked(self, widget=None):
         """
