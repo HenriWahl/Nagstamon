@@ -120,7 +120,7 @@ class GUI(object):
                                   gtk.gdk.Pixbuf, gtk.gdk.Pixbuf, gtk.gdk.Pixbuf, gtk.gdk.Pixbuf]           
         
         # create all GUI widgets
-        self.CreateOutputVisuals()
+        self._CreateOutputVisuals()
 
         # set size of popup-window
         self.popwin.Resize()
@@ -141,6 +141,7 @@ class GUI(object):
                                                       (server.HOST_COLUMN_ID, gtk.SORT_ASCENDING)],
                                                       len(server.COLUMNS)+1) # stores sorting between table refresh
     
+            
     def get_last_sorting(self, server):
         return self.last_sorting[server.get_name()]
     
@@ -190,7 +191,7 @@ class GUI(object):
             last_sorting.add(id, order)
 
             
-    def CreateOutputVisuals(self):
+    def _CreateOutputVisuals(self):
         """
             create output visuals
         """
@@ -545,9 +546,15 @@ class GUI(object):
             
         # try to fix Debian bug #591875: eventually ends up lower in the window stacking order, and can't be raised
         # raising statusbar window with every refresh should do the job        
-        if str(self.conf.statusbar_floating) == "True": 
-            self.statusbar.StatusBar.window.raise_()
-            
+        if str(self.conf.statusbar_floating) == "True":
+            # always raise on Windows
+            if platform.system() == "Windows":
+                self.statusbar.StatusBar.window.raise_()
+            # on Linux & Co. only raise if popwin is not shown because otherwise
+            # the statusbar shadow overlays the popwin on newer desktop environments
+            elif self.popwin.showPopwin == False: 
+                self.statusbar.StatusBar.window.raise_()
+
         # return False to get removed as gobject idle source
         return False
 
@@ -1328,10 +1335,13 @@ class Popwin(object):
         # put a name tag where there buttons had been before
         # image for logo in statusbar
         self.NagstamonLabel = gtk.Image()
-        self.NagstamonLabel.set_from_file(self.output.Resources + os.sep + "nagstamon_label.png")     
+        self.NagstamonLabel.set_from_file(self.output.Resources + os.sep + "nagstamon_label.png")
+        self.NagstamonVersion = gtk.Label("  " + self.output.version)
+
         self.HBoxNagiosButtons.add(self.NagstamonLabel)
+        self.HBoxNagiosButtons.add(self.NagstamonVersion) 
+
         self.AlMonitorLabel.add(self.HBoxNagiosButtons)
-        
         self.ComboboxMonitor = gtk.combo_box_new_text()
         # fill Nagios server combobox with nagios servers
         self.ComboboxMonitor.append_text("Choose monitor...")
@@ -2326,16 +2336,18 @@ class Settings(object):
             self.firstrun = False
             self.conf.unconfigured = False
             
-            # create output visuals again because they might have changed (systray/free floating status bar)
-            self.output.statusbar.StatusBar.destroy()    
-            self.output.statusbar.SysTray.set_visible(False)       
-            self.output.popwin.Window.destroy()
-            # re-initialize output with new settings
-            self.output.__init__()
-            # in Windows the statusbar with gtk.gdk.WINDOW_TYPE_HINT_UTILITY places itself somewhere
-            # this way it should be disciplined
-            self.output.statusbar.StatusBar.move(int(self.conf.position_x), int(self.conf.position_y))
-            
+            # only if not running on MacOS (which crashes here) reinit all GUI stuff
+            if not platform.system() == "Darwin":
+                # create output visuals again because they might have changed (systray/free floating status bar)
+                self.output.statusbar.StatusBar.destroy()    
+                self.output.statusbar.SysTray.set_visible(False)       
+                #self.output.popwin.Window.destroy()
+                # re-initialize output with new settings
+                self.output.__init__()
+                # in Windows the statusbar with gtk.gdk.WINDOW_TYPE_HINT_UTILITY places itself somewhere
+                # this way it should be disciplined
+                self.output.statusbar.StatusBar.move(int(self.conf.position_x), int(self.conf.position_y))
+                
             # start debugging loop if wanted
             if str(self.conf.debug_mode) == "True":
                 debugloop = Actions.DebugLoop(conf=self.conf, debug_queue=self.output.debug_queue, output=self.output)
