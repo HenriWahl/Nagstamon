@@ -1311,12 +1311,14 @@ class Popwin(object):
         
         # Initialize type popup
         self.Window = gtk.Window(gtk.WINDOW_POPUP)
+        #self.Window = gtk.Window(gtk.WINDOW_TOPLEVEL)
+
         # for not letting statusbar throw a shadow onto popwin in any composition-window-manager this helps to
         # keep a more consistent look - copied from StatusBar... anyway, doesn't work... well, next attempt:
-        self.Window.set_type_hint(gtk.gdk.WINDOW_TYPE_HINT_UTILITY)
+        #self.Window.set_type_hint(gtk.gdk.WINDOW_TYPE_HINT_UTILITY)
         self.Window.set_decorated(False)
         self.Window.set_keep_above(True)
-        self.Window.stick()
+        #self.Window.stick()
         self.Window.set_property("skip-taskbar-hint", True)
         self.Window.set_skip_taskbar_hint(True)    
         
