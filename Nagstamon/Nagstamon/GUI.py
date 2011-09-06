@@ -195,8 +195,8 @@ class GUI(object):
         """
             create output visuals
         """
-        # decide if the platform can handle SVG if not (MacOSX) use PNG
-        if platform.system() == "Darwin":
+        # decide if the platform can handle SVG if not use PNG
+        if platform.system() in ["Darwin", "Windows"]:
             self.BitmapSuffix = ".png"
         else:
             self.BitmapSuffix = ".svg"
@@ -238,16 +238,17 @@ class GUI(object):
     
         # if pointer hovers or clicks statusbar show details
         self.statusbar.EventBoxLabel.connect("enter-notify-event", self.statusbar.Hovered)
+        self.statusbar.EventBoxLabel.connect("leave-notify-event", self.statusbar.LeaveStatusbar)
         self.statusbar.EventBoxLabel.connect("button-press-event", self.statusbar.Clicked)
 
         # Workaround for behavorial differences of GTK in Windows and Linux
         # in Linux it is enough to check for the pointer leaving the whole popwin,
         # in Windows it is not, here every widget on popwin has to be heard
         # the intended effect is that popwin closes when the pointer leaves it
-        self.popwin.ButtonRefresh.connect("leave-notify-event", self.popwin.PopDown)
-        self.popwin.ButtonSettings.connect("leave-notify-event", self.popwin.PopDown)
-        self.popwin.ButtonClose.connect("leave-notify-event", self.popwin.PopDown)
-        self.popwin.Window.connect("leave-notify-event", self.popwin.PopDown)
+        self.popwin.ButtonRefresh.connect("leave-notify-event", self.popwin.LeavePopWin)
+        self.popwin.ButtonSettings.connect("leave-notify-event", self.popwin.LeavePopWin)
+        self.popwin.ButtonClose.connect("leave-notify-event", self.popwin.LeavePopWin)
+        self.popwin.Window.connect("leave-notify-event", self.popwin.LeavePopWin)
 
         # close popwin when its close button is pressed
         self.popwin.ButtonClose.connect("clicked", self.popwin.Close)
@@ -1198,11 +1199,23 @@ class StatusBar(object):
         """
             see what happens if statusbar is hovered
         """
-        # check if settings ar not already open
+        # check if any dialogs are not already open
+        
+        print "Window", self.output.popwin.Window.get_visible()
+        
         if self.output.popwin.IsWanted() == True and\
-           str(self.conf.popup_details_hover) == "True":
-                self.output.popwin.PopUp()
+           str(self.conf.popup_details_hover) == "True" and\
+           self.output.popwin.pointer_left_popwin == False:
+            self.output.popwin.PopUp()
            
+                
+    def LeaveStatusbar(self, widget=None, event=None):
+        """
+        when pointer leaves statusbar the popwin.pointer_left_popwin flag has to be reset
+        """
+        self.output.popwin.pointer_left_popwin = False  
+        print self.output.popwin.pointer_left_popwin
+                
 
     def MenuPopup(self, widget=None, event=None, time=None, dummy=None):
         """
@@ -1507,6 +1520,7 @@ class Popwin(object):
         when pointer leaves popwin the pointer_left_popwin flag has to be set
         """
         self.pointer_left_popwin = True
+        print self.output.popwin.pointer_left_popwin
         self.PopDown(widget, event)
 
 
@@ -1547,7 +1561,7 @@ class Popwin(object):
         """
         self.Window.hide_all()
         # notification off because user had a look to hosts/services recently
-        self.output.NotificationOff()        
+        self.output.NotificationOff()       
 
 
     def Resize(self):
@@ -1680,6 +1694,7 @@ class Popwin(object):
             
             # set size REALLY because otherwise it stays to large
             self.Window.resize(self.popwinwidth, self.popwinheight)
+            
         except Exception, err:
             print err
             pass
@@ -1726,8 +1741,8 @@ class Popwin(object):
             return True
         else:
             return False
-    
 
+        
 class ServerVBox(gtk.VBox):
     """
     VBox which contains all infos about one Monitor server: Name, Buttons, Treeview
