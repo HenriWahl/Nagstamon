@@ -238,7 +238,6 @@ class GUI(object):
     
         # if pointer hovers or clicks statusbar show details
         self.statusbar.EventBoxLabel.connect("enter-notify-event", self.statusbar.Hovered)
-        self.statusbar.EventBoxLabel.connect("leave-notify-event", self.statusbar.LeaveStatusbar)
         self.statusbar.EventBoxLabel.connect("button-press-event", self.statusbar.Clicked)
 
         # Workaround for behavorial differences of GTK in Windows and Linux
@@ -1199,23 +1198,13 @@ class StatusBar(object):
         """
             see what happens if statusbar is hovered
         """
-        # check if any dialogs are not already open
-        
-        print "Window", self.output.popwin.Window.get_visible()
-        
+        # check if any dialogs are not already open and pointer does not come
+        # directly from popwin - to avoid flicker and artefact
         if self.output.popwin.IsWanted() == True and\
            str(self.conf.popup_details_hover) == "True" and\
            self.output.popwin.pointer_left_popwin == False:
             self.output.popwin.PopUp()
-           
-                
-    def LeaveStatusbar(self, widget=None, event=None):
-        """
-        when pointer leaves statusbar the popwin.pointer_left_popwin flag has to be reset
-        """
-        self.output.popwin.pointer_left_popwin = False  
-        print self.output.popwin.pointer_left_popwin
-                
+
 
     def MenuPopup(self, widget=None, event=None, time=None, dummy=None):
         """
@@ -1517,11 +1506,22 @@ class Popwin(object):
     
     def LeavePopWin(self, widget=None, event=None):
         """
-        when pointer leaves popwin the pointer_left_popwin flag has to be set
+        when pointer leaves popwin the pointer_left_popwin flag has to be set to avoid
+        popwin artefacts when hovering over statusbar
         """
         self.pointer_left_popwin = True
-        print self.output.popwin.pointer_left_popwin
         self.PopDown(widget, event)
+        # after a shortdelay set pointer_left_popwin back to false, in the meantime 
+        # there will be no extra flickering popwin coming from hovered statusbar 
+        gobject.timeout_add(250, self.SetPointerLeftPopwinFalse)
+        
+    
+    def SetPointerLeftPopwinFalse(self):
+        """
+        function to be called by gobject.
+        """
+        self.pointer_left_popwin = False
+        return False
 
 
     def PopDown(self, widget=None, event=None):
