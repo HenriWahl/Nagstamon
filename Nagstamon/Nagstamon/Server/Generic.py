@@ -212,18 +212,30 @@ class GenericServer(object):
         # do not care about the doube %s (%s%s) - its ok, "flags" cares about the necessary "&"
         if service == "":
             # host
+            # according to sf.net bug #3304098 (https://sourceforge.net/tracker/?func=detail&atid=1101370&aid=3304098&group_id=236865)
+            # the send_notification-flag must not exist if it is set to "off", otherwise
+            # the Nagios core interpretes it as set, regardless its real value
+            if notify == True:
+                send_notification = "&send_notification=on"
+            else:
+                send_notification = ""
             cgi_data = urllib.urlencode({"cmd_typ":"33", "cmd_mod":"2", "host":host, "com_author":author,\
-                                         "sticky_ack":self.HTML_ACKFLAGS[sticky], "send_notification":self.HTML_ACKFLAGS[notify], "persistent":self.HTML_ACKFLAGS[persistent],\
-                                         "com_data":comment, "btnSubmit":"Commit"})
+                                         "sticky_ack":self.HTML_ACKFLAGS[sticky], "persistent":self.HTML_ACKFLAGS[persistent],\
+                                         "com_data":comment, "btnSubmit":"Commit"}) + send_notification
             self.FetchURL(url, giveback="raw", cgi_data=cgi_data) 
             
         # if host is acknowledged and all services should be to or if a service is acknowledged
         # (and all other on this host too)
         if service != "":
             # service @ host
+            # the same applies here as with the host ad send_notification
+            if notify == True:
+                send_notification = "&send_notification=on"
+            else:
+                send_notification = ""            
             cgi_data = urllib.urlencode({"cmd_typ":"34", "cmd_mod":"2", "host":host, "service":service,\
-                                         "sticky_ack":self.HTML_ACKFLAGS[sticky], "send_notification":self.HTML_ACKFLAGS[notify], "persistent":self.HTML_ACKFLAGS[persistent],\
-                                         "com_author":author, "com_data":comment, "btnSubmit":"Commit"})          
+                                         "sticky_ack":self.HTML_ACKFLAGS[sticky], "persistent":self.HTML_ACKFLAGS[persistent],\
+                                         "com_author":author, "com_data":comment, "btnSubmit":"Commit"}) + send_notification         
             # running remote cgi command        
             self.FetchURL(url, giveback="raw", cgi_data=cgi_data) 
 
