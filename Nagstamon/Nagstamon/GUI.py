@@ -596,8 +596,8 @@ class GUI(object):
         self.acknowledge_xml.get_object("input_checkbutton_acknowledge_all_services").set_active(False)
 
         # default author + comment
-        self.acknowledge_xml.get_object("input_entry_author").set_text(server.username)        
-        self.acknowledge_xml.get_object("input_entry_comment").set_text("acknowledged")
+        #self.acknowledge_xml.get_object("input_entry_author").set_text(server.username)        
+        #self.acknowledge_xml.get_object("input_entry_comment").set_text("acknowledged")
 
 
         # show dialog
@@ -1412,6 +1412,16 @@ class Popwin(object):
         self.HBoxAllButtons.add(self.AlMonitorComboBox)
         self.HBoxAllButtons.add(self.AlMenu)
                 
+        # close popwin when its close button is pressed
+        self.ButtonClose.connect("clicked", self.Close)
+        # threaded recheck all when refresh is clicked
+        self.ButtonRecheckAll.connect("clicked", self.output.RecheckAll)
+        # threaded refresh status information when refresh is clicked
+        self.ButtonRefresh.connect("clicked", lambda r: Actions.RefreshAllServers(servers=self.output.servers, output=self.output, conf=self.conf))
+        # open settings dialog when settings is clicked
+        self.ButtonSettings.connect("clicked", lambda s: Settings(servers=self.output.servers, output=self.output, conf=self.conf))        
+
+
         # for later calculation of the popwin size we need the height of the buttons
         # it is enough to choose one of those buttons because they all have the same dimensions
         # as it seems to be the largest one we choose ComboboxMonitor
@@ -2274,13 +2284,15 @@ class Settings(object):
                 # create output visuals again because they might have changed (systray/free floating status bar)
                 self.output.statusbar.StatusBar.destroy()    
                 self.output.statusbar.SysTray.set_visible(False)       
+                self.output.popwin.Window.destroy()
                 # re-initialize output with new settings
                 self.output.__init__()
-                
-            # in Windows the statusbar with gtk.gdk.WINDOW_TYPE_HINT_UTILITY places itself somewhere
-            # this way it should be disciplined
-            self.output.statusbar.StatusBar.move(int(self.conf.position_x), int(self.conf.position_y))
-            
+	    else:
+		self.output.popwin.__init__(conf=self.conf, output=self.output)
+	    # in Windows the statusbar with gtk.gdk.WINDOW_TYPE_HINT_UTILITY places itself somewhere
+	    # this way it should be disciplined
+	    self.output.statusbar.StatusBar.move(int(self.conf.position_x), int(self.conf.position_y))
+	
             # start debugging loop if wanted
             if str(self.conf.debug_mode) == "True":
                 debugloop = Actions.DebugLoop(conf=self.conf, debug_queue=self.output.debug_queue, output=self.output)
