@@ -596,8 +596,8 @@ class GUI(object):
         self.acknowledge_xml.get_object("input_checkbutton_acknowledge_all_services").set_active(False)
 
         # default author + comment
-        #self.acknowledge_xml.get_object("input_entry_author").set_text(server.username)        
-        #self.acknowledge_xml.get_object("input_entry_comment").set_text("acknowledged")
+        self.acknowledge_xml.get_object("input_entry_author").set_text(server.username)        
+        self.acknowledge_xml.get_object("input_entry_comment").set_text("acknowledged")
 
 
         # show dialog
@@ -1317,10 +1317,10 @@ class Popwin(object):
 
         # for not letting statusbar throw a shadow onto popwin in any composition-window-manager this helps to
         # keep a more consistent look - copied from StatusBar... anyway, doesn't work... well, next attempt:
-        #self.Window.set_type_hint(gtk.gdk.WINDOW_TYPE_HINT_UTILITY)
+        self.Window.set_type_hint(gtk.gdk.WINDOW_TYPE_HINT_UTILITY)
         self.Window.set_decorated(False)
         self.Window.set_keep_above(True)
-        #self.Window.stick()
+        self.Window.stick()
         self.Window.set_property("skip-taskbar-hint", True)
         self.Window.set_skip_taskbar_hint(True)    
         
@@ -2274,13 +2274,13 @@ class Settings(object):
                 # create output visuals again because they might have changed (systray/free floating status bar)
                 self.output.statusbar.StatusBar.destroy()    
                 self.output.statusbar.SysTray.set_visible(False)       
-                #self.output.popwin.Window.destroy()
                 # re-initialize output with new settings
                 self.output.__init__()
-                # in Windows the statusbar with gtk.gdk.WINDOW_TYPE_HINT_UTILITY places itself somewhere
-                # this way it should be disciplined
-                self.output.statusbar.StatusBar.move(int(self.conf.position_x), int(self.conf.position_y))
                 
+            # in Windows the statusbar with gtk.gdk.WINDOW_TYPE_HINT_UTILITY places itself somewhere
+            # this way it should be disciplined
+            self.output.statusbar.StatusBar.move(int(self.conf.position_x), int(self.conf.position_y))
+            
             # start debugging loop if wanted
             if str(self.conf.debug_mode) == "True":
                 debugloop = Actions.DebugLoop(conf=self.conf, debug_queue=self.output.debug_queue, output=self.output)
