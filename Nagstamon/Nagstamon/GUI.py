@@ -1411,7 +1411,12 @@ class Popwin(object):
         # open settings dialog when settings is clicked
         self.ButtonSettings.connect("clicked", lambda s: Settings(servers=self.output.servers, output=self.output, conf=self.conf))        
 
-
+        # define colors for detailed status table in dictionaries
+        # need to be redefined here for MacOSX because there it is not
+        # possible to reinitialize the whole GUI after config changes without a crash
+        self.output.TAB_BG_COLORS = { "UNKNOWN":str(self.conf.color_unknown_background), "CRITICAL":str(self.conf.color_critical_background), "WARNING":str(self.conf.color_warning_background), "DOWN":str(self.conf.color_down_background), "UNREACHABLE":str(self.conf.color_unreachable_background)  }
+        self.output.TAB_FG_COLORS = { "UNKNOWN":str(self.conf.color_unknown_text), "CRITICAL":str(self.conf.color_critical_text), "WARNING":str(self.conf.color_warning_text), "DOWN":str(self.conf.color_down_text), "UNREACHABLE":str(self.conf.color_unreachable_text) }
+        
         # for later calculation of the popwin size we need the height of the buttons
         # it is enough to choose one of those buttons because they all have the same dimensions
         # as it seems to be the largest one we choose ComboboxMonitor
