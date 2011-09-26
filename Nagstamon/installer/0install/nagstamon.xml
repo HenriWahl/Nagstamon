@@ -15,24 +15,12 @@ sound. Hosts and services can be filtered by category and regular expressions.</
   <homepage>http://nagstamon.ifw-dresden.de</homepage>
   <category>Network</category>
   <icon href="http://nagstamon.ifw-dresden.de/0install/nagstamon.png" type="image/png"/>
-  <implementation id="sha1new=97bd4ba327205978bc2b0778cda953a3b36e620f" license="OSI Approved :: GNU General Public License v2" main="nagstamon.py" released="2011-09-02" version="438">
-    <archive extract="Nagstamon" href="http://nagstamon.ifw-dresden.de/0install/nagstamon_svn_438.tar.gz" size="474646" type="application/x-compressed-tar"/>
-  </implementation>
-  <implementation id="sha1new=484a8487f137d913c9a3eccdd375b0059bdad3a9" license="OSI Approved :: GNU General Public License v2" main="nagstamon.py" released="2011-09-02" version="439">
-    <archive extract="Nagstamon" href="http://nagstamon.ifw-dresden.de/0install/nagstamon_svn_439.tar.gz" size="474770" type="application/x-compressed-tar"/>
-  </implementation>
-  <implementation id="sha1new=310c7dc55163b09da603c7a261bc6e00826090cc" license="OSI Approved :: GNU General Public License v2" main="nagstamon.py" released="2011-09-02" version="440">
-    <archive extract="Nagstamon" href="http://nagstamon.ifw-dresden.de/0install/nagstamon_svn_440.tar.gz" size="474582" type="application/x-compressed-tar"/>
-  </implementation>
-  <implementation id="sha1new=75f85ebbd8ef754c0cdd6933e99d7f46e8d5ab57" license="OSI Approved :: GNU General Public License v2" main="nagstamon.py" released="2011-09-07" version="446">
-    <archive extract="Nagstamon" href="http://nagstamon.ifw-dresden.de/0install/nagstamon_svn_446.tar.gz" size="376949" type="application/x-compressed-tar"/>
-  </implementation>
-  <implementation id="sha1new=92733d741162a7c04aebba8453bc03c96f83357f" license="OSI Approved :: GNU General Public License v2" main="nagstamon.py" released="2011-09-26" version="450">
-    <archive extract="Nagstamon" href="http://nagstamon.ifw-dresden.de/0install/nagstamon_svn_450.tar.gz" size="474976" type="application/x-compressed-tar"/>
+  <implementation id="sha1new=5053ef9e8c6549bf1f252f17f56cf8eaca20c606" license="OSI Approved :: GNU General Public License v2" main="nagstamon.py" released="2011-09-26" version="456">
+    <archive extract="Nagstamon" href="http://nagstamon.ifw-dresden.de/0install/nagstamon_svn_456.tar.gz" size="474811" type="application/x-compressed-tar"/>
   </implementation>
 </interface>
 <!-- Base64 Signature
-iEYEABECAAYFAk6AWEMACgkQnmb3Nh+6CUJ8ygCfSN7KCWS8y0t0t/YeoYQtMU1DTb4An0QDAzbT
-7xNTBYG+2en3OPPVlLmG
+iEYEABECAAYFAk6A2ycACgkQnmb3Nh+6CULdZgCdFAdbKVHGmeVjx/w+9AdI4KK5RD8AnirGGy0h
+syb+IlE169FakBf8zCtk
 
 -->
