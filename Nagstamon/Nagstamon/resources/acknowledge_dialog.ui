@@ -228,8 +228,9 @@
             <child>
               <object class="GtkEntry" id="input_entry_author">
                 <property name="visible">True</property>
-                <property name="can_focus">False</property>
+                <property name="can_focus">True</property>
                 <property name="is_focus">True</property>
+                <property name="caps_lock_warning">False</property>
               </object>
               <packing>
                 <property name="left_attach">1</property>
@@ -241,7 +242,8 @@
             <child>
               <object class="GtkEntry" id="input_entry_comment">
                 <property name="visible">True</property>
-                <property name="can_focus">False</property>
+                <property name="can_focus">True</property>
+                <property name="caps_lock_warning">False</property>
               </object>
               <packing>
                 <property name="left_attach">1</property>

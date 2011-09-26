@@ -26,7 +26,7 @@
         <child internal-child="action_area">
           <object class="GtkButtonBox" id="dialog1-action_area">
             <property name="visible">True</property>
-            <property name="can_focus">False</property>
+            <property name="can_focus">True</property>
             <property name="layout_style">end</property>
             <child>
               <object class="GtkButton" id="button_ok">
@@ -212,7 +212,7 @@
             <child>
               <object class="GtkEntry" id="input_entry_author">
                 <property name="visible">True</property>
-                <property name="can_focus">False</property>
+                <property name="can_focus">True</property>
                 <property name="is_focus">True</property>
               </object>
               <packing>
@@ -225,8 +225,7 @@
             <child>
               <object class="GtkEntry" id="input_entry_comment">
                 <property name="visible">True</property>
-                <property name="can_focus">False</property>
-                <property name="is_focus">True</property>
+                <property name="can_focus">True</property>
               </object>
               <packing>
                 <property name="left_attach">1</property>
@@ -238,7 +237,7 @@
             <child>
               <object class="GtkEntry" id="input_entry_start_time">
                 <property name="visible">True</property>
-                <property name="can_focus">False</property>
+                <property name="can_focus">True</property>
               </object>
               <packing>
                 <property name="left_attach">1</property>
@@ -250,7 +249,7 @@
             <child>
               <object class="GtkEntry" id="input_entry_end_time">
                 <property name="visible">True</property>
-                <property name="can_focus">False</property>
+                <property name="can_focus">True</property>
               </object>
               <packing>
                 <property name="left_attach">1</property>

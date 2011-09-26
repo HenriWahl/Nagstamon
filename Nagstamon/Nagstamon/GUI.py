@@ -596,8 +596,8 @@ class GUI(object):
         self.acknowledge_xml.get_object("input_checkbutton_acknowledge_all_services").set_active(False)
 
         # default author + comment
-        self.acknowledge_xml.get_object("input_entry_author").set_text(server.username)        
-        self.acknowledge_xml.get_object("input_entry_comment").set_text("acknowledged")
+        #self.acknowledge_xml.get_object("input_entry_author").set_text(server.username)        
+        #self.acknowledge_xml.get_object("input_entry_comment").set_text("acknowledged")
 
 
         # show dialog
