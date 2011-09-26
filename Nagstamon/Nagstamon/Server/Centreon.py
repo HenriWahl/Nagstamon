@@ -107,6 +107,10 @@ class CentreonServer(GenericServer):
         Centreonified way to get host ip - attribute "a" in down hosts xml is of no use for up
         hosts so we need to get ip anyway from web page
         """
+        # the fasted method is taking hostname as used in monitor
+        if str(self.conf.connect_by_host) == "True":
+            return Result(result=host)        
+        
         # do a web interface search limited to only one result - the hostname
         cgi_data = urllib.urlencode({"sid":self.SID,\
                                     "search":host,\
@@ -118,10 +122,7 @@ class CentreonServer(GenericServer):
                                     "o":"h",\
                                     "p":20102,\
                                     "time":0})
-        
-        ###result = self.FetchURL(self.nagios_cgi_url + "/include/monitoring/status/Hosts/xml/hostXML.php?"\
-        ###                      + cgi_data, giveback="raw")
-        
+                
         result = self.FetchURL(self.nagios_cgi_url + "/include/monitoring/status/Hosts/xml/hostXML.php?"\
                               + cgi_data, giveback="xml")        
         xmlobj = result.result
@@ -129,7 +130,7 @@ class CentreonServer(GenericServer):
         if len(xmlobj) != 0:
             # when connection by DNS is not configured do it by IP
             try:
-                if str(self.conf.connect_by_dns_yes) == "True":
+                if str(self.conf.connect_by_dns) == "True":
                    # try to get DNS name for ip, if not available use ip
                     try:
                         address = socket.gethostbyaddr(xmlobj.l.a.text)[0]

@@ -1,6 +1,6 @@
 <?xml version="1.0" encoding="UTF-8"?>
 <interface>
-  <requires lib="gtk+" version="2.16"/>
+  <requires lib="gtk+" version="2.24"/>
   <object class="GtkAdjustment" id="adjustment1">
     <property name="upper">100</property>
     <property name="value">1</property>
@@ -120,6 +120,7 @@
                     <property name="can_focus">False</property>
                     <property name="receives_default">False</property>
                     <property name="use_action_appearance">False</property>
+                    <property name="xalign">0</property>
                     <property name="draw_indicator">True</property>
                     <signal name="toggled" handler="checkbutton_debug_mode" swapped="no"/>
                   </object>
@@ -135,6 +136,7 @@
                     <property name="can_focus">False</property>
                     <property name="receives_default">False</property>
                     <property name="use_action_appearance">False</property>
+                    <property name="xalign">0</property>
                     <property name="draw_indicator">True</property>
                     <signal name="toggled" handler="checkbutton_debug_to_file" swapped="no"/>
                   </object>
@@ -151,6 +153,7 @@
                     <property name="is_focus">True</property>
                     <property name="receives_default">False</property>
                     <property name="use_action_appearance">False</property>
+                    <property name="xalign">0</property>
                     <property name="draw_indicator">True</property>
                   </object>
                   <packing>
@@ -271,6 +274,9 @@
                 <property name="menu_label">Server</property>
                 <property name="tab_fill">False</property>
               </packing>
+            </child>
+            <child type="tab">
+              <placeholder/>
             </child>
             <child>
               <object class="GtkTable" id="table_display">
@@ -513,6 +519,9 @@
                 <property name="menu_label">Display</property>
                 <property name="position">1</property>
               </packing>
+            </child>
+            <child type="tab">
+              <placeholder/>
             </child>
             <child>
               <object class="GtkTable" id="table_filter">
@@ -961,12 +970,15 @@
                 <property name="position">2</property>
               </packing>
             </child>
+            <child type="tab">
+              <placeholder/>
+            </child>
             <child>
               <object class="GtkTable" id="table_executables">
                 <property name="visible">True</property>
                 <property name="can_focus">False</property>
                 <property name="border_width">5</property>
-                <property name="n_rows">8</property>
+                <property name="n_rows">10</property>
                 <property name="n_columns">2</property>
                 <child>
                   <object class="GtkLabel" id="label_options_apps">
@@ -1061,6 +1073,7 @@
                     <property name="visible">True</property>
                     <property name="can_focus">False</property>
                     <property name="xalign">0</property>
+                    <property name="yalign">0</property>
                     <property name="label" translatable="yes">Connection method:</property>
                   </object>
                   <packing>
@@ -1154,41 +1167,15 @@
                   </packing>
                 </child>
                 <child>
-                  <object class="GtkHBox" id="hbox3">
+                  <object class="GtkRadioButton" id="input_radiobutton_connect_by_host">
+                    <property name="label" translatable="yes">Host name</property>
                     <property name="visible">True</property>
-                    <property name="can_focus">False</property>
-                    <child>
-                      <object class="GtkRadioButton" id="input_radiobutton_connect_by_dns_yes">
-                        <property name="label" translatable="yes">DNS name</property>
-                        <property name="visible">True</property>
-                        <property name="can_focus">False</property>
-                        <property name="is_focus">True</property>
-                        <property name="receives_default">False</property>
-                        <property name="use_action_appearance">False</property>
-                        <property name="draw_indicator">True</property>
-                      </object>
-                      <packing>
-                        <property name="expand">True</property>
-                        <property name="fill">True</property>
-                        <property name="position">0</property>
-                      </packing>
-                    </child>
-                    <child>
-                      <object class="GtkRadioButton" id="input_radiobutton_connect_by_dns_no">
-                        <property name="label" translatable="yes">IP</property>
-                        <property name="visible">True</property>
-                        <property name="can_focus">False</property>
-                        <property name="receives_default">False</property>
-                        <property name="use_action_appearance">False</property>
-                        <property name="draw_indicator">True</property>
-                        <property name="group">input_radiobutton_connect_by_dns_yes</property>
-                      </object>
-                      <packing>
-                        <property name="expand">True</property>
-                        <property name="fill">True</property>
-                        <property name="position">1</property>
-                      </packing>
-                    </child>
+                    <property name="can_focus">True</property>
+                    <property name="receives_default">False</property>
+                    <property name="use_action_appearance">False</property>
+                    <property name="xalign">0</property>
+                    <property name="active">True</property>
+                    <property name="draw_indicator">True</property>
                   </object>
                   <packing>
                     <property name="left_attach">1</property>
@@ -1198,6 +1185,48 @@
                   </packing>
                 </child>
                 <child>
+                  <object class="GtkRadioButton" id="input_radiobutton_connect_by_dns">
+                    <property name="label" translatable="yes">DNS name</property>
+                    <property name="visible">True</property>
+                    <property name="can_focus">True</property>
+                    <property name="receives_default">False</property>
+                    <property name="use_action_appearance">False</property>
+                    <property name="xalign">0</property>
+                    <property name="draw_indicator">True</property>
+                    <property name="group">input_radiobutton_connect_by_host</property>
+                  </object>
+                  <packing>
+                    <property name="left_attach">1</property>
+                    <property name="right_attach">2</property>
+                    <property name="top_attach">8</property>
+                    <property name="bottom_attach">9</property>
+                  </packing>
+                </child>
+                <child>
+                  <object class="GtkRadioButton" id="input_radiobutton_connect_by_ip">
+                    <property name="label" translatable="yes">IP</property>
+                    <property name="visible">True</property>
+                    <property name="can_focus">True</property>
+                    <property name="receives_default">False</property>
+                    <property name="use_action_appearance">False</property>
+                    <property name="xalign">0</property>
+                    <property name="draw_indicator">True</property>
+                    <property name="group">input_radiobutton_connect_by_host</property>
+                  </object>
+                  <packing>
+                    <property name="left_attach">1</property>
+                    <property name="right_attach">2</property>
+                    <property name="top_attach">9</property>
+                    <property name="bottom_attach">10</property>
+                  </packing>
+                </child>
+                <child>
+                  <placeholder/>
+                </child>
+                <child>
+                  <placeholder/>
+                </child>
+                <child>
                   <placeholder/>
                 </child>
               </object>
@@ -1205,6 +1234,9 @@
                 <property name="menu_label">Executables</property>
                 <property name="position">3</property>
               </packing>
+            </child>
+            <child type="tab">
+              <placeholder/>
             </child>
             <child>
               <object class="GtkTable" id="table_notification">
@@ -1219,6 +1251,7 @@
                     <property name="can_focus">False</property>
                     <property name="receives_default">False</property>
                     <property name="use_action_appearance">False</property>
+                    <property name="xalign">0</property>
                     <property name="active">True</property>
                     <property name="draw_indicator">True</property>
                     <signal name="toggled" handler="checkbutton_enable_notification" swapped="no"/>
@@ -1238,6 +1271,7 @@
                             <property name="visible">True</property>
                             <property name="can_focus">False</property>
                             <property name="xalign">0</property>
+                            <property name="yalign">0</property>
                             <property name="label" translatable="yes">Notifications:</property>
                           </object>
                           <packing>
@@ -1262,6 +1296,7 @@
                                     <property name="is_focus">True</property>
                                     <property name="receives_default">False</property>
                                     <property name="use_action_appearance">False</property>
+                                    <property name="xalign">0</property>
                                     <property name="draw_indicator">True</property>
                                   </object>
                                   <packing>
@@ -1278,6 +1313,7 @@
                                     <property name="is_focus">True</property>
                                     <property name="receives_default">False</property>
                                     <property name="use_action_appearance">False</property>
+                                    <property name="xalign">0</property>
                                     <property name="draw_indicator">True</property>
                                   </object>
                                   <packing>
@@ -1293,6 +1329,7 @@
                                     <property name="can_focus">False</property>
                                     <property name="receives_default">False</property>
                                     <property name="use_action_appearance">False</property>
+                                    <property name="xalign">0</property>
                                     <property name="draw_indicator">True</property>
                                   </object>
                                   <packing>
@@ -1320,6 +1357,7 @@
                                     <property name="is_focus">True</property>
                                     <property name="receives_default">False</property>
                                     <property name="use_action_appearance">False</property>
+                                    <property name="xalign">0</property>
                                     <property name="draw_indicator">True</property>
                                   </object>
                                   <packing>
@@ -1336,6 +1374,7 @@
                                     <property name="is_focus">True</property>
                                     <property name="receives_default">False</property>
                                     <property name="use_action_appearance">False</property>
+                                    <property name="xalign">0</property>
                                     <property name="draw_indicator">True</property>
                                   </object>
                                   <packing>
@@ -1374,6 +1413,7 @@
                             <property name="can_focus">False</property>
                             <property name="receives_default">False</property>
                             <property name="use_action_appearance">False</property>
+                            <property name="xalign">0</property>
                             <property name="active">True</property>
                             <property name="draw_indicator">True</property>
                           </object>
@@ -1391,12 +1431,13 @@
                         <property name="n_rows">2</property>
                         <child>
                           <object class="GtkCheckButton" id="input_checkbutton_notification_sound">
-                            <property name="label" translatable="yes">Enable sound</property>
+                            <property name="label" translatable="yes">Enable sound (requires sox on unixoid OS)</property>
                             <property name="visible">True</property>
                             <property name="can_focus">False</property>
                             <property name="is_focus">True</property>
                             <property name="receives_default">False</property>
                             <property name="use_action_appearance">False</property>
+                            <property name="xalign">0</property>
                             <property name="active">True</property>
                             <property name="draw_indicator">True</property>
                             <signal name="toggled" handler="checkbutton_enable_sound" swapped="no"/>
@@ -1414,6 +1455,7 @@
                                 <property name="can_focus">False</property>
                                 <property name="receives_default">False</property>
                                 <property name="use_action_appearance">False</property>
+                                <property name="xalign">0</property>
                                 <property name="draw_indicator">True</property>
                               </object>
                               <packing>
@@ -1433,6 +1475,7 @@
                                     <property name="can_focus">False</property>
                                     <property name="receives_default">False</property>
                                     <property name="use_action_appearance">False</property>
+                                    <property name="xalign">0</property>
                                     <property name="draw_indicator">True</property>
                                     <property name="group">input_radiobutton_notification_default_sound</property>
                                     <signal name="toggled" handler="togglebutton_use_custom_sounds" swapped="no"/>
@@ -1638,6 +1681,7 @@
                                 <property name="is_focus">True</property>
                                 <property name="receives_default">False</property>
                                 <property name="use_action_appearance">False</property>
+                                <property name="xalign">0</property>
                                 <property name="draw_indicator">True</property>
                               </object>
                             </child>
@@ -1663,6 +1707,9 @@
               <packing>
                 <property name="position">4</property>
               </packing>
+            </child>
+            <child type="tab">
+              <placeholder/>
             </child>
             <child>
               <object class="GtkTable" id="table_colors">
@@ -2071,6 +2118,9 @@
               <packing>
                 <property name="position">5</property>
               </packing>
+            </child>
+            <child type="tab">
+              <placeholder/>
             </child>
           </object>
           <packing>

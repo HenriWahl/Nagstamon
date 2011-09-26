@@ -304,8 +304,13 @@ class MultisiteServer(GenericServer):
         find out ip or hostname of given host to access hosts/devices which do not appear in DNS but
         have their ip saved in Nagios
         """
+        
+        # the fasted method is taking hostname as used in monitor
+        if str(self.conf.connect_by_host) == "True":
+            return Result(result=host)
 
         ip = ""
+
         try:
             if host in self.hosts:
                 ip = self.hosts[host].address
@@ -313,7 +318,7 @@ class MultisiteServer(GenericServer):
             if str(self.conf.debug_mode) == "True":
                 self.Debug(server=self.get_name(), host=host, debug ="IP of %s:" % (host) + " " + ip)
 
-            if str(self.conf.connect_by_dns_yes) == "True":
+            if str(self.conf.connect_by_dns) == "True":
                 try:
                     address = socket.gethostbyaddr(ip)[0]
                 except:

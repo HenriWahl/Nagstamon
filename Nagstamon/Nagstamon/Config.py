@@ -41,8 +41,9 @@ class Config(object):
         self.popup_details_clicking = False
         self.close_details_hover = True
         self.close_details_clicking = False
-        self.connect_by_dns_yes = True
-        self.connect_by_dns_no = False
+        self.connect_by_host = True
+        self.connect_by_dns = False
+        self.connect_by_ip = False
         self.debug_mode = False
         self.debug_to_file = False
         self.debug_file = os.path.expanduser('~') + os.sep + "nagstamon.log"

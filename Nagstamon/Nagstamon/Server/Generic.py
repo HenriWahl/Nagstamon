@@ -929,6 +929,10 @@ class GenericServer(object):
         find out ip or hostname of given host to access hosts/devices which do not appear in DNS but
         have their ip saved in Nagios
         """
+
+        # the fasted method is taking hostname as used in monitor
+        if str(self.conf.connect_by_host) == "True":
+            return Result(result=host)
         
         # initialize ip string
         ip = ""
@@ -953,7 +957,7 @@ class GenericServer(object):
             if str(self.conf.debug_mode) == "True":    
                 self.Debug(server=self.get_name(), host=host, debug ="IP of %s:" % (host) + " " + ip)
             # when connection by DNS is not configured do it by IP
-            if str(self.conf.connect_by_dns_yes) == "True":
+            if str(self.conf.connect_by_dns) == "True":
                 # try to get DNS name for ip, if not available use ip
                 try:
                     address = socket.gethostbyaddr(ip)[0]
