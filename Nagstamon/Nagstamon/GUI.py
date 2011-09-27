@@ -564,7 +564,8 @@ class GUI(object):
         # connect with action
         # only OK needs to be connected - if this action gets canceled nothing happens
         # use connect_signals to assign methods to handlers
-        handlers_dict = { "button_ok_clicked" : self.Acknowledge }
+        handlers_dict = { "button_ok_clicked" : self.Acknowledge,
+                          "button_acknowledge_settings_clicked" : self.AcknowledgeDefaultSettings }
         self.acknowledge_xml.connect_signals(handlers_dict, server)
 
         # if service is "" it must be a host
@@ -581,20 +582,27 @@ class GUI(object):
             self.acknowledge_dialog.set_title("Acknowledge service")
 
         # default flags of Nagios acknowledgement
-        self.acknowledge_xml.get_object("input_checkbutton_sticky_acknowledgement").set_active(True)
-        self.acknowledge_xml.get_object("input_checkbutton_send_notification").set_active(True)
-        self.acknowledge_xml.get_object("input_checkbutton_persistent_comment").set_active(True)
-        self.acknowledge_xml.get_object("input_checkbutton_acknowledge_all_services").set_active(False)
+        self.acknowledge_xml.get_object("input_checkbutton_sticky_acknowledgement").set_active(eval(str(self.conf.defaults_acknowledge_sticky)))
+        self.acknowledge_xml.get_object("input_checkbutton_send_notification").set_active(eval(str(self.conf.defaults_acknowledge_send_notification)))
+        self.acknowledge_xml.get_object("input_checkbutton_persistent_comment").set_active(eval(str(self.conf.defaults_acknowledge_persistent_comment)))
+        self.acknowledge_xml.get_object("input_checkbutton_acknowledge_all_services").set_active(eval(str(self.conf.defaults_acknowledge_all_services)))
 
         # default author + comment
         self.acknowledge_xml.get_object("input_entry_author").set_text(server.username)        
-        self.acknowledge_xml.get_object("input_entry_comment").set_text("acknowledged")
-
+        self.acknowledge_xml.get_object("input_entry_comment").set_text(self.conf.defaults_acknowledge_comment)
 
         # show dialog
         self.acknowledge_dialog.run()
         self.acknowledge_dialog.destroy()
 
+        
+    def AcknowledgeDefaultSettings(self, foo, bar):
+        """
+        show settings with tab "defaults" as shortcut from Acknowledge dialog
+        """
+        self.acknowledge_dialog.destroy()
+        settings=Settings(servers=self.servers, output=self, conf=self.conf, first_page="Defaults")
+        
 
     def Acknowledge(self, widget, server):
         """
@@ -742,6 +750,8 @@ class GUI(object):
             self.submitcheckresult_xml.get_object("label_" + i).show()     
             self.submitcheckresult_xml.get_object("input_entry_" + i).show()        
 
+        self.submitcheckresult_xml.get_object("input_entry_comment").set_text(self.conf.defaults_submit_check_result_comment)           
+            
         # show dialog
         self.submitcheckresult_dialog.run()
 
@@ -2026,6 +2036,9 @@ class Settings(object):
     def __init__(self, **kwds):
         # add all keywords to object
         for k in kwds: self.__dict__[k] = kwds[k]
+        
+        # if not given default tab is empty
+        if not "first_page" in kwds: self.first_page = ""
 
         # flag settings dialog as opened
         self.output.SettingsDialogOpen = True
@@ -2103,9 +2116,14 @@ class Settings(object):
 
         # workaround for gazpacho-made glade-file - dunno why tab labels do not get named as they should be
         notebook = self.builder.get_object("notebook")
-        notebook_tabs =  ["Servers", "Display", "Filters", "Executables", "Notification", "Colors"]
+        notebook_tabs =  ["Servers", "Display", "Filters", "Executables", "Notification", "Colors", "Defaults"]
+        # now this presumably not necessary anymore workaround even gets extended as 
+        # determine-first-page-mechanism used for acknowledment dialog settings button
+        page = 0
         for c in notebook.get_children():
+            if notebook_tabs[0] == self.first_page: notebook.set_current_page(page)
             notebook.set_tab_label_text(c, notebook_tabs.pop(0))
+            page += 1
 
         # fill treeview
         self.FillTreeView()

@@ -228,7 +228,7 @@ class GenericServer(object):
         # (and all other on this host too)
         if service != "":
             # service @ host
-            # the same applies here as with the host ad send_notification
+            # the same applies here as with the host and send_notification
             if notify == True:
                 send_notification = "&send_notification=on"
             else:
@@ -242,10 +242,15 @@ class GenericServer(object):
         # acknowledge all services on a host
         if len(all_services) > 0:
             for s in all_services:
-                # service @ host
+                # services @ host
+                # the same applies here as with the host and send_notification
+                if notify == True:
+                    send_notification = "&send_notification=on"
+                else:
+                    send_notification = "" 
                 cgi_data = urllib.urlencode({"cmd_typ":"34", "cmd_mod":"2", "host":host, "service":s,\
-                                             "sticky_ack":self.HTML_ACKFLAGS[sticky], "send_notification":self.HTML_ACKFLAGS[notify], "persistent":self.HTML_ACKFLAGS[persistent],\
-                                             "com_author":author, "com_data":comment, "btnSubmit":"Commit"})
+                                             "sticky_ack":self.HTML_ACKFLAGS[sticky], "persistent":self.HTML_ACKFLAGS[persistent],\
+                                             "com_author":author, "com_data":comment, "btnSubmit":"Commit"}) + send_notification
                 #running remote cgi command        
                 self.FetchURL(url, giveback="raw", cgi_data=cgi_data)
             

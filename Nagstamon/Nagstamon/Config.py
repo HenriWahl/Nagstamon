@@ -89,7 +89,15 @@ class Config(object):
         self.color_error_background = self.default_color_error_background = "#D3D3D3"
         self.statusbar_systray = False
         self.statusbar_floating = True
-        self.icon_in_systray = False                        
+        self.icon_in_systray = False  
+        self.defaults_acknowledge_sticky = False
+        self.defaults_acknowledge_send_notification = False
+        self.defaults_acknowledge_persistent_comment = False
+        self.defaults_acknowledge_all_services = False
+        self.defaults_acknowledge_comment = "acknowledged"
+        self.defaults_submit_check_result_comment = "check result submitted"
+        
+        
 
         # those are example Windows settings, almost certainly a
         # user will have to fix them for his computer
