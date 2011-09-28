@@ -647,7 +647,8 @@ class GUI(object):
         # connect with action
         # only OK needs to be connected - if this action gets canceled nothing happens
         # use connect_signals to assign methods to handlers
-        handlers_dict = { "button_ok_clicked" : self.Downtime }
+        handlers_dict = { "button_ok_clicked" : self.Downtime,
+                          "button_downtime_settings_clicked" : self.DowntimeDefaultSettings }
         self.downtime_xml.connect_signals(handlers_dict, server)
 
         # if service is None it must be a host
@@ -666,19 +667,33 @@ class GUI(object):
         # get start_time and end_time externally from Actions.Downtime_get_start_end() for not mixing GUI and actions too much
         start_time, end_time = Actions.Downtime_get_start_end(server=server, host=host)
 
+        # radio buttons
+        print eval(str(self.conf.defaults_downtime_type_fixed))
+        
+        self.downtime_xml.get_object("input_radiobutton_type_fixed").set_active(eval(str(self.conf.defaults_downtime_type_fixed)))
+        self.downtime_xml.get_object("input_radiobutton_type_flexible").set_active(eval(str(self.conf.defaults_downtime_type_flexible)))
+        
         # default author + comment
         self.downtime_xml.get_object("input_entry_author").set_text(server.username)        
-        self.downtime_xml.get_object("input_entry_comment").set_text("scheduled downtime")
+        self.downtime_xml.get_object("input_entry_comment").set_text(self.conf.defaults_downtime_comment)
         # start and end time
         self.downtime_xml.get_object("input_entry_start_time").set_text(start_time)
         self.downtime_xml.get_object("input_entry_end_time").set_text(end_time)
         # flexible downtime duration
-        self.downtime_xml.get_object("input_spinbutton_duration_hours").set_value(2)
-        self.downtime_xml.get_object("input_spinbutton_duration_minutes").set_value(0)
+        self.downtime_xml.get_object("input_spinbutton_duration_hours").set_value(int(self.conf.defaults_downtime_duration_hours))
+        self.downtime_xml.get_object("input_spinbutton_duration_minutes").set_value(int(self.conf.defaults_downtime_duration_minutes))
 
         # show dialog
         self.downtime_dialog.run()
         self.downtime_dialog.destroy()
+        
+        
+    def DowntimeDefaultSettings(self, foo, bar):
+        """
+        show settings with tab "defaults" as shortcut from Downtime dialog
+        """
+        self.downtime_dialog.destroy()
+        settings=Settings(servers=self.servers, output=self, conf=self.conf, first_page="Defaults")
 
 
     def Downtime(self, widget, server):
@@ -722,7 +737,8 @@ class GUI(object):
         # only OK needs to be connected - if this action gets canceled nothing happens
         # use connect_signals to assign methods to handlers
         handlers_dict = { "button_ok_clicked" : self.SubmitCheckResultOK,\
-                          "button_cancel_clicked": self.SubmitCheckResultCancel}
+                          "button_cancel_clicked": self.SubmitCheckResultCancel,\
+                           "button_submit_check_result_settings_clicked" : self.SubmitCheckResultDefaultSettings}
         self.submitcheckresult_xml.connect_signals(handlers_dict, server)
 
         # if service is "" it must be a host
@@ -754,7 +770,15 @@ class GUI(object):
             
         # show dialog
         self.submitcheckresult_dialog.run()
-
+        
+                
+    def SubmitCheckResultDefaultSettings(self, foo, bar):
+        """
+        show settings with tab "defaults" as shortcut from Submit Check Result dialog
+        """
+        self.submitcheckresult_dialog.destroy()
+        settings=Settings(servers=self.servers, output=self, conf=self.conf, first_page="Defaults")
+        
 
     def SubmitCheckResultOK(self, widget, server):
         """

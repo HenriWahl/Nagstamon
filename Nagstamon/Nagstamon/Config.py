@@ -96,8 +96,11 @@ class Config(object):
         self.defaults_acknowledge_all_services = False
         self.defaults_acknowledge_comment = "acknowledged"
         self.defaults_submit_check_result_comment = "check result submitted"
-        
-        
+        self.defaults_downtime_duration_hours = "2"
+        self.defaults_downtime_duration_minutes = "0"
+        self.defaults_downtime_comment = "scheduled downtime"
+        self.defaults_downtime_type_fixed = True
+        self.defaults_downtime_type_flexible = False
 
         # those are example Windows settings, almost certainly a
         # user will have to fix them for his computer
