@@ -1,8 +1,0 @@
-[Desktop Entry]
-Type=Application
-Name=Nagstamon
-Comment=Nagios status monitor 
-Icon=/usr/share/nagstamon/Nagstamon/resources/nagstamon.svg
-Exec=nagstamon
-Terminal=false
-Categories=System;Monitor;GTK;
