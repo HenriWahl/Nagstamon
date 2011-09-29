@@ -2198,9 +2198,12 @@ class Settings(object):
         if not sys.modules.has_key("egg.trayicon"):
             self.builder.get_object("input_radiobutton_statusbar_systray").hide()
         if platform.system() == "Darwin":
+            # MacOS doesn't need any option because there is only floating statusbar possible
             self.builder.get_object("input_radiobutton_icon_in_systray").hide()
             self.builder.get_object("hbox_systray_popup_offset").hide()
-
+            self.builder.get_object("input_radiobutton_statusbar_floating").hide()
+            self.builder.get_object("label_appearance").hide()            
+            
         # show filled settings dialog and wait thanks to gtk.run()
         self.dialog.run()
         self.dialog.destroy()
