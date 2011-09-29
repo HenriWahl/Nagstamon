@@ -15,12 +15,12 @@ sound. Hosts and services can be filtered by category and regular expressions.</
   <homepage>http://nagstamon.ifw-dresden.de</homepage>
   <category>Network</category>
   <icon href="http://nagstamon.ifw-dresden.de/0install/nagstamon.png" type="image/png"/>
-  <implementation id="sha1new=4c02f8ee14321480abef0d570d3c85fc3a6fc3fb" license="OSI Approved :: GNU General Public License v2" main="nagstamon.py" released="2011-09-29" version="467">
-    <archive extract="Nagstamon" href="http://nagstamon.ifw-dresden.de/0install/nagstamon_svn_467.tar.gz" size="478631" type="application/x-compressed-tar"/>
+  <implementation id="sha1new=9e33023e75e359a6598129f35de2a437029a380b" license="OSI Approved :: GNU General Public License v2" main="nagstamon.py" released="2011-09-29" version="468">
+    <archive extract="Nagstamon" href="http://nagstamon.ifw-dresden.de/0install/nagstamon_svn_468.tar.gz" size="478682" type="application/x-compressed-tar"/>
   </implementation>
 </interface>
 <!-- Base64 Signature
-iEYEABECAAYFAk6EaQ4ACgkQnmb3Nh+6CUKwtwCfStnzvh5+4miCGB3dHikQlW6FeocAn1wOGuNQ
-V0ExHKNrNJmhRun1EraH
+iEYEABECAAYFAk6Ede0ACgkQnmb3Nh+6CUJ3kwCdForCzc5OJYu77GXtleM9kmpxh9cAn09s5L1t
+A5wYuTB1OigKE09pfMVU
 
 -->

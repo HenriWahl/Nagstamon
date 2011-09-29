@@ -1,6 +1,6 @@
 # encoding: utf-8
 
-import urllib
+import urllib, urllib2
 import webbrowser
 import socket
 import time
@@ -47,33 +47,30 @@ class CentreonServer(GenericServer):
     def open_tree_view(self, host, service=""):
         # must be a host if service is empty...
         if service == "":
-            webbrowser.open(self.nagios_cgi_url + "/index.php?" + urllib.urlencode({"p":201, "autologin":1,\
-            "o":"hd", "useralias":self.MD5_username, "password":self.MD5_password, "host_name":host}))
+            webbrowser.open(self.nagios_cgi_url + "/main.php?" + urllib.urlencode({"p":201,"o":"hd", "host_name":host}))
         else:
-            webbrowser.open(self.nagios_cgi_url + "/index.php?" + urllib.urlencode({"p":202, "autologin":1,\
-            "o":"svcd", "useralias":self.MD5_username, "password":self.MD5_password, "host_name":host,\
-             "service_description":service}))       
+            webbrowser.open(self.nagios_cgi_url + "/main.php?" + urllib.urlencode({"p":202, "o":"svcd",  "host_name":host, "service_description":service}))      
 
             
     def open_nagios(self):
-        webbrowser.open(self.nagios_cgi_url + "/index.php?autologin=1&p=1&useralias=" + self.MD5_username + "&password=" + self.MD5_password)
+        webbrowser.open(self.nagios_cgi_url + "/main.php?p=1")
         # debug
         if str(self.conf.debug_mode) == "True":
-            self.Debug(server=self.get_name(), debug="Open monitor web page " + self.nagios_url + "/index.php?autologin=1&p=1&useralias=" + self.MD5_username + "&password=" + self.MD5_password)
+            self.Debug(server=self.get_name(), debug="Open monitor web page " + self.nagios_url + "/main.php?p=1")
 
         
     def open_services(self):
-        webbrowser.open(self.nagios_cgi_url + "/index.php?autologin=1&p=1&useralias=" + self.MD5_username + "&password=" + self.MD5_password + "&p=20202&o=svcpb")
+        webbrowser.open(self.nagios_cgi_url + "/main.php?p=20202&o=svcpb")
         # debug
         if str(self.conf.debug_mode) == "True":
-            self.Debug(server=self.get_name(), debug="Open services web page " + "/index.php?p=20202&o=svcpb")
+            self.Debug(server=self.get_name(), debug="Open services web page " + "/main.php?p=20202&o=svcpb")
 
             
     def open_hosts(self):
-        webbrowser.open(self.nagios_cgi_url + "/index.php?autologin=1&p=1&useralias=" + self.MD5_username + "&password=" + self.MD5_password + "&p=20103&o=hpb")
+        webbrowser.open(self.nagios_cgi_url + "/main.php?p=20103&o=hpb")
         # debug
         if str(self.conf.debug_mode) == "True":
-            self.Debug(server=self.get_name(), debug="Open hosts web page " + self.nagios_url + "/index.php?autologin=1&p=1&useralias=" + self.MD5_username + "&password=" + self.MD5_password + "&p=20103&o=hpb")
+            self.Debug(server=self.get_name(), debug="Open hosts web page " + self.nagios_url + "/main.php?p=20103&o=hpb")
             
             
     def get_start_end(self, host):
@@ -107,7 +104,7 @@ class CentreonServer(GenericServer):
         Centreonified way to get host ip - attribute "a" in down hosts xml is of no use for up
         hosts so we need to get ip anyway from web page
         """
-        # the fasted method is taking hostname as used in monitor
+        # the fastest method is taking hostname as used in monitor
         if str(self.conf.connect_by_host) == "True":
             return Result(result=host)        
         
@@ -162,8 +159,10 @@ class CentreonServer(GenericServer):
         gets a shiny new SID for XML HTTP requests to Centreon cutting it out via .partition() from raw HTML
         additionally get php session cookie
         """
+        login_data = urllib.urlencode({"useralias" : self.conf.servers[self.get_name()].username, "password" : self.conf.servers[self.get_name()].password, "submit" : "Login"})
+        
         try:
-            raw = self.FetchURL(self.nagios_cgi_url + "/index.php?" + urllib.urlencode({"p":1, "autologin":1, "useralias":self.MD5_username, "password":self.MD5_password}), giveback="raw")
+            raw = self.FetchURL(self.nagios_cgi_url + "/index.php",cgi_data=login_data, giveback="raw")
             del raw
             sid = str(self.Cookie._cookies.values()[0].values()[0]["PHPSESSID"].value)
             return Result(result=sid)
@@ -176,11 +175,9 @@ class CentreonServer(GenericServer):
         """
         get host_id via parsing raw html
         """
-        cgi_data = urllib.urlencode({"p":201, "autologin":1,\
-                                    "o":"hd", "host_name":host,\
-                                    "useralias":self.MD5_username,\
-                                    "password":self.MD5_password})
-        result = self.FetchURL(self.nagios_cgi_url + "/main.php?" + cgi_data, giveback="raw")
+        cgi_data = urllib.urlencode({"p":201,\
+                                    "o":"hd", "host_name":host})
+        result = self.FetchURL(self.nagios_cgi_url + "/main.php?" + cgi_data, cgi_data=urllib.urlencode(self.SID), giveback="raw")
         raw, error = result.result, result.error
 
         if error == "":
@@ -192,7 +189,7 @@ class CentreonServer(GenericServer):
                 if str(self.conf.debug_mode) == "True":
                     self.Debug(server=self.get_name(), debug = "Host ID could not be retrieved, trying again...")
                 self.SID = self._get_sid().result
-                result = self.FetchURL(self.nagios_cgi_url + "/main.php?" + cgi_data, giveback="raw")
+                result = self.FetchURL(self.nagios_cgi_url + "/main.php?" + cgi_data, cgi_data=urllib.urlencode(self.SID), giveback="raw")
                 raw, error = result.result, result.error
                 host_id = raw.partition("var host_id= '")[2].partition("'")[0]
                 del raw
@@ -223,7 +220,7 @@ class CentreonServer(GenericServer):
                                      "host_name":host,\
                                      "service_description":service,\
                                      "o":"as"})
-        result = self.FetchURL(self.nagios_cgi_url + "/main.php?"+ cgi_data, giveback="raw")
+        result = self.FetchURL(self.nagios_cgi_url + "/main.php?"+ cgi_data, cgi_data=urllib.urlencode(self.SID), giveback="raw")
         raw, error = result.result, result.error
         
         # ids to give back, should contain to items, a host and a service id
@@ -235,7 +232,7 @@ class CentreonServer(GenericServer):
                 if str(self.conf.debug_mode) == "True":
                     self.Debug(server=self.get_name(), host=host, service=service, debug = "IDs could not be retrieved, trying again...")                
                 self.SID = self._get_sid().result
-                result = self.FetchURL(self.nagios_cgi_url + "/main.php?"+ cgi_data, giveback="raw")
+                result = self.FetchURL(self.nagios_cgi_url + "/main.php?"+ cgi_data, cgi_data=urllib.urlencode(self.SID), giveback="raw")
                 raw, error = result.result, result.error
                 
             # search ids
