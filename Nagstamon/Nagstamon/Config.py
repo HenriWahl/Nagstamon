@@ -90,6 +90,7 @@ class Config(object):
         self.statusbar_systray = False
         self.statusbar_floating = True
         self.icon_in_systray = False  
+        self.systray_popup_offset= 10
         self.defaults_acknowledge_sticky = False
         self.defaults_acknowledge_send_notification = False
         self.defaults_acknowledge_persistent_comment = False

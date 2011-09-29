@@ -433,6 +433,7 @@
                     <property name="xalign">0</property>
                     <property name="draw_indicator">True</property>
                     <property name="group">input_radiobutton_statusbar_floating</property>
+                    <signal name="toggled" handler="radiobutton_icon_in_systray_toggled" swapped="no"/>
                   </object>
                   <packing>
                     <property name="left_attach">1</property>
@@ -531,15 +532,14 @@
                   </packing>
                 </child>
                 <child>
-                  <object class="GtkHBox" id="hbox5">
+                  <object class="GtkHBox" id="hbox_systray_popup_offset">
                     <property name="visible">True</property>
                     <property name="can_focus">False</property>
                     <child>
-                      <object class="GtkLabel" id="label_systray_popup_distance">
+                      <object class="GtkLabel" id="label_systray_popup_offset">
                         <property name="visible">True</property>
                         <property name="can_focus">False</property>
-                        <property name="xalign">0</property>
-                        <property name="label" translatable="yes">Systray-popup-distance:</property>
+                        <property name="label" translatable="yes">Systray-popup-offset:</property>
                       </object>
                       <packing>
                         <property name="expand">True</property>
@@ -548,7 +548,7 @@
                       </packing>
                     </child>
                     <child>
-                      <object class="GtkSpinButton" id="input_spinbutton_systray_popup_distance">
+                      <object class="GtkSpinButton" id="input_spinbutton_systray_popup_offset">
                         <property name="visible">True</property>
                         <property name="can_focus">True</property>
                         <property name="max_length">2</property>

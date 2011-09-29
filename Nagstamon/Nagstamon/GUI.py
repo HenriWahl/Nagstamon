@@ -1632,11 +1632,12 @@ class Popwin(object):
                         # otherwise this does not work in windows
                         rootwin = self.output.statusbar.StatusBar.get_screen().get_root_window()
                         mousex, mousey, foo = rootwin.get_pointer()
-                        statusbar_mousex, statusbar_mousey = 0, 2
+                        #statusbar_mousex, statusbar_mousey = 0, 2
+                        statusbar_mousex, statusbar_mousey = 0, int(self.conf.systray_popup_offset)
                     else:    
                         mousex, mousey, foo, bar = self.output.statusbar.SysTray.get_geometry()[1]
-                        statusbar_mousex, statusbar_mousey = 0, 2
-
+                        #statusbar_mousex, statusbar_mousey = 0, 2
+                        statusbar_mousex, statusbar_mousey = 0, int(self.conf.systray_popup_offset)
                     # set monitor for later applying the correct monitor geometry
                     self.output.current_monitor = self.output.statusbar.StatusBar.get_screen().get_monitor_at_point(mousex, mousey)
 
@@ -1649,7 +1650,8 @@ class Popwin(object):
                     statusbar_mousex, statusbar_mousey = self.output.statusbar.StatusBar.get_pointer()
 
                 statusbarx0 = mousex - statusbar_mousex
-                statusbary0 = mousey - statusbar_mousey
+                statusbary0 = mousey - statusbar_mousey   
+                
                 # save trayicon x0 and y0 in self.statusbar
                 self.output.statusbar.StatusBar.x0 = statusbarx0
                 self.output.statusbar.StatusBar.y0 = statusbary0
@@ -2092,7 +2094,8 @@ class Settings(object):
                           "checkbutton_debug_to_file": self.ToggleDebugOptions,
                           "button_colors_default": self.ColorsDefault,
                           "button_colors_reset": self.ColorsReset,
-                          "color-set": self.ColorsPreview}
+                          "color-set": self.ColorsPreview,
+                          "radiobutton_icon_in_systray_toggled": self.ToggleSystrayPopupOffset}
         self.builder.connect_signals(handlers_dict)      
 
         keys = self.conf.__dict__.keys()        
@@ -2157,7 +2160,10 @@ class Settings(object):
 
         # toggle custom sounds options
         self.ToggleCustomSoundOptions()
-
+        
+        # toggle icon in systray popup offset
+        self.ToggleSystrayPopupOffset()
+        
         # set filters fore sound filechoosers
         filters = dict()
         # WAV files work on every platform
@@ -2193,6 +2199,7 @@ class Settings(object):
             self.builder.get_object("input_radiobutton_statusbar_systray").hide()
         if platform.system() == "Darwin":
             self.builder.get_object("input_radiobutton_icon_in_systray").hide()
+            self.builder.get_object("hbox_systray_popup_offset").hide()
 
         # show filled settings dialog and wait thanks to gtk.run()
         self.dialog.run()
@@ -2499,10 +2506,19 @@ class Settings(object):
         """
             Disable notification sound when not using sound is enabled
         """
-        options = self.builder.get_object("hbox_re_status_information")
-        checkbutton = self.builder.get_object("input_checkbutton_re_status_information_enabled")
+        options = self.builder.get_object("hbox_systray_popup_offset")
+        checkbutton = self.builder.get_object("input_radiobutton_icon_in_systray")
         options.set_sensitive(checkbutton.get_active())
 
+        
+    def ToggleSystrayPopupOffset(self, widget=None):
+        """
+            Toggle adjustment for systray-popup-offset (see sf.net bug 3389241)
+        """        
+        options = self.builder.get_object("hbox_systray_popup_offset")
+        checkbutton = self.builder.get_object("input_radiobutton_icon_in_systray")
+        options.set_sensitive(checkbutton.get_active())              
+        
 
     def PlaySound(self, playbutton=None):
         """
