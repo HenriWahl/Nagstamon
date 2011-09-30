@@ -884,9 +884,9 @@ class GenericServer(object):
                 if str(self.conf.debug_mode) == "True":
                     self.Debug(server=self.get_name(), debug="FetchURL: " + url + " CGI Data: " + str(cgi_data))
                 request = urllib2.Request(url, cgi_data, self.HTTPheaders[giveback])
-                urlcontent = self.urlopener.open(request)
                 # use opener - if cgi_data is not empty urllib uses a POST request
-                #del url, cgi_data, request                               
+                urlcontent = self.urlopener.open(request)
+                del url, cgi_data, request                               
             except:
                 result, error = self.Error(sys.exc_info())
                 return Result(result=result, error=error)
@@ -900,22 +900,22 @@ class GenericServer(object):
             
             # objectified HTML
             if giveback == 'obj':
-                request = urllib2.Request(url, cgi_data, self.HTTPheaders['obj'])
+                #request = urllib2.Request(url, cgi_data, self.HTTPheaders['obj'])
                 # use opener - if cgi_data is not empty urllib uses a POST request
-                urlcontent = self.urlopener.open(request)
+                #urlcontent = self.urlopener.open(request)
                 yummysoup = BeautifulSoup(urlcontent, convertEntities=BeautifulSoup.ALL_ENTITIES)
                 urlcontent.close()                
-                del url, cgi_data, request, urlcontent
+                del urlcontent
                 #return Result(result=copy.deepcopy(yummysoup))
                 return Result(result=yummysoup)
 
             # objectified generic XML, valid at least for Opsview and Centreon
             elif giveback == "xml":
-                request = urllib2.Request(url, cgi_data, self.HTTPheaders[giveback])
-                urlcontent = self.urlopener.open(request)
+                #request = urllib2.Request(url, cgi_data, self.HTTPheaders[giveback])
+                #urlcontent = self.urlopener.open(request)
                 xmlobj = BeautifulStoneSoup(urlcontent.read(), convertEntities=BeautifulStoneSoup.XML_ENTITIES)
                 urlcontent.close()
-                del url, cgi_data, request, urlcontent  
+                del urlcontent  
                 #return Result(result=copy.deepcopy(xmlobj)) 
                 return Result(result=xmlobj)   
 

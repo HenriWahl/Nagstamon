@@ -78,20 +78,28 @@ class CentreonServer(GenericServer):
         get start and end time for downtime from Centreon server
         """
         try:
-            cgi_data = urllib.urlencode({"p":"20305",\
+            cgi_data = urllib.urlencode({"p":"20106",\
                                          "o":"ah",\
                                          "host_name":host})
-            result = self.FetchURL(self.nagios_cgi_url + "/main.php?" + cgi_data, giveback="raw")
-            raw, error = result.result, result.error
+            #result = self.FetchURL(self.nagios_cgi_url + "/main.php?" + cgi_data, giveback="raw")
+            #raw, error = result.result, result.error
+            result = self.FetchURL(self.nagios_cgi_url + "/main.php?" + cgi_data, giveback="obj")
+            html, error = result.result, result.error
             if error == "":
                 # session id might have been invalid, so if necessary get a new one
-                if raw.find('name="start" type="text" value="') == -1:
-                    self.SID = self._get_sid().result
-                    result = self.FetchURL(self.nagios_cgi_url + "/main.php?" + cgi_data, giveback="raw")
-                    raw, error = result.result, result.error
-                start_time = raw.split('name="start" type="text" value="')[1].split('"')[0]
-                end_time = raw.split('name="end" type="text" value="')[1].split('"')[0]
-                del raw
+                ###if raw.find('name="start" type="text" value="') == -1:
+                ###    self.SID = self._get_sid().result
+                ###    result = self.FetchURL(self.nagios_cgi_url + "/main.php?" + cgi_data, giveback="raw")
+                ###    raw, error = result.result, result.error
+                ###start_time = raw.split('name="start" type="text" value="')[1].split('"')[0]
+                ###end_time = raw.split('name="end" type="text" value="')[1].split('"')[0]
+                
+                html = result.result
+                start_time = html.find(attrs={"name":"start"}).attrMap["value"]
+                end_time = html.find(attrs={"name":"end"}).attrMap["value"]                  
+                    
+                
+                ###del raw
                 # give values back as tuple      
                 return start_time, end_time
         except:
@@ -177,22 +185,12 @@ class CentreonServer(GenericServer):
         """
         cgi_data = urllib.urlencode({"p":201,\
                                     "o":"hd", "host_name":host})
-        result = self.FetchURL(self.nagios_cgi_url + "/main.php?" + cgi_data, cgi_data=urllib.urlencode(self.SID), giveback="raw")
+        result = self.FetchURL(self.nagios_cgi_url + "/main.php?" + cgi_data, cgi_data=urllib.urlencode({"sid":self.SID}), giveback="raw")
         raw, error = result.result, result.error
 
         if error == "":
             host_id = raw.partition("var host_id = '")[2].partition("'")[0]
             del raw
-            # if for some reason host_id could not be retrieved because
-            # we get a login page clear cookies and SID and try again
-            if host_id == "":
-                if str(self.conf.debug_mode) == "True":
-                    self.Debug(server=self.get_name(), debug = "Host ID could not be retrieved, trying again...")
-                self.SID = self._get_sid().result
-                result = self.FetchURL(self.nagios_cgi_url + "/main.php?" + cgi_data, cgi_data=urllib.urlencode(self.SID), giveback="raw")
-                raw, error = result.result, result.error
-                host_id = raw.partition("var host_id= '")[2].partition("'")[0]
-                del raw
         else:
             if str(self.conf.debug_mode) == "True":
                 self.Debug(server=self.get_name(), debug = "Host ID could not be retrieved.")
@@ -216,25 +214,19 @@ class CentreonServer(GenericServer):
         """
         parse a ton of html to get a host and a service id...
         """
-        cgi_data = urllib.urlencode({"p":"20305",\
+        cgi_data = urllib.urlencode({"p":"20218",\
                                      "host_name":host,\
                                      "service_description":service,\
                                      "o":"as"})
-        result = self.FetchURL(self.nagios_cgi_url + "/main.php?"+ cgi_data, cgi_data=urllib.urlencode(self.SID), giveback="raw")
+        # might look strange to have cgi_data 2 times, the first it is the "real" in URL and the second is the cgi_data parameter
+        # from urllib to get the session id POSTed
+        result = self.FetchURL(self.nagios_cgi_url + "/main.php?"+ cgi_data, cgi_data=urllib.urlencode({"sid":self.SID}), giveback="raw")
         raw, error = result.result, result.error
         
-        # ids to give back, should contain to items, a host and a service id
+        # ids to give back, should contain two items, a host and a service id
         ids = []
         
         if error == "":
-            if raw.find('selected="selected"') == -1:
-                # looks there was this old SID problem again - get a new one 
-                if str(self.conf.debug_mode) == "True":
-                    self.Debug(server=self.get_name(), host=host, service=service, debug = "IDs could not be retrieved, trying again...")                
-                self.SID = self._get_sid().result
-                result = self.FetchURL(self.nagios_cgi_url + "/main.php?"+ cgi_data, cgi_data=urllib.urlencode(self.SID), giveback="raw")
-                raw, error = result.result, result.error
-                
             # search ids
             for l in raw.splitlines():
                 if l.find('selected="selected"') <> -1:
@@ -276,7 +268,7 @@ class CentreonServer(GenericServer):
             if error != "": return Result(result=xmlobj, error=error)
 
             # in case there are no children session id is invalid
-            if xmlobj == "<response>bad session id</response>":    
+            if xmlobj == "<response>bad session id</response>" or xmlobj == "Bad Session ID":    
                 del xmlobj
                 if str(self.conf.debug_mode) == "True": 
                     self.Debug(server=self.get_name(), debug="Bad session ID, retrieving new one...")                
@@ -359,13 +351,12 @@ class CentreonServer(GenericServer):
             if error != "": return Result(result=xmlobj, error=error)
             
             # in case there are no children session id is invalid
-            if xmlobj == "<response>bad session id</response>": 
+            if xmlobj == "<response>bad session id</response>" or xmlobj == "Bad Session ID": 
                 # debug
                 if str(self.conf.debug_mode) == "True": 
                     self.Debug(server=self.get_name(), debug="Bad session ID, retrieving new one...")                                
                 # try again...
                 self.SID = self._get_sid().result
-                #result = self.FetchURL(nagcgiurl_services, giveback="raw")  
                 result = self.FetchURL(nagcgiurl_services, giveback="xml")                
                 xmlobj, error = result.result, result.error                
                 if error != "": return Result(result=xmlobj, error=error)
@@ -460,7 +451,6 @@ class CentreonServer(GenericServer):
                         "persistent":int(persistent), "sticky":int(sticky), "ackhostservice":"0", "o":"hd", "en":"1"})
                 # debug
                 if str(self.conf.debug_mode) == "True": 
-                    #print self.get_name(), host +": " + self.nagios_cgi_url + "/main.php?"+ cgi_data     
                     self.Debug(server=self.get_name(), host=host, debug=self.nagios_cgi_url + "/main.php?"+ cgi_data)                
 
                 # running remote cgi command, also possible with GET method     
@@ -535,8 +525,9 @@ class CentreonServer(GenericServer):
             if service == "":
                 # host
                 host_id = self._get_host_id(host)
-                cgi_data = urllib.urlencode({"p":"20305",\
+                cgi_data = urllib.urlencode({"p":"20106",\
                                              "host_id":host_id,\
+                                             "host_or_hg[host_or_hg]":1,\
                                              "submitA":"Save",\
                                              "persistent":int(fixed),\
                                              "persistant":int(fixed),\
@@ -551,7 +542,7 @@ class CentreonServer(GenericServer):
             else:
                 # service
                 host_id, service_id = self._get_host_and_service_id(host, service)
-                cgi_data = urllib.urlencode({"p":"20305",\
+                cgi_data = urllib.urlencode({"p":"20218",\
                                              "host_id":host_id,\
                                              "service_id":service_id,\
                                              "submitA":"Save",\
@@ -577,6 +568,7 @@ class CentreonServer(GenericServer):
         """
         # a SIDcount of 300 should make 15 min when being run every 3 secs as it is at 
         # the moment in Actions.RefreshLoopOneServer()
+        # maybe this is unnecessary now that we authenticate via login/password, no md5
         if self.SIDcount >= 300:
             if str(self.conf.debug_mode) == "True":
                 self.Debug(server=self.get_name(), debug="Old SID: " + self.SID + " " + str(self.Cookie))                
