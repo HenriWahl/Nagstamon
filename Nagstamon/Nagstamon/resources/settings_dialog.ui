@@ -2444,7 +2444,6 @@
                             <property name="max_length">2</property>
                             <property name="invisible_char">●</property>
                             <property name="invisible_char_set">True</property>
-                            <property name="progress_fraction">0.13</property>
                             <property name="adjustment">adjustment_hours</property>
                           </object>
                           <packing>
