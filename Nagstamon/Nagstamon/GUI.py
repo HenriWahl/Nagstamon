@@ -2107,6 +2107,7 @@ class Settings(object):
                     continue
                 # some hazard, every widget has other methods to fill it with desired content
                 # so we try them all, one of them should work                
+
                 # help gtk.filechooser on windows
                 if str(self.conf.__dict__[key]) == "None":
                     self.conf.__dict__[key] = None
@@ -2202,8 +2203,14 @@ class Settings(object):
             self.builder.get_object("input_radiobutton_icon_in_systray").hide()
             self.builder.get_object("hbox_systray_popup_offset").hide()
             self.builder.get_object("input_radiobutton_statusbar_floating").hide()
-            self.builder.get_object("label_appearance").hide()            
+            self.builder.get_object("label_appearance").hide()   
             
+        # this should not be necessary, but for some reason the number of hours is 10 in unitialized state... :-(
+        spinbutton = self.builder.get_object("input_spinbutton_defaults_downtime_duration_hours")
+        spinbutton.set_value(int(self.conf.defaults_downtime_duration_hours))
+        spinbutton = self.builder.get_object("input_spinbutton_defaults_downtime_duration_minutes")
+        spinbutton.set_value(int(self.conf.defaults_downtime_duration_minutes))
+        
         # show filled settings dialog and wait thanks to gtk.run()
         self.dialog.run()
         self.dialog.destroy()
