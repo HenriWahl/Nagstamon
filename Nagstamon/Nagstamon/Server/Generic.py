@@ -51,9 +51,6 @@ class GenericServer(object):
     ]
     
     DISABLED_CONTROLS = []
-
-    # Nagios CGI flags translation dictionary for acknowledging hosts/services 
-    HTML_ACKFLAGS = {True:"on", False:"off"}
     
     # dictionary to translate status bitmaps on webinterface into status flags
     # this are defaults from Nagios
@@ -219,9 +216,19 @@ class GenericServer(object):
                 send_notification = "&send_notification=on"
             else:
                 send_notification = ""
+            # dito for persistence...
+            if persistent == True:
+                persistent_comment = "&persistent=on"
+            else:
+                persistent_comment = ""
+            # ...and sticky acks too?
+            if sticky == True:
+                sticky_ack = "&sticky_ack=on"
+            else:
+                sticky_ack = ""
             cgi_data = urllib.urlencode({"cmd_typ":"33", "cmd_mod":"2", "host":host, "com_author":author,\
-                                         "sticky_ack":self.HTML_ACKFLAGS[sticky], "persistent":self.HTML_ACKFLAGS[persistent],\
-                                         "com_data":comment, "btnSubmit":"Commit"}) + send_notification
+                                         "com_data":comment, "btnSubmit":"Commit"})\
+                                         + send_notification + persistent_comment + sticky_ack
             self.FetchURL(url, giveback="raw", cgi_data=cgi_data) 
             
         # if host is acknowledged and all services should be to or if a service is acknowledged
@@ -232,10 +239,20 @@ class GenericServer(object):
             if notify == True:
                 send_notification = "&send_notification=on"
             else:
-                send_notification = ""            
+                send_notification = "" 
+            # dito for persistence...
+            if persistent == True:
+                persistent_comment = "&persistent=on"
+            else:
+                persistent_comment = ""
+            # ...and sticky acks too?
+            if sticky == True:
+                sticky_ack = "&sticky_ack=on"
+            else:
+                sticky_ack = ""
             cgi_data = urllib.urlencode({"cmd_typ":"34", "cmd_mod":"2", "host":host, "service":service,\
-                                         "sticky_ack":self.HTML_ACKFLAGS[sticky], "persistent":self.HTML_ACKFLAGS[persistent],\
-                                         "com_author":author, "com_data":comment, "btnSubmit":"Commit"}) + send_notification         
+                                         "com_author":author, "com_data":comment, "btnSubmit":"Commit"})\
+                                         + send_notification + persistent_comment + sticky_ack     
             # running remote cgi command        
             self.FetchURL(url, giveback="raw", cgi_data=cgi_data) 
 
@@ -248,9 +265,19 @@ class GenericServer(object):
                     send_notification = "&send_notification=on"
                 else:
                     send_notification = "" 
+            # dito for persistence...
+            if persistent == True:
+                persistent_comment = "&persistent=on"
+            else:
+                persistent_comment = ""
+            # ...and sticky acks too?
+            if sticky == True:
+                sticky_ack = "&sticky_ack=on"
+            else:
+                sticky_ack = ""
                 cgi_data = urllib.urlencode({"cmd_typ":"34", "cmd_mod":"2", "host":host, "service":s,\
-                                             "sticky_ack":self.HTML_ACKFLAGS[sticky], "persistent":self.HTML_ACKFLAGS[persistent],\
-                                             "com_author":author, "com_data":comment, "btnSubmit":"Commit"}) + send_notification
+                                             "com_author":author, "com_data":comment, "btnSubmit":"Commit"})\
+                                             + send_notification + persistent_comment + sticky_ack  
                 #running remote cgi command        
                 self.FetchURL(url, giveback="raw", cgi_data=cgi_data)
             
