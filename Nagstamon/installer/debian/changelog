@@ -1,13 +1,15 @@
 nagstamon (0.9.8.1-1) unstable; urgency=low
 
   * New upstream
-    - added Opsview flapping symbol
-    - kicked out lines 95-97 from Nagstamon/resources/settings_dialog.ui which seems to solve problem sf.net 3310224
-    - added regexp filter for statusinformation column
-    - added version-dependent update-check for that test versions don't tell there is an older "update"
+    - added customizable acknowledge/downtime/submit-result defaults
+    - added regexp filter for status information column
+    - added option to connect to hosts via its monitor hostname without HTTP overhead
     - added ability to keep status detail popup open despite hovering away
+    - fixed some popup artefacts
+    - fixed various bugs with acknowledgement flags (persistent/sticky/notification), now they are actually working
+    - fixed some issues when running on MacOS X
 
- -- Henri Wahl <h.wahl@ifw-dresden.de>  Wed, 03 Jul 2011 14:29:00 +0200
+ -- Henri Wahl <h.wahl@ifw-dresden.de>  Wed, 10 Oct 2011 14:49:00 +0200
 
 nagstamon (0.9.7.1-1) unstable; urgency=low
 
