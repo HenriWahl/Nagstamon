@@ -1,3 +1,404 @@
+2011-10-14 15:11  henriwww
+
+	* Nagstamon/resources/settings_dialog.ui: fixed last fix...
+
+2011-10-14 15:07  henriwww
+
+	* Nagstamon/Config.py, Nagstamon/GUI.py,
+	  Nagstamon/resources/settings_dialog.ui,
+	  installer/0install/nagstamon.xml: fixed silly duration hours in
+	  spinbutton
+
+2011-10-14 13:20  henriwww
+
+	* Nagstamon/Server/Generic.py, installer/0install/nagstamon.xml:
+	  fixed trouble with persistent acknowledgements
+
+2011-10-13 11:11  henriwww
+
+	* Nagstamon/resources/acknowledge_dialog.ui,
+	  Nagstamon/resources/downtime_dialog.ui,
+	  Nagstamon/resources/settings_dialog.ui,
+	  Nagstamon/resources/settings_server_dialog.ui,
+	  Nagstamon/resources/submit_check_result_dialog.ui: set gtk
+	  version required to 2.20
+
+2011-10-12 19:11  henriwww
+
+	* Nagstamon/resources/settings_dialog.ui: cleaning
+	  settings_dialog.ui again from selection stuff
+
+2011-10-11 10:00  henriwww
+
+	* installer/0install/nagstamon.xml: deletet op5-dev because it is
+	  obsolete
+
+2011-09-30 14:00  henriwww
+
+	* Nagstamon/Server/Centreon.py, Nagstamon/Server/Generic.py: Fixes
+	  for Centreon and changed page ids... why ever
+
+2011-09-29 14:32  henriwww
+
+	* Nagstamon/Server/Centreon.py, installer/0install/nagstamon.xml:
+	  applied patch for centreon to be authentication method agnostic
+
+2011-09-29 13:40  henriwww
+
+	* Nagstamon/GUI.py, installer/0install/nagstamon.xml: some macosx
+	  cosmetics
+
+2011-09-29 10:18  henriwww
+
+	* Nagstamon/Config.py, Nagstamon/GUI.py,
+	  Nagstamon/resources/settings_dialog.ui: workaround for sf.net bug
+	  #3389241
+
+2011-09-28 14:29  henriwww
+
+	* Nagstamon/resources/settings_dialog.ui,
+	  installer/0install/nagstamon.xml: working on fix for sf.net bug
+	  #3389241
+
+2011-09-28 09:39  henriwww
+
+	* Nagstamon/Config.py, Nagstamon/GUI.py,
+	  Nagstamon/resources/acknowledge_dialog.ui,
+	  Nagstamon/resources/downtime_dialog.ui,
+	  Nagstamon/resources/settings_dialog.ui,
+	  Nagstamon/resources/submit_check_result_dialog.ui,
+	  installer/0install/nagstamon.xml: added editable defaults for
+	  downtime
+
+2011-09-27 20:56  henriwww
+
+	* Nagstamon/Config.py, Nagstamon/GUI.py,
+	  Nagstamon/Server/Generic.py,
+	  Nagstamon/resources/acknowledge_dialog.ui,
+	  Nagstamon/resources/settings_dialog.ui,
+	  installer/0install/nagstamon.xml: added editable defaults for
+	  acknowledgement and submit check results
+
+2011-09-27 13:16  henriwww
+
+	* Nagstamon/GUI.py: fix for acknowledge-dialog
+
+2011-09-27 12:54  henriwww
+
+	* Nagstamon/resources/settings_dialog.ui,
+	  installer/0install/nagstamon.xml: little settings ui fix
+
+2011-09-27 08:23  henriwww
+
+	* Nagstamon/resources/settings_dialog.ui: tuned ui files
+
+2011-09-26 22:01  henriwww
+
+	* Nagstamon/Config.py, Nagstamon/Server/Centreon.py,
+	  Nagstamon/Server/Generic.py, Nagstamon/Server/Multisite.py,
+	  Nagstamon/resources/acknowledge_dialog.ui,
+	  Nagstamon/resources/settings_dialog.ui: added possibility to
+	  connect to hosts via hostname as-is in monitor without any
+	  HTML-parsing-to-get-one-IP-overhead
+
+2011-09-26 20:47  henriwww
+
+	* Nagstamon/Server/Generic.py: fixed
+	  always-sent-notifications-regardless-if-wanted-or-not bug sf.net
+	  #3304098
+
+2011-09-26 20:06  henriwww
+
+	* installer/0install/nagstamon.xml: 0install update
+
+2011-09-26 19:47  henriwww
+
+	* Nagstamon/GUI.py: ...
+
+2011-09-26 19:41  henriwww
+
+	* Nagstamon/resources/settings_dialog.ui: ...
+
+2011-09-26 19:34  henriwww
+
+	* Nagstamon/resources/acknowledge_dialog.ui,
+	  Nagstamon/resources/downtime_dialog.ui,
+	  Nagstamon/resources/settings_dialog.ui,
+	  Nagstamon/resources/settings_server_dialog.ui,
+	  Nagstamon/resources/submit_check_result_dialog.ui: changed
+	  dialoges to modal
+
+2011-09-26 19:26  henriwww
+
+	* Nagstamon/GUI.py: melted macosx changes
+
+2011-09-26 19:21  henriwww
+
+	* Nagstamon/GUI.py: fiddling macosx settings
+
+2011-09-26 10:49  henriwww
+
+	* installer/0install/nagstamon.xml: updated 0install
+
+2011-09-26 09:12  henriwww
+
+	* Nagstamon/GUI.py: MacOS now allows to edit settings without
+	  restarting Nagstamon
+
+2011-09-26 08:13  henriwww
+
+	* Nagstamon/GUI.py, Nagstamon/resources/acknowledge_dialog.ui,
+	  Nagstamon/resources/downtime_dialog.ui: fixed uneditable text
+	  entry fields in acknowledge & downtime dialog
+
+2011-09-07 08:54  henriwww
+
+	* Nagstamon/GUI.py, installer/0install/nagstamon.xml: avoid flicker
+	  and powin artefact occuring sometimes when hovering statusbar
+
+2011-09-06 14:40  henriwww
+
+	* Nagstamon/GUI.py: unsussessful attempt to get rid of popwin
+	  artefact
+
+2011-09-05 00:08  henriwww
+
+	* installer/0install/DMG_background.png,
+	  installer/0install/DMG_background.svg,
+	  installer/0install/Nagstamon.dmg: added modified DMG file
+
+2011-09-04 23:43  henriwww
+
+	* Nagstamon/GUI.py, installer/0install/DMG_background.png,
+	  installer/0install/DMG_background.svg,
+	  installer/0install/nagstamon.svg: added macosx dmg background
+
+2011-09-02 17:11  henriwww
+
+	* installer/darwin: deleting darwin stuff in favor of 0install
+
+2011-09-02 17:10  henriwww
+
+	* installer/0install/nagstamon.xml: ...
+
+2011-09-02 15:05  op5-team
+
+	* Nagstamon/Server/Ninja.py: Fixed issue where downtime
+	  hosts/services wasn't filtered out.
+	  
+	  typo _ should be -, shame on you Henri ;-)
+	  
+	  This resolves issue: 3391767
+	  
+	  // Mattias Ryrlén
+
+2011-09-02 14:07  op5-team
+
+	* Nagstamon/Server/Ninja.py: Fixed issue where some host/services
+	  where not displaying, this was due to
+	  bad settings in how many items you will display on a page.
+	  
+	  We now override this by fetching total of 10000 items (if you
+	  have so many problems)
+
+2011-09-02 12:12  henriwww
+
+	* Nagstamon/GUI.py, installer/0install/nagstamon.xml: fixed
+	  crashing macosx version after setup
+
+2011-09-02 10:40  henriwww
+
+	* Nagstamon/GUI.py, installer/0install/nagstamon.xml,
+	  installer/0install/nagstamon_svn_430.tar.gz: more fixes for
+	  MacOSX
+
+2011-09-01 07:09  henriwww
+
+	* Nagstamon/GUI.py: delete debug code
+
+2011-09-01 07:07  henriwww
+
+	* Nagstamon/GUI.py: another attempt to keep popwin above other
+	  windows
+
+2011-09-01 06:31  henriwww
+
+	* Nagstamon/GUI.py, Nagstamon/resources/settings_dialog.ui: small
+	  fixes
+
+2011-09-01 06:27  henriwww
+
+	* Nagstamon/GUI.py, Nagstamon/Server/Generic.py: added
+	  DummyStatusIcon class for MacOSX
+
+2011-08-31 20:36  henriwww
+
+	* Nagstamon/resources/settings_dialog.ui: settings ui regression
+	  bug fixed
+
+2011-08-31 19:25  henriwww
+
+	* installer/0install/nagstamon.png: 0install icon resized (bigger)
+
+2011-08-31 19:09  henriwww
+
+	* installer/0install/Nagstamon.xml,
+	  installer/0install/nagstamon.xml: more 0install changes
+
+2011-08-31 18:57  henriwww
+
+	* installer/0install/Nagstamon.xml,
+	  installer/0install/nagstamon.png,
+	  installer/0install/nagstamon_svn_430.tar.gz: changed 0install to
+	  nagstamon.ifw-dresden.de
+
+2011-08-31 08:49  henriwww
+
+	* Nagstamon/Server/Generic.py,
+	  Nagstamon/resources/settings_dialog.ui: macos fix
+
+2011-08-30 14:33  henriwww
+
+	* installer/0install, installer/0install/9E66F7361FBA0942.gpg,
+	  installer/0install/Nagstamon.xml,
+	  installer/0install/interface.xsl,
+	  installer/windows/nagstamon.iss: experimenting with 0install for
+	  MacOSX
+
+2011-08-10 22:28  henriwww
+
+	* Nagstamon/GUI.py, setup.py: fix for
+	  statusbar-not-overlapping-popup window dit not work
+
+2011-08-10 21:15  henriwww
+
+	* Nagstamon/GUI.py: changed comment in GUI.py
+
+2011-08-10 21:14  henriwww
+
+	* Nagstamon/GUI.py, Nagstamon/resources/settings_dialog.ui: fixed
+	  typo in settings dialog, use svg in windows
+
+2011-08-04 05:54  henriwww
+
+	* Nagstamon/resources/settings_dialog.ui: fixed typo in settings
+	  dialog
+
+2011-08-03 13:40  henriwww
+
+	* Nagstamon/Config.py, Nagstamon/GUI.py,
+	  Nagstamon/resources/settings_dialog.ui,
+	  installer/debian/changelog: added ability to keep status detail
+	  popup open despite hovering away
+
+2011-08-03 13:16  henriwww
+
+	* Nagstamon/Actions.py, installer/debian/changelog: added
+	  version-dependent update-check for that test versions don't tell
+	  there is an older "update"
+
+2011-08-03 13:05  henriwww
+
+	* Nagstamon/GUI.py, installer/debian/changelog: keep popwin higher
+	  than statusbar
+
+2011-08-03 12:22  henriwww
+
+	* Nagstamon/Server/Opsview.py: added flapping symbol for Opsview
+	  servers
+
+2011-07-08 09:27  henriwww
+
+	* Nagstamon/Server/Centreon.py: fixed sf.net bug #3346031 - broken
+	  Centreon context menu actions
+
+2011-07-08 08:45  henriwww
+
+	* Nagstamon/Actions.py, Nagstamon/Config.py, Nagstamon/GUI.py,
+	  Nagstamon/Server/Generic.py,
+	  Nagstamon/resources/settings_dialog.ui: added status information
+	  regexp filter
+
+2011-07-07 09:26  henriwww
+
+	* Nagstamon/Actions.py, Nagstamon/GUI.py,
+	  Nagstamon/resources/settings_dialog.ui: after switch to GTK
+	  Builder the play buttons for custom sounds did not work anymore -
+	  fixed this with gtk.Buildable.get_name(playbutton) instead of
+	  playbutton.name. Anyway nobody seemed to notice - does it mean
+	  nobody uses this feature?
+
+2011-07-07 08:41  henriwww
+
+	* Nagstamon/Config.py, Nagstamon/resources/settings_dialog.ui:
+	  workaround for SF.net bug #3304423
+
+2011-06-06 11:19  henriwww
+
+	* Nagstamon/resources/settings_dialog.ui: kicked out lines 95-97
+	  from Nagstamon/resources/settings_dialog.ui which seems to solve
+	  problem sf.net 3310224
+
+2011-06-06 11:13  henriwww
+
+	* Nagstamon/resources/acknowledge_dialog.ui,
+	  Nagstamon/resources/downtime_dialog.ui,
+	  Nagstamon/resources/settings_dialog.ui,
+	  Nagstamon/resources/settings_server_dialog.ui,
+	  Nagstamon/resources/submit_check_result_dialog.ui: last fix was
+	  no fix :-(
+
+2011-06-06 11:06  henriwww
+
+	* Nagstamon/resources/acknowledge_dialog.ui,
+	  Nagstamon/resources/downtime_dialog.ui,
+	  Nagstamon/resources/settings_dialog.ui,
+	  Nagstamon/resources/settings_server_dialog.ui,
+	  Nagstamon/resources/submit_check_result_dialog.ui: trying gtk ui
+	  builder fix for sf.net bug 3310224
+
+2011-05-30 10:11  henriwww
+
+	* Nagstamon/GUI.py, installer/debian/changelog,
+	  installer/windows/nagstamon.iss, setup.py: release 0.9.7.1
+	  preparations
+
+2011-05-30 09:39  henriwww
+
+	* Nagstamon/Server/Centreon.py: hot fix for sf.net bug 3309166 -
+	  broken centreon support
+
+2011-05-27 15:38  henriwww
+
+	* Nagstamon/resources/nagstamon.desktop: added .desktop file
+
+2011-05-27 14:52  henriwww
+
+	* ChangeLog, Nagstamon/GUI.py, Nagstamon/Server/Centreon.py,
+	  installer/debian/changelog, installer/debian/control, setup.py:
+	  ready for realeasing 0.9.7 bugfix release
+
+2011-05-27 12:32  henriwww
+
+	* Nagstamon/GUI.py, Nagstamon/Objects.py,
+	  Nagstamon/Server/Generic.py: merged passive and disabled property
+	  of hosts/services as they are used repectively but meaning the
+	  same, in my opinion
+
+2011-05-27 09:36  henriwww
+
+	* Nagstamon/Actions.py, Nagstamon/Objects.py,
+	  Nagstamon/Server/Generic.py, setup.py: changed filtering
+	  passiveonly hosts/services to disabled hosts/services to fit with
+	  filter_hosts_services_disabled_checks
+
+2011-05-26 09:58  henriwww
+
+	* Nagstamon/Config.py, Nagstamon/Server/Generic.py,
+	  Nagstamon/Server/Icinga.py,
+	  Nagstamon/resources/settings_dialog.ui: added filter for services
+	  on acknowledged host
+
 2011-05-25 11:34  henriwww
 
 	* Nagstamon/Actions.py, Nagstamon/Server/Generic.py: seemingly
