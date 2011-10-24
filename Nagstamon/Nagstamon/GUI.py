@@ -75,7 +75,7 @@ class GUI(object):
         for k in kwds: self.__dict__[k] = kwds[k]
 
         # Meta
-        self.name = "nagstamon"
+        self.name = "Nagstamon"
         self.version = "0.9.8"
         self.website = "http://nagstamon.ifw-dresden.de/"
         self.copyright = "©2008-2011 Henri Wahl\nh.wahl@ifw-dresden.de"
