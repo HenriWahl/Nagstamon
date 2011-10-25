@@ -5,6 +5,7 @@ nagstamon (0.9.8.1-1) unstable; urgency=low
     - added regexp filter for status information column
     - added option to connect to hosts via its monitor hostname without HTTP overhead
     - added ability to keep status detail popup open despite hovering away
+    - added option to change offset between popup window and systray icon to avoid partly hidden popup
     - fixed some popup artefacts
     - fixed various bugs with acknowledgement flags (persistent/sticky/notification), now they are actually working
     - fixed some issues when running on MacOS X
