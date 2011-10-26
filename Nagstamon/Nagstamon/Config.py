@@ -23,9 +23,11 @@ class Config(object):
         self.show_grid = True
         self.filter_all_down_hosts = False
         self.filter_all_unreachable_hosts = False
+        self.filter_all_flapping_hosts = False
         self.filter_all_unknown_services = False
         self.filter_all_warning_services = False
         self.filter_all_critical_services = False
+        self.filter_all_flapping_services = False
         self.filter_acknowledged_hosts_services = False
         self.filter_hosts_services_disabled_notifications = False
         self.filter_hosts_services_disabled_checks = False

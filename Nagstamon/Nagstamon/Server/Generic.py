@@ -710,6 +710,11 @@ class GenericServer(object):
                         self.Debug(server=self.get_name(), debug="Filter: DOWNTIME " + str(host.name))
                     host.visible = False
     
+                if host.flapping == True and str(self.conf.filter_all_flapping_hosts) == "True":
+                    if str(self.conf.debug_mode) == "True":
+                        self.Debug(server=self.get_name(), debug="Filter: FLAPPING HOST " + str(host.name))
+                    host.visible = False
+    
                 if HostIsFilteredOutByRE(host.name, self.conf) == True:
                     if str(self.conf.debug_mode) == "True":
                         self.Debug(server=self.get_name(), debug="Filter: REGEXP " + str(host.name))
@@ -762,7 +767,12 @@ class GenericServer(object):
                     if str(self.conf.debug_mode) == "True":
                         self.Debug(server=self.get_name(), debug="Filter: DOWNTIME " + str(host.name) + ";" + str(service.name))
                     service.visible = False
-
+                
+                if service.flapping == True and str(self.conf.filter_all_flapping_services) == "True":
+                    if str(self.conf.debug_mode) == "True":
+                        self.Debug(server=self.get_name(), debug="Filter: FLAPPING SERVICE " + str(host.name))
+                    service.visible = False
+                    
                 if host.scheduled_downtime == True and str(self.conf.filter_services_on_hosts_in_maintenance) == "True":
                     if str(self.conf.debug_mode) == "True":
                         self.Debug(server=self.get_name(), debug="Filter: Service on host in DOWNTIME " + str(host.name) + ";" + str(service.name))
