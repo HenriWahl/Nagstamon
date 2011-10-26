@@ -1353,7 +1353,6 @@ class Popwin(object):
 
         self.AlMonitorLabel = gtk.Alignment(xalign=0, yalign=0.5)
         self.AlMonitorComboBox = gtk.Alignment(xalign=0, yalign=0.5)
-        self.AlFilters = gtk.Alignment(xalign=0, yalign=0.5)
         self.AlMenu = gtk.Alignment(xalign=1.0, yalign=0.5)
         self.VBox = gtk.VBox()
         self.HBoxAllButtons = gtk.HBox()
@@ -1394,8 +1393,6 @@ class Popwin(object):
         self.ButtonFilters.set_relief(gtk.RELIEF_NONE)
         self.ButtonFilters.add(self.ButtonFilters_HBox)  
         self.HBoxMenu.add(self.ButtonFilters)    
-        # add to al 
-        #self.AlFilters.add(self.ButtonFilters)
 
         # Button Recheck All - HBox is necessary because gtk.Button allows only one child
         self.ButtonRecheckAll_HBox = gtk.HBox()
@@ -1432,6 +1429,9 @@ class Popwin(object):
         self.ButtonSettings.set_relief(gtk.RELIEF_NONE)
         self.ButtonSettings.add(self.ButtonSettings_HBox)
         self.HBoxMenu.add(self.ButtonSettings)
+        
+        # nice separator
+        self.HBoxMenu.add(gtk.VSeparator())
 
         # Button Close - HBox is necessary because gtk.Button allows only one child
         self.ButtonClose_HBox = gtk.HBox()
@@ -1449,7 +1449,6 @@ class Popwin(object):
         # HBoxes en masse...
         self.HBoxAllButtons.add(self.AlMonitorLabel)
         self.HBoxAllButtons.add(self.AlMonitorComboBox)
-        self.HBoxAllButtons.add(self.AlFilters)
         self.HBoxAllButtons.add(self.AlMenu)
 
         # close popwin when its close button is pressed
