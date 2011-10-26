@@ -76,9 +76,9 @@ class GUI(object):
 
         # Meta
         self.name = "Nagstamon"
-        self.version = "0.9.8"
+        self.version = "0.9.9-SVN"
         self.website = "http://nagstamon.ifw-dresden.de/"
-        self.copyright = "©2008-2011 Henri Wahl\nh.wahl@ifw-dresden.de"
+        self.copyright = "©2008-2011 Henri Wahl et al.\nh.wahl@ifw-dresden.de"
         self.comments = "Nagios status monitor for your desktop"
 
         # get resources directory from current directory - only if not being set before by pkg_resources
@@ -1410,7 +1410,7 @@ class Popwin(object):
         self.ButtonSettings_HBox = gtk.HBox()
         self.ButtonSettings_Icon = gtk.Image()
         self.ButtonSettings_Icon.set_from_file(self.output.Resources + os.sep + "settings.png")
-        self.ButtonSettings_Label = gtk.Label("Settings")
+        self.ButtonSettings_Label = gtk.Label("Global settings")
         self.ButtonSettings_HBox.add(self.ButtonSettings_Icon)
         self.ButtonSettings_HBox.add(self.ButtonSettings_Label)
         self.ButtonSettings = gtk.Button()
@@ -1489,9 +1489,9 @@ class Popwin(object):
             server = self.output.servers[item]
             # put all infos into one VBox object
             self.ServerVBoxes[server.get_name()] = ServerVBox(output=self.output, server=server)
-            self.ServerVBoxes[server.get_name()].Label.set_markup('<span weight="bold" size="large">' + server.get_name() + '</span>')
+            self.ServerVBoxes[server.get_name()].Label.set_markup('<span weight="bold" size="large">' + server.get_username() + "@" + server.get_name() + '</span>')
             self.ServerVBoxes[server.get_name()].Label.set_alignment(0,0)
-                # set no show all to be able to hide label and treeview if it is empty in case of no hassle
+            # set no show all to be able to hide label and treeview if it is empty in case of no hassle
             self.ServerVBoxes[server.get_name()].set_no_show_all(True)
 
             # connect buttons with actions
@@ -1501,7 +1501,8 @@ class Popwin(object):
             self.ServerVBoxes[server.get_name()].ButtonServices.connect("clicked", Actions.OpenServices, server, self.output)
             # open Nagios hosts in your favorite web browser when hosts button is clicked
             self.ServerVBoxes[server.get_name()].ButtonHosts.connect("clicked", Actions.OpenHosts, server, self.output)
-
+            # open server settings when settings button is clicked
+            self.ServerVBoxes[server.get_name()].ButtonSettings.connect("clicked", self.ServerVBoxes[server.get_name()]._SettingsButtonHelper, server)
             # windows workaround - see above
             # connect Server_EventBox with leave-notify-event to get popwin popping down when leaving it
             self.ServerVBoxes[server.get_name()].Server_EventBox.connect("leave-notify-event", self.PopDown)
@@ -1801,6 +1802,17 @@ class ServerVBox(gtk.VBox):
         self.Server_EventBox = gtk.EventBox()
 
         # server related Buttons
+        # Button Settings - HBox is necessary because gtk.Button allows only one child
+        self.ButtonSettings_HBox = gtk.HBox()
+        self.ButtonSettings_Icon = gtk.Image()
+        self.ButtonSettings_Icon.set_from_file(self.output.Resources + os.sep + "settings.png")
+        self.ButtonSettings_Label = gtk.Label("Settings")
+        self.ButtonSettings_HBox.add(self.ButtonSettings_Icon)
+        self.ButtonSettings_HBox.add(self.ButtonSettings_Label)
+        self.ButtonSettings = gtk.Button()
+        self.ButtonSettings.set_relief(gtk.RELIEF_NONE)
+        self.ButtonSettings.add(self.ButtonSettings_HBox)
+        
         # Button Monitor - HBox is necessary because gtk.Button allows only one child
         self.ButtonMonitor_HBox = gtk.HBox()
         self.ButtonMonitor_Icon = gtk.Image()
@@ -1847,6 +1859,7 @@ class ServerVBox(gtk.VBox):
         self.HBoxLeft.add(self.ButtonMonitor)
         self.HBoxLeft.add(self.ButtonHosts)
         self.HBoxLeft.add(self.ButtonServices)
+        self.HBoxLeft.add(self.ButtonSettings)
         self.HBoxLeft.add(gtk.VSeparator())
         self.HBoxLeft.add(self.LabelStatus)
 
@@ -1894,8 +1907,8 @@ class ServerVBox(gtk.VBox):
 
         # offset to access host and service flag icons separately, stored in grand liststore
         # may grow with more supported flags
-
         offset_img = {0:0, 1:len(self.output.STATE_ICONS)}
+
         # offset for alternate column colors could increase readability 
         # even and odd columns are calculated by column number
         offset_color = {0:8, 1:9}
@@ -2053,7 +2066,13 @@ class ServerVBox(gtk.VBox):
         except Exception, err:
             self.output.ErrorDialog(err)
 
+            
+    def _SettingsButtonHelper(self, widget, server):
+        # start settings dialog for particular server, copied from Settings()
+        self.output.popwin.Close()
+        EditServer(servers=self.output.servers, output=self.output, server=server.get_name(), settingsdialog=self, conf=self.output.conf),
 
+            
 class Settings(object):
     """
         settings dialog as object, may lead to less mess
@@ -2741,7 +2760,7 @@ class NewServer(ServerDialogHelper):
             item = self.builder.get_object(n)
             item.set_sensitive(state)
 
-
+            
 class EditServer(ServerDialogHelper):
     """
         settings of one particuliar new Nagios server
