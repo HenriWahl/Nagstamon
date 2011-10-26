@@ -1353,6 +1353,7 @@ class Popwin(object):
 
         self.AlMonitorLabel = gtk.Alignment(xalign=0, yalign=0.5)
         self.AlMonitorComboBox = gtk.Alignment(xalign=0, yalign=0.5)
+        self.AlFilters = gtk.Alignment(xalign=0, yalign=0.5)
         self.AlMenu = gtk.Alignment(xalign=1.0, yalign=0.5)
         self.VBox = gtk.VBox()
         self.HBoxAllButtons = gtk.HBox()
@@ -1381,6 +1382,20 @@ class Popwin(object):
         self.ComboboxMonitor.set_active(0)
         self.HBoxCombobox.add(self.ComboboxMonitor)
         self.AlMonitorComboBox.add(self.HBoxCombobox)
+        
+        # Button for Filter settings shortcut - HBox is necessary because gtk.Button allows only one child
+        self.ButtonFilters_HBox = gtk.HBox()
+        self.ButtonFilters_Icon = gtk.Image()
+        self.ButtonFilters_Icon.set_from_file(self.output.Resources + os.sep + "settings.png")
+        self.ButtonFilters_Label = gtk.Label("Filters")
+        self.ButtonFilters_HBox.add(self.ButtonFilters_Icon)
+        self.ButtonFilters_HBox.add(self.ButtonFilters_Label)
+        self.ButtonFilters = gtk.Button()
+        self.ButtonFilters.set_relief(gtk.RELIEF_NONE)
+        self.ButtonFilters.add(self.ButtonFilters_HBox)  
+        self.HBoxMenu.add(self.ButtonFilters)    
+        # add to al 
+        #self.AlFilters.add(self.ButtonFilters)
 
         # Button Recheck All - HBox is necessary because gtk.Button allows only one child
         self.ButtonRecheckAll_HBox = gtk.HBox()
@@ -1410,7 +1425,7 @@ class Popwin(object):
         self.ButtonSettings_HBox = gtk.HBox()
         self.ButtonSettings_Icon = gtk.Image()
         self.ButtonSettings_Icon.set_from_file(self.output.Resources + os.sep + "settings.png")
-        self.ButtonSettings_Label = gtk.Label("Global settings")
+        self.ButtonSettings_Label = gtk.Label("Settings")
         self.ButtonSettings_HBox.add(self.ButtonSettings_Icon)
         self.ButtonSettings_HBox.add(self.ButtonSettings_Label)
         self.ButtonSettings = gtk.Button()
@@ -1426,14 +1441,15 @@ class Popwin(object):
         self.ButtonClose = gtk.Button()
         self.ButtonClose.set_relief(gtk.RELIEF_NONE)
         self.ButtonClose.add(self.ButtonClose_HBox)
-        self.HBoxMenu.add(self.ButtonClose)
-
+        self.HBoxMenu.add(self.ButtonClose)     
+        
         # put the HBox full of buttons full of HBoxes into the aligned HBox...
         self.AlMenu.add(self.HBoxMenu)     
-
+        
         # HBoxes en masse...
         self.HBoxAllButtons.add(self.AlMonitorLabel)
         self.HBoxAllButtons.add(self.AlMonitorComboBox)
+        self.HBoxAllButtons.add(self.AlFilters)
         self.HBoxAllButtons.add(self.AlMenu)
 
         # close popwin when its close button is pressed
@@ -1444,7 +1460,9 @@ class Popwin(object):
         self.ButtonRefresh.connect("clicked", lambda r: Actions.RefreshAllServers(servers=self.output.servers, output=self.output, conf=self.conf))
         # open settings dialog when settings is clicked
         self.ButtonSettings.connect("clicked", lambda s: Settings(servers=self.output.servers, output=self.output, conf=self.conf))        
-
+        # open settings dialog for filters when filters is clicked
+        self.ButtonFilters.connect("clicked", lambda s: Settings(servers=self.output.servers, output=self.output, conf=self.conf, first_page="Filters"))        
+        
         # define colors for detailed status table in dictionaries
         # need to be redefined here for MacOSX because there it is not
         # possible to reinitialize the whole GUI after config changes without a crash
@@ -1501,8 +1519,6 @@ class Popwin(object):
             self.ServerVBoxes[server.get_name()].ButtonServices.connect("clicked", Actions.OpenServices, server, self.output)
             # open Nagios hosts in your favorite web browser when hosts button is clicked
             self.ServerVBoxes[server.get_name()].ButtonHosts.connect("clicked", Actions.OpenHosts, server, self.output)
-            # open server settings when settings button is clicked
-            self.ServerVBoxes[server.get_name()].ButtonSettings.connect("clicked", self.ServerVBoxes[server.get_name()]._SettingsButtonHelper, server)
             # windows workaround - see above
             # connect Server_EventBox with leave-notify-event to get popwin popping down when leaving it
             self.ServerVBoxes[server.get_name()].Server_EventBox.connect("leave-notify-event", self.PopDown)
@@ -1800,18 +1816,6 @@ class ServerVBox(gtk.VBox):
         self.Label = gtk.Label()
         # once again a Windows(TM) workaround
         self.Server_EventBox = gtk.EventBox()
-
-        # server related Buttons
-        # Button Settings - HBox is necessary because gtk.Button allows only one child
-        self.ButtonSettings_HBox = gtk.HBox()
-        self.ButtonSettings_Icon = gtk.Image()
-        self.ButtonSettings_Icon.set_from_file(self.output.Resources + os.sep + "settings.png")
-        self.ButtonSettings_Label = gtk.Label("Settings")
-        self.ButtonSettings_HBox.add(self.ButtonSettings_Icon)
-        self.ButtonSettings_HBox.add(self.ButtonSettings_Label)
-        self.ButtonSettings = gtk.Button()
-        self.ButtonSettings.set_relief(gtk.RELIEF_NONE)
-        self.ButtonSettings.add(self.ButtonSettings_HBox)
         
         # Button Monitor - HBox is necessary because gtk.Button allows only one child
         self.ButtonMonitor_HBox = gtk.HBox()
@@ -1859,7 +1863,6 @@ class ServerVBox(gtk.VBox):
         self.HBoxLeft.add(self.ButtonMonitor)
         self.HBoxLeft.add(self.ButtonHosts)
         self.HBoxLeft.add(self.ButtonServices)
-        self.HBoxLeft.add(self.ButtonSettings)
         self.HBoxLeft.add(gtk.VSeparator())
         self.HBoxLeft.add(self.LabelStatus)
 
@@ -2065,13 +2068,7 @@ class ServerVBox(gtk.VBox):
 
         except Exception, err:
             self.output.ErrorDialog(err)
-
             
-    def _SettingsButtonHelper(self, widget, server):
-        # start settings dialog for particular server, copied from Settings()
-        self.output.popwin.Close()
-        EditServer(servers=self.output.servers, output=self.output, server=server.get_name(), settingsdialog=self, conf=self.output.conf),
-
             
 class Settings(object):
     """
