@@ -10,15 +10,17 @@ class IcingaServer(GenericServer):
     """   
     TYPE = 'Icinga'
 
+    
+    # the following makes the situation more confusing.... Icinga seems to include that
+    # strange Nagios bug regarding acknowledgement flags but behaves even more inconsistent...
+    # in contrast to Nagios where absense of flags means that they are switched of here
+    # stuff only happens if they are set...
+    
+    """
     # Nagios CGI flags translation dictionary for acknowledging hosts/services 
     HTML_ACKFLAGS = {True:"on", False:"off"}
 
-    
     def _set_acknowledge(self, host, service, author, comment, sticky, notify, persistent, all_services=[]):
-        """
-        necessary port from 0.9.7.1 Generic.py because Icinga seems to have fixed Nagios bug
-        regarding treatment of ack flags - thus it does not work as it would with Nagios
-        """
         url = self.nagios_cgi_url + "/cmd.cgi"      
         
         # decision about host or service - they have different URLs
@@ -49,3 +51,4 @@ class IcingaServer(GenericServer):
                                              "com_author":author, "com_data":comment, "btnSubmit":"Commit"})
                 #running remote cgi command        
                 self.FetchURL(url, giveback="raw", cgi_data=cgi_data)
+    """
