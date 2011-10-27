@@ -794,7 +794,7 @@ class GUI(object):
         # dummy default state
         state = "ok"
 
-        for s in ["ok", "warning", "critical", "unreachable", "unknown", "down"]:
+        for s in ["ok", "up", "warning", "critical", "unreachable", "unknown", "down"]:
             if self.submitcheckresult_xml.get_object("input_radiobutton_result_" + s).get_active() == True:
                 state = s
                 break

@@ -226,8 +226,8 @@ class GenericServer(object):
                 sticky_ack = "&sticky_ack=on"
             else:
                 sticky_ack = ""
-            cgi_data = urllib.urlencode({"cmd_typ":"33", "cmd_mod":"2", "host":host, "com_author":author,\
-                                         "com_data":comment, "btnSubmit":"Commit"})\
+            cgi_data = urllib.urlencode([("cmd_typ","33"), ("cmd_mod","2"), ("host",host), ("com_author",author),\
+                                         ("com_data",comment), ("btnSubmit","Commit")])\
                                          + send_notification + persistent_comment + sticky_ack
             self.FetchURL(url, giveback="raw", cgi_data=cgi_data) 
             
@@ -250,8 +250,11 @@ class GenericServer(object):
                 sticky_ack = "&sticky_ack=on"
             else:
                 sticky_ack = ""
-            cgi_data = urllib.urlencode({"cmd_typ":"34", "cmd_mod":"2", "host":host, "service":service,\
-                                         "com_author":author, "com_data":comment, "btnSubmit":"Commit"})\
+            # for whatever silly reason Icinga depends on the correct order of submitted form items...
+            # see sf.net bug 3428844
+            # so whe cannot use a dictionary with urllib but a tuple full of tuples
+            cgi_data = urllib.urlencode([("cmd_typ","34"), ("cmd_mod","2"), ("host",host), ("service",service),\
+                                         ("com_author",author), ("com_data",comment), ("btnSubmit","Commit")])\
                                          + send_notification + persistent_comment + sticky_ack     
             # running remote cgi command        
             self.FetchURL(url, giveback="raw", cgi_data=cgi_data) 
@@ -275,8 +278,8 @@ class GenericServer(object):
                 sticky_ack = "&sticky_ack=on"
             else:
                 sticky_ack = ""
-                cgi_data = urllib.urlencode({"cmd_typ":"34", "cmd_mod":"2", "host":host, "service":s,\
-                                             "com_author":author, "com_data":comment, "btnSubmit":"Commit"})\
+                cgi_data = urllib.urlencode([("cmd_typ","34"), ("cmd_mod","2"), ("host",host), ("service",s),\
+                                             ("com_author",author), ("com_data",comment), ("btnSubmit","Commit")])\
                                              + send_notification + persistent_comment + sticky_ack  
                 #running remote cgi command        
                 self.FetchURL(url, giveback="raw", cgi_data=cgi_data)
@@ -331,16 +334,17 @@ class GenericServer(object):
         # decision about host or service - they have different URLs
         if service == "":
             # host
-            cgi_data = urllib.urlencode({"cmd_typ":"87", "cmd_mod":"2", "host":host,\
-                                         "plugin_state":{"up":"0", "down":"1", "unreachable":"2"}[state], "plugin_output":check_output,\
-                                         "performance_data":performance_data, "btnSubmit":"Commit"})  
+            cgi_data = urllib.urlencode([("cmd_typ","87"), ("cmd_mod","2"), ("host",host),\
+                                         ("plugin_state",{"up":"0", "down":"1", "unreachable":"2"}[state]),\
+                                         ("plugin_output",check_output),\
+                                         ("performance_data",performance_data), ("btnSubmit","Commit")])  
             self.FetchURL(url, giveback="raw", cgi_data=cgi_data) 
             
         if service != "":
             # service @ host
-            cgi_data = urllib.urlencode({"cmd_typ":"30", "cmd_mod":"2", "host":host, "service":service,\
-                                         "plugin_state":{"ok":"0", "warning":"1", "critical":"2", "unknown":"3"}[state], "plugin_output":check_output,\
-                                         "performance_data":performance_data, "btnSubmit":"Commit"})          
+            cgi_data = urllib.urlencode([("cmd_typ","30"), ("cmd_mod","2"), ("host",host), ("service",service),\
+                                         ("plugin_state",{"ok":"0", "warning":"1", "critical":"2", "unknown":"3"}[state]), ("plugin_output",check_output),\
+                                         ("performance_data",performance_data), ("btnSubmit","Commit")])          
             # running remote cgi command        
             self.FetchURL(url, giveback="raw", cgi_data=cgi_data) 
 
