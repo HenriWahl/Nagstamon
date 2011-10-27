@@ -126,34 +126,35 @@ class Config(object):
         # the app is unconfigured by default and will stay so if it
         # would not find a config file
         self.unconfigured = True
-
+        
         # try to use a given config file - there must be one given
         # if sys.argv is larger than 1
         if len(sys.argv) > 1:
             if sys.argv[1].find("-psn") != -1:
-                self.configfile = os.path.expanduser('~') + os.sep + ".nagstamon.conf"
+                # new configdir approach
+                self.configdir = os.path.expanduser('~') + os.sep + ".nagstamon"
             else:
                 # allow to give a config file
-                self.configfile = sys.argv[1]
+                self.configdir = sys.argv[1]
+                           
         # otherwise if there exits a configfile in current working directory it should be used
-        elif os.path.exists(os.getcwd() + os.sep + "nagstamon.conf"):
-            self.configfile = os.getcwd() + os.sep + "nagstamon.conf"
+        elif os.path.exists(os.getcwd() + os.sep + "nagstamon.config"):
+            self.configdir = os.getcwd() + os.sep + "nagstamon.config"
         else:
-            # ~/.nagstamon.conf is the user conf file
+            # ~/.nagstamon/nagstamon.conf is the user conf file
             # os.path.expanduser('~') finds out the user HOME dir where 
             # nagstamon expects its conf file to be
-            self.configfile = os.path.expanduser('~') + os.sep + ".nagstamon.conf"
+            self.configdir = os.path.expanduser('~') + os.sep + ".nagstamon"
 
+        self.configfile = self.configdir + os.sep + "nagstamon.conf"            
+            
         # make path fit for actual os, normcase for letters and normpath for path
         self.configfile = os.path.normpath(os.path.normcase(self.configfile))
 
-        # because the name of the configfile is also stored in the configfile
+        # because the name of the configdir is also stored in the configfile
         # there may be situations where the name gets overwritten by a
         # wrong name so it will be stored here temporarily
-        configfile_temp = self.configfile
-    
-        # dictionary containing the config data for different servers
-        self.servers = dict()
+        configdir_temp = self.configdir
         
         if os.path.exists(self.configfile):
             # instantiate a Configparser to parse the conf file
@@ -167,13 +168,38 @@ class Config(object):
             
             # go through all sections of the conf file
             for section in config.sections():
-                if section.startswith("Server_"):
+                # go through all items of each sections (in fact there is only on
+                # section which has to be there to comply to the .INI file standard
+                for i in config.items(section):
+                    # create a key of every config item with its appropriate value
+                    object.__setattr__(self, i[0], i[1])
+                    
+            # reset self.configdir to temporarily saved value in case it differs from
+            # the one read from configfile and so it would fail to save next time
+            self.configdir = configdir_temp
+                        
+            # seems like there is a config file so the app is not unconfigured anymore
+            self.unconfigured = False
+
+        # Servers configuration...
+        # dictionary containing the config data for different servers
+        self.servers = dict()
+        
+        if os.path.exists(self.configdir + os.sep + "servers"):
+            for f in os.listdir(self.configdir + os.sep + "servers"):
+                if f.startswith("server_") and f.endswith(".conf"):
+                    if sys.version_info[0] < 3 and sys.version_info[1] < 7:
+                        config = ConfigParser.ConfigParser()
+                    else:
+                        config = ConfigParser.ConfigParser(allow_no_value=True)
+                    config.read(self.configdir + os.sep + "servers" + os.sep + f)
+                    
                     # create server object for every server
-                    server_name = dict(config.items(section))["name"]
+                    server_name = f.split("_", 1)[1].rpartition(".")[0]
                     self.servers[server_name] = Server()                  
                     
-                    # go through all items of each sections
-                    for i in config.items(section):
+                    # go through all items of the server
+                    for i in config.items("Server_" + server_name):
                         # create a key of every config item with its appropriate value
                         self.servers[server_name].__setattr__(i[0], i[1])
                         
@@ -190,22 +216,9 @@ class Config(object):
                         self.servers[server_name].proxy_username = self.DeObfuscate(self.servers[server_name].proxy_username)
                         self.servers[server_name].proxy_password = self.DeObfuscate(self.servers[server_name].proxy_password)
                     except:
-                        pass
-                                       
-                elif section == "Nagstamon":
-                    # go through all items of each sections (in fact there is only on
-                    # section which has to be there to comply to the .INI file standard
-                    for i in config.items(section):
-                        # create a key of every config item with its appropriate value
-                        object.__setattr__(self, i[0], i[1])
-
-            # seems like there is a config file so the app is not unconfigured anymore
-            self.unconfigured = False
-            
-            # reset self.configfile to temporarily saved value in case it differs from
-            # the one read from configfile and so it would fail to save next time
-            self.configfile = configfile_temp
-            
+                        import traceback
+                        traceback.print_exc(file=sys.stdout)         
+ 
 
     def SaveConfig(self):
         """
@@ -221,7 +234,9 @@ class Config(object):
                     config.set("Nagstamon", option, self.__dict__[option])
             # one section for each configured server
             for server in self.__dict__["servers"]:
-                config.add_section("Server_" + server)
+                #config.add_section("Server_" + server)
+                config_server = ConfigParser.ConfigParser()
+                config_server.add_section("Server_" + server)
                 for option in self.__dict__["servers"][server].__dict__:
                     # obfuscate certain entries in config file
                     if option == "username" or option == "password" or option == "proxy_username" or option == "proxy_password":
@@ -229,16 +244,26 @@ class Config(object):
                         if option == "password" \
                            and self.servers[server].save_password == "False":
                             value = ""
-                        config.set("Server_" + server, option, value)
+                        config_server.set("Server_" + server, option, value)
                     else:
-                        config.set("Server_" + server, option, self.__dict__["servers"][server].__dict__[option])
+                        config_server.set("Server_" + server, option, self.__dict__["servers"][server].__dict__[option])
+                # open, save and close config_server file
+                if not os.path.exists(self.configdir + os.sep + "servers"):
+                    os.mkdir(self.configdir + os.sep + "servers")
+                f = open(os.path.normpath(self.configdir + os.sep + "servers" + os.sep + "server_" + server + ".conf"), "w")
+                config_server.write(f)
+                f.close()
+                
             # open, save and close config file
+            if not os.path.exists(self.configdir):
+                os.mkdir(self.configdir)
             f = open(os.path.normpath(self.configfile), "w")
             config.write(f)
             f.close()
             
-        except Exception, err:
-            print err
+        except:
+            import traceback
+            traceback.print_exc(file=sys.stdout)
 
 
     def Convert_Conf_to_Multiple_Servers(self):

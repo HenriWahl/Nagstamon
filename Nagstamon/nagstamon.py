@@ -40,11 +40,6 @@ except Exception, err:
     # set resources to "" in case there are no resources available from setup.py
     Resources = ""
 
-# Resources on MacOS X, environment variable _MEIPASS2 comes from pyinstaller packed executable
-# - does not really work at the moment
-if "_MEIPASS2" in os.environ and sys.platform == "darwin":
-    Resources = os.path.dirname(sys.executable) + "/resources"    
-    
 # initialize GUI and actions
 # if modules are not available from central python install try the ones in the same directory
 from Nagstamon import GUI
