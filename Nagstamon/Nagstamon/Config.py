@@ -181,44 +181,65 @@ class Config(object):
             # seems like there is a config file so the app is not unconfigured anymore
             self.unconfigured = False
 
-        # Servers configuration...
-        # dictionary containing the config data for different servers
-        self.servers = dict()
-        
-        if os.path.exists(self.configdir + os.sep + "servers"):
-            for f in os.listdir(self.configdir + os.sep + "servers"):
-                if f.startswith("server_") and f.endswith(".conf"):
-                    if sys.version_info[0] < 3 and sys.version_info[1] < 7:
-                        config = ConfigParser.ConfigParser()
-                    else:
-                        config = ConfigParser.ConfigParser(allow_no_value=True)
-                    config.read(self.configdir + os.sep + "servers" + os.sep + f)
-                    
-                    # create server object for every server
-                    server_name = f.split("_", 1)[1].rpartition(".")[0]
-                    self.servers[server_name] = Server()                  
-                    
-                    # go through all items of the server
-                    for i in config.items("Server_" + server_name):
-                        # create a key of every config item with its appropriate value
-                        self.servers[server_name].__setattr__(i[0], i[1])
+            # Servers configuration...
+            self._LoadServersConfig()
+            
+            
+    def _LoadServersConfig(self):
+        """
+        load servers config - special treatment because of obfuscated passwords
+        """
+        self.servers = self.LoadConfig("servers", "server", "Server")
+        # deobfuscate username + password inside a try-except loop
+        # if entries have not been obfuscated yet this action should raise an error
+        # and old values (from nagstamon < 0.9.0) stay and will be converted when next
+        # time saving config        
+        try:
+            for server in self.servers:
+                self.servers[server].username = self.DeObfuscate(self.servers[server].username)
+                if self.servers[server].save_password == "False":
+                    self.servers[server].password = ""
+                else:
+                    self.servers[server].password = self.DeObfuscate(self.servers[server].password)
+                self.servers[server].proxy_username = self.DeObfuscate(self.servers[server].proxy_username)
+                self.servers[server].proxy_password = self.DeObfuscate(self.servers[server].proxy_password)
+        except:
+            import traceback
+            traceback.print_exc(file=sys.stdout)   
+            
                         
-                    # deobfuscate username + password inside a try-except loop
-                    # if entries have not been obfuscated yet this action should raise an error
-                    # and old values (from nagstamon < 0.9.0) stay and will be converted when next
-                    # time saving config
-                    try:
-                        self.servers[server_name].username = self.DeObfuscate(self.servers[server_name].username)
-                        if self.servers[server_name].save_password == "False":
-                            self.servers[server_name].password = ""
+    def LoadConfig(self, settingsdir, setting, configobj):
+        """
+        load generic config into settings dict and return to central config
+        """
+        # defaults as None in case settings dir/files could not be found
+        settings = None
+        
+        try:
+            if os.path.exists(self.configdir + os.sep + settingsdir):
+                # dictionary that later gets returned back
+                settings = dict()
+                for f in os.listdir(self.configdir + os.sep + settingsdir):
+                    if f.startswith(setting + "_") and f.endswith(".conf"):
+                        if sys.version_info[0] < 3 and sys.version_info[1] < 7:
+                            config = ConfigParser.ConfigParser()
                         else:
-                            self.servers[server_name].password = self.DeObfuscate(self.servers[server_name].password)
-                        self.servers[server_name].proxy_username = self.DeObfuscate(self.servers[server_name].proxy_username)
-                        self.servers[server_name].proxy_password = self.DeObfuscate(self.servers[server_name].proxy_password)
-                    except:
-                        import traceback
-                        traceback.print_exc(file=sys.stdout)         
- 
+                            config = ConfigParser.ConfigParser(allow_no_value=True)
+                        config.read(self.configdir + os.sep + settingsdir + os.sep + f)
+                        
+                        # create object for every setting
+                        name = f.split("_", 1)[1].rpartition(".")[0]
+                        settings[name] = globals()[configobj]()                 
+
+                        # go through all items of the server
+                        for i in config.items(setting + "_" + name):
+                            # create a key of every config item with its appropriate value
+                            settings[name].__setattr__(i[0], i[1])
+                return settings  
+        except:
+            import traceback
+            traceback.print_exc(file=sys.stdout)
+            
 
     def SaveConfig(self):
         """
@@ -239,7 +260,7 @@ class Config(object):
             for server in self.__dict__["servers"]:
                 #config.add_section("Server_" + server)
                 config_server = ConfigParser.ConfigParser()
-                config_server.add_section("Server_" + server)
+                config_server.add_section("server_" + server)
                 for option in self.__dict__["servers"][server].__dict__:
                     # obfuscate certain entries in config file
                     if option == "username" or option == "password" or option == "proxy_username" or option == "proxy_password":
@@ -247,9 +268,9 @@ class Config(object):
                         if option == "password" \
                            and self.servers[server].save_password == "False":
                             value = ""
-                        config_server.set("Server_" + server, option, value)
+                        config_server.set("server_" + server, option, value)
                     else:
-                        config_server.set("Server_" + server, option, self.__dict__["servers"][server].__dict__[option])
+                        config_server.set("server_" + server, option, self.__dict__["servers"][server].__dict__[option])
                 # open, save and close config_server file
                 if not os.path.exists(self.configdir + os.sep + "servers"):
                     os.mkdir(self.configdir + os.sep + "servers")
@@ -349,3 +370,50 @@ class Server(object):
         self.proxy_username = ""
         self.proxy_password = ""
         
+
+class ActionGeneric(object):
+    """
+    class for custom actions, which whill be thrown into one config dictionary like the servers
+    """
+    
+    def __init__(self):
+        self.enabled = True
+        self.type = "generic"
+        self.name = ""
+        self.OS = ""
+        self.description = ""
+        
+        
+class ActionBrowser(ActionGeneric):
+    """
+    class for custom actions, which whill be thrown into one config dictionary like the servers
+    """
+    
+    def __init__(self):
+        self.type = "browser"
+        self.URL = ""
+        
+
+class ActionURL(ActionGeneric):
+    """
+    class for custom actions, which whill be thrown into one config dictionary like the servers
+    """
+    
+    def __init__(self):
+        self.type = "url"
+        self.URL = ""
+        
+        
+class ActionProgram(ActionGeneric):
+    """
+    class for custom actions, which whill be thrown into one config dictionary like the servers
+    """
+    
+    def __init__(self):
+        self.type = "program"
+        self.executable = ""
+        self.arguments = ""
+
+        
+
+    
