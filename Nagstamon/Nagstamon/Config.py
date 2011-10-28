@@ -185,11 +185,11 @@ class Config(object):
             self._LoadServersConfig()
             
             
-    def _LoadServersConfig(self):
+    def _LoadServersMultipleConfig(self):
         """
         load servers config - special treatment because of obfuscated passwords
         """
-        self.servers = self.LoadConfig("servers", "server", "Server")
+        self.servers = self.LoadMultipleConfig("servers", "server", "Server")
         # deobfuscate username + password inside a try-except loop
         # if entries have not been obfuscated yet this action should raise an error
         # and old values (from nagstamon < 0.9.0) stay and will be converted when next
@@ -208,7 +208,7 @@ class Config(object):
             traceback.print_exc(file=sys.stdout)   
             
                         
-    def LoadConfig(self, settingsdir, setting, configobj):
+    def LoadMultipleConfig(self, settingsdir, setting, configobj):
         """
         load generic config into settings dict and return to central config
         """
@@ -235,10 +235,11 @@ class Config(object):
                         for i in config.items(setting + "_" + name):
                             # create a key of every config item with its appropriate value
                             settings[name].__setattr__(i[0], i[1])
-                return settings  
+            return settings  
         except:
             import traceback
             traceback.print_exc(file=sys.stdout)
+            return settings
             
 
     def SaveConfig(self):
@@ -286,6 +287,33 @@ class Config(object):
         except:
             import traceback
             traceback.print_exc(file=sys.stdout)
+            
+            
+    def SaveMultipleConfig(self, settingsdir, setting):
+        """
+        saves conf files for settings like actions in extra directories
+        """
+        # one section for each configured server
+        for setting in self.__dict__[setting]:
+            #config.add_section("Server_" + server)
+            config = ConfigParser.ConfigParser()
+            config.add_section(setting + "_" + server)
+            for option in self.__dict__["servers"][server].__dict__:
+                # obfuscate certain entries in config file
+                if option == "username" or option == "password" or option == "proxy_username" or option == "proxy_password":
+                    value = self.Obfuscate(self.__dict__["servers"][server].__dict__[option])
+                    if option == "password" \
+                       and self.servers[server].save_password == "False":
+                        value = ""
+                    config_server.set("server_" + server, option, value)
+                else:
+                    config_server.set("server_" + server, option, self.__dict__["servers"][server].__dict__[option])
+            # open, save and close config_server file
+            if not os.path.exists(self.configdir + os.sep + "servers"):
+                os.mkdir(self.configdir + os.sep + "servers")
+            f = open(os.path.normpath(self.configdir + os.sep + "servers" + os.sep + "server_" + server + ".conf"), "w")
+            config_server.write(f)
+            f.close()
 
 
     def Convert_Conf_to_Multiple_Servers(self):
