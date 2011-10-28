@@ -184,6 +184,9 @@ class Config(object):
             # Servers configuration...
             self._LoadServersMultipleConfig()
             
+            # Load actions
+            self.actions = self.LoadMultipleConfig("actions", "action", "Action")
+
             
     def _LoadServersMultipleConfig(self):
         """
@@ -255,11 +258,14 @@ class Config(object):
             # general section for Nagstamon
             config.add_section("Nagstamon")
             for option in self.__dict__:
-                if not option == "servers":
+                if not option in ["servers", "actions"]:
                     config.set("Nagstamon", option, self.__dict__[option])
 
             # save servers dict
             self.SaveMultipleConfig("servers", "server")
+
+            # save actions dict
+            self.SaveMultipleConfig("actions", "action")
             
             # open, save and close config file
             f = open(os.path.normpath(self.configfile), "w")
@@ -297,7 +303,7 @@ class Config(object):
                             config.set(setting + "_" + s, option, self.__dict__[settingsdir][s].__dict__[option])
                     else:
                         config.set(setting + "_" + s, option, self.__dict__[settingsdir][s].__dict__[option])
-        
+                        
                 # open, save and close config_server file
                 if not os.path.exists(self.configdir + os.sep + settingsdir):
                     os.mkdir(self.configdir + os.sep + settingsdir)
@@ -403,10 +409,11 @@ class Action(object):
         self.enabled = True
         self.type = "generic"
         self.name = ""
-        self.OS = ""
+        self.os = ""
         self.description = ""
-        self.URL = ""
-        self.executable = ""
-        self.arguments = ""
+        self.url = ""
+        self.execute = ""
+        self.author = ""
+        self.version = "1"
         
     
