@@ -1879,12 +1879,23 @@ class ServerVBox(gtk.VBox):
         # context menu for detailed status overview, opens with a mouse click onto a listed item
         self.popupmenu = gtk.Menu()
         # first add connections
-        for i in ["Monitor", "SSH", "RDP", "VNC", "HTTP"]:
+        for i in ["SSH", "RDP", "VNC", "HTTP"]:
             menu_item = gtk.MenuItem(i)
             menu_item.connect("activate", self.TreeviewPopupMenuResponse, i)
             self.popupmenu.append(menu_item)
+            
         # add separator to separate between connections and actions
         self.popupmenu.append(gtk.SeparatorMenuItem())
+
+        # add custom actions - this is just a test!
+        for a in self.output.conf.actions:
+            menu_item = gtk.MenuItem(a)
+            menu_item.connect("activate", self.TreeviewPopupMenuResponse, a)
+            self.popupmenu.append(menu_item)
+        
+        # add separator to separate between connections and actions
+        self.popupmenu.append(gtk.SeparatorMenuItem())
+        
         # after the separatior add actions
         #for i in ["Recheck", "Acknowledge", "Submit check result", "Downtime"]:
         for i in self.server.MENU_ACTIONS:
@@ -2015,6 +2026,10 @@ class ServerVBox(gtk.VBox):
         # it seems to be more responsive especially while rechecking if every service
         # looks for its own for the miserable host's ip if it is needed
         try:
+            # custom actions
+            if remoteservice in self.output.conf.actions:
+                print self.output.conf.actions[remoteservice]
+            
             if remoteservice == "SSH":
                 # get host ip to connect to be independent of dns resolver
                 #host = self.miserable_server.GetHost(self.miserable_host)[0]

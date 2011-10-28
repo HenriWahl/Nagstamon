@@ -63,7 +63,7 @@ class GenericServer(object):
                        "flapping.gif" : "flapping"}
 
     # Entries for monitor default actions in context menu
-    MENU_ACTIONS = ["Recheck", "Acknowledge", "Submit check result", "Downtime"]
+    MENU_ACTIONS = ["Monitor", "Recheck", "Acknowledge", "Submit check result", "Downtime"]
     
     # Arguments available for submitting check results 
     SUBMIT_CHECK_RESULT_ARGS = ["check_output", "performance_data"]

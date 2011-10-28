@@ -280,6 +280,8 @@ class Config(object):
     def SaveMultipleConfig(self, settingsdir, setting):
         """
         saves conf files for settings like actions in extra directories
+        "multiple" means that multiple confs for actions or servers are loaded,
+        not just one like for e.g. sound file
         """
         try:
             # one section for each setting

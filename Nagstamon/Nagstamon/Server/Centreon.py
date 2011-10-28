@@ -27,7 +27,7 @@ class CentreonServer(GenericServer):
         GenericServer.__init__(self, **kwds)
         
         # Entries for monitor default actions in context menu
-        self.MENU_ACTIONS = ["Recheck", "Acknowledge", "Downtime"]        
+        self.MENU_ACTIONS = ["Monitor", "Recheck", "Acknowledge", "Downtime"]        
 
         # cache MD5 username + password to reduce load
         self.MD5_username = Actions.MD5ify(self.conf.servers[self.get_name()].username)   

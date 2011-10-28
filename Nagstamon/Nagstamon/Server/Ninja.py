@@ -40,7 +40,7 @@ class NinjaServer(GenericServer):
                                 "flapping.gif" : "flapping" }   
 
         # Entries for monitor default actions in context menu
-        self.MENU_ACTIONS = ["Recheck", "Acknowledge", "Downtime"]      
+        self.MENU_ACTIONS = ["Monitor", "Recheck", "Acknowledge", "Downtime"]      
 
         
     def init_HTTP(self):
