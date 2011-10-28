@@ -182,7 +182,7 @@ class Config(object):
             self.unconfigured = False
 
             # Servers configuration...
-            self._LoadServersConfig()
+            self._LoadServersMultipleConfig()
             
             
     def _LoadServersMultipleConfig(self):
