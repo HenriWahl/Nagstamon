@@ -257,28 +257,10 @@ class Config(object):
             for option in self.__dict__:
                 if not option == "servers":
                     config.set("Nagstamon", option, self.__dict__[option])
-            # one section for each configured server
-            for server in self.__dict__["servers"]:
-                #config.add_section("Server_" + server)
-                config_server = ConfigParser.ConfigParser()
-                config_server.add_section("server_" + server)
-                for option in self.__dict__["servers"][server].__dict__:
-                    # obfuscate certain entries in config file
-                    if option == "username" or option == "password" or option == "proxy_username" or option == "proxy_password":
-                        value = self.Obfuscate(self.__dict__["servers"][server].__dict__[option])
-                        if option == "password" \
-                           and self.servers[server].save_password == "False":
-                            value = ""
-                        config_server.set("server_" + server, option, value)
-                    else:
-                        config_server.set("server_" + server, option, self.__dict__["servers"][server].__dict__[option])
-                # open, save and close config_server file
-                if not os.path.exists(self.configdir + os.sep + "servers"):
-                    os.mkdir(self.configdir + os.sep + "servers")
-                f = open(os.path.normpath(self.configdir + os.sep + "servers" + os.sep + "server_" + server + ".conf"), "w")
-                config_server.write(f)
-                f.close()
-                
+
+            # save servers dict
+            self.SaveMultipleConfig("servers", "server")
+            
             # open, save and close config file
             f = open(os.path.normpath(self.configfile), "w")
             config.write(f)
@@ -293,29 +275,41 @@ class Config(object):
         """
         saves conf files for settings like actions in extra directories
         """
-        # one section for each configured server
-        for setting in self.__dict__[setting]:
-            #config.add_section("Server_" + server)
-            config = ConfigParser.ConfigParser()
-            config.add_section(setting + "_" + server)
-            for option in self.__dict__["servers"][server].__dict__:
-                # obfuscate certain entries in config file
-                if option == "username" or option == "password" or option == "proxy_username" or option == "proxy_password":
-                    value = self.Obfuscate(self.__dict__["servers"][server].__dict__[option])
-                    if option == "password" \
-                       and self.servers[server].save_password == "False":
-                        value = ""
-                    config_server.set("server_" + server, option, value)
+        try:
+            # one section for each setting
+            for s in self.__dict__[settingsdir]:
+                # depending on python version allow_no_value is allowed or not
+                if sys.version_info[0] < 3 and sys.version_info[1] < 7:
+                    config = ConfigParser.ConfigParser()
                 else:
-                    config_server.set("server_" + server, option, self.__dict__["servers"][server].__dict__[option])
-            # open, save and close config_server file
-            if not os.path.exists(self.configdir + os.sep + "servers"):
-                os.mkdir(self.configdir + os.sep + "servers")
-            f = open(os.path.normpath(self.configdir + os.sep + "servers" + os.sep + "server_" + server + ".conf"), "w")
-            config_server.write(f)
-            f.close()
-
-
+                    config = ConfigParser.ConfigParser(allow_no_value=True)
+                config.add_section(setting + "_" + s)
+                for option in self.__dict__[settingsdir][s].__dict__:
+                    # obfuscate certain entries in config file - special arrangement for servers
+                    if settingsdir == "servers":
+                        if option == "username" or option == "password" or option == "proxy_username" or option == "proxy_password":
+                            value = self.Obfuscate(self.__dict__[settingsdir][s].__dict__[option])
+                            if option == "password" \
+                               and self.__dict__[settingsdir][s].save_password == "False":
+                                value = ""
+                            config.set(setting + "_" + s, option, value)
+                        else:
+                            config.set(setting + "_" + s, option, self.__dict__[settingsdir][s].__dict__[option])
+                    else:
+                        config.set(setting + "_" + s, option, self.__dict__[settingsdir][s].__dict__[option])
+        
+                # open, save and close config_server file
+                if not os.path.exists(self.configdir + os.sep + settingsdir):
+                    os.mkdir(self.configdir + os.sep + settingsdir)
+                f = open(os.path.normpath(self.configdir + os.sep + settingsdir + os.sep + setting + "_" + s + ".conf"), "w")
+                config.write(f)
+                f.close()
+            
+        except:
+            import traceback
+            traceback.print_exc(file=sys.stdout)
+            
+            
     def Convert_Conf_to_Multiple_Servers(self):
         """
             if there are settings found which come from older nagstamon version convert them -
@@ -354,6 +348,7 @@ class Config(object):
             self.__dict__.pop("use_proxy_no")
             # save config
             self.SaveConfig()
+            
         
     def Obfuscate(self, string, count=5):
         """
