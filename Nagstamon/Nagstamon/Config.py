@@ -371,7 +371,7 @@ class Server(object):
         self.proxy_password = ""
         
 
-class ActionGeneric(object):
+class Action(object):
     """
     class for custom actions, which whill be thrown into one config dictionary like the servers
     """
@@ -382,38 +382,8 @@ class ActionGeneric(object):
         self.name = ""
         self.OS = ""
         self.description = ""
-        
-        
-class ActionBrowser(ActionGeneric):
-    """
-    class for custom actions, which whill be thrown into one config dictionary like the servers
-    """
-    
-    def __init__(self):
-        self.type = "browser"
         self.URL = ""
-        
-
-class ActionURL(ActionGeneric):
-    """
-    class for custom actions, which whill be thrown into one config dictionary like the servers
-    """
-    
-    def __init__(self):
-        self.type = "url"
-        self.URL = ""
-        
-        
-class ActionProgram(ActionGeneric):
-    """
-    class for custom actions, which whill be thrown into one config dictionary like the servers
-    """
-    
-    def __init__(self):
-        self.type = "program"
         self.executable = ""
         self.arguments = ""
-
         
-
     
