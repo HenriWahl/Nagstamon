@@ -225,6 +225,9 @@ class Config(object):
             save config file
         """
         try:
+            # Make sure .nagstamon is created
+            if not os.path.exists(self.configdir):
+                os.mkdir(self.configdir)
             # save config file with ConfigParser
             config = ConfigParser.ConfigParser()
             # general section for Nagstamon
@@ -255,8 +258,6 @@ class Config(object):
                 f.close()
                 
             # open, save and close config file
-            if not os.path.exists(self.configdir):
-                os.mkdir(self.configdir)
             f = open(os.path.normpath(self.configfile), "w")
             config.write(f)
             f.close()
