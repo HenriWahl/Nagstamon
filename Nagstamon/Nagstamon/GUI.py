@@ -1876,6 +1876,7 @@ class ServerVBox(gtk.VBox):
         self.Server_EventBox.add(self.HBox)
         self.add(self.Server_EventBox)            
 
+        """
         # context menu for detailed status overview, opens with a mouse click onto a listed item
         self.popupmenu = gtk.Menu()
         # first add connections
@@ -1888,7 +1889,9 @@ class ServerVBox(gtk.VBox):
         self.popupmenu.append(gtk.SeparatorMenuItem())
 
         # add custom actions - this is just a test!
-        for a in self.output.conf.actions:
+        actions_list=list(self.output.conf.actions)
+        actions_list.sort(key=str.lower)
+        for a in actions_list:
             menu_item = gtk.MenuItem(a)
             menu_item.connect("activate", self.TreeviewPopupMenuResponse, a)
             self.popupmenu.append(menu_item)
@@ -1905,6 +1908,7 @@ class ServerVBox(gtk.VBox):
                 self.recheck_item = menu_item
             self.popupmenu.append(menu_item)
         self.popupmenu.show_all()
+        """
 
         # new TreeView handling, not generating new items with every refresh cycle
         self.server.TreeView = gtk.TreeView() 
@@ -1995,14 +1999,56 @@ class ServerVBox(gtk.VBox):
             self.miserable_server = server
             self.miserable_host = treeview.get_model()[path[0]][server.HOST_COLUMN_ID]
             self.miserable_service = treeview.get_model()[path[0]][server.SERVICE_COLUMN_ID]
-            # popup the relevant content menu
-            if self.miserable_service and server.hosts[self.miserable_host].services[self.miserable_service].is_passive_only():
-                self.recheck_item.hide()
-            else:
-                self.recheck_item.show()
+            
+            # context menu for detailed status overview, opens with a mouse click onto a listed item
+            self.popupmenu = gtk.Menu()
+            # first add connections
+            for i in ["SSH", "RDP", "VNC", "HTTP"]:
+                menu_item = gtk.MenuItem(i)
+                menu_item.connect("activate", self.TreeviewPopupMenuResponse, i)
+                self.popupmenu.append(menu_item)
+                
+            # add separator to separate between connections and actions
+            self.popupmenu.append(gtk.SeparatorMenuItem())
+    
+            # add custom actions - this is just a test!
+            actions_list=list(self.output.conf.actions)
+            actions_list.sort(key=str.lower)
+            for a in actions_list:
+                # check if clicked line is a service or host
+                # if it is check if the action is targeted on hosts or services
+                if self.miserable_service:
+                    if not self.output.conf.actions[a].target.lower().find("service") == -1:
+                        menu_item = gtk.MenuItem(a)
+                        menu_item.connect("activate", self.TreeviewPopupMenuResponse, a)
+                        self.popupmenu.append(menu_item)
+                else:
+                    if not self.output.conf.actions[a].target.lower().find("host") == -1:
+                        menu_item = gtk.MenuItem(a)
+                        menu_item.connect("activate", self.TreeviewPopupMenuResponse, a)
+                        self.popupmenu.append(menu_item)
+            
+            # add separator to separate between connections and actions
+            self.popupmenu.append(gtk.SeparatorMenuItem())
+            
+            # after the separator add actions
+            # available default menu actions are monitor server dependent
+            for i in self.server.MENU_ACTIONS:
+                # recheck is not necessary for passive set checks
+                if i == "Recheck" and\
+                   self.miserable_service and server.hosts[self.miserable_host].services[self.miserable_service].is_passive_only():
+                    pass
+                else:        
+                    menu_item = gtk.MenuItem(i)
+                    menu_item.connect("activate", self.TreeviewPopupMenuResponse, i)
+                    self.popupmenu.append(menu_item)
+
+            self.popupmenu.show_all()
             self.popupmenu.popup(None, None, None, event.button, event.time)
-        except Exception, err:
-            print err
+            
+        except:
+            import traceback
+            traceback.print_exc(file=sys.stdout)   
 
 
     def TreeviewPopupMenuResponse(self, widget, remoteservice):
@@ -2015,7 +2061,8 @@ class ServerVBox(gtk.VBox):
 
         # closing popwin is innecessary in case of rechecking, otherwise it must be done
         # because the dialog/app window will stay under the popwin   
-        if not remoteservice == "Recheck":
+        #if not remoteservice == "Recheck":
+        if remoteservice in ["Acknowledge", "Downtime", "Submit check result"]:
             self.output.popwin.Close()  
 
         #debug    

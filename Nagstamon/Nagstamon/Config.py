@@ -414,13 +414,23 @@ class Action(object):
     """
     
     def __init__(self):
+        # to be or not to be enabled...
         self.enabled = True
+        # one of those: browser, url or command
         self.type = ""
+        # thy name is...
         self.name = ""
+        # OS of host where Nagstamon runs - especially commands are mostly not platform agnostic
         self.os = ""
+        # description
         self.description = ""
+        # might be URL in case of type browser/url and a commandline for commands
         self.string = ""
+        # who did this
         self.author = ""
+        # version - maybe in future this might be more sophisticated
         self.version = "1"
-        
+        # kind of Nagios item this action is targeted to - maybe also usable for states but
+        # not yet implemented (like "host,service,critical")
+        self.target = "host,service"
     
