@@ -156,6 +156,10 @@ class Config(object):
         # wrong name so it will be stored here temporarily
         configdir_temp = self.configdir
         
+        # default settings dicts
+        self.servers = dict()
+        self.actions = dict()
+        
         if os.path.exists(self.configfile):
             # instantiate a Configparser to parse the conf file
             # SF.net bug #3304423 could be fixed with allow_no_value argument which
@@ -182,8 +186,8 @@ class Config(object):
             self.unconfigured = False
 
             # Servers configuration...
-            self._LoadServersMultipleConfig()
-            
+            self.servers = self._LoadServersMultipleConfig()
+         
             # Load actions
             self.actions = self.LoadMultipleConfig("actions", "action", "Action")
 
@@ -192,31 +196,33 @@ class Config(object):
         """
         load servers config - special treatment because of obfuscated passwords
         """
-        self.servers = self.LoadMultipleConfig("servers", "server", "Server")
+        servers = self.LoadMultipleConfig("servers", "server", "Server")
         # deobfuscate username + password inside a try-except loop
         # if entries have not been obfuscated yet this action should raise an error
         # and old values (from nagstamon < 0.9.0) stay and will be converted when next
         # time saving config        
         try:
-            for server in self.servers:
-                self.servers[server].username = self.DeObfuscate(self.servers[server].username)
-                if self.servers[server].save_password == "False":
-                    self.servers[server].password = ""
+            for server in servers:
+                servers[server].username = self.DeObfuscate(servers[server].username)
+                if servers[server].save_password == "False":
+                    servers[server].password = ""
                 else:
-                    self.servers[server].password = self.DeObfuscate(self.servers[server].password)
-                self.servers[server].proxy_username = self.DeObfuscate(self.servers[server].proxy_username)
-                self.servers[server].proxy_password = self.DeObfuscate(self.servers[server].proxy_password)
+                    servers[server].password = self.DeObfuscate(servers[server].password)
+                servers[server].proxy_username = self.DeObfuscate(servers[server].proxy_username)
+                servers[server].proxy_password = self.DeObfuscate(servers[server].proxy_password)
         except:
             import traceback
             traceback.print_exc(file=sys.stdout)   
+        
+        return servers
             
                         
     def LoadMultipleConfig(self, settingsdir, setting, configobj):
         """
         load generic config into settings dict and return to central config
         """
-        # defaults as None in case settings dir/files could not be found
-        settings = None
+        # defaults as empty dict in case settings dir/files could not be found
+        settings = dict()
         
         try:
             if os.path.exists(self.configdir + os.sep + settingsdir):
@@ -238,11 +244,11 @@ class Config(object):
                         for i in config.items(setting + "_" + name):
                             # create a key of every config item with its appropriate value
                             settings[name].__setattr__(i[0], i[1])
-            return settings  
         except:
             import traceback
             traceback.print_exc(file=sys.stdout)
-            return settings
+        
+        return settings
             
 
     def SaveConfig(self):
