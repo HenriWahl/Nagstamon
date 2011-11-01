@@ -2027,10 +2027,17 @@ class ServerVBox(gtk.VBox):
         # looks for its own for the miserable host's ip if it is needed
         try:
             # custom actions
-            if remoteservice in self.output.conf.actions:
-                print self.output.conf.actions[remoteservice]
-            
-            if remoteservice == "SSH":
+            if remoteservice in self.output.conf.actions:               
+                # let the thread do the work
+                action = Actions.Action(action=self.output.conf.actions[remoteservice],\
+                                        conf=self.output.conf,\
+                                        server=self.miserable_server,\
+                                        host=self.miserable_host,\
+                                        service=self.miserable_service)
+                # Action!
+                action.start()
+
+            elif remoteservice == "SSH":
                 # get host ip to connect to be independent of dns resolver
                 #host = self.miserable_server.GetHost(self.miserable_host)[0]
                 result = self.miserable_server.GetHost(self.miserable_host)

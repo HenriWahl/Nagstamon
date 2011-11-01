@@ -535,7 +535,67 @@ class MoveStatusbar(threading.Thread):
             gobject.idle_add(self.output.statusbar.Move)
             time.sleep(0.01)
         
-
+            
+class Action(threading.Thread):
+    """
+    Exectute custom actions triggered by context menu of popwin
+    parameters are action and hosts/service
+    """
+    def __init__(self, **kwds):
+        # add all keywords to object
+        for k in kwds: self.__dict__[k] = kwds[k]
+        threading.Thread.__init__(self)
+        self.setDaemon(1)
+        
+    def run(self):
+        # first replace placeholder variables in string with actual values
+        """
+        Possible values for variables:
+        $HOST$         - host as in monitor
+        $SERVICE$      - service as in monitor
+        $MONITOR$      - monitor address - not yet clear what exactly for
+        $MONITOR-CGI$  - monitor CGI address - not yet clear what exactly for
+        $ADDRESS$      - address of host, investigated by Server.GetHost()
+        $USERNAME$     - username on monitor
+        $PASSWORD$     - username's password on monitor - whatever for
+        """
+        try:
+            # use a local copy
+            string = self.action.string
+            
+            # mapping of variables and values
+            mapping = { "$HOST$": self.host,\
+                        "$SERVICE$": self.service,\
+                        "$ADDRESS$": self.server.GetHost(self.host).result,\
+                        "$MONITOR$": self.server.nagios_url,\
+                        "$MONITOR-CGI$": self.server.nagios_cgi_url,\
+                        "$USERNAME$": self.server.username,\
+                        "$PASSWORD$": self.server.password }
+            
+            # mapping mapping
+            for i in mapping:
+                string = string.replace(i, mapping[i])
+            
+            # see what action to take
+            if self.action.type == "browser":
+                # debug
+                if str(self.conf.debug_mode) == "True":
+                    self.server.Debug(server=self.server.name, host=self.host, service=self.service, debug="ACTION: Browser " + string)
+                webbrowser.open(string)
+            elif self.action.type == "url":
+                # debug
+                if str(self.conf.debug_mode) == "True":
+                    self.server.Debug(server=self.server.name, host=self.host, service=self.service, debug="ACTION: URL in background " + string)
+                self.server.FetchURL(string)
+            elif self.action.type == "command":
+                # debug
+                if str(self.conf.debug_mode) == "True":
+                    self.server.Debug(server=self.server.name, host=self.host, service=self.service, debug="ACTION: COMMAND " + string)
+                commands.getoutput(string)
+        except:
+            import traceback
+            traceback.print_exc(file=sys.stdout)
+            
 
 def OpenNagios(widget, server, output):   
     # open Nagios main page in your favorite web browser when nagios button is clicked

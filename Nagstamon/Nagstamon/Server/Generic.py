@@ -1030,8 +1030,6 @@ class GenericServer(object):
         # do some garbage collection
         gc.collect()  
         
-        
-    
     
     def Error(self, error):
         """

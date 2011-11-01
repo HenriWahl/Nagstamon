@@ -415,12 +415,11 @@ class Action(object):
     
     def __init__(self):
         self.enabled = True
-        self.type = "generic"
+        self.type = ""
         self.name = ""
         self.os = ""
         self.description = ""
-        self.url = ""
-        self.execute = ""
+        self.string = ""
         self.author = ""
         self.version = "1"
         
