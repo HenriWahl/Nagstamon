@@ -2019,6 +2019,8 @@ class ServerVBox(gtk.VBox):
                 # if it is check if the action is targeted on hosts or services
                 if self.miserable_service:
                     if not self.output.conf.actions[a].target.lower().find("service") == -1:
+                        ###if self.miserable_service.find(self.output.conf.actions[a].filter_service.lower()) == -1:
+                        ###    print self.miserable_service, self.output.conf.actions[a].filter_service.lower()
                         menu_item = gtk.MenuItem(a)
                         menu_item.connect("activate", self.TreeviewPopupMenuResponse, a)
                         self.popupmenu.append(menu_item)

@@ -433,4 +433,7 @@ class Action(object):
         # kind of Nagios item this action is targeted to - maybe also usable for states but
         # not yet implemented (like "host,service,critical")
         self.target = "host,service"
+        # action applies only to certain hosts or services
+        self.filter_host = ""
+        self.filter_service = ""
     
