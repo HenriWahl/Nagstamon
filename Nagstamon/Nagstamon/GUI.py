@@ -2002,6 +2002,10 @@ class ServerVBox(gtk.VBox):
             
             # context menu for detailed status overview, opens with a mouse click onto a listed item
             self.popupmenu = gtk.Menu()
+            """
+
+            obsoleted by custom actions
+            
             # first add connections
             for i in ["SSH", "RDP", "VNC", "HTTP"]:
                 menu_item = gtk.MenuItem(i)
@@ -2010,25 +2014,57 @@ class ServerVBox(gtk.VBox):
                 
             # add separator to separate between connections and actions
             self.popupmenu.append(gtk.SeparatorMenuItem())
+            
+            """
     
             # add custom actions - this is just a test!
             actions_list=list(self.output.conf.actions)
             actions_list.sort(key=str.lower)
             for a in actions_list:
+                # shortcut for next lines
+                action = self.output.conf.actions[a]
+                # menu item visibility flag
+                item_visible = False
                 # check if clicked line is a service or host
                 # if it is check if the action is targeted on hosts or services
                 if self.miserable_service:
-                    if not self.output.conf.actions[a].target.lower().find("service") == -1:
-                        ###if self.miserable_service.find(self.output.conf.actions[a].filter_service.lower()) == -1:
-                        ###    print self.miserable_service, self.output.conf.actions[a].filter_service.lower()
-                        menu_item = gtk.MenuItem(a)
-                        menu_item.connect("activate", self.TreeviewPopupMenuResponse, a)
-                        self.popupmenu.append(menu_item)
+                    if not action.filter_target.lower().find("service") == -1:
+                        # if no filters are set do not check and show item
+                        if len(action.filter_host) == len(action.filter_service) == 0:
+                            item_visible = True    
+                        else:
+                            # only check if there is some to check
+                            if len(action.filter_host) > 0:
+                                if Actions.IsFoundByRE(self.miserable_host,\
+                                                                action.filter_host,\
+                                                                action.filter_host_reverse):
+                                    item_visible = True
+                            # dito
+                            if len(action.filter_service) > 0:
+                                if Actions.IsFoundByRE(self.miserable_service,\
+                                                                action.filter_service,\
+                                                                action.filter_service_reverse):
+                                    item_visible = True
+                            
                 else:
-                    if not self.output.conf.actions[a].target.lower().find("host") == -1:
-                        menu_item = gtk.MenuItem(a)
-                        menu_item.connect("activate", self.TreeviewPopupMenuResponse, a)
-                        self.popupmenu.append(menu_item)
+                    # hosts should only care about host specific actions, no services
+                    if not action.filter_target.lower().find("host") == -1:
+                        if len(action.filter_host) > 0:
+                            if Actions.IsFoundByRE(self.miserable_host,\
+                                                            action.filter_host,\
+                                                            action.filter_host_reverse):
+                                item_visible = True
+                        else:
+                            # a non specific action will be displayed per default
+                            item_visible = True
+                
+                # populate context menu with service actions
+                if item_visible == True:
+                    menu_item = gtk.MenuItem(a)
+                    menu_item.connect("activate", self.TreeviewPopupMenuResponse, a)
+                    self.popupmenu.append(menu_item)
+                        
+                del action, item_visible
             
             # add separator to separate between connections and actions
             self.popupmenu.append(gtk.SeparatorMenuItem())
@@ -2602,8 +2638,8 @@ class Settings(object):
         """
             Disable notification sound when not using sound is enabled
         """
-        options = self.builder.get_object("hbox_systray_popup_offset")
-        checkbutton = self.builder.get_object("input_radiobutton_icon_in_systray")
+        options = self.builder.get_object("hbox_re_status_information")
+        checkbutton = self.builder.get_object("input_checkbutton_re_status_information_enabled")
         options.set_sensitive(checkbutton.get_active())
 
         

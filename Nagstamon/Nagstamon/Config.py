@@ -432,8 +432,10 @@ class Action(object):
         self.version = "1"
         # kind of Nagios item this action is targeted to - maybe also usable for states but
         # not yet implemented (like "host,service,critical")
-        self.target = "host,service"
+        self.filter_target = "host,service"
         # action applies only to certain hosts or services
         self.filter_host = ""
+        self.filter_host_reverse = False
         self.filter_service = ""
+        self.filter_service_reverse = False
     

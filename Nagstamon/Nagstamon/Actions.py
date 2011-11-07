@@ -769,28 +769,36 @@ def OpenNagstamonDownload(output=None):
     webbrowser.open("http://nagstamon.sourceforge.net/download")
        
 
+def IsFoundByRE(string, pattern, reverse):
+    """
+    helper for context menu actions in context menu - hosts and services might be filtered out
+    also useful for services and hosts and status information
+    """
+    pattern = re.compile(pattern)    
+    if len(pattern.findall(string)) > 0:
+        if str(reverse) == "True":
+            return False
+        else:
+            return True
+    else:
+        if str(reverse) == "True":
+            return True 
+        else:
+            return False    
+    
+    
 def HostIsFilteredOutByRE(host, conf=None):
     """
         helper for applying RE filters in Generic.GetStatus()
     """
     try:
         if str(conf.re_host_enabled) == "True":
-            pattern = re.compile(conf.re_host_pattern)           
-            if len(pattern.findall(host)) > 0:
-                if str(conf.re_host_reverse) == "True":
-                    return False
-                else:
-                    return True
-            else:
-                if str(conf.re_host_reverse) == "True":
-                    return True
-                else:
-                    return False
-        
+            return IsFoundByRE(host, conf.re_host_pattern, conf.re_host_reverse)
         # if RE are disabled return True because host is not filtered      
         return False
     except:
-        pass
+        import traceback
+        traceback.print_exc(file=sys.stdout)
         
         
 def ServiceIsFilteredOutByRE(service, conf=None):
@@ -799,22 +807,12 @@ def ServiceIsFilteredOutByRE(service, conf=None):
     """
     try:
         if str(conf.re_service_enabled) == "True":
-            pattern = re.compile(conf.re_service_pattern)           
-            if len(pattern.findall(service)) > 0:
-                if str(conf.re_service_reverse) == "True":
-                    return False
-                else:
-                    return True
-            else:
-                if str(conf.re_service_reverse) == "True":
-                    return True 
-                else:
-                    return False
-        
+            return IsFoundByRE(service, conf.re_service_pattern, conf.re_service_reverse)
         # if RE are disabled return True because host is not filtered      
         return False
     except:
-        pass
+        import traceback
+        traceback.print_exc(file=sys.stdout)
 
     
 def StatusInformationIsFilteredOutByRE(status_information, conf=None):
@@ -823,20 +821,12 @@ def StatusInformationIsFilteredOutByRE(status_information, conf=None):
     """
     try:
         if str(conf.re_status_information_enabled) == "True":
-            pattern = re.compile(conf.re_status_information_pattern)       
-            if len(pattern.findall(status_information)) > 0:
-                if str(conf.re_status_information_reverse) == "True":
-                    return False
-                else:
-                    return True
-            else:
-                if str(conf.re_status_information_reverse) == "True":
-                    return True 
-                else:
-                    return False    
+            return IsFoundByRE(status_information, conf.re_status_information_pattern, conf.re_status_information_reverse)
+        # if RE are disabled return True because host is not filtered      
         return False
     except:
-        pass 
+        import traceback
+        traceback.print_exc(file=sys.stdout)
 
 
 def HumanReadableDuration(seconds):
