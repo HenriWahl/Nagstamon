@@ -2266,7 +2266,7 @@ class Settings(object):
 
         # workaround for gazpacho-made glade-file - dunno why tab labels do not get named as they should be
         notebook = self.builder.get_object("notebook")
-        notebook_tabs =  ["Servers", "Display", "Filters", "Executables", "Notification", "Colors", "Defaults"]
+        notebook_tabs =  ["Servers", "Display", "Filters", "Executables(OBSOLETE)", "Actions", "Notification", "Colors", "Defaults"]
         # now this presumably not necessary anymore workaround even gets extended as 
         # determine-first-page-mechanism used for acknowledment dialog settings button
         page = 0
