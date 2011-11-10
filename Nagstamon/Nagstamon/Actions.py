@@ -578,11 +578,15 @@ class Action(threading.Thread):
             
             # see what action to take
             if self.action.type == "browser":
+                # make string ready for URL
+                string = self._URLify(string)
                 # debug
                 if str(self.conf.debug_mode) == "True":
                     self.server.Debug(server=self.server.name, host=self.host, service=self.service, debug="ACTION: Browser " + string)
                 webbrowser.open(string)
             elif self.action.type == "url":
+                # make string ready for URL
+                string = self._URLify(string)
                 # debug
                 if str(self.conf.debug_mode) == "True":
                     self.server.Debug(server=self.server.name, host=self.host, service=self.service, debug="ACTION: URL in background " + string)
@@ -595,6 +599,14 @@ class Action(threading.Thread):
         except:
             import traceback
             traceback.print_exc(file=sys.stdout)
+        
+            
+    def _URLify(self, string):
+        """
+        return a string that fulfills requirements for URL
+        exclude several chars
+        """
+        return urllib.quote(string, ":/=?&")
             
 
 def OpenNagios(widget, server, output):   

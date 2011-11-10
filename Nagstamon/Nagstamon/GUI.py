@@ -2545,7 +2545,8 @@ class Settings(object):
                 self.conf.servers.pop(server)
                 # stop thread
                 try:
-                    self.servers[server].thread.Stop()
+                    if self.servers[server].thread:
+                        self.servers[server].thread.Stop()
                 except:
                     # most probably server has been disabled and that's why there is no thread running
                     # debug
@@ -2985,10 +2986,12 @@ class EditServer(ServerDialogHelper):
             # delete old server configuration entry
             self.conf.servers.pop(self.server)
             try:
-                # stop thread
-                self.servers[self.server].thread.Stop()
-            except Exception, err:
-                print err
+                # stop thread - only if it is yet initialized as such
+                if self.servers[self.server].thread:
+                    self.servers[self.server].thread.Stop()
+            except:
+                import traceback
+                traceback.print_exc(file=sys.stdout)
             # delete server from servers dictionary
             self.servers.pop(self.server)
 

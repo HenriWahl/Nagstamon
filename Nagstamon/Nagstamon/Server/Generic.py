@@ -85,7 +85,7 @@ class GenericServer(object):
         self.proxy_password = ""        
         self.hosts = dict()
         self.new_hosts = dict()
-        self.thread = ""
+        self.thread = None
         self.isChecking = False
         self.debug = False
         self.CheckingForNewVersion = False

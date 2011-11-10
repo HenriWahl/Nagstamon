@@ -1,12 +1,6 @@
 <?xml version="1.0" encoding="UTF-8"?>
 <interface>
   <requires lib="gtk+" version="2.20"/>
-  <object class="GtkListStore" id="liststore1">
-    <columns>
-      <!-- column-name item -->
-      <column type="gchararray"/>
-    </columns>
-  </object>
   <object class="GtkDialog" id="settings_server_dialog">
     <property name="can_focus">False</property>
     <property name="title" translatable="yes">Server settings</property>
@@ -67,7 +61,7 @@
           </packing>
         </child>
         <child>
-          <object class="GtkTable" id="table_server_settings">
+          <object class="GtkTable" id="table_action_settings">
             <property name="visible">True</property>
             <property name="can_focus">False</property>
             <property name="border_width">3</property>
@@ -81,15 +75,16 @@
                 <property name="is_focus">True</property>
                 <property name="receives_default">False</property>
                 <property name="use_action_appearance">False</property>
+                <property name="xalign">0</property>
                 <property name="draw_indicator">True</property>
               </object>
             </child>
             <child>
-              <object class="GtkLabel" id="label_server_type">
+              <object class="GtkLabel" id="label_action_type">
                 <property name="visible">True</property>
                 <property name="can_focus">False</property>
                 <property name="xalign">0</property>
-                <property name="label" translatable="yes">Server type:</property>
+                <property name="label" translatable="yes">Type:</property>
               </object>
               <packing>
                 <property name="top_attach">1</property>
@@ -101,7 +96,7 @@
                 <property name="visible">True</property>
                 <property name="can_focus">False</property>
                 <property name="xalign">0</property>
-                <property name="label" translatable="yes">Server name:</property>
+                <property name="label" translatable="yes">Name:</property>
               </object>
               <packing>
                 <property name="top_attach">2</property>
@@ -109,13 +104,13 @@
               </packing>
             </child>
             <child>
-              <object class="GtkLabel" id="label_server_url">
+              <object class="GtkLabel" id="label_description">
                 <property name="visible">True</property>
                 <property name="can_focus">False</property>
                 <property name="has_tooltip">True</property>
                 <property name="tooltip_markup">URL of Nagios Webseite in your LAN. HTTPS is preferred.</property>
                 <property name="xalign">0</property>
-                <property name="label" translatable="yes">Server URL:</property>
+                <property name="label" translatable="yes">Description:</property>
               </object>
               <packing>
                 <property name="top_attach">3</property>
@@ -123,7 +118,7 @@
               </packing>
             </child>
             <child>
-              <object class="GtkLabel" id="label_server_cgi_url">
+              <object class="GtkLabel" id="label_author">
                 <property name="visible">True</property>
                 <property name="can_focus">False</property>
                 <property name="has_tooltip">True</property>
@@ -131,7 +126,7 @@
 HTTPS is by all means the preferred because more secure option.
 Don&amp;apos;t put any status.cgi in there.</property>
                 <property name="xalign">0</property>
-                <property name="label" translatable="yes">Server CGI URL:</property>
+                <property name="label" translatable="yes">Author:</property>
               </object>
               <packing>
                 <property name="top_attach">4</property>
@@ -139,43 +134,13 @@ Don&amp;apos;t put any status.cgi in there.</property>
               </packing>
             </child>
             <child>
-              <object class="GtkLabel" id="label_username">
-                <property name="visible">True</property>
-                <property name="can_focus">False</property>
-                <property name="has_tooltip">True</property>
-                <property name="tooltip_markup">Username of your Nagios website.</property>
-                <property name="xalign">0</property>
-                <property name="label" translatable="yes">Username:</property>
-              </object>
-              <packing>
-                <property name="top_attach">5</property>
-                <property name="bottom_attach">6</property>
-              </packing>
-            </child>
-            <child>
-              <object class="GtkCheckButton" id="input_checkbutton_save_password">
-                <property name="label" translatable="yes">Save Password</property>
-                <property name="visible">True</property>
-                <property name="can_focus">False</property>
-                <property name="is_focus">True</property>
-                <property name="receives_default">False</property>
-                <property name="use_action_appearance">False</property>
-                <property name="draw_indicator">True</property>
-                <signal name="toggled" handler="toggle_save_password" swapped="no"/>
-              </object>
-              <packing>
-                <property name="top_attach">6</property>
-                <property name="bottom_attach">7</property>
-              </packing>
-            </child>
-            <child>
-              <object class="GtkLabel" id="label_password">
+              <object class="GtkLabel" id="label_target">
                 <property name="visible">True</property>
                 <property name="can_focus">False</property>
                 <property name="has_tooltip">True</property>
                 <property name="tooltip_markup">Password for your Nagios website.</property>
                 <property name="xalign">0</property>
-                <property name="label" translatable="yes">Password:</property>
+                <property name="label" translatable="yes">Target:</property>
               </object>
               <packing>
                 <property name="top_attach">7</property>
@@ -183,80 +148,9 @@ Don&amp;apos;t put any status.cgi in there.</property>
               </packing>
             </child>
             <child>
-              <object class="GtkCheckButton" id="input_checkbutton_use_proxy">
-                <property name="label" translatable="yes">Use proxy</property>
+              <object class="GtkComboBox" id="input_combo_action_type">
                 <property name="visible">True</property>
                 <property name="can_focus">False</property>
-                <property name="is_focus">True</property>
-                <property name="receives_default">False</property>
-                <property name="use_action_appearance">False</property>
-                <property name="draw_indicator">True</property>
-                <signal name="toggled" handler="toggle_proxy" swapped="no"/>
-              </object>
-              <packing>
-                <property name="top_attach">10</property>
-                <property name="bottom_attach">11</property>
-              </packing>
-            </child>
-            <child>
-              <object class="GtkCheckButton" id="input_checkbutton_use_proxy_from_os">
-                <property name="label" translatable="yes">Use proxy from OS</property>
-                <property name="visible">True</property>
-                <property name="can_focus">False</property>
-                <property name="receives_default">False</property>
-                <property name="use_action_appearance">False</property>
-                <property name="draw_indicator">True</property>
-                <signal name="toggled" handler="toggle_proxy" swapped="no"/>
-              </object>
-              <packing>
-                <property name="top_attach">11</property>
-                <property name="bottom_attach">12</property>
-              </packing>
-            </child>
-            <child>
-              <object class="GtkLabel" id="label_proxy_address">
-                <property name="visible">True</property>
-                <property name="can_focus">False</property>
-                <property name="xalign">0</property>
-                <property name="label" translatable="yes">Proxy address:</property>
-                <property name="width_chars">15</property>
-              </object>
-              <packing>
-                <property name="top_attach">12</property>
-                <property name="bottom_attach">13</property>
-              </packing>
-            </child>
-            <child>
-              <object class="GtkLabel" id="label_proxy_username">
-                <property name="visible">True</property>
-                <property name="can_focus">False</property>
-                <property name="xalign">0</property>
-                <property name="label" translatable="yes">Username:</property>
-                <property name="width_chars">10</property>
-              </object>
-              <packing>
-                <property name="top_attach">13</property>
-                <property name="bottom_attach">14</property>
-              </packing>
-            </child>
-            <child>
-              <object class="GtkLabel" id="label_proxy_password">
-                <property name="visible">True</property>
-                <property name="can_focus">False</property>
-                <property name="xalign">0</property>
-                <property name="label" translatable="yes">Password:</property>
-                <property name="width_chars">10</property>
-              </object>
-              <packing>
-                <property name="top_attach">14</property>
-                <property name="bottom_attach">15</property>
-              </packing>
-            </child>
-            <child>
-              <object class="GtkComboBox" id="input_combo_server_type">
-                <property name="visible">True</property>
-                <property name="can_focus">False</property>
-                <property name="model">liststore1</property>
               </object>
               <packing>
                 <property name="left_attach">1</property>
@@ -271,7 +165,7 @@ Don&amp;apos;t put any status.cgi in there.</property>
                 <property name="can_focus">True</property>
                 <property name="is_focus">True</property>
                 <property name="width_chars">50</property>
-                <property name="text" translatable="yes">Default</property>
+                <property name="text" translatable="yes">Custom action</property>
               </object>
               <packing>
                 <property name="left_attach">1</property>
@@ -281,11 +175,11 @@ Don&amp;apos;t put any status.cgi in there.</property>
               </packing>
             </child>
             <child>
-              <object class="GtkEntry" id="input_entry_nagios_url">
+              <object class="GtkEntry" id="input_entry_description">
                 <property name="visible">True</property>
                 <property name="can_focus">True</property>
                 <property name="is_focus">True</property>
-                <property name="text" translatable="yes">https://nagios-server</property>
+                <property name="text" translatable="yes">Starts a custom action.</property>
               </object>
               <packing>
                 <property name="left_attach">1</property>
@@ -295,11 +189,11 @@ Don&amp;apos;t put any status.cgi in there.</property>
               </packing>
             </child>
             <child>
-              <object class="GtkEntry" id="input_entry_nagios_cgi_url">
+              <object class="GtkEntry" id="input_entry_user">
                 <property name="visible">True</property>
                 <property name="can_focus">True</property>
                 <property name="is_focus">True</property>
-                <property name="text" translatable="yes">https://nagios-server/nagios/cgi-bin</property>
+                <property name="text" translatable="yes">Nag Stamon</property>
               </object>
               <packing>
                 <property name="left_attach">1</property>
@@ -309,26 +203,88 @@ Don&amp;apos;t put any status.cgi in there.</property>
               </packing>
             </child>
             <child>
-              <object class="GtkEntry" id="input_entry_username">
+              <object class="GtkLabel" id="label_string">
+                <property name="visible">True</property>
+                <property name="can_focus">False</property>
+                <property name="has_tooltip">True</property>
+                <property name="tooltip_markup">Username of your Nagios website.</property>
+                <property name="tooltip_text" translatable="yes">Username of your Nagios website.</property>
+                <property name="xalign">0</property>
+                <property name="label" translatable="yes">String:</property>
+              </object>
+              <packing>
+                <property name="top_attach">6</property>
+                <property name="bottom_attach">7</property>
+              </packing>
+            </child>
+            <child>
+              <object class="GtkEntry" id="input_entry_string">
                 <property name="visible">True</property>
                 <property name="can_focus">True</property>
-                <property name="is_focus">True</property>
-                <property name="text" translatable="yes">nagiosuser</property>
+                <property name="invisible_char">●</property>
               </object>
               <packing>
                 <property name="left_attach">1</property>
+                <property name="right_attach">2</property>
+                <property name="top_attach">6</property>
+                <property name="bottom_attach">7</property>
+              </packing>
+            </child>
+            <child>
+              <object class="GtkLabel" id="label_string_description">
+                <property name="visible">True</property>
+                <property name="can_focus">False</property>
+                <property name="xalign">0</property>
+                <property name="label" translatable="yes">The following string defines the executed action. Depending on defined type it will be used as executable or URL. These placeholders will be evaluated:
+$HOST$ - host as in monitor, $SERVICE$ - service as in monitor,
+$MONITOR$ - monitor address, $MONITOR-CGI$ - monitor CGI address,
+$ADDRESS$ - address of host which could differ from its name in monitor,
+$USERNAME$ - given username and $PASSWORD$ - username's password on monitor.</property>
+                <property name="wrap">True</property>
+                <property name="width_chars">60</property>
+              </object>
+              <packing>
                 <property name="right_attach">2</property>
                 <property name="top_attach">5</property>
                 <property name="bottom_attach">6</property>
               </packing>
             </child>
             <child>
-              <object class="GtkEntry" id="input_entry_password">
+              <object class="GtkHBox" id="hbox1">
                 <property name="visible">True</property>
-                <property name="can_focus">True</property>
-                <property name="is_focus">True</property>
-                <property name="visibility">False</property>
-                <property name="text" translatable="yes">nagiospassword</property>
+                <property name="can_focus">False</property>
+                <child>
+                  <object class="GtkCheckButton" id="input_checkbutton_target_host">
+                    <property name="label" translatable="yes">Host</property>
+                    <property name="visible">True</property>
+                    <property name="can_focus">True</property>
+                    <property name="receives_default">False</property>
+                    <property name="use_action_appearance">False</property>
+                    <property name="xalign">0</property>
+                    <property name="draw_indicator">True</property>
+                  </object>
+                  <packing>
+                    <property name="expand">True</property>
+                    <property name="fill">True</property>
+                    <property name="position">0</property>
+                  </packing>
+                </child>
+                <child>
+                  <object class="GtkCheckButton" id="input_checkbutton_target_service">
+                    <property name="label" translatable="yes">Service</property>
+                    <property name="visible">True</property>
+                    <property name="can_focus">True</property>
+                    <property name="receives_default">False</property>
+                    <property name="use_action_appearance">False</property>
+                    <property name="xalign">0</property>
+                    <property name="draw_indicator">True</property>
+                  </object>
+                  <packing>
+                    <property name="expand">True</property>
+                    <property name="fill">True</property>
+                    <property name="position">1</property>
+                  </packing>
+                </child>
               </object>
               <packing>
                 <property name="left_attach">1</property>
@@ -338,52 +294,138 @@ Don&amp;apos;t put any status.cgi in there.</property>
               </packing>
             </child>
             <child>
-              <object class="GtkEntry" id="input_entry_proxy_address">
+              <object class="GtkLabel" id="label_filter_services">
                 <property name="visible">True</property>
-                <property name="can_focus">True</property>
-                <property name="width_chars">30</property>
-                <property name="text" translatable="yes">http://proxy:port/</property>
+                <property name="can_focus">False</property>
+                <property name="xalign">0</property>
+                <property name="label" translatable="yes">Filter services:</property>
+                <property name="width_chars">10</property>
+              </object>
+              <packing>
+                <property name="top_attach">10</property>
+                <property name="bottom_attach">11</property>
+              </packing>
+            </child>
+            <child>
+              <object class="GtkHBox" id="hbox_re_service">
+                <property name="visible">True</property>
+                <property name="sensitive">False</property>
+                <property name="can_focus">False</property>
+                <child>
+                  <object class="GtkEntry" id="input_entry_re_service_pattern">
+                    <property name="visible">True</property>
+                    <property name="can_focus">True</property>
+                    <property name="invisible_char">●</property>
+                    <property name="width_chars">20</property>
+                    <property name="invisible_char_set">True</property>
+                    <property name="primary_icon_activatable">False</property>
+                    <property name="secondary_icon_activatable">False</property>
+                  </object>
+                  <packing>
+                    <property name="expand">True</property>
+                    <property name="fill">True</property>
+                    <property name="position">0</property>
+                  </packing>
+                </child>
+                <child>
+                  <object class="GtkCheckButton" id="input_checkbutton_re_service_reverse">
+                    <property name="label" translatable="yes">reverse</property>
+                    <property name="visible">True</property>
+                    <property name="can_focus">True</property>
+                    <property name="receives_default">False</property>
+                    <property name="use_action_appearance">False</property>
+                    <property name="xalign">0</property>
+                    <property name="draw_indicator">True</property>
+                  </object>
+                  <packing>
+                    <property name="expand">True</property>
+                    <property name="fill">True</property>
+                    <property name="position">1</property>
+                  </packing>
+                </child>
               </object>
               <packing>
                 <property name="left_attach">1</property>
                 <property name="right_attach">2</property>
-                <property name="top_attach">12</property>
-                <property name="bottom_attach">13</property>
+                <property name="top_attach">10</property>
+                <property name="bottom_attach">11</property>
               </packing>
             </child>
             <child>
-              <object class="GtkEntry" id="input_entry_proxy_username">
+              <object class="GtkLabel" id="label_filter_host">
                 <property name="visible">True</property>
-                <property name="can_focus">True</property>
-                <property name="is_focus">True</property>
-                <property name="width_chars">25</property>
-                <property name="text" translatable="yes">proxyuser</property>
+                <property name="can_focus">False</property>
+                <property name="xalign">0</property>
+                <property name="label" translatable="yes">Filter hosts:</property>
+                <property name="width_chars">15</property>
+              </object>
+              <packing>
+                <property name="top_attach">9</property>
+                <property name="bottom_attach">10</property>
+              </packing>
+            </child>
+            <child>
+              <object class="GtkHBox" id="hbox_re_host">
+                <property name="visible">True</property>
+                <property name="sensitive">False</property>
+                <property name="can_focus">False</property>
+                <child>
+                  <object class="GtkEntry" id="input_entry_re_host_pattern">
+                    <property name="visible">True</property>
+                    <property name="can_focus">True</property>
+                    <property name="invisible_char">●</property>
+                    <property name="width_chars">20</property>
+                    <property name="invisible_char_set">True</property>
+                    <property name="primary_icon_activatable">False</property>
+                    <property name="secondary_icon_activatable">False</property>
+                  </object>
+                  <packing>
+                    <property name="expand">True</property>
+                    <property name="fill">True</property>
+                    <property name="position">0</property>
+                  </packing>
+                </child>
+                <child>
+                  <object class="GtkCheckButton" id="input_checkbutton_re_host_reverse">
+                    <property name="label" translatable="yes">reverse</property>
+                    <property name="visible">True</property>
+                    <property name="can_focus">True</property>
+                    <property name="receives_default">False</property>
+                    <property name="use_action_appearance">False</property>
+                    <property name="xalign">0</property>
+                    <property name="draw_indicator">True</property>
+                  </object>
+                  <packing>
+                    <property name="expand">True</property>
+                    <property name="fill">True</property>
+                    <property name="position">1</property>
+                  </packing>
+                </child>
               </object>
               <packing>
                 <property name="left_attach">1</property>
                 <property name="right_attach">2</property>
-                <property name="top_attach">13</property>
-                <property name="bottom_attach">14</property>
+                <property name="top_attach">9</property>
+                <property name="bottom_attach">10</property>
               </packing>
             </child>
             <child>
-              <object class="GtkEntry" id="input_entry_proxy_password">
+              <object class="GtkLinkButton" id="linkbutton_python_re">
+                <property name="label" translatable="yes">See Python Regular Expressions HOWTO for filtering details.</property>
                 <property name="visible">True</property>
                 <property name="can_focus">True</property>
-                <property name="is_focus">True</property>
-                <property name="visibility">False</property>
-                <property name="width_chars">25</property>
-                <property name="text" translatable="yes">proxypassword</property>
+                <property name="receives_default">True</property>
+                <property name="has_tooltip">True</property>
+                <property name="use_action_appearance">False</property>
+                <property name="relief">none</property>
+                <property name="xalign">0</property>
+                <property name="uri">http://docs.python.org/howto/regex.html</property>
               </object>
               <packing>
-                <property name="left_attach">1</property>
                 <property name="right_attach">2</property>
-                <property name="top_attach">14</property>
-                <property name="bottom_attach">15</property>
+                <property name="top_attach">8</property>
+                <property name="bottom_attach">9</property>
               </packing>
-            </child>
-            <child>
-              <placeholder/>
             </child>
             <child>
               <placeholder/>
