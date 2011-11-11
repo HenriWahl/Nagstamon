@@ -318,6 +318,11 @@ class Config(object):
                 f = open(os.path.normpath(self.configdir + os.sep + settingsdir + os.sep + setting + "_" + s + ".conf"), "w")
                 config.write(f)
                 f.close()
+                
+            # clean up old deleted/renamed config files
+            for f in os.listdir(self.configdir + os.sep + settingsdir):
+                if not f.split(setting + "_")[1].split(".conf")[0] in self.__dict__[settingsdir]:
+                    os.unlink(self.configdir + os.sep + settingsdir + os.sep + f)
             
         except:
             import traceback

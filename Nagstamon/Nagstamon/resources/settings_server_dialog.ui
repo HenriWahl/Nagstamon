@@ -1,12 +1,6 @@
 <?xml version="1.0" encoding="UTF-8"?>
 <interface>
   <requires lib="gtk+" version="2.20"/>
-  <object class="GtkListStore" id="liststore1">
-    <columns>
-      <!-- column-name item -->
-      <column type="gchararray"/>
-    </columns>
-  </object>
   <object class="GtkDialog" id="settings_server_dialog">
     <property name="can_focus">False</property>
     <property name="title" translatable="yes">Server settings</property>
@@ -257,7 +251,6 @@ Don&amp;apos;t put any status.cgi in there.</property>
               <object class="GtkComboBox" id="input_combo_server_type">
                 <property name="visible">True</property>
                 <property name="can_focus">False</property>
-                <property name="model">liststore1</property>
               </object>
               <packing>
                 <property name="left_attach">1</property>

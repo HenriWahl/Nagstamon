@@ -2217,7 +2217,9 @@ class Settings(object):
                           "button_colors_default": self.ColorsDefault,
                           "button_colors_reset": self.ColorsReset,
                           "color-set": self.ColorsPreview,
-                          "radiobutton_icon_in_systray_toggled": self.ToggleSystrayPopupOffset}
+                          "radiobutton_icon_in_systray_toggled": self.ToggleSystrayPopupOffset,
+                          "button_new_action": lambda a: NewAction(servers=self.servers, output=self.output, settingsdialog=self, conf=self.conf)
+                          }
         self.builder.connect_signals(handlers_dict)      
 
         keys = self.conf.__dict__.keys()        
@@ -2688,9 +2690,9 @@ class ServerDialogHelper(object):
                     item.set_sensitive(True)
             else:
                 print 'Invalid widget set for disable in %s: %s' % (server_class.__name__, item_id)
+                
 
-
-class NewServer(ServerDialogHelper):
+class GenericServer(object):
     """
         settings of one particuliar new Nagios server
     """
@@ -2713,35 +2715,56 @@ class NewServer(ServerDialogHelper):
                           }
         self.builder.connect_signals(handlers_dict)
 
-        # set title of settings dialog 
-        self.dialog.set_title("New Server")
-
         # enable server by default
         self.builder.get_object("input_checkbutton_enabled").set_active(True)
 
         # set server type combobox to Nagios as default
-        combobox = self.builder.get_object("input_combo_server_type")
+        self.combobox = self.builder.get_object("input_combo_server_type")
         combomodel = gtk.ListStore(gobject.TYPE_STRING)
         cr = gtk.CellRendererText()
-        combobox.pack_start(cr, True)
-        combobox.set_attributes(cr, text=0)
+        self.combobox.pack_start(cr, True)
+        self.combobox.set_attributes(cr, text=0)
         for server in Actions.get_registered_server_type_list():
             combomodel.append((server,))
-        combobox.set_model(combomodel)
-        combobox.set_active(0)
+        self.combobox.set_model(combomodel)
+        self.combobox.set_active(0)
 
-        combobox.connect('changed', self.on_server_change)
-        self.on_server_change(combobox)
+        self.combobox.connect('changed', self.on_server_type_change)
+        # initialize server type dependent dialog outfit
+        self.on_server_type_change(self.combobox)
 
         # show password - or not
         self.ToggleSavePassword()
         # show settings options for proxy - or not
         self.ToggleProxy()
+       
 
-        # show filled settings dialog and wait thanks to gtk.run()
-        self.dialog.run()
-        self.dialog.destroy()       
+    def on_server_type_change(self, combobox):
+        """ 
+        Disables controls as it is set in server class 
+        from former ServerDialogHelper class which contained common logic for server dialog
+        might be of intereset in case server typer is changed and dialog content should be
+        adjusted to reflect different labels/entry fields
+        """
+        self.KNOWN_CONTROLS = set()
+        servers = Actions.get_registered_servers()
+        active = combobox.get_active_iter()
+        model = combobox.get_model()
+        if not model:
+            return
+        server_class = servers[model.get_value(active, 0)]
+        self.KNOWN_CONTROLS.update(server_class.DISABLED_CONTROLS)
 
+        for item_id in self.KNOWN_CONTROLS:
+            item = self.builder.get_object(item_id)
+            if item is not None:
+                if item_id in server_class.DISABLED_CONTROLS:
+                    item.set_sensitive(False)
+                else:
+                    item.set_sensitive(True)
+            else:
+                print 'Invalid widget set for disable in %s: %s' % (server_class.__name__, item_id)        
+        
 
     def OK(self, widget):
         """
@@ -2863,16 +2886,37 @@ class NewServer(ServerDialogHelper):
                   "input_entry_proxy_password"):
             item = self.builder.get_object(n)
             item.set_sensitive(state)
+                
 
-            
-class EditServer(ServerDialogHelper):
+class NewServer(GenericServer):
     """
         settings of one particuliar new Nagios server
     """
     def __init__(self, **kwds):
         # add all keywords to object
         for k in kwds: self.__dict__[k] = kwds[k]
+        
+        GenericServer.__init__(self, **kwds)
+        
+        # set title of settings dialog 
+        self.dialog.set_title("New Server")
+        
+        # show filled settings dialog and wait thanks to gtk.run()
+        self.dialog.run()
+        self.dialog.destroy() 
 
+        
+class EditServer(GenericServer):
+    """
+        settings of one particuliar Nagios server
+    """
+    def __init__(self, **kwds):
+        # add all keywords to object
+        for k in kwds: self.__dict__[k] = kwds[k]
+        
+        GenericServer.__init__(self, **kwds)
+
+        """
         # set the gtkbuilder files
         self.builderfile = self.output.Resources + os.sep + "settings_server_dialog.ui"
         self.builder = gtk.Builder()
@@ -2887,7 +2931,7 @@ class EditServer(ServerDialogHelper):
                           "toggle_proxy" : self.ToggleProxy    
                           }
         self.builder.connect_signals(handlers_dict)
-
+        """
         # in case server has been selected do nothing
         if not self.server == None:
             # set title of settings dialog 
@@ -2921,6 +2965,8 @@ class EditServer(ServerDialogHelper):
             # set server type combobox which cannot be set by above hazard method
             servers = Actions.get_registered_server_type_list()
             server_types = dict([(x[1], x[0]) for x in enumerate(servers)])
+            
+            """
             combobox = self.builder.get_object("input_combo_server_type")
             combomodel = gtk.ListStore(gobject.TYPE_STRING)
             cr = gtk.CellRendererText()
@@ -2929,11 +2975,14 @@ class EditServer(ServerDialogHelper):
             combobox.set_model(combomodel)
             for server in servers:
                 combobox.append_text(server)
-            combobox.set_active(server_types[self.conf.servers[self.server].type])
+            """    
+            self.combobox.set_active(server_types[self.conf.servers[self.server].type])
 
-            combobox.connect('changed', self.on_server_change)
-            self.on_server_change(combobox)
-
+            """
+            combobox.connect('changed', self.on_server_type_change)
+            self.on_server_type_change(combobox)
+            """
+            
             # show password - or not
             self.ToggleSavePassword()
             # show settings options for proxy - or not
@@ -2994,14 +3043,13 @@ class EditServer(ServerDialogHelper):
                 traceback.print_exc(file=sys.stdout)
             # delete server from servers dictionary
             self.servers.pop(self.server)
-
+            
             # put in new one
             self.conf.servers[new_server.name] = new_server
             # create new server thread
             created_server = Actions.CreateServer(new_server, self.conf, self.output.debug_queue)
             if created_server is not None:
                 self.servers[new_server.name] = created_server 
-
                 if str(self.conf.servers[new_server.name].enabled) == "True":  
                     # start new thread (should go to Actions)
                     self.servers[new_server.name].thread = Actions.RefreshLoopOneServer(server=self.servers[new_server.name], output=self.output, conf=self.conf)
@@ -3020,59 +3068,125 @@ class EditServer(ServerDialogHelper):
         self.dialog.destroy()
 
 
-    def ToggleSavePassword(self, widget=None):
-        """
-            Disable password input box
-        """
-        checkbutton = self.builder.get_object("input_checkbutton_save_password")
-        is_active = checkbutton.get_active()
-        item = self.builder.get_object("label_password")
-        item.set_sensitive( is_active )
-        item = self.builder.get_object("input_entry_password")
-        item.set_sensitive( is_active )
-        if not is_active:
-            item.set_text("")
+class GenericAction(object):
+    """
+        settings of one particuliar action
+    """
+    def __init__(self, **kwds):
+        # add all keywords to object
+        for k in kwds: self.__dict__[k] = kwds[k]
+
+        # set the gtkbuilder files
+        self.builderfile = self.output.Resources + os.sep + "settings_action_dialog.ui"
+        self.builder = gtk.Builder()
+        self.builder.add_from_file(self.builderfile)
+        self.dialog = self.builder.get_object("settings_action_dialog")
+
+        # assign handlers
+        handlers_dict = { "button_ok_clicked" : self.OK,
+                          "button_cancel_clicked" : self.Cancel,
+                          "settings_dialog_close" : self.Cancel
+                          }
+        self.builder.connect_signals(handlers_dict)
+
+        # enable action by default
+        self.builder.get_object("input_checkbutton_enabled").set_active(True)
+
+        # set server type combobox to Nagios as default
+        combobox = self.builder.get_object("input_combo_action_type")
+        combomodel = gtk.ListStore(gobject.TYPE_STRING)
+        cr = gtk.CellRendererText()
+        combobox.pack_start(cr, True)
+        combobox.set_attributes(cr, text=0)
+        for action_type in ["Browser", "Command", "URL"]:
+            combomodel.append((action_type,))
+        combobox.set_model(combomodel)
+        combobox.set_active(0)
+
+        ###combobox.connect('changed', self.on_server_change)
+        ###self.on_server_change(combobox) 
 
 
-    def ToggleProxy(self, widget=None):
+    def OK(self, widget):
         """
-            Disable proxy options
+            New server configured
         """
-        checkbutton = self.builder.get_object("input_checkbutton_use_proxy")
+        # put changed data into new server, which will get into the servers dictionary after the old
+        # one has been deleted
+        new_server = Config.Server()
 
-        self.ToggleProxyFromOS(checkbutton)
-        self.ToggleProxyAddress(checkbutton)  
+        keys = new_server.__dict__.keys()
+        for i in ["input_entry_", "input_checkbutton_", "input_radiobutton_", "input_spinbutton_", "input_filechooser_"]:
+            for key in keys:
+                j = self.builder.get_object(i + key)
+                if not j:
+                    continue
+                # some hazard, every widget has other methods to get its content
+                # so we try them all, one of them should work
+                try:
+                    new_server.__dict__[key] = j.get_text()
+                except:
+                    pass
+                try:
+                    new_server.__dict__[key] = j.get_active()
+                except:
+                    pass
+                try:
+                    new_server.__dict__[key] = int(j.get_value())
+                except:
+                    pass
 
+        # set server type combobox which cannot be set by above hazard method
+        combobox = self.builder.get_object("input_combo_server_type")
+        active = combobox.get_active_iter()
+        model = combobox.get_model()
+        new_server.__dict__["type"] = model.get_value(active, 0)                 
 
-    def ToggleProxyFromOS(self, widget=None):
-        """
-            toggle proxy from OS when using proxy is enabled
-        """
-        checkbutton = self.builder.get_object("input_checkbutton_use_proxy_from_os")
-        checkbutton.set_sensitive(self.builder.get_object("input_checkbutton_use_proxy").get_active())
-
-
-    def ToggleProxyAddress(self, widget=None):
-        """
-            toggle proxy address options when not using proxy is enabled
-        """
-        use_proxy = self.builder.get_object("input_checkbutton_use_proxy")
-        use_proxy_from_os = self.builder.get_object("input_checkbutton_use_proxy_from_os")
-        # depending on checkbox state address fields wil be active
-        if use_proxy.get_active() == True:
-            # always the opposite of os proxy selection
-            state = not use_proxy_from_os.get_active()
+        # check if there is already a server named like the new one
+        if new_server.name in self.conf.servers:
+            self.output.ErrorDialog("A server named " + new_server.name + " already exists.")
         else:
-            state = False
+            # put in new one
+            self.conf.servers[new_server.name] = new_server
+            # create new server thread
+            created_server = Actions.CreateServer(new_server, self.conf, self.output.debug_queue)
+            if created_server is not None:
+                self.servers[new_server.name] = created_server 
 
-        for n in ("label_proxy_address",
-                  "input_entry_proxy_address",
-                  "label_proxy_username",
-                  "input_entry_proxy_username",
-                  "label_proxy_password",
-                  "input_entry_proxy_password"):
-            item = self.builder.get_object(n)
-            item.set_sensitive(state)
+                if str(self.conf.servers[new_server.name].enabled) == "True":
+                    # start new thread (should go to Actions!)
+                    self.servers[new_server.name].thread = Actions.RefreshLoopOneServer(server=self.servers[new_server.name], output=self.output, conf=self.conf)
+                    self.servers[new_server.name].thread.start()        
+
+            # fill settings dialog treeview
+            self.settingsdialog.FillTreeView()
+            # destroy new action dialog
+            self.dialog.destroy()
+
+
+    def Cancel(self, widget):
+        """
+            settings dialog got cancelled
+        """
+        self.dialog.destroy()
+            
+            
+class NewAction(GenericAction):
+    """
+        generic settings of one particuliar new action server
+    """
+    def __init__(self, **kwds):
+        # add all keywords to object
+        for k in kwds: self.__dict__[k] = kwds[k]
+        
+        GenericAction.__init__(self, **kwds)
+        
+        # set title of settings dialog 
+        self.dialog.set_title("New Action")
+        
+        # show filled settings dialog and wait thanks to gtk.run()
+        self.dialog.run()
+        self.dialog.destroy() 
 
 
 class PasswordDialog:

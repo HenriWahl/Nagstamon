@@ -1,9 +1,9 @@
 <?xml version="1.0" encoding="UTF-8"?>
 <interface>
   <requires lib="gtk+" version="2.20"/>
-  <object class="GtkDialog" id="settings_server_dialog">
+  <object class="GtkDialog" id="settings_action_dialog">
     <property name="can_focus">False</property>
-    <property name="title" translatable="yes">Server settings</property>
+    <property name="title" translatable="yes">Action settings</property>
     <property name="resizable">False</property>
     <property name="modal">True</property>
     <property name="window_position">center-always</property>
@@ -140,6 +140,7 @@ Don&amp;apos;t put any status.cgi in there.</property>
                 <property name="has_tooltip">True</property>
                 <property name="tooltip_markup">Password for your Nagios website.</property>
                 <property name="xalign">0</property>
+                <property name="yalign">0</property>
                 <property name="label" translatable="yes">Target:</property>
               </object>
               <packing>
@@ -235,7 +236,7 @@ Don&amp;apos;t put any status.cgi in there.</property>
                 <property name="visible">True</property>
                 <property name="can_focus">False</property>
                 <property name="xalign">0</property>
-                <property name="label" translatable="yes">The following string defines the executed action. Depending on defined type it will be used as executable or URL. These placeholders will be evaluated:
+                <property name="label" translatable="yes">The following string defines the executed action. Depending on defined type it will be used as command or URL. These placeholders will be evaluated:
 $HOST$ - host as in monitor, $SERVICE$ - service as in monitor,
 $MONITOR$ - monitor address, $MONITOR-CGI$ - monitor CGI address,
 $ADDRESS$ - address of host which could differ from its name in monitor,
@@ -254,14 +255,41 @@ $USERNAME$ - given username and $PASSWORD$ - username's password on monitor.</pr
                 <property name="visible">True</property>
                 <property name="can_focus">False</property>
                 <child>
-                  <object class="GtkCheckButton" id="input_checkbutton_target_host">
-                    <property name="label" translatable="yes">Host</property>
+                  <object class="GtkVBox" id="vbox_target">
                     <property name="visible">True</property>
-                    <property name="can_focus">True</property>
-                    <property name="receives_default">False</property>
-                    <property name="use_action_appearance">False</property>
-                    <property name="xalign">0</property>
-                    <property name="draw_indicator">True</property>
+                    <property name="can_focus">False</property>
+                    <child>
+                      <object class="GtkCheckButton" id="input_checkbutton_target_host">
+                        <property name="label" translatable="yes">Host</property>
+                        <property name="visible">True</property>
+                        <property name="can_focus">True</property>
+                        <property name="receives_default">False</property>
+                        <property name="use_action_appearance">False</property>
+                        <property name="xalign">0</property>
+                        <property name="draw_indicator">True</property>
+                      </object>
+                      <packing>
+                        <property name="expand">True</property>
+                        <property name="fill">True</property>
+                        <property name="position">0</property>
+                      </packing>
+                    </child>
+                    <child>
+                      <object class="GtkCheckButton" id="input_checkbutton_target_service">
+                        <property name="label" translatable="yes">Service</property>
+                        <property name="visible">True</property>
+                        <property name="can_focus">True</property>
+                        <property name="receives_default">False</property>
+                        <property name="use_action_appearance">False</property>
+                        <property name="xalign">0</property>
+                        <property name="draw_indicator">True</property>
+                      </object>
+                      <packing>
+                        <property name="expand">True</property>
+                        <property name="fill">True</property>
+                        <property name="position">1</property>
+                      </packing>
+                    </child>
                   </object>
                   <packing>
                     <property name="expand">True</property>
@@ -270,20 +298,7 @@ $USERNAME$ - given username and $PASSWORD$ - username's password on monitor.</pr
                   </packing>
                 </child>
                 <child>
-                  <object class="GtkCheckButton" id="input_checkbutton_target_service">
-                    <property name="label" translatable="yes">Service</property>
-                    <property name="visible">True</property>
-                    <property name="can_focus">True</property>
-                    <property name="receives_default">False</property>
-                    <property name="use_action_appearance">False</property>
-                    <property name="xalign">0</property>
-                    <property name="draw_indicator">True</property>
-                  </object>
-                  <packing>
-                    <property name="expand">True</property>
-                    <property name="fill">True</property>
-                    <property name="position">1</property>
-                  </packing>
+                  <placeholder/>
                 </child>
               </object>
               <packing>
