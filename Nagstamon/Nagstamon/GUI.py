@@ -1108,12 +1108,13 @@ class StatusBar(object):
         if platform.system() == "Windows":
             self.StatusBar.set_type_hint(gtk.gdk.WINDOW_TYPE_HINT_UTILITY)
         else:
-            #self.StatusBar.set_type_hint(gtk.gdk.WINDOW_TYPE_HINT_DOCK)
             # trying as _HINT_UTILITY in Linux too as it gets a size modify element
             # in GNOME 3
             # after some experimenting it is in all OSs gtk.gdk.WINDOW_TYPE_HINT_UTILITY
             # so if..else should be unnecessary
-            self.StatusBar.set_type_hint(gtk.gdk.WINDOW_TYPE_HINT_UTILITY)
+            #self.StatusBar.set_type_hint(gtk.gdk.WINDOW_TYPE_HINT_UTILITY)
+            #self.StatusBar.set_type_hint(gtk.gdk.WINDOW_TYPE_HINT_DOCK)
+            self.StatusBar.set_type_hint(gtk.gdk.WINDOW_TYPE_HINT_TOOLBAR)
         self.StatusBar.set_property("skip-taskbar-hint", True)
         self.StatusBar.set_skip_taskbar_hint(True)
 
@@ -1132,10 +1133,10 @@ class StatusBar(object):
         if menu_entry == "Refresh": Actions.RefreshAllServers(servers=self.output.servers, output=self.output, conf=self.conf)
         if menu_entry == "Recheck all": self.output.RecheckAll()
         if menu_entry == "Settings...": Settings(servers=self.output.servers, output=self.output, conf=self.conf)
-        if menu_entry == "Save position": self.conf.SaveConfig()
+        if menu_entry == "Save position": self.conf.SaveConfig(output=self.output)
         if menu_entry == "About": self.output.AboutDialog()
         if menu_entry == "Exit": 
-            self.conf.SaveConfig()
+            self.conf.SaveConfig(output=self.output)
             gtk.main_quit()
 
 
@@ -2449,7 +2450,7 @@ class Settings(object):
             self.conf.update_interval = 1
 
         # save settings
-        self.conf.SaveConfig()
+        self.conf.SaveConfig(output=self.output)
 
         # catch exceptions in case of misconfiguration
         try:

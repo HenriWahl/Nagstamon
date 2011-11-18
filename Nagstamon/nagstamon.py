@@ -92,6 +92,6 @@ try:
     # Gtk Main Loop
     gtk.main()
     # save config
-    conf.SaveConfig()
+    conf.SaveConfig(output=output)
 except Exception, err:
     output.error_dialog(err)

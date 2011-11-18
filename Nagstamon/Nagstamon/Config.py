@@ -251,7 +251,7 @@ class Config(object):
         return settings
             
 
-    def SaveConfig(self):
+    def SaveConfig(self, output):
         """
             save config file
         """
@@ -272,15 +272,19 @@ class Config(object):
 
             # save actions dict
             self.SaveMultipleConfig("actions", "action")
-            
+
+            # debug
+            if str(self.debug_mode) == "True":
+                output.servers.values()[0].Debug(server="", debug="Saving config to" + self.configfile)
+                
             # open, save and close config file
             f = open(os.path.normpath(self.configfile), "w")
             config.write(f)
-            f.close()
-            
+            f.close()           
         except:
-            import traceback
-            traceback.print_exc(file=sys.stdout)
+            # debug
+            if str(self.debug_mode) == "True":
+                output.servers.values()[0].Error(sys.exc_info())
             
             
     def SaveMultipleConfig(self, settingsdir, setting):
@@ -333,7 +337,10 @@ class Config(object):
         """
             if there are settings found which come from older nagstamon version convert them -
             now with multiple servers support these servers have their own settings
+        
+            DEPRECATED I think, after 2,5 years have passed there should be no version less than 0.8.0 in the wild...
         """
+        
         # check if old settings exist
         if self.__dict__.has_key("nagios_url") and \
             self.__dict__.has_key("nagios_cgi_url") and \
@@ -365,8 +372,9 @@ class Config(object):
             self.__dict__.pop("password")
             self.__dict__.pop("use_proxy_yes")
             self.__dict__.pop("use_proxy_no")
+            
             # save config
-            self.SaveConfig()
+            #self.SaveConfig()
             
         
     def Obfuscate(self, string, count=5):
