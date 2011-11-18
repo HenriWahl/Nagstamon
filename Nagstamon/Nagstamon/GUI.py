@@ -2024,47 +2024,50 @@ class ServerVBox(gtk.VBox):
             for a in actions_list:
                 # shortcut for next lines
                 action = self.output.conf.actions[a]
-                # menu item visibility flag
-                item_visible = False
-                # check if clicked line is a service or host
-                # if it is check if the action is targeted on hosts or services
-                if self.miserable_service:
-                    if not action.filter_target.lower().find("service") == -1:
-                        # if no filters are set do not check and show item
-                        if len(action.filter_host) == len(action.filter_service) == 0:
-                            item_visible = True    
-                        else:
-                            # only check if there is some to check
+                if str(action.enabled) == "True":
+                    # menu item visibility flag
+                    item_visible = False
+                    # check if clicked line is a service or host
+                    # if it is check if the action is targeted on hosts or services
+                    if self.miserable_service:                    
+                        if str(action.filter_target_service) == "True":
+                            # if no filters are set do not check and show item
+                            if len(action.filter_host) == len(action.filter_service) == 0:
+                                item_visible = True    
+                            else:
+                                # only check if there is some to check
+                                if len(action.filter_host) > 0:
+                                    if Actions.IsFoundByRE(self.miserable_host,\
+                                                                    action.filter_host,\
+                                                                    action.filter_host_reverse):
+                                        item_visible = True
+                                # dito
+                                if len(action.filter_service) > 0:
+                                    if Actions.IsFoundByRE(self.miserable_service,\
+                                                                    action.filter_service,\
+                                                                    action.filter_service_reverse):
+                                        item_visible = True
+                                
+                    else:
+                        # hosts should only care about host specific actions, no services
+                        if str(action.filter_target_host) == "True":
                             if len(action.filter_host) > 0:
                                 if Actions.IsFoundByRE(self.miserable_host,\
                                                                 action.filter_host,\
                                                                 action.filter_host_reverse):
                                     item_visible = True
-                            # dito
-                            if len(action.filter_service) > 0:
-                                if Actions.IsFoundByRE(self.miserable_service,\
-                                                                action.filter_service,\
-                                                                action.filter_service_reverse):
-                                    item_visible = True
-                            
-                else:
-                    # hosts should only care about host specific actions, no services
-                    if not action.filter_target.lower().find("host") == -1:
-                        if len(action.filter_host) > 0:
-                            if Actions.IsFoundByRE(self.miserable_host,\
-                                                            action.filter_host,\
-                                                            action.filter_host_reverse):
+                            else:
+                                # a non specific action will be displayed per default
                                 item_visible = True
-                        else:
-                            # a non specific action will be displayed per default
-                            item_visible = True
-                
+                else:
+                     item_visible = False           
+                                
                 # populate context menu with service actions
                 if item_visible == True:
                     menu_item = gtk.MenuItem(a)
                     menu_item.connect("activate", self.TreeviewPopupMenuResponse, a)
                     self.popupmenu.append(menu_item)
-                        
+                    
                 del action, item_visible
             
             # add separator to separate between connections and actions
@@ -2197,6 +2200,10 @@ class Settings(object):
         self.builder = gtk.Builder()
         self.builder.add_from_file(self.builderfile)
         self.dialog = self.builder.get_object("settings_dialog")
+        
+        # little feedback store for servers and actions treeviews
+        self.selected_server = None
+        self.selected_action = None
 
         # use connect_signals to assign methods to handlers
         handlers_dict = { "button_ok_clicked": self.OK, 
@@ -2204,7 +2211,7 @@ class Settings(object):
                           "button_cancel_clicked": self.Cancel,
                           "button_new_server": lambda n: NewServer(servers=self.servers, output=self.output, settingsdialog=self, conf=self.conf),
                           "button_edit_server": lambda e: EditServer(servers=self.servers, output=self.output, server=self.selected_server, settingsdialog=self, conf=self.conf),
-                          "button_delete_server": lambda d: self.DeleteServer(self.selected_server),
+                          "button_delete_server": lambda d: self.DeleteServer(self.selected_server, self.conf.servers),
                           "button_check_for_new_version_now": self.CheckForNewVersionNow,
                           "checkbutton_enable_notification": self.ToggleNotification,
                           "checkbutton_enable_sound": self.ToggleSoundOptions,
@@ -2219,7 +2226,9 @@ class Settings(object):
                           "button_colors_reset": self.ColorsReset,
                           "color-set": self.ColorsPreview,
                           "radiobutton_icon_in_systray_toggled": self.ToggleSystrayPopupOffset,
-                          "button_new_action": lambda a: NewAction(servers=self.servers, output=self.output, settingsdialog=self, conf=self.conf)
+                          "button_new_action": lambda a: NewAction(output=self.output, settingsdialog=self, conf=self.conf),
+                          "button_edit_action": lambda e: EditAction(output=self.output, action=self.selected_action, settingsdialog=self, conf=self.conf),
+                          "button_delete_action": lambda d: self.DeleteAction(self.selected_action, self.conf.actions),
                           }
         self.builder.connect_signals(handlers_dict)      
 
@@ -2278,8 +2287,9 @@ class Settings(object):
             notebook.set_tab_label_text(c, notebook_tabs.pop(0))
             page += 1
 
-        # fill treeview
-        self.FillTreeView()
+        # fill treeviews
+        self.FillTreeView("servers_treeview", self.conf.servers, "Servers", "selected_server")
+        self.FillTreeView("actions_treeview", self.conf.actions, "Actions", "selected_action")
 
         # toggle debug options
         self.ToggleDebugOptions()
@@ -2344,60 +2354,67 @@ class Settings(object):
         self.output.SettingsDialogOpen = False
 
 
-    def FillTreeView(self):
-        # fill treeview containing servers
+    def FillTreeView(self, treeview_widget, items, column_string, selected_item):
+        """
+        fill treeview containing items - has been for servers only before
+        treeview_widget - string from gtk builder
+        items - dictionary containing the to-be-listed items
+        column_string - certain column name
+        selected_item - property which stores the selected item
+        """
         # create a model for treeview where the table headers all are strings
         liststore = gtk.ListStore(gobject.TYPE_STRING, gobject.TYPE_STRING, gobject.TYPE_BOOLEAN)
 
         # to sort the monitor servers alphabetically make a sortable list of their names
-        server_list = list(self.conf.servers)
-        server_list.sort(key=str.lower)
+        item_list = list(items)
+        item_list.sort(key=str.lower)
 
-        for server in server_list:            
+        for item in item_list:            
             iter = liststore.insert_before(None, None)
-            liststore.set_value(iter, 0, server)
-            if str(self.conf.servers[server].enabled) == "True":
+            liststore.set_value(iter, 0, item)
+            if str(items[item].enabled) == "True":
                 liststore.set_value(iter, 1, "black")
                 liststore.set_value(iter, 2, False)
             else:
                 liststore.set_value(iter, 1, "darkgrey")
                 liststore.set_value(iter, 2, True)
         # give model to the view
-        self.builder.get_object("servers_treeview").set_model(liststore)
+        self.builder.get_object(treeview_widget).set_model(liststore)
 
         # render aka create table view
         renderer_text = gtk.CellRendererText()
-        tab_column = gtk.TreeViewColumn("Servers", renderer_text, text=0, foreground=1, strikethrough=2)
+        tab_column = gtk.TreeViewColumn(column_string, renderer_text, text=0, foreground=1, strikethrough=2)
         # somehow idiotic, but less effort... try to delete which column ever, to create a new one
         # this will throw an exception at the first time the options dialog is opened because no column exists
         try:
-            self.builder.get_object("servers_treeview").remove_column(self.builder.get_object("servers_treeview").get_column(0))
+            self.builder.get_object(treeview_widget).remove_column(self.builder.get_object(treeview_widget).get_column(0))
         except:
             pass
-        self.builder.get_object("servers_treeview").append_column(tab_column)
+        self.builder.get_object(treeview_widget).append_column(tab_column)
 
-        # in case there are no servers yet because it runs the first time do a try-except
+        # in case there are no items yet because it runs the first time do a try-except
         try:
             # selected server to edit or delete, defaults to first one of server list
-            self.selected_server = server_list[0]
-            # select first server entry
-            self.builder.get_object("servers_treeview").set_cursor_on_cell((0,))
+            self.__dict__[selected_item] = item_list[0]
+            # select first entry
+            self.builder.get_object(treeview_widget).set_cursor_on_cell((0,))
         except:
             pass
         # connect treeview with mouseclicks
-        self.builder.get_object("servers_treeview").connect("button-press-event", self.SelectedServer)
+        self.builder.get_object(treeview_widget).connect("button-press-event", self.SelectedTreeviewItem, treeview_widget, selected_item)
 
 
-    def SelectedServer(self, widget=None, event=None):
+    def SelectedTreeviewItem(self, widget, event, treeview_widget, selected_item):
         """
-            findout selected server in servers treeview, should NOT return anything because the treeview
+            findout selected item in treeview, should NOT return anything because the treeview
             will be displayed buggy if it does
         """
         try:
             # get path to clicked cell
-            path, obj, x, y = self.builder.get_object("servers_treeview").get_path_at_pos(int(event.x), int(event.y))
-            # access content of rendered view model via normal python lists
-            self.selected_server = self.builder.get_object("servers_treeview").get_model()[path[0]][0]
+            path, obj, x, y = self.builder.get_object(treeview_widget).get_path_at_pos(int(event.x), int(event.y))
+            # access content of rendered view model via normal python lists and put
+            # it into Settings dictionary
+            self.__dict__[selected_item] = self.builder.get_object(treeview_widget).get_model()[path[0]][0]
         except:
             pass
 
@@ -2535,12 +2552,12 @@ class Settings(object):
         self.ColorsPreview()        
 
 
-    def DeleteServer(self, server=None):
+    def DeleteServer(self, server=None, servers=None):
         """
             delete Server after prompting
         """
         if server:
-            dialog = gtk.MessageDialog(parent=None, flags=gtk.DIALOG_MODAL, type=gtk.MESSAGE_QUESTION, buttons=gtk.BUTTONS_OK + gtk.BUTTONS_CANCEL, message_format="Really delete server " + server + "?")
+            dialog = gtk.MessageDialog(parent=None, flags=gtk.DIALOG_MODAL, type=gtk.MESSAGE_QUESTION, buttons=gtk.BUTTONS_OK + gtk.BUTTONS_CANCEL, message_format='Really delete server "' + server + '"?')
             # gtk.Dialog.run() does a mini loop to wait
             # for some reason response is YES, not OK... but it works.
             if dialog.run() == gtk.RESPONSE_YES:
@@ -2558,10 +2575,27 @@ class Settings(object):
                 # delete server from servers dictionary
                 self.servers.pop(server)
                 # fill settings dialog treeview
-                self.FillTreeView()
-
+                self.FillTreeView("servers_treeview", servers, "Servers", "selected_server")
+                
             dialog.destroy()
 
+            
+    def DeleteAction(self, action=None, actions=None):
+        """
+            delete action after prompting
+        """
+        if action:
+            dialog = gtk.MessageDialog(parent=None, flags=gtk.DIALOG_MODAL, type=gtk.MESSAGE_QUESTION, buttons=gtk.BUTTONS_OK + gtk.BUTTONS_CANCEL, message_format='Really delete action "' + action + '"?')
+            # gtk.Dialog.run() does a mini loop to wait
+            # for some reason response is YES, not OK... but it works.
+            if dialog.run() == gtk.RESPONSE_YES:
+                # delete actions configuration entry
+                self.conf.actions.pop(action)
+                # fill settings dialog treeview
+                self.FillTreeView("actions_treeview", actions, "Actions", "selected_action")
+                
+            dialog.destroy()            
+            
 
     def CheckForNewVersionNow(self, widget=None):
         """
@@ -2667,32 +2701,7 @@ class Settings(object):
         except Exception, err:
             print err
 
-
-class ServerDialogHelper(object):        
-    """ Contains common logic for server dialog """
-
-    KNOWN_CONTROLS = set()
-
-    def on_server_change(self, combobox):
-        """ Disables controls as it is set in server class """
-        servers = Actions.get_registered_servers()
-        active = combobox.get_active_iter()
-        model = combobox.get_model()
-        if not model:
-            return
-        server_class = servers[model.get_value(active, 0)]
-        self.KNOWN_CONTROLS.update(server_class.DISABLED_CONTROLS)
-        for item_id in self.KNOWN_CONTROLS:
-            item = self.builder.get_object(item_id)
-            if item is not None:
-                if item_id in server_class.DISABLED_CONTROLS:
-                    item.set_sensitive(False)
-                else:
-                    item.set_sensitive(True)
-            else:
-                print 'Invalid widget set for disable in %s: %s' % (server_class.__name__, item_id)
-                
-
+            
 class GenericServer(object):
     """
         settings of one particuliar new Nagios server
@@ -2804,7 +2813,7 @@ class GenericServer(object):
 
         # check if there is already a server named like the new one
         if new_server.name in self.conf.servers:
-            self.output.ErrorDialog("A server named " + new_server.name + " already exists.")
+            self.output.ErrorDialog('A server named "' + new_server.name + '" already exists.')
         else:
             # put in new one
             self.conf.servers[new_server.name] = new_server
@@ -2819,7 +2828,7 @@ class GenericServer(object):
                     self.servers[new_server.name].thread.start()        
 
             # fill settings dialog treeview
-            self.settingsdialog.FillTreeView()
+            self.settingsdialog.FillTreeView("servers_treeview", self.conf.servers, "Servers", "selected_server")
             # destroy new server dialog
             self.dialog.destroy()
 
@@ -2896,11 +2905,11 @@ class NewServer(GenericServer):
     def __init__(self, **kwds):
         # add all keywords to object
         for k in kwds: self.__dict__[k] = kwds[k]
-        
+
         GenericServer.__init__(self, **kwds)
         
         # set title of settings dialog 
-        self.dialog.set_title("New Server")
+        self.dialog.set_title("New server")
         
         # show filled settings dialog and wait thanks to gtk.run()
         self.dialog.run()
@@ -2917,26 +2926,10 @@ class EditServer(GenericServer):
         
         GenericServer.__init__(self, **kwds)
 
-        """
-        # set the gtkbuilder files
-        self.builderfile = self.output.Resources + os.sep + "settings_server_dialog.ui"
-        self.builder = gtk.Builder()
-        self.builder.add_from_file(self.builderfile)
-        self.dialog = self.builder.get_object("settings_server_dialog")
-
-        # assign handlers
-        handlers_dict = { "button_ok_clicked" : self.OK,
-                          "button_cancel_clicked" : self.Cancel,
-                          "settings_dialog_close" : self.Cancel,
-                          "toggle_save_password" : self.ToggleSavePassword,
-                          "toggle_proxy" : self.ToggleProxy    
-                          }
-        self.builder.connect_signals(handlers_dict)
-        """
         # in case server has been selected do nothing
         if not self.server == None:
             # set title of settings dialog 
-            self.dialog.set_title("Edit Server " + self.server)
+            self.dialog.set_title("Edit server " + self.server)
 
             keys = self.conf.servers[self.server].__dict__.keys()            
             # walk through all relevant input types to fill dialog with existing settings
@@ -2966,23 +2959,8 @@ class EditServer(GenericServer):
             # set server type combobox which cannot be set by above hazard method
             servers = Actions.get_registered_server_type_list()
             server_types = dict([(x[1], x[0]) for x in enumerate(servers)])
-            
-            """
-            combobox = self.builder.get_object("input_combo_server_type")
-            combomodel = gtk.ListStore(gobject.TYPE_STRING)
-            cr = gtk.CellRendererText()
-            combobox.pack_start(cr, True)
-            combobox.set_attributes(cr, text=0)
-            combobox.set_model(combomodel)
-            for server in servers:
-                combobox.append_text(server)
-            """    
+  
             self.combobox.set_active(server_types[self.conf.servers[self.server].type])
-
-            """
-            combobox.connect('changed', self.on_server_type_change)
-            self.on_server_type_change(combobox)
-            """
             
             # show password - or not
             self.ToggleSavePassword()
@@ -3093,7 +3071,7 @@ class GenericAction(object):
         # enable action by default
         self.builder.get_object("input_checkbutton_enabled").set_active(True)
 
-        # set server type combobox to Nagios as default
+        # fill combobox with options
         combobox = self.builder.get_object("input_combo_action_type")
         combomodel = gtk.ListStore(gobject.TYPE_STRING)
         cr = gtk.CellRendererText()
@@ -3102,22 +3080,46 @@ class GenericAction(object):
         for action_type in ["Browser", "Command", "URL"]:
             combomodel.append((action_type,))
         combobox.set_model(combomodel)
-        combobox.set_active(0)
-
-        ###combobox.connect('changed', self.on_server_change)
-        ###self.on_server_change(combobox) 
+        combobox.set_active(0)   
+        
+        # if uninitialized action (e.g. new one) is used don't access actions dictionary
+        if self.action == "":
+            # ...but use a dummy object with default settings
+            action = Config.Action()
+        else:
+            action = self.conf.actions[self.action]
+        keys = action.__dict__.keys()          
+        # walk through all relevant input types to fill dialog with existing settings
+        for i in ["input_entry_", "input_checkbutton_"]: 
+            for key in keys:
+                j = self.builder.get_object(i + key)
+                if not j:
+                    continue
+                # some hazard, every widget has other methods to fill it with desired content
+                # so we try them all, one of them should work
+                try:
+                    j.set_text(action.__dict__[key])
+                except:
+                    pass
+                try:
+                    if str(action.__dict__[key]) == "True":
+                        j.set_active(True)
+                    if str(action.__dict__[key]) == "False":
+                        j.set_active(False)
+                except:
+                    pass
 
 
     def OK(self, widget):
         """
-            New server configured
+            New action configured pr existing one edited
         """
         # put changed data into new server, which will get into the servers dictionary after the old
         # one has been deleted
-        new_server = Config.Server()
+        new_action = Config.Action()
 
-        keys = new_server.__dict__.keys()
-        for i in ["input_entry_", "input_checkbutton_", "input_radiobutton_", "input_spinbutton_", "input_filechooser_"]:
+        keys = new_action.__dict__.keys()
+        for i in ["input_entry_", "input_checkbutton_"]:
             for key in keys:
                 j = self.builder.get_object(i + key)
                 if not j:
@@ -3125,42 +3127,33 @@ class GenericAction(object):
                 # some hazard, every widget has other methods to get its content
                 # so we try them all, one of them should work
                 try:
-                    new_server.__dict__[key] = j.get_text()
+                    new_action.__dict__[key] = j.get_text()
                 except:
                     pass
                 try:
-                    new_server.__dict__[key] = j.get_active()
+                    new_action.__dict__[key] = j.get_active()
                 except:
                     pass
                 try:
-                    new_server.__dict__[key] = int(j.get_value())
+                    new_action.__dict__[key] = int(j.get_value())
                 except:
                     pass
 
         # set server type combobox which cannot be set by above hazard method
-        combobox = self.builder.get_object("input_combo_server_type")
+        combobox = self.builder.get_object("input_combo_action_type")
         active = combobox.get_active_iter()
         model = combobox.get_model()
-        new_server.__dict__["type"] = model.get_value(active, 0)                 
-
-        # check if there is already a server named like the new one
-        if new_server.name in self.conf.servers:
-            self.output.ErrorDialog("A server named " + new_server.name + " already exists.")
+        new_action.type = model.get_value(active, 0).lower()
+        
+        # check if there is already an action named like the new one
+        if new_action.name in self.conf.actions:
+            self.output.ErrorDialog('An action named "' + new_action.name + '" already exists.')
         else:
             # put in new one
-            self.conf.servers[new_server.name] = new_server
-            # create new server thread
-            created_server = Actions.CreateServer(new_server, self.conf, self.output.debug_queue)
-            if created_server is not None:
-                self.servers[new_server.name] = created_server 
-
-                if str(self.conf.servers[new_server.name].enabled) == "True":
-                    # start new thread (should go to Actions!)
-                    self.servers[new_server.name].thread = Actions.RefreshLoopOneServer(server=self.servers[new_server.name], output=self.output, conf=self.conf)
-                    self.servers[new_server.name].thread.start()        
+            self.conf.actions[new_action.name] = new_action      
 
             # fill settings dialog treeview
-            self.settingsdialog.FillTreeView()
+            self.settingsdialog.FillTreeView("actions_treeview", self.conf.actions, "Actions", "selected_action")
             # destroy new action dialog
             self.dialog.destroy()
 
@@ -3180,15 +3173,96 @@ class NewAction(GenericAction):
         # add all keywords to object
         for k in kwds: self.__dict__[k] = kwds[k]
         
+        
+        # create new dummy action
+        self.action = ""                
+        
         GenericAction.__init__(self, **kwds)
         
         # set title of settings dialog 
-        self.dialog.set_title("New Action")
+        self.dialog.set_title("New action")
         
         # show filled settings dialog and wait thanks to gtk.run()
         self.dialog.run()
         self.dialog.destroy() 
+        
 
+class EditAction(GenericAction):
+    """
+        generic settings of one particuliar new action server
+    """
+    def __init__(self, **kwds):
+        # add all keywords to object
+        for k in kwds: self.__dict__[k] = kwds[k]
+        
+        GenericAction.__init__(self, **kwds)
+        
+        # set title of settings dialog 
+        self.dialog.set_title("Edit action " + self.action)    
+        
+        # adjust combobox to used action type
+        self.combobox = self.builder.get_object("input_combo_action_type")
+        self.combobox.set_active({"browser":0, "command":1, "url":2}[self.conf.actions[self.action].type])           
+        
+        # show filled settings dialog and wait thanks to gtk.run()
+        self.dialog.run()
+        self.dialog.destroy()         
+        
+
+    def OK(self, widget):
+        """
+            New action configured pr existing one edited
+        """
+        # put changed data into new server, which will get into the servers dictionary after the old
+        # one has been deleted
+        new_action = Config.Action()
+
+        keys = new_action.__dict__.keys()
+        for i in ["input_entry_", "input_checkbutton_"]:
+            for key in keys:
+                j = self.builder.get_object(i + key)
+                if not j:
+                    continue
+                # some hazard, every widget has other methods to get its content
+                # so we try them all, one of them should work
+                try:
+                    new_action.__dict__[key] = j.get_text()
+                except:
+                    pass
+                try:
+                    new_action.__dict__[key] = j.get_active()
+                except:
+                    pass
+                try:
+                    new_action.__dict__[key] = int(j.get_value())
+                except:
+                    pass
+
+        # set server type combobox which cannot be set by above hazard method
+        combobox = self.builder.get_object("input_combo_action_type")
+        active = combobox.get_active_iter()
+        model = combobox.get_model()
+        new_action.type = model.get_value(active, 0).lower()
+        
+        # check if there is already an action named like the new one
+        if new_action.name in self.conf.actions and new_action.name != self.action:
+            self.output.ErrorDialog('An action named "' + new_action.name + '" already exists.')
+        else:
+            # put in new one
+            self.conf.actions[new_action.name] = new_action      
+
+            # fill settings dialog treeview
+            self.settingsdialog.FillTreeView("actions_treeview", self.conf.actions, "Actions", "selected_action")
+            # destroy new action dialog
+            self.dialog.destroy()
+
+
+    def Cancel(self, widget):
+        """
+            settings dialog got cancelled
+        """
+        self.dialog.destroy()
+        
 
 class PasswordDialog:
     """

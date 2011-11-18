@@ -430,22 +430,22 @@ class Action(object):
         # to be or not to be enabled...
         self.enabled = True
         # one of those: browser, url or command
-        self.type = ""
+        self.type = "browser"
         # thy name is...
-        self.name = ""
+        self.name = "Custom action"
         # OS of host where Nagstamon runs - especially commands are mostly not platform agnostic
         self.os = ""
         # description
-        self.description = ""
+        self.description = "Starts a custom action."
         # might be URL in case of type browser/url and a commandline for commands
         self.string = ""
         # who did this
-        self.author = ""
+        self.author = "Nag Stamon"
         # version - maybe in future this might be more sophisticated
         self.version = "1"
-        # kind of Nagios item this action is targeted to - maybe also usable for states but
-        # not yet implemented (like "host,service,critical")
-        self.filter_target = "host,service"
+        # kind of Nagios item this action is targeted to - maybe also usable for states
+        self.filter_target_host = True
+        self.filter_target_service = True
         # action applies only to certain hosts or services
         self.filter_host = ""
         self.filter_host_reverse = False

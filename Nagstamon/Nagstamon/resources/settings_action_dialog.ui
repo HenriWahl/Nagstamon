@@ -68,7 +68,7 @@
             <property name="visible">True</property>
             <property name="can_focus">False</property>
             <property name="border_width">3</property>
-            <property name="n_rows">14</property>
+            <property name="n_rows">15</property>
             <property name="n_columns">2</property>
             <child>
               <object class="GtkCheckButton" id="input_checkbutton_enabled">
@@ -147,8 +147,8 @@ Don&amp;apos;t put any status.cgi in there.</property>
                 <property name="label" translatable="yes">Target:</property>
               </object>
               <packing>
-                <property name="top_attach">7</property>
-                <property name="bottom_attach">8</property>
+                <property name="top_attach">8</property>
+                <property name="bottom_attach">9</property>
               </packing>
             </child>
             <child>
@@ -169,7 +169,6 @@ Don&amp;apos;t put any status.cgi in there.</property>
                 <property name="can_focus">True</property>
                 <property name="is_focus">True</property>
                 <property name="width_chars">50</property>
-                <property name="text" translatable="yes">Custom action</property>
               </object>
               <packing>
                 <property name="left_attach">1</property>
@@ -183,7 +182,6 @@ Don&amp;apos;t put any status.cgi in there.</property>
                 <property name="visible">True</property>
                 <property name="can_focus">True</property>
                 <property name="is_focus">True</property>
-                <property name="text" translatable="yes">Starts a custom action.</property>
               </object>
               <packing>
                 <property name="left_attach">1</property>
@@ -193,11 +191,10 @@ Don&amp;apos;t put any status.cgi in there.</property>
               </packing>
             </child>
             <child>
-              <object class="GtkEntry" id="input_entry_user">
+              <object class="GtkEntry" id="input_entry_author">
                 <property name="visible">True</property>
                 <property name="can_focus">True</property>
                 <property name="is_focus">True</property>
-                <property name="text" translatable="yes">Nag Stamon</property>
               </object>
               <packing>
                 <property name="left_attach">1</property>
@@ -225,32 +222,16 @@ Don&amp;apos;t put any status.cgi in there.</property>
               <object class="GtkEntry" id="input_entry_string">
                 <property name="visible">True</property>
                 <property name="can_focus">True</property>
+                <property name="is_focus">True</property>
                 <property name="invisible_char">●</property>
+                <property name="width_chars">60</property>
+                <property name="shadow_type">none</property>
               </object>
               <packing>
                 <property name="left_attach">1</property>
                 <property name="right_attach">2</property>
                 <property name="top_attach">6</property>
                 <property name="bottom_attach">7</property>
-              </packing>
-            </child>
-            <child>
-              <object class="GtkLabel" id="label_string_description">
-                <property name="visible">True</property>
-                <property name="can_focus">False</property>
-                <property name="xalign">0</property>
-                <property name="label" translatable="yes">The following string defines the executed action. Depending on defined type it will be used as command or URL. These placeholders will be evaluated:
-$HOST$ - host as in monitor, $SERVICE$ - service as in monitor,
-$MONITOR$ - monitor address, $MONITOR-CGI$ - monitor CGI address,
-$ADDRESS$ - address of host which could differ from its name in monitor,
-$USERNAME$ - given username and $PASSWORD$ - username's password on monitor.</property>
-                <property name="wrap">True</property>
-                <property name="width_chars">60</property>
-              </object>
-              <packing>
-                <property name="right_attach">2</property>
-                <property name="top_attach">5</property>
-                <property name="bottom_attach">6</property>
               </packing>
             </child>
             <child>
@@ -262,7 +243,7 @@ $USERNAME$ - given username and $PASSWORD$ - username's password on monitor.</pr
                     <property name="visible">True</property>
                     <property name="can_focus">False</property>
                     <child>
-                      <object class="GtkCheckButton" id="input_checkbutton_target_host">
+                      <object class="GtkCheckButton" id="input_checkbutton_filter_target_host">
                         <property name="label" translatable="yes">Host</property>
                         <property name="visible">True</property>
                         <property name="can_focus">True</property>
@@ -278,7 +259,7 @@ $USERNAME$ - given username and $PASSWORD$ - username's password on monitor.</pr
                       </packing>
                     </child>
                     <child>
-                      <object class="GtkCheckButton" id="input_checkbutton_target_service">
+                      <object class="GtkCheckButton" id="input_checkbutton_filter_target_service">
                         <property name="label" translatable="yes">Service</property>
                         <property name="visible">True</property>
                         <property name="can_focus">True</property>
@@ -307,8 +288,8 @@ $USERNAME$ - given username and $PASSWORD$ - username's password on monitor.</pr
               <packing>
                 <property name="left_attach">1</property>
                 <property name="right_attach">2</property>
-                <property name="top_attach">7</property>
-                <property name="bottom_attach">8</property>
+                <property name="top_attach">8</property>
+                <property name="bottom_attach">9</property>
               </packing>
             </child>
             <child>
@@ -320,22 +301,19 @@ $USERNAME$ - given username and $PASSWORD$ - username's password on monitor.</pr
                 <property name="width_chars">10</property>
               </object>
               <packing>
-                <property name="top_attach">10</property>
-                <property name="bottom_attach">11</property>
+                <property name="top_attach">11</property>
+                <property name="bottom_attach">12</property>
               </packing>
             </child>
             <child>
               <object class="GtkHBox" id="hbox_re_service">
                 <property name="visible">True</property>
-                <property name="sensitive">False</property>
                 <property name="can_focus">False</property>
                 <child>
                   <object class="GtkEntry" id="input_entry_re_service_pattern">
                     <property name="visible">True</property>
                     <property name="can_focus">True</property>
-                    <property name="invisible_char">●</property>
-                    <property name="width_chars">20</property>
-                    <property name="invisible_char_set">True</property>
+                    <property name="is_focus">True</property>
                     <property name="primary_icon_activatable">False</property>
                     <property name="secondary_icon_activatable">False</property>
                   </object>
@@ -365,8 +343,8 @@ $USERNAME$ - given username and $PASSWORD$ - username's password on monitor.</pr
               <packing>
                 <property name="left_attach">1</property>
                 <property name="right_attach">2</property>
-                <property name="top_attach">10</property>
-                <property name="bottom_attach">11</property>
+                <property name="top_attach">11</property>
+                <property name="bottom_attach">12</property>
               </packing>
             </child>
             <child>
@@ -378,24 +356,20 @@ $USERNAME$ - given username and $PASSWORD$ - username's password on monitor.</pr
                 <property name="width_chars">15</property>
               </object>
               <packing>
-                <property name="top_attach">9</property>
-                <property name="bottom_attach">10</property>
+                <property name="top_attach">10</property>
+                <property name="bottom_attach">11</property>
               </packing>
             </child>
             <child>
               <object class="GtkHBox" id="hbox_re_host">
                 <property name="visible">True</property>
-                <property name="sensitive">False</property>
                 <property name="can_focus">False</property>
                 <child>
-                  <object class="GtkEntry" id="input_entry_re_host_pattern">
+                  <object class="GtkEntry" id="input_entry_filter_host">
                     <property name="visible">True</property>
                     <property name="can_focus">True</property>
-                    <property name="invisible_char">●</property>
-                    <property name="width_chars">20</property>
+                    <property name="editable">False</property>
                     <property name="invisible_char_set">True</property>
-                    <property name="primary_icon_activatable">False</property>
-                    <property name="secondary_icon_activatable">False</property>
                   </object>
                   <packing>
                     <property name="expand">True</property>
@@ -404,7 +378,7 @@ $USERNAME$ - given username and $PASSWORD$ - username's password on monitor.</pr
                   </packing>
                 </child>
                 <child>
-                  <object class="GtkCheckButton" id="input_checkbutton_re_host_reverse">
+                  <object class="GtkCheckButton" id="input_checkbutton_filter_host_reverse">
                     <property name="label" translatable="yes">reverse</property>
                     <property name="visible">True</property>
                     <property name="can_focus">True</property>
@@ -423,8 +397,25 @@ $USERNAME$ - given username and $PASSWORD$ - username's password on monitor.</pr
               <packing>
                 <property name="left_attach">1</property>
                 <property name="right_attach">2</property>
-                <property name="top_attach">9</property>
-                <property name="bottom_attach">10</property>
+                <property name="top_attach">10</property>
+                <property name="bottom_attach">11</property>
+              </packing>
+            </child>
+            <child>
+              <object class="GtkLabel" id="label_string_description">
+                <property name="visible">True</property>
+                <property name="can_focus">False</property>
+                <property name="xalign">0</property>
+                <property name="ypad">2</property>
+                <property name="label" translatable="yes">Available variables: $HOST$, $SERVICE$, $MONITOR$, $MONITOR-CGI$, $ADDRESS$, $USERNAME$, $PASSWORD$</property>
+                <property name="wrap">True</property>
+                <property name="width_chars">60</property>
+              </object>
+              <packing>
+                <property name="left_attach">1</property>
+                <property name="right_attach">2</property>
+                <property name="top_attach">7</property>
+                <property name="bottom_attach">8</property>
               </packing>
             </child>
             <child>
@@ -441,9 +432,18 @@ $USERNAME$ - given username and $PASSWORD$ - username's password on monitor.</pr
               </object>
               <packing>
                 <property name="right_attach">2</property>
-                <property name="top_attach">8</property>
-                <property name="bottom_attach">9</property>
+                <property name="top_attach">12</property>
+                <property name="bottom_attach">13</property>
               </packing>
+            </child>
+            <child>
+              <placeholder/>
+            </child>
+            <child>
+              <placeholder/>
+            </child>
+            <child>
+              <placeholder/>
             </child>
             <child>
               <placeholder/>
