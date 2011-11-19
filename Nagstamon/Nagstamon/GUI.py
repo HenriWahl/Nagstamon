@@ -2278,7 +2278,7 @@ class Settings(object):
 
         # workaround for gazpacho-made glade-file - dunno why tab labels do not get named as they should be
         notebook = self.builder.get_object("notebook")
-        notebook_tabs =  ["Servers", "Display", "Filters", "Executables(OBSOLETE)", "Actions", "Notification", "Colors", "Defaults"]
+        notebook_tabs =  ["Servers", "Display", "Filters", "Actions", "Notification", "Colors", "Defaults"]
         # now this presumably not necessary anymore workaround even gets extended as 
         # determine-first-page-mechanism used for acknowledment dialog settings button
         page = 0
@@ -3248,9 +3248,10 @@ class EditAction(GenericAction):
         if new_action.name in self.conf.actions and new_action.name != self.action:
             self.output.ErrorDialog('An action named "' + new_action.name + '" already exists.')
         else:
+            # delete old one
+            self.conf.actions.pop(self.action)
             # put in new one
             self.conf.actions[new_action.name] = new_action      
-
             # fill settings dialog treeview
             self.settingsdialog.FillTreeView("actions_treeview", self.conf.actions, "Actions", "selected_action")
             # destroy new action dialog

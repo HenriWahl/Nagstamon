@@ -31,6 +31,8 @@ conf = Config()
 
 # check for old settings when upgrading from a nagstamon version < 0.8 and convert them
 conf.Convert_Conf_to_Multiple_Servers()
+# convert settings for actions to custom actions for Nagstamon < 0.9.9
+conf.Convert_Conf_to_Custom_Actions()
 
 # try to get resources path if nagstamon got be installed by setup.py
 try:

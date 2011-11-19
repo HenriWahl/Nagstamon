@@ -105,6 +105,7 @@ class Config(object):
         self.defaults_downtime_type_fixed = True
         self.defaults_downtime_type_flexible = False
 
+        """
         # those are example Windows settings, almost certainly a
         # user will have to fix them for his computer
         if platform.system() == "Windows":
@@ -122,7 +123,8 @@ class Config(object):
             self.app_ssh_options = "-l root"
             self.app_rdp_options = "-g 1024x768"
             self.app_vnc_options = ""
-
+        """
+        
         # the app is unconfigured by default and will stay so if it
         # would not find a config file
         self.unconfigured = True
@@ -375,6 +377,45 @@ class Config(object):
             
             # save config
             #self.SaveConfig()
+            
+            
+    def Convert_Conf_to_Custom_Actions(self):
+        """
+        any nagstamon minor to 0.9.9 will have extra ssh/rdp/vnc settings
+        which will be converted to custom actions here
+        """
+        
+        # check if old settings exist
+        if self.__dict__.has_key("app_ssh_bin") and \
+            self.__dict__.has_key("app_ssh_options") and \
+            self.__dict__.has_key("app_rdp_bin") and \
+            self.__dict__.has_key("app_rdp_options") and \
+            self.__dict__.has_key("app_vnc_bin") and \
+            self.__dict__.has_key("app_vnc_options"):
+            # create actions and fill them with old settings
+            self.actions["SSH"] = Action()
+            self.actions["SSH"].type = "command"
+            self.actions["SSH"].name = "SSH"
+            self.actions["SSH"].string = self.app_ssh_bin + " " + self.app_ssh_options + " $ADDRESS$"
+            self.actions["SSH"].description = "Converted from pre 0.9.9 Nagstamon."
+            self.actions["RDP"] = Action()
+            self.actions["RDP"].type = "command"
+            self.actions["RDP"].name = "RDP"
+            self.actions["RDP"].string = self.app_rdp_bin + " " + self.app_rdp_options + " $ADDRESS$"
+            self.actions["RDP"].description = "Converted from pre 0.9.9 Nagstamon."
+            self.actions["VNC"] = Action()
+            self.actions["VNC"].type = "command"
+            self.actions["VNC"].name = "VNC"
+            self.actions["VNC"].string = self.app_vnc_bin + " " + self.app_vnc_options + " $ADDRESS$"
+            self.actions["VNC"].description = "Converted from pre 0.9.9 Nagstamon."
+            
+            # delete old settings from config
+            self.__dict__.pop("app_ssh_bin")
+            self.__dict__.pop("app_ssh_options")
+            self.__dict__.pop("app_rdp_bin")
+            self.__dict__.pop("app_rdp_options")
+            self.__dict__.pop("app_vnc_bin")
+            self.__dict__.pop("app_vnc_options")
             
         
     def Obfuscate(self, string, count=5):

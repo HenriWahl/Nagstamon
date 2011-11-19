@@ -310,7 +310,7 @@ Don&amp;apos;t put any status.cgi in there.</property>
                 <property name="visible">True</property>
                 <property name="can_focus">False</property>
                 <child>
-                  <object class="GtkEntry" id="input_entry_re_service_pattern">
+                  <object class="GtkEntry" id="input_entry_filter_service">
                     <property name="visible">True</property>
                     <property name="can_focus">True</property>
                     <property name="is_focus">True</property>
@@ -324,7 +324,7 @@ Don&amp;apos;t put any status.cgi in there.</property>
                   </packing>
                 </child>
                 <child>
-                  <object class="GtkCheckButton" id="input_checkbutton_re_service_reverse">
+                  <object class="GtkCheckButton" id="input_checkbutton_filter_service_reverse">
                     <property name="label" translatable="yes">reverse</property>
                     <property name="visible">True</property>
                     <property name="can_focus">True</property>
@@ -419,6 +419,39 @@ Don&amp;apos;t put any status.cgi in there.</property>
               </packing>
             </child>
             <child>
+              <placeholder/>
+            </child>
+            <child>
+              <placeholder/>
+            </child>
+            <child>
+              <placeholder/>
+            </child>
+            <child>
+              <placeholder/>
+            </child>
+            <child>
+              <placeholder/>
+            </child>
+            <child>
+              <placeholder/>
+            </child>
+            <child>
+              <placeholder/>
+            </child>
+            <child>
+              <placeholder/>
+            </child>
+            <child>
+              <placeholder/>
+            </child>
+            <child>
+              <placeholder/>
+            </child>
+            <child>
+              <placeholder/>
+            </child>
+            <child>
               <object class="GtkLinkButton" id="linkbutton_python_re">
                 <property name="label" translatable="yes">See Python Regular Expressions HOWTO for filtering details.</property>
                 <property name="visible">True</property>
@@ -431,40 +464,11 @@ Don&amp;apos;t put any status.cgi in there.</property>
                 <property name="uri">http://docs.python.org/howto/regex.html</property>
               </object>
               <packing>
+                <property name="left_attach">1</property>
                 <property name="right_attach">2</property>
                 <property name="top_attach">12</property>
                 <property name="bottom_attach">13</property>
               </packing>
-            </child>
-            <child>
-              <placeholder/>
-            </child>
-            <child>
-              <placeholder/>
-            </child>
-            <child>
-              <placeholder/>
-            </child>
-            <child>
-              <placeholder/>
-            </child>
-            <child>
-              <placeholder/>
-            </child>
-            <child>
-              <placeholder/>
-            </child>
-            <child>
-              <placeholder/>
-            </child>
-            <child>
-              <placeholder/>
-            </child>
-            <child>
-              <placeholder/>
-            </child>
-            <child>
-              <placeholder/>
             </child>
           </object>
           <packing>
