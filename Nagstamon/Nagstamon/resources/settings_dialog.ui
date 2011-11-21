@@ -1120,7 +1120,7 @@
                 <property name="visible">True</property>
                 <property name="can_focus">False</property>
                 <property name="border_width">5</property>
-                <property name="n_rows">5</property>
+                <property name="n_rows">6</property>
                 <property name="n_columns">2</property>
                 <child>
                   <object class="GtkScrolledWindow" id="actions_scrolledwindow">
@@ -1140,7 +1140,7 @@
                     </child>
                   </object>
                   <packing>
-                    <property name="bottom_attach">3</property>
+                    <property name="bottom_attach">5</property>
                   </packing>
                 </child>
                 <child>
@@ -1336,8 +1336,8 @@
                     </child>
                   </object>
                   <packing>
-                    <property name="top_attach">3</property>
-                    <property name="bottom_attach">4</property>
+                    <property name="top_attach">5</property>
+                    <property name="bottom_attach">6</property>
                   </packing>
                 </child>
                 <child>

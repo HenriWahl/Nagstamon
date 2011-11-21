@@ -1105,7 +1105,7 @@ class StatusBar(object):
         self.StatusBar.stick()
         # at http://www.pygtk.org/docs/pygtk/gdk-constants.html#gdk-window-type-hint-constants
         # there are some hint types to experiment with
-        if platform.system() == "Windows":
+        if platform.system() == "Windows" or platform.system() == "Darwin":
             self.StatusBar.set_type_hint(gtk.gdk.WINDOW_TYPE_HINT_UTILITY)
         else:
             # trying as _HINT_UTILITY in Linux too as it gets a size modify element
