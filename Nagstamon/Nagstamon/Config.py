@@ -488,8 +488,13 @@ class Action(object):
         self.filter_target_host = True
         self.filter_target_service = True
         # action applies only to certain hosts or services
-        self.filter_host = ""
-        self.filter_host_reverse = False
-        self.filter_service = ""
-        self.filter_service_reverse = False
+        self.re_host_enabled = False
+        self.re_host_pattern = ""
+        self.re_host_reverse = False
+        self.re_service_enabled = False
+        self.re_service_pattern = ""
+        self.re_service_reverse = False
+        self.re_status_information_enabled = False
+        self.re_status_information_pattern = ""
+        self.re_status_information_reverse = False
     

@@ -2023,35 +2023,43 @@ class ServerVBox(gtk.VBox):
             actions_list.sort(key=str.lower)
             for a in actions_list:
                 # shortcut for next lines
-                action = self.output.conf.actions[a]
+                action = self.output.conf.actions[a]                
                 if str(action.enabled) == "True":
                     # menu item visibility flag
                     item_visible = False
                     # check if clicked line is a service or host
                     # if it is check if the action is targeted on hosts or services
-                    if self.miserable_service:                    
+                    if self.miserable_service:                           
                         if str(action.filter_target_service) == "True":
-                            # if no filters are set do not check and show item
-                            if len(action.filter_host) == len(action.filter_service) == 0:
-                                item_visible = True    
-                            else:
-                                # only check if there is some to check
-                                if len(action.filter_host) > 0:
-                                    if Actions.IsFoundByRE(self.miserable_host,\
-                                                                    action.filter_host,\
-                                                                    action.filter_host_reverse):
-                                        item_visible = True
-                                # dito
-                                if len(action.filter_service) > 0:
-                                    if Actions.IsFoundByRE(self.miserable_service,\
-                                                                    action.filter_service,\
-                                                                    action.filter_service_reverse):
-                                        item_visible = True
+                            # only check if there is some to check
+                            if str(action.re_host_enabled) == "True":
+                                if Actions.IsFoundByRE(self.miserable_host,\
+                                                                action.re_host_pattern,\
+                                                                action.re_host_reverse):
+                                    item_visible = True
+                            # dito
+                            if str(action.re_service_enabled) == "True":
+                                if Actions.IsFoundByRE(self.miserable_service,\
+                                                                action.re_service_pattern,\
+                                                                action.re_service_reverse):
+                                    item_visible = True
+                            # dito
+                            if str(action.re_status_information_enabled) == "True":
+                                if Actions.IsFoundByRE(self.miserable_service,\
+                                                                action.re_status_information_pattern,\
+                                                                action.re_status_information_reverse):
+                                    item_visible = True
+                            # fallback if no regexp is selected
+                            
+                            #print action.re_host_enabled, action.re_service_enabled
+                            
+                            if str(action.re_host_enabled) == str(action.re_service_enabled) == str(action.re_status_information_enabled) == "False":
+                                item_visible = True
                                 
                     else:
                         # hosts should only care about host specific actions, no services
                         if str(action.filter_target_host) == "True":
-                            if len(action.filter_host) > 0:
+                            if str(action.re_host_enabled) == "True":
                                 if Actions.IsFoundByRE(self.miserable_host,\
                                                                 action.filter_host,\
                                                                 action.filter_host_reverse):
@@ -2060,7 +2068,7 @@ class ServerVBox(gtk.VBox):
                                 # a non specific action will be displayed per default
                                 item_visible = True
                 else:
-                     item_visible = False           
+                    item_visible = False
                                 
                 # populate context menu with service actions
                 if item_visible == True:
@@ -3064,7 +3072,10 @@ class GenericAction(object):
         # assign handlers
         handlers_dict = { "button_ok_clicked" : self.OK,
                           "button_cancel_clicked" : self.Cancel,
-                          "settings_dialog_close" : self.Cancel
+                          "settings_dialog_close" : self.Cancel,
+                          "checkbutton_re_host_enabled": self.ToggleREHostOptions,
+                          "checkbutton_re_service_enabled": self.ToggleREServiceOptions,
+                          "checkbutton_re_status_information_enabled": self.ToggleREStatusInformationOptions
                           }
         self.builder.connect_signals(handlers_dict)
 
@@ -3163,6 +3174,33 @@ class GenericAction(object):
             settings dialog got cancelled
         """
         self.dialog.destroy()
+        
+        
+    def ToggleREHostOptions(self, widget=None):
+        """
+            Toggle regular expression filter for hosts
+        """        
+        options = self.builder.get_object("hbox_re_host")
+        checkbutton = self.builder.get_object("input_checkbutton_re_host_enabled")
+        options.set_sensitive(checkbutton.get_active())
+
+
+    def ToggleREServiceOptions(self, widget=None):
+        """
+            Toggle regular expression filter for services
+        """
+        options = self.builder.get_object("hbox_re_service")
+        checkbutton = self.builder.get_object("input_checkbutton_re_service_enabled")
+        options.set_sensitive(checkbutton.get_active())
+
+
+    def ToggleREStatusInformationOptions(self, widget=None):
+        """
+            Disable notification sound when not using sound is enabled
+        """
+        options = self.builder.get_object("hbox_re_status_information")
+        checkbutton = self.builder.get_object("input_checkbutton_re_status_information_enabled")
+        options.set_sensitive(checkbutton.get_active())
             
             
 class NewAction(GenericAction):
