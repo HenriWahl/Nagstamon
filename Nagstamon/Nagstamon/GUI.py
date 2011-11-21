@@ -2061,8 +2061,8 @@ class ServerVBox(gtk.VBox):
                         if str(action.filter_target_host) == "True":
                             if str(action.re_host_enabled) == "True":
                                 if Actions.IsFoundByRE(self.miserable_host,\
-                                                                action.filter_host,\
-                                                                action.filter_host_reverse):
+                                                                action.re_host_pattern,\
+                                                                action.re_host_reverse):
                                     item_visible = True
                             else:
                                 # a non specific action will be displayed per default
