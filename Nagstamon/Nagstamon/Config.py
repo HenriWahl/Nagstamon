@@ -560,7 +560,12 @@ class Config(object):
         defaultactions["Graph-Opsview-Service"] = Action(name="Graph-Opsview-Service", type="browser",\
                                                     description="Show graph in browser.", filter_target_host=False,\
                                                     string="$MONITOR$/graph?service=$SERVICE$&host=$HOST$", enabled=False)
-        
+        defaultactions["Configure-Host-Ninja"] = Action(name="Configure-Host-Ninja", type="browser",\
+                                                    description="Configure host in browser.", author="op5 Ab",\
+                                                    string="$MONITOR$/index.php/configuration/configure/host/$HOST$", enabled=False)
+        defaultactions["Configure-Service-Ninja"] = Action(name="Configure-Service-Ninja", type="browser", filter_target_host=False,\
+                                                    description="Configure service in browser.", author="op5 Ab",\
+                                                    string="$MONITOR$/index.php/configuration/configure/service/$HOST$?service=$SERVICE$", enabled=False)        
         return defaultactions
             
 class Server(object):
