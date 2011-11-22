@@ -170,12 +170,8 @@ class Config(object):
                         
             # Servers configuration...
             self.servers = self._LoadServersMultipleConfig()
-         
-            # Load actions if Nagstamon is not unconfigured, otherwise load defaults
-            if str(self.unconfigured) == "True":
-                self.actions = _DefaultActions()
-            else:
-                self.actions = self.LoadMultipleConfig("actions", "action", "Action")
+            # ... and actions           
+            self.actions = self.LoadMultipleConfig("actions", "action", "Action")
             
             # seems like there is a config file so the app is not unconfigured anymore
             self.unconfigured = False
@@ -229,6 +225,10 @@ class Config(object):
             self.converted_from_single_configfile = True
             # of course Nagstamon is configured then
             self.unconfigured = False
+
+        # Load actions if Nagstamon is not unconfigured, otherwise load defaults
+        if str(self.unconfigured) == "True":
+            self.actions = self._DefaultActions()
 
         
     def _LoadServersMultipleConfig(self):
@@ -465,22 +465,30 @@ class Config(object):
             self.__dict__.has_key("app_vnc_bin") and \
             self.__dict__.has_key("app_vnc_options"):
             # create actions and fill them with old settings
-            self.actions["SSH"] = Action()
+            self.actions["SSH"] = Action(name="SSH", type="command", description="Converted from pre 0.9.9 Nagstamon.",\
+                                         string=self.app_ssh_bin + " " + self.app_ssh_options + " $ADDRESS$")
+            """
             self.actions["SSH"].type = "command"
             self.actions["SSH"].name = "SSH"
             self.actions["SSH"].string = self.app_ssh_bin + " " + self.app_ssh_options + " $ADDRESS$"
             self.actions["SSH"].description = "Converted from pre 0.9.9 Nagstamon."
-            self.actions["RDP"] = Action()
+            """
+            self.actions["RDP"] = Action(name="RDP", type="command", description="Converted from pre 0.9.9 Nagstamon.",\
+                                         string=self.app_rdp_bin + " " + self.app_rdp_options + " $ADDRESS$")
+            """
             self.actions["RDP"].type = "command"
             self.actions["RDP"].name = "RDP"
             self.actions["RDP"].string = self.app_rdp_bin + " " + self.app_rdp_options + " $ADDRESS$"
             self.actions["RDP"].description = "Converted from pre 0.9.9 Nagstamon."
-            self.actions["VNC"] = Action()
+            """
+            self.actions["VNC"] = Action(name="VNC", type="command", description="Converted from pre 0.9.9 Nagstamon.",\
+                                         string=self.app_vnc_bin + " " + self.app_vnc_options + " $ADDRESS$")
+            """
             self.actions["VNC"].type = "command"
             self.actions["VNC"].name = "VNC"
             self.actions["VNC"].string = self.app_vnc_bin + " " + self.app_vnc_options + " $ADDRESS$"
             self.actions["VNC"].description = "Converted from pre 0.9.9 Nagstamon."
-            
+            """
             # delete old settings from config
             self.__dict__.pop("app_ssh_bin")
             self.__dict__.pop("app_ssh_options")
@@ -533,9 +541,26 @@ class Config(object):
                                "VNC": Action(name="VNC", description="Connect via VNC.",\
                                     type="command", string="/usr/bin/vncviewer $ADDRESS$"),
                                "SSH": Action(name="SSH", description="Connect via SSH.",\
-                                    type="command", string="/usr/bin/gnome-terminal -x ssh root@$ADDRESS$")\
+                                    type="command", string="/usr/bin/gnome-terminal -x ssh root@$ADDRESS$"),\
+                               "Update-Linux": Action(name="Update-Linux", description="Run remote update script.",\
+                                    type="command", string="/usr/bin/terminator -x  ssh root@$HOST$ update.sh",\
+                                    enabled=False)\
                                }
-
+        # OS agnostic actions
+        defaultactions["1-Click-Acknowledge-Host"] = Action(name="1-Click-Acknowledge-Host", type="url",\
+                                                    description="Acknowledges a host with one click.",\
+                                                    filter_target_service=False, enabled=False,\
+                                                    string="$MONITOR-CGI$/cmd.cgi?cmd_typ=33&cmd_mod=2&host=$HOST$\
+                                                    &com_author=$USERNAME$&com_data=acknowledged&btnSubmit=Commit")
+        defaultactions["1-Click-Acknowledge-Service"] = Action(name="1-Click-Acknowledge-Service", type="url",\
+                                                    description="Acknowledges a service with one click.",\
+                                                    filter_target_host=False, enabled=False,\
+                                                    string="$MONITOR-CGI$/cmd.cgi?cmd_typ=34&cmd_mod=2&host=$HOST$\
+                                                    &service=$SERVICE$&com_author=$USERNAME$&com_data=acknowledged&btnSubmit=Commit")
+        defaultactions["Graph-Opsview-Service"] = Action(name="Graph-Opsview-Service", type="browser",\
+                                                    description="Show graph in browser.", filter_target_host=False,\
+                                                    string="$MONITOR$/graph?service=$SERVICE$&host=$HOST$", enabled=False)
+        
         return defaultactions
             
 class Server(object):
