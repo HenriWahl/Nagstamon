@@ -104,6 +104,7 @@ class Config(object):
         self.defaults_downtime_comment = "scheduled downtime"
         self.defaults_downtime_type_fixed = True
         self.defaults_downtime_type_flexible = False
+        self.converted_from_single_configfile = False
 
         """
         # those are example Windows settings, almost certainly a
@@ -128,6 +129,10 @@ class Config(object):
         # the app is unconfigured by default and will stay so if it
         # would not find a config file
         self.unconfigured = True
+        
+        print
+        print self._LoadLegacyConfigFile()
+        print
         
         # try to use a given config file - there must be one given
         # if sys.argv is larger than 1
@@ -157,7 +162,10 @@ class Config(object):
         # there may be situations where the name gets overwritten by a
         # wrong name so it will be stored here temporarily
         configdir_temp = self.configdir
-        
+                              
+        # legacy configfile treatment
+        legacyconfigfile = self._LoadLegacyConfigFile()
+                
         # default settings dicts
         self.servers = dict()
         self.actions = dict()
@@ -193,7 +201,64 @@ class Config(object):
             # Load actions
             self.actions = self.LoadMultipleConfig("actions", "action", "Action")
 
+        # in case it exists and it has not been used before read legacy config file once
+        if str(self.converted_from_single_configfile) == "False" and not legacyconfigfile == False:
+  
+            print
+            print "reading legacy config file"
+            print
             
+            # instantiate a Configparser to parse the conf file
+            # SF.net bug #3304423 could be fixed with allow_no_value argument which
+            # is only available since Python 2.7
+            if sys.version_info[0] < 3 and sys.version_info[1] < 7:
+                config = ConfigParser.ConfigParser()
+            else:
+                config = ConfigParser.ConfigParser(allow_no_value=True)
+            config.read(legacyconfigfile)
+            
+            # go through all sections of the conf file
+            for section in config.sections():
+                if section.startswith("Server_"):
+                    # create server object for every server
+                    server_name = dict(config.items(section))["name"]
+                    self.servers[server_name] = Server()                  
+                    
+                    # go through all items of each sections
+                    for i in config.items(section):
+                            self.servers[server_name].__setattr__(i[0], i[1])
+                        
+                    # deobfuscate username + password inside a try-except loop
+                    # if entries have not been obfuscated yet this action should raise an error
+                    # and old values (from nagstamon < 0.9.0) stay and will be converted when next
+                    # time saving config
+                    try:
+                        self.servers[server_name].username = self.DeObfuscate(self.servers[server_name].username)
+                        if self.servers[server_name].save_password == "False":
+                            self.servers[server_name].password = ""
+                        else:
+                            self.servers[server_name].password = self.DeObfuscate(self.servers[server_name].password)
+                        self.servers[server_name].proxy_username = self.DeObfuscate(self.servers[server_name].proxy_username)
+                        self.servers[server_name].proxy_password = self.DeObfuscate(self.servers[server_name].proxy_password)
+                    except:
+                        pass
+                                       
+                elif section == "Nagstamon":
+                    # go through all items of each sections (in fact there is only on
+                    # section which has to be there to comply to the .INI file standard
+                    for i in config.items(section):
+                        # create a key of every config item with its appropriate value - but please no legacy config file
+                        if not i[0] == "configfile":
+                            object.__setattr__(self, i[0], i[1])
+                    
+            # set flag for config file not being evaluated again
+            self.converted_from_single_configfile = "True"
+            
+        #for d in self.__dict__:
+        #    print d, "=", self.__dict__[d]
+        print self.servers
+
+        
     def _LoadServersMultipleConfig(self):
         """
         load servers config - special treatment because of obfuscated passwords
@@ -217,7 +282,41 @@ class Config(object):
             traceback.print_exc(file=sys.stdout)   
         
         return servers
-            
+    
+    
+    def _LoadLegacyConfigFile(self):
+        """
+        load any pre-0.9.9 config file
+        """
+        
+        # default negative setting
+        legacyconfigfile = False
+        
+        # try to use a given config file - there must be one given
+        # if sys.argv is larger than 1
+        if len(sys.argv) > 1:
+            if sys.argv[1].find("-psn") != -1:
+                legacyconfigfile = os.path.expanduser('~') + os.sep + ".nagstamon.conf"
+            else:
+                # allow to give a config file
+                self.configfile = sys.argv[1]
+        # otherwise if there exits a configfile in current working directory it should be used
+        elif os.path.exists(os.getcwd() + os.sep + "nagstamon.conf"):
+            legacyconfigfile = os.getcwd() + os.sep + "nagstamon.conf"
+        else:
+            # ~/.nagstamon.conf is the user conf file
+            # os.path.expanduser('~') finds out the user HOME dir where 
+            # nagstamon expects its conf file to be
+            legacyconfigfile = os.path.expanduser('~') + os.sep + ".nagstamon.conf"
+
+        # make path fit for actual os, normcase for letters and normpath for path
+        legacyconfigfile = os.path.normpath(os.path.normcase(legacyconfigfile))
+        
+        if os.path.exists(legacyconfigfile):
+            return legacyconfigfile
+        else:
+            return False
+        
                         
     def LoadMultipleConfig(self, settingsdir, setting, configobj):
         """

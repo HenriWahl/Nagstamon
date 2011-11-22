@@ -2077,7 +2077,12 @@ class ServerVBox(gtk.VBox):
                     self.popupmenu.append(menu_item)
                     
                 del action, item_visible
-            
+                
+            # add "Edit actions..." menu entry
+            menu_item = gtk.MenuItem("Edit actions...")
+            menu_item.connect("activate", self.TreeviewPopupMenuResponse, "Edit actions...")
+            self.popupmenu.append(menu_item)
+                            
             # add separator to separate between connections and actions
             self.popupmenu.append(gtk.SeparatorMenuItem())
             
@@ -2112,7 +2117,7 @@ class ServerVBox(gtk.VBox):
         # closing popwin is innecessary in case of rechecking, otherwise it must be done
         # because the dialog/app window will stay under the popwin   
         #if not remoteservice == "Recheck":
-        if remoteservice in ["Acknowledge", "Downtime", "Submit check result"]:
+        if remoteservice in ["Acknowledge", "Downtime", "Submit check result", "Edit actions..."]:
             self.output.popwin.Close()  
 
         #debug    
@@ -2134,40 +2139,9 @@ class ServerVBox(gtk.VBox):
                 # Action!
                 action.start()
 
-            elif remoteservice == "SSH":
-                # get host ip to connect to be independent of dns resolver
-                #host = self.miserable_server.GetHost(self.miserable_host)[0]
-                result = self.miserable_server.GetHost(self.miserable_host)
-                host, error = result.result, result.error
-                if error == "":
-                    # workaround for bug 2080503@sf.net
-                    if self.output.conf.app_ssh_options == "": args = self.output.conf.app_ssh_bin + " " + host
-                    else: args = self.output.conf.app_ssh_bin + " " + self.output.conf.app_ssh_options + " " + host
-                    sub = subprocess.Popen(args.split(" "))
-            elif remoteservice == "RDP":
-                # get host ip to connect to be independent of dns resolver               
-                result = self.miserable_server.GetHost(self.miserable_host)
-                host, error = result.result, result.error
-                if error == "":
-                    # workaround for bug 2080503@sf.net
-                    if self.output.conf.app_rdp_options == "": args = self.output.conf.app_rdp_bin + " " + host
-                    else: args = self.output.conf.app_rdp_bin + " " + self.output.conf.app_rdp_options + " " + host
-                    sub = subprocess.Popen(args.split(" "))
-            elif remoteservice == "VNC":
-                # get host ip to connect to be independent of dns resolver
-                result = self.miserable_server.GetHost(self.miserable_host)
-                host, error = result.result, result.error
-                if error == "":
-                    # workaround for bug 2080503@sf.net
-                    if self.output.conf.app_vnc_options == "": args = self.output.conf.app_vnc_bin + " " + host
-                    else: args = self.output.conf.app_vnc_bin + " " + self.output.conf.app_vnc_options + " " + host
-                    sub = subprocess.Popen(args.split(" "))
-            elif remoteservice == "HTTP":
-                # get host ip to connect to be independent of dns resolver
-                result = self.miserable_server.GetHost(self.miserable_host)
-                host, error = result.result, result.error
-                if error == "":
-                    Actions.TreeViewHTTP(host)
+            elif remoteservice == "Edit actions...":
+                # open actions settings
+                Settings(servers=self.output.servers, output=self.output, conf=self.output.conf, first_page="Actions")
             elif remoteservice == "Monitor":
                 # let Actions.TreeViewNagios do the work to open a webbrowser with nagios informations
                 Actions.TreeViewNagios(self.miserable_server, self.miserable_host, self.miserable_service)
