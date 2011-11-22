@@ -246,6 +246,9 @@ class Config(object):
                         # create a key of every config item with its appropriate value - but please no legacy config file
                         if not i[0] == "configfile":
                             object.__setattr__(self, i[0], i[1])
+            
+            print self.unconfigured
+                            
                     
             # set flag for config file not being evaluated again
             self.converted_from_single_configfile = True
