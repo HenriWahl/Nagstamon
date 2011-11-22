@@ -129,11 +129,7 @@ class Config(object):
         # the app is unconfigured by default and will stay so if it
         # would not find a config file
         self.unconfigured = True
-        
-        print
-        print self._LoadLegacyConfigFile()
-        print
-        
+
         # try to use a given config file - there must be one given
         # if sys.argv is larger than 1
         if len(sys.argv) > 1:
@@ -252,11 +248,9 @@ class Config(object):
                             object.__setattr__(self, i[0], i[1])
                     
             # set flag for config file not being evaluated again
-            self.converted_from_single_configfile = "True"
-            
-        #for d in self.__dict__:
-        #    print d, "=", self.__dict__[d]
-        print self.servers
+            self.converted_from_single_configfile = True
+            # of course Nagstamon is configured then
+            self.unconfigured = False
 
         
     def _LoadServersMultipleConfig(self):
