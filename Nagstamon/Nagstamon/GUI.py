@@ -3017,7 +3017,7 @@ class EditServer(GenericServer):
                     self.servers[new_server.name].thread.start()   
 
             # fill settings dialog treeview
-            self.settingsdialog.FillTreeView()
+            self.settingsdialog.FillTreeView("servers_treeview", self.conf.servers, "Servers", "selected_server")
             # destroy dialog
             self.dialog.destroy()
 
