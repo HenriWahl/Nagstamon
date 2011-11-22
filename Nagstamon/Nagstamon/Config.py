@@ -534,6 +534,14 @@ class Config(object):
                                "SSH": Action(name="SSH", description="Connect via SSH.",\
                                     type="command", string="C:\Program Files\PuTTY\putty.exe -l root $ADDRESS$")\
                                }
+        elif platform.system() == "Darwin":
+            defaultactions = { "RDP": Action(name="RDP", description="Connect via RDP.",\
+                                    type="command", string="open rdp://$ADDRESS$"), \
+                               "VNC": Action(name="VNC", description="Connect via VNC.",\
+                                    type="command", string="open vnc://$ADDRESS$"), \
+                               "SSH": Action(name="SSH", description="Connect via SSH.",\
+                                    type="command", string="open ssh://root@$ADDRESS$")\
+                               }
         else:
             # the Linux settings
             defaultactions = { "RDP": Action(name="RDP", description="Connect via RDP.",\
@@ -567,6 +575,7 @@ class Config(object):
                                                     description="Configure service in browser.", author="op5 Ab",\
                                                     string="$MONITOR$/index.php/configuration/configure/service/$HOST$?service=$SERVICE$", enabled=False)        
         return defaultactions
+    
             
 class Server(object):
     """
