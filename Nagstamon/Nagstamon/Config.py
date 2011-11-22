@@ -105,27 +105,7 @@ class Config(object):
         self.defaults_downtime_type_fixed = True
         self.defaults_downtime_type_flexible = False
         self.converted_from_single_configfile = False
-
-        """
-        # those are example Windows settings, almost certainly a
-        # user will have to fix them for his computer
-        if platform.system() == "Windows":
-            self.app_ssh_bin = "C:\Program Files\PuTTY\putty.exe"
-            self.app_rdp_bin = "C:\windows\system32\mstsc.exe"
-            self.app_vnc_bin = "C:\Program Files\TightVNC\\vncviewer.exe"
-            self.app_ssh_options = "-l root"
-            self.app_rdp_options = "/v:"
-            self.app_vnc_options = ""
-        else:
-            # the Linux settings
-            self.app_ssh_bin = "/usr/bin/gnome-terminal -x ssh"
-            self.app_rdp_bin = "/usr/bin/rdesktop"
-            self.app_vnc_bin = "/usr/bin/vncviewer"
-            self.app_ssh_options = "-l root"
-            self.app_rdp_options = "-g 1024x768"
-            self.app_vnc_options = ""
-        """
-        
+       
         # the app is unconfigured by default and will stay so if it
         # would not find a config file
         self.unconfigured = True
@@ -188,22 +168,20 @@ class Config(object):
             # the one read from configfile and so it would fail to save next time
             self.configdir = configdir_temp
                         
-            # seems like there is a config file so the app is not unconfigured anymore
-            self.unconfigured = False
-
             # Servers configuration...
             self.servers = self._LoadServersMultipleConfig()
          
-            # Load actions
-            self.actions = self.LoadMultipleConfig("actions", "action", "Action")
+            # Load actions if Nagstamon is not unconfigured, otherwise load defaults
+            if str(self.unconfigured) == "True":
+                self.actions = _DefaultActions()
+            else:
+                self.actions = self.LoadMultipleConfig("actions", "action", "Action")
+            
+            # seems like there is a config file so the app is not unconfigured anymore
+            self.unconfigured = False
 
         # in case it exists and it has not been used before read legacy config file once
         if str(self.converted_from_single_configfile) == "False" and not legacyconfigfile == False:
-  
-            print
-            print "reading legacy config file"
-            print
-            
             # instantiate a Configparser to parse the conf file
             # SF.net bug #3304423 could be fixed with allow_no_value argument which
             # is only available since Python 2.7
@@ -246,9 +224,6 @@ class Config(object):
                         # create a key of every config item with its appropriate value - but please no legacy config file
                         if not i[0] == "configfile":
                             object.__setattr__(self, i[0], i[1])
-            
-            print self.unconfigured
-                            
                     
             # set flag for config file not being evaluated again
             self.converted_from_single_configfile = True
@@ -539,6 +514,30 @@ class Config(object):
         return string
     
 
+    def _DefaultActions(self):
+        """
+        create some default actions like SSH and so on
+        """
+        if platform.system() == "Windows":
+            defaultactions = { "RDP": Action(name="RDP", description="Connect via RDP.",\
+                                    type="command", string="C:\windows\system32\mstsc.exe $ADDRESS$"), \
+                               "VNC": Action(name="VNC", description="Connect via VNC.",\
+                                    type="command", string="C:\Program Files\TightVNC\\vncviewer.exe $ADDRESS$"), \
+                               "SSH": Action(name="SSH", description="Connect via SSH.",\
+                                    type="command", string="C:\Program Files\PuTTY\putty.exe -l root $ADDRESS$")\
+                               }
+        else:
+            # the Linux settings
+            defaultactions = { "RDP": Action(name="RDP", description="Connect via RDP.",\
+                                    type="command", string="/usr/bin/rdesktop -g 1024x768 $ADDRESS$"),\
+                               "VNC": Action(name="VNC", description="Connect via VNC.",\
+                                    type="command", string="/usr/bin/vncviewer $ADDRESS$"),
+                               "SSH": Action(name="SSH", description="Connect via SSH.",\
+                                    type="command", string="/usr/bin/gnome-terminal -x ssh root@$ADDRESS$")\
+                               }
+
+        return defaultactions
+            
 class Server(object):
     """
     one Server realized as object for config info
@@ -564,7 +563,7 @@ class Action(object):
     class for custom actions, which whill be thrown into one config dictionary like the servers
     """
     
-    def __init__(self):
+    def __init__(self, **kwds):       
         # to be or not to be enabled...
         self.enabled = True
         # one of those: browser, url or command
@@ -595,3 +594,5 @@ class Action(object):
         self.re_status_information_pattern = ""
         self.re_status_information_reverse = False
     
+        # add and/or all keywords to object
+        for k in kwds: self.__dict__[k] = kwds[k]
