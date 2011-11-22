@@ -419,9 +419,10 @@ class Config(object):
                 f.close()
                 
             # clean up old deleted/renamed config files
-            for f in os.listdir(self.configdir + os.sep + settingsdir):
-                if not f.split(setting + "_")[1].split(".conf")[0] in self.__dict__[settingsdir]:
-                    os.unlink(self.configdir + os.sep + settingsdir + os.sep + f)
+            if os.path.exists(self.configdir + os.sep + settingsdir):
+                for f in os.listdir(self.configdir + os.sep + settingsdir):
+                    if not f.split(setting + "_")[1].split(".conf")[0] in self.__dict__[settingsdir]:
+                        os.unlink(self.configdir + os.sep + settingsdir + os.sep + f)
             
         except:
             import traceback
