@@ -2136,6 +2136,13 @@ class ServerVBox(gtk.VBox):
                                         server=self.miserable_server,\
                                         host=self.miserable_host,\
                                         service=self.miserable_service)
+
+                print self.output.conf.actions[remoteservice].close_popwin
+                
+                # if action wants a closed powin it should be closed
+                if str(self.output.conf.actions[remoteservice].close_popwin) == "True":
+                    self.output.popwin.Close()  
+                    
                 # Action!
                 action.start()
 
@@ -3091,6 +3098,10 @@ class GenericAction(object):
                         j.set_active(True)
                     if str(action.__dict__[key]) == "False":
                         j.set_active(False)
+                except:
+                    pass
+                try:
+                    j.set_value(int(self.conf.__dict__[key]))
                 except:
                     pass
 
