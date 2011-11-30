@@ -931,8 +931,10 @@ class GUI(object):
                         if str(self.conf.notification_flashing) == "True":
                             self.statusbar.SysTray.set_blinking(True)
                             self.statusbar.Flashing = True
-                            flash = Actions.Notification(output=self, sound=status, Resources=self.Resources, conf=self.conf, servers=self.servers)
-                            flash.start()   
+                            
+                        notify = Actions.Notification(output=self, sound=status, Resources=self.Resources, conf=self.conf, servers=self.servers)
+                        notify.start()  
+                        
                         # if desired pop up status window
                         # sorry but does absolutely not work with windows and systray icon so I prefer to let it be
                         #if str(self.conf.notification_popup) == "True":

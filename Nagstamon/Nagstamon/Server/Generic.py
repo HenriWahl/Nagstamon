@@ -268,22 +268,22 @@ class GenericServer(object):
                     send_notification = "&send_notification=on"
                 else:
                     send_notification = "" 
-            # dito for persistence...
-            if persistent == True:
-                persistent_comment = "&persistent=on"
-            else:
-                persistent_comment = ""
-            # ...and sticky acks too?
-            if sticky == True:
-                sticky_ack = "&sticky_ack=on"
-            else:
-                sticky_ack = ""
-                cgi_data = urllib.urlencode([("cmd_typ","34"), ("cmd_mod","2"), ("host",host), ("service",s),\
-                                             ("com_author",author), ("com_data",comment), ("btnSubmit","Commit")])\
-                                             + send_notification + persistent_comment + sticky_ack  
-                #running remote cgi command        
-                self.FetchURL(url, giveback="raw", cgi_data=cgi_data)
-            
+                # dito for persistence...
+                if persistent == True:
+                    persistent_comment = "&persistent=on"
+                else:
+                    persistent_comment = ""
+                # ...and sticky acks too?
+                if sticky == True:
+                    sticky_ack = "&sticky_ack=on"
+                else:
+                    sticky_ack = ""
+                    cgi_data = urllib.urlencode([("cmd_typ","34"), ("cmd_mod","2"), ("host",host), ("service",s),\
+                                                 ("com_author",author), ("com_data",comment), ("btnSubmit","Commit")])\
+                                                 + send_notification + persistent_comment + sticky_ack  
+                    #running remote cgi command        
+                    self.FetchURL(url, giveback="raw", cgi_data=cgi_data)
+                
     
     def set_downtime(self, thread_obj):
         self._set_downtime(thread_obj.host, thread_obj.service, thread_obj.author, thread_obj.comment, thread_obj.fixed,
@@ -774,7 +774,7 @@ class GenericServer(object):
                 
                 if service.flapping == True and str(self.conf.filter_all_flapping_services) == "True":
                     if str(self.conf.debug_mode) == "True":
-                        self.Debug(server=self.get_name(), debug="Filter: FLAPPING SERVICE " + str(host.name))
+                        self.Debug(server=self.get_name(), debug="Filter: FLAPPING SERVICE " + str(host.name) + ";" + str(service.name))
                     service.visible = False
                     
                 if host.scheduled_downtime == True and str(self.conf.filter_services_on_hosts_in_maintenance) == "True":

@@ -146,7 +146,6 @@ class OpsviewServer(GenericServer):
                     self.new_hosts[hostdict["name"]].flapping = True                    
 
                 #services
-                #for service in host.getchildren()[:-1]:
                 for service in host.findAll("services"):   
                     servicedict = dict(service._getAttrMap())
                     self.new_hosts[hostdict["name"]].services[servicedict["name"]] = OpsviewService()
@@ -164,6 +163,7 @@ class OpsviewServer(GenericServer):
                         self.new_hosts[hostdict["name"]].services[servicedict["name"]].acknowledged = True
                     if servicedict.has_key("flapping"):
                         self.new_hosts[hostdict["name"]].services[servicedict["name"]].flapping = True
+
                     # extra opsview id for service, needed for submitting check results
                     self.new_hosts[hostdict["name"]].services[servicedict["name"]].service_object_id = str(servicedict["service_object_id"])
 
