@@ -634,6 +634,7 @@ class Action(object):
         self.re_status_information_reverse = False
         # close powin or not, depends on personal preference
         self.close_popwin = True
+        self.leave_popwin_open = False
     
         # add and/or all keywords to object
         for k in kwds: self.__dict__[k] = kwds[k]

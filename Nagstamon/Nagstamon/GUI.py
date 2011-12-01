@@ -3084,9 +3084,11 @@ class GenericAction(object):
             action = self.conf.actions[self.action]
         keys = action.__dict__.keys()          
         # walk through all relevant input types to fill dialog with existing settings
-        for i in ["input_entry_", "input_checkbutton_"]: 
+        for i in ["input_entry_", "input_checkbutton_", "input_radiobutton_"]: 
             for key in keys:
                 j = self.builder.get_object(i + key)
+                
+                
                 if not j:
                     continue
                 # some hazard, every widget has other methods to fill it with desired content
@@ -3117,7 +3119,7 @@ class GenericAction(object):
         new_action = Config.Action()
 
         keys = new_action.__dict__.keys()
-        for i in ["input_entry_", "input_checkbutton_"]:
+        for i in ["input_entry_", "input_checkbutton_", "input_radiobutton_"]:
             for key in keys:
                 j = self.builder.get_object(i + key)
                 if not j:
@@ -3127,15 +3129,13 @@ class GenericAction(object):
                 try:
                     new_action.__dict__[key] = j.get_text()
                 except:
-                    pass
-                try:
-                    new_action.__dict__[key] = j.get_active()
-                except:
-                    pass
-                try:
-                    new_action.__dict__[key] = int(j.get_value())
-                except:
-                    pass
+                    try:
+                        new_action.__dict__[key] = j.get_active()
+                    except:
+                        try:
+                            new_action.__dict__[key] = int(j.get_value())
+                        except:
+                            pass
 
         # set server type combobox which cannot be set by above hazard method
         combobox = self.builder.get_object("input_combo_action_type")
@@ -3243,7 +3243,7 @@ class EditAction(GenericAction):
         new_action = Config.Action()
 
         keys = new_action.__dict__.keys()
-        for i in ["input_entry_", "input_checkbutton_"]:
+        for i in ["input_entry_", "input_checkbutton_", "input_radiobutton_"]:
             for key in keys:
                 j = self.builder.get_object(i + key)
                 if not j:
@@ -3253,15 +3253,13 @@ class EditAction(GenericAction):
                 try:
                     new_action.__dict__[key] = j.get_text()
                 except:
-                    pass
-                try:
-                    new_action.__dict__[key] = j.get_active()
-                except:
-                    pass
-                try:
-                    new_action.__dict__[key] = int(j.get_value())
-                except:
-                    pass
+                    try:
+                        new_action.__dict__[key] = j.get_active()
+                    except:
+                        try:
+                            new_action.__dict__[key] = int(j.get_value())
+                        except:
+                            pass
 
         # set server type combobox which cannot be set by above hazard method
         combobox = self.builder.get_object("input_combo_action_type")
