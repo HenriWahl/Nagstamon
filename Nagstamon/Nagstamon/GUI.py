@@ -1385,52 +1385,14 @@ class Popwin(object):
         self.HBoxCombobox.add(self.ComboboxMonitor)
         self.AlMonitorComboBox.add(self.HBoxCombobox)
         
-        # Button for Filter settings shortcut - HBox is necessary because gtk.Button allows only one child
-        self.ButtonFilters_HBox = gtk.HBox()
-        self.ButtonFilters_Icon = gtk.Image()
-        self.ButtonFilters_Icon.set_from_file(self.output.Resources + os.sep + "settings.png")
-        self.ButtonFilters_Label = gtk.Label("Filters")
-        self.ButtonFilters_HBox.add(self.ButtonFilters_Icon)
-        self.ButtonFilters_HBox.add(self.ButtonFilters_Label)
-        self.ButtonFilters = gtk.Button()
-        self.ButtonFilters.set_relief(gtk.RELIEF_NONE)
-        self.ButtonFilters.add(self.ButtonFilters_HBox)  
-        self.HBoxMenu.add(self.ButtonFilters)    
-
-        # Button Recheck All - HBox is necessary because gtk.Button allows only one child
-        self.ButtonRecheckAll_HBox = gtk.HBox()
-        self.ButtonRecheckAll_Icon = gtk.Image()
-        self.ButtonRecheckAll_Icon.set_from_file(self.output.Resources + os.sep + "recheckall.png")
-        self.ButtonRecheckAll_Label = gtk.Label("Recheck all and refresh")
-        self.ButtonRecheckAll_HBox.add(self.ButtonRecheckAll_Icon)
-        self.ButtonRecheckAll_HBox.add(self.ButtonRecheckAll_Label)
-        self.ButtonRecheckAll = gtk.Button()
-        self.ButtonRecheckAll.set_relief(gtk.RELIEF_NONE)
-        self.ButtonRecheckAll.add(self.ButtonRecheckAll_HBox)
-        self.HBoxMenu.add(self.ButtonRecheckAll)        
-
-        # Button Refresh - HBox is necessary because gtk.Button allows only one child
-        self.ButtonRefresh_HBox = gtk.HBox()
-        self.ButtonRefresh_Icon = gtk.Image()
-        self.ButtonRefresh_Icon.set_from_file(self.output.Resources + os.sep + "refresh.png")
-        self.ButtonRefresh_Label = gtk.Label("Refresh")
-        self.ButtonRefresh_HBox.add(self.ButtonRefresh_Icon)
-        self.ButtonRefresh_HBox.add(self.ButtonRefresh_Label)
-        self.ButtonRefresh = gtk.Button()
-        self.ButtonRefresh.set_relief(gtk.RELIEF_NONE)
-        self.ButtonRefresh.add(self.ButtonRefresh_HBox)
+        # general buttons 
+        self.ButtonFilters = ButtonWithIcon(output=self.output, label="Filters", icon="settings.png")
+        self.ButtonRecheckAll = ButtonWithIcon(output=self.output, label="Recheck all", icon="recheckall.png")
+        self.ButtonRefresh = ButtonWithIcon(output=self.output, label="Refresh", icon="refresh.png")
+        self.ButtonSettings = ButtonWithIcon(output=self.output, label="Settings", icon="settings.png")
+        self.HBoxMenu.add(self.ButtonFilters)   
+        self.HBoxMenu.add(self.ButtonRecheckAll)   
         self.HBoxMenu.add(self.ButtonRefresh)
-
-        # Button Settings - HBox is necessary because gtk.Button allows only one child
-        self.ButtonSettings_HBox = gtk.HBox()
-        self.ButtonSettings_Icon = gtk.Image()
-        self.ButtonSettings_Icon.set_from_file(self.output.Resources + os.sep + "settings.png")
-        self.ButtonSettings_Label = gtk.Label("Settings")
-        self.ButtonSettings_HBox.add(self.ButtonSettings_Icon)
-        self.ButtonSettings_HBox.add(self.ButtonSettings_Label)
-        self.ButtonSettings = gtk.Button()
-        self.ButtonSettings.set_relief(gtk.RELIEF_NONE)
-        self.ButtonSettings.add(self.ButtonSettings_HBox)
         self.HBoxMenu.add(self.ButtonSettings)
         
         # nice separator
@@ -1818,40 +1780,13 @@ class ServerVBox(gtk.VBox):
         self.Label = gtk.Label()
         # once again a Windows(TM) workaround
         self.Server_EventBox = gtk.EventBox()
+
+        # create icony buttons
+        self.ButtonMonitor = ButtonWithIcon(output=self.output, label="Monitor", icon="nagios.png")
+        self.ButtonHosts = ButtonWithIcon(output=self.output, label="Hosts", icon="hosts.png")
+        self.ButtonServices = ButtonWithIcon(output=self.output, label="Services", icon="services.png")
+        self.ButtonHistory = ButtonWithIcon(output=self.output, label="History", icon="history.png")
         
-        # Button Monitor - HBox is necessary because gtk.Button allows only one child
-        self.ButtonMonitor_HBox = gtk.HBox()
-        self.ButtonMonitor_Icon = gtk.Image()
-        self.ButtonMonitor_Icon.set_from_file(self.output.Resources + os.sep + "nagios.png")
-        self.ButtonMonitor_Label = gtk.Label("Monitor")
-        self.ButtonMonitor_HBox.add(self.ButtonMonitor_Icon)
-        self.ButtonMonitor_HBox.add(self.ButtonMonitor_Label)
-        self.ButtonMonitor = gtk.Button()
-        self.ButtonMonitor.set_relief(gtk.RELIEF_NONE)
-        self.ButtonMonitor.add(self.ButtonMonitor_HBox)
-
-        # Button Services - HBox is necessary because gtk.Button allows only one child
-        self.ButtonServices_HBox = gtk.HBox()
-        self.ButtonServices_Icon = gtk.Image()
-        self.ButtonServices_Icon.set_from_file(self.output.Resources + os.sep + "services.png")
-        self.ButtonServices_Label = gtk.Label("Services")
-        self.ButtonServices_HBox.add(self.ButtonServices_Icon)
-        self.ButtonServices_HBox.add(self.ButtonServices_Label)
-        self.ButtonServices = gtk.Button()
-        self.ButtonServices.set_relief(gtk.RELIEF_NONE)
-        self.ButtonServices.add(self.ButtonServices_HBox)
-
-        # Button Hosts - HBox is necessary because gtk.Button allows only one child
-        self.ButtonHosts_HBox = gtk.HBox()
-        self.ButtonHosts_Icon = gtk.Image()
-        self.ButtonHosts_Icon.set_from_file(self.output.Resources + os.sep + "hosts.png")
-        self.ButtonHosts_Label = gtk.Label("Hosts")
-        self.ButtonHosts_HBox.add(self.ButtonHosts_Icon)
-        self.ButtonHosts_HBox.add(self.ButtonHosts_Label)
-        self.ButtonHosts = gtk.Button()
-        self.ButtonHosts.set_relief(gtk.RELIEF_NONE)
-        self.ButtonHosts.add(self.ButtonHosts_HBox)
-
         # Label with status information
         self.LabelStatus = gtk.Label("")
 
@@ -1865,6 +1800,7 @@ class ServerVBox(gtk.VBox):
         self.HBoxLeft.add(self.ButtonMonitor)
         self.HBoxLeft.add(self.ButtonHosts)
         self.HBoxLeft.add(self.ButtonServices)
+        self.HBoxLeft.add(self.ButtonHistory)
         self.HBoxLeft.add(gtk.VSeparator())
         self.HBoxLeft.add(self.LabelStatus)
 
@@ -1878,40 +1814,6 @@ class ServerVBox(gtk.VBox):
 
         self.Server_EventBox.add(self.HBox)
         self.add(self.Server_EventBox)            
-
-        """
-        # context menu for detailed status overview, opens with a mouse click onto a listed item
-        self.popupmenu = gtk.Menu()
-        # first add connections
-        for i in ["SSH", "RDP", "VNC", "HTTP"]:
-            menu_item = gtk.MenuItem(i)
-            menu_item.connect("activate", self.TreeviewPopupMenuResponse, i)
-            self.popupmenu.append(menu_item)
-            
-        # add separator to separate between connections and actions
-        self.popupmenu.append(gtk.SeparatorMenuItem())
-
-        # add custom actions - this is just a test!
-        actions_list=list(self.output.conf.actions)
-        actions_list.sort(key=str.lower)
-        for a in actions_list:
-            menu_item = gtk.MenuItem(a)
-            menu_item.connect("activate", self.TreeviewPopupMenuResponse, a)
-            self.popupmenu.append(menu_item)
-        
-        # add separator to separate between connections and actions
-        self.popupmenu.append(gtk.SeparatorMenuItem())
-        
-        # after the separatior add actions
-        #for i in ["Recheck", "Acknowledge", "Submit check result", "Downtime"]:
-        for i in self.server.MENU_ACTIONS:
-            menu_item = gtk.MenuItem(i)
-            menu_item.connect("activate", self.TreeviewPopupMenuResponse, i)
-            if i == "Recheck":
-                self.recheck_item = menu_item
-            self.popupmenu.append(menu_item)
-        self.popupmenu.show_all()
-        """
 
         # new TreeView handling, not generating new items with every refresh cycle
         self.server.TreeView = gtk.TreeView() 
@@ -2118,7 +2020,6 @@ class ServerVBox(gtk.VBox):
 
         # closing popwin is innecessary in case of rechecking, otherwise it must be done
         # because the dialog/app window will stay under the popwin   
-        #if not remoteservice == "Recheck":
         if remoteservice in ["Acknowledge", "Downtime", "Submit check result", "Edit actions..."]:
             self.output.popwin.Close()  
 
@@ -2139,8 +2040,6 @@ class ServerVBox(gtk.VBox):
                                         host=self.miserable_host,\
                                         service=self.miserable_service)
 
-                print self.output.conf.actions[remoteservice].close_popwin
-                
                 # if action wants a closed powin it should be closed
                 if str(self.output.conf.actions[remoteservice].close_popwin) == "True":
                     self.output.popwin.Close()  
@@ -3373,3 +3272,24 @@ class DummyStatusIcon(object):
     def set_blinking(self, *args, **kwds):
         pass
 
+
+class ButtonWithIcon(gtk.Button):
+    """
+    Button with an icon - reduces code
+    """
+    def __init__(self, **kwds):
+        # add all keywords to object
+        for k in kwds: self.__dict__[k] = kwds[k]
+
+        gtk.Button.__init__(self)
+        
+        # HBox is necessary because gtk.Button allows only one child
+        hbox = gtk.HBox()
+        icon = gtk.Image()
+        icon.set_from_file(self.output.Resources + os.sep + self.icon)
+        label = gtk.Label(self.label)
+        hbox.add(icon)
+        hbox.add(label)
+        
+        self.set_relief(gtk.RELIEF_NONE)
+        self.add(hbox)

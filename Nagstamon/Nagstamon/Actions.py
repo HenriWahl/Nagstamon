@@ -638,11 +638,6 @@ def TreeViewNagios(server, host, service):
     # so the nagios query is different 
     server.open_tree_view(host, service)
 
-        
-def TreeViewHTTP(host):
-    # open Browser with URL of some Host
-    webbrowser.open("http://" + host)
-
 
 # contains dict with available server classes
 # key is type of server, value is server class
