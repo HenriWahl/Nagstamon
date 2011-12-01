@@ -391,14 +391,21 @@ class GenericServer(object):
         webbrowser.open(self.nagios_cgi_url + "/status.cgi?host=all&servicestatustypes=253")
         # debug
         if str(self.conf.debug_mode) == "True":
-            self.Debug(server=self.get_name(), debug="Open services web page " + self.nagios_url + "/status.cgi?host=all&servicestatustypes=253")
+            self.Debug(server=self.get_name(), debug="Open services web page " + self.nagios_cgi_url + "/status.cgi?host=all&servicestatustypes=253")
         
             
     def open_hosts(self):
         webbrowser.open(self.nagios_cgi_url + "/status.cgi?hostgroup=all&style=hostdetail&hoststatustypes=12")
         # debug
         if str(self.conf.debug_mode) == "True":
-            self.Debug(server=self.get_name(), debug="Open hosts web page " + self.nagios_url + "/status.cgi?hostgroup=all&style=hostdetail&hoststatustypes=12")
+            self.Debug(server=self.get_name(), debug="Open hosts web page " + self.nagios_cgi_url + "/status.cgi?hostgroup=all&style=hostdetail&hoststatustypes=12")
+
+            
+    def open_history(self):
+        webbrowser.open(self.nagios_cgi_url + "/history.cgi?host=all")
+        # debug
+        if str(self.conf.debug_mode) == "True":
+            self.Debug(server=self.get_name(), debug="Open history web page " + self.nagios_cgi_url + "/history.cgi?host=all")
 
             
     def _get_status(self):

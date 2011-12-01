@@ -1483,6 +1483,8 @@ class Popwin(object):
             self.ServerVBoxes[server.get_name()].ButtonServices.connect("clicked", Actions.OpenServices, server, self.output)
             # open Nagios hosts in your favorite web browser when hosts button is clicked
             self.ServerVBoxes[server.get_name()].ButtonHosts.connect("clicked", Actions.OpenHosts, server, self.output)
+            # open Nagios history in your favorite web browser when hosts button is clicked
+            self.ServerVBoxes[server.get_name()].ButtonHistory.connect("clicked", Actions.OpenHistory, server, self.output)
             # windows workaround - see above
             # connect Server_EventBox with leave-notify-event to get popwin popping down when leaving it
             self.ServerVBoxes[server.get_name()].Server_EventBox.connect("leave-notify-event", self.PopDown)
@@ -1907,20 +1909,6 @@ class ServerVBox(gtk.VBox):
             
             # context menu for detailed status overview, opens with a mouse click onto a listed item
             self.popupmenu = gtk.Menu()
-            """
-
-            obsoleted by custom actions
-            
-            # first add connections
-            for i in ["SSH", "RDP", "VNC", "HTTP"]:
-                menu_item = gtk.MenuItem(i)
-                menu_item.connect("activate", self.TreeviewPopupMenuResponse, i)
-                self.popupmenu.append(menu_item)
-                
-            # add separator to separate between connections and actions
-            self.popupmenu.append(gtk.SeparatorMenuItem())
-            
-            """
     
             # add custom actions - this is just a test!
             actions_list=list(self.output.conf.actions)
@@ -2013,9 +2001,9 @@ class ServerVBox(gtk.VBox):
     def TreeviewPopupMenuResponse(self, widget, remoteservice):
         """
             responses to the menu items
-            binaries get called by subprocess.Popen to beware nagstamon of hanging while
-            waiting for the called binary exit code
-            the requested binary and its arguments are given by a list
+            commands get called by subprocess.Popen to beware nagstamon of hanging while
+            waiting for the called command exit code
+            the requested command and its arguments are given by a list
         """
 
         # closing popwin is innecessary in case of rechecking, otherwise it must be done

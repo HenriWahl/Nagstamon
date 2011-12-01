@@ -69,12 +69,28 @@ class NinjaServer(GenericServer):
             webbrowser.open('%s/index.php/extinfo/details/host/%s' % (self.nagios_url, host))
         else:
             webbrowser.open('%s/index.php/extinfo/details/service/%s?service=%s' % (self.nagios_url, host, service))
+            
 
     def open_services(self):
         webbrowser.open('%s/index.php/status/service/all?servicestatustypes=14' % (self.nagios_url))
+        # debug
+        if str(self.conf.debug_mode) == "True":
+            self.Debug(server=self.get_name(), debug='Open services web page %s/index.php/status/service/all?servicestatustypes=14' % (self.nagios_url))
 
+            
     def open_hosts(self):
         webbrowser.open('%s/index.php/status/host/all/6' % (self.nagios_url))
+        # debug
+        if str(self.conf.debug_mode) == "True":
+            self.Debug(server=self.get_name(), debug='Open hosts web page %s/index.php/status/host/all/6' % (self.nagios_url))
+            
+        
+    def open_history(self):
+        webbrowser.open('%s/index.php/showlog/alert_history' % (self.nagios_url))
+        # debug
+        if str(self.conf.debug_mode) == "True":
+            self.Debug(server=self.get_name(), debug='Open history web page %s/index.php/showlog/alert_history' % (self.nagios_url))
+
 
     def _set_recheck(self, host, service):
         if not service:

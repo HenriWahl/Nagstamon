@@ -631,6 +631,14 @@ def OpenHosts(widget, server, output):
     output.popwin.Close()
     # start browser with URL
     server.open_hosts()
+    
+
+def OpenHistory(widget, server, output):
+    # open Nagios history in your favorite web browser when history button is clicked
+    # first close popwin
+    output.popwin.Close()
+    # start browser with URL
+    server.open_history()
 
     
 def TreeViewNagios(server, host, service):

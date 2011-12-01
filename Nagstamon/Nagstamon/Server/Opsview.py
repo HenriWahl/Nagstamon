@@ -198,3 +198,9 @@ class OpsviewServer(GenericServer):
         # debug
         if str(self.conf.debug_mode) == "True":
             self.Debug(server=self.get_name(), debug="Open hosts web page " + self.nagios_url + "/status/host?hostgroupid=1&state=1")
+
+    def open_history(self):
+        webbrowser.open(self.nagios_url + "/event")
+        # debug
+        if str(self.conf.debug_mode) == "True":
+            self.Debug(server=self.get_name(), debug="Open monitor history page " + self.nagios_url + "/event")
