@@ -74,6 +74,16 @@ for server in conf.servers.values():
 # Initiate Output
 output = GUI.GUI(conf=conf, servers=servers, Resources=Resources, debug_queue=debug_queue)
 
+# show notice if a legacy config file is used from commandline
+if conf.legacyconfigfile_notice == True:
+    notice = "You started Nagstamon with a non-default config file from command line. Since \
+Nagstamon 0.9.9 the configuration is stored in a config directory. Your config file has been \
+converted and will be saved as\n %s. \n\
+Please use this path or create a new one for your custom start of Nagstamon." % ((conf.configdir))
+    print "\n" + notice + "\n"
+    output.Dialog(type=gtk.MESSAGE_WARNING, buttons=gtk.BUTTONS_OK, message=notice)
+
+
 # Start debugging loop
 debugloop = Actions.DebugLoop(conf=conf, debug_queue=debug_queue, output=output)
 debugloop.start()

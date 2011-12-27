@@ -88,7 +88,6 @@ class GUI(object):
             else:
                 self.Resources = os.path.normcase(os.getcwd() + os.sep + "resources")
 
-
         # initialize overall status flag
         self.status_ok = True
 
@@ -800,7 +799,7 @@ class GUI(object):
                 break
 
         if "check_output" in server.SUBMIT_CHECK_RESULT_ARGS and len(check_output) == 0:
-            self.ErrorDialog("Submit check result needs a check output.")
+            self.Dialog(message="Submit check result needs a check output.")
         else:    
             # let thread execute POST request
             submit_check_result = Actions.SubmitCheckResult(server=server, host=host,\
@@ -874,14 +873,14 @@ class GUI(object):
         self.AboutDialogOpen = False
 
 
-    def ErrorDialog(self, error):
+    def Dialog(self, type=gtk.MESSAGE_ERROR, message="", buttons=gtk.BUTTONS_CANCEL):
         """
             versatile error dialog
         """        
         # close popwin to make sure the error dialog will not be covered by popwin
         self.popwin.Close()
 
-        dialog = gtk.MessageDialog(parent=None, flags=gtk.DIALOG_MODAL, type=gtk.MESSAGE_ERROR, buttons=gtk.BUTTONS_CANCEL, message_format=str(error))
+        dialog = gtk.MessageDialog(parent=None, flags=gtk.DIALOG_MODAL, type=type, buttons=buttons, message_format=str(message))
         # gtk.Dialog.run() does a mini loop to wait
         dialog.run()
         dialog.destroy()
@@ -1035,7 +1034,7 @@ class StatusBar(object):
         # if statusbar is enabled...
         self.StatusBar.move(int(self.conf.position_x), int(self.conf.position_y))
         if str(self.conf.statusbar_systray) == "True" or str(self.conf.statusbar_floating) == "True":
-        # ...move statusbar in case it is floating to its last saved position and show it
+        # ...move statusbar in case it is floating to its last saved position and show it            
             self.StatusBar.show_all()
         else:
             self.StatusBar.hide_all()
@@ -2055,7 +2054,7 @@ class ServerVBox(gtk.VBox):
             self.output.popwin.PopDown()
 
         except Exception, err:
-            self.output.ErrorDialog(err)
+            self.output.Dialog(message=err)
             
             
 class Settings(object):
@@ -2691,7 +2690,7 @@ class GenericServer(object):
 
         # check if there is already a server named like the new one
         if new_server.name in self.conf.servers:
-            self.output.ErrorDialog('A server named "' + new_server.name + '" already exists.')
+            self.output.Dialog(message='A server named "' + new_server.name + '" already exists.')
         else:
             # put in new one
             self.conf.servers[new_server.name] = new_server
@@ -2887,7 +2886,7 @@ class EditServer(GenericServer):
 
         # check if there is already a server named like the new one
         if new_server.name in self.conf.servers and new_server.name != self.server:
-            self.output.ErrorDialog("A server named " + new_server.name + " already exists.")
+            self.output.Dialog(message="A server named " + new_server.name + " already exists.")
         else:
             # delete old server configuration entry
             self.conf.servers.pop(self.server)
@@ -3032,7 +3031,7 @@ class GenericAction(object):
         
         # check if there is already an action named like the new one
         if new_action.name in self.conf.actions:
-            self.output.ErrorDialog('An action named "' + new_action.name + '" already exists.')
+            self.output.Dialog(message='An action named "' + new_action.name + '" already exists.')
         else:
             # put in new one
             self.conf.actions[new_action.name] = new_action      
@@ -3156,7 +3155,7 @@ class EditAction(GenericAction):
         
         # check if there is already an action named like the new one
         if new_action.name in self.conf.actions and new_action.name != self.action:
-            self.output.ErrorDialog('An action named "' + new_action.name + '" already exists.')
+            self.output.Dialog(message='An action named "' + new_action.name + '" already exists.')
         else:
             # delete old one
             self.conf.actions.pop(self.action)

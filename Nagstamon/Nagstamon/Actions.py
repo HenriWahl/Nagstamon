@@ -133,7 +133,6 @@ class RefreshLoopOneServer(threading.Thread):
                         # wait for the doRefresh flag to be True, if it is, do a refresh
                         if self.doRefresh == True:
                             if str(self.conf.debug_mode) == "True":
-                                #print self.server.get_name(), ":", "Refreshing output - server is already checking:", self.server.isChecking                                        
                                 self.server.Debug(server=self.server.get_name(), debug="Refreshing output - server is already checking: " + str(self.server.isChecking))
                             # reset refresh flag
                             self.doRefresh = False
@@ -196,7 +195,7 @@ class DebugLoop(threading.Thread):
                 self.debug_file = open(self.conf.debug_file, "w")
             except Exception, err:
                 # if path to file does not exist tell user
-                self.output.ErrorDialog(err) 
+                self.output.Dialog(message=err) 
         
         
     def run(self):       

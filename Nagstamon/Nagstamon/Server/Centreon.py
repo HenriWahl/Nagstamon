@@ -76,7 +76,7 @@ class CentreonServer(GenericServer):
         webbrowser.open(self.nagios_cgi_url + "/main.php?p=203")
         # debug
         if str(self.conf.debug_mode) == "True":
-            self.Debug(server=self.get_name(), debug="Open histroy web page " + self.nagios_url + "/main.php?p=203")
+            self.Debug(server=self.get_name(), debug="Open history web page " + self.nagios_url + "/main.php?p=203")
           
             
     def get_start_end(self, host):

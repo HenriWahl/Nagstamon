@@ -82,6 +82,8 @@ class MultisiteServer(GenericServer):
               'api_reschedule':  self.nagios_url + 'nagios_action.py?action=reschedule',
               'api_host_act':    self.nagios_url + 'view.py?_transid=-1&_do_actions=yes&_do_confirm=Yes!&output_format=python&view_name=hoststatus',
               'api_service_act': self.nagios_url + 'view.py?_transid=-1&_do_actions=yes&_do_confirm=Yes!&output_format=python&view_name=service',
+              'human_events':    self.nagios_url + "index.py?%s" %
+                                                   urllib.urlencode({'start_url': 'view.py?view_name=events'}),
             }
     
             self.statemap = {
@@ -277,12 +279,19 @@ class MultisiteServer(GenericServer):
 
         if str(self.conf.debug_mode) == "True":
             self.Debug(server=self.get_name(), debug="Open web page " + url)
+            
 
     def open_services(self):
         self._open_browser(self.urls['human_services'])
+        
 
     def open_hosts(self):
         self._open_browser(self.urls['human_hosts'])
+        
+        
+    def open_history(self):
+        self._open_browser(self.urls['human_events'])
+
 
     def open_tree_view(self, host, service=""):
         """

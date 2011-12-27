@@ -119,6 +119,7 @@ class Config(object):
             else:
                 # allow to give a config file
                 self.configdir = sys.argv[1]
+                #self.configfile= self.configdir + os.sep + "nagstamon.conf"
                            
         # otherwise if there exits a configfile in current working directory it should be used
         elif os.path.exists(os.getcwd() + os.sep + "nagstamon.config"):
@@ -129,7 +130,7 @@ class Config(object):
             # nagstamon expects its conf file to be
             self.configdir = os.path.expanduser('~') + os.sep + ".nagstamon"
 
-        self.configfile = self.configdir + os.sep + "nagstamon.conf"            
+        self.configfile = self.configdir + os.sep + "nagstamon.conf"      
             
         # make path fit for actual os, normcase for letters and normpath for path
         self.configfile = os.path.normpath(os.path.normcase(self.configfile))
@@ -175,9 +176,16 @@ class Config(object):
             
             # seems like there is a config file so the app is not unconfigured anymore
             self.unconfigured = False
-
+            
+            # if configfile has been converted from legacy configfile reset it to the new value
+            self.configfile = self.configdir + os.sep + "nagstamon.conf" 
+            
+        # flag to be evaluated after gui is initialized and used to show a notice if a legacy config file is used
+        # from command line
+        self.legacyconfigfile_notice = False
+            
         # in case it exists and it has not been used before read legacy config file once
-        if str(self.converted_from_single_configfile) == "False" and not legacyconfigfile == False:
+        if str(self.converted_from_single_configfile) == "False" and not legacyconfigfile == False:            
             # instantiate a Configparser to parse the conf file
             # SF.net bug #3304423 could be fixed with allow_no_value argument which
             # is only available since Python 2.7
@@ -221,16 +229,26 @@ class Config(object):
                         if not i[0] == "configfile":
                             object.__setattr__(self, i[0], i[1])
                     
+            # add default actions as examples
+            self.actions.update(self._DefaultActions())
+                            
             # set flag for config file not being evaluated again
             self.converted_from_single_configfile = True
             # of course Nagstamon is configured then
             self.unconfigured = False
+            
+            # add config dir in place of legacy config file
+            self.configdir = legacyconfigfile + ".config"
+            self.configfile = self.configdir + os.sep + "nagstamon.conf"
+            
+            # set flag to show legacy command line config file notice
+            self.legacyconfigfile_notice = True
 
         # Load actions if Nagstamon is not unconfigured, otherwise load defaults
         if str(self.unconfigured) == "True":
             self.actions = self._DefaultActions()
+            
 
-        
     def _LoadServersMultipleConfig(self):
         """
         load servers config - special treatment because of obfuscated passwords
@@ -271,7 +289,7 @@ class Config(object):
                 legacyconfigfile = os.path.expanduser('~') + os.sep + ".nagstamon.conf"
             else:
                 # allow to give a config file
-                self.configfile = sys.argv[1]
+                legacyconfigfile = sys.argv[1]
         # otherwise if there exits a configfile in current working directory it should be used
         elif os.path.exists(os.getcwd() + os.sep + "nagstamon.conf"):
             legacyconfigfile = os.getcwd() + os.sep + "nagstamon.conf"
@@ -280,7 +298,7 @@ class Config(object):
             # os.path.expanduser('~') finds out the user HOME dir where 
             # nagstamon expects its conf file to be
             legacyconfigfile = os.path.expanduser('~') + os.sep + ".nagstamon.conf"
-
+            
         # make path fit for actual os, normcase for letters and normpath for path
         legacyconfigfile = os.path.normpath(os.path.normcase(legacyconfigfile))
         
@@ -331,7 +349,7 @@ class Config(object):
         try:
             # Make sure .nagstamon is created
             if not os.path.exists(self.configdir):
-                os.mkdir(self.configdir)
+                os.mkdir(self.configdir)                
             # save config file with ConfigParser
             config = ConfigParser.ConfigParser()
             # general section for Nagstamon
@@ -348,7 +366,7 @@ class Config(object):
 
             # debug
             if str(self.debug_mode) == "True":
-                output.servers.values()[0].Debug(server="", debug="Saving config to" + self.configfile)
+                output.servers.values()[0].Debug(server="", debug="Saving config to " + self.configfile)
                 
             # open, save and close config file
             f = open(os.path.normpath(self.configfile), "w")
@@ -555,23 +573,29 @@ class Config(object):
                                     enabled=False)\
                                }
         # OS agnostic actions
-        defaultactions["1-Click-Acknowledge-Host"] = Action(name="1-Click-Acknowledge-Host", type="url",\
+        defaultactions["Opsview-1-Click-Acknowledge-Host"] = Action(name="Opsview-1-Click-Acknowledge-Host", type="url",\
                                                     description="Acknowledges a host with one click.",\
                                                     filter_target_service=False, enabled=False,\
                                                     string="$MONITOR-CGI$/cmd.cgi?cmd_typ=33&cmd_mod=2&host=$HOST$\
                                                     &com_author=$USERNAME$&com_data=acknowledged&btnSubmit=Commit")
-        defaultactions["1-Click-Acknowledge-Service"] = Action(name="1-Click-Acknowledge-Service", type="url",\
+        defaultactions["Opsview-1-Click-Acknowledge-Service"] = Action(name="Opsview-1-Click-Acknowledge-Service", type="url",\
                                                     description="Acknowledges a service with one click.",\
                                                     filter_target_host=False, enabled=False,\
                                                     string="$MONITOR-CGI$/cmd.cgi?cmd_typ=34&cmd_mod=2&host=$HOST$\
                                                     &service=$SERVICE$&com_author=$USERNAME$&com_data=acknowledged&btnSubmit=Commit")
-        defaultactions["Graph-Opsview-Service"] = Action(name="Graph-Opsview-Service", type="browser",\
+        defaultactions["Opsview-Graph-Service"] = Action(name="Opsview-Graph-Service", type="browser",\
                                                     description="Show graph in browser.", filter_target_host=False,\
                                                     string="$MONITOR$/graph?service=$SERVICE$&host=$HOST$", enabled=False)
-        defaultactions["Configure-Host-Ninja"] = Action(name="Configure-Host-Ninja", type="browser",\
+        defaultactions["Opsview-History-Host"] = Action(name="Opsview-Host-Service", type="browser",\
+                                                    description="Show host in browser.", filter_target_host=True,\
+                                                    string="$MONITOR$/event?host=$HOST$", enabled=False)
+        defaultactions["Opsview-History-Service"] = Action(name="Opsview-History-Service", type="browser",\
+                                                    description="Show history in browser.", filter_target_host=True,\
+                                                    string="$MONITOR$/event?host=$HOST$&service=$SERVICE$", enabled=False)
+        defaultactions["Ninja-Configure-Host"] = Action(name="Ninja-Configure-Host", type="browser",\
                                                     description="Configure host in browser.", author="op5 Ab",\
                                                     string="$MONITOR$/index.php/configuration/configure/host/$HOST$", enabled=False)
-        defaultactions["Configure-Service-Ninja"] = Action(name="Configure-Service-Ninja", type="browser", filter_target_host=False,\
+        defaultactions["Ninja-Configure-Service"] = Action(name="Ninja-Configure-Service", type="browser", filter_target_host=False,\
                                                     description="Configure service in browser.", author="op5 Ab",\
                                                     string="$MONITOR$/index.php/configuration/configure/service/$HOST$?service=$SERVICE$", enabled=False)        
         return defaultactions
