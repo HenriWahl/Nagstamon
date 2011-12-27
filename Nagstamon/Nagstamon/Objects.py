@@ -95,7 +95,8 @@ class DurationColumn(CustomSortingColumn):
         try:
             first = Actions.MachineSortableDuration(data1) 
             second = Actions.MachineSortableDuration(data2)
-        except ValueError:
+        except ValueError, err:
+            print err
             return cmp(first, second)
         return first - second
 

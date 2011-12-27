@@ -870,7 +870,7 @@ def HumanReadableDuration(seconds):
     
 def MachineSortableDuration(raw):
     """
-    Monitors gratefully shows duration even in weeks and months which confuse the
+    Monitors gratefully show duration even in weeks and months which confuse the
     sorting of popup window sorting - this functions wants to fix that
     """
     # dictionary for duration date string components
@@ -878,6 +878,9 @@ def MachineSortableDuration(raw):
     
     # if for some reason the value is empty/none make it compatible: 0s
     if raw == None: raw = "0s"
+
+    # check_mk has very human readable time
+    raw = raw.replace(" sec", "s").replace(" min", "m").replace(" hrs", "h")
 
     # strip and replace necessary for Nagios duration values,
     # split components of duration into dictionary
