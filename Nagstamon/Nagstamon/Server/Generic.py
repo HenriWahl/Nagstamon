@@ -67,6 +67,12 @@ class GenericServer(object):
     
     # Arguments available for submitting check results 
     SUBMIT_CHECK_RESULT_ARGS = ["check_output", "performance_data"]
+    
+    # URLs for browser shortlinks/buttons on popup window
+    BROWSER_URLS= { "monitor": "$MONITOR$",\
+                    "hosts": "$MONITOR-CGI$/status.cgi?hostgroup=all&style=hostdetail&hoststatustypes=12",\
+                    "services": "$MONITOR-CGI$/status.cgi?host=all&servicestatustypes=253",\
+                    "history": "$MONITOR-CGI$/history.cgi?host=all"}
    
     
     def __init__(self, **kwds):
@@ -74,8 +80,8 @@ class GenericServer(object):
         for k in kwds: self.__dict__[k] = kwds[k]
         
         self.type = ""
-        self.nagios_url = ""
-        self.nagios_cgi_url = ""
+        self.monitor_url = ""
+        self.monitor_cgi_url = ""
         self.username = ""
         self.password = ""
         self.use_proxy = False
@@ -170,7 +176,7 @@ class GenericServer(object):
                 # Do not check passive only checks
                 return
         # get start time from Nagios as HTML to use same timezone setting like the locally installed Nagios
-        result = self.FetchURL(self.nagios_cgi_url + "/cmd.cgi?" + urllib.urlencode({"cmd_typ":"96", "host":host}), giveback="raw")
+        result = self.FetchURL(self.monitor_cgi_url + "/cmd.cgi?" + urllib.urlencode({"cmd_typ":"96", "host":host}), giveback="raw")
         html = result.result
         self.start_time = html.split("NAME='start_time' VALUE='")[1].split("'></b></td></tr>")[0]          
             
@@ -190,7 +196,7 @@ class GenericServer(object):
                                      ("force_check", "on"),\
                                      ("btnSubmit", "Commit")])
         # execute POST request
-        self.FetchURL(self.nagios_cgi_url + "/cmd.cgi", giveback="raw", cgi_data=cgi_data)
+        self.FetchURL(self.monitor_cgi_url + "/cmd.cgi", giveback="raw", cgi_data=cgi_data)
     
         
     def set_acknowledge(self, thread_obj):
@@ -203,7 +209,7 @@ class GenericServer(object):
      
         
     def _set_acknowledge(self, host, service, author, comment, sticky, notify, persistent, all_services=[]):
-        url = self.nagios_cgi_url + "/cmd.cgi"      
+        url = self.monitor_cgi_url + "/cmd.cgi"      
         
         # decision about host or service - they have different URLs
         # do not care about the doube %s (%s%s) - its ok, "flags" cares about the necessary "&"
@@ -316,7 +322,7 @@ class GenericServer(object):
                                      ("minutes", minutes),\
                                      ("btnSubmit","Commit")])        
         # running remote cgi command
-        result = self.FetchURL(self.nagios_cgi_url + "/cmd.cgi", giveback="raw", cgi_data=cgi_data)
+        result = self.FetchURL(self.monitor_cgi_url + "/cmd.cgi", giveback="raw", cgi_data=cgi_data)
         raw = result.result
         
     
@@ -329,7 +335,7 @@ class GenericServer(object):
         """
         worker for submitting check result
         """
-        url = self.nagios_cgi_url + "/cmd.cgi"      
+        url = self.monitor_cgi_url + "/cmd.cgi"      
         
         # decision about host or service - they have different URLs
         if service == "":
@@ -355,7 +361,7 @@ class GenericServer(object):
         directly from web interface
         """
         try:
-            result = self.FetchURL(self.nagios_cgi_url + "/cmd.cgi?" + urllib.urlencode({"cmd_typ":"55", "host":host}))
+            result = self.FetchURL(self.monitor_cgi_url + "/cmd.cgi?" + urllib.urlencode({"cmd_typ":"55", "host":host}))
             html = result.result
             start_time = html.find(attrs={"name":"start_time"}).attrMap["value"]
             end_time = html.find(attrs={"name":"end_time"}).attrMap["value"]            
@@ -376,37 +382,26 @@ class GenericServer(object):
         else:
             typ = 2      
         if str(self.conf.debug_mode) == "True":
-            self.Debug(server=self.get_name(), host=host, service=service, debug="Open host/service monitor web page " + self.nagios_cgi_url + '/extinfo.cgi?' + urllib.urlencode({"type":typ, "host":host, "service":service}))
-        webbrowser.open(self.nagios_cgi_url + '/extinfo.cgi?' + urllib.urlencode({"type":typ, "host":host, "service":service}))
+            self.Debug(server=self.get_name(), host=host, service=service, debug="Open host/service monitor web page " + self.monitor_cgi_url + '/extinfo.cgi?' + urllib.urlencode({"type":typ, "host":host, "service":service}))        
+        webbrowser.open(self.monitor_cgi_url + '/extinfo.cgi?' + urllib.urlencode({"type":typ, "host":host, "service":service}))
 
         
-    def open_nagios(self):
-        webbrowser.open(self.nagios_url)
-        # debug
-        if str(self.conf.debug_mode) == "True":
-            self.Debug(server=self.get_name(), debug="Open monitor web page " + self.nagios_url)
+    def OpenBrowser(self, widget=None, url_type="", output=None):
+        """
+        multiple purpose open browser method for all open-a-browser-needs
+        """                
 
+        # first close popwin
+        if output <> None:
+            output.popwin.Close()
         
-    def open_services(self):
-        webbrowser.open(self.nagios_cgi_url + "/status.cgi?host=all&servicestatustypes=253")
-        # debug
-        if str(self.conf.debug_mode) == "True":
-            self.Debug(server=self.get_name(), debug="Open services web page " + self.nagios_cgi_url + "/status.cgi?host=all&servicestatustypes=253")
-        
-            
-    def open_hosts(self):
-        webbrowser.open(self.nagios_cgi_url + "/status.cgi?hostgroup=all&style=hostdetail&hoststatustypes=12")
-        # debug
-        if str(self.conf.debug_mode) == "True":
-            self.Debug(server=self.get_name(), debug="Open hosts web page " + self.nagios_cgi_url + "/status.cgi?hostgroup=all&style=hostdetail&hoststatustypes=12")
-
-            
-    def open_history(self):
-        webbrowser.open(self.nagios_cgi_url + "/history.cgi?host=all")
-        # debug
-        if str(self.conf.debug_mode) == "True":
-            self.Debug(server=self.get_name(), debug="Open history web page " + self.nagios_cgi_url + "/history.cgi?host=all")
-
+        # run thread with action
+        action = Actions.Action(string=self.BROWSER_URLS[url_type],\
+                        type="browser",\
+                        conf=self.conf,\
+                        server=self)
+        action.run()
+    
             
     def _get_status(self):
         """
@@ -430,9 +425,9 @@ class GenericServer(object):
         # group them together
         hostserviceprops = 0
         # services (unknown, warning or critical?)
-        nagcgiurl_services = self.nagios_cgi_url + "/status.cgi?host=all&servicestatustypes=" + str(servicestatustypes) + "&serviceprops=" + str(hostserviceprops)
+        nagcgiurl_services = self.monitor_cgi_url + "/status.cgi?host=all&servicestatustypes=" + str(servicestatustypes) + "&serviceprops=" + str(hostserviceprops)
         # hosts (up or down or unreachable)
-        nagcgiurl_hosts = self.nagios_cgi_url + "/status.cgi?hostgroup=all&style=hostdetail&hoststatustypes=" + str(hoststatustypes) + "&hostprops=" + str(hostserviceprops)
+        nagcgiurl_hosts = self.monitor_cgi_url + "/status.cgi?hostgroup=all&style=hostdetail&hoststatustypes=" + str(hoststatustypes) + "&hostprops=" + str(hostserviceprops)
         # hosts - mostly the down ones
         # unfortunately the hosts status page has a different structure so
         # hosts must be analyzed separately
@@ -991,7 +986,7 @@ class GenericServer(object):
         ip = ""
 
         # glue nagios cgi url and hostinfo 
-        nagcgiurl_host  = self.nagios_cgi_url + "/extinfo.cgi?type=1&host=" + host
+        nagcgiurl_host  = self.monitor_cgi_url + "/extinfo.cgi?type=1&host=" + host
         
         # get host info
         result = self.FetchURL(nagcgiurl_host, giveback="obj")

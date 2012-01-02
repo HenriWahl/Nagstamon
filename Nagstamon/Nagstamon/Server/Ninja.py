@@ -26,6 +26,12 @@ class NinjaServer(GenericServer):
     commit_url = False
     login_url = False
     time_url = False
+    
+    # URLs for browser shortlinks/buttons on popup window
+    BROWSER_URLS= { "monitor": "$MONITOR$",\
+                    "hosts": "$MONITOR$/index.php/status/host/all/6",\
+                    "services": "$MONITOR$/index.php/status/service/all?servicestatustypes=14",\
+                    "history": "$MONITOR$/index.php/showlog/alert_history"}
 
     
     def __init__(self, **kwds):
@@ -51,9 +57,9 @@ class NinjaServer(GenericServer):
         if len(self.Cookie) == 0: 
             try:
                 # Ninja Settings
-                self.commit_url = self.nagios_url + '/index.php/command/commit'
-                self.login_url = self.nagios_url + '/index.php/default/do_login'
-                self.time_url = self.nagios_url + '/index.php/extinfo/show_process_info'
+                self.commit_url = self.monitor_url + '/index.php/command/commit'
+                self.login_url = self.monitor_url + '/index.php/default/do_login'
+                self.time_url = self.monitor_url + '/index.php/extinfo/show_process_info'
                 # get a Ninja cookie via own method
                 self.urlopener.open(self.login_url, urllib.urlencode({'username': self.get_username(), 'password': self.get_password()}))
 
@@ -66,32 +72,11 @@ class NinjaServer(GenericServer):
 
     def open_tree_view(self, host, service):
         if not service:
-            webbrowser.open('%s/index.php/extinfo/details/host/%s' % (self.nagios_url, host))
+            webbrowser.open('%s/index.php/extinfo/details/host/%s' % (self.monitor_url, host))
         else:
-            webbrowser.open('%s/index.php/extinfo/details/service/%s?service=%s' % (self.nagios_url, host, service))
-            
-
-    def open_services(self):
-        webbrowser.open('%s/index.php/status/service/all?servicestatustypes=14' % (self.nagios_url))
-        # debug
-        if str(self.conf.debug_mode) == "True":
-            self.Debug(server=self.get_name(), debug='Open services web page %s/index.php/status/service/all?servicestatustypes=14' % (self.nagios_url))
+            webbrowser.open('%s/index.php/extinfo/details/service/%s?service=%s' % (self.monitor_url, host, service))
 
             
-    def open_hosts(self):
-        webbrowser.open('%s/index.php/status/host/all/6' % (self.nagios_url))
-        # debug
-        if str(self.conf.debug_mode) == "True":
-            self.Debug(server=self.get_name(), debug='Open hosts web page %s/index.php/status/host/all/6' % (self.nagios_url))
-            
-        
-    def open_history(self):
-        webbrowser.open('%s/index.php/showlog/alert_history' % (self.nagios_url))
-        # debug
-        if str(self.conf.debug_mode) == "True":
-            self.Debug(server=self.get_name(), debug='Open history web page %s/index.php/showlog/alert_history' % (self.nagios_url))
-
-
     def _set_recheck(self, host, service):
         if not service:
             values = {"requested_command": "SCHEDULE_HOST_CHECK"}
@@ -206,8 +191,8 @@ class NinjaServer(GenericServer):
         # this dictionary is only temporarily
         nagitems = {"services":[], "hosts":[]}
 
-        nagiosurl_services = self.nagios_url + "/index.php/status/service/all?servicestatustypes=78&hoststatustypes=71&items_per_page=10000"
-        nagiosurl_hosts = self.nagios_url + "/index.php/status/host/all/6"
+        nagiosurl_services = self.monitor_url + "/index.php/status/service/all?servicestatustypes=78&hoststatustypes=71&items_per_page=10000"
+        nagiosurl_hosts = self.monitor_url + "/index.php/status/host/all/6"
 
         # Hosts
         try:

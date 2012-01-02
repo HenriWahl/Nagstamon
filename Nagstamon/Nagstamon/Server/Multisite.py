@@ -47,7 +47,14 @@ class MultisiteServer(GenericServer):
        special treatment for Check_MK Multisite JSON API
     """
     TYPE = 'Check_MK Multisite'
-
+    
+    # URLs for browser shortlinks/buttons on popup window
+    BROWSER_URLS= { "monitor": "$MONITOR$",\
+                    "hosts": "$MONITOR$/index.py?start_url=view.py?view_name=nagstamon_hosts",\
+                    "services": "$MONITOR$/index.py?start_url=view.py?view_name=nagstamon_svc",\
+                    "history": '$MONITOR$/index.py?start_url=view.py?view_name=events'}    
+    
+    
     def __init__(self, **kwds):
         GenericServer.__init__(self, **kwds)
         
@@ -61,31 +68,31 @@ class MultisiteServer(GenericServer):
 
     def init_HTTP(self):
         # Fix eventually missing tailing "/" in url
-        if self.nagios_url[-1] != '/':
-            self.nagios_url += '/'
+        if self.monitor_url[-1] != '/':
+            self.monitor_url += '/'
         
         # Prepare all urls needed by nagstamon if not yet done
         if len(self.urls) == len(self.statemap):
             self.urls = {
-              'api_services':    self.nagios_url + "view.py?view_name=nagstamon_svc&output_format=python",
-              'human_services':  self.nagios_url + "index.py?%s" % \
+              'api_services':    self.monitor_url + "view.py?view_name=nagstamon_svc&output_format=python",
+              'human_services':  self.monitor_url + "index.py?%s" % \
                                                    urllib.urlencode({'start_url': 'view.py?view_name=nagstamon_svc'}),
-              'human_service':   self.nagios_url + "index.py?%s" %
+              'human_service':   self.monitor_url + "index.py?%s" %
                                                    urllib.urlencode({'start_url': 'view.py?view_name=service'}),
     
-              'api_hosts':       self.nagios_url + "view.py?view_name=nagstamon_hosts&output_format=python",
-              'human_hosts':     self.nagios_url + "index.py?%s" %
+              'api_hosts':       self.monitor_url + "view.py?view_name=nagstamon_hosts&output_format=python",
+              'human_hosts':     self.monitor_url + "index.py?%s" %
                                                    urllib.urlencode({'start_url': 'view.py?view_name=nagstamon_hosts'}),
-              'human_host':      self.nagios_url + "index.py?%s" %
+              'human_host':      self.monitor_url + "index.py?%s" %
                                                    urllib.urlencode({'start_url': 'view.py?view_name=hoststatus'}),
     
-              'api_reschedule':  self.nagios_url + 'nagios_action.py?action=reschedule',
-              'api_host_act':    self.nagios_url + 'view.py?_transid=-1&_do_actions=yes&_do_confirm=Yes!&output_format=python&view_name=hoststatus',
-              'api_service_act': self.nagios_url + 'view.py?_transid=-1&_do_actions=yes&_do_confirm=Yes!&output_format=python&view_name=service',
-              'human_events':    self.nagios_url + "index.py?%s" %
+              'api_reschedule':  self.monitor_url + 'nagios_action.py?action=reschedule',
+              'api_host_act':    self.monitor_url + 'view.py?_transid=-1&_do_actions=yes&_do_confirm=Yes!&output_format=python&view_name=hoststatus',
+              'api_service_act': self.monitor_url + 'view.py?_transid=-1&_do_actions=yes&_do_confirm=Yes!&output_format=python&view_name=service',
+              'human_events':    self.monitor_url + "index.py?%s" %
                                                    urllib.urlencode({'start_url': 'view.py?view_name=events'}),
             }
-    
+
             self.statemap = {
                 'UNREACH': 'UNREACHABLE',
                 'CRIT':    'CRITICAL',
@@ -273,26 +280,7 @@ class MultisiteServer(GenericServer):
 
         return ret
 
-
-    def _open_browser(self, url):
-        webbrowser.open(url)
-
-        if str(self.conf.debug_mode) == "True":
-            self.Debug(server=self.get_name(), debug="Open web page " + url)
             
-
-    def open_services(self):
-        self._open_browser(self.urls['human_services'])
-        
-
-    def open_hosts(self):
-        self._open_browser(self.urls['human_hosts'])
-        
-        
-    def open_history(self):
-        self._open_browser(self.urls['human_events'])
-
-
     def open_tree_view(self, host, service=""):
         """
         open monitor from treeview context menu

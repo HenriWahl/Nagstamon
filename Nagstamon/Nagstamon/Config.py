@@ -99,8 +99,8 @@ class Config(object):
         self.defaults_acknowledge_all_services = False
         self.defaults_acknowledge_comment = "acknowledged"
         self.defaults_submit_check_result_comment = "check result submitted"
-        self.defaults_downtime_duration_hours = 2
-        self.defaults_downtime_duration_minutes = 0
+        self.defaults_downtime_duration_hours = "2"
+        self.defaults_downtime_duration_minutes = "0"
         self.defaults_downtime_comment = "scheduled downtime"
         self.defaults_downtime_type_fixed = True
         self.defaults_downtime_type_flexible = False
@@ -247,6 +247,9 @@ class Config(object):
         # Load actions if Nagstamon is not unconfigured, otherwise load defaults
         if str(self.unconfigured) == "True":
             self.actions = self._DefaultActions()
+            
+        # do some conversion stuff needed because of config changes and code cleanup
+        self._LegacyAdjustments()
             
 
     def _LoadServersMultipleConfig(self):
@@ -444,8 +447,8 @@ class Config(object):
             server_name = "Default"
             self.servers[server_name] = Server()
             self.servers[server_name].name = server_name
-            self.servers[server_name].nagios_url = self.nagios_url
-            self.servers[server_name].nagios_cgi_url = self.nagios_cgi_url
+            self.servers[server_name].monitor_url = self.nagios_url
+            self.servers[server_name].monitor_cgi_url = self.nagios_cgi_url
             self.servers[server_name].username = self.username
             self.servers[server_name].password = self.password
             # convert VERY old config files
@@ -601,6 +604,20 @@ class Config(object):
         return defaultactions
     
             
+    
+    def _LegacyAdjustments(self):
+        # mere cosmetics but might be more clear for future additions - changing any "nagios"-setting to "monitor"
+        for s in self.servers.values():
+            if s.__dict__.has_key("nagios_url"):
+                s.monitor_url = s.nagios_url
+            if s.__dict__.has_key("nagios_cgi_url"):
+                s.monitor_cgi_url = s.nagios_cgi_url
+
+            # to reduce complexity in Centreon there is also only one URL necessary
+            if s.type == "Centreon":
+                s.monitor_url = s.monitor_cgi_url
+            
+    
 class Server(object):
     """
     one Server realized as object for config info
@@ -609,8 +626,8 @@ class Server(object):
         self.enabled = True
         self.type = "Nagios"
         self.name = ""
-        self.nagios_url = ""
-        self.nagios_cgi_url = ""
+        self.monitor_url = ""
+        self.monitor_cgi_url = ""
         self.username = ""
         self.password = ""
         self.save_password = True

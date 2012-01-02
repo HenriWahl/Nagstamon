@@ -542,9 +542,12 @@ class Action(threading.Thread):
     """
     def __init__(self, **kwds):
         # add all keywords to object
+        self.host = ""
+        self.service = ""
         for k in kwds: self.__dict__[k] = kwds[k]
         threading.Thread.__init__(self)
         self.setDaemon(1)
+        
         
     def run(self):
         # first replace placeholder variables in string with actual values
@@ -559,15 +562,20 @@ class Action(threading.Thread):
         $PASSWORD$     - username's password on monitor - whatever for
         """
         try:
-            # use a local copy
-            string = self.action.string
-            
+            # if run as custom action use given action definition
+            if self.__dict__.has_key("action"):
+                string = self.action.string
+                action_type = self.action.type
+            else:
+                string = self.string
+                action_type = self.type
+                
             # mapping of variables and values
             mapping = { "$HOST$": self.host,\
                         "$SERVICE$": self.service,\
                         "$ADDRESS$": self.server.GetHost(self.host).result,\
-                        "$MONITOR$": self.server.nagios_url,\
-                        "$MONITOR-CGI$": self.server.nagios_cgi_url,\
+                        "$MONITOR$": self.server.monitor_url,\
+                        "$MONITOR-CGI$": self.server.monitor_cgi_url,\
                         "$USERNAME$": self.server.username,\
                         "$PASSWORD$": self.server.password }
             
@@ -576,7 +584,7 @@ class Action(threading.Thread):
                 string = string.replace(i, mapping[i])
             
             # see what action to take
-            if self.action.type == "browser":
+            if action_type == "browser":
                 # make string ready for URL
                 string = self._URLify(string)
                 # debug
@@ -606,39 +614,7 @@ class Action(threading.Thread):
         exclude several chars
         """
         return urllib.quote(string, ":/=?&")
-            
-
-def OpenNagios(widget, server, output):   
-    # open Nagios main page in your favorite web browser when nagios button is clicked
-    # first close popwin
-    output.popwin.Close()
-    # start browser with URL
-    server.open_nagios()
-
-
-def OpenServices(widget, server, output):
-    # open Nagios services in your favorite web browser when service button is clicked
-    # first close popwin
-    output.popwin.Close()
-    # start browser with URL
-    server.open_services()
- 
-   
-def OpenHosts(widget, server, output):
-    # open Nagios hosts in your favorite web browser when hosts button is clicked
-    # first close popwin
-    output.popwin.Close()
-    # start browser with URL
-    server.open_hosts()
     
-
-def OpenHistory(widget, server, output):
-    # open Nagios history in your favorite web browser when history button is clicked
-    # first close popwin
-    output.popwin.Close()
-    # start browser with URL
-    server.open_history()
-
     
 def TreeViewNagios(server, host, service):
     # if the clicked row does not contain a service it mus be a host, 
@@ -681,14 +657,14 @@ def CreateServer(server=None, conf=None, debug_queue=None):
     # give argument servername so CentreonServer could use it for initializing MD5 cache
     nagiosserver = registered_servers[server.type](conf=conf, name=server.name)
     nagiosserver.type = server.type
-    nagiosserver.nagios_url = server.nagios_url
-    nagiosserver.nagios_cgi_url = server.nagios_cgi_url
+    nagiosserver.monitor_url = server.monitor_url
+    nagiosserver.monitor_cgi_url = server.monitor_cgi_url
     nagiosserver.username = server.username
     if server.save_password or not server.enabled:
         nagiosserver.password = server.password
     else:
         pwdialog = GUI.PasswordDialog(
-            "Password for " + server.username + " on " + server.nagios_url + ": ")
+            "Password for " + server.username + " on " + server.monitor_url + ": ")
         if pwdialog.password == None:
             nagiosserver.password = ""
         else:
@@ -704,8 +680,8 @@ def CreateServer(server=None, conf=None, debug_queue=None):
     
     # use server-owned attributes instead of redefining them with every request
     nagiosserver.passman = urllib2.HTTPPasswordMgrWithDefaultRealm()
-    nagiosserver.passman.add_password(None, server.nagios_url, server.username, server.password)
-    nagiosserver.passman.add_password(None, server.nagios_cgi_url, server.username, server.password)  
+    nagiosserver.passman.add_password(None, server.monitor_url, server.username, server.password)
+    nagiosserver.passman.add_password(None, server.monitor_cgi_url, server.username, server.password)  
     nagiosserver.basic_handler = urllib2.HTTPBasicAuthHandler(nagiosserver.passman)
     nagiosserver.digest_handler = urllib2.HTTPDigestAuthHandler(nagiosserver.passman)  
     nagiosserver.proxy_auth_handler = urllib2.ProxyBasicAuthHandler(nagiosserver.passman)    

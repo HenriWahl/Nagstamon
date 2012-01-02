@@ -12,7 +12,6 @@ from Nagstamon.Server.Icinga import IcingaServer
 from Nagstamon.Server.Multisite import MultisiteServer
 from Nagstamon.Server.Ninja import NinjaServer
 from Nagstamon.Server.Opsview import OpsviewServer
-from Nagstamon.Server.Pingdom import PingdomServer
 
 
 # moved registration process because of circular dependencies
@@ -23,4 +22,4 @@ register_server(MultisiteServer)
 register_server(IcingaServer)
 register_server(NinjaServer)
 register_server(OpsviewServer)
-register_server(PingdomServer)
+

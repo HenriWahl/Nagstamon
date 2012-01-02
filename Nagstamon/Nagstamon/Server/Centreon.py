@@ -20,6 +20,13 @@ class CentreonServer(GenericServer):
     # count for SID regeneration
     SIDcount = 0
     
+    # URLs for browser shortlinks/buttons on popup window
+    BROWSER_URLS= { "monitor": "$MONITOR$/main.php?p=1",\
+                    "hosts": "$MONITOR$/main.php?p=20103&o=hpb",\
+                    "services": "$MONITOR$/main.php?p=20202&o=svcpb",\
+                    "history": "$MONITOR$/main.php?p=203"}
+    
+    
     def __init__(self, **kwds):
         # add all keywords to object, every mode searchs inside for its favorite arguments/keywords
         for k in kwds: self.__dict__[k] = kwds[k]
@@ -47,37 +54,10 @@ class CentreonServer(GenericServer):
     def open_tree_view(self, host, service=""):
         # must be a host if service is empty...
         if service == "":
-            webbrowser.open(self.nagios_cgi_url + "/main.php?" + urllib.urlencode({"p":201,"o":"hd", "host_name":host}))
+            webbrowser.open(self.monitor_cgi_url + "/main.php?" + urllib.urlencode({"p":201,"o":"hd", "host_name":host}))
         else:
-            webbrowser.open(self.nagios_cgi_url + "/main.php?" + urllib.urlencode({"p":202, "o":"svcd",  "host_name":host, "service_description":service}))      
+            webbrowser.open(self.monitor_cgi_url + "/main.php?" + urllib.urlencode({"p":202, "o":"svcd",  "host_name":host, "service_description":service}))      
 
-            
-    def open_nagios(self):
-        webbrowser.open(self.nagios_cgi_url + "/main.php?p=1")
-        # debug
-        if str(self.conf.debug_mode) == "True":
-            self.Debug(server=self.get_name(), debug="Open monitor web page " + self.nagios_url + "/main.php?p=1")
-
-        
-    def open_services(self):
-        webbrowser.open(self.nagios_cgi_url + "/main.php?p=20202&o=svcpb")
-        # debug
-        if str(self.conf.debug_mode) == "True":
-            self.Debug(server=self.get_name(), debug="Open services web page " + "/main.php?p=20202&o=svcpb")
-
-            
-    def open_hosts(self):
-        webbrowser.open(self.nagios_cgi_url + "/main.php?p=20103&o=hpb")
-        # debug
-        if str(self.conf.debug_mode) == "True":
-            self.Debug(server=self.get_name(), debug="Open hosts web page " + self.nagios_url + "/main.php?p=20103&o=hpb")
-            
-    def open_history(self):
-        webbrowser.open(self.nagios_cgi_url + "/main.php?p=203")
-        # debug
-        if str(self.conf.debug_mode) == "True":
-            self.Debug(server=self.get_name(), debug="Open history web page " + self.nagios_url + "/main.php?p=203")
-          
             
     def get_start_end(self, host):
         """
@@ -87,15 +67,15 @@ class CentreonServer(GenericServer):
             cgi_data = urllib.urlencode({"p":"20106",\
                                          "o":"ah",\
                                          "host_name":host})
-            #result = self.FetchURL(self.nagios_cgi_url + "/main.php?" + cgi_data, giveback="raw")
+            #result = self.FetchURL(self.monitor_cgi_url + "/main.php?" + cgi_data, giveback="raw")
             #raw, error = result.result, result.error
-            result = self.FetchURL(self.nagios_cgi_url + "/main.php?" + cgi_data, giveback="obj")
+            result = self.FetchURL(self.monitor_cgi_url + "/main.php?" + cgi_data, giveback="obj")
             html, error = result.result, result.error
             if error == "":
                 # session id might have been invalid, so if necessary get a new one
                 ###if raw.find('name="start" type="text" value="') == -1:
                 ###    self.SID = self._get_sid().result
-                ###    result = self.FetchURL(self.nagios_cgi_url + "/main.php?" + cgi_data, giveback="raw")
+                ###    result = self.FetchURL(self.monitor_cgi_url + "/main.php?" + cgi_data, giveback="raw")
                 ###    raw, error = result.result, result.error
                 ###start_time = raw.split('name="start" type="text" value="')[1].split('"')[0]
                 ###end_time = raw.split('name="end" type="text" value="')[1].split('"')[0]
@@ -134,7 +114,7 @@ class CentreonServer(GenericServer):
                                     "p":20102,\
                                     "time":0})
                 
-        result = self.FetchURL(self.nagios_cgi_url + "/include/monitoring/status/Hosts/xml/hostXML.php?"\
+        result = self.FetchURL(self.monitor_cgi_url + "/include/monitoring/status/Hosts/xml/hostXML.php?"\
                               + cgi_data, giveback="xml")        
         xmlobj = result.result
         
@@ -176,7 +156,7 @@ class CentreonServer(GenericServer):
         login_data = urllib.urlencode({"useralias" : self.conf.servers[self.get_name()].username, "password" : self.conf.servers[self.get_name()].password, "submit" : "Login"})
         
         try:
-            raw = self.FetchURL(self.nagios_cgi_url + "/index.php",cgi_data=login_data, giveback="raw")
+            raw = self.FetchURL(self.monitor_cgi_url + "/index.php",cgi_data=login_data, giveback="raw")
             del raw
             sid = str(self.Cookie._cookies.values()[0].values()[0]["PHPSESSID"].value)
             return Result(result=sid)
@@ -191,7 +171,7 @@ class CentreonServer(GenericServer):
         """
         cgi_data = urllib.urlencode({"p":201,\
                                     "o":"hd", "host_name":host})
-        result = self.FetchURL(self.nagios_cgi_url + "/main.php?" + cgi_data, cgi_data=urllib.urlencode({"sid":self.SID}), giveback="raw")
+        result = self.FetchURL(self.monitor_cgi_url + "/main.php?" + cgi_data, cgi_data=urllib.urlencode({"sid":self.SID}), giveback="raw")
         raw, error = result.result, result.error
 
         if error == "":
@@ -226,7 +206,7 @@ class CentreonServer(GenericServer):
                                      "o":"as"})
         # might look strange to have cgi_data 2 times, the first it is the "real" in URL and the second is the cgi_data parameter
         # from urllib to get the session id POSTed
-        result = self.FetchURL(self.nagios_cgi_url + "/main.php?"+ cgi_data, cgi_data=urllib.urlencode({"sid":self.SID}), giveback="raw")
+        result = self.FetchURL(self.monitor_cgi_url + "/main.php?"+ cgi_data, cgi_data=urllib.urlencode({"sid":self.SID}), giveback="raw")
         raw, error = result.result, result.error
         
         # ids to give back, should contain two items, a host and a service id
@@ -260,10 +240,10 @@ class CentreonServer(GenericServer):
             self.SID = self._get_sid().result     
             
         # services (unknown, warning or critical?)
-        nagcgiurl_services = self.nagios_cgi_url + "/include/monitoring/status/Services/xml/serviceXML.php?" + urllib.urlencode({"num":0, "limit":999, "o":"svcpb", "sort_type":"status", "sid":self.SID})
+        nagcgiurl_services = self.monitor_cgi_url + "/include/monitoring/status/Services/xml/serviceXML.php?" + urllib.urlencode({"num":0, "limit":999, "o":"svcpb", "sort_type":"status", "sid":self.SID})
 
         # hosts (up or down or unreachable)
-        nagcgiurl_hosts = self.nagios_cgi_url + "/include/monitoring/status/Hosts/xml/hostXML.php?" + urllib.urlencode({"num":0, "limit":999, "o":"hpb", "sort_type":"status", "sid":self.SID})
+        nagcgiurl_hosts = self.monitor_cgi_url + "/include/monitoring/status/Hosts/xml/hostXML.php?" + urllib.urlencode({"num":0, "limit":999, "o":"hpb", "sort_type":"status", "sid":self.SID})
 
         # hosts - mostly the down ones
         # unfortunately the hosts status page has a different structure so
@@ -457,10 +437,10 @@ class CentreonServer(GenericServer):
                         "persistent":int(persistent), "sticky":int(sticky), "ackhostservice":"0", "o":"hd", "en":"1"})
                 # debug
                 if str(self.conf.debug_mode) == "True": 
-                    self.Debug(server=self.get_name(), host=host, debug=self.nagios_cgi_url + "/main.php?"+ cgi_data)                
+                    self.Debug(server=self.get_name(), host=host, debug=self.monitor_cgi_url + "/main.php?"+ cgi_data)                
 
                 # running remote cgi command, also possible with GET method     
-                raw = self.FetchURL(self.nagios_cgi_url + "/main.php?" + cgi_data, giveback="raw") 
+                raw = self.FetchURL(self.monitor_cgi_url + "/main.php?" + cgi_data, giveback="raw") 
                 del raw
                 
             # if host is acknowledged and all services should be to or if a service is acknowledged
@@ -483,11 +463,11 @@ class CentreonServer(GenericServer):
                             "sticky":int(sticky), "o":"svcd", "en":"1"}) 
                     # debug
                     if str(self.conf.debug_mode) == "True": 
-                        self.Debug(server=self.get_name(), host=host, service=s, debug=self.nagios_cgi_url + "/main.php?" + cgi_data)                
+                        self.Debug(server=self.get_name(), host=host, service=s, debug=self.monitor_cgi_url + "/main.php?" + cgi_data)                
 
                     # running remote cgi command with GET method, for some strange reason only working if
                     # giveback is "raw"
-                    raw = self.FetchURL(self.nagios_cgi_url + "/main.php?" + cgi_data, giveback="raw")
+                    raw = self.FetchURL(self.monitor_cgi_url + "/main.php?" + cgi_data, giveback="raw")
                     del raw
         except:
             self.Error(sys.exc_info())
@@ -506,7 +486,7 @@ class CentreonServer(GenericServer):
                 # fill and encode CGI data
                 cgi_data = urllib.urlencode({"cmd":"host_schedule_check", "actiontype":1,\
                                              "host_id":host_id, "sid":self.SID})
-                url = self.nagios_cgi_url + "/include/monitoring/objectDetails/xml/hostSendCommand.php?" + cgi_data
+                url = self.monitor_cgi_url + "/include/monitoring/objectDetails/xml/hostSendCommand.php?" + cgi_data
                 del host_id
             else:
                 # service @ host
@@ -514,7 +494,7 @@ class CentreonServer(GenericServer):
                 # fill and encode CGI data
                 cgi_data = urllib.urlencode({"cmd":"service_schedule_check", "actiontype":1,\
                                              "host_id":host_id, "service_id":service_id, "sid":self.SID})
-                url = self.nagios_cgi_url + "/include/monitoring/objectDetails/xml/serviceSendCommand.php?" + cgi_data
+                url = self.monitor_cgi_url + "/include/monitoring/objectDetails/xml/serviceSendCommand.php?" + cgi_data
                 del host_id, service_id
             # execute POST request
             raw = self.FetchURL(url, giveback="raw")
@@ -543,7 +523,7 @@ class CentreonServer(GenericServer):
                                              "o":"ah"})
                 # debug
                 if str(self.conf.debug_mode) == "True": 
-                    self.Debug(server=self.get_name(), host=host, debug=self.nagios_cgi_url + "/main.php?" + cgi_data)                
+                    self.Debug(server=self.get_name(), host=host, debug=self.monitor_cgi_url + "/main.php?" + cgi_data)                
 
             else:
                 # service
@@ -559,10 +539,10 @@ class CentreonServer(GenericServer):
                                              "o":"as"})
                 # debug
                 if str(self.conf.debug_mode) == "True": 
-                    self.Debug(server=self.get_name(), host=host, service=service, debug=self.nagios_cgi_url + "/main.php?" + cgi_data)                
+                    self.Debug(server=self.get_name(), host=host, service=service, debug=self.monitor_cgi_url + "/main.php?" + cgi_data)                
 
             # running remote cgi command
-            raw = self.FetchURL(self.nagios_cgi_url + "/main.php", giveback="raw", cgi_data=cgi_data)   
+            raw = self.FetchURL(self.monitor_cgi_url + "/main.php", giveback="raw", cgi_data=cgi_data)   
             del raw
         except:
             self.Error(sys.exc_info())

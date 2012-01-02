@@ -27,6 +27,12 @@ class OpsviewServer(GenericServer):
     # Arguments available for submitting check results 
     SUBMIT_CHECK_RESULT_ARGS = ["comment"]  
     
+    # URLs for browser shortlinks/buttons on popup window
+    BROWSER_URLS= { "monitor": "$MONITOR$/status/service?filter=unhandled&includeunhandledhosts=1",\
+                    "hosts": "$MONITOR$/status/host?hostgroupid=1&state=1",\
+                    "services": "$MONITOR$/status/service?state=1&state=2&state=3",\
+                    "history": "$MONITOR$/event"}
+    
     
     def init_HTTP(self):      
         if self.HTTPheaders == {}:
@@ -49,7 +55,7 @@ class OpsviewServer(GenericServer):
             # get cookie from login page via url retrieving as with other urls
             try:
                 # login and get cookie
-                urlcontent = self.urlopener.open(self.nagios_url + "/login", logindata)
+                urlcontent = self.urlopener.open(self.monitor_url + "/login", logindata)
                 urlcontent.close()
             except:
                 self.Error(sys.exc_info())
@@ -61,7 +67,7 @@ class OpsviewServer(GenericServer):
         directly from web interface
         """
         try:
-            result = self.FetchURL(self.nagios_cgi_url + "/cmd.cgi?" + urllib.urlencode({"cmd_typ":"55", "host":host}))
+            result = self.FetchURL(self.monitor_cgi_url + "/cmd.cgi?" + urllib.urlencode({"cmd_typ":"55", "host":host}))
             html = result.result
             start_time = html.find(attrs={"name":"starttime"}).attrMap["value"]
             end_time = html.find(attrs={"name":"endtime"}).attrMap["value"]            
@@ -80,7 +86,7 @@ class OpsviewServer(GenericServer):
         else:
             # service
             cgi_data = urllib.urlencode({"cmd_typ":"56", "host":host, "service":service})
-        url = self.nagios_cgi_url + "/cmd.cgi"
+        url = self.monitor_cgi_url + "/cmd.cgi"
         result = self.FetchURL(url, giveback="raw", cgi_data=cgi_data)
         html = result.result
         # which opsview form action to call
@@ -88,7 +94,7 @@ class OpsviewServer(GenericServer):
         # this time cgi_data does not get encoded because it will be submitted via multipart
         # to build value for hidden form field old cgi_data is used
         cgi_data = { "from" : url + "?" + cgi_data, "comment": comment, "starttime": start_time, "endtime": end_time }
-        self.FetchURL(self.nagios_url + action, giveback="raw", cgi_data=cgi_data)
+        self.FetchURL(self.monitor_url + action, giveback="raw", cgi_data=cgi_data)
         
         
     def _set_submit_check_result(self, host, service, state, comment, check_output, performance_data):
@@ -98,7 +104,7 @@ class OpsviewServer(GenericServer):
         # decision about host or service - they have different URLs
         if service == "":
             # host - here Opsview uses the plain oldschool Nagios way of CGI
-            url = self.nagios_cgi_url + "/cmd.cgi"   
+            url = self.monitor_cgi_url + "/cmd.cgi"   
             cgi_data = urllib.urlencode({"cmd_typ":"87", "cmd_mod":"2", "host":host,\
                                          "plugin_state":{"up":"0", "down":"1", "unreachable":"2"}[state], "plugin_output":check_output,\
                                          "performance_data":performance_data, "btnSubmit":"Commit"})  
@@ -106,7 +112,7 @@ class OpsviewServer(GenericServer):
             
         if service != "":
             # service @ host - here Opsview brews something own            
-            url = self.nagios_url + "/state/service/" + self.hosts[host].services[service].service_object_id + "/change"
+            url = self.monitor_url + "/state/service/" + self.hosts[host].services[service].service_object_id + "/change"
             cgi_data = urllib.urlencode({"state":{"ok":"0", "warning":"1", "critical":"2", "unknown":"3"}[state],\
                                          "comment":comment, "submit":"Commit"})          
             # running remote cgi command        
@@ -121,7 +127,7 @@ class OpsviewServer(GenericServer):
         # because we filter them out later
         # the API seems not to let hosts information directly, we hope to get it from service informations
         try:
-            opsapiurl = self.nagios_url + "/api/status/service?state=1&state=2&state=3"
+            opsapiurl = self.monitor_url + "/api/status/service?state=1&state=2&state=3"
             result = self.FetchURL(opsapiurl, giveback="xml")
             xmlobj, error = result.result, result.error
             if error != "": return Result(result=xmlobj, error=error)
@@ -166,8 +172,6 @@ class OpsviewServer(GenericServer):
 
                     # extra opsview id for service, needed for submitting check results
                     self.new_hosts[hostdict["name"]].services[servicedict["name"]].service_object_id = str(servicedict["service_object_id"])
-
-
         except:
             # set checking flag back to False
             self.isChecking = False
@@ -179,28 +183,5 @@ class OpsviewServer(GenericServer):
 
         
     def open_tree_view(self, host, service):
-        webbrowser.open('%s/status/service?host=%s' % (self.nagios_url, host))
-        
-    def open_nagios(self):
-        webbrowser.open(self.nagios_url + "/status/service?filter=unhandled&includeunhandledhosts=1")
-        # debug
-        if str(self.conf.debug_mode) == "True":
-            self.Debug(server=self.get_name(), debug="Open monitor web page " + self.nagios_url + "/status/service?filter=unhandled&includeunhandledhosts=1")   
-            
-    def open_services(self):
-        webbrowser.open(self.nagios_url + "/status/service?state=1&state=2&state=3")
-        # debug
-        if str(self.conf.debug_mode) == "True":
-            self.Debug(server=self.get_name(), debug="Open services web page " + self.nagios_url + "/status/service?state=1&state=2&state=3")
+        webbrowser.open('%s/status/service?host=%s' % (self.monitor_url, host))
 
-    def open_hosts(self):
-        webbrowser.open(self.nagios_url + "/status/host?hostgroupid=1&state=1")
-        # debug
-        if str(self.conf.debug_mode) == "True":
-            self.Debug(server=self.get_name(), debug="Open hosts web page " + self.nagios_url + "/status/host?hostgroupid=1&state=1")
-
-    def open_history(self):
-        webbrowser.open(self.nagios_url + "/event")
-        # debug
-        if str(self.conf.debug_mode) == "True":
-            self.Debug(server=self.get_name(), debug="Open monitor history page " + self.nagios_url + "/event")

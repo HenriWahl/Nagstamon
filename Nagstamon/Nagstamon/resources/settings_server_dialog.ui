@@ -278,7 +278,7 @@ Don&amp;apos;t put any status.cgi in there.</property>
               </packing>
             </child>
             <child>
-              <object class="GtkEntry" id="input_entry_nagios_url">
+              <object class="GtkEntry" id="input_entry_monitor_url">
                 <property name="visible">True</property>
                 <property name="can_focus">True</property>
                 <property name="is_focus">True</property>
@@ -292,7 +292,7 @@ Don&amp;apos;t put any status.cgi in there.</property>
               </packing>
             </child>
             <child>
-              <object class="GtkEntry" id="input_entry_nagios_cgi_url">
+              <object class="GtkEntry" id="input_entry_monitor_cgi_url">
                 <property name="visible">True</property>
                 <property name="can_focus">True</property>
                 <property name="is_focus">True</property>

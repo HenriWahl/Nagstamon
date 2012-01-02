@@ -1124,8 +1124,14 @@ class StatusBar(object):
         """
             open responding Nagios status web page
         """
-        Actions.OpenNagios(None, self.output.servers[menu_entry], self.output)
-
+        #action = Actions.Action(string=self.output.servers[menu_entry].monitor_url,\
+        #                        type="browser",\
+        #                        conf=self.output.conf,\
+        #                        server=self.output.servers[menu_entry])
+        #action.run()
+        self.output.servers[menu_entry].OpenBrowser("monitor")
+        
+        
 
     def MenuResponse(self, widget, menu_entry):
         """
@@ -1477,13 +1483,13 @@ class Popwin(object):
 
             # connect buttons with actions
             # open Nagios main page in your favorite web browser when nagios button is clicked
-            self.ServerVBoxes[server.get_name()].ButtonMonitor.connect("clicked", Actions.OpenNagios, server, self.output)
+            self.ServerVBoxes[server.get_name()].ButtonMonitor.connect("clicked", server.OpenBrowser, "monitor", self.output)
             # open Nagios services in your favorite web browser when service button is clicked
-            self.ServerVBoxes[server.get_name()].ButtonServices.connect("clicked", Actions.OpenServices, server, self.output)
+            self.ServerVBoxes[server.get_name()].ButtonServices.connect("clicked", server.OpenBrowser, "services", self.output)
             # open Nagios hosts in your favorite web browser when hosts button is clicked
-            self.ServerVBoxes[server.get_name()].ButtonHosts.connect("clicked", Actions.OpenHosts, server, self.output)
+            self.ServerVBoxes[server.get_name()].ButtonHosts.connect("clicked", server.OpenBrowser, "hosts", self.output)
             # open Nagios history in your favorite web browser when hosts button is clicked
-            self.ServerVBoxes[server.get_name()].ButtonHistory.connect("clicked", Actions.OpenHistory, server, self.output)
+            self.ServerVBoxes[server.get_name()].ButtonHistory.connect("clicked", server.OpenBrowser, "history", self.output)
             # windows workaround - see above
             # connect Server_EventBox with leave-notify-event to get popwin popping down when leaving it
             self.ServerVBoxes[server.get_name()].Server_EventBox.connect("leave-notify-event", self.PopDown)
@@ -1737,7 +1743,7 @@ class Popwin(object):
         try:
             active = widget.get_active_iter()
             model = widget.get_model()
-            Actions.OpenNagios(widget=None, server=self.output.servers[model.get_value(active, 0)], output=self.output)
+            self.output.servers[model.get_value(active, 0)].OpenBrowser(url_type="monitor")        
         except:
             self.output.servers.values()[0].Error(sys.exc_info())
 

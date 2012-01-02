@@ -63,7 +63,7 @@ debug_queue = Queue.Queue()
 for server in conf.servers.values():
     if server.save_password == "False" and server.enabled == "True":
         pwdialog = GUI.PasswordDialog(
-            "Password for " + server.username + " on " + server.nagios_url + ": ")
+            "Password for " + server.username + " on " + server.monitor_url + ": ")
         if pwdialog.password == None:
             sys.exit(1)
         server.password = pwdialog.password
