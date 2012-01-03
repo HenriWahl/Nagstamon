@@ -678,6 +678,16 @@ class GenericServer(object):
         self.status, self.status_description = status.result, status.error     
 
         if status.error != "":
+            print "'" + status.error + "'"
+            # ask for password if authorization failed
+            if "HTTP Error 401: Unauthorized" in status.error:
+                print "JJJJJJJJJJJJJEEEEEEEEEEEEEEEEEEEEEEEEEHHHHHHHHHHHHHHHHHHHHHHHHHHHHAAAAAAAAAAAAAAAAAAAAAAAAAAA!"
+                self.password = Actions.GetPassword(self)
+                print self.password
+                status = self._get_status()
+                self.status, self.status_description = status.result, status.error     
+
+            
             self.isChecking = False
             return Result(result=self.status, error=self.status_description)
         

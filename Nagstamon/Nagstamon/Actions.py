@@ -874,6 +874,15 @@ def MD5ify(string):
     return md5(string).hexdigest()
 
 
+def GetPassword(server):
+    """
+    call GUI password dialog
+    """
+    pwdialog = GUI.PasswordDialog(
+        "Password for " + server.username + " on " + server.monitor_url + ": ")
+    return pwdialog.password
+
+
 # <IMPORT>
 # Borrowed from http://pipe.scs.fsu.edu/PostHandler/MultipartPostHandler.py
 # Released under LGPL
