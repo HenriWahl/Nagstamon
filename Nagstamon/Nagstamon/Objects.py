@@ -83,7 +83,7 @@ class ServiceColumn(Column):
     
 class LastCheckColumn(Column):
     ATTR_NAME = 'last_check'
-
+    
     
 class DurationColumn(CustomSortingColumn):
     ATTR_NAME = 'duration'
@@ -93,8 +93,8 @@ class DurationColumn(CustomSortingColumn):
         """ Overrides default sorting behaviour """       
         data1, data2 = [model.get_value(x, column) for x in (iter1, iter2)]
         try:
-            first = Actions.MachineSortableDuration(data1) 
-            second = Actions.MachineSortableDuration(data2)
+            first = Actions.MachineSortableTime(data1) 
+            second = Actions.MachineSortableTime(data2)
         except ValueError, err:
             print err
             return cmp(first, second)

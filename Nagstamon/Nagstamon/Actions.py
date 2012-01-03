@@ -844,7 +844,7 @@ def HumanReadableDuration(seconds):
         return seconds
 
     
-def MachineSortableDuration(raw):
+def MachineSortableTime(raw):
     """
     Monitors gratefully show duration even in weeks and months which confuse the
     sorting of popup window sorting - this functions wants to fix that
