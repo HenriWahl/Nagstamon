@@ -26,6 +26,9 @@ class CentreonServer(GenericServer):
                     "services": "$MONITOR$/main.php?p=20202&o=svcpb",\
                     "history": "$MONITOR$/main.php?p=203"}
     
+    # A Monitor CGI URL is not necessary so hide it in settings
+    DISABLED_CONTROLS = ["label_monitor_cgi_url", "input_entry_monitor_cgi_url"]
+    
     
     def __init__(self, **kwds):
         # add all keywords to object, every mode searchs inside for its favorite arguments/keywords

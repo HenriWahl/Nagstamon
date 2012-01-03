@@ -2636,27 +2636,28 @@ class GenericServer(object):
         """ 
         Disables controls as it is set in server class 
         from former ServerDialogHelper class which contained common logic for server dialog
-        might be of intereset in case server typer is changed and dialog content should be
+        might be of interest in case server type is changed and dialog content should be
         adjusted to reflect different labels/entry fields
         """
-        self.KNOWN_CONTROLS = set()
-        servers = Actions.get_registered_servers()
+        ###servers = Actions.get_registered_servers()
         active = combobox.get_active_iter()
         model = combobox.get_model()
         if not model:
             return
-        server_class = servers[model.get_value(active, 0)]
-        self.KNOWN_CONTROLS.update(server_class.DISABLED_CONTROLS)
+        server = Actions.get_registered_servers()[model.get_value(active, 0)]
 
-        for item_id in self.KNOWN_CONTROLS:
-            item = self.builder.get_object(item_id)
-            if item is not None:
-                if item_id in server_class.DISABLED_CONTROLS:
-                    item.set_sensitive(False)
-                else:
-                    item.set_sensitive(True)
-            else:
-                print 'Invalid widget set for disable in %s: %s' % (server_class.__name__, item_id)        
+        # if there is anything to hide hide it
+        if len(server.DISABLED_CONTROLS) != 0:
+            for item_id in server.DISABLED_CONTROLS:
+                item = self.builder.get_object(item_id)
+                if item is not None:
+                    item.set_visible(False)
+        else:                    
+            # in case there is nothing to be hidden enable all possibly hidden items
+            for item_id in ["label_monitor_cgi_url", "input_entry_monitor_cgi_url"]:
+                item = self.builder.get_object(item_id)
+                if item is not None:
+                    item.set_visible(True)
         
 
     def OK(self, widget):

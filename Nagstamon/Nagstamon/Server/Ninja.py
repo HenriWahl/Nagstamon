@@ -32,6 +32,9 @@ class NinjaServer(GenericServer):
                     "hosts": "$MONITOR$/index.php/status/host/all/6",\
                     "services": "$MONITOR$/index.php/status/service/all?servicestatustypes=14",\
                     "history": "$MONITOR$/index.php/showlog/alert_history"}
+    
+    # A Monitor CGI URL is not necessary so hide it in settings
+    DISABLED_CONTROLS = ["label_monitor_cgi_url", "input_entry_monitor_cgi_url"]
 
     
     def __init__(self, **kwds):

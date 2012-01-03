@@ -54,6 +54,9 @@ class MultisiteServer(GenericServer):
                     "services": "$MONITOR$/index.py?start_url=view.py?view_name=nagstamon_svc",\
                     "history": '$MONITOR$/index.py?start_url=view.py?view_name=events'}    
     
+    # A Monitor CGI URL is not necessary so hide it in settings
+    DISABLED_CONTROLS = ["label_monitor_cgi_url", "input_entry_monitor_cgi_url"]
+    
     
     def __init__(self, **kwds):
         GenericServer.__init__(self, **kwds)

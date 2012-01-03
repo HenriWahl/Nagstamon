@@ -107,13 +107,13 @@
               </packing>
             </child>
             <child>
-              <object class="GtkLabel" id="label_server_url">
+              <object class="GtkLabel" id="label_monitor_url">
                 <property name="visible">True</property>
                 <property name="can_focus">False</property>
                 <property name="has_tooltip">True</property>
                 <property name="tooltip_markup">URL of Nagios Webseite in your LAN. HTTPS is preferred.</property>
                 <property name="xalign">0</property>
-                <property name="label" translatable="yes">Server URL:</property>
+                <property name="label" translatable="yes">Monitor URL:</property>
               </object>
               <packing>
                 <property name="top_attach">3</property>
@@ -121,7 +121,7 @@
               </packing>
             </child>
             <child>
-              <object class="GtkLabel" id="label_server_cgi_url">
+              <object class="GtkLabel" id="label_monitor_cgi_url">
                 <property name="visible">True</property>
                 <property name="can_focus">False</property>
                 <property name="has_tooltip">True</property>
@@ -129,7 +129,7 @@
 HTTPS is by all means the preferred because more secure option.
 Don&amp;apos;t put any status.cgi in there.</property>
                 <property name="xalign">0</property>
-                <property name="label" translatable="yes">Server CGI URL:</property>
+                <property name="label" translatable="yes">Monitor CGI URL:</property>
               </object>
               <packing>
                 <property name="top_attach">4</property>
