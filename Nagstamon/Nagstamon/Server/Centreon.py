@@ -252,12 +252,12 @@ class CentreonServer(GenericServer):
         # unfortunately the hosts status page has a different structure so
         # hosts must be analyzed separately
         try:           
-            result = self.FetchURL(nagcgiurl_hosts, giveback="xml")  
+            result = self.FetchURL(nagcgiurl_hosts, giveback="xml") 
             xmlobj, error = result.result, result.error            
             if error != "": return Result(result=xmlobj, error=error)
-
+            
             # in case there are no children session id is invalid
-            if xmlobj == "<response>bad session id</response>" or xmlobj == "Bad Session ID":    
+            if xmlobj == "<response>bad session id</response>" or str(xmlobj) == "Bad Session ID":    
                 del xmlobj
                 if str(self.conf.debug_mode) == "True": 
                     self.Debug(server=self.get_name(), debug="Bad session ID, retrieving new one...")                
@@ -266,7 +266,11 @@ class CentreonServer(GenericServer):
                 self.SID = self._get_sid().result
                 result = self.FetchURL(nagcgiurl_hosts, giveback="xml")
                 xmlobj, error = result.result, result.error
-                if error != "": return Result(result=xmlobj, error=error)   
+                if error != "": return Result(result=xmlobj, error=error)
+                
+                # a second time a bad session id should raise an error                
+                if xmlobj == "<response>bad session id</response>" or str(xmlobj) == "Bad Session ID":
+                    return Result(result=xmlobj, error=str(xmlobj))
                 
             for l in xmlobj.findAll("l"):
                 try:                       

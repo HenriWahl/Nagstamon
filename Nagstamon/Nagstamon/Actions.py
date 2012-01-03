@@ -101,7 +101,7 @@ class RefreshLoopOneServer(threading.Thread):
                     server_status.error = server_status.error.replace("<", "").replace(">", "").replace("\n", " ")
                     # debug
                     if str(self.conf.debug_mode) == "True":
-                        self.server.Debug(server=self.server.get_name(), debug="server return values: " + server_status.result + " " + server_status.error)
+                        self.server.Debug(server=self.server.get_name(), debug="server return values: " + str(server_status.result) + " " + str(server_status.error))
                     if server_status.error != "":
                         # set server status for status field in popwin 
                         self.server.status = "ERROR"
