@@ -31,7 +31,7 @@
                 <property name="has_default">True</property>
                 <property name="receives_default">True</property>
                 <property name="use_action_appearance">False</property>
-                <signal name="pressed" handler="button_ok_clicked" swapped="no"/>
+                <signal name="clicked" handler="button_ok_clicked" swapped="no"/>
               </object>
               <packing>
                 <property name="expand">False</property>
@@ -511,27 +511,6 @@ Don&amp;apos;t put any status.cgi in there.</property>
               </packing>
             </child>
             <child>
-              <placeholder/>
-            </child>
-            <child>
-              <placeholder/>
-            </child>
-            <child>
-              <placeholder/>
-            </child>
-            <child>
-              <placeholder/>
-            </child>
-            <child>
-              <placeholder/>
-            </child>
-            <child>
-              <placeholder/>
-            </child>
-            <child>
-              <placeholder/>
-            </child>
-            <child>
               <object class="GtkLabel" id="label_close_popwin">
                 <property name="visible">True</property>
                 <property name="can_focus">False</property>
@@ -583,6 +562,27 @@ Don&amp;apos;t put any status.cgi in there.</property>
                 <property name="top_attach">15</property>
                 <property name="bottom_attach">16</property>
               </packing>
+            </child>
+            <child>
+              <placeholder/>
+            </child>
+            <child>
+              <placeholder/>
+            </child>
+            <child>
+              <placeholder/>
+            </child>
+            <child>
+              <placeholder/>
+            </child>
+            <child>
+              <placeholder/>
+            </child>
+            <child>
+              <placeholder/>
+            </child>
+            <child>
+              <placeholder/>
             </child>
           </object>
           <packing>

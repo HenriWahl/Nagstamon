@@ -2702,7 +2702,7 @@ class GenericServer(object):
             # put in new one
             self.conf.servers[new_server.name] = new_server
             # create new server thread
-            created_server = Actions.CreateServer(new_server, self.conf, self.output.debug_queue)
+            created_server = Actions.CreateServer(new_server, self.conf, self.output.debug_queue, self.output.Resources)
             if created_server is not None:
                 self.servers[new_server.name] = created_server 
 
@@ -2910,7 +2910,7 @@ class EditServer(GenericServer):
             # put in new one
             self.conf.servers[new_server.name] = new_server
             # create new server thread
-            created_server = Actions.CreateServer(new_server, self.conf, self.output.debug_queue)
+            created_server = Actions.CreateServer(new_server, self.conf, self.output.debug_queue, self.output.Resources)
             if created_server is not None:
                 self.servers[new_server.name] = created_server 
                 if str(self.conf.servers[new_server.name].enabled) == "True":  
@@ -3181,63 +3181,65 @@ class EditAction(GenericAction):
         self.dialog.destroy()
         
 
-class PasswordDialog:
+class AuthenticationDialog:
     """
-    used in case password is not stored
+    used in case password is not stored or authentication is wrong
     """
-    password = None
-    escaped = False
 
-    def __init__( self, prompt ):
-        dialog = gtk.MessageDialog(
-            None,
-            gtk.DIALOG_MODAL | gtk.DIALOG_DESTROY_WITH_PARENT,
-            gtk.MESSAGE_QUESTION,
-            gtk.BUTTONS_OK,
-            None)
+    def __init__(self, **kwds):
+        # the usual...
+        for k in kwds: self.__dict__[k] = kwds[k]
 
-        # present password dialog in a safe way
-        dialog.present()
-        dialog.stick()
-        dialog.set_keep_above(True)
-        dialog.set_position(gtk.WIN_POS_CENTER_ALWAYS)
+        # set the gtkbuilder files       
+        self.builderfile = self.server.Resources + os.sep + "authentification_dialog.ui"
+        self.builder = gtk.Builder()
+        self.builder.add_from_file(self.builderfile)
+        self.dialog = self.builder.get_object("authentification_dialog")
 
-        dialog.set_markup(prompt)
-        # on close, we note that the user escaped the dialog
-        dialog.connect("close", self.dialog_close)
-        # on response, we check if the user confirmed or closed the dialog
-        dialog.connect("response", self.dialog_response)
-        # the password entry field
-        entry = gtk.Entry()
-        # password should not be shown
-        entry.set_visibility(False)
-        entry.connect("activate", self.entry_activate, dialog, gtk.RESPONSE_OK)
-        # a horizontal box to put in the input field and a label
-        hbox = gtk.HBox()
-        hbox.pack_start(gtk.Label("Password:"), False, 5, 5)
-        hbox.pack_end(entry)
-        # put all together
-        dialog.vbox.pack_end(hbox, True, True, 0)
-        # and show it
-        dialog.show_all()
-        dialog.run()
-        # only save the password if the user confirmed the entry
-        if not self.escaped:
-            self.password = entry.get_text()
-        dialog.destroy()
+        # assign handlers
+        handlers_dict = { "button_ok_clicked" : self.OK,
+                          "button_exit_clicked" : self.Exit,
+                          "button_cancel_clicked" : self.Cancel
+                          }
+        self.builder.connect_signals(handlers_dict)
 
+        self.entry_username = self.builder.get_object("input_entry_username")
+        self.entry_password = self.builder.get_object("input_entry_password")
 
-    def entry_activate(self, entry, dialog, response):
-        dialog.response(response)
+        self.entry_username.set_text(str(self.server.get_username()))
+        self.entry_password.set_text(str(self.server.get_password()))
+        
+        # get current defaults
+        self.username, self.password = self.server.get_username(), self.server.get_password()
+        
+        # omitting .show_all() leads to crash under Linux - why?
+        self.dialog.show_all()
+        self.dialog.run()
+        self.dialog.destroy()
+    
+            
+    def OK(self, widget):       
+        self.username = self.entry_username.get_text()
+        self.password = self.entry_password.get_text()
+        toggle_save_password = self.builder.get_object("input_checkbutton_save_password")
+        
+        if toggle_save_password.get_active() == True:
+            # store authentication information in config
+            self.server.conf.servers[self.server.get_name()].username = self.username
+            self.server.conf.servers[self.server.get_name()].password = self.password
+            self.server.conf.servers[self.server.get_name()].save_password = True
+            self.server.conf.SaveConfig(server=self.server)
+        self.dialog.destroy()
+        
+        
+    def Cancel(self, widget):
+        # the old settings
+        self.username, self.password = self.server.username, self.server.password
+        self.dialog.destroy()
 
-
-    def dialog_close(self, dialog):
-        self.escaped = True
-
-
-    def dialog_response(self, dialog, arg):
-        if arg != gtk.RESPONSE_OK:
-            self.escaped = True
+        
+    def Exit(self, widget):
+        sys.exit()
 
 
 class DummyStatusIcon(object):

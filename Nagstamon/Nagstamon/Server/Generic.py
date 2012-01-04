@@ -93,7 +93,8 @@ class GenericServer(object):
         self.new_hosts = dict()
         self.thread = None
         self.isChecking = False
-        self.debug = False
+        ### seems to be unused ?
+        ###self.debug = False
         self.CheckingForNewVersion = False
         self.WorstStatus = "UP"
         self.States = ["UP", "UNKNOWN", "WARNING", "CRITICAL", "UNREACHABLE", "DOWN"]
@@ -680,17 +681,21 @@ class GenericServer(object):
         if status.error != "":
             print "'" + status.error + "'"
             # ask for password if authorization failed
-            if "HTTP Error 401: Unauthorized" in status.error:
-                print "JJJJJJJJJJJJJEEEEEEEEEEEEEEEEEEEEEEEEEHHHHHHHHHHHHHHHHHHHHHHHHHHHHAAAAAAAAAAAAAAAAAAAAAAAAAAA!"
-                self.password = Actions.GetPassword(self)
-                print self.password
-                status = self._get_status()
-                self.status, self.status_description = status.result, status.error     
+            if "HTTP Error 401: Unauthorized" in status.error or \
+               "HTTP Error 403: Forbidden" in status.error or \
+               "Bad Session ID" in status.error:
+                while status.error != "":
+                    # clean existent authentification
+                    self.HTTPheaders = {}
+                    self.username, self.password = Actions.GetAuthentication(server=self)
+                    status = self._get_status()
+                    self.status, self.status_description = status.result, status.error  
+                    print status.error
 
+            else:
+                self.isChecking = False
+                return Result(result=self.status, error=self.status_description)
             
-            self.isChecking = False
-            return Result(result=self.status, error=self.status_description)
-        
         # this part has been before in GUI.RefreshDisplay() - wrong place, here it needs to be reset
         self.nagitems_filtered = {"services":{"CRITICAL":[], "WARNING":[], "UNKNOWN":[]}, "hosts":{"DOWN":[], "UNREACHABLE":[]}}      
 

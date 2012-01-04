@@ -31,7 +31,7 @@
                 <property name="has_default">True</property>
                 <property name="receives_default">True</property>
                 <property name="use_action_appearance">False</property>
-                <signal name="pressed" handler="button_ok_clicked" swapped="no"/>
+                <signal name="clicked" handler="button_ok_clicked" swapped="no"/>
               </object>
               <packing>
                 <property name="expand">False</property>
@@ -152,7 +152,7 @@ Don&amp;apos;t put any status.cgi in there.</property>
             </child>
             <child>
               <object class="GtkCheckButton" id="input_checkbutton_save_password">
-                <property name="label" translatable="yes">Save Password</property>
+                <property name="label" translatable="yes">Save password</property>
                 <property name="visible">True</property>
                 <property name="can_focus">False</property>
                 <property name="is_focus">True</property>
@@ -310,7 +310,7 @@ Don&amp;apos;t put any status.cgi in there.</property>
                 <property name="visible">True</property>
                 <property name="can_focus">True</property>
                 <property name="is_focus">True</property>
-                <property name="text" translatable="yes">nagiosuser</property>
+                <property name="text" translatable="yes">user</property>
               </object>
               <packing>
                 <property name="left_attach">1</property>
@@ -325,7 +325,7 @@ Don&amp;apos;t put any status.cgi in there.</property>
                 <property name="can_focus">True</property>
                 <property name="is_focus">True</property>
                 <property name="visibility">False</property>
-                <property name="text" translatable="yes">nagiospassword</property>
+                <property name="text" translatable="yes">password</property>
               </object>
               <packing>
                 <property name="left_attach">1</property>

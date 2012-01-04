@@ -345,9 +345,10 @@ class Config(object):
         return settings
             
 
-    def SaveConfig(self, output):
+    def SaveConfig(self, output=None, server=None):
         """
             save config file
+            "output" and "server" are used only for debug purpose - which one is given will be taken
         """
         try:
             # Make sure .nagstamon is created
@@ -369,7 +370,10 @@ class Config(object):
 
             # debug
             if str(self.debug_mode) == "True":
-                output.servers.values()[0].Debug(server="", debug="Saving config to " + self.configfile)
+                if server != None:
+                    server.Debug(server="", debug="Saving config to " + self.configfile)
+                elif output != None:
+                    output.servers.values()[0].Debug(server="", debug="Saving config to " + self.configfile)
                 
             # open, save and close config file
             f = open(os.path.normpath(self.configfile), "w")
@@ -378,7 +382,10 @@ class Config(object):
         except:
             # debug
             if str(self.debug_mode) == "True":
-                output.servers.values()[0].Error(sys.exc_info())
+                if server != None:
+                    server.Debug(server="", debug="Saving config to " + self.configfile)
+                elif output != None:
+                    output.servers.values()[0].Debug(server="", debug="Saving config to " + self.configfile)
             
             
     def SaveMultipleConfig(self, settingsdir, setting):

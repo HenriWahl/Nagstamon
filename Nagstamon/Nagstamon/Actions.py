@@ -648,7 +648,7 @@ def get_registered_server_type_list():
     return [x[0] for x in REGISTERED_SERVERS]
 
 
-def CreateServer(server=None, conf=None, debug_queue=None):
+def CreateServer(server=None, conf=None, debug_queue=None, resources=None):
     # create Server from config
     registered_servers = get_registered_servers()
     if server.type not in registered_servers:
@@ -658,17 +658,19 @@ def CreateServer(server=None, conf=None, debug_queue=None):
     nagiosserver = registered_servers[server.type](conf=conf, name=server.name)
     nagiosserver.type = server.type
     nagiosserver.monitor_url = server.monitor_url
-    nagiosserver.monitor_cgi_url = server.monitor_cgi_url
+    nagiosserver.monitor_cgi_url = server.monitor_cgi_url           
+    # add resources, needed for auth dialog
+    nagiosserver.Resources = resources
     nagiosserver.username = server.username
     if server.save_password or not server.enabled:
         nagiosserver.password = server.password
     else:
-        pwdialog = GUI.PasswordDialog(
-            "Password for " + server.username + " on " + server.monitor_url + ": ")
-        if pwdialog.password == None:
+        auth = GUI.AuthenticationDialog(server=nagiosserver)
+        if auth.password == None or auth.password == "":
             nagiosserver.password = ""
         else:
-            nagiosserver.password = pwdialog.password        
+            nagiosserver.username = auth.username
+            nagiosserver.password = auth.password       
     nagiosserver.use_proxy = server.use_proxy
     nagiosserver.use_proxy_from_os = server.use_proxy_from_os
     nagiosserver.proxy_address = server.proxy_address
@@ -874,13 +876,12 @@ def MD5ify(string):
     return md5(string).hexdigest()
 
 
-def GetPassword(server):
+def GetAuthentication(server):
     """
     call GUI password dialog
     """
-    pwdialog = GUI.PasswordDialog(
-        "Password for " + server.username + " on " + server.monitor_url + ": ")
-    return pwdialog.password
+    auth = GUI.AuthenticationDialog(server=server)
+    return auth.username, auth.password
 
 
 # <IMPORT>
