@@ -624,7 +624,19 @@ class Config(object):
             if s.type == "Centreon":
                 s.monitor_url = s.monitor_cgi_url
             
-    
+                
+    def GetNumberOfEnabledMonitors(self):
+        """
+        returns the number of enabled monitors - in case all are disabled there is no need to display the popwin
+        """
+        # to be returned
+        number = 0
+        for server in self.servers.values():
+            if str(server.enabled) == "True":
+                number += 1
+        return number    
+        
+
 class Server(object):
     """
     one Server realized as object for config info

@@ -138,6 +138,13 @@ class GenericServer(object):
                 self.HTTPheaders[giveback] = {"Authorization": "Basic " + base64.b64encode(self.get_username() + ":" + self.get_password())}
 
                 
+    def reset_HTTP(self):
+        """
+        if authentication fails try to reset any HTTP session stuff - might be different for different monitors
+        """
+        self.HTTPheaders = {}     
+        
+                
     def get_name(self):
         """
         return stringified name
@@ -679,18 +686,20 @@ class GenericServer(object):
         self.status, self.status_description = status.result, status.error     
 
         if status.error != "":
-            print "'" + status.error + "'"
             # ask for password if authorization failed
             if "HTTP Error 401: Unauthorized" in status.error or \
                "HTTP Error 403: Forbidden" in status.error or \
                "Bad Session ID" in status.error:
-                while status.error != "":
-                    # clean existent authentification
-                    self.HTTPheaders = {}
-                    self.username, self.password = Actions.GetAuthentication(server=self)
-                    status = self._get_status()
-                    self.status, self.status_description = status.result, status.error  
-                    print status.error
+                if str(self.conf.servers[self.name].enabled) == "True":
+                    while status.error != "":
+                        # clean existent authentification
+                        self.reset_HTTP()
+                        self.username, self.password = Actions.GetAuthentication(server=self)
+                        status = self._get_status()
+                        self.status, self.status_description = status.result, status.error  
+                        # if monitor has been disabled do not try to connect to it
+                        if str(self.conf.servers[self.name].enabled) == "False":
+                            break
 
             else:
                 self.isChecking = False

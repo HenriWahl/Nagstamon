@@ -52,13 +52,13 @@
               </packing>
             </child>
             <child>
-              <object class="GtkButton" id="button_cancel">
-                <property name="label" translatable="yes">Cancel</property>
+              <object class="GtkButton" id="button_disable">
+                <property name="label" translatable="yes">Disable monoitor</property>
                 <property name="visible">True</property>
                 <property name="can_focus">True</property>
                 <property name="receives_default">True</property>
                 <property name="use_action_appearance">False</property>
-                <signal name="pressed" handler="button_cancel_clicked" swapped="no"/>
+                <signal name="clicked" handler="button_disable_clicked" swapped="no"/>
               </object>
               <packing>
                 <property name="expand">False</property>
@@ -79,7 +79,7 @@
             <property name="visible">True</property>
             <property name="can_focus">False</property>
             <property name="border_width">3</property>
-            <property name="n_rows">3</property>
+            <property name="n_rows">4</property>
             <property name="n_columns">2</property>
             <child>
               <object class="GtkLabel" id="label_username">
@@ -91,6 +91,10 @@
                 <property name="xalign">0</property>
                 <property name="label" translatable="yes">Username:</property>
               </object>
+              <packing>
+                <property name="top_attach">1</property>
+                <property name="bottom_attach">2</property>
+              </packing>
             </child>
             <child>
               <object class="GtkEntry" id="input_entry_username">
@@ -103,6 +107,8 @@
               <packing>
                 <property name="left_attach">1</property>
                 <property name="right_attach">2</property>
+                <property name="top_attach">1</property>
+                <property name="bottom_attach">2</property>
               </packing>
             </child>
             <child>
@@ -120,8 +126,8 @@
               <packing>
                 <property name="left_attach">1</property>
                 <property name="right_attach">2</property>
-                <property name="top_attach">1</property>
-                <property name="bottom_attach">2</property>
+                <property name="top_attach">2</property>
+                <property name="bottom_attach">3</property>
               </packing>
             </child>
             <child>
@@ -135,8 +141,8 @@
                 <property name="label" translatable="yes">Password:</property>
               </object>
               <packing>
-                <property name="top_attach">1</property>
-                <property name="bottom_attach">2</property>
+                <property name="top_attach">2</property>
+                <property name="bottom_attach">3</property>
               </packing>
             </child>
             <child>
@@ -152,8 +158,20 @@
               <packing>
                 <property name="left_attach">1</property>
                 <property name="right_attach">2</property>
-                <property name="top_attach">2</property>
-                <property name="bottom_attach">3</property>
+                <property name="top_attach">3</property>
+                <property name="bottom_attach">4</property>
+              </packing>
+            </child>
+            <child>
+              <object class="GtkLabel" id="label_monitor">
+                <property name="visible">True</property>
+                <property name="can_focus">False</property>
+                <property name="xpad">3</property>
+                <property name="ypad">3</property>
+                <property name="label" translatable="yes">Please give the correct credentials.</property>
+              </object>
+              <packing>
+                <property name="right_attach">2</property>
               </packing>
             </child>
             <child>
@@ -171,7 +189,7 @@
     <action-widgets>
       <action-widget response="0">button_ok</action-widget>
       <action-widget response="0">button_exit</action-widget>
-      <action-widget response="0">button_cancel</action-widget>
+      <action-widget response="0">button_disable</action-widget>
     </action-widgets>
   </object>
 </interface>

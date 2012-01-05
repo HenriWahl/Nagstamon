@@ -1131,7 +1131,6 @@ class StatusBar(object):
         #action.run()
         self.output.servers[menu_entry].OpenBrowser("monitor")
         
-        
 
     def MenuResponse(self, widget, menu_entry):
         """
@@ -1517,7 +1516,7 @@ class Popwin(object):
         # otherwise there is no sense in showing an empty popwin
         # for some reason the painting will lag behind popping up popwin if not getting resized twice -
         # seems like a strange workaround
-        if self.showPopwin and not self.output.status_ok:
+        if self.showPopwin and not self.output.status_ok and self.output.conf.GetNumberOfEnabledMonitors() > 0:
             self.output.statusbar.Moving = False
             # position and resize...
             self.Resize()
@@ -3199,13 +3198,16 @@ class AuthenticationDialog:
         # assign handlers
         handlers_dict = { "button_ok_clicked" : self.OK,
                           "button_exit_clicked" : self.Exit,
-                          "button_cancel_clicked" : self.Cancel
+                          "button_disable_clicked" : self.Disable
                           }
         self.builder.connect_signals(handlers_dict)
 
+        self.label_monitor = self.builder.get_object("label_monitor")
         self.entry_username = self.builder.get_object("input_entry_username")
         self.entry_password = self.builder.get_object("input_entry_password")
 
+        self.dialog.set_title("Nagstamon authentication for " + self.server.get_name())
+        self.label_monitor.set_text("Please give the correct credentials for "+ self.server.get_name() + ":")
         self.entry_username.set_text(str(self.server.get_username()))
         self.entry_password.set_text(str(self.server.get_password()))
         
@@ -3232,13 +3234,17 @@ class AuthenticationDialog:
         self.dialog.destroy()
         
         
-    def Cancel(self, widget):
+    def Disable(self, widget):
         # the old settings
+        self.server.conf.servers[self.server.get_name()].enabled = False
         self.username, self.password = self.server.username, self.server.password
+        # stop server thread
+        self.server.thread.Stop()
         self.dialog.destroy()
 
         
     def Exit(self, widget):
+        gtk.main_quit()
         sys.exit()
 
 

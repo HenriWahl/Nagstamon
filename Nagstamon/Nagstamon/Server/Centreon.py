@@ -51,7 +51,19 @@ class CentreonServer(GenericServer):
         if self.HTTPheaders == {}:
             GenericServer.init_HTTP(self)
             # Centreon xml giveback method just should exist
-            self.HTTPheaders["xml"] = {}                             
+            self.HTTPheaders["xml"] = {}        
+            
+            
+    def reset_HTTP(self):
+        """
+        Centreon needs deletion of SID
+        """
+        print self.SID, self.SIDcount, self.Cookie
+        self.HTTPheaders = {}     
+        self.SID = None
+        self.SIDcount = 0
+        #self.Cookie = cookielib.CookieJar()   
+        self._get_sid()
         
     
     def open_tree_view(self, host, service=""):
@@ -156,8 +168,10 @@ class CentreonServer(GenericServer):
         gets a shiny new SID for XML HTTP requests to Centreon cutting it out via .partition() from raw HTML
         additionally get php session cookie
         """
-        login_data = urllib.urlencode({"useralias" : self.conf.servers[self.get_name()].username, "password" : self.conf.servers[self.get_name()].password, "submit" : "Login"})
-        
+        print self.username, self.password
+#        login_data = urllib.urlencode({"useralias" : self.conf.servers[self.get_name()].username, "password" : self.conf.servers[self.get_name()].password, "submit" : "Login"})
+        login_data = urllib.urlencode({"useralias" : self.username, "password" : self.password, "submit" : "Login"})
+      
         try:
             raw = self.FetchURL(self.monitor_cgi_url + "/index.php",cgi_data=login_data, giveback="raw")
             del raw
