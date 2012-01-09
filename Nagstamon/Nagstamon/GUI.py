@@ -38,6 +38,9 @@ import sys
 import gc
 import time
 
+# registry for open windows to be able to wait until opening another
+###OpenWindows = {}
+
 
 class Sorting(object):
     """ Sorting persistence purpose class
@@ -126,11 +129,6 @@ class GUI(object):
 
         # flag which is set True if already notifying
         self.Notifying = False
-
-        # flag if settings dialog is already open to omit various open settings dialogs after systray icon context menu click
-        self.SettingsDialogOpen = False       
-        # flag if about box is shown
-        self.AboutDialogOpen = False
 
         # saving sorting state between refresh
         self.rows_reordered_handler = {} 
@@ -665,9 +663,6 @@ class GUI(object):
 
         # get start_time and end_time externally from Actions.Downtime_get_start_end() for not mixing GUI and actions too much
         start_time, end_time = Actions.Downtime_get_start_end(server=server, host=host)
-
-        # radio buttons
-        print eval(str(self.conf.defaults_downtime_type_fixed))
         
         self.downtime_xml.get_object("input_radiobutton_type_fixed").set_active(eval(str(self.conf.defaults_downtime_type_fixed)))
         self.downtime_xml.get_object("input_radiobutton_type_flexible").set_active(eval(str(self.conf.defaults_downtime_type_flexible)))
@@ -818,6 +813,9 @@ class GUI(object):
         """
             about nagstamon
         """
+
+        global OpenWindows
+        
         about = gtk.AboutDialog()
         about.set_name(self.name)
         about.set_version(self.version)
@@ -866,16 +864,20 @@ class GUI(object):
             license = "Nagstamon is licensed under GPL 2.0.\nYou should have got a LICENSE file distributed with nagstamon.\nGet it at http://www.gnu.org/licenses/gpl-2.0.txt."
         about.set_license(license)
 
-        self.AboutDialogOpen = True        
+        OpenWindows["About"] = about
+        
         self.popwin.Close()
+        
         about.run()
+        
+        OpenWindows.pop("About")
+        
         about.destroy()
-        self.AboutDialogOpen = False
 
 
     def Dialog(self, type=gtk.MESSAGE_ERROR, message="", buttons=gtk.BUTTONS_CANCEL):
         """
-            versatile error dialog
+            versatile message dialog
         """        
         # close popwin to make sure the error dialog will not be covered by popwin
         self.popwin.Close()
@@ -1149,7 +1151,7 @@ class StatusBar(object):
     def Clicked(self, widget=None, event=None):
         """
             see what happens if statusbar is clicked
-        """
+        """        
         # check if settings etc. are not already open
         if self.output.popwin.IsWanted() == True:
             # if left mousebutton is pressed
@@ -1183,8 +1185,11 @@ class StatusBar(object):
         """
             see what happens if statusbar is clicked
         """
+        # needed for checking if there are any open windows in which case won't be a new one
+        global OpenWindows
+        
         # check if settings etc. are not already open
-        if self.output.SettingsDialogOpen == False and self.output.AboutDialogOpen == False:
+        if len(OpenWindows) == 0:
             # get position of statusbar
             self.StatusBar.x = event.x
             self.StatusBar.y = event.y
@@ -1242,14 +1247,17 @@ class StatusBar(object):
         """
             context menu for label in statusbar
         """
-
+        
+        # needed for checking if there are any open windows in which case won't be a new one
+        ###global OpenWindows
+        
         self.output.popwin.Close()
 
         # no dragging of statusbar anymore if menu pops up
         self.Moving = False
-
+        
         # check if settings ar not already open
-        if self.output.SettingsDialogOpen == False:
+        if not "Settings" in self.output.servers.values()[0].OpenWindows:    
             # for some reason StatusIcon delivers another event (type int) than
             # egg.trayicon (type object) so it must be checked which one has
             # been calling
@@ -1512,22 +1520,30 @@ class Popwin(object):
         """
             pop up popwin
         """
+        # needed for checking if there are any open windows in which case won't be a new one
+        ###global OpenWindows
+        
         # when popwin is showable and label is not "UP" popwin will be showed - 
         # otherwise there is no sense in showing an empty popwin
         # for some reason the painting will lag behind popping up popwin if not getting resized twice -
         # seems like a strange workaround
         if self.showPopwin and not self.output.status_ok and self.output.conf.GetNumberOfEnabledMonitors() > 0:
-            self.output.statusbar.Moving = False
-            # position and resize...
-            self.Resize()
-            # ...show
-            self.Window.show_all()
-            # position and resize...
-            self.Resize()
-            # set combobox to default value
-            self.ComboboxMonitor.set_active(0)
-            # switch off Notification    
-            self.output.NotificationOff()
+            if len(self.output.servers.values()[0].OpenWindows) == 0:
+                self.output.statusbar.Moving = False
+                # position and resize...
+                self.Resize()
+                # ...show
+                self.Window.show_all()
+                # position and resize...
+                self.Resize()
+                # set combobox to default value
+                self.ComboboxMonitor.set_active(0)
+                # switch off Notification    
+                self.output.NotificationOff()
+                # register as open window
+                self.output.servers.values()[0].OpenWindows["Popwin"] = self.Window
+            
+        print "OpenWindows", self.output.servers.values()[0].OpenWindows
 
 
     def LeavePopWin(self, widget=None, event=None):
@@ -1573,18 +1589,24 @@ class Popwin(object):
             # y-axis dooes not get extra 10 px on top for sake of combobox and x-axis on right side not because of scrollbar -
             # so i wonder if it has any use left...
             if str(self.conf.close_details_hover) == "True":
-                if mousex <= popwinx0 + 10 or mousex >= (popwinx0 + self.popwinwidth) or mousey <= popwiny0 or mousey >= (popwiny0 + self.popwinheight) - 10 :
-                    self.Close()
+                if mousex <= popwinx0 + 10 or mousex >= (popwinx0 + self.popwinwidth) or mousey <= popwiny0 or mousey >= (popwiny0 + self.popwinheight) - 10 :       
+                    self.Close()        
 
         except Exception, err:
-            print err
-            pass
+            import traceback
+            traceback.print_exc(file=sys.stdout)
 
 
     def Close(self, widget=None):
         """
             hide popwin
         """
+        # needed for checking if there are any open windows in which case won't be a new one
+        ###global OpenWindows
+
+        # unregister popwin - seems to be called even if popwin is not open so check before unregistering
+        if self.output.servers.values()[0].OpenWindows.has_key("Popwin"): self.output.servers.values()[0].OpenWindows.pop("Popwin")
+        
         self.Window.hide_all()
         # notification off because user had a look to hosts/services recently
         self.output.NotificationOff()       
@@ -1724,8 +1746,8 @@ class Popwin(object):
             self.Window.resize(self.popwinwidth, self.popwinheight)
 
         except Exception, err:
-            print err
-            pass
+            import traceback
+            traceback.print_exc(file=sys.stdout)
 
 
     def setShowable(self, widget=None, event=None):
@@ -1753,7 +1775,7 @@ class Popwin(object):
         """
         # status field in server vbox in popwin    
         try:
-            self.ServerVBoxes[server.get_name()].LabelStatus.set_markup('<span>Status: ' + str(server.status) + ' <span color="darkred">' + str(server.status_description) + '</span></span>')
+            self.ServerVBoxes[server.get_name()].LabelStatus.set_markup('<span> Status: ' + str(server.status) + ' <span color="darkred">' + str(server.status_description) + '</span></span>')
         except:
             server.Error(sys.exc_info())
 
@@ -1763,9 +1785,11 @@ class Popwin(object):
         check if no other dialog/menu is shown which would not like to be
         covered by the popup window
         """
-        if self.output.SettingsDialogOpen == False and\
-           self.output.AboutDialogOpen == False and\
-           self.output.statusbar.MenuOpen == False:
+        # needed for checking if there are any open windows in which case won't be a new one
+        ###global OpenWindows
+        
+        if (len(self.output.servers.values()[0].OpenWindows) == 0 or "Popwin" in self.output.servers.values()[0].OpenWindows)and\
+        self.output.statusbar.MenuOpen == False:  
             return True
         else:
             return False
@@ -1945,10 +1969,7 @@ class ServerVBox(gtk.VBox):
                                                                 action.re_status_information_pattern,\
                                                                 action.re_status_information_reverse):
                                     item_visible = True
-                            # fallback if no regexp is selected
-                            
-                            #print action.re_host_enabled, action.re_service_enabled
-                            
+                            # fallback if no regexp is selected                            
                             if str(action.re_host_enabled) == str(action.re_service_enabled) == str(action.re_status_information_enabled) == "False":
                                 item_visible = True
                                 
@@ -2074,14 +2095,16 @@ class Settings(object):
         # if not given default tab is empty
         if not "first_page" in kwds: self.first_page = ""
 
-        # flag settings dialog as opened
-        self.output.SettingsDialogOpen = True
+        # needed for checking if there are any open windows in which case won't be a new one
+        ###global OpenWindows
 
         # set the gtkbuilder files
         self.builderfile = self.output.Resources + os.sep + "settings_dialog.ui"
         self.builder = gtk.Builder()
         self.builder.add_from_file(self.builderfile)
         self.dialog = self.builder.get_object("settings_dialog")
+        
+        self.output.servers.values()[0].OpenWindows["Settings"] = self.dialog
         
         # little feedback store for servers and actions treeviews
         self.selected_server = None
@@ -2151,7 +2174,8 @@ class Settings(object):
         # hide open popwin in try/except clause because at first start there
         # cannot be a popwin object
         try:
-            self.output.popwin.Window.hide_all()
+            ###self.output.popwin.Window.hide_all()
+            self.output.popwin.Close()
         except:
             pass
 
@@ -2230,10 +2254,11 @@ class Settings(object):
         
         # show filled settings dialog and wait thanks to gtk.run()
         self.dialog.run()
-        self.dialog.destroy()
 
-        # flag settings dialog as closed
-        self.output.SettingsDialogOpen = False
+        # delete global open Windows entry
+        self.output.servers.values()[0].OpenWindows.pop("Settings")
+        
+        self.dialog.destroy()
 
 
     def FillTreeView(self, treeview_widget, items, column_string, selected_item):
@@ -2336,7 +2361,7 @@ class Settings(object):
             self.conf.__dict__["color_" + state + "_background"] = self.builder.get_object("input_colorbutton_" + state + "_background").get_color().to_string()     
 
         # close settings dialog 
-        self.dialog.destroy()
+        ###self.dialog.destroy()
 
         # close popwin
         # catch Exception at first run when there cannot exist a popwin
@@ -2388,8 +2413,8 @@ class Settings(object):
         """
             settings dialog got cancelled
         """
-        self.dialog.destroy()
-        self.output.popwin.PopDown()
+        ###self.dialog.destroy()
+        ###self.output.popwin.PopDown()
         # when getting cancelled at first run exit immediately because
         # without settings there is not much nagstamon can do
         if self.output.firstrun == True:
@@ -2581,7 +2606,8 @@ class Settings(object):
             sound = Actions.PlaySound(sound="FILE", file=filechooser.get_filename(), conf=self.conf, servers=self.servers)
             sound.start()
         except Exception, err:
-            print err
+            import traceback
+            traceback.print_exc(file=sys.stdout)
 
             
 class GenericServer(object):
@@ -3188,37 +3214,52 @@ class AuthenticationDialog:
     def __init__(self, **kwds):
         # the usual...
         for k in kwds: self.__dict__[k] = kwds[k]
-
-        # set the gtkbuilder files       
-        self.builderfile = self.server.Resources + os.sep + "authentification_dialog.ui"
-        self.builder = gtk.Builder()
-        self.builder.add_from_file(self.builderfile)
-        self.dialog = self.builder.get_object("authentification_dialog")
-
-        # assign handlers
-        handlers_dict = { "button_ok_clicked" : self.OK,
-                          "button_exit_clicked" : self.Exit,
-                          "button_disable_clicked" : self.Disable
-                          }
-        self.builder.connect_signals(handlers_dict)
-
-        self.label_monitor = self.builder.get_object("label_monitor")
-        self.entry_username = self.builder.get_object("input_entry_username")
-        self.entry_password = self.builder.get_object("input_entry_password")
-
-        self.dialog.set_title("Nagstamon authentication for " + self.server.get_name())
-        self.label_monitor.set_text("Please give the correct credentials for "+ self.server.get_name() + ":")
-        self.entry_username.set_text(str(self.server.get_username()))
-        self.entry_password.set_text(str(self.server.get_password()))
         
-        # get current defaults
-        self.username, self.password = self.server.get_username(), self.server.get_password()
+        ###global OpenWindows
         
-        # omitting .show_all() leads to crash under Linux - why?
-        self.dialog.show_all()
-        self.dialog.run()
-        self.dialog.destroy()
+        print "OpenWindows Auth", self.server.OpenWindows
+        
+        if len(self.server.OpenWindows) == 0:   
+            # set the gtkbuilder files       
+            self.builderfile = self.server.Resources + os.sep + "authentification_dialog.ui"
+            self.builder = gtk.Builder()
+            self.builder.add_from_file(self.builderfile)
+            self.dialog = self.builder.get_object("authentification_dialog")
     
+            # assign handlers
+            handlers_dict = { "button_ok_clicked" : self.OK,
+                              "button_exit_clicked" : self.Exit,
+                              "button_disable_clicked" : self.Disable
+                              }
+            self.builder.connect_signals(handlers_dict)
+    
+            self.label_monitor = self.builder.get_object("label_monitor")
+            self.entry_username = self.builder.get_object("input_entry_username")
+            self.entry_password = self.builder.get_object("input_entry_password")
+    
+            self.dialog.set_title("Nagstamon authentication for " + self.server.get_name())
+            self.label_monitor.set_text("Please give the correct credentials for "+ self.server.get_name() + ":")
+            self.entry_username.set_text(str(self.server.get_username()))
+            self.entry_password.set_text(str(self.server.get_password()))
+            
+            # get current defaults
+            self.username, self.password = self.server.get_username(), self.server.get_password()
+            
+            # omitting .show_all() leads to crash under Linux - why?
+            self.dialog.show_all()
+            
+            self.server.OpenWindows["Authentication-" + self.server.get_name()] = self.dialog
+            
+            self.dialog.run()
+            
+            self.server.OpenWindows.pop("Authentication-" + self.server.get_name())
+            
+            self.dialog.destroy()
+        
+        else:
+            #return current defaults
+            self.username, self.password = self.server.get_username(), self.server.get_password()
+            
             
     def OK(self, widget):       
         self.username = self.entry_username.get_text()
@@ -3231,7 +3272,6 @@ class AuthenticationDialog:
             self.server.conf.servers[self.server.get_name()].password = self.password
             self.server.conf.servers[self.server.get_name()].save_password = True
             self.server.conf.SaveConfig(server=self.server)
-        self.dialog.destroy()
         
         
     def Disable(self, widget):
@@ -3240,7 +3280,6 @@ class AuthenticationDialog:
         self.username, self.password = self.server.username, self.server.password
         # stop server thread
         self.server.thread.Stop()
-        self.dialog.destroy()
 
         
     def Exit(self, widget):
@@ -3289,7 +3328,7 @@ class ButtonWithIcon(gtk.Button):
         hbox = gtk.HBox()
         icon = gtk.Image()
         icon.set_from_file(self.output.Resources + os.sep + self.icon)
-        label = gtk.Label(self.label)
+        label = gtk.Label(" " + self.label)
         hbox.add(icon)
         hbox.add(label)
         

@@ -61,15 +61,6 @@ debug_queue = Queue.Queue()
 
 # create servers
 for server in conf.servers.values():
-    """
-    if server.save_password == "False" and server.enabled == "True":
-        ###pwdialog = GUI.PasswordDialog(
-        ###    "Password for " + server.username + " on " + server.monitor_url + ": ")
-        auth = GUI.AuthenticationDialog(server=server)
-        if auth.password == None:
-            sys.exit(1)
-        server.password = auth.password
-    """
     created_server = Actions.CreateServer(server, conf, debug_queue, Resources)
     if created_server is not None:
         servers[server.name] = created_server     

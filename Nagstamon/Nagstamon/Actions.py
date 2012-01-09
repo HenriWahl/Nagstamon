@@ -42,6 +42,9 @@ except:
 # flag which indicates if already rechecking all
 RecheckingAll = False
 
+# Open windows seen from GUI - locking each other not to do unwanted stuff if some windows interfere
+OpenWindows = {}
+
 
 def StartRefreshLoop(servers=None, output=None, conf=None):
     """
@@ -155,7 +158,6 @@ def RefreshAllServers(servers=None, output=None, conf=None):
         if server.isChecking == False and str(conf.servers[server.get_name()].enabled) == "True":
             #debug
             if str(conf.debug_mode) == "True":
-                #print "Checking server:", server.get_name()
                 server.Debug(server=server.get_name(), debug="Checking server...")
     
             server.thread.Refresh()
@@ -261,7 +263,6 @@ class RecheckAll(threading.Thread):
             try:
                 # debug
                 if str(self.conf.debug_mode) == "True":
-                    #print "Recheck all: Rechecking all services on all hosts on all servers..."
                     # workaround, take Debug method from first server reachable
                     self.servers.values()[0].Debug(debug="Recheck all: Rechecking all services on all hosts on all servers...")
                 for server in self.servers.values():      
@@ -277,7 +278,6 @@ class RecheckAll(threading.Thread):
                             rechecks_dict[server.get_name() + ": " + host.get_name()].start()
                             # debug
                             if str(self.conf.debug_mode) == "True":
-                                #print "Recheck all:", "rechecking", server.get_name() + ": " + host.get_name()                                
                                 server.Debug(server=server.get_name(), host=host.get_name(), debug="Rechecking...")
                             for service in host.services.values():
                                 # dito
@@ -293,7 +293,6 @@ class RecheckAll(threading.Thread):
                 while len(rechecks_dict) > 0:
                     # debug
                     if str(self.conf.debug_mode) == "True":
-                        #print "Recheck all: # of checks which still need to be done:", len(rechecks_dict)
                         # once again taking .Debug() from first server
                         self.servers.values()[0].Debug(server=server.get_name(), debug="Recheck all: # of checks which still need to be done: " + str(len(rechecks_dict)))
 
@@ -306,7 +305,6 @@ class RecheckAll(threading.Thread):
                     
                 # debug
                 if str(self.conf.debug_mode) == "True":
-                    #print "Recheck all: All servers, hosts and services are rechecked."
                     # once again taking .Debug() from first server
                     self.servers.values()[0].Debug(server=server.get_name(), debug="Recheck all: All servers, hosts and services are rechecked.")                
                 # reset global flag
@@ -324,7 +322,6 @@ class RecheckAll(threading.Thread):
         else:
             # debug
             if str(self.conf.debug_mode) == "True":
-                #print "Recheck all: Already rechecking all services on all hosts on all servers."
                 # once again taking .Debug() from first server
                 self.servers.values()[0].Debug(debug="Recheck all: Already rechecking all services on all hosts on all servers.")                
 
@@ -394,7 +391,6 @@ class CheckForNewVersion(threading.Thread):
         
         # debug
         if str(self.output.conf.debug_mode) == "True":
-            #print "Checking for new version..."
             # once again taking .Debug() from first server
             self.servers.values()[0].Debug(debug="Checking for new version...")
 
@@ -410,7 +406,6 @@ class CheckForNewVersion(threading.Thread):
                 
                 # debug
                 if str(self.output.conf.debug_mode) == "True":
-                    #print "Latest version from sourceforge.net:", version
                     # once again taking .Debug() from first server
                     self.servers.values()[0].Debug(debug="Latest version from sourceforge.net: " + str(version))
                 
@@ -649,6 +644,9 @@ def get_registered_server_type_list():
 
 
 def CreateServer(server=None, conf=None, debug_queue=None, resources=None):
+    # global open windows registry
+    global OpenWindows
+    
     # create Server from config
     registered_servers = get_registered_servers()
     if server.type not in registered_servers:
@@ -661,6 +659,8 @@ def CreateServer(server=None, conf=None, debug_queue=None, resources=None):
     nagiosserver.monitor_cgi_url = server.monitor_cgi_url           
     # add resources, needed for auth dialog
     nagiosserver.Resources = resources
+    # global open windows registry
+    nagiosserver.OpenWindows = OpenWindows
     nagiosserver.username = server.username
     if server.save_password or not server.enabled:
         nagiosserver.password = server.password

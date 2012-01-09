@@ -39,10 +39,6 @@ class CentreonServer(GenericServer):
         # Entries for monitor default actions in context menu
         self.MENU_ACTIONS = ["Monitor", "Recheck", "Acknowledge", "Downtime"]        
 
-        # cache MD5 username + password to reduce load
-        self.MD5_username = Actions.MD5ify(self.conf.servers[self.get_name()].username)   
-        self.MD5_password = Actions.MD5ify(self.conf.servers[self.get_name()].password)
-
         
     def init_HTTP(self):  
         """
@@ -58,11 +54,9 @@ class CentreonServer(GenericServer):
         """
         Centreon needs deletion of SID
         """
-        print self.SID, self.SIDcount, self.Cookie
         self.HTTPheaders = {}     
         self.SID = None
         self.SIDcount = 0
-        #self.Cookie = cookielib.CookieJar()   
         self._get_sid()
         
     
@@ -98,9 +92,7 @@ class CentreonServer(GenericServer):
                 html = result.result
                 start_time = html.find(attrs={"name":"start"}).attrMap["value"]
                 end_time = html.find(attrs={"name":"end"}).attrMap["value"]                  
-                    
-                
-                ###del raw
+    
                 # give values back as tuple      
                 return start_time, end_time
         except:
@@ -168,8 +160,6 @@ class CentreonServer(GenericServer):
         gets a shiny new SID for XML HTTP requests to Centreon cutting it out via .partition() from raw HTML
         additionally get php session cookie
         """
-        print self.username, self.password
-#        login_data = urllib.urlencode({"useralias" : self.conf.servers[self.get_name()].username, "password" : self.conf.servers[self.get_name()].password, "submit" : "Login"})
         login_data = urllib.urlencode({"useralias" : self.username, "password" : self.password, "submit" : "Login"})
       
         try:

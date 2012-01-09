@@ -687,8 +687,8 @@ class GenericServer(object):
 
         if status.error != "":
             # ask for password if authorization failed
-            if "HTTP Error 401: Unauthorized" in status.error or \
-               "HTTP Error 403: Forbidden" in status.error or \
+            if "HTTP Error 401" in status.error or \
+               "HTTP Error 403" in status.error or \
                "Bad Session ID" in status.error:
                 if str(self.conf.servers[self.name].enabled) == "True":
                     while status.error != "":
@@ -700,6 +700,8 @@ class GenericServer(object):
                         # if monitor has been disabled do not try to connect to it
                         if str(self.conf.servers[self.name].enabled) == "False":
                             break
+                        # take a break not to DOS the monitor...
+                        time.sleep(5)
 
             else:
                 self.isChecking = False
