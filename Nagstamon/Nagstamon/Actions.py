@@ -43,8 +43,8 @@ except:
 RecheckingAll = False
 
 # Open windows seen from GUI - locking each other not to do unwanted stuff if some windows interfere
-OpenWindows = {}
-
+#OpenWindows = {}
+OpenWindows = list()
 
 def StartRefreshLoop(servers=None, output=None, conf=None):
     """
@@ -555,6 +555,7 @@ class Action(threading.Thread):
         $ADDRESS$      - address of host, investigated by Server.GetHost()
         $USERNAME$     - username on monitor
         $PASSWORD$     - username's password on monitor - whatever for
+        
         """
         try:
             # if run as custom action use given action definition
@@ -608,7 +609,7 @@ class Action(threading.Thread):
         return a string that fulfills requirements for URL
         exclude several chars
         """
-        return urllib.quote(string, ":/=?&")
+        return urllib.quote(string, ":/=?&@")
     
     
 def TreeViewNagios(server, host, service):

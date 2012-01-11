@@ -1080,3 +1080,28 @@ class GenericServer(object):
         # give debug info to debug loop for thread-save log-file writing
         self.debug_queue.put(debug_string)
         
+    
+    def AddOpenWindow(self, window_name, window):
+        """
+        add calling window to dictionary of open windows to keep the windows separated
+        to be called via gobject.idle_add
+        """
+
+        #self.OpenWindows[window_name] = window
+        self.OpenWindows.append(window_name)
+        
+        print self.OpenWindows
+
+        # necessary for idle_add to be removed from gobject todo-list
+        return False
+    
+        
+    def DeleteOpenWindow(self, window_name):
+        """
+        add calling window to dictionary of open windows to keep the windows separated
+        to be called via gobject.idle_add
+        """
+        self.OpenWindows.pop(window_name)
+        
+        # necessary for idle_add to be removed from gobject todo-list
+        return False

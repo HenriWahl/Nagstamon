@@ -41,7 +41,6 @@ import time
 # registry for open windows to be able to wait until opening another
 ###OpenWindows = {}
 
-
 class Sorting(object):
     """ Sorting persistence purpose class
     Stores tuple pairs in form of:
@@ -864,13 +863,17 @@ class GUI(object):
             license = "Nagstamon is licensed under GPL 2.0.\nYou should have got a LICENSE file distributed with nagstamon.\nGet it at http://www.gnu.org/licenses/gpl-2.0.txt."
         about.set_license(license)
 
-        OpenWindows["About"] = about
+        ###OpenWindows["About"] = about
+        # use gobject.idle_add() to be thread safe
+        gobject.idle_add(self.output.servers.values()[0].AddOpenWindow, self.__class__.__name__, about)
         
         self.popwin.Close()
         
         about.run()
         
-        OpenWindows.pop("About")
+        ###OpenWindows.pop("About")
+        # use gobject.idle_add() to be thread safe
+        gobject.idle_add(self.output.servers.values()[0].DeleteOpenWindow, self.__class__.__name__)            
         
         about.destroy()
 
@@ -1541,11 +1544,11 @@ class Popwin(object):
                 # switch off Notification    
                 self.output.NotificationOff()
                 # register as open window
-                self.output.servers.values()[0].OpenWindows["Popwin"] = self.Window
-            
-        print "OpenWindows", self.output.servers.values()[0].OpenWindows
-
-
+                #self.output.servers.values()[0].OpenWindows["Popwin"] = self.Window
+                # use gobject.idle_add() to be thread safe
+                gobject.idle_add(self.output.servers.values()[0].AddOpenWindow, self.__class__.__name__, self.Window)
+        
+        
     def LeavePopWin(self, widget=None, event=None):
         """
         when pointer leaves popwin the pointer_left_popwin flag has to be set to avoid
@@ -1605,8 +1608,10 @@ class Popwin(object):
         ###global OpenWindows
 
         # unregister popwin - seems to be called even if popwin is not open so check before unregistering
-        if self.output.servers.values()[0].OpenWindows.has_key("Popwin"): self.output.servers.values()[0].OpenWindows.pop("Popwin")
-        
+        if self.output.servers.values()[0].OpenWindows.has_key("Popwin"): 
+            #self.output.servers.values()[0].OpenWindows.pop("Popwin")
+            # use gobject.idle_add() to be thread safe
+            gobject.idle_add(self.output.servers.values()[0].DeleteOpenWindow, self.__class__.__name__)
         self.Window.hide_all()
         # notification off because user had a look to hosts/services recently
         self.output.NotificationOff()       
@@ -2097,6 +2102,10 @@ class Settings(object):
 
         # needed for checking if there are any open windows in which case won't be a new one
         ###global OpenWindows
+        
+
+        print "OpenWindows", self.output.servers.values()[0].OpenWindows
+        
 
         # set the gtkbuilder files
         self.builderfile = self.output.Resources + os.sep + "settings_dialog.ui"
@@ -2104,7 +2113,9 @@ class Settings(object):
         self.builder.add_from_file(self.builderfile)
         self.dialog = self.builder.get_object("settings_dialog")
         
-        self.output.servers.values()[0].OpenWindows["Settings"] = self.dialog
+        ###self.output.servers.values()[0].OpenWindows["Settings"] = self.dialog
+        # use gobject.idle_add() to be thread safe
+        gobject.idle_add(self.output.servers.values()[0].AddOpenWindow, self.__class__.__name__, self.dialog)
         
         # little feedback store for servers and actions treeviews
         self.selected_server = None
@@ -2256,7 +2267,9 @@ class Settings(object):
         self.dialog.run()
 
         # delete global open Windows entry
-        self.output.servers.values()[0].OpenWindows.pop("Settings")
+        ###self.output.servers.values()[0].OpenWindows.pop("Settings")
+        # use gobject.idle_add() to be thread safe
+        gobject.idle_add(self.output.servers.values()[0].DeleteOpenWindow, self.__class__.__name__)
         
         self.dialog.destroy()
 
@@ -3248,11 +3261,15 @@ class AuthenticationDialog:
             # omitting .show_all() leads to crash under Linux - why?
             self.dialog.show_all()
             
-            self.server.OpenWindows["Authentication-" + self.server.get_name()] = self.dialog
+            ###self.server.OpenWindows["Authentication-" + self.server.get_name()] = self.dialog
+            # use gobject.idle_add() to be thread safe
+            gobject.idle_add(self.server.AddOpenWindow, self.__class__.__name__ + self.server.get_name(), self.dialog)
             
             self.dialog.run()
             
-            self.server.OpenWindows.pop("Authentication-" + self.server.get_name())
+            ###self.server.OpenWindows.pop("Authentication-" + self.server.get_name())
+            # use gobject.idle_add() to be thread safe
+            gobject.idle_add(self.server.DeleteOpenWindow, self.__class__.__name__ + self.server.get_name())
             
             self.dialog.destroy()
         
