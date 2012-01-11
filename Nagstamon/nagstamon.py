@@ -59,14 +59,18 @@ servers = dict()
 # queue for debugging
 debug_queue = Queue.Queue()
 
+# Open windows etc. seen from GUI - locking each other not to do unwanted stuff if some windows interfere
+GUILock = {}
+
+
 # create servers
 for server in conf.servers.values():
-    created_server = Actions.CreateServer(server, conf, debug_queue, Resources)
+    created_server = Actions.CreateServer(server, conf, debug_queue, Resources, GUILock)
     if created_server is not None:
         servers[server.name] = created_server     
         
 # Initiate Output
-output = GUI.GUI(conf=conf, servers=servers, Resources=Resources, debug_queue=debug_queue)
+output = GUI.GUI(conf=conf, servers=servers, Resources=Resources, debug_queue=debug_queue, GUILock=GUILock)
 
 # show notice if a legacy config file is used from commandline
 if conf.legacyconfigfile_notice == True:

@@ -43,8 +43,8 @@ except:
 RecheckingAll = False
 
 # Open windows seen from GUI - locking each other not to do unwanted stuff if some windows interfere
-#OpenWindows = {}
-OpenWindows = list()
+###GUILock = {}
+
 
 def StartRefreshLoop(servers=None, output=None, conf=None):
     """
@@ -522,12 +522,15 @@ class MoveStatusbar(threading.Thread):
     def run(self):
         # avoid flickering popwin while moving statusbar around
         # gets re-enabled from popwin.setShowable()
-        self.output.popwin.Close()
-        self.output.popwin.showPopwin = False  
+        if self.output.servers.values()[0].GUILock.has_key("Popwin"): self.output.popwin.Close()
+        self.output.popwin.showPopwin = False
+        # lock GUI while moving statusbar so no auth dialogs could pop up
+        self.output.servers.values()[0].AddGUILock(self.__class__.__name__)
         # in case of moving statusbar do some moves
         while self.output.statusbar.Moving == True:
             gobject.idle_add(self.output.statusbar.Move)
             time.sleep(0.01)
+        self.output.servers.values()[0].DeleteGUILock(self.__class__.__name__)
         
             
 class Action(threading.Thread):
@@ -644,10 +647,7 @@ def get_registered_server_type_list():
     return [x[0] for x in REGISTERED_SERVERS]
 
 
-def CreateServer(server=None, conf=None, debug_queue=None, resources=None):
-    # global open windows registry
-    global OpenWindows
-    
+def CreateServer(server=None, conf=None, debug_queue=None, resources=None, GUILock=None):   
     # create Server from config
     registered_servers = get_registered_servers()
     if server.type not in registered_servers:
@@ -661,7 +661,7 @@ def CreateServer(server=None, conf=None, debug_queue=None, resources=None):
     # add resources, needed for auth dialog
     nagiosserver.Resources = resources
     # global open windows registry
-    nagiosserver.OpenWindows = OpenWindows
+    nagiosserver.GUILock = GUILock
     nagiosserver.username = server.username
     if server.save_password or not server.enabled:
         nagiosserver.password = server.password
@@ -881,6 +881,8 @@ def GetAuthentication(server):
     """
     call GUI password dialog
     """
+    global GUILock
+    
     auth = GUI.AuthenticationDialog(server=server)
     return auth.username, auth.password
 

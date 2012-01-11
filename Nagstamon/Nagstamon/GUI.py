@@ -38,8 +38,6 @@ import sys
 import gc
 import time
 
-# registry for open windows to be able to wait until opening another
-###OpenWindows = {}
 
 class Sorting(object):
     """ Sorting persistence purpose class
@@ -812,9 +810,6 @@ class GUI(object):
         """
             about nagstamon
         """
-
-        global OpenWindows
-        
         about = gtk.AboutDialog()
         about.set_name(self.name)
         about.set_version(self.version)
@@ -863,18 +858,12 @@ class GUI(object):
             license = "Nagstamon is licensed under GPL 2.0.\nYou should have got a LICENSE file distributed with nagstamon.\nGet it at http://www.gnu.org/licenses/gpl-2.0.txt."
         about.set_license(license)
 
-        ###OpenWindows["About"] = about
         # use gobject.idle_add() to be thread safe
-        gobject.idle_add(self.output.servers.values()[0].AddOpenWindow, self.__class__.__name__, about)
-        
+        gobject.idle_add(self.output.servers.values()[0].AddGUILock, self.__class__.__name__)       
         self.popwin.Close()
-        
         about.run()
-        
-        ###OpenWindows.pop("About")
         # use gobject.idle_add() to be thread safe
-        gobject.idle_add(self.output.servers.values()[0].DeleteOpenWindow, self.__class__.__name__)            
-        
+        gobject.idle_add(self.output.servers.values()[0].DeleteGUILock, self.__class__.__name__)            
         about.destroy()
 
 
@@ -1187,12 +1176,9 @@ class StatusBar(object):
     def LogoClicked(self, widget=None, event=None):
         """
             see what happens if statusbar is clicked
-        """
-        # needed for checking if there are any open windows in which case won't be a new one
-        global OpenWindows
-        
-        # check if settings etc. are not already open
-        if len(OpenWindows) == 0:
+        """        
+        # check if settings etc. are not already open - an open popwin will be closed anyway
+        if len(self.output.servers.values()[0].GUILock) == 0 or self.output.servers.values()[0].GUILock.has_key("Popwin"):
             # get position of statusbar
             self.StatusBar.x = event.x
             self.StatusBar.y = event.y
@@ -1250,17 +1236,17 @@ class StatusBar(object):
         """
             context menu for label in statusbar
         """
-        
-        # needed for checking if there are any open windows in which case won't be a new one
-        ###global OpenWindows
-        
         self.output.popwin.Close()
 
         # no dragging of statusbar anymore if menu pops up
         self.Moving = False
         
-        # check if settings ar not already open
-        if not "Settings" in self.output.servers.values()[0].OpenWindows:    
+        # check if settings are not already open
+        if not "Settings" in self.output.servers.values()[0].GUILock:    
+
+            # use gobject.idle_add() to be thread safe
+            gobject.idle_add(self.output.servers.values()[0].AddGUILock, self.__class__.__name__)    
+            
             # for some reason StatusIcon delivers another event (type int) than
             # egg.trayicon (type object) so it must be checked which one has
             # been calling
@@ -1280,7 +1266,10 @@ class StatusBar(object):
                     self.MenuOpen = True
 
             self.MenuOpen = False
+            # use gobject.idle_add() to be thread safe
+            gobject.idle_add(self.output.servers.values()[0].DeleteGUILock, self.__class__.__name__)
 
+            
 
     def Move(self, widget=None, event=None):
         """
@@ -1523,15 +1512,15 @@ class Popwin(object):
         """
             pop up popwin
         """
-        # needed for checking if there are any open windows in which case won't be a new one
-        ###global OpenWindows
+        
+        print "Popup", self.output.servers.values()[0].GUILock
         
         # when popwin is showable and label is not "UP" popwin will be showed - 
         # otherwise there is no sense in showing an empty popwin
         # for some reason the painting will lag behind popping up popwin if not getting resized twice -
         # seems like a strange workaround
         if self.showPopwin and not self.output.status_ok and self.output.conf.GetNumberOfEnabledMonitors() > 0:
-            if len(self.output.servers.values()[0].OpenWindows) == 0:
+            if len(self.output.servers.values()[0].GUILock) == 0:
                 self.output.statusbar.Moving = False
                 # position and resize...
                 self.Resize()
@@ -1544,9 +1533,8 @@ class Popwin(object):
                 # switch off Notification    
                 self.output.NotificationOff()
                 # register as open window
-                #self.output.servers.values()[0].OpenWindows["Popwin"] = self.Window
                 # use gobject.idle_add() to be thread safe
-                gobject.idle_add(self.output.servers.values()[0].AddOpenWindow, self.__class__.__name__, self.Window)
+                gobject.idle_add(self.output.servers.values()[0].AddGUILock, self.__class__.__name__, self)
         
         
     def LeavePopWin(self, widget=None, event=None):
@@ -1604,14 +1592,10 @@ class Popwin(object):
         """
             hide popwin
         """
-        # needed for checking if there are any open windows in which case won't be a new one
-        ###global OpenWindows
-
         # unregister popwin - seems to be called even if popwin is not open so check before unregistering
-        if self.output.servers.values()[0].OpenWindows.has_key("Popwin"): 
-            #self.output.servers.values()[0].OpenWindows.pop("Popwin")
+        if self.output.servers.values()[0].GUILock.has_key("Popwin"): 
             # use gobject.idle_add() to be thread safe
-            gobject.idle_add(self.output.servers.values()[0].DeleteOpenWindow, self.__class__.__name__)
+            gobject.idle_add(self.output.servers.values()[0].DeleteGUILock, self.__class__.__name__)
         self.Window.hide_all()
         # notification off because user had a look to hosts/services recently
         self.output.NotificationOff()       
@@ -1790,10 +1774,7 @@ class Popwin(object):
         check if no other dialog/menu is shown which would not like to be
         covered by the popup window
         """
-        # needed for checking if there are any open windows in which case won't be a new one
-        ###global OpenWindows
-        
-        if (len(self.output.servers.values()[0].OpenWindows) == 0 or "Popwin" in self.output.servers.values()[0].OpenWindows)and\
+        if (len(self.output.servers.values()[0].GUILock) == 0 or "Popwin" in self.output.servers.values()[0].GUILock)and\
         self.output.statusbar.MenuOpen == False:  
             return True
         else:
@@ -2100,22 +2081,14 @@ class Settings(object):
         # if not given default tab is empty
         if not "first_page" in kwds: self.first_page = ""
 
-        # needed for checking if there are any open windows in which case won't be a new one
-        ###global OpenWindows
-        
-
-        print "OpenWindows", self.output.servers.values()[0].OpenWindows
-        
-
         # set the gtkbuilder files
         self.builderfile = self.output.Resources + os.sep + "settings_dialog.ui"
         self.builder = gtk.Builder()
         self.builder.add_from_file(self.builderfile)
         self.dialog = self.builder.get_object("settings_dialog")
         
-        ###self.output.servers.values()[0].OpenWindows["Settings"] = self.dialog
         # use gobject.idle_add() to be thread safe
-        gobject.idle_add(self.output.servers.values()[0].AddOpenWindow, self.__class__.__name__, self.dialog)
+        gobject.idle_add(self.output.servers.values()[0].AddGUILock, self.__class__.__name__)
         
         # little feedback store for servers and actions treeviews
         self.selected_server = None
@@ -2185,7 +2158,6 @@ class Settings(object):
         # hide open popwin in try/except clause because at first start there
         # cannot be a popwin object
         try:
-            ###self.output.popwin.Window.hide_all()
             self.output.popwin.Close()
         except:
             pass
@@ -2267,9 +2239,8 @@ class Settings(object):
         self.dialog.run()
 
         # delete global open Windows entry
-        ###self.output.servers.values()[0].OpenWindows.pop("Settings")
         # use gobject.idle_add() to be thread safe
-        gobject.idle_add(self.output.servers.values()[0].DeleteOpenWindow, self.__class__.__name__)
+        gobject.idle_add(self.output.servers.values()[0].DeleteGUILock, self.__class__.__name__)
         
         self.dialog.destroy()
 
@@ -3228,11 +3199,13 @@ class AuthenticationDialog:
         # the usual...
         for k in kwds: self.__dict__[k] = kwds[k]
         
-        ###global OpenWindows
         
-        print "OpenWindows Auth", self.server.OpenWindows
+        print "AUTH", self.server.GUILock
         
-        if len(self.server.OpenWindows) == 0:   
+
+        if len(self.server.GUILock) == 0 or self.server.GUILock.has_key("Popwin"):
+            if self.server.GUILock.has_key("Popwin"):
+                self.server.GUILock["Popwin"].Close()
             # set the gtkbuilder files       
             self.builderfile = self.server.Resources + os.sep + "authentification_dialog.ui"
             self.builder = gtk.Builder()
@@ -3260,21 +3233,15 @@ class AuthenticationDialog:
             
             # omitting .show_all() leads to crash under Linux - why?
             self.dialog.show_all()
-            
-            ###self.server.OpenWindows["Authentication-" + self.server.get_name()] = self.dialog
             # use gobject.idle_add() to be thread safe
-            gobject.idle_add(self.server.AddOpenWindow, self.__class__.__name__ + self.server.get_name(), self.dialog)
-            
+            gobject.idle_add(self.server.AddGUILock, self.__class__.__name__ + self.server.get_name())
             self.dialog.run()
-            
-            ###self.server.OpenWindows.pop("Authentication-" + self.server.get_name())
             # use gobject.idle_add() to be thread safe
-            gobject.idle_add(self.server.DeleteOpenWindow, self.__class__.__name__ + self.server.get_name())
-            
+            gobject.idle_add(self.server.DeleteGUILock, self.__class__.__name__ + self.server.get_name())
             self.dialog.destroy()
         
         else:
-            #return current defaults
+            # return current defaults
             self.username, self.password = self.server.get_username(), self.server.get_password()
             
             

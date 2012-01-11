@@ -1081,27 +1081,28 @@ class GenericServer(object):
         self.debug_queue.put(debug_string)
         
     
-    def AddOpenWindow(self, window_name, window):
+    def AddGUILock(self, widget_name, widget=None):
         """
         add calling window to dictionary of open windows to keep the windows separated
         to be called via gobject.idle_add
         """
-
-        #self.OpenWindows[window_name] = window
-        self.OpenWindows.append(window_name)
+        self.GUILock[widget_name] = widget
         
-        print self.OpenWindows
+        print self.GUILock
 
         # necessary for idle_add to be removed from gobject todo-list
         return False
     
         
-    def DeleteOpenWindow(self, window_name):
+    def DeleteGUILock(self, window_name):
         """
         add calling window to dictionary of open windows to keep the windows separated
         to be called via gobject.idle_add
         """
-        self.OpenWindows.pop(window_name)
+        try:
+            self.GUILock.pop(window_name)
+        except Exception, err:
+            print err
         
         # necessary for idle_add to be removed from gobject todo-list
         return False
