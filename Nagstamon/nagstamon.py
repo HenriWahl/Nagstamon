@@ -39,8 +39,12 @@ try:
     import pkg_resources
     Resources = pkg_resources.resource_filename("Nagstamon", "resources")
 except Exception, err:
-    # set resources to "" in case there are no resources available from setup.py
-    Resources = ""
+    # get resources directory from current directory - only if not being set before by pkg_resources
+    if Resources == "":
+        if os.path.exists(os.path.normcase(os.getcwd() + os.sep + "Nagstamon" + os.sep + "resources")):
+            Resources = os.path.normcase(os.getcwd() + os.sep + "Nagstamon" + os.sep + "resources")
+        else:
+            Resources = os.path.normcase(os.getcwd() + os.sep + "resources")
 
 # initialize GUI and actions
 # if modules are not available from central python install try the ones in the same directory

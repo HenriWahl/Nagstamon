@@ -81,13 +81,6 @@ class GUI(object):
         self.copyright = "©2008-2011 Henri Wahl et al.\nh.wahl@ifw-dresden.de"
         self.comments = "Nagios status monitor for your desktop"
 
-        # get resources directory from current directory - only if not being set before by pkg_resources
-        if self.Resources == "":
-            if os.path.exists(os.path.normcase(os.getcwd() + os.sep + "Nagstamon" + os.sep + "resources")):
-                self.Resources = os.path.normcase(os.getcwd() + os.sep + "Nagstamon" + os.sep + "resources")
-            else:
-                self.Resources = os.path.normcase(os.getcwd() + os.sep + "resources")
-
         # initialize overall status flag
         self.status_ok = True
 
@@ -3208,6 +3201,15 @@ class AuthenticationDialog:
                 self.server.GUILock["Popwin"].Close()
             # set the gtkbuilder files       
             self.builderfile = self.server.Resources + os.sep + "authentication_dialog.ui"
+            
+            print 30*"*"
+            
+            print self.builderfile
+            
+            print 30*"*"
+            
+            
+            
             self.builder = gtk.Builder()
             self.builder.add_from_file(self.builderfile)
             self.dialog = self.builder.get_object("authentication_dialog")
