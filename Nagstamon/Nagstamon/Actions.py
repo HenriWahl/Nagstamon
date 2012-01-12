@@ -660,7 +660,7 @@ def CreateServer(server=None, conf=None, debug_queue=None, resources=None, GUILo
     nagiosserver.monitor_cgi_url = server.monitor_cgi_url           
     # add resources, needed for auth dialog
     nagiosserver.Resources = resources
-    # global open windows registry
+    # global open widgets registry
     nagiosserver.GUILock = GUILock
     nagiosserver.username = server.username
     if server.save_password or not server.enabled:
@@ -677,6 +677,9 @@ def CreateServer(server=None, conf=None, debug_queue=None, resources=None, GUILo
     nagiosserver.proxy_address = server.proxy_address
     nagiosserver.proxy_username = server.proxy_username
     nagiosserver.proxy_password = server.proxy_password
+    
+    # if password is not to be saved ask for it at startup
+    if str(server.save_password) == False: nagiosserver.refresh_authentication = True
     
     # access to thread-safe debug queue
     nagiosserver.debug_queue = debug_queue     

@@ -271,11 +271,21 @@ class GUI(object):
         # walk through all servers, their hosts and their services
         for server in self.servers.values():
             # only refresh monitor server output if enabled and only once every server loop
-            if str(self.conf.servers[server.get_name()].enabled) == "True":
+            if str(self.conf.servers[server.get_name()].enabled) == "True" or\
+               str(server.refresh_authentication) == "True":
                 try:
                     # otherwise it must be shown, full of problems
                     self.popwin.ServerVBoxes[server.get_name()].show()
                     self.popwin.ServerVBoxes[server.get_name()].set_no_show_all(False)
+                    
+                    print 30*"*", "\n", server.get_name(), server.refresh_authentication, "\n", 30*"*"
+                    
+                    # if needed show auth line:
+                    if str(server.refresh_authentication) == "True":
+                        self.popwin.ServerVBoxes[server.get_name()].HBoxAuth.set_no_show_all(False)
+                        self.popwin.ServerVBoxes[server.get_name()].HBoxAuth.show_all()
+                        self.popwin.ServerVBoxes[server.get_name()].AuthEntryUsername.set_text(server.username)
+                        self.popwin.ServerVBoxes[server.get_name()].AuthEntryPassword.set_text(server.password)
 
                     # use a bunch of filtered nagitems, services and hosts sorted by different
                     # grades of severity
@@ -852,11 +862,11 @@ class GUI(object):
         about.set_license(license)
 
         # use gobject.idle_add() to be thread safe
-        gobject.idle_add(self.output.servers.values()[0].AddGUILock, self.__class__.__name__)       
+        gobject.idle_add(self.servers.values()[0].AddGUILock, self.__class__.__name__)       
         self.popwin.Close()
         about.run()
         # use gobject.idle_add() to be thread safe
-        gobject.idle_add(self.output.servers.values()[0].DeleteGUILock, self.__class__.__name__)            
+        gobject.idle_add(self.servers.values()[0].DeleteGUILock, self.__class__.__name__)            
         about.destroy()
 
 
@@ -1345,6 +1355,7 @@ class Popwin(object):
         # keep a more consistent look - copied from StatusBar... anyway, doesn't work... well, next attempt:
         #self.Window.set_type_hint(gtk.gdk.WINDOW_TYPE_HINT_UTILITY)
         #self.Window.set_type_hint(gtk.gdk.WINDOW_TYPE_HINT_SPLASHSCREEN)
+        # yeeehaaaa!
         self.Window.set_type_hint(gtk.gdk.WINDOW_TYPE_HINT_MENU)
         #self.Window.set_type_hint(gtk.gdk.WINDOW_TYPE_HINT_TOOLBAR)        
         #self.Window.set_type_hint(gtk.gdk.WINDOW_TYPE_HINT_DOCK)        
@@ -1488,6 +1499,8 @@ class Popwin(object):
             self.ServerVBoxes[server.get_name()].ButtonHosts.connect("clicked", server.OpenBrowser, "hosts", self.output)
             # open Nagios history in your favorite web browser when hosts button is clicked
             self.ServerVBoxes[server.get_name()].ButtonHistory.connect("clicked", server.OpenBrowser, "history", self.output)
+            # OK button for monitor credentials refreshment
+            self.ServerVBoxes[server.get_name()].AuthButtonOK.connect("clicked", self.ServerVBoxes[server.get_name()].AuthOK, server)
             # windows workaround - see above
             # connect Server_EventBox with leave-notify-event to get popwin popping down when leaving it
             self.ServerVBoxes[server.get_name()].Server_EventBox.connect("leave-notify-event", self.PopDown)
@@ -1533,7 +1546,7 @@ class Popwin(object):
                 self.output.NotificationOff()
                 # register as open window
                 # use gobject.idle_add() to be thread safe
-                gobject.idle_add(self.output.servers.values()[0].AddGUILock, self.__class__.__name__, self)
+                gobject.idle_add(self.output.servers.values()[0].AddGUILock, self.__class__.__name__)
         
         
     def LeavePopWin(self, widget=None, event=None):
@@ -1834,16 +1847,15 @@ class ServerVBox(gtk.VBox):
         
         # Auth line
         self.HBoxAuth = gtk.HBox()
-        self.AuthLabel = gtk.Label("Please authenticate:")
         self.AuthLabelUsername = gtk.Label("Username:")
         self.AuthEntryUsername = gtk.Entry()
         self.AuthEntryUsername.set_can_focus(True)        
-        self.AuthLabelPassword = gtk.Label("Password")
+        self.AuthLabelPassword = gtk.Label("Password:")
         self.AuthEntryPassword = gtk.Entry()
+        self.AuthEntryPassword.set_visibility(False)
         self.AuthCheckbuttonSave = gtk.CheckButton("Save password")
         self.AuthButtonOK = gtk.Button("OK")
-        
-        self.HBoxAuth.add(self.AuthLabel)
+
         self.HBoxAuth.add(self.AuthLabelUsername)
         self.HBoxAuth.add(self.AuthEntryUsername)
         self.HBoxAuth.add(self.AuthLabelPassword)
@@ -1854,10 +1866,11 @@ class ServerVBox(gtk.VBox):
         self.AlignmentAuth = gtk.Alignment(xalign=0, xscale=0.05, yalign=0)
         self.AlignmentAuth.add(self.HBoxAuth)  
         
-        
-        print "EDITABLE", self.AuthEntryUsername.get_editable()
-        
         self.VBox.add(self.AlignmentAuth)
+        
+        # start with hidden auth as default
+        self.HBoxAuth.set_no_show_all(True)
+        self.HBoxAuth.hide_all()
         
         self.Server_EventBox.add(self.VBox)
         self.add(self.Server_EventBox)            
@@ -2099,6 +2112,24 @@ class ServerVBox(gtk.VBox):
         except Exception, err:
             self.output.Dialog(message=err)
             
+           
+            
+    def AuthOK(self, widget, server):
+        """
+        use given auth informations
+        """
+        server.username, server.password = self.AuthEntryUsername.get_text(), self.AuthEntryPassword.get_text()
+        server.refresh_authentication = False
+        
+        if self.AuthCheckbuttonSave.get_active() == True:
+            # store authentication information in config
+            server.conf.servers[server.get_name()].username = server.username
+            server.conf.servers[server.get_name()].password = server.password
+            server.conf.servers[server.get_name()].save_password = True
+            server.conf.SaveConfig(server=server)
+        self.HBoxAuth.hide_all()
+        self.HBoxAuth.set_no_show_all(True)
+        
             
 class Settings(object):
     """
@@ -3229,25 +3260,12 @@ class AuthenticationDialog:
     def __init__(self, **kwds):
         # the usual...
         for k in kwds: self.__dict__[k] = kwds[k]
-        
-        
-        print "AUTH", self.server.GUILock
-        
 
         if len(self.server.GUILock) == 0 or self.server.GUILock.has_key("Popwin"):
             if self.server.GUILock.has_key("Popwin"):
                 self.server.GUILock["Popwin"].Close()
             # set the gtkbuilder files       
-            self.builderfile = self.server.Resources + os.sep + "authentication_dialog.ui"
-            
-            print 30*"*"
-            
-            print self.builderfile
-            
-            print 30*"*"
-            
-            
-            
+            self.builderfile = self.server.Resources + os.sep + "authentication_dialog.ui"       
             self.builder = gtk.Builder()
             self.builder.add_from_file(self.builderfile)
             self.dialog = self.builder.get_object("authentication_dialog")

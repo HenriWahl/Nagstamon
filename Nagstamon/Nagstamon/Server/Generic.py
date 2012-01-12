@@ -93,8 +93,6 @@ class GenericServer(object):
         self.new_hosts = dict()
         self.thread = None
         self.isChecking = False
-        ### seems to be unused ?
-        ###self.debug = False
         self.CheckingForNewVersion = False
         self.WorstStatus = "UP"
         self.States = ["UP", "UNKNOWN", "WARNING", "CRITICAL", "UNREACHABLE", "DOWN"]
@@ -126,7 +124,9 @@ class GenericServer(object):
         self.TreeViewColumns = list()
         self.ListStore = None
         self.ListStoreColumns = list()
-        
+        # flag which decides if authentication has to be renewed
+        self.refresh_authentication = False
+
     
     def init_HTTP(self):
         """
@@ -693,15 +693,16 @@ class GenericServer(object):
                 if str(self.conf.servers[self.name].enabled) == "True":
                     while status.error != "":
                         # clean existent authentification
-                        self.reset_HTTP()
-                        self.username, self.password = Actions.GetAuthentication(server=self)
+                        self.reset_HTTP() 
+                        self.refresh_authentication = True
+                        # take a break not to DOS the monitor...
+                        time.sleep(20)
                         status = self._get_status()
                         self.status, self.status_description = status.result, status.error  
                         # if monitor has been disabled do not try to connect to it
                         if str(self.conf.servers[self.name].enabled) == "False":
                             break
-                        # take a break not to DOS the monitor...
-                        time.sleep(5)
+
 
             else:
                 self.isChecking = False
@@ -1106,3 +1107,4 @@ class GenericServer(object):
         
         # necessary for idle_add to be removed from gobject todo-list
         return False
+    
