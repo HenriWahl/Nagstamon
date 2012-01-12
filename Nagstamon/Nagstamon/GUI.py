@@ -3207,10 +3207,10 @@ class AuthenticationDialog:
             if self.server.GUILock.has_key("Popwin"):
                 self.server.GUILock["Popwin"].Close()
             # set the gtkbuilder files       
-            self.builderfile = self.server.Resources + os.sep + "authentification_dialog.ui"
+            self.builderfile = self.server.Resources + os.sep + "authentication_dialog.ui"
             self.builder = gtk.Builder()
             self.builder.add_from_file(self.builderfile)
-            self.dialog = self.builder.get_object("authentification_dialog")
+            self.dialog = self.builder.get_object("authentication_dialog")
     
             # assign handlers
             handlers_dict = { "button_ok_clicked" : self.OK,

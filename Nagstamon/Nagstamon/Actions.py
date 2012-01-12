@@ -881,10 +881,11 @@ def GetAuthentication(server):
     """
     call GUI password dialog
     """
-    global GUILock
     
     auth = GUI.AuthenticationDialog(server=server)
     return auth.username, auth.password
+
+
 
 
 # <IMPORT>
