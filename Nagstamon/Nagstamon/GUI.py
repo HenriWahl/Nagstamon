@@ -1085,16 +1085,17 @@ class StatusBar(object):
         create statusbar as floating window
         """
         # TOPLEVEL seems to be more standard compliant
-        #self.StatusBar = gtk.Window(gtk.WINDOW_TOPLEVEL)
+        self.StatusBar = gtk.Window(gtk.WINDOW_TOPLEVEL)
         # WINDOW_POPUP works
-        self.StatusBar = gtk.Window(gtk.WINDOW_POPUP)
+        #self.StatusBar = gtk.Window(gtk.WINDOW_POPUP)
         self.StatusBar.set_decorated(False)
         self.StatusBar.set_keep_above(True)
         self.StatusBar.stick()
         # at http://www.pygtk.org/docs/pygtk/gdk-constants.html#gdk-window-type-hint-constants
         # there are some hint types to experiment with
         if platform.system() == "Windows" or platform.system() == "Darwin":
-            self.StatusBar.set_type_hint(gtk.gdk.WINDOW_TYPE_HINT_UTILITY)
+            #self.StatusBar.set_type_hint(gtk.gdk.WINDOW_TYPE_HINT_UTILITY)
+            self.StatusBar.set_type_hint(gtk.gdk.WINDOW_TYPE_HINT_MENU)            
         else:
             # trying as _HINT_UTILITY in Linux too as it gets a size modify element
             # in GNOME 3
@@ -1102,7 +1103,8 @@ class StatusBar(object):
             # so if..else should be unnecessary
             #self.StatusBar.set_type_hint(gtk.gdk.WINDOW_TYPE_HINT_UTILITY)
             #self.StatusBar.set_type_hint(gtk.gdk.WINDOW_TYPE_HINT_DOCK)
-            self.StatusBar.set_type_hint(gtk.gdk.WINDOW_TYPE_HINT_TOOLBAR)
+            #self.StatusBar.set_type_hint(gtk.gdk.WINDOW_TYPE_HINT_TOOLBAR)
+            self.StatusBar.set_type_hint(gtk.gdk.WINDOW_TYPE_HINT_MENU)   
         self.StatusBar.set_property("skip-taskbar-hint", True)
         self.StatusBar.set_skip_taskbar_hint(True)
 
@@ -1336,16 +1338,20 @@ class Popwin(object):
         for k in kwds: self.__dict__[k] = kwds[k]
 
         # Initialize type popup
-        self.Window = gtk.Window(gtk.WINDOW_POPUP)
-        #self.Window = gtk.Window(gtk.WINDOW_TOPLEVEL)
+        #self.Window = gtk.Window(gtk.WINDOW_POPUP)
+        self.Window = gtk.Window(gtk.WINDOW_TOPLEVEL)
 
         # for not letting statusbar throw a shadow onto popwin in any composition-window-manager this helps to
         # keep a more consistent look - copied from StatusBar... anyway, doesn't work... well, next attempt:
-        self.Window.set_type_hint(gtk.gdk.WINDOW_TYPE_HINT_UTILITY)
+        #self.Window.set_type_hint(gtk.gdk.WINDOW_TYPE_HINT_UTILITY)
+        #self.Window.set_type_hint(gtk.gdk.WINDOW_TYPE_HINT_SPLASHSCREEN)
+        self.Window.set_type_hint(gtk.gdk.WINDOW_TYPE_HINT_MENU)
+        #self.Window.set_type_hint(gtk.gdk.WINDOW_TYPE_HINT_TOOLBAR)        
+        #self.Window.set_type_hint(gtk.gdk.WINDOW_TYPE_HINT_DOCK)        
         self.Window.set_decorated(False)
         self.Window.set_keep_above(True)
         self.Window.stick()
-        self.Window.set_property("skip-taskbar-hint", True)
+        #self.Window.set_property("skip-taskbar-hint", True)
         self.Window.set_skip_taskbar_hint(True)    
 
         # initialize the coordinates of left upper corner of the popwin
@@ -1513,7 +1519,7 @@ class Popwin(object):
         # for some reason the painting will lag behind popping up popwin if not getting resized twice -
         # seems like a strange workaround
         if self.showPopwin and not self.output.status_ok and self.output.conf.GetNumberOfEnabledMonitors() > 0:
-            if len(self.output.servers.values()[0].GUILock) == 0:
+            if len(self.output.servers.values()[0].GUILock) == 0 or self.output.servers.values()[0].GUILock.has_key("Popwin"):
                 self.output.statusbar.Moving = False
                 # position and resize...
                 self.Resize()
@@ -1800,6 +1806,9 @@ class ServerVBox(gtk.VBox):
         self.LabelStatus = gtk.Label("")
 
         # order the elements
+        # now vboxing the elements to add a line in case authentication failed - so the user should auth here again
+        self.VBox = gtk.VBox()
+        # first line for usual monitor shortlink buttons
         self.HBox = gtk.HBox(homogeneous=True)
         self.HBoxLeft = gtk.HBox()
         self.HBoxRight = gtk.HBox()
@@ -1820,8 +1829,37 @@ class ServerVBox(gtk.VBox):
 
         self.HBox.add(self.AlignmentLeft)
         self.HBox.add(self.AlignmentRight)
-
-        self.Server_EventBox.add(self.HBox)
+        
+        self.VBox.add(self.HBox)
+        
+        # Auth line
+        self.HBoxAuth = gtk.HBox()
+        self.AuthLabel = gtk.Label("Please authenticate:")
+        self.AuthLabelUsername = gtk.Label("Username:")
+        self.AuthEntryUsername = gtk.Entry()
+        self.AuthEntryUsername.set_can_focus(True)        
+        self.AuthLabelPassword = gtk.Label("Password")
+        self.AuthEntryPassword = gtk.Entry()
+        self.AuthCheckbuttonSave = gtk.CheckButton("Save password")
+        self.AuthButtonOK = gtk.Button("OK")
+        
+        self.HBoxAuth.add(self.AuthLabel)
+        self.HBoxAuth.add(self.AuthLabelUsername)
+        self.HBoxAuth.add(self.AuthEntryUsername)
+        self.HBoxAuth.add(self.AuthLabelPassword)
+        self.HBoxAuth.add(self.AuthEntryPassword)
+        self.HBoxAuth.add(self.AuthCheckbuttonSave)
+        self.HBoxAuth.add(self.AuthButtonOK)
+        
+        self.AlignmentAuth = gtk.Alignment(xalign=0, xscale=0.05, yalign=0)
+        self.AlignmentAuth.add(self.HBoxAuth)  
+        
+        
+        print "EDITABLE", self.AuthEntryUsername.get_editable()
+        
+        self.VBox.add(self.AlignmentAuth)
+        
+        self.Server_EventBox.add(self.VBox)
         self.add(self.Server_EventBox)            
 
         # new TreeView handling, not generating new items with every refresh cycle

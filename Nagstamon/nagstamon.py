@@ -35,6 +35,7 @@ conf.Convert_Conf_to_Multiple_Servers()
 conf.Convert_Conf_to_Custom_Actions()
 
 # try to get resources path if nagstamon got be installed by setup.py
+Resources = ""
 try:
     import pkg_resources
     Resources = pkg_resources.resource_filename("Nagstamon", "resources")
@@ -65,7 +66,6 @@ debug_queue = Queue.Queue()
 
 # Open windows etc. seen from GUI - locking each other not to do unwanted stuff if some windows interfere
 GUILock = {}
-
 
 # create servers
 for server in conf.servers.values():
