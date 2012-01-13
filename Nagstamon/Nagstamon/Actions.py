@@ -42,9 +42,6 @@ except:
 # flag which indicates if already rechecking all
 RecheckingAll = False
 
-# Open windows seen from GUI - locking each other not to do unwanted stuff if some windows interfere
-###GUILock = {}
-
 
 def StartRefreshLoop(servers=None, output=None, conf=None):
     """
@@ -88,7 +85,8 @@ class RefreshLoopOneServer(threading.Thread):
               
         while self.stopped == False:          
             # check if we have to leave update interval sleep
-            if self.server.count > int(self.conf.update_interval)*60: self.doRefresh = True       
+            if self.server.count > int(self.conf.update_interval)*60: self.doRefresh = True   
+
             # self.doRefresh could also been changed by RefreshAllServers()
             if self.doRefresh == True:              
                 # reset server count
@@ -99,7 +97,7 @@ class RefreshLoopOneServer(threading.Thread):
                     self.server.status = "Refreshing"
                     gobject.idle_add(self.output.popwin.UpdateStatus, self.server)
                     # get current status
-                    server_status = self.server.GetStatus()
+                    server_status = self.server.GetStatus(output=self.output)
                     # GTK/Pango does not like tag brackets < and >, so clean them out from description
                     server_status.error = server_status.error.replace("<", "").replace(">", "").replace("\n", " ")
                     # debug
@@ -522,15 +520,15 @@ class MoveStatusbar(threading.Thread):
     def run(self):
         # avoid flickering popwin while moving statusbar around
         # gets re-enabled from popwin.setShowable()
-        if self.output.servers.values()[0].GUILock.has_key("Popwin"): self.output.popwin.Close()
+        if self.output.GUILock.has_key("Popwin"): self.output.popwin.Close()
         self.output.popwin.showPopwin = False
         # lock GUI while moving statusbar so no auth dialogs could pop up
-        self.output.servers.values()[0].AddGUILock(self.__class__.__name__)
+        self.output.AddGUILock(self.__class__.__name__)
         # in case of moving statusbar do some moves
         while self.output.statusbar.Moving == True:
             gobject.idle_add(self.output.statusbar.Move)
             time.sleep(0.01)
-        self.output.servers.values()[0].DeleteGUILock(self.__class__.__name__)
+        self.output.DeleteGUILock(self.__class__.__name__)
         
             
 class Action(threading.Thread):
@@ -647,7 +645,7 @@ def get_registered_server_type_list():
     return [x[0] for x in REGISTERED_SERVERS]
 
 
-def CreateServer(server=None, conf=None, debug_queue=None, resources=None, GUILock=None):   
+def CreateServer(server=None, conf=None, debug_queue=None, resources=None):   
     # create Server from config
     registered_servers = get_registered_servers()
     if server.type not in registered_servers:
@@ -660,8 +658,6 @@ def CreateServer(server=None, conf=None, debug_queue=None, resources=None, GUILo
     nagiosserver.monitor_cgi_url = server.monitor_cgi_url           
     # add resources, needed for auth dialog
     nagiosserver.Resources = resources
-    # global open widgets registry
-    nagiosserver.GUILock = GUILock
     nagiosserver.username = server.username
     if server.save_password or not server.enabled:
         nagiosserver.password = server.password
@@ -878,17 +874,6 @@ def MD5ify(string):
     makes something md5y of a given username or password for Centreon web interface access
     """
     return md5(string).hexdigest()
-
-
-def GetAuthentication(server):
-    """
-    call GUI password dialog
-    """
-    
-    auth = GUI.AuthenticationDialog(server=server)
-    return auth.username, auth.password
-
-
 
 
 # <IMPORT>

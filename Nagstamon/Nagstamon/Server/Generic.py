@@ -12,6 +12,7 @@ import time
 import traceback
 import base64
 import re
+import gobject
 
 # to let Linux distributions use their own BeautifulSoup if existent try importing local BeautifulSoup first
 # see https://sourceforge.net/tracker/?func=detail&atid=1101370&aid=3302612&group_id=236865
@@ -666,10 +667,11 @@ class GenericServer(object):
         return Result()
     
         
-    def GetStatus(self):
+    def GetStatus(self, output=None):
         """
         get nagios status information from nagcgiurl and give it back
         as dictionary
+        output parameter is needed in case authentication failed so that popwin might ask for credentials
         """
 
         # set checking flag to be sure only one thread cares about this server
@@ -692,9 +694,11 @@ class GenericServer(object):
                "Bad Session ID" in status.error:
                 if str(self.conf.servers[self.name].enabled) == "True":
                     while status.error != "":
-                        # clean existent authentification
+                        # clean existent authentication
                         self.reset_HTTP() 
                         self.refresh_authentication = True
+                        # needed to get valid credentials
+                        gobject.idle_add(output.RefreshDisplayStatus)
                         # take a break not to DOS the monitor...
                         time.sleep(20)
                         status = self._get_status()
@@ -702,8 +706,6 @@ class GenericServer(object):
                         # if monitor has been disabled do not try to connect to it
                         if str(self.conf.servers[self.name].enabled) == "False":
                             break
-
-
             else:
                 self.isChecking = False
                 return Result(result=self.status, error=self.status_description)
@@ -758,7 +760,7 @@ class GenericServer(object):
                         self.Debug(server=self.get_name(), debug="Filter: REGEXP " + str(host.name))
                     host.visible = False 
     
-                # Finegrain for the specific State
+                # Finegrain for the specific state
                 if host.status == "DOWN":
                     if str(self.conf.filter_all_down_hosts) == "True":
                         if str(self.conf.debug_mode) == "True":
@@ -1081,30 +1083,4 @@ class GenericServer(object):
         # give debug info to debug loop for thread-save log-file writing
         self.debug_queue.put(debug_string)
         
-    
-    def AddGUILock(self, widget_name, widget=None):
-        """
-        add calling window to dictionary of open windows to keep the windows separated
-        to be called via gobject.idle_add
-        """
-        self.GUILock[widget_name] = widget
-        
-        print self.GUILock
-
-        # necessary for idle_add to be removed from gobject todo-list
-        return False
-    
-        
-    def DeleteGUILock(self, window_name):
-        """
-        add calling window to dictionary of open windows to keep the windows separated
-        to be called via gobject.idle_add
-        """
-        try:
-            self.GUILock.pop(window_name)
-        except Exception, err:
-            print err
-        
-        # necessary for idle_add to be removed from gobject todo-list
-        return False
     

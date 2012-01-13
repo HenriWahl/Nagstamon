@@ -267,25 +267,25 @@ class GUI(object):
         warnings = 0
         # display "ERROR" in case of startup connection trouble
         errors = ""
-
+       
         # walk through all servers, their hosts and their services
         for server in self.servers.values():
             # only refresh monitor server output if enabled and only once every server loop
             if str(self.conf.servers[server.get_name()].enabled) == "True" or\
-               str(server.refresh_authentication) == "True":
+               server.refresh_authentication == True:
                 try:
                     # otherwise it must be shown, full of problems
                     self.popwin.ServerVBoxes[server.get_name()].show()
                     self.popwin.ServerVBoxes[server.get_name()].set_no_show_all(False)
                     
-                    print 30*"*", "\n", server.get_name(), server.refresh_authentication, "\n", 30*"*"
-                    
                     # if needed show auth line:
-                    if str(server.refresh_authentication) == "True":
+                    if server.refresh_authentication == True:
                         self.popwin.ServerVBoxes[server.get_name()].HBoxAuth.set_no_show_all(False)
                         self.popwin.ServerVBoxes[server.get_name()].HBoxAuth.show_all()
-                        self.popwin.ServerVBoxes[server.get_name()].AuthEntryUsername.set_text(server.username)
-                        self.popwin.ServerVBoxes[server.get_name()].AuthEntryPassword.set_text(server.password)
+                        if self.popwin.ServerVBoxes[server.get_name()].AuthEntryUsername.get_text() == "":
+                            self.popwin.ServerVBoxes[server.get_name()].AuthEntryUsername.set_text(server.username)
+                        if self.popwin.ServerVBoxes[server.get_name()].AuthEntryPassword.get_text() == "":
+                            self.popwin.ServerVBoxes[server.get_name()].AuthEntryPassword.set_text(server.password)
 
                     # use a bunch of filtered nagitems, services and hosts sorted by different
                     # grades of severity
@@ -525,10 +525,10 @@ class GUI(object):
 
             # set self.showPopwin to True because there is something to show
             self.popwin.showPopwin = True   
-
+            
         # if only one monitor cannot be reached show popwin to inform about its trouble
         for server in self.servers.values():
-            if server.status_description != "":
+            if server.status_description != "" or server.refresh_authentication == True:
                 self.status_ok = False   
                 self.popwin.showPopwin = True
 
@@ -862,11 +862,11 @@ class GUI(object):
         about.set_license(license)
 
         # use gobject.idle_add() to be thread safe
-        gobject.idle_add(self.servers.values()[0].AddGUILock, self.__class__.__name__)       
+        gobject.idle_add(self.AddGUILock, self.__class__.__name__)       
         self.popwin.Close()
         about.run()
         # use gobject.idle_add() to be thread safe
-        gobject.idle_add(self.servers.values()[0].DeleteGUILock, self.__class__.__name__)            
+        gobject.idle_add(self.DeleteGUILock, self.__class__.__name__)            
         about.destroy()
 
 
@@ -975,6 +975,25 @@ class GUI(object):
             color = color + diff
         return color
 
+    
+    def AddGUILock(self, widget_name, widget=None):
+        """
+        add calling window to dictionary of open windows to keep the windows separated
+        to be called via gobject.idle_add
+        """
+        self.GUILock[widget_name] = widget
+
+        
+    def DeleteGUILock(self, window_name):
+        """
+        add calling window to dictionary of open windows to keep the windows separated
+        to be called via gobject.idle_add
+        """
+        try:
+            self.GUILock.pop(window_name)
+        except:
+            pass
+        
 
 class StatusBar(object):
     """
@@ -1183,7 +1202,7 @@ class StatusBar(object):
             see what happens if statusbar is clicked
         """        
         # check if settings etc. are not already open - an open popwin will be closed anyway
-        if len(self.output.servers.values()[0].GUILock) == 0 or self.output.servers.values()[0].GUILock.has_key("Popwin"):
+        if len(self.output.GUILock) == 0 or self.output.GUILock.has_key("Popwin"):
             # get position of statusbar
             self.StatusBar.x = event.x
             self.StatusBar.y = event.y
@@ -1247,10 +1266,10 @@ class StatusBar(object):
         self.Moving = False
         
         # check if settings are not already open
-        if not "Settings" in self.output.servers.values()[0].GUILock:    
+        if not "Settings" in self.output.GUILock:    
 
             # use gobject.idle_add() to be thread safe
-            gobject.idle_add(self.output.servers.values()[0].AddGUILock, self.__class__.__name__)    
+            gobject.idle_add(self.output.AddGUILock, self.__class__.__name__)    
             
             # for some reason StatusIcon delivers another event (type int) than
             # egg.trayicon (type object) so it must be checked which one has
@@ -1272,7 +1291,7 @@ class StatusBar(object):
 
             self.MenuOpen = False
             # use gobject.idle_add() to be thread safe
-            gobject.idle_add(self.output.servers.values()[0].DeleteGUILock, self.__class__.__name__)
+            gobject.idle_add(self.output.DeleteGUILock, self.__class__.__name__)
 
             
 
@@ -1499,8 +1518,12 @@ class Popwin(object):
             self.ServerVBoxes[server.get_name()].ButtonHosts.connect("clicked", server.OpenBrowser, "hosts", self.output)
             # open Nagios history in your favorite web browser when hosts button is clicked
             self.ServerVBoxes[server.get_name()].ButtonHistory.connect("clicked", server.OpenBrowser, "history", self.output)
-            # OK button for monitor credentials refreshment
+            # OK button for monitor credentials refreshment or when "Enter" being pressed in password field           
             self.ServerVBoxes[server.get_name()].AuthButtonOK.connect("clicked", self.ServerVBoxes[server.get_name()].AuthOK, server)
+            # jump to password entry field if Return has been pressed on username entry field
+            self.ServerVBoxes[server.get_name()].AuthEntryUsername.connect("key-release-event", self.ServerVBoxes[server.get_name()].AuthUsername)
+            # for some reason signal "editing done" does not work so we need to check if Return has been pressed
+            self.ServerVBoxes[server.get_name()].AuthEntryPassword.connect("key-release-event", self.ServerVBoxes[server.get_name()].AuthPassword, server)
             # windows workaround - see above
             # connect Server_EventBox with leave-notify-event to get popwin popping down when leaving it
             self.ServerVBoxes[server.get_name()].Server_EventBox.connect("leave-notify-event", self.PopDown)
@@ -1523,16 +1546,13 @@ class Popwin(object):
     def PopUp(self, widget=None, event=None):
         """
             pop up popwin
-        """
-        
-        print "Popup", self.output.servers.values()[0].GUILock
-        
+        """       
         # when popwin is showable and label is not "UP" popwin will be showed - 
         # otherwise there is no sense in showing an empty popwin
         # for some reason the painting will lag behind popping up popwin if not getting resized twice -
         # seems like a strange workaround
         if self.showPopwin and not self.output.status_ok and self.output.conf.GetNumberOfEnabledMonitors() > 0:
-            if len(self.output.servers.values()[0].GUILock) == 0 or self.output.servers.values()[0].GUILock.has_key("Popwin"):
+            if len(self.output.GUILock) == 0 or self.output.GUILock.has_key("Popwin"):
                 self.output.statusbar.Moving = False
                 # position and resize...
                 self.Resize()
@@ -1546,7 +1566,7 @@ class Popwin(object):
                 self.output.NotificationOff()
                 # register as open window
                 # use gobject.idle_add() to be thread safe
-                gobject.idle_add(self.output.servers.values()[0].AddGUILock, self.__class__.__name__)
+                gobject.idle_add(self.output.AddGUILock, self.__class__.__name__)
         
         
     def LeavePopWin(self, widget=None, event=None):
@@ -1605,9 +1625,9 @@ class Popwin(object):
             hide popwin
         """
         # unregister popwin - seems to be called even if popwin is not open so check before unregistering
-        if self.output.servers.values()[0].GUILock.has_key("Popwin"): 
+        if self.output.GUILock.has_key("Popwin"): 
             # use gobject.idle_add() to be thread safe
-            gobject.idle_add(self.output.servers.values()[0].DeleteGUILock, self.__class__.__name__)
+            gobject.idle_add(self.output.DeleteGUILock, self.__class__.__name__)
         self.Window.hide_all()
         # notification off because user had a look to hosts/services recently
         self.output.NotificationOff()       
@@ -1776,7 +1796,8 @@ class Popwin(object):
         """
         # status field in server vbox in popwin    
         try:
-            self.ServerVBoxes[server.get_name()].LabelStatus.set_markup('<span> Status: ' + str(server.status) + ' <span color="darkred">' + str(server.status_description) + '</span></span>')
+            # kick out final "\n" for nicer appearance
+            self.ServerVBoxes[server.get_name()].LabelStatus.set_markup('<span> Status: ' + str(server.status) + ' <span color="darkred">' + str(server.status_description).rsplit("\n", 1)[0] + '</span></span>')
         except:
             server.Error(sys.exc_info())
 
@@ -1786,7 +1807,7 @@ class Popwin(object):
         check if no other dialog/menu is shown which would not like to be
         covered by the popup window
         """
-        if (len(self.output.servers.values()[0].GUILock) == 0 or "Popwin" in self.output.servers.values()[0].GUILock)and\
+        if (len(self.output.GUILock) == 0 or "Popwin" in self.output.GUILock)and\
         self.output.statusbar.MenuOpen == False:  
             return True
         else:
@@ -2112,7 +2133,6 @@ class ServerVBox(gtk.VBox):
         except Exception, err:
             self.output.Dialog(message=err)
             
-           
             
     def AuthOK(self, widget, server):
         """
@@ -2129,6 +2149,27 @@ class ServerVBox(gtk.VBox):
             server.conf.SaveConfig(server=server)
         self.HBoxAuth.hide_all()
         self.HBoxAuth.set_no_show_all(True)
+        
+        server.status = "Trying to reauthenticate..."
+        server.status_description = ""
+        self.output.popwin.UpdateStatus(server)
+        self.output.popwin.Resize()
+        
+        
+    def AuthUsername(self, widget, event):
+        """ 
+        if Return key has been pressed in password entry field interprete this as OK button being pressed
+        """
+        if gtk.gdk.keyval_name(event.keyval) == "Return":
+            self.AuthEntryPassword.grab_focus()   
+
+            
+    def AuthPassword(self, widget, event, server):
+        """ 
+        if Return key has been pressed in password entry field interprete this as OK button being pressed
+        """
+        if gtk.gdk.keyval_name(event.keyval) == "Return":
+            self.AuthOK(widget, server)
         
             
 class Settings(object):
@@ -2150,7 +2191,7 @@ class Settings(object):
         self.dialog = self.builder.get_object("settings_dialog")
         
         # use gobject.idle_add() to be thread safe
-        gobject.idle_add(self.output.servers.values()[0].AddGUILock, self.__class__.__name__)
+        gobject.idle_add(self.output.AddGUILock, self.__class__.__name__)
         
         # little feedback store for servers and actions treeviews
         self.selected_server = None
@@ -2302,7 +2343,7 @@ class Settings(object):
 
         # delete global open Windows entry
         # use gobject.idle_add() to be thread safe
-        gobject.idle_add(self.output.servers.values()[0].DeleteGUILock, self.__class__.__name__)
+        gobject.idle_add(self.output.DeleteGUILock, self.__class__.__name__)
         
         self.dialog.destroy()
 
@@ -3260,48 +3301,41 @@ class AuthenticationDialog:
     def __init__(self, **kwds):
         # the usual...
         for k in kwds: self.__dict__[k] = kwds[k]
-
-        if len(self.server.GUILock) == 0 or self.server.GUILock.has_key("Popwin"):
-            if self.server.GUILock.has_key("Popwin"):
-                self.server.GUILock["Popwin"].Close()
-            # set the gtkbuilder files       
-            self.builderfile = self.server.Resources + os.sep + "authentication_dialog.ui"       
-            self.builder = gtk.Builder()
-            self.builder.add_from_file(self.builderfile)
-            self.dialog = self.builder.get_object("authentication_dialog")
-    
-            # assign handlers
-            handlers_dict = { "button_ok_clicked" : self.OK,
-                              "button_exit_clicked" : self.Exit,
-                              "button_disable_clicked" : self.Disable
-                              }
-            self.builder.connect_signals(handlers_dict)
-    
-            self.label_monitor = self.builder.get_object("label_monitor")
-            self.entry_username = self.builder.get_object("input_entry_username")
-            self.entry_password = self.builder.get_object("input_entry_password")
-    
-            self.dialog.set_title("Nagstamon authentication for " + self.server.get_name())
-            self.label_monitor.set_text("Please give the correct credentials for "+ self.server.get_name() + ":")
-            self.entry_username.set_text(str(self.server.get_username()))
-            self.entry_password.set_text(str(self.server.get_password()))
-            
-            # get current defaults
-            self.username, self.password = self.server.get_username(), self.server.get_password()
-            
-            # omitting .show_all() leads to crash under Linux - why?
-            self.dialog.show_all()
-            # use gobject.idle_add() to be thread safe
-            gobject.idle_add(self.server.AddGUILock, self.__class__.__name__ + self.server.get_name())
-            self.dialog.run()
-            # use gobject.idle_add() to be thread safe
-            gobject.idle_add(self.server.DeleteGUILock, self.__class__.__name__ + self.server.get_name())
-            self.dialog.destroy()
         
-        else:
-            # return current defaults
-            self.username, self.password = self.server.get_username(), self.server.get_password()
-            
+        # set the gtkbuilder files       
+        self.builderfile = self.server.Resources + os.sep + "authentication_dialog.ui"       
+        self.builder = gtk.Builder()
+        self.builder.add_from_file(self.builderfile)
+        self.dialog = self.builder.get_object("authentication_dialog")
+
+        # assign handlers
+        handlers_dict = { "button_ok_clicked" : self.OK,
+                          "button_exit_clicked" : self.Exit,
+                          "button_disable_clicked" : self.Disable
+                          }
+        self.builder.connect_signals(handlers_dict)
+
+        self.label_monitor = self.builder.get_object("label_monitor")
+        self.entry_username = self.builder.get_object("input_entry_username")
+        self.entry_password = self.builder.get_object("input_entry_password")
+
+        self.dialog.set_title("Nagstamon authentication for " + self.server.get_name())
+        self.label_monitor.set_text("Please give the correct credentials for "+ self.server.get_name() + ":")
+        self.entry_username.set_text(str(self.server.get_username()))
+        self.entry_password.set_text(str(self.server.get_password()))
+        
+        # get current defaults
+        self.username, self.password = self.server.get_username(), self.server.get_password()
+        
+        # omitting .show_all() leads to crash under Linux - why?
+        self.dialog.show_all()
+        # use gobject.idle_add() to be thread safe
+        gobject.idle_add(self.server.AddGUILock, self.__class__.__name__ + self.server.get_name())
+        self.dialog.run()
+        # use gobject.idle_add() to be thread safe
+        gobject.idle_add(self.server.DeleteGUILock, self.__class__.__name__ + self.server.get_name())
+        self.dialog.destroy()
+                   
             
     def OK(self, widget):       
         self.username = self.entry_username.get_text()
@@ -3376,3 +3410,6 @@ class ButtonWithIcon(gtk.Button):
         
         self.set_relief(gtk.RELIEF_NONE)
         self.add(hbox)
+
+        
+

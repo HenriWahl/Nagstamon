@@ -69,7 +69,7 @@ GUILock = {}
 
 # create servers
 for server in conf.servers.values():
-    created_server = Actions.CreateServer(server, conf, debug_queue, Resources, GUILock)
+    created_server = Actions.CreateServer(server, conf, debug_queue, Resources)
     if created_server is not None:
         servers[server.name] = created_server     
         

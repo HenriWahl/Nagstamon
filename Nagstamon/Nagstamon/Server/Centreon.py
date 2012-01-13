@@ -274,7 +274,8 @@ class CentreonServer(GenericServer):
                 
                 # a second time a bad session id should raise an error                
                 if xmlobj == "<response>bad session id</response>" or str(xmlobj) == "Bad Session ID":
-                    return Result(result=xmlobj, error=str(xmlobj))
+                    #return Result(result=xmlobj, error=str(xmlobj))
+                    return Result(result="ERROR", error=str(xmlobj))
                 
             for l in xmlobj.findAll("l"):
                 try:                       
@@ -331,6 +332,7 @@ class CentreonServer(GenericServer):
                     self.isChecking = False
                     #return self.Error(sys.exc_info())
                     result, error = self.Error(sys.exc_info())
+                    #return Result(result=result, error=error)
                     return Result(result=result, error=error)
             
             del xmlobj                
@@ -354,10 +356,11 @@ class CentreonServer(GenericServer):
                     self.Debug(server=self.get_name(), debug="Bad session ID, retrieving new one...")                                
                 # try again...
                 self.SID = self._get_sid().result
-                result = self.FetchURL(nagcgiurl_services, giveback="xml")                
-                xmlobj, error = result.result, result.error                
-                if error != "": return Result(result=xmlobj, error=error)
-
+                result = self.FetchURL(nagcgiurl_services, giveback="xml")                             
+                xmlobj, error = result.result, result.error 
+                #if error != "": return Result(result=xmlobj, error=error)
+                if error != "": return Result(result="ERROR", error=error)
+                
             for l in xmlobj.findAll("l"):
                 try:
                     n = {}
