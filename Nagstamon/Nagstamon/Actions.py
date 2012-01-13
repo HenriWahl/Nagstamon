@@ -659,15 +659,7 @@ def CreateServer(server=None, conf=None, debug_queue=None, resources=None):
     # add resources, needed for auth dialog
     nagiosserver.Resources = resources
     nagiosserver.username = server.username
-    if server.save_password or not server.enabled:
-        nagiosserver.password = server.password
-    else:
-        auth = GUI.AuthenticationDialog(server=nagiosserver)
-        if auth.password == None or auth.password == "":
-            nagiosserver.password = ""
-        else:
-            nagiosserver.username = auth.username
-            nagiosserver.password = auth.password       
+    nagiosserver.password = server.password 
     nagiosserver.use_proxy = server.use_proxy
     nagiosserver.use_proxy_from_os = server.use_proxy_from_os
     nagiosserver.proxy_address = server.proxy_address

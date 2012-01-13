@@ -1843,7 +1843,8 @@ class ServerVBox(gtk.VBox):
         # now vboxing the elements to add a line in case authentication failed - so the user should auth here again
         self.VBox = gtk.VBox()
         # first line for usual monitor shortlink buttons
-        self.HBox = gtk.HBox(homogeneous=True)
+        #self.HBox = gtk.HBox(homogeneous=True)
+        self.HBox = gtk.HBox()
         self.HBoxLeft = gtk.HBox()
         self.HBoxRight = gtk.HBox()
         self.HBoxLeft.add(self.Label)
@@ -3295,7 +3296,9 @@ class EditAction(GenericAction):
 
 class AuthenticationDialog:
     """
-    used in case password is not stored or authentication is wrong
+    used in case password should not be stored
+    
+    "server" is here a Config.Server() instance given from nagstamon.py at startup, not a GenericServer()!
     """
 
     def __init__(self, **kwds):
@@ -3303,7 +3306,7 @@ class AuthenticationDialog:
         for k in kwds: self.__dict__[k] = kwds[k]
         
         # set the gtkbuilder files       
-        self.builderfile = self.server.Resources + os.sep + "authentication_dialog.ui"       
+        self.builderfile = self.Resources + os.sep + "authentication_dialog.ui"       
         self.builder = gtk.Builder()
         self.builder.add_from_file(self.builderfile)
         self.dialog = self.builder.get_object("authentication_dialog")
@@ -3319,43 +3322,33 @@ class AuthenticationDialog:
         self.entry_username = self.builder.get_object("input_entry_username")
         self.entry_password = self.builder.get_object("input_entry_password")
 
-        self.dialog.set_title("Nagstamon authentication for " + self.server.get_name())
-        self.label_monitor.set_text("Please give the correct credentials for "+ self.server.get_name() + ":")
-        self.entry_username.set_text(str(self.server.get_username()))
-        self.entry_password.set_text(str(self.server.get_password()))
-        
-        # get current defaults
-        self.username, self.password = self.server.get_username(), self.server.get_password()
+        self.dialog.set_title("Nagstamon authentication for " + self.server.name)
+        self.label_monitor.set_text("Please give the correct credentials for "+ self.server.name + ":")
+        self.entry_username.set_text(str(self.server.username))
+        self.entry_password.set_text(str(self.server.password))
         
         # omitting .show_all() leads to crash under Linux - why?
         self.dialog.show_all()
-        # use gobject.idle_add() to be thread safe
-        gobject.idle_add(self.server.AddGUILock, self.__class__.__name__ + self.server.get_name())
         self.dialog.run()
-        # use gobject.idle_add() to be thread safe
-        gobject.idle_add(self.server.DeleteGUILock, self.__class__.__name__ + self.server.get_name())
         self.dialog.destroy()
                    
             
     def OK(self, widget):       
-        self.username = self.entry_username.get_text()
-        self.password = self.entry_password.get_text()
+        self.server.username = self.entry_username.get_text()
+        self.server.password = self.entry_password.get_text()
         toggle_save_password = self.builder.get_object("input_checkbutton_save_password")
         
         if toggle_save_password.get_active() == True:
             # store authentication information in config
-            self.server.conf.servers[self.server.get_name()].username = self.username
-            self.server.conf.servers[self.server.get_name()].password = self.password
-            self.server.conf.servers[self.server.get_name()].save_password = True
-            self.server.conf.SaveConfig(server=self.server)
+            self.conf.servers[self.server.name].username = self.server.username
+            self.conf.servers[self.server.name].password = self.server.password
+            self.conf.servers[self.server.name].save_password = True
+            self.conf.SaveConfig(output=self.output)   
         
         
     def Disable(self, widget):
         # the old settings
-        self.server.conf.servers[self.server.get_name()].enabled = False
-        self.username, self.password = self.server.username, self.server.password
-        # stop server thread
-        self.server.thread.Stop()
+        self.conf.servers[self.server.name].enabled = False
 
         
     def Exit(self, widget):

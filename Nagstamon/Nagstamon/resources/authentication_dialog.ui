@@ -52,7 +52,7 @@
             </child>
             <child>
               <object class="GtkButton" id="button_disable">
-                <property name="label" translatable="yes">Disable monoitor</property>
+                <property name="label" translatable="yes">Disable monitor</property>
                 <property name="visible">True</property>
                 <property name="can_focus">True</property>
                 <property name="receives_default">True</property>

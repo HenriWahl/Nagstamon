@@ -67,12 +67,27 @@ debug_queue = Queue.Queue()
 # Open windows etc. seen from GUI - locking each other not to do unwanted stuff if some windows interfere
 GUILock = {}
 
+"""
 # create servers
 for server in conf.servers.values():
     created_server = Actions.CreateServer(server, conf, debug_queue, Resources)
     if created_server is not None:
         servers[server.name] = created_server     
+"""
+
+# create servers
+for server in conf.servers.values():
+    if server.save_password == "False" and server.enabled == "True":
+        # the auth dialog will fill the server's username and password with the given values
+        GUI.AuthenticationDialog(server=server, Resources=Resources, conf=conf, output=output)
         
+        print "------------|" + server.password + "|-----------------"
+        
+    created_server = Actions.CreateServer(server, conf, debug_queue)
+    if created_server is not None:
+        servers[server.name] = created_server   
+
+
 # Initiate Output
 output = GUI.GUI(conf=conf, servers=servers, Resources=Resources, debug_queue=debug_queue, GUILock=GUILock)
 
