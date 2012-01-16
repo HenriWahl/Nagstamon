@@ -345,10 +345,10 @@ class Config(object):
         return settings
             
 
-    def SaveConfig(self, output=None, server=None):
+    def SaveConfig(self, output=None, server=None, debug_queue=None):
         """
             save config file
-            "output" and "server" are used only for debug purpose - which one is given will be taken
+            "output", "server" and debug_queue are used only for debug purpose - which one is given will be taken
         """
         try:
             # Make sure .nagstamon is created
@@ -386,6 +386,10 @@ class Config(object):
                     server.Debug(server="", debug="Saving config to " + self.configfile)
                 elif output != None:
                     output.servers.values()[0].Debug(server="", debug="Saving config to " + self.configfile)
+                elif debug_queue != None:
+                    debug_string =  " ".join((head + ":",  str(datetime.datetime.now()), "Saving config to " + self.configfile))     
+                    # give debug info to debug loop for thread-save log-file writing
+                    self.debug_queue.put(debug_string)
             
             
     def SaveMultipleConfig(self, settingsdir, setting):

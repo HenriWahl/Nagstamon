@@ -854,7 +854,7 @@ def MachineSortableTime(raw):
 
     # strip and replace necessary for Nagios duration values,
     # split components of duration into dictionary
-    for c in raw.strip().replace("  ", " ").split(" "):
+    for c in raw.strip().replace("  ", " ").replace("-", " ").replace(":", " ").split(" "):
         number, period = c[0:-1],c[-1]
         d[period] = int(number) 
     # convert collected duration data components into seconds for being comparable

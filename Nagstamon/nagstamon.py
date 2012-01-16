@@ -79,14 +79,13 @@ for server in conf.servers.values():
 for server in conf.servers.values():
     if server.save_password == "False" and server.enabled == "True":
         # the auth dialog will fill the server's username and password with the given values
-        GUI.AuthenticationDialog(server=server, Resources=Resources, conf=conf, output=output)
+        GUI.AuthenticationDialog(server=server, Resources=Resources, conf=conf, debug_queue=debug_queue)
         
         print "------------|" + server.password + "|-----------------"
         
     created_server = Actions.CreateServer(server, conf, debug_queue)
     if created_server is not None:
         servers[server.name] = created_server   
-
 
 # Initiate Output
 output = GUI.GUI(conf=conf, servers=servers, Resources=Resources, debug_queue=debug_queue, GUILock=GUILock)
