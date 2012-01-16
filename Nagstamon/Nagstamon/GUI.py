@@ -235,6 +235,7 @@ class GUI(object):
         self.popwin.ButtonSettings.connect("leave-notify-event", self.popwin.LeavePopWin)
         self.popwin.ButtonClose.connect("leave-notify-event", self.popwin.LeavePopWin)
         self.popwin.Window.connect("leave-notify-event", self.popwin.LeavePopWin)
+        self.popwin.Window.connect("window-state-event", self.popwin.WindowStateEvent)
 
         # server combobox 
         self.popwin.ComboboxMonitor.connect("changed", self.popwin.ComboboxClicked)
@@ -1114,26 +1115,16 @@ class StatusBar(object):
         create statusbar as floating window
         """
         # TOPLEVEL seems to be more standard compliant
-        self.StatusBar = gtk.Window(gtk.WINDOW_TOPLEVEL)
-        # WINDOW_POPUP works
-        #self.StatusBar = gtk.Window(gtk.WINDOW_POPUP)
+        if platform.system() == "Windows" or platform.system() == "Darwin":
+            self.StatusBar = gtk.Window(gtk.WINDOW_POPUP)          
+        else:
+            self.StatusBar = gtk.Window(gtk.WINDOW_TOPLEVEL)
         self.StatusBar.set_decorated(False)
         self.StatusBar.set_keep_above(True)
         self.StatusBar.stick()
         # at http://www.pygtk.org/docs/pygtk/gdk-constants.html#gdk-window-type-hint-constants
         # there are some hint types to experiment with
-        if platform.system() == "Windows" or platform.system() == "Darwin":
-            #self.StatusBar.set_type_hint(gtk.gdk.WINDOW_TYPE_HINT_UTILITY)
-            self.StatusBar.set_type_hint(gtk.gdk.WINDOW_TYPE_HINT_MENU)            
-        else:
-            # trying as _HINT_UTILITY in Linux too as it gets a size modify element
-            # in GNOME 3
-            # after some experimenting it is in all OSs gtk.gdk.WINDOW_TYPE_HINT_UTILITY
-            # so if..else should be unnecessary
-            #self.StatusBar.set_type_hint(gtk.gdk.WINDOW_TYPE_HINT_UTILITY)
-            #self.StatusBar.set_type_hint(gtk.gdk.WINDOW_TYPE_HINT_DOCK)
-            #self.StatusBar.set_type_hint(gtk.gdk.WINDOW_TYPE_HINT_TOOLBAR)
-            self.StatusBar.set_type_hint(gtk.gdk.WINDOW_TYPE_HINT_MENU)   
+        self.StatusBar.set_type_hint(gtk.gdk.WINDOW_TYPE_HINT_MENU)   
         self.StatusBar.set_property("skip-taskbar-hint", True)
         self.StatusBar.set_skip_taskbar_hint(True)
 
@@ -1283,11 +1274,13 @@ class StatusBar(object):
                     # the popup be shown even after releasing the mouse button
                     self.Menu.popup(None, None, None, event, time)                          
                     self.MenuOpen = True
+                    self.Menu.window.raise_()
             else:
                 # right button
                 if event.button == 3:
                     widget.popup(None, None, None, event.button, event.time)
                     self.MenuOpen = True
+                    self.Menu.window.raise_()
 
             self.MenuOpen = False
             # use gobject.idle_add() to be thread safe
@@ -1369,19 +1362,29 @@ class Popwin(object):
         # Initialize type popup
         #self.Window = gtk.Window(gtk.WINDOW_POPUP)
         self.Window = gtk.Window(gtk.WINDOW_TOPLEVEL)
+        self.Window.set_transient_for(self.output.statusbar.StatusBar)
 
         # for not letting statusbar throw a shadow onto popwin in any composition-window-manager this helps to
         # keep a more consistent look - copied from StatusBar... anyway, doesn't work... well, next attempt:
         #self.Window.set_type_hint(gtk.gdk.WINDOW_TYPE_HINT_UTILITY)
         #self.Window.set_type_hint(gtk.gdk.WINDOW_TYPE_HINT_SPLASHSCREEN)
         # yeeehaaaa!
-        self.Window.set_type_hint(gtk.gdk.WINDOW_TYPE_HINT_MENU)
+        #self.Window.set_type_hint(gtk.gdk.WINDOW_TYPE_HINT_POPUP_MENU)
         #self.Window.set_type_hint(gtk.gdk.WINDOW_TYPE_HINT_TOOLBAR)        
-        #self.Window.set_type_hint(gtk.gdk.WINDOW_TYPE_HINT_DOCK)        
+        #self.Window.set_type_hint(gtk.gdk.WINDOW_TYPE_HINT_DOCK)
+        #self.Window.set_type_hint(gtk.gdk.WINDOW_TYPE_HINT_TOOLTIP)
+        #self.Window.set_type_hint(gtk.gdk.WINDOW_TYPE_HINT_MENU)
+        #self.Window.set_type_hint(gtk.gdk.WINDOW_TYPE_HINT_DROPDOWN_MENU)
+        #self.Window.set_type_hint(gtk.gdk.WINDOW_TYPE_HINT_MENU)
+        #self.Window.set_type_hint(gtk.gdk.WINDOW_TYPE_HINT_COMBO)
+        #self.Window.set_type_hint(gtk.gdk.WINDOW_TYPE_HINT_MENU)  
+        #self.Window.set_type_hint(gtk.gdk.WINDOW_TYPE_HINT_DIALOG) 
+        
+        
         self.Window.set_decorated(False)
         self.Window.set_keep_above(True)
         self.Window.stick()
-        #self.Window.set_property("skip-taskbar-hint", True)
+        self.Window.set_property("skip-taskbar-hint", True)
         self.Window.set_skip_taskbar_hint(True)    
 
         # initialize the coordinates of left upper corner of the popwin
@@ -1645,6 +1648,7 @@ class Popwin(object):
         """
             resize popwin depending on the amount of information displayed in scrollbox
         """
+        """
         try:
             # the popwin should always pop up near the systray/desktop status bar, therefore we
             # need to find out its position
@@ -1778,6 +1782,12 @@ class Popwin(object):
             import traceback
             traceback.print_exc(file=sys.stdout)
             
+        """
+        
+        self.Calculate()
+        self.Realize()
+        
+        
         
     def Calculate(self):
         """
@@ -2047,6 +2057,10 @@ class Popwin(object):
 
             """
             
+            # make sure popwin becomes transient for statusbar which is necessary in Windows if popwin
+            # is a toplevel window and no popup
+            self.output.popwin.Window.set_transient_for(self.output.statusbar.StatusBar)
+            
             # move popwin to its position
             self.Window.move(self.popwinx0, self.popwiny0)
 
@@ -2055,6 +2069,14 @@ class Popwin(object):
 
             # set size REALLY because otherwise it stays to large
             self.Window.resize(self.popwinwidth, self.popwinheight)
+            
+            # make sure popwin becomes transient for statusbar which is necessary in Windows if popwin
+            # is a toplevel window and no popup
+            self.output.popwin.Window.set_transient_for(self.output.statusbar.StatusBar)
+
+            # statusbar pulls popwin to the top...
+            if self.output.statusbar.StatusBar.window: self.output.statusbar.StatusBar.window.raise_()
+            if self.output.popwin.Window.window: self.output.popwin.Window.window.raise_()
 
         except Exception, err:
             import traceback
@@ -2102,6 +2124,9 @@ class Popwin(object):
             return True
         else:
             return False
+            
+    def WindowStateEvent(self, widget, state):
+		print widget, state
 
 
 class ServerVBox(gtk.VBox):
@@ -2738,15 +2763,12 @@ class Settings(object):
             self.conf.__dict__["color_" + state + "_text"] = self.builder.get_object("input_colorbutton_" + state + "_text").get_color().to_string()
             self.conf.__dict__["color_" + state + "_background"] = self.builder.get_object("input_colorbutton_" + state + "_background").get_color().to_string()     
 
-        # close settings dialog 
-        ###self.dialog.destroy()
-
         # close popwin
         # catch Exception at first run when there cannot exist a popwin
         try:
-            self.output.popwin.Window.hide_all()
-        except:
-            pass            
+            self.output.popwin.PopDown()
+        except Exception, err:
+            print err            
 
         if int(self.conf.update_interval) == 0:
             self.conf.update_interval = 1
@@ -2767,10 +2789,11 @@ class Settings(object):
                 self.output.statusbar.SysTray.set_visible(False)       
                 self.output.popwin.Window.destroy()
                 # re-initialize output with new settings
-                self.output.__init__()
+                self.output.__init__()                
             else:
                 # only reinitialize the popwin in case there where changes regarding monitors
                 self.output.popwin.__init__(conf=self.conf, output=self.output)
+                                
             # in Windows the statusbar with gtk.gdk.WINDOW_TYPE_HINT_UTILITY places itself somewhere
             # this way it should be disciplined
             self.output.statusbar.StatusBar.move(int(self.conf.position_x), int(self.conf.position_y))
