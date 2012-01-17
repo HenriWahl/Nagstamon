@@ -680,7 +680,7 @@ class Action(object):
         # might be URL in case of type browser/url and a commandline for commands
         self.string = ""
         # who did this
-        self.author = "Nag Stamon"
+        ###self.author = "Nag Stamon"
         # version - maybe in future this might be more sophisticated
         self.version = "1"
         # kind of Nagios item this action is targeted to - maybe also usable for states

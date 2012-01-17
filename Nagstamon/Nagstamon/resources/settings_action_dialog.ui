@@ -121,22 +121,6 @@
               </packing>
             </child>
             <child>
-              <object class="GtkLabel" id="label_author">
-                <property name="visible">True</property>
-                <property name="can_focus">False</property>
-                <property name="has_tooltip">True</property>
-                <property name="tooltip_markup">HTTP and HTTPS possible; e.g. &amp;quot;https://nagios-server/nagios/cgi-bin&amp;quot;.
-HTTPS is by all means the preferred because more secure option.
-Don&amp;apos;t put any status.cgi in there.</property>
-                <property name="xalign">0</property>
-                <property name="label" translatable="yes">Author:</property>
-              </object>
-              <packing>
-                <property name="top_attach">4</property>
-                <property name="bottom_attach">5</property>
-              </packing>
-            </child>
-            <child>
               <object class="GtkLabel" id="label_target">
                 <property name="visible">True</property>
                 <property name="can_focus">False</property>
@@ -188,19 +172,6 @@ Don&amp;apos;t put any status.cgi in there.</property>
                 <property name="right_attach">2</property>
                 <property name="top_attach">3</property>
                 <property name="bottom_attach">4</property>
-              </packing>
-            </child>
-            <child>
-              <object class="GtkEntry" id="input_entry_author">
-                <property name="visible">True</property>
-                <property name="can_focus">True</property>
-                <property name="is_focus">True</property>
-              </object>
-              <packing>
-                <property name="left_attach">1</property>
-                <property name="right_attach">2</property>
-                <property name="top_attach">4</property>
-                <property name="bottom_attach">5</property>
               </packing>
             </child>
             <child>
@@ -562,6 +533,12 @@ Don&amp;apos;t put any status.cgi in there.</property>
                 <property name="top_attach">7</property>
                 <property name="bottom_attach">8</property>
               </packing>
+            </child>
+            <child>
+              <placeholder/>
+            </child>
+            <child>
+              <placeholder/>
             </child>
             <child>
               <placeholder/>
