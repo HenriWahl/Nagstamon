@@ -2113,7 +2113,7 @@ class ServerVBox(gtk.VBox):
 
         # closing popwin is innecessary in case of rechecking, otherwise it must be done
         # because the dialog/app window will stay under the popwin   
-        if remoteservice in ["Acknowledge", "Downtime", "Submit check result", "Edit actions..."]:
+        if remoteservice in ["Acknowledge", "Monitor", "Downtime", "Submit check result", "Edit actions..."]:
             self.output.popwin.Close()  
 
         #debug    
