@@ -235,7 +235,6 @@ class GUI(object):
         self.popwin.ButtonSettings.connect("leave-notify-event", self.popwin.LeavePopWin)
         self.popwin.ButtonClose.connect("leave-notify-event", self.popwin.LeavePopWin)
         self.popwin.Window.connect("leave-notify-event", self.popwin.LeavePopWin)
-        self.popwin.Window.connect("window-state-event", self.popwin.WindowStateEvent)
 
         # server combobox 
         self.popwin.ComboboxMonitor.connect("changed", self.popwin.ComboboxClicked)
@@ -1360,7 +1359,6 @@ class Popwin(object):
         for k in kwds: self.__dict__[k] = kwds[k]
 
         # Initialize type popup
-        #self.Window = gtk.Window(gtk.WINDOW_POPUP)
         self.Window = gtk.Window(gtk.WINDOW_TOPLEVEL)
         self.Window.set_transient_for(self.output.statusbar.StatusBar)
 
@@ -1368,18 +1366,14 @@ class Popwin(object):
         # keep a more consistent look - copied from StatusBar... anyway, doesn't work... well, next attempt:
         #self.Window.set_type_hint(gtk.gdk.WINDOW_TYPE_HINT_UTILITY)
         #self.Window.set_type_hint(gtk.gdk.WINDOW_TYPE_HINT_SPLASHSCREEN)
-        # yeeehaaaa!
         #self.Window.set_type_hint(gtk.gdk.WINDOW_TYPE_HINT_POPUP_MENU)
         #self.Window.set_type_hint(gtk.gdk.WINDOW_TYPE_HINT_TOOLBAR)        
         #self.Window.set_type_hint(gtk.gdk.WINDOW_TYPE_HINT_DOCK)
         #self.Window.set_type_hint(gtk.gdk.WINDOW_TYPE_HINT_TOOLTIP)
-        #self.Window.set_type_hint(gtk.gdk.WINDOW_TYPE_HINT_MENU)
         #self.Window.set_type_hint(gtk.gdk.WINDOW_TYPE_HINT_DROPDOWN_MENU)
-        #self.Window.set_type_hint(gtk.gdk.WINDOW_TYPE_HINT_MENU)
-        #self.Window.set_type_hint(gtk.gdk.WINDOW_TYPE_HINT_COMBO)
-        #self.Window.set_type_hint(gtk.gdk.WINDOW_TYPE_HINT_MENU)  
+        #self.Window.set_type_hint(gtk.gdk.WINDOW_TYPE_HINT_COMBO) 
         #self.Window.set_type_hint(gtk.gdk.WINDOW_TYPE_HINT_DIALOG) 
-        
+        self.Window.set_type_hint(gtk.gdk.WINDOW_TYPE_HINT_MENU)
         
         self.Window.set_decorated(False)
         self.Window.set_keep_above(True)
@@ -1648,142 +1642,6 @@ class Popwin(object):
         """
             resize popwin depending on the amount of information displayed in scrollbox
         """
-        """
-        try:
-            # the popwin should always pop up near the systray/desktop status bar, therefore we
-            # need to find out its position
-
-            # find out dimension of all monitors
-            for m in range(self.output.statusbar.StatusBar.get_screen().get_n_monitors()):
-                monx0, mony0, monw, monh = self.output.statusbar.StatusBar.get_screen().get_monitor_geometry(m)
-                self.output.monitors[m] = (monx0, mony0, monw, monh)
-
-            # get x0 and y0 - workaround for gtk trayicon because self.statusbar as trayicon
-            # cannot get its absolute position, so we need to get pointers position relative
-            # to root window and to trayicon and subtract them and save the values in the
-            # self.statusbar object to avoid jumping popwin in case it is open, the status 
-            # refreshed and the pointer has moved
-            if self.Window.get_properties("visible")[0] == False:
-
-                # check if icon in systray or statusbar 
-                if str(self.conf.icon_in_systray) == "True":
-
-                    # trayicon seems not to have a .get_pointer() method so we use 
-                    # its geometry information
-                    if platform.system() == "Windows":
-                        # otherwise this does not work in windows
-                        rootwin = self.output.statusbar.StatusBar.get_screen().get_root_window()
-                        mousex, mousey, foo = rootwin.get_pointer()
-                        #statusbar_mousex, statusbar_mousey = 0, 2
-                        statusbar_mousex, statusbar_mousey = 0, int(self.conf.systray_popup_offset)
-                    else:    
-                        mousex, mousey, foo, bar = self.output.statusbar.SysTray.get_geometry()[1]
-                        #statusbar_mousex, statusbar_mousey = 0, 2
-                        statusbar_mousex, statusbar_mousey = 0, int(self.conf.systray_popup_offset)
-                    # set monitor for later applying the correct monitor geometry
-                    self.output.current_monitor = self.output.statusbar.StatusBar.get_screen().get_monitor_at_point(mousex, mousey)
-
-                else:
-                    mousex, mousey, foo = self.output.statusbar.StatusBar.get_screen().get_root_window().get_pointer()
-
-                    # set monitor for later applying the correct monitor geometry
-                    self.output.current_monitor = self.output.statusbar.StatusBar.get_screen().get_monitor_at_point(mousex, mousey)
-
-                    statusbar_mousex, statusbar_mousey = self.output.statusbar.StatusBar.get_pointer()
-
-                statusbarx0 = mousex - statusbar_mousex
-                statusbary0 = mousey - statusbar_mousey   
-                
-                # save trayicon x0 and y0 in self.statusbar
-                self.output.statusbar.StatusBar.x0 = statusbarx0
-                self.output.statusbar.StatusBar.y0 = statusbary0
-
-            else:
-                # use previously saved values for x0 and y0 in case popwin is still/already open
-                statusbarx0 = self.output.statusbar.StatusBar.x0
-                statusbary0 = self.output.statusbar.StatusBar.y0
-
-            # find out the necessary dimensions of popwin - assembled from scroll area and the buttons
-            treeviewwidth, treeviewheight = self.ScrolledVBox.size_request()
-
-            # get current monitor's settings
-            screenx0, screeny0, screenwidth, screenheight = self.output.monitors[self.output.current_monitor]
-
-            if treeviewwidth > screenwidth: treeviewwidth = screenwidth
-            self.ScrolledWindow.set_size_request(treeviewwidth, treeviewheight)
-
-            # care about the height of the buttons
-            # self.buttonsheight comes from create_output_visuals()
-            self.popwinwidth, self.popwinheight = treeviewwidth, treeviewheight + self.buttonsheight
-            # if popwinwidth is to small the buttons inside could be scrambled, so we give
-            # it a default minimum width
-            if self.popwinwidth < 600: self.popwinwidth = 600
-
-            # add some buffer pixels to popwinheight to avoid silly scrollbars
-            heightbuffer = 10
-            self.popwinheight = self.popwinheight + heightbuffer
-
-            # get parameters of statusbar
-            # get dimensions
-            if str(self.conf.icon_in_systray) == "True":
-                statusbarwidth, statusbarheight = 25, 25
-            else:    
-                statusbarwidth, statusbarheight = self.output.statusbar.StatusBar.get_size()
-
-            # if statusbar/trayicon stays in upper half of screen, popwin pops up UNDER statusbar/trayicon
-            if (statusbary0 + statusbarheight) < (screenheight / 2):
-                # if popwin is too large it gets cut at lower end of screen
-                if (statusbary0 + self.popwinheight + statusbarheight) > screenheight:
-                    treeviewheight = screenheight - (statusbary0 + statusbarheight + self.buttonsheight)
-                    self.popwinheight = screenheight - statusbarheight - statusbary0
-                    self.popwiny0 = statusbary0 + statusbarheight
-                # else do not relate to screen dimensions but own widgets ones
-                else:
-                    self.popwinheight = treeviewheight + self.buttonsheight + heightbuffer
-                    self.popwiny0 = statusbary0 + statusbarheight
-
-            # if it stays in lower half of screen, popwin pops up OVER statusbar/trayicon
-            else:
-                # if popwin is too large it gets cut at 0 
-                if (statusbary0 - self.popwinheight) < 0:
-                    treeviewheight = statusbary0 - self.buttonsheight - statusbarheight
-                    self.popwinheight = statusbary0
-                    self.popwiny0 = 0
-                # otherwise use own widgets for sizing
-                else:
-                    self.popwinheight = treeviewheight + self.buttonsheight + heightbuffer
-                    self.popwiny0 = statusbary0 - self.popwinheight
-
-            # after having determined dimensions of scrolling area apply them
-            self.ScrolledWindow.set_size_request(treeviewwidth, treeviewheight)
-
-            # if popwin is too wide cut it down to screen width
-            if self.popwinwidth > screenwidth:
-                self.popwinwidth = screenwidth
-
-            # decide x position of popwin
-            if (statusbarx0) + statusbarwidth / 2 + (self.popwinwidth) / 2 > (screenwidth + screenx0):
-                self.popwinx0 = screenwidth - self.popwinwidth + screenx0
-            elif (statusbarx0 + statusbarwidth / 2)- self.popwinwidth / 2 < screenx0:
-                self.popwinx0 = screenx0
-            else:
-                self.popwinx0 = statusbarx0 + (screenx0 + statusbarwidth) / 2 - (self.popwinwidth + screenx0) / 2
-
-            # move popwin to its position
-            self.Window.move(self.popwinx0, self.popwiny0)
-
-            # set size request of popwin
-            self.Window.set_size_request(self.popwinwidth, self.popwinheight)
-
-            # set size REALLY because otherwise it stays to large
-            self.Window.resize(self.popwinwidth, self.popwinheight)
-
-        except Exception, err:
-            import traceback
-            traceback.print_exc(file=sys.stdout)
-            
-        """
-        
         self.Calculate()
         self.Realize()
         
@@ -1913,15 +1771,6 @@ class Popwin(object):
             else:
                 self.popwinx0 = statusbarx0 + (screenx0 + statusbarwidth) / 2 - (self.popwinwidth + screenx0) / 2
 
-            # move popwin to its position
-            ###self.Window.move(self.popwinx0, self.popwiny0)
-
-            # set size request of popwin
-            ###self.Window.set_size_request(self.popwinwidth, self.popwinheight)
-
-            # set size REALLY because otherwise it stays to large
-            ###self.Window.resize(self.popwinwidth, self.popwinheight)
-
         except Exception, err:
             import traceback
             traceback.print_exc(file=sys.stdout)
@@ -1929,134 +1778,9 @@ class Popwin(object):
 
     def Realize(self):
         """
-            resize popwin depending on the amount of information displayed in scrollbox
+            realize popwin depending on the amount of information displayed in scrollbox
         """
         try:
-            """
-            # the popwin should always pop up near the systray/desktop status bar, therefore we
-            # need to find out its position
-
-            # find out dimension of all monitors
-            for m in range(self.output.statusbar.StatusBar.get_screen().get_n_monitors()):
-                monx0, mony0, monw, monh = self.output.statusbar.StatusBar.get_screen().get_monitor_geometry(m)
-                self.output.monitors[m] = (monx0, mony0, monw, monh)
-
-            # get x0 and y0 - workaround for gtk trayicon because self.statusbar as trayicon
-            # cannot get its absolute position, so we need to get pointers position relative
-            # to root window and to trayicon and subtract them and save the values in the
-            # self.statusbar object to avoid jumping popwin in case it is open, the status 
-            # refreshed and the pointer has moved
-            
-            """
-            """
-            if self.Window.get_properties("visible")[0] == False:
-
-                # check if icon in systray or statusbar 
-                if str(self.conf.icon_in_systray) == "True":
-
-                    # trayicon seems not to have a .get_pointer() method so we use 
-                    # its geometry information
-                    if platform.system() == "Windows":
-                        # otherwise this does not work in windows
-                        rootwin = self.output.statusbar.StatusBar.get_screen().get_root_window()
-                        mousex, mousey, foo = rootwin.get_pointer()
-                        #statusbar_mousex, statusbar_mousey = 0, 2
-                        statusbar_mousex, statusbar_mousey = 0, int(self.conf.systray_popup_offset)
-                    else:    
-                        mousex, mousey, foo, bar = self.output.statusbar.SysTray.get_geometry()[1]
-                        #statusbar_mousex, statusbar_mousey = 0, 2
-                        statusbar_mousex, statusbar_mousey = 0, int(self.conf.systray_popup_offset)
-                    # set monitor for later applying the correct monitor geometry
-                    self.output.current_monitor = self.output.statusbar.StatusBar.get_screen().get_monitor_at_point(mousex, mousey)
-
-                else:
-                    mousex, mousey, foo = self.output.statusbar.StatusBar.get_screen().get_root_window().get_pointer()
-
-                    # set monitor for later applying the correct monitor geometry
-                    self.output.current_monitor = self.output.statusbar.StatusBar.get_screen().get_monitor_at_point(mousex, mousey)
-
-                    statusbar_mousex, statusbar_mousey = self.output.statusbar.StatusBar.get_pointer()
-
-                statusbarx0 = mousex - statusbar_mousex
-                statusbary0 = mousey - statusbar_mousey   
-                
-                # save trayicon x0 and y0 in self.statusbar
-                self.output.statusbar.StatusBar.x0 = statusbarx0
-                self.output.statusbar.StatusBar.y0 = statusbary0
-
-            else:
-                # use previously saved values for x0 and y0 in case popwin is still/already open
-                statusbarx0 = self.output.statusbar.StatusBar.x0
-                statusbary0 = self.output.statusbar.StatusBar.y0
-
-            # find out the necessary dimensions of popwin - assembled from scroll area and the buttons
-            treeviewwidth, treeviewheight = self.ScrolledVBox.size_request()
-
-            # get current monitor's settings
-            screenx0, screeny0, screenwidth, screenheight = self.output.monitors[self.output.current_monitor]
-
-            if treeviewwidth > screenwidth: treeviewwidth = screenwidth
-            self.ScrolledWindow.set_size_request(treeviewwidth, treeviewheight)
-
-            # care about the height of the buttons
-            # self.buttonsheight comes from create_output_visuals()
-            self.popwinwidth, self.popwinheight = treeviewwidth, treeviewheight + self.buttonsheight
-            # if popwinwidth is to small the buttons inside could be scrambled, so we give
-            # it a default minimum width
-            if self.popwinwidth < 600: self.popwinwidth = 600
-
-            # add some buffer pixels to popwinheight to avoid silly scrollbars
-            heightbuffer = 10
-            self.popwinheight = self.popwinheight + heightbuffer
-
-            # get parameters of statusbar
-            # get dimensions
-            if str(self.conf.icon_in_systray) == "True":
-                statusbarwidth, statusbarheight = 25, 25
-            else:    
-                statusbarwidth, statusbarheight = self.output.statusbar.StatusBar.get_size()
-
-            # if statusbar/trayicon stays in upper half of screen, popwin pops up UNDER statusbar/trayicon
-            if (statusbary0 + statusbarheight) < (screenheight / 2):
-                # if popwin is too large it gets cut at lower end of screen
-                if (statusbary0 + self.popwinheight + statusbarheight) > screenheight:
-                    treeviewheight = screenheight - (statusbary0 + statusbarheight + self.buttonsheight)
-                    self.popwinheight = screenheight - statusbarheight - statusbary0
-                    self.popwiny0 = statusbary0 + statusbarheight
-                # else do not relate to screen dimensions but own widgets ones
-                else:
-                    self.popwinheight = treeviewheight + self.buttonsheight + heightbuffer
-                    self.popwiny0 = statusbary0 + statusbarheight
-
-            # if it stays in lower half of screen, popwin pops up OVER statusbar/trayicon
-            else:
-                # if popwin is too large it gets cut at 0 
-                if (statusbary0 - self.popwinheight) < 0:
-                    treeviewheight = statusbary0 - self.buttonsheight - statusbarheight
-                    self.popwinheight = statusbary0
-                    self.popwiny0 = 0
-                # otherwise use own widgets for sizing
-                else:
-                    self.popwinheight = treeviewheight + self.buttonsheight + heightbuffer
-                    self.popwiny0 = statusbary0 - self.popwinheight
-
-            # after having determined dimensions of scrolling area apply them
-            self.ScrolledWindow.set_size_request(treeviewwidth, treeviewheight)
-
-            # if popwin is too wide cut it down to screen width
-            if self.popwinwidth > screenwidth:
-                self.popwinwidth = screenwidth
-
-            # decide x position of popwin
-            if (statusbarx0) + statusbarwidth / 2 + (self.popwinwidth) / 2 > (screenwidth + screenx0):
-                self.popwinx0 = screenwidth - self.popwinwidth + screenx0
-            elif (statusbarx0 + statusbarwidth / 2)- self.popwinwidth / 2 < screenx0:
-                self.popwinx0 = screenx0
-            else:
-                self.popwinx0 = statusbarx0 + (screenx0 + statusbarwidth) / 2 - (self.popwinwidth + screenx0) / 2
-
-            """
-            
             # make sure popwin becomes transient for statusbar which is necessary in Windows if popwin
             # is a toplevel window and no popup
             self.output.popwin.Window.set_transient_for(self.output.statusbar.StatusBar)
@@ -2124,9 +1848,6 @@ class Popwin(object):
             return True
         else:
             return False
-            
-    def WindowStateEvent(self, widget, state):
-		print widget, state
 
 
 class ServerVBox(gtk.VBox):
