@@ -211,6 +211,7 @@ class GenericService(GenericObject):
     def get_service_name(self):
         return str(self.name) 
     
+        
     def is_host(self):
         """
         decides where to put acknowledged/downtime pixbufs in Liststore for Treeview in Popwin

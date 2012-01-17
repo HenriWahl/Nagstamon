@@ -220,13 +220,13 @@ class MultisiteServer(GenericServer):
             for row in response[1:]:
                 service = dict(zip(response[0], row))
                 n = {
-                    'host':               service['host'],
-                    'service':            service['service_description'],
+                    'host':               service['host'].encode("utf-8"),
+                    'service':            service['service_description'].encode("utf-8"),
                     'status':             self.statemap.get(service['service_state'], service['service_state']),
                     'last_check':         service['svc_check_age'],
                     'duration':           service['svc_state_age'],
                     'attempt':            service['svc_attempt'],
-                    'status_information': service['svc_plugin_output'],
+                    'status_information': service['svc_plugin_output'].encode("utf-8"),
                     # Check_MK passive services can be re-scheduled by using the Check_MK service
                     'passiveonly':        service['svc_is_active'] == 'no' and not service['svc_check_command'].startswith('check_mk'),
                     'notifications':      service['svc_notifications_enabled'] == 'yes',
@@ -235,7 +235,7 @@ class MultisiteServer(GenericServer):
                     'address':            service['host_address'],
                     'command':            service['svc_check_command'],
                 }
-
+                
                 # add dictionary full of information about this service item to nagitems - only if service
                 nagitems["services"].append(n)
                 # after collection data in nagitems create objects of its informations

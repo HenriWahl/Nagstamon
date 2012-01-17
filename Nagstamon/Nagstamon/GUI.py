@@ -333,6 +333,9 @@ class GUI(object):
                         for status, item_list in status_dict.iteritems():
                             for item in list(item_list):
                                 line = list(server.get_columns(item))
+                                
+                                #print line
+                                
                                 line.append(self.TAB_FG_COLORS[item.status])
                                 line.append(self.TAB_BG_COLORS[item.status])
 
@@ -1362,7 +1365,6 @@ class Popwin(object):
 
         # Initialize type popup
         self.Window = gtk.Window(gtk.WINDOW_TOPLEVEL)
-        ###self.Window.set_transient_for(self.output.statusbar.StatusBar)
 
         # for not letting statusbar throw a shadow onto popwin in any composition-window-manager this helps to
         # keep a more consistent look - copied from StatusBar... anyway, doesn't work... well, next attempt:
@@ -1555,12 +1557,7 @@ class Popwin(object):
             if len(self.output.GUILock) == 0 or self.output.GUILock.has_key("Popwin"):
                 self.output.statusbar.Moving = False
                 # position and resize...
-                ###self.Resize()
                 self.Calculate()
-                # ...show
-                #self.Window.show_all()
-                #position and resize...
-                #self.Resize()
                 # set combobox to default value
                 self.ComboboxMonitor.set_active(0)
                 # switch off Notification    
@@ -1572,9 +1569,7 @@ class Popwin(object):
                 self.Window.show_all()
                 
                 #position and resize...
-                ###self.Resize()
-                self.Calculate()
-                self.Realize()
+                self.Resize()
                 
                 
     def LeavePopWin(self, widget=None, event=None):
@@ -1783,11 +1778,7 @@ class Popwin(object):
         """
             realize popwin depending on the amount of information displayed in scrollbox
         """
-        try:
-            # make sure popwin becomes transient for statusbar which is necessary in Windows if popwin
-            # is a toplevel window and no popup
-            ###self.output.popwin.Window.set_transient_for(self.output.statusbar.StatusBar)
-            
+        try:           
             # move popwin to its position
             self.Window.move(self.popwinx0, self.popwiny0)
 
@@ -1797,10 +1788,6 @@ class Popwin(object):
             # set size REALLY because otherwise it stays to large
             self.Window.resize(self.popwinwidth, self.popwinheight)
             
-            # make sure popwin becomes transient for statusbar which is necessary in Windows if popwin
-            # is a toplevel window and no popup
-            ###self.output.popwin.Window.set_transient_for(self.output.statusbar.StatusBar)
-
             # statusbar pulls popwin to the top...
             if self.output.statusbar.StatusBar.window: self.output.statusbar.StatusBar.window.raise_()
             if self.output.popwin.Window.window: self.output.popwin.Window.window.raise_()
@@ -2540,8 +2527,6 @@ class Settings(object):
         """
             settings dialog got cancelled
         """
-        ###self.dialog.destroy()
-        ###self.output.popwin.PopDown()
         # when getting cancelled at first run exit immediately because
         # without settings there is not much nagstamon can do
         if self.output.firstrun == True:
@@ -2791,7 +2776,6 @@ class GenericServer(object):
         might be of interest in case server type is changed and dialog content should be
         adjusted to reflect different labels/entry fields
         """
-        ###servers = Actions.get_registered_servers()
         active = combobox.get_active_iter()
         model = combobox.get_model()
         if not model:

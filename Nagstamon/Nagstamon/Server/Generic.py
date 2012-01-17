@@ -169,11 +169,11 @@ class GenericServer(object):
 
     @classmethod
     def get_columns(cls, row):
-        """ Gets columns filled with row data """
+        """ Gets columns filled with row data """  
         for column_class in cls.COLUMNS:
             # str() necessary because MacOSX Python cries otherwise
             yield str(column_class(row))        
-        
+
         
     def set_recheck(self, thread_obj):
         self._set_recheck(thread_obj.host, thread_obj.service)
@@ -487,7 +487,7 @@ class GenericServer(object):
                         if len(tds) < 7:
                             # the old Nagios table
                             # status_information
-                            n["status_information"] = str(tds[4].string)
+                            n["status_information"] = str(tds[4].string).encode("utf-8")
                             # attempts are not shown in case of hosts so it defaults to "N/A"
                             n["attempt"] = "N/A"
                         else:
@@ -496,7 +496,7 @@ class GenericServer(object):
                             # to be stripped
                             n["attempt"] = str(tds[4].string).strip()
                             # status_information
-                            n["status_information"] = str(tds[5].string)
+                            n["status_information"] = str(tds[5].string).encode("utf-8")
                             
                         # status flags 
                         n["passiveonly"] = False
@@ -527,7 +527,7 @@ class GenericServer(object):
                             self.new_hosts[new_host].last_check = n["last_check"]
                             self.new_hosts[new_host].duration = n["duration"]
                             self.new_hosts[new_host].attempt = n["attempt"]
-                            self.new_hosts[new_host].status_information= n["status_information"]
+                            self.new_hosts[new_host].status_information= n["status_information"].encode("utf-8")
                             self.new_hosts[new_host].passiveonly = n["passiveonly"]
                             self.new_hosts[new_host].notifications_disabled = n["notifications_disabled"]
                             self.new_hosts[new_host].flapping = n["flapping"]
@@ -597,7 +597,7 @@ class GenericServer(object):
                         # to be stripped
                         n["attempt"] = str(tds[5](text=not_empty)[0]).strip()
                         # status_information
-                        n["status_information"] = str(tds[6](text=not_empty)[0])
+                        n["status_information"] = str(tds[6](text=not_empty)[0]).encode("utf-8")
                         # status flags 
                         n["passiveonly"] = False
                         n["notifications_disabled"] = False
@@ -633,8 +633,8 @@ class GenericServer(object):
                             # cleaning
                             del icons
                         # if a service does not exist create its object
-                        if not self.new_hosts[n["host"]].services.has_key(n["service"]):
-                            new_service = n["service"]
+                        if not self.new_hosts[n["host"]].services.has_key(n["service"]):                           
+                            new_service = n["service"]                            
                             self.new_hosts[n["host"]].services[new_service] = GenericService()
                             self.new_hosts[n["host"]].services[new_service].host = n["host"]
                             self.new_hosts[n["host"]].services[new_service].name = n["service"]
@@ -642,7 +642,7 @@ class GenericServer(object):
                             self.new_hosts[n["host"]].services[new_service].last_check = n["last_check"]
                             self.new_hosts[n["host"]].services[new_service].duration = n["duration"]
                             self.new_hosts[n["host"]].services[new_service].attempt = n["attempt"]
-                            self.new_hosts[n["host"]].services[new_service].status_information = n["status_information"]
+                            self.new_hosts[n["host"]].services[new_service].status_information = n["status_information"].encode("utf-8")
                             self.new_hosts[n["host"]].services[new_service].passiveonly = n["passiveonly"]
                             self.new_hosts[n["host"]].services[new_service].notifications_disabled = n["notifications_disabled"]
                             self.new_hosts[n["host"]].services[new_service].flapping = n["flapping"]
@@ -925,7 +925,7 @@ class GenericServer(object):
             
         # copy of listed nagitems for next comparison
         self.nagitems_filtered_list = copy.copy(new_nagitems_filtered_list)
-
+        
         # put new informations into respective dictionaries      
         self.hosts = copy.copy(self.new_hosts)
         self.new_hosts.clear()

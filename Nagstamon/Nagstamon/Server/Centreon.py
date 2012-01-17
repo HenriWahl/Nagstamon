@@ -80,15 +80,7 @@ class CentreonServer(GenericServer):
             #raw, error = result.result, result.error
             result = self.FetchURL(self.monitor_cgi_url + "/main.php?" + cgi_data, giveback="obj")
             html, error = result.result, result.error
-            if error == "":
-                # session id might have been invalid, so if necessary get a new one
-                ###if raw.find('name="start" type="text" value="') == -1:
-                ###    self.SID = self._get_sid().result
-                ###    result = self.FetchURL(self.monitor_cgi_url + "/main.php?" + cgi_data, giveback="raw")
-                ###    raw, error = result.result, result.error
-                ###start_time = raw.split('name="start" type="text" value="')[1].split('"')[0]
-                ###end_time = raw.split('name="end" type="text" value="')[1].split('"')[0]
-                
+            if error == "":               
                 html = result.result
                 start_time = html.find(attrs={"name":"start"}).attrMap["value"]
                 end_time = html.find(attrs={"name":"end"}).attrMap["value"]                  
