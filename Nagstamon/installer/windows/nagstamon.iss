@@ -1,21 +1,21 @@
 [Setup]
 AppName=Nagstamon
-AppVerName=Nagstamon 0.9.8
+AppVerName=Nagstamon 0.9.9 SVN
 DefaultDirName={pf}\Nagstamon
 DefaultGroupName=Nagstamon
 AlwaysUsePersonalGroup=false
 ShowLanguageDialog=no
 SetupIconFile=F:\Projekte\nagstamon\svn\trunk\Nagstamon\Nagstamon\resources\nagstamon.ico
 UsePreviousGroup=false
-OutputBaseFilename=Nagstamon_0.9.8_setup
+OutputBaseFilename=Nagstamon_0.9.9-SVN_setup
 UninstallDisplayIcon=
 UsePreviousAppDir=false
 AppID={{44F7CFFB-4776-4DA4-9930-A07178069517}
 UninstallRestartComputer=false
-VersionInfoVersion=0.9.8
+VersionInfoVersion=0.9.9
 VersionInfoCopyright=Henri Wahl
 VersionInfoProductName=Nagstamon
-VersionInfoProductVersion=0.9.8
+VersionInfoProductVersion=0.9.9
 InternalCompressLevel=max
 Compression=lzma
 SolidCompression=true

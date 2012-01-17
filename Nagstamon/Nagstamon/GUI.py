@@ -1273,13 +1273,15 @@ class StatusBar(object):
                     # the popup be shown even after releasing the mouse button
                     self.Menu.popup(None, None, None, event, time)                          
                     self.MenuOpen = True
-                    self.Menu.window.raise_()
+                    # silly Windows(TM) workaround to keep menu above taskbar
+                    self.Menu.window.set_keep_above(True)
             else:
                 # right button
                 if event.button == 3:
                     widget.popup(None, None, None, event.button, event.time)
                     self.MenuOpen = True
-                    self.Menu.window.raise_()
+                    # silly Windows(TM) workaround to keep menu above taskbar
+                    self.Menu.window.set_keep_above(True)
 
             self.MenuOpen = False
             # use gobject.idle_add() to be thread safe
@@ -1360,7 +1362,7 @@ class Popwin(object):
 
         # Initialize type popup
         self.Window = gtk.Window(gtk.WINDOW_TOPLEVEL)
-        self.Window.set_transient_for(self.output.statusbar.StatusBar)
+        ###self.Window.set_transient_for(self.output.statusbar.StatusBar)
 
         # for not letting statusbar throw a shadow onto popwin in any composition-window-manager this helps to
         # keep a more consistent look - copied from StatusBar... anyway, doesn't work... well, next attempt:
@@ -1374,7 +1376,8 @@ class Popwin(object):
         #self.Window.set_type_hint(gtk.gdk.WINDOW_TYPE_HINT_COMBO) 
         #self.Window.set_type_hint(gtk.gdk.WINDOW_TYPE_HINT_DIALOG) 
         self.Window.set_type_hint(gtk.gdk.WINDOW_TYPE_HINT_MENU)
-        
+
+        # make a nice popup of the toplevel window
         self.Window.set_decorated(False)
         self.Window.set_keep_above(True)
         self.Window.stick()
@@ -1783,7 +1786,7 @@ class Popwin(object):
         try:
             # make sure popwin becomes transient for statusbar which is necessary in Windows if popwin
             # is a toplevel window and no popup
-            self.output.popwin.Window.set_transient_for(self.output.statusbar.StatusBar)
+            ###self.output.popwin.Window.set_transient_for(self.output.statusbar.StatusBar)
             
             # move popwin to its position
             self.Window.move(self.popwinx0, self.popwiny0)
@@ -1796,7 +1799,7 @@ class Popwin(object):
             
             # make sure popwin becomes transient for statusbar which is necessary in Windows if popwin
             # is a toplevel window and no popup
-            self.output.popwin.Window.set_transient_for(self.output.statusbar.StatusBar)
+            ###self.output.popwin.Window.set_transient_for(self.output.statusbar.StatusBar)
 
             # statusbar pulls popwin to the top...
             if self.output.statusbar.StatusBar.window: self.output.statusbar.StatusBar.window.raise_()
@@ -2024,7 +2027,7 @@ class ServerVBox(gtk.VBox):
             self.miserable_service = treeview.get_model()[path[0]][server.SERVICE_COLUMN_ID]
             
             # context menu for detailed status overview, opens with a mouse click onto a listed item
-            self.popupmenu = gtk.Menu()
+            self.popupmenu = gtk.Menu()		
     
             # add custom actions - this is just a test!
             actions_list=list(self.output.conf.actions)
@@ -2105,7 +2108,9 @@ class ServerVBox(gtk.VBox):
 
             self.popupmenu.show_all()
             self.popupmenu.popup(None, None, None, event.button, event.time)
-            
+            # silly Windows(TM) workaround to keep menu above popwin
+            self.popupmenu.window.set_keep_above(True)
+
         except:
             import traceback
             traceback.print_exc(file=sys.stdout)   
