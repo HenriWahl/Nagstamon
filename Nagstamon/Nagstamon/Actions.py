@@ -549,14 +549,16 @@ class Action(threading.Thread):
         # first replace placeholder variables in string with actual values
         """
         Possible values for variables:
-        $HOST$         - host as in monitor
-        $SERVICE$      - service as in monitor
-        $MONITOR$      - monitor address - not yet clear what exactly for
-        $MONITOR-CGI$  - monitor CGI address - not yet clear what exactly for
-        $ADDRESS$      - address of host, investigated by Server.GetHost()
-        $USERNAME$     - username on monitor
-        $PASSWORD$     - username's password on monitor - whatever for
-        
+        $HOST$             - host as in monitor
+        $SERVICE$          - service as in monitor
+        $MONITOR$          - monitor address - not yet clear what exactly for
+        $MONITOR-CGI$      - monitor CGI address - not yet clear what exactly for
+        $ADDRESS$          - address of host, investigated by Server.GetHost()
+        $USERNAME$         - username on monitor
+        $PASSWORD$         - username's password on monitor - whatever for
+        $COMMENT-ACK$      - default acknowledge comment
+        $COMMENT-DOWN$     - default downtime comment
+        $COMMENT-SUBMIT$   - default submit check result comment
         """
         try:
             # if run as custom action use given action definition
@@ -574,8 +576,11 @@ class Action(threading.Thread):
                         "$MONITOR$": self.server.monitor_url,\
                         "$MONITOR-CGI$": self.server.monitor_cgi_url,\
                         "$USERNAME$": self.server.username,\
-                        "$PASSWORD$": self.server.password }
-            
+                        "$PASSWORD$": self.server.password,\
+                        "$COMMENT-ACK$": self.conf.defaults_acknowledge_comment,\
+                        "$COMMENT-DOWN$": self.conf.defaults_downtime_comment,\
+                        "$COMMENT-SUBMIT$": self.conf.defaults_submit_check_result_comment,
+                        }
             # mapping mapping
             for i in mapping:
                 string = string.replace(i, mapping[i])
