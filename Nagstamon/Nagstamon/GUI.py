@@ -3087,7 +3087,9 @@ class GenericAction(object):
                           "settings_dialog_close" : self.Cancel,
                           "checkbutton_re_host_enabled": self.ToggleREHostOptions,
                           "checkbutton_re_service_enabled": self.ToggleREServiceOptions,
-                          "checkbutton_re_status_information_enabled": self.ToggleREStatusInformationOptions
+                          "checkbutton_re_status_information_enabled": self.ToggleREStatusInformationOptions,
+                          "button_help_string_clicked": self.ToggleActionStringHelp,
+                          "button_help_type_clicked": self.ToggleActionTypeHelp,
                           }
         self.builder.connect_signals(handlers_dict)
 
@@ -3117,7 +3119,6 @@ class GenericAction(object):
             for key in keys:
                 j = self.builder.get_object(i + key)
                 
-                
                 if not j:
                     continue
                 # some hazard, every widget has other methods to fill it with desired content
@@ -3137,6 +3138,10 @@ class GenericAction(object):
                     j.set_value(int(self.conf.__dict__[key]))
                 except:
                     pass
+        
+        # disable help labels for actions        
+        self.ToggleActionStringHelp()
+        self.ToggleActionTypeHelp()
 
 
     def OK(self, widget):
@@ -3217,6 +3222,22 @@ class GenericAction(object):
         options = self.builder.get_object("hbox_re_status_information")
         checkbutton = self.builder.get_object("input_checkbutton_re_status_information_enabled")
         options.set_sensitive(checkbutton.get_active())
+        
+        
+    def ToggleActionStringHelp(self, widget=None):
+        """
+            Toggle help label for action string
+        """
+        help = self.builder.get_object("label_help_string_description")
+        help.set_visible(not help.get_visible())
+        
+        
+    def ToggleActionTypeHelp(self, widget=None):
+        """
+            Toggle help label for action type
+        """
+        help = self.builder.get_object("label_help_type_description")
+        help.set_visible(not help.get_visible())
             
             
 class NewAction(GenericAction):
