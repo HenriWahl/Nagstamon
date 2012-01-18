@@ -591,36 +591,6 @@ Request given URL string in the background, for example to acknowledge a service
               </packing>
             </child>
             <child>
-              <placeholder/>
-            </child>
-            <child>
-              <placeholder/>
-            </child>
-            <child>
-              <placeholder/>
-            </child>
-            <child>
-              <placeholder/>
-            </child>
-            <child>
-              <placeholder/>
-            </child>
-            <child>
-              <placeholder/>
-            </child>
-            <child>
-              <placeholder/>
-            </child>
-            <child>
-              <placeholder/>
-            </child>
-            <child>
-              <placeholder/>
-            </child>
-            <child>
-              <placeholder/>
-            </child>
-            <child>
               <object class="GtkHBox" id="hbox4">
                 <property name="visible">True</property>
                 <property name="can_focus">False</property>
@@ -630,7 +600,7 @@ Request given URL string in the background, for example to acknowledge a service
                     <property name="can_focus">False</property>
                     <child>
                       <object class="GtkComboBox" id="input_combo_action_type">
-                        <property name="width_request">400</property>
+                        <property name="width_request">250</property>
                         <property name="visible">True</property>
                         <property name="can_focus">False</property>
                         <property name="hexpand">True</property>
@@ -642,7 +612,7 @@ Request given URL string in the background, for example to acknowledge a service
                       </packing>
                     </child>
                     <child>
-                      <object class="GtkLinkButton" id="linkbutton_help_browser">
+                      <object class="GtkLinkButton" id="linkbutton_help_type">
                         <property name="label" translatable="yes">Help</property>
                         <property name="visible">True</property>
                         <property name="can_focus">True</property>
@@ -654,8 +624,8 @@ Request given URL string in the background, for example to acknowledge a service
                         <signal name="clicked" handler="button_help_type_clicked" swapped="no"/>
                       </object>
                       <packing>
-                        <property name="expand">True</property>
-                        <property name="fill">True</property>
+                        <property name="expand">False</property>
+                        <property name="fill">False</property>
                         <property name="position">1</property>
                       </packing>
                     </child>
@@ -668,6 +638,18 @@ Request given URL string in the background, for example to acknowledge a service
                 </child>
                 <child>
                   <object class="GtkLabel" id="label_dummy1">
+                    <property name="visible">True</property>
+                    <property name="can_focus">False</property>
+                    <property name="ypad">2</property>
+                  </object>
+                  <packing>
+                    <property name="expand">True</property>
+                    <property name="fill">True</property>
+                    <property name="position">1</property>
+                  </packing>
+                </child>
+                <child>
+                  <object class="GtkLabel" id="label_dummy2">
                     <property name="width_request">0</property>
                     <property name="visible">True</property>
                     <property name="can_focus">False</property>
@@ -675,7 +657,7 @@ Request given URL string in the background, for example to acknowledge a service
                   <packing>
                     <property name="expand">True</property>
                     <property name="fill">True</property>
-                    <property name="position">1</property>
+                    <property name="position">2</property>
                   </packing>
                 </child>
               </object>
@@ -685,6 +667,36 @@ Request given URL string in the background, for example to acknowledge a service
                 <property name="top_attach">1</property>
                 <property name="bottom_attach">2</property>
               </packing>
+            </child>
+            <child>
+              <placeholder/>
+            </child>
+            <child>
+              <placeholder/>
+            </child>
+            <child>
+              <placeholder/>
+            </child>
+            <child>
+              <placeholder/>
+            </child>
+            <child>
+              <placeholder/>
+            </child>
+            <child>
+              <placeholder/>
+            </child>
+            <child>
+              <placeholder/>
+            </child>
+            <child>
+              <placeholder/>
+            </child>
+            <child>
+              <placeholder/>
+            </child>
+            <child>
+              <placeholder/>
             </child>
           </object>
           <packing>
