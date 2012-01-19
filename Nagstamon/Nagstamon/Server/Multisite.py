@@ -41,6 +41,32 @@ class MultisiteError(Exception):
     def __init__(self, terminate, result):
         self.terminate = terminate
         self.result    = result
+        
+        
+class LastCheckColumnMultisite(Column):
+    """
+    because CHeck_MK has a pretty different date format (much better readable) it has to
+    be treaten differently
+    """
+    
+    ATTR_NAME = 'last_check'
+    print "LLLLAAAAAAAAAAAAASSSSSSSSSSSSTTTTTTTTTTTCCCHHEEEECKCOLUMN"
+    
+    @classmethod
+    def sort_function(cls, model, iter1, iter2, column):
+        """ Overrides default sorting behaviour """       
+        data1, data2 = [model.get_value(x, column) for x in (iter1, iter2)]
+        
+        print "yeeeeeeeeeeeeeeeehaaaaa"
+        
+        try:            
+            first = Actions.MachineSortableDate(data1)
+            second = Actions.MachineSortableDate(data2)
+        except ValueError, err:
+            print err
+            return cmp(first, second)
+        return first - second
+    
 
 class MultisiteServer(GenericServer):
     """
@@ -57,6 +83,15 @@ class MultisiteServer(GenericServer):
     # A Monitor CGI URL is not necessary so hide it in settings
     DISABLED_CONTROLS = ["label_monitor_cgi_url", "input_entry_monitor_cgi_url"]
     
+    COLUMNS = [
+        HostColumn,
+        ServiceColumn,
+        StatusColumn,
+        LastCheckColumnMultisite,
+        DurationColumn,
+        AttemptColumn,
+        StatusInformationColumn
+    ]
     
     def __init__(self, **kwds):
         GenericServer.__init__(self, **kwds)
@@ -401,7 +436,8 @@ class MultisiteServer(GenericServer):
         # acknowledge all services on a host when told to do so
         for s in all_services:
             self._action(self.hosts[host].site, host, s, p)
+            
 
-    
+
 
         
