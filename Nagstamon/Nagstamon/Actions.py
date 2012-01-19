@@ -856,17 +856,29 @@ def MachineSortableTime(raw):
 
     # check_mk has very human readable time
     raw = raw.replace(" sec", "s").replace(" min", "m").replace(" hrs", "h")
-
-    # strip and replace necessary for Nagios duration values,
-    # split components of duration into dictionary
-    ###for c in raw.strip().replace("  ", " ").replace("-", " ").replace(":", " ").split(" "):
-    for c in raw.strip().replace("  ", " ").split(" "):
-        number, period = c[0:-1],c[-1]
-        d[period] = int(number) 
+    
+    # check_mk has different formats - if duration takes too long it changes its scheme
+    if "-" in raw and ":" in raw:
+        datepart, timepart = raw.split(" ")
+        # need to convert years into months for later comparison
+        Y, M, D = datepart.split("-")
+        d["M"] = int(Y) * 12 + int(M)
+        d["d"] = int(D)
+        # time does not need to be changed
+        h, m, s = timepart.split(":")
+        d["h"], d["m"], d["s"] = int(h), int(m), int(s)    
+        del datepart, timepart, Y, M, D, h, m, s
+    else:
+        # strip and replace necessary for Nagios duration values,
+        # split components of duration into dictionary
+        for c in raw.strip().replace("  ", " ").split(" "):
+            number, period = c[0:-1],c[-1]
+            d[period] = int(number) 
+            del number, period
     # convert collected duration data components into seconds for being comparable
     return 16934400 * d["M"] + 604800 * d["w"] + 86400 * d["d"] + 3600 * d["h"] + 60 * d["m"] + d["s"]
 
-    
+
 def MD5ify(string):
     """
     makes something md5y of a given username or password for Centreon web interface access

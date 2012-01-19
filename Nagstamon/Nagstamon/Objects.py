@@ -92,8 +92,8 @@ class DurationColumn(CustomSortingColumn):
     def sort_function(cls, model, iter1, iter2, column):
         """ Overrides default sorting behaviour """       
         data1, data2 = [model.get_value(x, column) for x in (iter1, iter2)]
-        try:
-            first = Actions.MachineSortableTime(data1) 
+        try:            
+            first = Actions.MachineSortableTime(data1)
             second = Actions.MachineSortableTime(data2)
         except ValueError, err:
             print err

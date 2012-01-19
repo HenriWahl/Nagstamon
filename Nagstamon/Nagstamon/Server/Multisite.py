@@ -164,7 +164,7 @@ class MultisiteServer(GenericServer):
                     'host':               host['host'],
                     'status':             self.statemap.get(host['host_state'], host['host_state']),
                     'last_check':         host['host_check_age'],
-                    'duration':           self._ConvertDurationToBeEasierComparableWhenSorting(host['host_state_age']),
+                    'duration':           host['host_state_age'],
                     'status_information': host['host_plugin_output'],
                     'attempt':            host['host_attempt'],
                     'site':               host['sitename_plain'],
@@ -224,7 +224,7 @@ class MultisiteServer(GenericServer):
                     'service':            service['service_description'].encode("utf-8"),
                     'status':             self.statemap.get(service['service_state'], service['service_state']),
                     'last_check':         service['svc_check_age'],
-                    'duration':           self._ConvertDurationToBeEasierComparableWhenSorting(service['svc_state_age']),
+                    'duration':           service['svc_state_age'],
                     'attempt':            service['svc_attempt'],
                     'status_information': service['svc_plugin_output'].encode("utf-8"),
                     # Check_MK passive services can be re-scheduled by using the Check_MK service
@@ -403,21 +403,5 @@ class MultisiteServer(GenericServer):
             self._action(self.hosts[host].site, host, s, p)
 
     
-    def _ConvertDurationToBeEasierComparableWhenSorting(self, multiduration):
-        """
-        default Check_MK duration format makes sorting routine unhappy so convert it to
-        look like all the other monitors' duration values 
-        """        
-        #d["M"] + 604800 * d["w"] + 86400 * d["d"] + 3600 * d["h"] + 60 * d["m"] + d["s"]
-        
-        if multiduration.endswith("sec"):
-            return "0M 0d 0h 0m %ss" % (multiduration.split(" ")[0])
-        
-        elif multiduration.endswith("min"):            
-            return "0M 0d 0h %sm 0s" % (multiduration.split(" ")[0])
-        
-        elif multiduration.endswith("hrs"):
-            return "0M 0d %sh 0m 0s" % (multiduration.split(" ")[0])
-        
-        return multiduration
+
         
