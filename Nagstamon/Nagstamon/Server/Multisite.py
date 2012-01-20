@@ -37,6 +37,7 @@ from Nagstamon import Actions
 from Nagstamon.Objects import *
 from Nagstamon.Server.Generic import GenericServer
 
+
 class MultisiteError(Exception):
     def __init__(self, terminate, result):
         self.terminate = terminate
@@ -45,23 +46,37 @@ class MultisiteError(Exception):
         
 class LastCheckColumnMultisite(Column):
     """
-    because CHeck_MK has a pretty different date format (much better readable) it has to
+    because Check_MK has a pretty different date format (much better readable) it has to
     be treaten differently
+    
+    This is a custom version of LastCheckColumn to be used in list COLUMNS in class Multisite
     """
     
     ATTR_NAME = 'last_check'
-    print "LLLLAAAAAAAAAAAAASSSSSSSSSSSSTTTTTTTTTTTCCCHHEEEECKCOLUMN"
     
     @classmethod
     def sort_function(cls, model, iter1, iter2, column):
         """ Overrides default sorting behaviour """       
         data1, data2 = [model.get_value(x, column) for x in (iter1, iter2)]
-        
-        print "yeeeeeeeeeeeeeeeehaaaaa"
-        
         try:            
-            first = Actions.MachineSortableDate(data1)
-            second = Actions.MachineSortableDate(data2)
+            first = Actions.MachineSortableDateMultisite(data1)
+            second = Actions.MachineSortableDateMultisite(data2)
+        except ValueError, err:
+            print err
+            return cmp(first, second)
+        return first - second
+    
+    
+class DurationColumnMultisite(CustomSortingColumn):
+    ATTR_NAME = 'duration'
+    
+    @classmethod
+    def sort_function(cls, model, iter1, iter2, column):
+        """ Overrides default sorting behaviour """       
+        data1, data2 = [model.get_value(x, column) for x in (iter1, iter2)]
+        try:            
+            first = Actions.MachineSortableDateMultisite(data1)
+            second = Actions.MachineSortableDateMultisite(data2)
         except ValueError, err:
             print err
             return cmp(first, second)
@@ -88,7 +103,7 @@ class MultisiteServer(GenericServer):
         ServiceColumn,
         StatusColumn,
         LastCheckColumnMultisite,
-        DurationColumn,
+        DurationColumnMultisite,
         AttemptColumn,
         StatusInformationColumn
     ]

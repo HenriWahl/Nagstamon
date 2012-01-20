@@ -854,9 +854,26 @@ def MachineSortableDate(raw):
     # if for some reason the value is empty/none make it compatible: 0s
     if raw == None: raw = "0s"
 
-    # check_mk has very human readable time
-    raw = raw.replace(" sec", "s").replace(" min", "m").replace(" hrs", "h")
+    # strip and replace necessary for Nagios duration values,
+    # split components of duration into dictionary
+    for c in raw.strip().replace("  ", " ").split(" "):
+        number, period = c[0:-1],c[-1]
+        d[period] = int(number) 
+        del number, period
+    # convert collected duration data components into seconds for being comparable
+    return 16934400 * d["M"] + 604800 * d["w"] + 86400 * d["d"] + 3600 * d["h"] + 60 * d["m"] + d["s"]
+
+
+def MachineSortableDateMultisite(raw):
+    """
+    Multisite dates/times are so different to the others so it has to be handled separately
+    """
+    # dictionary for duration date string components
+    d = {"M":0, "d":0, "h":0, "m":0, "s":0}
     
+    # if for some reason the value is empty/none make it compatible: 0 sec
+    if raw == None: raw = "0 sec"
+
     # check_mk has different formats - if duration takes too long it changes its scheme
     if "-" in raw and ":" in raw:
         datepart, timepart = raw.split(" ")
@@ -869,14 +886,28 @@ def MachineSortableDate(raw):
         d["h"], d["m"], d["s"] = int(h), int(m), int(s)    
         del datepart, timepart, Y, M, D, h, m, s
     else:
-        # strip and replace necessary for Nagios duration values,
-        # split components of duration into dictionary
-        for c in raw.strip().replace("  ", " ").split(" "):
-            number, period = c[0:-1],c[-1]
-            d[period] = int(number) 
-            del number, period
+        # recalculate a timedelta of the given value 
+        if "sec" in raw:
+            d["s"] = raw.split(" ")[0]
+            delta = datetime.datetime.now() - datetime.timedelta(seconds=int(d["s"]))
+        elif "min" in raw:
+            d["m"] = raw.split(" ")[0]
+            delta = datetime.datetime.now() - datetime.timedelta(minutes=int(d["m"]))
+        elif "hrs" in raw:
+            d["h"] = raw.split(" ")[0]
+            delta = datetime.datetime.now() - datetime.timedelta(hours=int(d["h"])) 
+        else:
+            delta = datetime.datetime.now()
+        
+        Y, M, d["d"], d["h"], d["m"], d["s"] = delta.strftime("%Y %m %d %H %M %S").split(" ")
+        # need to convert years into months for later comparison
+        d["M"] = int(Y) * 12 + int(M)  
+            
+    # int-ify d
+    for i in d: d[i] = int(d[i])
+       
     # convert collected duration data components into seconds for being comparable
-    return 16934400 * d["M"] + 604800 * d["w"] + 86400 * d["d"] + 3600 * d["h"] + 60 * d["m"] + d["s"]
+    return 16934400 * d["M"] + 86400 * d["d"] + 3600 * d["h"] + 60 * d["m"] + d["s"]
 
 
 def MD5ify(string):
