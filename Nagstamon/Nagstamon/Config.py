@@ -119,7 +119,6 @@ class Config(object):
             else:
                 # allow to give a config file
                 self.configdir = sys.argv[1]
-                #self.configfile= self.configdir + os.sep + "nagstamon.conf"
                            
         # otherwise if there exits a configfile in current working directory it should be used
         elif os.path.exists(os.getcwd() + os.sep + "nagstamon.config"):
@@ -238,7 +237,14 @@ class Config(object):
             self.unconfigured = False
             
             # add config dir in place of legacy config file
-            self.configdir = legacyconfigfile + ".config"
+            # in case there is a default install use the default config dir
+            print legacyconfigfile
+            print os.path.normpath(os.path.normcase(os.path.expanduser('~') + os.sep + ".nagstamon.conf"))
+            
+            if legacyconfigfile == os.path.normpath(os.path.normcase(os.path.expanduser('~') + os.sep + ".nagstamon.conf")):
+                self.configdir = os.path.normpath(os.path.normcase(os.path.expanduser('~') + os.sep + ".nagstamon"))
+            else:
+                self.configdir = legacyconfigfile + ".config"
             self.configfile = self.configdir + os.sep + "nagstamon.conf"
             
             # set flag to show legacy command line config file notice
@@ -305,7 +311,7 @@ class Config(object):
         # make path fit for actual os, normcase for letters and normpath for path
         legacyconfigfile = os.path.normpath(os.path.normcase(legacyconfigfile))
         
-        if os.path.exists(legacyconfigfile):
+        if os.path.exists(legacyconfigfile):       
             return legacyconfigfile
         else:
             return False
