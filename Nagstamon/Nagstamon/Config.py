@@ -237,10 +237,7 @@ class Config(object):
             self.unconfigured = False
             
             # add config dir in place of legacy config file
-            # in case there is a default install use the default config dir
-            print legacyconfigfile
-            print os.path.normpath(os.path.normcase(os.path.expanduser('~') + os.sep + ".nagstamon.conf"))
-            
+            # in case there is a default install use the default config dir           
             if legacyconfigfile == os.path.normpath(os.path.normcase(os.path.expanduser('~') + os.sep + ".nagstamon.conf")):
                 self.configdir = os.path.normpath(os.path.normcase(os.path.expanduser('~') + os.sep + ".nagstamon"))
             else:

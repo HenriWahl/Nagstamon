@@ -89,7 +89,7 @@ output = GUI.GUI(conf=conf, servers=servers, Resources=Resources, debug_queue=de
 
 # show notice if a legacy config file is used from commandline
 if conf.legacyconfigfile_notice == True:
-    notice = "Hello Nagstamon user! Since Nagstamon version 0.9.9 the configuration is stored \
+    notice = "Hello Nagstamon user!\nSince version 0.9.9 the configuration is stored \
 in a config directory. Your config file has been \
 converted and will be saved as the following directory:\n\n %s\n\n\
 If you used to start Nagstamon with a special configuration file please use this path or \
