@@ -1,3 +1,19 @@
+nagstamon (0.9.9.1-1) unstable; urgency=low
+
+  * New upstream
+    - added custom actions in context menu
+    - added reauthentication in case of authenticaton problems
+    - changed configuration file to configuration directory (default:
+      ~/.nagstamon)
+    - added filter for flapping hosts and services
+    - added history button for monitors
+    - added shortcut to filter settings in popup window
+    - fixed bug in Icinga acknowledgement
+     - fixed bug in Check_MK Multisite sorting
+    - fixed some Check_MK Multisite UTF trouble
+
+ -- Henri Wahl <h.wahl@ifw-dresden.de>  Mon, 23 Jan 2012 11:25:00 +0200
+
 nagstamon (0.9.8.1-1) unstable; urgency=low
 
   * New upstream

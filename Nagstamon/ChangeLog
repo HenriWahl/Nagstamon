@@ -1,3 +1,487 @@
+2012-01-20 14:01  henriwww
+
+	* Nagstamon/resources/settings_action_dialog.ui: finetuning action
+	  dialog
+
+2012-01-20 13:52  henriwww
+
+	* Nagstamon/Config.py, nagstamon.py: finetuning config file -> dir
+	  conversion
+
+2012-01-20 13:48  henriwww
+
+	* Nagstamon/Config.py, nagstamon.py: finetuning config file -> dir
+	  conversion
+
+2012-01-20 11:11  henriwww
+
+	* Nagstamon/Actions.py, Nagstamon/Server/Multisite.py: ...and
+	  another check_mk-duration-sort-desaster fix...
+
+2012-01-19 15:23  henriwww
+
+	* Nagstamon/Actions.py, Nagstamon/Objects.py,
+	  Nagstamon/Server/Multisite.py: trying to fix check_mk last_check
+	  sorting order
+
+2012-01-19 09:59  henriwww
+
+	* Nagstamon/Actions.py, Nagstamon/Objects.py,
+	  Nagstamon/Server/Multisite.py: fixed check_mk duration sort
+	  problem
+
+2012-01-18 15:57  henriwww
+
+	* Nagstamon/Actions.py, Nagstamon/Server/Multisite.py,
+	  Nagstamon/resources/settings_action_dialog.ui: started fixing
+	  check_mk duration order problem
+
+2012-01-18 13:45  henriwww
+
+	* Nagstamon/GUI.py, Nagstamon/resources/settings_action_dialog.ui:
+	  added help for actions in actions dialog
+
+2012-01-17 14:22  henriwww
+
+	* Nagstamon/Actions.py: added default comments as variables in
+	  custom actions
+
+2012-01-17 14:09  henriwww
+
+	* Nagstamon/Config.py, Nagstamon/Server/Generic.py,
+	  Nagstamon/resources/settings_action_dialog.ui, nagstamon.py:
+	  deleted som debugging stuff
+
+2012-01-17 13:24  henriwww
+
+	* Nagstamon/GUI.py: fixed
+	  dont-close-popwin-when-accessing-monitor-via-context-menu-bug
+
+2012-01-17 13:15  henriwww
+
+	* Nagstamon/GUI.py, Nagstamon/Objects.py,
+	  Nagstamon/Server/Centreon.py, Nagstamon/Server/Generic.py,
+	  Nagstamon/Server/Multisite.py: fixed some multisite umlaut
+	  problem
+
+2012-01-17 08:33  henriwww
+
+	* Nagstamon/GUI.py, installer/windows/nagstamon.iss: let windows
+	  popwin menus work again
+
+2012-01-17 06:48  henriwww
+
+	* Nagstamon/GUI.py: cleaned fixed MS Windows popwin stuff
+
+2012-01-16 15:56  henriwww
+
+	* Nagstamon/GUI.py: fixed MS Windows popwin trouble with
+	  installation of pygtk aio 2.24.1
+
+2012-01-16 13:26  henriwww
+
+	* Nagstamon/GUI.py: trying to fix new popwin trouble in windows
+	  resulting from TOPLEVEL window type
+
+2012-01-16 08:22  henriwww
+
+	* Nagstamon/Actions.py, Nagstamon/Config.py, nagstamon.py: kind of
+	  fixed check_mk duration sorting bug
+
+2012-01-13 15:23  henriwww
+
+	* Nagstamon/Actions.py, Nagstamon/GUI.py,
+	  Nagstamon/resources/authentication_dialog.ui, nagstamon.py:
+	  startup password dialog works again
+
+2012-01-13 14:29  henriwww
+
+	* Nagstamon/Actions.py, Nagstamon/GUI.py,
+	  Nagstamon/Server/Centreon.py, Nagstamon/Server/Generic.py,
+	  nagstamon.py: auth in powin works
+
+2012-01-12 15:29  henriwww
+
+	* Nagstamon/Actions.py, Nagstamon/GUI.py,
+	  Nagstamon/Server/Generic.py: integrated auth dialog as auth line
+	  in popwin - dialogs caused crashes
+
+2012-01-12 13:51  henriwww
+
+	* Nagstamon/GUI.py, nagstamon.py: changing auth dialog into auth
+	  line in popwin... experimenting
+
+2012-01-12 09:20  henriwww
+
+	* Nagstamon/GUI.py, nagstamon.py: ...fixing resources path...
+
+2012-01-12 08:50  henriwww
+
+	* Nagstamon/Actions.py, Nagstamon/GUI.py,
+	  Nagstamon/resources/authentication_dialog.ui,
+	  Nagstamon/resources/authentification_dialog.ui: some
+	  authentication dialog cosmetics
+
+2012-01-11 14:31  henriwww
+
+	* Nagstamon/Actions.py, Nagstamon/GUI.py,
+	  Nagstamon/Server/Generic.py, nagstamon.py: nagstamon.py: Fatal IO
+	  error 0 (Erfolg) on X server :0.
+
+2012-01-11 12:16  henriwww
+
+	* Nagstamon/Actions.py, Nagstamon/GUI.py,
+	  Nagstamon/Server/Generic.py,
+	  Nagstamon/resources/settings_action_dialog.ui: trying to fix
+	  gtk/thread related segfaults
+
+2012-01-09 14:31  henriwww
+
+	* Nagstamon/Actions.py, Nagstamon/GUI.py,
+	  Nagstamon/Server/Centreon.py, Nagstamon/Server/Generic.py,
+	  Nagstamon/resources/authentification_dialog.ui, nagstamon.py:
+	  fiddling with auth dialog...
+
+2012-01-05 10:28  henriwww
+
+	* Nagstamon/Config.py, Nagstamon/GUI.py,
+	  Nagstamon/Server/Centreon.py, Nagstamon/Server/Generic.py,
+	  Nagstamon/resources/authentification_dialog.ui: kind of finished
+	  authentication-trouble-password-dialog
+
+2012-01-04 15:38  henriwww
+
+	* Nagstamon/Actions.py, Nagstamon/Config.py, Nagstamon/GUI.py,
+	  Nagstamon/Server/Generic.py,
+	  Nagstamon/resources/authentification_dialog.ui,
+	  Nagstamon/resources/settings_action_dialog.ui,
+	  Nagstamon/resources/settings_dialog.ui,
+	  Nagstamon/resources/settings_server_dialog.ui, nagstamon.py:
+	  extended ask-for-password-functionality to ask also if there are
+	  any authentication problems
+
+2012-01-03 15:30  henriwww
+
+	* Nagstamon/Actions.py, Nagstamon/Server/Generic.py: added
+	  permanent asking for password in case authentification failed
+
+2012-01-03 14:47  henriwww
+
+	* Nagstamon/Actions.py, Nagstamon/Server/Centreon.py: added error
+	  treatment for centreon
+
+2012-01-03 14:15  henriwww
+
+	* Nagstamon/GUI.py, Nagstamon/Server/Centreon.py,
+	  Nagstamon/Server/Multisite.py, Nagstamon/Server/Ninja.py,
+	  Nagstamon/resources/settings_server_dialog.ui: change settings
+	  dialog fields depending on server type - hide monitor cgi url if
+	  not needed
+
+2012-01-03 13:09  henriwww
+
+	* Nagstamon/Actions.py, Nagstamon/Objects.py: check_mk duration
+	  sorting fix
+
+2012-01-02 15:10  henriwww
+
+	* Nagstamon/Actions.py, Nagstamon/Config.py, Nagstamon/Custom.py,
+	  Nagstamon/GUI.py, Nagstamon/Server/Centreon.py,
+	  Nagstamon/Server/Generic.py, Nagstamon/Server/Multisite.py,
+	  Nagstamon/Server/Ninja.py, Nagstamon/Server/Opsview.py,
+	  Nagstamon/Server/Pingdom.py, Nagstamon/Server/PingdomAPI.py,
+	  Nagstamon/resources/settings_dialog.ui,
+	  Nagstamon/resources/settings_server_dialog.ui, nagstamon.py:
+	  based all button actions like history, services etc. on new
+	  Actions.Action via server method OpenBrowser - this should reduce
+	  complexity
+
+2011-12-27 15:56  henriwww
+
+	* Nagstamon/Actions.py, Nagstamon/Custom.py, Nagstamon/Objects.py,
+	  Nagstamon/Server/Pingdom.py, Nagstamon/Server/PingdomAPI.py,
+	  Nagstamon/resources/settings_dialog.ui: added first try of
+	  pingdom integration
+
+2011-12-27 13:42  henriwww
+
+	* Nagstamon/Actions.py, Nagstamon/Config.py, Nagstamon/GUI.py,
+	  Nagstamon/Server/Centreon.py, Nagstamon/Server/Multisite.py,
+	  nagstamon.py: maybe fixed conversion from config file to config
+	  dir
+
+2011-12-01 19:18  henriwww
+
+	* Nagstamon/Actions.py, Nagstamon/GUI.py,
+	  Nagstamon/Server/Centreon.py, Nagstamon/Server/Generic.py,
+	  Nagstamon/Server/Ninja.py, Nagstamon/Server/Opsview.py: added
+	  functionality to history button for Nagios, Icinga, Opsview,
+	  Centreon and Ninja - Check_MK comes soon
+
+2011-12-01 18:08  henriwww
+
+	* Nagstamon/Actions.py, Nagstamon/GUI.py,
+	  Nagstamon/resources/history.png, Nagstamon/resources/history.svg,
+	  Nagstamon/resources/services.png,
+	  Nagstamon/resources/services.svg: added not yet working history
+	  button in server vbox
+
+2011-12-01 16:46  henriwww
+
+	* Nagstamon/Config.py, Nagstamon/GUI.py: added option for action to
+	  choose between closing or leaving popup window open after action
+
+2011-11-30 16:39  henriwww
+
+	* Nagstamon/GUI.py, Nagstamon/Server/Generic.py,
+	  Nagstamon/Server/Opsview.py: fixed sf.net bug 3441770 - sond not
+	  able to play without flashing statusbar
+
+2011-11-25 17:36  henriwww
+
+	* Nagstamon/Config.py, Nagstamon/GUI.py,
+	  Nagstamon/resources/settings_action_dialog.ui: added
+	  close_popup_window option to actions
+
+2011-11-22 15:04  henriwww
+
+	* Nagstamon/Config.py: added more example actions+++
+
+2011-11-22 14:42  henriwww
+
+	* Nagstamon/Config.py: added more example actions+++
+
+2011-11-22 14:25  henriwww
+
+	* Nagstamon/Config.py: added more example actions
+
+2011-11-22 13:23  henriwww
+
+	* Nagstamon/Config.py: added default actions
+
+2011-11-22 11:22  henriwww
+
+	* Nagstamon/Config.py: fix for settings dialog
+
+2011-11-22 11:18  henriwww
+
+	* Nagstamon/GUI.py: fix for settings dialog
+
+2011-11-22 10:27  henriwww
+
+	* Nagstamon/Config.py: fix for new install
+
+2011-11-22 09:37  henriwww
+
+	* Nagstamon/Config.py: no segfault when canceling settings dialog
+
+2011-11-22 09:29  henriwww
+
+	* Nagstamon/Config.py, Nagstamon/GUI.py,
+	  Nagstamon/resources/settings_dialog.ui: convert legacy config
+	  file
+
+2011-11-21 10:50  henriwww
+
+	* Nagstamon/GUI.py, Nagstamon/resources/settings_dialog.ui: fix for
+	  mac regarding statusbar
+
+2011-11-21 09:25  henriwww
+
+	* Nagstamon/GUI.py: fixed typo
+
+2011-11-21 09:18  henriwww
+
+	* Nagstamon/Config.py, Nagstamon/GUI.py,
+	  Nagstamon/resources/settings_action_dialog.ui,
+	  Nagstamon/resources/settings_dialog.ui: changed action filters to
+	  action re filters analogue to servers, added status information
+	  filters
+
+2011-11-19 21:59  henriwww
+
+	* Nagstamon/Config.py, Nagstamon/GUI.py,
+	  Nagstamon/resources/settings_action_dialog.ui,
+	  Nagstamon/resources/settings_dialog.ui, nagstamon.py: fixes for
+	  custom actions gui, conversion of old settings to new custom
+	  actions
+
+2011-11-18 15:47  henriwww
+
+	* Nagstamon/Config.py, Nagstamon/GUI.py,
+	  Nagstamon/resources/settings_action_dialog.ui,
+	  Nagstamon/resources/settings_dialog.ui: added gui editor for
+	  actions
+
+2011-11-18 09:42  henriwww
+
+	* Nagstamon/Config.py, Nagstamon/GUI.py,
+	  Nagstamon/resources/acknowledge_dialog.ui,
+	  Nagstamon/resources/downtime_dialog.ui,
+	  Nagstamon/resources/settings_action_dialog.ui,
+	  Nagstamon/resources/settings_dialog.ui,
+	  Nagstamon/resources/settings_server_dialog.ui,
+	  Nagstamon/resources/submit_check_result_dialog.ui, nagstamon.py:
+	  corrected default enter key action in dialogs
+
+2011-11-11 16:01  henriwww
+
+	* Nagstamon/Config.py, Nagstamon/GUI.py,
+	  Nagstamon/resources/settings_action_dialog.ui,
+	  Nagstamon/resources/settings_dialog.ui,
+	  Nagstamon/resources/settings_server_dialog.ui: added first
+	  prototype of at least appearing action edit dialog, some code
+	  cleaning at the server edit area
+
+2011-11-10 22:48  henriwww
+
+	* Nagstamon/Actions.py, Nagstamon/GUI.py,
+	  Nagstamon/Server/Generic.py,
+	  Nagstamon/resources/settings_action_dialog.ui,
+	  Nagstamon/resources/settings_dialog.ui,
+	  Nagstamon/resources/settings_server_dialog.ui: started action
+	  dialog
+
+2011-11-07 22:12  henriwww
+
+	* Nagstamon/GUI.py, Nagstamon/resources/settings_action_dialog.ui,
+	  Nagstamon/resources/settings_dialog.ui: started with action gui
+	  editor
+
+2011-11-07 14:01  henriwww
+
+	* Nagstamon/Actions.py, Nagstamon/Config.py, Nagstamon/GUI.py:
+	  tuning custom actions
+
+2011-11-02 13:34  henriwww
+
+	* Nagstamon/Config.py, Nagstamon/GUI.py: playing with host/service
+	  filters for actions, incomplete
+
+2011-11-01 22:31  henriwww
+
+	* Nagstamon/Config.py, Nagstamon/GUI.py: playing with custom
+	  actions, adding examples and .target properties for actions
+
+2011-11-01 14:34  henriwww
+
+	* Nagstamon/Actions.py, Nagstamon/Config.py, Nagstamon/GUI.py,
+	  Nagstamon/Server/Generic.py: first working version of GUI-less
+	  custom actions (edit yourself in ~/.nagstamon/actions
+
+2011-11-01 10:16  henriwww
+
+	* Nagstamon/Config.py: fixed error when config dir did not exist
+	  yet
+
+2011-10-28 15:24  henriwww
+
+	* Nagstamon/Config.py, Nagstamon/GUI.py,
+	  Nagstamon/Server/Centreon.py, Nagstamon/Server/Generic.py,
+	  Nagstamon/Server/Multisite.py, Nagstamon/Server/Ninja.py: started
+	  with customizable actions, saves config files and displays on
+	  context menu
+
+2011-10-28 14:21  henriwww
+
+	* Nagstamon/Config.py: SaveMultipleConfig works
+
+2011-10-28 13:42  henriwww
+
+	* Nagstamon/Config.py: SaveMutlipleConfig added
+
+2011-10-28 13:16  henriwww
+
+	* Nagstamon/Config.py: LoadConfig() -> LoadMultipleConfig() part 2
+
+2011-10-28 13:15  henriwww
+
+	* Nagstamon/Config.py: LoadConfig() -> LoadMultipleConfig()
+
+2011-10-28 12:43  henriwww
+
+	* Nagstamon/Config.py: added actions class for config
+
+2011-10-28 12:38  henriwww
+
+	* Nagstamon/Config.py: abstract load config
+
+2011-10-28 10:05  op5-team
+
+	* Nagstamon/Config.py: Config.py, fixed so if your ~/.nagstamon dir
+	  doesn't exists it will be created
+	  
+	  If the basedir doesn't exist ./servers can't be created, and the
+	  save will fail.
+	  
+	  Sign-off: Mattias Ryrlén <mattias.ryrlen@op5.com>
+
+2011-10-27 18:04  henriwww
+
+	* Nagstamon/__init__.py, Nagstamon/resources/nagstamon.desktop:
+	  updated .desktop file and FSD address
+
+2011-10-27 13:18  henriwww
+
+	* Nagstamon/Config.py, nagstamon.py: new config dir with extra
+	  servers dir works (loads and saves)
+
+2011-10-27 07:06  henriwww
+
+	* Nagstamon/GUI.py, Nagstamon/Server/Generic.py,
+	  Nagstamon/Server/Icinga.py: finally fixed icinga ack bug
+
+2011-10-26 21:23  henriwww
+
+	* Nagstamon/Server/Icinga.py: the Icinga workaround did not really
+	  work so it is now excluded again
+
+2011-10-26 20:00  henriwww
+
+	* Nagstamon/Server/Icinga.py: fixed trouble with Icinga
+	  acknowledging services
+
+2011-10-26 14:57  henriwww
+
+	* Nagstamon/GUI.py: ...
+
+2011-10-26 14:35  henriwww
+
+	* Nagstamon/GUI.py: server settings button removed and filter
+	  settings button on popwin added
+
+2011-10-26 14:14  henriwww
+
+	* Nagstamon/GUI.py: server settings button implemented
+
+2011-10-26 12:28  henriwww
+
+	* Nagstamon/Config.py, Nagstamon/Server/Generic.py,
+	  Nagstamon/resources/settings_dialog.ui: added filter for flapping
+	  items
+
+2011-10-25 13:57  henriwww
+
+	* installer/debian/changelog: added tag 0.9.8
+
+2011-10-24 13:03  henriwww
+
+	* installer/0install/nagstamon.xml, setup.py: release preparations
+
+2011-10-24 12:23  henriwww
+
+	* Nagstamon/GUI.py: release preparations
+
+2011-10-24 10:27  henriwww
+
+	* installer/0install/nagstamon.xml, installer/debian/changelog,
+	  installer/windows/nagstamon.iss: release preparations
+
+2011-10-24 09:23  henriwww
+
+	* ChangeLog, Nagstamon/GUI.py, installer/0install/nagstamon.xml:
+	  release preparations...
+
 2011-10-14 15:11  henriwww
 
 	* Nagstamon/resources/settings_dialog.ui: fixed last fix...
