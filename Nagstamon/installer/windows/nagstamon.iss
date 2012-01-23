@@ -1,13 +1,13 @@
 [Setup]
 AppName=Nagstamon
-AppVerName=Nagstamon 0.9.9 SVN
+AppVerName=Nagstamon 0.9.9 RC1
 DefaultDirName={pf}\Nagstamon
 DefaultGroupName=Nagstamon
 AlwaysUsePersonalGroup=false
 ShowLanguageDialog=no
 SetupIconFile=F:\Projekte\nagstamon\svn\trunk\Nagstamon\Nagstamon\resources\nagstamon.ico
 UsePreviousGroup=false
-OutputBaseFilename=Nagstamon_0.9.9-SVN_setup
+OutputBaseFilename=Nagstamon_0.9.9-RC1_setup
 UninstallDisplayIcon=
 UsePreviousAppDir=false
 AppID={{44F7CFFB-4776-4DA4-9930-A07178069517}
