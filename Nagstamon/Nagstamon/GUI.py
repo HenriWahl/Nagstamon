@@ -564,10 +564,14 @@ class GUI(object):
         # connect with action
         # only OK needs to be connected - if this action gets canceled nothing happens
         # use connect_signals to assign methods to handlers
-        handlers_dict = { "button_ok_clicked" : self.Acknowledge,
-                          "button_acknowledge_settings_clicked" : self.AcknowledgeDefaultSettings }
+        handlers_dict = { "button_ok_clicked": self.Acknowledge,
+                          "button_acknowledge_settings_clicked": self.AcknowledgeDefaultSettings }
         self.acknowledge_xml.connect_signals(handlers_dict, server)
 
+        # did not get it to work with glade so comments will be fired up this way when pressing return
+        self.acknowledge_xml.get_object("input_entry_author").connect("key-release-event", self._FocusJump, self.acknowledge_xml, "input_entry_comment")
+        self.acknowledge_xml.get_object("input_entry_comment").connect("key-release-event", self.AcknowledgeCommentReturn, server)
+        
         # if service is "" it must be a host
         if service == "":
             # set label for acknowledging a host
@@ -590,6 +594,7 @@ class GUI(object):
         # default author + comment
         self.acknowledge_xml.get_object("input_entry_author").set_text(server.username)        
         self.acknowledge_xml.get_object("input_entry_comment").set_text(self.conf.defaults_acknowledge_comment)
+        self.acknowledge_xml.get_object("input_entry_comment").grab_focus()  
 
         # show dialog
         self.acknowledge_dialog.run()
@@ -601,10 +606,20 @@ class GUI(object):
         show settings with tab "defaults" as shortcut from Acknowledge dialog
         """
         self.acknowledge_dialog.destroy()
-        settings=Settings(servers=self.servers, output=self, conf=self.conf, first_page="Defaults")
-        
+        settings=Settings(servers=self.servers, output=self, conf=self.conf, first_page="Defaults") 
 
-    def Acknowledge(self, widget, server):
+            
+    def AcknowledgeCommentReturn(self, widget, event, server):
+        """ 
+        if Return key has been pressed in comment entry field interprete this as OK button being pressed
+        """
+        # KP_Enter seems to be the code for return key of numeric key block
+        if gtk.gdk.keyval_name(event.keyval) in ["Return", "KP_Enter"]:
+            self.Acknowledge(server=server)   
+            self.acknowledge_dialog.destroy()
+            
+
+    def Acknowledge(self, widget=None, server=None):
         """
             acknowledge miserable host/service
         """
@@ -651,6 +666,17 @@ class GUI(object):
                           "button_downtime_settings_clicked" : self.DowntimeDefaultSettings }
         self.downtime_xml.connect_signals(handlers_dict, server)
 
+        # focus jump chain - used to connect input fields in downtime dialog and access them via return key
+        chain = ["input_entry_start_time",
+                 "input_entry_end_time",
+                 "input_entry_author",
+                 "input_entry_comment"]
+        for i in range(len(chain)-1):
+            self.downtime_xml.get_object(chain[i]).connect("key-release-event", self._FocusJump, self.downtime_xml, chain[i+1])
+
+        # if return key enterd in comment field see this as OK button pressed
+        self.downtime_xml.get_object("input_entry_comment").connect("key-release-event", self.DowntimeCommentReturn, server)
+            
         # if service is None it must be a host
         if service == "":
             # set label for acknowledging a host
@@ -673,9 +699,12 @@ class GUI(object):
         # default author + comment
         self.downtime_xml.get_object("input_entry_author").set_text(server.username)        
         self.downtime_xml.get_object("input_entry_comment").set_text(self.conf.defaults_downtime_comment)
+        self.downtime_xml.get_object("input_entry_comment").grab_focus()        
+        
         # start and end time
         self.downtime_xml.get_object("input_entry_start_time").set_text(start_time)
         self.downtime_xml.get_object("input_entry_end_time").set_text(end_time)
+        
         # flexible downtime duration
         self.downtime_xml.get_object("input_spinbutton_duration_hours").set_value(int(self.conf.defaults_downtime_duration_hours))
         self.downtime_xml.get_object("input_spinbutton_duration_minutes").set_value(int(self.conf.defaults_downtime_duration_minutes))
@@ -691,9 +720,19 @@ class GUI(object):
         """
         self.downtime_dialog.destroy()
         settings=Settings(servers=self.servers, output=self, conf=self.conf, first_page="Defaults")
+        
+        
+    def DowntimeCommentReturn(self, widget, event, server):
+        """ 
+        if Return key has been pressed in comment entry field interprete this as OK button being pressed
+        """
+        # KP_Enter seems to be the code for return key of numeric key block
+        if gtk.gdk.keyval_name(event.keyval) in ["Return", "KP_Enter"]:
+            self.Downtime(server=server)   
+            self.downtime_dialog.destroy()
 
 
-    def Downtime(self, widget, server):
+    def Downtime(self, widget=None, server=None):
         """
             schedule downtime for miserable host/service
         """
@@ -738,6 +777,15 @@ class GUI(object):
                            "button_submit_check_result_settings_clicked" : self.SubmitCheckResultDefaultSettings}
         self.submitcheckresult_xml.connect_signals(handlers_dict, server)
 
+        # focus jump chain - used to connect input fields in submit check result dialog and access them via return key
+        # server.SUBMIT_CHECK_RESULT_ARGS contains the valid arguments for this server type so we might use it here too
+        chain = server.SUBMIT_CHECK_RESULT_ARGS
+        for i in range(len(chain)-1):         
+            self.submitcheckresult_xml.get_object("input_entry_" + chain[i]).connect("key-release-event", self._FocusJump, self.submitcheckresult_xml, "input_entry_" + chain[i+1])
+
+        # if return key entered in lastfield see this as OK button pressed
+        self.submitcheckresult_xml.get_object("input_entry_" + chain[-1]).connect("key-release-event", self.SubmitCheckResultCommentReturn, server)
+            
         # if service is "" it must be a host
         if service == "":
             # set label for submitting results to an host
@@ -777,7 +825,7 @@ class GUI(object):
         settings=Settings(servers=self.servers, output=self, conf=self.conf, first_page="Defaults")
         
 
-    def SubmitCheckResultOK(self, widget, server):
+    def SubmitCheckResultOK(self, widget=None, server=None):
         """
             submit check result
         """
@@ -810,6 +858,16 @@ class GUI(object):
 
     def SubmitCheckResultCancel(self, widget, server):    
         self.submitcheckresult_dialog.destroy()
+        
+
+    def SubmitCheckResultCommentReturn(self, widget, event, server):
+        """ 
+        if Return key has been pressed in comment entry field interprete this as OK button being pressed
+        """
+        # KP_Enter seems to be the code for return key of numeric key block
+        if gtk.gdk.keyval_name(event.keyval) in ["Return", "KP_Enter"]:
+            self.SubmitCheckResultOK(server=server)   
+            self.submitcheckresult_dialog.destroy()
 
 
     def AboutDialog(self):
@@ -997,6 +1055,14 @@ class GUI(object):
         except:
             pass
         
+    
+    def _FocusJump(self, widget=None, event=None, builder=None, next_widget=None):
+        """ 
+        if Return key has been pressed in entry field jump to given widget
+        """
+        if gtk.gdk.keyval_name(event.keyval) in ["Return", "KP_Enter"]:
+            builder.get_object(next_widget).grab_focus()  
+            
 
 class StatusBar(object):
     """
@@ -2189,7 +2255,7 @@ class ServerVBox(gtk.VBox):
         """ 
         if Return key has been pressed in password entry field interprete this as OK button being pressed
         """
-        if gtk.gdk.keyval_name(event.keyval) == "Return":
+        if gtk.gdk.keyval_name(event.keyval) in ["Return", "KP_Enter"]:
             self.AuthEntryPassword.grab_focus()   
 
             
@@ -2197,7 +2263,7 @@ class ServerVBox(gtk.VBox):
         """ 
         if Return key has been pressed in password entry field interprete this as OK button being pressed
         """
-        if gtk.gdk.keyval_name(event.keyval) == "Return":
+        if gtk.gdk.keyval_name(event.keyval) in ["Return", "KP_Enter"]:
             self.AuthOK(widget, server)
         
             
@@ -3359,9 +3425,7 @@ class AuthenticationDialog:
         handlers_dict = { "button_ok_clicked" : self.OK,
                           "button_exit_clicked" : self.Exit,
                           "button_disable_clicked" : self.Disable
-                          }
-        self.builder.connect_signals(handlers_dict)
-
+                          }        
         self.label_monitor = self.builder.get_object("label_monitor")
         self.entry_username = self.builder.get_object("input_entry_username")
         self.entry_password = self.builder.get_object("input_entry_password")

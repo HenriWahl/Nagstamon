@@ -90,8 +90,7 @@
               <object class="GtkCheckButton" id="input_checkbutton_sticky_acknowledgement">
                 <property name="label" translatable="yes">Sticky acknowledgement</property>
                 <property name="visible">True</property>
-                <property name="can_focus">False</property>
-                <property name="is_focus">True</property>
+                <property name="can_focus">True</property>
                 <property name="receives_default">False</property>
                 <property name="border_width">3</property>
                 <property name="use_action_appearance">False</property>
@@ -109,7 +108,7 @@
               <object class="GtkCheckButton" id="input_checkbutton_send_notification">
                 <property name="label" translatable="yes">Send notification</property>
                 <property name="visible">True</property>
-                <property name="can_focus">False</property>
+                <property name="can_focus">True</property>
                 <property name="receives_default">False</property>
                 <property name="border_width">3</property>
                 <property name="use_action_appearance">False</property>
@@ -127,7 +126,7 @@
               <object class="GtkCheckButton" id="input_checkbutton_persistent_comment">
                 <property name="label" translatable="yes">Persistent comment</property>
                 <property name="visible">True</property>
-                <property name="can_focus">False</property>
+                <property name="can_focus">True</property>
                 <property name="receives_default">False</property>
                 <property name="border_width">3</property>
                 <property name="use_action_appearance">False</property>
@@ -145,7 +144,7 @@
               <object class="GtkCheckButton" id="input_checkbutton_acknowledge_all_services">
                 <property name="label" translatable="yes">Acknowledge all services on host</property>
                 <property name="visible">True</property>
-                <property name="can_focus">False</property>
+                <property name="can_focus">True</property>
                 <property name="receives_default">False</property>
                 <property name="border_width">3</property>
                 <property name="use_action_appearance">False</property>
@@ -177,8 +176,7 @@
               <object class="GtkEntry" id="input_entry_comment">
                 <property name="visible">True</property>
                 <property name="can_focus">True</property>
-                <property name="invisible_char">●</property>
-                <property name="caps_lock_warning">False</property>
+                <property name="has_focus">True</property>
               </object>
               <packing>
                 <property name="left_attach">1</property>
@@ -260,10 +258,7 @@
                 <property name="label" translatable="yes">OK</property>
                 <property name="visible">True</property>
                 <property name="can_focus">True</property>
-                <property name="has_focus">True</property>
-                <property name="is_focus">True</property>
                 <property name="can_default">True</property>
-                <property name="has_default">True</property>
                 <property name="receives_default">True</property>
                 <property name="use_action_appearance">False</property>
                 <signal name="clicked" handler="button_ok_clicked" swapped="no"/>
@@ -278,7 +273,7 @@
               <object class="GtkButton" id="button_cancel">
                 <property name="label" translatable="yes">Cancel</property>
                 <property name="visible">True</property>
-                <property name="can_focus">False</property>
+                <property name="can_focus">True</property>
                 <property name="receives_default">False</property>
                 <property name="use_action_appearance">False</property>
               </object>
