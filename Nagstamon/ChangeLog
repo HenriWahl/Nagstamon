@@ -1,3 +1,13 @@
+2012-01-23 12:25  henriwww
+
+	* installer/windows/nagstamon.iss: iss file for 0.9.9 rc1
+
+2012-01-23 10:28  henriwww
+
+	* ChangeLog, Nagstamon/resources/settings_dialog.ui,
+	  installer/debian/changelog, setup.py: some cleanup to prepare
+	  0.9.9 release
+
 2012-01-20 14:01  henriwww
 
 	* Nagstamon/resources/settings_action_dialog.ui: finetuning action
