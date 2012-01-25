@@ -538,8 +538,9 @@ class GUI(object):
                 self.popwin.showPopwin = True
 
         # try to fix Debian bug #591875: eventually ends up lower in the window stacking order, and can't be raised
-        # raising statusbar window with every refresh should do the job        
-        if str(self.conf.statusbar_floating) == "True":
+        # raising statusbar window with every refresh should do the job
+        # also do NOT raise if statusbar menu is open because otherwise it will be overlapped
+        if str(self.conf.statusbar_floating) == "True" and self.statusbar.MenuOpen == False:
             # always raise on Windows
             if platform.system() == "Windows":
                 self.statusbar.StatusBar.window.raise_()
@@ -1393,7 +1394,6 @@ class StatusBar(object):
             # use gobject.idle_add() to be thread safe
             gobject.idle_add(self.output.DeleteGUILock, self.__class__.__name__)
 
-            
 
     def Move(self, widget=None, event=None):
         """
@@ -1471,15 +1471,6 @@ class Popwin(object):
 
         # for not letting statusbar throw a shadow onto popwin in any composition-window-manager this helps to
         # keep a more consistent look - copied from StatusBar... anyway, doesn't work... well, next attempt:
-        #self.Window.set_type_hint(gtk.gdk.WINDOW_TYPE_HINT_UTILITY)
-        #self.Window.set_type_hint(gtk.gdk.WINDOW_TYPE_HINT_SPLASHSCREEN)
-        #self.Window.set_type_hint(gtk.gdk.WINDOW_TYPE_HINT_POPUP_MENU)
-        #self.Window.set_type_hint(gtk.gdk.WINDOW_TYPE_HINT_TOOLBAR)        
-        #self.Window.set_type_hint(gtk.gdk.WINDOW_TYPE_HINT_DOCK)
-        #self.Window.set_type_hint(gtk.gdk.WINDOW_TYPE_HINT_TOOLTIP)
-        #self.Window.set_type_hint(gtk.gdk.WINDOW_TYPE_HINT_DROPDOWN_MENU)
-        #self.Window.set_type_hint(gtk.gdk.WINDOW_TYPE_HINT_COMBO) 
-        #self.Window.set_type_hint(gtk.gdk.WINDOW_TYPE_HINT_DIALOG) 
         self.Window.set_type_hint(gtk.gdk.WINDOW_TYPE_HINT_MENU)
 
         # make a nice popup of the toplevel window
