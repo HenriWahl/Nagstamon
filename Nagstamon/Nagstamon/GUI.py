@@ -537,20 +537,24 @@ class GUI(object):
                 self.status_ok = False   
                 self.popwin.showPopwin = True
 
+        """
         # try to fix Debian bug #591875: eventually ends up lower in the window stacking order, and can't be raised
         # raising statusbar window with every refresh should do the job
         # also do NOT raise if statusbar menu is open because otherwise it will be overlapped
         if str(self.conf.statusbar_floating) == "True":
-            # always raise on Windows
-            if platform.system() == "Windows":
-                self.statusbar.StatusBar.window.raise_()
+            # always raise on Windows plus
             # workaround for statusbar-that-overlaps-popup-menu (oh my god)
-            if self.statusbar.__dict__.has_key("Menu"):
-                self.statusbar.Menu.window.raise_()
+            if platform.system() == "Windows":
+                if not "Menu" in dir(self.statusbar):
+                    self.statusbar.StatusBar.window.raise_()
             # on Linux & Co. only raise if popwin is not shown because otherwise
             # the statusbar shadow overlays the popwin on newer desktop environments
-            elif self.popwin.showPopwin == False: 
+            elif self.popwin.showPopwin == False:
                 self.statusbar.StatusBar.window.raise_()
+        """
+
+        # try to fix vanishing statusbar
+        self.statusbar.Raise()
 
         # return False to get removed as gobject idle source
         return False
@@ -1434,6 +1438,24 @@ class StatusBar(object):
             self.StatusBar.resize(1, 1)
 
 
+    def Raise(self):
+        """
+        try to fix Debian bug #591875: eventually ends up lower in the window stacking order, and can't be raised
+        raising statusbar window with every refresh should do the job
+        also do NOT raise if statusbar menu is open because otherwise it will be overlapped
+        """
+        if str(self.conf.statusbar_floating) == "True":
+            # always raise on Windows plus
+            # workaround for statusbar-that-overlaps-popup-menu (oh my god)
+            if platform.system() == "Windows":
+                if not "Menu" in dir(self):
+                    self.StatusBar.window.raise_()
+            # on Linux & Co. only raise if popwin is not shown because otherwise
+            # the statusbar shadow overlays the popwin on newer desktop environments
+            elif self.output.popwin.showPopwin == False:
+                self.StatusBar.window.raise_()
+                
+
 class Popwin(object):
     """
     Popwin object
@@ -1858,8 +1880,8 @@ class Popwin(object):
             # set size REALLY because otherwise it stays to large
             self.Window.resize(self.popwinwidth, self.popwinheight)
             
-            # statusbar pulls popwin to the top...
-            if self.output.statusbar.StatusBar.window: self.output.statusbar.StatusBar.window.raise_()
+            # statusbar pulls popwin to the top... with silly-windows-workaround(tm) included
+            self.output.statusbar.Raise()
             if self.output.popwin.Window.window: self.output.popwin.Window.window.raise_()
 
         except Exception, err:
