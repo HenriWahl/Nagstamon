@@ -1309,7 +1309,6 @@ class StatusBar(object):
                 self.Moving = False
                 self._CreateMenu()
                 self.MenuPopup(widget=self.Menu, event=event)
-                #self.Menu.popup(None, None, None, event.button, event.time)
 
         # switch off Notification    
         self.output.NotificationOff()
@@ -1336,7 +1335,8 @@ class StatusBar(object):
             if event.button == 3:
                 self.output.popwin.Close()
                 self.Moving = False
-                self.Menu.popup(None, None, None, event.button, event.time)
+                self._CreateMenu()
+                self.MenuPopup(widget=self.Menu, event=event)
 
 
     def LogoReleased(self, widget=None, event=None):

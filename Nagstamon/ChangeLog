@@ -1,3 +1,47 @@
+2012-01-25 15:35  henriwww
+
+	* Nagstamon/GUI.py: now REALLY fixed that popup menu statusbar
+	  thing
+
+2012-01-25 14:52  henriwww
+
+	* Nagstamon/GUI.py: kind of solution for windows statusbar madness
+
+2012-01-25 11:30  henriwww
+
+	* Nagstamon/GUI.py: ...trouble with statusbar menu on windows...
+
+2012-01-25 11:13  henriwww
+
+	* Nagstamon/GUI.py: some windows statusbar menu trouble not fixed
+
+2012-01-25 10:28  henriwww
+
+	* Nagstamon/GUI.py, Nagstamon/Server/Centreon.py,
+	  Nagstamon/Server/Generic.py, Nagstamon/Server/Multisite.py: fixed
+	  bug with statusbar menu and gethost()
+
+2012-01-25 09:49  henriwww
+
+	* Nagstamon/GUI.py: reorganized sstatusbar popup menu due to
+	  strange windows bug
+
+2012-01-24 15:01  henriwww
+
+	* installer/windows/nagstamon.iss: rc2 preparations....
+
+2012-01-24 15:00  henriwww
+
+	* ChangeLog, installer/debian/changelog: rc2 preparations
+
+2012-01-24 14:57  henriwww
+
+	* Nagstamon/GUI.py, Nagstamon/resources/acknowledge_dialog.ui,
+	  Nagstamon/resources/downtime_dialog.ui,
+	  Nagstamon/resources/settings_dialog.ui,
+	  Nagstamon/resources/submit_check_result_dialog.ui: improved
+	  keyboard usage for ack/down/submit dialogs
+
 2012-01-23 12:25  henriwww
 
 	* installer/windows/nagstamon.iss: iss file for 0.9.9 rc1
