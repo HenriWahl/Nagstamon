@@ -544,6 +544,9 @@ class GUI(object):
             # always raise on Windows
             if platform.system() == "Windows":
                 self.statusbar.StatusBar.window.raise_()
+            # workaround for statusbar-that-overlaps-popup-menu (oh my god)
+            if self.statusbar.__dict__.has_key("Menu"):
+                self.statusbar.Menu.window.raise_()
             # on Linux & Co. only raise if popwin is not shown because otherwise
             # the statusbar shadow overlays the popwin on newer desktop environments
             elif self.popwin.showPopwin == False: 
@@ -1203,18 +1206,59 @@ class StatusBar(object):
                     menu_item = gtk.MenuItem(i)
                     menu_item.connect("activate", self.MenuResponse, i)
                     self.Menu.append(menu_item)
+                    
         self.Menu.show_all()
 
-        # due to different GTK versions on different OS with different capabilities those 
-        # flags are used instead of for example gtk.Menu.get_visible()
-        ###self.MenuOpen = True
         
+    def MenuPopup(self, widget=None, event=None, time=None, dummy=None):
+        """
+            context menu for label in statusbar
+        """
+        self.output.popwin.Close()
 
+        # no dragging of statusbar anymore if menu pops up
+        self.Moving = False
+        
+        # check if settings are not already open
+        if not "Settings" in self.output.GUILock:    
+
+            # use gobject.idle_add() to be thread safe
+            #gobject.idle_add(self.output.AddGUILock, "StatusbarMenuOpen")    
+            
+            # for some reason StatusIcon delivers another event (type int) than
+            # egg.trayicon (type object) so it must be checked which one has
+            # been calling
+            # to make it even worse there are different integer types given back
+            # in Windows and Unix
+            
+            # create menu
+            self._CreateMenu()
+            
+            if isinstance(event, int) or isinstance(event, long):
+                # right button
+                if event == 3:
+                    # 'time' is important (wherever it comes from) for Linux/Gtk to let
+                    # the popup be shown even after releasing the mouse button
+                    self.Menu.popup(None, None, None, event, time)                          
+            else:
+                # right button
+                if event.button == 3:
+                    self.Menu.popup(None, None, None, event.button, event.time) 
+                    
+            # silly Windows(TM) workaround to keep menu above taskbar - the side effect ist
+            # that popup menu does not close itself :-(
+            self.Menu.window.set_keep_above(True)
+
+            # use gobject.idle_add() to be thread safe
+            # gobject.idle_add(self.output.DeleteGUILock, self.__class__.__name__)
+
+            
     def MenuResponseMonitors(self, widget, menu_entry):
         """
             open responding Nagios status web page
         """
         self.output.servers[menu_entry].OpenBrowser("monitor")
+        self.Menu.destroy()
         
 
     def MenuResponse(self, widget, menu_entry):
@@ -1325,52 +1369,6 @@ class StatusBar(object):
            self.output.popwin.pointer_left_popwin == False:
             self.output.popwin.PopUp()
 
-
-    def MenuPopup(self, widget=None, event=None, time=None, dummy=None):
-        """
-            context menu for label in statusbar
-        """
-        self.output.popwin.Close()
-
-        # no dragging of statusbar anymore if menu pops up
-        self.Moving = False
-        
-        # check if settings are not already open
-        if not "Settings" in self.output.GUILock:    
-
-            # use gobject.idle_add() to be thread safe
-            gobject.idle_add(self.output.AddGUILock, self.__class__.__name__)    
-            
-            # for some reason StatusIcon delivers another event (type int) than
-            # egg.trayicon (type object) so it must be checked which one has
-            # been calling
-            # to make it even worse there are different integer types given back
-            # in Windows and Unix
-            
-            # create menu
-            self._CreateMenu()
-            
-            if isinstance(event, int) or isinstance(event, long):
-                # right button
-                if event == 3:
-                    # 'time' is important (wherever it comes from) for Linux/Gtk to let
-                    # the popup be shown even after releasing the mouse button
-                    self.Menu.popup(None, None, None, event, time)                          
-                    ###self.MenuOpen = True
-                    # silly Windows(TM) workaround to keep menu above taskbar
-                    self.Menu.window.set_keep_above(True)
-            else:
-                # right button
-                if event.button == 3:
-                    #widget.popup(None, None, None, event.button, event.time)
-                    self.Menu.popup(None, None, None, event.button, event.time)                    
-                    ###self.MenuOpen = True
-                    # silly Windows(TM) workaround to keep menu above taskbar
-                    self.Menu.window.set_keep_above(True)
-
-            ###self.MenuOpen = False
-            # use gobject.idle_add() to be thread safe
-            gobject.idle_add(self.output.DeleteGUILock, self.__class__.__name__)
 
 
     def Move(self, widget=None, event=None):
