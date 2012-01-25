@@ -1235,11 +1235,6 @@ class StatusBar(object):
         """
             open responding Nagios status web page
         """
-        #action = Actions.Action(string=self.output.servers[menu_entry].monitor_url,\
-        #                        type="browser",\
-        #                        conf=self.output.conf,\
-        #                        server=self.output.servers[menu_entry])
-        #action.run()
         self.output.servers[menu_entry].OpenBrowser("monitor")
         
 

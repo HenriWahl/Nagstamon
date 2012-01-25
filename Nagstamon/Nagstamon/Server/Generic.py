@@ -395,7 +395,7 @@ class GenericServer(object):
         webbrowser.open(self.monitor_cgi_url + '/extinfo.cgi?' + urllib.urlencode({"type":typ, "host":host, "service":service}))
 
         
-    def OpenBrowser(self, widget=None, url_type="", output=None):
+    def OpenBrowser(self, url_type="", output=None):
         """
         multiple purpose open browser method for all open-a-browser-needs
         """                
@@ -1009,7 +1009,7 @@ class GenericServer(object):
         """
 
         # the fasted method is taking hostname as used in monitor
-        if str(self.conf.connect_by_host) == "True":
+        if str(self.conf.connect_by_host) == "True" or host == "":
             return Result(result=host)
         
         # initialize ip string

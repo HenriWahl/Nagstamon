@@ -356,7 +356,7 @@ class MultisiteServer(GenericServer):
         """
         
         # the fasted method is taking hostname as used in monitor
-        if str(self.conf.connect_by_host) == "True":
+        if str(self.conf.connect_by_host) == "True" or host == "":
             return Result(result=host)
 
         ip = ""

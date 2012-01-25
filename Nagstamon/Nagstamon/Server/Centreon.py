@@ -98,7 +98,7 @@ class CentreonServer(GenericServer):
         hosts so we need to get ip anyway from web page
         """
         # the fastest method is taking hostname as used in monitor
-        if str(self.conf.connect_by_host) == "True":
+        if str(self.conf.connect_by_host) == "True" or host == "":
             return Result(result=host)        
         
         # do a web interface search limited to only one result - the hostname
