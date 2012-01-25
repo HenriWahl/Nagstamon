@@ -540,7 +540,7 @@ class GUI(object):
         # try to fix Debian bug #591875: eventually ends up lower in the window stacking order, and can't be raised
         # raising statusbar window with every refresh should do the job
         # also do NOT raise if statusbar menu is open because otherwise it will be overlapped
-        if str(self.conf.statusbar_floating) == "True" and self.statusbar.MenuOpen == False:
+        if str(self.conf.statusbar_floating) == "True":
             # always raise on Windows
             if platform.system() == "Windows":
                 self.statusbar.StatusBar.window.raise_()
@@ -1127,32 +1127,10 @@ class StatusBar(object):
         else:
             self.StatusBar.hide_all()
 
-        """
-        # Popup menu for statusbar
-        self.Menu = gtk.Menu()
-        for i in ["Refresh", "Recheck all", "-----", "Monitors", "-----", "Settings...", "Save position", "About", "Exit"]:
-            if i == "-----":
-                menu_item = gtk.SeparatorMenuItem()
-                self.Menu.append(menu_item)
-            else:
-                if i == "Monitors":
-                    monitor_items = list(self.output.servers)
-                    monitor_items.sort(key=str.lower)
-                    for m in monitor_items:
-                        menu_item = gtk.MenuItem(m)
-                        menu_item.connect("activate", self.MenuResponseMonitors, m)
-                        self.Menu.append(menu_item)
-                else:
-                    menu_item = gtk.MenuItem(i)
-                    menu_item.connect("activate", self.MenuResponse, i)
-                    self.Menu.append(menu_item)
-        self.Menu.show_all()
-        """
         # due to different GTK versions on different OS with different capabilities those 
         # flags are used instead of for example gtk.Menu.get_visible()
-        self.MenuOpen = False
-        
-        
+        ###self.MenuOpen = False
+                
         # put Systray icon into statusbar object
         # on MacOSX use only dummy
         if platform.system() == "Darwin":
@@ -1229,7 +1207,7 @@ class StatusBar(object):
 
         # due to different GTK versions on different OS with different capabilities those 
         # flags are used instead of for example gtk.Menu.get_visible()
-        self.MenuOpen = False
+        ###self.MenuOpen = True
         
 
     def MenuResponseMonitors(self, widget, menu_entry):
@@ -1378,7 +1356,7 @@ class StatusBar(object):
                     # 'time' is important (wherever it comes from) for Linux/Gtk to let
                     # the popup be shown even after releasing the mouse button
                     self.Menu.popup(None, None, None, event, time)                          
-                    self.MenuOpen = True
+                    ###self.MenuOpen = True
                     # silly Windows(TM) workaround to keep menu above taskbar
                     self.Menu.window.set_keep_above(True)
             else:
@@ -1386,11 +1364,11 @@ class StatusBar(object):
                 if event.button == 3:
                     #widget.popup(None, None, None, event.button, event.time)
                     self.Menu.popup(None, None, None, event.button, event.time)                    
-                    self.MenuOpen = True
+                    ###self.MenuOpen = True
                     # silly Windows(TM) workaround to keep menu above taskbar
                     self.Menu.window.set_keep_above(True)
 
-            self.MenuOpen = False
+            ###self.MenuOpen = False
             # use gobject.idle_add() to be thread safe
             gobject.idle_add(self.output.DeleteGUILock, self.__class__.__name__)
 
@@ -1927,8 +1905,7 @@ class Popwin(object):
         check if no other dialog/menu is shown which would not like to be
         covered by the popup window
         """
-        if (len(self.output.GUILock) == 0 or "Popwin" in self.output.GUILock)and\
-        self.output.statusbar.MenuOpen == False:  
+        if (len(self.output.GUILock) == 0 or "Popwin" in self.output.GUILock):  
             return True
         else:
             return False
