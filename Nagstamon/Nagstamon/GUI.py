@@ -537,22 +537,6 @@ class GUI(object):
                 self.status_ok = False   
                 self.popwin.showPopwin = True
 
-        """
-        # try to fix Debian bug #591875: eventually ends up lower in the window stacking order, and can't be raised
-        # raising statusbar window with every refresh should do the job
-        # also do NOT raise if statusbar menu is open because otherwise it will be overlapped
-        if str(self.conf.statusbar_floating) == "True":
-            # always raise on Windows plus
-            # workaround for statusbar-that-overlaps-popup-menu (oh my god)
-            if platform.system() == "Windows":
-                if not "Menu" in dir(self.statusbar):
-                    self.statusbar.StatusBar.window.raise_()
-            # on Linux & Co. only raise if popwin is not shown because otherwise
-            # the statusbar shadow overlays the popwin on newer desktop environments
-            elif self.popwin.showPopwin == False:
-                self.statusbar.StatusBar.window.raise_()
-        """
-
         # try to fix vanishing statusbar
         self.statusbar.Raise()
 
@@ -1648,8 +1632,7 @@ class Popwin(object):
         if self.showPopwin and not self.output.status_ok and self.output.conf.GetNumberOfEnabledMonitors() > 0:
             if len(self.output.GUILock) == 0 or self.output.GUILock.has_key("Popwin"):
                 self.output.statusbar.Moving = False
-                # position and resize...
-                self.Calculate()
+                # position and resize... necessary to do this here in case there are more than 1 monitors                self.Calculate()
                 # set combobox to default value
                 self.ComboboxMonitor.set_active(0)
                 # switch off Notification    
@@ -1882,7 +1865,7 @@ class Popwin(object):
             
             # statusbar pulls popwin to the top... with silly-windows-workaround(tm) included
             self.output.statusbar.Raise()
-            if self.output.popwin.Window.window: self.output.popwin.Window.window.raise_()
+            if self.output.popwin.Window.window and platform.system() == "Windows": self.output.popwin.Window.window.raise_()
 
         except Exception, err:
             import traceback
