@@ -1261,7 +1261,7 @@ class StatusBar(object):
         """
             open responding Nagios status web page
         """
-        self.output.servers[menu_entry].OpenBrowser("monitor")
+        self.output.servers[menu_entry].OpenBrowser(url_type="monitor")
         self.Menu.destroy()
         
 
