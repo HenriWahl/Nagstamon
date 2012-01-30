@@ -1453,7 +1453,11 @@ class Popwin(object):
 
         # for not letting statusbar throw a shadow onto popwin in any composition-window-manager this helps to
         # keep a more consistent look - copied from StatusBar... anyway, doesn't work... well, next attempt:
-        self.Window.set_type_hint(gtk.gdk.WINDOW_TYPE_HINT_MENU)
+        # Windows will have an entry on taskbar when not using HINT_UTILITY
+        if platform.system() == "Windows":
+            self.Window.set_type_hint(gtk.gdk.WINDOW_TYPE_HINT_UTILITY)
+        else:
+            self.Window.set_type_hint(gtk.gdk.WINDOW_TYPE_HINT_MENU)
 
         # make a nice popup of the toplevel window
         self.Window.set_decorated(False)

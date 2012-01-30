@@ -1,3 +1,22 @@
+2012-01-27 16:18  henriwww
+
+	* Nagstamon/GUI.py: positioning fix
+
+2012-01-27 15:55  henriwww
+
+	* Nagstamon/GUI.py: fixed MacOSX popwin-popping-always-up-bug
+
+2012-01-27 10:30  henriwww
+
+	* Nagstamon/GUI.py, Nagstamon/Server/Generic.py: fixed bug in
+	  OpenBrowser which made it not work at all
+
+2012-01-25 15:50  henriwww
+
+	* ChangeLog, Nagstamon/GUI.py,
+	  Nagstamon/resources/settings_dialog.ui: just another fix for just
+	  another fix...
+
 2012-01-25 15:35  henriwww
 
 	* Nagstamon/GUI.py: now REALLY fixed that popup menu statusbar
