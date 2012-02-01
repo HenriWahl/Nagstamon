@@ -1195,7 +1195,7 @@ class StatusBar(object):
                     menu_item.connect("activate", self.MenuResponse, i)
                     self.Menu.append(menu_item)
                     
-        self.Menu.show_all()
+        self.Menu.show_all()			
 
         
     def MenuPopup(self, widget=None, event=None, time=None, dummy=None):
@@ -1231,15 +1231,11 @@ class StatusBar(object):
             else:
                 # right button
                 if event.button == 3:
-                    self.Menu.popup(None, None, None, event.button, event.time) 
-                    
-            # silly Windows(TM) workaround to keep menu above taskbar - the side effect ist
-            # that popup menu does not close itself :-(
+                    self.Menu.popup(None, None, None, event.button, event.time)                    
+
+            # silly Windows(TM) workaround to keep menu above taskbar
             self.Menu.window.set_keep_above(True)
-
-            # use gobject.idle_add() to be thread safe
-            # gobject.idle_add(self.output.DeleteGUILock, self.__class__.__name__)
-
+		  
             
     def MenuResponseMonitors(self, widget, menu_entry):
         """
@@ -1356,7 +1352,6 @@ class StatusBar(object):
            str(self.conf.popup_details_hover) == "True" and\
            self.output.popwin.pointer_left_popwin == False:
             self.output.popwin.PopUp()
-
 
 
     def Move(self, widget=None, event=None):
