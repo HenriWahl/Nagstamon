@@ -2568,18 +2568,24 @@ class Settings(object):
             # now it is not the first run anymore
             self.firstrun = False
             self.conf.unconfigured = False
-
             # only if not running on MacOS (which crashes here) reinit all GUI stuff
-            if not platform.system() == "Darwin":
-                # create output visuals again because they might have changed (systray/free floating status bar)
-                self.output.statusbar.StatusBar.destroy()    
-                self.output.statusbar.SysTray.set_visible(False)       
-                self.output.popwin.Window.destroy()
-                # re-initialize output with new settings
-                self.output.__init__()                
-            else:
-                # only reinitialize the popwin in case there where changes regarding monitors
-                self.output.popwin.__init__(conf=self.conf, output=self.output)
+            # - not anymore, seems to be OK now
+            ##if not platform.system() == "Darwin":
+            ##    # create output visuals again because they might have changed (systray/free floating status bar)
+            ##    self.output.statusbar.StatusBar.destroy()    
+            ##    self.output.statusbar.SysTray.set_visible(False)       
+            ##    self.output.popwin.Window.destroy()
+            ##   # re-initialize output with new settings
+            ##    self.output.__init__()                
+            ##else:
+            ##    # only reinitialize the popwin in case there where changes regarding monitors
+            ##    self.output.popwin.__init__(conf=self.conf, output=self.output)
+            # create output visuals again because they might have changed (systray/free floating status bar)
+            self.output.statusbar.StatusBar.destroy()    
+            self.output.statusbar.SysTray.set_visible(False)       
+            self.output.popwin.Window.destroy()
+            # re-initialize output with new settings
+            self.output.__init__()       
                                 
             # in Windows the statusbar with gtk.gdk.WINDOW_TYPE_HINT_UTILITY places itself somewhere
             # this way it should be disciplined
