@@ -27,6 +27,7 @@
                 <property name="has_default">True</property>
                 <property name="receives_default">False</property>
                 <property name="use_action_appearance">False</property>
+                <signal name="released" handler="button_ok_clicked" swapped="no"/>
                 <signal name="clicked" handler="button_ok_clicked" swapped="no"/>
               </object>
               <packing>
@@ -42,6 +43,7 @@
                 <property name="can_focus">True</property>
                 <property name="receives_default">True</property>
                 <property name="use_action_appearance">False</property>
+                <signal name="released" handler="button_exit_clicked" swapped="no"/>
                 <signal name="clicked" handler="button_exit_clicked" swapped="no"/>
               </object>
               <packing>
@@ -57,6 +59,7 @@
                 <property name="can_focus">True</property>
                 <property name="receives_default">True</property>
                 <property name="use_action_appearance">False</property>
+                <signal name="released" handler="button_disable_clicked" swapped="no"/>
                 <signal name="clicked" handler="button_disable_clicked" swapped="no"/>
               </object>
               <packing>

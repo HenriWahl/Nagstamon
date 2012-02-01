@@ -3434,6 +3434,9 @@ class AuthenticationDialog:
                           "button_exit_clicked" : self.Exit,
                           "button_disable_clicked" : self.Disable
                           }        
+        
+        self.builder.connect_signals(handlers_dict)
+
         self.label_monitor = self.builder.get_object("label_monitor")
         self.entry_username = self.builder.get_object("input_entry_username")
         self.entry_password = self.builder.get_object("input_entry_password")
@@ -3447,13 +3450,13 @@ class AuthenticationDialog:
         self.dialog.show_all()
         self.dialog.run()
         self.dialog.destroy()
-                   
-            
+
+        
     def OK(self, widget):       
         self.server.username = self.entry_username.get_text()
         self.server.password = self.entry_password.get_text()
         toggle_save_password = self.builder.get_object("input_checkbutton_save_password")
-        
+
         if toggle_save_password.get_active() == True:
             # store authentication information in config
             self.conf.servers[self.server.name].username = self.server.username
