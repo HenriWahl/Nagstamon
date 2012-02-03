@@ -620,11 +620,7 @@ class Config(object):
                                                     string="$MONITOR$/index.php/configuration/configure/host/$HOST$", enabled=False)
         defaultactions["Ninja-Configure-Service"] = Action(name="Ninja-Configure-Service", type="browser", filter_target_host=False,\
                                                     description="Configure service in browser.",\
-                                                    string="$MONITOR$/index.php/configuration/configure/service/$HOST$?service=$SERVICE$", enabled=False)        
-        
-        
-        print defaultactions
-        
+                                                    string="$MONITOR$/index.php/configuration/configure/service/$HOST$?service=$SERVICE$", enabled=False)
         
         return defaultactions
     
