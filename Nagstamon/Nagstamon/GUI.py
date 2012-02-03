@@ -1270,7 +1270,6 @@ class StatusBar(object):
             if event.button == 3:
                 self.output.popwin.Close()
                 self.Moving = False
-                self._CreateMenu()
                 self.MenuPopup(widget=self.Menu, event=event)
 
         # switch off Notification    
