@@ -308,7 +308,7 @@ class Config(object):
         # make path fit for actual os, normcase for letters and normpath for path
         legacyconfigfile = os.path.normpath(os.path.normcase(legacyconfigfile))
         
-        if os.path.exists(legacyconfigfile):       
+        if os.path.exists(legacyconfigfile) and os.path.isfile(legacyconfigfile):       
             return legacyconfigfile
         else:
             return False
