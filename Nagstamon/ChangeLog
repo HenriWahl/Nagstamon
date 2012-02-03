@@ -1,3 +1,49 @@
+2012-02-03 14:59  henriwww
+
+	* installer/windows/nagstamon.iss: rc8 iss
+
+2012-02-03 14:53  henriwww
+
+	* Nagstamon/Config.py: fixed bug with legacy configfile given on
+	  command line
+
+2012-02-03 13:55  henriwww
+
+	* installer/windows/nagstamon.iss: rc7 iss file
+
+2012-02-03 13:50  henriwww
+
+	* Nagstamon/GUI.py: after some tests with popwin it works all the
+	  old way again
+
+2012-02-03 08:18  henriwww
+
+	* Nagstamon/GUI.py: reactivated former way of statusbar popup menu
+	  because it works with newer windows gtk 2.24 version part II
+
+2012-02-03 07:59  henriwww
+
+	* Nagstamon/GUI.py: reactivated former way of statusbar popup menu
+	  because it works with newer windows gtk 2.24 version
+
+2012-02-01 15:19  henriwww
+
+	* Nagstamon/GUI.py: mac trouble after install seems to be fixed
+
+2012-02-01 15:04  henriwww
+
+	* Nagstamon/GUI.py, Nagstamon/resources/authentication_dialog.ui:
+	  fixed auth dialog
+
+2012-02-01 09:47  henriwww
+
+	* Nagstamon/GUI.py, installer/windows/nagstamon.iss: leave that
+	  windows popup menu on statusbar bug alone...
+
+2012-01-30 14:19  henriwww
+
+	* ChangeLog, Nagstamon/GUI.py: fixed windows taskbar bug
+
 2012-01-27 16:18  henriwww
 
 	* Nagstamon/GUI.py: positioning fix

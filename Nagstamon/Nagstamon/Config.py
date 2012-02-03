@@ -563,9 +563,11 @@ class Config(object):
         """
         if platform.system() == "Windows":
             defaultactions = { "RDP": Action(name="RDP", description="Connect via RDP.",\
-                                    type="command", string="C:\windows\system32\mstsc.exe $ADDRESS$"), \
+                                    type="command", string="C:\windows\system32\mstsc.exe $ADDRESS$"),\
                                "VNC": Action(name="VNC", description="Connect via VNC.",\
-                                    type="command", string="C:\Program Files\TightVNC\\vncviewer.exe $ADDRESS$"), \
+                                    type="command", string="C:\Program Files\TightVNC\vncviewer.exe $ADDRESS$"),\
+                               "Telnet": Action(name="Telnet", description="Connect via Telnet.",\
+                                    type="command", string="C:\Windows\System32\Telnet.exe root@$ADDRESS$"),\
                                "SSH": Action(name="SSH", description="Connect via SSH.",\
                                     type="command", string="C:\Program Files\PuTTY\putty.exe -l root $ADDRESS$")\
                                }
@@ -575,27 +577,31 @@ class Config(object):
                                "VNC": Action(name="VNC", description="Connect via VNC.",\
                                     type="command", string="open vnc://$ADDRESS$"), \
                                "SSH": Action(name="SSH", description="Connect via SSH.",\
-                                    type="command", string="open ssh://root@$ADDRESS$")\
+                                    type="command", string="open ssh://root@$ADDRESS$"),\
+                               "Telnet": Action(name="Telnet", description="Connect via Telnet.",\
+                                    type="command", string="open telnet://root@$ADDRESS$")\
                                }
         else:
             # the Linux settings
             defaultactions = { "RDP": Action(name="RDP", description="Connect via RDP.",\
                                     type="command", string="/usr/bin/rdesktop -g 1024x768 $ADDRESS$"),\
                                "VNC": Action(name="VNC", description="Connect via VNC.",\
-                                    type="command", string="/usr/bin/vncviewer $ADDRESS$"),
+                                    type="command", string="/usr/bin/vncviewer $ADDRESS$"),\
                                "SSH": Action(name="SSH", description="Connect via SSH.",\
                                     type="command", string="/usr/bin/gnome-terminal -x ssh root@$ADDRESS$"),\
+                               "Telnet": Action(name="Telnet", description="Connect via Telnet.",\
+                                    type="command", string="/usr/bin/gnome-terminal -x telnet root@$ADDRESS$"),\
                                "Update-Linux": Action(name="Update-Linux", description="Run remote update script.",\
                                     type="command", string="/usr/bin/terminator -x  ssh root@$HOST$ update.sh",\
                                     enabled=False)\
                                }
-        # OS agnostic actions
-        defaultactions["Opsview-1-Click-Acknowledge-Host"] = Action(name="Opsview-1-Click-Acknowledge-Host", type="url",\
+        # OS agnostic actions as examples
+        defaultactions["Nagios-1-Click-Acknowledge-Host"] = Action(name="Nagios-1-Click-Acknowledge-Host", type="url",\
                                                     description="Acknowledges a host with one click.",\
                                                     filter_target_service=False, enabled=False,\
                                                     string="$MONITOR-CGI$/cmd.cgi?cmd_typ=33&cmd_mod=2&host=$HOST$\
                                                     &com_author=$USERNAME$&com_data=acknowledged&btnSubmit=Commit")
-        defaultactions["Opsview-1-Click-Acknowledge-Service"] = Action(name="Opsview-1-Click-Acknowledge-Service", type="url",\
+        defaultactions["Nagios-1-Click-Acknowledge-Service"] = Action(name="Nagios-1-Click-Acknowledge-Service", type="url",\
                                                     description="Acknowledges a service with one click.",\
                                                     filter_target_host=False, enabled=False,\
                                                     string="$MONITOR-CGI$/cmd.cgi?cmd_typ=34&cmd_mod=2&host=$HOST$\
@@ -610,11 +616,16 @@ class Config(object):
                                                     description="Show history in browser.", filter_target_host=True,\
                                                     string="$MONITOR$/event?host=$HOST$&service=$SERVICE$", enabled=False)
         defaultactions["Ninja-Configure-Host"] = Action(name="Ninja-Configure-Host", type="browser",\
-                                                    description="Configure host in browser.", author="op5 Ab",\
+                                                    description="Configure host in browser.",\
                                                     string="$MONITOR$/index.php/configuration/configure/host/$HOST$", enabled=False)
         defaultactions["Ninja-Configure-Service"] = Action(name="Ninja-Configure-Service", type="browser", filter_target_host=False,\
-                                                    description="Configure service in browser.", author="op5 Ab",\
+                                                    description="Configure service in browser.",\
                                                     string="$MONITOR$/index.php/configuration/configure/service/$HOST$?service=$SERVICE$", enabled=False)        
+        
+        
+        print defaultactions
+        
+        
         return defaultactions
     
             
