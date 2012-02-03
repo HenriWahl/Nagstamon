@@ -1297,7 +1297,6 @@ class StatusBar(object):
             if event.button == 3:
                 self.output.popwin.Close()
                 self.Moving = False
-                self._CreateMenu()
                 self.MenuPopup(widget=self.Menu, event=event)
 
 
@@ -1435,11 +1434,11 @@ class Popwin(object):
             self.Window.set_type_hint(gtk.gdk.WINDOW_TYPE_HINT_UTILITY)
         else:
             self.Window.set_type_hint(gtk.gdk.WINDOW_TYPE_HINT_MENU)
-
+        
         # make a nice popup of the toplevel window
         self.Window.set_decorated(False)
         self.Window.set_keep_above(True)
-        self.Window.stick()
+        #self.Window.stick()
         self.Window.set_property("skip-taskbar-hint", True)
         self.Window.set_skip_taskbar_hint(True)    
 
