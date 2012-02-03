@@ -1117,10 +1117,6 @@ class StatusBar(object):
             self.StatusBar.show_all()
         else:
             self.StatusBar.hide_all()
-
-        # due to different GTK versions on different OS with different capabilities those 
-        # flags are used instead of for example gtk.Menu.get_visible()
-        ###self.MenuOpen = False
                 
         # put Systray icon into statusbar object
         # on MacOSX use only dummy
@@ -1150,6 +1146,27 @@ class StatusBar(object):
         except:
             # in case of error define fixed fontsize
             self.output.fontsize = 10000
+            
+        # Popup menu for statusbar
+        self.Menu = gtk.Menu()
+        for i in ["Refresh", "Recheck all", "-----", "Monitors", "-----", "Settings...", "Save position", "About", "Exit"]:
+            if i == "-----":
+                menu_item = gtk.SeparatorMenuItem()
+                self.Menu.append(menu_item)
+            else:
+                if i == "Monitors":
+                    monitor_items = list(self.output.servers)
+                    monitor_items.sort(key=str.lower)
+                    for m in monitor_items:
+                        menu_item = gtk.MenuItem(m)
+                        menu_item.connect("activate", self.MenuResponseMonitors, m)
+                        self.Menu.append(menu_item)
+                else:
+                    menu_item = gtk.MenuItem(i)
+                    menu_item.connect("activate", self.MenuResponse, i)
+                    self.Menu.append(menu_item)
+                    
+        self.Menu.show_all()	
 
 
     def _CreateFloatingStatusbar(self):
@@ -1170,34 +1187,7 @@ class StatusBar(object):
         self.StatusBar.set_property("skip-taskbar-hint", True)
         self.StatusBar.set_skip_taskbar_hint(True)
 
-        
-    def _CreateMenu(self):
-        """
-        due to an obscure Windows bug popup menu is empty when openend more than once and
-        if a Windows "binary" made by pyinstaller is used this menu seems to need to be created
-        every time it is opened
-        """       
-        self.Menu = gtk.Menu()
-        for i in ["Refresh", "Recheck all", "-----", "Monitors", "-----", "Settings...", "Save position", "About", "Exit"]:
-            if i == "-----":
-                menu_item = gtk.SeparatorMenuItem()
-                self.Menu.append(menu_item)
-            else:
-                if i == "Monitors":
-                    monitor_items = list(self.output.servers)
-                    monitor_items.sort(key=str.lower)
-                    for m in monitor_items:
-                        menu_item = gtk.MenuItem(m)
-                        menu_item.connect("activate", self.MenuResponseMonitors, m)
-                        self.Menu.append(menu_item)
-                else:
-                    menu_item = gtk.MenuItem(i)
-                    menu_item.connect("activate", self.MenuResponse, i)
-                    self.Menu.append(menu_item)
-                    
-        self.Menu.show_all()			
-
-        
+    
     def MenuPopup(self, widget=None, event=None, time=None, dummy=None):
         """
             context menu for label in statusbar
@@ -1217,11 +1207,7 @@ class StatusBar(object):
             # egg.trayicon (type object) so it must be checked which one has
             # been calling
             # to make it even worse there are different integer types given back
-            # in Windows and Unix
-            
-            # create menu
-            self._CreateMenu()
-            
+            # in Windows and Unix           
             if isinstance(event, int) or isinstance(event, long):
                 # right button
                 if event == 3:
@@ -1235,14 +1221,13 @@ class StatusBar(object):
 
             # silly Windows(TM) workaround to keep menu above taskbar
             self.Menu.window.set_keep_above(True)
-		  
+            
             
     def MenuResponseMonitors(self, widget, menu_entry):
         """
             open responding Nagios status web page
         """
         self.output.servers[menu_entry].OpenBrowser(url_type="monitor")
-        self.Menu.destroy()
         
 
     def MenuResponse(self, widget, menu_entry):
@@ -1257,8 +1242,6 @@ class StatusBar(object):
         if menu_entry == "Exit": 
             self.conf.SaveConfig(output=self.output)
             gtk.main_quit()
-        
-        self.Menu.destroy()
 
 
     def Clicked(self, widget=None, event=None):
@@ -2568,18 +2551,6 @@ class Settings(object):
             # now it is not the first run anymore
             self.firstrun = False
             self.conf.unconfigured = False
-            # only if not running on MacOS (which crashes here) reinit all GUI stuff
-            # - not anymore, seems to be OK now
-            ##if not platform.system() == "Darwin":
-            ##    # create output visuals again because they might have changed (systray/free floating status bar)
-            ##    self.output.statusbar.StatusBar.destroy()    
-            ##    self.output.statusbar.SysTray.set_visible(False)       
-            ##    self.output.popwin.Window.destroy()
-            ##   # re-initialize output with new settings
-            ##    self.output.__init__()                
-            ##else:
-            ##    # only reinitialize the popwin in case there where changes regarding monitors
-            ##    self.output.popwin.__init__(conf=self.conf, output=self.output)
             # create output visuals again because they might have changed (systray/free floating status bar)
             self.output.statusbar.StatusBar.destroy()    
             self.output.statusbar.SysTray.set_visible(False)       
