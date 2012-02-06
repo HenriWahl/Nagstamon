@@ -250,7 +250,7 @@ class Config(object):
         # Load actions if Nagstamon is not unconfigured, otherwise load defaults
         if str(self.unconfigured) == "True":
             self.actions = self._DefaultActions()
-            
+
         # do some conversion stuff needed because of config changes and code cleanup
         self._LegacyAdjustments()
             

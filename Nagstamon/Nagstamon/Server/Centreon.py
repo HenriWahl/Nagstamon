@@ -29,6 +29,10 @@ class CentreonServer(GenericServer):
     # A Monitor CGI URL is not necessary so hide it in settings
     DISABLED_CONTROLS = ["label_monitor_cgi_url", "input_entry_monitor_cgi_url"]
     
+    # newer Centreon versions (2.3+?) have different URL paths with a "/ndo" fragment
+    # will be checked by _get_ndo_url() but default is /xml/ndo/
+    XML_NDO = "xml/ndo"
+    
     
     def __init__(self, **kwds):
         # add all keywords to object, every mode searchs inside for its favorite arguments/keywords
@@ -37,7 +41,7 @@ class CentreonServer(GenericServer):
         GenericServer.__init__(self, **kwds)
         
         # Entries for monitor default actions in context menu
-        self.MENU_ACTIONS = ["Monitor", "Recheck", "Acknowledge", "Downtime"]        
+        self.MENU_ACTIONS = ["Monitor", "Recheck", "Acknowledge", "Downtime"] 
 
         
     def init_HTTP(self):  
@@ -47,7 +51,7 @@ class CentreonServer(GenericServer):
         if self.HTTPheaders == {}:
             GenericServer.init_HTTP(self)
             # Centreon xml giveback method just should exist
-            self.HTTPheaders["xml"] = {}        
+            self.HTTPheaders["xml"] = {}      
             
             
     def reset_HTTP(self):
@@ -163,6 +167,17 @@ class CentreonServer(GenericServer):
             result, error = self.Error(sys.exc_info())
             return Result(result=result, error=error)
         
+    
+    def _get_ndo_url(self):
+        """
+        find out if Centreon is that new so it already supports ..../xml/ndo/.... URLs
+        """
+        ndo_test_url = self.monitor_cgi_url + "/include/monitoring/status/Hosts/xml/ndo/hostXML.php?" + urllib.urlencode({"num":0, "limit":999, "o":"hpb", "sort_type":"status", "sid":self.SID})
+        if "HTTP Error 404" in self.FetchURL(ndo_test_url).error:   
+            self.XML_NDO = "xml"
+            if str(self.conf.debug_mode) == "True":
+                self.Debug(server=self.get_name(), debug = "Centreon Monitor does not use .../xml/ndo/... URLs.")
+        
         
     def _get_host_id(self, host):
         """
@@ -236,7 +251,9 @@ class CentreonServer(GenericServer):
         
         # get sid in case this has not yet been done
         if self.SID == None or self.SID == "":
-            self.SID = self._get_sid().result     
+            self.SID = self._get_sid().result
+            # those ndo urls would not be changing too often so this check migth be done here
+            self._get_ndo_url()
             
         # services (unknown, warning or critical?)
         nagcgiurl_services = self.monitor_cgi_url + "/include/monitoring/status/Services/xml/serviceXML.php?" + urllib.urlencode({"num":0, "limit":999, "o":"svcpb", "sort_type":"status", "sid":self.SID})
