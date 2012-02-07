@@ -2874,14 +2874,19 @@ class GenericServer(object):
                 try:
                     new_server.__dict__[key] = int(j.get_value())
                 except:
-                    pass
+                    pass  
 
         # set server type combobox which cannot be set by above hazard method
         combobox = self.builder.get_object("input_combo_server_type")
         active = combobox.get_active_iter()
         model = combobox.get_model()
-        new_server.__dict__["type"] = model.get_value(active, 0)                 
+        new_server.__dict__["type"] = model.get_value(active, 0)  
 
+        # workaround for cgi-url not needed by certain monitor types
+        server = Actions.get_registered_servers()[new_server.type]
+        if "input_entry_monitor_cgi_url" in server.DISABLED_CONTROLS:
+            new_server.monitor_cgi_url = new_server.monitor_url
+        
         # check if there is already a server named like the new one
         if new_server.name in self.conf.servers:
             self.output.Dialog(message='A server named "' + new_server.name + '" already exists.')
@@ -3077,6 +3082,11 @@ class EditServer(GenericServer):
         active = combobox.get_active_iter()
         model = combobox.get_model()
         new_server.__dict__["type"] = model.get_value(active, 0)   
+        
+        # workaround for cgi-url not needed by certain monitor types
+        server = Actions.get_registered_servers()[new_server.type]
+        if "input_entry_monitor_cgi_url" in server.DISABLED_CONTROLS:
+            new_server.monitor_cgi_url = new_server.monitor_url
 
         # check if there is already a server named like the new one
         if new_server.name in self.conf.servers and new_server.name != self.server:
