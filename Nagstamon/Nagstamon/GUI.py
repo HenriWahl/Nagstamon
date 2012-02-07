@@ -1306,6 +1306,8 @@ class StatusBar(object):
         """
         self.output.popwin.setShowable()
         self.Moving = False
+        # to avoid wrong placed popwin in macosx
+        gobject.idle_add(self.output.RefreshDisplayStatus)
 
 
     def SysTrayClicked(self, widget=None, event=None):
