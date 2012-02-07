@@ -256,7 +256,7 @@ class CentreonServer(GenericServer):
             self._get_ndo_url()
             
         # services (unknown, warning or critical?)
-        nagcgiurl_services = self.monitor_cgi_url + "/include/monitoring/status/Services" + self.XML_NDO + "/serviceXML.php?" + urllib.urlencode({"num":0, "limit":999, "o":"svcpb", "sort_type":"status", "sid":self.SID})
+        nagcgiurl_services = self.monitor_cgi_url + "/include/monitoring/status/Services/" + self.XML_NDO + "/serviceXML.php?" + urllib.urlencode({"num":0, "limit":999, "o":"svcpb", "sort_type":"status", "sid":self.SID})
 
         # hosts (up or down or unreachable)
         nagcgiurl_hosts = self.monitor_cgi_url + "/include/monitoring/status/Hosts/" + self.XML_NDO + "/hostXML.php?" + urllib.urlencode({"num":0, "limit":999, "o":"hpb", "sort_type":"status", "sid":self.SID})
