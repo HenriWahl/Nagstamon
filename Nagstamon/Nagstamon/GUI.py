@@ -1180,6 +1180,8 @@ class StatusBar(object):
             self.StatusBar = gtk.Window(gtk.WINDOW_TOPLEVEL)
         self.StatusBar.set_decorated(False)
         self.StatusBar.set_keep_above(True)
+        # newer Ubuntus place a resize widget onto floating statusbar - please don't!
+        self.StatusBar.set_resizable(False)
         self.StatusBar.stick()
         # at http://www.pygtk.org/docs/pygtk/gdk-constants.html#gdk-window-type-hint-constants
         # there are some hint types to experiment with

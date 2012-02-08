@@ -1,3 +1,52 @@
+2012-02-07 15:22  henriwww
+
+	* installer/windows/nagstamon.iss: rc11 iss
+
+2012-02-07 15:07  henriwww
+
+	* Nagstamon/GUI.py: test statusbar moving without artefacts for
+	  MacOSX
+
+2012-02-07 13:46  henriwww
+
+	* installer/windows/nagstamon.iss: rc10 iss
+
+2012-02-07 13:40  henriwww
+
+	* Nagstamon/GUI.py: fix for centreon monitor cgi url
+
+2012-02-07 08:36  henriwww
+
+	* Nagstamon/GUI.py: fix for flickering popwin on macosx
+
+2012-02-07 08:07  henriwww
+
+	* installer/windows/nagstamon.iss: rc9 iss file
+
+2012-02-07 07:49  henriwww
+
+	* Nagstamon/Server/Centreon.py, nagstamon.py: fix in Centreon.py,
+	  changed shebang in nagstamon.py to use env (so it also runs on
+	  macos 10.5)
+
+2012-02-06 14:33  henriwww
+
+	* Nagstamon/Server/Centreon.py: fixed centreon 2.3.3 (or 2.3+)
+	  .../xml/ndo/... URL trouble
+
+2012-02-06 14:27  henriwww
+
+	* Nagstamon/Config.py, Nagstamon/Server/Centreon.py: fixed centreon
+	  2.3.3 (or 2.3+) .../xml/ndo/... URL trouble
+
+2012-02-03 16:07  henriwww
+
+	* Nagstamon/Config.py: added default actions as examples 2
+
+2012-02-03 16:03  henriwww
+
+	* ChangeLog, Nagstamon/Config.py: added default actions as examples
+
 2012-02-03 14:59  henriwww
 
 	* installer/windows/nagstamon.iss: rc8 iss
