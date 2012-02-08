@@ -1443,7 +1443,7 @@ class Popwin(object):
         self.Window.set_decorated(False)
         self.Window.set_keep_above(True)
         # newer Ubuntus place a resize widget onto floating statusbar - please don't!
-        self.StatusBar.set_resizable(False)
+        self.Window.set_resizable(False)
         self.Window.set_property("skip-taskbar-hint", True)
         self.Window.set_skip_taskbar_hint(True)    
 
