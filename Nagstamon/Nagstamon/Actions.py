@@ -6,7 +6,7 @@ import time
 import datetime
 import urllib
 import webbrowser
-import commands
+import subprocess
 import re
 import sys
 import traceback
@@ -465,7 +465,7 @@ class PlaySound(threading.Thread):
             # once again taking .Debug() from first server
             self.servers.values()[0].Debug(debug="Playing sound: " + str(file))
         if not platform.system() == "Windows":
-            commands.getoutput("play -q %s" % str(file))
+            subprocess.Popen("play -q %s" % str(file))
         else:
             winsound.PlaySound(file, winsound.SND_FILENAME)
             
@@ -604,7 +604,7 @@ class Action(threading.Thread):
                 # debug
                 if str(self.conf.debug_mode) == "True":
                     self.server.Debug(server=self.server.name, host=self.host, service=self.service, debug="ACTION: COMMAND " + string)
-                commands.getoutput(string)
+                subprocess.Popen(string)
         except:
             import traceback
             traceback.print_exc(file=sys.stdout)
