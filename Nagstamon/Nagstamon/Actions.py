@@ -465,7 +465,7 @@ class PlaySound(threading.Thread):
             # once again taking .Debug() from first server
             self.servers.values()[0].Debug(debug="Playing sound: " + str(file))
         if not platform.system() == "Windows":
-            print subprocess.Popen("play -q %s" % str(file), shell=True)
+            subprocess.Popen("play -q %s" % str(file), shell=True)
         else:
             winsound.PlaySound(file, winsound.SND_FILENAME)
             
