@@ -465,7 +465,7 @@ class PlaySound(threading.Thread):
             # once again taking .Debug() from first server
             self.servers.values()[0].Debug(debug="Playing sound: " + str(file))
         if not platform.system() == "Windows":
-            subprocess.Popen("play -q %s" % str(file))
+            print subprocess.Popen("play -q %s" % str(file), shell=True)
         else:
             winsound.PlaySound(file, winsound.SND_FILENAME)
             
@@ -604,7 +604,7 @@ class Action(threading.Thread):
                 # debug
                 if str(self.conf.debug_mode) == "True":
                     self.server.Debug(server=self.server.name, host=self.host, service=self.service, debug="ACTION: COMMAND " + string)
-                subprocess.Popen(string)
+                subprocess.Popen(string, shell=True)
         except:
             import traceback
             traceback.print_exc(file=sys.stdout)
