@@ -538,7 +538,8 @@ class GUI(object):
                 self.popwin.showPopwin = True
 
         # try to fix vanishing statusbar
-        self.statusbar.Raise()
+        if str(self.conf.icon_in_systray) == "False":
+            self.statusbar.Raise()
 
         # return False to get removed as gobject idle source
         return False
