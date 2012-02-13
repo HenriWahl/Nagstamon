@@ -597,7 +597,10 @@ class GenericServer(object):
                         # to be stripped
                         n["attempt"] = str(tds[5](text=not_empty)[0]).strip()
                         # status_information
-                        n["status_information"] = str(tds[6](text=not_empty)[0]).encode("utf-8")
+                        if len(tds[6](text=not_empty)) == 0:
+                            n["status_information"] = ""
+                        else:    
+                            n["status_information"] = str(tds[6](text=not_empty)[0]).encode("utf-8")
                         # status flags 
                         n["passiveonly"] = False
                         n["notifications_disabled"] = False
@@ -650,6 +653,10 @@ class GenericServer(object):
                             self.new_hosts[n["host"]].services[new_service].scheduled_downtime = n["scheduled_downtime"]
                 except:
                     self.Error(sys.exc_info())
+                    for td in tds:
+                        print td
+                        print 30*"-"
+                    print "--->" + str(tds[6](text=not_empty)) + "<---"
                                 
             # do some cleanup
             del table, trs
