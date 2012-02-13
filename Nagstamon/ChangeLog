@@ -1,3 +1,51 @@
+2012-02-13 12:31  henriwww
+
+	* Nagstamon/GUI.py: focus stealing fix part II
+
+2012-02-13 11:22  henriwww
+
+	* Nagstamon/GUI.py: omit raising statusbar when icon in systray
+
+2012-02-13 09:59  henriwww
+
+	* Nagstamon/GUI.py, installer/windows/nagstamon.iss: fixed
+	  misplacement of popup when in systray
+
+2012-02-09 09:55  henriwww
+
+	* Nagstamon/Actions.py: fix for sound play subprocess (print
+	  deleted)
+
+2012-02-09 08:36  henriwww
+
+	* installer/windows/nagstamon.iss: rc13 iss
+
+2012-02-09 08:34  henriwww
+
+	* Nagstamon/Actions.py: subprocess shell=true part II
+
+2012-02-09 08:10  henriwww
+
+	* Nagstamon/Actions.py: subprocess open for command actions
+
+2012-02-08 10:44  henriwww
+
+	* installer/windows/nagstamon.iss: rc12 iss
+
+2012-02-08 10:40  henriwww
+
+	* Nagstamon/GUI.py: resize overlay in Ubuntu disabled - also for
+	  popwin - fixed
+
+2012-02-08 10:30  henriwww
+
+	* Nagstamon/GUI.py: resize overlay in Ubuntu disabled - also for
+	  popwin
+
+2012-02-08 10:15  henriwww
+
+	* ChangeLog, Nagstamon/GUI.py: resize overlay in Ubuntu disabled
+
 2012-02-07 15:22  henriwww
 
 	* installer/windows/nagstamon.iss: rc11 iss

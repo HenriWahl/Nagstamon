@@ -437,7 +437,6 @@ class GenericServer(object):
         nagcgiurl_services = self.monitor_cgi_url + "/status.cgi?host=all&servicestatustypes=" + str(servicestatustypes) + "&serviceprops=" + str(hostserviceprops)
         # hosts (up or down or unreachable)
         nagcgiurl_hosts = self.monitor_cgi_url + "/status.cgi?hostgroup=all&style=hostdetail&hoststatustypes=" + str(hoststatustypes) + "&hostprops=" + str(hostserviceprops)
-
         # hosts - mostly the down ones
         # unfortunately the hosts status page has a different structure so
         # hosts must be analyzed separately

@@ -1012,7 +1012,6 @@ class GUI(object):
             self.statusbar.Resize()
 
 
-
     def RecheckAll(self, widget=None):
         """
         call threaded recheck all action
