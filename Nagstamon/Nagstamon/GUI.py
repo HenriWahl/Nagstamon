@@ -1619,7 +1619,8 @@ class Popwin(object):
                 self.output.statusbar.Moving = False
                 # position and resize... necessary to do this here in case there are more than 1 monitors, because otherwise
                 # powin will be placed somewhere but not on the right monitor
-                if self.output.statusbar.StatusBar.get_screen().get_n_monitors() > 1:
+                if self.output.statusbar.StatusBar.get_screen().get_n_monitors() > 1 \
+                    or str(self.conf.icon_in_systray) == "True":
                     self.Calculate()
                 # set combobox to default value
                 self.ComboboxMonitor.set_active(0)
