@@ -979,10 +979,7 @@ class GenericServer(object):
             
             # objectified HTML
             if giveback == 'obj':
-                #request = urllib2.Request(url, cgi_data, self.HTTPheaders['obj'])
-                # use opener - if cgi_data is not empty urllib uses a POST request
-                #urlcontent = self.urlopener.open(request)
-                yummysoup = BeautifulSoup(urlcontent, convertEntities=BeautifulSoup.ALL_ENTITIES)
+                yummysoup = BeautifulSoup(unicode(urlcontent.read(), "utf8", errors="ignore"), convertEntities=BeautifulSoup.ALL_ENTITIES)
                 urlcontent.close()                
                 del urlcontent
                 #return Result(result=copy.deepcopy(yummysoup))
@@ -990,8 +987,6 @@ class GenericServer(object):
 
             # objectified generic XML, valid at least for Opsview and Centreon
             elif giveback == "xml":
-                #request = urllib2.Request(url, cgi_data, self.HTTPheaders[giveback])
-                #urlcontent = self.urlopener.open(request)
                 xmlobj = BeautifulStoneSoup(urlcontent.read(), convertEntities=BeautifulStoneSoup.XML_ENTITIES)
                 urlcontent.close()
                 del urlcontent  
