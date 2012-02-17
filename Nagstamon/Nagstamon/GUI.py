@@ -1857,6 +1857,9 @@ class Popwin(object):
             if self.output.popwin.Window.window and platform.system() == "Windows" \
             and str(self.conf.icon_in_systray) == "False": 
                 self.output.popwin.Window.window.raise_()
+                
+            if self.output.popwin.Window.window:
+                print "WINDOW"
 
         except Exception, err:
             import traceback
