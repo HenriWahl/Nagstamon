@@ -1854,10 +1854,9 @@ class Popwin(object):
             
             # statusbar pulls popwin to the top... with silly-windows-workaround(tm) included
             if str(self.conf.icon_in_systray) == "False": self.output.statusbar.Raise()
-            if self.output.popwin.Window.window and platform.system() == "Windows": 
+            #if self.output.popwin.Window.window and platform.system() == "Windows": 
+            if self.output.GUILock.has_key("Popwin") and platform.system() == "Windows":  
                 self.output.popwin.Window.window.raise_()
-                
-            print self.output.GUILock
 
         except Exception, err:
             import traceback
