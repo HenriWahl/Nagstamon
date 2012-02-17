@@ -592,7 +592,7 @@ class Config(object):
                                "Telnet": Action(name="Telnet", description="Connect via Telnet.",\
                                     type="command", string="/usr/bin/gnome-terminal -x telnet root@$ADDRESS$"),\
                                "Update-Linux": Action(name="Update-Linux", description="Run remote update script.",\
-                                    type="command", string="/usr/bin/terminator -x  ssh root@$HOST$ update.sh",\
+                                    type="command", string="/usr/bin/terminator -x ssh root@$HOST$ update.sh",\
                                     enabled=False)\
                                }
         # OS agnostic actions as examples
