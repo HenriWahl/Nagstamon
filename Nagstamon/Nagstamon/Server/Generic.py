@@ -487,7 +487,10 @@ class GenericServer(object):
                         if len(tds) < 7:
                             # the old Nagios table
                             # status_information
-                            n["status_information"] = str(tds[4].string).encode("utf-8")
+                            if len(tds[4](text=not_empty)) == 0:
+                                n["status_information"] = ""
+                            else:    
+                                n["status_information"] = str(tds[4].string).encode("utf-8")
                             # attempts are not shown in case of hosts so it defaults to "N/A"
                             n["attempt"] = "N/A"
                         else:
@@ -496,7 +499,10 @@ class GenericServer(object):
                             # to be stripped
                             n["attempt"] = str(tds[4].string).strip()
                             # status_information
-                            n["status_information"] = str(tds[5].string).encode("utf-8")
+                            if len(tds[5](text=not_empty)) == 0:
+                                n["status_information"] = ""
+                            else:    
+                                n["status_information"] = str(tds[5].string).encode("utf-8")
                             
                         # status flags 
                         n["passiveonly"] = False
@@ -653,10 +659,6 @@ class GenericServer(object):
                             self.new_hosts[n["host"]].services[new_service].scheduled_downtime = n["scheduled_downtime"]
                 except:
                     self.Error(sys.exc_info())
-                    for td in tds:
-                        print td
-                        print 30*"-"
-                    print "--->" + str(tds[6](text=not_empty)) + "<---"
                                 
             # do some cleanup
             del table, trs

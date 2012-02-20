@@ -1,3 +1,17 @@
+2012-02-14 10:20  henriwww
+
+	* Nagstamon/Server/Generic.py, installer/windows/nagstamon.iss:
+	  trying to fix windows beatifulsoup problem
+
+2012-02-13 14:45  henriwww
+
+	* Nagstamon/Server/Generic.py: try to fix empty status information
+
+2012-02-13 13:48  henriwww
+
+	* ChangeLog, Nagstamon/GUI.py, Nagstamon/Server/Generic.py:
+	  fighting the stolen focus of systray icon
+
 2012-02-13 12:31  henriwww
 
 	* Nagstamon/GUI.py: focus stealing fix part II

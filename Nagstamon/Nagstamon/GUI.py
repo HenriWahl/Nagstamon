@@ -1854,9 +1854,7 @@ class Popwin(object):
             
             # statusbar pulls popwin to the top... with silly-windows-workaround(tm) included
             if str(self.conf.icon_in_systray) == "False": self.output.statusbar.Raise()
-            if self.output.popwin.Window.window and platform.system() == "Windows": 
-            #if self.output.GUILock.has_key("Popwin") and platform.system() == "Windows":  
-                self.output.popwin.Window.window.raise_()
+            if self.output.popwin.Window.window and platform.system() == "Windows": self.output.popwin.Window.window.raise_()
 
         except Exception, err:
             import traceback
@@ -3458,7 +3456,7 @@ class AuthenticationDialog:
             self.conf.servers[self.server.name].password = self.server.password
             self.conf.servers[self.server.name].save_password = True
             self.conf.SaveConfig(output=self.output)   
-        
+            
         
     def Disable(self, widget):
         # the old settings
