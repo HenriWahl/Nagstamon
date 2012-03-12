@@ -447,7 +447,8 @@ class GUI(object):
             self.statusbar.Resize()
             # if all is OK there is no need to pop up popwin so set self.showPopwin to False
             self.popwin.showPopwin = False
-            self.popwin.Close()
+            #self.popwin.Close()
+            self.popwin.PopDown()
             self.status_ok = True
             # set systray icon to green aka OK
             self.statusbar.SysTray.set_from_pixbuf(self.statusbar.SYSTRAY_ICONS["green"])
@@ -919,7 +920,8 @@ class GUI(object):
 
         # use gobject.idle_add() to be thread safe
         gobject.idle_add(self.AddGUILock, self.__class__.__name__)       
-        self.popwin.Close()
+        #self.popwin.Close()
+        self.popwin.PopDown()
         about.run()
         # use gobject.idle_add() to be thread safe
         gobject.idle_add(self.DeleteGUILock, self.__class__.__name__)            
@@ -931,7 +933,8 @@ class GUI(object):
             versatile message dialog
         """        
         # close popwin to make sure the error dialog will not be covered by popwin
-        self.popwin.Close()
+        #self.popwin.Close()
+        self.popwin.PopDown()
 
         dialog = gtk.MessageDialog(parent=None, flags=gtk.DIALOG_MODAL, type=type, buttons=buttons, message_format=str(message))
         # gtk.Dialog.run() does a mini loop to wait
@@ -945,7 +948,8 @@ class GUI(object):
         """
         try:
             # close popwin to make sure the error dialog will not be covered by popwin
-            self.popwin.Close()
+            #self.popwin.Close()
+            self.popwin.PopDown()
 
             # if used version is latest version only inform about
             if version_status == "latest":            
@@ -1316,17 +1320,35 @@ class StatusBar(object):
         """
             see what happens when icon in systray has been clicked
         """
+
+        print "Systray Clicked!"
+        print self.output.popwin.IsWanted()
+        print self.output.popwin.Window.get_properties("visible")[0]
+        
+        # workaround for continuous popup menu
+        try:
+            self.Menu.popdown()
+        except:
+            import traceback
+            traceback.print_exc(file=sys.stdout)
+            
         # switch notification off
         self.output.NotificationOff()
-        # check if settings ar not already open
+        # check if settings a d other dialogs are not already open
         if self.output.popwin.IsWanted() == True:
             # if popwin is not shown pop it up
-            if self.output.popwin.Window.get_properties("visible")[0] == False:
+            if self.output.popwin.Window.get_properties("visible")[0] == False or len(self.output.GUILock) == 0:
+            #if not self.output.popwin.Window.get_properties("visible")[0] or (not self.output.popwin.Window.window \
+            #                                            and "Popwin" in self.output.GUILock):
+            #    self.output.popwin.PopUp()
+            #elif not self.output.popwin.Window.get_properties("visible")[0] or (not self.output.popwin.Window.window.is_visible() \
+            #self.output.GUILock) == 0:    
+            #if len(self.output.GUILock) == 0:                                                      
                 self.output.popwin.PopUp()
             else:
                 self.output.popwin.Close()
 
-
+                
     def Hovered(self, widget=None, event=None):
         """
             see what happens if statusbar is hovered
@@ -1614,14 +1636,21 @@ class Popwin(object):
         # otherwise there is no sense in showing an empty popwin
         # for some reason the painting will lag behind popping up popwin if not getting resized twice -
         # seems like a strange workaround
+        print self.output.GUILock
         if self.showPopwin and not self.output.status_ok and self.output.conf.GetNumberOfEnabledMonitors() > 0:
             if len(self.output.GUILock) == 0 or self.output.GUILock.has_key("Popwin"):
+
+                print "POPUP"
+                
                 self.output.statusbar.Moving = False
                 # position and resize... necessary to do this here in case there are more than 1 monitors, because otherwise
                 # powin will be placed somewhere but not on the right monitor
-                if self.output.statusbar.StatusBar.get_screen().get_n_monitors() > 1 \
+                #if self.output.statusbar.StatusBar.get_screen().get_n_monitors() > 1 \
+                #    or str(self.conf.icon_in_systray) == "True":
+                #    self.Calculate()
+                if not platform.system() == "Darwin" or self.output.statusbar.StatusBar.get_screen().get_n_monitors() > 1 \
                     or str(self.conf.icon_in_systray) == "True":
-                    self.Calculate()
+                    self.Calculate()                    
                 # set combobox to default value
                 self.ComboboxMonitor.set_active(0)
                 # switch off Notification    
@@ -1631,6 +1660,8 @@ class Popwin(object):
                 gobject.idle_add(self.output.AddGUILock, self.__class__.__name__)
         
                 self.Window.show_all()
+
+                print "end"
                 
                 #position and resize...
                 self.Resize()
@@ -1682,7 +1713,7 @@ class Popwin(object):
                 if mousex <= popwinx0 + 10 or mousex >= (popwinx0 + self.popwinwidth) or mousey <= popwiny0 or mousey >= (popwiny0 + self.popwinheight) - 10 :       
                     self.Close()        
 
-        except Exception, err:
+        except:
             import traceback
             traceback.print_exc(file=sys.stdout)
 
@@ -1834,6 +1865,7 @@ class Popwin(object):
                 self.popwinx0 = statusbarx0 + (screenx0 + statusbarwidth) / 2 - (self.popwinwidth + screenx0) / 2
 
         except Exception, err:
+            print err
             import traceback
             traceback.print_exc(file=sys.stdout)
             
@@ -1854,10 +1886,11 @@ class Popwin(object):
             
             # statusbar pulls popwin to the top... with silly-windows-workaround(tm) included
             if str(self.conf.icon_in_systray) == "False": self.output.statusbar.Raise()
+            
             if self.output.popwin.Window.window and platform.system() == "Windows":
                 if self.output.popwin.Window.window.is_visible():
                     self.output.popwin.Window.window.raise_()
-
+                        
         except Exception, err:
             import traceback
             traceback.print_exc(file=sys.stdout)         
