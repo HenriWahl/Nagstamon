@@ -1321,10 +1321,6 @@ class StatusBar(object):
             see what happens when icon in systray has been clicked
         """
 
-        print "Systray Clicked!"
-        print self.output.popwin.IsWanted()
-        print self.output.popwin.Window.get_properties("visible")[0]
-        
         # workaround for continuous popup menu
         try:
             self.Menu.popdown()
@@ -1636,12 +1632,8 @@ class Popwin(object):
         # otherwise there is no sense in showing an empty popwin
         # for some reason the painting will lag behind popping up popwin if not getting resized twice -
         # seems like a strange workaround
-        print self.output.GUILock
         if self.showPopwin and not self.output.status_ok and self.output.conf.GetNumberOfEnabledMonitors() > 0:
             if len(self.output.GUILock) == 0 or self.output.GUILock.has_key("Popwin"):
-
-                print "POPUP"
-                
                 self.output.statusbar.Moving = False
                 # position and resize... necessary to do this here in case there are more than 1 monitors, because otherwise
                 # powin will be placed somewhere but not on the right monitor
@@ -1650,7 +1642,7 @@ class Popwin(object):
                 #    self.Calculate()
                 if not platform.system() == "Darwin" or self.output.statusbar.StatusBar.get_screen().get_n_monitors() > 1 \
                     or str(self.conf.icon_in_systray) == "True":
-                    self.Calculate()                    
+					self.Calculate()                    
                 # set combobox to default value
                 self.ComboboxMonitor.set_active(0)
                 # switch off Notification    
@@ -1659,11 +1651,9 @@ class Popwin(object):
                 # use gobject.idle_add() to be thread safe
                 gobject.idle_add(self.output.AddGUILock, self.__class__.__name__)
         
-                self.Window.show_all()
-
-                print "end"
+                self.Window.set_visible(True)
                 
-                #position and resize...
+                # position and resize...
                 self.Resize()
                 
                 
@@ -1726,7 +1716,8 @@ class Popwin(object):
         if self.output.GUILock.has_key("Popwin"): 
             # use gobject.idle_add() to be thread safe
             gobject.idle_add(self.output.DeleteGUILock, self.__class__.__name__)
-        self.Window.hide_all()
+        #self.Window.hide_all()
+        self.Window.set_visible(False)
         # notification off because user had a look to hosts/services recently
         self.output.NotificationOff()       
 
@@ -1769,11 +1760,9 @@ class Popwin(object):
                         # otherwise this does not work in windows
                         rootwin = self.output.statusbar.StatusBar.get_screen().get_root_window()
                         mousex, mousey, foo = rootwin.get_pointer()
-                        #statusbar_mousex, statusbar_mousey = 0, 2
                         statusbar_mousex, statusbar_mousey = 0, int(self.conf.systray_popup_offset)
                     else:    
                         mousex, mousey, foo, bar = self.output.statusbar.SysTray.get_geometry()[1]
-                        #statusbar_mousex, statusbar_mousey = 0, 2
                         statusbar_mousex, statusbar_mousey = 0, int(self.conf.systray_popup_offset)
                     # set monitor for later applying the correct monitor geometry
                     self.output.current_monitor = self.output.statusbar.StatusBar.get_screen().get_monitor_at_point(mousex, mousey)
@@ -1886,9 +1875,11 @@ class Popwin(object):
             
             # statusbar pulls popwin to the top... with silly-windows-workaround(tm) included
             if str(self.conf.icon_in_systray) == "False": self.output.statusbar.Raise()
-            
+
             if self.output.popwin.Window.window and platform.system() == "Windows":
                 if self.output.popwin.Window.window.is_visible():
+					# please stay above everything else...
+                    self.output.popwin.Window.set_keep_above(True)
                     self.output.popwin.Window.window.raise_()
                         
         except Exception, err:
@@ -1932,7 +1923,7 @@ class Popwin(object):
         check if no other dialog/menu is shown which would not like to be
         covered by the popup window
         """
-        if (len(self.output.GUILock) == 0 or "Popwin" in self.output.GUILock):  
+        if len(self.output.GUILock) == 0 or "Popwin" in self.output.GUILock:  
             return True
         else:
             return False
@@ -2192,7 +2183,7 @@ class ServerVBox(gtk.VBox):
                     self.popupmenu.append(menu_item)
 
             self.popupmenu.show_all()
-            self.popupmenu.popup(None, None, None, event.button, event.time)
+            self.popupmenu.popup(None, None, None, event.button, event.time)       
             # silly Windows(TM) workaround to keep menu above popwin
             self.popupmenu.window.set_keep_above(True)
 
