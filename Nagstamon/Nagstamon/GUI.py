@@ -1636,10 +1636,7 @@ class Popwin(object):
             if len(self.output.GUILock) == 0 or self.output.GUILock.has_key("Popwin"):
                 self.output.statusbar.Moving = False
                 # position and resize... necessary to do this here in case there are more than 1 monitors, because otherwise
-                # powin will be placed somewhere but not on the right monitor
-                #if self.output.statusbar.StatusBar.get_screen().get_n_monitors() > 1 \
-                #    or str(self.conf.icon_in_systray) == "True":
-                #    self.Calculate()
+                # popwin will be placed somewhere but not on the right monitor
                 if not platform.system() == "Darwin" or self.output.statusbar.StatusBar.get_screen().get_n_monitors() > 1 \
                     or str(self.conf.icon_in_systray) == "True":
 					self.Calculate()                    
