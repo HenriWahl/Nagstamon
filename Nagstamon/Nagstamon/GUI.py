@@ -278,6 +278,7 @@ class GUI(object):
                 try:
                     # otherwise it must be shown, full of problems
                     self.popwin.ServerVBoxes[server.get_name()].show()
+                    self.popwin.ServerVBoxes[server.get_name()].set_visible(True)
                     self.popwin.ServerVBoxes[server.get_name()].set_no_show_all(False)
                     
                     # if needed show auth line:
@@ -308,11 +309,13 @@ class GUI(object):
                        server.status_description == "":
                         # ... there is no need to show a label or treeview...
                         self.popwin.ServerVBoxes[server.get_name()].hide()
+                        self.popwin.ServerVBoxes[server.get_name()].set_visible(False)
                         self.popwin.ServerVBoxes[server.get_name()].set_no_show_all(True)
                         self.status_ok = True
                     else:
                         # otherwise it must be shown, full of problems
                         self.popwin.ServerVBoxes[server.get_name()].show()
+                        self.popwin.ServerVBoxes[server.get_name()].set_visible(True)
                         self.popwin.ServerVBoxes[server.get_name()].set_no_show_all(False)      
                         self.status_ok = False                       
 
@@ -1550,7 +1553,9 @@ class Popwin(object):
         # for later calculation of the popwin size we need the height of the buttons
         # it is enough to choose one of those buttons because they all have the same dimensions
         # as it seems to be the largest one we choose ComboboxMonitor
-        dummy, self.buttonsheight = self.ComboboxMonitor.size_request()
+        #dummy, self.buttonsheight = self.ComboboxMonitor.size_request()
+        #dummy, self.buttonsheight = self.NagstamonLabel.size_request()
+        #self.buttonswidth, self.buttonsheight = self.HBoxAllButtons.size_request()
 
         # add all buttons in their hbox to the overall vbox
         self.VBox.add(self.HBoxAllButtons)
@@ -1565,9 +1570,10 @@ class Popwin(object):
 
         # try putting everything status-related into a scrolled viewport
         self.ScrolledVBox = gtk.VBox()
-        self.ScrolledViewport = gtk.Viewport()
-        self.ScrolledViewport.add(self.ScrolledVBox)
-        self.ScrolledWindow.add(self.ScrolledViewport)   
+        #self.ScrolledViewport = gtk.Viewport()
+        #self.ScrolledViewport.add(self.ScrolledVBox)
+        #self.ScrolledWindow.add(self.ScrolledViewport)   
+        self.ScrolledWindow.add_with_viewport(self.ScrolledVBox)   
 
         # put scrolled window aka scrolled treeview into vbox
         self.VBox.add(self.ScrolledWindow)
@@ -1784,8 +1790,21 @@ class Popwin(object):
                 statusbarx0 = self.output.statusbar.StatusBar.x0
                 statusbary0 = self.output.statusbar.StatusBar.y0
 
+
+            print 30*"#"
+            treeviewwidth = treeviewheight = 0
+            for servervbox in self.GetVisibleServerVBoxes():
+				width, height = servervbox.size_request()
+				treeviewwidth += width
+				treeviewheight += height
+
+            print self.HBoxAllButtons.size_request()
+            
+            buttonswidth, buttonsheight = self.HBoxAllButtons.size_request()
+			
             # find out the necessary dimensions of popwin - assembled from scroll area and the buttons
-            treeviewwidth, treeviewheight = self.ScrolledVBox.size_request()
+            #treeviewwidth, treeviewheight = self.ScrolledVBox.size_request()
+            print treeviewwidth, treeviewheight
 
             # get current monitor's settings
             screenx0, screeny0, screenwidth, screenheight = self.output.monitors[self.output.current_monitor]
@@ -1794,15 +1813,14 @@ class Popwin(object):
             self.ScrolledWindow.set_size_request(treeviewwidth, treeviewheight)
 
             # care about the height of the buttons
-            # self.buttonsheight comes from create_output_visuals()
-            self.popwinwidth, self.popwinheight = treeviewwidth, treeviewheight + self.buttonsheight
+            # self.buttonsheight comes from create_output_visuals() - moved to popwin
+            self.popwinwidth, self.popwinheight = treeviewwidth, treeviewheight + buttonsheight
             # if popwinwidth is to small the buttons inside could be scrambled, so we give
-            # it a default minimum width
-            if self.popwinwidth < 600: self.popwinwidth = 600
+            # it a minimum width from head buttons
+            if self.popwinwidth < buttonswidth: self.popwinwidth = buttonswidth
 
             # add some buffer pixels to popwinheight to avoid silly scrollbars
             heightbuffer = 10
-            self.popwinheight = self.popwinheight + heightbuffer
 
             # get parameters of statusbar
             # get dimensions
@@ -1811,32 +1829,34 @@ class Popwin(object):
             else:    
                 statusbarwidth, statusbarheight = self.output.statusbar.StatusBar.get_size()
 
-            # if statusbar/trayicon stays in upper half of screen, popwin pops up UNDER statusbar/trayicon
+            # if statusbar/trayicon stays in upper half of screen, popwin pops up BELOW statusbar/trayicon
             if (statusbary0 + statusbarheight) < (screenheight / 2):
                 # if popwin is too large it gets cut at lower end of screen
                 if (statusbary0 + self.popwinheight + statusbarheight) > screenheight:
-                    treeviewheight = screenheight - (statusbary0 + statusbarheight + self.buttonsheight)
+                    treeviewheight = screenheight - (statusbary0 + statusbarheight + buttonsheight)
                     self.popwinheight = screenheight - statusbarheight - statusbary0
                     self.popwiny0 = statusbary0 + statusbarheight
                 # else do not relate to screen dimensions but own widgets ones
                 else:
-                    self.popwinheight = treeviewheight + self.buttonsheight + heightbuffer
+                    self.popwinheight = treeviewheight + buttonsheight + heightbuffer
                     self.popwiny0 = statusbary0 + statusbarheight
 
-            # if it stays in lower half of screen, popwin pops up OVER statusbar/trayicon
+            # if it stays in lower half of screen, popwin pops up ABOVE statusbar/trayicon
             else:
                 # if popwin is too large it gets cut at 0 
                 if (statusbary0 - self.popwinheight) < 0:
-                    treeviewheight = statusbary0 - self.buttonsheight - statusbarheight
+                    treeviewheight = statusbary0 - buttonsheight - statusbarheight
                     self.popwinheight = statusbary0
                     self.popwiny0 = 0
                 # otherwise use own widgets for sizing
                 else:
-                    self.popwinheight = treeviewheight + self.buttonsheight + heightbuffer
+                    self.popwinheight = treeviewheight + buttonsheight + heightbuffer
                     self.popwiny0 = statusbary0 - self.popwinheight
 
             # after having determined dimensions of scrolling area apply them
-            self.ScrolledWindow.set_size_request(treeviewwidth, treeviewheight)
+            #self.ScrolledWindow.set_size_request(treeviewwidth, treeviewheight)
+            print treeviewwidth, treeviewheight
+            self.ScrolledVBox.set_size_request(treeviewwidth, treeviewheight)
 
             # if popwin is too wide cut it down to screen width
             if self.popwinwidth > screenwidth:
@@ -1869,6 +1889,7 @@ class Popwin(object):
 
             # set size REALLY because otherwise it stays to large
             self.Window.resize(self.popwinwidth, self.popwinheight)
+            print "self.popwinwidth, self.popwinheight:", self.popwinwidth, self.popwinheight
             
             # statusbar pulls popwin to the top... with silly-windows-workaround(tm) included
             if str(self.conf.icon_in_systray) == "False": self.output.statusbar.Raise()
@@ -1924,6 +1945,17 @@ class Popwin(object):
             return True
         else:
             return False
+            
+    def GetVisibleServerVBoxes(self):
+		"""
+		return list of visible server VBoxes
+		"""
+		visible_servervboxes = list()
+		for servervbox in self.ServerVBoxes.values():
+			if servervbox.get_visible() == True:
+				visible_servervboxes.append(servervbox)
+		return visible_servervboxes
+				
 
 
 class ServerVBox(gtk.VBox):
