@@ -85,7 +85,7 @@ class RefreshLoopOneServer(threading.Thread):
               
         while self.stopped == False:          
             # check if we have to leave update interval sleep
-            if self.server.count > int(self.conf.update_interval)*60: self.doRefresh = True   
+            if self.server.count > int(self.conf.update_interval)*6: self.doRefresh = True   
 
             # self.doRefresh could also been changed by RefreshAllServers()
             if self.doRefresh == True:              

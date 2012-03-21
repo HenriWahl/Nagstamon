@@ -219,7 +219,7 @@ class GUI(object):
         self.statusbar.SysTray.connect("activate", self.statusbar.SysTrayClicked)
         #self.statusbar.SysTray.connect("popup-menu", self.statusbar.MenuPopup, self.statusbar.Menu)
         self.statusbar.SysTray.connect("popup-menu", self.statusbar.MenuPopup)
-        
+
 
         # if pointer clicks on logo move stautsbar
         self.statusbar.LogoEventbox.connect("button-press-event", self.statusbar.LogoClicked)
@@ -269,7 +269,7 @@ class GUI(object):
         warnings = 0
         # display "ERROR" in case of startup connection trouble
         errors = ""
-       
+
         # walk through all servers, their hosts and their services
         for server in self.servers.values():
             # only refresh monitor server output if enabled and only once every server loop
@@ -280,7 +280,7 @@ class GUI(object):
                     self.popwin.ServerVBoxes[server.get_name()].show()
                     self.popwin.ServerVBoxes[server.get_name()].set_visible(True)
                     self.popwin.ServerVBoxes[server.get_name()].set_no_show_all(False)
-                    
+
                     # if needed show auth line:
                     if server.refresh_authentication == True:
                         self.popwin.ServerVBoxes[server.get_name()].HBoxAuth.set_no_show_all(False)
@@ -338,9 +338,9 @@ class GUI(object):
                         for status, item_list in status_dict.iteritems():
                             for item in list(item_list):
                                 line = list(server.get_columns(item))
-                                
+
                                 #print line
-                                
+
                                 line.append(self.TAB_FG_COLORS[item.status])
                                 line.append(self.TAB_BG_COLORS[item.status])
 
@@ -534,7 +534,7 @@ class GUI(object):
 
             # set self.showPopwin to True because there is something to show
             self.popwin.showPopwin = True   
-            
+
         # if only one monitor cannot be reached show popwin to inform about its trouble
         for server in self.servers.values():
             if server.status_description != "" or server.refresh_authentication == True:
@@ -570,7 +570,7 @@ class GUI(object):
         # did not get it to work with glade so comments will be fired up this way when pressing return
         self.acknowledge_xml.get_object("input_entry_author").connect("key-release-event", self._FocusJump, self.acknowledge_xml, "input_entry_comment")
         self.acknowledge_xml.get_object("input_entry_comment").connect("key-release-event", self.AcknowledgeCommentReturn, server)
-        
+
         # if service is "" it must be a host
         if service == "":
             # set label for acknowledging a host
@@ -599,7 +599,7 @@ class GUI(object):
         self.acknowledge_dialog.run()
         self.acknowledge_dialog.destroy()
 
-        
+
     def AcknowledgeDefaultSettings(self, foo, bar):
         """
         show settings with tab "defaults" as shortcut from Acknowledge dialog
@@ -607,7 +607,7 @@ class GUI(object):
         self.acknowledge_dialog.destroy()
         settings=Settings(servers=self.servers, output=self, conf=self.conf, first_page="Defaults") 
 
-            
+
     def AcknowledgeCommentReturn(self, widget, event, server):
         """ 
         if Return key has been pressed in comment entry field interprete this as OK button being pressed
@@ -616,7 +616,7 @@ class GUI(object):
         if gtk.gdk.keyval_name(event.keyval) in ["Return", "KP_Enter"]:
             self.Acknowledge(server=server)   
             self.acknowledge_dialog.destroy()
-            
+
 
     def Acknowledge(self, widget=None, server=None):
         """
@@ -675,7 +675,7 @@ class GUI(object):
 
         # if return key enterd in comment field see this as OK button pressed
         self.downtime_xml.get_object("input_entry_comment").connect("key-release-event", self.DowntimeCommentReturn, server)
-            
+
         # if service is None it must be a host
         if service == "":
             # set label for acknowledging a host
@@ -691,19 +691,19 @@ class GUI(object):
 
         # get start_time and end_time externally from Actions.Downtime_get_start_end() for not mixing GUI and actions too much
         start_time, end_time = Actions.Downtime_get_start_end(server=server, host=host)
-        
+
         self.downtime_xml.get_object("input_radiobutton_type_fixed").set_active(eval(str(self.conf.defaults_downtime_type_fixed)))
         self.downtime_xml.get_object("input_radiobutton_type_flexible").set_active(eval(str(self.conf.defaults_downtime_type_flexible)))
-        
+
         # default author + comment
         self.downtime_xml.get_object("input_entry_author").set_text(server.username)        
         self.downtime_xml.get_object("input_entry_comment").set_text(self.conf.defaults_downtime_comment)
         self.downtime_xml.get_object("input_entry_comment").grab_focus()        
-        
+
         # start and end time
         self.downtime_xml.get_object("input_entry_start_time").set_text(start_time)
         self.downtime_xml.get_object("input_entry_end_time").set_text(end_time)
-        
+
         # flexible downtime duration
         self.downtime_xml.get_object("input_spinbutton_duration_hours").set_value(int(self.conf.defaults_downtime_duration_hours))
         self.downtime_xml.get_object("input_spinbutton_duration_minutes").set_value(int(self.conf.defaults_downtime_duration_minutes))
@@ -711,16 +711,16 @@ class GUI(object):
         # show dialog
         self.downtime_dialog.run()
         self.downtime_dialog.destroy()
-        
-        
+
+
     def DowntimeDefaultSettings(self, foo, bar):
         """
         show settings with tab "defaults" as shortcut from Downtime dialog
         """
         self.downtime_dialog.destroy()
         settings=Settings(servers=self.servers, output=self, conf=self.conf, first_page="Defaults")
-        
-        
+
+
     def DowntimeCommentReturn(self, widget, event, server):
         """ 
         if Return key has been pressed in comment entry field interprete this as OK button being pressed
@@ -773,7 +773,7 @@ class GUI(object):
         # use connect_signals to assign methods to handlers
         handlers_dict = { "button_ok_clicked" : self.SubmitCheckResultOK,\
                           "button_cancel_clicked": self.SubmitCheckResultCancel,\
-                           "button_submit_check_result_settings_clicked" : self.SubmitCheckResultDefaultSettings}
+                          "button_submit_check_result_settings_clicked" : self.SubmitCheckResultDefaultSettings}
         self.submitcheckresult_xml.connect_signals(handlers_dict, server)
 
         # focus jump chain - used to connect input fields in submit check result dialog and access them via return key
@@ -784,7 +784,7 @@ class GUI(object):
 
         # if return key entered in lastfield see this as OK button pressed
         self.submitcheckresult_xml.get_object("input_entry_" + chain[-1]).connect("key-release-event", self.SubmitCheckResultCommentReturn, server)
-            
+
         # if service is "" it must be a host
         if service == "":
             # set label for submitting results to an host
@@ -811,18 +811,18 @@ class GUI(object):
             self.submitcheckresult_xml.get_object("input_entry_" + i).show()        
 
         self.submitcheckresult_xml.get_object("input_entry_comment").set_text(self.conf.defaults_submit_check_result_comment)           
-            
+
         # show dialog
         self.submitcheckresult_dialog.run()
-        
-                
+
+
     def SubmitCheckResultDefaultSettings(self, foo, bar):
         """
         show settings with tab "defaults" as shortcut from Submit Check Result dialog
         """
         self.submitcheckresult_dialog.destroy()
         settings=Settings(servers=self.servers, output=self, conf=self.conf, first_page="Defaults")
-        
+
 
     def SubmitCheckResultOK(self, widget=None, server=None):
         """
@@ -857,7 +857,7 @@ class GUI(object):
 
     def SubmitCheckResultCancel(self, widget, server):    
         self.submitcheckresult_dialog.destroy()
-        
+
 
     def SubmitCheckResultCommentReturn(self, widget, event, server):
         """ 
@@ -990,10 +990,10 @@ class GUI(object):
                         if str(self.conf.notification_flashing) == "True":
                             self.statusbar.SysTray.set_blinking(True)
                             self.statusbar.Flashing = True
-                            
+
                         notify = Actions.Notification(output=self, sound=status, Resources=self.Resources, conf=self.conf, servers=self.servers)
                         notify.start()  
-                        
+
                         # if desired pop up status window
                         # sorry but does absolutely not work with windows and systray icon so I prefer to let it be
                         #if str(self.conf.notification_popup) == "True":
@@ -1037,7 +1037,7 @@ class GUI(object):
             color = color + diff
         return color
 
-    
+
     def AddGUILock(self, widget_name, widget=None):
         """
         add calling window to dictionary of open windows to keep the windows separated
@@ -1045,7 +1045,7 @@ class GUI(object):
         """
         self.GUILock[widget_name] = widget
 
-        
+
     def DeleteGUILock(self, window_name):
         """
         add calling window to dictionary of open windows to keep the windows separated
@@ -1055,15 +1055,15 @@ class GUI(object):
             self.GUILock.pop(window_name)
         except:
             pass
-        
-    
+
+
     def _FocusJump(self, widget=None, event=None, builder=None, next_widget=None):
         """ 
         if Return key has been pressed in entry field jump to given widget
         """
         if gtk.gdk.keyval_name(event.keyval) in ["Return", "KP_Enter"]:
             builder.get_object(next_widget).grab_focus()  
-            
+
 
 class StatusBar(object):
     """
@@ -1072,7 +1072,7 @@ class StatusBar(object):
     def __init__(self, **kwds):
         # add all keywords to object, every mode searchs inside for its favorite arguments/keywords
         for k in kwds: self.__dict__[k] = kwds[k]
-
+        
         # TrayIcon - appears as status bar in Windows due to non existent egg.trayicon python module
         if platform.system() == "Windows":
             self._CreateFloatingStatusbar()
@@ -1124,7 +1124,7 @@ class StatusBar(object):
             self.StatusBar.show_all()
         else:
             self.StatusBar.hide_all()
-                
+
         # put Systray icon into statusbar object
         # on MacOSX use only dummy
         if platform.system() == "Darwin":
@@ -1153,7 +1153,7 @@ class StatusBar(object):
         except:
             # in case of error define fixed fontsize
             self.output.fontsize = 10000
-            
+
         # Popup menu for statusbar
         self.Menu = gtk.Menu()
         for i in ["Refresh", "Recheck all", "-----", "Monitors", "-----", "Settings...", "Save position", "About", "Exit"]:
@@ -1172,7 +1172,7 @@ class StatusBar(object):
                     menu_item = gtk.MenuItem(i)
                     menu_item.connect("activate", self.MenuResponse, i)
                     self.Menu.append(menu_item)
-                    
+
         self.Menu.show_all()	
 
 
@@ -1195,8 +1195,8 @@ class StatusBar(object):
         self.StatusBar.set_type_hint(gtk.gdk.WINDOW_TYPE_HINT_MENU)   
         self.StatusBar.set_property("skip-taskbar-hint", True)
         self.StatusBar.set_skip_taskbar_hint(True)
+                
 
-    
     def MenuPopup(self, widget=None, event=None, time=None, dummy=None):
         """
             context menu for label in statusbar
@@ -1205,13 +1205,13 @@ class StatusBar(object):
 
         # no dragging of statusbar anymore if menu pops up
         self.Moving = False
-        
+
         # check if settings are not already open
         if not "Settings" in self.output.GUILock:    
 
             # use gobject.idle_add() to be thread safe
             #gobject.idle_add(self.output.AddGUILock, "StatusbarMenuOpen")    
-            
+
             # for some reason StatusIcon delivers another event (type int) than
             # egg.trayicon (type object) so it must be checked which one has
             # been calling
@@ -1230,14 +1230,14 @@ class StatusBar(object):
 
             # silly Windows(TM) workaround to keep menu above taskbar
             self.Menu.window.set_keep_above(True)
-            
-            
+
+
     def MenuResponseMonitors(self, widget, menu_entry):
         """
             open responding Nagios status web page
         """
         self.output.servers[menu_entry].OpenBrowser(url_type="monitor")
-        
+
 
     def MenuResponse(self, widget, menu_entry):
         """
@@ -1330,7 +1330,7 @@ class StatusBar(object):
         except:
             import traceback
             traceback.print_exc(file=sys.stdout)
-            
+
         # switch notification off
         self.output.NotificationOff()
         # check if settings a d other dialogs are not already open
@@ -1347,7 +1347,7 @@ class StatusBar(object):
             else:
                 self.output.popwin.Close()
 
-                
+
     def Hovered(self, widget=None, event=None):
         """
             see what happens if statusbar is hovered
@@ -1439,7 +1439,7 @@ class StatusBar(object):
             # the statusbar shadow overlays the popwin on newer desktop environments
             elif self.output.popwin.showPopwin == False:
                 self.StatusBar.window.raise_()
-                
+
 
 class Popwin(object):
     """
@@ -1460,7 +1460,7 @@ class Popwin(object):
             self.Window.set_type_hint(gtk.gdk.WINDOW_TYPE_HINT_UTILITY)
         else:
             self.Window.set_type_hint(gtk.gdk.WINDOW_TYPE_HINT_MENU)
-        
+
         # make a nice popup of the toplevel window
         self.Window.set_decorated(False)
         self.Window.set_keep_above(True)
@@ -1472,8 +1472,10 @@ class Popwin(object):
 
         self.Window = self._CreatePopwin()
 
-        # initialize the coordinates of left upper corner of the popwin
+
+        # initialize the coordinates of left upper corner of the popwin and its size
         self.popwinx0 = self.popwiny0 = 0
+        self.popwinwidth = self.popwinheight = 0
 
         self.AlMonitorLabel = gtk.Alignment(xalign=0, yalign=0.5)
         self.AlMonitorComboBox = gtk.Alignment(xalign=0, yalign=0.5)
@@ -1505,7 +1507,7 @@ class Popwin(object):
         self.ComboboxMonitor.set_active(0)
         self.HBoxCombobox.add(self.ComboboxMonitor)
         self.AlMonitorComboBox.add(self.HBoxCombobox)
-        
+
         # general buttons 
         self.ButtonFilters = ButtonWithIcon(output=self.output, label="Filters", icon="settings.png")
         self.ButtonRecheckAll = ButtonWithIcon(output=self.output, label="Recheck all", icon="recheckall.png")
@@ -1515,7 +1517,7 @@ class Popwin(object):
         self.HBoxMenu.add(self.ButtonRecheckAll)   
         self.HBoxMenu.add(self.ButtonRefresh)
         self.HBoxMenu.add(self.ButtonSettings)
-        
+
         # nice separator
         self.HBoxMenu.add(gtk.VSeparator())
 
@@ -1528,10 +1530,10 @@ class Popwin(object):
         self.ButtonClose.set_relief(gtk.RELIEF_NONE)
         self.ButtonClose.add(self.ButtonClose_HBox)
         self.HBoxMenu.add(self.ButtonClose)     
-        
+
         # put the HBox full of buttons full of HBoxes into the aligned HBox...
         self.AlMenu.add(self.HBoxMenu)     
-        
+
         # HBoxes en masse...
         self.HBoxAllButtons.add(self.AlMonitorLabel)
         self.HBoxAllButtons.add(self.AlMonitorComboBox)
@@ -1547,13 +1549,13 @@ class Popwin(object):
         self.ButtonSettings.connect("clicked", lambda s: Settings(servers=self.output.servers, output=self.output, conf=self.conf))        
         # open settings dialog for filters when filters is clicked
         self.ButtonFilters.connect("clicked", lambda s: Settings(servers=self.output.servers, output=self.output, conf=self.conf, first_page="Filters"))        
-        
+
         # define colors for detailed status table in dictionaries
         # need to be redefined here for MacOSX because there it is not
         # possible to reinitialize the whole GUI after config changes without a crash
         self.output.TAB_BG_COLORS = { "UNKNOWN":str(self.conf.color_unknown_background), "CRITICAL":str(self.conf.color_critical_background), "WARNING":str(self.conf.color_warning_background), "DOWN":str(self.conf.color_down_background), "UNREACHABLE":str(self.conf.color_unreachable_background)  }
         self.output.TAB_FG_COLORS = { "UNKNOWN":str(self.conf.color_unknown_text), "CRITICAL":str(self.conf.color_critical_text), "WARNING":str(self.conf.color_warning_text), "DOWN":str(self.conf.color_down_text), "UNREACHABLE":str(self.conf.color_unreachable_text) }
-        
+
         # for later calculation of the popwin size we need the height of the buttons
         # it is enough to choose one of those buttons because they all have the same dimensions
         # as it seems to be the largest one we choose ComboboxMonitor
@@ -1634,7 +1636,7 @@ class Popwin(object):
         self.pointer_left_popwin = False
 
 
-    def _CreatePopwin(self):
+    def _CreatePopwin(self, x0=0, y0=0, width=0, height=0):
         """
             Create popup window
         """
@@ -1649,7 +1651,7 @@ class Popwin(object):
             window.set_type_hint(gtk.gdk.WINDOW_TYPE_HINT_UTILITY)
         else:
             window.set_type_hint(gtk.gdk.WINDOW_TYPE_HINT_MENU)
-        
+
         # make a nice popup of the toplevel window
         window.set_decorated(False)
         window.set_keep_above(True)
@@ -1657,9 +1659,11 @@ class Popwin(object):
         window.set_resizable(False)
         window.set_property("skip-taskbar-hint", True)
         window.set_skip_taskbar_hint(True)
+        window.set_size_request(width, height)
+        window.move(x0, y0)
 
         return window
-            
+
 
     def PopUp(self, widget=None, event=None):
         """
@@ -1679,33 +1683,28 @@ class Popwin(object):
                 
                 # position and resize... necessary to do this here in case there are more than 1 monitors, because otherwise
                 # popwin will be placed somewhere but not on the right monitor
-                ###if not platform.system() == "Darwin" or self.output.statusbar.StatusBar.get_screen().get_n_monitors() > 1 \
-                ###    or str(self.conf.icon_in_systray) == "True":
-                #if not platform.system() == "Darwin":
-				##	#self.Calculate()
-                #    self.Resize()                    
                 """
-                self.Window.set_visible(True)
-                self.Window.resize(1,1)
+                if not platform.system() == "Darwin" or self.output.statusbar.StatusBar.get_screen().get_n_monitors() > 1 \
+                    or str(self.conf.icon_in_systray) == "True":
+                    self.Resize()
                 """
 
                 # after all the Windows bug with not resizing popwin
                 # can be solved with newly created popwin with every popup,
                 # just reparenting the content of the old to the new one
-                new_popwin = self._CreatePopwin()
+                new_popwin = self._CreatePopwin(x0=self.popwinx0, y0=self.popwiny0, width=self.popwinwidth, height=self.popwinheight)
                 self.VBox.reparent(new_popwin)
                 self.Window.destroy()
                 del self.Window
                 self.Window = new_popwin
-
-                # position and resize...
-                #self.Resize()
-
+                
+                #self.Resize()                    
                 self.VBox.show_all()
+                
                 self.Window.set_visible(True)
                 # position and resize...
                 self.Resize()
-                
+
                 # set combobox to default value
                 self.ComboboxMonitor.set_active(0)
                 # switch off Notification    
@@ -1713,11 +1712,11 @@ class Popwin(object):
                 # register as open window
                 # use gobject.idle_add() to be thread safe
                 gobject.idle_add(self.output.AddGUILock, self.__class__.__name__)
-                     
+
                 # do some garbage collection
                 gc.collect()
-                 
-                
+
+
     def LeavePopWin(self, widget=None, event=None):
         """
         when pointer leaves popwin the pointer_left_popwin flag has to be set to avoid
@@ -1789,30 +1788,33 @@ class Popwin(object):
     ###    """
     ###    self.Calculate()
     ###    self.Realize()
-        
-        
-        
+
+
+
     ###def Calculate(self):
     def Resize(self):
         """
             calculate popwin dimensions depending on the amount of information displayed in scrollbox
+            only if popwin is visible
         """
-        try:
-            # the popwin should always pop up near the systray/desktop status bar, therefore we
-            # need to find out its position
-
-            # find out dimension of all monitors
-            for m in range(self.output.statusbar.StatusBar.get_screen().get_n_monitors()):
-                monx0, mony0, monw, monh = self.output.statusbar.StatusBar.get_screen().get_monitor_geometry(m)
-                self.output.monitors[m] = (monx0, mony0, monw, monh)
-
-            # get x0 and y0 - workaround for gtk trayicon because self.statusbar as trayicon
-            # cannot get its absolute position, so we need to get pointers position relative
-            # to root window and to trayicon and subtract them and save the values in the
-            # self.statusbar object to avoid jumping popwin in case it is open, the status 
-            # refreshed and the pointer has moved
-            if self.Window.get_properties("visible")[0] == False:
-
+        if self.Window.get_properties("visible")[0] == True:
+            try:
+                # the popwin should always pop up near the systray/desktop status bar, therefore we
+                # need to find out its position
+    
+                # find out dimension of all monitors
+                for m in range(self.output.statusbar.StatusBar.get_screen().get_n_monitors()):
+                    monx0, mony0, monw, monh = self.output.statusbar.StatusBar.get_screen().get_monitor_geometry(m)
+                    self.output.monitors[m] = (monx0, mony0, monw, monh)
+    
+                # get x0 and y0 - workaround for gtk trayicon because self.statusbar as trayicon
+                # cannot get its absolute position, so we need to get pointers position relative
+                # to root window and to trayicon and subtract them and save the values in the
+                # self.statusbar object to avoid jumping popwin in case it is open, the status 
+                # refreshed and the pointer has moved
+                """
+                if self.Window.get_properties("visible")[0] == False:
+                """
                 # check if icon in systray or statusbar 
                 if str(self.conf.icon_in_systray) == "True":
 
@@ -1839,119 +1841,120 @@ class Popwin(object):
 
                 statusbarx0 = mousex - statusbar_mousex
                 statusbary0 = mousey - statusbar_mousey   
-                
+
                 # save trayicon x0 and y0 in self.statusbar
                 self.output.statusbar.StatusBar.x0 = statusbarx0
                 self.output.statusbar.StatusBar.y0 = statusbary0
-
-            else:
-                # use previously saved values for x0 and y0 in case popwin is still/already open
-                statusbarx0 = self.output.statusbar.StatusBar.x0
-                statusbary0 = self.output.statusbar.StatusBar.y0
-
-            # find out the necessary dimensions of popwin - assembled from scroll area and the buttons
-            treeviewwidth = treeviewheight = 0
-            for servervbox in self.GetVisibleServerVBoxes():
-                width, height = servervbox.size_request()
-                treeviewwidth += width
-                treeviewheight += height
-
-            buttonswidth, buttonsheight = self.HBoxAllButtons.size_request()
-
-            # get current monitor's settings
-            screenx0, screeny0, screenwidth, screenheight = self.output.monitors[self.output.current_monitor]
-
-            if treeviewwidth > screenwidth: treeviewwidth = screenwidth
-            self.ScrolledWindow.set_size_request(treeviewwidth, treeviewheight)
-
-            # care about the height of the buttons
-            # self.buttonsheight comes from create_output_visuals() - moved to popwin
-            self.popwinwidth, self.popwinheight = treeviewwidth, treeviewheight + buttonsheight
-            # if popwinwidth is to small the buttons inside could be scrambled, so we give
-            # it a minimum width from head buttons
-            if self.popwinwidth < buttonswidth: self.popwinwidth = buttonswidth
-
-            # add some buffer pixels to popwinheight to avoid silly scrollbars
-            heightbuffer = 10
-
-            # get parameters of statusbar
-            # get dimensions
-            if str(self.conf.icon_in_systray) == "True":
-                statusbarwidth, statusbarheight = 25, 25
-            else:    
-                statusbarwidth, statusbarheight = self.output.statusbar.StatusBar.get_size()
-
-            # if statusbar/trayicon stays in upper half of screen, popwin pops up BELOW statusbar/trayicon
-            if (statusbary0 + statusbarheight) < (screenheight / 2):
-                # if popwin is too large it gets cut at lower end of screen
-                if (statusbary0 + self.popwinheight + statusbarheight) > screenheight:
-                    treeviewheight = screenheight - (statusbary0 + statusbarheight + buttonsheight)
-                    self.popwinheight = screenheight - statusbarheight - statusbary0
-                    self.popwiny0 = statusbary0 + statusbarheight
-                # else do not relate to screen dimensions but own widgets ones
+                    
+                """   
                 else:
-                    self.popwinheight = treeviewheight + buttonsheight + heightbuffer
-                    self.popwiny0 = statusbary0 + statusbarheight
-
-            # if it stays in lower half of screen, popwin pops up ABOVE statusbar/trayicon
-            else:
-                # if popwin is too large it gets cut at 0 
-                if (statusbary0 - self.popwinheight) < 0:
-                    treeviewheight = statusbary0 - buttonsheight - statusbarheight
-                    self.popwinheight = statusbary0
-                    self.popwiny0 = 0
-                # otherwise use own widgets for sizing
+                    # use previously saved values for x0 and y0 in case popwin is still/already open
+                    statusbarx0 = self.output.statusbar.StatusBar.x0
+                    statusbary0 = self.output.statusbar.StatusBar.y0
+                """
+                # find out the necessary dimensions of popwin - assembled from scroll area and the buttons
+                treeviewwidth = treeviewheight = 0
+                for servervbox in self.GetVisibleServerVBoxes():
+                    width, height = servervbox.size_request()
+                    if width > treeviewwidth: treeviewwidth = width
+                    treeviewheight += height
+    
+                buttonswidth, buttonsheight = self.HBoxAllButtons.size_request()
+    
+                # get current monitor's settings
+                screenx0, screeny0, screenwidth, screenheight = self.output.monitors[self.output.current_monitor]
+    
+                if treeviewwidth > screenwidth: treeviewwidth = screenwidth
+                self.ScrolledWindow.set_size_request(treeviewwidth, treeviewheight)
+    
+                # care about the height of the buttons
+                # self.buttonsheight comes from create_output_visuals() - moved to popwin
+                self.popwinwidth, self.popwinheight = treeviewwidth, treeviewheight + buttonsheight
+                # if popwinwidth is to small the buttons inside could be scrambled, so we give
+                # it a minimum width from head buttons
+                if self.popwinwidth < buttonswidth: self.popwinwidth = buttonswidth
+    
+                # add some buffer pixels to popwinheight to avoid silly scrollbars
+                heightbuffer = 10
+    
+                # get parameters of statusbar
+                # get dimensions
+                if str(self.conf.icon_in_systray) == "True":
+                    statusbarwidth, statusbarheight = 25, 25
+                else:    
+                    statusbarwidth, statusbarheight = self.output.statusbar.StatusBar.get_size()
+    
+                # if statusbar/trayicon stays in upper half of screen, popwin pops up BELOW statusbar/trayicon
+                if (statusbary0 + statusbarheight) < (screenheight / 2):
+                    # if popwin is too large it gets cut at lower end of screen
+                    if (statusbary0 + self.popwinheight + statusbarheight) > screenheight:
+                        treeviewheight = screenheight - (statusbary0 + statusbarheight + buttonsheight)
+                        self.popwinheight = screenheight - statusbarheight - statusbary0
+                        self.popwiny0 = statusbary0 + statusbarheight
+                    # else do not relate to screen dimensions but own widgets ones
+                    else:
+                        self.popwinheight = treeviewheight + buttonsheight + heightbuffer
+                        self.popwiny0 = statusbary0 + statusbarheight
+    
+                # if it stays in lower half of screen, popwin pops up ABOVE statusbar/trayicon
                 else:
-                    self.popwinheight = treeviewheight + buttonsheight + heightbuffer
-                    self.popwiny0 = statusbary0 - self.popwinheight
+                    # if popwin is too large it gets cut at 0 
+                    if (statusbary0 - self.popwinheight) < 0:
+                        treeviewheight = statusbary0 - buttonsheight - statusbarheight
+                        self.popwinheight = statusbary0
+                        self.popwiny0 = 0
+                    # otherwise use own widgets for sizing
+                    else:
+                        self.popwinheight = treeviewheight + buttonsheight + heightbuffer
+                        self.popwiny0 = statusbary0 - self.popwinheight
+    
+                # after having determined dimensions of scrolling area apply them
+                #self.ScrolledWindow.set_size_request(treeviewwidth, treeviewheight)
+                self.ScrolledVBox.set_size_request(treeviewwidth, treeviewheight)
+    
+                # if popwin is too wide cut it down to screen width
+                if self.popwinwidth > screenwidth:
+                    self.popwinwidth = screenwidth
+    
+                # decide x position of popwin
+                if (statusbarx0) + statusbarwidth / 2 + (self.popwinwidth) / 2 > (screenwidth + screenx0):
+                    self.popwinx0 = screenwidth - self.popwinwidth + screenx0
+                elif (statusbarx0 + statusbarwidth / 2)- self.popwinwidth / 2 < screenx0:
+                    self.popwinx0 = screenx0
+                else:
+                    self.popwinx0 = statusbarx0 + (screenx0 + statusbarwidth) / 2 - (self.popwinwidth + screenx0) / 2
+    
+            except Exception, err:
+                print err
+                import traceback
+                traceback.print_exc(file=sys.stdout)
+    
+            try:
+                # move popwin to its position
+                self.Window.move(self.popwinx0, self.popwiny0)
+    
+                # set size request of popwin
+                self.Window.set_size_request(self.popwinwidth, self.popwinheight)
+    
+                # set size REALLY because otherwise it stays to large
+                #self.Window.resize(self.popwinwidth, self.popwinheight)
+                # resize(1,1) automatically uses minimal necessary size
+                self.Window.resize(1,1)
+    
+                # statusbar pulls popwin to the top... with silly-windows-workaround(tm) included
+                if str(self.conf.icon_in_systray) == "False": self.output.statusbar.Raise()
+    
+                ###if self.output.popwin.Window.window and platform.system() == "Windows":
+                ###    if self.output.popwin.Window.window.is_visible():
+                            ###		# please stay above everything else...
+                        ###self.output.popwin.Window.set_keep_above(True)
+                        ###self.output.popwin.Window.window.raise_()
+                ###        pass
+    
+            except Exception, err:
+                import traceback
+                traceback.print_exc(file=sys.stdout)         
 
-            # after having determined dimensions of scrolling area apply them
-            #self.ScrolledWindow.set_size_request(treeviewwidth, treeviewheight)
-            self.ScrolledVBox.set_size_request(treeviewwidth, treeviewheight)
-
-            # if popwin is too wide cut it down to screen width
-            if self.popwinwidth > screenwidth:
-                self.popwinwidth = screenwidth
-
-            # decide x position of popwin
-            if (statusbarx0) + statusbarwidth / 2 + (self.popwinwidth) / 2 > (screenwidth + screenx0):
-                self.popwinx0 = screenwidth - self.popwinwidth + screenx0
-            elif (statusbarx0 + statusbarwidth / 2)- self.popwinwidth / 2 < screenx0:
-                self.popwinx0 = screenx0
-            else:
-                self.popwinx0 = statusbarx0 + (screenx0 + statusbarwidth) / 2 - (self.popwinwidth + screenx0) / 2
-
-        except Exception, err:
-            print err
-            import traceback
-            traceback.print_exc(file=sys.stdout)
-
-        try:
-            # move popwin to its position
-            self.Window.move(self.popwinx0, self.popwiny0)
-
-            # set size request of popwin
-            self.Window.set_size_request(self.popwinwidth, self.popwinheight)
-
-            # set size REALLY because otherwise it stays to large
-            #self.Window.resize(self.popwinwidth, self.popwinheight)
-            # resize(1,1) automatically uses minimal necessary size
-            self.Window.resize(1,1)
-            
-            # statusbar pulls popwin to the top... with silly-windows-workaround(tm) included
-            if str(self.conf.icon_in_systray) == "False": self.output.statusbar.Raise()
-
-            ###if self.output.popwin.Window.window and platform.system() == "Windows":
-            ###    if self.output.popwin.Window.window.is_visible():
-			###		# please stay above everything else...
-                    ###self.output.popwin.Window.set_keep_above(True)
-                    ###self.output.popwin.Window.window.raise_()
-            ###        pass
-                        
-        except Exception, err:
-            import traceback
-            traceback.print_exc(file=sys.stdout)         
-            
 
     def setShowable(self, widget=None, event=None):
         """
@@ -1993,17 +1996,17 @@ class Popwin(object):
             return True
         else:
             return False
-            
+
     def GetVisibleServerVBoxes(self):
-		"""
-		return list of visible server VBoxes
-		"""
-		visible_servervboxes = list()
-		for servervbox in self.ServerVBoxes.values():
-			if servervbox.get_visible() == True:
-				visible_servervboxes.append(servervbox)
-		return visible_servervboxes
-				
+        """
+        return list of visible server VBoxes
+        """
+        visible_servervboxes = list()
+        for servervbox in self.ServerVBoxes.values():
+            if servervbox.get_visible() == True:
+                visible_servervboxes.append(servervbox)
+        return visible_servervboxes
+
 
 
 class ServerVBox(gtk.VBox):
@@ -2027,7 +2030,7 @@ class ServerVBox(gtk.VBox):
         self.ButtonHosts = ButtonWithIcon(output=self.output, label="Hosts", icon="hosts.png")
         self.ButtonServices = ButtonWithIcon(output=self.output, label="Services", icon="services.png")
         self.ButtonHistory = ButtonWithIcon(output=self.output, label="History", icon="history.png")
-        
+
         # Label with status information
         self.LabelStatus = gtk.Label("")
 
@@ -2056,9 +2059,9 @@ class ServerVBox(gtk.VBox):
 
         self.HBox.add(self.AlignmentLeft)
         self.HBox.add(self.AlignmentRight)
-        
+
         self.VBox.add(self.HBox)
-        
+
         # Auth line
         self.HBoxAuth = gtk.HBox()
         self.AuthLabelUsername = gtk.Label("Username:")
@@ -2076,16 +2079,16 @@ class ServerVBox(gtk.VBox):
         self.HBoxAuth.add(self.AuthEntryPassword)
         self.HBoxAuth.add(self.AuthCheckbuttonSave)
         self.HBoxAuth.add(self.AuthButtonOK)
-        
+
         self.AlignmentAuth = gtk.Alignment(xalign=0, xscale=0.05, yalign=0)
         self.AlignmentAuth.add(self.HBoxAuth)  
-        
+
         self.VBox.add(self.AlignmentAuth)
-        
+
         # start with hidden auth as default
         self.HBoxAuth.set_no_show_all(True)
         self.HBoxAuth.hide_all()
-        
+
         self.Server_EventBox.add(self.VBox)
         self.add(self.Server_EventBox)            
 
@@ -2178,10 +2181,10 @@ class ServerVBox(gtk.VBox):
             self.miserable_server = server
             self.miserable_host = treeview.get_model()[path[0]][server.HOST_COLUMN_ID]
             self.miserable_service = treeview.get_model()[path[0]][server.SERVICE_COLUMN_ID]
-            
+
             # context menu for detailed status overview, opens with a mouse click onto a listed item
             self.popupmenu = gtk.Menu()		
-    
+
             # add custom actions - this is just a test!
             actions_list=list(self.output.conf.actions)
             actions_list.sort(key=str.lower)
@@ -2198,55 +2201,55 @@ class ServerVBox(gtk.VBox):
                             # only check if there is some to check
                             if str(action.re_host_enabled) == "True":
                                 if Actions.IsFoundByRE(self.miserable_host,\
-                                                                action.re_host_pattern,\
-                                                                action.re_host_reverse):
+                                                       action.re_host_pattern,\
+                                                       action.re_host_reverse):
                                     item_visible = True
                             # dito
                             if str(action.re_service_enabled) == "True":
                                 if Actions.IsFoundByRE(self.miserable_service,\
-                                                                action.re_service_pattern,\
-                                                                action.re_service_reverse):
+                                                       action.re_service_pattern,\
+                                                       action.re_service_reverse):
                                     item_visible = True
                             # dito
                             if str(action.re_status_information_enabled) == "True":
                                 if Actions.IsFoundByRE(self.miserable_service,\
-                                                                action.re_status_information_pattern,\
-                                                                action.re_status_information_reverse):
+                                                       action.re_status_information_pattern,\
+                                                       action.re_status_information_reverse):
                                     item_visible = True
                             # fallback if no regexp is selected                            
                             if str(action.re_host_enabled) == str(action.re_service_enabled) == str(action.re_status_information_enabled) == "False":
                                 item_visible = True
-                                
+
                     else:
                         # hosts should only care about host specific actions, no services
                         if str(action.filter_target_host) == "True":
                             if str(action.re_host_enabled) == "True":
                                 if Actions.IsFoundByRE(self.miserable_host,\
-                                                                action.re_host_pattern,\
-                                                                action.re_host_reverse):
+                                                       action.re_host_pattern,\
+                                                       action.re_host_reverse):
                                     item_visible = True
                             else:
                                 # a non specific action will be displayed per default
                                 item_visible = True
                 else:
                     item_visible = False
-                                
+
                 # populate context menu with service actions
                 if item_visible == True:
                     menu_item = gtk.MenuItem(a)
                     menu_item.connect("activate", self.TreeviewPopupMenuResponse, a)
                     self.popupmenu.append(menu_item)
-                    
+
                 del action, item_visible
-                
+
             # add "Edit actions..." menu entry
             menu_item = gtk.MenuItem("Edit actions...")
             menu_item.connect("activate", self.TreeviewPopupMenuResponse, "Edit actions...")
             self.popupmenu.append(menu_item)
-                            
+
             # add separator to separate between connections and actions
             self.popupmenu.append(gtk.SeparatorMenuItem())
-            
+
             # after the separator add actions
             # available default menu actions are monitor server dependent
             for i in self.server.MENU_ACTIONS:
@@ -2302,7 +2305,7 @@ class ServerVBox(gtk.VBox):
                 # if action wants a closed powin it should be closed
                 if str(self.output.conf.actions[remoteservice].close_popwin) == "True":
                     self.output.popwin.Close()  
-                    
+
                 # Action!
                 action.start()
 
@@ -2327,15 +2330,15 @@ class ServerVBox(gtk.VBox):
 
         except Exception, err:
             self.output.Dialog(message=err)
-            
-            
+
+
     def AuthOK(self, widget, server):
         """
         use given auth informations
         """
         server.username, server.password = self.AuthEntryUsername.get_text(), self.AuthEntryPassword.get_text()
         server.refresh_authentication = False
-        
+
         if self.AuthCheckbuttonSave.get_active() == True:
             # store authentication information in config
             server.conf.servers[server.get_name()].username = server.username
@@ -2344,13 +2347,13 @@ class ServerVBox(gtk.VBox):
             server.conf.SaveConfig(server=server)
         self.HBoxAuth.hide_all()
         self.HBoxAuth.set_no_show_all(True)
-        
+
         server.status = "Trying to reauthenticate..."
         server.status_description = ""
         self.output.popwin.UpdateStatus(server)
         self.output.popwin.Resize()
-        
-        
+
+
     def AuthUsername(self, widget, event):
         """ 
         if Return key has been pressed in password entry field interprete this as OK button being pressed
@@ -2358,15 +2361,15 @@ class ServerVBox(gtk.VBox):
         if gtk.gdk.keyval_name(event.keyval) in ["Return", "KP_Enter"]:
             self.AuthEntryPassword.grab_focus()   
 
-            
+
     def AuthPassword(self, widget, event, server):
         """ 
         if Return key has been pressed in password entry field interprete this as OK button being pressed
         """
         if gtk.gdk.keyval_name(event.keyval) in ["Return", "KP_Enter"]:
             self.AuthOK(widget, server)
-        
-            
+
+
 class Settings(object):
     """
         settings dialog as object, may lead to less mess
@@ -2375,7 +2378,7 @@ class Settings(object):
     def __init__(self, **kwds):
         # add all keywords to object
         for k in kwds: self.__dict__[k] = kwds[k]
-        
+
         # if not given default tab is empty
         if not "first_page" in kwds: self.first_page = ""
 
@@ -2384,10 +2387,10 @@ class Settings(object):
         self.builder = gtk.Builder()
         self.builder.add_from_file(self.builderfile)
         self.dialog = self.builder.get_object("settings_dialog")
-        
+
         # use gobject.idle_add() to be thread safe
         gobject.idle_add(self.output.AddGUILock, self.__class__.__name__)
-        
+
         # little feedback store for servers and actions treeviews
         self.selected_server = None
         self.selected_action = None
@@ -2483,10 +2486,10 @@ class Settings(object):
 
         # toggle custom sounds options
         self.ToggleCustomSoundOptions()
-        
+
         # toggle icon in systray popup offset
         self.ToggleSystrayPopupOffset()
-        
+
         # set filters fore sound filechoosers
         filters = dict()
         # WAV files work on every platform
@@ -2526,20 +2529,20 @@ class Settings(object):
             self.builder.get_object("hbox_systray_popup_offset").hide()
             self.builder.get_object("input_radiobutton_statusbar_floating").hide()
             self.builder.get_object("label_appearance").hide()   
-            
+
         # this should not be necessary, but for some reason the number of hours is 10 in unitialized state... :-(
         spinbutton = self.builder.get_object("input_spinbutton_defaults_downtime_duration_hours")
         spinbutton.set_value(int(self.conf.defaults_downtime_duration_hours))
         spinbutton = self.builder.get_object("input_spinbutton_defaults_downtime_duration_minutes")
         spinbutton.set_value(int(self.conf.defaults_downtime_duration_minutes))
-        
+
         # show filled settings dialog and wait thanks to gtk.run()
         self.dialog.run()
 
         # delete global open Windows entry
         # use gobject.idle_add() to be thread safe
         gobject.idle_add(self.output.DeleteGUILock, self.__class__.__name__)
-        
+
         self.dialog.destroy()
 
 
@@ -2666,7 +2669,7 @@ class Settings(object):
             self.output.popwin.Window.destroy()
             # re-initialize output with new settings
             self.output.__init__()       
-                                
+
             # in Windows the statusbar with gtk.gdk.WINDOW_TYPE_HINT_UTILITY places itself somewhere
             # this way it should be disciplined
             self.output.statusbar.StatusBar.move(int(self.conf.position_x), int(self.conf.position_y))
@@ -2755,10 +2758,10 @@ class Settings(object):
                 self.servers.pop(server)
                 # fill settings dialog treeview
                 self.FillTreeView("servers_treeview", servers, "Servers", "selected_server")
-                
+
             dialog.destroy()
 
-            
+
     def DeleteAction(self, action=None, actions=None):
         """
             delete action after prompting
@@ -2772,9 +2775,9 @@ class Settings(object):
                 self.conf.actions.pop(action)
                 # fill settings dialog treeview
                 self.FillTreeView("actions_treeview", actions, "Actions", "selected_action")
-                
+
             dialog.destroy()            
-            
+
 
     def CheckForNewVersionNow(self, widget=None):
         """
@@ -2859,7 +2862,7 @@ class Settings(object):
         checkbutton = self.builder.get_object("input_checkbutton_re_status_information_enabled")
         options.set_sensitive(checkbutton.get_active())
 
-        
+
     def ToggleSystrayPopupOffset(self, widget=None):
         """
             Toggle adjustment for systray-popup-offset (see sf.net bug 3389241)
@@ -2867,7 +2870,7 @@ class Settings(object):
         options = self.builder.get_object("hbox_systray_popup_offset")
         checkbutton = self.builder.get_object("input_radiobutton_icon_in_systray")
         options.set_sensitive(checkbutton.get_active())              
-        
+
 
     def PlaySound(self, playbutton=None):
         """
@@ -2881,7 +2884,7 @@ class Settings(object):
             import traceback
             traceback.print_exc(file=sys.stdout)
 
-            
+
 class GenericServer(object):
     """
         settings of one particuliar new Nagios server
@@ -2927,7 +2930,7 @@ class GenericServer(object):
         self.ToggleSavePassword()
         # show settings options for proxy - or not
         self.ToggleProxy()
-       
+
 
     def on_server_type_change(self, combobox):
         """ 
@@ -2954,7 +2957,7 @@ class GenericServer(object):
                 item = self.builder.get_object(item_id)
                 if item is not None:
                     item.set_visible(True)
-        
+
 
     def OK(self, widget):
         """
@@ -2995,7 +2998,7 @@ class GenericServer(object):
         server = Actions.get_registered_servers()[new_server.type]
         if "input_entry_monitor_cgi_url" in server.DISABLED_CONTROLS:
             new_server.monitor_cgi_url = new_server.monitor_url
-        
+
         # check if there is already a server named like the new one
         if new_server.name in self.conf.servers:
             self.output.Dialog(message='A server named "' + new_server.name + '" already exists.')
@@ -3081,7 +3084,7 @@ class GenericServer(object):
                   "input_entry_proxy_password"):
             item = self.builder.get_object(n)
             item.set_sensitive(state)
-                
+
 
 class NewServer(GenericServer):
     """
@@ -3092,15 +3095,15 @@ class NewServer(GenericServer):
         for k in kwds: self.__dict__[k] = kwds[k]
 
         GenericServer.__init__(self, **kwds)
-        
+
         # set title of settings dialog 
         self.dialog.set_title("New server")
-        
+
         # show filled settings dialog and wait thanks to gtk.run()
         self.dialog.run()
         self.dialog.destroy() 
 
-        
+
 class EditServer(GenericServer):
     """
         settings of one particuliar Nagios server
@@ -3108,7 +3111,7 @@ class EditServer(GenericServer):
     def __init__(self, **kwds):
         # add all keywords to object
         for k in kwds: self.__dict__[k] = kwds[k]
-        
+
         GenericServer.__init__(self, **kwds)
 
         # in case server has been selected do nothing
@@ -3144,9 +3147,9 @@ class EditServer(GenericServer):
             # set server type combobox which cannot be set by above hazard method
             servers = Actions.get_registered_server_type_list()
             server_types = dict([(x[1], x[0]) for x in enumerate(servers)])
-  
+
             self.combobox.set_active(server_types[self.conf.servers[self.server].type])
-            
+
             # show password - or not
             self.ToggleSavePassword()
             # show settings options for proxy - or not
@@ -3191,7 +3194,7 @@ class EditServer(GenericServer):
         active = combobox.get_active_iter()
         model = combobox.get_model()
         new_server.__dict__["type"] = model.get_value(active, 0)   
-        
+
         # workaround for cgi-url not needed by certain monitor types
         server = Actions.get_registered_servers()[new_server.type]
         if "input_entry_monitor_cgi_url" in server.DISABLED_CONTROLS:
@@ -3212,7 +3215,7 @@ class EditServer(GenericServer):
                 traceback.print_exc(file=sys.stdout)
             # delete server from servers dictionary
             self.servers.pop(self.server)
-            
+
             # put in new one
             self.conf.servers[new_server.name] = new_server
             # create new server thread
@@ -3276,7 +3279,7 @@ class GenericAction(object):
             combomodel.append((action_type,))
         combobox.set_model(combomodel)
         combobox.set_active(0)   
-        
+
         # if uninitialized action (e.g. new one) is used don't access actions dictionary
         if self.action == "":
             # ...but use a dummy object with default settings
@@ -3288,7 +3291,7 @@ class GenericAction(object):
         for i in ["input_entry_", "input_checkbutton_", "input_radiobutton_"]: 
             for key in keys:
                 j = self.builder.get_object(i + key)
-                
+
                 if not j:
                     continue
                 # some hazard, every widget has other methods to fill it with desired content
@@ -3308,7 +3311,7 @@ class GenericAction(object):
                     j.set_value(int(self.conf.__dict__[key]))
                 except:
                     pass
-        
+
         # disable help labels for actions        
         self.ToggleActionStringHelp()
         self.ToggleActionTypeHelp()
@@ -3346,7 +3349,7 @@ class GenericAction(object):
         active = combobox.get_active_iter()
         model = combobox.get_model()
         new_action.type = model.get_value(active, 0).lower()
-        
+
         # check if there is already an action named like the new one
         if new_action.name in self.conf.actions:
             self.output.Dialog(message='An action named "' + new_action.name + '" already exists.')
@@ -3365,8 +3368,8 @@ class GenericAction(object):
             settings dialog got cancelled
         """
         self.dialog.destroy()
-        
-        
+
+
     def ToggleREHostOptions(self, widget=None):
         """
             Toggle regular expression filter for hosts
@@ -3392,24 +3395,24 @@ class GenericAction(object):
         options = self.builder.get_object("hbox_re_status_information")
         checkbutton = self.builder.get_object("input_checkbutton_re_status_information_enabled")
         options.set_sensitive(checkbutton.get_active())
-        
-        
+
+
     def ToggleActionStringHelp(self, widget=None):
         """
             Toggle help label for action string
         """
         help = self.builder.get_object("label_help_string_description")
         help.set_visible(not help.get_visible())
-        
-        
+
+
     def ToggleActionTypeHelp(self, widget=None):
         """
             Toggle help label for action type
         """
         help = self.builder.get_object("label_help_type_description")
         help.set_visible(not help.get_visible())
-            
-            
+
+
 class NewAction(GenericAction):
     """
         generic settings of one particuliar new action server
@@ -3417,20 +3420,20 @@ class NewAction(GenericAction):
     def __init__(self, **kwds):
         # add all keywords to object
         for k in kwds: self.__dict__[k] = kwds[k]
-        
-        
+
+
         # create new dummy action
         self.action = ""                
-        
+
         GenericAction.__init__(self, **kwds)
-        
+
         # set title of settings dialog 
         self.dialog.set_title("New action")
-        
+
         # show filled settings dialog and wait thanks to gtk.run()
         self.dialog.run()
         self.dialog.destroy() 
-        
+
 
 class EditAction(GenericAction):
     """
@@ -3439,20 +3442,20 @@ class EditAction(GenericAction):
     def __init__(self, **kwds):
         # add all keywords to object
         for k in kwds: self.__dict__[k] = kwds[k]
-        
+
         GenericAction.__init__(self, **kwds)
-        
+
         # set title of settings dialog 
         self.dialog.set_title("Edit action " + self.action)    
-        
+
         # adjust combobox to used action type
         self.combobox = self.builder.get_object("input_combo_action_type")
         self.combobox.set_active({"browser":0, "command":1, "url":2}[self.conf.actions[self.action].type])           
-        
+
         # show filled settings dialog and wait thanks to gtk.run()
         self.dialog.run()
         self.dialog.destroy()         
-        
+
 
     def OK(self, widget):
         """
@@ -3486,7 +3489,7 @@ class EditAction(GenericAction):
         active = combobox.get_active_iter()
         model = combobox.get_model()
         new_action.type = model.get_value(active, 0).lower()
-        
+
         # check if there is already an action named like the new one
         if new_action.name in self.conf.actions and new_action.name != self.action:
             self.output.Dialog(message='An action named "' + new_action.name + '" already exists.')
@@ -3506,19 +3509,19 @@ class EditAction(GenericAction):
             settings dialog got cancelled
         """
         self.dialog.destroy()
-        
+
 
 class AuthenticationDialog:
     """
     used in case password should not be stored
-    
+
     "server" is here a Config.Server() instance given from nagstamon.py at startup, not a GenericServer()!
     """
 
     def __init__(self, **kwds):
         # the usual...
         for k in kwds: self.__dict__[k] = kwds[k]
-        
+
         # set the gtkbuilder files       
         self.builderfile = self.Resources + os.sep + "authentication_dialog.ui"       
         self.builder = gtk.Builder()
@@ -3530,7 +3533,7 @@ class AuthenticationDialog:
                           "button_exit_clicked" : self.Exit,
                           "button_disable_clicked" : self.Disable
                           }        
-        
+
         self.builder.connect_signals(handlers_dict)
 
         self.label_monitor = self.builder.get_object("label_monitor")
@@ -3541,13 +3544,13 @@ class AuthenticationDialog:
         self.label_monitor.set_text("Please give the correct credentials for "+ self.server.name + ":")
         self.entry_username.set_text(str(self.server.username))
         self.entry_password.set_text(str(self.server.password))
-        
+
         # omitting .show_all() leads to crash under Linux - why?
         self.dialog.show_all()
         self.dialog.run()
         self.dialog.destroy()
 
-        
+
     def OK(self, widget):       
         self.server.username = self.entry_username.get_text()
         self.server.password = self.entry_password.get_text()
@@ -3559,13 +3562,13 @@ class AuthenticationDialog:
             self.conf.servers[self.server.name].password = self.server.password
             self.conf.servers[self.server.name].save_password = True
             self.conf.SaveConfig(output=self.output)   
-            
-        
+
+
     def Disable(self, widget):
         # the old settings
         self.conf.servers[self.server.name].enabled = False
 
-        
+
     def Exit(self, widget):
         gtk.main_quit()
         sys.exit()
@@ -3607,7 +3610,7 @@ class ButtonWithIcon(gtk.Button):
         for k in kwds: self.__dict__[k] = kwds[k]
 
         gtk.Button.__init__(self)
-        
+
         # HBox is necessary because gtk.Button allows only one child
         hbox = gtk.HBox()
         icon = gtk.Image()
@@ -3615,9 +3618,8 @@ class ButtonWithIcon(gtk.Button):
         label = gtk.Label(" " + self.label)
         hbox.add(icon)
         hbox.add(label)
-        
+
         self.set_relief(gtk.RELIEF_NONE)
         self.add(hbox)
 
-        
 
