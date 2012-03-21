@@ -437,8 +437,8 @@ class GUI(object):
                     server.Error(sys.exc_info())
 
         # show and resize popwin
-        self.popwin.VBox.hide_all()
-        self.popwin.VBox.show_all()
+        #self.popwin.VBox.hide_all()
+        #self.popwin.VBox.show_all()
         self.popwin.Resize()
 
         # everything OK
@@ -1449,6 +1449,7 @@ class Popwin(object):
         # add all keywords to object, every mode searchs inside for its favorite arguments/keywords
         for k in kwds: self.__dict__[k] = kwds[k]
 
+        """
         # Initialize type popup
         self.Window = gtk.Window(gtk.WINDOW_TOPLEVEL)
 
@@ -1466,7 +1467,10 @@ class Popwin(object):
         # newer Ubuntus place a resize widget onto floating statusbar - please don't!
         self.Window.set_resizable(False)
         self.Window.set_property("skip-taskbar-hint", True)
-        self.Window.set_skip_taskbar_hint(True)    
+        self.Window.set_skip_taskbar_hint(True)
+        """
+
+        self.Window = self._CreatePopwin()
 
         # initialize the coordinates of left upper corner of the popwin
         self.popwinx0 = self.popwiny0 = 0
@@ -1630,6 +1634,33 @@ class Popwin(object):
         self.pointer_left_popwin = False
 
 
+    def _CreatePopwin(self):
+        """
+            Create popup window
+        """
+
+        # Initialize type popup
+        window = gtk.Window(gtk.WINDOW_TOPLEVEL)
+
+        # for not letting statusbar throw a shadow onto popwin in any composition-window-manager this helps to
+        # keep a more consistent look - copied from StatusBar... anyway, doesn't work... well, next attempt:
+        # Windows will have an entry on taskbar when not using HINT_UTILITY
+        if platform.system() == "Windows":
+            window.set_type_hint(gtk.gdk.WINDOW_TYPE_HINT_UTILITY)
+        else:
+            window.set_type_hint(gtk.gdk.WINDOW_TYPE_HINT_MENU)
+        
+        # make a nice popup of the toplevel window
+        window.set_decorated(False)
+        window.set_keep_above(True)
+        # newer Ubuntus place a resize widget onto floating statusbar - please don't!
+        window.set_resizable(False)
+        window.set_property("skip-taskbar-hint", True)
+        window.set_skip_taskbar_hint(True)
+
+        return window
+            
+
     def PopUp(self, widget=None, event=None):
         """
             pop up popwin
@@ -1641,11 +1672,40 @@ class Popwin(object):
         if self.showPopwin and not self.output.status_ok and self.output.conf.GetNumberOfEnabledMonitors() > 0:
             if len(self.output.GUILock) == 0 or self.output.GUILock.has_key("Popwin"):
                 self.output.statusbar.Moving = False
+
+                # borrowed from GUI.RefreshDisplayStatus()
+                #self.VBox.hide_all()
+                #self.VBox.show_all()
+                
                 # position and resize... necessary to do this here in case there are more than 1 monitors, because otherwise
                 # popwin will be placed somewhere but not on the right monitor
-                if not platform.system() == "Darwin" or self.output.statusbar.StatusBar.get_screen().get_n_monitors() > 1 \
-                    or str(self.conf.icon_in_systray) == "True":
-					self.Calculate()                    
+                ###if not platform.system() == "Darwin" or self.output.statusbar.StatusBar.get_screen().get_n_monitors() > 1 \
+                ###    or str(self.conf.icon_in_systray) == "True":
+                #if not platform.system() == "Darwin":
+				##	#self.Calculate()
+                #    self.Resize()                    
+                """
+                self.Window.set_visible(True)
+                self.Window.resize(1,1)
+                """
+
+                # after all the Windows bug with not resizing popwin
+                # can be solved with newly created popwin with every popup,
+                # just reparenting the content of the old to the new one
+                new_popwin = self._CreatePopwin()
+                self.VBox.reparent(new_popwin)
+                self.Window.destroy()
+                del self.Window
+                self.Window = new_popwin
+
+                # position and resize...
+                #self.Resize()
+
+                self.VBox.show_all()
+                self.Window.set_visible(True)
+                # position and resize...
+                self.Resize()
+                
                 # set combobox to default value
                 self.ComboboxMonitor.set_active(0)
                 # switch off Notification    
@@ -1653,12 +1713,10 @@ class Popwin(object):
                 # register as open window
                 # use gobject.idle_add() to be thread safe
                 gobject.idle_add(self.output.AddGUILock, self.__class__.__name__)
-        
-                self.Window.set_visible(True)
-                
-                # position and resize...
-                self.Resize()
-                
+                     
+                # do some garbage collection
+                gc.collect()
+                 
                 
     def LeavePopWin(self, widget=None, event=None):
         """
@@ -1725,16 +1783,17 @@ class Popwin(object):
         self.output.NotificationOff()       
 
 
+    ###def Resize(self):
+    ###    """
+    ###        resize popwin depending on the amount of information displayed in scrollbox
+    ###    """
+    ###    self.Calculate()
+    ###    self.Realize()
+        
+        
+        
+    ###def Calculate(self):
     def Resize(self):
-        """
-            resize popwin depending on the amount of information displayed in scrollbox
-        """
-        self.Calculate()
-        self.Realize()
-        
-        
-        
-    def Calculate(self):
         """
             calculate popwin dimensions depending on the amount of information displayed in scrollbox
         """
@@ -1790,21 +1849,14 @@ class Popwin(object):
                 statusbarx0 = self.output.statusbar.StatusBar.x0
                 statusbary0 = self.output.statusbar.StatusBar.y0
 
-
-            print 30*"#"
+            # find out the necessary dimensions of popwin - assembled from scroll area and the buttons
             treeviewwidth = treeviewheight = 0
             for servervbox in self.GetVisibleServerVBoxes():
-				width, height = servervbox.size_request()
-				treeviewwidth += width
-				treeviewheight += height
+                width, height = servervbox.size_request()
+                treeviewwidth += width
+                treeviewheight += height
 
-            print self.HBoxAllButtons.size_request()
-            
             buttonswidth, buttonsheight = self.HBoxAllButtons.size_request()
-			
-            # find out the necessary dimensions of popwin - assembled from scroll area and the buttons
-            #treeviewwidth, treeviewheight = self.ScrolledVBox.size_request()
-            print treeviewwidth, treeviewheight
 
             # get current monitor's settings
             screenx0, screeny0, screenwidth, screenheight = self.output.monitors[self.output.current_monitor]
@@ -1855,7 +1907,6 @@ class Popwin(object):
 
             # after having determined dimensions of scrolling area apply them
             #self.ScrolledWindow.set_size_request(treeviewwidth, treeviewheight)
-            print treeviewwidth, treeviewheight
             self.ScrolledVBox.set_size_request(treeviewwidth, treeviewheight)
 
             # if popwin is too wide cut it down to screen width
@@ -1874,13 +1925,8 @@ class Popwin(object):
             print err
             import traceback
             traceback.print_exc(file=sys.stdout)
-            
 
-    def Realize(self):
-        """
-            realize popwin depending on the amount of information displayed in scrollbox
-        """
-        try:           
+        try:
             # move popwin to its position
             self.Window.move(self.popwinx0, self.popwiny0)
 
@@ -1888,17 +1934,19 @@ class Popwin(object):
             self.Window.set_size_request(self.popwinwidth, self.popwinheight)
 
             # set size REALLY because otherwise it stays to large
-            self.Window.resize(self.popwinwidth, self.popwinheight)
-            print "self.popwinwidth, self.popwinheight:", self.popwinwidth, self.popwinheight
+            #self.Window.resize(self.popwinwidth, self.popwinheight)
+            # resize(1,1) automatically uses minimal necessary size
+            self.Window.resize(1,1)
             
             # statusbar pulls popwin to the top... with silly-windows-workaround(tm) included
             if str(self.conf.icon_in_systray) == "False": self.output.statusbar.Raise()
 
-            if self.output.popwin.Window.window and platform.system() == "Windows":
-                if self.output.popwin.Window.window.is_visible():
-					# please stay above everything else...
-                    self.output.popwin.Window.set_keep_above(True)
-                    self.output.popwin.Window.window.raise_()
+            ###if self.output.popwin.Window.window and platform.system() == "Windows":
+            ###    if self.output.popwin.Window.window.is_visible():
+			###		# please stay above everything else...
+                    ###self.output.popwin.Window.set_keep_above(True)
+                    ###self.output.popwin.Window.window.raise_()
+            ###        pass
                         
         except Exception, err:
             import traceback
