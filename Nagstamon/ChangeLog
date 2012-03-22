@@ -1,3 +1,64 @@
+2012-03-21 10:11  henriwww
+
+	* Nagstamon/Actions.py: reset update frequency to 60 secs
+
+2012-03-21 10:10  henriwww
+
+	* Nagstamon/Actions.py, Nagstamon/GUI.py: new attempt to fix
+	  Windows popwin resizing madness
+
+2012-03-13 23:32  henriwww
+
+	* Nagstamon/GUI.py: strange windows popwin resize bug still
+	  unsolved....
+
+2012-03-13 14:35  henriwww
+
+	* Nagstamon/GUI.py: deleted comments
+
+2012-03-13 14:28  henriwww
+
+	* Nagstamon/GUI.py: fixed windows systray popwin trouble
+
+2012-03-12 14:34  henriwww
+
+	* Nagstamon/GUI.py: fiddling around with windows popwin artefact
+
+2012-02-21 06:53  henriwww
+
+	* Nagstamon/__init__.py: corrected FSD address in __init__:.py
+
+2012-02-20 08:23  henriwww
+
+	* Nagstamon/GUI.py, installer/windows/nagstamon.iss: next attempt
+	  to fix stealing focus
+
+2012-02-20 07:58  henriwww
+
+	* ChangeLog, Nagstamon/GUI.py, Nagstamon/Server/Generic.py:
+	  reverted last changes to rc16
+
+2012-02-17 16:32  henriwww
+
+	* Nagstamon/GUI.py: trying to fix latest focus stealing bug V
+
+2012-02-17 16:23  henriwww
+
+	* Nagstamon/GUI.py: trying to fix latest focus stealing bug IV
+
+2012-02-17 16:17  henriwww
+
+	* Nagstamon/GUI.py: trying to fix latest focus stealing bug III
+
+2012-02-17 16:03  henriwww
+
+	* Nagstamon/GUI.py: trying to fix latest focus stealing bug II
+
+2012-02-17 16:01  henriwww
+
+	* Nagstamon/Config.py, Nagstamon/GUI.py: trying to fix latest focus
+	  stealing bug
+
 2012-02-14 10:20  henriwww
 
 	* Nagstamon/Server/Generic.py, installer/windows/nagstamon.iss:
