@@ -427,9 +427,7 @@ class GUI(object):
                 except:
                     server.Error(sys.exc_info())
 
-        # show and resize popwin
-        #self.popwin.VBox.hide_all()
-        #self.popwin.VBox.show_all()
+        # resize popwin
         self.popwin.Resize()
 
         # everything OK
@@ -1659,20 +1657,9 @@ class Popwin(object):
         # seems like a strange workaround
         if self.showPopwin and not self.output.status_ok and self.output.conf.GetNumberOfEnabledMonitors() > 0:
             if len(self.output.GUILock) == 0 or self.output.GUILock.has_key("Popwin"):
+                
                 self.output.statusbar.Moving = False
-
-                # borrowed from GUI.RefreshDisplayStatus()
-                #self.VBox.hide_all()
-                #self.VBox.show_all()
-
-                # position and resize... necessary to do this here in case there are more than 1 monitors, because otherwise
-                # popwin will be placed somewhere but not on the right monitor
-                """
-                if not platform.system() == "Darwin" or self.output.statusbar.StatusBar.get_screen().get_n_monitors() > 1 \
-                    or str(self.conf.icon_in_systray) == "True":
-                    self.Resize()
-                """
-
+                
                 # after all the Windows bug with not resizing popwin
                 # can be solved with newly created popwin with every popup,
                 # just reparenting the content of the old to the new one
@@ -1681,11 +1668,10 @@ class Popwin(object):
                 self.Window.destroy()
                 del self.Window
                 self.Window = new_popwin
-
-                #self.Resize()                    
+           
                 self.VBox.show_all()
-
                 self.Window.set_visible(True)
+                
                 # position and resize...
                 self.calculate_coordinates = True
                 self.Resize()
@@ -1743,7 +1729,7 @@ class Popwin(object):
             # If pointer is outside popwin close it
             # to support Windows(TM)'s slow and event-loosing behaviour use some margin (10px) to be more tolerant to get popwin closed
             # y-axis dooes not get extra 10 px on top for sake of combobox and x-axis on right side not because of scrollbar -
-            # so i wonder if it has any use left...
+            # so I wonder if it has any use left...
             if str(self.conf.close_details_hover) == "True":
                 if mousex <= popwinx0 + 10 or mousex >= (popwinx0 + self.popwinwidth) or mousey <= popwiny0 or mousey >= (popwiny0 + self.popwinheight) - 10 :       
                     self.Close()        
@@ -1766,17 +1752,7 @@ class Popwin(object):
         # notification off because user had a look to hosts/services recently
         self.output.NotificationOff()       
 
-
-    ###def Resize(self):
-    ###    """
-    ###        resize popwin depending on the amount of information displayed in scrollbox
-    ###    """
-    ###    self.Calculate()
-    ###    self.Realize()
-
-
-
-    ###def Calculate(self):
+        
     def Resize(self):
         """
             calculate popwin dimensions depending on the amount of information displayed in scrollbox
@@ -1791,17 +1767,12 @@ class Popwin(object):
                 for m in range(self.output.statusbar.StatusBar.get_screen().get_n_monitors()):
                     monx0, mony0, monw, monh = self.output.statusbar.StatusBar.get_screen().get_monitor_geometry(m)
                     self.output.monitors[m] = (monx0, mony0, monw, monh)
-
                 
                 # get x0 and y0 - workaround for gtk trayicon because self.statusbar as trayicon
                 # cannot get its absolute position, so we need to get pointers position relative
                 # to root window and to trayicon and subtract them and save the values in the
                 # self.statusbar object to avoid jumping popwin in case it is open, the status 
                 # refreshed and the pointer has moved
-                """
-                if self.Window.get_properties("visible")[0] == False:
-                """
-                
                 if self.calculate_coordinates == True:
                     # check if icon in systray or statusbar 
                     if str(self.conf.icon_in_systray) == "True":
@@ -1899,7 +1870,6 @@ class Popwin(object):
                         self.popwiny0 = statusbary0 - self.popwinheight
 
                 # after having determined dimensions of scrolling area apply them
-                #self.ScrolledWindow.set_size_request(treeviewwidth, treeviewheight)
                 self.ScrolledVBox.set_size_request(treeviewwidth, treeviewheight)
 
                 # if popwin is too wide cut it down to screen width
@@ -1927,19 +1897,11 @@ class Popwin(object):
                 self.Window.set_size_request(self.popwinwidth, self.popwinheight)
 
                 # set size REALLY because otherwise it stays to large
-                #self.Window.resize(self.popwinwidth, self.popwinheight)
                 # resize(1,1) automatically uses minimal necessary size
                 self.Window.resize(1,1)
 
                 # statusbar pulls popwin to the top... with silly-windows-workaround(tm) included
                 if str(self.conf.icon_in_systray) == "False": self.output.statusbar.Raise()
-
-                ###if self.output.popwin.Window.window and platform.system() == "Windows":
-                ###    if self.output.popwin.Window.window.is_visible():
-                            ###		# please stay above everything else...
-                        ###self.output.popwin.Window.set_keep_above(True)
-                        ###self.output.popwin.Window.window.raise_()
-                ###        pass
 
             except Exception, err:
                 import traceback
