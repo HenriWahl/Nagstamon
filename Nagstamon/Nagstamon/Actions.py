@@ -114,8 +114,8 @@ class RefreshLoopOneServer(threading.Thread):
                         # of lost network connectivity - this leads to a mysterious pango crash
                         if self.output.statusbar.isShowingError == False:
                             gobject.idle_add(self.output.RefreshDisplayStatus)
-                            time.sleep(0.05)
-                            gobject.idle_add(self.output.RefreshDisplayStatus)
+                            ###time.sleep(0.05)
+                            ###gobject.idle_add(self.output.RefreshDisplayStatus)
                             # wait a moment
                             time.sleep(5)
                             # change statusbar to the following error message
@@ -133,8 +133,8 @@ class RefreshLoopOneServer(threading.Thread):
                         self.server.status = "Connected"
                         # tell gobject to care about GUI stuff - refresh display status
                         gobject.idle_add(self.output.RefreshDisplayStatus)
-                        time.sleep(0.05)
-                        gobject.idle_add(self.output.RefreshDisplayStatus)
+                        ###time.sleep(0.05)
+                        ###gobject.idle_add(self.output.RefreshDisplayStatus)
                         # wait for the doRefresh flag to be True, if it is, do a refresh
                         if self.doRefresh == True:
                             if str(self.conf.debug_mode) == "True":
