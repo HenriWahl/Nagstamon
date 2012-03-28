@@ -1912,6 +1912,7 @@ class Popwin(object):
                 self.Window.window.move_resize(self.popwinx0, self.popwiny0, self.popwinwidth, self.popwinheight)
         
         # statusbar pulls popwin to the top... with silly-windows-workaround(tm) included
+        self.output.statusbar.Raise()
         if str(self.conf.icon_in_systray) == "False": self.output.statusbar.Raise()
 
         return self.popwinx0, self.popwiny0, self.popwinwidth, self.popwinheight

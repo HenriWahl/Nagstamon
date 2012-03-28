@@ -1,3 +1,43 @@
+2012-03-28 06:41  henriwww
+
+	* Nagstamon/GUI.py, installer/windows/nagstamon.iss: adjusted
+	  heightbuffer
+
+2012-03-27 13:06  henriwww
+
+	* Nagstamon/Actions.py: kind of fixed popwin misplacement part II
+
+2012-03-27 10:19  henriwww
+
+	* Nagstamon/GUI.py: kind of fixed popwin misplacement
+
+2012-03-26 13:27  henriwww
+
+	* Nagstamon/Actions.py, Nagstamon/GUI.py: solution for non-showing
+	  popwin seems near
+
+2012-03-23 16:28  henriwww
+
+	* Nagstamon/Actions.py, Nagstamon/GUI.py: one step further to fix
+	  that GUI glitches of popwin when statusbar is on bottom of screen
+
+2012-03-22 11:38  henriwww
+
+	* ChangeLog: release candidate preparation
+
+2012-03-22 11:28  henriwww
+
+	* Nagstamon/Actions.py, Nagstamon/GUI.py: some cleaning
+
+2012-03-22 10:28  henriwww
+
+	* Nagstamon/GUI.py: fix for last fix
+
+2012-03-21 14:13  henriwww
+
+	* Nagstamon/Actions.py, Nagstamon/GUI.py: fixed popwin resize
+	  trouble in windows
+
 2012-03-21 10:11  henriwww
 
 	* Nagstamon/Actions.py: reset update frequency to 60 secs
