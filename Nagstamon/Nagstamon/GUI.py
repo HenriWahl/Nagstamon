@@ -1618,7 +1618,7 @@ class Popwin(object):
         self.calculate_coordinates = True
         
         # add some buffer pixels to popwinheight to avoid silly scrollbars
-        self.heightbuffer_internal = 3
+        self.heightbuffer_internal = 10
         if platform.system() != "Windows" and self.Window.get_screen().get_n_monitors() > 1:
             self.heightbuffer_external = 30
         else:
