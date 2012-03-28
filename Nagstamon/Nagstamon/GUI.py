@@ -1803,7 +1803,10 @@ class Popwin(object):
                     statusbar_mousex, statusbar_mousey = 0, int(self.conf.systray_popup_offset)
                 # set monitor for later applying the correct monitor geometry
                 self.output.current_monitor = self.output.statusbar.StatusBar.get_screen().get_monitor_at_point(mousex, mousey)
-
+            
+                statusbarx0 = mousex - statusbar_mousex
+                statusbary0 = mousey - statusbar_mousey                
+                
             else:
                 mousex, mousey, foo = self.output.statusbar.StatusBar.get_screen().get_root_window().get_pointer()
 
