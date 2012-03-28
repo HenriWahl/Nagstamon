@@ -1624,6 +1624,10 @@ class Popwin(object):
         else:
             self.heightbuffer_external = 0
 
+        # for whatever reason in Windows the Filters button grabs initial focus
+        # so the close button should grab it for cosmetical reasons
+        self.ButtonClose.grab_focus()
+
 
     def _CreatePopwin(self, x0=0, y0=0, width=0, height=0):
         """
