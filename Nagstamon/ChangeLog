@@ -1,3 +1,17 @@
+2012-03-28 12:47  henriwww
+
+	* Nagstamon/GUI.py: just another regression bug made popwin
+	  unopenable when in systray
+
+2012-03-28 12:11  henriwww
+
+	* ChangeLog, Nagstamon/GUI.py, installer/debian/changelog:
+	  regression bug of vanishing windows statusbar maybe fixed
+
+2012-03-28 10:29  henriwww
+
+	* Nagstamon/GUI.py: once again a stupid Windows workaround
+
 2012-03-28 06:41  henriwww
 
 	* Nagstamon/GUI.py, installer/windows/nagstamon.iss: adjusted

@@ -14,7 +14,7 @@ nagstamon (0.9.9.1-1) unstable; urgency=low
     - fixed some Check_MK Multisite UTF trouble
     - fixed some GUI artefacts when resizing popup window
 
- -- Henri Wahl <h.wahl@ifw-dresden.de>  Mon, 23 Jan 2012 11:25:00 +0200
+ -- Henri Wahl <h.wahl@ifw-dresden.de>  Fri, 13 Apr 2012 11:25:00 +0200
 
 nagstamon (0.9.8.1-1) unstable; urgency=low
 
