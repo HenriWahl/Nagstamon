@@ -10,7 +10,7 @@ from Nagstamon.Server.Nagios import NagiosServer
 from Nagstamon.Server.Centreon import CentreonServer
 from Nagstamon.Server.Icinga import IcingaServer
 from Nagstamon.Server.Multisite import MultisiteServer
-from Nagstamon.Server.Ninja import NinjaServer
+from Nagstamon.Server.Ninja import Ninja2Server, Ninja3Server
 from Nagstamon.Server.Opsview import OpsviewServer
 
 
@@ -20,6 +20,7 @@ register_server(NagiosServer)
 register_server(CentreonServer)
 register_server(MultisiteServer)
 register_server(IcingaServer)
-register_server(NinjaServer)
+register_server(Ninja2Server)
+register_server(Ninja3Server)
 register_server(OpsviewServer)
 

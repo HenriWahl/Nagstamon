@@ -13,58 +13,52 @@ import cookielib
 from Nagstamon import Actions
 from Nagstamon.Objects import *
 from Nagstamon.Server.Generic import GenericServer, not_empty
-
+from Nagstamon.BeautifulSoup import BeautifulSoup
 
 class NinjaServer(GenericServer):
     """
         Ninja plugin for Nagstamon
     """
 
-    TYPE = 'Ninja'
+    bitmasks = {
+        1: 'acknowledged',
+        2: 'notifications_disabled',
+        4: 'passiveonly',
+        8: 'scheduled_downtime',
+        16: 'down_or_unreachable',
+        32: 'flapping'
+    }
+    commit_path = '/index.php/command/commit'
+    show_login_path =  '/index.php/default/show_login'
+    login_path ='/index.php/default/do_login'
+    time_path = '/index.php/extinfo/show_process_info'
+    services_path = "/index.php/status/service/all?servicestatustypes=78&hoststatustypes=71&items_per_page=10000"
+    hosts_path = "/index.php/status/host/?host=all&hoststatustypes=6&items_per_page=999999"
 
-    # Ninja variables to be used later
-    commit_url = False
-    login_url = False
-    time_url = False
-    
-    # URLs for browser shortlinks/buttons on popup window
-    BROWSER_URLS= { "monitor": "$MONITOR$",\
-                    "hosts": "$MONITOR$/index.php/status/host/all/6",\
-                    "services": "$MONITOR$/index.php/status/service/all?servicestatustypes=14",\
-                    "history": "$MONITOR$/index.php/showlog/alert_history"}
-    
-    # A Monitor CGI URL is not necessary so hide it in settings
-    DISABLED_CONTROLS = ["label_monitor_cgi_url", "input_entry_monitor_cgi_url"]
-
-    
     def __init__(self, **kwds):
         GenericServer.__init__(self, **kwds)
-        
+
         # dictionary to translate status bitmaps on webinterface into status flags
         # this are defaults from Nagios
-        self.STATUS_MAPPING = { "acknowledged.png" : "acknowledged",\
-                                "active-checks-disabled.png" : "passiveonly",\
-                                "notify-disabled.png" : "notifications_disabled",\
-                                "scheduled-downtime.png" : "scheduled_downtime",\
-                                "flapping.gif" : "flapping" }   
 
         # Entries for monitor default actions in context menu
-        self.MENU_ACTIONS = ["Monitor", "Recheck", "Acknowledge", "Downtime"]      
+        self.MENU_ACTIONS = ["Recheck", "Acknowledge", "Downtime"]
 
-        
+    def get_start_end(self, host):
+        """ You must not call NinjaServer directly, use any child class """
+        raise NotImplementedError("You must not call NinjaServer directly, use any child class")
+
     def init_HTTP(self):
-        # add default auth for monitor.old 
+        # add default auth for monitor.old
         GenericServer.init_HTTP(self)
 
         # self.Cookie is a CookieJar which is a list of cookies - if 0 then emtpy
-        if len(self.Cookie) == 0: 
+        if len(self.Cookie) == 0:
             try:
                 # Ninja Settings
-                self.commit_url = self.monitor_url + '/index.php/command/commit'
-                self.login_url = self.monitor_url + '/index.php/default/do_login'
-                self.time_url = self.monitor_url + '/index.php/extinfo/show_process_info'
                 # get a Ninja cookie via own method
-                self.urlopener.open(self.login_url, urllib.urlencode({'username': self.get_username(), 'password': self.get_password()}))
+                self.urlopener.add_handler(urllib2.HTTPDefaultErrorHandler())
+                self.urlopener.open(self.login_url, urllib.urlencode({'username': self.get_username(), 'password': self.get_password(), 'csrf_token': self.csrf()}))
 
                 if str(self.conf.debug_mode) == "True":
                     self.Debug(server=self.get_name(), debug="Cookie:" + str(self.Cookie))
@@ -72,6 +66,11 @@ class NinjaServer(GenericServer):
             except:
                 self.Error(sys.exc_info())
 
+    def csrf(self):
+        opener = urllib2.build_opener(urllib2.HTTPCookieProcessor(self.Cookie))
+        response = opener.open(self.show_login_url)
+        soup = BeautifulSoup(response.read())
+        return soup.find('input', {'name': 'csrf_token'})['value']
 
     def open_tree_view(self, host, service):
         if not service:
@@ -79,7 +78,36 @@ class NinjaServer(GenericServer):
         else:
             webbrowser.open('%s/index.php/extinfo/details/service/%s?service=%s' % (self.monitor_url, host, service))
 
-            
+    def open_services(self):
+        webbrowser.open('%s/index.php/status/service/all?servicestatustypes=14' % (self.monitor_url))
+
+    def open_hosts(self):
+        webbrowser.open('%s/index.php/status/host/all/6' % (self.monitor_url))
+
+    @property
+    def time_url(self):
+        return self.monitor_url + self.time_path
+
+    @property
+    def login_url(self):
+        return self.monitor_url + self.login_path
+
+    @property
+    def show_login_url(self):
+        return self.monitor_url + self.show_login_path
+
+    @property
+    def commit_url(self):
+        return self.monitor_url + self.commit_path
+
+    @property
+    def hosts_url(self):
+        return self.monitor_url + self.hosts_path
+
+    @property
+    def services_url(self):
+        return self.monitor_url + self.services_path
+
     def _set_recheck(self, host, service):
         if not service:
             values = {"requested_command": "SCHEDULE_HOST_CHECK"}
@@ -122,7 +150,7 @@ class NinjaServer(GenericServer):
         values.update({"cmd_param[comment]": comment})
 
         self.FetchURL(self.commit_url, cgi_data=urllib.urlencode(values), giveback="raw")
-        
+
 
     def _set_downtime(self, host, service, author, comment, fixed, start_time, end_time, hours, minutes):
         if not service:
@@ -142,234 +170,64 @@ class NinjaServer(GenericServer):
 
         self.FetchURL(self.commit_url, cgi_data=urllib.urlencode(values), giveback="raw")
 
-    def get_start_end(self, host):
-        try:
-            content = self.FetchURL(self.time_url, giveback="raw").result
-            pos = content.find('<span id="page_last_updated">')
-            start_time = content[pos+len('<span id="page_last_updated">'):content.find('<', pos+1)]
-            if start_time:
-                magic_tuple = datetime.datetime.strptime(str(start_time), "%Y-%m-%d %H:%M:%S")
-                start_diff = datetime.timedelta(0, 10)
-                end_diff = datetime.timedelta(0, 7210)
-                start_time = magic_tuple + start_diff
-                end_time = magic_tuple + end_diff
+    def get_host_status(self):
+        htobj = self.FetchURL(self.hosts_url).result
+        table = htobj.find('table', {'id': 'host_table'})
+        trs = table.findAll('tr')
+        trs.pop(0)
 
-                return str(start_time), str(end_time)
-        except:
-            self.Error(sys.exc_info())
-            return "n/a", "n/a"
+        for tr in [tr for tr in table('tr') if len(tr('td')) > 0]:
+            n = self.parse_host_row(tr)
 
+            # after collection data in nagitems create objects from its informations
+            # host objects contain service objects
+            if n["name"] not in self.new_hosts:
+                new_host = GenericHost()
+                for attr, val in n.iteritems():
+                    setattr(new_host, attr, val)
+                self.new_hosts[new_host.name] = new_host
 
-    def calc_current_state(self, n):
-        ''' Return the current state of a host/service based on the value we parse from the page and run it into binary'''
-        ''' Reference list
-        1 = problem_has_been_acknowledged
-        2 = notifications_enabled
-        4 = active_checks_disabled
-        8 = scheduled_downtime_depth
-        16 = host_down || host_unreachable || service_critical || service_unknown || service_warning
-        32 = is_flapping
-        '''
-        state_list = [['problem_has_been_acknowledged', False],
-         ['notifications_enabled', False],
-         ['active_checks_disabled', False],
-         ['scheduled_downtime', False],
-         ['has_problem', False],
-         ['is_flapping', False]]
+    def get_service_status(self):
+        htobj = self.FetchURL(self.services_url).result
+        table = htobj.find('table', {'id': 'service_table'})
+        trs = table('tr')
+        trs.pop(0)
+        lasthost = ""
 
-        for i in range(len(state_list)):
-            if (1 << i) & n:
-                state_list[i][1] = True
-                
-        return dict(state_list)
+        for tr in [tr for tr in table('tr') if len(tr('td')) > 0]:
+            n, host_bitmask = self.parse_service_row(tr)
 
+            if n["host"] not in self.new_hosts:
+                # the hosts that we just fetched were on a list only containing
+                # those in a non-OK state, thus, we just found a not-yet seen host
+                # and we have to fake it 'til we make it
+                new_host = GenericHost()
+                new_host.name = n["host"]
+                new_host.status = "UP"
+                new_host.visible = False
+
+                # trying to fix https://sourceforge.net/tracker/index.php?func=detail&aid=3299790&group_id=236865&atid=1101370
+                # if host is not down but in downtime or any other flag this should be evaluated too
+                if host_bitmask:
+                    for number, name in self.bitmasks.iteritems():
+                        setattr(new_host, name, bool(int(host_bitmask) & number))
+                self.new_hosts[n["host"]] = new_host
+
+            # if a service does not exist create its object
+            if n["name"] not in self.new_hosts[n["host"]].services:
+                new_service = GenericService()
+                for attr, val in n.iteritems():
+                    setattr(new_service, attr, val)
+                self.new_hosts[n["host"]].services[n["name"]] = new_service
 
     def _get_status(self):
         """
         Get status from Ninja Server
         """
 
-        # create Ninja items dictionary with to lists for services and hosts
-        # every list will contain a dictionary for every failed service/host
-        # this dictionary is only temporarily
-        nagitems = {"services":[], "hosts":[]}
-
-        nagiosurl_services = self.monitor_url + "/index.php/status/service/all?servicestatustypes=78&hoststatustypes=71&items_per_page=10000"
-        nagiosurl_hosts = self.monitor_url + "/index.php/status/host/all/6"
-
-        # Hosts
         try:
-            result = self.FetchURL(nagiosurl_hosts)
-
-            htobj, error = result.result, result.error
-            table = htobj.find('table', {'id': 'host_table'})
-            trs = table.findAll('tr')
-            trs.pop(0)
-
-            for tr in table('tr'):
-                try:
-                    # ignore empty <tr> rows
-                    tds = tr('td')
-                    if len(tds) > 1:
-                        n = {}
-                        # host
-                        try:
-                            n["host"] = tds[2](text=not_empty)  
-                            n["host"] = n["host"][0].strip()
-                            n["status"] = str(tds[0](text=not_empty)[0].strip())
-                            n["last_check"] = str(tds[5](text=not_empty)[0].strip())
-                            n["duration"] = str(tds[6](text=not_empty)[0].strip())
-                            n["attempt"] = "N/A"
-                            n["status_information"] = str(tds[7](text=not_empty)[0].strip())
-                            
-                            # status flags 
-                            n["passiveonly"] = False
-                            n["notifications_disabled"] = False
-                            n["flapping"] = False
-                            n["acknowledged"] = False
-                            n["scheduled_downtime"] = False                            
-                                
-                            # map status icons to status flags
-                            icons = tds[2].findAll('img')
-                            for i in icons:
-                                icon = i["src"].split("/")[-1]
-                                if icon in self.STATUS_MAPPING:
-                                    n[self.STATUS_MAPPING[icon]] = True
-                            # cleaning
-                            del icons
-                                                       
-                           # add dictionary full of information about this host item to nagitems
-                            nagitems["hosts"].append(n)
-                            # after collection data in nagitems create objects from its informations
-                            # host objects contain service objects
-                            if not self.new_hosts.has_key(n["host"]):
-                                new_host = n["host"]
-                                self.new_hosts[new_host] = GenericHost()
-                                self.new_hosts[new_host].name = n["host"]
-                                self.new_hosts[new_host].status = n["status"]
-                                self.new_hosts[new_host].last_check = n["last_check"]
-                                self.new_hosts[new_host].duration = n["duration"]
-                                self.new_hosts[new_host].attempt = n["attempt"]
-                                self.new_hosts[new_host].status_information= n["status_information"]
-                                self.new_hosts[new_host].passiveonly = n["passiveonly"]
-                                self.new_hosts[new_host].flapping = n["flapping"]
-                                self.new_hosts[new_host].acknowledged = n["acknowledged"]
-                                self.new_hosts[new_host].notifications_disabled = n["notifications_disabled"]
-                                self.new_hosts[new_host].scheduled_downtime = n["scheduled_downtime"]
-                                self.new_hosts[new_host].visible = True
-                        except:
-                            n["host"] = str(nagitems[len(nagitems)-1]["host"])
-                            print "Except: " + str(nagitems[len(nagitems)-1]["host"])
-                except:
-                    self.Error(sys.exc_info())
-
-            del htobj
-        except:
-            # set checking flag back to False
-            self.isChecking = False
-            result, error = self.Error(sys.exc_info())
-            return Result(result=result, error=error)
-
-
-        # Services
-        try:
-            result = self.FetchURL(nagiosurl_services)
-
-            htobj, error = result.result, result.error
-            table = htobj.find('table', {'id': 'service_table'})
-            trs = table('tr')
-            trs.pop(0)
-            lasthost = ""
-
-            for tr in trs:
-                try:
-                    # ignore empty <tr> rows
-                    tds = tr('td')
-                    if len(tds) > 1:
-                        n = {}
-                        try:
-                            n["host"] = tds[1](text=not_empty)[0]
-                            if n["host"]:
-                                lasthost = n["host"]
-                            else:
-                                n["host"] = lasthost
-                        except:
-                            n["host"] = lasthost
-
-                        n["status"] = str(tds[2](text=not_empty)[0].strip())
-                        n["service"] = tds[4](text=not_empty)
-                        i = 1
-                        for i in range(len(n["service"])):
-                            if n["service"][i]:
-                                n["service_args"] = n["service"][i].strip()
-                                i+=1
-                        n["service"] = str(n["service"][0])
-                        n["last_check"] = str(tds[6](text=not_empty)[0].strip())
-                        n["duration"] = str(tds[7](text=not_empty)[0].strip())
-                        n["attempt"] = str(tds[8](text=not_empty)[0].strip())
-                        n["status_information"] = str(tds[9](text=not_empty)[0].strip())
-
-                        # status flags 
-                        n["passiveonly"] = False
-                        n["notifications_disabled"] = False
-                        n["flapping"] = False
-                        n["acknowledged"] = False
-                        n["scheduled_downtime"] = False
-                        
-                        # map status icons to status flags
-                        icons = tds[4].findAll('img')            
-                        for i in icons:
-                            icon = i["src"].split("/")[-1]
-                            if icon in self.STATUS_MAPPING:
-                                n[self.STATUS_MAPPING[icon]] = True
-                        # cleaning
-                        del icons                       
-
-                        nagitems["services"].append(n)
-                        # after collection data in nagitems create objects of its informations
-                        # host objects contain service objects
-                        if not self.new_hosts.has_key(n["host"]):
-                            self.new_hosts[n["host"]] = GenericHost()
-                            self.new_hosts[n["host"]].name = n["host"]
-                            self.new_hosts[n["host"]].status = "UP"
-                            self.new_hosts[n["host"]].visible = False
-                            
-                            # trying to fix https://sourceforge.net/tracker/index.php?func=detail&aid=3299790&group_id=236865&atid=1101370
-                            # if host is not down but in downtime or any other flag this should be evaluated too
-                            # map status icons to status flags
-                            icons = tds[1].findAll('img')
-                            for i in icons:
-                                icon = i["src"].split("/")[-1]
-                                if icon in self.STATUS_MAPPING:
-                                    self.new_hosts[n["host"]].__dict__[self.STATUS_MAPPING[icon]] = True
-                            # cleaning
-                            del icons                            
-                            
-                            
-                        # if a service does not exist create its object
-                        if not self.new_hosts[n["host"]].services.has_key(n["service"]):
-                            new_service = n["service"]
-                            self.new_hosts[n["host"]].services[new_service] = GenericService()
-                            self.new_hosts[n["host"]].services[new_service].host = n["host"]
-                            self.new_hosts[n["host"]].services[new_service].name = n["service"]
-                            self.new_hosts[n["host"]].services[new_service].status = n["status"]
-                            self.new_hosts[n["host"]].services[new_service].last_check = n["last_check"]
-                            self.new_hosts[n["host"]].services[new_service].duration = n["duration"]
-                            self.new_hosts[n["host"]].services[new_service].attempt = n["attempt"]
-                            self.new_hosts[n["host"]].services[new_service].status_information = n["status_information"]
-                            self.new_hosts[n["host"]].services[new_service].passiveonly = n["passiveonly"]
-                            self.new_hosts[n["host"]].services[new_service].flapping = n["flapping"]
-                            self.new_hosts[n["host"]].services[new_service].acknowledged = n["acknowledged"]
-                            self.new_hosts[n["host"]].services[new_service].notifications_disabled = n["notifications_disabled"]
-                            self.new_hosts[n["host"]].services[new_service].scheduled_downtime = n["scheduled_downtime"]
-                            self.new_hosts[n["host"]].services[new_service].visible = True
-
-                except:
-                    self.Error(sys.exc_info())
-
-            del htobj
-            del table
-
+            self.get_host_status()
+            self.get_service_status()
         except:
             # set checking flag back to False
             self.isChecking = False
@@ -377,3 +235,79 @@ class NinjaServer(GenericServer):
             return Result(result=result, error=error)
 
         return Result()
+
+    def parse_host_row(self, tr):
+        tds = tr('td')
+        n = {}
+        n["name"] = tds[0]['id'].split('|')[-1]
+        n["status"] = tds[0]['title']
+        n["last_check"] = str(tds[5].contents[0])
+        n["duration"] = str(tds[6].contents[0])
+        n["attempt"] = "N/A"
+        n["status_information"] = str(tds[7].contents[0]).strip()
+        n["visible"] = True
+
+        # the last, hidden, span always contains an integer
+        bitmask = tds[2].findAll('span')[-1]
+
+        for number, name in self.bitmasks.iteritems():
+            n[name] = bool(int(bitmask.contents[0]) & number)
+
+        return n
+
+    def parse_service_row(self, tr):
+        tds = tr('td')
+        n = {}
+        n["status"] = tds[2]['title']
+
+        host_bitmask = tds[1].findAll('span')
+        if host_bitmask:
+            # we got at least one hit, pick the last
+            host_bitmask = host_bitmask[-1].contents[0]
+        n["host"] = tds[0]['id'].split('|')[-1]
+        n["name"] = tds[2]['id'].split('|')[-1]
+        n["last_check"] = str(tds[6].contents[0])
+        n["duration"] = str(tds[7].contents[0])
+        n["attempt"] = str(tds[8].contents[0])
+        n["status_information"] = str(tds[9].contents[0]).strip()
+        n["visible"] = True
+
+        # the last, hidden, span always contains an integer
+        bitmask = tds[4].findAll('span')[-1]
+        for number, name in self.bitmasks.iteritems():
+            n[name] = bool(int(bitmask.contents[0]) & number)
+
+        return n, host_bitmask
+
+class Ninja3Server(NinjaServer):
+    """ Latest and greatest will always have TYPE = Ninja """
+    TYPE = 'Ninja'
+
+    def get_start_end(self, host):
+        last_update = self.FetchURL(self.time_url).result.find("a", {"id": "page_last_updated"})
+        start_time = last_update.contents[0]
+        if not start_time:
+            raise Exception("Failed to get current date for host '%s'. This is the Ninja 3.x version of Nagstamon, is that what's installed on your server?" % host)
+        magic_tuple = datetime.datetime.strptime(str(start_time), "%Y-%m-%d %H:%M:%S")
+        start_diff = datetime.timedelta(0, 10)
+        end_diff = datetime.timedelta(0, 7210)
+        start_time = magic_tuple + start_diff
+        end_time = magic_tuple + end_diff
+        return str(start_time), str(end_time)
+
+class Ninja2Server(NinjaServer):
+    """ Legacy support """
+    TYPE = 'Ninja v.2'
+
+    def get_start_end(self, host):
+        last_update = self.FetchURL(self.time_url).result.find("span", {"id": "page_last_updated"})
+        start_time = last_update.contents[0]
+        if not start_time:
+            raise Exception("Failed to get current date for host '%s'. This is the Ninja 2.x version of Nagstamon, is that what's installed on your server?" % host)
+        magic_tuple = datetime.datetime.strptime(str(start_time), "%Y-%m-%d %H:%M:%S")
+        start_diff = datetime.timedelta(0, 10)
+        end_diff = datetime.timedelta(0, 7210)
+        start_time = magic_tuple + start_diff
+        end_time = magic_tuple + end_diff
+
+        return str(start_time), str(end_time)
