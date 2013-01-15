@@ -108,6 +108,7 @@ class MultisiteServer(GenericServer):
         StatusInformationColumn
     ]
     
+       
     def __init__(self, **kwds):
         GenericServer.__init__(self, **kwds)
         
@@ -117,6 +118,9 @@ class MultisiteServer(GenericServer):
         
         # Entries for monitor default actions in context menu
         self.MENU_ACTIONS = ["Monitor", "Recheck", "Acknowledge", "Downtime"]
+        
+        # flag fo newer cookie authentication
+        self.CookieAuth = False
         
 
     def init_HTTP(self):
@@ -154,6 +158,25 @@ class MultisiteServer(GenericServer):
                 'PEND':    'PENDING',
             }            
 
+        if self.CookieAuth:
+            # get cookie to access Check_MK web interface       
+            if len(self.Cookie) == 0:         
+                # put all necessary data into url string
+                logindata = urllib.urlencode({"_username":self.get_username(),\
+                                 "_password":self.get_password(),\
+                                 "_login":"1",\
+                                 "_origtarget": "",\
+                                 "filled_in":"login"})
+    
+                # the following is necessary for Opsview servers
+                # get cookie from login page via url retrieving as with other urls
+                try:
+                    # login and get cookie
+                    urlcontent = self.urlopener.open(self.monitor_url + "/login.py", logindata)
+                    urlcontent.close()
+                except:
+                    self.Error(sys.exc_info())
+            
         GenericServer.init_HTTP(self)
 
         
@@ -177,13 +200,18 @@ class MultisiteServer(GenericServer):
         elif content.startswith('ERROR:'):
             raise MultisiteError(True, Result(result = content,
                                                error = content))
-
+  
+        # looks like cookieauth
+        elif content.startswith('<'):
+            self.CookieAuth = True
+            return ""
+            
         return eval(content)
 
     
     def _get_status(self):
         """
-        Get status from Nagios Server
+        Get status from Check_MK Server
         """
         ret = Result()
         # create Nagios items dictionary with to lists for services and hosts
@@ -259,8 +287,6 @@ class MultisiteServer(GenericServer):
             try:
                 response = self._get_url(self.urls['api_services'] + url_params)
             except MultisiteError, e:
-                #print "------------------------------------"
-                #print "%s" % e.result.error
                 if e.terminate:
                     return e.result
                 else:
@@ -312,7 +338,7 @@ class MultisiteServer(GenericServer):
                     self.new_hosts[n["host"]].services[new_service].site = n["site"]
                     self.new_hosts[n["host"]].services[new_service].address = n["address"]
                     self.new_hosts[n["host"]].services[new_service].command = n["command"]
-                    # transisition to Check_MK 1.1.10p2
+                    # transistion to Check_MK 1.1.10p2
                     if service.has_key('svc_in_downtime'):
                         if service['svc_in_downtime'] == 'yes':
                             self.new_hosts[n["host"]].services[new_service].scheduled_downtime = True
@@ -355,7 +381,7 @@ class MultisiteServer(GenericServer):
         have their ip saved in Nagios
         """
         
-        # the fasted method is taking hostname as used in monitor
+        # the fastest method is taking hostname as used in monitor
         if str(self.conf.connect_by_host) == "True" or host == "":
             return Result(result=host)
 
@@ -397,11 +423,8 @@ class MultisiteServer(GenericServer):
         result = self.FetchURL(self.urls['api_reschedule'] + '&' + urllib.urlencode({'site': self.hosts[host].site,
                                                                                      'host': host,
                                                                                      'service': service}), giveback='raw')
-        #print result.result
-        # Host: ['OK', 1296825198, 0, 'OK - 127.0.0.1: rta 0,053ms, lost 0%']
-        # Service:  ['OK', 1296827285, 0, 'OK - Agent version 1.1.9i4, execution time 0.1 sec']
 
-
+        
     def get_start_end(self, host):
         return time.strftime("%Y-%m-%d %H:%M"), time.strftime("%Y-%m-%d %H:%M", time.localtime(time.time() + 7200))
 

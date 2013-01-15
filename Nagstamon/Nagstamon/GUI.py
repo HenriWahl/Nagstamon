@@ -76,9 +76,9 @@ class GUI(object):
 
         # Meta
         self.name = "Nagstamon"
-        self.version = "0.9.9"
+        self.version = "0.9.10-devel"
         self.website = "http://nagstamon.ifw-dresden.de/"
-        self.copyright = "©2008-2012 Henri Wahl et al.\nh.wahl@ifw-dresden.de"
+        self.copyright = "©2008-2013 Henri Wahl et al.\nh.wahl@ifw-dresden.de"
         self.comments = "Nagios status monitor for your desktop"
 
         # initialize overall status flag
@@ -431,7 +431,7 @@ class GUI(object):
         #self.popwin.VBox.show_all()
         if self.popwin.Window.get_properties("visible")[0] == True:
             self.popwin.Resize()        
-        
+           
         # everything OK
         if unknowns == 0 and warnings == 0 and criticals == 0 and unreachables == 0 and downs == 0 and self.status_ok is not False:
             self.statusbar.statusbar_labeltext = '<span size="' + str(self.fontsize) + '" background="' + str(self.conf.color_ok_background) + '" foreground="' + str(self.conf.color_ok_text) + '"> OK </span>'
@@ -441,14 +441,15 @@ class GUI(object):
             self.statusbar.Resize()
             # if all is OK there is no need to pop up popwin so set self.showPopwin to False
             self.popwin.showPopwin = False
-            #self.popwin.Close()
             self.popwin.PopDown()
             self.status_ok = True
+            
             # set systray icon to green aka OK
             self.statusbar.SysTray.set_from_pixbuf(self.statusbar.SYSTRAY_ICONS["green"])
 
             # switch notification off
             self.NotificationOff()
+
         else:
             self.status_ok = False
 
@@ -531,7 +532,11 @@ class GUI(object):
             if server.status_description != "" or server.refresh_authentication == True:
                 self.status_ok = False   
                 self.popwin.showPopwin = True
-
+        
+        # close popwin in case everything is ok and green
+        if self.status_ok and not self.popwin.showPopwin:
+            self.popwin.Close()
+                
         # try to fix vanishing statusbar
         if str(self.conf.icon_in_systray) == "False":
             self.statusbar.Raise()
@@ -1039,7 +1044,7 @@ class GUI(object):
 
     def DeleteGUILock(self, window_name):
         """
-        add calling window to dictionary of open windows to keep the windows separated
+        delete calling window from dictionary of open windows to keep the windows separated
         to be called via gobject.idle_add
         """
         try:
@@ -1748,8 +1753,7 @@ class Popwin(object):
             # so I wonder if it has any use left...
             if str(self.conf.close_details_hover) == "True":
                 if mousex <= popwinx0 + 10 or mousex >= (popwinx0 + self.popwinwidth) or mousey <= popwiny0 or mousey >= (popwiny0 + self.popwinheight) - 10 :       
-                    self.Close()        
-
+                    self.Close()
         except:
             import traceback
             traceback.print_exc(file=sys.stdout)
