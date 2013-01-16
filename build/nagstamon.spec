@@ -20,4 +20,4 @@ coll = COLLECT(exe,
                upx=False,
                name=os.path.join('dist', 'nagstamon'))
 app = BUNDLE(coll,
-             name=os.path.join('dist', 'nagstamon.app'))
+             name=os.path.join('dist', 'Nagstamon.app'))
