@@ -980,7 +980,7 @@ class GenericServer(object):
                 return result
             
             # objectified HTML
-            if giveback == 'obj':
+            if giveback == "obj":
                 yummysoup = BeautifulSoup(unicode(urlcontent.read(), "utf8", errors="ignore"), convertEntities=BeautifulSoup.ALL_ENTITIES)
                 urlcontent.close()                
                 del urlcontent
