@@ -2968,6 +2968,10 @@ class GenericServer(object):
         server = Actions.get_registered_servers()[new_server.type]
         if "input_entry_monitor_cgi_url" in server.DISABLED_CONTROLS:
             new_server.monitor_cgi_url = new_server.monitor_url
+            
+        # URLs should not end with / - clean it
+        new_server.monitor_url = new_server.monitor_url.rstrip("/")
+        new_server.monitor_cgi_url = new_server.monitor_cgi_url.rstrip("/")
 
         # check if there is already a server named like the new one
         if new_server.name in self.conf.servers:
@@ -3169,6 +3173,10 @@ class EditServer(GenericServer):
         server = Actions.get_registered_servers()[new_server.type]
         if "input_entry_monitor_cgi_url" in server.DISABLED_CONTROLS:
             new_server.monitor_cgi_url = new_server.monitor_url
+            
+        # URLs should not end with / - clean it
+        new_server.monitor_url = new_server.monitor_url.rstrip("/")
+        new_server.monitor_cgi_url = new_server.monitor_cgi_url.rstrip("/")
 
         # check if there is already a server named like the new one
         if new_server.name in self.conf.servers and new_server.name != self.server:

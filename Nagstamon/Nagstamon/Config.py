@@ -502,28 +502,13 @@ class Config(object):
             # create actions and fill them with old settings
             self.actions["SSH"] = Action(name="SSH", type="command", description="Converted from pre 0.9.9 Nagstamon.",\
                                          string=self.app_ssh_bin + " " + self.app_ssh_options + " $ADDRESS$")
-            """
-            self.actions["SSH"].type = "command"
-            self.actions["SSH"].name = "SSH"
-            self.actions["SSH"].string = self.app_ssh_bin + " " + self.app_ssh_options + " $ADDRESS$"
-            self.actions["SSH"].description = "Converted from pre 0.9.9 Nagstamon."
-            """
+
             self.actions["RDP"] = Action(name="RDP", type="command", description="Converted from pre 0.9.9 Nagstamon.",\
                                          string=self.app_rdp_bin + " " + self.app_rdp_options + " $ADDRESS$")
-            """
-            self.actions["RDP"].type = "command"
-            self.actions["RDP"].name = "RDP"
-            self.actions["RDP"].string = self.app_rdp_bin + " " + self.app_rdp_options + " $ADDRESS$"
-            self.actions["RDP"].description = "Converted from pre 0.9.9 Nagstamon."
-            """
+
             self.actions["VNC"] = Action(name="VNC", type="command", description="Converted from pre 0.9.9 Nagstamon.",\
                                          string=self.app_vnc_bin + " " + self.app_vnc_options + " $ADDRESS$")
-            """
-            self.actions["VNC"].type = "command"
-            self.actions["VNC"].name = "VNC"
-            self.actions["VNC"].string = self.app_vnc_bin + " " + self.app_vnc_options + " $ADDRESS$"
-            self.actions["VNC"].description = "Converted from pre 0.9.9 Nagstamon."
-            """
+
             # delete old settings from config
             self.__dict__.pop("app_ssh_bin")
             self.__dict__.pop("app_ssh_options")
@@ -689,8 +674,6 @@ class Action(object):
         self.description = "Starts a custom action."
         # might be URL in case of type browser/url and a commandline for commands
         self.string = ""
-        # who did this
-        ###self.author = "Nag Stamon"
         # version - maybe in future this might be more sophisticated
         self.version = "1"
         # kind of Nagios item this action is targeted to - maybe also usable for states

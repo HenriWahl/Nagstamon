@@ -6,6 +6,7 @@ import sys
 import json
 
 from Nagstamon.Objects import *
+from Nagstamon.Actions import *
 
 class IcingaServer(GenericServer):    
     """
@@ -162,21 +163,101 @@ class IcingaServer(GenericServer):
             ###result = self.FetchURL(nagcgiurl_services)
             result = self.FetchURL(nagcgiurl_services, giveback="raw")
             ###htobj, error = result.result, result.error
-            raw, error = result.result, result.error
-
-            #print raw
+            jsonraw, error = result.result, result.error
             
             #if error != "": return Result(result=copy.deepcopy(htobj), error=error)
-            if error != "": return Result(result=htobj, error=error)
+            if error != "": return Result(result=jsonraw, error=error)
           
             ###table = htobj('table', {'class': 'status'})[0]
-            jsondict = json.loads(raw)
+            jsondict = json.loads(jsonraw)
                        
             services = jsondict["status"]["service_status"]
             
-            for s in services: 
-                for i in s.items():
-                    print i
+            for service in services: 
+                """
+                   (u'host_display_name', u'web_de-www')
+                   (u'status', u'CRITICAL')
+                   (u'status_information', u'CRITICAL - Socket timeout after 10 seconds')
+                   (u'active_checks_enabled', True)
+                   (u'has_been_acknowledged', True)
+                   (u'notifications_enabled', True)
+                   (u'action_url', None)
+                   (u'last_check', u'01-18-2013 15:46:08')
+                   (u'service_display_name', u'HTTP')
+                   (u'attempts', u'1/4')
+                   (u'notes_url', None)
+                   (u'host_name', u'web_de-www')
+                   (u'is_flapping', False)
+                   (u'duration', u'12d 23h 53m 37s')
+                   (u'service_description', u'HTTP')
+                   (u'state_type', u'HARD')
+                   (u'in_scheduled_downtime', False)
+                   (u'passive_checks_enabled', True)
+                """    
+                
+                s = dict(service.items())
+
+                # new item
+                n = {}
+
+                # host
+                n["host"] = s["host_display_name"]
+                # service                                             
+                n["service"] = s["service_display_name"]
+                # status
+                n["status"] = s["status"]
+                # last_check
+                n["last_check"] = s["last_check"]
+                # duration
+                n["duration"] = s["duration"]
+                # attempt
+                n["attempt"] = s["attempts"]
+                # status_information
+                n["status_information"] = s["status_information"]
+                # status flags 
+                n["passiveonly"] = not(s["active_checks_enabled"])
+                n["notifications_disabled"] = not(s["notifications_enabled"])
+                n["flapping"] = s["is_flapping"]
+                n["acknowledged"] = s["has_been_acknowledged"]
+                n["scheduled_downtime"] = s["in_scheduled_downtime"]
+
+                # add dictionary full of information about this service item to nagitems - only if service
+                nagitems["services"].append(n)
+                
+                # after collection data in nagitems create objects of its informations
+                # host objects contain service objects
+                if not self.new_hosts.has_key(n["host"]):
+                    self.new_hosts[n["host"]] = GenericHost()
+                    self.new_hosts[n["host"]].name = n["host"]
+                    self.new_hosts[n["host"]].status = "UP"
+                    #### trying to fix https://sourceforge.net/tracker/index.php?func=detail&aid=3299790&group_id=236865&atid=1101370
+                    #### if host is not down but in downtime or any other flag this should be evaluated too
+                    #### map status icons to status flags
+                    ###icons = tds[0].findAll('img')
+                    ###for i in icons:
+                    ###    icon = i["src"].split("/")[-1]
+                    ###    if icon in self.STATUS_MAPPING:
+                    ###        self.new_hosts[n["host"]].__dict__[self.STATUS_MAPPING[icon]] = True
+                    #### cleaning
+                    ###del icons
+                    
+                    
+                # if a service does not exist create its object
+                if not self.new_hosts[n["host"]].services.has_key(n["service"]):                           
+                    new_service = n["service"]                            
+                    self.new_hosts[n["host"]].services[new_service] = GenericService()
+                    self.new_hosts[n["host"]].services[new_service].host = n["host"]
+                    self.new_hosts[n["host"]].services[new_service].name = n["service"]
+                    self.new_hosts[n["host"]].services[new_service].status = n["status"]
+                    self.new_hosts[n["host"]].services[new_service].last_check = n["last_check"]
+                    self.new_hosts[n["host"]].services[new_service].duration = n["duration"]
+                    self.new_hosts[n["host"]].services[new_service].attempt = n["attempt"]
+                    self.new_hosts[n["host"]].services[new_service].status_information = n["status_information"].encode("utf-8")
+                    self.new_hosts[n["host"]].services[new_service].passiveonly = n["passiveonly"]
+                    self.new_hosts[n["host"]].services[new_service].notifications_disabled = n["notifications_disabled"]
+                    self.new_hosts[n["host"]].services[new_service].flapping = n["flapping"]
+                    self.new_hosts[n["host"]].services[new_service].acknowledged = n["acknowledged"]
+                    self.new_hosts[n["host"]].services[new_service].scheduled_downtime = n["scheduled_downtime"]
 
             #### some Icinga versions have a <tbody> tag in cgi output HTML which
             #### omits the <tr> tags being found
@@ -191,94 +272,9 @@ class IcingaServer(GenericServer):
             
             # kick out table heads
             ###trs.pop(0)
-
-            for tr in trs:
-                try:
-                    # ignore empty <tr> rows - there are a lot of them - a Nagios bug? 
-                    tds = tr('td', recursive=False)
-                    if len(tds) > 1:
-                        n = {}
-                        # host
-                        # the resulting table of Nagios status.cgi table omits the
-                        # hostname of a failing service if there are more than one
-                        # so if the hostname is empty the nagios status item should get
-                        # its hostname from the previuos item - one reason to keep "nagitems"
-                        try:
-                            n["host"] = str(tds[0](text=not_empty)[0])
-                        except:
-                            n["host"] = nagitems["services"][len(nagitems["services"])-1]["host"]
-                        # service                                             
-                        n["service"] = str(tds[1](text=not_empty)[0])
-                        # status
-                        n["status"] = str(tds[2](text=not_empty)[0])
-                        # last_check
-                        n["last_check"] = str(tds[3](text=not_empty)[0])
-                        # duration
-                        n["duration"] = str(tds[4](text=not_empty)[0])
-                        # attempt
-                        # to fix http://sourceforge.net/tracker/?func=detail&atid=1101370&aid=3280961&group_id=236865 .attempt needs
-                        # to be stripped
-                        n["attempt"] = str(tds[5](text=not_empty)[0]).strip()
-                        # status_information
-                        if len(tds[6](text=not_empty)) == 0:
-                            n["status_information"] = ""
-                        else:    
-                            n["status_information"] = str(tds[6](text=not_empty)[0]).encode("utf-8")
-                        # status flags 
-                        n["passiveonly"] = False
-                        n["notifications_disabled"] = False
-                        n["flapping"] = False
-                        n["acknowledged"] = False
-                        n["scheduled_downtime"] = False
-                        
-                        # map status icons to status flags
-                        icons = tds[1].findAll('img')
-                        for i in icons:
-                            icon = i["src"].split("/")[-1]
-                            if icon in self.STATUS_MAPPING:
-                                n[self.STATUS_MAPPING[icon]] = True
-                        # cleaning
-                        del icons
-                        
-                        # add dictionary full of information about this service item to nagitems - only if service
-                        nagitems["services"].append(n)
-                        # after collection data in nagitems create objects of its informations
-                        # host objects contain service objects
-                        if not self.new_hosts.has_key(n["host"]):
-                            self.new_hosts[n["host"]] = GenericHost()
-                            self.new_hosts[n["host"]].name = n["host"]
-                            self.new_hosts[n["host"]].status = "UP"
-                            # trying to fix https://sourceforge.net/tracker/index.php?func=detail&aid=3299790&group_id=236865&atid=1101370
-                            # if host is not down but in downtime or any other flag this should be evaluated too
-                            # map status icons to status flags
-                            icons = tds[0].findAll('img')
-                            for i in icons:
-                                icon = i["src"].split("/")[-1]
-                                if icon in self.STATUS_MAPPING:
-                                    self.new_hosts[n["host"]].__dict__[self.STATUS_MAPPING[icon]] = True
-                            # cleaning
-                            del icons
-                        # if a service does not exist create its object
-                        if not self.new_hosts[n["host"]].services.has_key(n["service"]):                           
-                            new_service = n["service"]                            
-                            self.new_hosts[n["host"]].services[new_service] = GenericService()
-                            self.new_hosts[n["host"]].services[new_service].host = n["host"]
-                            self.new_hosts[n["host"]].services[new_service].name = n["service"]
-                            self.new_hosts[n["host"]].services[new_service].status = n["status"]
-                            self.new_hosts[n["host"]].services[new_service].last_check = n["last_check"]
-                            self.new_hosts[n["host"]].services[new_service].duration = n["duration"]
-                            self.new_hosts[n["host"]].services[new_service].attempt = n["attempt"]
-                            self.new_hosts[n["host"]].services[new_service].status_information = n["status_information"].encode("utf-8")
-                            self.new_hosts[n["host"]].services[new_service].passiveonly = n["passiveonly"]
-                            self.new_hosts[n["host"]].services[new_service].notifications_disabled = n["notifications_disabled"]
-                            self.new_hosts[n["host"]].services[new_service].flapping = n["flapping"]
-                            self.new_hosts[n["host"]].services[new_service].acknowledged = n["acknowledged"]
-                            self.new_hosts[n["host"]].services[new_service].scheduled_downtime = n["scheduled_downtime"]
-                except:
-                    self.Error(sys.exc_info())
-                                
+ 
             # do some cleanup
-            del table, trs
+            ###del table, trs
             
         except:
             # set checking flag back to False
