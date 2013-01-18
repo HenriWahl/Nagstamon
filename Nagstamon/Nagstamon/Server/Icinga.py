@@ -63,8 +63,10 @@ class IcingaServer(GenericServer):
                 # new host item
                 n = {}
 
-                # host                        
-                n["host"] = h["host_display_name"]
+                # host 
+                # according to http://sourceforge.net/p/nagstamon/bugs/83/ it might 
+                # better be host_name instead of host_display_name
+                n["host"] = h["host_name"]
                 # status
                 n["status"] = h["status"]
                 # last_check
@@ -122,9 +124,10 @@ class IcingaServer(GenericServer):
 
                 # new service item
                 n = {}
-
                 # host
-                n["host"] = s["host_display_name"]
+                # according to http://sourceforge.net/p/nagstamon/bugs/83/ it might 
+                # better be host_name instead of host_display_name
+                n["host"] = s["host_name"]
                 # service                                             
                 n["service"] = s["service_display_name"]
                 # status
