@@ -2625,8 +2625,8 @@ class Settings(object):
         except Exception, err:
             print err            
 
-        if int(self.conf.update_interval) == 0:
-            self.conf.update_interval = 1
+        if int(self.conf.update_interval_seconds) == 0:
+            self.conf.update_interval_seconds = 60
 
         # save settings
         self.conf.SaveConfig(output=self.output)
