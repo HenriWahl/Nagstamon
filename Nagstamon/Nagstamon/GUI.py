@@ -170,6 +170,7 @@ class GUI(object):
             self.on_sorting_order_change(liststore, None, None, None, id, model, server)
         model.set_sort_column_id(id)
 
+
     def on_sorting_order_change(self, liststore, path, iter, new_order, id, model, server, do_action=True):
         """ Saves current sorting change in object property """
         if do_action:
@@ -190,6 +191,10 @@ class GUI(object):
 
         # set app icon for all app windows
         gtk.window_set_default_icon_from_file(self.Resources + os.sep + "nagstamon" + self.BitmapSuffix)
+
+        # MacOSX gets instable with default theme "Clearlooks" so use custom one with theme "Murrine"
+        if platform.system() == "Darwin":
+            gtk.rc_set_default_files([self.Resources + os.sep + "gtkrc-mac"])
 
         # icons for acknowledgement/downtime visualization
         self.STATE_ICONS = dict()
@@ -1188,7 +1193,7 @@ class StatusBar(object):
         self.StatusBar.stick()
         # at http://www.pygtk.org/docs/pygtk/gdk-constants.html#gdk-window-type-hint-constants
         # there are some hint types to experiment with
-        self.StatusBar.set_type_hint(gtk.gdk.WINDOW_TYPE_HINT_MENU)   
+        self.StatusBar.set_type_hint(gtk.gdk.WINDOW_TYPE_HINT_MENU)
         self.StatusBar.set_property("skip-taskbar-hint", True)
         self.StatusBar.set_skip_taskbar_hint(True)
 
@@ -1203,29 +1208,26 @@ class StatusBar(object):
         self.Moving = False
 
         # check if settings are not already open
-        if not "Settings" in self.output.GUILock:    
-
-            # use gobject.idle_add() to be thread safe
-            #gobject.idle_add(self.output.AddGUILock, "StatusbarMenuOpen")    
-
+        if not "Settings" in self.output.GUILock:
             # for some reason StatusIcon delivers another event (type int) than
             # egg.trayicon (type object) so it must be checked which one has
             # been calling
             # to make it even worse there are different integer types given back
-            # in Windows and Unix           
+            # in Windows and Unix
             if isinstance(event, int) or isinstance(event, long):
                 # right button
                 if event == 3:
                     # 'time' is important (wherever it comes from) for Linux/Gtk to let
                     # the popup be shown even after releasing the mouse button
-                    self.Menu.popup(None, None, None, event, time)                          
+                    self.Menu.popup(None, None, None, event, time)
             else:
                 # right button
                 if event.button == 3:
-                    self.Menu.popup(None, None, None, event.button, event.time)                    
+                    self.Menu.popup(None, None, None, event.button, event.time)
 
             # silly Windows(TM) workaround to keep menu above taskbar
-            self.Menu.window.set_keep_above(True)
+            if not platform.system() == "Darwin":
+                self.Menu.window.set_keep_above(True)
 
 
     def MenuResponseMonitors(self, widget, menu_entry):
@@ -1252,7 +1254,7 @@ class StatusBar(object):
     def Clicked(self, widget=None, event=None):
         """
             see what happens if statusbar is clicked
-        """        
+        """
         # check if settings etc. are not already open
         if self.output.popwin.IsWanted() == True:
             # if left mousebutton is pressed
@@ -1273,11 +1275,11 @@ class StatusBar(object):
                         self.output.popwin.Close()
             # if right mousebutton is pressed show statusbar menu
             if event.button == 3:
-                self.output.popwin.Close()
+                #self.output.popwin.Close()
                 self.Moving = False
                 self.MenuPopup(widget=self.Menu, event=event)
 
-        # switch off Notification    
+        # switch off Notification
         self.output.NotificationOff()
 
 
