@@ -195,6 +195,12 @@ class GUI(object):
         # MacOSX gets instable with default theme "Clearlooks" so use custom one with theme "Murrine"
         if platform.system() == "Darwin":
             gtk.rc_set_default_files([self.Resources + os.sep + "gtkrc-mac"])
+            # init MacOSX integration
+            import gtk_osxapplication
+            osxapp = gtk_osxapplication.OSXApplication()
+            # prevent blocking
+            osxapp.connect("NSApplicationBlockTermination", gtk.main_quit)
+            osxapp.ready()
 
         # icons for acknowledgement/downtime visualization
         self.STATE_ICONS = dict()
