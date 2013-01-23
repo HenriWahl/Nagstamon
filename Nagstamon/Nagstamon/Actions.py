@@ -85,7 +85,7 @@ class RefreshLoopOneServer(threading.Thread):
               
         while self.stopped == False:          
             # check if we have to leave update interval sleep
-            if self.server.count > int(self.conf.update_interval)*60: self.doRefresh = True   
+            if self.server.count > int(self.conf.update_interval_seconds): self.doRefresh = True
 
             # self.doRefresh could also been changed by RefreshAllServers()
             if self.doRefresh == True:              
@@ -501,7 +501,7 @@ class Notification(threading.Thread):
                     sound = PlaySound(sound=self.sound, Resources=self.Resources, conf=self.conf, servers=self.servers)
                     sound.start()
                     soundcount += 1
-                elif str(self.conf.notification_sound_repeat) == "True" and soundcount >= 2*int(self.conf.update_interval)*60:
+                elif str(self.conf.notification_sound_repeat) == "True" and soundcount >= 2*int(self.conf.update_interval_seconds):
                     soundcount = 0
                 else:
                     soundcount += 1       

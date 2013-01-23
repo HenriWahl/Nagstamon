@@ -18,6 +18,8 @@ class Config(object):
         """
         # supposed to be sensible defaults
         self.update_interval = 1
+        # move from minute interval to seconds
+        self.update_interval_seconds = 60
         self.short_display = False
         self.long_display = True
         self.show_grid = True
@@ -622,6 +624,11 @@ class Config(object):
             # to reduce complexity in Centreon there is also only one URL necessary
             if s.type == "Centreon":
                 s.monitor_url = s.monitor_cgi_url
+
+        # switch to update interval in seconds not minutes
+        if self.__dict__.has_key("update_interval"):
+            self.update_interval_seconds = int(self.update_interval) * 60
+            self.__dict__.pop("update_interval")
             
                 
     def GetNumberOfEnabledMonitors(self):

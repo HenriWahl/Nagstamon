@@ -270,14 +270,14 @@
                     <property name="visible">True</property>
                     <property name="can_focus">False</property>
                     <child>
-                      <object class="GtkLabel" id="label_update_interval">
+                      <object class="GtkLabel" id="label_update_interval_seconds">
                         <property name="visible">True</property>
                         <property name="can_focus">False</property>
                         <property name="has_tooltip">True</property>
                         <property name="tooltip_markup">How often Nagios status should be refreshed.</property>
                         <property name="tooltip_text" translatable="yes">How often Nagios status should be refreshed.</property>
                         <property name="xalign">0</property>
-                        <property name="label" translatable="yes">Update interval in minutes:</property>
+                        <property name="label" translatable="yes">Update interval in seconds:</property>
                       </object>
                       <packing>
                         <property name="expand">True</property>
@@ -286,7 +286,7 @@
                       </packing>
                     </child>
                     <child>
-                      <object class="GtkSpinButton" id="input_spinbutton_update_interval">
+                      <object class="GtkSpinButton" id="input_spinbutton_update_interval_seconds">
                         <property name="visible">True</property>
                         <property name="can_focus">True</property>
                         <property name="invisible_char">●</property>

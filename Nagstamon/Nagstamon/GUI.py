@@ -1640,7 +1640,10 @@ class Popwin(object):
         """
 
         # Initialize type popup
-        window = gtk.Window(gtk.WINDOW_TOPLEVEL)
+        if platform.system() == "Darwin":
+            window = gtk.Window(gtk.WINDOW_POPUP)
+        else:
+            window = gtk.Window(gtk.WINDOW_TOPLEVEL)
 
         # for not letting statusbar throw a shadow onto popwin in any composition-window-manager this helps to
         # keep a more consistent look - copied from StatusBar... anyway, doesn't work... well, next attempt:
@@ -1676,9 +1679,9 @@ class Popwin(object):
         # seems like a strange workaround
         if self.showPopwin and not self.output.status_ok and self.output.conf.GetNumberOfEnabledMonitors() > 0:
             if len(self.output.GUILock) == 0 or self.output.GUILock.has_key("Popwin"):
-                
+
                 self.output.statusbar.Moving = False
-                
+
                 """
                 # after all the Windows bug with not resizing popwin
                 # can be solved with newly created popwin with every popup,
@@ -1687,19 +1690,19 @@ class Popwin(object):
                 self.VBox.reparent(new_popwin)
                 self.Window.destroy()
                 del self.Window
-                self.Window = new_popwin   
+                self.Window = new_popwin
                 """
 
                 self.Window.show_all()
-                self.Window.set_visible(True)                
-                
+                self.Window.set_visible(True)
+
                 # position and resize...
                 self.calculate_coordinates = True
                 self.Resize()
 
                 # set combobox to default value
                 self.ComboboxMonitor.set_active(0)
-                # switch off Notification    
+                # switch off Notification
                 self.output.NotificationOff()
                 # register as open window
                 # use gobject.idle_add() to be thread safe
@@ -2622,8 +2625,8 @@ class Settings(object):
         except Exception, err:
             print err            
 
-        if int(self.conf.update_interval) == 0:
-            self.conf.update_interval = 1
+        if int(self.conf.update_interval_seconds) == 0:
+            self.conf.update_interval_seconds = 60
 
         # save settings
         self.conf.SaveConfig(output=self.output)
