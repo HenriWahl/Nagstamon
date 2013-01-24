@@ -1,6 +1,7 @@
 <?xml version="1.0" encoding="UTF-8"?>
 <interface>
   <requires lib="gtk+" version="2.20"/>
+  <!-- interface-naming-policy toplevel-contextual -->
   <object class="GtkDialog" id="settings_server_dialog">
     <property name="can_focus">False</property>
     <property name="title" translatable="yes">Server settings</property>
@@ -12,11 +13,11 @@
     <property name="destroy_with_parent">True</property>
     <property name="type_hint">dialog</property>
     <child internal-child="vbox">
-      <object class="GtkBox" id="dialog1-vbox">
+      <object class="GtkVBox" id="dialog1-vbox">
         <property name="visible">True</property>
         <property name="can_focus">False</property>
         <child internal-child="action_area">
-          <object class="GtkButtonBox" id="dialog1-action_area">
+          <object class="GtkHButtonBox" id="dialog1-action_area">
             <property name="visible">True</property>
             <property name="can_focus">False</property>
             <property name="layout_style">end</property>
@@ -30,7 +31,6 @@
                 <property name="can_default">True</property>
                 <property name="has_default">True</property>
                 <property name="receives_default">True</property>
-                <property name="use_action_appearance">False</property>
                 <signal name="clicked" handler="button_ok_clicked" swapped="no"/>
               </object>
               <packing>
@@ -46,7 +46,6 @@
                 <property name="can_focus">False</property>
                 <property name="is_focus">True</property>
                 <property name="receives_default">False</property>
-                <property name="use_action_appearance">False</property>
                 <signal name="pressed" handler="button_cancel_clicked" swapped="no"/>
               </object>
               <packing>
@@ -71,13 +70,33 @@
             <property name="n_rows">14</property>
             <property name="n_columns">2</property>
             <child>
+              <placeholder/>
+            </child>
+            <child>
+              <placeholder/>
+            </child>
+            <child>
+              <placeholder/>
+            </child>
+            <child>
+              <placeholder/>
+            </child>
+            <child>
+              <placeholder/>
+            </child>
+            <child>
+              <placeholder/>
+            </child>
+            <child>
+              <placeholder/>
+            </child>
+            <child>
               <object class="GtkCheckButton" id="input_checkbutton_enabled">
                 <property name="label" translatable="yes">Enabled</property>
                 <property name="visible">True</property>
                 <property name="can_focus">False</property>
                 <property name="is_focus">True</property>
                 <property name="receives_default">False</property>
-                <property name="use_action_appearance">False</property>
                 <property name="xalign">0</property>
                 <property name="draw_indicator">True</property>
               </object>
@@ -157,7 +176,6 @@ Don&amp;apos;t put any status.cgi in there.</property>
                 <property name="can_focus">False</property>
                 <property name="is_focus">True</property>
                 <property name="receives_default">False</property>
-                <property name="use_action_appearance">False</property>
                 <property name="draw_indicator">True</property>
                 <signal name="toggled" handler="toggle_save_password" swapped="no"/>
               </object>
@@ -187,7 +205,6 @@ Don&amp;apos;t put any status.cgi in there.</property>
                 <property name="can_focus">False</property>
                 <property name="is_focus">True</property>
                 <property name="receives_default">False</property>
-                <property name="use_action_appearance">False</property>
                 <property name="draw_indicator">True</property>
                 <signal name="toggled" handler="toggle_proxy" swapped="no"/>
               </object>
@@ -202,7 +219,6 @@ Don&amp;apos;t put any status.cgi in there.</property>
                 <property name="visible">True</property>
                 <property name="can_focus">False</property>
                 <property name="receives_default">False</property>
-                <property name="use_action_appearance">False</property>
                 <property name="draw_indicator">True</property>
                 <signal name="toggled" handler="toggle_proxy" swapped="no"/>
               </object>
@@ -269,6 +285,10 @@ Don&amp;apos;t put any status.cgi in there.</property>
                 <property name="is_focus">True</property>
                 <property name="width_chars">50</property>
                 <property name="text" translatable="yes">Default</property>
+                <property name="primary_icon_activatable">False</property>
+                <property name="secondary_icon_activatable">False</property>
+                <property name="primary_icon_sensitive">True</property>
+                <property name="secondary_icon_sensitive">True</property>
               </object>
               <packing>
                 <property name="left_attach">1</property>
@@ -283,6 +303,10 @@ Don&amp;apos;t put any status.cgi in there.</property>
                 <property name="can_focus">True</property>
                 <property name="is_focus">True</property>
                 <property name="text" translatable="yes">https://nagios-server</property>
+                <property name="primary_icon_activatable">False</property>
+                <property name="secondary_icon_activatable">False</property>
+                <property name="primary_icon_sensitive">True</property>
+                <property name="secondary_icon_sensitive">True</property>
               </object>
               <packing>
                 <property name="left_attach">1</property>
@@ -297,6 +321,10 @@ Don&amp;apos;t put any status.cgi in there.</property>
                 <property name="can_focus">True</property>
                 <property name="is_focus">True</property>
                 <property name="text" translatable="yes">https://nagios-server/nagios/cgi-bin</property>
+                <property name="primary_icon_activatable">False</property>
+                <property name="secondary_icon_activatable">False</property>
+                <property name="primary_icon_sensitive">True</property>
+                <property name="secondary_icon_sensitive">True</property>
               </object>
               <packing>
                 <property name="left_attach">1</property>
@@ -311,6 +339,10 @@ Don&amp;apos;t put any status.cgi in there.</property>
                 <property name="can_focus">True</property>
                 <property name="is_focus">True</property>
                 <property name="text" translatable="yes">user</property>
+                <property name="primary_icon_activatable">False</property>
+                <property name="secondary_icon_activatable">False</property>
+                <property name="primary_icon_sensitive">True</property>
+                <property name="secondary_icon_sensitive">True</property>
               </object>
               <packing>
                 <property name="left_attach">1</property>
@@ -326,6 +358,10 @@ Don&amp;apos;t put any status.cgi in there.</property>
                 <property name="is_focus">True</property>
                 <property name="visibility">False</property>
                 <property name="text" translatable="yes">password</property>
+                <property name="primary_icon_activatable">False</property>
+                <property name="secondary_icon_activatable">False</property>
+                <property name="primary_icon_sensitive">True</property>
+                <property name="secondary_icon_sensitive">True</property>
               </object>
               <packing>
                 <property name="left_attach">1</property>
@@ -340,6 +376,10 @@ Don&amp;apos;t put any status.cgi in there.</property>
                 <property name="can_focus">True</property>
                 <property name="width_chars">30</property>
                 <property name="text" translatable="yes">http://proxy:port/</property>
+                <property name="primary_icon_activatable">False</property>
+                <property name="secondary_icon_activatable">False</property>
+                <property name="primary_icon_sensitive">True</property>
+                <property name="secondary_icon_sensitive">True</property>
               </object>
               <packing>
                 <property name="left_attach">1</property>
@@ -355,6 +395,10 @@ Don&amp;apos;t put any status.cgi in there.</property>
                 <property name="is_focus">True</property>
                 <property name="width_chars">25</property>
                 <property name="text" translatable="yes">proxyuser</property>
+                <property name="primary_icon_activatable">False</property>
+                <property name="secondary_icon_activatable">False</property>
+                <property name="primary_icon_sensitive">True</property>
+                <property name="secondary_icon_sensitive">True</property>
               </object>
               <packing>
                 <property name="left_attach">1</property>
@@ -371,6 +415,10 @@ Don&amp;apos;t put any status.cgi in there.</property>
                 <property name="visibility">False</property>
                 <property name="width_chars">25</property>
                 <property name="text" translatable="yes">proxypassword</property>
+                <property name="primary_icon_activatable">False</property>
+                <property name="secondary_icon_activatable">False</property>
+                <property name="primary_icon_sensitive">True</property>
+                <property name="secondary_icon_sensitive">True</property>
               </object>
               <packing>
                 <property name="left_attach">1</property>
@@ -378,27 +426,6 @@ Don&amp;apos;t put any status.cgi in there.</property>
                 <property name="top_attach">14</property>
                 <property name="bottom_attach">15</property>
               </packing>
-            </child>
-            <child>
-              <placeholder/>
-            </child>
-            <child>
-              <placeholder/>
-            </child>
-            <child>
-              <placeholder/>
-            </child>
-            <child>
-              <placeholder/>
-            </child>
-            <child>
-              <placeholder/>
-            </child>
-            <child>
-              <placeholder/>
-            </child>
-            <child>
-              <placeholder/>
             </child>
             <child>
               <placeholder/>
