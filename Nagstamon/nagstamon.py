@@ -68,14 +68,6 @@ debug_queue = Queue.Queue()
 # Open windows etc. seen from GUI - locking each other not to do unwanted stuff if some windows interfere
 GUILock = {}
 
-"""
-# create servers
-for server in conf.servers.values():
-    created_server = Actions.CreateServer(server, conf, debug_queue, Resources)
-    if created_server is not None:
-        servers[server.name] = created_server     
-"""
-
 # create servers
 for server in conf.servers.values():
     if server.save_password == "False" and server.enabled == "True":
