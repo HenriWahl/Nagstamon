@@ -176,7 +176,7 @@ class NinjaServer(GenericServer):
         trs = table.findAll('tr')
         trs.pop(0)
 
-        for tr in [tr for tr in table('tr') if len(tr('td')) > 0]:
+        for tr in [tr for tr in table('tr') if len(tr('td')) > 1]:
             n = self.parse_host_row(tr)
 
             # after collection data in nagitems create objects from its informations
@@ -194,7 +194,7 @@ class NinjaServer(GenericServer):
         trs.pop(0)
         lasthost = ""
 
-        for tr in [tr for tr in table('tr') if len(tr('td')) > 0]:
+        for tr in [tr for tr in table('tr') if len(tr('td')) > 1]:
             n, host_bitmask = self.parse_service_row(tr)
 
             if n["host"] not in self.new_hosts:
