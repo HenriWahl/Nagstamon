@@ -39,6 +39,7 @@ Resources = ""
 try:
     import pkg_resources
     Resources = pkg_resources.resource_filename("Nagstamon", "resources")
+    pass
 except Exception, err:
     # get resources directory from current directory - only if not being set before by pkg_resources
     if Resources == "":

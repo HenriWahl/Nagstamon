@@ -3,6 +3,8 @@
 from Nagstamon.Server.Generic import GenericServer
 import urllib
 import sys
+# this seems to be necessary for json to be packaged by pyinstaller
+from encodings import hex_codec
 import json
 
 from Nagstamon.Objects import *
