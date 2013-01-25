@@ -19,6 +19,7 @@ class NinjaServer(GenericServer):
     """
         Ninja plugin for Nagstamon
     """
+    TYPE = "Ninja"
 
     bitmasks = {
         1: 'acknowledged',
@@ -45,8 +46,25 @@ class NinjaServer(GenericServer):
         self.MENU_ACTIONS = ["Recheck", "Acknowledge", "Downtime"]
 
     def get_start_end(self, host):
-        """ You must not call NinjaServer directly, use any child class """
-        raise NotImplementedError("You must not call NinjaServer directly, use any child class")
+        #try to get ninja3 style update field first
+        last_update = self.FetchURL(self.time_url).result.find("a", {"id": "page_last_updated"})
+        if not last_update:
+            #maybe ninja2?
+            last_update = self.FetchURL(self.time_url).result.find("span", {"id": "page_last_updated"})
+
+        if not last_update:
+            #I don't even ...
+            raise Exception("Failed to get page update time!")
+
+        start_time = last_update.contents[0]
+        magic_tuple = datetime.datetime.strptime(str(start_time), "%Y-%m-%d %H:%M:%S")
+        start_diff = datetime.timedelta(0, 10)
+        end_diff = datetime.timedelta(0, 7210)
+        start_time = magic_tuple + start_diff
+        end_time = magic_tuple + end_diff
+        return str(start_time), str(end_time)
+
+
 
     def init_HTTP(self):
         # add default auth for monitor.old
@@ -278,36 +296,3 @@ class NinjaServer(GenericServer):
             n[name] = bool(int(bitmask.contents[0]) & number)
 
         return n, host_bitmask
-
-class Ninja3Server(NinjaServer):
-    """ Currently the latest incarnation of Ninja """
-    TYPE = 'Ninja3'
-
-    def get_start_end(self, host):
-        last_update = self.FetchURL(self.time_url).result.find("a", {"id": "page_last_updated"})
-        start_time = last_update.contents[0]
-        if not start_time:
-            raise Exception("Failed to get current date for host '%s'. This is the Ninja 3.x version of Nagstamon, is that what's installed on your server?" % host)
-        magic_tuple = datetime.datetime.strptime(str(start_time), "%Y-%m-%d %H:%M:%S")
-        start_diff = datetime.timedelta(0, 10)
-        end_diff = datetime.timedelta(0, 7210)
-        start_time = magic_tuple + start_diff
-        end_time = magic_tuple + end_diff
-        return str(start_time), str(end_time)
-
-class Ninja2Server(NinjaServer):
-    """ Legacy support """
-    TYPE = 'Ninja2'
-
-    def get_start_end(self, host):
-        last_update = self.FetchURL(self.time_url).result.find("span", {"id": "page_last_updated"})
-        start_time = last_update.contents[0]
-        if not start_time:
-            raise Exception("Failed to get current date for host '%s'. This is the Ninja 2.x version of Nagstamon, is that what's installed on your server?" % host)
-        magic_tuple = datetime.datetime.strptime(str(start_time), "%Y-%m-%d %H:%M:%S")
-        start_diff = datetime.timedelta(0, 10)
-        end_diff = datetime.timedelta(0, 7210)
-        start_time = magic_tuple + start_diff
-        end_time = magic_tuple + end_diff
-
-        return str(start_time), str(end_time)
