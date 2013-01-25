@@ -1,4 +1,4 @@
-#!/usr/bin/env python
+#!/usr/bin/env python2
 # encoding: utf-8
 
 # garbage collection
@@ -42,11 +42,32 @@ try:
     Resources = pkg_resources.resource_filename("Nagstamon", "resources")
 except Exception, err:
     # get resources directory from current directory - only if not being set before by pkg_resources
-    if Resources == "":
-        if os.path.exists(os.path.normcase(os.getcwd() + os.sep + "Nagstamon" + os.sep + "resources")):
-            Resources = os.path.normcase(os.getcwd() + os.sep + "Nagstamon" + os.sep + "resources")
-        else:
-            Resources = os.path.normcase(os.getcwd() + os.sep + "resources")
+    join = os.path.join
+    normcase = os.path.normcase
+    paths_to_check = [
+            normcase(join(os.getcwd(), "Nagstamon", "resources")),
+            normcase(join(os.getcwd(), "resources"))
+            ]
+    # if resources dir is not available in CWD, try the
+    # libs dir (site-packages) for the current Python
+    from distutils.sysconfig import get_python_lib
+    paths_to_check.append(
+            normcase(join(get_python_lib(), "Nagstamon", "resources"))
+            )
+
+    #if we're still out of luck, maybe this was a user scheme install
+    import site
+    site.getusersitepackages() #make sure USER_SITE is set
+
+    paths_to_check.append(
+            normcase(join(site.USER_SITE, "Nagstamon", "resources"))
+            )
+
+    for path in paths_to_check:
+        print "Looking for resource directory at %s" % str(path)
+        if os.path.exists(path):
+            Resources = path
+            break
 
 # initialize GUI and actions
 # if modules are not available from central python install try the ones in the same directory
