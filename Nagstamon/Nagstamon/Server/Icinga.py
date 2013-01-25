@@ -6,6 +6,14 @@ import sys
 # this seems to be necessary for json to be packaged by pyinstaller
 from encodings import hex_codec
 import json
+import base64
+
+# to let Linux distributions use their own BeautifulSoup if existent try importing local BeautifulSoup first
+# see https://sourceforge.net/tracker/?func=detail&atid=1101370&aid=3302612&group_id=236865
+try:
+    from BeautifulSoup import BeautifulSoup
+except:
+    from Nagstamon.BeautifulSoup import BeautifulSoup
 
 from Nagstamon.Objects import *
 from Nagstamon.Actions import *
@@ -15,16 +23,47 @@ class IcingaServer(GenericServer):
         object of Incinga server
     """   
     TYPE = 'Icinga'
+    # flag to handle JSON or HTML correctly - checked by get_server_version()
+    json = False
+
+
+    def init_HTTP(self):
+        """
+        partly not constantly working Basic Authorization requires extra Autorization headers,
+        different between various server types
+        """
+        if self.HTTPheaders == {}:
+            for giveback in ["raw", "obj"]:
+                self.HTTPheaders[giveback] = {"Authorization": "Basic " + base64.b64encode(self.get_username() + ":" + self.get_password())}
+
+
+    def get_server_version(self):
+        """
+        Try to get Icinga version for different URLs and JSON capabilities
+        """
+        #tacraw = self.FetchURL("%s/tac.cgi?jsonoutput" % (self.monitor_cgi_url), giveback="raw").result
+        tacraw = self.FetchURL("%s/tac.cgi?jsonoutput" % (self.monitor_cgi_url), giveback="raw").result
+        if tacraw.startswith("<"):
+            self.json = False
+            tacsoup = BeautifulSoup(tacraw)
+            self.version = tacsoup.find("a", { "class" : "homepageURL" })
+            # only extract version if HTML seemed to be OK
+            if self.version.__dict__.has_key("contents"):
+                self.version = self.version.contents[0].split("Icinga ")[1]
+        elif tacraw.startswith("{"):
+            jsondict = json.loads(tacraw)
+            self.version = jsondict["cgi_json_version"]
+            self.json = True
 
 
     def _get_status(self):
         """
-        Get status from Icinga Server via JSON
+        Get status from Icinga Server
         """
         # create Icinga items dictionary with to lists for services and hosts
         # every list will contain a dictionary for every failed service/host
         # this dictionary is only temporarily
-        nagitems = {"services":[], "hosts":[]}       
+        nagitems = {"services":[], "hosts":[]}
         
         # new_hosts dictionary
         self.new_hosts = dict()
@@ -131,7 +170,7 @@ class IcingaServer(GenericServer):
                 # better be host_name instead of host_display_name
                 n["host"] = s["host_name"]
                 # service                                             
-                n["service"] = s["service_display_name"]
+                n["service"] = s["service_description"]
                 # status
                 n["status"] = s["status"]
                 # last_check

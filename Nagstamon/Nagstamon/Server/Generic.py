@@ -127,6 +127,8 @@ class GenericServer(object):
         self.ListStoreColumns = list()
         # flag which decides if authentication has to be renewed
         self.refresh_authentication = False
+        # to handle Icinga versions this information is necessary, might be of future use for others too
+        self.version = ""
 
     
     def init_HTTP(self):
@@ -173,6 +175,13 @@ class GenericServer(object):
         for column_class in cls.COLUMNS:
             # str() necessary because MacOSX Python cries otherwise
             yield str(column_class(row))        
+
+
+    def get_server_version(self):
+        """
+        dummy function, at the moment only used by Icinga
+        """
+        pass
 
         
     def set_recheck(self, thread_obj):

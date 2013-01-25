@@ -700,9 +700,10 @@ def CreateServer(server=None, conf=None, debug_queue=None, resources=None):
 
     # create permanent urlopener for server to avoid memory leak with millions of openers    
     nagiosserver.urlopener = BuildURLOpener(nagiosserver)        
-    # server's individual preparations for HTTP connections (for example cookie creation)
+    # server's individual preparations for HTTP connections (for example cookie creation), version of monitor
     if str(server.enabled) == "True":
-        nagiosserver.init_HTTP()    
+        nagiosserver.init_HTTP()
+        nagiosserver.get_server_version()
 
     # debug
     if str(conf.debug_mode) == "True":
