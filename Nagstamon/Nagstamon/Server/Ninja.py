@@ -280,8 +280,8 @@ class NinjaServer(GenericServer):
         return n, host_bitmask
 
 class Ninja3Server(NinjaServer):
-    """ Latest and greatest will always have TYPE = Ninja """
-    TYPE = 'Ninja'
+    """ Currently the latest incarnation of Ninja """
+    TYPE = 'Ninja3'
 
     def get_start_end(self, host):
         last_update = self.FetchURL(self.time_url).result.find("a", {"id": "page_last_updated"})
@@ -297,7 +297,7 @@ class Ninja3Server(NinjaServer):
 
 class Ninja2Server(NinjaServer):
     """ Legacy support """
-    TYPE = 'Ninja v.2'
+    TYPE = 'Ninja2'
 
     def get_start_end(self, host):
         last_update = self.FetchURL(self.time_url).result.find("span", {"id": "page_last_updated"})
