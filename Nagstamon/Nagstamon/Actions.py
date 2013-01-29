@@ -544,7 +544,10 @@ class Action(threading.Thread):
         # add all keywords to object
         self.host = ""
         self.service = ""
+        self.status_info = ""
+
         for k in kwds: self.__dict__[k] = kwds[k]
+
         threading.Thread.__init__(self)
         self.setDaemon(1)
         
@@ -558,6 +561,7 @@ class Action(threading.Thread):
         $MONITOR$          - monitor address - not yet clear what exactly for
         $MONITOR-CGI$      - monitor CGI address - not yet clear what exactly for
         $ADDRESS$          - address of host, investigated by Server.GetHost()
+        $STATUS-INFO$           - status information
         $USERNAME$         - username on monitor
         $PASSWORD$         - username's password on monitor - whatever for
         $COMMENT-ACK$      - default acknowledge comment
@@ -579,6 +583,7 @@ class Action(threading.Thread):
                         "$ADDRESS$": self.server.GetHost(self.host).result,\
                         "$MONITOR$": self.server.monitor_url,\
                         "$MONITOR-CGI$": self.server.monitor_cgi_url,\
+                        "$STATUS-INFO$": self.status_info,\
                         "$USERNAME$": self.server.username,\
                         "$PASSWORD$": self.server.password,\
                         "$COMMENT-ACK$": self.conf.defaults_acknowledge_comment,\

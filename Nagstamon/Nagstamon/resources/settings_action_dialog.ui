@@ -24,7 +24,6 @@
             <child>
               <object class="GtkButton" id="button_ok">
                 <property name="label" translatable="yes">OK</property>
-                <property name="use_action_appearance">False</property>
                 <property name="visible">True</property>
                 <property name="can_focus">True</property>
                 <property name="has_focus">True</property>
@@ -43,7 +42,6 @@
             <child>
               <object class="GtkButton" id="button_cancel">
                 <property name="label" translatable="yes">Cancel</property>
-                <property name="use_action_appearance">False</property>
                 <property name="visible">True</property>
                 <property name="can_focus">False</property>
                 <property name="is_focus">True</property>
@@ -72,9 +70,35 @@
             <property name="n_rows">17</property>
             <property name="n_columns">2</property>
             <child>
+              <placeholder/>
+            </child>
+            <child>
+              <placeholder/>
+            </child>
+            <child>
+              <placeholder/>
+            </child>
+            <child>
+              <placeholder/>
+            </child>
+            <child>
+              <placeholder/>
+            </child>
+            <child>
+              <placeholder/>
+            </child>
+            <child>
+              <placeholder/>
+            </child>
+            <child>
+              <placeholder/>
+            </child>
+            <child>
+              <placeholder/>
+            </child>
+            <child>
               <object class="GtkCheckButton" id="input_checkbutton_enabled">
                 <property name="label" translatable="yes">Enabled</property>
-                <property name="use_action_appearance">False</property>
                 <property name="visible">True</property>
                 <property name="can_focus">False</property>
                 <property name="is_focus">True</property>
@@ -182,7 +206,6 @@
                     <child>
                       <object class="GtkCheckButton" id="input_checkbutton_filter_target_host">
                         <property name="label" translatable="yes">Host</property>
-                        <property name="use_action_appearance">False</property>
                         <property name="visible">True</property>
                         <property name="can_focus">True</property>
                         <property name="receives_default">False</property>
@@ -198,7 +221,6 @@
                     <child>
                       <object class="GtkCheckButton" id="input_checkbutton_filter_target_service">
                         <property name="label" translatable="yes">Service</property>
-                        <property name="use_action_appearance">False</property>
                         <property name="visible">True</property>
                         <property name="can_focus">True</property>
                         <property name="receives_default">False</property>
@@ -232,7 +254,6 @@
             <child>
               <object class="GtkCheckButton" id="input_checkbutton_re_service_enabled">
                 <property name="label" translatable="yes">RegExp services:</property>
-                <property name="use_action_appearance">False</property>
                 <property name="visible">True</property>
                 <property name="can_focus">True</property>
                 <property name="receives_default">False</property>
@@ -271,7 +292,6 @@
                 <child>
                   <object class="GtkCheckButton" id="input_checkbutton_re_service_reverse">
                     <property name="label" translatable="yes">reverse</property>
-                    <property name="use_action_appearance">False</property>
                     <property name="visible">True</property>
                     <property name="can_focus">True</property>
                     <property name="receives_default">False</property>
@@ -295,7 +315,6 @@
             <child>
               <object class="GtkLinkButton" id="linkbutton_python_re">
                 <property name="label" translatable="yes">See Python Regular Expressions HOWTO for filtering details.</property>
-                <property name="use_action_appearance">False</property>
                 <property name="visible">True</property>
                 <property name="can_focus">True</property>
                 <property name="receives_default">True</property>
@@ -336,7 +355,6 @@
                 <child>
                   <object class="GtkCheckButton" id="input_checkbutton_re_status_information_reverse">
                     <property name="label" translatable="yes">reverse</property>
-                    <property name="use_action_appearance">False</property>
                     <property name="visible">True</property>
                     <property name="can_focus">True</property>
                     <property name="receives_default">False</property>
@@ -360,7 +378,6 @@
             <child>
               <object class="GtkCheckButton" id="input_checkbutton_re_status_information_enabled">
                 <property name="label" translatable="yes">RegExp info:</property>
-                <property name="use_action_appearance">False</property>
                 <property name="visible">True</property>
                 <property name="can_focus">True</property>
                 <property name="receives_default">False</property>
@@ -399,7 +416,6 @@
                 <child>
                   <object class="GtkCheckButton" id="input_checkbutton_re_host_reverse">
                     <property name="label" translatable="yes">reverse</property>
-                    <property name="use_action_appearance">False</property>
                     <property name="visible">True</property>
                     <property name="can_focus">True</property>
                     <property name="receives_default">False</property>
@@ -423,7 +439,6 @@
             <child>
               <object class="GtkCheckButton" id="input_checkbutton_re_host_enabled">
                 <property name="label" translatable="yes">RegExp hosts:</property>
-                <property name="use_action_appearance">False</property>
                 <property name="visible">True</property>
                 <property name="can_focus">True</property>
                 <property name="receives_default">False</property>
@@ -455,7 +470,6 @@
             <child>
               <object class="GtkRadioButton" id="input_radiobutton_close_popwin">
                 <property name="label" translatable="yes">Close status popup window after action</property>
-                <property name="use_action_appearance">False</property>
                 <property name="visible">True</property>
                 <property name="can_focus">True</property>
                 <property name="receives_default">False</property>
@@ -473,7 +487,6 @@
             <child>
               <object class="GtkRadioButton" id="input_radiobutton_leave_popwin_open">
                 <property name="label" translatable="yes">Leave status popup window open after action</property>
-                <property name="use_action_appearance">False</property>
                 <property name="visible">True</property>
                 <property name="can_focus">True</property>
                 <property name="receives_default">False</property>
@@ -514,7 +527,6 @@
                 <child>
                   <object class="GtkLinkButton" id="linkbutton_help_string">
                     <property name="label" translatable="yes">Help</property>
-                    <property name="use_action_appearance">False</property>
                     <property name="visible">True</property>
                     <property name="can_focus">True</property>
                     <property name="receives_default">True</property>
@@ -566,6 +578,7 @@ $MONITOR$ - monitor address
 $MONITOR-CGI$ - monitor CGI address
 $ADDRESS$ - address of host, delivered from connection method 
 $USERNAME$ - username on monitor
+$STATUS-INFO$ - status information for host or service
 $PASSWORD$ - username's password on monitor
 $COMMENT-ACK$ - default acknowledge comment
 $COMMENT-DOWN$ - default downtime comment
@@ -631,7 +644,6 @@ Request given URL string in the background, for example to acknowledge a service
                     <child>
                       <object class="GtkLinkButton" id="linkbutton_help_type">
                         <property name="label" translatable="yes">Help</property>
-                        <property name="use_action_appearance">False</property>
                         <property name="visible">True</property>
                         <property name="can_focus">True</property>
                         <property name="receives_default">True</property>
@@ -684,33 +696,6 @@ Request given URL string in the background, for example to acknowledge a service
                 <property name="top_attach">1</property>
                 <property name="bottom_attach">2</property>
               </packing>
-            </child>
-            <child>
-              <placeholder/>
-            </child>
-            <child>
-              <placeholder/>
-            </child>
-            <child>
-              <placeholder/>
-            </child>
-            <child>
-              <placeholder/>
-            </child>
-            <child>
-              <placeholder/>
-            </child>
-            <child>
-              <placeholder/>
-            </child>
-            <child>
-              <placeholder/>
-            </child>
-            <child>
-              <placeholder/>
-            </child>
-            <child>
-              <placeholder/>
             </child>
             <child>
               <placeholder/>

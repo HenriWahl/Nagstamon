@@ -2163,7 +2163,7 @@ class ServerVBox(gtk.VBox):
             self.miserable_server = server
             self.miserable_host = treeview.get_model()[path[0]][server.HOST_COLUMN_ID]
             self.miserable_service = treeview.get_model()[path[0]][server.SERVICE_COLUMN_ID]
-
+            self.miserable_status_info = treeview.get_model()[path[0]][server.STATUS_INFO_COLUMN_ID]
             # context menu for detailed status overview, opens with a mouse click onto a listed item
             self.popupmenu = gtk.Menu()		
 
@@ -2269,7 +2269,10 @@ class ServerVBox(gtk.VBox):
 
         #debug    
         if str(self.output.conf.debug_mode) == "True":
-            self.miserable_server.Debug(server=self.miserable_server.get_name(), host=self.miserable_host, service=self.miserable_service, debug="Clicked context menu: " + remoteservice)
+            self.miserable_server.Debug(server=self.miserable_server.get_name(),\
+                                        host=self.miserable_host,\
+                                        service=self.miserable_service,\
+                                        debug="Clicked context menu: " + remoteservice)
 
         # choose appropriate service for menu entry
         # it seems to be more responsive especially while rechecking if every service
@@ -2282,7 +2285,8 @@ class ServerVBox(gtk.VBox):
                                         conf=self.output.conf,\
                                         server=self.miserable_server,\
                                         host=self.miserable_host,\
-                                        service=self.miserable_service)
+                                        service=self.miserable_service,\
+                                        status_info=self.miserable_status_info)
 
                 # if action wants a closed powin it should be closed
                 if str(self.output.conf.actions[remoteservice].close_popwin) == "True":
