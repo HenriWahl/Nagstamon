@@ -1,3 +1,13 @@
+nagstamon (0.9.10-devel-1) unstable; urgency=low
+
+  * New upstream
+    - added Check_MK cookie-based auth
+    - experimental Icinga JSON support
+
+ -- Henri Wahl <h.wahl@ifw-dresden.de>  Tue, 29 Jan 2013 15:25:00 +0200
+
+
+
 nagstamon (0.9.9.1-1) unstable; urgency=low
 
   * New upstream

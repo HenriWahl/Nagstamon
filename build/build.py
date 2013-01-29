@@ -1,3 +1,4 @@
+#!/usr/bin/env python
 # -*- coding: utf-8 -*-
 
 """ Experimental script for automated build
@@ -18,7 +19,7 @@ if platform.system() == 'Windows':
         print
         sys.exit()
 
-INSTALLER_DIR = 'installer%s' % os.path.sep
+INSTALLER_DIR = '../build/installer%s' % os.path.sep
 DEFAULT_LOCATION = os.path.join('..', 'Nagstamon')
 BUILD_HELPERS = 'helpers'
 REQUIRED_FILES = BUILD_HELPERS + os.sep + 'required_files.txt'
@@ -134,12 +135,19 @@ def debmain():
     else:
         options.debian = '%s/debian' % options.debian
     options.debian = os.path.abspath(options.debian)
+
+    print options.debian
+    print options.target
+
     if not os.path.isfile('%s/rules' % (options.debian)):
         print 'Missing required "rules" file in "%s" directory' % options.debian
         return
     execute_script_lines(['cd %(target)s; ln -s %(debian)s; chmod 755 %(debian)s/rules; fakeroot debian/rules build; \
 fakeroot debian/rules binary; fakeroot debian/rules clean; rm debian'],
                          get_opt_dict(options))
+
+    print "\nFind .deb output in ../.\n"
+
 
 DISTS = {
     'debian': debmain, 
