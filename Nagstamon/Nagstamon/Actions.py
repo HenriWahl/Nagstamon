@@ -900,7 +900,10 @@ def MachineSortableDateMultisite(raw):
             delta = datetime.datetime.now() - datetime.timedelta(minutes=int(d["m"]))
         elif "hrs" in raw:
             d["h"] = raw.split(" ")[0]
-            delta = datetime.datetime.now() - datetime.timedelta(hours=int(d["h"])) 
+            delta = datetime.datetime.now() - datetime.timedelta(hours=int(d["h"]))
+        elif "days" in raw:
+            d["d"] = raw.split(" ")[0]
+            delta = datetime.datetime.now() - datetime.timedelta(days=int(d["d"]))
         else:
             delta = datetime.datetime.now()
         
