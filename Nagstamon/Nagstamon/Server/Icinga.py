@@ -141,7 +141,9 @@ class IcingaServer(GenericServer):
                 # host 
                 # according to http://sourceforge.net/p/nagstamon/bugs/83/ it might 
                 # better be host_name instead of host_display_name
-                n["host"] = h["host_name"]
+                # legacy Icinga adjustments
+                if h.has_key("host_name"): n["host"] = h["host_name"]
+                elif h.has_key("host"): n["host"] = h["host"]
                 # status
                 n["status"] = h["status"]
                 # last_check
@@ -202,9 +204,14 @@ class IcingaServer(GenericServer):
                 # host
                 # according to http://sourceforge.net/p/nagstamon/bugs/83/ it might 
                 # better be host_name instead of host_display_name
-                n["host"] = s["host_name"]
-                # service                                             
-                n["service"] = s["service_description"]
+                # legacy Icinga adjustments
+                if s.has_key("host_name"): n["host"] = s["host_name"]
+                elif s.has_key("host"): n["host"] = s["host"]
+                # service
+                # legacy Icinga adjustments
+                if s.has_key("service_description"): n["service"] = s["service_description"]
+                elif s.has_key("description"): n["service"] = s["description"]
+                elif s.has_key("service"): n["service"] = s["service"]
                 # status
                 n["status"] = s["status"]
                 # last_check
