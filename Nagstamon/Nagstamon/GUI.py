@@ -232,7 +232,6 @@ class GUI(object):
         #self.statusbar.SysTray.connect("popup-menu", self.statusbar.MenuPopup, self.statusbar.Menu)
         self.statusbar.SysTray.connect("popup-menu", self.statusbar.MenuPopup)
 
-
         # if pointer clicks on logo move stautsbar
         self.statusbar.LogoEventbox.connect("button-press-event", self.statusbar.LogoClicked)
         self.statusbar.LogoEventbox.connect("button-release-event", self.statusbar.LogoReleased)
@@ -1460,6 +1459,9 @@ class Popwin(object):
         self.popwinx0 = self.popwiny0 = 0
         self.popwinwidth = self.popwinheight = 0
 
+        #self.AlMonitorLabel = gtk.Alignment(xalign=0, yalign=0.5)
+        #self.AlMonitorComboBox = gtk.Alignment(xalign=0, yalign=0.5)
+        #self.AlMenu = gtk.Alignment(xalign=1.0, yalign=0.5)
         self.AlMonitorLabel = gtk.Alignment(xalign=0, yalign=0.5)
         self.AlMonitorComboBox = gtk.Alignment(xalign=0, yalign=0.5)
         self.AlMenu = gtk.Alignment(xalign=1.0, yalign=0.5)
@@ -1471,8 +1473,10 @@ class Popwin(object):
 
         # put a name tag where there buttons had been before
         # image for logo in statusbar
+        # use pixbuf to keep transparency which itself should keep some padding if popup is oversized
         self.NagstamonLabel = gtk.Image()
-        self.NagstamonLabel.set_from_file(self.output.Resources + os.sep + "nagstamon_label.png")
+        nagstamon_label_pixbuf = gtk.gdk.pixbuf_new_from_file(self.output.Resources + os.sep + "nagstamon_label.png")
+        self.NagstamonLabel.set_from_pixbuf(nagstamon_label_pixbuf)
         self.NagstamonVersion = gtk.Label("  " + self.output.version)
 
         self.HBoxNagiosButtons.add(self.NagstamonLabel)
@@ -1709,6 +1713,9 @@ class Popwin(object):
                 self.calculate_coordinates = True
                 self.Resize()
 
+                # omit over-shadowing by statusbar
+                #self.Window.window.raise_()
+
                 # set combobox to default value
                 self.ComboboxMonitor.set_active(0)
                 # switch off Notification
@@ -1850,6 +1857,7 @@ class Popwin(object):
         treeviewwidth, treeviewheight = self.ScrolledVBox.size_request()
 
         # get current monitor's settings
+        # screeny0 might be important on more-than-one-monitor-setups where it will not be 0
         screenx0, screeny0, screenwidth, screenheight = self.output.monitors[self.output.current_monitor]
 
         # get dimensions of statusbar
@@ -1864,15 +1872,20 @@ class Popwin(object):
         
         # get dimensions of top button bar
         self.buttonswidth, self.buttonsheight = self.HBoxAllButtons.size_request()
-        
+
         # later GNOME might need some extra heightbuffer if using dual screen
-        if treeviewheight > screenheight - self.heightbuffer_external: treeviewheight = screenheight - self.buttonsheight - statusbarheight - self.heightbuffer_external
-        
+        if treeviewheight > screenheight - self.buttonsheight - statusbarheight - self.heightbuffer_external:
+            treeviewheight = screenheight - self.buttonsheight - statusbarheight - self.heightbuffer_external
+        else:
+            # avoid silly scrollbar
+            treeviewheight += self.heightbuffer_internal
+
         # after having determined dimensions of scrolling area apply them
-        self.ScrolledWindow.set_size_request(treeviewwidth, treeviewheight)                 
+        self.ScrolledWindow.set_size_request(treeviewwidth, treeviewheight)
         
         # care about the height of the buttons
         self.popwinwidth, self.popwinheight = treeviewwidth, treeviewheight + self.buttonsheight
+
         # if popwinwidth is to small the buttons inside could be scrambled, so we give
         # it a minimum width from head buttons
         if self.popwinwidth < self.buttonswidth: self.popwinwidth = self.buttonswidth
@@ -1880,29 +1893,29 @@ class Popwin(object):
         # if popwin is too wide cut it down to screen width
         if self.popwinwidth > screenwidth:
             self.popwinwidth = screenwidth                
-        
+
         # if statusbar/trayicon stays in upper half of screen, popwin pops up BELOW statusbar/trayicon
-        if (statusbary0 + statusbarheight) < (screenheight / 2):
+        if (statusbary0 + statusbarheight - screeny0) < (screenheight / 2):
             # if popwin is too large it gets cut at lower end of screen
             if (statusbary0 + self.popwinheight + statusbarheight) > screenheight:
-                treeviewheight = screenheight - (statusbary0 + statusbarheight + self.buttonsheight)
-                self.popwinheight = screenheight - statusbarheight - statusbary0
+                treeviewheight = screenheight - (statusbary0 + statusbarheight + self.buttonsheight) + screeny0
+                self.popwinheight = screenheight - statusbarheight - statusbary0 + screeny0
                 self.popwiny0 = statusbary0 + statusbarheight
             # else do not relate to screen dimensions but own widgets ones
             else:
-                self.popwinheight = treeviewheight + self.buttonsheight + self.heightbuffer_internal
+                self.popwinheight = treeviewheight + self.buttonsheight
                 self.popwiny0 = statusbary0 + statusbarheight
 
         # if it stays in lower half of screen, popwin pops up ABOVE statusbar/trayicon
         else:
             # if popwin is too large it gets cut at 0 
-            if (statusbary0 - self.popwinheight) < 0:
-                treeviewheight = statusbary0 - self.buttonsheight - statusbarheight
-                self.popwinheight = statusbary0
-                self.popwiny0 = 0
+            if (statusbary0 - self.popwinheight - self.heightbuffer_external) <= screeny0:
+                treeviewheight = statusbary0 - self.buttonsheight - statusbarheight - screeny0 - self.heightbuffer_internal
+                self.popwinheight = statusbary0 - screeny0 - self.heightbuffer_external
+                self.popwiny0 = screeny0 + self.heightbuffer_external
             # otherwise use own widgets for sizing
             else:
-                self.popwinheight = treeviewheight + self.buttonsheight + self.heightbuffer_internal
+                self.popwinheight = treeviewheight + self.buttonsheight
                 self.popwiny0 = statusbary0 - self.popwinheight
 
         # after having determined dimensions of scrolling area apply them
@@ -1931,7 +1944,7 @@ class Popwin(object):
                 self.Window.window.move_resize(self.popwinx0, self.popwiny0, self.popwinwidth, self.popwinheight)
         
         # statusbar pulls popwin to the top... with silly-windows-workaround(tm) included
-        self.output.statusbar.Raise()
+        #self.output.statusbar.Raise()
         if str(self.conf.icon_in_systray) == "False": self.output.statusbar.Raise()
 
         return self.popwinx0, self.popwiny0, self.popwinwidth, self.popwinheight
