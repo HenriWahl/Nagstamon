@@ -145,8 +145,8 @@ class RefreshLoopOneServer(threading.Thread):
                             self.server.Hook()
             else:
                 # sleep and count
-                time.sleep(3)
-                self.server.count += 3
+                time.sleep(1)
+                self.server.count += 1
                 # call Hook() for extra action
                 self.server.Hook()
 
