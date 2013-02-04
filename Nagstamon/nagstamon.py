@@ -63,6 +63,9 @@ except Exception, err:
     except:
         pass
 
+    # add directory nagstamon.py where nagstamon.py resides for cases like 0install without installed pkg-resources
+    paths_to_check.append(os.sep.join(sys.argv[0].split(os.sep)[:-1] + ["Nagstamon", "resources"]))
+
     for path in paths_to_check:
         if os.path.exists(path):
             Resources = path
