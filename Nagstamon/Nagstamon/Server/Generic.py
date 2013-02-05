@@ -74,9 +74,6 @@ class GenericServer(object):
                     "services": "$MONITOR-CGI$/status.cgi?host=all&servicestatustypes=253",\
                     "history": "$MONITOR-CGI$/history.cgi?host=all"}
 
-    # HARD/SOFT state CGI hosprop/serviceprop parameters
-    STATE_TYPE = {"soft": "524288", "hard": "262144"}
-
     
     def __init__(self, **kwds):
         # add all keywords to object, every mode searchs inside for its favorite arguments/keywords
