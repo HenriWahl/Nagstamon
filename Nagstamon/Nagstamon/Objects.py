@@ -8,6 +8,8 @@ import webbrowser
 import time
 import HTMLParser
 import Actions
+# attempt to fight memory leaks
+
 
 class Column(object):
     ATTR_NAME = 'name'
@@ -180,7 +182,7 @@ class GenericHost(GenericObject):
         GenericObject.__init__(self)
         # take all the faulty services on host
         self.services = dict()
-        
+
         
     def get_host_name(self):
         return str(self.name)

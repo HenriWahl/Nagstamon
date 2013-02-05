@@ -459,7 +459,7 @@ class IcingaServer(GenericServer):
                         try:
                             n["host"] = str(tds[0](text=not_empty)[0])
                         except:
-                            n["host"] = nagitems["services"][len(nagitems["services"])-1]["host"]
+                            n["host"] = str(nagitems["services"][len(nagitems["services"])-1]["host"])
                             # service
                         n["service"] = str(tds[1](text=not_empty)[0])
                         # status

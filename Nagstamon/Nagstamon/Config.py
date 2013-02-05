@@ -15,10 +15,10 @@ class Config(object):
     def __init__(self):
         """
             read config file and set the appropriate attributes
+            supposed to be sensible defaults
         """
-        # supposed to be sensible defaults
-        self.update_interval = 1
         # move from minute interval to seconds
+        #self.update_interval = 1
         self.update_interval_seconds = 60
         self.short_display = False
         self.long_display = True

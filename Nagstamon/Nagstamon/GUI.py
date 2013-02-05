@@ -35,9 +35,9 @@ from Nagstamon import Custom # used for initialization of custom components
 
 import subprocess
 import sys
-import gc
 import time
 
+import gc
 
 class Sorting(object):
     """ Sorting persistence purpose class
@@ -929,12 +929,12 @@ class GUI(object):
         about.set_license(license)
 
         # use gobject.idle_add() to be thread safe
-        gobject.idle_add(self.AddGUILock, self.__class__.__name__)       
+        gobject.idle_add(self.AddGUILock, str(self.__class__.__name__))
         #self.popwin.Close()
         self.popwin.PopDown()
         about.run()
         # use gobject.idle_add() to be thread safe
-        gobject.idle_add(self.DeleteGUILock, self.__class__.__name__)            
+        gobject.idle_add(self.DeleteGUILock, str(self.__class__.__name__))
         about.destroy()
 
 
@@ -1722,10 +1722,8 @@ class Popwin(object):
                 self.output.NotificationOff()
                 # register as open window
                 # use gobject.idle_add() to be thread safe
-                gobject.idle_add(self.output.AddGUILock, self.__class__.__name__)
-
-                # do some garbage collection
-                gc.collect()
+                gobject.idle_add(self.output.AddGUILock, str(self.__class__.__name__))
+                print self.output.GUILock
 
 
     def LeavePopWin(self, widget=None, event=None):
@@ -2388,7 +2386,7 @@ class Settings(object):
         self.dialog = self.builder.get_object("settings_dialog")
 
         # use gobject.idle_add() to be thread safe
-        gobject.idle_add(self.output.AddGUILock, self.__class__.__name__)
+        gobject.idle_add(self.output.AddGUILock, str(self.__class__.__name__))
 
         # little feedback store for servers and actions treeviews
         self.selected_server = None
@@ -2540,7 +2538,7 @@ class Settings(object):
 
         # delete global open Windows entry
         # use gobject.idle_add() to be thread safe
-        gobject.idle_add(self.output.DeleteGUILock, self.__class__.__name__)
+        gobject.idle_add(self.output.DeleteGUILock, str(self.__class__.__name__))
 
         self.dialog.destroy()
 
@@ -2651,7 +2649,7 @@ class Settings(object):
         except Exception, err:
             print err            
 
-        if int(self.conf.update_interval_seconds) == 0:
+        if int(self.conf.update_interval_seconds) <= 0:
             self.conf.update_interval_seconds = 60
 
         # save settings

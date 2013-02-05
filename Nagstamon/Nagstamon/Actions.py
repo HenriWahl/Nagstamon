@@ -145,8 +145,8 @@ class RefreshLoopOneServer(threading.Thread):
                             self.server.Hook()
             else:
                 # sleep and count
-                time.sleep(3)
-                self.server.count += 3
+                time.sleep(1)
+                self.server.count += 1
                 # call Hook() for extra action
                 self.server.Hook()
 
@@ -317,8 +317,7 @@ class RecheckAll(threading.Thread):
                 RefreshAllServers(servers=self.servers, output=self.output, conf=self.conf)
                 # do some cleanup
                 del rechecks_dict
-                #gc.collect()
-                               
+
             except:
                 RecheckingAll = False          
         else:
@@ -537,7 +536,7 @@ class MoveStatusbar(threading.Thread):
             
 class Action(threading.Thread):
     """
-    Exectute custom actions triggered by context menu of popwin
+    Execute custom actions triggered by context menu of popwin
     parameters are action and hosts/service
     """
     def __init__(self, **kwds):
@@ -625,8 +624,27 @@ class Action(threading.Thread):
         exclude several chars
         """
         return urllib.quote(string, ":/=?&@")
-    
-    
+
+
+class LonesomeGarbageCollector(threading.Thread):
+    """
+    do repeatedly collect some garbage - before every server thread did but might make more sense done
+     at one place and time
+    """
+    def __init__(self):
+        # garbage collection
+        gc.enable()
+        threading.Thread.__init__(self)
+        self.setDaemon(1)
+
+
+    def run(self):
+        while True:
+            gc.collect()
+            # lets do a gc.collect() once every minute
+            time.sleep(60)
+
+
 def TreeViewNagios(server, host, service):
     # if the clicked row does not contain a service it mus be a host, 
     # so the nagios query is different 
