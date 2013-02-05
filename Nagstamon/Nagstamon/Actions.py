@@ -82,6 +82,8 @@ class RefreshLoopOneServer(threading.Thread):
         """
         loop until end of eternity or until server is stopped
         """
+        # do stuff like getting server version and setting some URLs
+        self.server.init_config()
               
         while self.stopped == False:          
             # check if we have to leave update interval sleep
@@ -726,8 +728,6 @@ def CreateServer(server=None, conf=None, debug_queue=None, resources=None):
     # server's individual preparations for HTTP connections (for example cookie creation), version of monitor
     if str(server.enabled) == "True":
         nagiosserver.init_HTTP()
-        nagiosserver.get_server_version()
-        nagiosserver.init_config()
 
     # debug
     if str(conf.debug_mode) == "True":

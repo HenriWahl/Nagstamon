@@ -62,7 +62,14 @@ class CentreonServer(GenericServer):
         self.SID = None
         self.SIDcount = 0
         self._get_sid()
-        
+
+
+    def init_config(self):
+        """
+        dummy init_config, called at thread start, not really needed here, just omit extra properties
+        """
+        pass
+
     
     def open_tree_view(self, host, service=""):
         # must be a host if service is empty...

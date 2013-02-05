@@ -59,8 +59,15 @@ class OpsviewServer(GenericServer):
                 urlcontent.close()
             except:
                 self.Error(sys.exc_info())
-               
-                
+
+
+    def init_config(self):
+        """
+        dummy init_config, called at thread start, not really needed here, just omit extra properties
+        """
+        pass
+
+
     def get_start_end(self, host):
         """
         for GUI to get actual downtime start and end from server - they may vary so it's better to get

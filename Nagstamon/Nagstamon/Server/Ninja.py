@@ -45,6 +45,14 @@ class NinjaServer(GenericServer):
         # Entries for monitor default actions in context menu
         self.MENU_ACTIONS = ["Recheck", "Acknowledge", "Downtime"]
 
+
+    def init_config(self):
+        """
+        dummy init_config, called at thread start, not really needed here, just omit extra properties
+        """
+        pass
+
+
     def get_start_end(self, host):
         #try to get ninja3 style update field first
         last_update = self.FetchURL(self.time_url).result.find("a", {"id": "page_last_updated"})
@@ -63,7 +71,6 @@ class NinjaServer(GenericServer):
         start_time = magic_tuple + start_diff
         end_time = magic_tuple + end_diff
         return str(start_time), str(end_time)
-
 
 
     def init_HTTP(self):

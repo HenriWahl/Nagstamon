@@ -6,6 +6,7 @@ import os
 import os.path
 import Queue
 import platform
+import socket
 
 try:
     import pygtk
@@ -86,6 +87,9 @@ debug_queue = Queue.Queue()
 
 # Open windows etc. seen from GUI - locking each other not to do unwanted stuff if some windows interfere
 GUILock = {}
+
+# fix/patch for https://bugs.launchpad.net/ubuntu/+source/nagstamon/+bug/732544
+socket.setdefaulttimeout(30)
 
 # create servers
 for server in conf.servers.values():

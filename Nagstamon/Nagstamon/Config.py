@@ -38,6 +38,7 @@ class Config(object):
         self.filter_services_on_down_hosts = False
         self.filter_services_on_hosts_in_maintenance = False
         self.filter_services_on_unreachable_hosts = False
+        self.filter_hosts_in_soft_state = False
         self.filter_services_in_soft_state = False
         self.position_x = 30
         self.position_y = 30

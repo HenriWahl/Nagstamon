@@ -119,7 +119,7 @@ class GenericObject(object):
         self.status = ""
         self.status_information = ""
         # default state is soft, to be changed by to-be-written status_type check
-        self.status_type = "soft"
+        self.status_type = ""
         self.last_check = ""
         self.duration = ""
         self.attempt = ""

@@ -179,7 +179,14 @@ class MultisiteServer(GenericServer):
             
         GenericServer.init_HTTP(self)
 
-        
+
+    def init_config(self):
+        """
+        dummy init_config, called at thread start, not really needed here, just omit extra properties
+        """
+        pass
+
+
     def _get_url(self, url):
         result = self.FetchURL(url, 'raw')
         content, error = result.result, result.error

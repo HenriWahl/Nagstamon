@@ -30,7 +30,6 @@
     <property name="can_focus">False</property>
     <property name="title" translatable="yes">nagstamon settings</property>
     <property name="resizable">False</property>
-    <property name="modal">False</property>
     <property name="window_position">center-always</property>
     <property name="default_width">320</property>
     <property name="default_height">260</property>
@@ -632,9 +631,6 @@
                   <placeholder/>
                 </child>
                 <child>
-                  <placeholder/>
-                </child>
-                <child>
                   <object class="GtkLabel" id="label_filter">
                     <property name="visible">True</property>
                     <property name="can_focus">False</property>
@@ -737,8 +733,8 @@
                   </packing>
                 </child>
                 <child>
-                  <object class="GtkCheckButton" id="input_checkbutton_filter_services_in_soft_state">
-                    <property name="label" translatable="yes">Services in soft state</property>
+                  <object class="GtkCheckButton" id="input_checkbutton_filter_hosts_in_soft_state">
+                    <property name="label" translatable="yes">Hosts in soft state</property>
                     <property name="visible">True</property>
                     <property name="can_focus">True</property>
                     <property name="receives_default">False</property>
@@ -1088,6 +1084,22 @@
                 </child>
                 <child>
                   <placeholder/>
+                </child>
+                <child>
+                  <object class="GtkCheckButton" id="input_checkbutton_filter_services_in_soft_state">
+                    <property name="label" translatable="yes">Services in soft state</property>
+                    <property name="visible">True</property>
+                    <property name="can_focus">True</property>
+                    <property name="receives_default">False</property>
+                    <property name="xalign">0</property>
+                    <property name="draw_indicator">True</property>
+                  </object>
+                  <packing>
+                    <property name="left_attach">1</property>
+                    <property name="right_attach">2</property>
+                    <property name="top_attach">10</property>
+                    <property name="bottom_attach">11</property>
+                  </packing>
                 </child>
               </object>
               <packing>
@@ -1750,6 +1762,9 @@
                                     <child>
                                       <placeholder/>
                                     </child>
+                                    <child>
+                                      <placeholder/>
+                                    </child>
                                   </object>
                                   <packing>
                                     <property name="top_attach">1</property>
@@ -2175,6 +2190,9 @@
                         <property name="top_attach">7</property>
                         <property name="bottom_attach">8</property>
                       </packing>
+                    </child>
+                    <child>
+                      <placeholder/>
                     </child>
                     <child>
                       <placeholder/>
