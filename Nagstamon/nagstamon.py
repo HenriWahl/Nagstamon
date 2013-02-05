@@ -1,10 +1,6 @@
 #!/usr/bin/env python
 # encoding: utf-8
 
-# garbage collection
-import gc
-gc.enable()
-
 import sys
 import os
 import os.path
@@ -116,13 +112,15 @@ create a new one for your custom start of Nagstamon." % ((conf.configdir))
     print "\n" + notice + "\n"
     output.Dialog(type=gtk.MESSAGE_WARNING, buttons=gtk.BUTTONS_OK, message=notice)
 
-
 # Start debugging loop
 debugloop = Actions.DebugLoop(conf=conf, debug_queue=debug_queue, output=output)
 debugloop.start()
 
 # start threaded nagios server checking loop
 Actions.StartRefreshLoop(servers=servers, conf=conf, output=output)
+
+garbageloop = Actions.LonesomeGarbageCollector()
+garbageloop.start()
 
 # if unconfigured nagstamon shows the settings dialog to get settings
 if conf.unconfigured == True:

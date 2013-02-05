@@ -4,7 +4,6 @@ import urllib2
 import cookielib
 import sys
 import socket
-import gc
 import copy
 import webbrowser
 import datetime
@@ -122,7 +121,7 @@ class GenericServer(object):
         self.proxy_auth_handler = None        
         self.urlopener = None
         # headers for HTTP requests, might be needed for authorization on Nagios/Icinga Hosts
-        self.HTTPheaders = {}
+        self.HTTPheaders = dict()
         # attempt to use only one bound list of TreeViewColumns instead of ever increasing one
         self.TreeView = None
         self.TreeViewColumns = list()
@@ -155,7 +154,7 @@ class GenericServer(object):
         """
         if authentication fails try to reset any HTTP session stuff - might be different for different monitors
         """
-        self.HTTPheaders = {}     
+        self.HTTPheaders = dict()
         
                 
     def get_name(self):
@@ -442,7 +441,7 @@ class GenericServer(object):
         
         # new_hosts dictionary
         self.new_hosts = dict()
-        
+
         # create filters like described in
         # http://www.nagios-wiki.de/nagios/tips/host-_und_serviceproperties_fuer_status.cgi?s=servicestatustypes
         #
@@ -476,13 +475,11 @@ class GenericServer(object):
             result = self.FetchURL(nagcgiurl_hosts)
             htobj, error = result.result, result.error
 
-            if error != "": return Result(result=htobj, error=error) 
+            if error != "": return Result(result=copy.deepcopy(htobj), error=error)
+
             # put a copy of a part of htobj into table to be able to delete htobj
             table = htobj('table', {'class': 'status'})[0]
 
-            # do some cleanup
-            del htobj
-            
             # access table rows
             # some Icinga versions have a <tbody> tag in cgi output HTML which
             # omits the <tr> tags being found
@@ -499,7 +496,7 @@ class GenericServer(object):
                 try:
                     # ignore empty <tr> rows
                     if len(tr('td', recursive=False)) > 1:
-                        n = {}
+                        n = dict()
                         # get tds in one tr
                         tds = tr('td', recursive=False)
                         # host                        
@@ -549,9 +546,6 @@ class GenericServer(object):
                             icon = i["src"].split("/")[-1]
                             if icon in self.STATUS_MAPPING:
                                 n[self.STATUS_MAPPING[icon]] = True
-                        
-                        # cleaning
-                        del icons                            
 
                         # add dictionary full of information about this host item to nagitems
                         nagitems["hosts"].append(n)
@@ -571,12 +565,14 @@ class GenericServer(object):
                             self.new_hosts[new_host].flapping = n["flapping"]
                             self.new_hosts[new_host].acknowledged = n["acknowledged"]
                             self.new_hosts[new_host].scheduled_downtime = n["scheduled_downtime"]
+                    del n
                 except:
                     self.Error(sys.exc_info())
                 
             # do some cleanup
-            del table, trs
-            
+            htobj.decompose()
+            del trs, table, htobj, result, error, icons
+
         except:
             # set checking flag back to False
             self.isChecking = False
@@ -585,12 +581,10 @@ class GenericServer(object):
 
         # services
         try:
-            #result = Result()
             result = self.FetchURL(nagcgiurl_services)
             htobj, error = result.result, result.error          
-            #if error != "": return Result(result=copy.deepcopy(htobj), error=error)
-            if error != "": return Result(result=htobj, error=error)
-          
+            if error != "": return Result(result=copy.deepcopy(htobj), error=error)
+
             table = htobj('table', {'class': 'status'})[0]
 
             # some Icinga versions have a <tbody> tag in cgi output HTML which
@@ -601,9 +595,6 @@ class GenericServer(object):
                 tbody = table('tbody')[0]
                 trs = tbody('tr', recursive=False)
 
-            # do some cleanup    
-            del htobj
-            
             # kick out table heads
             trs.pop(0)
 
@@ -612,7 +603,7 @@ class GenericServer(object):
                     # ignore empty <tr> rows - there are a lot of them - a Nagios bug? 
                     tds = tr('td', recursive=False)
                     if len(tds) > 1:
-                        n = {}
+                        n = dict()
                         # host
                         # the resulting table of Nagios status.cgi table omits the
                         # hostname of a failing service if there are more than one
@@ -621,8 +612,8 @@ class GenericServer(object):
                         try:
                             n["host"] = str(tds[0](text=not_empty)[0])
                         except:
-                            n["host"] = nagitems["services"][len(nagitems["services"])-1]["host"]
-                        # service                                             
+                            n["host"] = str(nagitems["services"][len(nagitems["services"])-1]["host"])
+                        # service
                         n["service"] = str(tds[1](text=not_empty)[0])
                         # status
                         n["status"] = str(tds[2](text=not_empty)[0])
@@ -652,9 +643,7 @@ class GenericServer(object):
                             icon = i["src"].split("/")[-1]
                             if icon in self.STATUS_MAPPING:
                                 n[self.STATUS_MAPPING[icon]] = True
-                        # cleaning
-                        del icons
-                        
+
                         # add dictionary full of information about this service item to nagitems - only if service
                         nagitems["services"].append(n)
                         # after collection data in nagitems create objects of its informations
@@ -671,8 +660,7 @@ class GenericServer(object):
                                 icon = i["src"].split("/")[-1]
                                 if icon in self.STATUS_MAPPING:
                                     self.new_hosts[n["host"]].__dict__[self.STATUS_MAPPING[icon]] = True
-                            # cleaning
-                            del icons
+
                         # if a service does not exist create its object
                         if not self.new_hosts[n["host"]].services.has_key(n["service"]):                           
                             new_service = n["service"]                            
@@ -689,12 +677,14 @@ class GenericServer(object):
                             self.new_hosts[n["host"]].services[new_service].flapping = n["flapping"]
                             self.new_hosts[n["host"]].services[new_service].acknowledged = n["acknowledged"]
                             self.new_hosts[n["host"]].services[new_service].scheduled_downtime = n["scheduled_downtime"]
+                        del n
                 except:
                     self.Error(sys.exc_info())
                                 
             # do some cleanup
-            del table, trs
-            
+            htobj.decompose()
+            del trs, table, htobj, result, error, icons
+
         except:
             # set checking flag back to False
             self.isChecking = False
@@ -965,15 +955,16 @@ class GenericServer(object):
                 self.WorstStatus = self.States[worst]
             
         # copy of listed nagitems for next comparison
-        self.nagitems_filtered_list = copy.copy(new_nagitems_filtered_list)
-        
-        # put new informations into respective dictionaries      
-        self.hosts = copy.copy(self.new_hosts)
+        self.nagitems_filtered_list = copy.deepcopy(new_nagitems_filtered_list)
+        del new_nagitems_filtered_list
+
+    # put new informations into respective dictionaries
+        self.hosts = copy.deepcopy(self.new_hosts)
         self.new_hosts.clear()
         
         # after all checks are done unset checking flag
         self.isChecking = False
-        
+
         # return True if all worked well    
         return Result()
     
@@ -1034,7 +1025,6 @@ class GenericServer(object):
 
         result, error = self.Error(sys.exc_info())
         return Result(result=result, error=error)   
-    
 
 
     def GetHost(self, host):
@@ -1094,8 +1084,7 @@ class GenericServer(object):
         allows to add some extra actions for a monitor server to be executed in RefreshLoop
         inspired by Centreon and its seemingly Alzheimer desease regarding session ID/Cookie/whatever
         """
-        # do some garbage collection
-        gc.collect()  
+        pass
         
     
     def Error(self, error):
