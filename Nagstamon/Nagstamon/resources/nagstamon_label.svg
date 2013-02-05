@@ -136,14 +136,14 @@
      inkscape:pageopacity="0.0"
      inkscape:pageshadow="2"
      inkscape:zoom="1.979899"
-     inkscape:cx="335.00426"
-     inkscape:cy="640.76364"
+     inkscape:cx="203.24325"
+     inkscape:cy="681.16974"
      inkscape:document-units="px"
      inkscape:current-layer="g3894"
      showgrid="false"
-     inkscape:window-width="1414"
+     inkscape:window-width="1078"
      inkscape:window-height="931"
-     inkscape:window-x="194"
+     inkscape:window-x="0"
      inkscape:window-y="266"
      inkscape:window-maximized="0" />
   <metadata
@@ -154,7 +154,7 @@
         <dc:format>image/svg+xml</dc:format>
         <dc:type
            rdf:resource="http://purl.org/dc/dcmitype/StillImage" />
-        <dc:title></dc:title>
+        <dc:title />
       </cc:Work>
     </rdf:RDF>
   </metadata>
@@ -171,12 +171,12 @@
          inkscape:export-ydpi="37.161289"
          inkscape:export-xdpi="37.161289"
          inkscape:export-filename="/home/henri/Data/Projekte/nagstamon/git/Nagstamon/Nagstamon/resources/nagstamon_label.png"
-         y="289.93616"
-         x="88.627464"
-         height="100.03191"
-         width="353.07516"
+         y="289.92953"
+         x="93.6716"
+         height="100.04517"
+         width="348.03766"
          id="rect3892"
-         style="fill:#ffffff;fill-opacity:0;fill-rule:evenodd;stroke:#000000;stroke-width:1.86810255;stroke-linecap:butt;stroke-miterlimit:2.79999995;stroke-opacity:0;stroke-dasharray:none" />
+         style="fill:#ffffff;fill-opacity:0;fill-rule:evenodd;stroke:#000000;stroke-width:1.85485089;stroke-linecap:butt;stroke-miterlimit:2.79999995;stroke-opacity:0;stroke-dasharray:none" />
       <g
          inkscape:export-ydpi="37.161289"
          inkscape:export-xdpi="37.161289"
