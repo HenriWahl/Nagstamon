@@ -442,37 +442,11 @@ class GenericServer(object):
         # new_hosts dictionary
         self.new_hosts = dict()
 
-        # create filters like described in
-        # http://www.nagios-wiki.de/nagios/tips/host-_und_serviceproperties_fuer_status.cgi?s=servicestatustypes
-        #
-        # the following variables are not necessary anymore as with "new" filtering
-        #
-        # hoststatus
-        #hoststatustypes = 12
-        # servicestatus
-        #servicestatustypes = 253
-        # serviceprops & hostprops both have the same values for the same states so I
-        # group them together
-        #hostserviceprops = 0
-
-        # services (unknown, warning or critical?)
-        #nagcgiurl_services = self.monitor_cgi_url + "/status.cgi?host=all&servicestatustypes=" + str(servicestatustypes) + "&serviceprops=" + str(hostserviceprops)
-        nagcgiurl_services = self.monitor_cgi_url + "/status.cgi?host=all&servicestatustypes=253&serviceprops=0"
-        # hosts (up or down or unreachable)
-        #nagcgiurl_hosts = self.monitor_cgi_url + "/status.cgi?hostgroup=all&style=hostdetail&hoststatustypes=" + str(hoststatustypes) + "&hostprops=" + str(hostserviceprops)
-        nagcgiurl_hosts = self.monitor_cgi_url + "/status.cgi?hostgroup=all&style=hostdetail&hoststatustypes=12&hostprops=0"
-
-        # SOFT/HARD states also to be checked
-        # HOST_PROPERTY/SERVICE_PROPERTY 262144 = HARD state
-        nagcgiurl_services_hard  = self.monitor_cgi_url + "/status.cgi?host=all&servicestatustypes=253&serviceprops=262144"
-        nagcgiurl_hosts_hard = self.monitor_cgi_url + "/status.cgi?hostgroup=all&style=hostdetail&hoststatustypes=12&hostprops=262144"
-
-
-    # hosts - mostly the down ones
+        # hosts - mostly the down ones
         # unfortunately the hosts status page has a different structure so
         # hosts must be analyzed separately
         try:
-            result = self.FetchURL(nagcgiurl_hosts)
+            result = self.FetchURL(self.cgiurl_hosts)
             htobj, error = result.result, result.error
 
             if error != "": return Result(result=copy.deepcopy(htobj), error=error)
@@ -581,7 +555,7 @@ class GenericServer(object):
 
         # services
         try:
-            result = self.FetchURL(nagcgiurl_services)
+            result = self.FetchURL(self.cgiurl_services)
             htobj, error = result.result, result.error          
             if error != "": return Result(result=copy.deepcopy(htobj), error=error)
 
@@ -692,7 +666,7 @@ class GenericServer(object):
             return Result(result=result, error=error) 
 
         # some cleanup
-        del nagitems, nagcgiurl_hosts, nagcgiurl_hosts_hard, nagcgiurl_services
+        del nagitems
         
         #dummy return in case all is OK
         return Result()
@@ -700,7 +674,7 @@ class GenericServer(object):
         
     def GetStatus(self, output=None):
         """
-        get nagios status information from nagcgiurl and give it back
+        get nagios status information from cgiurl and give it back
         as dictionary
         output parameter is needed in case authentication failed so that popwin might ask for credentials
         """
@@ -1041,10 +1015,10 @@ class GenericServer(object):
         ip = ""
 
         # glue nagios cgi url and hostinfo 
-        nagcgiurl_host  = self.monitor_cgi_url + "/extinfo.cgi?type=1&host=" + host
+        cgiurl_host  = self.monitor_cgi_url + "/extinfo.cgi?type=1&host=" + host
         
         # get host info
-        result = self.FetchURL(nagcgiurl_host, giveback="obj")
+        result = self.FetchURL(cgiurl_host, giveback="obj")
         htobj = result.result
 
         try:

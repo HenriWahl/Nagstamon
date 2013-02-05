@@ -275,6 +275,7 @@ class IcingaServer(GenericServer):
         # create Nagios items dictionary with to lists for services and hosts
         # every list will contain a dictionary for every failed service/host
         # this dictionary is only temporarily
+        ###global icons
         nagitems = {"services":[], "hosts":[]}
 
         # new_hosts dictionary
@@ -413,13 +414,13 @@ class IcingaServer(GenericServer):
                     self.Error(sys.exc_info())
 
             # do some cleanup
-            del table, trs
+            del trs, table, htobj, result, error, icons
 
         except:
-            # set checking flag back to False
-            self.isChecking = False
-            result, error = self.Error(sys.exc_info())
-            return Result(result=result, error=error)
+                # set checking flag back to False
+                self.isChecking = False
+                result, error = self.Error(sys.exc_info())
+                return Result(result=result, error=error)
 
         # services
         try:

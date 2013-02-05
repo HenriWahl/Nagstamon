@@ -1723,7 +1723,6 @@ class Popwin(object):
                 # register as open window
                 # use gobject.idle_add() to be thread safe
                 gobject.idle_add(self.output.AddGUILock, str(self.__class__.__name__))
-                print self.output.GUILock
 
 
     def LeavePopWin(self, widget=None, event=None):
