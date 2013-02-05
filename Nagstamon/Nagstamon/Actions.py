@@ -709,6 +709,7 @@ def CreateServer(server=None, conf=None, debug_queue=None, resources=None):
     if str(server.enabled) == "True":
         nagiosserver.init_HTTP()
         nagiosserver.get_server_version()
+        nagiosserver.init_config()
 
     # debug
     if str(conf.debug_mode) == "True":

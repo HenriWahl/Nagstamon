@@ -143,6 +143,13 @@ class GenericServer(object):
             for giveback in ["raw", "obj"]:
                 self.HTTPheaders[giveback] = {"Authorization": "Basic " + base64.b64encode(self.get_username() + ":" + self.get_password())}
 
+
+    def init_config(self):
+        """
+        allow server to initialize additional config stuff like CGI-URLs for Nagios for example
+        """
+        pass
+
                 
     def reset_HTTP(self):
         """
@@ -438,18 +445,31 @@ class GenericServer(object):
         
         # create filters like described in
         # http://www.nagios-wiki.de/nagios/tips/host-_und_serviceproperties_fuer_status.cgi?s=servicestatustypes
+        #
+        # the following variables are not necessary anymore as with "new" filtering
+        #
         # hoststatus
-        hoststatustypes = 12
+        #hoststatustypes = 12
         # servicestatus
-        servicestatustypes = 253
+        #servicestatustypes = 253
         # serviceprops & hostprops both have the same values for the same states so I
         # group them together
-        hostserviceprops = 0
+        #hostserviceprops = 0
+
         # services (unknown, warning or critical?)
-        nagcgiurl_services = self.monitor_cgi_url + "/status.cgi?host=all&servicestatustypes=" + str(servicestatustypes) + "&serviceprops=" + str(hostserviceprops)
+        #nagcgiurl_services = self.monitor_cgi_url + "/status.cgi?host=all&servicestatustypes=" + str(servicestatustypes) + "&serviceprops=" + str(hostserviceprops)
+        nagcgiurl_services = self.monitor_cgi_url + "/status.cgi?host=all&servicestatustypes=253&serviceprops=0"
         # hosts (up or down or unreachable)
-        nagcgiurl_hosts = self.monitor_cgi_url + "/status.cgi?hostgroup=all&style=hostdetail&hoststatustypes=" + str(hoststatustypes) + "&hostprops=" + str(hostserviceprops)
-        # hosts - mostly the down ones
+        #nagcgiurl_hosts = self.monitor_cgi_url + "/status.cgi?hostgroup=all&style=hostdetail&hoststatustypes=" + str(hoststatustypes) + "&hostprops=" + str(hostserviceprops)
+        nagcgiurl_hosts = self.monitor_cgi_url + "/status.cgi?hostgroup=all&style=hostdetail&hoststatustypes=12&hostprops=0"
+
+        # SOFT/HARD states also to be checked
+        # HOST_PROPERTY/SERVICE_PROPERTY 262144 = HARD state
+        nagcgiurl_services_hard  = self.monitor_cgi_url + "/status.cgi?host=all&servicestatustypes=253&serviceprops=262144"
+        nagcgiurl_hosts_hard = self.monitor_cgi_url + "/status.cgi?hostgroup=all&style=hostdetail&hoststatustypes=12&hostprops=262144"
+
+
+    # hosts - mostly the down ones
         # unfortunately the hosts status page has a different structure so
         # hosts must be analyzed separately
         try:
@@ -682,7 +702,7 @@ class GenericServer(object):
             return Result(result=result, error=error) 
 
         # some cleanup
-        del nagitems
+        del nagitems, nagcgiurl_hosts, nagcgiurl_hosts_hard, nagcgiurl_services
         
         #dummy return in case all is OK
         return Result()

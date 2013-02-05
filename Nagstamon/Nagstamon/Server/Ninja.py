@@ -205,6 +205,8 @@ class NinjaServer(GenericServer):
                     setattr(new_host, attr, val)
                 self.new_hosts[new_host.name] = new_host
 
+        del trs, table, htobj
+
     def get_service_status(self):
         htobj = self.FetchURL(self.services_url).result
         table = htobj.find('table', {'id': 'service_table'})
@@ -237,6 +239,9 @@ class NinjaServer(GenericServer):
                 for attr, val in n.iteritems():
                     setattr(new_service, attr, val)
                 self.new_hosts[n["host"]].services[n["name"]] = new_service
+
+        del trs, table, htobj
+
 
     def _get_status(self):
         """
