@@ -32,6 +32,9 @@ class CentreonServer(GenericServer):
     # newer Centreon versions (2.3+?) have different URL paths with a "/ndo" fragment
     # will be checked by _get_ndo_url() but default is /xml/ndo/
     XML_NDO = "xml/ndo"
+
+    # HARD/SOFT state mapping
+    HARD_SOFT = {"(H)": "hard", "(S)": "soft"}
     
     
     def __init__(self, **kwds):
@@ -307,7 +310,7 @@ class CentreonServer(GenericServer):
                     # status_information
                     n["status_information"] = str(l.ou.text)
                     # attempts are not shown in case of hosts so it defaults to "N/A"
-                    n["attempt"] = str(l.tr.text).split(" ")[0]
+                    n["attempt"], n["status_type"] = str(l.tr.text).split(" ")
                     # host acknowledged or not, has to be filtered
                     n["acknowledged"] = str(l.ha.text)
                     # host notification disabled or not, has to be filtered
@@ -334,6 +337,7 @@ class CentreonServer(GenericServer):
                         self.new_hosts[new_host] = GenericHost()
                         self.new_hosts[new_host].name = n["host"]
                         self.new_hosts[new_host].status = n["status"]
+                        self.new_hosts[new_host].status_type = self.HARD_SOFT[n["status_type"]]
                         self.new_hosts[new_host].last_check = n["last_check"]
                         self.new_hosts[new_host].duration = n["duration"]
                         self.new_hosts[new_host].attempt = n["attempt"]
@@ -395,7 +399,7 @@ class CentreonServer(GenericServer):
                     # duration
                     n["duration"] = str(l.d.text)
                     # attempt
-                    n["attempt"] = str(l.ca.text).split(" ")[0]
+                    n["attempt"], n["status_type"] = str(l.ca.text).split(" ")
                     # status_information
                     n["status_information"] = str(l.po.text)
                     # service is acknowledged or not, has to be filtered
@@ -426,6 +430,7 @@ class CentreonServer(GenericServer):
                         self.new_hosts[n["host"]].services[new_service].host = n["host"]
                         self.new_hosts[n["host"]].services[new_service].name = n["service"]
                         self.new_hosts[n["host"]].services[new_service].status = n["status"]
+                        self.new_hosts[n["host"]].services[new_service].status_type = self.HARD_SOFT[n["status_type"]]
                         self.new_hosts[n["host"]].services[new_service].last_check = n["last_check"]
                         self.new_hosts[n["host"]].services[new_service].duration = n["duration"]
                         self.new_hosts[n["host"]].services[new_service].attempt = n["attempt"]

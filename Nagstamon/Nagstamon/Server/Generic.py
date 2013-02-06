@@ -776,7 +776,14 @@ class GenericServer(object):
                     if str(self.conf.debug_mode) == "True":
                         self.Debug(server=self.get_name(), debug="Filter: FLAPPING HOST " + str(host.name))
                     host.visible = False
-    
+
+                # Check_MK and OP5 do not show the status_type so their host.status_type will be empty
+                if host.status_type != "":
+                    if str(self.conf.filter_hosts_in_soft_state) == "True" and host.status_type == "soft":
+                        if str(self.conf.debug_mode) == "True":
+                            self.Debug(server=self.get_name(), debug="Filter: SOFT STATE " + str(host.name))
+                        host.visible = False
+
                 if HostIsFilteredOutByRE(host.name, self.conf) == True:
                     if str(self.conf.debug_mode) == "True":
                         self.Debug(server=self.get_name(), debug="Filter: REGEXP " + str(host.name))
@@ -807,7 +814,7 @@ class GenericServer(object):
                     if host.visible:
                         self.nagitems_filtered["hosts"]["UNREACHABLE"].append(host)
                         self.unreachables += 1
-    
+
             for service in host.services.values():                
                 # Some generic filtering
                 if service.acknowledged == True and str(self.conf.filter_acknowledged_hosts_services) == "True":
@@ -854,12 +861,20 @@ class GenericServer(object):
                     if str(self.conf.debug_mode) == "True":
                         self.Debug(server=self.get_name(), debug="Filter: Service on host in UNREACHABLE " + str(host.name) + ";" + str(service.name))
                     service.visible = False
-    
-                real_attempt, max_attempt = service.attempt.split("/")
-                if real_attempt <> max_attempt and str(self.conf.filter_services_in_soft_state) == "True":
-                    if str(self.conf.debug_mode) == "True":
-                        self.Debug(server=self.get_name(), debug="Filter: SOFT STATE " + str(host.name) + ";" + str(service.name))
-                    service.visible = False
+
+                # Check_MK and OP5 do not show the status_type so their host.status_type will be empty
+                if service.status_type != "":
+                    if str(self.conf.filter_services_in_soft_state) == "True" and service.status_type == "soft":
+                        if str(self.conf.debug_mode) == "True":
+                            self.Debug(server=self.get_name(), debug="Filter: SOFT STATE " + str(host.name) + ";" + str(service.name))
+                        service.visible = False
+                else:
+                    # the old, actually wrong, behaviour
+                    real_attempt, max_attempt = service.attempt.split("/")
+                    if real_attempt <> max_attempt and str(self.conf.filter_services_in_soft_state) == "True":
+                        if str(self.conf.debug_mode) == "True":
+                            self.Debug(server=self.get_name(), debug="Filter: SOFT STATE " + str(host.name) + ";" + str(service.name))
+                        service.visible = False
                 
                 if HostIsFilteredOutByRE(host.name, self.conf) == True:
                     if str(self.conf.debug_mode) == "True":
@@ -905,7 +920,7 @@ class GenericServer(object):
                             self.nagitems_filtered["services"]["UNKNOWN"].append(service)
                             self.unknowns += 1
 
-        # find out if there has been some status change to notify user
+    # find out if there has been some status change to notify user
         # compare sorted lists of filtered nagios items
         new_nagitems_filtered_list = []
         
