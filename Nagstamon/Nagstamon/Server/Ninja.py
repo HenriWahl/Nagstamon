@@ -36,6 +36,10 @@ class NinjaServer(GenericServer):
     services_path = "/index.php/status/service/all?servicestatustypes=78&hoststatustypes=71&items_per_page=10000"
     hosts_path = "/index.php/status/host/?host=all&hoststatustypes=6&items_per_page=999999"
 
+    # A Monitor CGI URL is not necessary so hide it in settings
+    DISABLED_CONTROLS = ["label_monitor_cgi_url", "input_entry_monitor_cgi_url"]
+
+
     def __init__(self, **kwds):
         GenericServer.__init__(self, **kwds)
 
@@ -43,7 +47,7 @@ class NinjaServer(GenericServer):
         # this are defaults from Nagios
 
         # Entries for monitor default actions in context menu
-        self.MENU_ACTIONS = ["Recheck", "Acknowledge", "Downtime"]
+        self.MENU_ACTIONS = ["Monitor", "Recheck", "Acknowledge", "Downtime"]
 
 
     def init_config(self):

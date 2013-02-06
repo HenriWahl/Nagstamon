@@ -146,6 +146,7 @@ class OpsviewServer(GenericServer):
                 self.new_hosts[hostdict["name"]].name = str(hostdict["name"])
                 # states come in lower case from Opsview
                 self.new_hosts[hostdict["name"]].status = str(hostdict["state"].upper())
+                self.new_hosts[hostdict["name"]].status_type = str(hostdict["state_type"])
                 self.new_hosts[hostdict["name"]].last_check = str(hostdict["last_check"])
                 self.new_hosts[hostdict["name"]].duration = Actions.HumanReadableDuration(hostdict["state_duration"])
                 self.new_hosts[hostdict["name"]].attempt = str(hostdict["current_check_attempt"])+ "/" + str(hostdict["max_check_attempts"])
@@ -166,6 +167,7 @@ class OpsviewServer(GenericServer):
                     self.new_hosts[hostdict["name"]].services[servicedict["name"]].name = str(servicedict["name"])
                     # states come in lower case from Opsview
                     self.new_hosts[hostdict["name"]].services[servicedict["name"]].status = str(servicedict["state"].upper())
+                    self.new_hosts[hostdict["name"]].services[servicedict["name"]].status_type = str(servicedict["state_type"])
                     self.new_hosts[hostdict["name"]].services[servicedict["name"]].last_check = str(servicedict["last_check"])
                     self.new_hosts[hostdict["name"]].services[servicedict["name"]].duration = Actions.HumanReadableDuration(servicedict["state_duration"])
                     self.new_hosts[hostdict["name"]].services[servicedict["name"]].attempt = str(servicedict["current_check_attempt"])+ "/" + str(servicedict["max_check_attempts"])
