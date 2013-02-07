@@ -318,7 +318,7 @@ class MultisiteServer(GenericServer):
                     'address':            service['host_address'],
                     'command':            service['svc_check_command'],
                 }
-                
+
                 # add dictionary full of information about this service item to nagitems - only if service
                 nagitems["services"].append(n)
                 # after collection data in nagitems create objects of its informations
@@ -352,12 +352,13 @@ class MultisiteServer(GenericServer):
                     if service.has_key('svc_acknowledged'):
                         if service['svc_acknowledged'] == 'yes':
                             self.new_hosts[n["host"]].services[new_service].acknowledged = True
-                    if service.has_key('svc_is_active'):
-                        if service['svc_is_active'] == 'no':
-                            self.new_hosts[n["host"]].services[new_service].passiveonly = True
-                    if service.has_key('svc_flapping'):
-                        if service['svc_flapping'] == 'yes':
-                            self.new_hosts[n["host"]].services[new_service].flapping = True
+                    # the following lead to wrong "passive" P sign in status window
+                    #if service.has_key('svc_is_active'):
+                    #    if service['svc_is_active'] == 'no' and not service['svc_check_command'].startswith('check_mk'):
+                    #        self.new_hosts[n["host"]].services[new_service].passiveonly = True
+                    #if service.has_key('svc_flapping'):
+                    #    if service['svc_flapping'] == 'yes':
+                    #        self.new_hosts[n["host"]].services[new_service].flapping = True
         except:
             # set checking flag back to False
             self.isChecking = False
