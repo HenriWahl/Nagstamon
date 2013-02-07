@@ -734,7 +734,7 @@
                 </child>
                 <child>
                   <object class="GtkCheckButton" id="input_checkbutton_filter_hosts_in_soft_state">
-                    <property name="label" translatable="yes">Hosts in soft state (not on Ninja/Multisite)</property>
+                    <property name="label" translatable="yes">Hosts in soft state (not on Ninja)</property>
                     <property name="visible">True</property>
                     <property name="can_focus">True</property>
                     <property name="receives_default">False</property>
@@ -1768,6 +1768,9 @@
                                     <child>
                                       <placeholder/>
                                     </child>
+                                    <child>
+                                      <placeholder/>
+                                    </child>
                                   </object>
                                   <packing>
                                     <property name="top_attach">1</property>
@@ -2193,6 +2196,9 @@
                         <property name="top_attach">7</property>
                         <property name="bottom_attach">8</property>
                       </packing>
+                    </child>
+                    <child>
+                      <placeholder/>
                     </child>
                     <child>
                       <placeholder/>

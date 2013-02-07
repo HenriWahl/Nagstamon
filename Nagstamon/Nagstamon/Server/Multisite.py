@@ -278,7 +278,14 @@ class MultisiteServer(GenericServer):
                     if host.has_key('host_acknowledged'):
                         if host['host_acknowledged'] == 'yes':
                             self.new_hosts[new_host].acknowledged = True
-                        
+
+                    # hard/soft state for later filter evaluation
+                    real_attempt, max_attempt = self.new_hosts[new_host].attempt.split("/")
+                    if real_attempt <> max_attempt:
+                        self.new_hosts[new_host].status_type = "soft"
+                    else:
+                        self.new_hosts[new_host].status_type = "hard"
+
         except:
             self.isChecking = False
             result, error = self.Error(sys.exc_info())
@@ -319,7 +326,7 @@ class MultisiteServer(GenericServer):
                     'command':            service['svc_check_command'],
                 }
 
-                # add dictionary full of information about this service item to nagitems - only if service
+            # add dictionary full of information about this service item to nagitems - only if service
                 nagitems["services"].append(n)
                 # after collection data in nagitems create objects of its informations
                 # host objects contain service objects
@@ -359,6 +366,14 @@ class MultisiteServer(GenericServer):
                     #if service.has_key('svc_flapping'):
                     #    if service['svc_flapping'] == 'yes':
                     #        self.new_hosts[n["host"]].services[new_service].flapping = True
+
+                    # hard/soft state for later filter evaluation
+                    real_attempt, max_attempt = self.new_hosts[n["host"]].services[new_service].attempt.split("/")
+                    if real_attempt <> max_attempt:
+                        self.new_hosts[n["host"]].services[new_service].status_type = "soft"
+                    else:
+                        self.new_hosts[n["host"]].services[new_service].status_type = "hard"
+
         except:
             # set checking flag back to False
             self.isChecking = False
