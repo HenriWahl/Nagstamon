@@ -94,7 +94,8 @@ class Config(object):
         self.color_error_background = self.default_color_error_background = "#D3D3D3"
         self.statusbar_systray = False
         self.statusbar_floating = True
-        self.icon_in_systray = False  
+        self.icon_in_systray = False
+        self.maximized_window = False
         self.systray_popup_offset= 10
         self.defaults_acknowledge_sticky = False
         self.defaults_acknowledge_send_notification = False
