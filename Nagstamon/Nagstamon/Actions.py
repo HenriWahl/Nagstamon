@@ -145,6 +145,9 @@ class RefreshLoopOneServer(threading.Thread):
                             self.doRefresh = False
                             # call Hook() for extra action
                             self.server.Hook()
+
+                        if str(self.conf.maximized_window) == "True":
+                            gobject.idle_add(self.output.popwin.RefreshMaximizedWindow)
             else:
                 # sleep and count
                 time.sleep(1)

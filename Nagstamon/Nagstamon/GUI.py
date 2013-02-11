@@ -119,6 +119,8 @@ class GUI(object):
         if str(self.conf.maximized_window) == "True":
             self.popwin.Window.show_all()
             self.popwin.Window.set_visible(True)
+            self.popwin.RefreshMaximizedWindow()
+
 
         # flag which is set True if already notifying
         self.Notifying = False
@@ -441,11 +443,9 @@ class GUI(object):
                 except:
                     server.Error(sys.exc_info())
         
-        #self.popwin.VBox.hide_all()
-        #self.popwin.VBox.show_all()
-        if self.popwin.Window.get_properties("visible")[0] == True:
-            self.popwin.Resize()        
-           
+        if self.popwin.Window.get_properties("visible")[0] == True and str(self.conf.maximized_window) == "False":
+            self.popwin.Resize()
+
         # everything OK
         if unknowns == 0 and warnings == 0 and criticals == 0 and unreachables == 0 and downs == 0 and self.status_ok is not False:
             self.statusbar.statusbar_labeltext = '<span size="' + str(self.fontsize) + '" background="' + str(self.conf.color_ok_background) + '" foreground="' + str(self.conf.color_ok_text) + '"> OK </span>'
@@ -1344,12 +1344,6 @@ class StatusBar(object):
         if self.output.popwin.IsWanted() == True:
             # if popwin is not shown pop it up
             if self.output.popwin.Window.get_properties("visible")[0] == False or len(self.output.GUILock) == 0:
-            #if not self.output.popwin.Window.get_properties("visible")[0] or (not self.output.popwin.Window.window \
-            #                                            and "Popwin" in self.output.GUILock):
-            #    self.output.popwin.PopUp()
-            #elif not self.output.popwin.Window.get_properties("visible")[0] or (not self.output.popwin.Window.window.is_visible() \
-            #self.output.GUILock) == 0:    
-            #if len(self.output.GUILock) == 0:                                                      
                 self.output.popwin.PopUp()
             else:
                 self.output.popwin.Close()
@@ -1462,12 +1456,11 @@ class Popwin(object):
         self.popwinx0 = self.popwiny0 = 0
         self.popwinwidth = self.popwinheight = 0
 
-        #self.AlMonitorLabel = gtk.Alignment(xalign=0, yalign=0.5)
-        #self.AlMonitorComboBox = gtk.Alignment(xalign=0, yalign=0.5)
-        #self.AlMenu = gtk.Alignment(xalign=1.0, yalign=0.5)
         self.AlMonitorLabel = gtk.Alignment(xalign=0, yalign=0.5)
         self.AlMonitorComboBox = gtk.Alignment(xalign=0, yalign=0.5)
         self.AlMenu = gtk.Alignment(xalign=1.0, yalign=0.5)
+        self.AlVBox = gtk.Alignment(xalign=0.5, yalign=0, xscale=1)
+
         self.VBox = gtk.VBox()
         self.HBoxAllButtons = gtk.HBox()
         self.HBoxNagiosButtons = gtk.HBox()
@@ -1478,8 +1471,8 @@ class Popwin(object):
         # image for logo in statusbar
         # use pixbuf to keep transparency which itself should keep some padding if popup is oversized
         self.NagstamonLabel = gtk.Image()
-        nagstamon_label_pixbuf = gtk.gdk.pixbuf_new_from_file(self.output.Resources + os.sep + "nagstamon_label.png")
-        self.NagstamonLabel.set_from_pixbuf(nagstamon_label_pixbuf)
+        self.NagstamonLabel_Pixbuf = gtk.gdk.pixbuf_new_from_file(self.output.Resources + os.sep + "nagstamon_label.png")
+        self.NagstamonLabel.set_from_pixbuf(self.NagstamonLabel_Pixbuf)
         self.NagstamonVersion = gtk.Label("  " + self.output.version)
 
         self.HBoxNagiosButtons.add(self.NagstamonLabel)
@@ -1619,14 +1612,18 @@ class Popwin(object):
             self.ScrolledVBox.add(self.ServerVBoxes[server.get_name()])
 
         # add all buttons in their hbox to the overall vbox
-        self.VBox.add(self.HBoxAllButtons)        
-        
+        self.VBox.add(self.HBoxAllButtons)
+
         # put scrolled window aka scrolled treeview into vbox
         self.VBox.add(self.ScrolledWindow)
-        
+
         # put this vbox into popwin
-        self.Window.add(self.VBox)  
-            
+
+        #self.Window.add(self.VBox)
+        self.AlVBox = gtk.Alignment(xalign=0.5, yalign=0, xscale=1, yscale=0)
+        self.AlVBox.add(self.VBox)
+        self.Window.add(self.AlVBox)
+
         # Initialize show_popwin - show it or not, if everything is OK
         # it is not necessary to pop it up
         self.showPopwin = False
@@ -1660,7 +1657,7 @@ class Popwin(object):
             window = gtk.Window(gtk.WINDOW_POPUP)
         else:
             window = gtk.Window(gtk.WINDOW_TOPLEVEL)
-
+            window.set_title(self.output.name + " " + self.output.version)
 
         if str(self.output.conf.maximized_window) == "False":
             # for not letting statusbar throw a shadow onto popwin in any composition-window-manager this helps to
@@ -1684,7 +1681,10 @@ class Popwin(object):
 
             window.connect("leave-notify-event", self.LeavePopWin)
         else:
+            window.move(int(self.output.conf.maximized_window_x0), int(self.output.conf.maximized_window_y0))
             window.maximize()
+            window.show_all()
+            window.set_visible(True)
 
         return window
 
@@ -1697,34 +1697,60 @@ class Popwin(object):
         # otherwise there is no sense in showing an empty popwin
         # for some reason the painting will lag behind popping up popwin if not getting resized twice -
         # seems like a strange workaround
-        if str(self.output.conf.maximized_window) == "False":
-            if self.showPopwin and not self.output.status_ok and self.output.conf.GetNumberOfEnabledMonitors() > 0:
-                if len(self.output.GUILock) == 0 or self.output.GUILock.has_key("Popwin"):
+        if self.showPopwin and not self.output.status_ok and self.output.conf.GetNumberOfEnabledMonitors() > 0:
+            if len(self.output.GUILock) == 0 or self.output.GUILock.has_key("Popwin"):
 
-                    self.output.statusbar.Moving = False
+                self.output.statusbar.Moving = False
 
-                    self.Window.show_all()
-                    self.Window.set_visible(True)
+                self.Window.show_all()
+                self.Window.set_visible(True)
 
-                    # position and resize...
-                    self.calculate_coordinates = True
-                    self.Resize()
+                # position and resize...
+                self.calculate_coordinates = True
+                self.Resize()
 
-                    # set combobox to default value
-                    self.ComboboxMonitor.set_active(0)
-                    # switch off Notification
-                    self.output.NotificationOff()
-                    # register as open window
-                    # use gobject.idle_add() to be thread safe
-                    gobject.idle_add(self.output.AddGUILock, str(self.__class__.__name__))
+                # set combobox to default value
+                self.ComboboxMonitor.set_active(0)
+                # switch off Notification
+                self.output.NotificationOff()
+                # register as open window
+                # use gobject.idle_add() to be thread safe
+                gobject.idle_add(self.output.AddGUILock, str(self.__class__.__name__))
 
-            # position and resize...
-            self.calculate_coordinates = True
-            self.Resize()
+        # position and resize...
+        self.calculate_coordinates = True
+        self.Resize()
+
+
+    def RefreshMaximizedWindow(self):
+        """
+        refresh maximized window
+        """
+
+        # get current monitor's settings
+        # screeny0 might be important on more-than-one-monitor-setups where it will not be 0
+        screenx0, screeny0, screenwidth, screenheight = self.output.monitors[self.output.current_monitor]
+
+        # limit size of treeview
+        treeviewwidth, treeviewheight = self.ScrolledVBox.size_request()
+        if treeviewwidth > screenwidth: treeviewwidth = screenwidth
+
+        # get dimensions of top button bar
+        self.buttonswidth, self.buttonsheight = self.HBoxAllButtons.size_request()
+
+        # later GNOME might need some extra heightbuffer if using dual screen
+        if treeviewheight > screenheight - self.buttonsheight - self.heightbuffer_external:
+            treeviewheight = screenheight - self.buttonsheight - self.heightbuffer_external
         else:
-            self.Window.show_all()
-            self.Window.set_visible(True)
-            self.Resize()
+            # avoid silly scrollbar
+            treeviewheight += self.heightbuffer_internal
+
+        # after having determined dimensions of scrolling area apply them
+        self.ScrolledWindow.set_size_request(treeviewwidth, treeviewheight)
+
+        self.Window.show_all()
+        self.Window.set_visible(True)
+        self.output.conf.maximized_window_x0, self.output.conf.maximized_window_y0 = self.Window.get_position()
 
 
     def LeavePopWin(self, widget=None, event=None):

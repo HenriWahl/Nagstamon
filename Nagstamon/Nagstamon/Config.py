@@ -42,6 +42,8 @@ class Config(object):
         self.filter_services_in_soft_state = False
         self.position_x = 30
         self.position_y = 30
+        self.maximized_window_x0 = 0
+        self.maximized_window_y0 = 0
         self.popup_details_hover = True
         self.popup_details_clicking = False
         self.close_details_hover = True
