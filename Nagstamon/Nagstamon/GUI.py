@@ -546,15 +546,15 @@ class GUI(object):
             if server.status_description != "" or server.refresh_authentication == True:
                 self.status_ok = False   
                 self.popwin.showPopwin = True
-        
+
         # close popwin in case everything is ok and green
         if self.status_ok and not self.popwin.showPopwin:
             self.popwin.Close()
-                
+
         # try to fix vanishing statusbar
         if str(self.conf.icon_in_systray) == "False":
             self.statusbar.Raise()
- 
+
         # return False to get removed as gobject idle source
         return False
 
@@ -1459,7 +1459,7 @@ class Popwin(object):
         self.AlMonitorLabel = gtk.Alignment(xalign=0, yalign=0.5)
         self.AlMonitorComboBox = gtk.Alignment(xalign=0, yalign=0.5)
         self.AlMenu = gtk.Alignment(xalign=1.0, yalign=0.5)
-        self.AlVBox = gtk.Alignment(xalign=0.5, yalign=0, xscale=1)
+        self.AlVBox = gtk.Alignment(xalign=0.5, yalign=0, xscale=1, yscale=0)
 
         self.VBox = gtk.VBox()
         self.HBoxAllButtons = gtk.HBox()
@@ -1547,14 +1547,6 @@ class Popwin(object):
         self.output.TAB_BG_COLORS = { "UNKNOWN":str(self.conf.color_unknown_background), "CRITICAL":str(self.conf.color_critical_background), "WARNING":str(self.conf.color_warning_background), "DOWN":str(self.conf.color_down_background), "UNREACHABLE":str(self.conf.color_unreachable_background)  }
         self.output.TAB_FG_COLORS = { "UNKNOWN":str(self.conf.color_unknown_text), "CRITICAL":str(self.conf.color_critical_text), "WARNING":str(self.conf.color_warning_text), "DOWN":str(self.conf.color_down_text), "UNREACHABLE":str(self.conf.color_unreachable_text) }
 
-        # for later calculation of the popwin size we need the height of the buttons
-        # it is enough to choose one of those buttons because they all have the same dimensions
-        # as it seems to be the largest one we choose ComboboxMonitor
-        # - no way, size_request() gives 0 here
-        #dummy, self.buttonsheight = self.ComboboxMonitor.size_request()
-        #dummy, self.buttonsheight = self.NagstamonLabel.size_request()
-        
-    
         # create a scrollable area for the treeview in case it is larger than the screen
         # in case there are too many failed services and hosts
         self.ScrolledWindow = gtk.ScrolledWindow()
@@ -1562,7 +1554,7 @@ class Popwin(object):
 
         # try putting everything status-related into a scrolled viewport
         self.ScrolledVBox = gtk.VBox()  
-        #self.ScrolledWindow.add_with_viewport(self.ScrolledVBox)   
+        #self.ScrolledWindow.add_with_viewport(self.ScrolledVBox)
         self.ScrolledViewport = gtk.Viewport()
         self.ScrolledViewport.add(self.ScrolledVBox)
         self.ScrolledWindow.add(self.ScrolledViewport) 
@@ -1618,9 +1610,6 @@ class Popwin(object):
         self.VBox.add(self.ScrolledWindow)
 
         # put this vbox into popwin
-
-        #self.Window.add(self.VBox)
-        self.AlVBox = gtk.Alignment(xalign=0.5, yalign=0, xscale=1, yscale=0)
         self.AlVBox.add(self.VBox)
         self.Window.add(self.AlVBox)
 
@@ -1678,15 +1667,19 @@ class Popwin(object):
             window.set_skip_taskbar_hint(True)
             window.set_size_request(width, height)
             window.move(x0, y0)
-
             window.connect("leave-notify-event", self.LeavePopWin)
         else:
             window.move(int(self.output.conf.maximized_window_x0), int(self.output.conf.maximized_window_y0))
             window.maximize()
+            window.connect("destroy", self.Destroy)
             window.show_all()
             window.set_visible(True)
 
         return window
+
+
+    def Destroy(self, widget=None, event=None):
+        print "DESTROY:", widget, event
 
 
     def PopUp(self, widget=None, event=None):
@@ -1722,34 +1715,40 @@ class Popwin(object):
         self.Resize()
 
 
-    def RefreshMaximizedWindow(self):
+    def RefreshMaximizedWindow(self, widget=None, event=None):
         """
         refresh maximized window
         """
-
         # get current monitor's settings
         # screeny0 might be important on more-than-one-monitor-setups where it will not be 0
-        screenx0, screeny0, screenwidth, screenheight = self.output.monitors[self.output.current_monitor]
+        x0, y0 = self.Window.get_position()
+        screenx0, screeny0, screenwidth, screenheight = self.output.monitors[self.Window.get_screen().get_monitor_at_point(x0,y0)]
 
-        # limit size of treeview
-        treeviewwidth, treeviewheight = self.ScrolledVBox.size_request()
-        if treeviewwidth > screenwidth: treeviewwidth = screenwidth
+        # limit size of scrolled vbox
+        vboxwidth, vboxheight = self.ScrolledVBox.size_request()
+        if vboxwidth > screenwidth: vboxwidth = screenwidth
 
         # get dimensions of top button bar
         self.buttonswidth, self.buttonsheight = self.HBoxAllButtons.size_request()
 
         # later GNOME might need some extra heightbuffer if using dual screen
-        if treeviewheight > screenheight - self.buttonsheight - self.heightbuffer_external:
-            treeviewheight = screenheight - self.buttonsheight - self.heightbuffer_external
+        if vboxheight > screenheight - self.buttonsheight - self.heightbuffer_external - self.heightbuffer_internal:
+            vboxheight = screenheight - self.buttonsheight - self.heightbuffer_external - self.heightbuffer_internal
         else:
             # avoid silly scrollbar
-            treeviewheight += self.heightbuffer_internal
+            vboxheight += self.heightbuffer_internal
 
-        # after having determined dimensions of scrolling area apply them
-        self.ScrolledWindow.set_size_request(treeviewwidth, treeviewheight)
+        self.ScrolledWindow.set_size_request(-1, vboxheight)
+
+        self.Window.set_size_request(self.buttonswidth, -1)
 
         self.Window.show_all()
         self.Window.set_visible(True)
+
+        # shrink window
+        self.Window.resize(1, 1)
+
+        # to be saved with configuration
         self.output.conf.maximized_window_x0, self.output.conf.maximized_window_y0 = self.Window.get_position()
 
 
