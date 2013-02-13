@@ -1072,7 +1072,17 @@ class GUI(object):
         if Return key has been pressed in entry field jump to given widget
         """
         if gtk.gdk.keyval_name(event.keyval) in ["Return", "KP_Enter"]:
-            builder.get_object(next_widget).grab_focus()  
+            builder.get_object(next_widget).grab_focus()
+
+
+    def Exit(self, dummy):
+        """
+        exit....
+        """
+
+        print dummy
+        self.conf.SaveConfig(output=self)
+        gtk.main_quit()
 
 
 class StatusBar(object):
@@ -1442,6 +1452,16 @@ class StatusBar(object):
                 self.StatusBar.window.raise_()
 
 
+class _Window(gtk.Window):
+    """
+    derived from gtk.Window for modifying .destroy() method
+    """
+    def destroy(self, mode=""):
+        gtk.Window.destroy(self)
+        if mode != "settings":
+            gtk.main_quit()
+
+
 class Popwin(object):
     """
     Popwin object
@@ -1504,17 +1524,22 @@ class Popwin(object):
         # nice separator
         self.HBoxMenu.add(gtk.VSeparator())
 
-        # Button Close - HBox is necessary because gtk.Button allows only one child
-        self.ButtonClose_HBox = gtk.HBox()
-        self.ButtonClose_Icon = gtk.Image()
-        self.ButtonClose_Icon.set_from_file(self.output.Resources + os.sep + "close.png")
-        self.ButtonClose_HBox.add(self.ButtonClose_Icon)
-        self.ButtonClose = gtk.Button()
-        self.ButtonClose.set_relief(gtk.RELIEF_NONE)
-        self.ButtonClose.add(self.ButtonClose_HBox)
-        self.HBoxMenu.add(self.ButtonClose)     
+        if str(self.output.conf.maximized_window) == "True":
+            self.ButtonMenu = ButtonWithIcon(output=self.output, label="", icon="menu.png")
+            self.HBoxMenu.add(self.ButtonMenu)
+            #self.ButtonMenu.connect("clicked", self.MenuPopUp)
+            self.ButtonMenu.connect("button-press-event", self.MenuPopUp)
+        else:
+            self.ButtonClose = ButtonWithIcon(output=self.output, label="", icon="close.png")
+            self.HBoxMenu.add(self.ButtonClose)
+            # close popwin when its close button is pressed
+            self.ButtonClose.connect("clicked", self.Close)
+            self.ButtonClose.connect("leave-notify-event", self.LeavePopWin)
+            # for whatever reason in Windows the Filters button grabs initial focus
+            # so the close button should grab it for cosmetical reasons
+            self.ButtonClose.grab_focus()
 
-        # put the HBox full of buttons full of HBoxes into the aligned HBox...
+            # put the HBox full of buttons full of HBoxes into the aligned HBox...
         self.AlMenu.add(self.HBoxMenu)     
 
         # HBoxes en masse...
@@ -1522,8 +1547,6 @@ class Popwin(object):
         self.HBoxAllButtons.add(self.AlMonitorComboBox)
         self.HBoxAllButtons.add(self.AlMenu)
 
-        # close popwin when its close button is pressed
-        self.ButtonClose.connect("clicked", self.Close)
         # threaded recheck all when refresh is clicked
         self.ButtonRecheckAll.connect("clicked", self.output.RecheckAll)
         # threaded refresh status information when refresh is clicked
@@ -1539,7 +1562,7 @@ class Popwin(object):
         # the intended effect is that popwin closes when the pointer leaves it
         self.ButtonRefresh.connect("leave-notify-event", self.LeavePopWin)
         self.ButtonSettings.connect("leave-notify-event", self.LeavePopWin)
-        self.ButtonClose.connect("leave-notify-event", self.LeavePopWin)       
+
         
         # define colors for detailed status table in dictionaries
         # need to be redefined here for MacOSX because there it is not
@@ -1631,9 +1654,19 @@ class Popwin(object):
         else:
             self.heightbuffer_external = 0
 
-        # for whatever reason in Windows the Filters button grabs initial focus
-        # so the close button should grab it for cosmetical reasons
-        self.ButtonClose.grab_focus()
+        if str(self.output.conf.maximized_window) == "True":
+            # Popup menu instead statusbar menu  for maximized window view
+            self.Menu = gtk.Menu()
+            for i in ["Save position", "About", "Exit"]:
+                if i == "-----":
+                    menu_item = gtk.SeparatorMenuItem()
+                    self.Menu.append(menu_item)
+                else:
+                    menu_item = gtk.MenuItem(i)
+                    menu_item.connect("activate", self.MenuResponse, i)
+                    self.Menu.append(menu_item)
+
+            self.Menu.show_all()
 
 
     def _CreatePopwin(self, x0=0, y0=0, width=0, height=0):
@@ -1643,9 +1676,11 @@ class Popwin(object):
 
         # Initialize type popup
         if platform.system() == "Darwin":
-            window = gtk.Window(gtk.WINDOW_POPUP)
+            #window = gtk.Window(gtk.WINDOW_POPUP)
+            window = _Window(gtk.WINDOW_POPUP)
         else:
-            window = gtk.Window(gtk.WINDOW_TOPLEVEL)
+            #window = gtk.Window(gtk.WINDOW_TOPLEVEL)
+            window = _Window(gtk.WINDOW_TOPLEVEL)
             window.set_title(self.output.name + " " + self.output.version)
 
         if str(self.output.conf.maximized_window) == "False":
@@ -1671,15 +1706,11 @@ class Popwin(object):
         else:
             window.move(int(self.output.conf.maximized_window_x0), int(self.output.conf.maximized_window_y0))
             window.maximize()
-            window.connect("destroy", self.Destroy)
+            #window.connect("destroy", self.output.conf.SaveConfig)
             window.show_all()
             window.set_visible(True)
 
         return window
-
-
-    def Destroy(self, widget=None, event=None):
-        print "DESTROY:", widget, event
 
 
     def PopUp(self, widget=None, event=None):
@@ -1722,6 +1753,7 @@ class Popwin(object):
         # get current monitor's settings
         # screeny0 might be important on more-than-one-monitor-setups where it will not be 0
         x0, y0 = self.Window.get_position()
+        w, h = self.Window.get_size()
         screenx0, screeny0, screenwidth, screenheight = self.output.monitors[self.Window.get_screen().get_monitor_at_point(x0,y0)]
 
         # limit size of scrolled vbox
@@ -1733,7 +1765,11 @@ class Popwin(object):
 
         # later GNOME might need some extra heightbuffer if using dual screen
         if vboxheight > screenheight - self.buttonsheight - self.heightbuffer_external - self.heightbuffer_internal:
-            vboxheight = screenheight - self.buttonsheight - self.heightbuffer_external - self.heightbuffer_internal
+            # helpless attempt to get window fitting on screen if not maximized on newer unixoid DEs by doubling
+            # external heightbuffer
+            # leads to silly grey unused whitespace on GNOME3 dualmonitor, but there is still some information visisble..
+            # let's call this a feature no bug
+            vboxheight = screenheight - self.buttonsheight - 2*self.heightbuffer_external - self.heightbuffer_internal
         else:
             # avoid silly scrollbar
             vboxheight += self.heightbuffer_internal
@@ -1746,7 +1782,8 @@ class Popwin(object):
         self.Window.set_visible(True)
 
         # shrink window
-        self.Window.resize(1, 1)
+        w, h = self.Window.get_size()
+        self.Window.resize(w, 1)
 
         # to be saved with configuration
         self.output.conf.maximized_window_x0, self.output.conf.maximized_window_y0 = self.Window.get_position()
@@ -1808,14 +1845,15 @@ class Popwin(object):
         """
             hide popwin
         """
-        # unregister popwin - seems to be called even if popwin is not open so check before unregistering
-        if self.output.GUILock.has_key("Popwin"): 
-            # use gobject.idle_add() to be thread safe
-            gobject.idle_add(self.output.DeleteGUILock, self.__class__.__name__)
-        #self.Window.hide_all()
-        self.Window.set_visible(False)
-        # notification off because user had a look to hosts/services recently
-        self.output.NotificationOff()       
+        if str(self.output.conf.maximized_window) == "False":
+            # unregister popwin - seems to be called even if popwin is not open so check before unregistering
+            if self.output.GUILock.has_key("Popwin"):
+                # use gobject.idle_add() to be thread safe
+                gobject.idle_add(self.output.DeleteGUILock, self.__class__.__name__)
+            #self.Window.hide_all()
+            self.Window.set_visible(False)
+            # notification off because user had a look to hosts/services recently
+            self.output.NotificationOff()
 
         
     def Resize(self):
@@ -2028,6 +2066,21 @@ class Popwin(object):
                 visible_servervboxes.append(servervbox)
         return visible_servervboxes
 
+
+    def MenuPopUp(self, widget=None, event=None):
+        """
+        popup menu for maximized overview window - instead of statusbar menu
+        """
+        self.Menu.popup(None, None, None, event.button, event.time)
+
+
+    def MenuResponse(self, widget, menu_entry):
+        """
+            responses for the context menu for menu button in maximized popup status window
+        """
+        if menu_entry == "Save position": self.conf.SaveConfig(output=self.output)
+        if menu_entry == "About": self.output.AboutDialog()
+        if menu_entry == "Exit": self.output.Exit(True)
 
 
 class ServerVBox(gtk.VBox):
@@ -2689,10 +2742,10 @@ class Settings(object):
             # now it is not the first run anymore
             self.firstrun = False
             self.conf.unconfigured = False
-            # create output visuals again because they might have changed (systray/free floating status bar)
+            # create output visuals again because they might have changed (e.g. systray/free floating status bar)
             self.output.statusbar.StatusBar.destroy()    
             self.output.statusbar.SysTray.set_visible(False)       
-            self.output.popwin.Window.destroy()
+            self.output.popwin.Window.destroy(mode="settings")
             # re-initialize output with new settings
             self.output.__init__()       
 
@@ -3649,9 +3702,11 @@ class ButtonWithIcon(gtk.Button):
         hbox = gtk.HBox()
         icon = gtk.Image()
         icon.set_from_file(self.output.Resources + os.sep + self.icon)
-        label = gtk.Label(" " + self.label)
         hbox.add(icon)
-        hbox.add(label)
+
+        if self.label != "":
+            label = gtk.Label(" " + self.label)
+            hbox.add(label)
 
         self.set_relief(gtk.RELIEF_NONE)
         self.add(hbox)

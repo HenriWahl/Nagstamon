@@ -152,6 +152,7 @@ class RefreshLoopOneServer(threading.Thread):
                 self.server.count += 1
                 # call Hook() for extra action
                 self.server.Hook()
+                # refresh fullscreen window - maybe somehow raw approach
                 if str(self.conf.maximized_window) == "True":
                     gobject.idle_add(self.output.popwin.RefreshMaximizedWindow)
 
