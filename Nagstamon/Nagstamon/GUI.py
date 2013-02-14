@@ -1454,11 +1454,13 @@ class StatusBar(object):
 
 class _Window(gtk.Window):
     """
-    derived from gtk.Window for modifying .destroy() method
+    derived from gtk.Window for modifying .destroy() method, because otherwise Nagstamon stopped running with
+    every display mode change
     """
-    def destroy(self, mode=""):
+    def destroy(self, widget=None, mode="", conf=None):
         gtk.Window.destroy(self)
-        if mode != "settings":
+        if mode != "settings" and str(conf.maximized_window) == "True":
+            conf.SaveConfig()
             gtk.main_quit()
 
 
@@ -1706,7 +1708,8 @@ class Popwin(object):
         else:
             window.move(int(self.output.conf.maximized_window_x0), int(self.output.conf.maximized_window_y0))
             window.maximize()
-            #window.connect("destroy", self.output.conf.SaveConfig)
+            # give conf to custom destroy method so it can find out if maximized window mode is enabled
+            window.connect("destroy", window.destroy, "close", self.output.conf)
             window.show_all()
             window.set_visible(True)
 
@@ -2744,8 +2747,9 @@ class Settings(object):
             self.conf.unconfigured = False
             # create output visuals again because they might have changed (e.g. systray/free floating status bar)
             self.output.statusbar.StatusBar.destroy()    
-            self.output.statusbar.SysTray.set_visible(False)       
-            self.output.popwin.Window.destroy(mode="settings")
+            self.output.statusbar.SysTray.set_visible(False)
+            # mode settings tell custom destroy method that no general stop is wanted, just destroy window
+            self.output.popwin.Window.destroy(mode="settings", conf=self.output.conf)
             # re-initialize output with new settings
             self.output.__init__()       
 
