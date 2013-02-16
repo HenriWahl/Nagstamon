@@ -121,7 +121,6 @@ class GUI(object):
             self.popwin.Window.set_visible(True)
             self.popwin.RefreshMaximizedWindow()
 
-
         # flag which is set True if already notifying
         self.Notifying = False
 
@@ -1457,11 +1456,20 @@ class _Window(gtk.Window):
     derived from gtk.Window for modifying .destroy() method, because otherwise Nagstamon stopped running with
     every display mode change
     """
+    # when OKing settings destroy() gets called twice and the first time without "settings" mode set
+    # so it Nagstamon soon gets gtk.main_quit()
+    # destroycount helps against premature exits.
+    destroycount = 0
+
+
     def destroy(self, widget=None, mode="", conf=None):
         gtk.Window.destroy(self)
-        if mode != "settings" and str(conf.maximized_window) == "True":
+        if mode != "settings" and str(conf.maximized_window) == "True" and self.destroycount > 0:
+            self.destroycount = 1
             conf.SaveConfig()
             gtk.main_quit()
+
+        self.destroycount += 1
 
 
 class Popwin(object):
@@ -1707,7 +1715,11 @@ class Popwin(object):
             window.connect("leave-notify-event", self.LeavePopWin)
         else:
             window.move(int(self.output.conf.maximized_window_x0), int(self.output.conf.maximized_window_y0))
-            window.maximize()
+            # fullscreen does not work at least with GNOME, Windows is OK
+            if platform.system() != "Windows":
+                window.maximize()
+            else:
+                window.fullscreen()
             # give conf to custom destroy method so it can find out if maximized window mode is enabled
             window.connect("destroy", window.destroy, "close", self.output.conf)
             window.show_all()
@@ -1753,6 +1765,8 @@ class Popwin(object):
         """
         refresh maximized window
         """
+
+        #if platform.system != "Windows":
         # get current monitor's settings
         # screeny0 might be important on more-than-one-monitor-setups where it will not be 0
         x0, y0 = self.Window.get_position()
