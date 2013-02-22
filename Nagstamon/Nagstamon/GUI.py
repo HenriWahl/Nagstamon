@@ -1463,13 +1463,24 @@ class _Window(gtk.Window):
 
 
     def destroy(self, widget=None, mode="", conf=None):
-        gtk.Window.destroy(self)
-        if mode != "settings" and str(conf.maximized_window) == "True" and self.destroycount > 0:
-            self.destroycount = 1
-            conf.SaveConfig()
-            gtk.main_quit()
+        print "\n", mode, str(conf.maximized_window), widget, self.destroycount, "\n"
 
+        if mode != "settings" and str(conf.maximized_window) == "True":
+            if platform.system() == "Windows" and self.destroycount > 0:
+                self.destroycount = 0
+                conf.SaveConfig()
+                gtk.main_quit()
+                print "windows"
+            elif platform.system() != "Windows" and self.destroycount > 0:
+                self.destroycount = 0
+                print "nonwindows"
+                conf.SaveConfig()
+                gtk.main_quit()
+        time.sleep(1)
+        print self.destroycount
         self.destroycount += 1
+
+        gtk.Window.destroy(self)
 
 
 class Popwin(object):
