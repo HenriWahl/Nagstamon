@@ -13,7 +13,7 @@ import cookielib
 from Nagstamon import Actions
 from Nagstamon.Objects import *
 from Nagstamon.Server.Generic import GenericServer, not_empty
-from Nagstamon.BeautifulSoup import BeautifulSoup
+from BeautifulSoup import BeautifulSoup
 
 class NinjaServer(GenericServer):
     """
