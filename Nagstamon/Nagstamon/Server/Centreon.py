@@ -8,60 +8,60 @@ import sys
 import cookielib
 import traceback
 import gc
-   
+
 from Nagstamon import Actions
 from Nagstamon.Objects import *
 from Nagstamon.Server.Generic import GenericServer
 
-class CentreonServer(GenericServer): 
+class CentreonServer(GenericServer):
     TYPE = 'Centreon'
     # centreon generic web interface uses a sid which is needed to ask for news
-    SID = None   
+    SID = None
     # count for SID regeneration
     SIDcount = 0
-    
+
     # URLs for browser shortlinks/buttons on popup window
     BROWSER_URLS= { "monitor": "$MONITOR$/main.php?p=1",\
                     "hosts": "$MONITOR$/main.php?p=20103&o=hpb",\
                     "services": "$MONITOR$/main.php?p=20202&o=svcpb",\
                     "history": "$MONITOR$/main.php?p=203"}
-    
+
     # A Monitor CGI URL is not necessary so hide it in settings
     DISABLED_CONTROLS = ["label_monitor_cgi_url", "input_entry_monitor_cgi_url"]
-    
+
     # newer Centreon versions (2.3+?) have different URL paths with a "/ndo" fragment
     # will be checked by _get_ndo_url() but default is /xml/ndo/
     XML_NDO = "xml/ndo"
 
     # HARD/SOFT state mapping
     HARD_SOFT = {"(H)": "hard", "(S)": "soft"}
-    
-    
+
+
     def __init__(self, **kwds):
         # add all keywords to object, every mode searchs inside for its favorite arguments/keywords
         for k in kwds: self.__dict__[k] = kwds[k]
 
         GenericServer.__init__(self, **kwds)
-        
-        # Entries for monitor default actions in context menu
-        self.MENU_ACTIONS = ["Monitor", "Recheck", "Acknowledge", "Downtime"] 
 
-        
-    def init_HTTP(self):  
+        # Entries for monitor default actions in context menu
+        self.MENU_ACTIONS = ["Monitor", "Recheck", "Acknowledge", "Downtime"]
+
+
+    def init_HTTP(self):
         """
         initialize HTTP connection
         """
         if self.HTTPheaders == {}:
             GenericServer.init_HTTP(self)
             # Centreon xml giveback method just should exist
-            self.HTTPheaders["xml"] = {}      
-            
-            
+            self.HTTPheaders["xml"] = {}
+
+
     def reset_HTTP(self):
         """
         Centreon needs deletion of SID
         """
-        self.HTTPheaders = {}     
+        self.HTTPheaders = {}
         self.SID = None
         self.SIDcount = 0
         self._get_sid()
@@ -73,15 +73,15 @@ class CentreonServer(GenericServer):
         """
         pass
 
-    
+
     def open_tree_view(self, host, service=""):
         # must be a host if service is empty...
         if service == "":
             webbrowser.open(self.monitor_cgi_url + "/main.php?" + urllib.urlencode({"p":201,"o":"hd", "host_name":host}))
         else:
-            webbrowser.open(self.monitor_cgi_url + "/main.php?" + urllib.urlencode({"p":202, "o":"svcd",  "host_name":host, "service_description":service}))      
+            webbrowser.open(self.monitor_cgi_url + "/main.php?" + urllib.urlencode({"p":202, "o":"svcd",  "host_name":host, "service_description":service}))
 
-            
+
     def get_start_end(self, host):
         """
         get start and end time for downtime from Centreon server
@@ -94,18 +94,18 @@ class CentreonServer(GenericServer):
             #raw, error = result.result, result.error
             result = self.FetchURL(self.monitor_cgi_url + "/main.php?" + cgi_data, giveback="obj")
             html, error = result.result, result.error
-            if error == "":               
+            if error == "":
                 html = result.result
                 start_time = html.find(attrs={"name":"start"}).attrMap["value"]
-                end_time = html.find(attrs={"name":"end"}).attrMap["value"]                  
-    
-                # give values back as tuple      
+                end_time = html.find(attrs={"name":"end"}).attrMap["value"]
+
+                # give values back as tuple
                 return start_time, end_time
         except:
             self.Error(sys.exc_info())
-            return "n/a", "n/a"            
-            
-    
+            return "n/a", "n/a"
+
+
     def GetHost(self, host):
         """
         Centreonified way to get host ip - attribute "a" in down hosts xml is of no use for up
@@ -113,8 +113,8 @@ class CentreonServer(GenericServer):
         """
         # the fastest method is taking hostname as used in monitor
         if str(self.conf.connect_by_host) == "True" or host == "":
-            return Result(result=host)        
-        
+            return Result(result=host)
+
         # do a web interface search limited to only one result - the hostname
         cgi_data = urllib.urlencode({"sid":self.SID,\
                                     "search":host,\
@@ -126,11 +126,11 @@ class CentreonServer(GenericServer):
                                     "o":"h",\
                                     "p":20102,\
                                     "time":0})
-                
+
         result = self.FetchURL(self.monitor_cgi_url + "/include/monitoring/status/Hosts/" + self.XML_NDO + "/hostXML.php?"\
-                              + cgi_data, giveback="xml")        
+                              + cgi_data, giveback="xml")
         xmlobj = result.result
-        
+
         if len(xmlobj) != 0:
             # when connection by DNS is not configured do it by IP
             try:
@@ -141,7 +141,7 @@ class CentreonServer(GenericServer):
                         del xmlobj
                     except:
                         self.Error(sys.exc_info())
-                        address = str(xmlobj.l.a.text)                        
+                        address = str(xmlobj.l.a.text)
                         del xmlobj
                 else:
                     address = str(xmlobj.l.a.text)
@@ -149,25 +149,25 @@ class CentreonServer(GenericServer):
             except:
                 result, error = self.Error(sys.exc_info())
                 return Result(error=error)
-        
-        else:   
+
+        else:
             result, error = self.Error(sys.exc_info())
             return Result(error=error)
-        
+
         # print IP in debug mode
-        if str(self.conf.debug_mode) == "True":    
+        if str(self.conf.debug_mode) == "True":
             self.Debug(server=self.get_name(), host=host, debug ="IP of %s:" % (host) + " " + address)
         # give back host or ip
         return Result(result=address)
-        
-            
+
+
     def _get_sid(self):
         """
         gets a shiny new SID for XML HTTP requests to Centreon cutting it out via .partition() from raw HTML
         additionally get php session cookie
         """
         login_data = urllib.urlencode({"useralias" : self.username, "password" : self.password, "submit" : "Login"})
-      
+
         try:
             raw = self.FetchURL(self.monitor_cgi_url + "/index.php",cgi_data=login_data, giveback="raw")
             del raw
@@ -176,19 +176,19 @@ class CentreonServer(GenericServer):
         except:
             result, error = self.Error(sys.exc_info())
             return Result(result=result, error=error)
-        
-    
+
+
     def _get_ndo_url(self):
         """
         find out if Centreon is that new so it already supports ..../xml/ndo/.... URLs
         """
         ndo_test_url = self.monitor_cgi_url + "/include/monitoring/status/Hosts/xml/ndo/hostXML.php?" + urllib.urlencode({"num":0, "limit":999, "o":"hpb", "sort_type":"status", "sid":self.SID})
-        if "HTTP Error 404" in self.FetchURL(ndo_test_url).error:   
+        if "HTTP Error 404" in self.FetchURL(ndo_test_url).error:
             self.XML_NDO = "xml"
             if str(self.conf.debug_mode) == "True":
                 self.Debug(server=self.get_name(), debug = "Centreon Monitor does not use .../xml/ndo/... URLs.")
-        
-        
+
+
     def _get_host_id(self, host):
         """
         get host_id via parsing raw html
@@ -205,10 +205,10 @@ class CentreonServer(GenericServer):
             if str(self.conf.debug_mode) == "True":
                 self.Debug(server=self.get_name(), debug = "Host ID could not be retrieved.")
 
-        # some cleanup        
-        del result, error        
-        
-        # only if host_id is an usable integer return it    
+        # some cleanup
+        del result, error
+
+        # only if host_id is an usable integer return it
         try:
             if int(host_id):
                 if str(self.conf.debug_mode) == "True":
@@ -218,7 +218,7 @@ class CentreonServer(GenericServer):
                 return ""
         except:
             return ""
-        
+
 
     def _get_host_and_service_id(self, host, service):
         """
@@ -232,10 +232,10 @@ class CentreonServer(GenericServer):
         # from urllib to get the session id POSTed
         result = self.FetchURL(self.monitor_cgi_url + "/main.php?"+ cgi_data, cgi_data=urllib.urlencode({"sid":self.SID}), giveback="raw")
         raw, error = result.result, result.error
-        
+
         # ids to give back, should contain two items, a host and a service id
         ids = []
-        
+
         if error == "":
             # search ids
             for l in raw.splitlines():
@@ -245,11 +245,11 @@ class CentreonServer(GenericServer):
                 return ids
         else:
             if str(self.conf.debug_mode) == "True":
-                self.Debug(server=self.get_name(), host=host, service=service, debug = "IDs could not be retrieved.")                
+                self.Debug(server=self.get_name(), host=host, service=service, debug = "IDs could not be retrieved.")
 
-            return "", ""    
-        
-        
+            return "", ""
+
+
     def _get_status(self):
         """
         Get status from Centreon Server
@@ -257,14 +257,14 @@ class CentreonServer(GenericServer):
         # create Nagios items dictionary with to lists for services and hosts
         # every list will contain a dictionary for every failed service/host
         # this dictionary is only temporarily
-        nagitems = {"services":[], "hosts":[]}       
-        
+        nagitems = {"services":[], "hosts":[]}
+
         # get sid in case this has not yet been done
         if self.SID == None or self.SID == "":
             self.SID = self._get_sid().result
             # those ndo urls would not be changing too often so this check migth be done here
             self._get_ndo_url()
-            
+
         # services (unknown, warning or critical?)
         nagcgiurl_services = self.monitor_cgi_url + "/include/monitoring/status/Services/" + self.XML_NDO + "/serviceXML.php?" + urllib.urlencode({"num":0, "limit":999, "o":"svcpb", "sort_type":"status", "sid":self.SID})
 
@@ -274,30 +274,30 @@ class CentreonServer(GenericServer):
         # hosts - mostly the down ones
         # unfortunately the hosts status page has a different structure so
         # hosts must be analyzed separately
-        try:           
-            result = self.FetchURL(nagcgiurl_hosts, giveback="xml") 
-            xmlobj, error = result.result, result.error            
+        try:
+            result = self.FetchURL(nagcgiurl_hosts, giveback="xml")
+            xmlobj, error = result.result, result.error
             if error != "": return Result(result=xmlobj, error=error)
-            
+
             # in case there are no children session id is invalid
-            if xmlobj == "<response>bad session id</response>" or str(xmlobj) == "Bad Session ID":    
+            if xmlobj == "<response>bad session id</response>" or str(xmlobj) == "Bad Session ID":
                 del xmlobj
-                if str(self.conf.debug_mode) == "True": 
-                    self.Debug(server=self.get_name(), debug="Bad session ID, retrieving new one...")                
+                if str(self.conf.debug_mode) == "True":
+                    self.Debug(server=self.get_name(), debug="Bad session ID, retrieving new one...")
 
                 # try again...
                 self.SID = self._get_sid().result
                 result = self.FetchURL(nagcgiurl_hosts, giveback="xml")
                 xmlobj, error = result.result, result.error
                 if error != "": return Result(result=xmlobj, error=error)
-                
-                # a second time a bad session id should raise an error                
+
+                # a second time a bad session id should raise an error
                 if xmlobj == "<response>bad session id</response>" or str(xmlobj) == "Bad Session ID":
                     #return Result(result=xmlobj, error=str(xmlobj))
                     return Result(result="ERROR", error=str(xmlobj))
-                
+
             for l in xmlobj.findAll("l"):
-                try:                       
+                try:
                     n = {}
                     # host
                     n["host"] = str(l.hn.text)
@@ -354,9 +354,9 @@ class CentreonServer(GenericServer):
                     result, error = self.Error(sys.exc_info())
                     #return Result(result=result, error=error)
                     return Result(result=result, error=error)
-            
-            del xmlobj                
-                
+
+            del xmlobj
+
         except:
             # set checking flag back to False
             self.isChecking = False
@@ -365,22 +365,22 @@ class CentreonServer(GenericServer):
 
         # services
         try:
-            result = self.FetchURL(nagcgiurl_services, giveback="xml")            
+            result = self.FetchURL(nagcgiurl_services, giveback="xml")
             xmlobj, error = result.result, result.error
             if error != "": return Result(result=xmlobj, error=error)
-            
+
             # in case there are no children session id is invalid
-            if xmlobj == "<response>bad session id</response>" or xmlobj == "Bad Session ID": 
+            if xmlobj == "<response>bad session id</response>" or xmlobj == "Bad Session ID":
                 # debug
-                if str(self.conf.debug_mode) == "True": 
-                    self.Debug(server=self.get_name(), debug="Bad session ID, retrieving new one...")                                
+                if str(self.conf.debug_mode) == "True":
+                    self.Debug(server=self.get_name(), debug="Bad session ID, retrieving new one...")
                 # try again...
                 self.SID = self._get_sid().result
-                result = self.FetchURL(nagcgiurl_services, giveback="xml")                             
-                xmlobj, error = result.result, result.error 
+                result = self.FetchURL(nagcgiurl_services, giveback="xml")
+                xmlobj, error = result.result, result.error
                 #if error != "": return Result(result=xmlobj, error=error)
                 if error != "": return Result(result="ERROR", error=error)
-                
+
             for l in xmlobj.findAll("l"):
                 try:
                     n = {}
@@ -416,7 +416,7 @@ class CentreonServer(GenericServer):
                     n["flapping"] = str(l.find("is").text)
                     # add dictionary full of information about this service item to nagitems - only if service
                     nagitems["services"].append(n)
-                    
+
                     # after collection data in nagitems create objects of its informations
                     # host objects contain service objects
                     if not self.new_hosts.has_key(n["host"]):
@@ -445,22 +445,22 @@ class CentreonServer(GenericServer):
                     self.isChecking = False
                     result, error = self.Error(sys.exc_info())
                     return Result(result=result, error=error)
-                                        
+
             # do some cleanup
             del xmlobj
-            
+
         except:
             # set checking flag back to False
             self.isChecking = False
             result, error = self.Error(sys.exc_info())
             return Result(result=result, error=error)
-     
+
         # some cleanup
         del nagitems
-        
-        # return True if all worked well    
-        return Result()        
-        
+
+        # return True if all worked well
+        return Result()
+
 
     def _set_acknowledge(self, host, service, author, comment, sticky, notify, persistent, all_services=[]):
         # decision about host or service - they have different URLs
@@ -471,13 +471,13 @@ class CentreonServer(GenericServer):
                         "author":author, "comment":comment, "submit":"Add", "notify":int(notify),\
                         "persistent":int(persistent), "sticky":int(sticky), "ackhostservice":"0", "o":"hd", "en":"1"})
                 # debug
-                if str(self.conf.debug_mode) == "True": 
-                    self.Debug(server=self.get_name(), host=host, debug=self.monitor_cgi_url + "/main.php?"+ cgi_data)                
+                if str(self.conf.debug_mode) == "True":
+                    self.Debug(server=self.get_name(), host=host, debug=self.monitor_cgi_url + "/main.php?"+ cgi_data)
 
-                # running remote cgi command, also possible with GET method     
-                raw = self.FetchURL(self.monitor_cgi_url + "/main.php?" + cgi_data, giveback="raw") 
+                # running remote cgi command, also possible with GET method
+                raw = self.FetchURL(self.monitor_cgi_url + "/main.php?" + cgi_data, giveback="raw")
                 del raw
-                
+
             # if host is acknowledged and all services should be to or if a service is acknowledged
             # (and all other on this host too)
             if service != "" or len(all_services) > 0:
@@ -485,20 +485,20 @@ class CentreonServer(GenericServer):
                 # if all_services is empty only one service has to be checked - the one clicked
                 # otherwise if there all services should be acknowledged
                 if len(all_services) == 0: all_services = [service]
-    
+
                 # acknowledge all services on a host
                 for s in all_services:
                     # service @ host
-                    # in case the Centreon guys one day fix their typos "persistent" and 
+                    # in case the Centreon guys one day fix their typos "persistent" and
                     # "persistent" will both be given (it is "persistant" in scheduling for downtime)
                     cgi_data = urllib.urlencode({"p":"20215", "cmd":"15", "host_name":host, \
                             "author":author, "comment":comment, "submit":"Add", "notify":int(notify),\
                             "service_description":s, "force_check":"1", \
                             "persistent":int(persistent), "persistant":int(persistent),\
-                            "sticky":int(sticky), "o":"svcd", "en":"1"}) 
+                            "sticky":int(sticky), "o":"svcd", "en":"1"})
                     # debug
-                    if str(self.conf.debug_mode) == "True": 
-                        self.Debug(server=self.get_name(), host=host, service=s, debug=self.monitor_cgi_url + "/main.php?" + cgi_data)                
+                    if str(self.conf.debug_mode) == "True":
+                        self.Debug(server=self.get_name(), host=host, service=s, debug=self.monitor_cgi_url + "/main.php?" + cgi_data)
 
                     # running remote cgi command with GET method, for some strange reason only working if
                     # giveback is "raw"
@@ -506,7 +506,7 @@ class CentreonServer(GenericServer):
                     del raw
         except:
             self.Error(sys.exc_info())
-            
+
 
     def _set_recheck(self, host, service):
         """
@@ -536,11 +536,11 @@ class CentreonServer(GenericServer):
             del raw
         except:
             self.Error(sys.exc_info())
-       
+
 
     def _set_downtime(self, host, service, author, comment, fixed, start_time, end_time, hours, minutes):
         """
-        gets actual host and service ids and apply them to downtime cgi  
+        gets actual host and service ids and apply them to downtime cgi
         """
         try:
             if service == "":
@@ -557,8 +557,8 @@ class CentreonServer(GenericServer):
                                              "comment":comment,\
                                              "o":"ah"})
                 # debug
-                if str(self.conf.debug_mode) == "True": 
-                    self.Debug(server=self.get_name(), host=host, debug=self.monitor_cgi_url + "/main.php?" + cgi_data)                
+                if str(self.conf.debug_mode) == "True":
+                    self.Debug(server=self.get_name(), host=host, debug=self.monitor_cgi_url + "/main.php?" + cgi_data)
 
             else:
                 # service
@@ -573,30 +573,30 @@ class CentreonServer(GenericServer):
                                              "comment":comment,\
                                              "o":"as"})
                 # debug
-                if str(self.conf.debug_mode) == "True": 
-                    self.Debug(server=self.get_name(), host=host, service=service, debug=self.monitor_cgi_url + "/main.php?" + cgi_data)                
+                if str(self.conf.debug_mode) == "True":
+                    self.Debug(server=self.get_name(), host=host, service=service, debug=self.monitor_cgi_url + "/main.php?" + cgi_data)
 
             # running remote cgi command
-            raw = self.FetchURL(self.monitor_cgi_url + "/main.php", giveback="raw", cgi_data=cgi_data)   
+            raw = self.FetchURL(self.monitor_cgi_url + "/main.php", giveback="raw", cgi_data=cgi_data)
             del raw
         except:
             self.Error(sys.exc_info())
 
-        
+
     def Hook(self):
         """
         in case count is down get a new SID, just in case
         """
-        # a SIDcount of 300 should make 15 min when being run every 3 secs as it is at 
+        # a SIDcount of 300 should make 15 min when being run every 3 secs as it is at
         # the moment in Actions.RefreshLoopOneServer()
         # maybe this is unnecessary now that we authenticate via login/password, no md5
         if self.SIDcount >= 300:
             if str(self.conf.debug_mode) == "True":
-                self.Debug(server=self.get_name(), debug="Old SID: " + self.SID + " " + str(self.Cookie))                
+                self.Debug(server=self.get_name(), debug="Old SID: " + self.SID + " " + str(self.Cookie))
             self.SID = self._get_sid().result
             if str(self.conf.debug_mode) == "True":
                 self.Debug(server=self.get_name(), debug="New SID: " +  self.SID + " " + str(self.Cookie))
             self.SIDcount = 0
         else:
-            self.SIDcount += 1         
+            self.SIDcount += 1
 

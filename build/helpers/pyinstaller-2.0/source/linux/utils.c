@@ -64,7 +64,7 @@ int get_thisfile(char *thisfile, const char *programname)
     }
 
     VS("thisfile is %s\n", thisfile);
-    
+
     return 0;
 }
 

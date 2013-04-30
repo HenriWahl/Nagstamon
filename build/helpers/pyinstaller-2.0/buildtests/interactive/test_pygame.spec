@@ -7,7 +7,7 @@ pyz = PYZ(a.pure)
 exe = EXE(pyz,
           a.scripts,
           exclude_binaries=1,
-          name=os.path.join('build', 'pyi.'+sys.platform, __testname__, 
+          name=os.path.join('build', 'pyi.'+sys.platform, __testname__,
                             __testname__ + '.exe'),
           debug=False,
           strip=False,
@@ -20,7 +20,7 @@ coll = COLLECT(exe,
                strip=False,
                upx=False,
                name=os.path.join('dist', __testname__))
-               
+
 import sys
 if sys.platform.startswith("darwin"):
     app = BUNDLE(coll,

@@ -73,7 +73,7 @@ except Exception, err:
 from Nagstamon import GUI
 from Nagstamon import Actions
 
-    
+
 ###### MAIN ##############
 
 # necessary gobject thread initialization
@@ -98,10 +98,10 @@ for server in conf.servers.values():
         if platform.system() == "Darwin":
             # MacOSX gets instable with default theme "Clearlooks" so use custom one with theme "Murrine"
             gtk.rc_parse_string('gtk-theme-name = "Murrine"')
-        GUI.AuthenticationDialog(server=server, Resources=Resources, conf=conf, debug_queue=debug_queue)        
+        GUI.AuthenticationDialog(server=server, Resources=Resources, conf=conf, debug_queue=debug_queue)
     created_server = Actions.CreateServer(server, conf, debug_queue)
     if created_server is not None:
-        servers[server.name] = created_server   
+        servers[server.name] = created_server
 
 # Initiate Output
 output = GUI.GUI(conf=conf, servers=servers, Resources=Resources, debug_queue=debug_queue, GUILock=GUILock)

@@ -26,7 +26,7 @@ exe = EXE(pyz,
           strip=False,
           upx=True,
           console=1 )
-                    
+
 pyzB = PYZ(b.pure)
 exeB = EXE(pyzB,
           b.scripts,

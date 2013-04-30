@@ -133,7 +133,7 @@ void startUp()
 	char *p;
 	int len;
 	memset(status_list, 0, 20 * sizeof(ARCHIVE_STATUS *));
-	
+
 	if (!GetModuleFileNameA(gInstance, thisfile, _MAX_PATH)) {
 		FATALERROR("System error - unable to load!");
 		return;
@@ -164,7 +164,7 @@ BOOL WINAPI DllMain(HINSTANCE hInstance, DWORD dwReason, LPVOID lpReserved)
 		//finalizePython();
 	}
 
-	return TRUE; 
+	return TRUE;
 }
 
 int LoadPythonCom(ARCHIVE_STATUS *status)
@@ -177,10 +177,10 @@ int LoadPythonCom(ARCHIVE_STATUS *status)
 	if (gPythoncom == NULL) {
 		sprintf(dllpath, "%spythoncom%02d.dll", here, getPyVersion(status));
 		//VS(dllpath);
-		gPythoncom = LoadLibraryExA( dllpath, // points to name of executable module 
-					   NULL, // HANDLE hFile, // reserved, must be NULL 
-					   LOAD_WITH_ALTERED_SEARCH_PATH // DWORD dwFlags // entry-point execution flag 
-					  ); 
+		gPythoncom = LoadLibraryExA( dllpath, // points to name of executable module
+					   NULL, // HANDLE hFile, // reserved, must be NULL
+					   LOAD_WITH_ALTERED_SEARCH_PATH // DWORD dwFlags // entry-point execution flag
+					  );
 	}
 	if (!gPythoncom) {
 		VS("Pythoncom failed to load");

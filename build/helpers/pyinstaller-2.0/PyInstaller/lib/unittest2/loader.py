@@ -53,7 +53,7 @@ def _make_failed_test(classname, methodname, exception, suiteClass):
     attrs = {methodname: testFailure}
     TestClass = type(classname, (case.TestCase,), attrs)
     return suiteClass((TestClass(methodname),))
-    
+
 
 class TestLoader(unittest.TestLoader):
     """
@@ -242,7 +242,7 @@ class TestLoader(unittest.TestLoader):
     def _match_path(self, path, full_path, pattern):
         # override this method to use alternative matching strategy
         return fnmatch(path, pattern)
-    
+
     def _find_tests(self, start_dir, pattern):
         """Used by discovery. Yields test suites it loads."""
         paths = os.listdir(start_dir)

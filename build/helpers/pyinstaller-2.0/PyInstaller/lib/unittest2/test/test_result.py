@@ -258,7 +258,7 @@ class Test_TestResult(unittest2.TestCase):
                 f_globals = {}
         result = unittest2.TestResult()
         self.assertFalse(result._is_relevant_tb_level(Frame))
-        
+
         Frame.tb_frame.f_globals['__unittest'] = True
         self.assertTrue(result._is_relevant_tb_level(Frame))
 
@@ -304,65 +304,65 @@ class TestOutputBuffering(unittest2.TestCase):
     def testBufferOutputOff(self):
         real_out = self._real_out
         real_err = self._real_err
-        
+
         result = unittest2.TestResult()
         self.assertFalse(result.buffer)
-    
+
         self.assertIs(real_out, sys.stdout)
         self.assertIs(real_err, sys.stderr)
-        
+
         result.startTest(self)
-        
+
         self.assertIs(real_out, sys.stdout)
         self.assertIs(real_err, sys.stderr)
 
     def testBufferOutputStartTestAddSuccess(self):
         real_out = self._real_out
         real_err = self._real_err
-        
+
         result = unittest2.TestResult()
         self.assertFalse(result.buffer)
-        
+
         result.buffer = True
-    
+
         self.assertIs(real_out, sys.stdout)
         self.assertIs(real_err, sys.stderr)
-        
+
         result.startTest(self)
-        
+
         self.assertIsNot(real_out, sys.stdout)
         self.assertIsNot(real_err, sys.stderr)
         self.assertIsInstance(sys.stdout, StringIO)
         self.assertIsInstance(sys.stderr, StringIO)
         self.assertIsNot(sys.stdout, sys.stderr)
-        
+
         out_stream = sys.stdout
         err_stream = sys.stderr
-        
+
         result._original_stdout = StringIO()
         result._original_stderr = StringIO()
-        
+
         print 'foo'
         print >> sys.stderr, 'bar'
-        
+
         self.assertEqual(out_stream.getvalue(), 'foo\n')
         self.assertEqual(err_stream.getvalue(), 'bar\n')
-        
+
         self.assertEqual(result._original_stdout.getvalue(), '')
         self.assertEqual(result._original_stderr.getvalue(), '')
-        
+
         result.addSuccess(self)
         result.stopTest(self)
-        
+
         self.assertIs(sys.stdout, result._original_stdout)
         self.assertIs(sys.stderr, result._original_stderr)
-        
+
         self.assertEqual(result._original_stdout.getvalue(), '')
         self.assertEqual(result._original_stderr.getvalue(), '')
-        
+
         self.assertEqual(out_stream.getvalue(), '')
         self.assertEqual(err_stream.getvalue(), '')
-        
+
 
     def getStartedResult(self):
         result = unittest2.TestResult()
@@ -372,26 +372,26 @@ class TestOutputBuffering(unittest2.TestCase):
 
     def testBufferOutputAddErrorOrFailure(self):
         for message_attr, add_attr, include_error in [
-            ('errors', 'addError', True), 
+            ('errors', 'addError', True),
             ('failures', 'addFailure', False),
-            ('errors', 'addError', True), 
+            ('errors', 'addError', True),
             ('failures', 'addFailure', False)
         ]:
             result = self.getStartedResult()
             result._original_stderr = StringIO()
             result._original_stdout = StringIO()
-            
+
             print >> sys.stdout, 'foo'
             if include_error:
                 print >> sys.stderr, 'bar'
-            
+
             addFunction = getattr(result, add_attr)
             addFunction(self, (None, None, None))
             result.stopTest(self)
-            
+
             result_list = getattr(result, message_attr)
             self.assertEqual(len(result_list), 1)
-            
+
             test, message = result_list[0]
             expectedOutMessage = textwrap.dedent("""
                 Stdout:
@@ -409,8 +409,8 @@ class TestOutputBuffering(unittest2.TestCase):
             self.assertEqual(result._original_stdout.getvalue(), expectedOutMessage)
             self.assertEqual(result._original_stderr.getvalue(), expectedErrMessage)
             self.assertMultiLineEqual(message, expectedFullMessage)
-        
-        
+
+
 
 if __name__ == '__main__':
     unittest2.main()

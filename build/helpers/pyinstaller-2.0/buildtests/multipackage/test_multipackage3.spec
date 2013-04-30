@@ -34,7 +34,7 @@ coll = COLLECT( exe,
         strip=False,
         upx=True,
         name=os.path.join('dist', __testname__ ))
-           
+
 pyzB = PYZ(b.pure)
 exeB = EXE(pyzB,
           b.scripts,

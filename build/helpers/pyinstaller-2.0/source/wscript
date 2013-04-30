@@ -22,7 +22,7 @@ out = 'build'
 
 def set_options(opt):
     myplatform = Utils.detect_platform()
-    
+
     if myplatform.startswith('linux'):
         opt.add_option('--no-lsb',
                 action = 'store_true',
@@ -213,7 +213,7 @@ def configure(conf):
             conf.env.append_value('CCFLAGS', '/Wp64')
         # We use SEH exceptions in winmain.c; make sure they are activated.
         conf.env.append_value('CCFLAGS', '/EHa')
-    
+
     # Compile with 64bit gcc 32bit binaries or vice versa.
     if conf.env.CC_NAME == 'gcc':
         if myarch == '32bit' and conf.check_cc(ccflags='-m32', msg='Checking for flags -m32'):

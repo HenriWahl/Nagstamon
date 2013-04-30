@@ -53,7 +53,7 @@ class TestWith(unittest2.TestCase):
             # This causes a UnicodeWarning due to its craziness
             one = ''.join([chr(i) for i in range(255)])
             # this used to cause a UnicodeDecodeError constructing msg
-            self._formatMessage(one, u'\uFFFD')        
+            self._formatMessage(one, u'\uFFFD')
         cm = catch_warnings(record=True)
         self.runContext(cm, run)
 
@@ -77,13 +77,13 @@ class TestWith(unittest2.TestCase):
             def testUnexpectedSuccess(self):
                 pass
             testUnexpectedSuccess = unittest2.expectedFailure(testUnexpectedSuccess)
-        
-        for test_name, should_pass in (('testSkip', True), 
-                                       ('testExpectedFail', True), 
+
+        for test_name, should_pass in (('testSkip', True),
+                                       ('testExpectedFail', True),
                                        ('testUnexpectedSuccess', False)):
             test = Test(test_name)
             self.assertOldResultWarning(test, int(not should_pass))
-        
+
     def test_old_testresult_setup(self):
         class Test(unittest2.TestCase):
             def setUp(self):
@@ -91,7 +91,7 @@ class TestWith(unittest2.TestCase):
             def testFoo(self):
                 pass
         self.assertOldResultWarning(Test('testFoo'), 0)
-        
+
     def test_old_testresult_class(self):
         class Test(unittest2.TestCase):
             def testFoo(self):

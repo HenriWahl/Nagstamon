@@ -174,7 +174,7 @@ def __add_options(parser):
                  'be used multiple times.')
     g.add_option("--additional-hooks-dir", action="append", dest="hookspath",
                  help="additional path to search for hooks "
-                      "(may be given several times)")    
+                      "(may be given several times)")
 
     g = parser.add_option_group('How to generate')
     g.add_option("-d", "--debug", action="store_true", default=False,

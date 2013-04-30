@@ -33,6 +33,6 @@ print '-----------'
 print 'dir contents sys._MEIPASS:', os.listdir(sys._MEIPASS)
 
 print '-----------'
-print 'now importing pkg_resources' 
+print 'now importing pkg_resources'
 import pkg_resources
 print "dir(pkg_resources)", dir(pkg_resources)
