@@ -70,7 +70,7 @@ setup(
                "(including commercial ones)."),
     keywords = "packaging, standalone executable, freeze",
     url = "http://www.pyinstaller.org/",
-    download_url = "http://www.pyinstaller.org/wiki#Downloads",    
+    download_url = "http://www.pyinstaller.org/wiki#Downloads",
     zip_safe = False,
     classifiers = [
         'Development Status :: 6 - Mature',

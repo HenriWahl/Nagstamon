@@ -11,7 +11,7 @@ try:
 except ImportError:
     def registerResult(_):
         pass
-    
+
 __unittest = True
 
 
@@ -153,7 +153,7 @@ class TextTestRunner(unittest.TextTestRunner):
         result.failfast = self.failfast
         result.buffer = self.buffer
         registerResult(result)
-        
+
         startTime = time.time()
         startTestRun = getattr(result, 'startTestRun', None)
         if startTestRun is not None:
@@ -174,7 +174,7 @@ class TextTestRunner(unittest.TextTestRunner):
         self.stream.writeln("Ran %d test%s in %.3fs" %
                             (run, run != 1 and "s" or "", timeTaken))
         self.stream.writeln()
-        
+
         expectedFails = unexpectedSuccesses = skipped = 0
         try:
             results = map(len, (result.expectedFailures,

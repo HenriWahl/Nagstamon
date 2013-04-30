@@ -62,7 +62,7 @@ def skip(reason):
                 raise SkipTest(reason)
             skip_wrapper = wraps(test_item)(skip_wrapper)
             test_item = skip_wrapper
-        
+
         test_item.__unittest_skip__ = True
         test_item.__unittest_skip_why__ = reason
         return test_item
@@ -132,20 +132,20 @@ class _AssertRaisesContext(object):
 
 
 class _TypeEqualityDict(object):
-    
+
     def __init__(self, testcase):
         self.testcase = testcase
         self._store = {}
-    
+
     def __setitem__(self, key, value):
         self._store[key] = value
-    
+
     def __getitem__(self, key):
         value = self._store[key]
         if isinstance(value, basestring):
             return getattr(self.testcase, value)
         return value
-    
+
     def get(self, key, default=None):
         if key in self._store:
             return self[key]
@@ -191,9 +191,9 @@ class TestCase(unittest.TestCase):
     # to any explicit message passed.
 
     longMessage = True
-    
+
     # Attribute used by TestSuite for classSetUp
-    
+
     _classSetupFailed = False
 
     def __init__(self, methodName='runTest'):
@@ -247,15 +247,15 @@ class TestCase(unittest.TestCase):
 
     def setUp(self):
         "Hook method for setting up the test fixture before exercising it."
-    
+
     def setUpClass(cls):
         "Hook method for setting up class fixture before running tests in the class."
     setUpClass = classmethod(setUpClass)
-    
+
     def tearDownClass(cls):
         "Hook method for deconstructing the class fixture after running all tests in the class."
     tearDownClass = classmethod(tearDownClass)
-    
+
     def tearDown(self):
         "Hook method for deconstructing the test fixture after testing it."
 
@@ -297,13 +297,13 @@ class TestCase(unittest.TestCase):
     def __repr__(self):
         return "<%s testMethod=%s>" % \
                (strclass(self.__class__), self._testMethodName)
-    
+
     def _addSkip(self, result, reason):
         addSkip = getattr(result, 'addSkip', None)
         if addSkip is not None:
             addSkip(self, reason)
         else:
-            warnings.warn("Use of a TestResult without an addSkip method is deprecated", 
+            warnings.warn("Use of a TestResult without an addSkip method is deprecated",
                           DeprecationWarning, 2)
             result.addSuccess(self)
 
@@ -317,10 +317,10 @@ class TestCase(unittest.TestCase):
 
         self._resultForDoCleanups = result
         result.startTest(self)
-        
+
         testMethod = getattr(self, self._testMethodName)
-        
-        if (getattr(self.__class__, "__unittest_skip__", False) or 
+
+        if (getattr(self.__class__, "__unittest_skip__", False) or
             getattr(testMethod, "__unittest_skip__", False)):
             # If the class or method was skipped.
             try:
@@ -347,8 +347,8 @@ class TestCase(unittest.TestCase):
                     addExpectedFailure = getattr(result, 'addExpectedFailure', None)
                     if addExpectedFailure is not None:
                         addExpectedFailure(self, e.exc_info)
-                    else: 
-                        warnings.warn("Use of a TestResult without an addExpectedFailure method is deprecated", 
+                    else:
+                        warnings.warn("Use of a TestResult without an addExpectedFailure method is deprecated",
                                       DeprecationWarning)
                         result.addSuccess(self)
                 except _UnexpectedSuccess:
@@ -356,7 +356,7 @@ class TestCase(unittest.TestCase):
                     if addUnexpectedSuccess is not None:
                         addUnexpectedSuccess(self)
                     else:
-                        warnings.warn("Use of a TestResult without an addUnexpectedSuccess method is deprecated", 
+                        warnings.warn("Use of a TestResult without an addUnexpectedSuccess method is deprecated",
                                       DeprecationWarning)
                         result.addFailure(self, sys.exc_info())
                 except SkipTest, e:
@@ -478,7 +478,7 @@ class TestCase(unittest.TestCase):
             callableObj(*args, **kwargs)
         except excClass:
             return
-        
+
         if hasattr(excClass,'__name__'):
             excName = excClass.__name__
         else:
@@ -528,7 +528,7 @@ class TestCase(unittest.TestCase):
            operator.
         """
         if not first != second:
-            msg = self._formatMessage(msg, '%s == %s' % (safe_repr(first), 
+            msg = self._formatMessage(msg, '%s == %s' % (safe_repr(first),
                                                            safe_repr(second)))
             raise self.failureException(msg)
 
@@ -549,23 +549,23 @@ class TestCase(unittest.TestCase):
             return
         if delta is not None and places is not None:
             raise TypeError("specify delta or places not both")
-        
+
         if delta is not None:
             if abs(first - second) <= delta:
                 return
-        
-            standardMsg = '%s != %s within %s delta' % (safe_repr(first), 
-                                                        safe_repr(second), 
+
+            standardMsg = '%s != %s within %s delta' % (safe_repr(first),
+                                                        safe_repr(second),
                                                         safe_repr(delta))
         else:
             if places is None:
                 places = 7
-                
+
             if round(abs(second-first), places) == 0:
                 return
-        
-            standardMsg = '%s != %s within %r places' % (safe_repr(first), 
-                                                          safe_repr(second), 
+
+            standardMsg = '%s != %s within %r places' % (safe_repr(first),
+                                                          safe_repr(second),
                                                           places)
         msg = self._formatMessage(msg, standardMsg)
         raise self.failureException(msg)
@@ -586,7 +586,7 @@ class TestCase(unittest.TestCase):
         if delta is not None:
             if not (first == second) and abs(first - second) > delta:
                 return
-            standardMsg = '%s == %s within %s delta' % (safe_repr(first), 
+            standardMsg = '%s == %s within %s delta' % (safe_repr(first),
                                                         safe_repr(second),
                                                         safe_repr(delta))
         else:
@@ -594,7 +594,7 @@ class TestCase(unittest.TestCase):
                 places = 7
             if not (first == second) and round(abs(second-first), places) != 0:
                 return
-            standardMsg = '%s == %s within %r places' % (safe_repr(first), 
+            standardMsg = '%s == %s within %r places' % (safe_repr(first),
                                                          safe_repr(second),
                                                          places)
 
@@ -811,14 +811,14 @@ class TestCase(unittest.TestCase):
     def assertIn(self, member, container, msg=None):
         """Just like self.assertTrue(a in b), but with a nicer default message."""
         if member not in container:
-            standardMsg = '%s not found in %s' % (safe_repr(member), 
+            standardMsg = '%s not found in %s' % (safe_repr(member),
                                                    safe_repr(container))
             self.fail(self._formatMessage(msg, standardMsg))
 
     def assertNotIn(self, member, container, msg=None):
         """Just like self.assertTrue(a not in b), but with a nicer default message."""
         if member in container:
-            standardMsg = '%s unexpectedly found in %s' % (safe_repr(member), 
+            standardMsg = '%s unexpectedly found in %s' % (safe_repr(member),
                                                             safe_repr(container))
             self.fail(self._formatMessage(msg, standardMsg))
 
@@ -860,7 +860,7 @@ class TestCase(unittest.TestCase):
                     are_equal = False
                 if not are_equal:
                     mismatched.append('%s, expected: %s, actual: %s' %
-                                      (safe_repr(key), safe_repr(value), 
+                                      (safe_repr(key), safe_repr(value),
                                        safe_repr(actual[key])))
 
         if not (missing or mismatched):
@@ -868,7 +868,7 @@ class TestCase(unittest.TestCase):
 
         standardMsg = ''
         if missing:
-            standardMsg = 'Missing: %s' % ','.join([safe_repr(m) for m in 
+            standardMsg = 'Missing: %s' % ','.join([safe_repr(m) for m in
                                                     missing])
         if mismatched:
             if standardMsg:
@@ -881,19 +881,19 @@ class TestCase(unittest.TestCase):
         """An unordered sequence specific comparison. It asserts that
         expected_seq and actual_seq contain the same elements. It is
         the equivalent of::
-        
+
             self.assertEqual(sorted(expected_seq), sorted(actual_seq))
 
         Raises with an error message listing which elements of expected_seq
         are missing from actual_seq and vice versa if any.
-        
+
         Asserts that each element has the same count in both sequences.
         Example:
             - [0, 1, 1] and [1, 0, 1] compare equal.
             - [0, 0, 1] and [0, 1] compare unequal.
         """
         try:
-            
+
             expected = expected_seq[:]
             expected.sort()
             actual = actual_seq[:]
@@ -910,10 +910,10 @@ class TestCase(unittest.TestCase):
 
         errors = []
         if missing:
-            errors.append('Expected, but missing:\n    %s' % 
+            errors.append('Expected, but missing:\n    %s' %
                            safe_repr(missing))
         if unexpected:
-            errors.append('Unexpected, but present:\n    %s' % 
+            errors.append('Unexpected, but present:\n    %s' %
                            safe_repr(unexpected))
         if errors:
             standardMsg = '\n'.join(errors)
@@ -1005,9 +1005,9 @@ class TestCase(unittest.TestCase):
                 raise self.failureException('"%s" does not match "%s"' %
                          (expected_regexp.pattern, str(exc_value)))
         else:
-            if hasattr(expected_exception, '__name__'): 
+            if hasattr(expected_exception, '__name__'):
                 excName = expected_exception.__name__
-            else: 
+            else:
                 excName = str(expected_exception)
             raise self.failureException, "%s not raised" % excName
 

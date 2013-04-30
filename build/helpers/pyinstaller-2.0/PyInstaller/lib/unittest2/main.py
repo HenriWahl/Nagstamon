@@ -68,7 +68,7 @@ class TestProgram(object):
        for making test modules conveniently executable.
     """
     USAGE = USAGE_FROM_MODULE
-    
+
     # defaults for testing
     failfast = catchbreak = buffer = progName = None
 
@@ -170,15 +170,15 @@ class TestProgram(object):
                           help='Verbose output', action='store_true')
         if self.failfast != False:
             parser.add_option('-f', '--failfast', dest='failfast', default=False,
-                              help='Stop on first fail or error', 
+                              help='Stop on first fail or error',
                               action='store_true')
         if self.catchbreak != False and installHandler is not None:
             parser.add_option('-c', '--catch', dest='catchbreak', default=False,
-                              help='Catch ctrl-C and display results so far', 
+                              help='Catch ctrl-C and display results so far',
                               action='store_true')
         if self.buffer != False:
             parser.add_option('-b', '--buffer', dest='buffer', default=False,
-                              help='Buffer stdout and stderr during tests', 
+                              help='Buffer stdout and stderr during tests',
                               action='store_true')
         parser.add_option('-s', '--start-directory', dest='start', default='.',
                           help="Directory to start discovery ('.' default)")
@@ -193,7 +193,7 @@ class TestProgram(object):
 
         for name, value in zip(('start', 'pattern', 'top'), args):
             setattr(options, name, value)
-        
+
         # only set options from the parsing here
         # if they weren't set explicitly in the constructor
         if self.failfast is None:
@@ -202,7 +202,7 @@ class TestProgram(object):
             self.catchbreak = options.catchbreak
         if self.buffer is None:
             self.buffer = options.buffer
-        
+
         if options.verbose:
             self.verbosity = 2
 

@@ -629,7 +629,7 @@ class Test_TestCase(unittest2.TestCase, EqualityMixin, HashingMixin):
         self.assertRaises(unittest2.TestCase.failureException,
                           self.assertDictContainsSubset, {'a': 1, 'c': 1},
                           {'a': 1}, '.*Missing:.*Mismatched values:.*')
-        
+
         self.assertRaises(self.failureException,
                           self.assertDictContainsSubset, {1: "one"}, {})
 
@@ -738,7 +738,7 @@ class Test_TestCase(unittest2.TestCase, EqualityMixin, HashingMixin):
         self.assertItemsEqual([{'a': 1}, {'b': 2}], [{'b': 2}, {'a': 1}])
         self.assertRaises(self.failureException, self.assertItemsEqual,
                           [[1]], [[2]])
-        
+
         # Test unsortable objects
         self.assertItemsEqual([2j, None], [None, 2j])
         self.assertRaises(self.failureException, self.assertItemsEqual,

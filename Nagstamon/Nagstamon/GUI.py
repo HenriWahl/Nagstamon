@@ -31,7 +31,7 @@ if platform.system() != "Windows" and platform.system() != "Darwin":
 from Nagstamon import Config
 from Nagstamon import Actions
 from Nagstamon import Objects
-from Nagstamon import Custom # used for initialization of custom components 
+from Nagstamon import Custom # used for initialization of custom components
 
 import subprocess
 import sys
@@ -85,7 +85,7 @@ class GUI(object):
         self.status_ok = True
 
         # if run first it is impossible to refresh the display with
-        # non-existent settings so there has to be extra treatment 
+        # non-existent settings so there has to be extra treatment
         # at the second run nagstamon will be configured and so no first run
         if self.conf.unconfigured:
             self.firstrun = True
@@ -109,7 +109,7 @@ class GUI(object):
                                   gobject.TYPE_STRING, gobject.TYPE_STRING, gobject.TYPE_STRING,\
                                   gobject.TYPE_STRING,\
                                   gtk.gdk.Pixbuf, gtk.gdk.Pixbuf, gtk.gdk.Pixbuf, gtk.gdk.Pixbuf,\
-                                  gtk.gdk.Pixbuf, gtk.gdk.Pixbuf, gtk.gdk.Pixbuf, gtk.gdk.Pixbuf]           
+                                  gtk.gdk.Pixbuf, gtk.gdk.Pixbuf, gtk.gdk.Pixbuf, gtk.gdk.Pixbuf]
 
         # create all GUI widgets
         self._CreateOutputVisuals()
@@ -125,7 +125,7 @@ class GUI(object):
         self.Notifying = False
 
         # saving sorting state between refresh
-        self.rows_reordered_handler = {} 
+        self.rows_reordered_handler = {}
         self.last_sorting = {}
         for server in self.servers.values():
             self.last_sorting[server.get_name()] = Sorting([(server.DEFAULT_SORT_COLUMN_ID, gtk.SORT_ASCENDING),
@@ -147,7 +147,7 @@ class GUI(object):
 
     def set_sorting(self, liststore, server):
         """ Restores sorting after refresh """
-        for id, order in self.get_last_sorting(server).iteritems():           
+        for id, order in self.get_last_sorting(server).iteritems():
             liststore.set_sort_column_id(id, order)
             # this makes sorting arrows visible according to
             # sort order after refresh
@@ -212,7 +212,7 @@ class GUI(object):
         for icon in ["acknowledged", "downtime", "flapping", "passive"]:
             self.STATE_ICONS[icon] = gtk.gdk.pixbuf_new_from_file_at_size(self.Resources\
                                                                           + os.sep + "nagstamon_" + icon + self.BitmapSuffix,\
-                                                                          int(self.fontsize/650), int(self.fontsize/650))            
+                                                                          int(self.fontsize/650), int(self.fontsize/650))
 
         # Icon in systray and statusbar both get created but
         # only one of them depending on the settings will
@@ -221,14 +221,14 @@ class GUI(object):
 
         # Popup is a WINDOW_POPUP without border etc.
         self.popwin = Popwin(conf=self.conf, output=self)
-        # Windows workaround for faulty behavior in case the statusbar label shrinks - 
+        # Windows workaround for faulty behavior in case the statusbar label shrinks -
         # it does not in Windows, maybe a Gtk bug
         # do this only if statusbar is enabled
         if str(self.conf.statusbar_systray) == "True" or str(self.conf.statusbar_systray) == "True":
             x,y = self.statusbar.HBox.size_request()
             self.statusbar.StatusBar.resize(x, y)
 
-        # connect events to actions                
+        # connect events to actions
         # when talking about "systray" the Windows variant of upper left desktop corner
         # statusbar is meant synonymical
         # if pointer on systray do popup the long-summary-status-window aka popwin
@@ -244,7 +244,7 @@ class GUI(object):
         self.statusbar.EventBoxLabel.connect("enter-notify-event", self.statusbar.Hovered)
         self.statusbar.EventBoxLabel.connect("button-press-event", self.statusbar.Clicked)
 
-        # server combobox 
+        # server combobox
         self.popwin.ComboboxMonitor.connect("changed", self.popwin.ComboboxClicked)
 
         # attempt to place and resize statusbar where it belongs to in Windows - workaround
@@ -262,7 +262,7 @@ class GUI(object):
         # refresh statusbar
 
         # flag for overall status, needed by popwin.popup to decide if popup in case all is OK
-        self.status_ok = False    
+        self.status_ok = False
 
         # set handler to None for do not disconnecting it after display refresh
         self.rows_reordered_handler = {}
@@ -322,8 +322,8 @@ class GUI(object):
                         # otherwise it must be shown, full of problems
                         self.popwin.ServerVBoxes[server.get_name()].show()
                         self.popwin.ServerVBoxes[server.get_name()].set_visible(True)
-                        self.popwin.ServerVBoxes[server.get_name()].set_no_show_all(False)      
-                        self.status_ok = False                       
+                        self.popwin.ServerVBoxes[server.get_name()].set_no_show_all(False)
+                        self.status_ok = False
 
                     # use a liststore for treeview where the table headers all are strings - first empty it
                     # now added with some simple repair after settings dialog has been used
@@ -332,14 +332,14 @@ class GUI(object):
                     if not type(server.ListStore) == type(None):
                         server.ListStore.clear()
                     else:
-                        server.ListStore = gtk.ListStore(*self.LISTSTORE_COLUMNS)                        
+                        server.ListStore = gtk.ListStore(*self.LISTSTORE_COLUMNS)
                     if type(server.TreeView) == type(None):
-                        server.TreeView = gtk.TreeView() 
+                        server.TreeView = gtk.TreeView()
 
                     # apart from status informations there we need two columns which
                     # hold the color information, which is derived from status which
-                    # is used as key at the above color dictionaries    
-                    # Update: new columns added which contain pixbufs of flag indicators if needed                      
+                    # is used as key at the above color dictionaries
+                    # Update: new columns added which contain pixbufs of flag indicators if needed
                     for item_type, status_dict in server.nagitems_filtered.iteritems():
                         for status, item_list in status_dict.iteritems():
                             for item in list(item_list):
@@ -359,76 +359,76 @@ class GUI(object):
                                 line.append(color.to_string())
 
                                 # icons for hosts
-                                if item.is_host():                                
+                                if item.is_host():
                                     if item.is_acknowledged():
                                         line.append(self.STATE_ICONS["acknowledged"])
-                                    else:    
+                                    else:
                                         line.append(None)
 
                                     if item.is_in_scheduled_downtime():
-                                        line.append(self.STATE_ICONS["downtime"])   
-                                    else:    
+                                        line.append(self.STATE_ICONS["downtime"])
+                                    else:
                                         line.append(None)
 
                                     if item.is_flapping():
-                                        line.append(self.STATE_ICONS["flapping"])   
-                                    else:    
-                                        line.append(None)   
+                                        line.append(self.STATE_ICONS["flapping"])
+                                    else:
+                                        line.append(None)
 
                                     if item.is_passive_only():
-                                        line.append(self.STATE_ICONS["passive"])   
-                                    else:    
-                                        line.append(None)   
+                                        line.append(self.STATE_ICONS["passive"])
+                                    else:
+                                        line.append(None)
 
-                                    # fill line with dummmy values because there will 
+                                    # fill line with dummmy values because there will
                                     # be none for services if this is a host
-                                    line.extend([None, None, None, None])                                        
+                                    line.extend([None, None, None, None])
 
-                                # icons for services 
+                                # icons for services
                                 else:
                                     # if the hosting host of a service has any flags display them too
                                     if server.hosts[item.host].is_acknowledged():
                                         line.append(self.STATE_ICONS["acknowledged"])
-                                    else:    
+                                    else:
                                         line.append(None)
 
                                     if server.hosts[item.host].is_in_scheduled_downtime():
-                                        line.append(self.STATE_ICONS["downtime"])   
-                                    else:    
+                                        line.append(self.STATE_ICONS["downtime"])
+                                    else:
                                         line.append(None)
 
                                     if server.hosts[item.host].is_flapping():
-                                        line.append(self.STATE_ICONS["flapping"])   
-                                    else:    
-                                        line.append(None)           
+                                        line.append(self.STATE_ICONS["flapping"])
+                                    else:
+                                        line.append(None)
 
                                     if server.hosts[item.host].is_passive_only():
-                                        line.append(self.STATE_ICONS["passive"])   
-                                    else:    
-                                        line.append(None)   
+                                        line.append(self.STATE_ICONS["passive"])
+                                    else:
+                                        line.append(None)
 
-                                    # now the service...                                    
+                                    # now the service...
                                     if item.is_acknowledged():
                                         line.append(self.STATE_ICONS["acknowledged"])
-                                    else:    
+                                    else:
                                         line.append(None)
 
                                     if item.is_in_scheduled_downtime():
-                                        line.append(self.STATE_ICONS["downtime"])   
-                                    else:    
+                                        line.append(self.STATE_ICONS["downtime"])
+                                    else:
                                         line.append(None)
 
                                     if item.is_flapping():
-                                        line.append(self.STATE_ICONS["flapping"])   
-                                    else:    
-                                        line.append(None)               
+                                        line.append(self.STATE_ICONS["flapping"])
+                                    else:
+                                        line.append(None)
 
                                     if item.is_passive_only():
-                                        line.append(self.STATE_ICONS["passive"])   
-                                    else:    
-                                        line.append(None)    
+                                        line.append(self.STATE_ICONS["passive"])
+                                    else:
+                                        line.append(None)
 
-                                server.ListStore.append(line)   
+                                server.ListStore.append(line)
 
                     # give new ListStore to the view, overwrites the old one automatically - theoretically
                     server.TreeView.set_model(server.ListStore)
@@ -436,12 +436,12 @@ class GUI(object):
                     # restore sorting order from previous refresh
                     self.set_sorting(server.ListStore, server)
 
-                    # status field in server vbox in popwin    
+                    # status field in server vbox in popwin
                     self.popwin.UpdateStatus(server)
 
                 except:
                     server.Error(sys.exc_info())
-        
+
         if self.popwin.Window.get_properties("visible")[0] == True and str(self.conf.maximized_window) == "False":
             self.popwin.Resize()
 
@@ -456,7 +456,7 @@ class GUI(object):
             self.popwin.showPopwin = False
             self.popwin.PopDown()
             self.status_ok = True
-            
+
             # set systray icon to green aka OK
             self.statusbar.SysTray.set_from_pixbuf(self.statusbar.SYSTRAY_ICONS["green"])
 
@@ -488,7 +488,7 @@ class GUI(object):
             if warnings > 0:
                 if str(self.conf.long_display) == "True": warnings = str(warnings) + " WARNING"
                 self.statusbar.statusbar_labeltext = self.statusbar.statusbar_labeltext + '<span size="' + str(self.fontsize) + '" background="' + str(self.conf.color_warning_background) + '" foreground="' + str(self.conf.color_warning_text) + '"> ' + str(warnings) + ' </span>'
-                self.statusbar.statusbar_labeltext_inverted = self.statusbar.statusbar_labeltext_inverted + '<span size="' + str(self.fontsize) + '" background="' + str(self.conf.color_warning_text) + '" foreground="' + str(self.conf.color_warning_background) + '"> ' + str(warnings) + ' </span>'               
+                self.statusbar.statusbar_labeltext_inverted = self.statusbar.statusbar_labeltext_inverted + '<span size="' + str(self.fontsize) + '" background="' + str(self.conf.color_warning_text) + '" foreground="' + str(self.conf.color_warning_background) + '"> ' + str(warnings) + ' </span>'
 
             # if connections fails at starting do not display OK - Debian bug #617490
             if unknowns == 0 and warnings == 0 and criticals == 0 and unreachables == 0 and downs == 0 and self.status_ok is False:
@@ -498,7 +498,7 @@ class GUI(object):
                     errors = "ERR"
                 self.statusbar.statusbar_labeltext = self.statusbar.statusbar_labeltext + '<span size="' + str(self.fontsize) + '" background="' + str(self.conf.color_error_background) + '" foreground="' + str(self.conf.color_error_text) + '"> ' + str(errors) + ' </span>'
                 self.statusbar.statusbar_labeltext_inverted = self.statusbar.statusbar_labeltext_inverted + '<span size="' + str(self.fontsize) + '" background="' + str(self.conf.color_error_text) + '" foreground="' + str(self.conf.color_error_background) + '"> ' + str(errors) + ' </span>'
-                color = "error"     
+                color = "error"
 
             # put text into label in statusbar, only if not already flashing
             if self.statusbar.Flashing == False:
@@ -524,26 +524,26 @@ class GUI(object):
 
             """
             the last worse state should be saved here and taken for
-            comparison to decide if keep warning if the respective 
+            comparison to decide if keep warning if the respective
             (and not yet existing) option is set
-            """            
+            """
             for server in self.servers.values():
                 if not server.WorstStatus == "UP":
                     # switch server status back because it has been recognized
                     if server.States.index(server.WorstStatus) > worst:
                         worst_status = server.WorstStatus
                     # reset status of the server for only processing it once
-                    server.WorstStatus = "UP"                    
+                    server.WorstStatus = "UP"
                 if not worst_status == "UP" and str(self.conf.notification) == "True":
                     self.NotificationOn(status=worst_status)
 
             # set self.showPopwin to True because there is something to show
-            self.popwin.showPopwin = True   
+            self.popwin.showPopwin = True
 
         # if only one monitor cannot be reached show popwin to inform about its trouble
         for server in self.servers.values():
             if server.status_description != "" or server.refresh_authentication == True:
-                self.status_ok = False   
+                self.status_ok = False
                 self.popwin.showPopwin = True
 
         # close popwin in case everything is ok and green
@@ -587,7 +587,7 @@ class GUI(object):
             self.acknowledge_xml.get_object("label_service").hide()
             self.acknowledge_xml.get_object("input_label_service").hide()
             self.acknowledge_dialog.set_title("Acknowledge host")
-        else: 
+        else:
             # set label for acknowledging a service on host
             self.acknowledge_xml.get_object("input_label_host").set_text(host)
             self.acknowledge_xml.get_object("input_label_service").set_text(service)
@@ -600,9 +600,9 @@ class GUI(object):
         self.acknowledge_xml.get_object("input_checkbutton_acknowledge_all_services").set_active(eval(str(self.conf.defaults_acknowledge_all_services)))
 
         # default author + comment
-        self.acknowledge_xml.get_object("input_entry_author").set_text(server.username)        
+        self.acknowledge_xml.get_object("input_entry_author").set_text(server.username)
         self.acknowledge_xml.get_object("input_entry_comment").set_text(self.conf.defaults_acknowledge_comment)
-        self.acknowledge_xml.get_object("input_entry_comment").grab_focus()  
+        self.acknowledge_xml.get_object("input_entry_comment").grab_focus()
 
         # show dialog
         self.acknowledge_dialog.run()
@@ -614,16 +614,16 @@ class GUI(object):
         show settings with tab "defaults" as shortcut from Acknowledge dialog
         """
         self.acknowledge_dialog.destroy()
-        settings=Settings(servers=self.servers, output=self, conf=self.conf, first_page="Defaults") 
+        settings=Settings(servers=self.servers, output=self, conf=self.conf, first_page="Defaults")
 
 
     def AcknowledgeCommentReturn(self, widget, event, server):
-        """ 
+        """
         if Return key has been pressed in comment entry field interprete this as OK button being pressed
         """
         # KP_Enter seems to be the code for return key of numeric key block
         if gtk.gdk.keyval_name(event.keyval) in ["Return", "KP_Enter"]:
-            self.Acknowledge(server=server)   
+            self.Acknowledge(server=server)
             self.acknowledge_dialog.destroy()
 
 
@@ -653,7 +653,7 @@ class GUI(object):
         acknowledge = Actions.Acknowledge(server=server, host=host,\
                                           service=service, author=author, comment=comment, acknowledge_all_services=acknowledge_all_services,\
                                           all_services=all_services, sticky=sticky, notify=notify, persistent=persistent)
-        acknowledge.start()        
+        acknowledge.start()
 
 
     def DowntimeDialogShow(self, server, host, service=None):
@@ -692,7 +692,7 @@ class GUI(object):
             self.downtime_xml.get_object("label_service").hide()
             self.downtime_xml.get_object("input_label_service").hide()
             self.downtime_dialog.set_title("Downtime for host")
-        else: 
+        else:
             # set label for acknowledging a service on host
             self.downtime_xml.get_object("input_label_host").set_text(host)
             self.downtime_xml.get_object("input_label_service").set_text(service)
@@ -705,9 +705,9 @@ class GUI(object):
         self.downtime_xml.get_object("input_radiobutton_type_flexible").set_active(eval(str(self.conf.defaults_downtime_type_flexible)))
 
         # default author + comment
-        self.downtime_xml.get_object("input_entry_author").set_text(server.username)        
+        self.downtime_xml.get_object("input_entry_author").set_text(server.username)
         self.downtime_xml.get_object("input_entry_comment").set_text(self.conf.defaults_downtime_comment)
-        self.downtime_xml.get_object("input_entry_comment").grab_focus()        
+        self.downtime_xml.get_object("input_entry_comment").grab_focus()
 
         # start and end time
         self.downtime_xml.get_object("input_entry_start_time").set_text(start_time)
@@ -731,12 +731,12 @@ class GUI(object):
 
 
     def DowntimeCommentReturn(self, widget, event, server):
-        """ 
+        """
         if Return key has been pressed in comment entry field interprete this as OK button being pressed
         """
         # KP_Enter seems to be the code for return key of numeric key block
         if gtk.gdk.keyval_name(event.keyval) in ["Return", "KP_Enter"]:
-            self.Downtime(server=server)   
+            self.Downtime(server=server)
             self.downtime_dialog.destroy()
 
 
@@ -788,7 +788,7 @@ class GUI(object):
         # focus jump chain - used to connect input fields in submit check result dialog and access them via return key
         # server.SUBMIT_CHECK_RESULT_ARGS contains the valid arguments for this server type so we might use it here too
         chain = server.SUBMIT_CHECK_RESULT_ARGS
-        for i in range(len(chain)-1):         
+        for i in range(len(chain)-1):
             self.submitcheckresult_xml.get_object("input_entry_" + chain[i]).connect("key-release-event", self._FocusJump, self.submitcheckresult_xml, "input_entry_" + chain[i+1])
 
         # if return key entered in lastfield see this as OK button pressed
@@ -807,7 +807,7 @@ class GUI(object):
             self.submitcheckresult_xml.get_object("input_radiobutton_result_critical").hide()
             self.submitcheckresult_xml.get_object("input_radiobutton_result_unknown").hide()
             self.submitcheckresult_xml.get_object("input_radiobutton_result_up").set_active(True)
-        else: 
+        else:
             # set label for submitting results to a service on host
             self.submitcheckresult_xml.get_object("input_label_host").set_text(host)
             self.submitcheckresult_xml.get_object("input_label_service").set_text(service)
@@ -816,10 +816,10 @@ class GUI(object):
             self.submitcheckresult_xml.get_object("input_radiobutton_result_up").hide()
             self.submitcheckresult_xml.get_object("input_radiobutton_result_down").hide()
         for i in server.SUBMIT_CHECK_RESULT_ARGS:
-            self.submitcheckresult_xml.get_object("label_" + i).show()     
-            self.submitcheckresult_xml.get_object("input_entry_" + i).show()        
+            self.submitcheckresult_xml.get_object("label_" + i).show()
+            self.submitcheckresult_xml.get_object("input_entry_" + i).show()
 
-        self.submitcheckresult_xml.get_object("input_entry_comment").set_text(self.conf.defaults_submit_check_result_comment)           
+        self.submitcheckresult_xml.get_object("input_entry_comment").set_text(self.conf.defaults_submit_check_result_comment)
 
         # show dialog
         self.submitcheckresult_dialog.run()
@@ -854,27 +854,27 @@ class GUI(object):
 
         if "check_output" in server.SUBMIT_CHECK_RESULT_ARGS and len(check_output) == 0:
             self.Dialog(message="Submit check result needs a check output.")
-        else:    
+        else:
             # let thread execute POST request
             submit_check_result = Actions.SubmitCheckResult(server=server, host=host,\
                                                             service=service, comment=comment, check_output=check_output,\
                                                             performance_data=performance_data, state=state)
-            submit_check_result.start()               
+            submit_check_result.start()
             # only close dialog if input was correct
             self.submitcheckresult_dialog.destroy()
 
 
-    def SubmitCheckResultCancel(self, widget, server):    
+    def SubmitCheckResultCancel(self, widget, server):
         self.submitcheckresult_dialog.destroy()
 
 
     def SubmitCheckResultCommentReturn(self, widget, event, server):
-        """ 
+        """
         if Return key has been pressed in comment entry field interprete this as OK button being pressed
         """
         # KP_Enter seems to be the code for return key of numeric key block
         if gtk.gdk.keyval_name(event.keyval) in ["Return", "KP_Enter"]:
-            self.SubmitCheckResultOK(server=server)   
+            self.SubmitCheckResultOK(server=server)
             self.submitcheckresult_dialog.destroy()
 
 
@@ -943,7 +943,7 @@ class GUI(object):
     def Dialog(self, type=gtk.MESSAGE_ERROR, message="", buttons=gtk.BUTTONS_CANCEL):
         """
             versatile message dialog
-        """        
+        """
         # close popwin to make sure the error dialog will not be covered by popwin
         #self.popwin.Close()
         self.popwin.PopDown()
@@ -964,7 +964,7 @@ class GUI(object):
             self.popwin.PopDown()
 
             # if used version is latest version only inform about
-            if version_status == "latest":            
+            if version_status == "latest":
                 dialog = gtk.MessageDialog(parent=None, flags=gtk.DIALOG_MODAL, type=gtk.MESSAGE_INFO, buttons=gtk.BUTTONS_OK, \
                                            message_format="You are already using the\nlatest version of Nagstamon.\n\nLatest version: %s" % (version))
                 dialog.run()
@@ -976,7 +976,7 @@ class GUI(object):
                 response = dialog.run()
                 if response == gtk.RESPONSE_YES:
                     Actions.OpenNagstamonDownload(output=self)
-                dialog.destroy()               
+                dialog.destroy()
         except:
             self.servers.values()[0].Error(sys.exc_info())
 
@@ -993,7 +993,7 @@ class GUI(object):
                     if self.Notifying == False:
                         self.Notifying = True
                         # debug
-                        if str(self.conf.debug_mode) == "True":                            
+                        if str(self.conf.debug_mode) == "True":
                             self.servers.values()[0].Debug(debug="Notification on.")
                         # threaded statusbar flash
                         if str(self.conf.notification_flashing) == "True":
@@ -1001,7 +1001,7 @@ class GUI(object):
                             self.statusbar.Flashing = True
 
                         notify = Actions.Notification(output=self, sound=status, Resources=self.Resources, conf=self.conf, servers=self.servers)
-                        notify.start()  
+                        notify.start()
 
                         # if desired pop up status window
                         # sorry but does absolutely not work with windows and systray icon so I prefer to let it be
@@ -1067,7 +1067,7 @@ class GUI(object):
 
 
     def _FocusJump(self, widget=None, event=None, builder=None, next_widget=None):
-        """ 
+        """
         if Return key has been pressed in entry field jump to given widget
         """
         if gtk.gdk.keyval_name(event.keyval) in ["Return", "KP_Enter"]:
@@ -1139,7 +1139,7 @@ class StatusBar(object):
         # if statusbar is enabled...
         self.StatusBar.move(int(self.conf.position_x), int(self.conf.position_y))
         if str(self.conf.statusbar_systray) == "True" or str(self.conf.statusbar_floating) == "True":
-        # ...move statusbar in case it is floating to its last saved position and show it            
+        # ...move statusbar in case it is floating to its last saved position and show it
             self.StatusBar.show_all()
         else:
             self.StatusBar.hide_all()
@@ -1192,7 +1192,7 @@ class StatusBar(object):
                     menu_item.connect("activate", self.MenuResponse, i)
                     self.Menu.append(menu_item)
 
-        self.Menu.show_all()	
+        self.Menu.show_all()
 
 
     def _CreateFloatingStatusbar(self):
@@ -1201,7 +1201,7 @@ class StatusBar(object):
         """
         # TOPLEVEL seems to be more standard compliant
         if platform.system() == "Windows" or platform.system() == "Darwin":
-            self.StatusBar = gtk.Window(gtk.WINDOW_POPUP)          
+            self.StatusBar = gtk.Window(gtk.WINDOW_POPUP)
         else:
             self.StatusBar = gtk.Window(gtk.WINDOW_TOPLEVEL)
         self.StatusBar.set_decorated(False)
@@ -1264,7 +1264,7 @@ class StatusBar(object):
         if menu_entry == "Settings...": Settings(servers=self.output.servers, output=self.output, conf=self.conf)
         if menu_entry == "Save position": self.conf.SaveConfig(output=self.output)
         if menu_entry == "About": self.output.AboutDialog()
-        if menu_entry == "Exit": 
+        if menu_entry == "Exit":
             self.conf.SaveConfig(output=self.output)
             gtk.main_quit()
 
@@ -1304,7 +1304,7 @@ class StatusBar(object):
     def LogoClicked(self, widget=None, event=None):
         """
             see what happens if statusbar is clicked
-        """        
+        """
         # check if settings etc. are not already open - an open popwin will be closed anyway
         if len(self.output.GUILock) == 0 or self.output.GUILock.has_key("Popwin"):
             # get position of statusbar
@@ -1314,7 +1314,7 @@ class StatusBar(object):
             if event.button == 1:
                 self.output.popwin.Close()
 
-                self.Moving = True   
+                self.Moving = True
                 move = Actions.MoveStatusbar(output=self.output)
                 move.start()
 
@@ -1390,7 +1390,7 @@ class StatusBar(object):
         try:
             # set flag to locked
             self.isShowingError = True
-            self.Label.set_markup('<span size="%s"> %s </span>' % (self.output.fontsize, message)) 
+            self.Label.set_markup('<span size="%s"> %s </span>' % (self.output.fontsize, message))
             # Windows workaround for non-shrinking desktop statusbar
             self.Resize()
             # change systray icon to error
@@ -1404,10 +1404,10 @@ class StatusBar(object):
     def Flash(self):
         """
             Flashing notification, triggered by threaded RefreshLoop
-        """     
+        """
         # replace statusbar label text with its inverted version
         if self.Label.get_label() == self.statusbar_labeltext:
-            self.Label.set_markup(self.statusbar_labeltext_inverted) 
+            self.Label.set_markup(self.statusbar_labeltext_inverted)
         else:
             self.Label.set_markup(self.statusbar_labeltext)
 
@@ -1429,7 +1429,7 @@ class StatusBar(object):
         try:
             x,y = self.Label.size_request()
             self.StatusBar.resize(x, y)
-        except:   
+        except:
             self.StatusBar.resize(1, 1)
 
 
@@ -1517,7 +1517,7 @@ class Popwin(object):
         self.NagstamonVersion = gtk.Label("  " + self.output.version)
 
         self.HBoxNagiosButtons.add(self.NagstamonLabel)
-        self.HBoxNagiosButtons.add(self.NagstamonVersion) 
+        self.HBoxNagiosButtons.add(self.NagstamonVersion)
 
         self.AlMonitorLabel.add(self.HBoxNagiosButtons)
         self.ComboboxMonitor = gtk.combo_box_new_text()
@@ -1532,13 +1532,13 @@ class Popwin(object):
         self.HBoxCombobox.add(self.ComboboxMonitor)
         self.AlMonitorComboBox.add(self.HBoxCombobox)
 
-        # general buttons 
+        # general buttons
         self.ButtonFilters = ButtonWithIcon(output=self.output, label="Filters", icon="settings.png")
         self.ButtonRecheckAll = ButtonWithIcon(output=self.output, label="Recheck all", icon="recheckall.png")
         self.ButtonRefresh = ButtonWithIcon(output=self.output, label="Refresh", icon="refresh.png")
         self.ButtonSettings = ButtonWithIcon(output=self.output, label="Settings", icon="settings.png")
-        self.HBoxMenu.add(self.ButtonFilters)   
-        self.HBoxMenu.add(self.ButtonRecheckAll)   
+        self.HBoxMenu.add(self.ButtonFilters)
+        self.HBoxMenu.add(self.ButtonRecheckAll)
         self.HBoxMenu.add(self.ButtonRefresh)
         self.HBoxMenu.add(self.ButtonSettings)
 
@@ -1561,7 +1561,7 @@ class Popwin(object):
             self.ButtonClose.grab_focus()
 
             # put the HBox full of buttons full of HBoxes into the aligned HBox...
-        self.AlMenu.add(self.HBoxMenu)     
+        self.AlMenu.add(self.HBoxMenu)
 
         # HBoxes en masse...
         self.HBoxAllButtons.add(self.AlMonitorLabel)
@@ -1573,9 +1573,9 @@ class Popwin(object):
         # threaded refresh status information when refresh is clicked
         self.ButtonRefresh.connect("clicked", lambda r: Actions.RefreshAllServers(servers=self.output.servers, output=self.output, conf=self.conf))
         # open settings dialog when settings is clicked
-        self.ButtonSettings.connect("clicked", lambda s: Settings(servers=self.output.servers, output=self.output, conf=self.conf))        
+        self.ButtonSettings.connect("clicked", lambda s: Settings(servers=self.output.servers, output=self.output, conf=self.conf))
         # open settings dialog for filters when filters is clicked
-        self.ButtonFilters.connect("clicked", lambda s: Settings(servers=self.output.servers, output=self.output, conf=self.conf, first_page="Filters"))        
+        self.ButtonFilters.connect("clicked", lambda s: Settings(servers=self.output.servers, output=self.output, conf=self.conf, first_page="Filters"))
 
         # Workaround for behavorial differences of GTK in Windows and Linux
         # in Linux it is enough to check for the pointer leaving the whole popwin,
@@ -1584,7 +1584,7 @@ class Popwin(object):
         self.ButtonRefresh.connect("leave-notify-event", self.LeavePopWin)
         self.ButtonSettings.connect("leave-notify-event", self.LeavePopWin)
 
-        
+
         # define colors for detailed status table in dictionaries
         # need to be redefined here for MacOSX because there it is not
         # possible to reinitialize the whole GUI after config changes without a crash
@@ -1597,11 +1597,11 @@ class Popwin(object):
         self.ScrolledWindow.set_policy(gtk.POLICY_NEVER, gtk.POLICY_AUTOMATIC)
 
         # try putting everything status-related into a scrolled viewport
-        self.ScrolledVBox = gtk.VBox()  
+        self.ScrolledVBox = gtk.VBox()
         #self.ScrolledWindow.add_with_viewport(self.ScrolledVBox)
         self.ScrolledViewport = gtk.Viewport()
         self.ScrolledViewport.add(self.ScrolledVBox)
-        self.ScrolledWindow.add(self.ScrolledViewport) 
+        self.ScrolledWindow.add(self.ScrolledViewport)
 
         # group server infos in VBoxes
         self.ServerVBoxes = dict()
@@ -1610,7 +1610,7 @@ class Popwin(object):
         server_list = list(self.output.servers)
         server_list.sort(key=str.lower)
 
-        # create table with all the displayed info    
+        # create table with all the displayed info
         for item in server_list:
             # get the servers alphabetically sorted
             server = self.output.servers[item]
@@ -1630,7 +1630,7 @@ class Popwin(object):
             self.ServerVBoxes[server.get_name()].ButtonHosts.connect("clicked", server.OpenBrowser, "hosts", self.output)
             # open Nagios history in your favorite web browser when hosts button is clicked
             self.ServerVBoxes[server.get_name()].ButtonHistory.connect("clicked", server.OpenBrowser, "history", self.output)
-            # OK button for monitor credentials refreshment or when "Enter" being pressed in password field           
+            # OK button for monitor credentials refreshment or when "Enter" being pressed in password field
             self.ServerVBoxes[server.get_name()].AuthButtonOK.connect("clicked", self.ServerVBoxes[server.get_name()].AuthOK, server)
             # jump to password entry field if Return has been pressed on username entry field
             self.ServerVBoxes[server.get_name()].AuthEntryUsername.connect("key-release-event", self.ServerVBoxes[server.get_name()].AuthUsername)
@@ -1639,7 +1639,7 @@ class Popwin(object):
             # windows workaround - see above
             # connect Server_EventBox with leave-notify-event to get popwin popping down when leaving it
             self.ServerVBoxes[server.get_name()].Server_EventBox.connect("leave-notify-event", self.PopDown)
-            # sorry folks, but this only works at the border of the treeviews 
+            # sorry folks, but this only works at the border of the treeviews
             self.ServerVBoxes[server.get_name()].TreeView.connect("leave-notify-event", self.PopDown)
             # connect the treeviews of the servers to mouse clicks
             self.ServerVBoxes[server.get_name()].TreeView.connect("button-press-event", self.ServerVBoxes[server.get_name()].TreeviewPopupMenu, self.ServerVBoxes[server.get_name()].TreeView, self.output.servers[server.get_name()])
@@ -1663,11 +1663,11 @@ class Popwin(object):
 
         # measure against artefactional popwin
         self.pointer_left_popwin = False
-        
-        # flag for deciding if coordinates of statusbar need to be reinvestigated, 
+
+        # flag for deciding if coordinates of statusbar need to be reinvestigated,
         # only necessary after popping up
         self.calculate_coordinates = True
-        
+
         # add some buffer pixels to popwinheight to avoid silly scrollbars
         self.heightbuffer_internal = 10
         if platform.system() != "Windows" and self.Window.get_screen().get_n_monitors() > 1:
@@ -1742,8 +1742,8 @@ class Popwin(object):
     def PopUp(self, widget=None, event=None):
         """
             pop up popwin
-        """               
-        # when popwin is showable and label is not "UP" popwin will be showed - 
+        """
+        # when popwin is showable and label is not "UP" popwin will be showed -
         # otherwise there is no sense in showing an empty popwin
         # for some reason the painting will lag behind popping up popwin if not getting resized twice -
         # seems like a strange workaround
@@ -1824,8 +1824,8 @@ class Popwin(object):
         """
         self.pointer_left_popwin = True
         self.PopDown(widget, event)
-        # after a shortdelay set pointer_left_popwin back to false, in the meantime 
-        # there will be no extra flickering popwin coming from hovered statusbar 
+        # after a shortdelay set pointer_left_popwin back to false, in the meantime
+        # there will be no extra flickering popwin coming from hovered statusbar
         gobject.timeout_add(250, self.SetPointerLeftPopwinFalse)
 
 
@@ -1840,7 +1840,7 @@ class Popwin(object):
     def PopDown(self, widget=None, event=None):
         """
             close popwin
-            when it should closed it must be checked if the pointer is outside 
+            when it should closed it must be checked if the pointer is outside
             the popwin to prevent it closing when not necessary/desired
         """
 
@@ -1883,7 +1883,7 @@ class Popwin(object):
             # notification off because user had a look to hosts/services recently
             self.output.NotificationOff()
 
-        
+
     def Resize(self):
         """
             calculate popwin dimensions depending on the amount of information displayed in scrollbox
@@ -2056,7 +2056,7 @@ class Popwin(object):
         try:
             active = widget.get_active_iter()
             model = widget.get_model()
-            self.output.servers[model.get_value(active, 0)].OpenBrowser(url_type="monitor")        
+            self.output.servers[model.get_value(active, 0)].OpenBrowser(url_type="monitor")
         except:
             self.output.servers.values()[0].Error(sys.exc_info())
 
@@ -2065,7 +2065,7 @@ class Popwin(object):
         """
             Updates status field of a server
         """
-        # status field in server vbox in popwin    
+        # status field in server vbox in popwin
         try:
             # kick out final "\n" for nicer appearance
             self.ServerVBoxes[server.get_name()].LabelStatus.set_markup('<span> Status: ' + str(server.status) + ' <span color="darkred">' + str(server.status_description).rsplit("\n", 1)[0] + '</span></span>')
@@ -2078,11 +2078,11 @@ class Popwin(object):
         check if no other dialog/menu is shown which would not like to be
         covered by the popup window
         """
-        if len(self.output.GUILock) == 0 or "Popwin" in self.output.GUILock:  
+        if len(self.output.GUILock) == 0 or "Popwin" in self.output.GUILock:
             return True
         else:
             return False
-        
+
 
     def GetVisibleServerVBoxes(self):
         """
@@ -2115,9 +2115,9 @@ class ServerVBox(gtk.VBox):
     """
     VBox which contains all infos about one monitor server: Name, Buttons, Treeview
     """
-    def __init__(self, **kwds):        
+    def __init__(self, **kwds):
             # add all keywords to object, every mode searchs inside for its favorite arguments/keywords
-        for k in kwds: self.__dict__[k] = kwds[k]       
+        for k in kwds: self.__dict__[k] = kwds[k]
 
         # initalize VBox
         gtk.VBox.__init__(self)
@@ -2168,7 +2168,7 @@ class ServerVBox(gtk.VBox):
         self.HBoxAuth = gtk.HBox()
         self.AuthLabelUsername = gtk.Label("Username:")
         self.AuthEntryUsername = gtk.Entry()
-        self.AuthEntryUsername.set_can_focus(True)        
+        self.AuthEntryUsername.set_can_focus(True)
         self.AuthLabelPassword = gtk.Label("Password:")
         self.AuthEntryPassword = gtk.Entry()
         self.AuthEntryPassword.set_visibility(False)
@@ -2183,7 +2183,7 @@ class ServerVBox(gtk.VBox):
         self.HBoxAuth.add(self.AuthButtonOK)
 
         self.AlignmentAuth = gtk.Alignment(xalign=0, xscale=0.05, yalign=0)
-        self.AlignmentAuth.add(self.HBoxAuth)  
+        self.AlignmentAuth.add(self.HBoxAuth)
 
         self.VBox.add(self.AlignmentAuth)
 
@@ -2192,10 +2192,10 @@ class ServerVBox(gtk.VBox):
         self.HBoxAuth.hide_all()
 
         self.Server_EventBox.add(self.VBox)
-        self.add(self.Server_EventBox)            
+        self.add(self.Server_EventBox)
 
         # new TreeView handling, not generating new items with every refresh cycle
-        self.server.TreeView = gtk.TreeView() 
+        self.server.TreeView = gtk.TreeView()
         # enable hover effect
         self.server.TreeView.set_hover_selection(True)
         # enable grid lines
@@ -2210,13 +2210,13 @@ class ServerVBox(gtk.VBox):
         # may grow with more supported flags
         offset_img = {0:0, 1:len(self.output.STATE_ICONS)}
 
-        # offset for alternate column colors could increase readability 
+        # offset for alternate column colors could increase readability
         # even and odd columns are calculated by column number
         offset_color = {0:8, 1:9}
 
         for s, column in enumerate(self.server.COLUMNS):
             tab_column = gtk.TreeViewColumn(column.get_label())
-            self.server.TreeView.append_column(tab_column)  
+            self.server.TreeView.append_column(tab_column)
             # the first and second column hold hosts and service name which will get acknowledged/downtime flag
             # indicators added
             if s in [0, 1]:
@@ -2246,7 +2246,7 @@ class ServerVBox(gtk.VBox):
                 tab_column.add_attribute(cell_img_flap, "cell-background", offset_color[s % 2])
                 tab_column.set_attributes(cell_img_pass, pixbuf=13+offset_img[s])
                 tab_column.add_attribute(cell_img_pass, "cell-background", offset_color[s % 2])
-                tab_column.set_sizing(gtk.TREE_VIEW_COLUMN_AUTOSIZE)                            
+                tab_column.set_sizing(gtk.TREE_VIEW_COLUMN_AUTOSIZE)
             else:
                 # normal way for all other columns
                 cell_txt = gtk.CellRendererText()
@@ -2257,14 +2257,14 @@ class ServerVBox(gtk.VBox):
 
             # set customized sorting
             if column.has_customized_sorting():
-                self.server.ListStore.set_sort_func(s, column.sort_function, s)           
+                self.server.ListStore.set_sort_func(s, column.sort_function, s)
 
             # make table sortable by clicking on column headers
             tab_column.set_clickable(True)
             #tab_column.set_property('sort-indicator', True) # makes sorting arrows visible
             tab_column.connect('clicked', self.output.on_column_header_click, s, self.server.ListStore, self.server)
 
-        # the whole TreeView memory leaky complex...  
+        # the whole TreeView memory leaky complex...
         self.TreeView = self.server.TreeView
         self.ListStore = self.server.ListStore
 
@@ -2285,20 +2285,20 @@ class ServerVBox(gtk.VBox):
             self.miserable_service = treeview.get_model()[path[0]][server.SERVICE_COLUMN_ID]
             self.miserable_status_info = treeview.get_model()[path[0]][server.STATUS_INFO_COLUMN_ID]
             # context menu for detailed status overview, opens with a mouse click onto a listed item
-            self.popupmenu = gtk.Menu()		
+            self.popupmenu = gtk.Menu()
 
             # add custom actions - this is just a test!
             actions_list=list(self.output.conf.actions)
             actions_list.sort(key=str.lower)
             for a in actions_list:
                 # shortcut for next lines
-                action = self.output.conf.actions[a]                
+                action = self.output.conf.actions[a]
                 if str(action.enabled) == "True":
                     # menu item visibility flag
                     item_visible = False
                     # check if clicked line is a service or host
                     # if it is check if the action is targeted on hosts or services
-                    if self.miserable_service:                           
+                    if self.miserable_service:
                         if str(action.filter_target_service) == "True":
                             # only check if there is some to check
                             if str(action.re_host_enabled) == "True":
@@ -2318,7 +2318,7 @@ class ServerVBox(gtk.VBox):
                                                        action.re_status_information_pattern,\
                                                        action.re_status_information_reverse):
                                     item_visible = True
-                            # fallback if no regexp is selected                            
+                            # fallback if no regexp is selected
                             if str(action.re_host_enabled) == str(action.re_service_enabled) == str(action.re_status_information_enabled) == "False":
                                 item_visible = True
 
@@ -2359,19 +2359,19 @@ class ServerVBox(gtk.VBox):
                 if i == "Recheck" and\
                    self.miserable_service and server.hosts[self.miserable_host].services[self.miserable_service].is_passive_only():
                     pass
-                else:        
+                else:
                     menu_item = gtk.MenuItem(i)
                     menu_item.connect("activate", self.TreeviewPopupMenuResponse, i)
                     self.popupmenu.append(menu_item)
 
             self.popupmenu.show_all()
-            self.popupmenu.popup(None, None, None, event.button, event.time)       
+            self.popupmenu.popup(None, None, None, event.button, event.time)
             # silly Windows(TM) workaround to keep menu above popwin
             self.popupmenu.window.set_keep_above(True)
 
         except:
             import traceback
-            traceback.print_exc(file=sys.stdout)   
+            traceback.print_exc(file=sys.stdout)
 
 
     def TreeviewPopupMenuResponse(self, widget, remoteservice):
@@ -2383,11 +2383,11 @@ class ServerVBox(gtk.VBox):
         """
 
         # closing popwin is innecessary in case of rechecking, otherwise it must be done
-        # because the dialog/app window will stay under the popwin   
+        # because the dialog/app window will stay under the popwin
         if remoteservice in ["Acknowledge", "Monitor", "Downtime", "Submit check result", "Edit actions..."]:
-            self.output.popwin.Close()  
+            self.output.popwin.Close()
 
-        #debug    
+        #debug
         if str(self.output.conf.debug_mode) == "True":
             self.miserable_server.Debug(server=self.miserable_server.get_name(),\
                                         host=self.miserable_host,\
@@ -2399,7 +2399,7 @@ class ServerVBox(gtk.VBox):
         # looks for its own for the miserable host's ip if it is needed
         try:
             # custom actions
-            if remoteservice in self.output.conf.actions:               
+            if remoteservice in self.output.conf.actions:
                 # let the thread do the work
                 action = Actions.Action(action=self.output.conf.actions[remoteservice],\
                                         conf=self.output.conf,\
@@ -2410,7 +2410,7 @@ class ServerVBox(gtk.VBox):
 
                 # if action wants a closed powin it should be closed
                 if str(self.output.conf.actions[remoteservice].close_popwin) == "True":
-                    self.output.popwin.Close()  
+                    self.output.popwin.Close()
 
                 # Action!
                 action.start()
@@ -2461,15 +2461,15 @@ class ServerVBox(gtk.VBox):
 
 
     def AuthUsername(self, widget, event):
-        """ 
+        """
         if Return key has been pressed in password entry field interprete this as OK button being pressed
         """
         if gtk.gdk.keyval_name(event.keyval) in ["Return", "KP_Enter"]:
-            self.AuthEntryPassword.grab_focus()   
+            self.AuthEntryPassword.grab_focus()
 
 
     def AuthPassword(self, widget, event, server):
-        """ 
+        """
         if Return key has been pressed in password entry field interprete this as OK button being pressed
         """
         if gtk.gdk.keyval_name(event.keyval) in ["Return", "KP_Enter"]:
@@ -2502,7 +2502,7 @@ class Settings(object):
         self.selected_action = None
 
         # use connect_signals to assign methods to handlers
-        handlers_dict = { "button_ok_clicked": self.OK, 
+        handlers_dict = { "button_ok_clicked": self.OK,
                           "settings_dialog_close": self.Cancel,
                           "button_cancel_clicked": self.Cancel,
                           "button_new_server": lambda n: NewServer(servers=self.servers, output=self.output, settingsdialog=self, conf=self.conf),
@@ -2526,17 +2526,17 @@ class Settings(object):
                           "button_edit_action": lambda e: EditAction(output=self.output, action=self.selected_action, settingsdialog=self, conf=self.conf),
                           "button_delete_action": lambda d: self.DeleteAction(self.selected_action, self.conf.actions),
                           }
-        self.builder.connect_signals(handlers_dict)      
+        self.builder.connect_signals(handlers_dict)
 
-        keys = self.conf.__dict__.keys()        
+        keys = self.conf.__dict__.keys()
         # walk through all relevant input types to fill dialog with existing settings
-        for i in ["input_entry_", "input_checkbutton_", "input_radiobutton_", "input_spinbutton_", "input_filechooser_"]: 
+        for i in ["input_entry_", "input_checkbutton_", "input_radiobutton_", "input_spinbutton_", "input_filechooser_"]:
             for key in keys:
                 j = self.builder.get_object(i + key)
                 if not j:
                     continue
                 # some hazard, every widget has other methods to fill it with desired content
-                # so we try them all, one of them should work                
+                # so we try them all, one of them should work
 
                 # help gtk.filechooser on windows
                 if str(self.conf.__dict__[key]) == "None":
@@ -2575,7 +2575,7 @@ class Settings(object):
         # workaround for gazpacho-made glade-file - dunno why tab labels do not get named as they should be
         notebook = self.builder.get_object("notebook")
         notebook_tabs =  ["Servers", "Display", "Filters", "Actions", "Notification", "Colors", "Defaults"]
-        # now this presumably not necessary anymore workaround even gets extended as 
+        # now this presumably not necessary anymore workaround even gets extended as
         # determine-first-page-mechanism used for acknowledment dialog settings button
         page = 0
         for c in notebook.get_children():
@@ -2612,7 +2612,7 @@ class Settings(object):
             filters["ogg"].add_pattern("*.OGG")
 
         for f in ["warning", "critical", "down"]:
-            filechooser = self.builder.get_object("input_filechooser_notification_custom_sound_" + f)            
+            filechooser = self.builder.get_object("input_filechooser_notification_custom_sound_" + f)
             for f in filters: filechooser.add_filter(filters[f])
             # for some reason does not show wanted effect
             filechooser.set_filter(filters["wav"])
@@ -2623,7 +2623,7 @@ class Settings(object):
             NewServer(servers=self.servers, output=self.output, settingsdialog=self, conf=self.conf)
 
         # prepare colors and preview them
-        self.ColorsReset()      
+        self.ColorsReset()
 
         # disable non useful gui settings
         # statusbar in trayicon is only useful if GNOME egg trayicon is loaded
@@ -2635,7 +2635,7 @@ class Settings(object):
             self.builder.get_object("hbox_systray_popup_offset").hide()
             self.builder.get_object("input_radiobutton_statusbar_floating").hide()
             self.builder.get_object("input_radiobutton_maximized_window").hide()
-            self.builder.get_object("label_appearance").hide()   
+            self.builder.get_object("label_appearance").hide()
 
         # this should not be necessary, but for some reason the number of hours is 10 in unitialized state... :-(
         spinbutton = self.builder.get_object("input_spinbutton_defaults_downtime_duration_hours")
@@ -2668,7 +2668,7 @@ class Settings(object):
         item_list = list(items)
         item_list.sort(key=str.lower)
 
-        for item in item_list:            
+        for item in item_list:
             iter = liststore.insert_before(None, None)
             liststore.set_value(iter, 0, item)
             if str(items[item].enabled) == "True":
@@ -2724,7 +2724,7 @@ class Settings(object):
             values of the config object
             after this the config file gets saved.
         """
-        keys = self.conf.__dict__.keys()       
+        keys = self.conf.__dict__.keys()
         for i in ["input_entry_", "input_checkbutton_", "input_radiobutton_", "input_spinbutton_", "input_filechooser_"]:
             for key in keys:
                 j = self.builder.get_object(i + key)
@@ -2750,14 +2750,14 @@ class Settings(object):
         # evaluate and apply colors
         for state in ["ok", "warning", "critical", "unknown", "unreachable", "down", "error"]:
             self.conf.__dict__["color_" + state + "_text"] = self.builder.get_object("input_colorbutton_" + state + "_text").get_color().to_string()
-            self.conf.__dict__["color_" + state + "_background"] = self.builder.get_object("input_colorbutton_" + state + "_background").get_color().to_string()     
+            self.conf.__dict__["color_" + state + "_background"] = self.builder.get_object("input_colorbutton_" + state + "_background").get_color().to_string()
 
         # close popwin
         # catch Exception at first run when there cannot exist a popwin
         try:
             self.output.popwin.PopDown()
         except Exception, err:
-            print err            
+            print err
 
         if int(self.conf.update_interval_seconds) <= 0:
             self.conf.update_interval_seconds = 60
@@ -2771,12 +2771,12 @@ class Settings(object):
             self.firstrun = False
             self.conf.unconfigured = False
             # create output visuals again because they might have changed (e.g. systray/free floating status bar)
-            self.output.statusbar.StatusBar.destroy()    
+            self.output.statusbar.StatusBar.destroy()
             self.output.statusbar.SysTray.set_visible(False)
             # mode settings tell custom destroy method that no general stop is wanted, just destroy window
             self.output.popwin.Window.destroy(mode="settings", conf=self.output.conf)
             # re-initialize output with new settings
-            self.output.__init__()       
+            self.output.__init__()
 
             # in Windows the statusbar with gtk.gdk.WINDOW_TYPE_HINT_UTILITY places itself somewhere
             # this way it should be disciplined
@@ -2822,8 +2822,8 @@ class Settings(object):
         """
         # text and background colors of all states get set to defaults
         for state in ["ok", "warning", "critical", "unknown", "unreachable", "down", "error"]:
-            self.builder.get_object("input_colorbutton_" + state + "_text").set_color(gtk.gdk.color_parse(self.conf.__dict__["default_color_" + state + "_text"]))     
-            self.builder.get_object("input_colorbutton_" + state + "_background").set_color(gtk.gdk.color_parse(self.conf.__dict__["default_color_" + state + "_background"]))     
+            self.builder.get_object("input_colorbutton_" + state + "_text").set_color(gtk.gdk.color_parse(self.conf.__dict__["default_color_" + state + "_text"]))
+            self.builder.get_object("input_colorbutton_" + state + "_background").set_color(gtk.gdk.color_parse(self.conf.__dict__["default_color_" + state + "_background"]))
 
         # renew preview
         self.ColorsPreview()
@@ -2835,11 +2835,11 @@ class Settings(object):
         """
         # text and background colors of all states get set to defaults
         for state in ["ok", "warning", "critical", "unknown", "unreachable", "down", "error"]:
-            self.builder.get_object("input_colorbutton_" + state + "_text").set_color(gtk.gdk.color_parse(self.conf.__dict__["color_" + state + "_text"]))     
-            self.builder.get_object("input_colorbutton_" + state + "_background").set_color(gtk.gdk.color_parse(self.conf.__dict__["color_" + state + "_background"]))                                   
+            self.builder.get_object("input_colorbutton_" + state + "_text").set_color(gtk.gdk.color_parse(self.conf.__dict__["color_" + state + "_text"]))
+            self.builder.get_object("input_colorbutton_" + state + "_background").set_color(gtk.gdk.color_parse(self.conf.__dict__["color_" + state + "_background"]))
 
         # renew preview
-        self.ColorsPreview()        
+        self.ColorsPreview()
 
 
     def DeleteServer(self, server=None, servers=None):
@@ -2884,7 +2884,7 @@ class Settings(object):
                 # fill settings dialog treeview
                 self.FillTreeView("actions_treeview", actions, "Actions", "selected_action")
 
-            dialog.destroy()            
+            dialog.destroy()
 
 
     def CheckForNewVersionNow(self, widget=None):
@@ -2947,7 +2947,7 @@ class Settings(object):
     def ToggleREHostOptions(self, widget=None):
         """
             Toggle regular expression filter for hosts
-        """        
+        """
         options = self.builder.get_object("hbox_re_host")
         checkbutton = self.builder.get_object("input_checkbutton_re_host_enabled")
         options.set_sensitive(checkbutton.get_active())
@@ -2974,10 +2974,10 @@ class Settings(object):
     def ToggleSystrayPopupOffset(self, widget=None):
         """
             Toggle adjustment for systray-popup-offset (see sf.net bug 3389241)
-        """        
+        """
         options = self.builder.get_object("hbox_systray_popup_offset")
         checkbutton = self.builder.get_object("input_radiobutton_icon_in_systray")
-        options.set_sensitive(checkbutton.get_active())              
+        options.set_sensitive(checkbutton.get_active())
 
 
     def PlaySound(self, playbutton=None):
@@ -3010,9 +3010,9 @@ class GenericServer(object):
         # assign handlers
         handlers_dict = { "button_ok_clicked" : self.OK,
                           "button_cancel_clicked" : self.Cancel,
-                          "settings_dialog_close" : self.Cancel, 
+                          "settings_dialog_close" : self.Cancel,
                           "toggle_save_password" : self.ToggleSavePassword,
-                          "toggle_proxy" : self.ToggleProxy 
+                          "toggle_proxy" : self.ToggleProxy
                           }
         self.builder.connect_signals(handlers_dict)
 
@@ -3041,8 +3041,8 @@ class GenericServer(object):
 
 
     def on_server_type_change(self, combobox):
-        """ 
-        Disables controls as it is set in server class 
+        """
+        Disables controls as it is set in server class
         from former ServerDialogHelper class which contained common logic for server dialog
         might be of interest in case server type is changed and dialog content should be
         adjusted to reflect different labels/entry fields
@@ -3059,7 +3059,7 @@ class GenericServer(object):
                 item = self.builder.get_object(item_id)
                 if item is not None:
                     item.set_visible(False)
-        else:                    
+        else:
             # in case there is nothing to be hidden enable all possibly hidden items
             for item_id in ["label_monitor_cgi_url", "input_entry_monitor_cgi_url"]:
                 item = self.builder.get_object(item_id)
@@ -3094,19 +3094,19 @@ class GenericServer(object):
                 try:
                     new_server.__dict__[key] = int(j.get_value())
                 except:
-                    pass  
+                    pass
 
         # set server type combobox which cannot be set by above hazard method
         combobox = self.builder.get_object("input_combo_server_type")
         active = combobox.get_active_iter()
         model = combobox.get_model()
-        new_server.__dict__["type"] = model.get_value(active, 0)  
+        new_server.__dict__["type"] = model.get_value(active, 0)
 
         # workaround for cgi-url not needed by certain monitor types
         server = Actions.get_registered_servers()[new_server.type]
         if "input_entry_monitor_cgi_url" in server.DISABLED_CONTROLS:
             new_server.monitor_cgi_url = new_server.monitor_url
-            
+
         # URLs should not end with / - clean it
         new_server.monitor_url = new_server.monitor_url.rstrip("/")
         new_server.monitor_cgi_url = new_server.monitor_cgi_url.rstrip("/")
@@ -3120,12 +3120,12 @@ class GenericServer(object):
             # create new server thread
             created_server = Actions.CreateServer(new_server, self.conf, self.output.debug_queue, self.output.Resources)
             if created_server is not None:
-                self.servers[new_server.name] = created_server 
+                self.servers[new_server.name] = created_server
 
                 if str(self.conf.servers[new_server.name].enabled) == "True":
                     # start new thread (should go to Actions!)
                     self.servers[new_server.name].thread = Actions.RefreshLoopOneServer(server=self.servers[new_server.name], output=self.output, conf=self.conf)
-                    self.servers[new_server.name].thread.start()        
+                    self.servers[new_server.name].thread.start()
 
             # fill settings dialog treeview
             self.settingsdialog.FillTreeView("servers_treeview", self.conf.servers, "Servers", "selected_server")
@@ -3136,7 +3136,7 @@ class GenericServer(object):
     def Cancel(self, widget):
         """
             settings dialog got cancelled
-        """        
+        """
         if not self.conf.unconfigured == True:
             self.dialog.destroy()
         else:
@@ -3164,13 +3164,13 @@ class GenericServer(object):
         checkbutton = self.builder.get_object("input_checkbutton_use_proxy")
 
         self.ToggleProxyFromOS(checkbutton)
-        self.ToggleProxyAddress(checkbutton)  
+        self.ToggleProxyAddress(checkbutton)
 
 
     def ToggleProxyFromOS(self, widget=None):
         """
             toggle proxy from OS when using proxy is enabled
-        """       
+        """
         checkbutton = self.builder.get_object("input_checkbutton_use_proxy_from_os")
         checkbutton.set_sensitive(self.builder.get_object("input_checkbutton_use_proxy").get_active())
 
@@ -3208,12 +3208,12 @@ class NewServer(GenericServer):
 
         GenericServer.__init__(self, **kwds)
 
-        # set title of settings dialog 
+        # set title of settings dialog
         self.dialog.set_title("New server")
 
         # show filled settings dialog and wait thanks to gtk.run()
         self.dialog.run()
-        self.dialog.destroy() 
+        self.dialog.destroy()
 
 
 class EditServer(GenericServer):
@@ -3228,12 +3228,12 @@ class EditServer(GenericServer):
 
         # in case server has been selected do nothing
         if not self.server == None:
-            # set title of settings dialog 
+            # set title of settings dialog
             self.dialog.set_title("Edit server " + self.server)
 
-            keys = self.conf.servers[self.server].__dict__.keys()            
+            keys = self.conf.servers[self.server].__dict__.keys()
             # walk through all relevant input types to fill dialog with existing settings
-            for i in ["input_entry_", "input_checkbutton_", "input_radiobutton_", "input_spinbutton_"]: 
+            for i in ["input_entry_", "input_checkbutton_", "input_radiobutton_", "input_spinbutton_"]:
                 for key in keys:
                     j = self.builder.get_object(i + key)
                     if not j:
@@ -3305,13 +3305,13 @@ class EditServer(GenericServer):
         combobox = self.builder.get_object("input_combo_server_type")
         active = combobox.get_active_iter()
         model = combobox.get_model()
-        new_server.__dict__["type"] = model.get_value(active, 0)   
+        new_server.__dict__["type"] = model.get_value(active, 0)
 
         # workaround for cgi-url not needed by certain monitor types
         server = Actions.get_registered_servers()[new_server.type]
         if "input_entry_monitor_cgi_url" in server.DISABLED_CONTROLS:
             new_server.monitor_cgi_url = new_server.monitor_url
-            
+
         # URLs should not end with / - clean it
         new_server.monitor_url = new_server.monitor_url.rstrip("/")
         new_server.monitor_cgi_url = new_server.monitor_cgi_url.rstrip("/")
@@ -3337,11 +3337,11 @@ class EditServer(GenericServer):
             # create new server thread
             created_server = Actions.CreateServer(new_server, self.conf, self.output.debug_queue, self.output.Resources)
             if created_server is not None:
-                self.servers[new_server.name] = created_server 
-                if str(self.conf.servers[new_server.name].enabled) == "True":  
+                self.servers[new_server.name] = created_server
+                if str(self.conf.servers[new_server.name].enabled) == "True":
                     # start new thread (should go to Actions)
                     self.servers[new_server.name].thread = Actions.RefreshLoopOneServer(server=self.servers[new_server.name], output=self.output, conf=self.conf)
-                    self.servers[new_server.name].thread.start()   
+                    self.servers[new_server.name].thread.start()
 
             # fill settings dialog treeview
             self.settingsdialog.FillTreeView("servers_treeview", self.conf.servers, "Servers", "selected_server")
@@ -3394,7 +3394,7 @@ class GenericAction(object):
         for action_type in ["Browser", "Command", "URL"]:
             combomodel.append((action_type,))
         combobox.set_model(combomodel)
-        combobox.set_active(0)   
+        combobox.set_active(0)
 
         # if uninitialized action (e.g. new one) is used don't access actions dictionary
         if self.action == "":
@@ -3402,9 +3402,9 @@ class GenericAction(object):
             action = Config.Action()
         else:
             action = self.conf.actions[self.action]
-        keys = action.__dict__.keys()          
+        keys = action.__dict__.keys()
         # walk through all relevant input types to fill dialog with existing settings
-        for i in ["input_entry_", "input_checkbutton_", "input_radiobutton_"]: 
+        for i in ["input_entry_", "input_checkbutton_", "input_radiobutton_"]:
             for key in keys:
                 j = self.builder.get_object(i + key)
 
@@ -3428,7 +3428,7 @@ class GenericAction(object):
                 except:
                     pass
 
-        # disable help labels for actions        
+        # disable help labels for actions
         self.ToggleActionStringHelp()
         self.ToggleActionTypeHelp()
 
@@ -3471,7 +3471,7 @@ class GenericAction(object):
             self.output.Dialog(message='An action named "' + new_action.name + '" already exists.')
         else:
             # put in new one
-            self.conf.actions[new_action.name] = new_action      
+            self.conf.actions[new_action.name] = new_action
 
             # fill settings dialog treeview
             self.settingsdialog.FillTreeView("actions_treeview", self.conf.actions, "Actions", "selected_action")
@@ -3489,7 +3489,7 @@ class GenericAction(object):
     def ToggleREHostOptions(self, widget=None):
         """
             Toggle regular expression filter for hosts
-        """        
+        """
         options = self.builder.get_object("hbox_re_host")
         checkbutton = self.builder.get_object("input_checkbutton_re_host_enabled")
         options.set_sensitive(checkbutton.get_active())
@@ -3539,16 +3539,16 @@ class NewAction(GenericAction):
 
 
         # create new dummy action
-        self.action = ""                
+        self.action = ""
 
         GenericAction.__init__(self, **kwds)
 
-        # set title of settings dialog 
+        # set title of settings dialog
         self.dialog.set_title("New action")
 
         # show filled settings dialog and wait thanks to gtk.run()
         self.dialog.run()
-        self.dialog.destroy() 
+        self.dialog.destroy()
 
 
 class EditAction(GenericAction):
@@ -3561,16 +3561,16 @@ class EditAction(GenericAction):
 
         GenericAction.__init__(self, **kwds)
 
-        # set title of settings dialog 
-        self.dialog.set_title("Edit action " + self.action)    
+        # set title of settings dialog
+        self.dialog.set_title("Edit action " + self.action)
 
         # adjust combobox to used action type
         self.combobox = self.builder.get_object("input_combo_action_type")
-        self.combobox.set_active({"browser":0, "command":1, "url":2}[self.conf.actions[self.action].type])           
+        self.combobox.set_active({"browser":0, "command":1, "url":2}[self.conf.actions[self.action].type])
 
         # show filled settings dialog and wait thanks to gtk.run()
         self.dialog.run()
-        self.dialog.destroy()         
+        self.dialog.destroy()
 
 
     def OK(self, widget):
@@ -3613,7 +3613,7 @@ class EditAction(GenericAction):
             # delete old one
             self.conf.actions.pop(self.action)
             # put in new one
-            self.conf.actions[new_action.name] = new_action      
+            self.conf.actions[new_action.name] = new_action
             # fill settings dialog treeview
             self.settingsdialog.FillTreeView("actions_treeview", self.conf.actions, "Actions", "selected_action")
             # destroy new action dialog
@@ -3638,8 +3638,8 @@ class AuthenticationDialog:
         # the usual...
         for k in kwds: self.__dict__[k] = kwds[k]
 
-        # set the gtkbuilder files       
-        self.builderfile = self.Resources + os.sep + "authentication_dialog.ui"       
+        # set the gtkbuilder files
+        self.builderfile = self.Resources + os.sep + "authentication_dialog.ui"
         self.builder = gtk.Builder()
         self.builder.add_from_file(self.builderfile)
         self.dialog = self.builder.get_object("authentication_dialog")
@@ -3648,7 +3648,7 @@ class AuthenticationDialog:
         handlers_dict = { "button_ok_clicked" : self.OK,
                           "button_exit_clicked" : self.Exit,
                           "button_disable_clicked" : self.Disable
-                          }        
+                          }
 
         self.builder.connect_signals(handlers_dict)
 
@@ -3667,7 +3667,7 @@ class AuthenticationDialog:
         self.dialog.destroy()
 
 
-    def OK(self, widget):       
+    def OK(self, widget):
         self.server.username = self.entry_username.get_text()
         self.server.password = self.entry_password.get_text()
         toggle_save_password = self.builder.get_object("input_checkbutton_save_password")
@@ -3677,7 +3677,7 @@ class AuthenticationDialog:
             self.conf.servers[self.server.name].username = self.server.username
             self.conf.servers[self.server.name].password = self.server.password
             self.conf.servers[self.server.name].save_password = True
-            self.conf.SaveConfig(output=self.output)   
+            self.conf.SaveConfig(output=self.output)
 
 
     def Disable(self, widget):

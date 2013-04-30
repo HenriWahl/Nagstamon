@@ -8,7 +8,7 @@
 	<g>
 		<polygon id="Shadow" display="none" points="968.529,1039.548 180.512,1056.217 110.55,1039.548 180.512,1022.88 		"/>
 		<g id="Shadow_Blur_1_">
-			
+
 				<image overflow="visible" width="931" height="106" xlink:href="data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAA6MAAABqCAYAAABJaYf9AAAACXBIWXMAAAsSAAALEgHS3X78AAAA
 GXRFWHRTb2Z0d2FyZQBBZG9iZSBJbWFnZVJlYWR5ccllPAAAGhJJREFUeNrsnYtu47gSBaUk+/8/
 vDO8uMAO1muIr+7TTUquAgw7juOQFCWx2HwcBwAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAA
@@ -139,7 +139,7 @@ TkSuQmCC" transform="matrix(1 0 0 1 74 986.8647)">
 			<stop  offset="0" style="stop-color:#2080C0"/>
 			<stop  offset="1" style="stop-color:#186192"/>
 		</linearGradient>
-		<polygon fill-rule="evenodd" clip-rule="evenodd" fill="url(#SVGID_1_)" points="106.54,1002.935 22.113,146.508 48.714,114.089 
+		<polygon fill-rule="evenodd" clip-rule="evenodd" fill="url(#SVGID_1_)" points="106.54,1002.935 22.113,146.508 48.714,114.089
 			936.982,26.524 969.401,53.125 1056.966,941.393 1030.366,973.812 173.939,1058.239 		"/>
 		<path fill="#003366" d="M935.727,30.668l29.856,24.499l87.24,884.971l-24.499,29.856l-853.129,84.103l-64.838-53.202
 			L26.257,147.765l24.499-29.857L935.727,30.668 M938.239,22.381l-891.566,87.89L17.97,145.252l84.751,859.724l69.961,57.406
@@ -184,7 +184,7 @@ TkSuQmCC" transform="matrix(1 0 0 1 74 986.8647)">
 			<use xlink:href="#SVGID_3_"  overflow="visible"/>
 		</clipPath>
 		<g transform="matrix(1 0 0 1 0 -3.954816e-007)" clip-path="url(#SVGID_4_)">
-			
+
 				<image overflow="visible" width="1080" height="1080" xlink:href="data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAABDgAAAQ5CAYAAAAnTL8qAAAACXBIWXMAAAsSAAALEgHS3X78AAAA
 GXRFWHRTb2Z0d2FyZQBBZG9iZSBJbWFnZVJlYWR5ccllPAADrDxJREFUeNrsvXuUZVlZ4Pl9EZER
 GfmsrKqsN1kPqgQKiqcLLAcFwVYW4gPbabQdB7RlbKYdtdsGFRW01/IxM3/YM2vanmkdRW1ddjs0

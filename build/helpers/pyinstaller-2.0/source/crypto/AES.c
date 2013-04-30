@@ -36,12 +36,12 @@
 #define MAXKB	(256/8)
 #define MAXNR	14
 
-typedef unsigned char	u8;	
-typedef unsigned short	u16;	
+typedef unsigned char	u8;
+typedef unsigned short	u16;
 typedef unsigned int	u32;
 
 typedef struct {
-	u32 ek[ 4*(MAXNR+1) ]; 
+	u32 ek[ 4*(MAXNR+1) ];
 	u32 dk[ 4*(MAXNR+1) ];
 	int rounds;
 } block_state;
@@ -1322,7 +1322,7 @@ void rijndaelEncryptRound(const u32 rk[/*4*(Nr + 1)*/], int Nr, u8 block[16], in
 			(Te4[(s1 >>  8) & 0xff] & 0x0000ff00) ^
 			(Te4[(s2      ) & 0xff] & 0x000000ff) ^
 			rk[3];
-		
+
 		s0 = t0;
 		s1 = t1;
 		s2 = t2;

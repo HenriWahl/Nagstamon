@@ -11,8 +11,8 @@ BLOCK_SIZE = 16
 def main():
     print "AES null encryption, block size", BLOCK_SIZE
     # Just for testing functionality after all
-    print "HEX", binascii.hexlify(AES.new("\0" * 
-                                          BLOCK_SIZE).encrypt("\0" * 
+    print "HEX", binascii.hexlify(AES.new("\0" *
+                                          BLOCK_SIZE).encrypt("\0" *
                                                               BLOCK_SIZE))
 
 

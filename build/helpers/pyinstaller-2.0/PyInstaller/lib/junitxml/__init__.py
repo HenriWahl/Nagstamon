@@ -89,7 +89,7 @@ def _escape_attr(s):
 
 class JUnitXmlResult(unittest.TestResult):
     """A TestResult which outputs JUnit compatible XML."""
-    
+
     def __init__(self, stream):
         """Create a JUnitXmlResult.
 

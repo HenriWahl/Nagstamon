@@ -68,7 +68,7 @@ class fileview(object):
         if not (self._start <= seekto <= self._end):
             raise IOError("%s to offset %d is outside window [%d, %d]" % (
                 op, seekto, self._start, self._end))
-        
+
     def seek(self, offset, whence=0):
         seekto = offset
         if whence == 0:
@@ -94,7 +94,7 @@ class fileview(object):
         self._checkwindow(here, 'read')
         bytes = min(size, self._end - here)
         return self._fileobj.read(bytes)
-        
+
 
 def mergecopy(src, dest):
     """
@@ -205,7 +205,7 @@ def is_platform_file(path):
 def iter_platform_files(dst):
     """
     Walk a directory and yield each full path that is a Mach-O file
-    """ 
+    """
     for root, dirs, files in os.walk(dst):
         for fn in files:
             fn = os.path.join(root, fn)

@@ -42,62 +42,62 @@ class MultisiteError(Exception):
     def __init__(self, terminate, result):
         self.terminate = terminate
         self.result    = result
-        
-        
+
+
 class LastCheckColumnMultisite(Column):
     """
     because Check_MK has a pretty different date format (much better readable) it has to
     be treaten differently
-    
+
     This is a custom version of LastCheckColumn to be used in list COLUMNS in class Multisite
     """
-    
+
     ATTR_NAME = 'last_check'
-    
+
     @classmethod
     def sort_function(cls, model, iter1, iter2, column):
-        """ Overrides default sorting behaviour """       
+        """ Overrides default sorting behaviour """
         data1, data2 = [model.get_value(x, column) for x in (iter1, iter2)]
-        try:            
+        try:
             first = Actions.MachineSortableDateMultisite(data1)
             second = Actions.MachineSortableDateMultisite(data2)
         except ValueError, err:
             print err
             return cmp(first, second)
         return first - second
-    
-    
+
+
 class DurationColumnMultisite(CustomSortingColumn):
     ATTR_NAME = 'duration'
-    
+
     @classmethod
     def sort_function(cls, model, iter1, iter2, column):
-        """ Overrides default sorting behaviour """       
+        """ Overrides default sorting behaviour """
         data1, data2 = [model.get_value(x, column) for x in (iter1, iter2)]
-        try:            
+        try:
             first = Actions.MachineSortableDateMultisite(data1)
             second = Actions.MachineSortableDateMultisite(data2)
         except ValueError, err:
             print err
             return cmp(first, second)
         return first - second
-    
+
 
 class MultisiteServer(GenericServer):
     """
        special treatment for Check_MK Multisite JSON API
     """
     TYPE = 'Check_MK Multisite'
-    
+
     # URLs for browser shortlinks/buttons on popup window
     BROWSER_URLS= { "monitor": "$MONITOR$",\
                     "hosts": "$MONITOR$/index.py?start_url=view.py?view_name=nagstamon_hosts",\
                     "services": "$MONITOR$/index.py?start_url=view.py?view_name=nagstamon_svc",\
-                    "history": '$MONITOR$/index.py?start_url=view.py?view_name=events'}    
-    
+                    "history": '$MONITOR$/index.py?start_url=view.py?view_name=events'}
+
     # A Monitor CGI URL is not necessary so hide it in settings
     DISABLED_CONTROLS = ["label_monitor_cgi_url", "input_entry_monitor_cgi_url"]
-    
+
     COLUMNS = [
         HostColumn,
         ServiceColumn,
@@ -107,27 +107,27 @@ class MultisiteServer(GenericServer):
         AttemptColumn,
         StatusInformationColumn
     ]
-    
-       
+
+
     def __init__(self, **kwds):
         GenericServer.__init__(self, **kwds)
-        
-        # Prepare all urls needed by nagstamon - 
+
+        # Prepare all urls needed by nagstamon -
         self.urls = {}
         self.statemap = {}
-        
+
         # Entries for monitor default actions in context menu
         self.MENU_ACTIONS = ["Monitor", "Recheck", "Acknowledge", "Downtime"]
-        
+
         # flag fo newer cookie authentication
         self.CookieAuth = False
-        
+
 
     def init_HTTP(self):
         # Fix eventually missing tailing "/" in url
         if self.monitor_url[-1] != '/':
             self.monitor_url += '/'
-        
+
         # Prepare all urls needed by nagstamon if not yet done
         if len(self.urls) == len(self.statemap):
             self.urls = {
@@ -136,13 +136,13 @@ class MultisiteServer(GenericServer):
                                                    urllib.urlencode({'start_url': 'view.py?view_name=nagstamon_svc'}),
               'human_service':   self.monitor_url + "index.py?%s" %
                                                    urllib.urlencode({'start_url': 'view.py?view_name=service'}),
-    
+
               'api_hosts':       self.monitor_url + "view.py?view_name=nagstamon_hosts&output_format=python",
               'human_hosts':     self.monitor_url + "index.py?%s" %
                                                    urllib.urlencode({'start_url': 'view.py?view_name=nagstamon_hosts'}),
               'human_host':      self.monitor_url + "index.py?%s" %
                                                    urllib.urlencode({'start_url': 'view.py?view_name=hoststatus'}),
-    
+
               'api_reschedule':  self.monitor_url + 'nagios_action.py?action=reschedule',
               'api_host_act':    self.monitor_url + 'view.py?_transid=-1&_do_actions=yes&_do_confirm=Yes!&output_format=python&view_name=hoststatus',
               'api_service_act': self.monitor_url + 'view.py?_transid=-1&_do_actions=yes&_do_confirm=Yes!&output_format=python&view_name=service',
@@ -156,18 +156,18 @@ class MultisiteServer(GenericServer):
                 'WARN':    'WARNING',
                 'UNKN':    'UNKNOWN',
                 'PEND':    'PENDING',
-            }            
+            }
 
         if self.CookieAuth:
-            # get cookie to access Check_MK web interface       
-            if len(self.Cookie) == 0:         
+            # get cookie to access Check_MK web interface
+            if len(self.Cookie) == 0:
                 # put all necessary data into url string
                 logindata = urllib.urlencode({"_username":self.get_username(),\
                                  "_password":self.get_password(),\
                                  "_login":"1",\
                                  "_origtarget": "",\
                                  "filled_in":"login"})
-    
+
                 # the following is necessary for Opsview servers
                 # get cookie from login page via url retrieving as with other urls
                 try:
@@ -176,7 +176,7 @@ class MultisiteServer(GenericServer):
                     urlcontent.close()
                 except:
                     self.Error(sys.exc_info())
-            
+
         GenericServer.init_HTTP(self)
 
 
@@ -207,15 +207,15 @@ class MultisiteServer(GenericServer):
         elif content.startswith('ERROR:'):
             raise MultisiteError(True, Result(result = content,
                                                error = content))
-  
+
         # looks like cookieauth
         elif content.startswith('<'):
             self.CookieAuth = True
             return ""
-            
+
         return eval(content)
 
-    
+
     def _get_status(self):
         """
         Get status from Check_MK Server
@@ -234,7 +234,7 @@ class MultisiteServer(GenericServer):
         url_params += '&is_host_active_checks_enabled=-1&is_service_active_checks_enabled=-1'
         url_params += '&host_scheduled_downtime_depth=-1&is_in_downtime=-1'
 
-        
+
         try:
             response = []
             try:
@@ -244,7 +244,7 @@ class MultisiteServer(GenericServer):
                     return e.result
 
             for row in response[1:]:
-                host= dict(zip(response[0], row))               
+                host= dict(zip(response[0], row))
                 n = {
                     'host':               host['host'],
                     'status':             self.statemap.get(host['host_state'], host['host_state']),
@@ -305,8 +305,8 @@ class MultisiteServer(GenericServer):
                     return e.result
                 else:
                     response = e.result.content
-                    ret = e.result   
-                    
+                    ret = e.result
+
             for row in response[1:]:
                 service = dict(zip(response[0], row))
                 n = {
@@ -348,7 +348,7 @@ class MultisiteServer(GenericServer):
                     self.new_hosts[n["host"]].services[new_service].attempt = n["attempt"]
                     self.new_hosts[n["host"]].services[new_service].status_information = n["status_information"]
                     self.new_hosts[n["host"]].services[new_service].passiveonly = n["passiveonly"]
-                    self.new_hosts[n["host"]].services[new_service].flapping = n["flapping"]                    
+                    self.new_hosts[n["host"]].services[new_service].flapping = n["flapping"]
                     self.new_hosts[n["host"]].services[new_service].site = n["site"]
                     self.new_hosts[n["host"]].services[new_service].address = n["address"]
                     self.new_hosts[n["host"]].services[new_service].command = n["command"]
@@ -382,7 +382,7 @@ class MultisiteServer(GenericServer):
 
         return ret
 
-            
+
     def open_tree_view(self, host, service=""):
         """
         open monitor from treeview context menu
@@ -403,7 +403,7 @@ class MultisiteServer(GenericServer):
         find out ip or hostname of given host to access hosts/devices which do not appear in DNS but
         have their ip saved in Nagios
         """
-        
+
         # the fastest method is taking hostname as used in monitor
         if str(self.conf.connect_by_host) == "True" or host == "":
             return Result(result=host)
@@ -447,7 +447,7 @@ class MultisiteServer(GenericServer):
                                                                                      'host': host,
                                                                                      'service': service}), giveback='raw')
 
-        
+
     def get_start_end(self, host):
         return time.strftime("%Y-%m-%d %H:%M"), time.strftime("%Y-%m-%d %H:%M", time.localtime(time.time() + 7200))
 
@@ -497,8 +497,7 @@ class MultisiteServer(GenericServer):
         # acknowledge all services on a host when told to do so
         for s in all_services:
             self._action(self.hosts[host].site, host, s, p)
-            
 
 
 
-        
+

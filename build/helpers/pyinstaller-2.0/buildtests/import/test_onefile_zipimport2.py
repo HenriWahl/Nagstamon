@@ -34,7 +34,7 @@ if hasattr(sys, 'frozen') and sys.frozen:
     print 'dir contents sys._MEIPASS:', os.listdir(sys._MEIPASS)
 
 print '-----------'
-print 'now importing pkg_resources' 
+print 'now importing pkg_resources'
 import pkg_resources
 
 print '-----------'

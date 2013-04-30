@@ -36,7 +36,7 @@ Manual.tex: Manual.rst _definitions.txt
 	rst2pdf < ${srcdir}/$< -o ${srcdir}/$@ \
 	   --header='###Title### - ###Section###' \
 	   --footer='###Page###' \
-	   --default-dpi=75 
+	   --default-dpi=75
 	rm ../_definitions.txt
 
 _definitions.txt:

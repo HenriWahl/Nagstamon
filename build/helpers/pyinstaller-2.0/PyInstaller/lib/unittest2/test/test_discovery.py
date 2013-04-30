@@ -317,7 +317,7 @@ class TestDiscovery(unittest2.TestCase):
         original_listdir = os.listdir
         original_isfile = os.path.isfile
         original_isdir = os.path.isdir
-        
+
         def cleanup():
             os.listdir = original_listdir
             os.path.isfile = original_isfile
@@ -326,7 +326,7 @@ class TestDiscovery(unittest2.TestCase):
             if full_path in sys.path:
                 sys.path.remove(full_path)
         self.addCleanup(cleanup)
-        
+
         def listdir(_):
             return ['foo.py']
         def isfile(_):
@@ -336,9 +336,9 @@ class TestDiscovery(unittest2.TestCase):
         os.listdir = listdir
         os.path.isfile = isfile
         os.path.isdir = isdir
-        
+
         loader = unittest2.TestLoader()
-        
+
         mod_dir = os.path.abspath('bar')
         expected_dir = os.path.abspath('foo')
         msg = re.escape(r"'foo' module incorrectly imported from %r. Expected %r. "
@@ -349,10 +349,10 @@ class TestDiscovery(unittest2.TestCase):
         )
         self.assertEqual(sys.path[0], full_path)
 
-        
+
     def test_discovery_from_dotted_path(self):
         loader = unittest2.TestLoader()
-        
+
         tests = [self]
         from unittest2 import test
         expectedPath = os.path.abspath(os.path.dirname(test.__file__))

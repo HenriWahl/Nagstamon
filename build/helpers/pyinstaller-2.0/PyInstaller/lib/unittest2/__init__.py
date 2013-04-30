@@ -58,7 +58,7 @@ except ImportError:
     # Compatibility with platforms that don't have the signal module
     pass
 else:
-    __all__.extend(['installHandler', 'registerResult', 'removeResult', 
+    __all__.extend(['installHandler', 'registerResult', 'removeResult',
                     'removeHandler'])
 
 # deprecated

@@ -38,24 +38,24 @@ class Test_Assertions(unittest2.TestCase):
             self.assertAlmostEqual(x, x)
             self.assertRaises(self.failureException, self.assertNotAlmostEqual,
                               x, x)
-            
-            
+
+
     def test_AmostEqualWithDelta(self):
         self.assertAlmostEqual(1.1, 1.0, delta=0.5)
         self.assertAlmostEqual(1.0, 1.1, delta=0.5)
         self.assertNotAlmostEqual(1.1, 1.0, delta=0.05)
         self.assertNotAlmostEqual(1.0, 1.1, delta=0.05)
-        
+
         self.assertRaises(self.failureException, self.assertAlmostEqual,
                           1.1, 1.0, delta=0.05)
         self.assertRaises(self.failureException, self.assertNotAlmostEqual,
                           1.1, 1.0, delta=0.5)
-        
+
         self.assertRaises(TypeError, self.assertAlmostEqual,
                           1.1, 1.0, places=2, delta=2)
         self.assertRaises(TypeError, self.assertNotAlmostEqual,
                           1.1, 1.0, places=2, delta=2)
-        
+
         first = datetime.datetime.now()
         second = first + datetime.timedelta(seconds=10)
         self.assertAlmostEqual(first, second,
@@ -106,7 +106,7 @@ class TestLongMessage(unittest2.TestCase):
 
         self.assertEquals(self.testableTrue._formatMessage(None, "foo"), "foo")
         self.assertEquals(self.testableTrue._formatMessage("foo", "bar"), "bar : foo")
-        
+
         # This blows up if _formatMessage uses string concatenation
         self.testableTrue._formatMessage(object(), 'foo')
 
@@ -129,7 +129,7 @@ class TestLongMessage(unittest2.TestCase):
             self.assertRaisesRegexp(self.failureException,
                                     expected_regexp,
                                     lambda: testMethod(*args, **kwargs))
-            
+
     def testAssertTrue(self):
         self.assertMessages('assertTrue', (False,),
                             ["^False is not True$", "^oops$", "^False is not True$",
