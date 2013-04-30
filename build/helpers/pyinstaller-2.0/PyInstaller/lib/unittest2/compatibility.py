@@ -46,7 +46,7 @@ def _relpath_posix(path, start=os.path.curdir):
 
     if not path:
         raise ValueError("no path specified")
-    
+
     start_list = os.path.abspath(start).split(os.path.sep)
     path_list = os.path.abspath(path).split(os.path.sep)
 

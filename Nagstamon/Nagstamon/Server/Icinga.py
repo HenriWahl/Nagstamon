@@ -18,10 +18,10 @@ except:
 from Nagstamon.Objects import *
 from Nagstamon.Actions import *
 
-class IcingaServer(GenericServer):    
+class IcingaServer(GenericServer):
     """
         object of Incinga server
-    """   
+    """
     TYPE = 'Icinga'
     # flag to handle JSON or HTML correctly - checked by get_server_version()
     json = None
@@ -121,7 +121,7 @@ class IcingaServer(GenericServer):
         # every list will contain a dictionary for every failed service/host
         # this dictionary is only temporarily
         nagitems = {"services":[], "hosts":[]}
-        
+
         # new_hosts dictionary
         self.new_hosts = dict()
 
@@ -268,11 +268,11 @@ class IcingaServer(GenericServer):
             # set checking flag back to False
             self.isChecking = False
             result, error = self.Error(sys.exc_info())
-            return Result(result=result, error=error) 
+            return Result(result=result, error=error)
 
         # some cleanup
         del nagitems, jsonraw, jsondict, error, hosts, services
-        
+
         #dummy return in case all is OK
         return Result()
 

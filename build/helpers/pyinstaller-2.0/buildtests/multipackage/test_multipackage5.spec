@@ -59,7 +59,7 @@ coll = COLLECT( exeB,
         strip=False,
         upx=True,
         name=os.path.join('dist', __testdep__))
-        
+
 pyzC = PYZ(c.pure)
 exeC = EXE(pyzC,
           c.scripts,

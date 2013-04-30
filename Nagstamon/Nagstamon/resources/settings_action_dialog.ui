@@ -570,13 +570,13 @@
                 <property name="can_focus">False</property>
                 <property name="xalign">0</property>
                 <property name="ypad">2</property>
-                <property name="label" translatable="yes">Available variables for action strings: 
+                <property name="label" translatable="yes">Available variables for action strings:
 
 $HOST$ - host as in monitor
 $SERVICE$ - service as in monitor
 $MONITOR$ - monitor address
 $MONITOR-CGI$ - monitor CGI address
-$ADDRESS$ - address of host, delivered from connection method 
+$ADDRESS$ - address of host, delivered from connection method
 $USERNAME$ - username on monitor
 $STATUS-INFO$ - status information for host or service
 $PASSWORD$ - username's password on monitor
@@ -609,7 +609,7 @@ Command:
 Execute command as given in string and evaluate variables, for example to open SSH connection.
 
 URL:
-Request given URL string in the background, for example to acknowledge a service with one click. 
+Request given URL string in the background, for example to acknowledge a service with one click.
 </property>
                 <property name="wrap">True</property>
                 <property name="width_chars">60</property>

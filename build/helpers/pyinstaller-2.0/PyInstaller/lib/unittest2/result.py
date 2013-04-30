@@ -36,7 +36,7 @@ class TestResult(unittest.TestResult):
     """
     _previousTestClass = None
     _moduleSetUpFailed = False
-    
+
     def __init__(self):
         self.failfast = False
         self.failures = []
@@ -52,7 +52,7 @@ class TestResult(unittest.TestResult):
         self._original_stdout = sys.stdout
         self._original_stderr = sys.stderr
         self._mirrorOutput = False
-    
+
     def startTest(self, test):
         "Called when the given test is about to be run"
         self.testsRun += 1
@@ -84,7 +84,7 @@ class TestResult(unittest.TestResult):
                     if not error.endswith('\n'):
                         error += '\n'
                     self._original_stderr.write(STDERR_LINE % error)
-                
+
             sys.stdout = self._original_stdout
             sys.stderr = self._original_stderr
             self._stdout_buffer.seek(0)
@@ -92,7 +92,7 @@ class TestResult(unittest.TestResult):
             self._stderr_buffer.seek(0)
             self._stderr_buffer.truncate()
         self._mirrorOutput = False
-        
+
 
     def stopTestRun(self):
         """Called once after all tests are executed.
@@ -115,7 +115,7 @@ class TestResult(unittest.TestResult):
         self.failures.append((test, self._exc_info_to_string(err, test)))
         self._mirrorOutput = True
     addFailure = failfast(addFailure)
-    
+
     def addSuccess(self, test):
         "Called when a test has completed successfully"
         pass
@@ -154,10 +154,10 @@ class TestResult(unittest.TestResult):
             msgLines = traceback.format_exception(exctype, value, tb, length)
         else:
             msgLines = traceback.format_exception(exctype, value, tb)
-        
+
         if self.buffer:
             output = sys.stdout.getvalue()
-            error = sys.stderr.getvalue()            
+            error = sys.stderr.getvalue()
             if output:
                 if not output.endswith('\n'):
                     output += '\n'

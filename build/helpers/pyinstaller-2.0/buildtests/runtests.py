@@ -622,11 +622,11 @@ def main():
         suite = unittest.TestSuite()
         for arg in args:
            test_list = glob.glob(arg)
-           if not test_list: 
+           if not test_list:
                test_list = [arg]
            else:
                test_list = [x for x in test_list if os.path.splitext(x)[1] == ".py"]
-           for t in test_list: 
+           for t in test_list:
               test_dir = os.path.dirname(t)
               test_script = os.path.basename(os.path.splitext(t)[0])
               suite.addTest(GenericTestCase(test_dir, test_script))

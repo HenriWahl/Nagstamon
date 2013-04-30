@@ -38,7 +38,7 @@ char* basename (char *path)
   /* Search for the last directory separator in PATH.  */
   char *basename = strrchr (path, '\\');
   if (!basename) basename = strrchr (path, '/');
-  
+
   /* If found, return the address of the following character,
      or the start of the parameter passed in.  */
   return basename ? ++basename : (char*)path;
@@ -50,11 +50,11 @@ static ULONG_PTR actToken;
 #ifndef STATUS_SXS_EARLY_DEACTIVATION
 #define STATUS_SXS_EARLY_DEACTIVATION 0xC015000F
 #endif
- 	
+
 int IsXPOrLater(void)
 {
     OSVERSIONINFO osvi;
-    
+
     ZeroMemory(&osvi, sizeof(OSVERSIONINFO));
     osvi.dwOSVersionInfoSize = sizeof(OSVERSIONINFO);
 
@@ -76,23 +76,23 @@ int CreateActContext(char *workpath, char *thisfile)
     // If not XP, nothing to do -- return OK
     if (!IsXPOrLater())
         return 1;
-       
+
     /* Setup activation context */
     strcpy(manifestpath, workpath);
     strcat(manifestpath, basename(thisfile));
     strcat(manifestpath, ".manifest");
     VS("manifestpath: %s\n", manifestpath);
-    
+
     k32 = LoadLibrary("kernel32");
     CreateActCtx = (void*)GetProcAddress(k32, "CreateActCtxA");
     ActivateActCtx = (void*)GetProcAddress(k32, "ActivateActCtx");
-    
+
     if (!CreateActCtx || !ActivateActCtx)
     {
         VS("Cannot find CreateActCtx/ActivateActCtx exports in kernel32.dll\n");
         return 0;
     }
-    
+
     ZeroMemory(&ctx, sizeof(ctx));
     ctx.cbSize = sizeof(ACTCTX);
     ctx.lpSource = manifestpath;
@@ -136,7 +136,7 @@ void ReleaseActContext(void)
         VS("Deactivating activation context\n");
         if (!DeactivateActCtx(0, actToken))
             VS("Error deactivating context!\n!");
-        
+
         VS("Releasing activation context\n");
         if (hCtx != INVALID_HANDLE_VALUE)
             ReleaseActCtx(hCtx);
@@ -159,7 +159,7 @@ int get_thisfile(char *thisfile, const char *programname)
 		FATALERROR("System error - unable to load!");
 		return -1;
 	}
-	
+
 	return 0;
 }
 
@@ -169,14 +169,14 @@ int get_thisfilew(LPWSTR thisfilew)
 		FATALERROR("System error - unable to load!");
 		return -1;
 	}
-	
+
 	return 0;
 }
 
 void get_homepath(char *homepath, const char *thisfile)
 {
 	char *p = NULL;
-	
+
 	strcpy(homepath, thisfile);
 	for (p = homepath + strlen(homepath); *p != '\\' && p >= homepath + 2; --p);
 	*++p = '\0';
@@ -221,17 +221,17 @@ int spawn(LPWSTR thisfile)
 	si.hStdError = (void*)_get_osfhandle(fileno(stderr));
 
 	VS("Creating child process\n");
-	if (CreateProcessW( 
-			thisfile, // pointer to name of executable module 
-			GetCommandLineW(),  // pointer to command line string 
-			&sa,  // pointer to process security attributes 
-			NULL,  // pointer to thread security attributes 
-			TRUE,  // handle inheritance flag 
-			0,  // creation flags 
-			NULL,  // pointer to new environment block 
-			NULL,  // pointer to current directory name 
-			&si,  // pointer to STARTUPINFO 
-			&pi  // pointer to PROCESS_INFORMATION 
+	if (CreateProcessW(
+			thisfile, // pointer to name of executable module
+			GetCommandLineW(),  // pointer to command line string
+			&sa,  // pointer to process security attributes
+			NULL,  // pointer to thread security attributes
+			TRUE,  // handle inheritance flag
+			0,  // creation flags
+			NULL,  // pointer to new environment block
+			NULL,  // pointer to current directory name
+			&si,  // pointer to STARTUPINFO
+			&pi  // pointer to PROCESS_INFORMATION
 			)) {
 		VS("Waiting for child process to finish...\n");
 		WaitForSingleObject(pi.hProcess, INFINITE);

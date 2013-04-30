@@ -32,7 +32,7 @@ class Tkhanoi:
 
         Label(text="Press <ESC> to exit").pack()
         tk.bind("<Escape>", lambda x: tk.destroy()) #quit())
-        
+
         self.canvas = c = Canvas(tk)
         c.pack()
         width, height = tk.getint(c['width']), tk.getint(c['height'])

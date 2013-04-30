@@ -111,7 +111,7 @@ diff.discard('%(modname)s')
 print list(diff)
 """ % {'modname': modname}
     module_imports = eval_statement(statement)
-    
+
 
     if not module_imports:
         logger.error('Cannot find imports for module %s' % modname)

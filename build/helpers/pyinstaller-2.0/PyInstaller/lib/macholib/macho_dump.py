@@ -26,7 +26,7 @@ def print_file(fp, path):
         else:
             sz = '32-bit'
 
-        print('    [%s endian=%r size=%r arch=%r]' % (header.__class__.__name__, 
+        print('    [%s endian=%r size=%r arch=%r]' % (header.__class__.__name__,
                 header.endian, sz, ARCH_MAP[(header.endian, sz)]), file=fp)
         for idx, name, other in header.walkRelocatables():
             if other not in seen:

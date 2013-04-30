@@ -58,7 +58,7 @@ def main(opts, args):
     if not os.path.isfile(name):
         print "%s is an invalid file name!" % name
         return 1
-        
+
     arch = getArchive(name)
     stack.append((name, arch))
     if debug or brief:
@@ -202,7 +202,7 @@ class ZlibArchive(archive.ZlibArchive):
         """
         self.lib.seek(self.start)       #default - magic is at start of file
         if self.lib.read(len(self.MAGIC)) != self.MAGIC:
-            raise RuntimeError("%s is not a valid %s archive file" 
+            raise RuntimeError("%s is not a valid %s archive file"
                                % (self.path, self.__class__.__name__))
         if self.lib.read(len(self.pymagic)) != self.pymagic:
             print "Warning: pyz is from a different Python version"

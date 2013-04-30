@@ -77,7 +77,7 @@
  * Python.h replacements.
  *
  * We do not want to include Python.h because we do no want to bind
- * to a specific version of Python. If we were to, eg., use the 
+ * to a specific version of Python. If we were to, eg., use the
  * Py_INCREF macro from Python.h, the compiled code would depend
  * on the specific layout in memory of PyObject, and thus change
  * when Python changes (or if your platform changes between 32bit

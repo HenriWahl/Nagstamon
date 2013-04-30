@@ -27,7 +27,7 @@ REQUIRED_FILES = BUILD_HELPERS + os.sep + 'required_files.txt'
 def execute_script_lines(script_lines, opt_dict):
     for line in script_lines:
         command = line % opt_dict
-        print 'Running: %s' % command 
+        print 'Running: %s' % command
         os.system(command)
 
 def get_opt_dict(options):
@@ -61,12 +61,12 @@ def winmain():
     parser.add_option('-o', '--omit-gtk', action='store_true', dest='omit_gtk', default=False,
                                     help="Omits copying of required gtk files to application directory")
     options, args = parser.parse_args()
-    
+
     if not options.file:
         options.file = '%s\\nagstamon.py' % options.target
-    
+
     opt_dict = get_opt_dict(options)
-    
+
     opt_dict.update({ 'resources_dir': '..\\Nagstamon\\Nagstamon\\resources' })
     opt_dict.update({ 'icon': opt_dict['resources_dir'] + '\\nagstamon.ico' })
     opt_dict.update({ 'dist': 'dist\\nagstamon' })
@@ -80,7 +80,7 @@ def winmain():
         'xcopy "%(resources_dir)s" dist\\nagstamon\\resources /y /e /i /h /EXCLUDE:helpers\excludelist.txt',
         'cd %(dist)s & del /q /f %(exclude_dlls)s & cd ..'
     ]
-    
+
     execute_script_lines(script_lines, opt_dict)
 
     if not options.omit_gtk:
@@ -100,7 +100,7 @@ def winmain():
         # copy gtk windows theme stuff to nagstamon directory
         os.system('xcopy %(gtk-windows-theme)s dist\\nagstamon /y /e /i /h /EXCLUDE:helpers\excludelist.txt' % opt_dict)
 
-    
+
         if os.path.exists(os.path.join(*dist_location)):
             iss_location = '%(target)s\\%(installer)s\\windows\\%(iss)s' % opt_dict
             if os.path.isfile(iss_location):
@@ -123,7 +123,7 @@ def winmain():
                 execute_script_lines(['"%(iscc)s" nagstamon.iss'], opt_dict)
             else:
                 print 'Missing "%s" file' % iss_location
-                
+
 
 def debmain():
     parser = OptionParser()
@@ -150,7 +150,7 @@ fakeroot debian/rules binary; fakeroot debian/rules clean; rm debian'],
 
 
 DISTS = {
-    'debian': debmain, 
+    'debian': debmain,
     'Ubuntu': debmain
 }
 

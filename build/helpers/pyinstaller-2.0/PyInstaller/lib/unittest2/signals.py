@@ -17,7 +17,7 @@ class _InterruptHandler(object):
             # if we aren't the installed handler, then delegate immediately
             # to the default handler
             self.default_handler(signum, frame)
-            
+
         if self.called:
             self.default_handler(signum, frame)
         self.called = True

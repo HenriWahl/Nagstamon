@@ -133,7 +133,7 @@
       </body>
     </html>
   </xsl:template>
-  
+
   <xsl:template mode='dl' match='/zi:interface/@uri'>
     <dt>Full name</dt><dd><p><a href='{.}'><xsl:value-of select="."/></a></p></dd>
   </xsl:template>

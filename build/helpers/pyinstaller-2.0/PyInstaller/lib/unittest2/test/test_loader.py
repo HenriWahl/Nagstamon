@@ -187,9 +187,9 @@ class Test_TestLoader(unittest2.TestCase):
         self.assertIsInstance(suite, unittest2.TestSuite)
         self.assertEqual(suite.countTestCases(), 1)
         test = list(suite)[0]
-        
+
         self.assertRaisesRegexp(TypeError, "some failure", test.m)
-        
+
 
     ################################################################
     ### /Tests for TestLoader.loadTestsFromModule()

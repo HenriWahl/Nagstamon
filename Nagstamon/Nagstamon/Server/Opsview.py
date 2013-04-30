@@ -6,7 +6,7 @@ import webbrowser
 import traceback
 import base64
 
-from Nagstamon import Actions 
+from Nagstamon import Actions
 from Nagstamon.Objects import *
 from Nagstamon.Server.Generic import GenericServer
 
@@ -16,34 +16,34 @@ class OpsviewService(GenericService):
     add Opsview specific service property to generic service class
     """
     service_object_id = ""
-    
 
-class OpsviewServer(GenericServer):   
-    """  
+
+class OpsviewServer(GenericServer):
+    """
        special treatment for Opsview XML based API
-    """   
+    """
     TYPE = 'Opsview'
-    
-    # Arguments available for submitting check results 
-    SUBMIT_CHECK_RESULT_ARGS = ["comment"]  
-    
+
+    # Arguments available for submitting check results
+    SUBMIT_CHECK_RESULT_ARGS = ["comment"]
+
     # URLs for browser shortlinks/buttons on popup window
     BROWSER_URLS= { "monitor": "$MONITOR$/status/service?filter=unhandled&includeunhandledhosts=1",\
                     "hosts": "$MONITOR$/status/host?hostgroupid=1&state=1",\
                     "services": "$MONITOR$/status/service?state=1&state=2&state=3",\
                     "history": "$MONITOR$/event"}
-    
-    
-    def init_HTTP(self):      
+
+
+    def init_HTTP(self):
         if self.HTTPheaders == {}:
             GenericServer.init_HTTP(self)
             # special Opsview treatment, transmit username and passwort for XML requests
             # http://docs.opsview.org/doku.php?id=opsview3.4:api
             # this is only necessary when accessing the API and expecting a XML answer
-            self.HTTPheaders["xml"] = {"Content-Type":"text/xml", "X-Username":self.get_username(), "X-Password":self.get_password()}          
-            
-        # get cookie to access Opsview web interface to access Opsviews Nagios part       
-        if len(self.Cookie) == 0:         
+            self.HTTPheaders["xml"] = {"Content-Type":"text/xml", "X-Username":self.get_username(), "X-Password":self.get_password()}
+
+        # get cookie to access Opsview web interface to access Opsviews Nagios part
+        if len(self.Cookie) == 0:
             # put all necessary data into url string
             logindata = urllib.urlencode({"login_username":self.get_username(),\
                              "login_password":self.get_password(),\
@@ -77,14 +77,14 @@ class OpsviewServer(GenericServer):
             result = self.FetchURL(self.monitor_cgi_url + "/cmd.cgi?" + urllib.urlencode({"cmd_typ":"55", "host":host}))
             html = result.result
             start_time = html.find(attrs={"name":"starttime"}).attrMap["value"]
-            end_time = html.find(attrs={"name":"endtime"}).attrMap["value"]            
+            end_time = html.find(attrs={"name":"endtime"}).attrMap["value"]
             # give values back as tuple
             return start_time, end_time
         except:
             self.Error(sys.exc_info())
-            return "n/a", "n/a"                 
-            
-            
+            return "n/a", "n/a"
+
+
     def _set_downtime(self, host, service, author, comment, fixed, start_time, end_time, hours, minutes):
         # get action url for opsview downtime form
         if service == "":
@@ -102,30 +102,30 @@ class OpsviewServer(GenericServer):
         # to build value for hidden form field old cgi_data is used
         cgi_data = { "from" : url + "?" + cgi_data, "comment": comment, "starttime": start_time, "endtime": end_time }
         self.FetchURL(self.monitor_url + action, giveback="raw", cgi_data=cgi_data)
-        
-        
+
+
     def _set_submit_check_result(self, host, service, state, comment, check_output, performance_data):
         """
         worker for submitting check result
-        """ 
+        """
         # decision about host or service - they have different URLs
         if service == "":
             # host - here Opsview uses the plain oldschool Nagios way of CGI
-            url = self.monitor_cgi_url + "/cmd.cgi"   
+            url = self.monitor_cgi_url + "/cmd.cgi"
             cgi_data = urllib.urlencode({"cmd_typ":"87", "cmd_mod":"2", "host":host,\
                                          "plugin_state":{"up":"0", "down":"1", "unreachable":"2"}[state], "plugin_output":check_output,\
-                                         "performance_data":performance_data, "btnSubmit":"Commit"})  
-            self.FetchURL(url, giveback="raw", cgi_data=cgi_data) 
-            
+                                         "performance_data":performance_data, "btnSubmit":"Commit"})
+            self.FetchURL(url, giveback="raw", cgi_data=cgi_data)
+
         if service != "":
-            # service @ host - here Opsview brews something own            
+            # service @ host - here Opsview brews something own
             url = self.monitor_url + "/state/service/" + self.hosts[host].services[service].service_object_id + "/change"
             cgi_data = urllib.urlencode({"state":{"ok":"0", "warning":"1", "critical":"2", "unknown":"3"}[state],\
-                                         "comment":comment, "submit":"Commit"})          
-            # running remote cgi command        
-            self.FetchURL(url, giveback="raw", cgi_data=cgi_data) 
-            
-        
+                                         "comment":comment, "submit":"Commit"})
+            # running remote cgi command
+            self.FetchURL(url, giveback="raw", cgi_data=cgi_data)
+
+
     def _get_status(self):
         """
         Get status from Opsview Server
@@ -138,8 +138,8 @@ class OpsviewServer(GenericServer):
             result = self.FetchURL(opsapiurl, giveback="xml")
             xmlobj, error = result.result, result.error
             if error != "": return Result(result=xmlobj, error=error)
-            
-            for host in xmlobj.data.findAll("list"):                
+
+            for host in xmlobj.data.findAll("list"):
                 # host
                 hostdict = dict(host._getAttrMap())
                 self.new_hosts[hostdict["name"]] = GenericHost()
@@ -157,10 +157,10 @@ class OpsviewServer(GenericServer):
                 if hostdict.has_key("acknowledged"):
                     self.new_hosts[hostdict["name"]].acknowledged = True
                 if hostdict.has_key("flapping"):
-                    self.new_hosts[hostdict["name"]].flapping = True                    
+                    self.new_hosts[hostdict["name"]].flapping = True
 
                 #services
-                for service in host.findAll("services"):   
+                for service in host.findAll("services"):
                     servicedict = dict(service._getAttrMap())
                     self.new_hosts[hostdict["name"]].services[servicedict["name"]] = OpsviewService()
                     self.new_hosts[hostdict["name"]].services[servicedict["name"]].host = str(hostdict["name"])
@@ -186,11 +186,11 @@ class OpsviewServer(GenericServer):
             self.isChecking = False
             result, error = self.Error(sys.exc_info())
             return Result(result=result, error=error)
-        
+
         #dummy return in case all is OK
         return Result()
 
-        
+
     def open_tree_view(self, host, service):
         webbrowser.open('%s/status/service?host=%s' % (self.monitor_url, host))
 
