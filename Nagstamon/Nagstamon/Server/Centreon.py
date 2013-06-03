@@ -173,6 +173,13 @@ class CentreonServer(GenericServer):
         gets a shiny new SID for XML HTTP requests to Centreon cutting it out via .partition() from raw HTML
         additionally get php session cookie
         """
+        # BROWSER_URLS using autologin
+        if str(self.use_autologin) == "True":
+            auth = "&autologin=1&useralias=" + self.username + "&token=" + self.autologin_key
+            self.BROWSER_URLS= { "monitor": "$MONITOR$/index.php?p=1" + auth,\
+                            "hosts": "$MONITOR$/index.php?p=20103&o=hpb" + auth,\
+                            "services": "$MONITOR$/index.php?p=20202&o=svcpb" + auth,\
+                            "history": "$MONITOR$/index.php?p=203" + auth}
         try:
             if str(self.use_autologin) == "True":
               raw = self.FetchURL(self.monitor_cgi_url + "/index.php?p=101&autologin=1&useralias=" + self.username + "&token=" + self.autologin_key, giveback="raw")
@@ -188,12 +195,6 @@ class CentreonServer(GenericServer):
             result, error = self.Error(sys.exc_info())
             return Result(result=result, error=error)
 
-        #if self.use_autologin == True:
-        #    auth = "&autologin=1&useralias=" + self.username + "&token=" + self.autologin_key
-        #    self.BROWSER_URLS= { "monitor": "$MONITOR$/index.php?p=1" + auth,\
-        #                    "hosts": "$MONITOR$/index.php?p=20103&o=hpb" + auth,\
-        #                    "services": "$MONITOR$/index.php?p=20202&o=svcpb" + auth,\
-        #                    "history": "$MONITOR$/index.php?p=203" + auth}
 
     def _get_ndo_url(self):
         """
