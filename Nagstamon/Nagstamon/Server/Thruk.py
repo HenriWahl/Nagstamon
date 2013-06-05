@@ -34,9 +34,7 @@ from Nagstamon.Objects import *
 
 class ThrukServer(GenericServer):
     """
-        Abstract server which serves as template for all other types
-        Default values are for Nagios servers
-        Here Thruk is derived
+        Thruk is derived from generic (Nagios) server
     """
     TYPE = 'Thruk'
 

@@ -363,9 +363,9 @@ class MultisiteServer(GenericServer):
                     #if service.has_key('svc_is_active'):
                     #    if service['svc_is_active'] == 'no' and not service['svc_check_command'].startswith('check_mk'):
                     #        self.new_hosts[n["host"]].services[new_service].passiveonly = True
-                    #if service.has_key('svc_flapping'):
-                    #    if service['svc_flapping'] == 'yes':
-                    #        self.new_hosts[n["host"]].services[new_service].flapping = True
+                    if service.has_key('svc_flapping'):
+                        if service['svc_flapping'] == 'yes':
+                            self.new_hosts[n["host"]].services[new_service].flapping = True
 
                     # hard/soft state for later filter evaluation
                     real_attempt, max_attempt = self.new_hosts[n["host"]].services[new_service].attempt.split("/")

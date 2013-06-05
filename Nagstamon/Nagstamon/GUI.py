@@ -2638,6 +2638,8 @@ class Settings(object):
         if str(self.conf.unconfigured) == "True":
             self.output.statusbar.StatusBar.hide()
             NewServer(servers=self.servers, output=self.output, settingsdialog=self, conf=self.conf)
+            # save settings
+            self.conf.SaveConfig(output=self.output)
 
         # prepare colors and preview them
         self.ColorsReset()
