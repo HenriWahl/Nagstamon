@@ -18,19 +18,8 @@
 # along with this program; if not, write to the Free Software
 # Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA  02110-1301, USA
 
-import urllib
-import urllib2
-import cookielib
+from Nagstamon.Server.Generic import GenericServer
 import sys
-import socket
-import copy
-import webbrowser
-import datetime
-import time
-import traceback
-import base64
-import re
-import gobject
 
 # to let Linux distributions use their own BeautifulSoup if existent try importing local BeautifulSoup first
 # see https://sourceforge.net/tracker/?func=detail&atid=1101370&aid=3302612&group_id=236865
@@ -38,6 +27,7 @@ try:
     from BeautifulSoup import BeautifulSoup, BeautifulStoneSoup
 except:
     from Nagstamon.BeautifulSoup import BeautifulSoup, BeautifulStoneSoup
+
 from Nagstamon.Actions import HostIsFilteredOutByRE, ServiceIsFilteredOutByRE, StatusInformationIsFilteredOutByRE, not_empty
 from Nagstamon.Objects import *
 
@@ -46,10 +36,9 @@ class ThrukServer(GenericServer):
     """
         Abstract server which serves as template for all other types
         Default values are for Nagios servers
+        Here Thruk is derived
     """
-
     TYPE = 'Thruk'
-
 
 
     def init_config(self):

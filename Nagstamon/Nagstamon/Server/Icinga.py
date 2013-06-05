@@ -35,6 +35,7 @@ except:
 from Nagstamon.Objects import *
 from Nagstamon.Actions import *
 
+
 class IcingaServer(GenericServer):
     """
         object of Incinga server
