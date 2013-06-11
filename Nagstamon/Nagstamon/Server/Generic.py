@@ -84,6 +84,8 @@ class GenericServer(object):
         self.monitor_cgi_url = ""
         self.username = ""
         self.password = ""
+        self.use_autologin = False
+        self.autologin_key = ""
         self.use_proxy = False
         self.use_proxy_from_os = False
         self.proxy_address = ""
@@ -188,7 +190,7 @@ class GenericServer(object):
 
     def get_password(self):
         """
-        return stringified username
+        return stringified password
         """
         return str(self.password)
 
@@ -716,8 +718,10 @@ class GenericServer(object):
 
         if status.error != "":
             # ask for password if authorization failed
+            print "error: " + status.error
             if "HTTP Error 401" in status.error or \
                "HTTP Error 403" in status.error or \
+               "HTTP Error 500" in status.error or \
                "Bad Session ID" in status.error:
                 if str(self.conf.servers[self.name].enabled) == "True":
                     while status.error != "":

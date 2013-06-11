@@ -33,6 +33,9 @@ class OpsviewServer(GenericServer):
                     "services": "$MONITOR$/status/service?state=1&state=2&state=3",\
                     "history": "$MONITOR$/event"}
 
+    # autologin is used only by Centreon
+    DISABLED_CONTROLS = ["input_checkbutton_use_autologin", "label_autologin_key", "input_entry_autologin_key"]
+
 
     def init_HTTP(self):
         if self.HTTPheaders == {}:
