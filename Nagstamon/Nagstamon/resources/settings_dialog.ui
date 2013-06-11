@@ -609,8 +609,8 @@
                   </packing>
                 </child>
                 <child>
-                  <object class="GtkRadioButton" id="input_radiobutton_maximized_window">
-                    <property name="label" translatable="yes">Maximized window</property>
+                  <object class="GtkRadioButton" id="input_radiobutton_fullscreen">
+                    <property name="label" translatable="yes">Fullscreen</property>
                     <property name="visible">True</property>
                     <property name="can_focus">True</property>
                     <property name="receives_default">False</property>

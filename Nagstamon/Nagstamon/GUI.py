@@ -133,10 +133,10 @@ class GUI(object):
 
         # set size of popup-window
         self.popwin.Resize()
-        if str(self.conf.maximized_window) == "True":
+        if str(self.conf.fullscreen) == "True":
             self.popwin.Window.show_all()
             self.popwin.Window.set_visible(True)
-            self.popwin.RefreshMaximizedWindow()
+            self.popwin.RefreshFullscreen()
 
         # flag which is set True if already notifying
         self.Notifying = False
@@ -456,7 +456,7 @@ class GUI(object):
                 except:
                     server.Error(sys.exc_info())
 
-        if self.popwin.Window.get_properties("visible")[0] == True and str(self.conf.maximized_window) == "False":
+        if self.popwin.Window.get_properties("visible")[0] == True and str(self.conf.fullscreen) == "False":
             self.popwin.Resize()
 
         # everything OK
@@ -1527,7 +1527,7 @@ class Popwin(object):
         # nice separator
         self.HBoxMenu.add(gtk.VSeparator())
 
-        if str(self.output.conf.maximized_window) == "True":
+        if str(self.output.conf.fullscreen) == "True":
             self.ButtonMenu = ButtonWithIcon(output=self.output, label="", icon="menu.png")
             self.HBoxMenu.add(self.ButtonMenu)
             #self.ButtonMenu.connect("clicked", self.MenuPopUp)
@@ -1657,7 +1657,7 @@ class Popwin(object):
         else:
             self.heightbuffer_external = 0
 
-        if str(self.output.conf.maximized_window) == "True":
+        if str(self.output.conf.fullscreen) == "True":
             # Popup menu instead statusbar menu  for maximized window view
             self.Menu = gtk.Menu()
             for i in ["Save position", "About", "Exit"]:
@@ -1686,7 +1686,7 @@ class Popwin(object):
             ###window = _Window(gtk.WINDOW_TOPLEVEL)
             window.set_title(self.output.name + " " + self.output.version)
 
-        if str(self.output.conf.maximized_window) == "False":
+        if str(self.output.conf.fullscreen) == "False":
             # for not letting statusbar throw a shadow onto popwin in any composition-window-manager this helps to
             # keep a more consistent look - copied from StatusBar... anyway, doesn't work... well, next attempt:
             # Windows will have an entry on taskbar when not using HINT_UTILITY
@@ -1747,12 +1747,10 @@ class Popwin(object):
         self.Resize()
 
 
-    def RefreshMaximizedWindow(self, widget=None, event=None):
+    def RefreshFullscreen(self, widget=None, event=None):
         """
-        refresh maximized window
+        refresh fullscreen window
         """
-
-        #if platform.system != "Windows":
         # get current monitor's settings
         # screeny0 might be important on more-than-one-monitor-setups where it will not be 0
         x0, y0 = self.Window.get_position()
@@ -1778,18 +1776,13 @@ class Popwin(object):
             vboxheight += self.heightbuffer_internal
 
         self.ScrolledWindow.set_size_request(-1, vboxheight)
-
         self.Window.set_size_request(self.buttonswidth, -1)
-
         self.Window.show_all()
         self.Window.set_visible(True)
 
         # shrink window
         w, h = self.Window.get_size()
         self.Window.resize(w, 1)
-
-        # to be saved with configuration
-        self.output.conf.maximized_window_x0, self.output.conf.maximized_window_y0 = self.Window.get_position()
 
 
     def LeavePopWin(self, widget=None, event=None):
@@ -1819,7 +1812,7 @@ class Popwin(object):
             the popwin to prevent it closing when not necessary/desired
         """
 
-        if str(self.output.conf.maximized_window) == "False":
+        if str(self.output.conf.fullscreen) == "False":
             # catch Exception
             try:
                 # access to rootwindow to get the pointers coordinates
@@ -1848,7 +1841,7 @@ class Popwin(object):
         """
             hide popwin
         """
-        if str(self.output.conf.maximized_window) == "False":
+        if str(self.output.conf.fullscreen) == "False":
             # unregister popwin - seems to be called even if popwin is not open so check before unregistering
             if self.output.GUILock.has_key("Popwin"):
                 # use gobject.idle_add() to be thread safe
@@ -1996,7 +1989,7 @@ class Popwin(object):
         else:
             self.popwinx0 = statusbarx0 + (screenx0 + statusbarwidth) / 2 - (self.popwinwidth + screenx0) / 2
 
-        if str(self.output.conf.maximized_window) == "False":
+        if str(self.output.conf.fullscreen) == "False":
             # set size request of popwin
             self.Window.set_size_request(self.popwinwidth, self.popwinheight)
 
@@ -2611,7 +2604,7 @@ class Settings(object):
             self.builder.get_object("input_radiobutton_icon_in_systray").hide()
             self.builder.get_object("hbox_systray_popup_offset").hide()
             self.builder.get_object("input_radiobutton_statusbar_floating").hide()
-            self.builder.get_object("input_radiobutton_maximized_window").hide()
+            self.builder.get_object("input_radiobutton_fullscreen").hide()
             self.builder.get_object("label_appearance").hide()
 
         # this should not be necessary, but for some reason the number of hours is 10 in unitialized state... :-(
