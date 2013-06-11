@@ -111,7 +111,7 @@ socket.setdefaulttimeout(30)
 
 # create servers
 for server in conf.servers.values():
-    if server.save_password == "False" and server.enabled == "True":
+    if ( server.use_autologin == "False" and server.save_password == "False" and server.enabled == "True" ) or ( server.enabled == "True" and server.use_autologin == "True" and server.autologin_key == "" ):
         # the auth dialog will fill the server's username and password with the given values
         if platform.system() == "Darwin":
             # MacOSX gets instable with default theme "Clearlooks" so use custom one with theme "Murrine"

@@ -44,6 +44,8 @@ class IcingaServer(GenericServer):
     # flag to handle JSON or HTML correctly - checked by get_server_version()
     json = None
 
+    # autologin is used only by Centreon
+    DISABLED_CONTROLS = ["input_checkbutton_use_autologin", "label_autologin_key", "input_entry_autologin_key"]
 
     def init_HTTP(self):
         """

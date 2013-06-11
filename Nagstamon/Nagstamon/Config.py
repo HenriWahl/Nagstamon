@@ -238,6 +238,7 @@ class Config(object):
                             self.servers[server_name].password = ""
                         else:
                             self.servers[server_name].password = self.DeObfuscate(self.servers[server_name].password)
+                        self.servers[server_name].autologin_key  = self.DeObfuscate(self.servers[server_name].autologin_key)
                         self.servers[server_name].proxy_username = self.DeObfuscate(self.servers[server_name].proxy_username)
                         self.servers[server_name].proxy_password = self.DeObfuscate(self.servers[server_name].proxy_password)
                     except:
@@ -294,6 +295,7 @@ class Config(object):
                     servers[server].password = ""
                 else:
                     servers[server].password = self.DeObfuscate(servers[server].password)
+                servers[server].autologin_key  = self.DeObfuscate(servers[server].autologin_key)
                 servers[server].proxy_username = self.DeObfuscate(servers[server].proxy_username)
                 servers[server].proxy_password = self.DeObfuscate(servers[server].proxy_password)
         except:
@@ -436,7 +438,7 @@ class Config(object):
                 for option in self.__dict__[settingsdir][s].__dict__:
                     # obfuscate certain entries in config file - special arrangement for servers
                     if settingsdir == "servers":
-                        if option == "username" or option == "password" or option == "proxy_username" or option == "proxy_password":
+                        if option == "username" or option == "password" or option == "proxy_username" or option == "proxy_password" or option == "autologin_key":
                             value = self.Obfuscate(self.__dict__[settingsdir][s].__dict__[option])
                             if option == "password" \
                                and self.__dict__[settingsdir][s].save_password == "False":
@@ -682,6 +684,8 @@ class Server(object):
         self.proxy_address = ""
         self.proxy_username = ""
         self.proxy_password = ""
+        self.use_autologin = False
+        self.autologin_key = ""
 
 
 class Action(object):

@@ -102,6 +102,8 @@ class GenericServer(object):
         self.monitor_cgi_url = ""
         self.username = ""
         self.password = ""
+        self.use_autologin = False
+        self.autologin_key = ""
         self.use_proxy = False
         self.use_proxy_from_os = False
         self.proxy_address = ""
@@ -176,11 +178,11 @@ class GenericServer(object):
         #hostserviceprops = 0
 
         # services (unknown, warning or critical?) as dictionary, sorted by hard and soft state type
-        self.cgiurl_services = {"hard": self.monitor_cgi_url + "/status.cgi?host=all&servicestatustypes=253&serviceprops=262144",\
-                                 "soft": self.monitor_cgi_url + "/status.cgi?host=all&servicestatustypes=253&serviceprops=524288"}
+        self.cgiurl_services = {"hard": self.monitor_cgi_url + "/status.cgi?host=all&servicestatustypes=253&serviceprops=262144&limit=0",\
+                                 "soft": self.monitor_cgi_url + "/status.cgi?host=all&servicestatustypes=253&serviceprops=524288&limit=0"}
         # hosts (up or down or unreachable)
-        self.cgiurl_hosts = { "hard": self.monitor_cgi_url + "/status.cgi?hostgroup=all&style=hostdetail&hoststatustypes=12&hostprops=262144",\
-                              "soft": self.monitor_cgi_url + "/status.cgi?hostgroup=all&style=hostdetail&hoststatustypes=12&hostprops=524288"}
+        self.cgiurl_hosts = { "hard": self.monitor_cgi_url + "/status.cgi?hostgroup=all&style=hostdetail&hoststatustypes=12&hostprops=262144&limit=0",\
+                              "soft": self.monitor_cgi_url + "/status.cgi?hostgroup=all&style=hostdetail&hoststatustypes=12&hostprops=524288&limit=0"}
 
 
     def reset_HTTP(self):
@@ -206,7 +208,7 @@ class GenericServer(object):
 
     def get_password(self):
         """
-        return stringified username
+        return stringified password
         """
         return str(self.password)
 
@@ -734,8 +736,10 @@ class GenericServer(object):
 
         if status.error != "":
             # ask for password if authorization failed
+            print "error: " + status.error
             if "HTTP Error 401" in status.error or \
                "HTTP Error 403" in status.error or \
+               "HTTP Error 500" in status.error or \
                "Bad Session ID" in status.error:
                 if str(self.conf.servers[self.name].enabled) == "True":
                     while status.error != "":

@@ -38,6 +38,118 @@ class ThrukServer(GenericServer):
     """
     TYPE = 'Thruk'
 
+<<<<<<< HEAD
+=======
+    # GUI sortable columns stuff
+    DEFAULT_SORT_COLUMN_ID = 2
+    # lost any memory what this COLOR_COLUMN_ID is used for...
+    #COLOR_COLUMN_ID = 2
+    HOST_COLUMN_ID = 0
+    SERVICE_COLUMN_ID = 1
+    # used for $STATUS$ variable for custom actions
+    STATUS_INFO_COLUMN_ID = 6
+
+    COLUMNS = [
+        HostColumn,
+        ServiceColumn,
+        StatusColumn,
+        LastCheckColumn,
+        DurationColumn,
+        AttemptColumn,
+        StatusInformationColumn
+    ]
+
+    # autologin is used only by Centreon
+    DISABLED_CONTROLS = ["input_checkbutton_use_autologin", "label_autologin_key", "input_entry_autologin_key"]
+
+    # dictionary to translate status bitmaps on webinterface into status flags
+    # this are defaults from Nagios
+    # "disabled.gif" is in Nagios for hosts the same as "passiveonly.gif" for services
+    STATUS_MAPPING = { "ack.gif" : "acknowledged",\
+                       "passiveonly.gif" : "passiveonly",\
+                       "disabled.gif" : "passiveonly",\
+                       "ndisabled.gif" : "notifications_disabled",\
+                       "downtime.gif" : "scheduled_downtime",\
+                       "flapping.gif" : "flapping"}
+
+    # Entries for monitor default actions in context menu
+    MENU_ACTIONS = ["Monitor", "Recheck", "Acknowledge", "Submit check result", "Downtime"]
+
+    # Arguments available for submitting check results
+    SUBMIT_CHECK_RESULT_ARGS = ["check_output", "performance_data"]
+
+    # URLs for browser shortlinks/buttons on popup window
+    BROWSER_URLS = { "monitor": "$MONITOR$",\
+                    "hosts": "$MONITOR-CGI$/status.cgi?hostgroup=all&style=hostdetail&hoststatustypes=12",\
+                    "services": "$MONITOR-CGI$/status.cgi??dfl_s0_value_sel=5&dfl_s0_servicestatustypes=29&dfl_s0_op=%3D&style=detail&dfl_s0_type=host&dfl_s0_serviceprops=0&dfl_s0_servicestatustype=4&dfl_s0_servicestatustype=8&dfl_s0_servicestatustype=16&dfl_s0_servicestatustype=1&hidetop=&dfl_s0_hoststatustypes=15&dfl_s0_val_pre=&hidesearch=2&dfl_s0_value=all&dfl_s0_hostprops=0&nav=&page=1&entries=all",\
+                    "history": "$MONITOR-CGI$/history.cgi?host=all&page=1&entries=all"}
+
+
+    def __init__(self, **kwds):
+        # add all keywords to object, every mode searchs inside for its favorite arguments/keywords
+        for k in kwds: self.__dict__[k] = kwds[k]
+
+        self.type = ""
+        self.monitor_url = ""
+        self.monitor_cgi_url = ""
+        self.username = ""
+        self.password = ""
+        self.use_proxy = False
+        self.use_proxy_from_os = False
+        self.proxy_address = ""
+        self.proxy_username = ""
+        self.proxy_password = ""
+        self.hosts = dict()
+        self.new_hosts = dict()
+        self.thread = None
+        self.isChecking = False
+        self.CheckingForNewVersion = False
+        self.WorstStatus = "UP"
+        self.States = ["UP", "UNKNOWN", "WARNING", "CRITICAL", "UNREACHABLE", "DOWN"]
+        self.nagitems_filtered_list = list()
+        self.nagitems_filtered = {"services":{"CRITICAL":[], "WARNING":[], "UNKNOWN":[]}, "hosts":{"DOWN":[], "UNREACHABLE":[]}}
+        self.downs = 0
+        self.unreachables = 0
+        self.unknowns = 0
+        self.criticals = 0
+        self.warnings = 0
+        self.status = ""
+        self.status_description = ""
+        # needed for looping server thread
+        self.count = 0
+        # needed for RecheckAll - save start_time once for not having to get it for every recheck
+        self.start_time = None
+        self.Cookie = cookielib.CookieJar()
+        # use server-owned attributes instead of redefining them with every request
+        self.passman = None
+        self.basic_handler = None
+        self.digest_handler = None
+        self.proxy_handler = None
+        self.proxy_auth_handler = None
+        self.urlopener = None
+        # headers for HTTP requests, might be needed for authorization on Nagios/Icinga Hosts
+        self.HTTPheaders = dict()
+        # attempt to use only one bound list of TreeViewColumns instead of ever increasing one
+        self.TreeView = None
+        self.TreeViewColumns = list()
+        self.ListStore = None
+        self.ListStoreColumns = list()
+        # flag which decides if authentication has to be renewed
+        self.refresh_authentication = False
+        # to handle Icinga versions this information is necessary, might be of future use for others too
+        self.version = ""
+
+
+    def init_HTTP(self):
+        """
+        partly not constantly working Basic Authorization requires extra Autorization headers,
+        different between various server types
+        """
+        if self.HTTPheaders == {}:
+            for giveback in ["raw", "obj"]:
+                self.HTTPheaders[giveback] = {"Authorization": "Basic " + base64.b64encode(self.get_username() + ":" + self.get_password())}
+
+>>>>>>> 2034ac0a3f656c54a0f600d9ee5ae612fb134c7a
 
     def init_config(self):
         """

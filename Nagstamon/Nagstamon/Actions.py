@@ -715,6 +715,8 @@ def CreateServer(server=None, conf=None, debug_queue=None, resources=None):
     nagiosserver.Resources = resources
     nagiosserver.username = server.username
     nagiosserver.password = server.password
+    nagiosserver.use_autologin = server.use_autologin
+    nagiosserver.autologin_key = server.autologin_key
     nagiosserver.use_proxy = server.use_proxy
     nagiosserver.use_proxy_from_os = server.use_proxy_from_os
     nagiosserver.proxy_address = server.proxy_address
@@ -722,7 +724,8 @@ def CreateServer(server=None, conf=None, debug_queue=None, resources=None):
     nagiosserver.proxy_password = server.proxy_password
 
     # if password is not to be saved ask for it at startup
-    if str(server.save_password) == False: nagiosserver.refresh_authentication = True
+    if ( server.enabled == "True" and server.save_password == "False" and server.use_autologin == "False" ):
+        nagiosserver.refresh_authentication = True
 
     # access to thread-safe debug queue
     nagiosserver.debug_queue = debug_queue

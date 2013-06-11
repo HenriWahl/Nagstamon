@@ -305,7 +305,7 @@ class GUI(object):
                     self.popwin.ServerVBoxes[server.get_name()].set_no_show_all(False)
 
                     # if needed show auth line:
-                    if server.refresh_authentication == True:
+                    if server.refresh_authentication == True and server.use_autologin == False:
                         self.popwin.ServerVBoxes[server.get_name()].HBoxAuth.set_no_show_all(False)
                         self.popwin.ServerVBoxes[server.get_name()].HBoxAuth.show_all()
                         if self.popwin.ServerVBoxes[server.get_name()].AuthEntryUsername.get_text() == "":
@@ -3014,7 +3014,7 @@ class Settings(object):
 
 class GenericServer(object):
     """
-        settings of one particuliar new Nagios server
+        settings of one particular new Nagios server
     """
     def __init__(self, **kwds):
         # add all keywords to object
@@ -3031,6 +3031,7 @@ class GenericServer(object):
                           "button_cancel_clicked" : self.Cancel,
                           "settings_dialog_close" : self.Cancel,
                           "toggle_save_password" : self.ToggleSavePassword,
+                          "toggle_autologin_key" : self.ToggleAutoLoginKey,
                           "toggle_proxy" : self.ToggleProxy
                           }
         self.builder.connect_signals(handlers_dict)
@@ -3057,6 +3058,8 @@ class GenericServer(object):
         self.ToggleSavePassword()
         # show settings options for proxy - or not
         self.ToggleProxy()
+	# disable autologin by default
+	self.ToggleAutoLoginKey()
 
 
     def on_server_type_change(self, combobox):
@@ -3072,19 +3075,18 @@ class GenericServer(object):
             return
         server = Actions.get_registered_servers()[model.get_value(active, 0)]
 
-        # if there is anything to hide hide it
+        # make everything visible
+        for item_id in ["label_monitor_cgi_url", "input_entry_monitor_cgi_url", "input_checkbutton_use_autologin", "label_autologin_key", "input_entry_autologin_key"]:
+            item = self.builder.get_object(item_id)
+            if item is not None:
+                item.set_visible(True)
+
+        # so we can hide what may be hidden
         if len(server.DISABLED_CONTROLS) != 0:
             for item_id in server.DISABLED_CONTROLS:
                 item = self.builder.get_object(item_id)
                 if item is not None:
                     item.set_visible(False)
-        else:
-            # in case there is nothing to be hidden enable all possibly hidden items
-            for item_id in ["label_monitor_cgi_url", "input_entry_monitor_cgi_url"]:
-                item = self.builder.get_object(item_id)
-                if item is not None:
-                    item.set_visible(True)
-
 
     def OK(self, widget):
         """
@@ -3175,6 +3177,28 @@ class GenericServer(object):
         if not is_active:
             item.set_text("")
 
+    def ToggleAutoLoginKey(self, widget=None):
+        """
+            Disable autologin key input box
+        """
+        use_autologin = self.builder.get_object("input_checkbutton_use_autologin")
+        is_active = use_autologin.get_active()
+        item = self.builder.get_object("label_autologin_key")
+        item.set_sensitive( is_active )
+        item = self.builder.get_object("input_entry_autologin_key")
+        item.set_sensitive( is_active )
+        if not is_active:
+            item.set_text("")
+
+	#disable save password
+        item = self.builder.get_object("input_checkbutton_save_password")
+        item.set_active( False )
+        item.set_sensitive( not is_active )
+        item = self.builder.get_object("label_password")
+        item.set_sensitive( not is_active )
+        item = self.builder.get_object("input_entry_password")
+        item.set_sensitive( not is_active )
+        item.set_text("")
 
     def ToggleProxy(self, widget=None):
         """
@@ -3666,6 +3690,7 @@ class AuthenticationDialog:
         # assign handlers
         handlers_dict = { "button_ok_clicked" : self.OK,
                           "button_exit_clicked" : self.Exit,
+                          "toggle_autologin_key_auth" : self.ToggleAutoLoginKeyAuth,
                           "button_disable_clicked" : self.Disable
                           }
 
@@ -3674,11 +3699,13 @@ class AuthenticationDialog:
         self.label_monitor = self.builder.get_object("label_monitor")
         self.entry_username = self.builder.get_object("input_entry_username")
         self.entry_password = self.builder.get_object("input_entry_password")
+        self.entry_autologin_key = self.builder.get_object("input_entry_autologin_key")
 
         self.dialog.set_title("Nagstamon authentication for " + self.server.name)
         self.label_monitor.set_text("Please give the correct credentials for "+ self.server.name + ":")
         self.entry_username.set_text(str(self.server.username))
         self.entry_password.set_text(str(self.server.password))
+        self.entry_autologin_key.set_text(str(self.server.autologin_key))
 
         # omitting .show_all() leads to crash under Linux - why?
         self.dialog.show_all()
@@ -3689,6 +3716,7 @@ class AuthenticationDialog:
     def OK(self, widget):
         self.server.username = self.entry_username.get_text()
         self.server.password = self.entry_password.get_text()
+        self.server.autologin_key = self.entry_autologin_key.get_text()
         toggle_save_password = self.builder.get_object("input_checkbutton_save_password")
 
         if toggle_save_password.get_active() == True:
@@ -3696,6 +3724,16 @@ class AuthenticationDialog:
             self.conf.servers[self.server.name].username = self.server.username
             self.conf.servers[self.server.name].password = self.server.password
             self.conf.servers[self.server.name].save_password = True
+            self.conf.SaveConfig(output=self.output)
+
+        toggle_use_autologin = self.builder.get_object("input_checkbutton_use_autologin")
+        if toggle_use_autologin.get_active() == True:
+            # store autologin information in config
+            self.conf.servers[self.server.name].username = self.server.username
+            self.conf.servers[self.server.name].password = ""
+            self.conf.servers[self.server.name].save_password = False
+            self.conf.servers[self.server.name].autologin_key = self.server.autologin_key
+            self.conf.servers[self.server.name].use_autologin = True
             self.conf.SaveConfig(output=self.output)
 
 
@@ -3707,6 +3745,30 @@ class AuthenticationDialog:
     def Exit(self, widget):
         gtk.main_quit()
         sys.exit()
+
+
+    def ToggleAutoLoginKeyAuth(self, widget=None):
+        """
+            Disable autologin key input box
+        """
+        use_autologin = self.builder.get_object("input_checkbutton_use_autologin")
+        is_active = use_autologin.get_active()
+        item = self.builder.get_object("label_autologin_key")
+        item.set_sensitive( is_active )
+        item = self.builder.get_object("input_entry_autologin_key")
+        item.set_sensitive( is_active )
+        if not is_active:
+            item.set_text("")
+
+	#disable save password
+        item = self.builder.get_object("input_checkbutton_save_password")
+        item.set_active( False )
+        item.set_sensitive( not is_active )
+        item = self.builder.get_object("label_password")
+        item.set_sensitive( not is_active )
+        item = self.builder.get_object("input_entry_password")
+        item.set_sensitive( not is_active )
+        item.set_text("")
 
 
 class DummyStatusIcon(object):
