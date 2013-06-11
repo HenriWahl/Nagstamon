@@ -1465,33 +1465,6 @@ class StatusBar(object):
                 self.StatusBar.window.raise_()
 
 
-class _Window(gtk.Window):
-    """
-    derived from gtk.Window for modifying .destroy() method, because otherwise Nagstamon stopped running with
-    every display mode change
-    """
-    # when OKing settings destroy() gets called twice and the first time without "settings" mode set
-    # so it Nagstamon soon gets gtk.main_quit()
-    # destroycount helps against premature exits.
-    destroycount = 0
-
-
-    def destroy(self, widget=None, mode="", conf=None):
-        if mode != "settings" and str(conf.maximized_window) == "True":
-            if platform.system() == "Windows" and self.destroycount > 0:
-                self.destroycount = 0
-                conf.SaveConfig()
-                gtk.main_quit()
-            elif platform.system() != "Windows" and self.destroycount > 0:
-                self.destroycount = 0
-                conf.SaveConfig()
-                gtk.main_quit()
-        time.sleep(1)
-        self.destroycount += 1
-
-        gtk.Window.destroy(self)
-
-
 class Popwin(object):
     """
     Popwin object
@@ -1706,11 +1679,11 @@ class Popwin(object):
 
         # Initialize type popup
         if platform.system() == "Darwin":
-            #window = gtk.Window(gtk.WINDOW_POPUP)
-            window = _Window(gtk.WINDOW_POPUP)
+            window = gtk.Window(gtk.WINDOW_POPUP)
+            ###window = _Window(gtk.WINDOW_POPUP)
         else:
-            #window = gtk.Window(gtk.WINDOW_TOPLEVEL)
-            window = _Window(gtk.WINDOW_TOPLEVEL)
+            window = gtk.Window(gtk.WINDOW_TOPLEVEL)
+            ###window = _Window(gtk.WINDOW_TOPLEVEL)
             window.set_title(self.output.name + " " + self.output.version)
 
         if str(self.output.conf.maximized_window) == "False":
@@ -1734,14 +1707,7 @@ class Popwin(object):
             window.move(x0, y0)
             window.connect("leave-notify-event", self.LeavePopWin)
         else:
-            window.move(int(self.output.conf.maximized_window_x0), int(self.output.conf.maximized_window_y0))
-            # fullscreen does not work at least with GNOME, Windows is OK
-            if platform.system() != "Windows":
-                window.maximize()
-            else:
-                window.fullscreen()
-            # give conf to custom destroy method so it can find out if maximized window mode is enabled
-            window.connect("destroy", window.destroy, "close", self.output.conf)
+            window.fullscreen()
             window.show_all()
             window.set_visible(True)
 
@@ -2784,8 +2750,7 @@ class Settings(object):
             # create output visuals again because they might have changed (e.g. systray/free floating status bar)
             self.output.statusbar.StatusBar.destroy()
             self.output.statusbar.SysTray.set_visible(False)
-            # mode settings tell custom destroy method that no general stop is wanted, just destroy window
-            self.output.popwin.Window.destroy(mode="settings", conf=self.output.conf)
+            self.output.popwin.Window.destroy()
             # re-initialize output with new settings
             self.output.__init__()
 
