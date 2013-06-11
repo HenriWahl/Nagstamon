@@ -75,11 +75,18 @@ class CentreonServer(GenericServer):
 
 
     def open_tree_view(self, host, service=""):
-        # must be a host if service is empty...
-        if service == "":
-            webbrowser.open(self.monitor_cgi_url + "/main.php?" + urllib.urlencode({"p":201,"o":"hd", "host_name":host}))
+        if str(self.use_autologin) == "True":
+            auth = "&autologin=1&useralias=" + self.username + "&token=" + self.autologin_key
+            if service == "":
+                webbrowser.open(self.monitor_cgi_url + "/index.php?" + urllib.urlencode({"p":201,"o":"hd", "host_name":host}) + auth )
+            else:
+                webbrowser.open(self.monitor_cgi_url + "/index.php?" + urllib.urlencode({"p":202, "o":"svcd",  "host_name":host, "service_description":service}) + auth )
         else:
-            webbrowser.open(self.monitor_cgi_url + "/main.php?" + urllib.urlencode({"p":202, "o":"svcd",  "host_name":host, "service_description":service}))
+            # must be a host if service is empty...
+            if service == "":
+                webbrowser.open(self.monitor_cgi_url + "/main.php?" + urllib.urlencode({"p":201,"o":"hd", "host_name":host}))
+            else:
+                webbrowser.open(self.monitor_cgi_url + "/main.php?" + urllib.urlencode({"p":202, "o":"svcd",  "host_name":host, "service_description":service}))
 
 
     def get_start_end(self, host):
@@ -166,10 +173,21 @@ class CentreonServer(GenericServer):
         gets a shiny new SID for XML HTTP requests to Centreon cutting it out via .partition() from raw HTML
         additionally get php session cookie
         """
-        login_data = urllib.urlencode({"useralias" : self.username, "password" : self.password, "submit" : "Login"})
-
+        # BROWSER_URLS using autologin
+        if str(self.use_autologin) == "True":
+            auth = "&autologin=1&useralias=" + self.username + "&token=" + self.autologin_key
+            self.BROWSER_URLS= { "monitor": "$MONITOR$/index.php?p=1" + auth,\
+                            "hosts": "$MONITOR$/index.php?p=20103&o=hpb" + auth,\
+                            "services": "$MONITOR$/index.php?p=20202&o=svcpb" + auth,\
+                            "history": "$MONITOR$/index.php?p=203" + auth}
         try:
-            raw = self.FetchURL(self.monitor_cgi_url + "/index.php",cgi_data=login_data, giveback="raw")
+            if str(self.use_autologin) == "True":
+              raw = self.FetchURL(self.monitor_cgi_url + "/index.php?p=101&autologin=1&useralias=" + self.username + "&token=" + self.autologin_key, giveback="raw")
+              #p=101&autologin=1&useralias=foscarini&token=8sEvwyEcMt
+            else:
+              login_data = urllib.urlencode({"useralias" : self.username, "password" : self.password, "submit" : "Login"})
+              raw = self.FetchURL(self.monitor_cgi_url + "/index.php",cgi_data=login_data, giveback="raw")
+
             del raw
             sid = str(self.Cookie._cookies.values()[0].values()[0]["PHPSESSID"].value)
             return Result(result=sid)
@@ -183,7 +201,9 @@ class CentreonServer(GenericServer):
         find out if Centreon is that new so it already supports ..../xml/ndo/.... URLs
         """
         ndo_test_url = self.monitor_cgi_url + "/include/monitoring/status/Hosts/xml/ndo/hostXML.php?" + urllib.urlencode({"num":0, "limit":999, "o":"hpb", "sort_type":"status", "sid":self.SID})
-        if "HTTP Error 404" in self.FetchURL(ndo_test_url).error:
+
+        result = self.FetchURL(ndo_test_url)
+        if "HTTP Error 404" in result.error:
             self.XML_NDO = "xml"
             if str(self.conf.debug_mode) == "True":
                 self.Debug(server=self.get_name(), debug = "Centreon Monitor does not use .../xml/ndo/... URLs.")

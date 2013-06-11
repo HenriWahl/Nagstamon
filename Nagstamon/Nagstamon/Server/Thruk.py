@@ -50,7 +50,8 @@ class ThrukServer(object):
         StatusInformationColumn
     ]
 
-    DISABLED_CONTROLS = []
+    # autologin is used only by Centreon
+    DISABLED_CONTROLS = ["input_checkbutton_use_autologin", "label_autologin_key", "input_entry_autologin_key"]
 
     # dictionary to translate status bitmaps on webinterface into status flags
     # this are defaults from Nagios
