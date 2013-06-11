@@ -48,7 +48,8 @@ class CentreonServer(GenericServer):
 
     # newer Centreon versions (2.3+?) have different URL paths with a "/ndo" fragment
     # will be checked by _get_ndo_url() but default is /xml/ndo/
-    XML_NDO = "xml/ndo"
+    # new in Centreon 2.4 seems to be a /xml/broker/ URL so this will be tried first
+    XML_NDO = "xml/broker"
 
     # HARD/SOFT state mapping
     HARD_SOFT = {"(H)": "hard", "(S)": "soft"}
@@ -217,13 +218,20 @@ class CentreonServer(GenericServer):
         """
         find out if Centreon is that new so it already supports ..../xml/ndo/.... URLs
         """
-        ndo_test_url = self.monitor_cgi_url + "/include/monitoring/status/Hosts/xml/ndo/hostXML.php?" + urllib.urlencode({"num":0, "limit":999, "o":"hpb", "sort_type":"status", "sid":self.SID})
-
+        # first test broker URL
+        ndo_test_url = self.monitor_cgi_url + "/include/monitoring/status/Hosts/xml/broker/hostXML.php?" + urllib.urlencode({"num":0, "limit":999, "o":"hpb", "sort_type":"status", "sid":self.SID})
         result = self.FetchURL(ndo_test_url)
         if "HTTP Error 404" in result.error:
-            self.XML_NDO = "xml"
             if str(self.conf.debug_mode) == "True":
-                self.Debug(server=self.get_name(), debug = "Centreon Monitor does not use .../xml/ndo/... URLs.")
+                self.Debug(server=self.get_name(), debug = "Centreon Monitor does not use .../xml/broker/... URLs.")
+            # second test ndo URL
+            self.XML_NDO = "xml/ndo"
+            ndo_test_url = self.monitor_cgi_url + "/include/monitoring/status/Hosts/xml/ndo/hostXML.php?" + urllib.urlencode({"num":0, "limit":999, "o":"hpb", "sort_type":"status", "sid":self.SID})
+            result = self.FetchURL(ndo_test_url)
+            if "HTTP Error 404" in result.error:
+                self.XML_NDO = "xml"
+                if str(self.conf.debug_mode) == "True":
+                    self.Debug(server=self.get_name(), debug = "Centreon Monitor does not use .../xml/ndo/... URLs.")
 
 
     def _get_host_id(self, host):

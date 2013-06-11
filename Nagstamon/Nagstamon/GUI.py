@@ -361,9 +361,6 @@ class GUI(object):
                         for status, item_list in status_dict.iteritems():
                             for item in list(item_list):
                                 line = list(server.get_columns(item))
-
-                                #print line
-
                                 line.append(self.TAB_FG_COLORS[item.status])
                                 line.append(self.TAB_BG_COLORS[item.status])
 
@@ -1480,21 +1477,16 @@ class _Window(gtk.Window):
 
 
     def destroy(self, widget=None, mode="", conf=None):
-        print "\n", mode, str(conf.maximized_window), widget, self.destroycount, "\n"
-
         if mode != "settings" and str(conf.maximized_window) == "True":
             if platform.system() == "Windows" and self.destroycount > 0:
                 self.destroycount = 0
                 conf.SaveConfig()
                 gtk.main_quit()
-                print "windows"
             elif platform.system() != "Windows" and self.destroycount > 0:
                 self.destroycount = 0
-                print "nonwindows"
                 conf.SaveConfig()
                 gtk.main_quit()
         time.sleep(1)
-        print self.destroycount
         self.destroycount += 1
 
         gtk.Window.destroy(self)
