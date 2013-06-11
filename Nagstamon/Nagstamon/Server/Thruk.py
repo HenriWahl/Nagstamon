@@ -20,6 +20,8 @@
 
 from Nagstamon.Server.Generic import GenericServer
 import sys
+import cookielib
+import base64
 
 # to let Linux distributions use their own BeautifulSoup if existent try importing local BeautifulSoup first
 # see https://sourceforge.net/tracker/?func=detail&atid=1101370&aid=3302612&group_id=236865
@@ -38,8 +40,6 @@ class ThrukServer(GenericServer):
     """
     TYPE = 'Thruk'
 
-<<<<<<< HEAD
-=======
     # GUI sortable columns stuff
     DEFAULT_SORT_COLUMN_ID = 2
     # lost any memory what this COLOR_COLUMN_ID is used for...
@@ -149,7 +149,6 @@ class ThrukServer(GenericServer):
             for giveback in ["raw", "obj"]:
                 self.HTTPheaders[giveback] = {"Authorization": "Basic " + base64.b64encode(self.get_username() + ":" + self.get_password())}
 
->>>>>>> 2034ac0a3f656c54a0f600d9ee5ae612fb134c7a
 
     def init_config(self):
         """

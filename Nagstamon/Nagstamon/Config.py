@@ -295,7 +295,10 @@ class Config(object):
                     servers[server].password = ""
                 else:
                     servers[server].password = self.DeObfuscate(servers[server].password)
-                servers[server].autologin_key  = self.DeObfuscate(servers[server].autologin_key)
+                if servers[server].__dict__.has_key("autologin_key"):
+                    print servers[server].__dict__
+                    if len(servers[server].__dict__["autologin_key"]) > 0:
+                        servers[server].autologin_key  = self.DeObfuscate(servers[server].autologin_key)
                 servers[server].proxy_username = self.DeObfuscate(servers[server].proxy_username)
                 servers[server].proxy_password = self.DeObfuscate(servers[server].proxy_password)
         except:
