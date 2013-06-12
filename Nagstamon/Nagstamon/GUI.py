@@ -131,6 +131,11 @@ class GUI(object):
         # create all GUI widgets
         self._CreateOutputVisuals()
 
+        # find out dimension of all monitors
+        for m in range(self.statusbar.StatusBar.get_screen().get_n_monitors()):
+            monx0, mony0, monw, monh = self.statusbar.StatusBar.get_screen().get_monitor_geometry(m)
+            self.monitors[m] = (monx0, mony0, monw, monh)
+
         # set size of popup-window
         self.popwin.Resize()
         if str(self.conf.fullscreen) == "True":
@@ -1888,9 +1893,9 @@ class Popwin(object):
         # need to find out its position
 
         # find out dimension of all monitors
-        for m in range(self.output.statusbar.StatusBar.get_screen().get_n_monitors()):
-            monx0, mony0, monw, monh = self.output.statusbar.StatusBar.get_screen().get_monitor_geometry(m)
-            self.output.monitors[m] = (monx0, mony0, monw, monh)
+        ###for m in range(self.output.statusbar.StatusBar.get_screen().get_n_monitors()):
+        ###    monx0, mony0, monw, monh = self.output.statusbar.StatusBar.get_screen().get_monitor_geometry(m)
+        ###    self.output.monitors[m] = (monx0, mony0, monw, monh)
 
         # get x0 and y0 - workaround for gtk trayicon because self.statusbar as trayicon
         # cannot get its absolute position, so we need to get pointers position relative
@@ -2611,7 +2616,6 @@ class Settings(object):
             for f in filters: filechooser.add_filter(filters[f])
             # for some reason does not show wanted effect
             filechooser.set_filter(filters["wav"])
-
 
         # commit e1946ea33fefac6271d44eb44c05dd2c3ff5bfe9 from pull request by foscarini@github
         # offering sort order for status popup
