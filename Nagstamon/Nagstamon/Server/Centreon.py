@@ -25,6 +25,7 @@ import sys
 import cookielib
 import traceback
 import gc
+import re
 
 from Nagstamon import Actions
 from Nagstamon.Objects import *
@@ -216,23 +217,30 @@ class CentreonServer(GenericServer):
 
     def _get_ndo_url(self):
         """
-        find out if Centreon is that new so it already supports ..../xml/ndo/.... URLs
+        Find out where this instance of Centreon is publishing the status XMLs
+	Centreon + ndo            - /include/monitoring/status/Hosts/xml/hostXML.php
+	Centreon + broker 2.3/2.4 - /include/monitoring/status/Hosts/xml/{ndo,broker}/hostXML.php according to configuration
         """
-        # first test broker URL
-        ndo_test_url = self.monitor_cgi_url + "/include/monitoring/status/Hosts/xml/broker/hostXML.php?" + urllib.urlencode({"num":0, "limit":999, "o":"hpb", "sort_type":"status", "sid":self.SID})
-        result = self.FetchURL(ndo_test_url)
-        if "HTTP Error 404" in result.error:
-            if str(self.conf.debug_mode) == "True":
-                self.Debug(server=self.get_name(), debug = "Centreon Monitor does not use .../xml/broker/... URLs.")
-            # second test ndo URL
-            self.XML_NDO = "xml/ndo"
-            ndo_test_url = self.monitor_cgi_url + "/include/monitoring/status/Hosts/xml/ndo/hostXML.php?" + urllib.urlencode({"num":0, "limit":999, "o":"hpb", "sort_type":"status", "sid":self.SID})
-            result = self.FetchURL(ndo_test_url)
-            if "HTTP Error 404" in result.error:
-                self.XML_NDO = "xml"
-                if str(self.conf.debug_mode) == "True":
-                    self.Debug(server=self.get_name(), debug = "Centreon Monitor does not use .../xml/ndo/... URLs.")
+        cgi_data = urllib.urlencode({"p":201})
+        result = self.FetchURL(self.monitor_cgi_url + "/main.php?" + cgi_data, cgi_data=urllib.urlencode({"sid":self.SID}), giveback="raw")
+        raw, error = result.result, result.error
 
+        if error == "":
+            if   re.search("var _addrXML.*xml\/host", raw):
+              self.XML_NDO = "xml"
+            elif re.search("var _addrXML.*xml\/ndo\/host", raw):
+              self.XML_NDO = "xml/ndo"
+            elif re.search("var _addrXML.*xml\/broker\/host", raw):
+              self.XML_NDO = "xml/broker"
+            else:
+              self.XML_NDO = "xml/broker"
+            del raw
+        else:
+            if str(self.conf.debug_mode) == "True":
+                self.Debug(server=self.get_name(), debug = "Could not detect host/service status version. Using Centreon_Broker")
+        # some cleanup
+        del result, error
+	
 
     def _get_host_id(self, host):
         """

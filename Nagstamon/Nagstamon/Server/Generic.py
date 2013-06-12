@@ -50,11 +50,12 @@ class GenericServer(object):
     TYPE = 'Generic'
 
     # GUI sortable columns stuff
-    DEFAULT_SORT_COLUMN_ID = 2
-    # lost any memory what this COLOR_COLUMN_ID is used for...
-    #COLOR_COLUMN_ID = 2
     HOST_COLUMN_ID = 0
     SERVICE_COLUMN_ID = 1
+    STATUS_COLUMN_ID = 2
+    LAST_CHECK_COLUMN_ID = 3
+    DURATION_COLUMN_ID = 4
+    ATTEMPT_COLUMN_ID = 5
     # used for $STATUS$ variable for custom actions
     STATUS_INFO_COLUMN_ID = 6
 
