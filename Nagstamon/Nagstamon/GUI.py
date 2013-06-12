@@ -143,7 +143,6 @@ class GUI(object):
 
 
         # defining sorting defaults in first render
-
         HOST_COLUMN_ID = 0
         SERVICE_COLUMN_ID = 1
         STATUS_COLUMN_ID = 2
@@ -152,19 +151,23 @@ class GUI(object):
         ATTEMPT_COLUMN_ID = 5
         STATUS_INFO_COLUMN_ID = 6
 
-        if str(self.conf.default_sort_order) == "ascending":
+        self.COLUMNS_IDS_MAP = {"Host": 0,\
+                          "Service": 1,\
+                          "Status": 2,\
+                          "Last Check": 3,\
+                          "Duration": 4,\
+                          "Attempt": 5,\
+                          "Status Information": 6}
+
+        # reverse mapping of column names and IDs for settings dialog
+        self.IDS_COLUMNS_MAP = dict((id, column) for column, id in self.COLUMNS_IDS_MAP.iteritems())
+
+        if str(self.conf.default_sort_order) == "Ascending":
             startup_sort_order = gtk.SORT_ASCENDING
         else:
             startup_sort_order = gtk.SORT_DESCENDING
 
-        if str(self.conf.default_sort_field) == "host_name":
-            startup_sort_field = HOST_COLUMN_ID
-        elif str(self.conf.default_sort_field) == "service_name":
-            startup_sort_field = SERVICE_COLUMN_ID
-        elif str(self.conf.default_sort_field) == "last_check_time":
-            startup_sort_field = LAST_CHECK_COLUMN_ID
-        else:
-            startup_sort_field = DURATION_COLUMN_ID
+        startup_sort_field = self.COLUMNS_IDS_MAP[self.conf.default_sort_field]
 
         self.rows_reordered_handler = {}
         self.last_sorting = {}
@@ -1684,7 +1687,7 @@ class Popwin(object):
         if str(self.output.conf.fullscreen) == "True":
             # Popup menu instead statusbar menu  for maximized window view
             self.Menu = gtk.Menu()
-            for i in ["Save position", "About", "Exit"]:
+            for i in ["About", "Exit"]:
                 if i == "-----":
                     menu_item = gtk.SeparatorMenuItem()
                     self.Menu.append(menu_item)
@@ -2610,36 +2613,29 @@ class Settings(object):
             filechooser.set_filter(filters["wav"])
 
 
+        # commit e1946ea33fefac6271d44eb44c05dd2c3ff5bfe9 from pull request by foscarini@github
+        # offering sort order for status popup
         self.combo_default_sort_field = self.builder.get_object("input_combo_default_sort_field")
         combomodel_default_sort_field = gtk.ListStore(gobject.TYPE_STRING)
         crA = gtk.CellRendererText()
         self.combo_default_sort_field.pack_start(crA, True)
         self.combo_default_sort_field.set_attributes(crA, text=0)
-        combomodel_default_sort_field.append(("duration",))
-        combomodel_default_sort_field.append(("host_name",))
-        combomodel_default_sort_field.append(("service_name",))
-        combomodel_default_sort_field.append(("last_check_time",))
-        self.combo_default_sort_field.set_model(combomodel_default_sort_field)
-        self.combo_default_sort_field.set_active(0)
-        if str(self.conf.default_sort_field) == "duration":
-            self.combo_default_sort_field.set_active(0)
-        elif str(self.conf.default_sort_field) == "host_name":
-            self.combo_default_sort_field.set_active(1)
-        elif str(self.conf.default_sort_field) == "service_name":
-            self.combo_default_sort_field.set_active(2)
-        else:
-            self.combo_default_sort_field.set_active(3)
-        self.combo_default_sort_field.connect('changed', self.on_default_sort_field_change)
 
+        for i in range(6):
+            combomodel_default_sort_field.append((self.output.IDS_COLUMNS_MAP[i],))
+
+        self.combo_default_sort_field.set_model(combomodel_default_sort_field)
+        self.combo_default_sort_field.set_active(self.output.COLUMNS_IDS_MAP[self.conf.default_sort_field])
+        self.combo_default_sort_field.connect('changed', self.on_default_sort_field_change)
         self.combo_default_sort_order = self.builder.get_object("input_combo_default_sort_order")
         combomodel_default_sort_order = gtk.ListStore(gobject.TYPE_STRING)
         crB = gtk.CellRendererText()
         self.combo_default_sort_order.pack_start(crB, True)
         self.combo_default_sort_order.set_attributes(crB, text=0)
-        combomodel_default_sort_order.append(("ascending" ,))
-        combomodel_default_sort_order.append(("descending",))
+        combomodel_default_sort_order.append(("Ascending" ,))
+        combomodel_default_sort_order.append(("Descending",))
         self.combo_default_sort_order.set_model(combomodel_default_sort_order)
-        if str(self.conf.default_sort_order) == "ascending":
+        if str(self.conf.default_sort_order) == "Ascending":
             self.combo_default_sort_order.set_active(0)
         else:
             self.combo_default_sort_order.set_active(1)
@@ -2682,6 +2678,7 @@ class Settings(object):
 
         self.dialog.destroy()
 
+
     def on_default_sort_order_change(self, combobox):
         """
         adjust default sort order config
@@ -2689,9 +2686,10 @@ class Settings(object):
         active = combobox.get_active_iter()
         model = combobox.get_model()
         if not model:
-            self.conf.default_sort_field = "ascending"
+            self.conf.default_sort_order = "Ascending"
         else: 
-            self.conf.default_sort_field = model.get_value(active, 0)
+            self.conf.default_sort_order = model.get_value(active, 0)
+
 
     def on_default_sort_field_change(self, combobox):
         """
@@ -2700,7 +2698,7 @@ class Settings(object):
         active = combobox.get_active_iter()
         model = combobox.get_model()
         if not model:
-            self.conf.default_sort_field = "duration"
+            self.conf.default_sort_field = "Status"
         else: 
             self.conf.default_sort_field = model.get_value(active, 0)
 

@@ -40,8 +40,8 @@ class Config(object):
         self.short_display = False
         self.long_display = True
         self.show_grid = True
-        self.default_sort_field = "duration"
-        self.default_sort_order = "ascending"
+        self.default_sort_field = "Status"
+        self.default_sort_order = "Ascending"
         self.filter_all_down_hosts = False
         self.filter_all_unreachable_hosts = False
         self.filter_all_flapping_hosts = False
