@@ -141,11 +141,35 @@ class GUI(object):
         # flag which is set True if already notifying
         self.Notifying = False
 
-        # saving sorting state between refresh
+
+        # defining sorting defaults in first render
+
+        HOST_COLUMN_ID = 0
+        SERVICE_COLUMN_ID = 1
+        STATUS_COLUMN_ID = 2
+        LAST_CHECK_COLUMN_ID = 3
+        DURATION_COLUMN_ID = 4
+        ATTEMPT_COLUMN_ID = 5
+        STATUS_INFO_COLUMN_ID = 6
+
+        if str(self.conf.default_sort_order) == "ascending":
+            startup_sort_order = gtk.SORT_ASCENDING
+        else:
+            startup_sort_order = gtk.SORT_DESCENDING
+
+        if str(self.conf.default_sort_field) == "host_name":
+            startup_sort_field = HOST_COLUMN_ID
+        elif str(self.conf.default_sort_field) == "service_name":
+            startup_sort_field = SERVICE_COLUMN_ID
+        elif str(self.conf.default_sort_field) == "last_check_time":
+            startup_sort_field = LAST_CHECK_COLUMN_ID
+        else:
+            startup_sort_field = DURATION_COLUMN_ID
+
         self.rows_reordered_handler = {}
         self.last_sorting = {}
         for server in self.servers.values():
-            self.last_sorting[server.get_name()] = Sorting([(server.DEFAULT_SORT_COLUMN_ID, gtk.SORT_ASCENDING),
+            self.last_sorting[server.get_name()] = Sorting([(startup_sort_field, startup_sort_order ),
                                                             (server.HOST_COLUMN_ID, gtk.SORT_ASCENDING)],
                                                            len(server.COLUMNS)+1) # stores sorting between table refresh
 
@@ -2585,6 +2609,42 @@ class Settings(object):
             # for some reason does not show wanted effect
             filechooser.set_filter(filters["wav"])
 
+
+        self.combo_default_sort_field = self.builder.get_object("input_combo_default_sort_field")
+        combomodel_default_sort_field = gtk.ListStore(gobject.TYPE_STRING)
+        crA = gtk.CellRendererText()
+        self.combo_default_sort_field.pack_start(crA, True)
+        self.combo_default_sort_field.set_attributes(crA, text=0)
+        combomodel_default_sort_field.append(("duration",))
+        combomodel_default_sort_field.append(("host_name",))
+        combomodel_default_sort_field.append(("service_name",))
+        combomodel_default_sort_field.append(("last_check_time",))
+        self.combo_default_sort_field.set_model(combomodel_default_sort_field)
+        self.combo_default_sort_field.set_active(0)
+        if str(self.conf.default_sort_field) == "duration":
+            self.combo_default_sort_field.set_active(0)
+        elif str(self.conf.default_sort_field) == "host_name":
+            self.combo_default_sort_field.set_active(1)
+        elif str(self.conf.default_sort_field) == "service_name":
+            self.combo_default_sort_field.set_active(2)
+        else:
+            self.combo_default_sort_field.set_active(3)
+        self.combo_default_sort_field.connect('changed', self.on_default_sort_field_change)
+
+        self.combo_default_sort_order = self.builder.get_object("input_combo_default_sort_order")
+        combomodel_default_sort_order = gtk.ListStore(gobject.TYPE_STRING)
+        crB = gtk.CellRendererText()
+        self.combo_default_sort_order.pack_start(crB, True)
+        self.combo_default_sort_order.set_attributes(crB, text=0)
+        combomodel_default_sort_order.append(("ascending" ,))
+        combomodel_default_sort_order.append(("descending",))
+        self.combo_default_sort_order.set_model(combomodel_default_sort_order)
+        if str(self.conf.default_sort_order) == "ascending":
+            self.combo_default_sort_order.set_active(0)
+        else:
+            self.combo_default_sort_order.set_active(1)
+        self.combo_default_sort_order.connect('changed', self.on_default_sort_order_change)
+
         # in case nagstamon runs the first time it should display a new server dialog
         if str(self.conf.unconfigured) == "True":
             self.output.statusbar.StatusBar.hide()
@@ -2621,6 +2681,28 @@ class Settings(object):
         gobject.idle_add(self.output.DeleteGUILock, str(self.__class__.__name__))
 
         self.dialog.destroy()
+
+    def on_default_sort_order_change(self, combobox):
+        """
+        adjust default sort order config
+        """
+        active = combobox.get_active_iter()
+        model = combobox.get_model()
+        if not model:
+            self.conf.default_sort_field = "ascending"
+        else: 
+            self.conf.default_sort_field = model.get_value(active, 0)
+
+    def on_default_sort_field_change(self, combobox):
+        """
+        adjust default sort field config
+        """
+        active = combobox.get_active_iter()
+        model = combobox.get_model()
+        if not model:
+            self.conf.default_sort_field = "duration"
+        else: 
+            self.conf.default_sort_field = model.get_value(active, 0)
 
 
     def FillTreeView(self, treeview_widget, items, column_string, selected_item):
