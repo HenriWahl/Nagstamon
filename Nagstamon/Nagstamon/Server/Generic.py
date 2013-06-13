@@ -489,16 +489,17 @@ class GenericServer(object):
                 if error != "": return Result(result=copy.deepcopy(htobj), error=copy.deepcopy(error))
 
                 # put a copy of a part of htobj into table to be able to delete htobj
-                table = copy.deepcopy(htobj('table', {'class': 'status'})[0])
+                # too mnuch copy.deepcopy()s here give recursion crashs
+                table = htobj('table', {'class': 'status'})[0]
 
                 # access table rows
                 # some Icinga versions have a <tbody> tag in cgi output HTML which
                 # omits the <tr> tags being found
                 if len(table('tbody')) == 0:
-                    trs = copy.deepcopy(table('tr', recursive=False))
+                    trs = table('tr', recursive=False)
                 else:
-                    tbody = copy.deepcopy(table('tbody')[0])
-                    trs = copy.deepcopy(tbody('tr', recursive=False))
+                    tbody = table('tbody')[0]
+                    trs = tbody('tr', recursive=False)
 
                 # kick out table heads
                 trs.pop(0)
@@ -512,7 +513,7 @@ class GenericServer(object):
                         if len(tr('td', recursive=False)) > 1:
                             n = dict()
                             # get tds in one tr
-                            tds = copy.deepcopy(tr('td', recursive=False))
+                            tds = tr('td', recursive=False)
                             # host
                             try:
                                 n["host"] = str(tds[0].table.tr.td.table.tr.td.a.string)
@@ -603,15 +604,16 @@ class GenericServer(object):
                 htobj, error = result.result, result.error
                 if error != "": return Result(result=copy.deepcopy(htobj), error=copy.deepcopy(error))
 
-                table = copy.deepcopy(htobj('table', {'class': 'status'})[0])
+                # too much copy.deepcopy()s here give recursion crashs
+                table = htobj('table', {'class': 'status'})[0]
 
                 # some Icinga versions have a <tbody> tag in cgi output HTML which
                 # omits the <tr> tags being found
                 if len(table('tbody')) == 0:
-                    trs = copy.deepcopy(table('tr', recursive=False))
+                    trs = table('tr', recursive=False)
                 else:
-                    tbody = copy.deepcopy(table('tbody')[0])
-                    trs = copy.deepcopy(tbody('tr', recursive=False))
+                    tbody = table('tbody')[0]
+                    trs = tbody('tr', recursive=False)
 
                 # kick out table heads
                 trs.pop(0)
@@ -622,7 +624,7 @@ class GenericServer(object):
                 for tr in trs:
                     try:
                         # ignore empty <tr> rows - there are a lot of them - a Nagios bug?
-                        tds = copy.deepcopy(tr('td', recursive=False))
+                        tds = tr('td', recursive=False)
                         if len(tds) > 1:
                             n = dict()
                             # host
