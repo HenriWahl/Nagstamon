@@ -2619,31 +2619,38 @@ class Settings(object):
 
         # commit e1946ea33fefac6271d44eb44c05dd2c3ff5bfe9 from pull request by foscarini@github
         # offering sort order for status popup
+        # default sort column field
         self.combo_default_sort_field = self.builder.get_object("input_combo_default_sort_field")
         combomodel_default_sort_field = gtk.ListStore(gobject.TYPE_STRING)
-        crA = gtk.CellRendererText()
-        self.combo_default_sort_field.pack_start(crA, True)
-        self.combo_default_sort_field.set_attributes(crA, text=0)
-
+        crsf = gtk.CellRendererText()
+        self.combo_default_sort_field.pack_start(crsf, True)
+        self.combo_default_sort_field.set_attributes(crsf, text=0)
         for i in range(6):
             combomodel_default_sort_field.append((self.output.IDS_COLUMNS_MAP[i],))
-
         self.combo_default_sort_field.set_model(combomodel_default_sort_field)
         self.combo_default_sort_field.set_active(self.output.COLUMNS_IDS_MAP[self.conf.default_sort_field])
-        self.combo_default_sort_field.connect('changed', self.on_default_sort_field_change)
+
+        # default column sort order combobox
         self.combo_default_sort_order = self.builder.get_object("input_combo_default_sort_order")
         combomodel_default_sort_order = gtk.ListStore(gobject.TYPE_STRING)
-        crB = gtk.CellRendererText()
-        self.combo_default_sort_order.pack_start(crB, True)
-        self.combo_default_sort_order.set_attributes(crB, text=0)
+        crso = gtk.CellRendererText()
+        self.combo_default_sort_order.pack_start(crso, True)
+        self.combo_default_sort_order.set_attributes(crso, text=0)
         combomodel_default_sort_order.append(("Ascending" ,))
         combomodel_default_sort_order.append(("Descending",))
         self.combo_default_sort_order.set_model(combomodel_default_sort_order)
-        if str(self.conf.default_sort_order) == "Ascending":
-            self.combo_default_sort_order.set_active(0)
-        else:
-            self.combo_default_sort_order.set_active(1)
-        self.combo_default_sort_order.connect('changed', self.on_default_sort_order_change)
+        self.combo_default_sort_order.set_active({"Ascending": 0, "Descending": 1}[self.conf.default_sort_order])
+
+        # fill fullscreen display combobox
+        self.combo_fullscreen_display = self.builder.get_object("input_combo_fullscreen_display")
+        combomodel_fullscreen_display = gtk.ListStore(gobject.TYPE_STRING)
+        crfsd = gtk.CellRendererText()
+        self.combo_fullscreen_display.pack_start(crfsd, True)
+        self.combo_fullscreen_display.set_attributes(crfsd, text=0)
+        for i in self.output.monitors:
+            combomodel_fullscreen_display.append((str(i)))
+        self.combo_fullscreen_display.set_model(combomodel_fullscreen_display)
+        self.combo_fullscreen_display.set_active(int(self.conf.fullscreen_display))
 
         # in case nagstamon runs the first time it should display a new server dialog
         if str(self.conf.unconfigured) == "True":
@@ -2681,30 +2688,6 @@ class Settings(object):
         gobject.idle_add(self.output.DeleteGUILock, str(self.__class__.__name__))
 
         self.dialog.destroy()
-
-
-    def on_default_sort_order_change(self, combobox):
-        """
-        adjust default sort order config
-        """
-        active = combobox.get_active_iter()
-        model = combobox.get_model()
-        if not model:
-            self.conf.default_sort_order = "Ascending"
-        else: 
-            self.conf.default_sort_order = model.get_value(active, 0)
-
-
-    def on_default_sort_field_change(self, combobox):
-        """
-        adjust default sort field config
-        """
-        active = combobox.get_active_iter()
-        model = combobox.get_model()
-        if not model:
-            self.conf.default_sort_field = "Status"
-        else: 
-            self.conf.default_sort_field = model.get_value(active, 0)
 
 
     def FillTreeView(self, treeview_widget, items, column_string, selected_item):
@@ -2805,6 +2788,11 @@ class Settings(object):
         for state in ["ok", "warning", "critical", "unknown", "unreachable", "down", "error"]:
             self.conf.__dict__["color_" + state + "_text"] = self.builder.get_object("input_colorbutton_" + state + "_text").get_color().to_string()
             self.conf.__dict__["color_" + state + "_background"] = self.builder.get_object("input_colorbutton_" + state + "_background").get_color().to_string()
+
+        # evaluate comboboxes
+        self.conf.default_sort_field = self.combo_default_sort_field.get_active_text()
+        self.conf.default_sort_order = self.combo_default_sort_order.get_active_text()
+        self.conf.fullscreen_display = self.combo_fullscreen_display.get_active_text()
 
         # close popwin
         # catch Exception at first run when there cannot exist a popwin

@@ -593,10 +593,10 @@
                     <property name="visible">True</property>
                     <property name="can_focus">False</property>
                     <child>
-                      <object class="GtkLabel" id="label_fullscreen_monitors">
+                      <object class="GtkLabel" id="label_fullscreen_display">
                         <property name="visible">True</property>
                         <property name="can_focus">False</property>
-                        <property name="label" translatable="yes">Fill monitor:</property>
+                        <property name="label" translatable="yes">Display to use:</property>
                       </object>
                       <packing>
                         <property name="expand">True</property>
@@ -605,7 +605,7 @@
                       </packing>
                     </child>
                     <child>
-                      <object class="GtkComboBox" id="input_combo_fullscreen_monitor">
+                      <object class="GtkComboBox" id="input_combo_fullscreen_display">
                         <property name="visible">True</property>
                         <property name="can_focus">False</property>
                       </object>
@@ -1896,6 +1896,9 @@
                                     <child>
                                       <placeholder/>
                                     </child>
+                                    <child>
+                                      <placeholder/>
+                                    </child>
                                   </object>
                                   <packing>
                                     <property name="top_attach">1</property>
@@ -2321,6 +2324,9 @@
                         <property name="top_attach">7</property>
                         <property name="bottom_attach">8</property>
                       </packing>
+                    </child>
+                    <child>
+                      <placeholder/>
                     </child>
                     <child>
                       <placeholder/>
