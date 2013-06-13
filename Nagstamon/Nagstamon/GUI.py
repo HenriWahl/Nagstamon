@@ -1739,6 +1739,12 @@ class Popwin(object):
             window.move(x0, y0)
             window.connect("leave-notify-event", self.LeavePopWin)
         else:
+            # find out dimension of all monitors
+            for m in range(window.get_screen().get_n_monitors()):
+                monx0, mony0, monw, monh = window.get_screen().get_monitor_geometry(m)
+                self.output.monitors[m] = (monx0, mony0, monw, monh)
+            x0, y0 = self.output.monitors[int(self.output.conf.fullscreen_display)][0:2]
+            window.move(x0, y0)
             window.fullscreen()
             window.show_all()
             window.set_visible(True)
