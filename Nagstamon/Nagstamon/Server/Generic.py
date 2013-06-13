@@ -486,22 +486,25 @@ class GenericServer(object):
                 result = self.FetchURL(self.cgiurl_hosts[status_type])
                 htobj, error = result.result, result.error
 
-                if error != "": return Result(result=copy.deepcopy(htobj), error=error)
+                if error != "": return Result(result=copy.deepcopy(htobj), error=copy.deepcopy(error))
 
                 # put a copy of a part of htobj into table to be able to delete htobj
-                table = htobj('table', {'class': 'status'})[0]
+                table = copy.deepcopy(htobj('table', {'class': 'status'})[0])
 
                 # access table rows
                 # some Icinga versions have a <tbody> tag in cgi output HTML which
                 # omits the <tr> tags being found
                 if len(table('tbody')) == 0:
-                    trs = table('tr', recursive=False)
+                    trs = copy.deepcopy(table('tr', recursive=False))
                 else:
-                    tbody = table('tbody')[0]
-                    trs = tbody('tr', recursive=False)
+                    tbody = copy.deepcopy(table('tbody')[0])
+                    trs = copy.deepcopy(tbody('tr', recursive=False))
 
                 # kick out table heads
                 trs.pop(0)
+
+                # dummy tds to be deleteable
+                tds = []
 
                 for tr in trs:
                     try:
@@ -509,7 +512,7 @@ class GenericServer(object):
                         if len(tr('td', recursive=False)) > 1:
                             n = dict()
                             # get tds in one tr
-                            tds = tr('td', recursive=False)
+                            tds = copy.deepcopy(tr('td', recursive=False))
                             # host
                             try:
                                 n["host"] = str(tds[0].table.tr.td.table.tr.td.a.string)
@@ -585,7 +588,7 @@ class GenericServer(object):
 
                 # do some cleanup
                 htobj.decompose()
-                del trs, table, htobj, result, error
+                del trs, tds, table, htobj, result, error
 
         except:
             # set checking flag back to False
@@ -598,25 +601,28 @@ class GenericServer(object):
             for status_type in "hard", "soft":
                 result = self.FetchURL(self.cgiurl_services[status_type])
                 htobj, error = result.result, result.error
-                if error != "": return Result(result=copy.deepcopy(htobj), error=error)
+                if error != "": return Result(result=copy.deepcopy(htobj), error=copy.deepcopy(error))
 
-                table = htobj('table', {'class': 'status'})[0]
+                table = copy.deepcopy(htobj('table', {'class': 'status'})[0])
 
                 # some Icinga versions have a <tbody> tag in cgi output HTML which
                 # omits the <tr> tags being found
                 if len(table('tbody')) == 0:
-                    trs = table('tr', recursive=False)
+                    trs = copy.deepcopy(table('tr', recursive=False))
                 else:
-                    tbody = table('tbody')[0]
-                    trs = tbody('tr', recursive=False)
+                    tbody = copy.deepcopy(table('tbody')[0])
+                    trs = copy.deepcopy(tbody('tr', recursive=False))
 
                 # kick out table heads
                 trs.pop(0)
 
+                # dummy tds to be deleteable
+                tds = []
+
                 for tr in trs:
                     try:
                         # ignore empty <tr> rows - there are a lot of them - a Nagios bug?
-                        tds = tr('td', recursive=False)
+                        tds = copy.deepcopy(tr('td', recursive=False))
                         if len(tds) > 1:
                             n = dict()
                             # host
@@ -701,7 +707,7 @@ class GenericServer(object):
 
                 # do some cleanup
                 htobj.decompose()
-                del trs, table, htobj, result, error
+                del trs, tds, table, htobj, result, error
         except:
             # set checking flag back to False
             self.isChecking = False

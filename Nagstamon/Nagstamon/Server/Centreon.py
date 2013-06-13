@@ -218,8 +218,9 @@ class CentreonServer(GenericServer):
     def _get_ndo_url(self):
         """
         Find out where this instance of Centreon is publishing the status XMLs
-	Centreon + ndo            - /include/monitoring/status/Hosts/xml/hostXML.php
-	Centreon + broker 2.3/2.4 - /include/monitoring/status/Hosts/xml/{ndo,broker}/hostXML.php according to configuration
+	    Centreon + ndo            - /include/monitoring/status/Hosts/xml/hostXML.php
+	    Centreon + broker 2.3/2.4 - /include/monitoring/status/Hosts/xml/{ndo,broker}/hostXML.php according to configuration
+	    regexping HTML for Javascript
         """
         cgi_data = urllib.urlencode({"p":201})
         result = self.FetchURL(self.monitor_cgi_url + "/main.php?" + cgi_data, cgi_data=urllib.urlencode({"sid":self.SID}), giveback="raw")
@@ -330,7 +331,7 @@ class CentreonServer(GenericServer):
         try:
             result = self.FetchURL(nagcgiurl_hosts, giveback="xml")
             xmlobj, error = result.result, result.error
-            if error != "": return Result(result=xmlobj, error=error)
+            if error != "": return Result(result=copy.deepcopy(xmlobj), error=copy.deepcopy(error))
 
             # in case there are no children session id is invalid
             if xmlobj == "<response>bad session id</response>" or str(xmlobj) == "Bad Session ID":
@@ -342,11 +343,10 @@ class CentreonServer(GenericServer):
                 self.SID = self._get_sid().result
                 result = self.FetchURL(nagcgiurl_hosts, giveback="xml")
                 xmlobj, error = result.result, result.error
-                if error != "": return Result(result=xmlobj, error=error)
+                if error != "": return Result(result=copy.deepcopy(xmlobj), error=copy.deepcopy(error))
 
                 # a second time a bad session id should raise an error
                 if xmlobj == "<response>bad session id</response>" or str(xmlobj) == "Bad Session ID":
-                    #return Result(result=xmlobj, error=str(xmlobj))
                     return Result(result="ERROR", error=str(xmlobj))
 
             for l in xmlobj.findAll("l"):
@@ -420,7 +420,7 @@ class CentreonServer(GenericServer):
         try:
             result = self.FetchURL(nagcgiurl_services, giveback="xml")
             xmlobj, error = result.result, result.error
-            if error != "": return Result(result=xmlobj, error=error)
+            if error != "": return Result(result=xmlobj, error=copy.deepcopy(error))
 
             # in case there are no children session id is invalid
             if xmlobj == "<response>bad session id</response>" or xmlobj == "Bad Session ID":
@@ -431,8 +431,7 @@ class CentreonServer(GenericServer):
                 self.SID = self._get_sid().result
                 result = self.FetchURL(nagcgiurl_services, giveback="xml")
                 xmlobj, error = result.result, result.error
-                #if error != "": return Result(result=xmlobj, error=error)
-                if error != "": return Result(result="ERROR", error=error)
+                if error != "": return Result(result="ERROR", error=copy.deepcopy(error))
 
             for l in xmlobj.findAll("l"):
                 try:

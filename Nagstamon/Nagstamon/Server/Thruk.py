@@ -156,16 +156,6 @@ class ThrukServer(GenericServer):
         """
         # create filters like described in
         # http://www.nagios-wiki.de/nagios/tips/host-_und_serviceproperties_fuer_status.cgi?s=servicestatustypes
-        #
-        # the following variables are not necessary anymore as with "new" filtering
-        #
-        # hoststatus
-        #hoststatustypes = 12
-        # servicestatus
-        #servicestatustypes = 253
-        # serviceprops & hostprops both have the same values for the same states so I
-        # group them together
-        #hostserviceprops = 0
 
         # services (unknown, warning or critical?) as dictionary, sorted by hard and soft state type
         self.cgiurl_services = {"hard": self.monitor_cgi_url + "/status.cgi?dfl_s0_servicestatustypes=29&style=detail&dfl_s0_serviceprops=262144&dfl_s0_hoststatustypes=15&dfl_s0_hostprops=0&nav=&page=1&entries=all",\
@@ -173,7 +163,6 @@ class ThrukServer(GenericServer):
         # hosts (up or down or unreachable)
         self.cgiurl_hosts = { "hard": self.monitor_cgi_url + "/status.cgi?hostgroup=all&style=hostdetail&hoststatustypes=12&hostprops=262144",\
                               "soft": self.monitor_cgi_url + "/status.cgi?hostgroup=all&style=hostdetail&hoststatustypes=12&hostprops=524288"}
-
 
 
     def _get_status(self):
@@ -196,22 +185,29 @@ class ThrukServer(GenericServer):
                 result = self.FetchURL(self.cgiurl_hosts[status_type])
                 htobj, error = result.result, result.error
 
-                if error != "": return Result(result=copy.deepcopy(htobj), error=error)
+                if error != "": return Result(result=copy.deepcopy(htobj), error=copy.deepcopy(error))
 
-                # put a copy of a part of htobj into table to be able to delete htobj
-                table = htobj('table', {'class': 'status'})[0]
+                table = copy.deepcopy(htobj('table', {'class': 'status'}))
 
-                # access table rows
-                # some Icinga versions have a <tbody> tag in cgi output HTML which
-                # omits the <tr> tags being found
-                if len(table('tbody')) == 0:
-                    trs = table('tr', recursive=False)
+                # If all is OK table is empty but leads to index error
+                if len(table) == 0:
+                    trs = []
                 else:
-                    tbody = table('tbody')[0]
-                    trs = tbody('tr', recursive=False)
+                    # put a copy of a part of htobj into table to be able to delete htobj
+                    table = table[0]
+                    # access table rows
+                    # some Icinga versions have a <tbody> tag in cgi output HTML which
+                    # omits the <tr> tags being found
+                    if len(table('tbody')) == 0:
+                        trs = copy.deepcopy(table('tr', recursive=False))
+                    else:
+                        tbody = copy.deepcopy(table('tbody')[0])
+                        trs = copy.deepcopy(tbody('tr', recursive=False))
+                    # kick out table heads
+                    ###trs.pop(0)
 
-                # kick out table heads
-                trs.pop(0)
+                # dummy tds to be deleteable
+                tds = []
 
                 for tr in trs:
                     try:
@@ -219,7 +215,7 @@ class ThrukServer(GenericServer):
                         if len(tr('td', recursive=False)) > 1:
                             n = dict()
                             # get tds in one tr
-                            tds = tr('td', recursive=False)
+                            tds = copy.deepcopy(tr('td', recursive=False))
                             # host
                             try:
                                 n["host"] = str(tds[0].table.tr.td.table.tr.td.a.string)
@@ -289,13 +285,13 @@ class ThrukServer(GenericServer):
                                 self.new_hosts[new_host].acknowledged = n["acknowledged"]
                                 self.new_hosts[new_host].scheduled_downtime = n["scheduled_downtime"]
                                 self.new_hosts[new_host].status_type = status_type
-                        del n
+                            del n
                     except:
                         self.Error(sys.exc_info())
 
                 # do some cleanup
                 htobj.decompose()
-                del trs, table, htobj, result, error
+                del trs, tds, table, htobj, result, error
 
         except:
             # set checking flag back to False
@@ -308,25 +304,32 @@ class ThrukServer(GenericServer):
             for status_type in "hard", "soft":
                 result = self.FetchURL(self.cgiurl_services[status_type])
                 htobj, error = result.result, result.error
-                if error != "": return Result(result=copy.deepcopy(htobj), error=error)
+                if error != "": return Result(result=copy.deepcopy(htobj), error=copy.deepcopy(error))
 
-                table = htobj('table', {'class': 'status servicestatus'})[0]
+                table = copy.deepcopy(htobj('table', {'class': 'status servicestatus'}))
 
-                # some Icinga versions have a <tbody> tag in cgi output HTML which
-                # omits the <tr> tags being found
-                if len(table('tbody')) == 0:
-                    trs = table('tr', recursive=False)
+                # If all is OK table is empty but leads to index error
+                if len(table) == 0:
+                    trs = []
                 else:
-                    tbody = table('tbody')[0]
-                    trs = tbody('tr', recursive=False)
+                    table = table[0]
+                    # some Icinga versions have a <tbody> tag in cgi output HTML which
+                    # omits the <tr> tags being found
+                    if len(table('tbody')) == 0:
+                        trs = copy.deepcopy(table('tr', recursive=False))
+                    else:
+                        tbody = copy.deepcopy(table('tbody')[0])
+                        trs = copy.deepcopy(tbody('tr', recursive=False))
+                    # kick out table heads
+                    ###trs.pop(0)
 
-                # kick out table heads
-                trs.pop(0)
+                # dummy tds to be deleteable
+                tds = []
 
                 for tr in trs:
                     try:
                         # ignore empty <tr> rows - there are a lot of them - a Nagios bug?
-                        tds = tr('td', recursive=False)
+                        tds = copy.deepcopy(tr('td', recursive=False))
 
                         if len(tds) > 1:
                             n = dict()
@@ -415,7 +418,7 @@ class ThrukServer(GenericServer):
 
                 # do some cleanup
                 htobj.decompose()
-                del trs, table, htobj, result, error
+                del trs, tds, table, htobj, result, error
         except:
             # set checking flag back to False
             self.isChecking = False

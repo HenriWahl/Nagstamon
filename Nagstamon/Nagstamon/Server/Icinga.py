@@ -150,12 +150,12 @@ class IcingaServer(GenericServer):
         try:
             for status_type in "hard", "soft":
                 result = self.FetchURL(self.cgiurl_hosts[status_type], giveback="raw")
-                jsonraw, error = result.result, result.error
+                jsonraw, error = copy.deepcopy(result.result), copy.deepcopy(result.error)
 
                 if error != "": return Result(result=jsonraw, error=error)
 
                 jsondict = json.loads(jsonraw)
-                hosts = jsondict["status"]["host_status"]
+                hosts = copy.deepcopy(jsondict["status"]["host_status"])
 
                 for host in hosts:
                     # make dict of tuples for better reading
@@ -206,6 +206,7 @@ class IcingaServer(GenericServer):
                         self.new_hosts[new_host].acknowledged = n["acknowledged"]
                         self.new_hosts[new_host].scheduled_downtime = n["scheduled_downtime"]
                         self.new_hosts[new_host].status_type = status_type
+
         except:
             # set checking flag back to False
             self.isChecking = False
@@ -216,12 +217,12 @@ class IcingaServer(GenericServer):
         try:
             for status_type in "hard", "soft":
                 result = self.FetchURL(self.cgiurl_services[status_type], giveback="raw")
-                jsonraw, error = result.result, result.error
+                jsonraw, error = copy.deepcopy(result.result), copy.deepcopy(result.error)
 
                 if error != "": return Result(result=jsonraw, error=error)
 
                 jsondict = json.loads(jsonraw)
-                services = jsondict["status"]["service_status"]
+                services = copy.deepcopy(jsondict["status"]["service_status"])
 
                 for service in services:
                     # make dict of tuples for better reading
@@ -284,6 +285,7 @@ class IcingaServer(GenericServer):
                         self.new_hosts[n["host"]].services[new_service].acknowledged = n["acknowledged"]
                         self.new_hosts[n["host"]].services[new_service].scheduled_downtime = n["scheduled_downtime"]
                         self.new_hosts[n["host"]].services[new_service].status_type = status_type
+
         except:
             # set checking flag back to False
             self.isChecking = False

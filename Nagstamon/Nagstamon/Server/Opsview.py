@@ -157,7 +157,7 @@ class OpsviewServer(GenericServer):
             opsapiurl = self.monitor_url + "/api/status/service?state=1&state=2&state=3"
             result = self.FetchURL(opsapiurl, giveback="xml")
             xmlobj, error = result.result, result.error
-            if error != "": return Result(result=xmlobj, error=error)
+            if error != "": return Result(result=xmlobj, error=copy.deepcopy(error))
 
             for host in xmlobj.data.findAll("list"):
                 # host

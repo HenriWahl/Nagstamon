@@ -235,7 +235,6 @@ class MultisiteServer(GenericServer):
         url_params += '&is_host_active_checks_enabled=-1&is_service_active_checks_enabled=-1'
         url_params += '&host_scheduled_downtime_depth=-1&is_in_downtime=-1'
 
-
         try:
             response = []
             try:
@@ -245,7 +244,7 @@ class MultisiteServer(GenericServer):
                     return e.result
 
             for row in response[1:]:
-                host= dict(zip(response[0], row))
+                host= dict(zip(copy.deepcopy(response[0]), copy.deepcopy(row)))
                 n = {
                     'host':               host['host'],
                     'status':             self.statemap.get(host['host_state'], host['host_state']),
@@ -287,6 +286,8 @@ class MultisiteServer(GenericServer):
                     else:
                         self.new_hosts[new_host].status_type = "hard"
 
+            del response
+
         except:
             self.isChecking = False
             result, error = self.Error(sys.exc_info())
@@ -305,11 +306,11 @@ class MultisiteServer(GenericServer):
                 if e.terminate:
                     return e.result
                 else:
-                    response = e.result.content
-                    ret = e.result
+                    response = copy.deepcopy(e.result.content)
+                    ret = copy.deepcopy(e.result)
 
             for row in response[1:]:
-                service = dict(zip(response[0], row))
+                service = dict(zip(copy.deepcopy(response[0]), copy.deepcopy(row)))
                 n = {
                     'host':               service['host'].encode("utf-8"),
                     'service':            service['service_description'].encode("utf-8"),
@@ -327,7 +328,7 @@ class MultisiteServer(GenericServer):
                     'command':            service['svc_check_command'],
                 }
 
-            # add dictionary full of information about this service item to nagitems - only if service
+                # add dictionary full of information about this service item to nagitems - only if service
                 nagitems["services"].append(n)
                 # after collection data in nagitems create objects of its informations
                 # host objects contain service objects
@@ -375,11 +376,15 @@ class MultisiteServer(GenericServer):
                     else:
                         self.new_hosts[n["host"]].services[new_service].status_type = "hard"
 
+            del response
+
         except:
             # set checking flag back to False
             self.isChecking = False
             result, error = self.Error(sys.exc_info())
-            return Result(result=result, error=error)
+            return Result(result=copy.deepcopy(result), error=copy.deepcopy(error))
+
+        del url_params
 
         return ret
 
