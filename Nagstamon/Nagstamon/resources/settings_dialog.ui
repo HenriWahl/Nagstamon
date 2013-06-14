@@ -580,6 +580,7 @@
                     <property name="xalign">0</property>
                     <property name="draw_indicator">True</property>
                     <property name="group">input_radiobutton_statusbar_floating</property>
+                    <signal name="toggled" handler="radiobutton_fullscreen_toggled" swapped="no"/>
                   </object>
                   <packing>
                     <property name="left_attach">1</property>
@@ -589,7 +590,7 @@
                   </packing>
                 </child>
                 <child>
-                  <object class="GtkHBox" id="hbox_fullscreen_monitors">
+                  <object class="GtkHBox" id="hbox_fullscreen_display">
                     <property name="visible">True</property>
                     <property name="can_focus">False</property>
                     <child>
@@ -607,7 +608,7 @@
                     <child>
                       <object class="GtkComboBox" id="input_combo_fullscreen_display">
                         <property name="visible">True</property>
-                        <property name="can_focus">False</property>
+                        <property name="can_focus">True</property>
                       </object>
                       <packing>
                         <property name="expand">True</property>
@@ -1899,6 +1900,9 @@
                                     <child>
                                       <placeholder/>
                                     </child>
+                                    <child>
+                                      <placeholder/>
+                                    </child>
                                   </object>
                                   <packing>
                                     <property name="top_attach">1</property>
@@ -2324,6 +2328,9 @@
                         <property name="top_attach">7</property>
                         <property name="bottom_attach">8</property>
                       </packing>
+                    </child>
+                    <child>
+                      <placeholder/>
                     </child>
                     <child>
                       <placeholder/>

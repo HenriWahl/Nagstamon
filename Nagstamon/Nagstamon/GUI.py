@@ -2528,6 +2528,7 @@ class Settings(object):
                           "button_colors_reset": self.ColorsReset,
                           "color-set": self.ColorsPreview,
                           "radiobutton_icon_in_systray_toggled": self.ToggleSystrayPopupOffset,
+                          "radiobutton_fullscreen_toggled": self.ToggleFullscreenDisplay,
                           "button_new_action": lambda a: NewAction(output=self.output, settingsdialog=self, conf=self.conf),
                           "button_edit_action": lambda e: EditAction(output=self.output, action=self.selected_action, settingsdialog=self, conf=self.conf),
                           "button_delete_action": lambda d: self.DeleteAction(self.selected_action, self.conf.actions),
@@ -2601,6 +2602,9 @@ class Settings(object):
 
         # toggle icon in systray popup offset
         self.ToggleSystrayPopupOffset()
+
+        # toggle fullscreen display selection combobox
+        self.ToggleFullscreenDisplay()
 
         # set filters fore sound filechoosers
         filters = dict()
@@ -2677,8 +2681,11 @@ class Settings(object):
             self.builder.get_object("input_radiobutton_icon_in_systray").hide()
             self.builder.get_object("hbox_systray_popup_offset").hide()
             self.builder.get_object("input_radiobutton_statusbar_floating").hide()
-            self.builder.get_object("input_radiobutton_fullscreen").hide()
             self.builder.get_object("label_appearance").hide()
+            self.builder.get_object("input_radiobutton_fullscreen").hide()
+            self.builder.get_object("input_combo_fullscreen_display").hide()
+            self.builder.get_object("label_fullscreen_display").hide()
+
 
         # this should not be necessary, but for some reason the number of hours is 10 in unitialized state... :-(
         spinbutton = self.builder.get_object("input_spinbutton_defaults_downtime_duration_hours")
@@ -2950,6 +2957,7 @@ class Settings(object):
                 # if one of the servers is not used to check for new version this is enough
                 break
 
+
     def ToggleDebugOptions(self, widget=None):
         """
         allow to use a file for debug output
@@ -3024,6 +3032,15 @@ class Settings(object):
         """
         options = self.builder.get_object("hbox_systray_popup_offset")
         checkbutton = self.builder.get_object("input_radiobutton_icon_in_systray")
+        options.set_sensitive(checkbutton.get_active())
+
+
+    def ToggleFullscreenDisplay(self, widget=None):
+        """
+            Toggle adjustment for fullscreen display choice
+        """
+        options = self.builder.get_object("hbox_fullscreen_display")
+        checkbutton = self.builder.get_object("input_radiobutton_fullscreen")
         options.set_sensitive(checkbutton.get_active())
 
 
