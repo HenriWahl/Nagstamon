@@ -120,7 +120,7 @@ class MultisiteServer(GenericServer):
         # Entries for monitor default actions in context menu
         self.MENU_ACTIONS = ["Monitor", "Recheck", "Acknowledge", "Downtime"]
 
-        # flag fo newer cookie authentication
+        # flag for newer cookie authentication
         self.CookieAuth = False
 
 
@@ -169,7 +169,6 @@ class MultisiteServer(GenericServer):
                                  "_origtarget": "",\
                                  "filled_in":"login"})
 
-                # the following is necessary for Opsview servers
                 # get cookie from login page via url retrieving as with other urls
                 try:
                     # login and get cookie

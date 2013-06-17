@@ -896,6 +896,22 @@ def HumanReadableDuration(seconds):
         return seconds
 
 
+def HumanReadableDurationThruk(timestamp):
+    """
+    Thruk server supplies timestamp of latest state change which
+    has to be subtracted from .now()
+    """
+    try:
+        td = datetime.datetime.now() - datetime.datetime.fromtimestamp(int(timestamp))
+        h = td.seconds / 3600
+        m = td.seconds % 3600 / 60
+        s = td.seconds % 60
+        return "%sd %sh %sm %ss" % (td.days, h, m ,s)
+    except:
+        import traceback
+        traceback.print_exc(file=sys.stdout)
+
+
 def MachineSortableDate(raw):
     """
     Monitors gratefully show duration even in weeks and months which confuse the

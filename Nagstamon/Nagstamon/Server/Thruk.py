@@ -22,6 +22,10 @@ from Nagstamon.Server.Generic import GenericServer
 import sys
 import cookielib
 import base64
+import json
+import datetime
+import urllib
+import copy
 
 # to let Linux distributions use their own BeautifulSoup if existent try importing local BeautifulSoup first
 # see https://sourceforge.net/tracker/?func=detail&atid=1101370&aid=3302612&group_id=236865
@@ -81,63 +85,18 @@ class ThrukServer(GenericServer):
     # URLs for browser shortlinks/buttons on popup window
     BROWSER_URLS = { "monitor": "$MONITOR$",\
                     "hosts": "$MONITOR-CGI$/status.cgi?hostgroup=all&style=hostdetail&hoststatustypes=12",\
-                    "services": "$MONITOR-CGI$/status.cgi??dfl_s0_value_sel=5&dfl_s0_servicestatustypes=29&dfl_s0_op=%3D&style=detail&dfl_s0_type=host&dfl_s0_serviceprops=0&dfl_s0_servicestatustype=4&dfl_s0_servicestatustype=8&dfl_s0_servicestatustype=16&dfl_s0_servicestatustype=1&hidetop=&dfl_s0_hoststatustypes=15&dfl_s0_val_pre=&hidesearch=2&dfl_s0_value=all&dfl_s0_hostprops=0&nav=&page=1&entries=all",\
+                    "services": "$MONITOR-CGI$/status.cgi?dfl_s0_value_sel=5&dfl_s0_servicestatustypes=29&dfl_s0_op=%3D&style=detail&dfl_s0_type=host&dfl_s0_serviceprops=0&dfl_s0_servicestatustype=4&dfl_s0_servicestatustype=8&dfl_s0_servicestatustype=16&dfl_s0_servicestatustype=1&hidetop=&dfl_s0_hoststatustypes=15&dfl_s0_val_pre=&hidesearch=2&dfl_s0_value=all&dfl_s0_hostprops=0&nav=&page=1&entries=all",\
                     "history": "$MONITOR-CGI$/history.cgi?host=all&page=1&entries=all"}
+
+    STATES_MAPPING = {"hosts" : {0 : "OK", 1 : "DOWN", 2 : "UNREACHABLE"},\
+                      "services" : {0 : "OK", 1 : "WARNING",  2 : "CRITICAL", 3 : "UNKNOWN"}}
 
 
     def __init__(self, **kwds):
-        # add all keywords to object, every mode searchs inside for its favorite arguments/keywords
-        for k in kwds: self.__dict__[k] = kwds[k]
+        GenericServer.__init__(self, **kwds)
 
-        self.type = ""
-        self.monitor_url = ""
-        self.monitor_cgi_url = ""
-        self.username = ""
-        self.password = ""
-        self.use_proxy = False
-        self.use_proxy_from_os = False
-        self.proxy_address = ""
-        self.proxy_username = ""
-        self.proxy_password = ""
-        self.hosts = dict()
-        self.new_hosts = dict()
-        self.thread = None
-        self.isChecking = False
-        self.CheckingForNewVersion = False
-        self.WorstStatus = "UP"
-        self.States = ["UP", "UNKNOWN", "WARNING", "CRITICAL", "UNREACHABLE", "DOWN"]
-        self.nagitems_filtered_list = list()
-        self.nagitems_filtered = {"services":{"CRITICAL":[], "WARNING":[], "UNKNOWN":[]}, "hosts":{"DOWN":[], "UNREACHABLE":[]}}
-        self.downs = 0
-        self.unreachables = 0
-        self.unknowns = 0
-        self.criticals = 0
-        self.warnings = 0
-        self.status = ""
-        self.status_description = ""
-        # needed for looping server thread
-        self.count = 0
-        # needed for RecheckAll - save start_time once for not having to get it for every recheck
-        self.start_time = None
-        self.Cookie = cookielib.CookieJar()
-        # use server-owned attributes instead of redefining them with every request
-        self.passman = None
-        self.basic_handler = None
-        self.digest_handler = None
-        self.proxy_handler = None
-        self.proxy_auth_handler = None
-        self.urlopener = None
-        # headers for HTTP requests, might be needed for authorization on Nagios/Icinga Hosts
-        self.HTTPheaders = dict()
-        # attempt to use only one bound list of TreeViewColumns instead of ever increasing one
-        self.TreeView = None
-        self.TreeViewColumns = list()
-        self.ListStore = None
-        self.ListStoreColumns = list()
-        # flag which decides if authentication has to be renewed
-        self.refresh_authentication = False
-        # to handle Icinga versions this information is necessary, might be of future use for others too
-        self.version = ""
+        # flag for newer cookie authentication
+        self.CookieAuth = False
 
 
     def init_HTTP(self):
@@ -149,6 +108,23 @@ class ThrukServer(GenericServer):
             for giveback in ["raw", "obj"]:
                 self.HTTPheaders[giveback] = {"Authorization": "Basic " + base64.b64encode(self.get_username() + ":" + self.get_password())}
 
+        # only if cookies are needed
+        if self.CookieAuth:
+            # get cookie to access Check_MK web interface
+            if len(self.Cookie) < 2:
+                # put all necessary data into url string
+                logindata = urllib.urlencode({"login":self.get_username(),\
+                                 "password":self.get_password(),\
+                                 "submit":"Login"})
+                # get cookie from login page via url retrieving as with other urls
+                try:
+                    # login and get cookie
+                    # empty referer seems to be ignored so add it manually
+                    urlcontent = self.urlopener.open(self.monitor_cgi_url + "/login.cgi?", logindata + "&referer=")
+                    urlcontent.close()
+                except:
+                    self.Error(sys.exc_info())
+
 
     def init_config(self):
         """
@@ -156,13 +132,25 @@ class ThrukServer(GenericServer):
         """
         # create filters like described in
         # http://www.nagios-wiki.de/nagios/tips/host-_und_serviceproperties_fuer_status.cgi?s=servicestatustypes
-
-        # services (unknown, warning or critical?) as dictionary, sorted by hard and soft state type
-        self.cgiurl_services = {"hard": self.monitor_cgi_url + "/status.cgi?dfl_s0_servicestatustypes=29&style=detail&dfl_s0_serviceprops=262144&dfl_s0_hoststatustypes=15&dfl_s0_hostprops=0&nav=&page=1&entries=all",\
-                                 "soft": self.monitor_cgi_url + "/status.cgi?dfl_s0_servicestatustypes=29&style=detail&dfl_s0_serviceprops=524288&dfl_s0_hoststatustypes=15&dfl_s0_hostprops=0&nav=&page=1&entries=all"}
+        self.cgiurl_services = self.monitor_cgi_url + "/status.cgi?host=all&servicestatustypes=28&view_mode=json"
         # hosts (up or down or unreachable)
-        self.cgiurl_hosts = { "hard": self.monitor_cgi_url + "/status.cgi?hostgroup=all&style=hostdetail&hoststatustypes=12&hostprops=262144",\
-                              "soft": self.monitor_cgi_url + "/status.cgi?hostgroup=all&style=hostdetail&hoststatustypes=12&hostprops=524288"}
+        self.cgiurl_hosts = self.monitor_cgi_url + "/status.cgi?hostgroup=all&style=hostdetail&hoststatustypes=12&view_mode=json"
+
+        # test for cookies
+        # put all necessary data into url string
+        logindata = urllib.urlencode({"login":self.get_username(),\
+                                 "password":self.get_password(),\
+                                 "submit":"Login"})
+        # get cookie from login page via url retrieving as with other urls
+        try:
+            # login and get cookie
+            # empty referer seems to be ignored so add it manually
+            urlcontent = self.urlopener.open(self.monitor_cgi_url + "/login.cgi?", logindata + "&referer=")
+            urlcontent.close()
+            if len(self.Cookie) > 0:
+                self.CookieAuth = True
+        except:
+            self.Error(sys.exc_info())
 
 
     def _get_status(self):
@@ -181,118 +169,65 @@ class ThrukServer(GenericServer):
         # unfortunately the hosts status page has a different structure so
         # hosts must be analyzed separately
         try:
-            for status_type in "hard", "soft":
-                result = self.FetchURL(self.cgiurl_hosts[status_type])
-                htobj, error = result.result, result.error
+            # JSON experiments
+            result = self.FetchURL(self.cgiurl_hosts, giveback="raw")
+            jsonraw, error = copy.deepcopy(result.result), copy.deepcopy(result.error)
+            if error != "": return Result(result=jsonraw, error=error)
 
-                if error != "": return Result(result=copy.deepcopy(htobj), error=copy.deepcopy(error))
+            # in case basic auth did not work try form login cookie based login
+            if jsonraw.startswith("<"):
+                self.CookieAuth = True
+                return Result(result=None, error="Login failed.")
 
-                table = copy.deepcopy(htobj('table', {'class': 'status'}))
+            # in case JSON is not empty evaluate it
+            elif not jsonraw == "[]":
+                hosts = json.loads(jsonraw)
 
-                # If all is OK table is empty but leads to index error
-                if len(table) == 0:
-                    trs = []
-                else:
-                    # put a copy of a part of htobj into table to be able to delete htobj
-                    table = table[0]
-                    # access table rows
-                    # some Icinga versions have a <tbody> tag in cgi output HTML which
-                    # omits the <tr> tags being found
-                    if len(table('tbody')) == 0:
-                        trs = copy.deepcopy(table('tr', recursive=False))
-                    else:
-                        tbody = copy.deepcopy(table('tbody')[0])
-                        trs = copy.deepcopy(tbody('tr', recursive=False))
-                    # kick out table heads
-                    ###trs.pop(0)
+                for h in hosts:
+                    # new host item
+                    n = {}
 
-                # dummy tds to be deleteable
-                tds = []
+                    # host
+                    n["host"] = h["name"]
+                    # status
+                    n["status"] = self.STATES_MAPPING["hosts"][h["state"]]
+                    # last_check
+                    n["last_check"] = datetime.datetime.fromtimestamp(int(h["last_check"])).isoformat(" ")
+                    # duration
+                    n["duration"] = Actions.HumanReadableDurationThruk(h["last_state_change"])
+                    # status information
+                    n["status_information"] = h["plugin_output"]
+                    # attempts
+                    n["attempt"] = "%s/%s" % (h["current_attempt"], h["max_check_attempts"])
+                    # status flags
+                    n["passiveonly"] = not(bool(int(h["active_checks_enabled"])))
+                    n["notifications_disabled"] = not(bool(int(h["notifications_enabled"])))
+                    n["flapping"] = bool(int(h["is_flapping"]))
+                    n["acknowledged"] = bool(int(h["acknowledged"]))
+                    n["scheduled_downtime"] = bool(int(h["scheduled_downtime_depth"]))
+                    n["status_type"] = {0: "soft", 1: "hard"}[h["state_type"]]
 
-                for tr in trs:
-                    try:
-                        # ignore empty <tr> rows
-                        if len(tr('td', recursive=False)) > 1:
-                            n = dict()
-                            # get tds in one tr
-                            tds = copy.deepcopy(tr('td', recursive=False))
-                            # host
-                            try:
-                                n["host"] = str(tds[0].table.tr.td.table.tr.td.a.string)
-                            except:
-                                n["host"] = str(nagitems[len(nagitems)-1]["host"])
-                            # status
-                            n["status"] = str(tds[1].string)
-                            # last_check
-                            n["last_check"] = str(tds[2].string)
-                            # duration
-                            n["duration"] = str(tds[3].string)
-                            # division between Nagios and Icinga in real life... where
-                            # Nagios has only 5 columns there are 7 in Icinga 1.3...
-                            # ... and 6 in Icinga 1.2 :-)
-                            if len(tds) < 7:
-                                # the old Nagios table
-                                # status_information
-                                if len(tds[4](text=not_empty)) == 0:
-                                    n["status_information"] = ""
-                                else:
-                                    n["status_information"] = str(tds[4](text=not_empty)[1]).encode("utf-8")
-                                # attempts are not shown in case of hosts so it defaults to "N/A"
-                                n["attempt"] = "N/A"
-                            else:
-                                # attempts are shown for hosts
-                                # to fix http://sourceforge.net/tracker/?func=detail&atid=1101370&aid=3280961&group_id=236865 .attempt needs
-                                # to be stripped
-                                n["attempt"] = str(tds[4].string).strip()
-                                # status_information
-                                if len(tds[5](text=not_empty)) == 0:
-                                    n["status_information"] = ""
-                                else:
-                                    n["status_information"] = str(tds[5].string).encode("utf-8")
-
-                            # status flags
-                            n["passiveonly"] = False
-                            n["notifications_disabled"] = False
-                            n["flapping"] = False
-                            n["acknowledged"] = False
-                            n["scheduled_downtime"] = False
-
-                            # map status icons to status flags
-                            icons = tds[0].findAll('img')
-                            for i in icons:
-                                icon = i["src"].split("/")[-1]
-                                if icon in self.STATUS_MAPPING:
-                                    n[self.STATUS_MAPPING[icon]] = True
-                            # cleaning
-                            del icons
-
-                            # add dictionary full of information about this host item to nagitems
-                            nagitems["hosts"].append(n)
-                            # after collection data in nagitems create objects from its informations
-                            # host objects contain service objects
-                            if not self.new_hosts.has_key(n["host"]):
-                                new_host = n["host"]
-                                self.new_hosts[new_host] = GenericHost()
-                                self.new_hosts[new_host].name = n["host"]
-                                self.new_hosts[new_host].status = n["status"]
-                                self.new_hosts[new_host].last_check = n["last_check"]
-                                self.new_hosts[new_host].duration = n["duration"]
-                                self.new_hosts[new_host].attempt = n["attempt"]
-                                self.new_hosts[new_host].status_information= n["status_information"].encode("utf-8")
-                                self.new_hosts[new_host].passiveonly = n["passiveonly"]
-                                self.new_hosts[new_host].notifications_disabled = n["notifications_disabled"]
-                                self.new_hosts[new_host].flapping = n["flapping"]
-                                self.new_hosts[new_host].acknowledged = n["acknowledged"]
-                                self.new_hosts[new_host].scheduled_downtime = n["scheduled_downtime"]
-                                self.new_hosts[new_host].status_type = status_type
-                            del n
-                    except:
-                        self.Error(sys.exc_info())
-
-                # do some cleanup
-                htobj.decompose()
-                del trs, tds, table, htobj, result, error
-
+                    # add dictionary full of information about this host item to nagitems
+                    nagitems["hosts"].append(n)
+                    # after collection data in nagitems create objects from its informations
+                    # host objects contain service objects
+                    if not self.new_hosts.has_key(n["host"]):
+                        new_host = n["host"]
+                        self.new_hosts[new_host] = GenericHost()
+                        self.new_hosts[new_host].name = n["host"]
+                        self.new_hosts[new_host].status = n["status"]
+                        self.new_hosts[new_host].last_check = n["last_check"]
+                        self.new_hosts[new_host].duration = n["duration"]
+                        self.new_hosts[new_host].attempt = n["attempt"]
+                        self.new_hosts[new_host].status_information= n["status_information"].encode("utf-8")
+                        self.new_hosts[new_host].passiveonly = n["passiveonly"]
+                        self.new_hosts[new_host].notifications_disabled = n["notifications_disabled"]
+                        self.new_hosts[new_host].flapping = n["flapping"]
+                        self.new_hosts[new_host].acknowledged = n["acknowledged"]
+                        self.new_hosts[new_host].scheduled_downtime = n["scheduled_downtime"]
+                        self.new_hosts[new_host].status_type = n["status_type"]
+                        del n
+                    del h
         except:
             # set checking flag back to False
             self.isChecking = False
@@ -301,124 +236,75 @@ class ThrukServer(GenericServer):
 
         # services
         try:
-            for status_type in "hard", "soft":
-                result = self.FetchURL(self.cgiurl_services[status_type])
-                htobj, error = result.result, result.error
-                if error != "": return Result(result=copy.deepcopy(htobj), error=copy.deepcopy(error))
 
-                table = copy.deepcopy(htobj('table', {'class': 'status servicestatus'}))
+            # JSON experiments
+            result = self.FetchURL(self.cgiurl_services, giveback="raw")
+            jsonraw, error = copy.deepcopy(result.result), copy.deepcopy(result.error)
 
-                # If all is OK table is empty but leads to index error
-                if len(table) == 0:
-                    trs = []
-                else:
-                    table = table[0]
-                    # some Icinga versions have a <tbody> tag in cgi output HTML which
-                    # omits the <tr> tags being found
-                    if len(table('tbody')) == 0:
-                        trs = copy.deepcopy(table('tr', recursive=False))
-                    else:
-                        tbody = copy.deepcopy(table('tbody')[0])
-                        trs = copy.deepcopy(tbody('tr', recursive=False))
-                    # kick out table heads
-                    ###trs.pop(0)
+            if error != "": return Result(result=jsonraw, error=error)
 
-                # dummy tds to be deleteable
-                tds = []
+            # in case basic auth did not work try form login cookie based login
+            if jsonraw.startswith("<"):
+                self.CookieAuth = True
+                return Result(result=None, error="Login failed.")
 
-                for tr in trs:
-                    try:
-                        # ignore empty <tr> rows - there are a lot of them - a Nagios bug?
-                        tds = copy.deepcopy(tr('td', recursive=False))
+            # in case JSON is not empty evaluate it
+            elif not jsonraw == "[]":
+                services = json.loads(jsonraw)
 
-                        if len(tds) > 1:
-                            n = dict()
-                            # host
-                            # the resulting table of Nagios status.cgi table omits the
-                            # hostname of a failing service if there are more than one
-                            # so if the hostname is empty the nagios status item should get
-                            # its hostname from the previuos item - one reason to keep "nagitems"
-                            try:
-                                n["host"] = str(tds[0](text=not_empty)[0])
-                            except:
-                                n["host"] = str(nagitems["services"][len(nagitems["services"])-1]["host"])
-                            # service
-                            n["service"] = str(tds[1](text=not_empty)[0])
-                            # status
-                            n["status"] = str(tds[2](text=not_empty)[0])
-                            # last_check
-                            n["last_check"] = str(tds[3](text=not_empty)[0])
-                            # duration
-                            n["duration"] = str(tds[4](text=not_empty)[0])
-                            # attempt
-                            # to fix http://sourceforge.net/tracker/?func=detail&atid=1101370&aid=3280961&group_id=236865 .attempt needs
-                            # to be stripped
-                            n["attempt"] = str(tds[5](text=not_empty)[0]).strip()
-                            # status_information
-                            if len(tds[6](text=not_empty)) == 0:
-                                n["status_information"] = ""  							
-                            else:
-                                try:
-                                    n["status_information"] = str(tds[6](text=not_empty)[1])
-                                except:
-                                    n["status_information"] = ""
-                            # status flags
-                            n["passiveonly"] = False
-                            n["notifications_disabled"] = False
-                            n["flapping"] = False
-                            n["acknowledged"] = False
-                            n["scheduled_downtime"] = False
+                for s in services:
+                    # new service item
+                    n = {}
+                    n["host"] = s["host_name"]
+                    n["service"] = s["description"]
+                    # status
+                    n["status"] = self.STATES_MAPPING["services"][s["state"]]
+                    # last_check
+                    n["last_check"] = datetime.datetime.fromtimestamp(int(s["last_check"])).isoformat(" ")
+                    # duration
+                    n["duration"] = Actions.HumanReadableDurationThruk(s["last_state_change"])
+                    # status information
+                    n["status_information"] = s["plugin_output"]
+                    # attempts
+                    n["attempt"] = "%s/%s" % (s["current_attempt"], s["max_check_attempts"])
+                    # status flags
+                    n["passiveonly"] = not(bool(int(s["active_checks_enabled"])))
+                    n["notifications_disabled"] = not(bool(int(s["notifications_enabled"])))
+                    n["flapping"] = bool(int(s["is_flapping"]))
+                    n["acknowledged"] = bool(int(s["acknowledged"]))
+                    n["scheduled_downtime"] = bool(int(s["scheduled_downtime_depth"]))
+                    n["status_type"] = {0: "soft", 1: "hard"}[s["state_type"]]
 
-                            # map status icons to status flags
-                            icons = tds[1].findAll('img')
-                            for i in icons:
-                                icon = i["src"].split("/")[-1]
-                                if icon in self.STATUS_MAPPING:
-                                    n[self.STATUS_MAPPING[icon]] = True
-                            # cleaning
-                            del icons
+                     # add dictionary full of information about this service item to nagitems - only if service
+                    nagitems["services"].append(n)
 
-                            # add dictionary full of information about this service item to nagitems - only if service
-                            nagitems["services"].append(n)
-                            # after collection data in nagitems create objects of its informations
-                            # host objects contain service objects
-                            if not self.new_hosts.has_key(n["host"]):
-                                self.new_hosts[n["host"]] = GenericHost()
-                                self.new_hosts[n["host"]].name = n["host"]
-                                self.new_hosts[n["host"]].status = "UP"
-                                # trying to fix https://sourceforge.net/tracker/index.php?func=detail&aid=3299790&group_id=236865&atid=1101370
-                                # if host is not down but in downtime or any other flag this should be evaluated too
-                                # map status icons to status flags
-                                icons = tds[0].findAll('img')
-                                for i in icons:
-                                    icon = i["src"].split("/")[-1]
-                                    if icon in self.STATUS_MAPPING:
-                                        self.new_hosts[n["host"]].__dict__[self.STATUS_MAPPING[icon]] = True
+                    # after collection data in nagitems create objects of its informations
+                    # host objects contain service objects
+                    if not self.new_hosts.has_key(n["host"]):
+                        self.new_hosts[n["host"]] = GenericHost()
+                        self.new_hosts[n["host"]].name = n["host"]
+                        self.new_hosts[n["host"]].status = "UP"
 
-                            # if a service does not exist create its object
-                            if not self.new_hosts[n["host"]].services.has_key(n["service"]):
-                                new_service = n["service"]
-                                self.new_hosts[n["host"]].services[new_service] = GenericService()
-                                self.new_hosts[n["host"]].services[new_service].host = n["host"]
-                                self.new_hosts[n["host"]].services[new_service].name = n["service"]
-                                self.new_hosts[n["host"]].services[new_service].status = n["status"]
-                                self.new_hosts[n["host"]].services[new_service].last_check = n["last_check"]
-                                self.new_hosts[n["host"]].services[new_service].duration = n["duration"]
-                                self.new_hosts[n["host"]].services[new_service].attempt = n["attempt"]
-                                self.new_hosts[n["host"]].services[new_service].status_information = n["status_information"].encode("utf-8")
-                                self.new_hosts[n["host"]].services[new_service].passiveonly = n["passiveonly"]
-                                self.new_hosts[n["host"]].services[new_service].notifications_disabled = n["notifications_disabled"]
-                                self.new_hosts[n["host"]].services[new_service].flapping = n["flapping"]
-                                self.new_hosts[n["host"]].services[new_service].acknowledged = n["acknowledged"]
-                                self.new_hosts[n["host"]].services[new_service].scheduled_downtime = n["scheduled_downtime"]
-                                self.new_hosts[n["host"]].services[new_service].status_type = status_type
-                            del n
-                    except:
-                        self.Error(sys.exc_info())
+                    # if a service does not exist create its object
+                    if not self.new_hosts[n["host"]].services.has_key(n["service"]):
+                        new_service = n["service"]
+                        self.new_hosts[n["host"]].services[new_service] = GenericService()
+                        self.new_hosts[n["host"]].services[new_service].host = n["host"]
+                        self.new_hosts[n["host"]].services[new_service].name = n["service"]
+                        self.new_hosts[n["host"]].services[new_service].status = n["status"]
+                        self.new_hosts[n["host"]].services[new_service].last_check = n["last_check"]
+                        self.new_hosts[n["host"]].services[new_service].duration = n["duration"]
+                        self.new_hosts[n["host"]].services[new_service].attempt = n["attempt"]
+                        self.new_hosts[n["host"]].services[new_service].status_information = n["status_information"].encode("utf-8")
+                        self.new_hosts[n["host"]].services[new_service].passiveonly = n["passiveonly"]
+                        self.new_hosts[n["host"]].services[new_service].notifications_disabled = n["notifications_disabled"]
+                        self.new_hosts[n["host"]].services[new_service].flapping = n["flapping"]
+                        self.new_hosts[n["host"]].services[new_service].acknowledged = n["acknowledged"]
+                        self.new_hosts[n["host"]].services[new_service].scheduled_downtime = n["scheduled_downtime"]
+                        self.new_hosts[n["host"]].services[new_service].status_type = n["status_type"]
+                        del s
+                    del n
 
-                # do some cleanup
-                htobj.decompose()
-                del trs, tds, table, htobj, result, error
         except:
             # set checking flag back to False
             self.isChecking = False
