@@ -1712,10 +1712,8 @@ class Popwin(object):
         # Initialize type popup
         if platform.system() == "Darwin":
             window = gtk.Window(gtk.WINDOW_POPUP)
-            ###window = _Window(gtk.WINDOW_POPUP)
         else:
             window = gtk.Window(gtk.WINDOW_TOPLEVEL)
-            ###window = _Window(gtk.WINDOW_TOPLEVEL)
             window.set_title(self.output.name + " " + self.output.version)
 
         if str(self.output.conf.fullscreen) == "False":
@@ -2828,6 +2826,8 @@ class Settings(object):
             # create output visuals again because they might have changed (e.g. systray/free floating status bar)
             self.output.statusbar.StatusBar.destroy()
             self.output.statusbar.SysTray.set_visible(False)
+            # if not unfullscreening here some artefact fullscreen window might persist (GTK bug?)
+            self.output.popwin.Window.unfullscreen()
             self.output.popwin.Window.destroy()
             # re-initialize output with new settings
             self.output.__init__()
