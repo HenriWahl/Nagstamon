@@ -140,7 +140,7 @@ class IcingaServer(GenericServer):
         # create Icinga items dictionary with to lists for services and hosts
         # every list will contain a dictionary for every failed service/host
         # this dictionary is only temporarily
-        nagitems = {"services":[], "hosts":[]}
+        ###nagitems = {"services":[], "hosts":[]}
 
         # new_hosts dictionary
         self.new_hosts = dict()
@@ -161,51 +161,30 @@ class IcingaServer(GenericServer):
                     # make dict of tuples for better reading
                     h = dict(host.items())
 
-                    # new host item
-                    n = {}
-
                     # host
                     # according to http://sourceforge.net/p/nagstamon/bugs/83/ it might
                     # better be host_name instead of host_display_name
                     # legacy Icinga adjustments
-                    if h.has_key("host_name"): n["host"] = h["host_name"]
-                    elif h.has_key("host"): n["host"] = h["host"]
-                    # status
-                    n["status"] = h["status"]
-                    # last_check
-                    n["last_check"] = h["last_check"]
-                    # duration
-                    n["duration"] = h["duration"]
-                    # status information
-                    n["status_information"] = h["status_information"]
-                    # attempts
-                    n["attempt"] = h["attempts"]
-                    # status flags
-                    n["passiveonly"] = not(h["active_checks_enabled"])
-                    n["notifications_disabled"] = not(h["notifications_enabled"])
-                    n["flapping"] = h["is_flapping"]
-                    n["acknowledged"] = h["has_been_acknowledged"]
-                    n["scheduled_downtime"] = h["in_scheduled_downtime"]
+                    if h.has_key("host_name"): host_name = h["host_name"]
+                    elif h.has_key("host"): host_name = h["host"]
 
-                    # add dictionary full of information about this host item to nagitems
-                    nagitems["hosts"].append(n)
                     # after collection data in nagitems create objects from its informations
                     # host objects contain service objects
-                    if not self.new_hosts.has_key(n["host"]):
-                        new_host = n["host"]
-                        self.new_hosts[new_host] = GenericHost()
-                        self.new_hosts[new_host].name = n["host"]
-                        self.new_hosts[new_host].status = n["status"]
-                        self.new_hosts[new_host].last_check = n["last_check"]
-                        self.new_hosts[new_host].duration = n["duration"]
-                        self.new_hosts[new_host].attempt = n["attempt"]
-                        self.new_hosts[new_host].status_information= n["status_information"].encode("utf-8")
-                        self.new_hosts[new_host].passiveonly = n["passiveonly"]
-                        self.new_hosts[new_host].notifications_disabled = n["notifications_disabled"]
-                        self.new_hosts[new_host].flapping = n["flapping"]
-                        self.new_hosts[new_host].acknowledged = n["acknowledged"]
-                        self.new_hosts[new_host].scheduled_downtime = n["scheduled_downtime"]
-                        self.new_hosts[new_host].status_type = status_type
+                    if not self.new_hosts.has_key(host_name):
+                        self.new_hosts[host_name] = GenericHost()
+                        self.new_hosts[host_name].name = host_name
+                        self.new_hosts[host_name].status = h["status"]
+                        self.new_hosts[host_name].last_check = h["last_check"]
+                        self.new_hosts[host_name].duration = h["duration"]
+                        self.new_hosts[host_name].attempt = h["attempts"]
+                        self.new_hosts[host_name].status_information= h["status_information"].encode("utf-8")
+                        self.new_hosts[host_name].passiveonly = not(h["active_checks_enabled"])
+                        self.new_hosts[host_name].notifications_disabled = not(h["notifications_enabled"])
+                        self.new_hosts[host_name].flapping = h["is_flapping"]
+                        self.new_hosts[host_name].acknowledged = h["has_been_acknowledged"]
+                        self.new_hosts[host_name].scheduled_downtime = h["in_scheduled_downtime"]
+                        self.new_hosts[host_name].status_type = status_type
+                    del h, host_name
 
         except:
             # set checking flag back to False
@@ -228,64 +207,40 @@ class IcingaServer(GenericServer):
                     # make dict of tuples for better reading
                     s = dict(service.items())
 
-                    # new service item
-                    n = {}
-                    # host
-                    # according to http://sourceforge.net/p/nagstamon/bugs/83/ it might
-                    # better be host_name instead of host_display_name
-                    # legacy Icinga adjustments
-                    if s.has_key("host_name"): n["host"] = s["host_name"]
-                    elif s.has_key("host"): n["host"] = s["host"]
-                    # service
-                    # legacy Icinga adjustments
-                    if s.has_key("service_description"): n["service"] = s["service_description"]
-                    elif s.has_key("description"): n["service"] = s["description"]
-                    elif s.has_key("service"): n["service"] = s["service"]
-                    # status
-                    n["status"] = s["status"]
-                    # last_check
-                    n["last_check"] = s["last_check"]
-                    # duration
-                    n["duration"] = s["duration"]
-                    # attempt
-                    n["attempt"] = s["attempts"]
-                    # status_information
-                    n["status_information"] = s["status_information"]
-                    # status flags
-                    n["passiveonly"] = not(s["active_checks_enabled"])
-                    n["notifications_disabled"] = not(s["notifications_enabled"])
-                    n["flapping"] = s["is_flapping"]
-                    n["acknowledged"] = s["has_been_acknowledged"]
-                    n["scheduled_downtime"] = s["in_scheduled_downtime"]
-
-                    # add dictionary full of information about this service item to nagitems - only if service
-                    nagitems["services"].append(n)
+                    # legacy icinga hostname inconsistency
+                    if s.has_key("host_name"): host_name = s["host_name"]
+                    elif s.has_key("host"): host_name = s["host"]
 
                     # after collection data in nagitems create objects of its informations
                     # host objects contain service objects
-                    if not self.new_hosts.has_key(n["host"]):
-                        self.new_hosts[n["host"]] = GenericHost()
-                        self.new_hosts[n["host"]].name = n["host"]
-                        self.new_hosts[n["host"]].status = "UP"
+                    if not self.new_hosts.has_key(host_name):
+                        self.new_hosts[host_name] = GenericHost()
+                        self.new_hosts[host_name].name = host_name
+                        self.new_hosts[host_name].status = "UP"
+
+                    # legacy Icinga adjustments
+                    if s.has_key("service_description"): service_name = s["service_description"]
+                    elif s.has_key("description"): service_name = s["description"]
+                    elif s.has_key("service"): service_name = s["service"]
 
                     # if a service does not exist create its object
-                    if not self.new_hosts[n["host"]].services.has_key(n["service"]):
-                        new_service = n["service"]
-                        self.new_hosts[n["host"]].services[new_service] = GenericService()
-                        self.new_hosts[n["host"]].services[new_service].host = n["host"]
-                        self.new_hosts[n["host"]].services[new_service].name = n["service"]
-                        self.new_hosts[n["host"]].services[new_service].status = n["status"]
-                        self.new_hosts[n["host"]].services[new_service].last_check = n["last_check"]
-                        self.new_hosts[n["host"]].services[new_service].duration = n["duration"]
-                        self.new_hosts[n["host"]].services[new_service].attempt = n["attempt"]
-                        self.new_hosts[n["host"]].services[new_service].status_information = n["status_information"].encode("utf-8")
-                        self.new_hosts[n["host"]].services[new_service].passiveonly = n["passiveonly"]
-                        self.new_hosts[n["host"]].services[new_service].notifications_disabled = n["notifications_disabled"]
-                        self.new_hosts[n["host"]].services[new_service].flapping = n["flapping"]
-                        self.new_hosts[n["host"]].services[new_service].acknowledged = n["acknowledged"]
-                        self.new_hosts[n["host"]].services[new_service].scheduled_downtime = n["scheduled_downtime"]
-                        self.new_hosts[n["host"]].services[new_service].status_type = status_type
+                    if not self.new_hosts[host_name].services.has_key(service_name):
+                        self.new_hosts[host_name].services[service_name] = GenericService()
+                        self.new_hosts[host_name].services[service_name].host = host_name
+                        self.new_hosts[host_name].services[service_name].name = service_name
+                        self.new_hosts[host_name].services[service_name].status = s["status"]
+                        self.new_hosts[host_name].services[service_name].last_check = s["last_check"]
+                        self.new_hosts[host_name].services[service_name].duration = s["duration"]
+                        self.new_hosts[host_name].services[service_name].attempt = s["attempts"]
+                        self.new_hosts[host_name].services[service_name].status_information = s["status_information"].encode("utf-8")
+                        self.new_hosts[host_name].services[service_name].passiveonly = not(s["active_checks_enabled"])
+                        self.new_hosts[host_name].services[service_name].notifications_disabled = not(s["notifications_enabled"])
+                        self.new_hosts[host_name].services[service_name].flapping = s["is_flapping"]
+                        self.new_hosts[host_name].services[service_name].acknowledged = s["has_been_acknowledged"]
+                        self.new_hosts[host_name].services[service_name].scheduled_downtime = s["in_scheduled_downtime"]
 
+                        self.new_hosts[host_name].services[service_name].status_type = status_type
+                    del s, host_name, service_name
         except:
             # set checking flag back to False
             self.isChecking = False
@@ -293,7 +248,7 @@ class IcingaServer(GenericServer):
             return Result(result=result, error=error)
 
         # some cleanup
-        del nagitems, jsonraw, jsondict, error, hosts, services
+        del jsonraw, jsondict, error, hosts, services
 
         #dummy return in case all is OK
         return Result()
