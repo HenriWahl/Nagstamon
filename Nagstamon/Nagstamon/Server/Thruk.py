@@ -134,11 +134,11 @@ class ThrukServer(GenericServer):
         # http://www.nagios-wiki.de/nagios/tips/host-_und_serviceproperties_fuer_status.cgi?s=servicestatustypes
         # Thruk allows requesting only needed information to reduce traffic
         self.cgiurl_services = self.monitor_cgi_url + "/status.cgi?host=all&servicestatustypes=28&view_mode=json&"\
-                                                        "columns=host_name,description,state,last_check,"\
-                                                        "last_state_change,plugin_output,current_attempt,"\
-                                                        "max_check_attempts,active_checks_enabled,is_flapping,"\
-                                                        "notifications_enabled,acknowledged,state_type,"\
-                                                        "scheduled_downtime_depth"
+                                                      "columns=host_name,description,state,last_check,"\
+                                                      "last_state_change,plugin_output,current_attempt,"\
+                                                      "max_check_attempts,active_checks_enabled,is_flapping,"\
+                                                      "notifications_enabled,acknowledged,state_type,"\
+                                                      "scheduled_downtime_depth"
         # hosts (up or down or unreachable)
         self.cgiurl_hosts = self.monitor_cgi_url + "/status.cgi?hostgroup=all&style=hostdetail&hoststatustypes=12&"\
                                                     "view_mode=json&columns=name,state,last_check,last_state_change,"\
@@ -167,11 +167,6 @@ class ThrukServer(GenericServer):
         """
         Get status from Thruk Server
         """
-        # create Nagios items dictionary with to lists for services and hosts
-        # every list will contain a dictionary for every failed service/host
-        # this dictionary is only temporarily
-        nagitems = {"services":[], "hosts":[]}
-
         # new_hosts dictionary
         self.new_hosts = dict()
 
@@ -194,49 +189,21 @@ class ThrukServer(GenericServer):
                 hosts = json.loads(jsonraw)
 
                 for h in hosts:
-                    # new host item
-                    n = {}
-
-                    # host
-                    n["host"] = h["name"]
-                    # status
-                    n["status"] = self.STATES_MAPPING["hosts"][h["state"]]
-                    # last_check
-                    n["last_check"] = datetime.datetime.fromtimestamp(int(h["last_check"])).isoformat(" ")
-                    # duration
-                    n["duration"] = Actions.HumanReadableDurationThruk(h["last_state_change"])
-                    # status information
-                    n["status_information"] = h["plugin_output"]
-                    # attempts
-                    n["attempt"] = "%s/%s" % (h["current_attempt"], h["max_check_attempts"])
-                    # status flags
-                    n["passiveonly"] = not(bool(int(h["active_checks_enabled"])))
-                    n["notifications_disabled"] = not(bool(int(h["notifications_enabled"])))
-                    n["flapping"] = bool(int(h["is_flapping"]))
-                    n["acknowledged"] = bool(int(h["acknowledged"]))
-                    n["scheduled_downtime"] = bool(int(h["scheduled_downtime_depth"]))
-                    n["status_type"] = {0: "soft", 1: "hard"}[h["state_type"]]
-
-                    # add dictionary full of information about this host item to nagitems
-                    nagitems["hosts"].append(n)
-                    # after collection data in nagitems create objects from its informations
-                    # host objects contain service objects
-                    if not self.new_hosts.has_key(n["host"]):
-                        new_host = n["host"]
-                        self.new_hosts[new_host] = GenericHost()
-                        self.new_hosts[new_host].name = n["host"]
-                        self.new_hosts[new_host].status = n["status"]
-                        self.new_hosts[new_host].last_check = n["last_check"]
-                        self.new_hosts[new_host].duration = n["duration"]
-                        self.new_hosts[new_host].attempt = n["attempt"]
-                        self.new_hosts[new_host].status_information= n["status_information"].encode("utf-8")
-                        self.new_hosts[new_host].passiveonly = n["passiveonly"]
-                        self.new_hosts[new_host].notifications_disabled = n["notifications_disabled"]
-                        self.new_hosts[new_host].flapping = n["flapping"]
-                        self.new_hosts[new_host].acknowledged = n["acknowledged"]
-                        self.new_hosts[new_host].scheduled_downtime = n["scheduled_downtime"]
-                        self.new_hosts[new_host].status_type = n["status_type"]
-                        del n
+                    if not self.new_hosts.has_key(h["name"]):
+                        ###new_host = h["name"]
+                        self.new_hosts[h["name"]] = GenericHost()
+                        self.new_hosts[h["name"]].name = h["name"]
+                        self.new_hosts[h["name"]].status = self.STATES_MAPPING["hosts"][h["state"]]
+                        self.new_hosts[h["name"]].last_check = datetime.datetime.fromtimestamp(int(h["last_check"])).isoformat(" ")
+                        self.new_hosts[h["name"]].duration = Actions.HumanReadableDurationThruk(h["last_state_change"])
+                        self.new_hosts[h["name"]].attempt = "%s/%s" % (h["current_attempt"], h["max_check_attempts"])
+                        self.new_hosts[h["name"]].status_information= h["plugin_output"].encode("utf-8")
+                        self.new_hosts[h["name"]].passiveonly = not(bool(int(h["active_checks_enabled"])))
+                        self.new_hosts[h["name"]].notifications_disabled = bool(int(h["is_flapping"]))
+                        self.new_hosts[h["name"]].flapping = bool(int(h["is_flapping"]))
+                        self.new_hosts[h["name"]].acknowledged = bool(int(h["acknowledged"]))
+                        self.new_hosts[h["name"]].scheduled_downtime = bool(int(h["scheduled_downtime_depth"]))
+                        self.new_hosts[h["name"]].status_type =  {0: "soft", 1: "hard"}[h["state_type"]]
                     del h
         except:
             # set checking flag back to False
@@ -263,66 +230,36 @@ class ThrukServer(GenericServer):
                 services = json.loads(jsonraw)
 
                 for s in services:
-                    # new service item
-                    n = {}
-                    n["host"] = s["host_name"]
-                    n["service"] = s["description"]
-                    # status
-                    n["status"] = self.STATES_MAPPING["services"][s["state"]]
-                    # last_check
-                    n["last_check"] = datetime.datetime.fromtimestamp(int(s["last_check"])).isoformat(" ")
-                    # duration
-                    n["duration"] = Actions.HumanReadableDurationThruk(s["last_state_change"])
-                    # status information
-                    n["status_information"] = s["plugin_output"]
-                    # attempts
-                    n["attempt"] = "%s/%s" % (s["current_attempt"], s["max_check_attempts"])
-                    # status flags
-                    n["passiveonly"] = not(bool(int(s["active_checks_enabled"])))
-                    n["notifications_disabled"] = not(bool(int(s["notifications_enabled"])))
-                    n["flapping"] = bool(int(s["is_flapping"]))
-                    n["acknowledged"] = bool(int(s["acknowledged"]))
-                    n["scheduled_downtime"] = bool(int(s["scheduled_downtime_depth"]))
-                    n["status_type"] = {0: "soft", 1: "hard"}[s["state_type"]]
-
-                     # add dictionary full of information about this service item to nagitems - only if service
-                    nagitems["services"].append(n)
-
                     # after collection data in nagitems create objects of its informations
                     # host objects contain service objects
-                    if not self.new_hosts.has_key(n["host"]):
-                        self.new_hosts[n["host"]] = GenericHost()
-                        self.new_hosts[n["host"]].name = n["host"]
-                        self.new_hosts[n["host"]].status = "UP"
+                    if not self.new_hosts.has_key(s["host_name"]):
+                        self.new_hosts[s["host_name"]] = GenericHost()
+                        self.new_hosts[s["host_name"]].name = s["host_name"]
+                        self.new_hosts[s["host_name"]].status = "UP"
 
                     # if a service does not exist create its object
-                    if not self.new_hosts[n["host"]].services.has_key(n["service"]):
-                        new_service = n["service"]
-                        self.new_hosts[n["host"]].services[new_service] = GenericService()
-                        self.new_hosts[n["host"]].services[new_service].host = n["host"]
-                        self.new_hosts[n["host"]].services[new_service].name = n["service"]
-                        self.new_hosts[n["host"]].services[new_service].status = n["status"]
-                        self.new_hosts[n["host"]].services[new_service].last_check = n["last_check"]
-                        self.new_hosts[n["host"]].services[new_service].duration = n["duration"]
-                        self.new_hosts[n["host"]].services[new_service].attempt = n["attempt"]
-                        self.new_hosts[n["host"]].services[new_service].status_information = n["status_information"].encode("utf-8")
-                        self.new_hosts[n["host"]].services[new_service].passiveonly = n["passiveonly"]
-                        self.new_hosts[n["host"]].services[new_service].notifications_disabled = n["notifications_disabled"]
-                        self.new_hosts[n["host"]].services[new_service].flapping = n["flapping"]
-                        self.new_hosts[n["host"]].services[new_service].acknowledged = n["acknowledged"]
-                        self.new_hosts[n["host"]].services[new_service].scheduled_downtime = n["scheduled_downtime"]
-                        self.new_hosts[n["host"]].services[new_service].status_type = n["status_type"]
+                    if not self.new_hosts[s["host_name"]].services.has_key(s["description"]):
+                        ###new_service = s["description"]
+                        self.new_hosts[s["host_name"]].services[s["description"]] = GenericService()
+                        self.new_hosts[s["host_name"]].services[s["description"]].host = s["host_name"]
+                        self.new_hosts[s["host_name"]].services[s["description"]].name = s["description"]
+                        self.new_hosts[s["host_name"]].services[s["description"]].status = self.STATES_MAPPING["services"][s["state"]]
+                        self.new_hosts[s["host_name"]].services[s["description"]].last_check = datetime.datetime.fromtimestamp(int(s["last_check"])).isoformat(" ")
+                        self.new_hosts[s["host_name"]].services[s["description"]].duration = Actions.HumanReadableDurationThruk(s["last_state_change"])
+                        self.new_hosts[s["host_name"]].services[s["description"]].attempt = "%s/%s" % (s["current_attempt"], s["max_check_attempts"])
+                        self.new_hosts[s["host_name"]].services[s["description"]].status_information = s["plugin_output"].encode("utf-8")
+                        self.new_hosts[s["host_name"]].services[s["description"]].passiveonly = not(bool(int(s["active_checks_enabled"])))
+                        self.new_hosts[s["host_name"]].services[s["description"]].notifications_disabled = not(bool(int(s["notifications_enabled"])))
+                        self.new_hosts[s["host_name"]].services[s["description"]].flapping = bool(int(s["is_flapping"]))
+                        self.new_hosts[s["host_name"]].services[s["description"]].acknowledged = bool(int(s["acknowledged"]))
+                        self.new_hosts[s["host_name"]].services[s["description"]].scheduled_downtime = bool(int(s["scheduled_downtime_depth"]))
+                        self.new_hosts[s["host_name"]].services[s["description"]].status_type = {0: "soft", 1: "hard"}[s["state_type"]]
                         del s
-                    del n
-
         except:
             # set checking flag back to False
             self.isChecking = False
             result, error = self.Error(sys.exc_info())
             return Result(result=result, error=error)
-
-        # some cleanup
-        del nagitems
 
         #dummy return in case all is OK
         return Result()
