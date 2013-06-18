@@ -2826,8 +2826,6 @@ class Settings(object):
             # create output visuals again because they might have changed (e.g. systray/free floating status bar)
             self.output.statusbar.StatusBar.destroy()
             self.output.statusbar.SysTray.set_visible(False)
-            # if not unfullscreening here some artefact fullscreen window might persist (GTK bug?)
-            self.output.popwin.Window.unfullscreen()
             # still not going away artefact - trying brute force
             while self.output.popwin.Window.get_visible():
                 self.output.popwin.Window.destroy()
