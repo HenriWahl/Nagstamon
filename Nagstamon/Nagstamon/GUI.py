@@ -1788,10 +1788,7 @@ class Popwin(object):
         refresh fullscreen window
         """
         # get current monitor's settings
-        # screeny0 might be important on more-than-one-monitor-setups where it will not be 0
-        x0, y0 = self.Window.get_position()
-        w, h = self.Window.get_size()
-        screenx0, screeny0, screenwidth, screenheight = self.output.monitors[self.Window.get_screen().get_monitor_at_point(x0,y0)]
+        screenx0, screeny0, screenwidth, screenheight = self.output.monitors[int(self.conf.fullscreen_display)]
 
         # limit size of scrolled vbox
         vboxwidth, vboxheight = self.ScrolledVBox.size_request()
@@ -1801,24 +1798,21 @@ class Popwin(object):
         self.buttonswidth, self.buttonsheight = self.HBoxAllButtons.size_request()
 
         # later GNOME might need some extra heightbuffer if using dual screen
-        if vboxheight > screenheight - self.buttonsheight - self.heightbuffer_external - self.heightbuffer_internal:
+        if vboxheight > screenheight - self.buttonsheight- self.heightbuffer_internal:
             # helpless attempt to get window fitting on screen if not maximized on newer unixoid DEs by doubling
             # external heightbuffer
             # leads to silly grey unused whitespace on GNOME3 dualmonitor, but there is still some information visisble..
             # let's call this a feature no bug
-            vboxheight = screenheight - self.buttonsheight - 2*self.heightbuffer_external - self.heightbuffer_internal
+            vboxheight = screenheight - self.buttonsheight - self.heightbuffer_internal
         else:
             # avoid silly scrollbar
             vboxheight += self.heightbuffer_internal
 
         self.ScrolledWindow.set_size_request(-1, vboxheight)
+        # even if fullscreen this is necessary
         self.Window.set_size_request(self.buttonswidth, -1)
         self.Window.show_all()
         self.Window.set_visible(True)
-
-        # shrink window
-        w, h = self.Window.get_size()
-        self.Window.resize(w, 1)
 
 
     def LeavePopWin(self, widget=None, event=None):

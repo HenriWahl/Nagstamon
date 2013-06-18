@@ -221,10 +221,6 @@ class MultisiteServer(GenericServer):
         Get status from Check_MK Server
         """
         ret = Result()
-        # create Nagios items dictionary with to lists for services and hosts
-        # every list will contain a dictionary for every failed service/host
-        # this dictionary is only temporarily
-        nagitems = {"services":[], "hosts":[]}
 
         # Create URLs for the configured filters
         url_params = ''
@@ -255,9 +251,6 @@ class MultisiteServer(GenericServer):
                     'address':            host['host_address'],
                 }
 
-                # add dictionary full of information about this host item to nagitems
-                nagitems["hosts"].append(n)
-                # after collection data in nagitems create objects from its informations
                 # host objects contain service objects
                 if not self.new_hosts.has_key(n["host"]):
                     new_host = n["host"]
@@ -327,9 +320,6 @@ class MultisiteServer(GenericServer):
                     'command':            service['svc_check_command'],
                 }
 
-                # add dictionary full of information about this service item to nagitems - only if service
-                nagitems["services"].append(n)
-                # after collection data in nagitems create objects of its informations
                 # host objects contain service objects
                 if not self.new_hosts.has_key(n["host"]):
                     self.new_hosts[n["host"]] = GenericHost()

@@ -234,7 +234,6 @@ class NinjaServer(GenericServer):
         for tr in [tr for tr in table('tr') if len(tr('td')) > 1]:
             n = self.parse_host_row(tr)
 
-            # after collection data in nagitems create objects from its informations
             # host objects contain service objects
             if n["name"] not in self.new_hosts:
                 new_host = GenericHost()

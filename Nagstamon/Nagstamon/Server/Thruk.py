@@ -230,7 +230,6 @@ class ThrukServer(GenericServer):
                 services = json.loads(jsonraw)
 
                 for s in services:
-                    # after collection data in nagitems create objects of its informations
                     # host objects contain service objects
                     if not self.new_hosts.has_key(s["host_name"]):
                         self.new_hosts[s["host_name"]] = GenericHost()

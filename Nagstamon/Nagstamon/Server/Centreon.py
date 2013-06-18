@@ -308,11 +308,6 @@ class CentreonServer(GenericServer):
         """
         Get status from Centreon Server
         """
-        # create Nagios items dictionary with to lists for services and hosts
-        # every list will contain a dictionary for every failed service/host
-        # this dictionary is only temporarily
-        nagitems = {"services":[], "hosts":[]}
-
         # get sid in case this has not yet been done
         if self.SID == None or self.SID == "":
             self.SID = self._get_sid().result
@@ -381,9 +376,7 @@ class CentreonServer(GenericServer):
                         n["flapping"] = "0"
                     # active checks enabled or passiveonly?
                     n["passiveonly"] = str(l.ace.text)
-                    # add dictionary full of information about this host item to nagitems
-                    nagitems["hosts"].append(n)
-                    # after collection data in nagitems create objects from its informations
+
                     # host objects contain service objects
                     if not self.new_hosts.has_key(n["host"]):
                         new_host = n["host"]
@@ -440,7 +433,7 @@ class CentreonServer(GenericServer):
                     # the resulting table of Nagios status.cgi table omits the
                     # hostname of a failing service if there are more than one
                     # so if the hostname is empty the nagios status item should get
-                    # its hostname from the previuos item - one reason to keep "nagitems"
+                    # its hostname from the previuos item
                     n["host"] = str(l.hn.text)
                     # service
                     n["service"] = str(l.sd.text)
@@ -466,10 +459,7 @@ class CentreonServer(GenericServer):
                     # the "is" flag indicates "is_flapping"... and python whines when using l.is.text so we need to
                     # use .find("is") instead
                     n["flapping"] = str(l.find("is").text)
-                    # add dictionary full of information about this service item to nagitems - only if service
-                    nagitems["services"].append(n)
 
-                    # after collection data in nagitems create objects of its informations
                     # host objects contain service objects
                     if not self.new_hosts.has_key(n["host"]):
                         self.new_hosts[n["host"]] = GenericHost()
@@ -506,9 +496,6 @@ class CentreonServer(GenericServer):
             self.isChecking = False
             result, error = self.Error(sys.exc_info())
             return Result(result=result, error=error)
-
-        # some cleanup
-        del nagitems
 
         # return True if all worked well
         return Result()

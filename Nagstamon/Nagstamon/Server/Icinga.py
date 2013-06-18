@@ -137,11 +137,6 @@ class IcingaServer(GenericServer):
         """
         Get status from Icinga Server - the JSON way
         """
-        # create Icinga items dictionary with to lists for services and hosts
-        # every list will contain a dictionary for every failed service/host
-        # this dictionary is only temporarily
-        ###nagitems = {"services":[], "hosts":[]}
-
         # new_hosts dictionary
         self.new_hosts = dict()
 
@@ -168,7 +163,6 @@ class IcingaServer(GenericServer):
                     if h.has_key("host_name"): host_name = h["host_name"]
                     elif h.has_key("host"): host_name = h["host"]
 
-                    # after collection data in nagitems create objects from its informations
                     # host objects contain service objects
                     if not self.new_hosts.has_key(host_name):
                         self.new_hosts[host_name] = GenericHost()
@@ -211,7 +205,6 @@ class IcingaServer(GenericServer):
                     if s.has_key("host_name"): host_name = s["host_name"]
                     elif s.has_key("host"): host_name = s["host"]
 
-                    # after collection data in nagitems create objects of its informations
                     # host objects contain service objects
                     if not self.new_hosts.has_key(host_name):
                         self.new_hosts[host_name] = GenericHost()
