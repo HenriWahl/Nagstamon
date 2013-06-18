@@ -749,7 +749,8 @@ class GenericServer(object):
             if "HTTP Error 401" in status.error or \
                "HTTP Error 403" in status.error or \
                "HTTP Error 500" in status.error or \
-               "Bad Session ID" in status.error:
+               "Bad Session ID" in status.error or \
+               "Login failed" in status.error:
                 if str(self.conf.servers[self.name].enabled) == "True":
                     while status.error != "":
                         # clean existent authentication
