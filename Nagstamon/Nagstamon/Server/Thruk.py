@@ -142,8 +142,8 @@ class ThrukServer(GenericServer):
         # hosts (up or down or unreachable)
         self.cgiurl_hosts = self.monitor_cgi_url + "/status.cgi?hostgroup=all&style=hostdetail&hoststatustypes=12&"\
                                                     "view_mode=json&columns=name,state,last_check,last_state_change,"\
-                                                    "plugin_output,current_attempt,max_check_attempts"\
-                                                    "active_checks_enabled,notifications_enabled,is_flapping"\
+                                                    "plugin_output,current_attempt,max_check_attempts,"\
+                                                    "active_checks_enabled,notifications_enabled,is_flapping,"\
                                                     "acknowledged,scheduled_downtime_depth,state_type"
 
         # test for cookies
