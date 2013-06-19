@@ -154,53 +154,55 @@ class OpsviewServer(GenericServer):
         # because we filter them out later
         # the API seems not to let hosts information directly, we hope to get it from service informations
         try:
-            opsapiurl = self.monitor_url + "/api/status/service?state=1&state=2&state=3"
-            result = self.FetchURL(opsapiurl, giveback="xml")
+            result = self.FetchURL(self.monitor_url + "/api/status/service?state=1&state=2&state=3", giveback="xml")
             xmlobj, error = result.result, result.error
             if error != "": return Result(result=xmlobj, error=copy.deepcopy(error))
 
             for host in xmlobj.data.findAll("list"):
                 # host
                 hostdict = dict(host._getAttrMap())
-                self.new_hosts[hostdict["name"]] = GenericHost()
-                self.new_hosts[hostdict["name"]].name = str(hostdict["name"])
+                self.new_hosts[str(hostdict["name"])] = GenericHost()
+                self.new_hosts[str(hostdict["name"])].name = str(hostdict["name"])
                 # states come in lower case from Opsview
-                self.new_hosts[hostdict["name"]].status = str(hostdict["state"].upper())
-                self.new_hosts[hostdict["name"]].status_type = str(hostdict["state_type"])
-                self.new_hosts[hostdict["name"]].last_check = str(hostdict["last_check"])
-                self.new_hosts[hostdict["name"]].duration = Actions.HumanReadableDuration(hostdict["state_duration"])
-                self.new_hosts[hostdict["name"]].attempt = str(hostdict["current_check_attempt"])+ "/" + str(hostdict["max_check_attempts"])
-                self.new_hosts[hostdict["name"]].status_information = str(hostdict["output"].replace("\n", " "))
+                self.new_hosts[str(hostdict["name"])].status = str(hostdict["state"].upper())
+                self.new_hosts[str(hostdict["name"])].status_type = str(hostdict["state_type"])
+                self.new_hosts[str(hostdict["name"])].last_check = str(hostdict["last_check"])
+                self.new_hosts[str(hostdict["name"])].duration = Actions.HumanReadableDuration(hostdict["state_duration"])
+                self.new_hosts[str(hostdict["name"])].attempt = str(hostdict["current_check_attempt"])+ "/" + str(hostdict["max_check_attempts"])
+                self.new_hosts[str(hostdict["name"])].status_information = str(hostdict["output"].replace("\n", " "))
                 # if host is in downtime add it to known maintained hosts
                 if hostdict["downtime"] == "2":
-                    self.new_hosts[hostdict["name"]].scheduled_downtime = True
+                    self.new_hosts[str(hostdict["name"])].scheduled_downtime = True
                 if hostdict.has_key("acknowledged"):
-                    self.new_hosts[hostdict["name"]].acknowledged = True
+                    self.new_hosts[str(hostdict["name"])].acknowledged = True
                 if hostdict.has_key("flapping"):
-                    self.new_hosts[hostdict["name"]].flapping = True
+                    self.new_hosts[str(hostdict["name"])].flapping = True
 
                 #services
                 for service in host.findAll("services"):
                     servicedict = dict(service._getAttrMap())
-                    self.new_hosts[hostdict["name"]].services[servicedict["name"]] = OpsviewService()
-                    self.new_hosts[hostdict["name"]].services[servicedict["name"]].host = str(hostdict["name"])
-                    self.new_hosts[hostdict["name"]].services[servicedict["name"]].name = str(servicedict["name"])
+                    self.new_hosts[str(hostdict["name"])].services[str(servicedict["name"])] = OpsviewService()
+                    self.new_hosts[str(hostdict["name"])].services[str(servicedict["name"])].host = str(hostdict["name"])
+                    self.new_hosts[str(hostdict["name"])].services[str(servicedict["name"])].name = str(servicedict["name"])
                     # states come in lower case from Opsview
-                    self.new_hosts[hostdict["name"]].services[servicedict["name"]].status = str(servicedict["state"].upper())
-                    self.new_hosts[hostdict["name"]].services[servicedict["name"]].status_type = str(servicedict["state_type"])
-                    self.new_hosts[hostdict["name"]].services[servicedict["name"]].last_check = str(servicedict["last_check"])
-                    self.new_hosts[hostdict["name"]].services[servicedict["name"]].duration = Actions.HumanReadableDuration(servicedict["state_duration"])
-                    self.new_hosts[hostdict["name"]].services[servicedict["name"]].attempt = str(servicedict["current_check_attempt"])+ "/" + str(servicedict["max_check_attempts"])
-                    self.new_hosts[hostdict["name"]].services[servicedict["name"]].status_information= str(servicedict["output"].replace("\n", " "))
+                    self.new_hosts[str(hostdict["name"])].services[str(servicedict["name"])].status = str(servicedict["state"].upper())
+                    self.new_hosts[str(hostdict["name"])].services[str(servicedict["name"])].status_type = str(servicedict["state_type"])
+                    self.new_hosts[str(hostdict["name"])].services[str(servicedict["name"])].last_check = str(servicedict["last_check"])
+                    self.new_hosts[str(hostdict["name"])].services[str(servicedict["name"])].duration = Actions.HumanReadableDuration(servicedict["state_duration"])
+                    self.new_hosts[str(hostdict["name"])].services[str(servicedict["name"])].attempt = str(servicedict["current_check_attempt"])+ "/" + str(servicedict["max_check_attempts"])
+                    self.new_hosts[str(hostdict["name"])].services[str(servicedict["name"])].status_information= str(servicedict["output"].replace("\n", " "))
                     if servicedict["downtime"] == "2":
-                        self.new_hosts[hostdict["name"]].services[servicedict["name"]].scheduled_downtime = True
+                        self.new_hosts[str(hostdict["name"])].services[str(servicedict["name"])].scheduled_downtime = True
                     if servicedict.has_key("acknowledged"):
-                        self.new_hosts[hostdict["name"]].services[servicedict["name"]].acknowledged = True
+                        self.new_hosts[str(hostdict["name"])].services[str(servicedict["name"])].acknowledged = True
                     if servicedict.has_key("flapping"):
-                        self.new_hosts[hostdict["name"]].services[servicedict["name"]].flapping = True
+                        self.new_hosts[str(hostdict["name"])].services[str(servicedict["name"])].flapping = True
 
                     # extra opsview id for service, needed for submitting check results
-                    self.new_hosts[hostdict["name"]].services[servicedict["name"]].service_object_id = str(servicedict["service_object_id"])
+                    self.new_hosts[str(str(hostdict["name"]))].services[str(str(servicedict["name"]))].service_object_id = str(servicedict["service_object_id"])
+                del servicedict
+                del hostdict
+
         except:
             # set checking flag back to False
             self.isChecking = False
