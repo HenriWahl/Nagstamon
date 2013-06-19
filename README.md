@@ -12,7 +12,7 @@ It works with GNOME, KDE, Windows and MacOS X desktop.
 
 Successfully tested monitor versions include:
 
-Nagios 1.x, 2.x and 3.x, Icinga 1.2+, Opsview 3.5+, Centreon 2.1.x, Op5 Monitor 5.x and Check_MK/Multisite 1.1.10+
+Nagios 1.x, 2.x and 3.x, Icinga 1.2+, Opsview 3.5+, Centreon 2.1.x, Op5 Monitor 5.x, Check_MK/Multisite 1.1.10+ and Thruk 1.5.0+.
 
 
 See http://nagstamon.ifw-dresden.de for further information.
