@@ -346,52 +346,18 @@ class CentreonServer(GenericServer):
 
             for l in xmlobj.findAll("l"):
                 try:
-                    """
-                    #n = {}
-                    # host
-                    n["host"] = str(l.hn.text)
-                    # status
-                    n["status"] = str(l.cs.text)
-                    # last_check
-                    n["last_check"] = str(l.lc.text)
-                    # duration
-                    n["duration"] = str(l.lsc.text)
-                    # status_information
-                    n["status_information"] = str(l.ou.text)
-                    # attempts are not shown in case of hosts so it defaults to "N/A"
-                    n["attempt"], n["status_type"] = str(l.tr.text).split(" ")
-                    # host acknowledged or not, has to be filtered
-                    n["acknowledged"] = str(l.ha.text)
-                    # host notification disabled or not, has to be filtered
-                    n["notification_enabled"] = str(l.ne.text)
-                    # host check enabled or not, has to be filtered
-                    n["check_enabled"] = str(l.ace.text)
-                    # host down for maintenance or not, has to be filtered
-                    n["scheduled_downtime"] = str(l.hdtm.text)
-                    # is host flapping?
-                    # the "is" flag indicates "is_flapping"... and doesn't seem to exist on hosts
-                    # because python whines when l.is.text is used we go the .find() way
-                    if l.find("is") != None:
-                        n["flapping"] = str(l.find("is").text)
-                    else:
-                        n["flapping"] = "0"
-                    # active checks enabled or passiveonly?
-                    n["passiveonly"] = str(l.ace.text)
-                    """
                     # host objects contain service objects
-                    if not self.new_hosts.has_key(str(l.hn.text)]):
-                        #new_host = n["host"]
+                    if not self.new_hosts.has_key(str(l.hn.text)):
                         self.new_hosts[str(l.hn.text)] = GenericHost()
                         self.new_hosts[str(l.hn.text)].name =  str(l.hn.text)
                         self.new_hosts[str(l.hn.text)].status = str(l.cs.text)
-                        self.new_hosts[str(l.hn.text)].status_type, self. new_hosts[str(l.hn.text)].attempt = str(l.tr.text).split(" ")
-                        self.new_hosts[str(l.hn.text)].status_type = self.HARD_SOFT[self. new_hosts[str(l.hn.text)].status_type]
+                        self.new_hosts[str(l.hn.text)].attempt, self.new_hosts[str(l.hn.text)].status_type  = str(l.tr.text).split(" ")
+                        self.new_hosts[str(l.hn.text)].status_type = self.HARD_SOFT[self.new_hosts[str(l.hn.text)].status_type]
                         self.new_hosts[str(l.hn.text)].last_check = str(l.lc.text)
                         self.new_hosts[str(l.hn.text)].duration = str(l.lsc.text)
                         self.new_hosts[str(l.hn.text)].status_information= str(l.ou.text)
                         self.new_hosts[str(l.hn.text)].acknowledged = bool(int(str(l.ha.text)))
                         self.new_hosts[str(l.hn.text)].scheduled_downtime = bool(int(str(l.hdtm.text)))
-                        self.new_hosts[str(l.hn.text)].flapping = bool(int(n["flapping"]))
                         if l.find("is") != None:
                             self.new_hosts[str(l.hn.text)].flapping = bool(int(str(l.find("is").text)))
                         else:
@@ -401,9 +367,7 @@ class CentreonServer(GenericServer):
                 except:
                     # set checking flag back to False
                     self.isChecking = False
-                    #return self.Error(sys.exc_info())
                     result, error = self.Error(sys.exc_info())
-                    #return Result(result=result, error=error)
                     return Result(result=result, error=error)
 
             del xmlobj
@@ -433,60 +397,29 @@ class CentreonServer(GenericServer):
 
             for l in xmlobj.findAll("l"):
                 try:
-                    n = {}
-                    # host
-                    # the resulting table of Nagios status.cgi table omits the
-                    # hostname of a failing service if there are more than one
-                    # so if the hostname is empty the nagios status item should get
-                    # its hostname from the previuos item
-                    n["host"] = str(l.hn.text)
-                    # service
-                    n["service"] = str(l.sd.text)
-                    # status
-                    n["status"] = str(l.cs.text)
-                    # last_check
-                    n["last_check"] = str(l.lc.text)
-                    # duration
-                    n["duration"] = str(l.d.text)
-                    # attempt
-                    n["attempt"], n["status_type"] = str(l.ca.text).split(" ")
-                    # status_information
-                    n["status_information"] = str(l.po.text)
-                    # service is acknowledged or not, has to be filtered
-                    n["acknowledged"] = str(l.pa.text)
-                    # service notification enabled or not, has to be filtered
-                    n["notification_enabled"] = str(l.ne.text)
-                    # active service check enabled or not, has to be filtered
-                    n["passiveonly"] = str(l.ac.text)
-                    # service down for maintenance or not, has to be filtered
-                    n["scheduled_downtime"] = str(l.dtm.text)
-                    # is service flapping?
-                    # the "is" flag indicates "is_flapping"... and python whines when using l.is.text so we need to
-                    # use .find("is") instead
-                    n["flapping"] = str(l.find("is").text)
-
                     # host objects contain service objects
-                    if not self.new_hosts.has_key(n["host"]):
-                        self.new_hosts[n["host"]] = GenericHost()
-                        self.new_hosts[n["host"]].name = n["host"]
-                        self.new_hosts[n["host"]].status = "UP"
+                    if not self.new_hosts.has_key(str(l.hn.text)):
+                        self.new_hosts[str(l.hn.text)] = GenericHost()
+                        self.new_hosts[str(l.hn.text)].name = str(l.hn.text)
+                        self.new_hosts[str(l.hn.text)].status = "UP"
                     # if a service does not exist create its object
-                    if not self.new_hosts[n["host"]].services.has_key(n["service"]):
-                        new_service = n["service"]
-                        self.new_hosts[n["host"]].services[new_service] = GenericService()
-                        self.new_hosts[n["host"]].services[new_service].host = n["host"]
-                        self.new_hosts[n["host"]].services[new_service].name = n["service"]
-                        self.new_hosts[n["host"]].services[new_service].status = n["status"]
-                        self.new_hosts[n["host"]].services[new_service].status_type = self.HARD_SOFT[n["status_type"]]
-                        self.new_hosts[n["host"]].services[new_service].last_check = n["last_check"]
-                        self.new_hosts[n["host"]].services[new_service].duration = n["duration"]
-                        self.new_hosts[n["host"]].services[new_service].attempt = n["attempt"]
-                        self.new_hosts[n["host"]].services[new_service].status_information = n["status_information"]
-                        self.new_hosts[n["host"]].services[new_service].acknowledged = bool(int(n["acknowledged"]))
-                        self.new_hosts[n["host"]].services[new_service].scheduled_downtime = bool(int(n["scheduled_downtime"]))
-                        self.new_hosts[n["host"]].services[new_service].flapping = bool(int(n["flapping"]))
-                        self.new_hosts[n["host"]].services[new_service].notifications_disabled = not bool(int(n["notification_enabled"]))
-                        self.new_hosts[n["host"]].services[new_service].passiveonly = not bool(int(n["passiveonly"]))
+                    if not self.new_hosts[str(l.hn.text)].services.has_key(str(l.sd.text)):
+                        self.new_hosts[str(l.hn.text)].services[str(l.sd.text)] = GenericService()
+                        self.new_hosts[str(l.hn.text)].services[str(l.sd.text)].host = str(l.hn.text)
+                        self.new_hosts[str(l.hn.text)].services[str(l.sd.text)].name = str(l.sd.text)
+                        self.new_hosts[str(l.hn.text)].services[str(l.sd.text)].status = str(l.cs.text)
+                        self.new_hosts[str(l.hn.text)].services[str(l.sd.text)].attempt, \
+                            self.new_hosts[str(l.hn.text)].services[str(l.sd.text)].status_type = str(l.ca.text).split(" ")
+                        self.new_hosts[str(l.hn.text)].services[str(l.sd.text)].status_type =\
+                            self.HARD_SOFT[self.new_hosts[str(l.hn.text)].services[str(l.sd.text)].status_type]
+                        self.new_hosts[str(l.hn.text)].services[str(l.sd.text)].last_check = str(l.lc.text)
+                        self.new_hosts[str(l.hn.text)].services[str(l.sd.text)].duration = str(l.d.text)
+                        self.new_hosts[str(l.hn.text)].services[str(l.sd.text)].status_information = str(l.po.text)
+                        self.new_hosts[str(l.hn.text)].services[str(l.sd.text)].acknowledged = bool(int(str(l.pa.text)))
+                        self.new_hosts[str(l.hn.text)].services[str(l.sd.text)].scheduled_downtime = bool(int(str(l.dtm.text)))
+                        self.new_hosts[str(l.hn.text)].services[str(l.sd.text)].flapping = bool(int(str(l.find("is").text)))
+                        self.new_hosts[str(l.hn.text)].services[str(l.sd.text)].notifications_disabled = not bool(int(str(l.ne.text)))
+                        self.new_hosts[str(l.hn.text)].services[str(l.sd.text)].passiveonly = not bool(int(str(l.ac.text)))
                 except:
                     # set checking flag back to False
                     self.isChecking = False
