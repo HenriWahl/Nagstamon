@@ -346,7 +346,8 @@ class CentreonServer(GenericServer):
 
             for l in xmlobj.findAll("l"):
                 try:
-                    n = {}
+                    """
+                    #n = {}
                     # host
                     n["host"] = str(l.hn.text)
                     # status
@@ -376,23 +377,27 @@ class CentreonServer(GenericServer):
                         n["flapping"] = "0"
                     # active checks enabled or passiveonly?
                     n["passiveonly"] = str(l.ace.text)
-
+                    """
                     # host objects contain service objects
-                    if not self.new_hosts.has_key(n["host"]):
-                        new_host = n["host"]
-                        self.new_hosts[new_host] = GenericHost()
-                        self.new_hosts[new_host].name = n["host"]
-                        self.new_hosts[new_host].status = n["status"]
-                        self.new_hosts[new_host].status_type = self.HARD_SOFT[n["status_type"]]
-                        self.new_hosts[new_host].last_check = n["last_check"]
-                        self.new_hosts[new_host].duration = n["duration"]
-                        self.new_hosts[new_host].attempt = n["attempt"]
-                        self.new_hosts[new_host].status_information= n["status_information"]
-                        self.new_hosts[new_host].acknowledged = bool(int(n["acknowledged"]))
-                        self.new_hosts[new_host].scheduled_downtime = bool(int(n["scheduled_downtime"]))
-                        self.new_hosts[new_host].flapping = bool(int(n["flapping"]))
-                        self.new_hosts[new_host].notifications_disabled = not bool(int(n["notification_enabled"]))
-                        self.new_hosts[new_host].passiveonly = not bool(int(n["passiveonly"]))
+                    if not self.new_hosts.has_key(str(l.hn.text)]):
+                        #new_host = n["host"]
+                        self.new_hosts[str(l.hn.text)] = GenericHost()
+                        self.new_hosts[str(l.hn.text)].name =  str(l.hn.text)
+                        self.new_hosts[str(l.hn.text)].status = str(l.cs.text)
+                        self.new_hosts[str(l.hn.text)].status_type, self. new_hosts[str(l.hn.text)].attempt = str(l.tr.text).split(" ")
+                        self.new_hosts[str(l.hn.text)].status_type = self.HARD_SOFT[self. new_hosts[str(l.hn.text)].status_type]
+                        self.new_hosts[str(l.hn.text)].last_check = str(l.lc.text)
+                        self.new_hosts[str(l.hn.text)].duration = str(l.lsc.text)
+                        self.new_hosts[str(l.hn.text)].status_information= str(l.ou.text)
+                        self.new_hosts[str(l.hn.text)].acknowledged = bool(int(str(l.ha.text)))
+                        self.new_hosts[str(l.hn.text)].scheduled_downtime = bool(int(str(l.hdtm.text)))
+                        self.new_hosts[str(l.hn.text)].flapping = bool(int(n["flapping"]))
+                        if l.find("is") != None:
+                            self.new_hosts[str(l.hn.text)].flapping = bool(int(str(l.find("is").text)))
+                        else:
+                            self.new_hosts[str(l.hn.text)].flapping = False
+                        self.new_hosts[str(l.hn.text)].notifications_disabled = not bool(int(str(l.ne.text)))
+                        self.new_hosts[str(l.hn.text)].passiveonly = not bool(int(str(l.ace.text)))
                 except:
                     # set checking flag back to False
                     self.isChecking = False
