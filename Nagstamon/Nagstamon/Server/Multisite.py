@@ -494,5 +494,3 @@ class MultisiteServer(GenericServer):
             self._action(self.hosts[host].site, host, s, p)
 
 
-
-

@@ -28,6 +28,7 @@ except Exception, err:
     print
     import sys
     sys.exit()
+
 import gtk
 import gobject
 import os
@@ -50,11 +51,8 @@ from Nagstamon import Actions
 from Nagstamon import Objects
 from Nagstamon import Custom # used for initialization of custom components
 
-import subprocess
 import sys
-import time
-
-import gc
+import copy
 
 class Sorting(object):
     """ Sorting persistence purpose class
@@ -391,7 +389,9 @@ class GUI(object):
                     # Update: new columns added which contain pixbufs of flag indicators if needed
                     for item_type, status_dict in server.nagitems_filtered.iteritems():
                         for status, item_list in status_dict.iteritems():
-                            for item in list(item_list):
+                            for single_item in list(item_list):
+                                # use copy to fight memory leak
+                                item = copy.deepcopy(single_item)
                                 line = list(server.get_columns(item))
                                 line.append(self.TAB_FG_COLORS[item.status])
                                 line.append(self.TAB_BG_COLORS[item.status])
@@ -475,6 +475,7 @@ class GUI(object):
                                         line.append(None)
 
                                 server.ListStore.append(line)
+                                del item, line
 
                     # give new ListStore to the view, overwrites the old one automatically - theoretically
                     server.TreeView.set_model(server.ListStore)
