@@ -567,13 +567,17 @@ class CentreonServer(GenericServer):
         # a SIDcount of 300 should make 15 min when being run every 3 secs as it is at
         # the moment in Actions.RefreshLoopOneServer()
         # maybe this is unnecessary now that we authenticate via login/password, no md5
-        if self.SIDcount >= 300:
-            if str(self.conf.debug_mode) == "True":
-                self.Debug(server=self.get_name(), debug="Old SID: " + self.SID + " " + str(self.Cookie))
-            self.SID = self._get_sid().result
-            if str(self.conf.debug_mode) == "True":
-                self.Debug(server=self.get_name(), debug="New SID: " +  self.SID + " " + str(self.Cookie))
-            self.SIDcount = 0
-        else:
-            self.SIDcount += 1
+
+
+        #This hook generates dozens/hundreds of repeated sessions in Centreon ( > 2.4.0 ) session table to the same user, with the same session_id and diferent id
+        #Either in user/password auth and autologinkey auth it has the same effect.
+        #if self.SIDcount >= 300:
+        #    if str(self.conf.debug_mode) == "True":
+        #        self.Debug(server=self.get_name(), debug="Old SID: " + self.SID + " " + str(self.Cookie))
+        #    self.SID = self._get_sid().result
+        #    if str(self.conf.debug_mode) == "True":
+        #        self.Debug(server=self.get_name(), debug="New SID: " +  self.SID + " " + str(self.Cookie))
+        #    self.SIDcount = 0
+        #else:
+        #    self.SIDcount += 1
 
