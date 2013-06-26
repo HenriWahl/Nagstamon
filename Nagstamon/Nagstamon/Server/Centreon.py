@@ -580,4 +580,5 @@ class CentreonServer(GenericServer):
         #    self.SIDcount = 0
         #else:
         #    self.SIDcount += 1
+        pass
 
