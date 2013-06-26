@@ -82,15 +82,6 @@
               <placeholder/>
             </child>
             <child>
-              <placeholder/>
-            </child>
-            <child>
-              <placeholder/>
-            </child>
-            <child>
-              <placeholder/>
-            </child>
-            <child>
               <object class="GtkCheckButton" id="input_checkbutton_enabled">
                 <property name="label" translatable="yes">Enabled</property>
                 <property name="visible">True</property>
@@ -302,7 +293,7 @@ Don&amp;apos;t put any status.cgi in there.</property>
                 <property name="visible">True</property>
                 <property name="can_focus">True</property>
                 <property name="is_focus">True</property>
-                <property name="text" translatable="yes">https://nagios-server</property>
+                <property name="text" translatable="yes">https://monitor-server</property>
                 <property name="primary_icon_activatable">False</property>
                 <property name="secondary_icon_activatable">False</property>
                 <property name="primary_icon_sensitive">True</property>
@@ -320,7 +311,7 @@ Don&amp;apos;t put any status.cgi in there.</property>
                 <property name="visible">True</property>
                 <property name="can_focus">True</property>
                 <property name="is_focus">True</property>
-                <property name="text" translatable="yes">https://nagios-server/nagios/cgi-bin</property>
+                <property name="text" translatable="yes">https://monitor-server/monitor/cgi-bin</property>
                 <property name="primary_icon_activatable">False</property>
                 <property name="secondary_icon_activatable">False</property>
                 <property name="primary_icon_sensitive">True</property>
@@ -434,7 +425,7 @@ Don&amp;apos;t put any status.cgi in there.</property>
                 <property name="can_focus">True</property>
                 <property name="receives_default">False</property>
                 <property name="draw_indicator">True</property>
-                <signal name="toggled" handler="toggle_autologin_key"/>
+                <signal name="toggled" handler="toggle_autologin_key" swapped="no"/>
               </object>
               <packing>
                 <property name="top_attach">8</property>
@@ -444,6 +435,7 @@ Don&amp;apos;t put any status.cgi in there.</property>
             <child>
               <object class="GtkLabel" id="label_autologin_key">
                 <property name="visible">True</property>
+                <property name="can_focus">False</property>
                 <property name="xalign">0</property>
                 <property name="label" translatable="yes">Autologin Key:</property>
               </object>
@@ -456,7 +448,9 @@ Don&amp;apos;t put any status.cgi in there.</property>
               <object class="GtkEntry" id="input_entry_autologin_key">
                 <property name="visible">True</property>
                 <property name="can_focus">True</property>
-                <property name="invisible_char">&#x25CF;</property>
+                <property name="invisible_char">●</property>
+                <property name="primary_icon_activatable">False</property>
+                <property name="secondary_icon_activatable">False</property>
                 <property name="primary_icon_sensitive">True</property>
                 <property name="secondary_icon_sensitive">True</property>
               </object>
@@ -466,18 +460,6 @@ Don&amp;apos;t put any status.cgi in there.</property>
                 <property name="top_attach">9</property>
                 <property name="bottom_attach">10</property>
               </packing>
-            </child>
-            <child>
-              <placeholder/>
-            </child>
-            <child>
-              <placeholder/>
-            </child>
-            <child>
-              <placeholder/>
-            </child>
-            <child>
-              <placeholder/>
             </child>
             <child>
               <placeholder/>

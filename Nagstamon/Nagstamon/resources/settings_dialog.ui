@@ -1903,6 +1903,9 @@
                                     <child>
                                       <placeholder/>
                                     </child>
+                                    <child>
+                                      <placeholder/>
+                                    </child>
                                   </object>
                                   <packing>
                                     <property name="top_attach">1</property>
@@ -2328,6 +2331,9 @@
                         <property name="top_attach">7</property>
                         <property name="bottom_attach">8</property>
                       </packing>
+                    </child>
+                    <child>
+                      <placeholder/>
                     </child>
                     <child>
                       <placeholder/>

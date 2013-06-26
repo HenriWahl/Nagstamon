@@ -54,6 +54,7 @@ from Nagstamon import Custom # used for initialization of custom components
 import sys
 import copy
 
+
 class Sorting(object):
     """ Sorting persistence purpose class
     Stores tuple pairs in form of:
@@ -178,6 +179,9 @@ class GUI(object):
             self.last_sorting[server.get_name()] = Sorting([(startup_sort_field, startup_sort_order ),
                                                             (server.HOST_COLUMN_ID, gtk.SORT_ASCENDING)],
                                                            len(server.COLUMNS)+1) # stores sorting between table refresh
+
+        # store once created windows here to minimize memory usage
+        self.Dialogs = {}
 
 
     def get_last_sorting(self, server):
@@ -307,7 +311,6 @@ class GUI(object):
             nagios one had to schedule/acknowledge every single service
         """
         # refresh statusbar
-
         # flag for overall status, needed by popwin.popup to decide if popup in case all is OK
         self.status_ok = False
 
@@ -323,7 +326,7 @@ class GUI(object):
         # display "ERROR" in case of startup connection trouble
         errors = ""
 
-        # walk through all servers,RefreshDisplayStatus their hosts and their services
+        # walk through all servers, RefreshDisplayStatus their hosts and their services
         for server in self.servers.values():
             # only refresh monitor server output if enabled and only once every server loop
             if str(self.conf.servers[server.get_name()].enabled) == "True" or\
@@ -601,6 +604,7 @@ class GUI(object):
         if str(self.conf.icon_in_systray) == "False":
             self.statusbar.Raise()
 
+
         # return False to get removed as gobject idle source
         return False
 
@@ -661,7 +665,7 @@ class GUI(object):
         show settings with tab "defaults" as shortcut from Acknowledge dialog
         """
         self.acknowledge_dialog.destroy()
-        settings=Settings(servers=self.servers, output=self, conf=self.conf, first_page="Defaults")
+        self.GetDialog(dialog="Settings", servers=self.servers, output=self, conf=self.conf, first_page="Defaults")
 
 
     def AcknowledgeCommentReturn(self, widget, event, server):
@@ -774,7 +778,7 @@ class GUI(object):
         show settings with tab "defaults" as shortcut from Downtime dialog
         """
         self.downtime_dialog.destroy()
-        settings=Settings(servers=self.servers, output=self, conf=self.conf, first_page="Defaults")
+        self.GetDialog(dialog="Settings", servers=self.servers, output=self, conf=self.conf, first_page="Defaults")
 
 
     def DowntimeCommentReturn(self, widget, event, server):
@@ -791,7 +795,6 @@ class GUI(object):
         """
             schedule downtime for miserable host/service
         """
-
         # various parameters for the CGI request
         host = self.downtime_xml.get_object("input_label_host").get_text()
         service = self.downtime_xml.get_object("input_label_service").get_text()
@@ -877,7 +880,7 @@ class GUI(object):
         show settings with tab "defaults" as shortcut from Submit Check Result dialog
         """
         self.submitcheckresult_dialog.destroy()
-        settings=Settings(servers=self.servers, output=self, conf=self.conf, first_page="Defaults")
+        self.GetDialog(dialog="Settings", servers=self.servers, output=self, conf=self.conf, first_page="Defaults")
 
 
     def SubmitCheckResultOK(self, widget=None, server=None):
@@ -979,7 +982,6 @@ class GUI(object):
 
         # use gobject.idle_add() to be thread safe
         gobject.idle_add(self.AddGUILock, str(self.__class__.__name__))
-        #self.popwin.Close()
         self.popwin.PopDown()
         about.run()
         # use gobject.idle_add() to be thread safe
@@ -992,13 +994,11 @@ class GUI(object):
             versatile message dialog
         """
         # close popwin to make sure the error dialog will not be covered by popwin
-        #self.popwin.Close()
         self.popwin.PopDown()
-
-        dialog = gtk.MessageDialog(parent=None, flags=gtk.DIALOG_MODAL, type=type, buttons=buttons, message_format=str(message))
+        self.dialog = gtk.MessageDialog(parent=None, flags=gtk.DIALOG_MODAL, type=type, buttons=buttons, message_format=str(message))
         # gtk.Dialog.run() does a mini loop to wait
-        dialog.run()
-        dialog.destroy()
+        self.dialog.run()
+        self.dialog.destroy()
 
 
     def CheckForNewVersionDialog(self, version_status=None, version=None):
@@ -1007,23 +1007,22 @@ class GUI(object):
         """
         try:
             # close popwin to make sure the error dialog will not be covered by popwin
-            #self.popwin.Close()
             self.popwin.PopDown()
 
             # if used version is latest version only inform about
             if version_status == "latest":
-                dialog = gtk.MessageDialog(parent=None, flags=gtk.DIALOG_MODAL, type=gtk.MESSAGE_INFO, buttons=gtk.BUTTONS_OK, \
+                self.dialog = gtk.MessageDialog(parent=None, flags=gtk.DIALOG_MODAL, type=gtk.MESSAGE_INFO, buttons=gtk.BUTTONS_OK, \
                                            message_format="You are already using the\nlatest version of Nagstamon.\n\nLatest version: %s" % (version))
-                dialog.run()
-                dialog.destroy()
+                self.dialog.run()
+                self.dialog.destroy()
             # if used version is out of date offer downloading latest one
             elif version_status == "out_of_date":
-                dialog = gtk.MessageDialog(parent=None, flags=gtk.DIALOG_MODAL, type=gtk.MESSAGE_WARNING, buttons=gtk.BUTTONS_YES_NO, \
+                self.dialog = gtk.MessageDialog(parent=None, flags=gtk.DIALOG_MODAL, type=gtk.MESSAGE_WARNING, buttons=gtk.BUTTONS_YES_NO, \
                                            message_format="You are not using the latest version of Nagstamon.\n\nYour version:\t\t%s\nLatest version:\t%s\n\nDo you want to download the latest version?" % (self.version, version))
-                response = dialog.run()
+                response = self.dialog.run()
                 if response == gtk.RESPONSE_YES:
                     Actions.OpenNagstamonDownload(output=self)
-                dialog.destroy()
+                self.dialog.destroy()
         except:
             self.servers.values()[0].Error(sys.exc_info())
 
@@ -1110,6 +1109,8 @@ class GUI(object):
         try:
             self.GUILock.pop(window_name)
         except:
+            #import traceback
+            #traceback.print_exc(file=sys.stdout)
             pass
 
 
@@ -1125,10 +1126,47 @@ class GUI(object):
         """
         exit....
         """
-
         print dummy
         self.conf.SaveConfig(output=self)
         gtk.main_quit()
+
+
+    def GetDialog(self, **kwds):
+        """
+        Manage dialogs et al. so they would not have been re-created with every access
+        Hoping to decrease memory usage this way
+        """
+        for k in kwds: self.__dict__[k] = kwds[k]
+
+        if not self.dialog in self.Dialogs:
+            if self.dialog == "Settings":
+                gobject.idle_add(self.output.AddGUILock, "Settings")
+                self.Dialogs["Settings"] = Settings(servers=self.servers, output=self.output, conf=self.conf, first_page=self.first_page)
+            elif self.dialog == "NewServer":
+                gobject.idle_add(self.output.AddGUILock, "NewServer")
+                self.Dialogs["NewServer"] = NewServer(servers=self.servers, output=self.output, settingsdialog=self.settingsdialog, conf=self.conf)
+            elif self.dialog == "EditServer":
+                gobject.idle_add(self.output.AddGUILock, "EditServer")
+                self.Dialogs["EditServer"] = EditServer(servers=self.servers, output=self.output, settingsdialog=self.settingsdialog, conf=self.conf, server=self.selected_server)
+            elif self.dialog == "NewAction":
+                gobject.idle_add(self.output.AddGUILock, "NewAction")
+                self.Dialogs["NewAction"] = NewAction(output=self.output, settingsdialog=self.settingsdialog, conf=self.conf)
+            elif self.dialog == "EditAction":
+                gobject.idle_add(self.output.AddGUILock, "EditAction")
+                self.Dialogs["EditAction"] = EditAction(output=self.output, settingsdialog=self.settingsdialog, conf=self.conf, action=self.selected_action)
+        else:
+            # when being reused some dialogs need some extra values
+            if self.dialog in ["Settings", "NewServer", "EditServer", "NewAction", "EditAction"]:
+                self.output.popwin.Close()
+                gobject.idle_add(self.output.AddGUILock, self.dialog)
+                if self.dialog == "Settings":
+                    self.Dialogs["Settings"].first_page = self.first_page
+                if self.dialog == "EditServer":
+                    self.Dialogs["EditServer"].server = self.selected_server
+                if self.dialog == "EditAction":
+                    self.Dialogs["EditAction"].action = self.selected_action
+                self.Dialogs[self.dialog].initialize()
+                self.Dialogs[self.dialog].dialog.show()
 
 
 class StatusBar(object):
@@ -1308,7 +1346,7 @@ class StatusBar(object):
         """
         if menu_entry == "Refresh": Actions.RefreshAllServers(servers=self.output.servers, output=self.output, conf=self.conf)
         if menu_entry == "Recheck all": self.output.RecheckAll()
-        if menu_entry == "Settings...": Settings(servers=self.output.servers, output=self.output, conf=self.conf)
+        if menu_entry == "Settings...": self.output.GetDialog(dialog="Settings", servers=self.output.servers, output=self.output, conf=self.conf, first_page="Servers")
         if menu_entry == "Save position": self.conf.SaveConfig(output=self.output)
         if menu_entry == "About": self.output.AboutDialog()
         if menu_entry == "Exit":
@@ -1588,9 +1626,10 @@ class Popwin(object):
         # threaded refresh status information when refresh is clicked
         self.ButtonRefresh.connect("clicked", lambda r: Actions.RefreshAllServers(servers=self.output.servers, output=self.output, conf=self.conf))
         # open settings dialog when settings is clicked
-        self.ButtonSettings.connect("clicked", lambda s: Settings(servers=self.output.servers, output=self.output, conf=self.conf))
+        self.ButtonSettings.connect("clicked", lambda s: self.output.GetDialog(dialog="Settings", servers=self.output.servers, output=self.output, conf=self.conf, first_page="Servers"))
+
         # open settings dialog for filters when filters is clicked
-        self.ButtonFilters.connect("clicked", lambda s: Settings(servers=self.output.servers, output=self.output, conf=self.conf, first_page="Filters"))
+        self.ButtonFilters.connect("clicked", lambda s: self.output.GetDialog(dialog="Settings", servers=self.output.servers, output=self.output, conf=self.conf, first_page="Filters"))
 
         # Workaround for behavorial differences of GTK in Windows and Linux
         # in Linux it is enough to check for the pointer leaving the whole popwin,
@@ -1598,7 +1637,6 @@ class Popwin(object):
         # the intended effect is that popwin closes when the pointer leaves it
         self.ButtonRefresh.connect("leave-notify-event", self.LeavePopWin)
         self.ButtonSettings.connect("leave-notify-event", self.LeavePopWin)
-
 
         # define colors for detailed status table in dictionaries
         # need to be redefined here for MacOSX because there it is not
@@ -1890,12 +1928,6 @@ class Popwin(object):
         """
         # the popwin should always pop up near the systray/desktop status bar, therefore we
         # need to find out its position
-
-        # find out dimension of all monitors
-        ###for m in range(self.output.statusbar.StatusBar.get_screen().get_n_monitors()):
-        ###    monx0, mony0, monw, monh = self.output.statusbar.StatusBar.get_screen().get_monitor_geometry(m)
-        ###    self.output.monitors[m] = (monx0, mony0, monw, monh)
-
         # get x0 and y0 - workaround for gtk trayicon because self.statusbar as trayicon
         # cannot get its absolute position, so we need to get pointers position relative
         # to root window and to trayicon and subtract them and save the values in the
@@ -2416,7 +2448,7 @@ class ServerVBox(gtk.VBox):
 
             elif remoteservice == "Edit actions...":
                 # open actions settings
-                Settings(servers=self.output.servers, output=self.output, conf=self.output.conf, first_page="Actions")
+                self.output.GetDialog(dialog="Settings", servers=self.output.servers, output=self.output, conf=self.output.conf, first_page="Actions")
             elif remoteservice == "Monitor":
                 # let Actions.TreeViewNagios do the work to open a webbrowser with nagios informations
                 Actions.TreeViewNagios(self.miserable_server, self.miserable_host, self.miserable_service)
@@ -2494,7 +2526,7 @@ class Settings(object):
         self.dialog = self.builder.get_object("settings_dialog")
 
         # use gobject.idle_add() to be thread safe
-        gobject.idle_add(self.output.AddGUILock, str(self.__class__.__name__))
+        ###gobject.idle_add(self.output.AddGUILock, str(self.__class__.__name__))
 
         # little feedback store for servers and actions treeviews
         self.selected_server = None
@@ -2504,8 +2536,10 @@ class Settings(object):
         handlers_dict = { "button_ok_clicked": self.OK,
                           "settings_dialog_close": self.Cancel,
                           "button_cancel_clicked": self.Cancel,
-                          "button_new_server": lambda n: NewServer(servers=self.servers, output=self.output, settingsdialog=self, conf=self.conf),
-                          "button_edit_server": lambda e: EditServer(servers=self.servers, output=self.output, server=self.selected_server, settingsdialog=self, conf=self.conf),
+                          ###"button_new_server": lambda n: NewServer(servers=self.servers, output=self.output, settingsdialog=self, conf=self.conf),
+                          "button_new_server": lambda n: self.output.GetDialog(dialog="NewServer", servers=self.servers, output=self.output, settingsdialog=self, conf=self.conf),
+                          #"button_edit_server": lambda e: EditServer(servers=self.servers, output=self.output, server=self.selected_server, settingsdialog=self, conf=self.conf),
+                          "button_edit_server": lambda e: self.output.GetDialog(dialog="EditServer", servers=self.servers, output=self.output, selected_server=self.selected_server, settingsdialog=self, conf=self.conf),
                           "button_delete_server": lambda d: self.DeleteServer(self.selected_server, self.conf.servers),
                           "button_check_for_new_version_now": self.CheckForNewVersionNow,
                           "checkbutton_enable_notification": self.ToggleNotification,
@@ -2522,8 +2556,8 @@ class Settings(object):
                           "color-set": self.ColorsPreview,
                           "radiobutton_icon_in_systray_toggled": self.ToggleSystrayPopupOffset,
                           "radiobutton_fullscreen_toggled": self.ToggleFullscreenDisplay,
-                          "button_new_action": lambda a: NewAction(output=self.output, settingsdialog=self, conf=self.conf),
-                          "button_edit_action": lambda e: EditAction(output=self.output, action=self.selected_action, settingsdialog=self, conf=self.conf),
+                          "button_new_action": lambda a: self.output.GetDialog(dialog="NewAction", output=self.output, settingsdialog=self, conf=self.conf),
+                          "button_edit_action": lambda e: self.output.GetDialog(dialog="EditAction", output=self.output, selected_action=self.selected_action, settingsdialog=self, conf=self.conf),
                           "button_delete_action": lambda d: self.DeleteAction(self.selected_action, self.conf.actions),
                           }
         self.builder.connect_signals(handlers_dict)
@@ -2573,14 +2607,14 @@ class Settings(object):
         self.dialog.set_title(self.output.name + " " + self.output.version + " settings")
 
         # workaround for gazpacho-made glade-file - dunno why tab labels do not get named as they should be
-        notebook = self.builder.get_object("notebook")
+        self.notebook = self.builder.get_object("notebook")
         notebook_tabs =  ["Servers", "Display", "Filters", "Actions", "Notification", "Colors", "Defaults"]
         # now this presumably not necessary anymore workaround even gets extended as
         # determine-first-page-mechanism used for acknowledment dialog settings button
         page = 0
-        for c in notebook.get_children():
-            if notebook_tabs[0] == self.first_page: notebook.set_current_page(page)
-            notebook.set_tab_label_text(c, notebook_tabs.pop(0))
+        for c in self.notebook.get_children():
+            if notebook_tabs[0] == self.first_page: self.notebook.set_current_page(page)
+            self.notebook.set_tab_label_text(c, notebook_tabs.pop(0))
             page += 1
 
         # fill treeviews
@@ -2690,10 +2724,17 @@ class Settings(object):
         self.dialog.run()
 
         # delete global open Windows entry
-        # use gobject.idle_add() to be thread safe
         gobject.idle_add(self.output.DeleteGUILock, str(self.__class__.__name__))
+        self.dialog.hide()
 
-        self.dialog.destroy()
+
+    def initialize(self):
+        """
+        used by various dialogs, not here - just a dummy
+        """
+        # set first page of notebook tabs
+        self.notebook.set_current_page(["Servers", "Display", "Filters", "Actions",\
+                                        "Notification", "Colors", "Defaults"].index(self.first_page))
 
 
     def FillTreeView(self, treeview_widget, items, column_string, selected_item):
@@ -2818,14 +2859,21 @@ class Settings(object):
             # now it is not the first run anymore
             self.firstrun = False
             self.conf.unconfigured = False
+
+            gobject.idle_add(self.output.DeleteGUILock, str(self.__class__.__name__))
+            self.dialog.hide()
+
             # create output visuals again because they might have changed (e.g. systray/free floating status bar)
             self.output.statusbar.StatusBar.destroy()
             self.output.statusbar.SysTray.set_visible(False)
+            #self.output.statusbar.SysTray.destroy()
             # still not going away artefact - trying brute force
-            while self.output.popwin.Window.get_visible():
-                self.output.popwin.Window.destroy()
-            del self.output.popwin.Window
-                
+            #while self.output.popwin.Window.get_visible():
+            #    self.output.popwin.Window.destroy()
+            #del self.output.popwin.Window
+            self.output.popwin.Window.destroy()
+
+
             # re-initialize output with new settings
             self.output.__init__()
 
@@ -2853,6 +2901,9 @@ class Settings(object):
         # without settings there is not much nagstamon can do
         if self.output.firstrun == True:
             sys.exit()
+        else:
+            gobject.idle_add(self.output.DeleteGUILock, str(self.__class__.__name__))
+            self.dialog.hide()
 
 
     def ColorsPreview(self, widget=None):
@@ -3078,9 +3129,6 @@ class GenericServer(object):
                           }
         self.builder.connect_signals(handlers_dict)
 
-        # enable server by default
-        self.builder.get_object("input_checkbutton_enabled").set_active(True)
-
         # set server type combobox to Nagios as default
         self.combobox = self.builder.get_object("input_combo_server_type")
         combomodel = gtk.ListStore(gobject.TYPE_STRING)
@@ -3096,12 +3144,41 @@ class GenericServer(object):
         # initialize server type dependent dialog outfit
         self.on_server_type_change(self.combobox)
 
+        # set specific defaults or server settings
+        self.initialize()
+
+
+    def initialize(self):
+        """
+        set server settings to default values
+        """
+        # enable server by default
+        self.builder.get_object("input_checkbutton_enabled").set_active(True)
+        # do not save password by default
+        self.builder.get_object("input_checkbutton_save_password").set_active(False)
+        # disable proxy by default
+        self.builder.get_object("input_checkbutton_use_proxy").set_active(False)
+
+        # set first monitor type as default
+        self.combobox.set_active(0)
+
+        # default monitor server addresses
+        self.builder.get_object("input_entry_monitor_url").set_text("https://monitor-server")
+        self.builder.get_object("input_entry_monitor_cgi_url").set_text("https://monitor-server/monitor/cgi-bin")
+        # default user and password
+        self.builder.get_object("input_entry_username").set_text("user")
+        self.builder.get_object("input_entry_password").set_text("password")
+        # default proxy settings
+        self.builder.get_object("input_entry_proxy_address").set_text("http://proxy:port/")
+        self.builder.get_object("input_entry_proxy_username").set_text("proxyuser")
+        self.builder.get_object("input_entry_proxy_password").set_text("proxypassword")
+
         # show password - or not
         self.ToggleSavePassword()
         # show settings options for proxy - or not
         self.ToggleProxy()
-	# disable autologin by default
-	self.ToggleAutoLoginKey()
+        # disable autologin by default
+        self.ToggleAutoLoginKey()
 
 
     def on_server_type_change(self, combobox):
@@ -3129,6 +3206,7 @@ class GenericServer(object):
                 item = self.builder.get_object(item_id)
                 if item is not None:
                     item.set_visible(False)
+
 
     def OK(self, widget):
         """
@@ -3193,7 +3271,8 @@ class GenericServer(object):
             # fill settings dialog treeview
             self.settingsdialog.FillTreeView("servers_treeview", self.conf.servers, "Servers", "selected_server")
             # destroy new server dialog
-            self.dialog.destroy()
+            gobject.idle_add(self.output.DeleteGUILock, str(self.__class__.__name__))
+            self.dialog.hide()
 
 
     def Cancel(self, widget):
@@ -3201,7 +3280,8 @@ class GenericServer(object):
             settings dialog got cancelled
         """
         if not self.conf.unconfigured == True:
-            self.dialog.destroy()
+            gobject.idle_add(self.output.DeleteGUILock, str(self.__class__.__name__))
+            self.dialog.hide()
         else:
             sys.exit()
 
@@ -3241,6 +3321,7 @@ class GenericServer(object):
         item = self.builder.get_object("input_entry_password")
         item.set_sensitive( not is_active )
         item.set_text("")
+
 
     def ToggleProxy(self, widget=None):
         """
@@ -3298,7 +3379,8 @@ class NewServer(GenericServer):
 
         # show filled settings dialog and wait thanks to gtk.run()
         self.dialog.run()
-        self.dialog.destroy()
+        gobject.idle_add(self.output.DeleteGUILock, str(self.__class__.__name__))
+        self.dialog.hide()
 
 
 class EditServer(GenericServer):
@@ -3354,7 +3436,53 @@ class EditServer(GenericServer):
 
             # show filled settings dialog and wait thanks to gtk.run()
             self.dialog.run()
-            self.dialog.destroy()
+            gobject.idle_add(self.output.DeleteGUILock, str(self.__class__.__name__))
+            self.dialog.hide()
+
+
+    def initialize(self):
+        """
+        fill dialog with server settings
+        """
+        # set title of settings dialog
+        self.dialog.set_title("Edit server " + self.server)
+
+        keys = self.conf.servers[self.server].__dict__.keys()
+        # walk through all relevant input types to fill dialog with existing settings
+        for i in ["input_entry_", "input_checkbutton_", "input_radiobutton_", "input_spinbutton_"]:
+            for key in keys:
+                j = self.builder.get_object(i + key)
+                if not j:
+                    continue
+                # some hazard, every widget has other methods to fill it with desired content
+                # so we try them all, one of them should work
+                try:
+                    j.set_text(self.conf.servers[self.server].__dict__[key])
+                except:
+                    pass
+                try:
+                    if str(self.conf.servers[self.server].__dict__[key]) == "True":
+                        j.set_active(True)
+                    if str(self.conf.servers[self.server].__dict__[key]) == "False":
+                        j.set_active(False)
+                except:
+                    pass
+                try:
+                    j.set_value(int(self.conf.servers[self.server].__dict__[key]))
+                except:
+                    pass
+
+        # set server type combobox which cannot be set by above hazard method
+        servers = Actions.get_registered_server_type_list()
+        server_types = dict([(x[1], x[0]) for x in enumerate(servers)])
+
+        # set server type
+        self.combobox.set_active(server_types[self.conf.servers[self.server].type])
+
+        # show password - or not
+        self.ToggleSavePassword()
+        # show settings options for proxy - or not
+        self.ToggleProxy()
 
 
     def OK(self, widget):
@@ -3430,15 +3558,17 @@ class EditServer(GenericServer):
 
             # fill settings dialog treeview
             self.settingsdialog.FillTreeView("servers_treeview", self.conf.servers, "Servers", "selected_server")
-            # destroy dialog
-            self.dialog.destroy()
+            # gide dialog
+            gobject.idle_add(self.output.DeleteGUILock, str(self.__class__.__name__))
+            self.dialog.hide()
 
 
     def Cancel(self, widget):
         """
             settings dialog got cancelled
         """
-        self.dialog.destroy()
+        gobject.idle_add(self.output.DeleteGUILock, str(self.__class__.__name__))
+        self.dialog.hide()
 
 
 class GenericAction(object):
@@ -3467,9 +3597,6 @@ class GenericAction(object):
                           }
         self.builder.connect_signals(handlers_dict)
 
-        # enable action by default
-        self.builder.get_object("input_checkbutton_enabled").set_active(True)
-
         # fill combobox with options
         combobox = self.builder.get_object("input_combo_action_type")
         combomodel = gtk.ListStore(gobject.TYPE_STRING)
@@ -3479,7 +3606,12 @@ class GenericAction(object):
         for action_type in ["Browser", "Command", "URL"]:
             combomodel.append((action_type,))
         combobox.set_model(combomodel)
+
+        """
         combobox.set_active(0)
+
+        # enable action by default
+        self.builder.get_object("input_checkbutton_enabled").set_active(True)
 
         # if uninitialized action (e.g. new one) is used don't access actions dictionary
         if self.action == "":
@@ -3516,6 +3648,55 @@ class GenericAction(object):
         # disable help labels for actions
         self.ToggleActionStringHelp()
         self.ToggleActionTypeHelp()
+        """
+
+        self.initialize()
+
+
+    def initialize(self):
+        """
+        set defaults for action
+        """
+        # if uninitialized action (e.g. new one) is used don't access actions dictionary
+        if self.action == "":
+            # ...but use a dummy object with default settings
+            action = Config.Action()
+            # enable action by default
+            self.builder.get_object("input_checkbutton_enabled").set_active(True)
+            # action type combobox should be set to default
+            combobox = self.builder.get_object("input_combo_action_type")
+            combobox.set_active(0)
+        else:
+            action = self.conf.actions[self.action]
+        keys = action.__dict__.keys()
+        # walk through all relevant input types to fill dialog with existing settings
+        for i in ["input_entry_", "input_checkbutton_", "input_radiobutton_"]:
+            for key in keys:
+                j = self.builder.get_object(i + key)
+
+                if not j:
+                    continue
+                # some hazard, every widget has other methods to fill it with desired content
+                # so we try them all, one of them should work
+                try:
+                    j.set_text(action.__dict__[key])
+                except:
+                    pass
+                try:
+                    if str(action.__dict__[key]) == "True":
+                        j.set_active(True)
+                    if str(action.__dict__[key]) == "False":
+                        j.set_active(False)
+                except:
+                    pass
+                try:
+                    j.set_value(int(self.conf.__dict__[key]))
+                except:
+                    pass
+
+        # disable help per default
+        self.builder.get_object("label_help_string_description").set_visible(False)
+        self.builder.get_object("label_help_type_description").set_visible(False)
 
 
     def OK(self, widget):
@@ -3561,14 +3742,16 @@ class GenericAction(object):
             # fill settings dialog treeview
             self.settingsdialog.FillTreeView("actions_treeview", self.conf.actions, "Actions", "selected_action")
             # destroy new action dialog
-            self.dialog.destroy()
+            gobject.idle_add(self.output.DeleteGUILock, str(self.__class__.__name__))
+            self.dialog.hide()
 
 
     def Cancel(self, widget):
         """
             settings dialog got cancelled
         """
-        self.dialog.destroy()
+        gobject.idle_add(self.output.DeleteGUILock, str(self.__class__.__name__))
+        self.dialog.hide()
 
 
     def ToggleREHostOptions(self, widget=None):
@@ -3633,7 +3816,8 @@ class NewAction(GenericAction):
 
         # show filled settings dialog and wait thanks to gtk.run()
         self.dialog.run()
-        self.dialog.destroy()
+        gobject.idle_add(self.output.DeleteGUILock, str(self.__class__.__name__))
+        self.dialog.hide()
 
 
 class EditAction(GenericAction):
@@ -3655,7 +3839,8 @@ class EditAction(GenericAction):
 
         # show filled settings dialog and wait thanks to gtk.run()
         self.dialog.run()
-        self.dialog.destroy()
+        gobject.idle_add(self.output.DeleteGUILock, str(self.__class__.__name__))
+        self.dialog.hide()
 
 
     def OK(self, widget):
@@ -3702,14 +3887,16 @@ class EditAction(GenericAction):
             # fill settings dialog treeview
             self.settingsdialog.FillTreeView("actions_treeview", self.conf.actions, "Actions", "selected_action")
             # destroy new action dialog
-            self.dialog.destroy()
+            gobject.idle_add(self.output.DeleteGUILock, str(self.__class__.__name__))
+            self.dialog.hide()
 
 
     def Cancel(self, widget):
         """
             settings dialog got cancelled
         """
-        self.dialog.destroy()
+        gobject.idle_add(self.output.DeleteGUILock, str(self.__class__.__name__))
+        self.dialog.hide()
 
 
 class AuthenticationDialog:

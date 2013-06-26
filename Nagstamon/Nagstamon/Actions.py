@@ -424,8 +424,9 @@ class CheckForNewVersion(threading.Thread):
             if s.CheckingForNewVersion == False:
                 # set the flag to lock that connection
                 s.CheckingForNewVersion = True
+                # use IFW server to speed up request
+                result = s.FetchURL("http://nagstamon.ifw-dresden.de/files-nagstamon/latest_version_" + self.output.version, giveback="raw")
                 # remove newline
-                result = s.FetchURL("http://nagstamon.sourceforge.net/latest_version_" + self.output.version, giveback="raw")
                 version, error = result.result.split("\n")[0], result.error
 
                 # debug
