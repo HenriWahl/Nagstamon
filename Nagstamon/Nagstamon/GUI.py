@@ -35,15 +35,16 @@ import os
 import platform
 
 # module egg.trayicon doesnt exists on Windows
-if platform.system() != "Windows" and platform.system() != "Darwin":
-    try:
-        import egg.trayicon
-    except Exception, err:
-        print
-        print err
-        print
-        print "Could not load egg.trayicon, so you cannot put nagstamon statusbar into systray."
-        print
+# and is going to be obsolete on Linux too
+#if platform.system() != "Windows" and platform.system() != "Darwin":
+#    try:
+#        import egg.trayicon
+#    except Exception, err:
+#        print
+#        print err
+#        print
+#        print "Could not load egg.trayicon, so you cannot put nagstamon statusbar into systray."
+#        print
 
 # needed for actions e.g. triggered by pressed buttons
 from Nagstamon import Config
@@ -127,8 +128,53 @@ class GUI(object):
                                   gtk.gdk.Pixbuf, gtk.gdk.Pixbuf, gtk.gdk.Pixbuf, gtk.gdk.Pixbuf,\
                                   gtk.gdk.Pixbuf, gtk.gdk.Pixbuf, gtk.gdk.Pixbuf, gtk.gdk.Pixbuf]
 
+        # decide if the platform can handle SVG if not use PNG
+        if platform.system() in ["Darwin", "Windows"]:
+            self.BitmapSuffix = ".png"
+        else:
+            self.BitmapSuffix = ".svg"
+
+        # set app icon for all app windows
+        gtk.window_set_default_icon_from_file(self.Resources + os.sep + "nagstamon" + self.BitmapSuffix)
+
+        if platform.system() == "Darwin":
+            # MacOSX gets instable with default theme "Clearlooks" so use custom one with theme "Murrine"
+            gtk.rc_parse_string('gtk-theme-name = "Murrine"')
+
+            # init MacOSX integration
+            import gtk_osxapplication
+            osxapp = gtk_osxapplication.OSXApplication()
+            # prevent blocking
+            osxapp.connect("NSApplicationBlockTermination", gtk.main_quit)
+            osxapp.ready()
+
+        # icons for acknowledgement/downtime visualization
+        self.STATE_ICONS = dict()
+        for icon in ["acknowledged", "downtime", "flapping", "passive"]:
+            self.STATE_ICONS[icon] = gtk.gdk.pixbuf_new_from_file_at_size(self.Resources\
+                                                                          + os.sep + "nagstamon_" + icon + self.BitmapSuffix,\
+                                                                          int(self.fontsize/650), int(self.fontsize/650))
+
+        # Icon in systray and statusbar both get created but
+        # only one of them depending on the settings will
+        # be shown
+        self.statusbar = StatusBar(conf=self.conf, output=self)
+
+        # Windows workaround for faulty behavior in case the statusbar label shrinks -
+        # it does not in Windows, maybe a Gtk bug
+        # do this only if statusbar is enabled
+        ###
+        ###         what?
+        ###
+        ###if str(self.conf.statusbar_systray) == "True" or str(self.conf.statusbar_systray) == "True":
+        ###    x,y = self.statusbar.HBox.size_request()
+        ###    self.statusbar.StatusBar.resize(x, y)
+
         # create all GUI widgets
-        self._CreateOutputVisuals()
+        #self._CreateOutputVisuals()
+
+        # Popup is a WINDOW_POPUP without border etc.
+        self.popwin = Popwin(conf=self.conf, output=self)
 
         # find out dimension of all monitors
         for m in range(self.statusbar.StatusBar.get_screen().get_n_monitors()):
@@ -141,6 +187,29 @@ class GUI(object):
             self.popwin.Window.show_all()
             self.popwin.Window.set_visible(True)
             self.popwin.RefreshFullscreen()
+
+        # connect events to actions
+        # when talking about "systray" the Windows variant of upper left desktop corner
+        # statusbar is meant synonymical
+        # if pointer on systray do popup the long-summary-status-window aka popwin
+        self.statusbar.SysTray.connect("activate", self.statusbar.SysTrayClicked)
+        #self.statusbar.SysTray.connect("popup-menu", self.statusbar.MenuPopup, self.statusbar.Menu)
+        self.statusbar.SysTray.connect("popup-menu", self.statusbar.MenuPopup)
+
+        # if pointer clicks on logo move stautsbar
+        self.statusbar.LogoEventbox.connect("button-press-event", self.statusbar.LogoClicked)
+        self.statusbar.LogoEventbox.connect("button-release-event", self.statusbar.LogoReleased)
+
+        # if pointer hovers or clicks statusbar show details
+        self.statusbar.EventBoxLabel.connect("enter-notify-event", self.statusbar.Hovered)
+        self.statusbar.EventBoxLabel.connect("button-press-event", self.statusbar.Clicked)
+
+        # server combobox
+        self.popwin.ComboboxMonitor.connect("changed", self.popwin.ComboboxClicked)
+
+        # attempt to place and resize statusbar where it belongs to in Windows - workaround
+        self.statusbar.StatusBar.move(int(self.conf.position_x), int(self.conf.position_y))
+        self.statusbar.Resize()
 
         # flag which is set True if already notifying
         self.Notifying = False
@@ -180,7 +249,7 @@ class GUI(object):
                                                             (server.HOST_COLUMN_ID, gtk.SORT_ASCENDING)],
                                                            len(server.COLUMNS)+1) # stores sorting between table refresh
 
-        # store once created windows here to minimize memory usage
+        # store once created dialogs here to minimize memory usage
         self.Dialogs = {}
 
 
@@ -238,46 +307,46 @@ class GUI(object):
         """
             create output visuals
         """
-        # decide if the platform can handle SVG if not use PNG
-        if platform.system() in ["Darwin", "Windows"]:
-            self.BitmapSuffix = ".png"
-        else:
-            self.BitmapSuffix = ".svg"
+        #### decide if the platform can handle SVG if not use PNG
+        ###if platform.system() in ["Darwin", "Windows"]:
+        ###    self.BitmapSuffix = ".png"
+        ###else:
+        ###    self.BitmapSuffix = ".svg"
 
-        # set app icon for all app windows
-        gtk.window_set_default_icon_from_file(self.Resources + os.sep + "nagstamon" + self.BitmapSuffix)
+        #### set app icon for all app windows
+        ###gtk.window_set_default_icon_from_file(self.Resources + os.sep + "nagstamon" + self.BitmapSuffix)
 
-        if platform.system() == "Darwin":
-            # MacOSX gets instable with default theme "Clearlooks" so use custom one with theme "Murrine"
-            gtk.rc_parse_string('gtk-theme-name = "Murrine"')
+        ###if platform.system() == "Darwin":
+        ###    # MacOSX gets instable with default theme "Clearlooks" so use custom one with theme "Murrine"
+        ###    gtk.rc_parse_string('gtk-theme-name = "Murrine"')
+        ###
+        ###    # init MacOSX integration
+        ###    import gtk_osxapplication
+        ###    osxapp = gtk_osxapplication.OSXApplication()
+        ###    # prevent blocking
+        ###    osxapp.connect("NSApplicationBlockTermination", gtk.main_quit)
+        ###    osxapp.ready()
 
-            # init MacOSX integration
-            import gtk_osxapplication
-            osxapp = gtk_osxapplication.OSXApplication()
-            # prevent blocking
-            osxapp.connect("NSApplicationBlockTermination", gtk.main_quit)
-            osxapp.ready()
+        #### icons for acknowledgement/downtime visualization
+        ###self.STATE_ICONS = dict()
+        ###for icon in ["acknowledged", "downtime", "flapping", "passive"]:
+        ###    self.STATE_ICONS[icon] = gtk.gdk.pixbuf_new_from_file_at_size(self.Resources\
+        ###                                                                  + os.sep + "nagstamon_" + icon + self.BitmapSuffix,\
+        ###                                                                  int(self.fontsize/650), int(self.fontsize/650))
 
-        # icons for acknowledgement/downtime visualization
-        self.STATE_ICONS = dict()
-        for icon in ["acknowledged", "downtime", "flapping", "passive"]:
-            self.STATE_ICONS[icon] = gtk.gdk.pixbuf_new_from_file_at_size(self.Resources\
-                                                                          + os.sep + "nagstamon_" + icon + self.BitmapSuffix,\
-                                                                          int(self.fontsize/650), int(self.fontsize/650))
+        #### Icon in systray and statusbar both get created but
+        #### only one of them depending on the settings will
+        #### be shown
+        ###self.statusbar = StatusBar(conf=self.conf, output=self)
 
-        # Icon in systray and statusbar both get created but
-        # only one of them depending on the settings will
-        # be shown
-        self.statusbar = StatusBar(conf=self.conf, output=self)
-
-        # Popup is a WINDOW_POPUP without border etc.
-        self.popwin = Popwin(conf=self.conf, output=self)
-        # Windows workaround for faulty behavior in case the statusbar label shrinks -
-        # it does not in Windows, maybe a Gtk bug
-        # do this only if statusbar is enabled
-        if str(self.conf.statusbar_systray) == "True" or str(self.conf.statusbar_systray) == "True":
-            x,y = self.statusbar.HBox.size_request()
-            self.statusbar.StatusBar.resize(x, y)
+        ## Popup is a WINDOW_POPUP without border etc.
+        #self.popwin = Popwin(conf=self.conf, output=self)
+        ## Windows workaround for faulty behavior in case the statusbar label shrinks -
+        ## it does not in Windows, maybe a Gtk bug
+        ## do this only if statusbar is enabled
+        #if str(self.conf.statusbar_systray) == "True" or str(self.conf.statusbar_systray) == "True":
+        #    x,y = self.statusbar.HBox.size_request()
+        #    self.statusbar.StatusBar.resize(x, y)
 
         # connect events to actions
         # when talking about "systray" the Windows variant of upper left desktop corner
@@ -1177,18 +1246,20 @@ class StatusBar(object):
         # add all keywords to object, every mode searchs inside for its favorite arguments/keywords
         for k in kwds: self.__dict__[k] = kwds[k]
 
-        # TrayIcon - appears as status bar in Windows due to non existent egg.trayicon python module
-        if platform.system() == "Windows":
-            self._CreateFloatingStatusbar()
-        else:
-            if str(self.conf.statusbar_systray) == "True":
-                try:
-                    self.StatusBar = egg.trayicon.TrayIcon(self.output.name)
-                except:
-                    print "python gnome2 extras with egg.trayicon not installed so trayicon cannot be used. Using floating desktop status bar instead."
-                    self._CreateFloatingStatusbar()
-            else:
-                self._CreateFloatingStatusbar()
+        ## TrayIcon - appears as status bar in Windows due to non existent egg.trayicon python module
+        #if platform.system() == "Windows":
+        #    self._CreateFloatingStatusbar()
+        #else:
+        #    if str(self.conf.statusbar_systray) == "True":
+        #        try:
+        #            self.StatusBar = egg.trayicon.TrayIcon(self.output.name)
+        #        except:
+        #            print "python gnome2 extras with egg.trayicon not installed so trayicon cannot be used. Using floating desktop status bar instead."
+        #            self._CreateFloatingStatusbar()
+        #    else:
+        #        self._CreateFloatingStatusbar()
+
+        self._CreateFloatingStatusbar()
 
         # image for logo in statusbar
         self.nagstamonLogo = gtk.Image()
@@ -1223,7 +1294,7 @@ class StatusBar(object):
 
         # if statusbar is enabled...
         self.StatusBar.move(int(self.conf.position_x), int(self.conf.position_y))
-        if str(self.conf.statusbar_systray) == "True" or str(self.conf.statusbar_floating) == "True":
+        if str(self.conf.statusbar_floating) == "True":
         # ...move statusbar in case it is floating to its last saved position and show it
             self.StatusBar.show_all()
         else:
@@ -1544,7 +1615,17 @@ class Popwin(object):
         # add all keywords to object, every mode searchs inside for its favorite arguments/keywords
         for k in kwds: self.__dict__[k] = kwds[k]
 
-        self.Window = self._CreatePopwin()
+        #self.Window = self._CreatePopwin()
+
+        # Initialize type popup
+        if platform.system() == "Darwin":
+            self.Window = gtk.Window(gtk.WINDOW_POPUP)
+        else:
+            self.Window = gtk.Window(gtk.WINDOW_TOPLEVEL)
+            self.Window.set_title(self.output.name + " " + self.output.version)
+
+        # switch between fullscreen and popup mode
+        self.SwitchMode()
 
         # initialize the coordinates of left upper corner of the popwin and its size
         self.popwinx0 = self.popwiny0 = 0
@@ -1743,50 +1824,53 @@ class Popwin(object):
             self.Menu.show_all()
 
 
-    def _CreatePopwin(self, x0=0, y0=0, width=0, height=0):
+    def SwitchMode(self, x0=0, y0=0, width=0, height=0):
         """
-            Create popup window
+            switch between fullscreen and popup window mode
         """
 
+        """
         # Initialize type popup
         if platform.system() == "Darwin":
             window = gtk.Window(gtk.WINDOW_POPUP)
         else:
             window = gtk.Window(gtk.WINDOW_TOPLEVEL)
             window.set_title(self.output.name + " " + self.output.version)
+        """
 
         if str(self.output.conf.fullscreen) == "False":
             # for not letting statusbar throw a shadow onto popwin in any composition-window-manager this helps to
             # keep a more consistent look - copied from StatusBar... anyway, doesn't work... well, next attempt:
             # Windows will have an entry on taskbar when not using HINT_UTILITY
             if platform.system() == "Windows":
-                window.set_type_hint(gtk.gdk.WINDOW_TYPE_HINT_UTILITY)
+                self.Window.set_type_hint(gtk.gdk.WINDOW_TYPE_HINT_UTILITY)
             else:
-                window.set_type_hint(gtk.gdk.WINDOW_TYPE_HINT_MENU)
+                self.Window.set_type_hint(gtk.gdk.WINDOW_TYPE_HINT_MENU)
 
             # make a nice popup of the toplevel window
-            window.set_decorated(False)
-            window.set_keep_above(True)
+            self.Window.set_decorated(False)
+            self.Window.set_keep_above(True)
             # newer Ubuntus place a resize widget onto floating statusbar - please don't!
-            window.set_resizable(False)
-            window.set_property("skip-taskbar-hint", True)
-            window.stick()
-            window.set_skip_taskbar_hint(True)
-            window.set_size_request(width, height)
-            window.move(x0, y0)
-            window.connect("leave-notify-event", self.LeavePopWin)
+            self.Window.set_resizable(False)
+            self.Window.set_property("skip-taskbar-hint", True)
+            self.Window.stick()
+            self.Window.set_skip_taskbar_hint(True)
+            self.Window.set_size_request(width, height)
+            self.Window.move(x0, y0)
+            self.Window.connect("leave-notify-event", self.LeavePopWin)
         else:
             # find out dimension of all monitors
-            for m in range(window.get_screen().get_n_monitors()):
-                monx0, mony0, monw, monh = window.get_screen().get_monitor_geometry(m)
+            for m in range(self.Window.get_screen().get_n_monitors()):
+                monx0, mony0, monw, monh = self.Window.get_screen().get_monitor_geometry(m)
                 self.output.monitors[m] = (monx0, mony0, monw, monh)
             x0, y0 = self.output.monitors[int(self.output.conf.fullscreen_display)][0:2]
-            window.move(x0, y0)
-            window.fullscreen()
-            window.show_all()
-            window.set_visible(True)
+            self.Window.move(x0, y0)
+            self.Window.fullscreen()
+            self.Window.show_all()
+            self.Window.set_visible(True)
 
-        return window
+        # dummy return
+        return True
 
 
     def PopUp(self, widget=None, event=None):
@@ -1949,7 +2033,6 @@ class Popwin(object):
                     statusbar_mousex, statusbar_mousey = 0, int(self.conf.systray_popup_offset)
                 # set monitor for later applying the correct monitor geometry
                 self.output.current_monitor = self.output.statusbar.StatusBar.get_screen().get_monitor_at_point(mousex, mousey)
-
                 statusbarx0 = mousex - statusbar_mousex
                 statusbary0 = mousey - statusbar_mousey
 
@@ -1958,9 +2041,7 @@ class Popwin(object):
 
                 # set monitor for later applying the correct monitor geometry
                 self.output.current_monitor = self.output.statusbar.StatusBar.get_screen().get_monitor_at_point(mousex, mousey)
-
                 statusbar_mousex, statusbar_mousey = self.output.statusbar.StatusBar.get_pointer()
-
                 statusbarx0 = mousex - statusbar_mousex
                 statusbary0 = mousey - statusbar_mousey
 
@@ -2701,8 +2782,8 @@ class Settings(object):
 
         # disable non useful gui settings
         # statusbar in trayicon is only useful if GNOME egg trayicon is loaded
-        if not sys.modules.has_key("egg.trayicon"):
-            self.builder.get_object("input_radiobutton_statusbar_systray").hide()
+        ###if not sys.modules.has_key("egg.trayicon"):
+        ###    self.builder.get_object("input_radiobutton_statusbar_systray").hide()
         if platform.system() == "Darwin":
             # MacOS doesn't need any option because there is only floating statusbar possible
             self.builder.get_object("input_radiobutton_icon_in_systray").hide()
@@ -2864,22 +2945,39 @@ class Settings(object):
             self.dialog.hide()
 
             # create output visuals again because they might have changed (e.g. systray/free floating status bar)
-            self.output.statusbar.StatusBar.destroy()
-            self.output.statusbar.SysTray.set_visible(False)
+            #self.output.statusbar.StatusBar.destroy()
+
+            if str(self.conf.statusbar_floating) == "True":
+                self.output.statusbar.StatusBar.show_all()
+            else:
+                self.output.statusbar.StatusBar.hide_all()
+
+            if str(self.conf.icon_in_systray) == "True":
+                self.output.statusbar.SysTray.set_visible(True)
+            else:
+                self.output.statusbar.SysTray.set_visible(False)
+
+            #self.output.statusbar.SysTray.set_visible(False)
             #self.output.statusbar.SysTray.destroy()
             # still not going away artefact - trying brute force
             #while self.output.popwin.Window.get_visible():
             #    self.output.popwin.Window.destroy()
             #del self.output.popwin.Window
-            self.output.popwin.Window.destroy()
+            #self.output.popwin.Window.destroy()
 
 
             # re-initialize output with new settings
-            self.output.__init__()
+            #self.output.__init__()
+            #self.output._CreateOutputVisuals()
+
+
 
             # in Windows the statusbar with gtk.gdk.WINDOW_TYPE_HINT_UTILITY places itself somewhere
             # this way it should be disciplined
             self.output.statusbar.StatusBar.move(int(self.conf.position_x), int(self.conf.position_y))
+
+            # popwin treatment
+            self.output.popwin.SwitchMode()
 
             # start debugging loop if wanted
             if str(self.conf.debug_mode) == "True":
@@ -2890,6 +2988,8 @@ class Settings(object):
             Actions.RefreshAllServers(servers=self.servers, output=self.output, conf=self.conf)
 
         except:
+            import traceback
+            traceback.print_exc(file=sys.stdout)
             self.servers.values()[0].Error(sys.exc_info())
 
 

@@ -111,7 +111,8 @@ class Config(object):
         self.color_down_background = self.default_color_down_background = "#000000"
         self.color_error_text = self.default_color_error_text= "#000000"
         self.color_error_background = self.default_color_error_background = "#D3D3D3"
-        self.statusbar_systray = False
+        # going to be obsolete even on Linux
+        #self.statusbar_systray = False
         self.statusbar_floating = True
         self.icon_in_systray = False
         self.fullscreen = False
@@ -656,6 +657,12 @@ class Config(object):
         if self.__dict__.has_key("update_interval"):
             self.update_interval_seconds = int(self.update_interval) * 60
             self.__dict__.pop("update_interval")
+
+        # remove support for GNOME2-trayicon-egg-stuff
+        if self.__dict__.has_key("statusbar_systray"):
+            if str(self.statusbar_systray) == "True":
+                self.icon_in_systray = "True"
+            self.__dict__.pop("statusbar_systray")
 
 
     def GetNumberOfEnabledMonitors(self):
