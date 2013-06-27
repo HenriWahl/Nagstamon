@@ -34,18 +34,6 @@ import gobject
 import os
 import platform
 
-# module egg.trayicon doesnt exists on Windows
-# and is going to be obsolete on Linux too
-#if platform.system() != "Windows" and platform.system() != "Darwin":
-#    try:
-#        import egg.trayicon
-#    except Exception, err:
-#        print
-#        print err
-#        print
-#        print "Could not load egg.trayicon, so you cannot put nagstamon statusbar into systray."
-#        print
-
 # needed for actions e.g. triggered by pressed buttons
 from Nagstamon import Config
 from Nagstamon import Actions
@@ -181,12 +169,12 @@ class GUI(object):
             monx0, mony0, monw, monh = self.statusbar.StatusBar.get_screen().get_monitor_geometry(m)
             self.monitors[m] = (monx0, mony0, monw, monh)
 
-        # set size of popup-window
-        self.popwin.Resize()
         if str(self.conf.fullscreen) == "True":
             self.popwin.Window.show_all()
             self.popwin.Window.set_visible(True)
             self.popwin.RefreshFullscreen()
+        else:
+            self.popwin.Resize()
 
         # connect events to actions
         # when talking about "systray" the Windows variant of upper left desktop corner
@@ -1195,7 +1183,6 @@ class GUI(object):
         """
         exit....
         """
-        print dummy
         self.conf.SaveConfig(output=self)
         gtk.main_quit()
 
@@ -1245,19 +1232,6 @@ class StatusBar(object):
     def __init__(self, **kwds):
         # add all keywords to object, every mode searchs inside for its favorite arguments/keywords
         for k in kwds: self.__dict__[k] = kwds[k]
-
-        ## TrayIcon - appears as status bar in Windows due to non existent egg.trayicon python module
-        #if platform.system() == "Windows":
-        #    self._CreateFloatingStatusbar()
-        #else:
-        #    if str(self.conf.statusbar_systray) == "True":
-        #        try:
-        #            self.StatusBar = egg.trayicon.TrayIcon(self.output.name)
-        #        except:
-        #            print "python gnome2 extras with egg.trayicon not installed so trayicon cannot be used. Using floating desktop status bar instead."
-        #            self._CreateFloatingStatusbar()
-        #    else:
-        #        self._CreateFloatingStatusbar()
 
         self._CreateFloatingStatusbar()
 
@@ -1315,6 +1289,7 @@ class StatusBar(object):
         # flag to lock statusbar error messages not to provoke a pango crash
         self.isShowingError = False
 
+        """
         # adapt label font size to nagstamon logo height because on different platforms
         # default sizes + fonts vary
         try:
@@ -1328,6 +1303,9 @@ class StatusBar(object):
         except:
             # in case of error define fixed fontsize
             self.output.fontsize = 10000
+        """
+
+        self.CalculateFontSize()
 
         # Popup menu for statusbar
         self.Menu = gtk.Menu()
@@ -1349,6 +1327,24 @@ class StatusBar(object):
                     self.Menu.append(menu_item)
 
         self.Menu.show_all()
+
+
+    def CalculateFontSize(self):
+        """
+        adapt label font size to nagstamon logo height because on different platforms
+        default sizes + fonts vary
+        """
+        try:
+            fontsize = 7000
+            self.Label.set_markup('<span size="%s"> Loading... </span>' % (fontsize))
+            # compare heights, height of logo is the important one
+            while self.LogoEventbox.size_request()[1] > self.Label.size_request()[1]:
+                self.Label.set_markup('<span size="%s"> Loading... </span>' % (fontsize))
+                fontsize += 250
+            self.output.fontsize = fontsize
+        except:
+            # in case of error define fixed fontsize
+            self.output.fontsize = 10000
 
 
     def _CreateFloatingStatusbar(self):
@@ -1615,8 +1611,6 @@ class Popwin(object):
         # add all keywords to object, every mode searchs inside for its favorite arguments/keywords
         for k in kwds: self.__dict__[k] = kwds[k]
 
-        #self.Window = self._CreatePopwin()
-
         # Initialize type popup
         if platform.system() == "Darwin":
             self.Window = gtk.Window(gtk.WINDOW_POPUP)
@@ -1624,8 +1618,8 @@ class Popwin(object):
             self.Window = gtk.Window(gtk.WINDOW_TOPLEVEL)
             self.Window.set_title(self.output.name + " " + self.output.version)
 
-        # switch between fullscreen and popup mode
-        self.SwitchMode()
+        # notice leaving cursor
+        self.Window.connect("leave-notify-event", self.LeavePopWin)
 
         # initialize the coordinates of left upper corner of the popwin and its size
         self.popwinx0 = self.popwiny0 = 0
@@ -1679,22 +1673,24 @@ class Popwin(object):
         # nice separator
         self.HBoxMenu.add(gtk.VSeparator())
 
-        if str(self.output.conf.fullscreen) == "True":
-            self.ButtonMenu = ButtonWithIcon(output=self.output, label="", icon="menu.png")
-            self.HBoxMenu.add(self.ButtonMenu)
-            #self.ButtonMenu.connect("clicked", self.MenuPopUp)
-            self.ButtonMenu.connect("button-press-event", self.MenuPopUp)
-        else:
-            self.ButtonClose = ButtonWithIcon(output=self.output, label="", icon="close.png")
-            self.HBoxMenu.add(self.ButtonClose)
-            # close popwin when its close button is pressed
-            self.ButtonClose.connect("clicked", self.Close)
-            self.ButtonClose.connect("leave-notify-event", self.LeavePopWin)
-            # for whatever reason in Windows the Filters button grabs initial focus
-            # so the close button should grab it for cosmetical reasons
-            self.ButtonClose.grab_focus()
+        ###if str(self.output.conf.fullscreen) == "True":
+        self.ButtonMenu = ButtonWithIcon(output=self.output, label="", icon="menu.png")
+        self.ButtonMenu.set_no_show_all(True)
+        self.HBoxMenu.add(self.ButtonMenu)
+        #self.ButtonMenu.connect("clicked", self.MenuPopUp)
+        self.ButtonMenu.connect("button-press-event", self.MenuPopUp)
+        ###else:
+        self.ButtonClose = ButtonWithIcon(output=self.output, label="", icon="close.png")
+        self.ButtonClose.set_no_show_all(True)
+        self.HBoxMenu.add(self.ButtonClose)
+        # close popwin when its close button is pressed
+        self.ButtonClose.connect("clicked", self.Close)
+        self.ButtonClose.connect("leave-notify-event", self.LeavePopWin)
+        # for whatever reason in Windows the Filters button grabs initial focus
+        # so the close button should grab it for cosmetical reasons
+        self.ButtonClose.grab_focus()
 
-            # put the HBox full of buttons full of HBoxes into the aligned HBox...
+        # put the HBox full of buttons full of HBoxes into the aligned HBox...
         self.AlMenu.add(self.HBoxMenu)
 
         # HBoxes en masse...
@@ -1736,6 +1732,18 @@ class Popwin(object):
         self.ScrolledViewport = gtk.Viewport()
         self.ScrolledViewport.add(self.ScrolledVBox)
         self.ScrolledWindow.add(self.ScrolledViewport)
+
+        # menu in upper right corner for fullscreen mode
+        self.Menu = gtk.Menu()
+        for i in ["About", "Exit"]:
+            if i == "-----":
+                menu_item = gtk.SeparatorMenuItem()
+                self.Menu.append(menu_item)
+            else:
+                menu_item = gtk.MenuItem(i)
+                menu_item.connect("activate", self.MenuResponse, i)
+                self.Menu.append(menu_item)
+        self.Menu.show_all()
 
         # group server infos in VBoxes
         self.ServerVBoxes = dict()
@@ -1809,65 +1817,59 @@ class Popwin(object):
         else:
             self.heightbuffer_external = 0
 
-        if str(self.output.conf.fullscreen) == "True":
-            # Popup menu instead statusbar menu  for maximized window view
-            self.Menu = gtk.Menu()
-            for i in ["About", "Exit"]:
-                if i == "-----":
-                    menu_item = gtk.SeparatorMenuItem()
-                    self.Menu.append(menu_item)
-                else:
-                    menu_item = gtk.MenuItem(i)
-                    menu_item.connect("activate", self.MenuResponse, i)
-                    self.Menu.append(menu_item)
-
-            self.Menu.show_all()
+        # switch between fullscreen and popup mode
+        self.SwitchMode()
 
 
-    def SwitchMode(self, x0=0, y0=0, width=0, height=0):
+    def SwitchMode(self):
         """
             switch between fullscreen and popup window mode
-        """
-
-        """
-        # Initialize type popup
-        if platform.system() == "Darwin":
-            window = gtk.Window(gtk.WINDOW_POPUP)
-        else:
-            window = gtk.Window(gtk.WINDOW_TOPLEVEL)
-            window.set_title(self.output.name + " " + self.output.version)
         """
 
         if str(self.output.conf.fullscreen) == "False":
             # for not letting statusbar throw a shadow onto popwin in any composition-window-manager this helps to
             # keep a more consistent look - copied from StatusBar... anyway, doesn't work... well, next attempt:
             # Windows will have an entry on taskbar when not using HINT_UTILITY
+            self.Window.set_visible(False)
             if platform.system() == "Windows":
                 self.Window.set_type_hint(gtk.gdk.WINDOW_TYPE_HINT_UTILITY)
             else:
                 self.Window.set_type_hint(gtk.gdk.WINDOW_TYPE_HINT_MENU)
+            self.Window.set_visible(True)
 
             # make a nice popup of the toplevel window
             self.Window.set_decorated(False)
             self.Window.set_keep_above(True)
+            self.Window.unfullscreen()
             # newer Ubuntus place a resize widget onto floating statusbar - please don't!
             self.Window.set_resizable(False)
             self.Window.set_property("skip-taskbar-hint", True)
             self.Window.stick()
             self.Window.set_skip_taskbar_hint(True)
-            self.Window.set_size_request(width, height)
-            self.Window.move(x0, y0)
-            self.Window.connect("leave-notify-event", self.LeavePopWin)
+            # change Close/Menu button in popup-mode
+            self.ButtonClose.show()
+            self.ButtonMenu.hide()
         else:
+            self.Window.set_visible(False)
+            self.Window.set_type_hint(gtk.gdk.WINDOW_TYPE_HINT_NORMAL)
+            self.Window.set_visible(True)
+
             # find out dimension of all monitors
             for m in range(self.Window.get_screen().get_n_monitors()):
                 monx0, mony0, monw, monh = self.Window.get_screen().get_monitor_geometry(m)
                 self.output.monitors[m] = (monx0, mony0, monw, monh)
-            x0, y0 = self.output.monitors[int(self.output.conf.fullscreen_display)][0:2]
+            x0, y0, width, height = self.output.monitors[int(self.output.conf.fullscreen_display)]
             self.Window.move(x0, y0)
+            self.Window.set_decorated(True)
+            self.Window.set_resizable(True)
+            self.Window.set_property("skip-taskbar-hint", False)
+            self.Window.set_skip_taskbar_hint(False)
+            self.Window.unstick()
             self.Window.fullscreen()
             self.Window.show_all()
-            self.Window.set_visible(True)
+            # change Close/Menu button in fullscreen-mode
+            self.ButtonClose.hide()
+            self.ButtonMenu.show()
 
         # dummy return
         return True
@@ -4138,15 +4140,35 @@ class ButtonWithIcon(gtk.Button):
         gtk.Button.__init__(self)
 
         # HBox is necessary because gtk.Button allows only one child
-        hbox = gtk.HBox()
-        icon = gtk.Image()
-        icon.set_from_file(self.output.Resources + os.sep + self.icon)
-        hbox.add(icon)
+        self.HBox = gtk.HBox()
+        self.Icon = gtk.Image()
+        self.Icon.set_from_file(self.output.Resources + os.sep + self.icon)
+        self.HBox.add(self.Icon)
 
         if self.label != "":
-            label = gtk.Label(" " + self.label)
-            hbox.add(label)
+            self.Label = gtk.Label(" " + self.label)
+            self.HBox.add(self.Label)
 
         self.set_relief(gtk.RELIEF_NONE)
-        self.add(hbox)
+        self.add(self.HBox)
 
+    def show(self):
+        """
+        'normal' .show() does not show HBox and Icon
+        """
+        gtk.Button.show(self)
+        self.HBox.show()
+        self.Icon.show()
+        if self.__dict__.has_key("Label"):
+            self.Label.show()
+
+
+    def hide(self):
+        """
+        'normal' .hide() does not hide HBox and Icon
+        """
+        gtk.Button.hide(self)
+        self.HBox.hide()
+        self.Icon.hide()
+        if self.__dict__.has_key("Label"):
+            self.Label.hide()
