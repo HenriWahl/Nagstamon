@@ -148,19 +148,6 @@ class GUI(object):
         # be shown
         self.statusbar = StatusBar(conf=self.conf, output=self)
 
-        # Windows workaround for faulty behavior in case the statusbar label shrinks -
-        # it does not in Windows, maybe a Gtk bug
-        # do this only if statusbar is enabled
-        ###
-        ###         what?
-        ###
-        ###if str(self.conf.statusbar_systray) == "True" or str(self.conf.statusbar_systray) == "True":
-        ###    x,y = self.statusbar.HBox.size_request()
-        ###    self.statusbar.StatusBar.resize(x, y)
-
-        # create all GUI widgets
-        #self._CreateOutputVisuals()
-
         # Popup is a WINDOW_POPUP without border etc.
         self.popwin = Popwin(conf=self.conf, output=self)
 
@@ -224,16 +211,16 @@ class GUI(object):
         self.IDS_COLUMNS_MAP = dict((id, column) for column, id in self.COLUMNS_IDS_MAP.iteritems())
 
         if str(self.conf.default_sort_order) == "Ascending":
-            startup_sort_order = gtk.SORT_ASCENDING
+            self.startup_sort_order = gtk.SORT_ASCENDING
         else:
-            startup_sort_order = gtk.SORT_DESCENDING
+            self.startup_sort_order = gtk.SORT_DESCENDING
 
-        startup_sort_field = self.COLUMNS_IDS_MAP[self.conf.default_sort_field]
+        self.startup_sort_field = self.COLUMNS_IDS_MAP[self.conf.default_sort_field]
 
         self.rows_reordered_handler = {}
         self.last_sorting = {}
         for server in self.servers.values():
-            self.last_sorting[server.get_name()] = Sorting([(startup_sort_field, startup_sort_order ),
+            self.last_sorting[server.get_name()] = Sorting([(self.startup_sort_field, self.startup_sort_order ),
                                                             (server.HOST_COLUMN_ID, gtk.SORT_ASCENDING)],
                                                            len(server.COLUMNS)+1) # stores sorting between table refresh
 
@@ -289,75 +276,6 @@ class GUI(object):
             order = model.get_sort_order()
             last_sorting = self.get_last_sorting(server)
             last_sorting.add(id, order)
-
-
-    def _CreateOutputVisuals(self):
-        """
-            create output visuals
-        """
-        #### decide if the platform can handle SVG if not use PNG
-        ###if platform.system() in ["Darwin", "Windows"]:
-        ###    self.BitmapSuffix = ".png"
-        ###else:
-        ###    self.BitmapSuffix = ".svg"
-
-        #### set app icon for all app windows
-        ###gtk.window_set_default_icon_from_file(self.Resources + os.sep + "nagstamon" + self.BitmapSuffix)
-
-        ###if platform.system() == "Darwin":
-        ###    # MacOSX gets instable with default theme "Clearlooks" so use custom one with theme "Murrine"
-        ###    gtk.rc_parse_string('gtk-theme-name = "Murrine"')
-        ###
-        ###    # init MacOSX integration
-        ###    import gtk_osxapplication
-        ###    osxapp = gtk_osxapplication.OSXApplication()
-        ###    # prevent blocking
-        ###    osxapp.connect("NSApplicationBlockTermination", gtk.main_quit)
-        ###    osxapp.ready()
-
-        #### icons for acknowledgement/downtime visualization
-        ###self.STATE_ICONS = dict()
-        ###for icon in ["acknowledged", "downtime", "flapping", "passive"]:
-        ###    self.STATE_ICONS[icon] = gtk.gdk.pixbuf_new_from_file_at_size(self.Resources\
-        ###                                                                  + os.sep + "nagstamon_" + icon + self.BitmapSuffix,\
-        ###                                                                  int(self.fontsize/650), int(self.fontsize/650))
-
-        #### Icon in systray and statusbar both get created but
-        #### only one of them depending on the settings will
-        #### be shown
-        ###self.statusbar = StatusBar(conf=self.conf, output=self)
-
-        ## Popup is a WINDOW_POPUP without border etc.
-        #self.popwin = Popwin(conf=self.conf, output=self)
-        ## Windows workaround for faulty behavior in case the statusbar label shrinks -
-        ## it does not in Windows, maybe a Gtk bug
-        ## do this only if statusbar is enabled
-        #if str(self.conf.statusbar_systray) == "True" or str(self.conf.statusbar_systray) == "True":
-        #    x,y = self.statusbar.HBox.size_request()
-        #    self.statusbar.StatusBar.resize(x, y)
-
-        # connect events to actions
-        # when talking about "systray" the Windows variant of upper left desktop corner
-        # statusbar is meant synonymical
-        # if pointer on systray do popup the long-summary-status-window aka popwin
-        self.statusbar.SysTray.connect("activate", self.statusbar.SysTrayClicked)
-        #self.statusbar.SysTray.connect("popup-menu", self.statusbar.MenuPopup, self.statusbar.Menu)
-        self.statusbar.SysTray.connect("popup-menu", self.statusbar.MenuPopup)
-
-        # if pointer clicks on logo move stautsbar
-        self.statusbar.LogoEventbox.connect("button-press-event", self.statusbar.LogoClicked)
-        self.statusbar.LogoEventbox.connect("button-release-event", self.statusbar.LogoReleased)
-
-        # if pointer hovers or clicks statusbar show details
-        self.statusbar.EventBoxLabel.connect("enter-notify-event", self.statusbar.Hovered)
-        self.statusbar.EventBoxLabel.connect("button-press-event", self.statusbar.Clicked)
-
-        # server combobox
-        self.popwin.ComboboxMonitor.connect("changed", self.popwin.ComboboxClicked)
-
-        # attempt to place and resize statusbar where it belongs to in Windows - workaround
-        self.statusbar.StatusBar.move(int(self.conf.position_x), int(self.conf.position_y))
-        self.statusbar.Resize()
 
 
     def RefreshDisplayStatus(self):
@@ -1672,14 +1590,11 @@ class Popwin(object):
 
         # nice separator
         self.HBoxMenu.add(gtk.VSeparator())
-
-        ###if str(self.output.conf.fullscreen) == "True":
         self.ButtonMenu = ButtonWithIcon(output=self.output, label="", icon="menu.png")
         self.ButtonMenu.set_no_show_all(True)
         self.HBoxMenu.add(self.ButtonMenu)
         #self.ButtonMenu.connect("clicked", self.MenuPopUp)
         self.ButtonMenu.connect("button-press-event", self.MenuPopUp)
-        ###else:
         self.ButtonClose = ButtonWithIcon(output=self.output, label="", icon="close.png")
         self.ButtonClose.set_no_show_all(True)
         self.HBoxMenu.add(self.ButtonClose)
@@ -1753,41 +1668,11 @@ class Popwin(object):
         server_list.sort(key=str.lower)
 
         # create table with all the displayed info
-        for item in server_list:
-            # get the servers alphabetically sorted
-            server = self.output.servers[item]
-            # put all infos into one VBox object
-            self.ServerVBoxes[server.get_name()] = ServerVBox(output=self.output, server=server)
-            self.ServerVBoxes[server.get_name()].Label.set_markup('<span weight="bold" size="large">' + server.get_username() + "@" + server.get_name() + '</span>')
-            self.ServerVBoxes[server.get_name()].Label.set_alignment(0,0)
-            # set no show all to be able to hide label and treeview if it is empty in case of no hassle
-            self.ServerVBoxes[server.get_name()].set_no_show_all(True)
-
-            # connect buttons with actions
-            # open Nagios main page in your favorite web browser when nagios button is clicked
-            self.ServerVBoxes[server.get_name()].ButtonMonitor.connect("clicked", server.OpenBrowser, "monitor", self.output)
-            # open Nagios services in your favorite web browser when service button is clicked
-            self.ServerVBoxes[server.get_name()].ButtonServices.connect("clicked", server.OpenBrowser, "services", self.output)
-            # open Nagios hosts in your favorite web browser when hosts button is clicked
-            self.ServerVBoxes[server.get_name()].ButtonHosts.connect("clicked", server.OpenBrowser, "hosts", self.output)
-            # open Nagios history in your favorite web browser when hosts button is clicked
-            self.ServerVBoxes[server.get_name()].ButtonHistory.connect("clicked", server.OpenBrowser, "history", self.output)
-            # OK button for monitor credentials refreshment or when "Enter" being pressed in password field
-            self.ServerVBoxes[server.get_name()].AuthButtonOK.connect("clicked", self.ServerVBoxes[server.get_name()].AuthOK, server)
-            # jump to password entry field if Return has been pressed on username entry field
-            self.ServerVBoxes[server.get_name()].AuthEntryUsername.connect("key-release-event", self.ServerVBoxes[server.get_name()].AuthUsername)
-            # for some reason signal "editing done" does not work so we need to check if Return has been pressed
-            self.ServerVBoxes[server.get_name()].AuthEntryPassword.connect("key-release-event", self.ServerVBoxes[server.get_name()].AuthPassword, server)
-            # windows workaround - see above
-            # connect Server_EventBox with leave-notify-event to get popwin popping down when leaving it
-            self.ServerVBoxes[server.get_name()].Server_EventBox.connect("leave-notify-event", self.PopDown)
-            # sorry folks, but this only works at the border of the treeviews
-            self.ServerVBoxes[server.get_name()].TreeView.connect("leave-notify-event", self.PopDown)
-            # connect the treeviews of the servers to mouse clicks
-            self.ServerVBoxes[server.get_name()].TreeView.connect("button-press-event", self.ServerVBoxes[server.get_name()].TreeviewPopupMenu, self.ServerVBoxes[server.get_name()].TreeView, self.output.servers[server.get_name()])
+        for server in server_list:
+            self.ServerVBoxes[server] = self.CreateServerVBox(server, self.output)
 
             # add box to the other ones
-            self.ScrolledVBox.add(self.ServerVBoxes[server.get_name()])
+            self.ScrolledVBox.add(self.ServerVBoxes[server])
 
         # add all buttons in their hbox to the overall vbox
         self.VBox.add(self.HBoxAllButtons)
@@ -1835,7 +1720,7 @@ class Popwin(object):
                 self.Window.set_type_hint(gtk.gdk.WINDOW_TYPE_HINT_UTILITY)
             else:
                 self.Window.set_type_hint(gtk.gdk.WINDOW_TYPE_HINT_MENU)
-            self.Window.set_visible(True)
+            #self.Window.set_visible(True)
 
             # make a nice popup of the toplevel window
             self.Window.set_decorated(False)
@@ -1874,6 +1759,44 @@ class Popwin(object):
         # dummy return
         return True
 
+
+    def CreateServerVBox(self, server_name=None, output=None):
+        """
+        creates one VBox for one server
+        """
+        # get the servers alphabetically sorted
+        server = self.output.servers[server_name]
+        # put all infos into one VBox object
+        servervbox = ServerVBox(output=self.output, server=server)
+        servervbox.Label.set_markup('<span weight="bold" size="large">' + server.get_username() + "@" + server.get_name() + '</span>')
+        servervbox.Label.set_alignment(0,0)
+        # set no show all to be able to hide label and treeview if it is empty in case of no hassle
+        servervbox.set_no_show_all(True)
+
+        # connect buttons with actions
+        # open Nagios main page in your favorite web browser when nagios button is clicked
+        servervbox.ButtonMonitor.connect("clicked", server.OpenBrowser, "monitor", self.output)
+        # open Nagios services in your favorite web browser when service button is clicked
+        servervbox.ButtonServices.connect("clicked", server.OpenBrowser, "services", self.output)
+        # open Nagios hosts in your favorite web browser when hosts button is clicked
+        servervbox.ButtonHosts.connect("clicked", server.OpenBrowser, "hosts", self.output)
+        # open Nagios history in your favorite web browser when hosts button is clicked
+        servervbox.ButtonHistory.connect("clicked", server.OpenBrowser, "history", self.output)
+        # OK button for monitor credentials refreshment or when "Enter" being pressed in password field
+        servervbox.AuthButtonOK.connect("clicked", servervbox.AuthOK, server)
+        # jump to password entry field if Return has been pressed on username entry field
+        servervbox.AuthEntryUsername.connect("key-release-event", servervbox.AuthUsername)
+        # for some reason signal "editing done" does not work so we need to check if Return has been pressed
+        servervbox.AuthEntryPassword.connect("key-release-event", servervbox.AuthPassword, server)
+        # windows workaround - see above
+        # connect Server_EventBox with leave-notify-event to get popwin popping down when leaving it
+        servervbox.Server_EventBox.connect("leave-notify-event", self.PopDown)
+        # sorry folks, but this only works at the border of the treeviews
+        servervbox.TreeView.connect("leave-notify-event", self.PopDown)
+        # connect the treeviews of the servers to mouse clicks
+        servervbox.TreeView.connect("button-press-event", servervbox.TreeviewPopupMenu, servervbox.TreeView, self.output.servers[server.get_name()])
+
+        return servervbox
 
     def PopUp(self, widget=None, event=None):
         """
@@ -2071,6 +1994,8 @@ class Popwin(object):
             statusbarwidth, statusbarheight = 25, 25
         else:
             statusbarwidth, statusbarheight = self.output.statusbar.StatusBar.get_size()
+            # to avoid jumping popwin when statusbar changes dimensions set width fixed
+            statusbarwidth = 320
 
         # limit size of treeview
         treeviewwidth, treeviewheight = self.ScrolledVBox.size_request()
@@ -2608,9 +2533,6 @@ class Settings(object):
         self.builder.add_from_file(self.builderfile)
         self.dialog = self.builder.get_object("settings_dialog")
 
-        # use gobject.idle_add() to be thread safe
-        ###gobject.idle_add(self.output.AddGUILock, str(self.__class__.__name__))
-
         # little feedback store for servers and actions treeviews
         self.selected_server = None
         self.selected_action = None
@@ -2619,9 +2541,7 @@ class Settings(object):
         handlers_dict = { "button_ok_clicked": self.OK,
                           "settings_dialog_close": self.Cancel,
                           "button_cancel_clicked": self.Cancel,
-                          ###"button_new_server": lambda n: NewServer(servers=self.servers, output=self.output, settingsdialog=self, conf=self.conf),
                           "button_new_server": lambda n: self.output.GetDialog(dialog="NewServer", servers=self.servers, output=self.output, settingsdialog=self, conf=self.conf),
-                          #"button_edit_server": lambda e: EditServer(servers=self.servers, output=self.output, server=self.selected_server, settingsdialog=self, conf=self.conf),
                           "button_edit_server": lambda e: self.output.GetDialog(dialog="EditServer", servers=self.servers, output=self.output, selected_server=self.selected_server, settingsdialog=self, conf=self.conf),
                           "button_delete_server": lambda d: self.DeleteServer(self.selected_server, self.conf.servers),
                           "button_check_for_new_version_now": self.CheckForNewVersionNow,
@@ -2783,9 +2703,6 @@ class Settings(object):
         self.ColorsReset()
 
         # disable non useful gui settings
-        # statusbar in trayicon is only useful if GNOME egg trayicon is loaded
-        ###if not sys.modules.has_key("egg.trayicon"):
-        ###    self.builder.get_object("input_radiobutton_statusbar_systray").hide()
         if platform.system() == "Darwin":
             # MacOS doesn't need any option because there is only floating statusbar possible
             self.builder.get_object("input_radiobutton_icon_in_systray").hide()
@@ -2796,12 +2713,14 @@ class Settings(object):
             self.builder.get_object("input_combo_fullscreen_display").hide()
             self.builder.get_object("label_fullscreen_display").hide()
 
-
         # this should not be necessary, but for some reason the number of hours is 10 in unitialized state... :-(
         spinbutton = self.builder.get_object("input_spinbutton_defaults_downtime_duration_hours")
         spinbutton.set_value(int(self.conf.defaults_downtime_duration_hours))
         spinbutton = self.builder.get_object("input_spinbutton_defaults_downtime_duration_minutes")
         spinbutton.set_value(int(self.conf.defaults_downtime_duration_minutes))
+
+        # store fullscreen state to avoif innecessary popwin flickering
+        self.saved_fullscreen_state = str(self.conf.fullscreen)
 
         # show filled settings dialog and wait thanks to gtk.run()
         self.dialog.run()
@@ -2818,6 +2737,9 @@ class Settings(object):
         # set first page of notebook tabs
         self.notebook.set_current_page(["Servers", "Display", "Filters", "Actions",\
                                         "Notification", "Colors", "Defaults"].index(self.first_page))
+
+        # store fullscreen state to avoif innecessary popwin flickering
+        self.saved_fullscreen_state = str(self.conf.fullscreen)
 
 
     def FillTreeView(self, treeview_widget, items, column_string, selected_item):
@@ -2928,8 +2850,10 @@ class Settings(object):
         # catch Exception at first run when there cannot exist a popwin
         try:
             self.output.popwin.PopDown()
-        except Exception, err:
-            print err
+        except:
+            import traceback
+            traceback.print_exc(file=sys.stdout)
+            self.servers.values()[0].Error(sys.exc_info())
 
         if int(self.conf.update_interval_seconds) <= 0:
             self.conf.update_interval_seconds = 60
@@ -2951,6 +2875,7 @@ class Settings(object):
 
             if str(self.conf.statusbar_floating) == "True":
                 self.output.statusbar.StatusBar.show_all()
+                self.output.statusbar.CalculateFontSize()
             else:
                 self.output.statusbar.StatusBar.hide_all()
 
@@ -2959,27 +2884,40 @@ class Settings(object):
             else:
                 self.output.statusbar.SysTray.set_visible(False)
 
-            #self.output.statusbar.SysTray.set_visible(False)
-            #self.output.statusbar.SysTray.destroy()
-            # still not going away artefact - trying brute force
-            #while self.output.popwin.Window.get_visible():
-            #    self.output.popwin.Window.destroy()
-            #del self.output.popwin.Window
-            #self.output.popwin.Window.destroy()
-
-
-            # re-initialize output with new settings
-            #self.output.__init__()
-            #self.output._CreateOutputVisuals()
-
-
-
             # in Windows the statusbar with gtk.gdk.WINDOW_TYPE_HINT_UTILITY places itself somewhere
             # this way it should be disciplined
             self.output.statusbar.StatusBar.move(int(self.conf.position_x), int(self.conf.position_y))
 
             # popwin treatment
-            self.output.popwin.SwitchMode()
+            # only change popwin if fullscreen mode is changed
+            if self.saved_fullscreen_state != str(self.conf.fullscreen):
+                self.output.popwin.SwitchMode()
+
+            # kick out deleted or renamed servers, create new ones for new or renamed ones
+            for server in self.output.servers.values():
+                if not server.name in self.output.popwin.ServerVBoxes:
+                    self.output.popwin.ServerVBoxes[server.name] = self.output.popwin.CreateServerVBox(server.name, self.output)
+                    if str(self.conf.servers[server.name].enabled)== "True":
+                        self.output.popwin.ServerVBoxes[server.name].set_visible(True)
+                        self.output.popwin.ServerVBoxes[server.name].Label.set_markup('<span weight="bold" size="large">' + server.get_username() + "@" + server.get_name() + '</span>')
+                        # add box to the other ones
+                        self.output.popwin.ScrolledVBox.add(self.output.popwin.ServerVBoxes[server.name])
+
+                        # add server sorting
+                        self.output.last_sorting[server.get_name()] = Sorting([(self.output.startup_sort_field,\
+                                                                      self.output.startup_sort_order ),
+                                                                      (server.HOST_COLUMN_ID, gtk.SORT_ASCENDING)],
+                                                                      len(server.COLUMNS)+1)
+            for server in self.output.popwin.ServerVBoxes:
+                if not server in self.output.servers:
+                    self.output.popwin.ServerVBoxes[server].destroy()
+
+            # reorder server VBoxes in case some names changed
+            # to sort the Nagios servers alphabetically make a sortable list of their names
+            server_list = list(self.output.servers)
+            server_list.sort(key=str.lower)
+            for server in server_list:
+                 self.output.popwin.ScrolledVBox.reorder_child(self.output.popwin.ServerVBoxes[server], server_list.index(server))
 
             # start debugging loop if wanted
             if str(self.conf.debug_mode) == "True":
@@ -4038,8 +3976,18 @@ class AuthenticationDialog:
         self.entry_password.set_text(str(self.server.password))
         self.entry_autologin_key.set_text(str(self.server.autologin_key))
 
+        self.ToggleAutoLoginKeyAuth()
+
         # omitting .show_all() leads to crash under Linux - why?
         self.dialog.show_all()
+
+        # any monitor that is not Centreon does not need autologin entry
+        if not self.server.type == "Centreon":
+            self.entry_autologin_key.set_visible(False)
+            self.builder.get_object("input_checkbutton_use_autologin").set_visible(False)
+            self.builder.get_object("label_autologin_key").set_visible(False)
+            self.builder.get_object("input_entry_autologin_key").set_visible(False)
+
         self.dialog.run()
         self.dialog.destroy()
 
@@ -4091,7 +4039,7 @@ class AuthenticationDialog:
         if not is_active:
             item.set_text("")
 
-	#disable save password
+	    #disable save password
         item = self.builder.get_object("input_checkbutton_save_password")
         item.set_active( False )
         item.set_sensitive( not is_active )
