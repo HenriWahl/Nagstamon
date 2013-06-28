@@ -467,7 +467,10 @@ class GUI(object):
                 except:
                     server.Error(sys.exc_info())
 
-        if self.popwin.Window.get_properties("visible")[0] == True and str(self.conf.fullscreen) == "False":
+        print "WWIINNDOOW:", self.popwin.Window.get_properties("visible")[0], str(self.conf.fullscreen)
+
+        if str(self.conf.fullscreen) == "False":
+            print "RESIIIIIZZE"
             self.popwin.Resize()
 
         # everything OK

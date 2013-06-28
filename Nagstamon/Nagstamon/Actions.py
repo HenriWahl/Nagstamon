@@ -425,7 +425,8 @@ class CheckForNewVersion(threading.Thread):
                 # set the flag to lock that connection
                 s.CheckingForNewVersion = True
                 # use IFW server to speed up request and secure via https
-                result = s.FetchURL("https://nagstamon.ifw-dresden.de/files-nagstamon/latest_version_" + self.output.version, giveback="raw", no_auth=True)
+                result = s.FetchURL("https://nagstamon.ifw-dresden.de/files-nagstamon/latest_version_" +\
+                                     self.output.version, giveback="raw", no_auth=True)
                 # remove newline
                 version, error = result.result.split("\n")[0], result.error
 

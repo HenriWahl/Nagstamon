@@ -1025,8 +1025,7 @@ class GenericServer(object):
         if not no_auth:
             self.init_HTTP()
         else:
-            for giveback in ["raw", "obj"]:
-                self.HTTPheaders[giveback] = {}
+            self.HTTPheaders["raw"] = self.HTTPheaders["obj"] = {}
 
         try:
             try:

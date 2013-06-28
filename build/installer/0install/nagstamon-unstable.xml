@@ -16,12 +16,12 @@ and regular expressions.</description>
   <homepage>http://nagstamon.ifw-dresden.de</homepage>
   <category>Network</category>
   <icon href="http://nagstamon.ifw-dresden.de/0install/nagstamon.png" type="image/png"/>
-  <implementation id="sha1new=27f1efff60ad8f46449e168b655cc3aa4a746df8" license="OSI Approved :: GNU General Public License v2" main="nagstamon.py" released="2013-06-27" stability="testing" version="0.9.10-20130627">
-    <archive extract="Nagstamon" href="http://nagstamon.ifw-dresden.de/0install/Nagstamon-0.9.10-devel-20130627.tar.gz" size="394936" type="application/x-compressed-tar"/>
+  <implementation id="sha1new=68f7e6030a89617f91b27cbeeaf4b649611cad59" license="OSI Approved :: GNU General Public License v2" main="nagstamon.py" released="2013-06-28" stability="testing" version="0.9.10-20130628">
+    <archive extract="Nagstamon" href="http://nagstamon.ifw-dresden.de/0install/Nagstamon-0.9.10-devel-20130628.tar.gz" size="395305" type="application/x-compressed-tar"/>
   </implementation>
 </interface>
 <!-- Base64 Signature
-iEYEABECAAYFAlHMTeIACgkQnmb3Nh+6CULdywCfY0yuWEJfL1FQvxcal4CerCnLsi0AnRBxDCVn
-puKTANvCCSKl6K3c4wiB
+iEYEABECAAYFAlHNY2oACgkQnmb3Nh+6CUJvwgCfWmxZcTxgIRp3fWbONrvsA3V+u5AAmgNDCmv4
+ZSAwVOYltd0fUadhE9tk
 
 -->
