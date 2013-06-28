@@ -345,9 +345,9 @@ class GUI(object):
                         self.status_ok = True
                     else:
                         # otherwise it must be shown, full of problems
-                        self.popwin.ServerVBoxes[server.get_name()].show()
                         self.popwin.ServerVBoxes[server.get_name()].set_visible(True)
                         self.popwin.ServerVBoxes[server.get_name()].set_no_show_all(False)
+                        self.popwin.ServerVBoxes[server.get_name()].show_all()
                         self.status_ok = False
 
                     # use a liststore for treeview where the table headers all are strings - first empty it
@@ -467,10 +467,13 @@ class GUI(object):
                 except:
                     server.Error(sys.exc_info())
 
-        print "WWIINNDOOW:", self.popwin.Window.get_properties("visible")[0], str(self.conf.fullscreen)
+            else:
+                # disabled monitor must not be shown
+                self.popwin.ServerVBoxes[server.get_name()].hide()
+                self.popwin.ServerVBoxes[server.get_name()].set_visible(False)
+                self.popwin.ServerVBoxes[server.get_name()].set_no_show_all(True)
 
         if str(self.conf.fullscreen) == "False":
-            print "RESIIIIIZZE"
             self.popwin.Resize()
 
         # everything OK
@@ -1422,7 +1425,7 @@ class StatusBar(object):
 
         # switch notification off
         self.output.NotificationOff()
-        # check if settings a d other dialogs are not already open
+        # check if settings and other dialogs are not already open
         if self.output.popwin.IsWanted() == True:
             # if popwin is not shown pop it up
             if self.output.popwin.Window.get_properties("visible")[0] == False or len(self.output.GUILock) == 0:
@@ -1673,7 +1676,6 @@ class Popwin(object):
         # create table with all the displayed info
         for server in server_list:
             self.ServerVBoxes[server] = self.CreateServerVBox(server, self.output)
-
             # add box to the other ones
             self.ScrolledVBox.add(self.ServerVBoxes[server])
 
@@ -1801,6 +1803,7 @@ class Popwin(object):
 
         return servervbox
 
+
     def PopUp(self, widget=None, event=None):
         """
             pop up popwin
@@ -1811,7 +1814,6 @@ class Popwin(object):
         # seems like a strange workaround
         if self.showPopwin and not self.output.status_ok and self.output.conf.GetNumberOfEnabledMonitors() > 0:
             if len(self.output.GUILock) == 0 or self.output.GUILock.has_key("Popwin"):
-
                 self.output.statusbar.Moving = False
 
                 self.Window.show_all()
@@ -1830,8 +1832,8 @@ class Popwin(object):
                 gobject.idle_add(self.output.AddGUILock, str(self.__class__.__name__))
 
         # position and resize...
-        self.calculate_coordinates = True
-        self.Resize()
+        ###self.calculate_coordinates = True
+        ###self.Resize()
 
 
     def RefreshFullscreen(self, widget=None, event=None):
@@ -1977,7 +1979,7 @@ class Popwin(object):
                 self.output.statusbar.StatusBar.x0 = statusbarx0
                 self.output.statusbar.StatusBar.y0 = statusbary0
 
-                # set back to False to do recalculation of coordinates as long as popwin is opened
+                # set back to False to do no recalculation of coordinates as long as popwin is opened
                 self.calculate_coordinates = False
 
         else:
@@ -1986,7 +1988,7 @@ class Popwin(object):
             statusbary0 = self.output.statusbar.StatusBar.y0
 
         # find out the necessary dimensions of popwin - assembled from scroll area and the buttons
-        treeviewwidth, treeviewheight = self.ScrolledVBox.size_request()
+        #treeviewwidth, treeviewheight = self.ScrolledVBox.size_request()
 
         # get current monitor's settings
         # screeny0 might be important on more-than-one-monitor-setups where it will not be 0
@@ -2063,23 +2065,22 @@ class Popwin(object):
         else:
             self.popwinx0 = statusbarx0 + (screenx0 + statusbarwidth) / 2 - (self.popwinwidth + screenx0) / 2
 
-        if str(self.output.conf.fullscreen) == "False":
-            # set size request of popwin
-            self.Window.set_size_request(self.popwinwidth, self.popwinheight)
+        # set size request of popwin
+        self.Window.set_size_request(self.popwinwidth, self.popwinheight)
 
-            if self.Window.get_properties("visible")[0] == True:
+        if self.Window.get_properties("visible")[0] == True:
+            self.Window.window.move_resize(self.popwinx0, self.popwiny0, self.popwinwidth, self.popwinheight)
+
+            # if popwin is misplaced please correct it here
+            if self.Window.get_position() != (self.popwinx0, self.popwiny0):
+                # would be nice if there could be any way to avoid flickering...
+                # but move/resize only works after a hide_all()/showe_all() mantra
+                self.Window.hide_all()
+                self.Window.show_all()
                 self.Window.window.move_resize(self.popwinx0, self.popwiny0, self.popwinwidth, self.popwinheight)
 
-                # if popwin is misplaced please correct it here
-                if self.Window.get_position() != (self.popwinx0, self.popwiny0):
-                    # would be nice if there could be any way to avoid flickering...
-                    # but move/resize only works after a hide_all()/showe_all() mantra
-                    self.Window.hide_all()
-                    self.Window.show_all()
-                    self.Window.window.move_resize(self.popwinx0, self.popwiny0, self.popwinwidth, self.popwinheight)
-
-            # statusbar pulls popwin to the top... with silly-windows-workaround(tm) included
-            if str(self.conf.icon_in_systray) == "False": self.output.statusbar.Raise()
+        # statusbar pulls popwin to the top... with silly-windows-workaround(tm) included
+        if str(self.conf.icon_in_systray) == "False": self.output.statusbar.Raise()
 
         return self.popwinx0, self.popwiny0, self.popwinwidth, self.popwinheight
 
@@ -2124,17 +2125,6 @@ class Popwin(object):
             return True
         else:
             return False
-
-
-    def GetVisibleServerVBoxes(self):
-        """
-        return list of visible server VBoxes
-        """
-        visible_servervboxes = list()
-        for servervbox in self.ServerVBoxes.values():
-            if servervbox.get_visible() == True:
-                visible_servervboxes.append(servervbox)
-        return visible_servervboxes
 
 
     def MenuPopUp(self, widget=None, event=None):
@@ -2873,9 +2863,6 @@ class Settings(object):
             gobject.idle_add(self.output.DeleteGUILock, str(self.__class__.__name__))
             self.dialog.hide()
 
-            # create output visuals again because they might have changed (e.g. systray/free floating status bar)
-            #self.output.statusbar.StatusBar.destroy()
-
             if str(self.conf.statusbar_floating) == "True":
                 self.output.statusbar.StatusBar.show_all()
                 self.output.statusbar.CalculateFontSize()
@@ -2902,17 +2889,20 @@ class Settings(object):
                     self.output.popwin.ServerVBoxes[server.name] = self.output.popwin.CreateServerVBox(server.name, self.output)
                     if str(self.conf.servers[server.name].enabled)== "True":
                         self.output.popwin.ServerVBoxes[server.name].set_visible(True)
+                        self.output.popwin.ServerVBoxes[server.get_name()].set_no_show_all(False)
+                        self.output.popwin.ServerVBoxes[server.get_name()].show_all()
                         self.output.popwin.ServerVBoxes[server.name].Label.set_markup('<span weight="bold" size="large">' + server.get_username() + "@" + server.get_name() + '</span>')
                         # add box to the other ones
                         self.output.popwin.ScrolledVBox.add(self.output.popwin.ServerVBoxes[server.name])
 
                         # add server sorting
                         self.output.last_sorting[server.get_name()] = Sorting([(self.output.startup_sort_field,\
-                                                                      self.output.startup_sort_order ),
-                                                                      (server.HOST_COLUMN_ID, gtk.SORT_ASCENDING)],
+                                                                      self.output.startup_sort_order ),\
+                                                                      (server.HOST_COLUMN_ID, gtk.SORT_ASCENDING)],\
                                                                       len(server.COLUMNS)+1)
             for server in self.output.popwin.ServerVBoxes:
                 if not server in self.output.servers:
+                    self.output.popwin.ServerVBoxes[server].hide_all()
                     self.output.popwin.ServerVBoxes[server].destroy()
 
             # reorder server VBoxes in case some names changed
@@ -2920,7 +2910,12 @@ class Settings(object):
             server_list = list(self.output.servers)
             server_list.sort(key=str.lower)
             for server in server_list:
-                 self.output.popwin.ScrolledVBox.reorder_child(self.output.popwin.ServerVBoxes[server], server_list.index(server))
+                if str(self.conf.servers[server].enabled)== "True":
+                        self.output.popwin.ServerVBoxes[server].set_visible(True)
+                        self.output.popwin.ServerVBoxes[server].set_no_show_all(False)
+                        self.output.popwin.ServerVBoxes[server].show_all()
+                        self.output.popwin.ServerVBoxes[server].show()
+                self.output.popwin.ScrolledVBox.reorder_child(self.output.popwin.ServerVBoxes[server], server_list.index(server))
 
             # start debugging loop if wanted
             if str(self.conf.debug_mode) == "True":
