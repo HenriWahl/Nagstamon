@@ -239,10 +239,8 @@ class GenericServer(object):
                 # Do not check passive only checks
                 return
         # get start time from Nagios as HTML to use same timezone setting like the locally installed Nagios
-        result = self.FetchURL(self.monitor_cgi_url + "/cmd.cgi?" + urllib.urlencode({"cmd_typ":"96", "host":host}), giveback="raw")
-        html = result.result
-        self.start_time = html.split("NAME='start_time' VALUE='")[1].split("'></b></td></tr>")[0]
-
+        result = self.FetchURL(self.monitor_cgi_url + "/cmd.cgi?" + urllib.urlencode({"cmd_typ":"96", "host":host}))
+        self.start_time = dict(result.result.find(attrs={"name":"start_time"}).attrs)["value"]
         # decision about host or service - they have different URLs
         if service == "":
             # host
@@ -426,8 +424,8 @@ class GenericServer(object):
         try:
             result = self.FetchURL(self.monitor_cgi_url + "/cmd.cgi?" + urllib.urlencode({"cmd_typ":"55", "host":host}))
             html = result.result
-            start_time = html.find(attrs={"name":"start_time"}).attrMap["value"]
-            end_time = html.find(attrs={"name":"end_time"}).attrMap["value"]
+            start_time = dict(result.result.find(attrs={"name":"start_time"}).attrs)["value"]
+            end_time = dict(result.result.find(attrs={"name":"end_time"}).attrs)["value"]
             # give values back as tuple
             return start_time, end_time
         except:
@@ -1012,7 +1010,7 @@ class GenericServer(object):
         return Result()
 
 
-    def FetchURL(self, url, giveback="obj", cgi_data=None):
+    def FetchURL(self, url, giveback="obj", cgi_data=None, no_auth=False):
         """
         get content of given url, cgi_data only used if present
         "obj" FetchURL gives back a dict full of miserable hosts/services,
@@ -1023,7 +1021,12 @@ class GenericServer(object):
         """
 
         # run this method which checks itself if there is some action to take for initializing connection
-        self.init_HTTP()
+        # if no_auth is true do not use Auth headers, used by Actions.CheckForNewVersion()
+        if not no_auth:
+            self.init_HTTP()
+        else:
+            for giveback in ["raw", "obj"]:
+                self.HTTPheaders[giveback] = {}
 
         try:
             try:

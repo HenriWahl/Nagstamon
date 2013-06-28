@@ -498,3 +498,36 @@ class IcingaServer(GenericServer):
 
         #dummy return in case all is OK
         return Result()
+
+
+    def _set_recheck(self, host, service):
+        """
+        to solve https://sourceforge.net/p/nagstamon/feature-requests/74/ there is a comment parameter added
+        to cgi request
+        """
+        if service != "":
+            if self.hosts[host].services[service].is_passive_only():
+                # Do not check passive only checks
+                return
+        # get start time from Nagios as HTML to use same timezone setting like the locally installed Nagios
+        result = self.FetchURL(self.monitor_cgi_url + "/cmd.cgi?" + urllib.urlencode({"cmd_typ":"96", "host":host}))
+        self.start_time = dict(result.result.find(attrs={"name":"start_time"}).attrs)["value"]
+
+        # decision about host or service - they have different URLs
+        if service == "":
+            # host
+            cmd_typ = "96"
+        else:
+            # service @ host
+            cmd_typ = "7"
+        # ignore empty service in case of rechecking a host
+        cgi_data = urllib.urlencode([("cmd_typ", cmd_typ),\
+                                     ("cmd_mod", "2"),\
+                                     ("host", host),\
+                                     ("service", service),\
+                                     ("start_time", self.start_time),\
+                                     ("force_check", "on"),\
+                                     ("com_data", "Recheck by %s" % self.username),\
+                                     ("btnSubmit", "Commit")])
+        # execute POST request
+        self.FetchURL(self.monitor_cgi_url + "/cmd.cgi", giveback="raw", cgi_data=cgi_data)
