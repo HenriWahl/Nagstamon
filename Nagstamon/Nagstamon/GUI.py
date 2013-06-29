@@ -467,12 +467,6 @@ class GUI(object):
                 except:
                     server.Error(sys.exc_info())
 
-            else:
-                # disabled monitor must not be shown
-                self.popwin.ServerVBoxes[server.get_name()].hide()
-                self.popwin.ServerVBoxes[server.get_name()].set_visible(False)
-                self.popwin.ServerVBoxes[server.get_name()].set_no_show_all(True)
-
         if str(self.conf.fullscreen) == "False":
             self.popwin.Resize()
 
@@ -1675,9 +1669,11 @@ class Popwin(object):
 
         # create table with all the displayed info
         for server in server_list:
-            self.ServerVBoxes[server] = self.CreateServerVBox(server, self.output)
-            # add box to the other ones
-            self.ScrolledVBox.add(self.ServerVBoxes[server])
+            # only if server is enabled
+            if str(self.conf.servers[server].enabled) == "True":
+                self.ServerVBoxes[server] = self.CreateServerVBox(server, self.output)
+                # add box to the other ones
+                self.ScrolledVBox.add(self.ServerVBoxes[server])
 
         # add all buttons in their hbox to the overall vbox
         self.VBox.add(self.HBoxAllButtons)
@@ -2883,38 +2879,45 @@ class Settings(object):
             if self.saved_fullscreen_state != str(self.conf.fullscreen):
                 self.output.popwin.SwitchMode()
 
-            # kick out deleted or renamed servers, create new ones for new or renamed ones
+            # kick out deleted or renamed servers,
+            # create new ones for new, renamed or re-enabled ones
             for server in self.output.servers.values():
                 if not server.name in self.output.popwin.ServerVBoxes:
                     self.output.popwin.ServerVBoxes[server.name] = self.output.popwin.CreateServerVBox(server.name, self.output)
                     if str(self.conf.servers[server.name].enabled)== "True":
                         self.output.popwin.ServerVBoxes[server.name].set_visible(True)
-                        self.output.popwin.ServerVBoxes[server.get_name()].set_no_show_all(False)
-                        self.output.popwin.ServerVBoxes[server.get_name()].show_all()
+                        self.output.popwin.ServerVBoxes[server.name].set_no_show_all(False)
+                        self.output.popwin.ServerVBoxes[server.name].show_all()
                         self.output.popwin.ServerVBoxes[server.name].Label.set_markup('<span weight="bold" size="large">' + server.get_username() + "@" + server.get_name() + '</span>')
                         # add box to the other ones
                         self.output.popwin.ScrolledVBox.add(self.output.popwin.ServerVBoxes[server.name])
-
                         # add server sorting
                         self.output.last_sorting[server.get_name()] = Sorting([(self.output.startup_sort_field,\
                                                                       self.output.startup_sort_order ),\
                                                                       (server.HOST_COLUMN_ID, gtk.SORT_ASCENDING)],\
                                                                       len(server.COLUMNS)+1)
-            for server in self.output.popwin.ServerVBoxes:
+            # delete not-current-anymore servers (disabled or renamed)
+            for server in self.output.popwin.ServerVBoxes.keys():
                 if not server in self.output.servers:
                     self.output.popwin.ServerVBoxes[server].hide_all()
                     self.output.popwin.ServerVBoxes[server].destroy()
+                    self.output.popwin.ServerVBoxes.pop(server)
 
             # reorder server VBoxes in case some names changed
             # to sort the Nagios servers alphabetically make a sortable list of their names
-            server_list = list(self.output.servers)
+            server_list = []
+            for server in self.conf.servers:
+                if str(self.conf.servers[server].enabled) == "True":
+                    server_list.append(server)
+                else:
+                    # destroy disabled server vboxes if they exist
+                    if server in self.output.popwin.ServerVBoxes:
+                        self.output.popwin.ServerVBoxes[server].destroy()
+                        self.output.popwin.ServerVBoxes.pop(server)
             server_list.sort(key=str.lower)
+
+            # sort server vboxes
             for server in server_list:
-                if str(self.conf.servers[server].enabled)== "True":
-                        self.output.popwin.ServerVBoxes[server].set_visible(True)
-                        self.output.popwin.ServerVBoxes[server].set_no_show_all(False)
-                        self.output.popwin.ServerVBoxes[server].show_all()
-                        self.output.popwin.ServerVBoxes[server].show()
                 self.output.popwin.ScrolledVBox.reorder_child(self.output.popwin.ServerVBoxes[server], server_list.index(server))
 
             # start debugging loop if wanted
@@ -2987,7 +2990,7 @@ class Settings(object):
             delete Server after prompting
         """
         if server:
-            dialog = gtk.MessageDialog(parent=None, flags=gtk.DIALOG_MODAL, type=gtk.MESSAGE_QUESTION, buttons=gtk.BUTTONS_OK + gtk.BUTTONS_CANCEL, message_format='Really delete server "' + server + '"?')
+            dialog = gtk.MessageDialog(parent=self.dialog, flags=gtk.DIALOG_MODAL, type=gtk.MESSAGE_QUESTION, buttons=gtk.BUTTONS_OK + gtk.BUTTONS_CANCEL, message_format='Really delete server "' + server + '"?')
             # gtk.Dialog.run() does a mini loop to wait
             # for some reason response is YES, not OK... but it works.
             if dialog.run() == gtk.RESPONSE_YES:
@@ -3015,7 +3018,7 @@ class Settings(object):
             delete action after prompting
         """
         if action:
-            dialog = gtk.MessageDialog(parent=None, flags=gtk.DIALOG_MODAL, type=gtk.MESSAGE_QUESTION, buttons=gtk.BUTTONS_OK + gtk.BUTTONS_CANCEL, message_format='Really delete action "' + action + '"?')
+            dialog = gtk.MessageDialog(parent=self.dialog, flags=gtk.DIALOG_MODAL, type=gtk.MESSAGE_QUESTION, buttons=gtk.BUTTONS_OK + gtk.BUTTONS_CANCEL, message_format='Really delete action "' + action + '"?')
             # gtk.Dialog.run() does a mini loop to wait
             # for some reason response is YES, not OK... but it works.
             if dialog.run() == gtk.RESPONSE_YES:

@@ -8,10 +8,9 @@
     <property name="resizable">False</property>
     <property name="modal">True</property>
     <property name="window_position">center-always</property>
-    <property name="default_width">320</property>
-    <property name="default_height">260</property>
     <property name="destroy_with_parent">True</property>
     <property name="type_hint">dialog</property>
+    <property name="urgency_hint">True</property>
     <child internal-child="vbox">
       <object class="GtkVBox" id="dialog1-vbox">
         <property name="visible">True</property>
