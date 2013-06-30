@@ -121,11 +121,13 @@ class NinjaServer(GenericServer):
             except:
                 self.Error(sys.exc_info())
 
+
     def csrf(self):
         opener = urllib2.build_opener(urllib2.HTTPCookieProcessor(self.Cookie))
         response = opener.open(self.show_login_url)
         soup = BeautifulSoup(response.read())
         return soup.find('input', {'name': 'csrf_token'})['value']
+
 
     def open_tree_view(self, host, service):
         if not service:
@@ -133,35 +135,44 @@ class NinjaServer(GenericServer):
         else:
             webbrowser.open('%s/index.php/extinfo/details/service/%s?service=%s' % (self.monitor_url, host, service))
 
+
     def open_services(self):
         webbrowser.open('%s/index.php/status/service/all?servicestatustypes=14' % (self.monitor_url))
 
+
     def open_hosts(self):
         webbrowser.open('%s/index.php/status/host/all/6' % (self.monitor_url))
+
 
     @property
     def time_url(self):
         return self.monitor_url + self.time_path
 
+
     @property
     def login_url(self):
         return self.monitor_url + self.login_path
+
 
     @property
     def show_login_url(self):
         return self.monitor_url + self.show_login_path
 
+
     @property
     def commit_url(self):
         return self.monitor_url + self.commit_path
+
 
     @property
     def hosts_url(self):
         return self.monitor_url + self.hosts_path
 
+
     @property
     def services_url(self):
         return self.monitor_url + self.services_path
+
 
     def _set_recheck(self, host, service):
         if not service:
@@ -225,6 +236,7 @@ class NinjaServer(GenericServer):
 
         self.FetchURL(self.commit_url, cgi_data=urllib.urlencode(values), giveback="raw")
 
+
     def get_host_status(self):
         htobj = self.FetchURL(self.hosts_url).result
         table = htobj.find('table', {'id': 'host_table'})
@@ -242,6 +254,7 @@ class NinjaServer(GenericServer):
                 self.new_hosts[new_host.name] = new_host
 
         del trs, table, htobj
+
 
     def get_service_status(self):
         htobj = self.FetchURL(self.services_url).result
@@ -295,6 +308,7 @@ class NinjaServer(GenericServer):
 
         return Result()
 
+
     def parse_host_row(self, tr):
         tds = tr('td')
         n = {}
@@ -313,6 +327,7 @@ class NinjaServer(GenericServer):
             n[name] = bool(int(bitmask.contents[0]) & number)
 
         return n
+
 
     def parse_service_row(self, tr):
         tds = tr('td')

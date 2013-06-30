@@ -47,15 +47,6 @@ class IcingaServer(GenericServer):
     # autologin is used only by Centreon
     DISABLED_CONTROLS = ["input_checkbutton_use_autologin", "label_autologin_key", "input_entry_autologin_key"]
 
-    def init_HTTP(self):
-        """
-        partly not constantly working Basic Authorization requires extra Autorization headers,
-        different between various server types
-        """
-        if self.HTTPheaders == {}:
-            for giveback in ["raw", "obj"]:
-                self.HTTPheaders[giveback] = {"Authorization": "Basic " + base64.b64encode(self.get_username() + ":" + self.get_password())}
-
 
     def get_server_version(self):
         """

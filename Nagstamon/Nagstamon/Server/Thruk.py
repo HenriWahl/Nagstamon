@@ -104,9 +104,11 @@ class ThrukServer(GenericServer):
         partly not constantly working Basic Authorization requires extra Autorization headers,
         different between various server types
         """
-        if self.HTTPheaders == {}:
-            for giveback in ["raw", "obj"]:
-                self.HTTPheaders[giveback] = {"Authorization": "Basic " + base64.b64encode(self.get_username() + ":" + self.get_password())}
+        GenericServer.init_HTTP(self)
+
+        #if self.HTTPheaders == {}:
+        #    for giveback in ["raw", "obj"]:
+        #        self.HTTPheaders[giveback] = {"Authorization": "Basic " + base64.b64encode(self.get_username() + ":" + self.get_password())}
 
         # only if cookies are needed
         if self.CookieAuth:
