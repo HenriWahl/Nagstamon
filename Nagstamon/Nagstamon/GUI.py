@@ -2882,15 +2882,15 @@ class Settings(object):
             # kick out deleted or renamed servers,
             # create new ones for new, renamed or re-enabled ones
             for server in self.output.servers.values():
-                if not server.name in self.output.popwin.ServerVBoxes:
-                    self.output.popwin.ServerVBoxes[server.name] = self.output.popwin.CreateServerVBox(server.name, self.output)
-                    if str(self.conf.servers[server.name].enabled)== "True":
-                        self.output.popwin.ServerVBoxes[server.name].set_visible(True)
-                        self.output.popwin.ServerVBoxes[server.name].set_no_show_all(False)
-                        self.output.popwin.ServerVBoxes[server.name].show_all()
-                        self.output.popwin.ServerVBoxes[server.name].Label.set_markup('<span weight="bold" size="large">' + server.get_username() + "@" + server.get_name() + '</span>')
+                if not server.get_name() in self.output.popwin.ServerVBoxes:
+                    self.output.popwin.ServerVBoxes[server.get_name()] = self.output.popwin.CreateServerVBox(server.get_name(), self.output)
+                    if str(self.conf.servers[server.get_name()].enabled)== "True":
+                        self.output.popwin.ServerVBoxes[server.get_name()].set_visible(True)
+                        self.output.popwin.ServerVBoxes[server.get_name()].set_no_show_all(False)
+                        self.output.popwin.ServerVBoxes[server.get_name()].show_all()
+                        self.output.popwin.ServerVBoxes[server.get_name()].Label.set_markup('<span weight="bold" size="large">' + server.get_username() + "@" + server.get_name() + '</span>')
                         # add box to the other ones
-                        self.output.popwin.ScrolledVBox.add(self.output.popwin.ServerVBoxes[server.name])
+                        self.output.popwin.ScrolledVBox.add(self.output.popwin.ServerVBoxes[server.get_name()])
                         # add server sorting
                         self.output.last_sorting[server.get_name()] = Sorting([(self.output.startup_sort_field,\
                                                                       self.output.startup_sort_order ),\
@@ -3986,8 +3986,8 @@ class AuthenticationDialog:
         self.entry_password = self.builder.get_object("input_entry_password")
         self.entry_autologin_key = self.builder.get_object("input_entry_autologin_key")
 
-        self.dialog.set_title("Nagstamon authentication for " + self.server.name)
-        self.label_monitor.set_text("Please give the correct credentials for "+ self.server.name + ":")
+        self.dialog.set_title("Nagstamon authentication for " + self.server.get_name())
+        self.label_monitor.set_text("Please give the correct credentials for "+ self.server.get_name() + ":")
         self.entry_username.set_text(str(self.server.username))
         self.entry_password.set_text(str(self.server.password))
         self.entry_autologin_key.set_text(str(self.server.autologin_key))
@@ -4016,25 +4016,25 @@ class AuthenticationDialog:
 
         if toggle_save_password.get_active() == True:
             # store authentication information in config
-            self.conf.servers[self.server.name].username = self.server.username
-            self.conf.servers[self.server.name].password = self.server.password
-            self.conf.servers[self.server.name].save_password = True
+            self.conf.servers[self.server.get_name()].username = self.server.username
+            self.conf.servers[self.server.get_name()].password = self.server.password
+            self.conf.servers[self.server.get_name()].save_password = True
             self.conf.SaveConfig(output=self.output)
 
         toggle_use_autologin = self.builder.get_object("input_checkbutton_use_autologin")
         if toggle_use_autologin.get_active() == True:
             # store autologin information in config
-            self.conf.servers[self.server.name].username = self.server.username
-            self.conf.servers[self.server.name].password = ""
-            self.conf.servers[self.server.name].save_password = False
-            self.conf.servers[self.server.name].autologin_key = self.server.autologin_key
-            self.conf.servers[self.server.name].use_autologin = True
+            self.conf.servers[self.server.get_name()].username = self.server.username
+            self.conf.servers[self.server.get_name()].password = ""
+            self.conf.servers[self.server.get_name()].save_password = False
+            self.conf.servers[self.server.get_name()].autologin_key = self.server.autologin_key
+            self.conf.servers[self.server.get_name()].use_autologin = True
             self.conf.SaveConfig(output=self.output)
 
 
     def Disable(self, widget):
         # the old settings
-        self.conf.servers[self.server.name].enabled = False
+        self.conf.servers[self.server.get_name()].enabled = False
 
 
     def Exit(self, widget):
