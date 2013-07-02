@@ -654,7 +654,7 @@ class Action(threading.Thread):
 class LonesomeGarbageCollector(threading.Thread):
     """
     do repeatedly collect some garbage - before every server thread did but might make more sense done
-     at one place and time
+    at one place and time
     """
     def __init__(self):
         # garbage collection

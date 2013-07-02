@@ -138,11 +138,14 @@ create a new one for your custom start of Nagstamon." % ((conf.configdir))
 debugloop = Actions.DebugLoop(conf=conf, debug_queue=debug_queue, output=output)
 debugloop.start()
 
-# start threaded nagios server checking loop
+# start threaded monitor server checking loop
 Actions.StartRefreshLoop(servers=servers, conf=conf, output=output)
 
-garbageloop = Actions.LonesomeGarbageCollector()
-garbageloop.start()
+# apparently useless desperate attempt to fix the memory leak -
+# beside its uselessness the leak seems to be less leakier now
+# after some code cleaning
+#garbageloop = Actions.LonesomeGarbageCollector()
+#garbageloop.start()
 
 # if unconfigured nagstamon shows the settings dialog to get settings
 if conf.unconfigured == True:

@@ -359,7 +359,8 @@ class GUI(object):
                     else:
                         server.ListStore = gtk.ListStore(*self.LISTSTORE_COLUMNS)
                     if type(server.TreeView) == type(None):
-                        server.TreeView = gtk.TreeView()
+                        #server.TreeView = gtk.TreeView()
+                        server.TreeView = self.popwin.ServerVBoxes[server.get_name()].TreeView
 
                     # apart from status informations there we need two columns which
                     # hold the color information, which is derived from status which
@@ -578,7 +579,6 @@ class GUI(object):
         # try to fix vanishing statusbar
         if str(self.conf.icon_in_systray) == "False":
             self.statusbar.Raise()
-
 
         # return False to get removed as gobject idle source
         return False
@@ -1739,7 +1739,6 @@ class Popwin(object):
             self.Window.set_visible(False)
             self.Window.set_type_hint(gtk.gdk.WINDOW_TYPE_HINT_NORMAL)
             self.Window.set_visible(True)
-
             # find out dimension of all monitors
             for m in range(self.Window.get_screen().get_n_monitors()):
                 monx0, mony0, monw, monh = self.Window.get_screen().get_monitor_geometry(m)
@@ -1747,6 +1746,7 @@ class Popwin(object):
             x0, y0, width, height = self.output.monitors[int(self.output.conf.fullscreen_display)]
             self.Window.move(x0, y0)
             self.Window.set_decorated(True)
+            self.Window.set_keep_above(False)
             self.Window.set_resizable(True)
             self.Window.set_property("skip-taskbar-hint", False)
             self.Window.set_skip_taskbar_hint(False)
@@ -2919,6 +2919,21 @@ class Settings(object):
             # sort server vboxes
             for server in server_list:
                 self.output.popwin.ScrolledVBox.reorder_child(self.output.popwin.ServerVBoxes[server], server_list.index(server))
+
+            # refresh servers combobox in popwin
+            # first remove all entries
+            for i in range(1, len(self.output.popwin.ComboboxMonitor.get_model())):
+                # "Choose monitor..." is the first entry so do not delete item index 0
+                self.output.popwin.ComboboxMonitor.remove_text(1)
+
+            # sort server names for list
+            server_list = list()
+            for server in self.conf.servers.keys():
+                server_list.append(server)
+            server_list.sort(key=str.lower)
+            # add all servers in sorted order
+            for server in server_list:
+                self.output.popwin.ComboboxMonitor.append_text(server)
 
             # start debugging loop if wanted
             if str(self.conf.debug_mode) == "True":
