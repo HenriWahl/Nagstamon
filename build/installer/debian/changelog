@@ -1,12 +1,24 @@
-nagstamon (0.9.10-devel-1) unstable; urgency=low
+nagstamon (0.9.10rc1) unstable; urgency=low
 
   * New upstream
+    - added fullscreen option
+    - added Thruk support
     - added Check_MK cookie-based auth
-    - experimental Icinga JSON support
+    - added new Centreon autologin option
+    - added configurable default sort order
+    - added filter for hosts in hard/soft state for Nagios, Icinga, Opsview and Centreon
+    - added $STATUS-INFO$ variable for custom actions
+    - update interval set in seconds instead minutes
+    - improved Icinga JSON support
+    - improved Centreon 2.4 xml/broker support
+    - improved Nagios 3.4 pagination support
+    - uses nicer GTK theme Murrine on MacOSX
+    - fixed blocking of shutdown/reboot on MacOSX
+    - fixed some memory leaks
+    - fixed superfluous passive icon for Check_MK
+    - fixed some GUI issues
 
- -- Henri Wahl <h.wahl@ifw-dresden.de>  Tue, 29 Jan 2013 15:25:00 +0200
-
-
+ -- Henri Wahl <h.wahl@ifw-dresden.de>  Wed, 03 Jul 2013 10:25:00 +0200
 
 nagstamon (0.9.9.1-1) unstable; urgency=low
 

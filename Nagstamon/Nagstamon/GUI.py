@@ -81,7 +81,7 @@ class GUI(object):
 
         # Meta
         self.name = "Nagstamon"
-        self.version = "0.9.10-devel"
+        self.version = "0.9.10rc1"
         self.website = "http://nagstamon.ifw-dresden.de/"
         self.copyright = "©2008-2013 Henri Wahl et al.\nh.wahl@ifw-dresden.de"
         self.comments = "Nagios status monitor for your desktop"
@@ -188,7 +188,6 @@ class GUI(object):
 
         # flag which is set True if already notifying
         self.Notifying = False
-
 
         # defining sorting defaults in first render
         HOST_COLUMN_ID = 0
@@ -359,7 +358,7 @@ class GUI(object):
                     else:
                         server.ListStore = gtk.ListStore(*self.LISTSTORE_COLUMNS)
                     if type(server.TreeView) == type(None):
-                        #server.TreeView = gtk.TreeView()
+                        # if treeview got lost recycle the one in servervbox
                         server.TreeView = self.popwin.ServerVBoxes[server.get_name()].TreeView
 
                     # apart from status informations there we need two columns which
@@ -686,7 +685,6 @@ class GUI(object):
         """
             create and show downtime_dialog from gtkbuilder file
         """
-
         # set the gtkbuilder file
         self.builderfile = self.Resources + os.sep + "downtime_dialog.ui"
         self.downtime_xml = gtk.Builder()
@@ -852,7 +850,7 @@ class GUI(object):
 
     def SubmitCheckResultDefaultSettings(self, foo, bar):
         """
-        show settings with tab "defaults" as shortcut from Submit Check Result dialog
+            show settings with tab "defaults" as shortcut from Submit Check Result dialog
         """
         self.submitcheckresult_dialog.destroy()
         self.GetDialog(dialog="Settings", servers=self.servers, output=self, conf=self.conf, first_page="Defaults")
@@ -895,7 +893,7 @@ class GUI(object):
 
     def SubmitCheckResultCommentReturn(self, widget, event, server):
         """
-        if Return key has been pressed in comment entry field interprete this as OK button being pressed
+            if Return key has been pressed in comment entry field interprete this as OK button being pressed
         """
         # KP_Enter seems to be the code for return key of numeric key block
         if gtk.gdk.keyval_name(event.keyval) in ["Return", "KP_Enter"]:
@@ -922,16 +920,21 @@ class GUI(object):
                            "Antoine Jacoutot",\
                            "Benoît Soenen",\
                            "Carl Chenet",\
+                           "Carl Helmertz",\
+                           "Davide Cecchetto",\
                            "Emile Heitor ",\
                            "John Conroy",\
                            "Lars Michelsen",\
                            "M. Cigdem Cebe",\
                            "Mattias Ryrlén",\
                            "Michał Rzeszut",\
+                           "Nikita Klimov",\
                            "Patrick Cernko",\
                            "Pawel Połewicz",\
                            "Robin Sonefors",\
+                           "Salvatore LaMendola",\
                            "Sandro Tosi",\
+                           "Sven Nierlein",\
                            "Thomas Gelf",\
                            "Tobias Scheerbaum",\
                            "Yannick Charton",\
@@ -1051,7 +1054,7 @@ class GUI(object):
 
     def RecheckAll(self, widget=None):
         """
-        call threaded recheck all action
+            call threaded recheck all action
         """
         recheckall = Actions.RecheckAll(servers=self.servers, output=self, conf=self.conf)
         recheckall.start()
@@ -1059,7 +1062,7 @@ class GUI(object):
 
     def _GetAlternateColor(self, color, diff=2048):
         """
-        helper for treeview table colors to get a slightly different color
+            helper for treeview table colors to get a slightly different color
         """
         if color > (65535 - diff):
             color = color - diff
@@ -1070,8 +1073,8 @@ class GUI(object):
 
     def AddGUILock(self, widget_name, widget=None):
         """
-        add calling window to dictionary of open windows to keep the windows separated
-        to be called via gobject.idle_add
+            add calling window to dictionary of open windows to keep the windows separated
+            to be called via gobject.idle_add
         """
         self.GUILock[widget_name] = widget
 
@@ -1099,7 +1102,7 @@ class GUI(object):
 
     def Exit(self, dummy):
         """
-        exit....
+            exit....
         """
         self.conf.SaveConfig(output=self)
         gtk.main_quit()
@@ -1107,8 +1110,8 @@ class GUI(object):
 
     def GetDialog(self, **kwds):
         """
-        Manage dialogs et al. so they would not have been re-created with every access
-        Hoping to decrease memory usage this way
+            Manage dialogs et al. so they would not have been re-created with every access
+            Hoping to decrease memory usage this way
         """
         for k in kwds: self.__dict__[k] = kwds[k]
 
@@ -1207,22 +1210,6 @@ class StatusBar(object):
         # flag to lock statusbar error messages not to provoke a pango crash
         self.isShowingError = False
 
-        """
-        # adapt label font size to nagstamon logo height because on different platforms
-        # default sizes + fonts vary
-        try:
-            fontsize = 7000
-            self.Label.set_markup('<span size="%s"> Loading... </span>' % (fontsize))
-            # compare heights, height of logo is the important one
-            while self.LogoEventbox.size_request()[1] > self.Label.size_request()[1]:
-                self.Label.set_markup('<span size="%s"> Loading... </span>' % (fontsize))
-                fontsize += 250
-            self.output.fontsize = fontsize
-        except:
-            # in case of error define fixed fontsize
-            self.output.fontsize = 10000
-        """
-
         self.CalculateFontSize()
 
         # Popup menu for statusbar
@@ -1249,8 +1236,8 @@ class StatusBar(object):
 
     def CalculateFontSize(self):
         """
-        adapt label font size to nagstamon logo height because on different platforms
-        default sizes + fonts vary
+            adapt label font size to nagstamon logo height because on different platforms
+            default sizes + fonts vary
         """
         try:
             fontsize = 7000
@@ -1267,7 +1254,7 @@ class StatusBar(object):
 
     def _CreateFloatingStatusbar(self):
         """
-        create statusbar as floating window
+            create statusbar as floating window
         """
         # TOPLEVEL seems to be more standard compliant
         if platform.system() == "Windows" or platform.system() == "Darwin":
@@ -3056,7 +3043,7 @@ class Settings(object):
                 break
             else:
                 # start thread which checks for updates
-                self.check = Actions.CheckForNewVersion(servers=self.servers, output=self.output, mode="normal")
+                self.check = Actions.CheckForNewVersion(servers=self.servers, output=self.output, mode="normal", parent=self)
                 self.check.start()
                 # if one of the servers is not used to check for new version this is enough
                 break

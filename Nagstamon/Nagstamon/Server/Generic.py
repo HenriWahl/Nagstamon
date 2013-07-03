@@ -1022,17 +1022,20 @@ class GenericServer(object):
 
         # run this method which checks itself if there is some action to take for initializing connection
         # if no_auth is true do not use Auth headers, used by Actions.CheckForNewVersion()
-        if not no_auth:
+        if no_auth == False:
             self.init_HTTP()
+            # to avoid race condition and credentials leak use local HTTPheaders
+            HTTPheaders = self.HTTPheaders
         else:
-            self.HTTPheaders["raw"] = self.HTTPheaders["obj"] = self.HTTPheaders["xml"] = {}
+            HTTPheaders = dict()
+            HTTPheaders["raw"] = HTTPheaders["obj"] = HTTPheaders["obj"] =  dict()
 
         try:
             try:
                 # debug
                 if str(self.conf.debug_mode) == "True":
                     self.Debug(server=self.get_name(), debug="FetchURL: " + url + " CGI Data: " + str(cgi_data))
-                request = urllib2.Request(url, cgi_data, self.HTTPheaders[giveback])
+                request = urllib2.Request(url, cgi_data, HTTPheaders[giveback])
                 # use opener - if cgi_data is not empty urllib uses a POST request
                 urlcontent = self.urlopener.open(request)
                 del url, cgi_data, request

@@ -410,8 +410,10 @@ class CheckForNewVersion(threading.Thread):
 
 
     def run(self):
-        # try all servers respectively their net connections, one of them should be able to connect
-        # to nagstamon.sourceforge.net
+        """
+        try all servers respectively their net connections, one of them should be able to connect
+        to nagstamon.sourceforge.net
+        """
 
         # debug
         if str(self.output.conf.debug_mode) == "True":
