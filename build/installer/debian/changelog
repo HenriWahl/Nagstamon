@@ -13,10 +13,11 @@ nagstamon (0.9.10rc1) unstable; urgency=low
     - improved Centreon 2.4 xml/broker support
     - improved Nagios 3.4 pagination support
     - uses nicer GTK theme Murrine on MacOSX
-    - fixed blocking of shutdown/reboot on MacOSX
     - fixed some memory leaks
     - fixed superfluous passive icon for Check_MK
+    - fixed blocking of shutdown/reboot on MacOSX
     - fixed some GUI issues
+    - fixed update detection
 
  -- Henri Wahl <h.wahl@ifw-dresden.de>  Wed, 03 Jul 2013 10:25:00 +0200
 
