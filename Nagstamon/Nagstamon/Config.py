@@ -273,6 +273,9 @@ class Config(object):
             # set flag to show legacy command line config file notice
             self.legacyconfigfile_notice = True
 
+            # save converted configuration
+            self.SaveConfig()
+
         # Load actions if Nagstamon is not unconfigured, otherwise load defaults
         if str(self.unconfigured) == "True":
             self.actions = self._DefaultActions()
@@ -314,7 +317,6 @@ class Config(object):
         """
         load any pre-0.9.9 config file
         """
-
         # default negative setting
         legacyconfigfile = False
 
@@ -512,9 +514,6 @@ class Config(object):
             self.__dict__.pop("use_proxy_yes")
             self.__dict__.pop("use_proxy_no")
 
-            # save config
-            #self.SaveConfig()
-
 
     def Convert_Conf_to_Custom_Actions(self):
         """
@@ -638,7 +637,6 @@ class Config(object):
                                                     string="$MONITOR$/index.php/configuration/configure/service/$HOST$?service=$SERVICE$", enabled=False)
 
         return defaultactions
-
 
 
     def _LegacyAdjustments(self):
