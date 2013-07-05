@@ -1013,7 +1013,11 @@ class GUI(object):
             # check if notification for status is wanted
             if not status == "UP" and str(self.conf.__dict__["notify_if_" + status.lower()]) == "True":
                 # only notify if popwin not already popped up
-                if self.popwin.Window.get_properties("visible")[0] == False:
+                if (self.popwin.Window.get_properties("visible")[0] == False and\
+                    str(self.conf.fullscreen) == "False")\
+                    or\
+                    (self.popwin.Window.get_properties("visible")[0] == True and\
+                     str(self.conf.fullscreen) == "True"):
                     if self.Notifying == False:
                         self.Notifying = True
                         # debug
