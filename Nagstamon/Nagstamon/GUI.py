@@ -1748,7 +1748,7 @@ class Popwin(object):
             self.Window.move(x0, y0)
             self.Window.set_decorated(True)
             self.Window.set_keep_above(False)
-            self.Window.set_resizable(True)
+            self.Window.set_resizable(False)
             self.Window.set_property("skip-taskbar-hint", False)
             self.Window.set_skip_taskbar_hint(False)
             self.Window.unstick()
