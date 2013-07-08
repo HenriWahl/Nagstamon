@@ -178,7 +178,6 @@ class GUI(object):
         # statusbar is meant synonymical
         # if pointer on systray do popup the long-summary-status-window aka popwin
         self.statusbar.SysTray.connect("activate", self.statusbar.SysTrayClicked)
-        #self.statusbar.SysTray.connect("popup-menu", self.statusbar.MenuPopup, self.statusbar.Menu)
         self.statusbar.SysTray.connect("popup-menu", self.statusbar.MenuPopup)
 
         # if pointer clicks on logo move stautsbar
@@ -493,7 +492,8 @@ class GUI(object):
             self.status_ok = True
 
             # set systray icon to green aka OK
-            self.statusbar.SysTray.set_from_pixbuf(self.statusbar.SYSTRAY_ICONS["green"])
+            if str(self.conf.icon_in_systray) == "True":
+                self.statusbar.SysTray.set_from_pixbuf(self.statusbar.SYSTRAY_ICONS["green"])
 
             # switch notification off
             self.NotificationOff()
@@ -550,7 +550,8 @@ class GUI(object):
             if unreachables > 0: color = "darkred"
             if downs > 0: color = "black"
 
-            self.statusbar.SysTray.set_from_pixbuf(self.statusbar.SYSTRAY_ICONS[color])
+            if str(self.conf.icon_in_systray) == "True":
+                self.statusbar.SysTray.set_from_pixbuf(self.statusbar.SYSTRAY_ICONS[color])
 
             # if there has been any status change notify user
             # first find out which of all servers states is the worst similar to nagstamonObjects.GetStatus()
@@ -1035,8 +1036,10 @@ class GUI(object):
                             self.servers.values()[0].Debug(debug="Notification on.")
                         # threaded statusbar flash
                         if str(self.conf.notification_flashing) == "True":
-                            self.statusbar.SysTray.set_blinking(True)
-                            self.statusbar.Flashing = True
+                            if  str(self.conf.icon_in_systray) == "True":
+                                self.statusbar.SysTray.set_blinking(True)
+                            elif  str(self.conf.statusbar_floating) == "True":
+                                self.statusbar.Flashing = True
 
                         notify = Actions.Notification(output=self, sound=status, Resources=self.Resources, conf=self.conf, servers=self.servers)
                         notify.start()
@@ -1059,11 +1062,13 @@ class GUI(object):
             # debug
             if str(self.conf.debug_mode) == "True":
                 self.servers.values()[0].Debug(debug="Notification on.")
-            self.statusbar.SysTray.set_blinking(False)
-            self.statusbar.Flashing = False
-            self.statusbar.Label.set_markup(self.statusbar.statusbar_labeltext)
-            # resize statusbar to avoid artefact when showing error
-            self.statusbar.Resize()
+            if  str(self.conf.icon_in_systray) == "True":
+                self.statusbar.SysTray.set_blinking(False)
+            elif  str(self.conf.statusbar_floating) == "True":
+                self.statusbar.Flashing = False
+                self.statusbar.Label.set_markup(self.statusbar.statusbar_labeltext)
+                # resize statusbar to avoid artefact when showing error
+                self.statusbar.Resize()
 
 
     def RecheckAll(self, widget=None):
@@ -1737,18 +1742,19 @@ class Popwin(object):
             self.ButtonClose.show()
             self.ButtonMenu.hide()
         else:
+            # find out dimension of all monitors
+            if len(self.output.monitors) == 0:
+                for m in range(self.Window.get_screen().get_n_monitors()):
+                    monx0, mony0, monw, monh = self.Window.get_screen().get_monitor_geometry(m)
+                    self.output.monitors[m] = (monx0, mony0, monw, monh)
             self.Window.set_visible(False)
             self.Window.set_type_hint(gtk.gdk.WINDOW_TYPE_HINT_NORMAL)
             self.Window.set_visible(True)
-            # find out dimension of all monitors
-            for m in range(self.Window.get_screen().get_n_monitors()):
-                monx0, mony0, monw, monh = self.Window.get_screen().get_monitor_geometry(m)
-                self.output.monitors[m] = (monx0, mony0, monw, monh)
             x0, y0, width, height = self.output.monitors[int(self.output.conf.fullscreen_display)]
             self.Window.move(x0, y0)
             self.Window.set_decorated(True)
             self.Window.set_keep_above(False)
-            self.Window.set_resizable(False)
+            self.Window.set_resizable(True)
             self.Window.set_property("skip-taskbar-hint", False)
             self.Window.set_skip_taskbar_hint(False)
             self.Window.unstick()
