@@ -156,6 +156,16 @@ class GUI(object):
             monx0, mony0, monw, monh = self.statusbar.StatusBar.get_screen().get_monitor_geometry(m)
             self.monitors[m] = (monx0, mony0, monw, monh)
 
+        # check if statusbar is inside display boundaries
+        # modify x0 and y0 to fit into display
+        x0, y0 = self.statusbar.StatusBar.get_position()
+        m = self.statusbar.StatusBar.get_screen().get_monitor_at_point(x0, y0)
+        if not (self.monitors[m][0] <= int(self.conf.position_x) <= self.monitors[m][2]):
+            self.conf.position_x = self.monitors[m][0] + 30
+        if not (self.monitors[m][1] <= int(self.conf.position_y) <= self.monitors[m][3]):
+            self.conf.position_y = self.monitors[m][1] + 30
+        self.statusbar.StatusBar.move(int(self.conf.position_x), int(self.conf.position_y))
+
         if str(self.conf.fullscreen) == "True":
             self.popwin.Window.show_all()
             self.popwin.Window.set_visible(True)
@@ -576,7 +586,7 @@ class GUI(object):
             self.popwin.Close()
 
         # try to fix vanishing statusbar
-        if str(self.conf.icon_in_systray) == "False":
+        if str(self.conf.statusbar_floating) == "True":
             self.statusbar.Raise()
 
         # return False to get removed as gobject idle source
