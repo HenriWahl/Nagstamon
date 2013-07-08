@@ -160,10 +160,14 @@ class GUI(object):
         # modify x0 and y0 to fit into display
         x0, y0 = self.statusbar.StatusBar.get_position()
         m = self.statusbar.StatusBar.get_screen().get_monitor_at_point(x0, y0)
-        if not (self.monitors[m][0] <= int(self.conf.position_x) <= self.monitors[m][2]):
+        if not (self.monitors[m][0] <= int(self.conf.position_x)):
             self.conf.position_x = self.monitors[m][0] + 30
-        if not (self.monitors[m][1] <= int(self.conf.position_y) <= self.monitors[m][3]):
+        if not (int(self.conf.position_x) <= self.monitors[m][2]):
+            self.conf.position_x = self.monitors[m][2] - 50
+        if not (self.monitors[m][1] <= int(self.conf.position_y)):
             self.conf.position_y = self.monitors[m][1] + 30
+        if not (int(self.conf.position_y) <= self.monitors[m][3]):
+            self.conf.position_y = self.monitors[m][3] - 50
         self.statusbar.StatusBar.move(int(self.conf.position_x), int(self.conf.position_y))
 
         if str(self.conf.fullscreen) == "True":
