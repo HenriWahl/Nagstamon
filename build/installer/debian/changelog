@@ -1,3 +1,12 @@
+nagstamon (0.9.10rc2) unstable; urgency=low
+
+  * New upstream
+    - audio alarms also in fullscreen mode
+    - adjust x0 y0 position of statusbar when offscreen
+    - save converted pre 0.9.9 config immediately
+
+ -- Henri Wahl <h.wahl@ifw-dresden.de>  Tue, 09 Jul 2013 14:25:00 +0200
+
 nagstamon (0.9.10rc1) unstable; urgency=low
 
   * New upstream
