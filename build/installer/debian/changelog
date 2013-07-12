@@ -1,3 +1,10 @@
+nagstamon (0.9.11-devel) unstable; urgency=low
+
+  * New upstream
+    - fixed Correct-Statusbar-Position-O-Matic (https://sourceforge.net/p/nagstamon/bugs/85/)
+
+ -- Henri Wahl <h.wahl@ifw-dresden.de>  Fri, 12 Jul 2013 14:35:00 +0200
+
 nagstamon (0.9.10) unstable; urgency=low
 
   * New upstream
