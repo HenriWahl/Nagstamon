@@ -34,6 +34,13 @@ import gobject
 import os
 import platform
 
+# testing pynotify support
+try:
+    import pynotify
+    pynotify.init("Nagstamon")
+except:
+    pass
+
 # needed for actions e.g. triggered by pressed buttons
 from Nagstamon import Config
 from Nagstamon import Actions
@@ -1080,6 +1087,9 @@ class GUI(object):
 
                         notify = Actions.Notification(output=self, sound=status, Resources=self.Resources, conf=self.conf, servers=self.servers)
                         notify.start()
+
+                        notify_bubble = pynotify.Notification ("Nagstamon", "There is some trouble.", "dialog-information")
+                        notify_bubble.show ()
 
                         # if desired pop up status window
                         # sorry but does absolutely not work with windows and systray icon so I prefer to let it be
