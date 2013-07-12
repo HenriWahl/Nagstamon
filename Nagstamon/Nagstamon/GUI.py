@@ -158,16 +158,20 @@ class GUI(object):
 
         # check if statusbar is inside display boundaries
         # modify x0 and y0 to fit into display
-        x0, y0 = self.statusbar.StatusBar.get_position()
-        m = self.statusbar.StatusBar.get_screen().get_monitor_at_point(x0, y0)
-        if not (self.monitors[m][0] <= int(self.conf.position_x)):
-            self.conf.position_x = self.monitors[m][0] + 30
-        if not (int(self.conf.position_x) <= self.monitors[m][2]):
-            self.conf.position_x = self.monitors[m][2] - 50
-        if not (self.monitors[m][1] <= int(self.conf.position_y)):
-            self.conf.position_y = self.monitors[m][1] + 30
-        if not (int(self.conf.position_y) <= self.monitors[m][3]):
-            self.conf.position_y = self.monitors[m][3] - 50
+        statusbar_x0, statusbar_y0 = self.statusbar.StatusBar.get_position()
+        m = self.statusbar.StatusBar.get_screen().get_monitor_at_point(statusbar_x0, statusbar_y0)
+
+        # get max dimensions of current display
+        x0, y0, x_max, y_max = self._get_display_dimensions(m)
+
+        if not (x0 <= int(self.conf.position_x)):
+            self.conf.position_x = x0 + 30
+        if not int(self.conf.position_x) <= x_max:
+            self.conf.position_x = x_max - 50
+        if not (y0 <= int(self.conf.position_y)):
+            self.conf.position_y = y0 + 30
+        if not int(self.conf.position_y) <= y_max:
+            self.conf.position_y = y_max - 50
         self.statusbar.StatusBar.move(int(self.conf.position_x), int(self.conf.position_y))
 
         if str(self.conf.fullscreen) == "True":
@@ -238,6 +242,35 @@ class GUI(object):
 
         # store once created dialogs here to minimize memory usage
         self.Dialogs = {}
+
+
+    def _get_display_dimensions(self, monitor):
+        """
+        get x0 y0 xmax and ymax of a distinct monitor, usefull to put statusbar inside the fence
+        """
+        # startt with values of first display
+        x0, y0, x_max, y_max = self.monitors[0]
+        # only calculate some dimensions when multiple displays are used
+        if len(self.monitors) > 1:
+            # run through all displays
+            for m in range(1, monitor+1):
+                # if 2 displays have some coordinates in common they belong to each other
+                if self.monitors[m-1][2] == self.monitors[m][0]:
+                    x0 += self.monitors[m][0]
+                    x_max += self.monitors[m][2]
+                else:
+                    x0 = self.monitors[m][0]
+                    x_max = self.monitors[m][2] + self.monitors[m][0]
+                if self.monitors[m-1][3] == self.monitors[m][1]:
+                    y0 += self.monitors[m][1]
+                    y_max += self.monitors[m][3]
+                else:
+                    y0 = self.monitors[m][1]
+                    y_max = self.monitors[m][3] + self.monitors[m][1]
+
+        return x0, y0, x_max, y_max
+
+
 
 
     def get_last_sorting(self, server):
