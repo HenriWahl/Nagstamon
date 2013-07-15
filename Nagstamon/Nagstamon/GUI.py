@@ -35,11 +35,11 @@ import os
 import platform
 
 # testing pynotify support
-try:
-    import pynotify
-    pynotify.init("Nagstamon")
-except:
-    pass
+###try:
+###    import pynotify
+###    pynotify.init("Nagstamon")
+###except:
+###    pass
 
 # needed for actions e.g. triggered by pressed buttons
 from Nagstamon import Config
@@ -1088,8 +1088,9 @@ class GUI(object):
                         notify = Actions.Notification(output=self, sound=status, Resources=self.Resources, conf=self.conf, servers=self.servers)
                         notify.start()
 
-                        notify_bubble = pynotify.Notification ("Nagstamon", "There is some trouble.", "dialog-information")
-                        notify_bubble.show ()
+                        ### just playing with libnotify
+                        ###notify_bubble = pynotify.Notification ("Nagstamon", "There is some trouble.", "dialog-information")
+                        ###notify_bubble.show ()
 
                         # if desired pop up status window
                         # sorry but does absolutely not work with windows and systray icon so I prefer to let it be
@@ -4040,8 +4041,8 @@ class AuthenticationDialog:
         self.entry_password = self.builder.get_object("input_entry_password")
         self.entry_autologin_key = self.builder.get_object("input_entry_autologin_key")
 
-        self.dialog.set_title("Nagstamon authentication for " + self.server.get_name())
-        self.label_monitor.set_text("Please give the correct credentials for "+ self.server.get_name() + ":")
+        self.dialog.set_title("Nagstamon authentication for " + self.server.name)
+        self.label_monitor.set_text("Please give the correct credentials for "+ self.server.name + ":")
         self.entry_username.set_text(str(self.server.username))
         self.entry_password.set_text(str(self.server.password))
         self.entry_autologin_key.set_text(str(self.server.autologin_key))

@@ -499,6 +499,10 @@ class GenericServer(object):
                     tbody = table('tbody')[0]
                     trs = tbody('tr', recursive=False)
 
+                # do some cleanup
+                htobj.decompose()
+                del result, htobj, error
+
                 # kick out table heads
                 trs.pop(0)
 
@@ -586,8 +590,7 @@ class GenericServer(object):
                         self.Error(sys.exc_info())
 
                 # do some cleanup
-                htobj.decompose()
-                del trs, tds, table, htobj, result, error
+                del trs, tds, table
 
         except:
             # set checking flag back to False
@@ -612,6 +615,9 @@ class GenericServer(object):
                 else:
                     tbody = table('tbody')[0]
                     trs = tbody('tr', recursive=False)
+
+                htobj.decompose()
+                del result, htobj, error
 
                 # kick out table heads
                 trs.pop(0)
@@ -706,8 +712,8 @@ class GenericServer(object):
                         self.Error(sys.exc_info())
 
                 # do some cleanup
-                htobj.decompose()
-                del trs, tds, table, htobj, result, error
+                del trs, tds, table
+
         except:
             # set checking flag back to False
             self.isChecking = False

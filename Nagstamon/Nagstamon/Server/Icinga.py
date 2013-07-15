@@ -264,7 +264,8 @@ class IcingaServer(GenericServer):
                 table = htobj('table', {'class': 'status'})[0]
 
                 # do some cleanup
-                del htobj
+                htobj.decompose()
+                del result, htobj, error
 
                 # access table rows
                 # some Icinga versions have a <tbody> tag in cgi output HTML which
@@ -358,7 +359,7 @@ class IcingaServer(GenericServer):
                         self.Error(sys.exc_info())
 
                 # do some cleanup
-                del trs, table, htobj, result, error
+                del trs, tds, table
 
         except:
                 # set checking flag back to False
@@ -385,7 +386,8 @@ class IcingaServer(GenericServer):
                     trs = tbody('tr', recursive=False)
 
                 # do some cleanup
-                del htobj
+                htobj.decompose()
+                del result, htobj, error
 
                 # kick out table heads
                 trs.pop(0)
@@ -476,7 +478,7 @@ class IcingaServer(GenericServer):
                         self.Error(sys.exc_info())
 
                 # do some cleanup
-                del table, trs, htobj, result, error
+                del table, trs, tds
 
         except:
             # set checking flag back to False
