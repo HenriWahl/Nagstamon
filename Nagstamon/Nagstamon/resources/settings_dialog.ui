@@ -718,7 +718,7 @@
                 <property name="visible">True</property>
                 <property name="can_focus">False</property>
                 <property name="border_width">5</property>
-                <property name="n_rows">15</property>
+                <property name="n_rows">16</property>
                 <property name="n_columns">2</property>
                 <child>
                   <placeholder/>
@@ -997,6 +997,21 @@
                   </packing>
                 </child>
                 <child>
+                  <object class="GtkCheckButton" id="input_checkbutton_re_criticality_enabled">
+                    <property name="label" translatable="yes">RegExp criticality (centreon only):</property>
+                    <property name="visible">True</property>
+                    <property name="can_focus">True</property>
+                    <property name="receives_default">False</property>
+                    <property name="xalign">0</property>
+                    <property name="draw_indicator">True</property>
+                    <signal name="toggled" handler="checkbutton_re_criticality_enabled" swapped="no"/>
+                  </object>
+                  <packing>
+                    <property name="top_attach">14</property>
+                    <property name="bottom_attach">15</property>
+                  </packing>
+                </child>
+                <child>
                   <object class="GtkHBox" id="hbox_re_status_information">
                     <property name="visible">True</property>
                     <property name="sensitive">False</property>
@@ -1042,6 +1057,54 @@
                     <property name="bottom_attach">14</property>
                   </packing>
                 </child>
+                
+                <child>
+                  <object class="GtkHBox" id="hbox_re_criticality">
+                    <property name="visible">True</property>
+                    <property name="sensitive">False</property>
+                    <property name="can_focus">False</property>
+                    <child>
+                      <object class="GtkEntry" id="input_entry_re_criticality_pattern">
+                        <property name="visible">True</property>
+                        <property name="can_focus">True</property>
+                        <property name="invisible_char">●</property>
+                        <property name="width_chars">20</property>
+                        <property name="invisible_char_set">True</property>
+                        <property name="primary_icon_activatable">False</property>
+                        <property name="secondary_icon_activatable">False</property>
+                        <property name="primary_icon_sensitive">True</property>
+                        <property name="secondary_icon_sensitive">True</property>
+                      </object>
+                      <packing>
+                        <property name="expand">True</property>
+                        <property name="fill">True</property>
+                        <property name="position">0</property>
+                      </packing>
+                    </child>
+                    <child>
+                      <object class="GtkCheckButton" id="input_checkbutton_re_criticality_reverse">
+                        <property name="label" translatable="yes">reverse</property>
+                        <property name="visible">True</property>
+                        <property name="can_focus">True</property>
+                        <property name="receives_default">False</property>
+                        <property name="xalign">0</property>
+                        <property name="draw_indicator">True</property>
+                      </object>
+                      <packing>
+                        <property name="expand">True</property>
+                        <property name="fill">True</property>
+                        <property name="position">1</property>
+                      </packing>
+                    </child>
+                  </object>
+                  <packing>
+                    <property name="left_attach">1</property>
+                    <property name="right_attach">2</property>
+                    <property name="top_attach">14</property>
+                    <property name="bottom_attach">15</property>
+                  </packing>
+                </child>
+                
                 <child>
                   <object class="GtkHBox" id="hbox_re_service">
                     <property name="visible">True</property>
@@ -1177,8 +1240,8 @@
                   </object>
                   <packing>
                     <property name="right_attach">2</property>
-                    <property name="top_attach">14</property>
-                    <property name="bottom_attach">15</property>
+                    <property name="top_attach">15</property>
+                    <property name="bottom_attach">16</property>
                   </packing>
                 </child>
                 <child>

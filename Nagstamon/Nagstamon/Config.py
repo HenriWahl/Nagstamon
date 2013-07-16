@@ -97,6 +97,10 @@ class Config(object):
         self.re_status_information_enabled = False
         self.re_status_information_pattern = ""
         self.re_status_information_reverse = False
+        self.re_criticality_enabled = False
+        self.re_criticality_pattern = ""
+        self.re_criticality_reverse = False
+        
         self.color_ok_text = self.default_color_ok_text = "#FFFFFF"
         self.color_ok_background = self.default_color_ok_background = "#006400"
         self.color_warning_text = self.default_color_warning_text = "#000000"
@@ -730,6 +734,9 @@ class Action(object):
         self.re_status_information_enabled = False
         self.re_status_information_pattern = ""
         self.re_status_information_reverse = False
+        self.re_criticality_enabled = False
+        self.re_criticality_pattern = ""
+        self.re_criticality_reverse = False
         # close powin or not, depends on personal preference
         self.close_popwin = True
         self.leave_popwin_open = False

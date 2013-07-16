@@ -874,6 +874,18 @@ def StatusInformationIsFilteredOutByRE(status_information, conf=None):
         import traceback
         traceback.print_exc(file=sys.stdout)
 
+def CriticalityIsFilteredOutByRE(criticality, conf=None):
+    """
+        helper for applying RE filters in Generic.GetStatus()
+    """
+    try:
+        if str(conf.re_criticality_enabled) == "True":
+            return IsFoundByRE(criticality, conf.re_criticality_pattern, conf.re_criticality_reverse)
+        # if RE are disabled return True because host is not filtered
+        return False
+    except:
+        import traceback
+        traceback.print_exc(file=sys.stdout)
 
 def HumanReadableDuration(seconds):
     """
