@@ -435,7 +435,7 @@ class CheckForNewVersion(threading.Thread):
                 # debug
                 if str(self.output.conf.debug_mode) == "True":
                     # once again taking .Debug() from first server
-                    self.servers.values()[0].Debug(debug="Latest version from sourceforge.net: " + str(version))
+                    self.servers.values()[0].Debug(debug="Latest version: " + str(version))
 
                 # if we got a result notify user
                 if error == "":

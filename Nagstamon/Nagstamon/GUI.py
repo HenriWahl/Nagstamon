@@ -1882,8 +1882,8 @@ class Popwin(object):
                 gobject.idle_add(self.output.AddGUILock, str(self.__class__.__name__))
 
         # position and resize...
-        ###self.calculate_coordinates = True
-        ###self.Resize()
+        self.calculate_coordinates = True
+        self.Resize()
 
 
     def RefreshFullscreen(self, widget=None, event=None):
@@ -2037,9 +2037,6 @@ class Popwin(object):
             statusbarx0 = self.output.statusbar.StatusBar.x0
             statusbary0 = self.output.statusbar.StatusBar.y0
 
-        # find out the necessary dimensions of popwin - assembled from scroll area and the buttons
-        #treeviewwidth, treeviewheight = self.ScrolledVBox.size_request()
-
         # get current monitor's settings
         # screeny0 might be important on more-than-one-monitor-setups where it will not be 0
         screenx0, screeny0, screenwidth, screenheight = self.output.monitors[self.output.current_monitor]
@@ -2068,6 +2065,8 @@ class Popwin(object):
 
         # after having determined dimensions of scrolling area apply them
         self.ScrolledWindow.set_size_request(treeviewwidth, treeviewheight)
+
+        #print "ScrolledWindow:",  self.ScrolledWindow.get_size_request()
 
         # care about the height of the buttons
         self.popwinwidth, self.popwinheight = treeviewwidth, treeviewheight + self.buttonsheight
@@ -2119,12 +2118,18 @@ class Popwin(object):
         self.Window.set_size_request(self.popwinwidth, self.popwinheight)
 
         if self.Window.get_properties("visible")[0] == True:
-            self.Window.window.move_resize(self.popwinx0, self.popwiny0, self.popwinwidth, self.popwinheight)
+            # avoid resizing artefacts when popwin keeps opened introduced in 0.9.10
+            real_winwidth, real_winheight = self.Window.get_size()
+            real_scrolledwinwidth, real_scrolledwinheight = self.ScrolledWindow.get_size_request()
+            if real_scrolledwinheight + self.buttonsheight < real_winheight:
+                self.Window.hide_all()
+                self.Window.show_all()
+s            self.Window.window.move_resize(self.popwinx0, self.popwiny0, self.popwinwidth, self.popwinheight)
 
             # if popwin is misplaced please correct it here
             if self.Window.get_position() != (self.popwinx0, self.popwiny0):
                 # would be nice if there could be any way to avoid flickering...
-                # but move/resize only works after a hide_all()/showe_all() mantra
+                # but move/resize only works after a hide_all()/show_all() mantra
                 self.Window.hide_all()
                 self.Window.show_all()
                 self.Window.window.move_resize(self.popwinx0, self.popwiny0, self.popwinwidth, self.popwinheight)
@@ -4067,28 +4072,28 @@ class AuthenticationDialog:
         self.server.password = self.entry_password.get_text()
         self.server.autologin_key = self.entry_autologin_key.get_text()
         toggle_save_password = self.builder.get_object("input_checkbutton_save_password")
+        toggle_use_autologin = self.builder.get_object("input_checkbutton_use_autologin")
 
         if toggle_save_password.get_active() == True:
             # store authentication information in config
-            self.conf.servers[self.server.get_name()].username = self.server.username
-            self.conf.servers[self.server.get_name()].password = self.server.password
-            self.conf.servers[self.server.get_name()].save_password = True
-            self.conf.SaveConfig(output=self.output)
+            self.conf.servers[self.server.name].username = self.server.username
+            self.conf.servers[self.server.name].password = self.server.password
+            self.conf.servers[self.server.name].save_password = True
+            self.conf.SaveConfig()
 
-        toggle_use_autologin = self.builder.get_object("input_checkbutton_use_autologin")
         if toggle_use_autologin.get_active() == True:
             # store autologin information in config
-            self.conf.servers[self.server.get_name()].username = self.server.username
-            self.conf.servers[self.server.get_name()].password = ""
-            self.conf.servers[self.server.get_name()].save_password = False
-            self.conf.servers[self.server.get_name()].autologin_key = self.server.autologin_key
-            self.conf.servers[self.server.get_name()].use_autologin = True
-            self.conf.SaveConfig(output=self.output)
+            self.conf.servers[self.server.name].username = self.server.username
+            self.conf.servers[self.server.name].password = ""
+            self.conf.servers[self.server.name].save_password = False
+            self.conf.servers[self.server.name].autologin_key = self.server.autologin_key
+            self.conf.servers[self.server.name].use_autologin = True
+            self.conf.SaveConfig()
 
 
     def Disable(self, widget):
         # the old settings
-        self.conf.servers[self.server.get_name()].enabled = False
+        self.conf.servers[self.server.name].enabled = False
 
 
     def Exit(self, widget):
