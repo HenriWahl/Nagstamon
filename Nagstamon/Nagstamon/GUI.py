@@ -35,11 +35,11 @@ import os
 import platform
 
 # testing pynotify support
-###try:
-###    import pynotify
-###    pynotify.init("Nagstamon")
-###except:
-###    pass
+try:
+    import pynotify
+    pynotify.init("Nagstamon")
+except:
+    pass
 
 # needed for actions e.g. triggered by pressed buttons
 from Nagstamon import Config
@@ -613,7 +613,7 @@ class GUI(object):
                     # reset status of the server for only processing it once
                     server.WorstStatus = "UP"
                 if not worst_status == "UP" and str(self.conf.notification) == "True":
-                    self.NotificationOn(status=worst_status)
+                    self.NotificationOn(status=worst_status, ducuw=(downs, unreachables, criticals, unknowns, warnings))
 
             # set self.showPopwin to True because there is something to show
             self.popwin.showPopwin = True
@@ -1058,9 +1058,10 @@ class GUI(object):
             self.servers.values()[0].Error(sys.exc_info())
 
 
-    def NotificationOn(self, status="UP"):
+    def NotificationOn(self, status="UP", ducuw=None):
         """
             switch on whichever kind of notification
+            ducuw = downs, unreachables, criticals, unknowns, warnings
         """
         try:
             # check if notification for status is wanted
@@ -1086,9 +1087,18 @@ class GUI(object):
                         notify = Actions.Notification(output=self, sound=status, Resources=self.Resources, conf=self.conf, servers=self.servers)
                         notify.start()
 
-                        ### just playing with libnotify
-                        ###notify_bubble = pynotify.Notification ("Nagstamon", "There is some trouble.", "dialog-information")
-                        ###notify_bubble.show ()
+                        # just playing with libnotify
+                        if str(self.conf.notification_desktop) == "True":
+                            trouble = ""
+                            if ducuw[0] > 0 : trouble += ducuw[0] + " "
+                            if ducuw[1] > 0 : trouble += ducuw[1] + " "
+                            if ducuw[2] > 0 : trouble += ducuw[2] + " "
+                            if ducuw[3] > 0 : trouble += ducuw[3] + " "
+                            if ducuw[4] > 0 : trouble += ducuw[4]
+                            self.notify_bubble = pynotify.Notification ("Nagstamon", trouble, self.Resources + os.sep + "nagstamon" + self.BitmapSuffix)
+
+                            self.notify_bubble.add_action("action", "Open popup window", self.popwin.PopUp)
+                            self.notify_bubble.show ()
 
                         # if desired pop up status window
                         # sorry but does absolutely not work with windows and systray icon so I prefer to let it be
@@ -1881,7 +1891,7 @@ class Popwin(object):
                 gobject.idle_add(self.output.AddGUILock, str(self.__class__.__name__))
 
         # position and resize...
-        self.calculate_coordinates = True
+        #self.calculate_coordinates = True
         self.Resize()
 
 
@@ -1999,7 +2009,6 @@ class Popwin(object):
         if self.calculate_coordinates == True:
             # check if icon in systray or statusbar
             if str(self.conf.icon_in_systray) == "True":
-
                 # trayicon seems not to have a .get_pointer() method so we use
                 # its geometry information
                 if platform.system() == "Windows":
@@ -2759,6 +2768,11 @@ class Settings(object):
             self.builder.get_object("input_radiobutton_fullscreen").hide()
             self.builder.get_object("input_combo_fullscreen_display").hide()
             self.builder.get_object("label_fullscreen_display").hide()
+
+        # libnotify-based desktop notification probably only available on Linux
+        if not platform.system() in ["Darwin", "Windows"]:
+            if not sys.modules.has_key("pynotify"):
+                self.builder.get_object("input_checkbutton_notification_desktop").hide()
 
         # this should not be necessary, but for some reason the number of hours is 10 in unitialized state... :-(
         spinbutton = self.builder.get_object("input_spinbutton_defaults_downtime_duration_hours")

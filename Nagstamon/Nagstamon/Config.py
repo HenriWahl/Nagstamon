@@ -74,6 +74,7 @@ class Config(object):
         self.check_for_new_version = True
         self.notification = True
         self.notification_flashing = True
+        self.notification_desktop = False
         # because of nonexistent windows systray popup support I'll let it be now
         #self.notification_popup = False
         self.notification_sound = True
