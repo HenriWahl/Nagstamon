@@ -52,7 +52,8 @@ import copy
 
 
 class Sorting(object):
-    """ Sorting persistence purpose class
+    """
+    Sorting persistence purpose class
     Stores tuple pairs in form of:
     (<column_id>, <gtk.SORT_ASCENDING|gtk.SORT_DESCENDING)
     """
@@ -276,8 +277,6 @@ class GUI(object):
                     y_max = self.monitors[m][3] + self.monitors[m][1]
 
         return x0, y0, x_max, y_max
-
-
 
 
     def get_last_sorting(self, server):

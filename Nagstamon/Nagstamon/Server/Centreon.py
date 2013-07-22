@@ -116,8 +116,6 @@ class CentreonServer(GenericServer):
             cgi_data = urllib.urlencode({"p":"20106",\
                                          "o":"ah",\
                                          "host_name":host})
-            #result = self.FetchURL(self.monitor_cgi_url + "/main.php?" + cgi_data, giveback="raw")
-            #raw, error = result.result, result.error
             result = self.FetchURL(self.monitor_cgi_url + "/main.php?" + cgi_data, giveback="obj")
             html, error = result.result, result.error
             if error == "":
