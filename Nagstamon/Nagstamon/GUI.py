@@ -165,18 +165,17 @@ class GUI(object):
             self.monitors[m] = (monx0, mony0, monw, monh)
 
         # check if statusbar is inside display boundaries
+        # give 5 pixels tolerance to x0 and y0
         # modify x0 and y0 to fit into display
         statusbar_x0, statusbar_y0 = self.statusbar.StatusBar.get_position()
         m = self.statusbar.StatusBar.get_screen().get_monitor_at_point(statusbar_x0, statusbar_y0)
-
         # get max dimensions of current display
         x0, y0, x_max, y_max = self._get_display_dimensions(m)
-
-        if not (x0 <= int(self.conf.position_x)):
+        if not (x0-5 <= int(self.conf.position_x)):
             self.conf.position_x = x0 + 30
         if not int(self.conf.position_x) <= x_max:
             self.conf.position_x = x_max - 50
-        if not (y0 <= int(self.conf.position_y)):
+        if not (y0-5 <= int(self.conf.position_y)):
             self.conf.position_y = y0 + 30
         if not int(self.conf.position_y) <= y_max:
             self.conf.position_y = y_max - 50
