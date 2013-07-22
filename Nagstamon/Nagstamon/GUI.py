@@ -2121,10 +2121,10 @@ class Popwin(object):
             # avoid resizing artefacts when popwin keeps opened introduced in 0.9.10
             real_winwidth, real_winheight = self.Window.get_size()
             real_scrolledwinwidth, real_scrolledwinheight = self.ScrolledWindow.get_size_request()
-            if real_scrolledwinheight + self.buttonsheight < real_winheight:
+            if real_scrolledwinheight + self.buttonsheight < real_winheight and not (self.popwinheight == treeviewheight + self.buttonsheight):
                 self.Window.hide_all()
                 self.Window.show_all()
-s            self.Window.window.move_resize(self.popwinx0, self.popwiny0, self.popwinwidth, self.popwinheight)
+            self.Window.window.move_resize(self.popwinx0, self.popwiny0, self.popwinwidth, self.popwinheight)
 
             # if popwin is misplaced please correct it here
             if self.Window.get_position() != (self.popwinx0, self.popwiny0):
