@@ -1096,9 +1096,10 @@ class GUI(object):
                             if ducuw[3] > 0 : trouble += ducuw[3] + " "
                             if ducuw[4] > 0 : trouble += ducuw[4]
                             self.notify_bubble = pynotify.Notification ("Nagstamon", trouble, self.Resources + os.sep + "nagstamon" + self.BitmapSuffix)
+                            # only offer button for popup window when floating statusbar is used
                             if str(self.conf.statusbar_floating) == "True":
                                 self.notify_bubble.add_action("action", "Open popup window", self.popwin.PopUp)
-                            self.notify_bubble.show ()
+                            self.notify_bubble.show()
 
                         # if desired pop up status window
                         # sorry but does absolutely not work with windows and systray icon so I prefer to let it be
@@ -2758,11 +2759,15 @@ class Settings(object):
             self.builder.get_object("input_radiobutton_fullscreen").hide()
             self.builder.get_object("input_combo_fullscreen_display").hide()
             self.builder.get_object("label_fullscreen_display").hide()
+            self.builder.get_object("input_checkbutton_notification_desktop").hide()
+
+        # as of now there is no notification in Windows so disable it
+        if platform.system() == "Windows":
+            self.builder.get_object("input_checkbutton_notification_desktop").hide()
 
         # libnotify-based desktop notification probably only available on Linux
-        if not platform.system() in ["Darwin", "Windows"]:
-            if not sys.modules.has_key("pynotify"):
-                self.builder.get_object("input_checkbutton_notification_desktop").hide()
+        if not sys.modules.has_key("pynotify"):
+            self.builder.get_object("input_checkbutton_notification_desktop").hide()
 
         # this should not be necessary, but for some reason the number of hours is 10 in unitialized state... :-(
         spinbutton = self.builder.get_object("input_spinbutton_defaults_downtime_duration_hours")
