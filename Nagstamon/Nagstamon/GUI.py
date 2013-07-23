@@ -1096,8 +1096,8 @@ class GUI(object):
                             if ducuw[3] > 0 : trouble += ducuw[3] + " "
                             if ducuw[4] > 0 : trouble += ducuw[4]
                             self.notify_bubble = pynotify.Notification ("Nagstamon", trouble, self.Resources + os.sep + "nagstamon" + self.BitmapSuffix)
-
-                            self.notify_bubble.add_action("action", "Open popup window", self.popwin.PopUp)
+                            if str(self.conf.statusbar_floating) == "True":
+                                self.notify_bubble.add_action("action", "Open popup window", self.popwin.PopUp)
                             self.notify_bubble.show ()
 
                         # if desired pop up status window

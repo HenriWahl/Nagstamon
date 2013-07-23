@@ -360,12 +360,14 @@ class IcingaServer(GenericServer):
                                 self.new_hosts[new_host].acknowledged = n["acknowledged"]
                                 self.new_hosts[new_host].scheduled_downtime = n["scheduled_downtime"]
                                 self.new_hosts[new_host].status_type = status_type
+                            # some cleanup
+                            del tds, n
                     except:
                         self.Error(sys.exc_info())
 
                 # do some cleanup
                 htobj.decompose()
-                del htobj, trs, tds, table
+                del htobj, trs, table
 
         except:
                 # set checking flag back to False
@@ -479,12 +481,14 @@ class IcingaServer(GenericServer):
                                 self.new_hosts[n["host"]].services[new_service].flapping = n["flapping"]
                                 self.new_hosts[n["host"]].services[new_service].acknowledged = n["acknowledged"]
                                 self.new_hosts[n["host"]].services[new_service].scheduled_downtime = n["scheduled_downtime"]
+                            # some cleanup
+                            del tds, n
                     except:
                         self.Error(sys.exc_info())
 
                 # do some cleanup
                 htobj.decompose()
-                del htobj, trs, tds, table
+                del htobj, trs, table
 
         except:
             # set checking flag back to False
