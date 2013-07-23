@@ -61,9 +61,15 @@ class IcingaServer(GenericServer):
             if self.version.__dict__.has_key("contents"):
                 self.version = self.version.contents[0].split("Icinga ")[1]
         elif tacraw.startswith("{"):
-            jsondict = json.loads(tacraw)
-            self.version = jsondict["cgi_json_version"]
-            self.json = True
+            # there seem to be problems with Icinga < 1.6
+            # in case JSON parsing crashes fall back to HTML
+            try:
+                jsondict = json.loads(tacraw)
+                self.version = jsondict["cgi_json_version"]
+                self.json = True
+            except:
+                self.version = "1.6"
+                self.json = False
 
 
     def init_config(self):

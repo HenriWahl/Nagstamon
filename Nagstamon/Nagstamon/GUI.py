@@ -2001,11 +2001,14 @@ class Popwin(object):
         """
         # the popwin should always pop up near the systray/desktop status bar, therefore we
         # need to find out its position
-        # get x0 and y0 - workaround for gtk trayicon because self.statusbar as trayicon
-        # cannot get its absolute position, so we need to get pointers position relative
-        # to root window and to trayicon and subtract them and save the values in the
-        # self.statusbar object to avoid jumping popwin in case it is open, the status
-        # refreshed and the pointer has moved
+        # get dimensions of statusbar
+        if str(self.conf.icon_in_systray) == "True":
+            statusbarwidth, statusbarheight = 25, 25
+        else:
+            statusbarwidth, statusbarheight = self.output.statusbar.StatusBar.get_size()
+            # to avoid jumping popwin when statusbar changes dimensions set width fixed
+            statusbarwidth = 320
+
         if self.calculate_coordinates == True:
             # check if icon in systray or statusbar
             if str(self.conf.icon_in_systray) == "True":
@@ -2023,16 +2026,11 @@ class Popwin(object):
                 self.output.current_monitor = self.output.statusbar.StatusBar.get_screen().get_monitor_at_point(mousex, mousey)
                 statusbarx0 = mousex - statusbar_mousex
                 statusbary0 = mousey - statusbar_mousey
-
             else:
-                mousex, mousey, foo = self.output.statusbar.StatusBar.get_screen().get_root_window().get_pointer()
-
+                statusbarx0, statusbary0 = self.output.statusbar.StatusBar.get_position()
                 # set monitor for later applying the correct monitor geometry
-                self.output.current_monitor = self.output.statusbar.StatusBar.get_screen().get_monitor_at_point(mousex, mousey)
-                statusbar_mousex, statusbar_mousey = self.output.statusbar.StatusBar.get_pointer()
-                statusbarx0 = mousex - statusbar_mousex
-                statusbary0 = mousey - statusbar_mousey
-
+                self.output.current_monitor = self.output.statusbar.StatusBar.get_screen().get_monitor_at_point(\
+                                              statusbarx0+statusbarwidth/2, statusbary0+statusbarheight/2)
                 # save trayicon x0 and y0 in self.statusbar
                 self.output.statusbar.StatusBar.x0 = statusbarx0
                 self.output.statusbar.StatusBar.y0 = statusbary0
@@ -2048,14 +2046,6 @@ class Popwin(object):
         # get current monitor's settings
         # screeny0 might be important on more-than-one-monitor-setups where it will not be 0
         screenx0, screeny0, screenwidth, screenheight = self.output.monitors[self.output.current_monitor]
-
-        # get dimensions of statusbar
-        if str(self.conf.icon_in_systray) == "True":
-            statusbarwidth, statusbarheight = 25, 25
-        else:
-            statusbarwidth, statusbarheight = self.output.statusbar.StatusBar.get_size()
-            # to avoid jumping popwin when statusbar changes dimensions set width fixed
-            statusbarwidth = 320
 
         # limit size of treeview
         treeviewwidth, treeviewheight = self.ScrolledVBox.size_request()
