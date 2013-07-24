@@ -2916,7 +2916,7 @@ class Settings(object):
             self.builder.get_object("input_checkbutton_notification_desktop").hide()
         # appindicator option is not needed on non-Ubuntuesque systems
         if not sys.modules.has_key("appindicator"):
-            self.builder.get_object("input_checkbutton_appindicator").hide()
+            self.builder.get_object("input_radiobutton_appindicator").hide()
 
         # this should not be necessary, but for some reason the number of hours is 10 in unitialized state... :-(
         spinbutton = self.builder.get_object("input_spinbutton_defaults_downtime_duration_hours")
