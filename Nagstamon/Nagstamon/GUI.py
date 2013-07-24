@@ -3086,11 +3086,12 @@ class Settings(object):
             else:
                 self.output.statusbar.SysTray.set_visible(False)
 
-            if str(self.conf.appindicator) == "True":
-                #self.output.appindicator.Indicator.set_status(appindicator.STATUS_ATTENTION)
-                self.output.appindicator.OK()
-            else:
-                self.output.appindicator.Indicator.set_status(appindicator.STATUS_PASSIVE)
+            # only if appindicator module exists
+            if sys.modules.has_key("appindicator"):
+                if str(self.conf.appindicator) == "True":
+                    self.output.appindicator.OK()
+                else:
+                    self.output.appindicator.Indicator.set_status(appindicator.STATUS_PASSIVE)
 
             # in Windows the statusbar with gtk.gdk.WINDOW_TYPE_HINT_UTILITY places itself somewhere
             # this way it should be disciplined
