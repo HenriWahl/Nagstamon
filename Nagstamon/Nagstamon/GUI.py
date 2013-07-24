@@ -2904,12 +2904,12 @@ class Settings(object):
             self.builder.get_object("input_combo_fullscreen_display").hide()
             self.builder.get_object("label_fullscreen_display").hide()
             self.builder.get_object("input_checkbutton_notification_desktop").hide()
-            self.builder.get_object("input_checkbutton_appindicator").hide()
+            self.builder.get_object("input_radiobutton_appindicator").hide()
 
         # as of now there is no notification in Windows so disable it
         if platform.system() == "Windows":
             self.builder.get_object("input_checkbutton_notification_desktop").hide()
-            self.builder.get_object("input_checkbutton_appindicator").hide()
+            self.builder.get_object("input_radiobutton_appindicator").hide()
 
         # libnotify-based desktop notification probably only available on Linux
         if not sys.modules.has_key("pynotify"):
