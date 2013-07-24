@@ -521,6 +521,9 @@ class Notification(threading.Thread):
                 if self.output.statusbar.isShowingError == False:
                     # check again because in the mean time this flag could have been changed by NotificationOff()
                     gobject.idle_add(self.output.statusbar.Flash)
+            # Ubuntu AppIndicator simulates flashing by brute force
+            if str(self.conf.appindicator) == "True":
+                gobject.idle_add(self.output.appindicator.Flash)
             # if wanted play notification sound, if it should be repeated every minute (2*interval/0.5=interval) do so.
             if str(self.conf.notification_sound) == "True":
                 if soundcount == 0:

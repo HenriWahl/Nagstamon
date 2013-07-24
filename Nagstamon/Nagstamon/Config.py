@@ -116,6 +116,7 @@ class Config(object):
         #self.statusbar_systray = False
         self.statusbar_floating = True
         self.icon_in_systray = False
+        self.appindicator = False
         self.fullscreen = False
         self.fullscreen_display = 0
         self.systray_popup_offset= 10
