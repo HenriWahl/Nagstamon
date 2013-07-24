@@ -41,6 +41,12 @@ try:
 except:
     pass
 
+# testing Ubuntu AppIndicator support
+try:
+    import appindicator
+except:
+    pass
+
 # needed for actions e.g. triggered by pressed buttons
 from Nagstamon import Config
 from Nagstamon import Actions
