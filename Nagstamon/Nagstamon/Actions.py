@@ -523,7 +523,8 @@ class Notification(threading.Thread):
                     gobject.idle_add(self.output.statusbar.Flash)
             # Ubuntu AppIndicator simulates flashing by brute force
             if str(self.conf.appindicator) == "True":
-                gobject.idle_add(self.output.appindicator.Flash)
+                if self.output.appindicator.Flashing == True:
+                    gobject.idle_add(self.output.appindicator.Flash)
             # if wanted play notification sound, if it should be repeated every minute (2*interval/0.5=interval) do so.
             if str(self.conf.notification_sound) == "True":
                 if soundcount == 0:
@@ -626,7 +627,8 @@ class Action(threading.Thread):
             # see what action to take
             if action_type == "browser":
                 # make string ready for URL
-                string = self._URLify(string)
+                # should not be needed for browsers, see https://github.com/HenriWahl/Nagstamon/issues/34
+                ###string = self._URLify(string)
                 # debug
                 if str(self.conf.debug_mode) == "True":
                     self.server.Debug(server=self.server.name, host=self.host, service=self.service, debug="ACTION: Browser " + string)

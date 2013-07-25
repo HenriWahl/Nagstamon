@@ -1621,7 +1621,7 @@
                         <property name="n_rows">2</property>
                         <child>
                           <object class="GtkCheckButton" id="input_checkbutton_notification_flashing">
-                            <property name="label" translatable="yes">Flashing statusbar and systray icon</property>
+                            <property name="label" translatable="yes">Flashing statusbar/appindicator/systray icon</property>
                             <property name="visible">True</property>
                             <property name="can_focus">False</property>
                             <property name="receives_default">False</property>
@@ -1878,6 +1878,9 @@
                                         <property name="top_attach">2</property>
                                         <property name="bottom_attach">3</property>
                                       </packing>
+                                    </child>
+                                    <child>
+                                      <placeholder/>
                                     </child>
                                     <child>
                                       <placeholder/>
@@ -2355,6 +2358,9 @@
                         <property name="top_attach">7</property>
                         <property name="bottom_attach">8</property>
                       </packing>
+                    </child>
+                    <child>
+                      <placeholder/>
                     </child>
                     <child>
                       <placeholder/>

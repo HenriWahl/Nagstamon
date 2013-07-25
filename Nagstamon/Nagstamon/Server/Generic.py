@@ -749,7 +749,7 @@ class GenericServer(object):
 
         if status.error != "":
             # ask for password if authorization failed
-            print "error: " + status.error
+            print "Error: " + status.error
             if "HTTP Error 401" in status.error or \
                "HTTP Error 403" in status.error or \
                "HTTP Error 500" in status.error or \

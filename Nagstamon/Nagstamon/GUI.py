@@ -371,9 +371,9 @@ class GUI(object):
                     self.popwin.ServerVBoxes[server.get_name()].show()
                     self.popwin.ServerVBoxes[server.get_name()].set_visible(True)
                     self.popwin.ServerVBoxes[server.get_name()].set_no_show_all(False)
-
-                    # if needed show auth line:
-                    if server.refresh_authentication == True and server.use_autologin == False:
+                    # if needed show auth line
+                    # Centreon autologin could be set in Settings dialog
+                    if server.refresh_authentication == True and str(server.use_autologin) == "False":
                         self.popwin.ServerVBoxes[server.get_name()].HBoxAuth.set_no_show_all(False)
                         self.popwin.ServerVBoxes[server.get_name()].HBoxAuth.show_all()
                         if self.popwin.ServerVBoxes[server.get_name()].AuthEntryUsername.get_text() == "":
@@ -526,7 +526,9 @@ class GUI(object):
                     self.popwin.UpdateStatus(server)
 
                 except:
-                    server.Error(sys.exc_info())
+                    import traceback
+                    #traceback.print_exc(file=sys.stdout)
+                    #server.Error(sys.exc_info())
 
         if str(self.conf.fullscreen) == "False":
             self.popwin.Resize()
@@ -546,6 +548,18 @@ class GUI(object):
             # set systray icon to green aka OK
             if str(self.conf.icon_in_systray) == "True":
                 self.statusbar.SysTray.set_from_pixbuf(self.statusbar.SYSTRAY_ICONS["green"])
+
+            if str(self.conf.appindicator) == "True" and sys.modules.has_key("appindicator"):
+                # greenify status icon
+                self.appindicator.Indicator.set_attention_icon(self.Resources + os.sep + "nagstamon_green" + self.BitmapSuffix)
+                self.appindicator.Indicator.set_status(appindicator.STATUS_ATTENTION)
+                # disable all unneeded menu entries
+                self.appindicator.Menu_OK.hide()
+                self.appindicator.Menu_WARNING.hide()
+                self.appindicator.Menu_UNKNOWN.hide()
+                self.appindicator.Menu_CRITICAL.hide()
+                self.appindicator.Menu_UNREACHABLE.hide()
+                self.appindicator.Menu_DOWN.hide()
 
             # switch notification off
             self.NotificationOff()
@@ -587,6 +601,11 @@ class GUI(object):
                 self.statusbar.statusbar_labeltext_inverted = self.statusbar.statusbar_labeltext_inverted + '<span size="' + str(self.fontsize) + '" background="' + str(self.conf.color_error_text) + '" foreground="' + str(self.conf.color_error_background) + '"> ' + str(errors) + ' </span>'
                 color = "error"
 
+            if str(self.conf.appindicator) == "True" and sys.modules.has_key("appindicator"):
+                # set new icon
+                self.appindicator.Indicator.set_attention_icon(self.Resources + os.sep + "nagstamon_error" + self.BitmapSuffix)
+                self.appindicator.Indicator.set_status(appindicator.STATUS_ATTENTION)
+
             # put text into label in statusbar, only if not already flashing
             if self.statusbar.Flashing == False:
                 self.statusbar.Label.set_markup(self.statusbar.statusbar_labeltext)
@@ -604,6 +623,41 @@ class GUI(object):
 
             if str(self.conf.icon_in_systray) == "True":
                 self.statusbar.SysTray.set_from_pixbuf(self.statusbar.SYSTRAY_ICONS[color])
+
+            if str(self.conf.appindicator) == "True" and sys.modules.has_key("appindicator"):
+                # enable/disable menu entries depending on existence of problems
+                if warnings > 0:
+                    self.appindicator.Menu_WARNING.set_label(str(warnings) + " WARNING")
+                    self.appindicator.Menu_WARNING.show()
+                else:
+                    self.appindicator.Menu_WARNING.hide()
+                if unknowns > 0:
+                    self.appindicator.Menu_UNKNOWN.set_label(str(unknowns) + " UNKNOWN")
+                    self.appindicator.Menu_UNKNOWN.show()
+                else:
+                    self.appindicator.Menu_UNKNOWN.hide()
+                if criticals > 0:
+                    self.appindicator.Menu_CRITICAL.set_label(str(criticals) + " CRITICAL")
+                    self.appindicator.Menu_CRITICAL.show()
+                else:
+                    self.appindicator.Menu_CRITICAL.hide()
+                if unreachables > 0:
+                    self.appindicator.Menu_UNREACHABLE.set_label(str(unreachables) + " UNREACHABLE")
+                    self.appindicator.Menu_UNREACHABLE.show()
+                else:
+                    self.appindicator.Menu_UNREACHABLE.hide()
+                if downs > 0:
+                    self.appindicator.Menu_DOWN.set_label(str(downs) + " DOWNS")
+                    self.appindicator.Menu_DOWN.show()
+                else:
+                    self.appindicator.Menu_DOWN.hide()
+
+                # show nenu entry to acknowledge the notification
+                self.appindicator.Menu_OK.show()
+
+                # set new icon
+                self.appindicator.Indicator.set_attention_icon(self.Resources + os.sep + "nagstamon_" + color + self.BitmapSuffix)
+                self.appindicator.Indicator.set_status(appindicator.STATUS_ATTENTION)
 
             # if there has been any status change notify user
             # first find out which of all servers states is the worst similar to nagstamonObjects.GetStatus()
@@ -1093,6 +1147,8 @@ class GUI(object):
                                 self.statusbar.SysTray.set_blinking(True)
                             elif  str(self.conf.statusbar_floating) == "True":
                                 self.statusbar.Flashing = True
+                            elif str(self.conf.appindicator) == "True":
+                                self.appindicator.Flashing = True
 
                         notify = Actions.Notification(output=self, sound=status, Resources=self.Resources, conf=self.conf, servers=self.servers)
                         notify.start()
@@ -1111,53 +1167,7 @@ class GUI(object):
                                 self.notify_bubble.add_action("action", "Open popup window", self.popwin.PopUp)
                             self.notify_bubble.show()
 
-                        # playing with Ubuntu AppIndicator
-                        if str(self.conf.appindicator) == "True":
-                            # default OK color
-                            color = "green"
-
-                            # enable/disable menu entries depending on existence of problems
-                            if ducuw[4] != 0:
-                                color = "yellow"
-                                self.appindicator.Menu_WARNING.set_label(ducuw[4])
-                                self.appindicator.Menu_WARNING.show()
-                            else:
-                                self.appindicator.Menu_WARNING.hide()
-                            if ducuw[3] != 0:
-                                color = "orange"
-                                self.appindicator.Menu_UNKNOWN.set_label(ducuw[3])
-                                self.appindicator.Menu_UNKNOWN.show()
-                            else:
-                                self.appindicator.Menu_UNKNOWN.hide()
-                            if ducuw[2] != 0:
-                                color = "red"
-                                self.appindicator.Menu_CRITICAL.set_label(ducuw[2])
-                                self.appindicator.Menu_CRITICAL.show()
-                            else:
-                                self.appindicator.Menu_CRITICAL.hide()
-                            if ducuw[2] != 0:
-                                color = "darkred"
-                                self.appindicator.Menu_UNREACHABLE.set_label(ducuw[1])
-                                self.appindicator.Menu_UNREACHABLE.show()
-                            else:
-                                self.appindicator.Menu_UNREACHABLE.hide()
-                            if ducuw[0] != 0:
-                                color = "black"
-                                self.appindicator.Menu_DOWN.set_label(ducuw[0])
-                                self.appindicator.Menu_DOWN.show()
-                            else:
-                                self.appindicator.Menu_DOWN.hide()
-
-                            ## use color to see if there is a need for OK menu entry
-                            if color != "green":
-                                self.appindicator.Menu_OK.show()
-                            else:
-                                self.appindicator.Menu_OK.hide()
-
-                            self.appindicator.Indicator.set_attention_icon(self.Resources + os.sep + "nagstamon_" + color + self.BitmapSuffix)
-                            self.appindicator.Flash()
-
-                        # if desired pop up status window
+                         # if desired pop up status window
                         # sorry but does absolutely not work with windows and systray icon so I prefer to let it be
                         #if str(self.conf.notification_popup) == "True":
                         #    self.popwin.showPopwin = True
@@ -1174,7 +1184,7 @@ class GUI(object):
             self.Notifying = False
             # debug
             if str(self.conf.debug_mode) == "True":
-                self.servers.values()[0].Debug(debug="Notification on.")
+                self.servers.values()[0].Debug(debug="Notification off.")
             if  str(self.conf.icon_in_systray) == "True":
                 self.statusbar.SysTray.set_blinking(False)
             elif  str(self.conf.statusbar_floating) == "True":
@@ -1182,6 +1192,9 @@ class GUI(object):
                 self.statusbar.Label.set_markup(self.statusbar.statusbar_labeltext)
                 # resize statusbar to avoid artefact when showing error
                 self.statusbar.Resize()
+            elif str(self.conf.appindicator) == "True" and sys.modules.has_key("appindicator"):
+                self.appindicator.Flashing = False
+                self.appindicator.Indicator.set_status(appindicator.STATUS_ATTENTION)
 
 
     def RecheckAll(self, widget=None):
@@ -2102,9 +2115,9 @@ class Popwin(object):
                 self.output.current_monitor = self.output.appindicator.Menu_Nagstamon.get_screen().get_monitor_at_point(mousex, mousey)
                 # maybe more confusing but for not having rewrite too much code the statusbar*0 variables
                 # are reused here
-                statusbarx0, statusbary0, screenwidth, screenheight = self.output.monitors[self.output.current_monitor]
+                self.popwinx0, dummy, screenwidth, dummy = self.output.monitors[self.output.current_monitor]
                 # putting the "statusbar" into the farest right edge of the screen to get the popwin into that corner
-                statusbarx0 = screenwidth + statusbarx0
+                self.popwinx0 = screenwidth + self.popwinx0
             else:
                 # use previously saved values for x0 and y0 in case popwin is still/already open
                 statusbarx0 = self.output.statusbar.StatusBar.x0
@@ -2128,8 +2141,8 @@ class Popwin(object):
             # avoid silly scrollbar
             treeviewheight += self.heightbuffer_internal
 
-        # after having determined dimensions of scrolling area apply them
-        self.ScrolledWindow.set_size_request(treeviewwidth, treeviewheight)
+        #### after having determined dimensions of scrolling area apply them
+        ###self.ScrolledWindow.set_size_request(treeviewwidth, treeviewheight)
 
         # care about the height of the buttons
         self.popwinwidth, self.popwinheight = treeviewwidth, treeviewheight + self.buttonsheight
@@ -2142,43 +2155,52 @@ class Popwin(object):
         if str(self.conf.appindicator) == "True":
             if self.popwinwidth > screenwidth - 100:
                 self.popwinwidth = screenwidth - 100
-        elif self.popwinwidth > screenwidth:
-            self.popwinwidth = screenwidth
-
-        # if statusbar/trayicon stays in upper half of screen, popwin pops up BELOW statusbar/trayicon
-        if (statusbary0 + statusbarheight - screeny0) < (screenheight / 2):
-            # if popwin is too large it gets cut at lower end of screen
-            if (statusbary0 + self.popwinheight + statusbarheight) > screenheight:
-                treeviewheight = screenheight - (statusbary0 + statusbarheight + self.buttonsheight) + screeny0
-                self.popwinheight = screenheight - statusbarheight - statusbary0 + screeny0
-                self.popwiny0 = statusbary0 + statusbarheight
-            # else do not relate to screen dimensions but own widgets ones
-            else:
-                self.popwinheight = treeviewheight + self.buttonsheight
-                self.popwiny0 = statusbary0 + statusbarheight
-
-        # if it stays in lower half of screen, popwin pops up ABOVE statusbar/trayicon
+            # fixed x0 coordinate
+            self.popwinx0 = screenwidth - self.popwinwidth + screenx0
+            # make room for menu bar of Ubuntu
+            if self.popwinheight >= screenheight:
+                treeviewheight += -25
+                self.popwinheight += -25
+            # place popup unfer menu bar in Ubuntu
+            self.popwiny0 = screeny0 + 25
         else:
-            # if popwin is too large it gets cut at 0
-            if (statusbary0 - self.popwinheight - self.heightbuffer_external) <= screeny0:
-                treeviewheight = statusbary0 - self.buttonsheight - statusbarheight - screeny0 - self.heightbuffer_internal
-                self.popwinheight = statusbary0 - screeny0 - self.heightbuffer_external
-                self.popwiny0 = screeny0 + self.heightbuffer_external
-            # otherwise use own widgets for sizing
+            if self.popwinwidth > screenwidth:
+                self.popwinwidth = screenwidth
+
+            # if statusbar/trayicon stays in upper half of screen, popwin pops up BELOW statusbar/trayicon
+            if (statusbary0 + statusbarheight - screeny0) < (screenheight / 2):
+                # if popwin is too large it gets cut at lower end of screen
+                if (statusbary0 + self.popwinheight + statusbarheight) > screenheight:
+                    treeviewheight = screenheight - (statusbary0 + statusbarheight + self.buttonsheight) + screeny0
+                    self.popwinheight = screenheight - statusbarheight - statusbary0 + screeny0
+                    self.popwiny0 = statusbary0 + statusbarheight
+                # else do not relate to screen dimensions but own widgets ones
+                else:
+                    self.popwinheight = treeviewheight + self.buttonsheight
+                    self.popwiny0 = statusbary0 + statusbarheight
+
+            # if it stays in lower half of screen, popwin pops up ABOVE statusbar/trayicon
             else:
-                self.popwinheight = treeviewheight + self.buttonsheight
-                self.popwiny0 = statusbary0 - self.popwinheight
+                # if popwin is too large it gets cut at 0
+                if (statusbary0 - self.popwinheight - self.heightbuffer_external) <= screeny0:
+                    treeviewheight = statusbary0 - self.buttonsheight - statusbarheight - screeny0 - self.heightbuffer_internal
+                    self.popwinheight = statusbary0 - screeny0 - self.heightbuffer_external
+                    self.popwiny0 = screeny0 + self.heightbuffer_external
+                # otherwise use own widgets for sizing
+                else:
+                    self.popwinheight = treeviewheight + self.buttonsheight
+                    self.popwiny0 = statusbary0 - self.popwinheight
+
+            # decide x position of popwin
+            if (statusbarx0) + statusbarwidth / 2 + (self.popwinwidth) / 2 > (screenwidth + screenx0):
+                self.popwinx0 = screenwidth - self.popwinwidth + screenx0
+            elif (statusbarx0 + statusbarwidth / 2)- self.popwinwidth / 2 < screenx0:
+                self.popwinx0 = screenx0
+            else:
+                self.popwinx0 = statusbarx0 + (screenx0 + statusbarwidth) / 2 - (self.popwinwidth + screenx0) / 2
 
         # after having determined dimensions of scrolling area apply them
         self.ScrolledWindow.set_size_request(treeviewwidth, treeviewheight)
-
-        # decide x position of popwin
-        if (statusbarx0) + statusbarwidth / 2 + (self.popwinwidth) / 2 > (screenwidth + screenx0):
-            self.popwinx0 = screenwidth - self.popwinwidth + screenx0
-        elif (statusbarx0 + statusbarwidth / 2)- self.popwinwidth / 2 < screenx0:
-            self.popwinx0 = screenx0
-        else:
-            self.popwinx0 = statusbarx0 + (screenx0 + statusbarwidth) / 2 - (self.popwinwidth + screenx0) / 2
 
         # set size request of popwin
         self.Window.set_size_request(self.popwinwidth, self.popwinheight)
@@ -2607,6 +2629,9 @@ class ServerVBox(gtk.VBox):
         self.HBoxAuth.hide_all()
         self.HBoxAuth.set_no_show_all(True)
 
+        # refresh server label
+        self.Label.set_markup('<span weight="bold" size="large">' + server.get_username() + "@" + server.get_name() + '</span>')
+
         server.status = "Trying to reauthenticate..."
         server.status_description = ""
         self.output.popwin.UpdateStatus(server)
@@ -2682,6 +2707,9 @@ class AppIndicator(object):
             self.Indicator.set_status(appindicator.STATUS_ACTIVE)
         else:
             self.Indicator.set_status(appindicator.STATUS_PASSIVE)
+
+        # flash flag evaluated in notification thread
+        self.Flashing = False
 
 
     def Flash(self):
@@ -3591,7 +3619,7 @@ class GenericServer(object):
         if not is_active:
             item.set_text("")
 
-	#disable save password
+	    #disable save password
         item = self.builder.get_object("input_checkbutton_save_password")
         item.set_active( False )
         item.set_sensitive( not is_active )
@@ -4218,7 +4246,6 @@ class AuthenticationDialog:
 
 
     def Exit(self, widget):
-        gtk.main_quit()
         sys.exit()
 
 
