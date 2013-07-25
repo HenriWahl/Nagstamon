@@ -500,8 +500,7 @@ class GenericServer(object):
                     trs = tbody('tr', recursive=False)
 
                 # do some cleanup
-                htobj.decompose()
-                del result, htobj, error
+                del result, error
 
                 # kick out table heads
                 trs.pop(0)
@@ -585,12 +584,13 @@ class GenericServer(object):
                                 self.new_hosts[new_host].acknowledged = n["acknowledged"]
                                 self.new_hosts[new_host].scheduled_downtime = n["scheduled_downtime"]
                                 self.new_hosts[new_host].status_type = status_type
-                        del n
+                            del tds, n
                     except:
                         self.Error(sys.exc_info())
 
                 # do some cleanup
-                del trs, tds, table
+                htobj.decompose()
+                del htobj, trs, table
 
         except:
             # set checking flag back to False
@@ -616,8 +616,7 @@ class GenericServer(object):
                     tbody = table('tbody')[0]
                     trs = tbody('tr', recursive=False)
 
-                htobj.decompose()
-                del result, htobj, error
+                del result, error
 
                 # kick out table heads
                 trs.pop(0)
@@ -707,12 +706,13 @@ class GenericServer(object):
                                 self.new_hosts[n["host"]].services[new_service].acknowledged = n["acknowledged"]
                                 self.new_hosts[n["host"]].services[new_service].scheduled_downtime = n["scheduled_downtime"]
                                 self.new_hosts[n["host"]].services[new_service].status_type = status_type
-                            del n
+                            del tds, n
                     except:
                         self.Error(sys.exc_info())
 
                 # do some cleanup
-                del trs, tds, table
+                htobj.decompose()
+                del htobj, trs, table
 
         except:
             # set checking flag back to False

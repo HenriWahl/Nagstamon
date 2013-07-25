@@ -435,7 +435,7 @@ class CheckForNewVersion(threading.Thread):
                 # debug
                 if str(self.output.conf.debug_mode) == "True":
                     # once again taking .Debug() from first server
-                    self.servers.values()[0].Debug(debug="Latest version from sourceforge.net: " + str(version))
+                    self.servers.values()[0].Debug(debug="Latest version: " + str(version))
 
                 # if we got a result notify user
                 if error == "":
@@ -521,6 +521,9 @@ class Notification(threading.Thread):
                 if self.output.statusbar.isShowingError == False:
                     # check again because in the mean time this flag could have been changed by NotificationOff()
                     gobject.idle_add(self.output.statusbar.Flash)
+            # Ubuntu AppIndicator simulates flashing by brute force
+            if str(self.conf.appindicator) == "True":
+                gobject.idle_add(self.output.appindicator.Flash)
             # if wanted play notification sound, if it should be repeated every minute (2*interval/0.5=interval) do so.
             if str(self.conf.notification_sound) == "True":
                 if soundcount == 0:

@@ -61,9 +61,15 @@ class IcingaServer(GenericServer):
             if self.version.__dict__.has_key("contents"):
                 self.version = self.version.contents[0].split("Icinga ")[1]
         elif tacraw.startswith("{"):
-            jsondict = json.loads(tacraw)
-            self.version = jsondict["cgi_json_version"]
-            self.json = True
+            # there seem to be problems with Icinga < 1.6
+            # in case JSON parsing crashes fall back to HTML
+            try:
+                jsondict = json.loads(tacraw)
+                self.version = jsondict["cgi_json_version"]
+                self.json = True
+            except:
+                self.version = "1.6"
+                self.json = False
 
 
     def init_config(self):
@@ -264,8 +270,7 @@ class IcingaServer(GenericServer):
                 table = htobj('table', {'class': 'status'})[0]
 
                 # do some cleanup
-                htobj.decompose()
-                del result, htobj, error
+                del result, error
 
                 # access table rows
                 # some Icinga versions have a <tbody> tag in cgi output HTML which
@@ -355,11 +360,14 @@ class IcingaServer(GenericServer):
                                 self.new_hosts[new_host].acknowledged = n["acknowledged"]
                                 self.new_hosts[new_host].scheduled_downtime = n["scheduled_downtime"]
                                 self.new_hosts[new_host].status_type = status_type
+                            # some cleanup
+                            del tds, n
                     except:
                         self.Error(sys.exc_info())
 
                 # do some cleanup
-                del trs, tds, table
+                htobj.decompose()
+                del htobj, trs, table
 
         except:
                 # set checking flag back to False
@@ -386,8 +394,7 @@ class IcingaServer(GenericServer):
                     trs = tbody('tr', recursive=False)
 
                 # do some cleanup
-                htobj.decompose()
-                del result, htobj, error
+                del result, error
 
                 # kick out table heads
                 trs.pop(0)
@@ -474,11 +481,14 @@ class IcingaServer(GenericServer):
                                 self.new_hosts[n["host"]].services[new_service].flapping = n["flapping"]
                                 self.new_hosts[n["host"]].services[new_service].acknowledged = n["acknowledged"]
                                 self.new_hosts[n["host"]].services[new_service].scheduled_downtime = n["scheduled_downtime"]
+                            # some cleanup
+                            del tds, n
                     except:
                         self.Error(sys.exc_info())
 
                 # do some cleanup
-                del table, trs, tds
+                htobj.decompose()
+                del htobj, trs, table
 
         except:
             # set checking flag back to False

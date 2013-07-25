@@ -74,6 +74,7 @@ class Config(object):
         self.check_for_new_version = True
         self.notification = True
         self.notification_flashing = True
+        self.notification_desktop = False
         # because of nonexistent windows systray popup support I'll let it be now
         #self.notification_popup = False
         self.notification_sound = True
@@ -119,6 +120,7 @@ class Config(object):
         #self.statusbar_systray = False
         self.statusbar_floating = True
         self.icon_in_systray = False
+        self.appindicator = False
         self.fullscreen = False
         self.fullscreen_display = 0
         self.systray_popup_offset= 10

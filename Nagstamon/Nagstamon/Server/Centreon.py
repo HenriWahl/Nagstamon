@@ -116,8 +116,6 @@ class CentreonServer(GenericServer):
             cgi_data = urllib.urlencode({"p":"20106",\
                                          "o":"ah",\
                                          "host_name":host})
-            #result = self.FetchURL(self.monitor_cgi_url + "/main.php?" + cgi_data, giveback="raw")
-            #raw, error = result.result, result.error
             result = self.FetchURL(self.monitor_cgi_url + "/main.php?" + cgi_data, giveback="obj")
             html, error = result.result, result.error
             if error == "":
@@ -571,22 +569,17 @@ class CentreonServer(GenericServer):
     def Hook(self):
         """
         in case count is down get a new SID, just in case
+        was kicked out but as to be seen in https://sourceforge.net/p/nagstamon/bugs/86/ there are problems with older
+        Centreon installations so this should come back
         """
-        # a SIDcount of 300 should make 15 min when being run every 3 secs as it is at
-        # the moment in Actions.RefreshLoopOneServer()
+        # renewing the SID once an hour might be enough
         # maybe this is unnecessary now that we authenticate via login/password, no md5
-
-
-        #This hook generates dozens/hundreds of repeated sessions in Centreon ( > 2.4.0 ) session table to the same user, with the same session_id and diferent id
-        #Either in user/password auth and autologinkey auth it has the same effect.
-        #if self.SIDcount >= 300:
-        #    if str(self.conf.debug_mode) == "True":
-        #        self.Debug(server=self.get_name(), debug="Old SID: " + self.SID + " " + str(self.Cookie))
-        #    self.SID = self._get_sid().result
-        #    if str(self.conf.debug_mode) == "True":
-        #        self.Debug(server=self.get_name(), debug="New SID: " +  self.SID + " " + str(self.Cookie))
-        #    self.SIDcount = 0
-        #else:
-        #    self.SIDcount += 1
-        pass
-
+        if self.SIDcount >= 3600:
+            if str(self.conf.debug_mode) == "True":
+                self.Debug(server=self.get_name(), debug="Old SID: " + self.SID + " " + str(self.Cookie))
+            self.SID = self._get_sid().result
+            if str(self.conf.debug_mode) == "True":
+                self.Debug(server=self.get_name(), debug="New SID: " + self.SID + " " + str(self.Cookie))
+            self.SIDcount = 0
+        else:
+            self.SIDcount += 1

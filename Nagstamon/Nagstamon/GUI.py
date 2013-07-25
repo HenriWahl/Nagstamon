@@ -35,11 +35,17 @@ import os
 import platform
 
 # testing pynotify support
-###try:
-###    import pynotify
-###    pynotify.init("Nagstamon")
-###except:
-###    pass
+try:
+    import pynotify
+    pynotify.init("Nagstamon")
+except:
+    pass
+
+# testing Ubuntu AppIndicator support
+try:
+    import appindicator
+except:
+    pass
 
 # needed for actions e.g. triggered by pressed buttons
 from Nagstamon import Config
@@ -52,7 +58,8 @@ import copy
 
 
 class Sorting(object):
-    """ Sorting persistence purpose class
+    """
+    Sorting persistence purpose class
     Stores tuple pairs in form of:
     (<column_id>, <gtk.SORT_ASCENDING|gtk.SORT_DESCENDING)
     """
@@ -163,19 +170,22 @@ class GUI(object):
             monx0, mony0, monw, monh = self.statusbar.StatusBar.get_screen().get_monitor_geometry(m)
             self.monitors[m] = (monx0, mony0, monw, monh)
 
+        # testing Ubuntu AppIndicator
+        if sys.modules.has_key("appindicator"):
+            self.appindicator = AppIndicator(conf=self.conf, output=self)
+
         # check if statusbar is inside display boundaries
+        # give 5 pixels tolerance to x0 and y0
         # modify x0 and y0 to fit into display
         statusbar_x0, statusbar_y0 = self.statusbar.StatusBar.get_position()
         m = self.statusbar.StatusBar.get_screen().get_monitor_at_point(statusbar_x0, statusbar_y0)
-
         # get max dimensions of current display
         x0, y0, x_max, y_max = self._get_display_dimensions(m)
-
-        if not (x0 <= int(self.conf.position_x)):
+        if not (x0-5 <= int(self.conf.position_x)):
             self.conf.position_x = x0 + 30
         if not int(self.conf.position_x) <= x_max:
             self.conf.position_x = x_max - 50
-        if not (y0 <= int(self.conf.position_y)):
+        if not (y0-5 <= int(self.conf.position_y)):
             self.conf.position_y = y0 + 30
         if not int(self.conf.position_y) <= y_max:
             self.conf.position_y = y_max - 50
@@ -276,8 +286,6 @@ class GUI(object):
                     y_max = self.monitors[m][3] + self.monitors[m][1]
 
         return x0, y0, x_max, y_max
-
-
 
 
     def get_last_sorting(self, server):
@@ -615,7 +623,7 @@ class GUI(object):
                     # reset status of the server for only processing it once
                     server.WorstStatus = "UP"
                 if not worst_status == "UP" and str(self.conf.notification) == "True":
-                    self.NotificationOn(status=worst_status)
+                    self.NotificationOn(status=worst_status, ducuw=(downs, unreachables, criticals, unknowns, warnings))
 
             # set self.showPopwin to True because there is something to show
             self.popwin.showPopwin = True
@@ -1060,9 +1068,10 @@ class GUI(object):
             self.servers.values()[0].Error(sys.exc_info())
 
 
-    def NotificationOn(self, status="UP"):
+    def NotificationOn(self, status="UP", ducuw=None):
         """
             switch on whichever kind of notification
+            ducuw = downs, unreachables, criticals, unknowns, warnings
         """
         try:
             # check if notification for status is wanted
@@ -1088,9 +1097,65 @@ class GUI(object):
                         notify = Actions.Notification(output=self, sound=status, Resources=self.Resources, conf=self.conf, servers=self.servers)
                         notify.start()
 
-                        ### just playing with libnotify
-                        ###notify_bubble = pynotify.Notification ("Nagstamon", "There is some trouble.", "dialog-information")
-                        ###notify_bubble.show ()
+                        # just playing with libnotify
+                        if str(self.conf.notification_desktop) == "True":
+                            trouble = ""
+                            if ducuw[0] > 0 : trouble += ducuw[0] + " "
+                            if ducuw[1] > 0 : trouble += ducuw[1] + " "
+                            if ducuw[2] > 0 : trouble += ducuw[2] + " "
+                            if ducuw[3] > 0 : trouble += ducuw[3] + " "
+                            if ducuw[4] > 0 : trouble += ducuw[4]
+                            self.notify_bubble = pynotify.Notification ("Nagstamon", trouble, self.Resources + os.sep + "nagstamon" + self.BitmapSuffix)
+                            # only offer button for popup window when floating statusbar is used
+                            if str(self.conf.statusbar_floating) == "True":
+                                self.notify_bubble.add_action("action", "Open popup window", self.popwin.PopUp)
+                            self.notify_bubble.show()
+
+                        # playing with Ubuntu AppIndicator
+                        if str(self.conf.appindicator) == "True":
+                            # default OK color
+                            color = "green"
+
+                            # enable/disable menu entries depending on existence of problems
+                            if ducuw[4] != 0:
+                                color = "yellow"
+                                self.appindicator.Menu_WARNING.set_label(ducuw[4])
+                                self.appindicator.Menu_WARNING.show()
+                            else:
+                                self.appindicator.Menu_WARNING.hide()
+                            if ducuw[3] != 0:
+                                color = "orange"
+                                self.appindicator.Menu_UNKNOWN.set_label(ducuw[3])
+                                self.appindicator.Menu_UNKNOWN.show()
+                            else:
+                                self.appindicator.Menu_UNKNOWN.hide()
+                            if ducuw[2] != 0:
+                                color = "red"
+                                self.appindicator.Menu_CRITICAL.set_label(ducuw[2])
+                                self.appindicator.Menu_CRITICAL.show()
+                            else:
+                                self.appindicator.Menu_CRITICAL.hide()
+                            if ducuw[2] != 0:
+                                color = "darkred"
+                                self.appindicator.Menu_UNREACHABLE.set_label(ducuw[1])
+                                self.appindicator.Menu_UNREACHABLE.show()
+                            else:
+                                self.appindicator.Menu_UNREACHABLE.hide()
+                            if ducuw[0] != 0:
+                                color = "black"
+                                self.appindicator.Menu_DOWN.set_label(ducuw[0])
+                                self.appindicator.Menu_DOWN.show()
+                            else:
+                                self.appindicator.Menu_DOWN.hide()
+
+                            ## use color to see if there is a need for OK menu entry
+                            if color != "green":
+                                self.appindicator.Menu_OK.show()
+                            else:
+                                self.appindicator.Menu_OK.hide()
+
+                            self.appindicator.Indicator.set_attention_icon(self.Resources + os.sep + "nagstamon_" + color + self.BitmapSuffix)
+                            self.appindicator.Flash()
 
                         # if desired pop up status window
                         # sorry but does absolutely not work with windows and systray icon so I prefer to let it be
@@ -1101,7 +1166,7 @@ class GUI(object):
             self.servers.values()[0].Error(sys.exc_info())
 
 
-    def NotificationOff(self):
+    def NotificationOff(self, widget=None):
         """
             switch off whichever kind of notification
         """
@@ -1883,8 +1948,8 @@ class Popwin(object):
                 gobject.idle_add(self.output.AddGUILock, str(self.__class__.__name__))
 
         # position and resize...
-        ###self.calculate_coordinates = True
-        ###self.Resize()
+        #self.calculate_coordinates = True
+        self.Resize()
 
 
     def RefreshFullscreen(self, widget=None, event=None):
@@ -1993,15 +2058,17 @@ class Popwin(object):
         """
         # the popwin should always pop up near the systray/desktop status bar, therefore we
         # need to find out its position
-        # get x0 and y0 - workaround for gtk trayicon because self.statusbar as trayicon
-        # cannot get its absolute position, so we need to get pointers position relative
-        # to root window and to trayicon and subtract them and save the values in the
-        # self.statusbar object to avoid jumping popwin in case it is open, the status
-        # refreshed and the pointer has moved
-        if self.calculate_coordinates == True:
+        # get dimensions of statusbar
+        if str(self.conf.icon_in_systray) == "True":
+            statusbarwidth, statusbarheight = 25, 25
+        else:
+            statusbarwidth, statusbarheight = self.output.statusbar.StatusBar.get_size()
+            # to avoid jumping popwin when statusbar changes dimensions set width fixed
+            statusbarwidth = 320
+
+        if self.calculate_coordinates == True and str(self.conf.appindicator) == "False":
             # check if icon in systray or statusbar
             if str(self.conf.icon_in_systray) == "True":
-
                 # trayicon seems not to have a .get_pointer() method so we use
                 # its geometry information
                 if platform.system() == "Windows":
@@ -2016,42 +2083,36 @@ class Popwin(object):
                 self.output.current_monitor = self.output.statusbar.StatusBar.get_screen().get_monitor_at_point(mousex, mousey)
                 statusbarx0 = mousex - statusbar_mousex
                 statusbary0 = mousey - statusbar_mousey
-
             else:
-                mousex, mousey, foo = self.output.statusbar.StatusBar.get_screen().get_root_window().get_pointer()
-
+                statusbarx0, statusbary0 = self.output.statusbar.StatusBar.get_position()
                 # set monitor for later applying the correct monitor geometry
-                self.output.current_monitor = self.output.statusbar.StatusBar.get_screen().get_monitor_at_point(mousex, mousey)
-                statusbar_mousex, statusbar_mousey = self.output.statusbar.StatusBar.get_pointer()
-                statusbarx0 = mousex - statusbar_mousex
-                statusbary0 = mousey - statusbar_mousey
-
+                self.output.current_monitor = self.output.statusbar.StatusBar.get_screen().get_monitor_at_point(\
+                                              statusbarx0+statusbarwidth/2, statusbary0+statusbarheight/2)
                 # save trayicon x0 and y0 in self.statusbar
                 self.output.statusbar.StatusBar.x0 = statusbarx0
                 self.output.statusbar.StatusBar.y0 = statusbary0
 
                 # set back to False to do no recalculation of coordinates as long as popwin is opened
                 self.calculate_coordinates = False
-
         else:
-            # use previously saved values for x0 and y0 in case popwin is still/already open
-            statusbarx0 = self.output.statusbar.StatusBar.x0
-            statusbary0 = self.output.statusbar.StatusBar.y0
-
-        # find out the necessary dimensions of popwin - assembled from scroll area and the buttons
-        #treeviewwidth, treeviewheight = self.ScrolledVBox.size_request()
+            if str(self.conf.appindicator) == "True":
+                rootwin = self.output.appindicator.Menu_Nagstamon.get_screen().get_root_window()
+                mousex, mousey, foo = rootwin.get_pointer()
+                # set monitor for later applying the correct monitor geometry
+                self.output.current_monitor = self.output.appindicator.Menu_Nagstamon.get_screen().get_monitor_at_point(mousex, mousey)
+                # maybe more confusing but for not having rewrite too much code the statusbar*0 variables
+                # are reused here
+                statusbarx0, statusbary0, screenwidth, screenheight = self.output.monitors[self.output.current_monitor]
+                # putting the "statusbar" into the farest right edge of the screen to get the popwin into that corner
+                statusbarx0 = screenwidth + statusbarx0
+            else:
+                # use previously saved values for x0 and y0 in case popwin is still/already open
+                statusbarx0 = self.output.statusbar.StatusBar.x0
+                statusbary0 = self.output.statusbar.StatusBar.y0
 
         # get current monitor's settings
         # screeny0 might be important on more-than-one-monitor-setups where it will not be 0
         screenx0, screeny0, screenwidth, screenheight = self.output.monitors[self.output.current_monitor]
-
-        # get dimensions of statusbar
-        if str(self.conf.icon_in_systray) == "True":
-            statusbarwidth, statusbarheight = 25, 25
-        else:
-            statusbarwidth, statusbarheight = self.output.statusbar.StatusBar.get_size()
-            # to avoid jumping popwin when statusbar changes dimensions set width fixed
-            statusbarwidth = 320
 
         # limit size of treeview
         treeviewwidth, treeviewheight = self.ScrolledVBox.size_request()
@@ -2077,8 +2138,11 @@ class Popwin(object):
         # it a minimum width from head buttons
         if self.popwinwidth < self.buttonswidth: self.popwinwidth = self.buttonswidth
 
-        # if popwin is too wide cut it down to screen width
-        if self.popwinwidth > screenwidth:
+        # if popwin is too wide cut it down to screen width - in case of AppIndicator use keep some space for ugly Ubuntu dock
+        if str(self.conf.appindicator) == "True":
+            if self.popwinwidth > screenwidth - 100:
+                self.popwinwidth = screenwidth - 100
+        elif self.popwinwidth > screenwidth:
             self.popwinwidth = screenwidth
 
         # if statusbar/trayicon stays in upper half of screen, popwin pops up BELOW statusbar/trayicon
@@ -2120,18 +2184,24 @@ class Popwin(object):
         self.Window.set_size_request(self.popwinwidth, self.popwinheight)
 
         if self.Window.get_properties("visible")[0] == True:
+            # avoid resizing artefacts when popwin keeps opened introduced in 0.9.10
+            real_winwidth, real_winheight = self.Window.get_size()
+            real_scrolledwinwidth, real_scrolledwinheight = self.ScrolledWindow.get_size_request()
+            if real_scrolledwinheight + self.buttonsheight < real_winheight and not (self.popwinheight == treeviewheight + self.buttonsheight):
+                self.Window.hide_all()
+                self.Window.show_all()
             self.Window.window.move_resize(self.popwinx0, self.popwiny0, self.popwinwidth, self.popwinheight)
 
             # if popwin is misplaced please correct it here
             if self.Window.get_position() != (self.popwinx0, self.popwiny0):
                 # would be nice if there could be any way to avoid flickering...
-                # but move/resize only works after a hide_all()/showe_all() mantra
+                # but move/resize only works after a hide_all()/show_all() mantra
                 self.Window.hide_all()
                 self.Window.show_all()
                 self.Window.window.move_resize(self.popwinx0, self.popwiny0, self.popwinwidth, self.popwinheight)
 
         # statusbar pulls popwin to the top... with silly-windows-workaround(tm) included
-        if str(self.conf.icon_in_systray) == "False": self.output.statusbar.Raise()
+        if str(self.conf.statusbar_floating) == "True": self.output.statusbar.Raise()
 
         return self.popwinx0, self.popwiny0, self.popwinwidth, self.popwinheight
 
@@ -2559,6 +2629,83 @@ class ServerVBox(gtk.VBox):
             self.AuthOK(widget, server)
 
 
+class AppIndicator(object):
+    """
+        Ubuntu AppIndicator management class
+    """
+    def __init__(self, **kwds):
+        # add all keywords to object, every mode searchs inside for its favorite arguments/keywords
+        for k in kwds: self.__dict__[k] = kwds[k]
+        self.Indicator = appindicator.Indicator("Nagstamon", self.output.Resources + os.sep + "nagstamon" + self.output.BitmapSuffix,\
+                                                 appindicator.CATEGORY_APPLICATION_STATUS)
+        # define all items on AppIndicator menu, which might be switched on and off depending of their relevance
+        self.Menu = gtk.Menu()
+        # Nagstamon Submenu
+        self.Menu_Nagstamon = gtk.MenuItem("Nagstamon")
+        self.Menu_Nagstamon.set_submenu(self.output.statusbar.Menu)
+        self.Menu_Separator = gtk.SeparatorMenuItem()
+        # Status menu items
+        self.Menu_DOWN = gtk.MenuItem("")
+        self.Menu_DOWN.connect("activate", self.output.popwin.PopUp)
+        self.Menu_UNREACHABLE = gtk.MenuItem("")
+        self.Menu_UNREACHABLE.connect("activate", self.output.popwin.PopUp)
+        self.Menu_CRITICAL = gtk.MenuItem("")
+        self.Menu_CRITICAL.connect("activate", self.output.popwin.PopUp)
+        self.Menu_UNKNOWN = gtk.MenuItem("")
+        self.Menu_UNKNOWN.connect("activate", self.output.popwin.PopUp)
+        self.Menu_WARNING = gtk.MenuItem("")
+        self.Menu_WARNING.connect("activate", self.output.popwin.PopUp)
+        # show detail popup, same effect as clicking one f the above
+        self.Menu_ShowDetails = gtk.MenuItem("Show details...")
+        self.Menu_ShowDetails.connect("activate", self.output.popwin.PopUp)
+        self.Menu_OK = gtk.MenuItem("OK")
+        self.Menu_OK.connect("activate", self.OK)
+
+        self.Menu.append(self.Menu_Nagstamon)
+        self.Menu.append(self.Menu_Separator)
+        self.Menu.append(self.Menu_DOWN)
+        self.Menu.append(self.Menu_UNREACHABLE)
+        self.Menu.append(self.Menu_CRITICAL)
+        self.Menu.append(self.Menu_UNKNOWN)
+        self.Menu.append(self.Menu_WARNING)
+        self.Menu.append(self.Menu_ShowDetails)
+        self.Menu.append(self.Menu_OK)
+
+        self.Menu_Nagstamon.show()
+        self.Menu_Separator.show()
+        self.Menu_ShowDetails.show()
+        self.Menu.show()
+        self.Indicator.set_menu(self.Menu)
+
+        # display AppIndicator only if configured
+        if str(self.conf.appindicator) == "True":
+            self.Indicator.set_status(appindicator.STATUS_ACTIVE)
+        else:
+            self.Indicator.set_status(appindicator.STATUS_PASSIVE)
+
+
+    def Flash(self):
+        """
+            Flash in case of reason to do so
+        """
+        if self.Indicator.get_status() == appindicator.STATUS_ATTENTION:
+            self.Indicator.set_status(appindicator.STATUS_ACTIVE)
+        else:
+            self.Indicator.set_status(appindicator.STATUS_ATTENTION)
+
+        # return False to get removed as gobject idle source
+        return False
+
+
+    def OK(self, dummy=None):
+        """
+            action for OK menu entry, to be triggered if notification is acknowledged
+        """
+        self.Menu_OK.hide()
+        self.output.NotificationOff()
+        self.Indicator.set_status(appindicator.STATUS_ATTENTION)
+
+
 class Settings(object):
     """
         settings dialog as object, may lead to less mess
@@ -2757,6 +2904,20 @@ class Settings(object):
             self.builder.get_object("input_radiobutton_fullscreen").hide()
             self.builder.get_object("input_combo_fullscreen_display").hide()
             self.builder.get_object("label_fullscreen_display").hide()
+            self.builder.get_object("input_checkbutton_notification_desktop").hide()
+            self.builder.get_object("input_radiobutton_appindicator").hide()
+
+        # as of now there is no notification in Windows so disable it
+        if platform.system() == "Windows":
+            self.builder.get_object("input_checkbutton_notification_desktop").hide()
+            self.builder.get_object("input_radiobutton_appindicator").hide()
+
+        # libnotify-based desktop notification probably only available on Linux
+        if not sys.modules.has_key("pynotify"):
+            self.builder.get_object("input_checkbutton_notification_desktop").hide()
+        # appindicator option is not needed on non-Ubuntuesque systems
+        if not sys.modules.has_key("appindicator"):
+            self.builder.get_object("input_radiobutton_appindicator").hide()
 
         # this should not be necessary, but for some reason the number of hours is 10 in unitialized state... :-(
         spinbutton = self.builder.get_object("input_spinbutton_defaults_downtime_duration_hours")
@@ -2783,7 +2944,7 @@ class Settings(object):
         self.notebook.set_current_page(["Servers", "Display", "Filters", "Actions",\
                                         "Notification", "Colors", "Defaults"].index(self.first_page))
 
-        # store fullscreen state to avoif innecessary popwin flickering
+        # store fullscreen state to avoid innecessary popwin flickering
         self.saved_fullscreen_state = str(self.conf.fullscreen)
 
 
@@ -2925,6 +3086,13 @@ class Settings(object):
                 self.output.statusbar.SysTray.set_visible(True)
             else:
                 self.output.statusbar.SysTray.set_visible(False)
+
+            # only if appindicator module exists
+            if sys.modules.has_key("appindicator"):
+                if str(self.conf.appindicator) == "True":
+                    self.output.appindicator.OK()
+                else:
+                    self.output.appindicator.Indicator.set_status(appindicator.STATUS_PASSIVE)
 
             # in Windows the statusbar with gtk.gdk.WINDOW_TYPE_HINT_UTILITY places itself somewhere
             # this way it should be disciplined
@@ -3728,49 +3896,6 @@ class GenericAction(object):
             combomodel.append((action_type,))
         combobox.set_model(combomodel)
 
-        """
-        combobox.set_active(0)
-
-        # enable action by default
-        self.builder.get_object("input_checkbutton_enabled").set_active(True)
-
-        # if uninitialized action (e.g. new one) is used don't access actions dictionary
-        if self.action == "":
-            # ...but use a dummy object with default settings
-            action = Config.Action()
-        else:
-            action = self.conf.actions[self.action]
-        keys = action.__dict__.keys()
-        # walk through all relevant input types to fill dialog with existing settings
-        for i in ["input_entry_", "input_checkbutton_", "input_radiobutton_"]:
-            for key in keys:
-                j = self.builder.get_object(i + key)
-
-                if not j:
-                    continue
-                # some hazard, every widget has other methods to fill it with desired content
-                # so we try them all, one of them should work
-                try:
-                    j.set_text(action.__dict__[key])
-                except:
-                    pass
-                try:
-                    if str(action.__dict__[key]) == "True":
-                        j.set_active(True)
-                    if str(action.__dict__[key]) == "False":
-                        j.set_active(False)
-                except:
-                    pass
-                try:
-                    j.set_value(int(self.conf.__dict__[key]))
-                except:
-                    pass
-
-        # disable help labels for actions
-        self.ToggleActionStringHelp()
-        self.ToggleActionTypeHelp()
-        """
-
         self.initialize()
 
 
@@ -4086,28 +4211,28 @@ class AuthenticationDialog:
         self.server.password = self.entry_password.get_text()
         self.server.autologin_key = self.entry_autologin_key.get_text()
         toggle_save_password = self.builder.get_object("input_checkbutton_save_password")
+        toggle_use_autologin = self.builder.get_object("input_checkbutton_use_autologin")
 
         if toggle_save_password.get_active() == True:
             # store authentication information in config
-            self.conf.servers[self.server.get_name()].username = self.server.username
-            self.conf.servers[self.server.get_name()].password = self.server.password
-            self.conf.servers[self.server.get_name()].save_password = True
-            self.conf.SaveConfig(output=self.output)
+            self.conf.servers[self.server.name].username = self.server.username
+            self.conf.servers[self.server.name].password = self.server.password
+            self.conf.servers[self.server.name].save_password = True
+            self.conf.SaveConfig()
 
-        toggle_use_autologin = self.builder.get_object("input_checkbutton_use_autologin")
         if toggle_use_autologin.get_active() == True:
             # store autologin information in config
-            self.conf.servers[self.server.get_name()].username = self.server.username
-            self.conf.servers[self.server.get_name()].password = ""
-            self.conf.servers[self.server.get_name()].save_password = False
-            self.conf.servers[self.server.get_name()].autologin_key = self.server.autologin_key
-            self.conf.servers[self.server.get_name()].use_autologin = True
-            self.conf.SaveConfig(output=self.output)
+            self.conf.servers[self.server.name].username = self.server.username
+            self.conf.servers[self.server.name].password = ""
+            self.conf.servers[self.server.name].save_password = False
+            self.conf.servers[self.server.name].autologin_key = self.server.autologin_key
+            self.conf.servers[self.server.name].use_autologin = True
+            self.conf.SaveConfig()
 
 
     def Disable(self, widget):
         # the old settings
-        self.conf.servers[self.server.get_name()].enabled = False
+        self.conf.servers[self.server.name].enabled = False
 
 
     def Exit(self, widget):
