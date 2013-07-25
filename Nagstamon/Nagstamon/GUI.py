@@ -2158,9 +2158,9 @@ class Popwin(object):
             # fixed x0 coordinate
             self.popwinx0 = screenwidth - self.popwinwidth + screenx0
             # make room for menu bar of Ubuntu
-            if self.popwinheight >= screenheight:
+            if self.popwinheight >= screenheight - 25:
                 treeviewheight += -25
-                self.popwinheight += -25
+                self.popwinheight = screenheight - 25
             # place popup unfer menu bar in Ubuntu
             self.popwiny0 = screeny0 + 25
         else:
