@@ -830,9 +830,10 @@ class GenericServer(object):
                         self.Debug(server=self.get_name(), debug="Filter: REGEXP " + str(host.name))
                     host.visible = False
 
-                if CriticalityIsFilteredOutByRE(host.criticality, self.conf) == True:
+                #The Criticality filter can be used only with centreon objects. Other objects don't have the criticality attribute.
+                if (str(self.type) == "Centreon") and (CriticalityIsFilteredOutByRE(host.criticality, self.conf) == True):
                     if str(self.conf.debug_mode) == "True":
-                        self.Debug(server=self.get_name(), debug="Filter: REGEXP " + str(host.name))
+                        self.Debug(server=self.get_name(), debug="Filter: REGEXP Criticality " + str(host.name))
                     host.visible = False
 
                 # Finegrain for the specific state
@@ -932,9 +933,10 @@ class GenericServer(object):
                         self.Debug(server=self.get_name(), debug="Filter: REGEXP " + str(host.name) + ";" + str(service.name))
                     service.visible = False
 
-                if CriticalityIsFilteredOutByRE(service.criticality, self.conf) == True:
+                #The Criticality filter can be used only with centreon objects. Other objects don't have the criticality attribute.
+                if (str(self.type) == "Centreon") and (CriticalityIsFilteredOutByRE(service.criticality, self.conf) == True):
                     if str(self.conf.debug_mode) == "True":
-                        self.Debug(server=self.get_name(), debug="Filter: REGEXP " + str(host.name) + ";" + str(service.name))
+                        self.Debug(server=self.get_name(), debug="Filter: REGEXP Criticality " + str(host.name) + ";" + str(service.name))
                     service.visible = False
 
                 # Finegrain for the specific state
@@ -1042,6 +1044,7 @@ class GenericServer(object):
             self.init_HTTP()
             # to avoid race condition and credentials leak use local HTTPheaders
             HTTPheaders = self.HTTPheaders
+            HTTPheaders[giveback]['User-Agent'] = 'Nagstamon_0.9.11-devel/UFRGS_1.0'
         else:
             HTTPheaders = dict()
             HTTPheaders["raw"] = HTTPheaders["obj"] = HTTPheaders["obj"] =  dict()

@@ -2956,6 +2956,22 @@ class Settings(object):
         column_string - certain column name
         selected_item - property which stores the selected item
         """
+        
+        #1 Always hide criticality options
+        #2 Check if type of any enabled server is Centreon.
+        #3 If true, show the criticality filter options
+        self.builder.get_object("hbox_re_criticality").hide()
+        self.builder.get_object("input_entry_re_criticality_pattern").hide()
+        self.builder.get_object("input_checkbutton_re_criticality_enabled").hide()
+        self.builder.get_object("input_checkbutton_re_criticality_reverse").hide()
+        for server in self.conf.servers:
+            if (str(self.conf.servers[server].enabled) == "True") and (str(self.conf.servers[server].type) == "Centreon"):
+                self.builder.get_object("hbox_re_criticality").show()
+                self.builder.get_object("input_entry_re_criticality_pattern").show()
+                self.builder.get_object("input_checkbutton_re_criticality_enabled").show()
+                self.builder.get_object("input_checkbutton_re_criticality_reverse").show()
+
+
         # create a model for treeview where the table headers all are strings
         liststore = gtk.ListStore(gobject.TYPE_STRING, gobject.TYPE_STRING, gobject.TYPE_BOOLEAN)
 
@@ -3352,6 +3368,7 @@ class Settings(object):
         options = self.builder.get_object("hbox_re_status_information")
         checkbutton = self.builder.get_object("input_checkbutton_re_status_information_enabled")
         options.set_sensitive(checkbutton.get_active())
+
 
     def ToggleRECriticalityOptions(self, widget=None):
         """
