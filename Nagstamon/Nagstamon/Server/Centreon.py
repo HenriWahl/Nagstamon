@@ -354,6 +354,10 @@ class CentreonServer(GenericServer):
                         self.new_hosts[str(l.hn.text)].last_check = str(l.lc.text)
                         self.new_hosts[str(l.hn.text)].duration = str(l.lsc.text)
                         self.new_hosts[str(l.hn.text)].status_information= str(l.ou.text)
+                        if l.find("cih") != None:
+                            self.new_hosts[str(l.hn.text)].criticality = str(l.cih.text)
+                        else:
+                            self.new_hosts[str(l.hn.text)].criticality = ""
                         self.new_hosts[str(l.hn.text)].acknowledged = bool(int(str(l.ha.text)))
                         self.new_hosts[str(l.hn.text)].scheduled_downtime = bool(int(str(l.hdtm.text)))
                         if l.find("is") != None:
@@ -413,6 +417,10 @@ class CentreonServer(GenericServer):
                         self.new_hosts[str(l.hn.text)].services[str(l.sd.text)].last_check = str(l.lc.text)
                         self.new_hosts[str(l.hn.text)].services[str(l.sd.text)].duration = str(l.d.text)
                         self.new_hosts[str(l.hn.text)].services[str(l.sd.text)].status_information = str(l.po.text)
+                        if l.find("cih") != None:
+                            self.new_hosts[str(l.hn.text)].services[str(l.sd.text)].criticality = str(l.cih.text)
+                        else:
+                            self.new_hosts[str(l.hn.text)].services[str(l.sd.text)].criticality = ""
                         self.new_hosts[str(l.hn.text)].services[str(l.sd.text)].acknowledged = bool(int(str(l.pa.text)))
                         self.new_hosts[str(l.hn.text)].services[str(l.sd.text)].scheduled_downtime = bool(int(str(l.dtm.text)))
                         self.new_hosts[str(l.hn.text)].services[str(l.sd.text)].flapping = bool(int(str(l.find("is").text)))
