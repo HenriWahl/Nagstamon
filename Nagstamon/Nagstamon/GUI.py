@@ -2732,6 +2732,7 @@ class AppIndicator(object):
         self.Menu_OK.hide()
         self.output.NotificationOff()
         self.Indicator.set_status(appindicator.STATUS_ATTENTION)
+        self.output.popwin.Close()
 
 
 class Settings(object):

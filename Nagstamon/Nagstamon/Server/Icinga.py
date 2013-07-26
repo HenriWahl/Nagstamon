@@ -48,11 +48,26 @@ class IcingaServer(GenericServer):
     DISABLED_CONTROLS = ["input_checkbutton_use_autologin", "label_autologin_key", "input_entry_autologin_key"]
 
 
+    def init_config(self):
+        """
+        set URLs for CGI - they are static and there is no need to set them with every cycle
+        """
+        # dummy default empty cgi urls - get filled later when server version is known
+        self.cgiurl_services = None
+        self.cgiurl_hosts = None
+
+
     def get_server_version(self):
         """
         Try to get Icinga version for different URLs and JSON capabilities
         """
-        tacraw = self.FetchURL("%s/tac.cgi?jsonoutput" % (self.monitor_cgi_url), giveback="raw").result
+        result = self.FetchURL("%s/tac.cgi?jsonoutput" % (self.monitor_cgi_url), giveback="raw")
+
+        if result.error != "":
+            return result
+        else:
+            tacraw = result.result
+
         if tacraw.startswith("<"):
             self.json = False
             tacsoup = BeautifulSoup(tacraw)
@@ -72,54 +87,46 @@ class IcingaServer(GenericServer):
                 self.json = False
 
 
-    def init_config(self):
-        """
-        allow server to initialize additional config stuff like CGI-URLs for Nagios for example
-        """
-        # we need to get the server version and its JSONability
-        while self.version == "":
-            self.get_server_version()
-            time.sleep(10)
-
-        # http://www.nagios-wiki.de/nagios/tips/host-_und_serviceproperties_fuer_status.cgi?s=servicestatustypes
-        # hoststatus
-        # hoststatustypes = 12
-        # servicestatus
-        #servicestatustypes = 253
-        # serviceprops & hostprops both have the same values for the same states so I
-        # group them together
-        #hostserviceprops = 0
-        if self.version < "1.7":
-            # services (unknown, warning or critical?) as dictionary, sorted by hard and soft state type
-            self.cgiurl_services = {"hard": self.monitor_cgi_url + "/status.cgi?host=all&servicestatustypes=253&serviceprops=262144",\
-                                    "soft": self.monitor_cgi_url + "/status.cgi?host=all&servicestatustypes=253&serviceprops=524288"}
-            # hosts (up or down or unreachable)
-            self.cgiurl_hosts = {"hard": self.monitor_cgi_url + "/status.cgi?hostgroup=all&style=hostdetail&hoststatustypes=12&hostprops=262144",\
-                                 "soft": self.monitor_cgi_url + "/status.cgi?hostgroup=all&style=hostdetail&hoststatustypes=12&hostprops=524288"}
-        else:
-            # services (unknown, warning or critical?)
-            self.cgiurl_services = {"hard": self.monitor_cgi_url + "/status.cgi?style=servicedetail&servicestatustypes=253&serviceprops=262144",\
-                                    "soft": self.monitor_cgi_url + "/status.cgi?style=servicedetail&servicestatustypes=253&serviceprops=524288"}
-            # hosts (up or down or unreachable)
-            self.cgiurl_hosts = {"hard": self.monitor_cgi_url + "/status.cgi?style=hostdetail&hoststatustypes=12&hostprops=262144",\
-                                 "soft": self.monitor_cgi_url + "/status.cgi?style=hostdetail&hoststatustypes=12&hostprops=524288"}
-        if self.json:
-            for status_type in "hard", "soft":
-               self.cgiurl_services[status_type] += "&jsonoutput"
-               self.cgiurl_hosts[status_type] += "&jsonoutput"
-
-
     def _get_status(self):
         """
         Get status from Icinga Server, prefer JSON if possible
         """
         try:
             if self.json == None:
-                self.get_server_version()
-            if self.json:
-                self._get_status_JSON()
+                # we need to get the server version and its JSONability
+                result = self.get_server_version()
+
+            if self.version != "":
+                # define CGI URLs for hosts and services depending on JSON-capable server version
+                if self.cgiurl_hosts == self.cgiurl_services == None:
+                    if self.version < "1.7":
+                        # http://www.nagios-wiki.de/nagios/tips/host-_und_serviceproperties_fuer_status.cgi?s=servicestatustypes
+                        # services (unknown, warning or critical?) as dictionary, sorted by hard and soft state type
+                        self.cgiurl_services = {"hard": self.monitor_cgi_url + "/status.cgi?host=all&servicestatustypes=253&serviceprops=262144",\
+                                                "soft": self.monitor_cgi_url + "/status.cgi?host=all&servicestatustypes=253&serviceprops=524288"}
+                        # hosts (up or down or unreachable)
+                        self.cgiurl_hosts = {"hard": self.monitor_cgi_url + "/status.cgi?hostgroup=all&style=hostdetail&hoststatustypes=12&hostprops=262144",\
+                                             "soft": self.monitor_cgi_url + "/status.cgi?hostgroup=all&style=hostdetail&hoststatustypes=12&hostprops=524288"}
+                    else:
+                        # services (unknown, warning or critical?)
+                        self.cgiurl_services = {"hard": self.monitor_cgi_url + "/status.cgi?style=servicedetail&servicestatustypes=253&serviceprops=262144",\
+                                                "soft": self.monitor_cgi_url + "/status.cgi?style=servicedetail&servicestatustypes=253&serviceprops=524288"}
+                        # hosts (up or down or unreachable)
+                        self.cgiurl_hosts = {"hard": self.monitor_cgi_url + "/status.cgi?style=hostdetail&hoststatustypes=12&hostprops=262144",\
+                                             "soft": self.monitor_cgi_url + "/status.cgi?style=hostdetail&hoststatustypes=12&hostprops=524288"}
+                    if self.json == True:
+                        for status_type in "hard", "soft":
+                           self.cgiurl_services[status_type] += "&jsonoutput"
+                           self.cgiurl_hosts[status_type] += "&jsonoutput"
+
+                # get status depending on JSONablility
+                if self.json == True:
+                    self._get_status_JSON()
+                else:
+                    self._get_status_HTML()
             else:
-                self._get_status_HTML()
+                # error result in case version still was ""
+                return result
         except:
             # set checking flag back to False
             self.isChecking = False
@@ -266,6 +273,7 @@ class IcingaServer(GenericServer):
                 htobj, error = result.result, result.error
 
                 if error != "": return Result(result=htobj, error=error)
+
                 # put a copy of a part of htobj into table to be able to delete htobj
                 table = htobj('table', {'class': 'status'})[0]
 

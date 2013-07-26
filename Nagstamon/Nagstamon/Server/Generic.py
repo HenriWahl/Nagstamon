@@ -763,7 +763,7 @@ class GenericServer(object):
                         # needed to get valid credentials
                         gobject.idle_add(output.RefreshDisplayStatus)
                         # take a break not to DOS the monitor...
-                        time.sleep(20)
+                        time.sleep(10)
                         status = self._get_status()
                         self.status, self.status_description = status.result, status.error
                         # if monitor has been disabled do not try to connect to it
@@ -772,6 +772,7 @@ class GenericServer(object):
             else:
                 self.isChecking = False
                 return Result(result=self.status, error=self.status_description)
+
 
         # this part has been before in GUI.RefreshDisplay() - wrong place, here it needs to be reset
         self.nagitems_filtered = {"services":{"CRITICAL":[], "WARNING":[], "UNKNOWN":[]}, "hosts":{"DOWN":[], "UNREACHABLE":[]}}
@@ -1161,5 +1162,3 @@ class GenericServer(object):
         debug_string =  " ".join((head + ":",  str(datetime.datetime.now()), server, host, service, debug))
         # give debug info to debug loop for thread-save log-file writing
         self.debug_queue.put(debug_string)
-
-
