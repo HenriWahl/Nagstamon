@@ -3675,8 +3675,8 @@ class GenericServer(object):
         item.set_sensitive( is_active )
         item = self.builder.get_object("input_entry_password")
         item.set_sensitive( is_active )
-        if not is_active:
-            item.set_text("")
+        ###if not is_active:
+        ###    item.set_text("")
 
     def ToggleAutoLoginKey(self, widget=None):
         """
@@ -3688,8 +3688,8 @@ class GenericServer(object):
         item.set_sensitive( is_active )
         item = self.builder.get_object("input_entry_autologin_key")
         item.set_sensitive( is_active )
-        if not is_active:
-            item.set_text("")
+        ###if not is_active:
+        ###    item.set_text("")
 
 	    #disable save password
         item = self.builder.get_object("input_checkbutton_save_password")
@@ -3803,11 +3803,6 @@ class EditServer(GenericServer):
 
             self.combobox.set_active(server_types[self.conf.servers[self.server].type])
 
-            # show password - or not
-            self.ToggleSavePassword()
-            # show settings options for proxy - or not
-            self.ToggleProxy()
-
 
     def initialize(self):
         """
@@ -3847,13 +3842,6 @@ class EditServer(GenericServer):
 
         # set server type
         self.combobox.set_active(server_types[self.conf.servers[self.server].type])
-
-        # show password - or not
-        self.ToggleSavePassword()
-        # show settings options for proxy - or not
-        self.ToggleProxy()
-        # disable autologin by default
-        self.ToggleAutoLoginKey()
 
 
     def OK(self, widget):
