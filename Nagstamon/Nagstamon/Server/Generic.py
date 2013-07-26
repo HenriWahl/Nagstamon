@@ -37,7 +37,7 @@ try:
     from BeautifulSoup import BeautifulSoup, BeautifulStoneSoup
 except:
     from Nagstamon.BeautifulSoup import BeautifulSoup, BeautifulStoneSoup
-from Nagstamon.Actions import HostIsFilteredOutByRE, ServiceIsFilteredOutByRE, StatusInformationIsFilteredOutByRE, not_empty
+from Nagstamon.Actions import HostIsFilteredOutByRE, ServiceIsFilteredOutByRE, StatusInformationIsFilteredOutByRE, CriticalityIsFilteredOutByRE, not_empty
 from Nagstamon.Objects import *
 
 
@@ -831,6 +831,12 @@ class GenericServer(object):
                         self.Debug(server=self.get_name(), debug="Filter: REGEXP " + str(host.name))
                     host.visible = False
 
+                #The Criticality filter can be used only with centreon objects. Other objects don't have the criticality attribute.
+                if (str(self.type) == "Centreon") and (CriticalityIsFilteredOutByRE(host.criticality, self.conf) == True):
+                    if str(self.conf.debug_mode) == "True":
+                        self.Debug(server=self.get_name(), debug="Filter: REGEXP Criticality " + str(host.name))
+                    host.visible = False
+
                 # Finegrain for the specific state
                 if host.status == "DOWN":
                     if str(self.conf.filter_all_down_hosts) == "True":
@@ -926,6 +932,12 @@ class GenericServer(object):
                 if StatusInformationIsFilteredOutByRE(service.status_information, self.conf) == True:
                     if str(self.conf.debug_mode) == "True":
                         self.Debug(server=self.get_name(), debug="Filter: REGEXP " + str(host.name) + ";" + str(service.name))
+                    service.visible = False
+
+                #The Criticality filter can be used only with centreon objects. Other objects don't have the criticality attribute.
+                if (str(self.type) == "Centreon") and (CriticalityIsFilteredOutByRE(service.criticality, self.conf) == True):
+                    if str(self.conf.debug_mode) == "True":
+                        self.Debug(server=self.get_name(), debug="Filter: REGEXP Criticality " + str(host.name) + ";" + str(service.name))
                     service.visible = False
 
                 # Finegrain for the specific state
