@@ -95,7 +95,7 @@ class GUI(object):
 
         # Meta
         self.name = "Nagstamon"
-        self.version = "0.9.11-devel"
+        self.version = "0.9.11"
         self.website = "http://nagstamon.ifw-dresden.de/"
         self.copyright = "©2008-2013 Henri Wahl et al.\nh.wahl@ifw-dresden.de"
         self.comments = "Nagios status monitor for your desktop"
@@ -2635,6 +2635,7 @@ class ServerVBox(gtk.VBox):
             server.conf.servers[server.get_name()].password = server.password
             server.conf.servers[server.get_name()].save_password = True
             server.conf.SaveConfig(server=server)
+
         self.HBoxAuth.hide_all()
         self.HBoxAuth.set_no_show_all(True)
 

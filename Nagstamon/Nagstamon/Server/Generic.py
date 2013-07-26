@@ -153,12 +153,12 @@ class GenericServer(object):
 
     def init_HTTP(self):
         """
-        partly not constantly working Basic Authorization requires extra Autorization headers,
+        partly not constantly working Basic Authorization requires extra Authorization headers,
         different between various server types
         """
         if self.HTTPheaders == {}:
             for giveback in ["raw", "obj"]:
-                self.HTTPheaders[giveback] = {"Authorization": "Basic " + base64.b64encode(self.get_username() + ":" + self.get_password())}
+                self.HTTPheaders[giveback] = {"Authorization": "Basic " + base64.b64encode(self.username + ":" + self.password)}
 
 
     def init_config(self):
@@ -749,30 +749,32 @@ class GenericServer(object):
 
         if status.error != "":
             # ask for password if authorization failed
-            print "Error: " + status.error
             if "HTTP Error 401" in status.error or \
                "HTTP Error 403" in status.error or \
                "HTTP Error 500" in status.error or \
                "Bad Session ID" in status.error or \
                "Login failed" in status.error:
                 if str(self.conf.servers[self.name].enabled) == "True":
+                    # needed to get valid credentials
+                    self.refresh_authentication = True
                     while status.error != "":
+                        gobject.idle_add(output.RefreshDisplayStatus)
+
                         # clean existent authentication
                         self.reset_HTTP()
-                        self.refresh_authentication = True
-                        # needed to get valid credentials
-                        gobject.idle_add(output.RefreshDisplayStatus)
-                        # take a break not to DOS the monitor...
-                        time.sleep(10)
+                        self.init_HTTP()
+
                         status = self._get_status()
                         self.status, self.status_description = status.result, status.error
+                        # take a break not to DOS the monitor...
+                        time.sleep(10)
+
                         # if monitor has been disabled do not try to connect to it
                         if str(self.conf.servers[self.name].enabled) == "False":
                             break
             else:
                 self.isChecking = False
                 return Result(result=self.status, error=self.status_description)
-
 
         # this part has been before in GUI.RefreshDisplay() - wrong place, here it needs to be reset
         self.nagitems_filtered = {"services":{"CRITICAL":[], "WARNING":[], "UNKNOWN":[]}, "hosts":{"DOWN":[], "UNREACHABLE":[]}}
@@ -1059,6 +1061,7 @@ class GenericServer(object):
                 urlcontent = self.urlopener.open(request)
                 del url, cgi_data, request
             except:
+                del url, cgi_data, request
                 result, error = self.Error(sys.exc_info())
                 return Result(result=result, error=error)
 
