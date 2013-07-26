@@ -101,7 +101,6 @@ class Config(object):
         self.re_criticality_enabled = False
         self.re_criticality_pattern = ""
         self.re_criticality_reverse = False
-        
         self.color_ok_text = self.default_color_ok_text = "#FFFFFF"
         self.color_ok_background = self.default_color_ok_background = "#006400"
         self.color_warning_text = self.default_color_warning_text = "#000000"

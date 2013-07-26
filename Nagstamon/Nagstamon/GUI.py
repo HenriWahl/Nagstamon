@@ -1264,18 +1264,27 @@ class GUI(object):
             if self.dialog == "Settings":
                 gobject.idle_add(self.output.AddGUILock, "Settings")
                 self.Dialogs["Settings"] = Settings(servers=self.servers, output=self.output, conf=self.conf, first_page=self.first_page)
+                self.Dialogs["Settings"].show()
+
             elif self.dialog == "NewServer":
                 gobject.idle_add(self.output.AddGUILock, "NewServer")
                 self.Dialogs["NewServer"] = NewServer(servers=self.servers, output=self.output, settingsdialog=self.settingsdialog, conf=self.conf)
+                self.Dialogs["NewServer"].show()
+
             elif self.dialog == "EditServer":
                 gobject.idle_add(self.output.AddGUILock, "EditServer")
                 self.Dialogs["EditServer"] = EditServer(servers=self.servers, output=self.output, settingsdialog=self.settingsdialog, conf=self.conf, server=self.selected_server)
+                self.Dialogs["EditServer"].show()
+
             elif self.dialog == "NewAction":
                 gobject.idle_add(self.output.AddGUILock, "NewAction")
                 self.Dialogs["NewAction"] = NewAction(output=self.output, settingsdialog=self.settingsdialog, conf=self.conf)
+                self.Dialogs["NewAction"].show()
+
             elif self.dialog == "EditAction":
                 gobject.idle_add(self.output.AddGUILock, "EditAction")
                 self.Dialogs["EditAction"] = EditAction(output=self.output, settingsdialog=self.settingsdialog, conf=self.conf, action=self.selected_action)
+                self.Dialogs["EditAction"].show()
         else:
             # when being reused some dialogs need some extra values
             if self.dialog in ["Settings", "NewServer", "EditServer", "NewAction", "EditAction"]:
@@ -1288,7 +1297,7 @@ class GUI(object):
                 if self.dialog == "EditAction":
                     self.Dialogs["EditAction"].action = self.selected_action
                 self.Dialogs[self.dialog].initialize()
-                self.Dialogs[self.dialog].dialog.show()
+                self.Dialogs[self.dialog].show()
 
 
 class StatusBar(object):
@@ -2957,9 +2966,13 @@ class Settings(object):
         # store fullscreen state to avoif innecessary popwin flickering
         self.saved_fullscreen_state = str(self.conf.fullscreen)
 
+        # care about Centreon criticality filter
+        self.ToggleRECriticalityFilter()
+
+
+    def show(self):
         # show filled settings dialog and wait thanks to gtk.run()
         self.dialog.run()
-
         # delete global open Windows entry
         gobject.idle_add(self.output.DeleteGUILock, str(self.__class__.__name__))
         self.dialog.hide()
@@ -2967,7 +2980,7 @@ class Settings(object):
 
     def initialize(self):
         """
-        used by various dialogs, not here - just a dummy
+        initialize some stuff at every call of this dialog
         """
         # set first page of notebook tabs
         self.notebook.set_current_page(["Servers", "Display", "Filters", "Actions",\
@@ -2976,16 +2989,7 @@ class Settings(object):
         # store fullscreen state to avoid innecessary popwin flickering
         self.saved_fullscreen_state = str(self.conf.fullscreen)
 
-
-    def FillTreeView(self, treeview_widget, items, column_string, selected_item):
         """
-        fill treeview containing items - has been for servers only before
-        treeview_widget - string from gtk builder
-        items - dictionary containing the to-be-listed items
-        column_string - certain column name
-        selected_item - property which stores the selected item
-        """
-        
         #1 Always hide criticality options
         #2 Check if type of any enabled server is Centreon.
         #3 If true, show the criticality filter options
@@ -2999,7 +3003,19 @@ class Settings(object):
                 self.builder.get_object("input_entry_re_criticality_pattern").show()
                 self.builder.get_object("input_checkbutton_re_criticality_enabled").show()
                 self.builder.get_object("input_checkbutton_re_criticality_reverse").show()
+        """
+        # care about Centreon criticality filter
+        self.ToggleRECriticalityFilter()
 
+
+    def FillTreeView(self, treeview_widget, items, column_string, selected_item):
+        """
+        fill treeview containing items - has been for servers only before
+        treeview_widget - string from gtk builder
+        items - dictionary containing the to-be-listed items
+        column_string - certain column name
+        selected_item - property which stores the selected item
+        """
 
         # create a model for treeview where the table headers all are strings
         liststore = gtk.ListStore(gobject.TYPE_STRING, gobject.TYPE_STRING, gobject.TYPE_BOOLEAN)
@@ -3408,6 +3424,24 @@ class Settings(object):
         options.set_sensitive(checkbutton.get_active())
 
 
+    def ToggleRECriticalityFilter(self):
+        """
+            1. Always hide criticality options
+            2. Check if type of any enabled server is Centreon.
+            3. If true, show the criticality filter options
+        """
+        self.builder.get_object("hbox_re_criticality").hide()
+        self.builder.get_object("input_entry_re_criticality_pattern").hide()
+        self.builder.get_object("input_checkbutton_re_criticality_enabled").hide()
+        self.builder.get_object("input_checkbutton_re_criticality_reverse").hide()
+        for server in self.conf.servers:
+            if (str(self.conf.servers[server].enabled) == "True") and (str(self.conf.servers[server].type) == "Centreon"):
+                self.builder.get_object("hbox_re_criticality").show()
+                self.builder.get_object("input_entry_re_criticality_pattern").show()
+                self.builder.get_object("input_checkbutton_re_criticality_enabled").show()
+                self.builder.get_object("input_checkbutton_re_criticality_reverse").show()
+
+
     def ToggleSystrayPopupOffset(self, widget=None):
         """
             Toggle adjustment for systray-popup-offset (see sf.net bug 3389241)
@@ -3480,6 +3514,13 @@ class GenericServer(object):
 
         # set specific defaults or server settings
         self.initialize()
+
+
+    def show(self):
+        # show filled settings dialog and wait thanks to gtk.run()
+        self.dialog.run()
+        gobject.idle_add(self.output.DeleteGUILock, str(self.__class__.__name__))
+        self.dialog.hide()
 
 
     def initialize(self):
@@ -3604,6 +3645,10 @@ class GenericServer(object):
 
             # fill settings dialog treeview
             self.settingsdialog.FillTreeView("servers_treeview", self.conf.servers, "Servers", "selected_server")
+
+            # care about Centreon criticality filter
+            self.output.Dialogs["Settings"].ToggleRECriticalityFilter()
+
             # destroy new server dialog
             gobject.idle_add(self.output.DeleteGUILock, str(self.__class__.__name__))
             self.dialog.hide()
@@ -3711,11 +3756,6 @@ class NewServer(GenericServer):
         # set title of settings dialog
         self.dialog.set_title("New server")
 
-        # show filled settings dialog and wait thanks to gtk.run()
-        self.dialog.run()
-        gobject.idle_add(self.output.DeleteGUILock, str(self.__class__.__name__))
-        self.dialog.hide()
-
 
 class EditServer(GenericServer):
     """
@@ -3768,11 +3808,6 @@ class EditServer(GenericServer):
             # show settings options for proxy - or not
             self.ToggleProxy()
 
-            # show filled settings dialog and wait thanks to gtk.run()
-            self.dialog.run()
-            gobject.idle_add(self.output.DeleteGUILock, str(self.__class__.__name__))
-            self.dialog.hide()
-
 
     def initialize(self):
         """
@@ -3817,6 +3852,8 @@ class EditServer(GenericServer):
         self.ToggleSavePassword()
         # show settings options for proxy - or not
         self.ToggleProxy()
+        # disable autologin by default
+        self.ToggleAutoLoginKey()
 
 
     def OK(self, widget):
@@ -3892,7 +3929,11 @@ class EditServer(GenericServer):
 
             # fill settings dialog treeview
             self.settingsdialog.FillTreeView("servers_treeview", self.conf.servers, "Servers", "selected_server")
-            # gide dialog
+
+            # care about Centreon criticality filter
+            self.output.Dialogs["Settings"].ToggleRECriticalityFilter()
+
+            # hide dialog
             gobject.idle_add(self.output.DeleteGUILock, str(self.__class__.__name__))
             self.dialog.hide()
 
@@ -3943,6 +3984,13 @@ class GenericAction(object):
         combobox.set_model(combomodel)
 
         self.initialize()
+
+
+    def show(self):
+        # show filled settings dialog and wait thanks to gtk.run()
+        self.dialog.run()
+        gobject.idle_add(self.output.DeleteGUILock, str(self.__class__.__name__))
+        self.dialog.hide()
 
 
     def initialize(self):
@@ -4114,11 +4162,6 @@ class NewAction(GenericAction):
         # set title of settings dialog
         self.dialog.set_title("New action")
 
-        # show filled settings dialog and wait thanks to gtk.run()
-        self.dialog.run()
-        gobject.idle_add(self.output.DeleteGUILock, str(self.__class__.__name__))
-        self.dialog.hide()
-
 
 class EditAction(GenericAction):
     """
@@ -4136,11 +4179,6 @@ class EditAction(GenericAction):
         # adjust combobox to used action type
         self.combobox = self.builder.get_object("input_combo_action_type")
         self.combobox.set_active({"browser":0, "command":1, "url":2}[self.conf.actions[self.action].type])
-
-        # show filled settings dialog and wait thanks to gtk.run()
-        self.dialog.run()
-        gobject.idle_add(self.output.DeleteGUILock, str(self.__class__.__name__))
-        self.dialog.hide()
 
 
     def OK(self, widget):
