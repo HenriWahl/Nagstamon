@@ -1,9 +1,18 @@
-nagstamon (0.9.11-devel) unstable; urgency=low
+nagstamon (0.9.11rc1) unstable; urgency=low
 
   * New upstream
-    - fixed Correct-Statusbar-Position-O-Matic (https://sourceforge.net/p/nagstamon/bugs/85/)
+    - added Ubuntu AppIndicator support
+    - added libnotify desktop notification support
+    - added Centreon criticality support
+    - fixed broken authentication dialog
+    - fixed wrong OK state for Nagios and Icinga
+    - fixed Correct-Statusbar-Position-O-Matic
+    - fixed some Thruk issues
+    - fixed popup resizing artefact
+    - fixed some server edit dialog bugs
+    - fixed missing auth field in Icinga when credentials are wrong
 
- -- Henri Wahl <h.wahl@ifw-dresden.de>  Fri, 12 Jul 2013 14:35:00 +0200
+ -- Henri Wahl <h.wahl@ifw-dresden.de>  Mon, 29 Jul 2013 10:35:00 +0200
 
 nagstamon (0.9.10) unstable; urgency=low
 
