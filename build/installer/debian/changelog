@@ -11,6 +11,7 @@ nagstamon (0.9.11) unstable; urgency=low
     - fixed popup resizing artefact
     - fixed some server edit dialog bugs
     - fixed missing auth field in Icinga when credentials are wrong
+    - fixed quoting URLs for browser actions
 
  -- Henri Wahl <h.wahl@ifw-dresden.de>  Wed, 11 Sep 2013 09:00:00 +0200
 
