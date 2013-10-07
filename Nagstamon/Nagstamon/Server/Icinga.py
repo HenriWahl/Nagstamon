@@ -149,7 +149,8 @@ class IcingaServer(GenericServer):
         try:
             for status_type in "hard", "soft":
                 result = self.FetchURL(self.cgiurl_hosts[status_type], giveback="raw")
-                jsonraw, error = copy.deepcopy(result.result), copy.deepcopy(result.error)
+                # purify JSON result of unnecessary control sequence \n
+                jsonraw, error = copy.deepcopy(result.result.replace("\n", "")), copy.deepcopy(result.error)
 
                 if error != "": return Result(result=jsonraw, error=error)
 
@@ -194,7 +195,8 @@ class IcingaServer(GenericServer):
         try:
             for status_type in "hard", "soft":
                 result = self.FetchURL(self.cgiurl_services[status_type], giveback="raw")
-                jsonraw, error = copy.deepcopy(result.result), copy.deepcopy(result.error)
+                # purify JSON result of unnecessary control sequence \n
+                jsonraw, error = copy.deepcopy(result.result.replace("\n", "")), copy.deepcopy(result.error)
 
                 if error != "": return Result(result=jsonraw, error=error)
 
