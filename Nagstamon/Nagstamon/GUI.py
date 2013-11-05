@@ -52,6 +52,7 @@ from Nagstamon import Config
 from Nagstamon import Actions
 from Nagstamon import Objects
 from Nagstamon import Custom # used for initialization of custom components
+from Nagstamon.pybuddylib import iBuddyDevice
 
 import sys
 import copy
@@ -129,6 +130,20 @@ class GUI(object):
                                   gobject.TYPE_STRING,\
                                   gtk.gdk.Pixbuf, gtk.gdk.Pixbuf, gtk.gdk.Pixbuf, gtk.gdk.Pixbuf,\
                                   gtk.gdk.Pixbuf, gtk.gdk.Pixbuf, gtk.gdk.Pixbuf, gtk.gdk.Pixbuf]
+
+        # iBuddy settings
+        self.buddycolor = iBuddyDevice.GREEN
+        self.buddyheart = iBuddyDevice.OFF
+
+        try:
+            self.buddy = iBuddyDevice()
+            self.buddy.doReset()
+            self.buddy.doColorName(self.buddycolor)
+            self.buddy.setHeart(self.buddyheart)
+
+        except:
+            # do nothing
+            self.buddy = None
 
         # decide if the platform can handle SVG if not use PNG
         if platform.system() in ["Darwin", "Windows"]:
@@ -534,6 +549,9 @@ class GUI(object):
             self.popwin.Resize()
 
         # everything OK
+        self.buddycolor = iBuddyDevice.GREEN
+        self.buddyheart = iBuddyDevice.OFF
+
         if unknowns == 0 and warnings == 0 and criticals == 0 and unreachables == 0 and downs == 0 and self.status_ok is not False:
             self.statusbar.statusbar_labeltext = '<span size="' + str(self.fontsize) + '" background="' + str(self.conf.color_ok_background) + '" foreground="' + str(self.conf.color_ok_text) + '"> OK </span>'
             self.statusbar.statusbar_labeltext_inverted = self.statusbar.statusbar_labeltext
@@ -658,6 +676,31 @@ class GUI(object):
                 # set new icon
                 self.appindicator.Indicator.set_attention_icon(self.Resources + os.sep + "nagstamon_" + color + self.BitmapSuffix)
                 self.appindicator.Indicator.set_status(appindicator.STATUS_ATTENTION)
+
+            # set iBuddy status
+            if self.buddy is not None:
+                if downs > 0:
+                    color = "black"
+                    self.buddycolor = iBuddyDevice.RED
+                    self.buddyheart = iBuddyDevice.ON
+                    self.buddy.doWiggle(5)
+                elif unreachables > 0:
+                    color = "darkred"
+                    self.buddycolor = iBuddyDevice.YELLOW
+                    self.buddyheart = iBuddyDevice.ON
+                    self.buddy.doFlap(5)
+                elif criticals > 0:
+                    color = "red"
+                    self.buddycolor = iBuddyDevice.RED
+                elif warnings > 0:
+                    color = "yellow"
+                    self.buddycolor = iBuddyDevice.YELLOW
+                elif unknowns > 0:
+                    color = "orange"
+                    self.buddycolor = iBuddyDevice.PURPLE
+
+                self.buddy.doColorName(self.buddycolor)
+                self.buddy.setHeart(self.buddyheart)
 
             # if there has been any status change notify user
             # first find out which of all servers states is the worst similar to nagstamonObjects.GetStatus()
@@ -1249,6 +1292,8 @@ class GUI(object):
         """
             exit....
         """
+        if self.buddy is not None:
+            self.buddy.doReset()
         self.conf.SaveConfig(output=self)
         gtk.main_quit()
 
