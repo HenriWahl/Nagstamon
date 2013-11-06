@@ -546,6 +546,10 @@ class Notification(threading.Thread):
             time.sleep(0.5)
         # reset statusbar
         self.output.statusbar.Label.set_markup(self.output.statusbar.statusbar_labeltext)
+        # reset iBuddy
+        if self.output.buddy is not None:
+            self.output.buddy.doColorName(self.output.buddycolor)
+            self.output.buddy.setHeart(self.output.buddyheart)
 
 
 class MoveStatusbar(threading.Thread):
