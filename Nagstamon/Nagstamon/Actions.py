@@ -517,12 +517,12 @@ class Notification(threading.Thread):
         soundcount = 0
         # in case of notifying in statusbar do some flashing and honking
         while self.output.Notifying == True:
-            if self.output.buddy is not None:
-                self.output.buddy.doColorName(self.output.buddycolor)
-                if self.output.buddyheart == iBuddyDevice.ON and self.output.buddy.getHeart() == iBuddyDevice.OFF :
-                    self.output.buddy.setHeart(iBuddyDevice.ON)
+            if self.output.buddy is not None and self.output.statusbar.Flashing == True:
+                if self.output.buddy.command == iBuddyDevice.CLEAR:
+                    self.output.buddy.doColorName(self.output.buddycolor)
+                    self.output.buddy.setHeart(self.output.buddyheart)
                 else :
-                    self.output.buddy.setHeart(iBuddyDevice.OFF)
+                    self.output.buddy.doReset()
 
             # as long as flashing flag is set statusbar flashes until someone takes care
             if self.output.statusbar.Flashing == True:
@@ -543,9 +543,6 @@ class Notification(threading.Thread):
                     soundcount = 0
                 else:
                     soundcount += 1
-            # wiggle iBuddy
-            if self.output.buddy is not None:
-                self.output.buddy.doWiggle()
             time.sleep(0.5)
         # reset statusbar
         self.output.statusbar.Label.set_markup(self.output.statusbar.statusbar_labeltext)

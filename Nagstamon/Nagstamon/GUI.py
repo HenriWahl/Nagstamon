@@ -1520,9 +1520,7 @@ class StatusBar(object):
         if menu_entry == "Settings...": self.output.GetDialog(dialog="Settings", servers=self.output.servers, output=self.output, conf=self.conf, first_page="Servers")
         if menu_entry == "Save position": self.conf.SaveConfig(output=self.output)
         if menu_entry == "About": self.output.AboutDialog()
-        if menu_entry == "Exit":
-            self.conf.SaveConfig(output=self.output)
-            gtk.main_quit()
+        if menu_entry == "Exit": self.output.Exit(True)
 
 
     def Clicked(self, widget=None, event=None):
