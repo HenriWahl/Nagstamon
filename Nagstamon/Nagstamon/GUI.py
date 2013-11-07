@@ -548,10 +548,6 @@ class GUI(object):
         if str(self.conf.fullscreen) == "False":
             self.popwin.Resize()
 
-        # everything OK
-        self.buddycolor = iBuddyDevice.GREEN
-        self.buddyheart = iBuddyDevice.OFF
-
         if unknowns == 0 and warnings == 0 and criticals == 0 and unreachables == 0 and downs == 0 and self.status_ok is not False:
             self.statusbar.statusbar_labeltext = '<span size="' + str(self.fontsize) + '" background="' + str(self.conf.color_ok_background) + '" foreground="' + str(self.conf.color_ok_text) + '"> OK </span>'
             self.statusbar.statusbar_labeltext_inverted = self.statusbar.statusbar_labeltext
@@ -578,6 +574,11 @@ class GUI(object):
                 self.appindicator.Menu_CRITICAL.hide()
                 self.appindicator.Menu_UNREACHABLE.hide()
                 self.appindicator.Menu_DOWN.hide()
+
+            # calculate iBuddy status
+            if self.buddy is not None:
+                self.buddycolor = iBuddyDevice.GREEN
+                self.buddyheart = iBuddyDevice.OFF
 
             # switch notification off
             self.NotificationOff()
@@ -677,7 +678,7 @@ class GUI(object):
                 self.appindicator.Indicator.set_attention_icon(self.Resources + os.sep + "nagstamon_" + color + self.BitmapSuffix)
                 self.appindicator.Indicator.set_status(appindicator.STATUS_ATTENTION)
 
-            # set iBuddy status
+            # calculate iBuddy status
             if self.buddy is not None:
                 if downs > 0:
                     color = "black"
@@ -699,8 +700,6 @@ class GUI(object):
                     color = "orange"
                     self.buddycolor = iBuddyDevice.PURPLE
 
-                self.buddy.doColorName(self.buddycolor)
-                self.buddy.setHeart(self.buddyheart)
 
             # if there has been any status change notify user
             # first find out which of all servers states is the worst similar to nagstamonObjects.GetStatus()
@@ -724,6 +723,11 @@ class GUI(object):
 
             # set self.showPopwin to True because there is something to show
             self.popwin.showPopwin = True
+
+        # set iBuddy status
+        if self.buddy is not None:
+            self.buddy.doColorName(self.buddycolor)
+            self.buddy.setHeart(self.buddyheart)
 
         # if only one monitor cannot be reached show popwin to inform about its trouble
         for server in self.servers.values():
