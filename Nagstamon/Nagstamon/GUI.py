@@ -694,12 +694,15 @@ class GUI(object):
                 elif criticals > 0:
                     color = "red"
                     self.buddycolor = iBuddyDevice.RED
+                    self.buddyheart = iBuddyDevice.OFF
                 elif warnings > 0:
                     color = "yellow"
                     self.buddycolor = iBuddyDevice.YELLOW
+                    self.buddyheart = iBuddyDevice.OFF
                 elif unknowns > 0:
                     color = "orange"
                     self.buddycolor = iBuddyDevice.PURPLE
+                    self.buddyheart = iBuddyDevice.OFF
 
 
             # if there has been any status change notify user
