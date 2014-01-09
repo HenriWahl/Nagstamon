@@ -1422,7 +1422,11 @@ class StatusBar(object):
         self.StatusBar.stick()
         # at http://www.pygtk.org/docs/pygtk/gdk-constants.html#gdk-window-type-hint-constants
         # there are some hint types to experiment with
-        self.StatusBar.set_type_hint(gtk.gdk.WINDOW_TYPE_HINT_MENU)
+        # see https://github.com/HenriWahl/Nagstamon/issues/51
+        if platform.system() == "Windows":
+            self.StatusBar.set_type_hint(gtk.gdk.WINDOW_TYPE_HINT_UTILITY)
+        else:
+            self.StatusBar.set_type_hint(gtk.gdk.WINDOW_TYPE_HINT_MENU)
         self.StatusBar.set_property("skip-taskbar-hint", True)
         self.StatusBar.set_skip_taskbar_hint(True)
 
