@@ -292,7 +292,7 @@ class RecheckAll(threading.Thread):
                     self.servers.values()[0].Debug(debug="Recheck all: Rechecking all services on all hosts on all servers...")
                 for server in self.servers.values():
                     # only test enabled servers and only if not already
-                    if str(self.conf.servers[server.get_name()].enabled):
+                    if str(self.conf.servers[server.get_name()].enabled) == "True":
                         # set server status for status field in popwin
                         server.status = "Rechecking all started"
                         gobject.idle_add(self.output.popwin.UpdateStatus, server)

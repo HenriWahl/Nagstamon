@@ -29,8 +29,6 @@
 import sys
 import urllib
 import webbrowser
-import traceback
-import base64
 import time
 
 from Nagstamon import Actions
@@ -426,23 +424,6 @@ class MultisiteServer(GenericServer):
         return Result(result=address)
 
 
-    def _set_recheck(self, host, service):
-        if service != "":
-            if self.hosts[host].services[service].is_passive_only() and not service['Service check command'].startswith('check_mk'):
-                # Do not check passive only checks
-                return
-
-            if self.hosts[host].services[service].command.startswith('check_mk'):
-                if str(self.conf.debug_mode) == "True":
-                    self.Debug(server=self.get_name(), host=host, debug ="This is a passive child of Check_MK. Re-schedule the Check_MK service")
-
-                service = 'Check_MK'
-
-        result = self.FetchURL(self.urls['api_reschedule'] + '&' + urllib.urlencode({'site': self.hosts[host].site,
-                                                                                     'host': host,
-                                                                                     'service': service}), giveback='raw')
-
-
     def get_start_end(self, host):
         return time.strftime("%Y-%m-%d %H:%M"), time.strftime("%Y-%m-%d %H:%M", time.localtime(time.time() + 7200))
 
@@ -494,3 +475,8 @@ class MultisiteServer(GenericServer):
             self._action(self.hosts[host].site, host, s, p)
 
 
+    def _set_recheck(self, host, service):
+        p = {
+            '_resched_checks':    'Reschedule active checks',
+        }
+        self._action(self.hosts[host].site, host, service, p)
