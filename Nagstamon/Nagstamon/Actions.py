@@ -297,23 +297,27 @@ class RecheckAll(threading.Thread):
                         server.status = "Rechecking all started"
                         gobject.idle_add(self.output.popwin.UpdateStatus, server)
 
-                        for host in server.hosts.values():
-                            # construct an unique key which refers to rechecking thread in dictionary
-                            rechecks_dict[server.get_name() + ": " + host.get_name()] = Recheck(server=server, host=host.get_name(), service="")
-                            rechecks_dict[server.get_name() + ": " + host.get_name()].start()
-                            # debug
-                            if str(self.conf.debug_mode) == "True":
-                                server.Debug(server=server.get_name(), host=host.get_name(), debug="Rechecking...")
-                            for service in host.services.values():
-                                # dito
-                                if service.is_passive_only() == True:
-                                    continue
-                                rechecks_dict[server.get_name() + ": " + host.get_name() + ": " + service.get_name()] = Recheck(server=server, host=host.get_name(), service=service.get_name())
-                                rechecks_dict[server.get_name() + ": " + host.get_name() + ": " + service.get_name()].start()
+                        # special treatment for Check_MK Multisite because there is only one URL call necessary
+                        if server.type != "Check_MK Multisite":
+                            for host in server.hosts.values():
+                                # construct an unique key which refers to rechecking thread in dictionary
+                                rechecks_dict[server.get_name() + ": " + host.get_name()] = Recheck(server=server, host=host.get_name(), service="")
+                                rechecks_dict[server.get_name() + ": " + host.get_name()].start()
                                 # debug
                                 if str(self.conf.debug_mode) == "True":
-                                    server.Debug(server=server.get_name(), host=host.get_name(), service=service.get_name(), debug="Rechecking...")
-
+                                    server.Debug(server=server.get_name(), host=host.get_name(), debug="Rechecking...")
+                                for service in host.services.values():
+                                    # dito
+                                    if service.is_passive_only() == True:
+                                        continue
+                                    rechecks_dict[server.get_name() + ": " + host.get_name() + ": " + service.get_name()] = Recheck(server=server, host=host.get_name(), service=service.get_name())
+                                    rechecks_dict[server.get_name() + ": " + host.get_name() + ": " + service.get_name()].start()
+                                    # debug
+                                    if str(self.conf.debug_mode) == "True":
+                                        server.Debug(server=server.get_name(), host=host.get_name(), service=service.get_name(), debug="Rechecking...")
+                        else:
+                            # Check_MK Multisite does it its own way
+                            server.recheck_all()
                 # wait until all rechecks have been done
                 while len(rechecks_dict) > 0:
                     # debug

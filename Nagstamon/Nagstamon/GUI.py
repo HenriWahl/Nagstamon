@@ -1201,6 +1201,7 @@ class GUI(object):
         """
             call threaded recheck all action
         """
+
         recheckall = Actions.RecheckAll(servers=self.servers, output=self, conf=self.conf)
         recheckall.start()
 

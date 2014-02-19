@@ -145,6 +145,7 @@ class MultisiteServer(GenericServer):
               'api_reschedule':  self.monitor_url + 'nagios_action.py?action=reschedule',
               'api_host_act':    self.monitor_url + 'view.py?_transid=-1&_do_actions=yes&_do_confirm=Yes!&output_format=python&view_name=hoststatus',
               'api_service_act': self.monitor_url + 'view.py?_transid=-1&_do_actions=yes&_do_confirm=Yes!&output_format=python&view_name=service',
+              'api_svcprob_act': self.monitor_url + 'view.py?_transid=-1&_do_actions=yes&_do_confirm=Yes!&output_format=python&view_name=svcproblems',
               'human_events':    self.monitor_url + "index.py?%s" %
                                                    urllib.urlencode({'start_url': 'view.py?view_name=events'}),
             }
@@ -442,7 +443,7 @@ class MultisiteServer(GenericServer):
             url = self.urls['api_service_act']
 
         if str(self.conf.debug_mode) == "True":
-            self.Debug(server=self.get_name(), host=host, debug ="Adding downtime: " + url + '&' + urllib.urlencode(params))
+            self.Debug(server=self.get_name(), host=host, debug ="Submitting action: " + url + '&' + urllib.urlencode(params))
 
         result = self.FetchURL(url + '&' + urllib.urlencode(params), giveback = 'raw')
 
@@ -480,3 +481,17 @@ class MultisiteServer(GenericServer):
             '_resched_checks':    'Reschedule active checks',
         }
         self._action(self.hosts[host].site, host, service, p)
+
+
+    def recheck_all(self):
+        """
+        special method for Check_MK as there is one URL for rescheduling all problems to be checked
+        """
+        params = dict()
+        params['_resched_checks'] = 'Reschedule active checks'
+        url = self.urls['api_svcprob_act']
+
+        if str(self.conf.debug_mode) == "True":
+            self.Debug(server=self.get_name(), debug ="Rechecking all action: " + url + '&' + urllib.urlencode(params))
+
+        result = self.FetchURL(url + '&' + urllib.urlencode(params), giveback = 'raw')
