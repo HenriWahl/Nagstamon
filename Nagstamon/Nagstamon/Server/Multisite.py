@@ -130,19 +130,18 @@ class MultisiteServer(GenericServer):
         # Prepare all urls needed by nagstamon if not yet done
         if len(self.urls) == len(self.statemap):
             self.urls = {
-              'api_services':    self.monitor_url + "view.py?view_name=nagstamon_svc&output_format=python",
+              'api_services':    self.monitor_url + "view.py?view_name=nagstamon_svc&output_format=python&lang=",
               'human_services':  self.monitor_url + "index.py?%s" % \
                                                    urllib.urlencode({'start_url': 'view.py?view_name=nagstamon_svc'}),
               'human_service':   self.monitor_url + "index.py?%s" %
                                                    urllib.urlencode({'start_url': 'view.py?view_name=service'}),
 
-              'api_hosts':       self.monitor_url + "view.py?view_name=nagstamon_hosts&output_format=python",
+              'api_hosts':       self.monitor_url + "view.py?view_name=nagstamon_hosts&output_format=python&lang=",
               'human_hosts':     self.monitor_url + "index.py?%s" %
                                                    urllib.urlencode({'start_url': 'view.py?view_name=nagstamon_hosts'}),
               'human_host':      self.monitor_url + "index.py?%s" %
                                                    urllib.urlencode({'start_url': 'view.py?view_name=hoststatus'}),
 
-              'api_reschedule':  self.monitor_url + 'nagios_action.py?action=reschedule',
               'api_host_act':    self.monitor_url + 'view.py?_transid=-1&_do_actions=yes&_do_confirm=Yes!&output_format=python&view_name=hoststatus',
               'api_service_act': self.monitor_url + 'view.py?_transid=-1&_do_actions=yes&_do_confirm=Yes!&output_format=python&view_name=service',
               'api_svcprob_act': self.monitor_url + 'view.py?_transid=-1&_do_actions=yes&_do_confirm=Yes!&output_format=python&view_name=svcproblems',
