@@ -52,6 +52,7 @@ from Nagstamon import Config
 from Nagstamon import Actions
 from Nagstamon import Objects
 from Nagstamon import Custom # used for initialization of custom components
+from Nagstamon.pybuddylib import iBuddyDevice
 
 import sys
 import copy
@@ -129,6 +130,20 @@ class GUI(object):
                                   gobject.TYPE_STRING,\
                                   gtk.gdk.Pixbuf, gtk.gdk.Pixbuf, gtk.gdk.Pixbuf, gtk.gdk.Pixbuf,\
                                   gtk.gdk.Pixbuf, gtk.gdk.Pixbuf, gtk.gdk.Pixbuf, gtk.gdk.Pixbuf]
+
+        # iBuddy settings
+        self.buddycolor = iBuddyDevice.GREEN
+        self.buddyheart = iBuddyDevice.OFF
+
+        try:
+            self.buddy = iBuddyDevice()
+            self.buddy.doReset()
+            self.buddy.doColorName(self.buddycolor)
+            self.buddy.setHeart(self.buddyheart)
+
+        except:
+            # do nothing
+            self.buddy = None
 
         # decide if the platform can handle SVG if not use PNG
         if platform.system() in ["Darwin", "Windows"]:
@@ -561,6 +576,11 @@ class GUI(object):
                 self.appindicator.Menu_UNREACHABLE.hide()
                 self.appindicator.Menu_DOWN.hide()
 
+            # calculate iBuddy status
+            if self.buddy is not None:
+                self.buddycolor = iBuddyDevice.GREEN
+                self.buddyheart = iBuddyDevice.OFF
+
             # switch notification off
             self.NotificationOff()
 
@@ -659,6 +679,32 @@ class GUI(object):
                 self.appindicator.Indicator.set_attention_icon(self.Resources + os.sep + "nagstamon_" + color + self.BitmapSuffix)
                 self.appindicator.Indicator.set_status(appindicator.STATUS_ATTENTION)
 
+            # calculate iBuddy status
+            if self.buddy is not None:
+                if downs > 0:
+                    color = "black"
+                    self.buddycolor = iBuddyDevice.RED
+                    self.buddyheart = iBuddyDevice.ON
+                    self.buddy.doWiggle(5)
+                elif unreachables > 0:
+                    color = "darkred"
+                    self.buddycolor = iBuddyDevice.YELLOW
+                    self.buddyheart = iBuddyDevice.ON
+                    self.buddy.doFlap(5)
+                elif criticals > 0:
+                    color = "red"
+                    self.buddycolor = iBuddyDevice.RED
+                    self.buddyheart = iBuddyDevice.OFF
+                elif warnings > 0:
+                    color = "yellow"
+                    self.buddycolor = iBuddyDevice.YELLOW
+                    self.buddyheart = iBuddyDevice.OFF
+                elif unknowns > 0:
+                    color = "orange"
+                    self.buddycolor = iBuddyDevice.PURPLE
+                    self.buddyheart = iBuddyDevice.OFF
+
+
             # if there has been any status change notify user
             # first find out which of all servers states is the worst similar to nagstamonObjects.GetStatus()
             worst = 0
@@ -681,6 +727,11 @@ class GUI(object):
 
             # set self.showPopwin to True because there is something to show
             self.popwin.showPopwin = True
+
+        # set iBuddy status
+        if self.buddy is not None:
+            self.buddy.doColorName(self.buddycolor)
+            self.buddy.setHeart(self.buddyheart)
 
         # if only one monitor cannot be reached show popwin to inform about its trouble
         for server in self.servers.values():
@@ -1250,6 +1301,8 @@ class GUI(object):
         """
             exit....
         """
+        if self.buddy is not None:
+            self.buddy.doReset()
         self.conf.SaveConfig(output=self)
         gtk.main_quit()
 
@@ -1480,9 +1533,7 @@ class StatusBar(object):
         if menu_entry == "Settings...": self.output.GetDialog(dialog="Settings", servers=self.output.servers, output=self.output, conf=self.conf, first_page="Servers")
         if menu_entry == "Save position": self.conf.SaveConfig(output=self.output)
         if menu_entry == "About": self.output.AboutDialog()
-        if menu_entry == "Exit":
-            self.conf.SaveConfig(output=self.output)
-            gtk.main_quit()
+        if menu_entry == "Exit": self.output.Exit(True)
 
 
     def Clicked(self, widget=None, event=None):
