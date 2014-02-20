@@ -160,19 +160,8 @@ class MultisiteServer(GenericServer):
         if self.CookieAuth:
             # get cookie to access Check_MK web interface
             if len(self.Cookie) == 0:
-                # put all necessary data into url string
-                logindata = urllib.urlencode({"_username":self.get_username(),\
-                                 "_password":self.get_password(),\
-                                 "_login":"1",\
-                                 "_origtarget": "",\
-                                 "filled_in":"login"})
-                # get cookie from login page via url retrieving as with other urls
-                try:
-                    # login and get cookie
-                    urlcontent = self.urlopener.open(self.monitor_url + "/login.py", logindata)
-                    urlcontent.close()
-                except:
-                    self.Error(sys.exc_info())
+                # if no cookie yet login
+                self._get_cookie_login()
 
         GenericServer.init_HTTP(self)
 
@@ -205,7 +194,7 @@ class MultisiteServer(GenericServer):
             raise MultisiteError(True, Result(result = content,
                                                error = content))
 
-        # in case of wrong password enable GUI auth part in popup
+        # in case of auth problem enable GUI auth part in popup
         if self.CookieAuth == True and len(self.Cookie) == 0:
             self.refresh_authentication = True
             return Result(result="", error="Authentication failed")
@@ -213,9 +202,34 @@ class MultisiteServer(GenericServer):
        # looks like cookieauth
         elif content.startswith('<'):
             self.CookieAuth = True
-            return ""
+            # if first attempt login and then try to get data again
+            if len(self.Cookie) == 0:
+                self._get_cookie_login()
+                result = self.FetchURL(url, 'raw')
+                content, error = result.result, result.error
+                if content.startswith('<'):
+                    return ""
 
         return eval(content)
+
+
+    def _get_cookie_login(self):
+        """
+        login on cookie monitor site
+        """
+        # put all necessary data into url string
+        logindata = urllib.urlencode({"_username":self.get_username(),\
+                         "_password":self.get_password(),\
+                         "_login":"1",\
+                         "_origtarget": "",\
+                         "filled_in":"login"})
+        # get cookie from login page via url retrieving as with other urls
+        try:
+            # login and get cookie
+            urlcontent = self.urlopener.open(self.monitor_url + "/login.py", logindata)
+            urlcontent.close()
+        except:
+                    self.Error(sys.exc_info())
 
 
     def _get_status(self):
@@ -352,10 +366,6 @@ class MultisiteServer(GenericServer):
                     if service.has_key('svc_acknowledged'):
                         if service['svc_acknowledged'] == 'yes':
                             self.new_hosts[n["host"]].services[new_service].acknowledged = True
-                    # the following lead to wrong "passive" P sign in status window
-                    #if service.has_key('svc_is_active'):
-                    #    if service['svc_is_active'] == 'no' and not service['svc_check_command'].startswith('check_mk'):
-                    #        self.new_hosts[n["host"]].services[new_service].passiveonly = True
                     if service.has_key('svc_flapping'):
                         if service['svc_flapping'] == 'yes':
                             self.new_hosts[n["host"]].services[new_service].flapping = True
