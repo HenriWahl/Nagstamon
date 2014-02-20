@@ -89,8 +89,8 @@ class MultisiteServer(GenericServer):
 
     # URLs for browser shortlinks/buttons on popup window
     BROWSER_URLS= { "monitor": "$MONITOR$",\
-                    "hosts": "$MONITOR$/index.py?start_url=view.py?view_name=nagstamon_hosts",\
-                    "services": "$MONITOR$/index.py?start_url=view.py?view_name=nagstamon_svc",\
+                    "hosts": "$MONITOR$/index.py?start_url=view.py?view_name=hostproblems",\
+                    "services": "$MONITOR$/index.py?start_url=view.py?view_name=svcproblems",\
                     "history": '$MONITOR$/index.py?start_url=view.py?view_name=events'}
 
     # A Monitor CGI URL is not necessary so hide it in settings
@@ -166,7 +166,6 @@ class MultisiteServer(GenericServer):
                                  "_login":"1",\
                                  "_origtarget": "",\
                                  "filled_in":"login"})
-
                 # get cookie from login page via url retrieving as with other urls
                 try:
                     # login and get cookie
@@ -206,7 +205,12 @@ class MultisiteServer(GenericServer):
             raise MultisiteError(True, Result(result = content,
                                                error = content))
 
-        # looks like cookieauth
+        # in case of wrong password enable GUI auth part in popup
+        if self.CookieAuth == True and len(self.Cookie) == 0:
+            self.refresh_authentication = True
+            return Result(result="", error="Authentication failed")
+
+       # looks like cookieauth
         elif content.startswith('<'):
             self.CookieAuth = True
             return ""
