@@ -883,6 +883,7 @@ def StatusInformationIsFilteredOutByRE(status_information, conf=None):
         import traceback
         traceback.print_exc(file=sys.stdout)
 
+
 def CriticalityIsFilteredOutByRE(criticality, conf=None):
     """
         helper for applying RE filters in Generic.GetStatus()
@@ -895,6 +896,7 @@ def CriticalityIsFilteredOutByRE(criticality, conf=None):
     except:
         import traceback
         traceback.print_exc(file=sys.stdout)
+
 
 def HumanReadableDuration(seconds):
     """
@@ -1012,6 +1014,13 @@ def MD5ify(string):
     makes something md5y of a given username or password for Centreon web interface access
     """
     return md5(string).hexdigest()
+
+
+def RunNotificationAction(action):
+    """
+    run action for notification
+    """
+    subprocess.Popen(action, shell=True)
 
 
 # <IMPORT>

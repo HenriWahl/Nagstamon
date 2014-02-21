@@ -223,6 +223,9 @@ class GUI(object):
         # flag which is set True if already notifying
         self.Notifying = False
 
+        # last worst state for notification
+        self.last_worst_status = "UP"
+
         # defining sorting defaults in first render
         HOST_COLUMN_ID = 0
         SERVICE_COLUMN_ID = 1
@@ -678,9 +681,18 @@ class GUI(object):
                     server.WorstStatus = "UP"
                 if not worst_status == "UP" and str(self.conf.notification) == "True":
                     self.NotificationOn(status=worst_status, ducuw=(downs, unreachables, criticals, unknowns, warnings))
+                    # store latst worst status for decide if there has to be notification action
+                    # when all is OK some lines later
+                    self.last_worst_status = worst_status
 
             # set self.showPopwin to True because there is something to show
             self.popwin.showPopwin = True
+
+        # id all gets OK and an notifikation actions is defined run it
+        if self.status_ok and self.last_worst_status != "UP":
+            if str(self.conf.notification_action_ok) == "True":
+               Actions.RunNotificationAction(str(self.conf.notification_action_ok_string))
+            self.last_worst_status = "UP"
 
         # if only one monitor cannot be reached show popwin to inform about its trouble
         for server in self.servers.values():
@@ -1150,6 +1162,7 @@ class GUI(object):
                             elif str(self.conf.appindicator) == "True":
                                 self.appindicator.Flashing = True
 
+                        # flashing notification
                         notify = Actions.Notification(output=self, sound=status, Resources=self.Resources, conf=self.conf, servers=self.servers)
                         notify.start()
 
@@ -1167,7 +1180,15 @@ class GUI(object):
                                 self.notify_bubble.add_action("action", "Open popup window", self.popwin.PopUp)
                             self.notify_bubble.show()
 
-                         # if desired pop up status window
+                        # Notification actions
+                        if str(self.conf.notification_action_warning) == "True":
+                            Actions.RunNotificationAction(str(self.conf.notification_action_warning_string))
+                        if str(self.conf.notification_action_critical) == "True":
+                            Actions.RunNotificationAction(str(self.conf.notification_action_critical_string))
+                        if str(self.conf.notification_action_down) == "True":
+                            Actions.RunNotificationAction(str(self.conf.notification_action_down_string))
+                            
+                        # if desired pop up status window
                         # sorry but does absolutely not work with windows and systray icon so I prefer to let it be
                         #if str(self.conf.notification_popup) == "True":
                         #    self.popwin.showPopwin = True
@@ -2795,6 +2816,10 @@ class Settings(object):
                           "color-set": self.ColorsPreview,
                           "radiobutton_icon_in_systray_toggled": self.ToggleSystrayPopupOffset,
                           "radiobutton_fullscreen_toggled": self.ToggleFullscreenDisplay,
+                          "notification_action_warning": self.ToggleNotificationActionWarning,
+                          "notification_action_critical": self.ToggleNotificationActionCritical,
+                          "notification_action_down": self.ToggleNotificationActionDown,
+                          "notification_action_ok": self.ToggleNotificationActionOk,
                           "button_new_action": lambda a: self.output.GetDialog(dialog="NewAction", output=self.output, settingsdialog=self, conf=self.conf),
                           "button_edit_action": lambda e: self.output.GetDialog(dialog="EditAction", output=self.output, selected_action=self.selected_action, settingsdialog=self, conf=self.conf),
                           "button_delete_action": lambda d: self.DeleteAction(self.selected_action, self.conf.actions),
@@ -2871,6 +2896,12 @@ class Settings(object):
 
         # toggle fullscreen display selection combobox
         self.ToggleFullscreenDisplay()
+
+        # toggle notification action options
+        self.ToggleNotificationActionWarning()
+        self.ToggleNotificationActionCritical()
+        self.ToggleNotificationActionDown()
+        self.ToggleNotificationActionOk()
 
         # set filters fore sound filechoosers
         filters = dict()
@@ -3463,6 +3494,42 @@ class Settings(object):
         """
         options = self.builder.get_object("hbox_fullscreen_display")
         checkbutton = self.builder.get_object("input_radiobutton_fullscreen")
+        options.set_sensitive(checkbutton.get_active())
+
+
+    def ToggleNotificationActionWarning(self, widget=None):
+        """
+            Toggle notification action for WARNING
+        """
+        options = self.builder.get_object("input_entry_notification_action_warning_string")
+        checkbutton = self.builder.get_object("input_checkbutton_notification_action_warning")
+        options.set_sensitive(checkbutton.get_active())
+
+
+    def ToggleNotificationActionCritical(self, widget=None):
+        """
+            Toggle notification action for CRITICAL
+        """
+        options = self.builder.get_object("input_entry_notification_action_critical_string")
+        checkbutton = self.builder.get_object("input_checkbutton_notification_action_critical")
+        options.set_sensitive(checkbutton.get_active())
+
+
+    def ToggleNotificationActionDown(self, widget=None):
+        """
+            Toggle notification action for DOWN
+        """
+        options = self.builder.get_object("input_entry_notification_action_down_string")
+        checkbutton = self.builder.get_object("input_checkbutton_notification_action_down")
+        options.set_sensitive(checkbutton.get_active())
+
+
+    def ToggleNotificationActionOk(self, widget=None):
+        """
+            Toggle notification action for OK
+        """
+        options = self.builder.get_object("input_entry_notification_action_ok_string")
+        checkbutton = self.builder.get_object("input_checkbutton_notification_action_ok")
         options.set_sensitive(checkbutton.get_active())
 
 

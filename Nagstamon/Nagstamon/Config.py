@@ -84,6 +84,14 @@ class Config(object):
         self.notification_custom_sound_warning = None
         self.notification_custom_sound_critical = None
         self.notification_custom_sound_down = None
+        self.notification_action_warning = False
+        self.notification_action_warning_string = ""
+        self.notification_action_critical = False
+        self.notification_action_critical_string = ""
+        self.notification_action_down = False
+        self.notification_action_down_string = ""
+        self.notification_action_ok = False
+        self.notification_action_ok_string = ""
         self.notify_if_warning = True
         self.notify_if_critical = True
         self.notify_if_unknown = True
