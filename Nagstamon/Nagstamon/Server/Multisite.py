@@ -29,8 +29,6 @@
 import sys
 import urllib
 import webbrowser
-import traceback
-import base64
 import time
 
 from Nagstamon import Actions
@@ -91,8 +89,8 @@ class MultisiteServer(GenericServer):
 
     # URLs for browser shortlinks/buttons on popup window
     BROWSER_URLS= { "monitor": "$MONITOR$",\
-                    "hosts": "$MONITOR$/index.py?start_url=view.py?view_name=nagstamon_hosts",\
-                    "services": "$MONITOR$/index.py?start_url=view.py?view_name=nagstamon_svc",\
+                    "hosts": "$MONITOR$/index.py?start_url=view.py?view_name=hostproblems",\
+                    "services": "$MONITOR$/index.py?start_url=view.py?view_name=svcproblems",\
                     "history": '$MONITOR$/index.py?start_url=view.py?view_name=events'}
 
     # A Monitor CGI URL is not necessary so hide it in settings
@@ -132,21 +130,21 @@ class MultisiteServer(GenericServer):
         # Prepare all urls needed by nagstamon if not yet done
         if len(self.urls) == len(self.statemap):
             self.urls = {
-              'api_services':    self.monitor_url + "view.py?view_name=nagstamon_svc&output_format=python",
+              'api_services':    self.monitor_url + "view.py?view_name=nagstamon_svc&output_format=python&lang=",
               'human_services':  self.monitor_url + "index.py?%s" % \
                                                    urllib.urlencode({'start_url': 'view.py?view_name=nagstamon_svc'}),
               'human_service':   self.monitor_url + "index.py?%s" %
                                                    urllib.urlencode({'start_url': 'view.py?view_name=service'}),
 
-              'api_hosts':       self.monitor_url + "view.py?view_name=nagstamon_hosts&output_format=python",
+              'api_hosts':       self.monitor_url + "view.py?view_name=nagstamon_hosts&output_format=python&lang=",
               'human_hosts':     self.monitor_url + "index.py?%s" %
                                                    urllib.urlencode({'start_url': 'view.py?view_name=nagstamon_hosts'}),
               'human_host':      self.monitor_url + "index.py?%s" %
                                                    urllib.urlencode({'start_url': 'view.py?view_name=hoststatus'}),
 
-              'api_reschedule':  self.monitor_url + 'nagios_action.py?action=reschedule',
               'api_host_act':    self.monitor_url + 'view.py?_transid=-1&_do_actions=yes&_do_confirm=Yes!&output_format=python&view_name=hoststatus',
               'api_service_act': self.monitor_url + 'view.py?_transid=-1&_do_actions=yes&_do_confirm=Yes!&output_format=python&view_name=service',
+              'api_svcprob_act': self.monitor_url + 'view.py?_transid=-1&_do_actions=yes&_do_confirm=Yes!&output_format=python&view_name=svcproblems',
               'human_events':    self.monitor_url + "index.py?%s" %
                                                    urllib.urlencode({'start_url': 'view.py?view_name=events'}),
             }
@@ -162,20 +160,8 @@ class MultisiteServer(GenericServer):
         if self.CookieAuth:
             # get cookie to access Check_MK web interface
             if len(self.Cookie) == 0:
-                # put all necessary data into url string
-                logindata = urllib.urlencode({"_username":self.get_username(),\
-                                 "_password":self.get_password(),\
-                                 "_login":"1",\
-                                 "_origtarget": "",\
-                                 "filled_in":"login"})
-
-                # get cookie from login page via url retrieving as with other urls
-                try:
-                    # login and get cookie
-                    urlcontent = self.urlopener.open(self.monitor_url + "/login.py", logindata)
-                    urlcontent.close()
-                except:
-                    self.Error(sys.exc_info())
+                # if no cookie yet login
+                self._get_cookie_login()
 
         GenericServer.init_HTTP(self)
 
@@ -208,12 +194,42 @@ class MultisiteServer(GenericServer):
             raise MultisiteError(True, Result(result = content,
                                                error = content))
 
-        # looks like cookieauth
+        # in case of auth problem enable GUI auth part in popup
+        if self.CookieAuth == True and len(self.Cookie) == 0:
+            self.refresh_authentication = True
+            return Result(result="", error="Authentication failed")
+
+       # looks like cookieauth
         elif content.startswith('<'):
             self.CookieAuth = True
-            return ""
+            # if first attempt login and then try to get data again
+            if len(self.Cookie) == 0:
+                self._get_cookie_login()
+                result = self.FetchURL(url, 'raw')
+                content, error = result.result, result.error
+                if content.startswith('<'):
+                    return ""
 
         return eval(content)
+
+
+    def _get_cookie_login(self):
+        """
+        login on cookie monitor site
+        """
+        # put all necessary data into url string
+        logindata = urllib.urlencode({"_username":self.get_username(),\
+                         "_password":self.get_password(),\
+                         "_login":"1",\
+                         "_origtarget": "",\
+                         "filled_in":"login"})
+        # get cookie from login page via url retrieving as with other urls
+        try:
+            # login and get cookie
+            urlcontent = self.urlopener.open(self.monitor_url + "/login.py", logindata)
+            urlcontent.close()
+        except:
+                    self.Error(sys.exc_info())
 
 
     def _get_status(self):
@@ -350,10 +366,6 @@ class MultisiteServer(GenericServer):
                     if service.has_key('svc_acknowledged'):
                         if service['svc_acknowledged'] == 'yes':
                             self.new_hosts[n["host"]].services[new_service].acknowledged = True
-                    # the following lead to wrong "passive" P sign in status window
-                    #if service.has_key('svc_is_active'):
-                    #    if service['svc_is_active'] == 'no' and not service['svc_check_command'].startswith('check_mk'):
-                    #        self.new_hosts[n["host"]].services[new_service].passiveonly = True
                     if service.has_key('svc_flapping'):
                         if service['svc_flapping'] == 'yes':
                             self.new_hosts[n["host"]].services[new_service].flapping = True
@@ -426,23 +438,6 @@ class MultisiteServer(GenericServer):
         return Result(result=address)
 
 
-    def _set_recheck(self, host, service):
-        if service != "":
-            if self.hosts[host].services[service].is_passive_only() and not service['Service check command'].startswith('check_mk'):
-                # Do not check passive only checks
-                return
-
-            if self.hosts[host].services[service].command.startswith('check_mk'):
-                if str(self.conf.debug_mode) == "True":
-                    self.Debug(server=self.get_name(), host=host, debug ="This is a passive child of Check_MK. Re-schedule the Check_MK service")
-
-                service = 'Check_MK'
-
-        result = self.FetchURL(self.urls['api_reschedule'] + '&' + urllib.urlencode({'site': self.hosts[host].site,
-                                                                                     'host': host,
-                                                                                     'service': service}), giveback='raw')
-
-
     def get_start_end(self, host):
         return time.strftime("%Y-%m-%d %H:%M"), time.strftime("%Y-%m-%d %H:%M", time.localtime(time.time() + 7200))
 
@@ -461,7 +456,7 @@ class MultisiteServer(GenericServer):
             url = self.urls['api_service_act']
 
         if str(self.conf.debug_mode) == "True":
-            self.Debug(server=self.get_name(), host=host, debug ="Adding downtime: " + url + '&' + urllib.urlencode(params))
+            self.Debug(server=self.get_name(), host=host, debug ="Submitting action: " + url + '&' + urllib.urlencode(params))
 
         result = self.FetchURL(url + '&' + urllib.urlencode(params), giveback = 'raw')
 
@@ -494,3 +489,22 @@ class MultisiteServer(GenericServer):
             self._action(self.hosts[host].site, host, s, p)
 
 
+    def _set_recheck(self, host, service):
+        p = {
+            '_resched_checks':    'Reschedule active checks',
+        }
+        self._action(self.hosts[host].site, host, service, p)
+
+
+    def recheck_all(self):
+        """
+        special method for Check_MK as there is one URL for rescheduling all problems to be checked
+        """
+        params = dict()
+        params['_resched_checks'] = 'Reschedule active checks'
+        url = self.urls['api_svcprob_act']
+
+        if str(self.conf.debug_mode) == "True":
+            self.Debug(server=self.get_name(), debug ="Rechecking all action: " + url + '&' + urllib.urlencode(params))
+
+        result = self.FetchURL(url + '&' + urllib.urlencode(params), giveback = 'raw')
