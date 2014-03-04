@@ -1680,7 +1680,7 @@ class StatusBar(object):
             # always raise on Windows plus
             # workaround for statusbar-that-overlaps-popup-menu (oh my god)
             if platform.system() == "Windows":
-                if not "Menu" in dir(self):
+                if not self.Menu.get_properties("visible")[0]:
                     self.StatusBar.window.raise_()
             # on Linux & Co. only raise if popwin is not shown because otherwise
             # the statusbar shadow overlays the popwin on newer desktop environments
