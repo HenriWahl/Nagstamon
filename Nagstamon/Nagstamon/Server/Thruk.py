@@ -196,6 +196,7 @@ class ThrukServer(GenericServer):
                         ###new_host = h["name"]
                         self.new_hosts[h["name"]] = GenericHost()
                         self.new_hosts[h["name"]].name = h["name"]
+                        self.new_hosts[h["name"]].server = self.name
                         self.new_hosts[h["name"]].status = self.STATES_MAPPING["hosts"][h["state"]]
                         self.new_hosts[h["name"]].last_check = datetime.datetime.fromtimestamp(int(h["last_check"])).isoformat(" ")
                         self.new_hosts[h["name"]].duration = Actions.HumanReadableDurationThruk(h["last_state_change"])
@@ -237,6 +238,7 @@ class ThrukServer(GenericServer):
                     if not self.new_hosts.has_key(s["host_name"]):
                         self.new_hosts[s["host_name"]] = GenericHost()
                         self.new_hosts[s["host_name"]].name = s["host_name"]
+                        self.new_hosts[s["host_name"]].server = self.name
                         self.new_hosts[s["host_name"]].status = "UP"
 
                     # if a service does not exist create its object
@@ -245,6 +247,7 @@ class ThrukServer(GenericServer):
                         self.new_hosts[s["host_name"]].services[s["description"]] = GenericService()
                         self.new_hosts[s["host_name"]].services[s["description"]].host = s["host_name"]
                         self.new_hosts[s["host_name"]].services[s["description"]].name = s["description"]
+                        self.new_hosts[s["host_name"]].services[s["description"]].server = self.name
                         self.new_hosts[s["host_name"]].services[s["description"]].status = self.STATES_MAPPING["services"][s["state"]]
                         self.new_hosts[s["host_name"]].services[s["description"]].last_check = datetime.datetime.fromtimestamp(int(s["last_check"])).isoformat(" ")
                         self.new_hosts[s["host_name"]].services[s["description"]].duration = Actions.HumanReadableDurationThruk(s["last_state_change"])

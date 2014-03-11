@@ -573,6 +573,7 @@ class GenericServer(object):
                                 new_host = n["host"]
                                 self.new_hosts[new_host] = GenericHost()
                                 self.new_hosts[new_host].name = n["host"]
+                                self.new_hosts[new_host].server = self.name
                                 self.new_hosts[new_host].status = n["status"]
                                 self.new_hosts[new_host].last_check = n["last_check"]
                                 self.new_hosts[new_host].duration = n["duration"]
@@ -695,6 +696,7 @@ class GenericServer(object):
                                 self.new_hosts[n["host"]].services[new_service] = GenericService()
                                 self.new_hosts[n["host"]].services[new_service].host = n["host"]
                                 self.new_hosts[n["host"]].services[new_service].name = n["service"]
+                                self.new_hosts[n["host"]].services[new_service].server = self.name
                                 self.new_hosts[n["host"]].services[new_service].status = n["status"]
                                 self.new_hosts[n["host"]].services[new_service].last_check = n["last_check"]
                                 self.new_hosts[n["host"]].services[new_service].duration = n["duration"]

@@ -172,6 +172,7 @@ class IcingaServer(GenericServer):
                     if not self.new_hosts.has_key(host_name):
                         self.new_hosts[host_name] = GenericHost()
                         self.new_hosts[host_name].name = host_name
+                        self.new_hosts[host_name].server = self.name
                         self.new_hosts[host_name].status = h["status"]
                         self.new_hosts[host_name].last_check = h["last_check"]
                         self.new_hosts[host_name].duration = h["duration"]
@@ -227,6 +228,7 @@ class IcingaServer(GenericServer):
                         self.new_hosts[host_name].services[service_name] = GenericService()
                         self.new_hosts[host_name].services[service_name].host = host_name
                         self.new_hosts[host_name].services[service_name].name = service_name
+                        self.new_hosts[host_name].services[service_name].server = self.name
                         self.new_hosts[host_name].services[service_name].status = s["status"]
                         self.new_hosts[host_name].services[service_name].last_check = s["last_check"]
                         self.new_hosts[host_name].services[service_name].duration = s["duration"]
@@ -359,6 +361,7 @@ class IcingaServer(GenericServer):
                                 new_host = n["host"]
                                 self.new_hosts[new_host] = GenericHost()
                                 self.new_hosts[new_host].name = n["host"]
+                                self.new_hosts[new_host].server = self.name
                                 self.new_hosts[new_host].status = n["status"]
                                 self.new_hosts[new_host].last_check = n["last_check"]
                                 self.new_hosts[new_host].duration = n["duration"]
@@ -480,6 +483,7 @@ class IcingaServer(GenericServer):
                                 new_service = n["service"]
                                 self.new_hosts[n["host"]].services[new_service] = GenericService()
                                 self.new_hosts[n["host"]].services[new_service].host = n["host"]
+                                self.new_hosts[n["host"]].services[new_service].server = self.name
                                 self.new_hosts[n["host"]].services[new_service].name = n["service"]
                                 self.new_hosts[n["host"]].services[new_service].status = n["status"]
                                 self.new_hosts[n["host"]].services[new_service].last_check = n["last_check"]

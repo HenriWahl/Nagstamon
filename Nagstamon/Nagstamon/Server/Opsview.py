@@ -163,6 +163,7 @@ class OpsviewServer(GenericServer):
                 hostdict = dict(host._getAttrMap())
                 self.new_hosts[str(hostdict["name"])] = GenericHost()
                 self.new_hosts[str(hostdict["name"])].name = str(hostdict["name"])
+                self.new_hosts[str(hostdict["name"])].server = self.name
                 # states come in lower case from Opsview
                 self.new_hosts[str(hostdict["name"])].status = str(hostdict["state"].upper())
                 self.new_hosts[str(hostdict["name"])].status_type = str(hostdict["state_type"])
@@ -184,6 +185,7 @@ class OpsviewServer(GenericServer):
                     self.new_hosts[str(hostdict["name"])].services[str(servicedict["name"])] = OpsviewService()
                     self.new_hosts[str(hostdict["name"])].services[str(servicedict["name"])].host = str(hostdict["name"])
                     self.new_hosts[str(hostdict["name"])].services[str(servicedict["name"])].name = str(servicedict["name"])
+                    self.new_hosts[str(hostdict["name"])].services[str(servicedict["name"])].server = self.name
                     # states come in lower case from Opsview
                     self.new_hosts[str(hostdict["name"])].services[str(servicedict["name"])].status = str(servicedict["state"].upper())
                     self.new_hosts[str(hostdict["name"])].services[str(servicedict["name"])].status_type = str(servicedict["state_type"])

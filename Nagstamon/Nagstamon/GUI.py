@@ -33,6 +33,7 @@ import gtk
 import gobject
 import os
 import platform
+import datetime
 
 # testing pynotify support
 try:
@@ -128,7 +129,8 @@ class GUI(object):
                                   gobject.TYPE_STRING, gobject.TYPE_STRING, gobject.TYPE_STRING,\
                                   gobject.TYPE_STRING,\
                                   gtk.gdk.Pixbuf, gtk.gdk.Pixbuf, gtk.gdk.Pixbuf, gtk.gdk.Pixbuf,\
-                                  gtk.gdk.Pixbuf, gtk.gdk.Pixbuf, gtk.gdk.Pixbuf, gtk.gdk.Pixbuf]
+                                  gtk.gdk.Pixbuf, gtk.gdk.Pixbuf, gtk.gdk.Pixbuf, gtk.gdk.Pixbuf,\
+                                  gtk.gdk.Pixbuf, gtk.gdk.Pixbuf]
 
         # decide if the platform can handle SVG if not use PNG
         if platform.system() in ["Darwin", "Windows"]:
@@ -152,7 +154,7 @@ class GUI(object):
 
         # icons for acknowledgement/downtime visualization
         self.STATE_ICONS = dict()
-        for icon in ["acknowledged", "downtime", "flapping", "passive"]:
+        for icon in ["fresh", "acknowledged", "downtime", "flapping", "passive"]:
             self.STATE_ICONS[icon] = gtk.gdk.pixbuf_new_from_file_at_size(self.Resources\
                                                                           + os.sep + "nagstamon_" + icon + self.BitmapSuffix,\
                                                                           int(self.fontsize/650), int(self.fontsize/650))
@@ -262,6 +264,10 @@ class GUI(object):
 
         # store once created dialogs here to minimize memory usage
         self.Dialogs = {}
+
+        # history of events to track status changes for notifications
+        self.events_current = {}
+        self.events_history = {}
 
 
     def _get_display_dimensions(self, monitor):
@@ -413,6 +419,33 @@ class GUI(object):
                         self.popwin.ServerVBoxes[server.get_name()].show_all()
                         self.status_ok = False
 
+                    # calculate freshness of hosts
+                    # first reset all events
+                    self.events_current.clear()
+
+                    # run through all servers and hosts and servvices
+                    for server in self.servers.values():
+                        for host in server.hosts.values():
+                            if not host.status == "UP":
+                                # only if host is not filtered out add it to current events
+                                # the boolean is meaningless for current events
+                                if host.visible:
+                                    self.events_current[host.get_hash()] = True
+                            for service in host.services.values():
+                                # same for services of host
+                                if service.visible:
+                                    self.events_current[service.get_hash()] = True
+
+                    # check if some cached event still is relevant - kick it out if not
+                    for event in self.events_history.keys():
+                        if not event in self.events_current.keys():
+                            self.events_history.pop(event)
+
+                    # if some current event is not yet in event cache add it and mark it as fresh (=True)
+                    for event in self.events_current.keys():
+                        if not event in self.events_history.keys():
+                            self.events_history[event] = True
+
                     # use a liststore for treeview where the table headers all are strings - first empty it
                     # now added with some simple repair after settings dialog has been used
                     # because sometimes after settings changes ListStore and TreeView become NoneType
@@ -448,6 +481,11 @@ class GUI(object):
 
                                 # icons for hosts
                                 if item.is_host():
+                                    if item.get_hash() in self.events_history and self.events_history[item.get_hash()] == True:
+                                        line.append(self.STATE_ICONS["fresh"])
+                                    else:
+                                        line.append(None)
+
                                     if item.is_acknowledged():
                                         line.append(self.STATE_ICONS["acknowledged"])
                                     else:
@@ -470,11 +508,14 @@ class GUI(object):
 
                                     # fill line with dummmy values because there will
                                     # be none for services if this is a host
-                                    line.extend([None, None, None, None])
+                                    line.extend([None, None, None, None, None])
 
                                 # icons for services
                                 else:
                                     # if the hosting host of a service has any flags display them too
+                                    # a fresh service's host does not nead a freshness icon
+                                    line.append(None)
+
                                     if server.hosts[item.host].is_acknowledged():
                                         line.append(self.STATE_ICONS["acknowledged"])
                                     else:
@@ -496,6 +537,11 @@ class GUI(object):
                                         line.append(None)
 
                                     # now the service...
+                                    if item.get_hash() in self.events_history and self.events_history[item.get_hash()] == True:
+                                        line.append(self.STATE_ICONS["fresh"])
+                                    else:
+                                        line.append(None)
+
                                     if item.is_acknowledged():
                                         line.append(self.STATE_ICONS["acknowledged"])
                                     else:
@@ -517,6 +563,7 @@ class GUI(object):
                                         line.append(None)
 
                                 server.ListStore.append(line)
+
                                 del item, line
 
                     # give new ListStore to the view, overwrites the old one automatically - theoretically
@@ -530,8 +577,8 @@ class GUI(object):
 
                 except:
                     import traceback
-                    #traceback.print_exc(file=sys.stdout)
-                    #server.Error(sys.exc_info())
+                    traceback.print_exc(file=sys.stdout)
+                    server.Error(sys.exc_info())
 
         if str(self.conf.fullscreen) == "False":
             self.popwin.Resize()
@@ -1222,7 +1269,9 @@ class GUI(object):
         """
             call threaded recheck all action
         """
-
+        # first delete all freshness flags
+        self.UnfreshEventHistory()
+        # run threads for rechecking
         recheckall = Actions.RecheckAll(servers=self.servers, output=self, conf=self.conf)
         recheckall.start()
 
@@ -1320,6 +1369,12 @@ class GUI(object):
                     self.Dialogs["EditAction"].action = self.selected_action
                 self.Dialogs[self.dialog].initialize()
                 self.Dialogs[self.dialog].show()
+
+
+    def UnfreshEventHistory(self):
+        # set all flagged-as-fresh-events to un-fresh
+        for event in self.events_history.keys():
+            self.events_history[event] = False
 
 
 class StatusBar(object):
@@ -2083,6 +2138,9 @@ class Popwin(object):
                 import traceback
                 traceback.print_exc(file=sys.stdout)
 
+            # set all flagged-as-fresh-events to un-fresh
+            self.output.UnfreshEventHistory()
+
 
     def Close(self, widget=None):
         """
@@ -2431,14 +2489,16 @@ class ServerVBox(gtk.VBox):
             # indicators added
             if s in [0, 1]:
                 # pixbuf for little icon
+                cell_img_fresh = gtk.CellRendererPixbuf()
                 cell_img_ack = gtk.CellRendererPixbuf()
                 cell_img_down = gtk.CellRendererPixbuf()
                 cell_img_flap = gtk.CellRendererPixbuf()
                 cell_img_pass = gtk.CellRendererPixbuf()
                 # host/service name
                 cell_txt = gtk.CellRendererText()
-                # stuff all renders into one cell
+                # stuff all renderers into one cell
                 tab_column.pack_start(cell_txt, False)
+                tab_column.pack_start(cell_img_fresh, False)
                 tab_column.pack_start(cell_img_ack, False)
                 tab_column.pack_start(cell_img_down, False)
                 tab_column.pack_start(cell_img_flap, False)
@@ -2448,13 +2508,15 @@ class ServerVBox(gtk.VBox):
                 # to be honest, even looks better in Linux
                 tab_column.set_attributes(cell_txt, foreground=7, text=s)
                 tab_column.add_attribute(cell_txt, "cell-background", offset_color[s % 2])
-                tab_column.set_attributes(cell_img_ack, pixbuf=10+offset_img[s])
+                tab_column.set_attributes(cell_img_fresh, pixbuf=10+offset_img[s])
+                tab_column.add_attribute(cell_img_fresh, "cell-background", offset_color[s % 2])
+                tab_column.set_attributes(cell_img_ack, pixbuf=11+offset_img[s])
                 tab_column.add_attribute(cell_img_ack, "cell-background", offset_color[s % 2])
-                tab_column.set_attributes(cell_img_down, pixbuf=11+offset_img[s])
+                tab_column.set_attributes(cell_img_down, pixbuf=12+offset_img[s])
                 tab_column.add_attribute(cell_img_down, "cell-background", offset_color[s % 2])
-                tab_column.set_attributes(cell_img_flap, pixbuf=12+offset_img[s])
+                tab_column.set_attributes(cell_img_flap, pixbuf=13+offset_img[s])
                 tab_column.add_attribute(cell_img_flap, "cell-background", offset_color[s % 2])
-                tab_column.set_attributes(cell_img_pass, pixbuf=13+offset_img[s])
+                tab_column.set_attributes(cell_img_pass, pixbuf=14+offset_img[s])
                 tab_column.add_attribute(cell_img_pass, "cell-background", offset_color[s % 2])
                 tab_column.set_sizing(gtk.TREE_VIEW_COLUMN_AUTOSIZE)
             else:

@@ -30,6 +30,7 @@ import sys
 import urllib
 import webbrowser
 import time
+import copy
 
 from Nagstamon import Actions
 from Nagstamon.Objects import *
@@ -272,12 +273,13 @@ class MultisiteServer(GenericServer):
                     new_host = n["host"]
                     self.new_hosts[new_host] = GenericHost()
                     self.new_hosts[new_host].name = n["host"]
+                    self.new_hosts[new_host].server = self.name
                     self.new_hosts[new_host].status = n["status"]
                     self.new_hosts[new_host].last_check = n["last_check"]
                     self.new_hosts[new_host].duration = n["duration"]
                     self.new_hosts[new_host].attempt = n["attempt"]
                     self.new_hosts[new_host].status_information= n["status_information"]
-                    self.new_hosts[new_host].site    = n["site"]
+                    self.new_hosts[new_host].site = n["site"]
                     self.new_hosts[new_host].address = n["address"]
                     # transisition to Check_MK 1.1.10p2
                     if host.has_key('host_in_downtime'):
@@ -339,15 +341,16 @@ class MultisiteServer(GenericServer):
                 # host objects contain service objects
                 if not self.new_hosts.has_key(n["host"]):
                     self.new_hosts[n["host"]] = GenericHost()
-                    self.new_hosts[n["host"]].name    = n["host"]
-                    self.new_hosts[n["host"]].status  = "UP"
-                    self.new_hosts[n["host"]].site    = n["site"]
+                    self.new_hosts[n["host"]].name = n["host"]
+                    self.new_hosts[n["host"]].status = "UP"
+                    self.new_hosts[n["host"]].site = n["site"]
                     self.new_hosts[n["host"]].address = n["address"]
                 # if a service does not exist create its object
                 if not self.new_hosts[n["host"]].services.has_key(n["service"]):
                     new_service = n["service"]
                     self.new_hosts[n["host"]].services[new_service] = GenericService()
                     self.new_hosts[n["host"]].services[new_service].host = n["host"]
+                    self.new_hosts[n["host"]].services[new_service].server = self.name
                     self.new_hosts[n["host"]].services[new_service].name = n["service"]
                     self.new_hosts[n["host"]].services[new_service].status = n["status"]
                     self.new_hosts[n["host"]].services[new_service].last_check = n["last_check"]

@@ -17,15 +17,7 @@
 # along with this program; if not, write to the Free Software
 # Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA  02110-1301, USA
 
-import sys
-import socket
-import gc
-import copy
-import webbrowser
-import time
-import HTMLParser
 import Actions
-# attempt to fight memory leaks
 
 
 class Column(object):
@@ -146,6 +138,10 @@ class GenericObject(object):
         self.flapping = False
         self.scheduled_downtime = False
         self.visible = True
+        # Check_MK also has site info
+        self.site = ""
+        # server to be added to hash
+        self.server = ""
 
 
     def is_passive_only(self):
@@ -166,6 +162,7 @@ class GenericObject(object):
 
     def is_in_scheduled_downtime(self):
         return bool(self.scheduled_downtime)
+
 
     def is_visible(self):
         return bool(self.visible)
@@ -192,6 +189,13 @@ class GenericObject(object):
         return ''
 
 
+    def get_hash(self):
+        """
+        returns hash of event status information - different for host and service thus empty here
+        """
+        return ''
+
+
 class GenericHost(GenericObject):
     """
         one host which is monitored by a Nagios server, gets populated with services
@@ -212,6 +216,13 @@ class GenericHost(GenericObject):
         decides where to put acknowledged/downtime pixbufs in Liststore for Treeview in Popwin
         """
         return True
+
+
+    def get_hash(self):
+        """
+        return hash for event history tracking
+        """
+        return " ".join((self.server, self.site, self.name, self.status))
 
 
 class GenericService(GenericObject):
@@ -236,6 +247,13 @@ class GenericService(GenericObject):
         decides where to put acknowledged/downtime pixbufs in Liststore for Treeview in Popwin
         """
         return False
+
+
+    def get_hash(self):
+        """
+        return hash for event history tracking
+        """
+        return " ".join((self.server, self.site, self.host, self.name, self.status))
 
 
 class Result(object):

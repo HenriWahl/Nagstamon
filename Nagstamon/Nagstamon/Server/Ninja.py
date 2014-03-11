@@ -252,6 +252,7 @@ class NinjaServer(GenericServer):
                 for attr, val in n.iteritems():
                     setattr(new_host, attr, val)
                 self.new_hosts[new_host.name] = new_host
+                self.new_hosts[new_host.name].server = self.name
 
         del trs, table, htobj
 
@@ -272,6 +273,7 @@ class NinjaServer(GenericServer):
                 # and we have to fake it 'til we make it
                 new_host = GenericHost()
                 new_host.name = n["host"]
+                new_host.server = self.name
                 new_host.status = "UP"
                 new_host.visible = False
 
@@ -288,6 +290,7 @@ class NinjaServer(GenericServer):
                 for attr, val in n.iteritems():
                     setattr(new_service, attr, val)
                 self.new_hosts[n["host"]].services[n["name"]] = new_service
+                self.new_hosts[n["host"]].services[n["name"]].server = self.name
 
         del trs, table, htobj
 

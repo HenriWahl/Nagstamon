@@ -348,6 +348,7 @@ class CentreonServer(GenericServer):
                     if not self.new_hosts.has_key(str(l.hn.text)):
                         self.new_hosts[str(l.hn.text)] = GenericHost()
                         self.new_hosts[str(l.hn.text)].name =  str(l.hn.text)
+                        self.new_hosts[str(l.hn.text)].server = self.name
                         self.new_hosts[str(l.hn.text)].status = str(l.cs.text)
                         self.new_hosts[str(l.hn.text)].attempt, self.new_hosts[str(l.hn.text)].status_type  = str(l.tr.text).split(" ")
                         self.new_hosts[str(l.hn.text)].status_type = self.HARD_SOFT[self.new_hosts[str(l.hn.text)].status_type]
@@ -409,6 +410,7 @@ class CentreonServer(GenericServer):
                         self.new_hosts[str(l.hn.text)].services[str(l.sd.text)] = GenericService()
                         self.new_hosts[str(l.hn.text)].services[str(l.sd.text)].host = str(l.hn.text)
                         self.new_hosts[str(l.hn.text)].services[str(l.sd.text)].name = str(l.sd.text)
+                        self.new_hosts[str(l.hn.text)].services[str(l.sd.text)].server = self.name
                         self.new_hosts[str(l.hn.text)].services[str(l.sd.text)].status = str(l.cs.text)
                         self.new_hosts[str(l.hn.text)].services[str(l.sd.text)].attempt, \
                             self.new_hosts[str(l.hn.text)].services[str(l.sd.text)].status_type = str(l.ca.text).split(" ")
