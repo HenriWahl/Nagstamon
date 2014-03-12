@@ -424,8 +424,8 @@ class GUI(object):
                     self.events_current.clear()
 
                     # run through all servers and hosts and servvices
-                    for server in self.servers.values():
-                        for host in server.hosts.values():
+                    for s in self.servers.values():
+                        for host in s.hosts.values():
                             if not host.status == "UP":
                                 # only if host is not filtered out add it to current events
                                 # the boolean is meaningless for current events
@@ -467,6 +467,7 @@ class GUI(object):
                             for single_item in list(item_list):
                                 # use copy to fight memory leak
                                 item = copy.deepcopy(single_item)
+
                                 line = list(server.get_columns(item))
                                 line.append(self.TAB_FG_COLORS[item.status])
                                 line.append(self.TAB_BG_COLORS[item.status])
@@ -2051,7 +2052,7 @@ class Popwin(object):
                 gobject.idle_add(self.output.AddGUILock, str(self.__class__.__name__))
 
         # position and resize...
-        #self.calculate_coordinates = True
+        self.calculate_coordinates = True
         self.Resize()
 
 
@@ -2134,12 +2135,10 @@ class Popwin(object):
                 if str(self.conf.close_details_hover) == "True":
                     if mousex <= popwinx0 + 10 or mousex >= (popwinx0 + self.popwinwidth) or mousey <= popwiny0 or mousey >= (popwiny0 + self.popwinheight) - 10 :
                         self.Close()
+
             except:
                 import traceback
                 traceback.print_exc(file=sys.stdout)
-
-            # set all flagged-as-fresh-events to un-fresh
-            self.output.UnfreshEventHistory()
 
 
     def Close(self, widget=None):
@@ -2155,6 +2154,9 @@ class Popwin(object):
             self.Window.set_visible(False)
             # notification off because user had a look to hosts/services recently
             self.output.NotificationOff()
+
+            # set all flagged-as-fresh-events to un-fresh
+            self.output.UnfreshEventHistory()
 
 
     def Resize(self):
@@ -2408,7 +2410,6 @@ class ServerVBox(gtk.VBox):
         # now vboxing the elements to add a line in case authentication failed - so the user should auth here again
         self.VBox = gtk.VBox()
         # first line for usual monitor shortlink buttons
-        #self.HBox = gtk.HBox(homogeneous=True)
         self.HBox = gtk.HBox()
         self.HBoxLeft = gtk.HBox()
         self.HBoxRight = gtk.HBox()
@@ -2422,7 +2423,7 @@ class ServerVBox(gtk.VBox):
         self.HBoxLeft.add(gtk.VSeparator())
         self.HBoxLeft.add(self.LabelStatus)
 
-        self.AlignmentLeft = gtk.Alignment(xalign=0, xscale=0.05, yalign=0)
+        self.AlignmentLeft = gtk.Alignment(xalign=0, xscale=0.0, yalign=0)
         self.AlignmentLeft.add(self.HBoxLeft)
         self.AlignmentRight = gtk.Alignment(xalign=0, xscale=0.0, yalign=0.5)
         self.AlignmentRight.add(self.HBoxRight)
@@ -2450,7 +2451,7 @@ class ServerVBox(gtk.VBox):
         self.HBoxAuth.add(self.AuthCheckbuttonSave)
         self.HBoxAuth.add(self.AuthButtonOK)
 
-        self.AlignmentAuth = gtk.Alignment(xalign=0, xscale=0.05, yalign=0)
+        self.AlignmentAuth = gtk.Alignment(xalign=0, xscale=0.0, yalign=0)
         self.AlignmentAuth.add(self.HBoxAuth)
 
         self.VBox.add(self.AlignmentAuth)
