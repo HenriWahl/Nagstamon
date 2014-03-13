@@ -3211,6 +3211,9 @@ class Settings(object):
         for state in ["ok", "warning", "critical", "unknown", "unreachable", "down", "error"]:
             self.conf.__dict__["color_" + state + "_text"] = self.builder.get_object("input_colorbutton_" + state + "_text").get_color().to_string()
             self.conf.__dict__["color_" + state + "_background"] = self.builder.get_object("input_colorbutton_" + state + "_background").get_color().to_string()
+            # add new color information to color dictionaries for cells to render
+            self.output.TAB_FG_COLORS[state.upper()] = self.builder.get_object("input_colorbutton_" + state + "_text").get_color().to_string()
+            self.output.TAB_BG_COLORS[state.upper()] = self.builder.get_object("input_colorbutton_" + state + "_background").get_color().to_string()
 
         # evaluate comboboxes
         self.conf.default_sort_field = self.combo_default_sort_field.get_active_text()
