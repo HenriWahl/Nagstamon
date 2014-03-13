@@ -229,14 +229,6 @@ class GUI(object):
         self.last_worst_status = "UP"
 
         # defining sorting defaults in first render
-        HOST_COLUMN_ID = 0
-        SERVICE_COLUMN_ID = 1
-        STATUS_COLUMN_ID = 2
-        LAST_CHECK_COLUMN_ID = 3
-        DURATION_COLUMN_ID = 4
-        ATTEMPT_COLUMN_ID = 5
-        STATUS_INFO_COLUMN_ID = 6
-
         self.COLUMNS_IDS_MAP = {"Host": 0,\
                           "Service": 1,\
                           "Status": 2,\
@@ -248,6 +240,7 @@ class GUI(object):
         # reverse mapping of column names and IDs for settings dialog
         self.IDS_COLUMNS_MAP = dict((id, column) for column, id in self.COLUMNS_IDS_MAP.iteritems())
 
+        # use configured default sorting order
         if str(self.conf.default_sort_order) == "Ascending":
             self.startup_sort_order = gtk.SORT_ASCENDING
         else:

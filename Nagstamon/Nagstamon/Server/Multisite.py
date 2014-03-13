@@ -56,14 +56,17 @@ class LastCheckColumnMultisite(Column):
     @classmethod
     def sort_function(cls, model, iter1, iter2, column):
         """ Overrides default sorting behaviour """
+
         data1, data2 = [model.get_value(x, column) for x in (iter1, iter2)]
+
         try:
             first = Actions.MachineSortableDateMultisite(data1)
             second = Actions.MachineSortableDateMultisite(data2)
         except ValueError, err:
             print err
             return cmp(first, second)
-        return first - second
+        # other order than default function
+        return second - first
 
 
 class DurationColumnMultisite(CustomSortingColumn):
@@ -79,7 +82,8 @@ class DurationColumnMultisite(CustomSortingColumn):
         except ValueError, err:
             print err
             return cmp(first, second)
-        return first - second
+        # other order than default function
+        return second - first
 
 
 class MultisiteServer(GenericServer):
