@@ -274,7 +274,7 @@ class GUI(object):
         """
         get x0 y0 xmax and ymax of a distinct monitor, usefull to put statusbar inside the fence
         """
-        # startt with values of first display
+        # start with values of first display
         x0, y0, x_max, y_max = self.monitors[0]
         # only calculate some dimensions when multiple displays are used
         if len(self.monitors) > 1:
@@ -1769,7 +1769,7 @@ class Popwin(object):
         self.AlMonitorLabel = gtk.Alignment(xalign=0, yalign=0.5)
         self.AlMonitorComboBox = gtk.Alignment(xalign=0, yalign=0.5)
         self.AlMenu = gtk.Alignment(xalign=1.0, yalign=0.5)
-        self.AlVBox = gtk.Alignment(xalign=0.5, yalign=0, xscale=1, yscale=0)
+        self.AlVBox = gtk.Alignment(xalign=0, yalign=0, xscale=0, yscale=0)
 
         self.VBox = gtk.VBox()
         self.HBoxAllButtons = gtk.HBox()
@@ -2224,6 +2224,7 @@ class Popwin(object):
 
         # limit size of treeview
         treeviewwidth, treeviewheight = self.ScrolledVBox.size_request()
+
         if treeviewwidth > screenwidth: treeviewwidth = screenwidth
 
         # get dimensions of top button bar
@@ -2263,9 +2264,12 @@ class Popwin(object):
                 self.popwinwidth = screenwidth
 
             # if statusbar/trayicon stays in upper half of screen, popwin pops up BELOW statusbar/trayicon
-            if (statusbary0 + statusbarheight - screeny0) < (screenheight / 2):
+            # take into account different y0 on multiple monitors, otherwise the popwin might be scretched somehow
+            if (statusbary0 - self.output.monitors[self.output.current_monitor][1] + statusbarheight - screeny0) < (screenheight / 2):
                 # if popwin is too large it gets cut at lower end of screen
-                if (statusbary0 + self.popwinheight + statusbarheight) > screenheight:
+                # take into account different y0 on multiple monitors, otherwise the popwin might be scretched somehow
+                if (statusbary0 - self.output.monitors[self.output.current_monitor][1] +\
+                    self.popwinheight + statusbarheight) > screenheight:
                     treeviewheight = screenheight - (statusbary0 + statusbarheight + self.buttonsheight) + screeny0
                     self.popwinheight = screenheight - statusbarheight - statusbary0 + screeny0
                     self.popwiny0 = statusbary0 + statusbarheight
