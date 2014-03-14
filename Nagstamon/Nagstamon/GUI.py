@@ -144,6 +144,8 @@ class GUI(object):
         if platform.system() == "Darwin":
             # MacOSX gets instable with default theme "Clearlooks" so use custom one with theme "Murrine"
             gtk.rc_parse_string('gtk-theme-name = "Murrine"')
+            # workaround for ugly Fonts on Maverick
+            gtk.rc_parse_string('style "font" {font_name = "Lucida Grande"} widget_class "*" style "font"')
 
             # init MacOSX integration
             import gtk_osxapplication
