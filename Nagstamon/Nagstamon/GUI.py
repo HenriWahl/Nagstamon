@@ -578,6 +578,12 @@ class GUI(object):
 
         if str(self.conf.fullscreen) == "False":
             self.popwin.Resize()
+        else:
+            # set every active vbox to window with to avoid too small ugly treeviewa
+            for server in self.servers.values():
+                if str(self.conf.servers[server.get_name()].enabled) == "True":
+                    self.popwin.ServerVBoxes[server.get_name()].set_size_request(self.popwin.Window.get_size()[1], -1)
+            pass
 
         # everything OK
         if unknowns == 0 and warnings == 0 and criticals == 0 and unreachables == 0 and downs == 0 and self.status_ok is not False:
