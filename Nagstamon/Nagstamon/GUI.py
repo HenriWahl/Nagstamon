@@ -33,7 +33,6 @@ import gtk
 import gobject
 import os
 import platform
-import datetime
 
 # testing pynotify support
 try:
@@ -145,7 +144,8 @@ class GUI(object):
             # MacOSX gets instable with default theme "Clearlooks" so use custom one with theme "Murrine"
             gtk.rc_parse_string('gtk-theme-name = "Murrine"')
             # workaround for ugly Fonts on Maverick
-            gtk.rc_parse_string('style "font" {font_name = "Lucida Grande"} widget_class "*" style "font"')
+            if platform.release() > "12":
+                gtk.rc_parse_string('style "font" {font_name = "Lucida Grande"} widget_class "*" style "font"')
 
             # init MacOSX integration
             import gtk_osxapplication
@@ -3624,6 +3624,9 @@ class GenericServer(object):
         self.builder = gtk.Builder()
         self.builder.add_from_file(self.builderfile)
         self.dialog = self.builder.get_object("settings_server_dialog")
+        # try to avoid shy dialog on MacOSX
+        self.dialog.set_transient_for(self.settingsdialog.dialog)
+
 
         # assign handlers
         handlers_dict = { "button_ok_clicked" : self.OK,
@@ -4085,6 +4088,8 @@ class GenericAction(object):
         self.builder = gtk.Builder()
         self.builder.add_from_file(self.builderfile)
         self.dialog = self.builder.get_object("settings_action_dialog")
+        # try to avoid shy dialog on MacOSX
+        self.dialog.set_transient_for(self.settingsdialog.dialog)
 
         # assign handlers
         handlers_dict = { "button_ok_clicked" : self.OK,
