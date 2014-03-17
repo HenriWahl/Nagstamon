@@ -2441,7 +2441,7 @@ class ServerVBox(gtk.VBox):
         self.AuthEntryPassword = gtk.Entry()
         self.AuthEntryPassword.set_visibility(False)
         self.AuthCheckbuttonSave = gtk.CheckButton("Save password")
-        self.AuthButtonOK = gtk.Button("OK")
+        self.AuthButtonOK = gtk.Button("   OK   ")
 
         self.HBoxAuth.add(self.AuthLabelUsername)
         self.HBoxAuth.add(self.AuthEntryUsername)

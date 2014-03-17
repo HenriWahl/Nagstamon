@@ -20,8 +20,7 @@
 import sys
 import urllib
 import webbrowser
-import traceback
-import base64
+import copy
 
 from Nagstamon import Actions
 from Nagstamon.Objects import *
