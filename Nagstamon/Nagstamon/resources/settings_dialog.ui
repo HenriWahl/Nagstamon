@@ -1755,7 +1755,7 @@
                                 <property name="n_rows">2</property>
                                 <child>
                                   <object class="GtkRadioButton" id="input_radiobutton_notification_custom_sound">
-                                    <property name="label" translatable="yes">Use custom sounds:</property>
+                                    <property name="label" translatable="yes">Use custom sounds</property>
                                     <property name="visible">True</property>
                                     <property name="can_focus">False</property>
                                     <property name="receives_default">False</property>
@@ -1996,6 +1996,9 @@
                                     <child>
                                       <placeholder/>
                                     </child>
+                                    <child>
+                                      <placeholder/>
+                                    </child>
                                   </object>
                                   <packing>
                                     <property name="top_attach">1</property>
@@ -2063,6 +2066,18 @@
                             <property name="n_rows">4</property>
                             <property name="n_columns">3</property>
                             <property name="column_spacing">5</property>
+                            <child>
+                              <placeholder/>
+                            </child>
+                            <child>
+                              <placeholder/>
+                            </child>
+                            <child>
+                              <placeholder/>
+                            </child>
+                            <child>
+                              <placeholder/>
+                            </child>
                             <child>
                               <object class="GtkEntry" id="input_entry_notification_action_warning_string">
                                 <property name="visible">True</property>
@@ -2160,18 +2175,6 @@
                                 <property name="x_options">GTK_FILL</property>
                                 <property name="y_options">GTK_FILL</property>
                               </packing>
-                            </child>
-                            <child>
-                              <placeholder/>
-                            </child>
-                            <child>
-                              <placeholder/>
-                            </child>
-                            <child>
-                              <placeholder/>
-                            </child>
-                            <child>
-                              <placeholder/>
                             </child>
                             <child>
                               <object class="GtkCheckButton" id="input_checkbutton_notification_action_ok">
@@ -2610,6 +2613,9 @@
                         <property name="top_attach">7</property>
                         <property name="bottom_attach">8</property>
                       </packing>
+                    </child>
+                    <child>
+                      <placeholder/>
                     </child>
                     <child>
                       <placeholder/>

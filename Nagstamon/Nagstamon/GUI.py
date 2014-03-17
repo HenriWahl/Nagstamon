@@ -3493,7 +3493,11 @@ class Settings(object):
         """
         options = self.builder.get_object("table_notification_sound_options_custom_sounds_files")
         checkbutton = self.builder.get_object("input_radiobutton_notification_custom_sound")
-        options.set_sensitive(checkbutton.get_active())
+
+        if not checkbutton.get_active():
+            options.hide_all()
+        else:
+            options.show_all()
 
 
     def ToggleREHostOptions(self, widget=None):
