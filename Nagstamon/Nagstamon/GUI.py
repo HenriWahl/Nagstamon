@@ -2953,6 +2953,8 @@ class Settings(object):
         self.FillTreeView("servers_treeview", self.conf.servers, "Servers", "selected_server")
         self.FillTreeView("actions_treeview", self.conf.actions, "Actions", "selected_action")
 
+        """
+        # all toggling should be done centralized in self.initialize()
         # toggle debug options
         self.ToggleDebugOptions()
 
@@ -2970,6 +2972,8 @@ class Settings(object):
         self.ToggleNotificationActionCritical()
         self.ToggleNotificationActionDown()
         self.ToggleNotificationActionOk()
+
+        """
 
         # set filters fore sound filechoosers
         filters = dict()
@@ -3071,8 +3075,13 @@ class Settings(object):
         # store fullscreen state to avoif innecessary popwin flickering
         self.saved_fullscreen_state = str(self.conf.fullscreen)
 
+        # initialize state of some GUI elements
+        self.initialize()
+
+        """
         # care about Centreon criticality filter
         self.ToggleRECriticalityFilter()
+        """
 
 
     def show(self):
@@ -3094,23 +3103,31 @@ class Settings(object):
         # store fullscreen state to avoid innecessary popwin flickering
         self.saved_fullscreen_state = str(self.conf.fullscreen)
 
-        """
-        #1 Always hide criticality options
-        #2 Check if type of any enabled server is Centreon.
-        #3 If true, show the criticality filter options
-        self.builder.get_object("hbox_re_criticality").hide()
-        self.builder.get_object("input_entry_re_criticality_pattern").hide()
-        self.builder.get_object("input_checkbutton_re_criticality_enabled").hide()
-        self.builder.get_object("input_checkbutton_re_criticality_reverse").hide()
-        for server in self.conf.servers:
-            if (str(self.conf.servers[server].enabled) == "True") and (str(self.conf.servers[server].type) == "Centreon"):
-                self.builder.get_object("hbox_re_criticality").show()
-                self.builder.get_object("input_entry_re_criticality_pattern").show()
-                self.builder.get_object("input_checkbutton_re_criticality_enabled").show()
-                self.builder.get_object("input_checkbutton_re_criticality_reverse").show()
-        """
+        # toggle certain options
+        self.ToggleREHostOptions()
+        self.ToggleREServiceOptions()
+        self.ToggleREStatusInformationOptions()
+
         # care about Centreon criticality filter
         self.ToggleRECriticalityFilter()
+
+        # toggle debug options
+        self.ToggleDebugOptions()
+
+        # toggle custom sounds options
+        self.ToggleCustomSoundOptions()
+
+        # toggle icon in systray popup offset
+        self.ToggleSystrayPopupOffset()
+
+        # toggle fullscreen display selection combobox
+        self.ToggleFullscreenDisplay()
+
+        # toggle notification action options
+        self.ToggleNotificationActionWarning()
+        self.ToggleNotificationActionCritical()
+        self.ToggleNotificationActionDown()
+        self.ToggleNotificationActionOk()
 
 
     def FillTreeView(self, treeview_widget, items, column_string, selected_item):
@@ -3462,11 +3479,20 @@ class Settings(object):
         debug_to_file = self.builder.get_object("input_checkbutton_debug_to_file")
         debug_file = self.builder.get_object("input_entry_debug_file")
         debug_mode = self.builder.get_object("input_checkbutton_debug_mode")
-        debug_to_file.set_sensitive(debug_mode.get_active())
-        debug_file.set_sensitive(debug_to_file.get_active())
 
         if debug_to_file.state == gtk.STATE_INSENSITIVE:
             debug_file.set_sensitive(False)
+
+        if not debug_mode.get_active():
+            debug_to_file.hide()
+            debug_to_file.set_sensitive(debug_mode.get_active())
+            debug_file.hide()
+            debug_file.set_sensitive(debug_to_file.get_active())
+        else:
+            debug_to_file.show()
+            debug_to_file.set_sensitive(debug_mode.get_active())
+            debug_file.show()
+            debug_file.set_sensitive(debug_to_file.get_active())
 
 
     def ToggleNotification(self, widget=None):
@@ -3506,6 +3532,10 @@ class Settings(object):
         """
         options = self.builder.get_object("hbox_re_host")
         checkbutton = self.builder.get_object("input_checkbutton_re_host_enabled")
+        if not checkbutton.get_active():
+            options.hide_all()
+        else:
+            options.show_all()
         options.set_sensitive(checkbutton.get_active())
 
 
@@ -3515,6 +3545,10 @@ class Settings(object):
         """
         options = self.builder.get_object("hbox_re_service")
         checkbutton = self.builder.get_object("input_checkbutton_re_service_enabled")
+        if not checkbutton.get_active():
+            options.hide_all()
+        else:
+            options.show_all()
         options.set_sensitive(checkbutton.get_active())
 
 
@@ -3524,6 +3558,10 @@ class Settings(object):
         """
         options = self.builder.get_object("hbox_re_status_information")
         checkbutton = self.builder.get_object("input_checkbutton_re_status_information_enabled")
+        if not checkbutton.get_active():
+            options.hide_all()
+        else:
+            options.show_all()
         options.set_sensitive(checkbutton.get_active())
 
 
@@ -3533,7 +3571,10 @@ class Settings(object):
         """
         options = self.builder.get_object("hbox_re_criticality")
         checkbutton = self.builder.get_object("input_checkbutton_re_criticality_enabled")
-        options.set_sensitive(checkbutton.get_active())
+        if not checkbutton.get_active():
+            options.hide_all()
+        else:
+            options.show_all()
 
 
     def ToggleRECriticalityFilter(self):
@@ -3560,7 +3601,12 @@ class Settings(object):
         """
         options = self.builder.get_object("hbox_systray_popup_offset")
         checkbutton = self.builder.get_object("input_radiobutton_icon_in_systray")
-        options.set_sensitive(checkbutton.get_active())
+
+        #options.set_sensitive(checkbutton.get_active())
+        if not checkbutton.get_active():
+            options.hide_all()
+        else:
+            options.show_all()
 
 
     def ToggleFullscreenDisplay(self, widget=None):
@@ -3569,7 +3615,12 @@ class Settings(object):
         """
         options = self.builder.get_object("hbox_fullscreen_display")
         checkbutton = self.builder.get_object("input_radiobutton_fullscreen")
-        options.set_sensitive(checkbutton.get_active())
+
+        #options.set_sensitive(checkbutton.get_active())
+        if not checkbutton.get_active():
+            options.hide_all()
+        else:
+            options.show_all()
 
 
     def ToggleNotificationActionWarning(self, widget=None):
@@ -4179,6 +4230,12 @@ class GenericAction(object):
         self.builder.get_object("label_help_string_description").set_visible(False)
         self.builder.get_object("label_help_type_description").set_visible(False)
 
+        # toggle some GUI elements
+        self.ToggleREHostOptions()
+        self.ToggleREServiceOptions()
+        self.ToggleREStatusInformationOptions()
+        self.ToggleRECriticalityOptions()
+
 
     def OK(self, widget):
         """
@@ -4241,6 +4298,10 @@ class GenericAction(object):
         """
         options = self.builder.get_object("hbox_re_host")
         checkbutton = self.builder.get_object("input_checkbutton_re_host_enabled")
+        if not checkbutton.get_active():
+            options.hide_all()
+        else:
+            options.show_all()
         options.set_sensitive(checkbutton.get_active())
 
 
@@ -4250,6 +4311,10 @@ class GenericAction(object):
         """
         options = self.builder.get_object("hbox_re_service")
         checkbutton = self.builder.get_object("input_checkbutton_re_service_enabled")
+        if not checkbutton.get_active():
+            options.hide_all()
+        else:
+            options.show_all()
         options.set_sensitive(checkbutton.get_active())
 
 
@@ -4259,6 +4324,10 @@ class GenericAction(object):
         """
         options = self.builder.get_object("hbox_re_status_information")
         checkbutton = self.builder.get_object("input_checkbutton_re_status_information_enabled")
+        if not checkbutton.get_active():
+            options.hide_all()
+        else:
+            options.show_all()
         options.set_sensitive(checkbutton.get_active())
     
     def ToggleRECriticalityOptions(self, widget=None):
@@ -4267,7 +4336,12 @@ class GenericAction(object):
         """
         options = self.builder.get_object("hbox_re_criticality")
         checkbutton = self.builder.get_object("input_checkbutton_re_criticality_enabled")
-        options.set_sensitive(checkbutton.get_active())
+        if not checkbutton == None:
+            if not checkbutton.get_active():
+                options.hide_all()
+            else:
+                options.show_all()
+            options.set_sensitive(checkbutton.get_active())
 
 
     def ToggleActionStringHelp(self, widget=None):

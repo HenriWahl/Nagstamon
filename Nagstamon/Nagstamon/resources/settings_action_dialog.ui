@@ -253,7 +253,7 @@
             </child>
             <child>
               <object class="GtkCheckButton" id="input_checkbutton_re_service_enabled">
-                <property name="label" translatable="yes">RegExp services:</property>
+                <property name="label" translatable="yes">RegExp services</property>
                 <property name="visible">True</property>
                 <property name="can_focus">True</property>
                 <property name="receives_default">False</property>
@@ -377,7 +377,7 @@
             </child>
             <child>
               <object class="GtkCheckButton" id="input_checkbutton_re_status_information_enabled">
-                <property name="label" translatable="yes">RegExp info:</property>
+                <property name="label" translatable="yes">RegExp info</property>
                 <property name="visible">True</property>
                 <property name="can_focus">True</property>
                 <property name="receives_default">False</property>
@@ -438,7 +438,7 @@
             </child>
             <child>
               <object class="GtkCheckButton" id="input_checkbutton_re_host_enabled">
-                <property name="label" translatable="yes">RegExp hosts:</property>
+                <property name="label" translatable="yes">RegExp hosts</property>
                 <property name="visible">True</property>
                 <property name="can_focus">True</property>
                 <property name="receives_default">False</property>
