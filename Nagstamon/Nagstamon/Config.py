@@ -92,6 +92,10 @@ class Config(object):
         self.notification_action_down_string = ""
         self.notification_action_ok = False
         self.notification_action_ok_string = ""
+        self.notification_custom_action = False
+        self.notification_custom_action_string = False
+        self.notification_custom_action_separator = False
+        self.notification_custom_action_single = False
         self.notify_if_warning = True
         self.notify_if_critical = True
         self.notify_if_unknown = True

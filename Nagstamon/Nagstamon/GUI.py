@@ -261,8 +261,12 @@ class GUI(object):
         self.Dialogs = {}
 
         # history of events to track status changes for notifications
+        # events that came in
         self.events_current = {}
+        # events that had been already displayed in popwin and need no extra mark
         self.events_history = {}
+        # events to be given to custom notification, maybe to desktop notification too
+        self.events_notification = {}
 
 
     def _get_display_dimensions(self, monitor):
@@ -435,11 +439,13 @@ class GUI(object):
                     for event in self.events_history.keys():
                         if not event in self.events_current.keys():
                             self.events_history.pop(event)
+                            self.events_notification.pop(event)
 
                     # if some current event is not yet in event cache add it and mark it as fresh (=True)
                     for event in self.events_current.keys():
                         if not event in self.events_history.keys():
                             self.events_history[event] = True
+                            self.events_notification[event] = True
 
                     # use a liststore for treeview where the table headers all are strings - first empty it
                     # now added with some simple repair after settings dialog has been used
@@ -1236,12 +1242,33 @@ class GUI(object):
                             Actions.RunNotificationAction(str(self.conf.notification_action_critical_string))
                         if str(self.conf.notification_action_down) == "True":
                             Actions.RunNotificationAction(str(self.conf.notification_action_down_string))
-                            
+
+
+
                         # if desired pop up status window
                         # sorry but does absolutely not work with windows and systray icon so I prefer to let it be
                         #if str(self.conf.notification_popup) == "True":
                         #    self.popwin.showPopwin = True
                         #    self.popwin.PopUp()
+
+                # Custom event notification
+                if str(self.conf.notification_custom_action) == "True":
+                    events = ""
+                    for event in self.events_notification:
+                        if self.events_notification[event] == True:
+                            if str(self.conf.notification_custom_action_single) == "False":
+                                events += event + self.conf.notification_custom_action_separator
+                            else:
+                                custom_action_string = self.conf.notification_custom_action_string.replace("$EVENTS$", event)
+                                Actions.RunNotificationAction(custom_action_string)
+                            self.events_notification[event] = False
+                    if events != "":
+                        custom_action_string = self.conf.notification_custom_action_string.replace("$EVENTS$", events)
+                        Actions.RunNotificationAction(custom_action_string)
+                else:
+                    # set all events to False to ignore them in the future
+                    for event in self.events_notification: self.events_notification[event] = False
+
         except:
             self.servers.values()[0].Error(sys.exc_info())
 
@@ -3103,7 +3130,7 @@ class Settings(object):
         # store fullscreen state to avoid innecessary popwin flickering
         self.saved_fullscreen_state = str(self.conf.fullscreen)
 
-        # toggle certain options
+        # toggle regexp options
         self.ToggleREHostOptions()
         self.ToggleREServiceOptions()
         self.ToggleREStatusInformationOptions()
@@ -3114,7 +3141,8 @@ class Settings(object):
         # toggle debug options
         self.ToggleDebugOptions()
 
-        # toggle custom sounds options
+        # toggle sounds options
+        self.ToggleSoundOptions()
         self.ToggleCustomSoundOptions()
 
         # toggle icon in systray popup offset
@@ -3510,7 +3538,13 @@ class Settings(object):
         """
         options = self.builder.get_object("table_notification_options_sound_options")
         checkbutton = self.builder.get_object("input_checkbutton_notification_sound")
+        if not checkbutton.get_active():
+            options.hide_all()
+        else:
+            options.show_all()
         options.set_sensitive(checkbutton.get_active())
+        # in case custom options are shown but not selected (due to .show_all())
+        self.ToggleCustomSoundOptions()
 
 
     def ToggleCustomSoundOptions(self, widget=None):
@@ -3519,7 +3553,6 @@ class Settings(object):
         """
         options = self.builder.get_object("table_notification_sound_options_custom_sounds_files")
         checkbutton = self.builder.get_object("input_radiobutton_notification_custom_sound")
-
         if not checkbutton.get_active():
             options.hide_all()
         else:
