@@ -1600,7 +1600,7 @@
                   <object class="GtkTable" id="table_notification_options">
                     <property name="visible">True</property>
                     <property name="can_focus">False</property>
-                    <property name="n_rows">5</property>
+                    <property name="n_rows">6</property>
                     <child>
                       <object class="GtkTable" id="table_notification_options_flash">
                         <property name="visible">True</property>
@@ -1930,9 +1930,6 @@
                                     <child>
                                       <placeholder/>
                                     </child>
-                                    <child>
-                                      <placeholder/>
-                                    </child>
                                   </object>
                                   <packing>
                                     <property name="top_attach">1</property>
@@ -2096,17 +2093,45 @@
                       </packing>
                     </child>
                     <child>
-                      <object class="GtkCheckButton" id="input_checkbox_notification_actions">
-                        <property name="label" translatable="yes">Notification actions</property>
+                      <object class="GtkHBox" id="hbox_notification_actions_checkbox">
                         <property name="visible">True</property>
-                        <property name="can_focus">True</property>
-                        <property name="receives_default">False</property>
-                        <property name="draw_indicator">True</property>
-                        <signal name="toggled" handler="notification_actions" swapped="no"/>
+                        <property name="can_focus">False</property>
+                        <child>
+                          <object class="GtkCheckButton" id="input_checkbutton_notification_actions">
+                            <property name="label" translatable="yes">Notification actions</property>
+                            <property name="visible">True</property>
+                            <property name="can_focus">True</property>
+                            <property name="receives_default">False</property>
+                            <property name="draw_indicator">True</property>
+                            <signal name="toggled" handler="notification_actions" swapped="no"/>
+                          </object>
+                          <packing>
+                            <property name="expand">False</property>
+                            <property name="fill">True</property>
+                            <property name="position">0</property>
+                          </packing>
+                        </child>
+                        <child>
+                          <object class="GtkLinkButton" id="linkbutton_notification_actions_help">
+                            <property name="label" translatable="yes">Help</property>
+                            <property name="visible">True</property>
+                            <property name="can_focus">True</property>
+                            <property name="receives_default">True</property>
+                            <property name="has_tooltip">True</property>
+                            <property name="relief">none</property>
+                            <signal name="clicked" handler="button_help_notification_actions_clicked" swapped="no"/>
+                          </object>
+                          <packing>
+                            <property name="expand">False</property>
+                            <property name="fill">True</property>
+                            <property name="position">1</property>
+                          </packing>
+                        </child>
                       </object>
                       <packing>
                         <property name="top_attach">3</property>
                         <property name="bottom_attach">4</property>
+                        <property name="x_options">GTK_FILL</property>
                         <property name="y_options">GTK_FILL</property>
                       </packing>
                     </child>
@@ -2381,8 +2406,34 @@
                         </child>
                       </object>
                       <packing>
+                        <property name="top_attach">5</property>
+                        <property name="bottom_attach">6</property>
+                        <property name="y_options">GTK_FILL</property>
+                      </packing>
+                    </child>
+                    <child>
+                      <object class="GtkLabel" id="label_help_notification_actions_description">
+                        <property name="can_focus">False</property>
+                        <property name="xalign">0</property>
+                        <property name="yalign">0</property>
+                        <property name="ypad">5</property>
+                        <property name="label" translatable="yes">Every state allows to trigger some specific custom action like playing some sound, open some special application or whatever.
+These actions are triggered by the worst state. Just specify a command line for the desired action.
+
+A custom notification will be used for every notification event. The notification message has to be given by use of $EVENTS$ variable.
+Example: 
+
+zenity --notification --text "$EVENTS$"
+
+The events will be separated by the separator.
+As default all events of one refresh cycle will be used in one notification action. If you want an action for every single event enable the option "Run one single action for every event".</property>
+                        <property name="wrap">True</property>
+                        <property name="width_chars">60</property>
+                      </object>
+                      <packing>
                         <property name="top_attach">4</property>
                         <property name="bottom_attach">5</property>
+                        <property name="x_options">GTK_FILL</property>
                         <property name="y_options">GTK_FILL</property>
                       </packing>
                     </child>

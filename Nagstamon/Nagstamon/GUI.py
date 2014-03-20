@@ -1267,7 +1267,10 @@ class GUI(object):
                             self.events_notification[event] = False
                     # if events got filled display them now
                     if events != "":
-                        custom_action_string = self.conf.notification_custom_action_string.replace("$EVENTS$", events)
+                        # in case a single action per event has to be executed
+                        custom_action_string = self.conf.notification_custom_action_string.replace("$EVENT$", "$EVENTS$")
+                        # insert real event(s)
+                        custom_action_string = custom_action_string.replace("$EVENTS$", events)
                         Actions.RunNotificationAction(custom_action_string)
                 else:
                     # set all events to False to ignore them in the future
@@ -2921,6 +2924,7 @@ class Settings(object):
                           "notification_action_critical": self.ToggleNotificationActionCritical,
                           "notification_action_down": self.ToggleNotificationActionDown,
                           "notification_action_ok": self.ToggleNotificationActionOk,
+                          "button_help_notification_actions_clicked": self.ToggleNotificationActionsHelp,
                           "button_new_action": lambda a: self.output.GetDialog(dialog="NewAction", output=self.output, settingsdialog=self, conf=self.conf),
                           "button_edit_action": lambda e: self.output.GetDialog(dialog="EditAction", output=self.output, selected_action=self.selected_action, settingsdialog=self, conf=self.conf),
                           "button_delete_action": lambda d: self.DeleteAction(self.selected_action, self.conf.actions),
@@ -3673,13 +3677,11 @@ class Settings(object):
             Toggle extra notifications per level
         """
         options = self.builder.get_object("vbox_notification_actions")
-        checkbutton = self.builder.get_object("input_checkbox_notification_actions")
-
+        checkbutton = self.builder.get_object("input_checkbutton_notification_actions")
         if not checkbutton.get_active():
             options.hide()
         else:
             options.show()
-
         self.ToggleNotificationCustomAction()
 
 
@@ -3689,7 +3691,6 @@ class Settings(object):
         """
         options = self.builder.get_object("table_notification_custom_action")
         checkbutton = self.builder.get_object("input_checkbutton_notification_custom_action")
-
         if not checkbutton.get_active():
             options.hide()
         else:
@@ -3742,6 +3743,14 @@ class Settings(object):
             options.hide()
         else:
             options.show()
+
+
+    def ToggleNotificationActionsHelp(self, widget=None):
+        """
+            Toggle help label for action string
+        """
+        help = self.builder.get_object("label_help_notification_actions_description")
+        help.set_visible(not help.get_visible())
 
 
     def PlaySound(self, playbutton=None):
