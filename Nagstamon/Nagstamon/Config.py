@@ -75,8 +75,7 @@ class Config(object):
         self.notification = True
         self.notification_flashing = True
         self.notification_desktop = False
-        # because of nonexistent windows systray popup support I'll let it be now
-        #self.notification_popup = False
+        self.notification_actions = False
         self.notification_sound = True
         self.notification_sound_repeat = False
         self.notification_default_sound = True

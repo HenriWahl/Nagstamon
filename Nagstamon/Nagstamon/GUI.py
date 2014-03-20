@@ -1236,14 +1236,13 @@ class GUI(object):
                             self.notify_bubble.show()
 
                         # Notification actions
-                        if str(self.conf.notification_action_warning) == "True":
-                            Actions.RunNotificationAction(str(self.conf.notification_action_warning_string))
-                        if str(self.conf.notification_action_critical) == "True":
-                            Actions.RunNotificationAction(str(self.conf.notification_action_critical_string))
-                        if str(self.conf.notification_action_down) == "True":
-                            Actions.RunNotificationAction(str(self.conf.notification_action_down_string))
-
-
+                        if str(self.conf.notification_actions) == "True":
+                            if str(self.conf.notification_action_warning) == "True":
+                                Actions.RunNotificationAction(str(self.conf.notification_action_warning_string))
+                            if str(self.conf.notification_action_critical) == "True":
+                                Actions.RunNotificationAction(str(self.conf.notification_action_critical_string))
+                            if str(self.conf.notification_action_down) == "True":
+                                Actions.RunNotificationAction(str(self.conf.notification_action_down_string))
 
                         # if desired pop up status window
                         # sorry but does absolutely not work with windows and systray icon so I prefer to let it be
@@ -1252,16 +1251,21 @@ class GUI(object):
                         #    self.popwin.PopUp()
 
                 # Custom event notification
-                if str(self.conf.notification_custom_action) == "True":
+                if str(self.conf.notification_actions) == "True" and str(self.conf.notification_custom_action) == "True":
                     events = ""
-                    for event in self.events_notification:
-                        if self.events_notification[event] == True:
-                            if str(self.conf.notification_custom_action_single) == "False":
-                                events += event + self.conf.notification_custom_action_separator
-                            else:
-                                custom_action_string = self.conf.notification_custom_action_string.replace("$EVENTS$", event)
-                                Actions.RunNotificationAction(custom_action_string)
+                    # if no single notifications should be used (default) put all events into one string, separated by separator
+                    if str(self.conf.notification_custom_action_single) == "False":
+                        # list comprehension only considers events which are new, ergo True
+                        events = self.conf.notification_custom_action_separator.join([k for k,v in self.events_notification.items() if v == True])
+                        # clear already notified events setting them to False
+                        for event in [k for k,v in self.events_notification.items() if v == True]: self.events_notification[event] = False
+                    else:
+                        for event in [k for k,v in self.events_notification.items() if v == True]:
+                            custom_action_string = self.conf.notification_custom_action_string.replace("$EVENTS$", event)
+                            Actions.RunNotificationAction(custom_action_string)
+                            # clear already notified events setting them to False
                             self.events_notification[event] = False
+                    # if events got filled display them now
                     if events != "":
                         custom_action_string = self.conf.notification_custom_action_string.replace("$EVENTS$", events)
                         Actions.RunNotificationAction(custom_action_string)
@@ -2911,6 +2915,8 @@ class Settings(object):
                           "color-set": self.ColorsPreview,
                           "radiobutton_icon_in_systray_toggled": self.ToggleSystrayPopupOffset,
                           "radiobutton_fullscreen_toggled": self.ToggleFullscreenDisplay,
+                          "notification_actions": self.ToggleNotificationActions,
+                          "notification_custom_action": self.ToggleNotificationCustomAction,
                           "notification_action_warning": self.ToggleNotificationActionWarning,
                           "notification_action_critical": self.ToggleNotificationActionCritical,
                           "notification_action_down": self.ToggleNotificationActionDown,
@@ -3152,10 +3158,12 @@ class Settings(object):
         self.ToggleFullscreenDisplay()
 
         # toggle notification action options
+        self.ToggleNotificationActions()
         self.ToggleNotificationActionWarning()
         self.ToggleNotificationActionCritical()
         self.ToggleNotificationActionDown()
         self.ToggleNotificationActionOk()
+        #self.ToggleNotificationCustomAction()
 
 
     def FillTreeView(self, treeview_widget, items, column_string, selected_item):
@@ -3529,7 +3537,11 @@ class Settings(object):
         """
         options = self.builder.get_object("table_notification_options")
         checkbutton = self.builder.get_object("input_checkbutton_notification")
-        options.set_sensitive(checkbutton.get_active())
+        #options.set_sensitive(checkbutton.get_active())
+        if not checkbutton.get_active():
+            options.hide()
+        else:
+            options.show()
 
 
     def ToggleSoundOptions(self, widget=None):
@@ -3656,13 +3668,44 @@ class Settings(object):
             options.show_all()
 
 
+    def ToggleNotificationActions(self, widget=None):
+        """
+            Toggle extra notifications per level
+        """
+        options = self.builder.get_object("vbox_notification_actions")
+        checkbutton = self.builder.get_object("input_checkbox_notification_actions")
+
+        if not checkbutton.get_active():
+            options.hide()
+        else:
+            options.show()
+
+        self.ToggleNotificationCustomAction()
+
+
+    def ToggleNotificationCustomAction(self, widget=None):
+        """
+            Toggle generic custom notification
+        """
+        options = self.builder.get_object("table_notification_custom_action")
+        checkbutton = self.builder.get_object("input_checkbutton_notification_custom_action")
+
+        if not checkbutton.get_active():
+            options.hide()
+        else:
+            options.show()
+
+
     def ToggleNotificationActionWarning(self, widget=None):
         """
             Toggle notification action for WARNING
         """
         options = self.builder.get_object("input_entry_notification_action_warning_string")
         checkbutton = self.builder.get_object("input_checkbutton_notification_action_warning")
-        options.set_sensitive(checkbutton.get_active())
+        if not checkbutton.get_active():
+            options.hide()
+        else:
+            options.show()
 
 
     def ToggleNotificationActionCritical(self, widget=None):
@@ -3671,7 +3714,10 @@ class Settings(object):
         """
         options = self.builder.get_object("input_entry_notification_action_critical_string")
         checkbutton = self.builder.get_object("input_checkbutton_notification_action_critical")
-        options.set_sensitive(checkbutton.get_active())
+        if not checkbutton.get_active():
+            options.hide()
+        else:
+            options.show()
 
 
     def ToggleNotificationActionDown(self, widget=None):
@@ -3680,7 +3726,10 @@ class Settings(object):
         """
         options = self.builder.get_object("input_entry_notification_action_down_string")
         checkbutton = self.builder.get_object("input_checkbutton_notification_action_down")
-        options.set_sensitive(checkbutton.get_active())
+        if not checkbutton.get_active():
+            options.hide()
+        else:
+            options.show()
 
 
     def ToggleNotificationActionOk(self, widget=None):
@@ -3689,7 +3738,10 @@ class Settings(object):
         """
         options = self.builder.get_object("input_entry_notification_action_ok_string")
         checkbutton = self.builder.get_object("input_checkbutton_notification_action_ok")
-        options.set_sensitive(checkbutton.get_active())
+        if not checkbutton.get_active():
+            options.hide()
+        else:
+            options.show()
 
 
     def PlaySound(self, playbutton=None):
