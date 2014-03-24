@@ -593,7 +593,7 @@ class GUI(object):
 
         # everything OK
         if unknowns == 0 and warnings == 0 and criticals == 0 and unreachables == 0 and downs == 0 and self.status_ok is not False:
-            self.statusbar.statusbar_labeltext = '<span size="' + str(self.fontsize) + '" background="' + str(self.conf.color_ok_background) + '" foreground="' + str(self.conf.color_ok_text) + '"> OK </span>'
+            self.statusbar.statusbar_labeltext = '<span size="%s" background="%s" foreground="%s"> OK </span>' % (str(self.fontsize), str(self.conf.color_ok_background), str(self.conf.color_ok_text))
             self.statusbar.statusbar_labeltext_inverted = self.statusbar.statusbar_labeltext
             self.statusbar.Label.set_markup(self.statusbar.statusbar_labeltext)
             # fix size when loading with network errors
@@ -630,24 +630,24 @@ class GUI(object):
 
             if downs > 0:
                 if str(self.conf.long_display) == "True": downs = str(downs) + " DOWN"
-                self.statusbar.statusbar_labeltext = '<span size="' + str(self.fontsize) + '" background="' + str(self.conf.color_down_background) + '" foreground="' + str(self.conf.color_down_text) + '"> ' + str(downs) + ' </span>'
-                self.statusbar.statusbar_labeltext_inverted = '<span size="' + str(self.fontsize) + '" background="' + str(self.conf.color_down_text) + '" foreground="' + str(self.conf.color_down_background) + '"> ' + str(downs) + ' </span>'
+                self.statusbar.statusbar_labeltext += '<span size="%s" background="%s" foreground="%s">%s</span>' % (str(self.fontsize), str(self.conf.color_down_background), str(self.conf.color_down_text), str(downs))
+                self.statusbar.statusbar_labeltext_inverted += '<span size="%s" background="%s" foreground="%s">%s</span>' % (str(self.fontsize), str(self.conf.color_down_text), str(self.conf.color_down_background), str(downs))
             if unreachables > 0:
                 if str(self.conf.long_display) == "True": unreachables = str(unreachables) + " UNREACHABLE"
-                self.statusbar.statusbar_labeltext = self.statusbar.statusbar_labeltext + '<span size="' + str(self.fontsize) + '" background="' + str(self.conf.color_unreachable_background) + '" foreground="' + str(self.conf.color_unreachable_text) + '"> ' + str(unreachables) + ' </span>'
-                self.statusbar.statusbar_labeltext_inverted = self.statusbar.statusbar_labeltext_inverted + '<span size="' + str(self.fontsize) + '" background="' + str(self.conf.color_unreachable_text) + '" foreground="' + str(self.conf.color_unreachable_background) + '"> ' + str(unreachables) + ' </span>'
+                self.statusbar.statusbar_labeltext += '<span size="%s" background="%s" foreground="%s">%s</span>' % (str(self.fontsize), str(self.conf.color_unreachable_background), str(self.conf.color_unreachable_text), str(unreachables))
+                self.statusbar.statusbar_labeltext_inverted += '<span size="%s" background="%s" foreground="%s">%s</span>' % (str(self.fontsize), str(self.conf.color_unreachable_text), str(self.conf.color_unreachable_background), str(unreachables))
             if criticals > 0:
                 if str(self.conf.long_display) == "True": criticals = str(criticals) + " CRITICAL"
-                self.statusbar.statusbar_labeltext = self.statusbar.statusbar_labeltext + '<span size="' + str(self.fontsize) + '" background="' + str(self.conf.color_critical_background) + '" foreground="' + str(self.conf.color_critical_text) + '"> ' + str(criticals) + ' </span>'
-                self.statusbar.statusbar_labeltext_inverted = self.statusbar.statusbar_labeltext_inverted + '<span size="' + str(self.fontsize) + '" background="' + str(self.conf.color_critical_text) + '" foreground="' + str(self.conf.color_critical_background) + '"> ' + str(criticals) + ' </span>'
+                self.statusbar.statusbar_labeltext += '<span size="%s" background="%s" foreground="%s">%s</span>' % (str(self.fontsize), str(self.conf.color_critical_background), str(self.conf.color_critical_text), str(criticals))
+                self.statusbar.statusbar_labeltext_inverted += '<span size="%s" background="%s" foreground="%s">%s</span>' % (str(self.fontsize), str(self.conf.color_critical_text), str(self.conf.color_critical_background), str(criticals))
             if unknowns > 0:
                 if str(self.conf.long_display) == "True": unknowns = str(unknowns) + " UNKNOWN"
-                self.statusbar.statusbar_labeltext = self.statusbar.statusbar_labeltext + '<span size="' + str(self.fontsize) + '" background="' + str(self.conf.color_unknown_background) + '" foreground="' + str(self.conf.color_unknown_text) + '"> ' + str(unknowns) + ' </span>'
-                self.statusbar.statusbar_labeltext_inverted = self.statusbar.statusbar_labeltext_inverted + '<span size="' + str(self.fontsize) + '" background="' + str(self.conf.color_unknown_text) + '" foreground="' + str(self.conf.color_unknown_background) + '"> ' + str(unknowns) + ' </span>'
+                self.statusbar.statusbar_labeltext += '<span size="%s" background="%s" foreground="%s">%s</span>' % (str(self.fontsize), str(self.conf.color_unknown_background), str(self.conf.color_unknown_text), str(unknowns))
+                self.statusbar.statusbar_labeltext_inverted += '<span size="%s" background="%s" foreground="%s">%s</span>' % (str(self.fontsize), str(self.conf.color_unknown_text), str(self.conf.color_unknown_background), str(unknowns))
             if warnings > 0:
                 if str(self.conf.long_display) == "True": warnings = str(warnings) + " WARNING"
-                self.statusbar.statusbar_labeltext = self.statusbar.statusbar_labeltext + '<span size="' + str(self.fontsize) + '" background="' + str(self.conf.color_warning_background) + '" foreground="' + str(self.conf.color_warning_text) + '"> ' + str(warnings) + ' </span>'
-                self.statusbar.statusbar_labeltext_inverted = self.statusbar.statusbar_labeltext_inverted + '<span size="' + str(self.fontsize) + '" background="' + str(self.conf.color_warning_text) + '" foreground="' + str(self.conf.color_warning_background) + '"> ' + str(warnings) + ' </span>'
+                self.statusbar.statusbar_labeltext += '<span size="%s" background="%s" foreground="%s">%s</span>' % (str(self.fontsize), str(self.conf.color_warning_background), str(self.conf.color_warning_text), str(warnings))
+                self.statusbar.statusbar_labeltext_inverted += '<span size="%s" background="%s" foreground="%s">%s</span>' % (str(self.fontsize), str(self.conf.color_warning_text), str(self.conf.color_warning_background), str(warnings))
 
             # if connections fails at starting do not display OK - Debian bug #617490
             if unknowns == 0 and warnings == 0 and criticals == 0 and unreachables == 0 and downs == 0 and self.status_ok is False:
@@ -655,8 +655,8 @@ class GUI(object):
                     errors = "ERROR"
                 else:
                     errors = "ERR"
-                self.statusbar.statusbar_labeltext = self.statusbar.statusbar_labeltext + '<span size="' + str(self.fontsize) + '" background="' + str(self.conf.color_error_background) + '" foreground="' + str(self.conf.color_error_text) + '"> ' + str(errors) + ' </span>'
-                self.statusbar.statusbar_labeltext_inverted = self.statusbar.statusbar_labeltext_inverted + '<span size="' + str(self.fontsize) + '" background="' + str(self.conf.color_error_text) + '" foreground="' + str(self.conf.color_error_background) + '"> ' + str(errors) + ' </span>'
+                self.statusbar.statusbar_labeltext += '<span size="%s" background="%s" foreground="%s">%s</span>' % (str(self.fontsize), str(self.conf.color_error_background), str(self.conf.color_error_text), str(errors))
+                self.statusbar.statusbar_labeltext_inverted += '<span size="%s" background="%s" foreground="%s">%s</span>' % (str(self.fontsize), str(self.conf.color_error_text), str(self.conf.color_error_background), str(errors))
                 color = "error"
 
             if str(self.conf.appindicator) == "True" and sys.modules.has_key("appindicator"):
@@ -2032,7 +2032,7 @@ class Popwin(object):
         server = self.output.servers[server_name]
         # put all infos into one VBox object
         servervbox = ServerVBox(output=self.output, server=server)
-        servervbox.Label.set_markup('<span weight="bold" size="large">' + server.get_username() + "@" + server.get_name() + '</span>')
+        servervbox.Label.set_markup('<span weight="bold" size="large">%s@%s</span>' % (server.get_username(), server.get_name()))
         servervbox.Label.set_alignment(0,0)
         # set no show all to be able to hide label and treeview if it is empty in case of no hassle
         servervbox.set_no_show_all(True)
@@ -2392,7 +2392,7 @@ class Popwin(object):
         # status field in server vbox in popwin
         try:
             # kick out final "\n" for nicer appearance
-            self.ServerVBoxes[server.get_name()].LabelStatus.set_markup('<span> Status: ' + str(server.status) + ' <span color="darkred">' + str(server.status_description).rsplit("\n", 1)[0] + '</span></span>')
+            self.ServerVBoxes[server.get_name()].LabelStatus.set_markup('<span> Status: %s <span color="darkred">%s</span></span>' % (str(server.status), str(server.status_description).rsplit("\n", 1)[0]))
         except:
             server.Error(sys.exc_info())
 
@@ -2772,7 +2772,7 @@ class ServerVBox(gtk.VBox):
         self.HBoxAuth.set_no_show_all(True)
 
         # refresh server label
-        self.Label.set_markup('<span weight="bold" size="large">' + server.get_username() + "@" + server.get_name() + '</span>')
+        self.Label.set_markup('<span weight="bold" size="large">%s@%s</span>' % (server.get_username(), server.get_name()))
 
         server.status = "Trying to reauthenticate..."
         server.status_description = ""
@@ -3342,7 +3342,7 @@ class Settings(object):
                         self.output.popwin.ServerVBoxes[server.get_name()].set_visible(True)
                         self.output.popwin.ServerVBoxes[server.get_name()].set_no_show_all(False)
                         self.output.popwin.ServerVBoxes[server.get_name()].show_all()
-                        self.output.popwin.ServerVBoxes[server.get_name()].Label.set_markup('<span weight="bold" size="large">' + server.get_username() + "@" + server.get_name() + '</span>')
+                        self.output.popwin.ServerVBoxes[server.get_name()].Label.set_markup('<span weight="bold" size="large">%s@%s</span>' % (server.get_username(), server.get_name()))
                         # add box to the other ones
                         self.output.popwin.ScrolledVBox.add(self.output.popwin.ServerVBoxes[server.get_name()])
                         # add server sorting
