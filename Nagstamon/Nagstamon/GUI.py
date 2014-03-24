@@ -749,6 +749,10 @@ class GUI(object):
                Actions.RunNotificationAction(str(self.conf.notification_action_ok_string))
             self.last_worst_status = "UP"
 
+        # if failures have gone and nobody took notice switch notification off again
+        if len([k for k,v in self.events_history.items() if v == True]) == 0 and self.Notifying == True:
+            self.NotificationOff()
+
         # if only one monitor cannot be reached show popwin to inform about its trouble
         for server in self.servers.values():
             if server.status_description != "" or server.refresh_authentication == True:
