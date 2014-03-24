@@ -630,24 +630,24 @@ class GUI(object):
 
             if downs > 0:
                 if str(self.conf.long_display) == "True": downs = str(downs) + " DOWN"
-                self.statusbar.statusbar_labeltext += '<span size="%s" background="%s" foreground="%s">%s</span>' % (str(self.fontsize), str(self.conf.color_down_background), str(self.conf.color_down_text), str(downs))
-                self.statusbar.statusbar_labeltext_inverted += '<span size="%s" background="%s" foreground="%s">%s</span>' % (str(self.fontsize), str(self.conf.color_down_text), str(self.conf.color_down_background), str(downs))
+                self.statusbar.statusbar_labeltext += '<span size="%s" background="%s" foreground="%s"> %s </span>' % (str(self.fontsize), str(self.conf.color_down_background), str(self.conf.color_down_text), str(downs))
+                self.statusbar.statusbar_labeltext_inverted += '<span size="%s" background="%s" foreground="%s"> %s </span>' % (str(self.fontsize), str(self.conf.color_down_text), str(self.conf.color_down_background), str(downs))
             if unreachables > 0:
                 if str(self.conf.long_display) == "True": unreachables = str(unreachables) + " UNREACHABLE"
-                self.statusbar.statusbar_labeltext += '<span size="%s" background="%s" foreground="%s">%s</span>' % (str(self.fontsize), str(self.conf.color_unreachable_background), str(self.conf.color_unreachable_text), str(unreachables))
-                self.statusbar.statusbar_labeltext_inverted += '<span size="%s" background="%s" foreground="%s">%s</span>' % (str(self.fontsize), str(self.conf.color_unreachable_text), str(self.conf.color_unreachable_background), str(unreachables))
+                self.statusbar.statusbar_labeltext += '<span size="%s" background="%s" foreground="%s"> %s </span>' % (str(self.fontsize), str(self.conf.color_unreachable_background), str(self.conf.color_unreachable_text), str(unreachables))
+                self.statusbar.statusbar_labeltext_inverted += '<span size="%s" background="%s" foreground="%s"> %s </span>' % (str(self.fontsize), str(self.conf.color_unreachable_text), str(self.conf.color_unreachable_background), str(unreachables))
             if criticals > 0:
                 if str(self.conf.long_display) == "True": criticals = str(criticals) + " CRITICAL"
-                self.statusbar.statusbar_labeltext += '<span size="%s" background="%s" foreground="%s">%s</span>' % (str(self.fontsize), str(self.conf.color_critical_background), str(self.conf.color_critical_text), str(criticals))
-                self.statusbar.statusbar_labeltext_inverted += '<span size="%s" background="%s" foreground="%s">%s</span>' % (str(self.fontsize), str(self.conf.color_critical_text), str(self.conf.color_critical_background), str(criticals))
+                self.statusbar.statusbar_labeltext += '<span size="%s" background="%s" foreground="%s"> %s </span>' % (str(self.fontsize), str(self.conf.color_critical_background), str(self.conf.color_critical_text), str(criticals))
+                self.statusbar.statusbar_labeltext_inverted += '<span size="%s" background="%s" foreground="%s"> %s </span>' % (str(self.fontsize), str(self.conf.color_critical_text), str(self.conf.color_critical_background), str(criticals))
             if unknowns > 0:
                 if str(self.conf.long_display) == "True": unknowns = str(unknowns) + " UNKNOWN"
-                self.statusbar.statusbar_labeltext += '<span size="%s" background="%s" foreground="%s">%s</span>' % (str(self.fontsize), str(self.conf.color_unknown_background), str(self.conf.color_unknown_text), str(unknowns))
-                self.statusbar.statusbar_labeltext_inverted += '<span size="%s" background="%s" foreground="%s">%s</span>' % (str(self.fontsize), str(self.conf.color_unknown_text), str(self.conf.color_unknown_background), str(unknowns))
+                self.statusbar.statusbar_labeltext += '<span size="%s" background="%s" foreground="%s"> %s </span>' % (str(self.fontsize), str(self.conf.color_unknown_background), str(self.conf.color_unknown_text), str(unknowns))
+                self.statusbar.statusbar_labeltext_inverted += '<span size="%s" background="%s" foreground="%s"> %s </span>' % (str(self.fontsize), str(self.conf.color_unknown_text), str(self.conf.color_unknown_background), str(unknowns))
             if warnings > 0:
                 if str(self.conf.long_display) == "True": warnings = str(warnings) + " WARNING"
-                self.statusbar.statusbar_labeltext += '<span size="%s" background="%s" foreground="%s">%s</span>' % (str(self.fontsize), str(self.conf.color_warning_background), str(self.conf.color_warning_text), str(warnings))
-                self.statusbar.statusbar_labeltext_inverted += '<span size="%s" background="%s" foreground="%s">%s</span>' % (str(self.fontsize), str(self.conf.color_warning_text), str(self.conf.color_warning_background), str(warnings))
+                self.statusbar.statusbar_labeltext += '<span size="%s" background="%s" foreground="%s"> %s </span>' % (str(self.fontsize), str(self.conf.color_warning_background), str(self.conf.color_warning_text), str(warnings))
+                self.statusbar.statusbar_labeltext_inverted += '<span size="%s" background="%s" foreground="%s"> %s </span>' % (str(self.fontsize), str(self.conf.color_warning_text), str(self.conf.color_warning_background), str(warnings))
 
             # if connections fails at starting do not display OK - Debian bug #617490
             if unknowns == 0 and warnings == 0 and criticals == 0 and unreachables == 0 and downs == 0 and self.status_ok is False:
@@ -655,8 +655,8 @@ class GUI(object):
                     errors = "ERROR"
                 else:
                     errors = "ERR"
-                self.statusbar.statusbar_labeltext += '<span size="%s" background="%s" foreground="%s">%s</span>' % (str(self.fontsize), str(self.conf.color_error_background), str(self.conf.color_error_text), str(errors))
-                self.statusbar.statusbar_labeltext_inverted += '<span size="%s" background="%s" foreground="%s">%s</span>' % (str(self.fontsize), str(self.conf.color_error_text), str(self.conf.color_error_background), str(errors))
+                self.statusbar.statusbar_labeltext += '<span size="%s" background="%s" foreground="%s"> %s </span>' % (str(self.fontsize), str(self.conf.color_error_background), str(self.conf.color_error_text), str(errors))
+                self.statusbar.statusbar_labeltext_inverted += '<span size="%s" background="%s" foreground="%s"> %s </span>' % (str(self.fontsize), str(self.conf.color_error_text), str(self.conf.color_error_background), str(errors))
                 color = "error"
 
             if str(self.conf.appindicator) == "True" and sys.modules.has_key("appindicator"):
