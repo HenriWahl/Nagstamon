@@ -25,6 +25,13 @@ import base64
 import zlib
 import sys
 
+#Determine if keyring module and an implementation is available for secure password storage
+try:
+  import keyring
+  keyring_available = not (keyring.get_keyring() is None)
+except ImportError:
+  keyring_available = False
+
 class Config(object):
     """
         The place for central configuration.
@@ -34,6 +41,7 @@ class Config(object):
             read config file and set the appropriate attributes
             supposed to be sensible defaults
         """
+        self.keyring_available = keyring_available
         # move from minute interval to seconds
         #self.update_interval = 1
         self.update_interval_seconds = 60
@@ -314,6 +322,8 @@ class Config(object):
                 servers[server].username = self.DeObfuscate(servers[server].username)
                 if servers[server].save_password == "False":
                     servers[server].password = ""
+		elif self.keyring_available:
+                    servers[server].password = keyring.get_password("Nagstamon.Password", servers[server].username) or ""
                 else:
                     servers[server].password = self.DeObfuscate(servers[server].password)
                 # do only deobfuscating if any autologin_key is set - will be only Centreon
@@ -463,9 +473,13 @@ class Config(object):
                     if settingsdir == "servers":
                         if option == "username" or option == "password" or option == "proxy_username" or option == "proxy_password" or option == "autologin_key":
                             value = self.Obfuscate(self.__dict__[settingsdir][s].__dict__[option])
-                            if option == "password" \
-                               and self.__dict__[settingsdir][s].save_password == "False":
-                                value = ""
+                            if option == "password":
+			       if self.__dict__[settingsdir][s].save_password == "False":
+                                 value = ""
+                               elif self.keyring_available:
+                                 if self.__dict__[settingsdir][s].password != "":
+                                   keyring.set_password("Nagstamon.Password", self.__dict__[settingsdir][s].username, self.__dict__[settingsdir][s].password)
+                                 value = ""
                             config.set(setting + "_" + s, option, value)
                         else:
                             config.set(setting + "_" + s, option, self.__dict__[settingsdir][s].__dict__[option])
