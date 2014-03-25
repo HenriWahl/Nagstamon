@@ -323,7 +323,7 @@ class Config(object):
                 if servers[server].save_password == "False":
                     servers[server].password = ""
 		elif self.keyring_available:
-                    servers[server].password = keyring.get_password("Nagstamon.Password", servers[server].username) or ""
+                    servers[server].password = keyring.get_password("Nagstamon", servers[server].username + "@" + servers[server].monitor_url) or ""
                 else:
                     servers[server].password = self.DeObfuscate(servers[server].password)
                 # do only deobfuscating if any autologin_key is set - will be only Centreon
@@ -478,7 +478,7 @@ class Config(object):
                                  value = ""
                                elif self.keyring_available:
                                  if self.__dict__[settingsdir][s].password != "":
-                                   keyring.set_password("Nagstamon.Password", self.__dict__[settingsdir][s].username, self.__dict__[settingsdir][s].password)
+                                   keyring.set_password("Nagstamon", self.__dict__[settingsdir][s].username + "@" + self.__dict__[settingsdir][s].monitor_url, self.__dict__[settingsdir][s].password)
                                  value = ""
                             config.set(setting + "_" + s, option, value)
                         else:
