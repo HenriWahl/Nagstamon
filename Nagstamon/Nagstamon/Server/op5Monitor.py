@@ -21,12 +21,32 @@ import sys
 import json
 import urllib
 import datetime
+import time
 
 from datetime import datetime
 
 from Nagstamon import Actions
 from Nagstamon.Objects import *
 from Nagstamon.Server.Generic import GenericServer, not_empty
+
+def human_duration(start, stop=time.time()):
+    ret = ''
+    first = True
+    secs = stop - start
+    units = 'wdhms'
+    divisors = {'w': 86400 * 7, 'd': 86400, 'h': 3600, 'm': 60, 's': 1}
+    for unit in units:
+        divisor = divisors[unit]
+        if secs < divisor:
+            continue
+        amount = int(secs / divisor)
+        secs %= divisor
+        if not first:
+            ret += ' '
+        ret += "%d%c" % (amount, unit)
+        first = False
+    return ret
+
 
 class Op5MonitorServer(GenericServer):
     """
@@ -133,7 +153,7 @@ class Op5MonitorServer(GenericServer):
                     n["passiveonly"] = 0 if api['active_checks_enabled'] else 1
                     n["scheduled_downtime"] = 1 if api['scheduled_downtime_depth'] else 0
                     n['attempt'] = "%s/%s" % (str(api['current_attempt']), str(api['max_check_attempts']))
-                    n['duration'] = api['last_state_change']
+                    n['duration'] = human_duration(api['last_state_change'])
                     n['last_check'] = datetime.fromtimestamp(int(api['last_check'])).strftime('%Y-%m-%d %H:%M:%S')
                     n['status'] = self.STATUS_HOST_MAPPING[str(api['state'])]
                     n['status_information'] = api['plugin_output']
@@ -183,7 +203,7 @@ class Op5MonitorServer(GenericServer):
                     n["passiveonly"] = 0 if api['active_checks_enabled'] else 1
                     n["scheduled_downtime"] = 1 if api['scheduled_downtime_depth'] else 0
                     n['attempt'] = "%s/%s" % (str(api['current_attempt']), str(api['max_check_attempts']))
-                    n['duration'] = api['last_state_change']
+                    n['duration'] = human_duration(api['last_state_change'])
                     n['last_check'] = datetime.fromtimestamp(int(api['last_check'])).strftime('%Y-%m-%d %H:%M:%S')
                     n['status_information'] = api['plugin_output']
 
