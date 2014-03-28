@@ -258,56 +258,41 @@ class Op5MonitorServer(GenericServer):
         end_time = magic_tuple + end_diff
         return str(start_time), str(end_time)
 
+    def send_command(self, command, params=False):
+        url = self.monitor_url + self.api_cmd + '/' + command
+        self.FetchURL(url, "raw", urllib.urlencode(params))
+
     def _set_recheck(self, host, service):
+        params = {'host_name': host, 'check_time': time.time()}
         if not service:
-            values = {"requested_command": "SCHEDULE_HOST_CHECK"}
-            values.update({"cmd_param[host_name]": host})
+            command = 'SCHEDULE_HOST_CHECK'
         else:
             if self.hosts[host].services[service].is_passive_only():
                 return
-            values = {"requested_command": "SCHEDULE_SVC_CHECK"}
-            values.update({"cmd_param[service]": host + ";" + service})
-
-            time_diff = datetime.timedelta(0, 10)
-            remote_time = magic_tuple + datetime.utcnow()
-
-        values.update({"cmd_param[check_time]": remote_time})
-        values.update({"cmd_param[_force]": "1"})
-
-        self.FetchURL(self.commit_url, cgi_data=urllib.urlencode(values), giveback="raw")
+            command = 'SCHEDULE_SVC_CHECK'
+            params['service_description'] = service
+        self.send_command(command, params)
 
 
     def _set_acknowledge(self, host, service, author, comment, sticky, notify, persistent, all_services):
+        params = {'host_name': host, 'sticky': int(sticky),
+                  'notify': int(notify), 'persistent': int(persistent),
+                  'author': author, 'comment': comment}
         if not service:
-            values = {"requested_command": "ACKNOWLEDGE_HOST_PROBLEM"}
-            values.update({"cmd_param[host_name]": host})
+            command = 'ACKNOWLEDGE_HOST_PROBLEM'
         else:
-            values = {"requested_command": "ACKNOWLEDGE_SVC_PROBLEM"}
-            values.update({"cmd_param[service]": host + ";" + service})
-
-        values.update({"cmd_param[sticky]": int(sticky)})
-        values.update({"cmd_param[notify]": int(notify)})
-        values.update({"cmd_param[persistent]": int(persistent)})
-        values.update({"cmd_param[author]": self.get_username()})
-        values.update({"cmd_param[comment]": comment})
-
-        self.FetchURL(self.commit_url, cgi_data=urllib.urlencode(values), giveback="raw")
-
+            params['service_description'] = service
+            command = 'ACKNOWLEDGE_SVC_PROBLEM'
+        self.send_command(command, params)
 
     def _set_downtime(self, host, service, author, comment, fixed, start_time, end_time, hours, minutes):
+        params = {'host_name': host, 'author': author, 'comment': comment,
+                  'fixed': fixed, 'trigger_id': '0', 'start_time': start_time,
+                  'end_time': end_time,
+                  'duration': str(hours) + '.' + str(minutes)}
         if not service:
-            values = {"requested_command": "SCHEDULE_HOST_DOWNTIME"}
-            values.update({"cmd_param[host_name]": host})
+            command = 'SCHEDULE_HOST_DOWNTIME'
         else:
-            values = {"requested_command": "SCHEDULE_SVC_DOWNTIME"}
-            values.update({"cmd_param[service]": host + ";" + service})
-
-        values.update({"cmd_param[author]": author})
-        values.update({"cmd_param[comment]": comment})
-        values.update({"cmd_param[fixed]": fixed})
-        values.update({"cmd_param[trigger_id]": "0"})
-        values.update({"cmd_param[start_time]": start_time})
-        values.update({"cmd_param[end_time]": end_time})
-        values.update({"cmd_param[duration]": str(hours) + "." + str(minutes)})
-
-        self.FetchURL(self.commit_url, cgi_data=urllib.urlencode(values), giveback="raw")
+            command = 'SCHEDULE_SVC_DOWNTIME'
+            params['service_description'] = service
+        self.send_command(command, params)
