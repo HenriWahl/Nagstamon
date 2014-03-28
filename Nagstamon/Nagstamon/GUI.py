@@ -2060,6 +2060,13 @@ class Popwin(object):
         # connect the treeviews of the servers to mouse clicks
         servervbox.TreeView.connect("button-press-event", servervbox.TreeviewPopupMenu, servervbox.TreeView, self.output.servers[server.get_name()])
 
+        if server.type == "Check_MK Multisite":
+            servervbox.HBoxCheckMK.set_no_show_all(False)
+            servervbox.HBoxCheckMK.show_all()
+        else:
+            servervbox.HBoxCheckMK.set_no_show_all(True)
+            servervbox.HBoxCheckMK.hide_all()
+
         return servervbox
 
 
@@ -2446,6 +2453,9 @@ class ServerVBox(gtk.VBox):
         self.ButtonServices = ButtonWithIcon(output=self.output, label="Services", icon="services.png")
         self.ButtonHistory = ButtonWithIcon(output=self.output, label="History", icon="history.png")
 
+        # Check_MK stuff
+        self.CheckButtonCheckMKVisibility = gtk.CheckButton("Only my issues")
+
         # Label with status information
         self.LabelStatus = gtk.Label("")
 
@@ -2455,6 +2465,7 @@ class ServerVBox(gtk.VBox):
         # first line for usual monitor shortlink buttons
         self.HBox = gtk.HBox()
         self.HBoxLeft = gtk.HBox()
+        self.HBoxCheckMK = gtk.HBox()
         self.HBoxRight = gtk.HBox()
         self.HBoxLeft.add(self.Label)
         # leave some space around the label
@@ -2463,6 +2474,13 @@ class ServerVBox(gtk.VBox):
         self.HBoxLeft.add(self.ButtonHosts)
         self.HBoxLeft.add(self.ButtonServices)
         self.HBoxLeft.add(self.ButtonHistory)
+
+        # Check_MK stuff
+        self.HBoxCheckMK.add(gtk.VSeparator())
+        self.HBoxCheckMK.add(self.CheckButtonCheckMKVisibility)
+        self.HBoxLeft.add(self.HBoxCheckMK)
+
+        # Status info
         self.HBoxLeft.add(gtk.VSeparator())
         self.HBoxLeft.add(self.LabelStatus)
 
@@ -3358,7 +3376,7 @@ class Settings(object):
                     self.output.popwin.ServerVBoxes.pop(server)
 
             # reorder server VBoxes in case some names changed
-            # to sort the Nagios servers alphabetically make a sortable list of their names
+            # to sort the monitor servers alphabetically make a sortable list of their names
             server_list = []
             for server in self.conf.servers:
                 if str(self.conf.servers[server].enabled) == "True":
@@ -4427,7 +4445,8 @@ class GenericAction(object):
         else:
             options.show_all()
         options.set_sensitive(checkbutton.get_active())
-    
+
+
     def ToggleRECriticalityOptions(self, widget=None):
         """
             Toggle regular expression filter for criticality

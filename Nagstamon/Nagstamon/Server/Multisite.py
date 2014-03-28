@@ -152,6 +152,7 @@ class MultisiteServer(GenericServer):
               'api_svcprob_act': self.monitor_url + 'view.py?_transid=-1&_do_actions=yes&_do_confirm=Yes!&output_format=python&view_name=svcproblems',
               'human_events':    self.monitor_url + "index.py?%s" %
                                                    urllib.urlencode({'start_url': 'view.py?view_name=events'}),
+              'togglevisibility':self.monitor_url + "user_profile.py"
             }
 
             self.statemap = {
@@ -241,6 +242,7 @@ class MultisiteServer(GenericServer):
         """
         Get status from Check_MK Server
         """
+
         ret = Result()
 
         # Create URLs for the configured filters
@@ -515,3 +517,18 @@ class MultisiteServer(GenericServer):
             self.Debug(server=self.get_name(), debug ="Rechecking all action: " + url + '&' + urllib.urlencode(params))
 
         result = self.FetchURL(url + '&' + urllib.urlencode(params), giveback = 'raw')
+
+
+    def ToggleVisibilityOfHostsServices(self, visibility):
+        """
+        Attempt to enable/disable visibility of all problems for user via
+        /user_profile.py?cb_ua_force_authuser=0&cb_ua_force_authuser_webservice=0&filled_in=profile
+        """
+        transid = self.FetchURL(self.urls["togglevisibility"], "obj").result.find(attrs={"name" : "_transid"})["value"]
+
+        self.FetchURL(self.urls["togglevisibility"], "raw", cgi_data=urllib.urlencode(\
+                                                                    {"cb_ua_force_authuser" : str(int(visibility)),\
+                                                                     "cb_ua_force_authuser_webservice" : str(int(visibility)),\
+                                                                     "filled_in" : "profile",\
+                                                                     "_transid" : transid,\
+                                                                     "_save" : "Save"}))
