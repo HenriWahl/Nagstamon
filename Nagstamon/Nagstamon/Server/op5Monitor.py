@@ -249,14 +249,7 @@ class Op5MonitorServer(GenericServer):
             webbrowser.open('%s/monitor/index.php/extinfo/details?host=%s&service=%s' % (self.monitor_url, host, service))
 
     def get_start_end(self, host):
-        last_update = datetime.utcnow()
-        start_time = last_update.contents[0]
-        magic_tuple = datetime.datetime.strptime(str(start_time), "%Y-%m-%d %H:%M:%S")
-        start_diff = datetime.timedelta(0, 10)
-        end_diff = datetime.timedelta(0, 7210)
-        start_time = magic_tuple + start_diff
-        end_time = magic_tuple + end_diff
-        return str(start_time), str(end_time)
+        return time.strftime("%Y-%m-%d %H:%M"), time.strftime("%Y-%m-%d %H:%M", time.localtime(time.time() + 7200))
 
     def send_command(self, command, params=False):
         url = self.monitor_url + self.api_cmd + '/' + command
@@ -286,10 +279,12 @@ class Op5MonitorServer(GenericServer):
         self.send_command(command, params)
 
     def _set_downtime(self, host, service, author, comment, fixed, start_time, end_time, hours, minutes):
+        start_time = int(time.mktime(time.strptime(start_time, "%Y-%m-%d %H:%M")))
+        end_time = int(time.mktime(time.strptime(end_time, "%Y-%m-%d %H:%M")))
+        duration = end_time - start_time
         params = {'host_name': host, 'author': author, 'comment': comment,
                   'fixed': fixed, 'trigger_id': '0', 'start_time': start_time,
-                  'end_time': end_time,
-                  'duration': str(hours) + '.' + str(minutes)}
+                  'end_time': end_time, 'duration': duration}
         if not service:
             command = 'SCHEDULE_HOST_DOWNTIME'
         else:
