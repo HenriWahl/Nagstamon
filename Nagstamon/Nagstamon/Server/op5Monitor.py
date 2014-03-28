@@ -270,7 +270,7 @@ class Op5MonitorServer(GenericServer):
     def _set_acknowledge(self, host, service, author, comment, sticky, notify, persistent, all_services):
         params = {'host_name': host, 'sticky': int(sticky),
                   'notify': int(notify), 'persistent': int(persistent),
-                  'author': author, 'comment': comment}
+                  'comment': comment}
         if not service:
             command = 'ACKNOWLEDGE_HOST_PROBLEM'
         else:
@@ -282,7 +282,7 @@ class Op5MonitorServer(GenericServer):
         start_time = int(time.mktime(time.strptime(start_time, "%Y-%m-%d %H:%M")))
         end_time = int(time.mktime(time.strptime(end_time, "%Y-%m-%d %H:%M")))
         duration = end_time - start_time
-        params = {'host_name': host, 'author': author, 'comment': comment,
+        params = {'host_name': host, 'comment': comment,
                   'fixed': fixed, 'trigger_id': '0', 'start_time': start_time,
                   'end_time': end_time, 'duration': duration}
         if not service:
