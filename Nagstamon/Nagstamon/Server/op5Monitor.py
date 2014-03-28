@@ -263,7 +263,7 @@ class Op5MonitorServer(GenericServer):
         self.FetchURL(url, "raw", urllib.urlencode(params))
 
     def _set_recheck(self, host, service):
-        params = {'host_name': host, 'check_time': time.time()}
+        params = {'host_name': host, 'check_time': int(time.time())}
         if not service:
             command = 'SCHEDULE_HOST_CHECK'
         else:
