@@ -21,12 +21,32 @@ import sys
 import json
 import urllib
 import datetime
+import time
 
 from datetime import datetime
 
 from Nagstamon import Actions
 from Nagstamon.Objects import *
 from Nagstamon.Server.Generic import GenericServer, not_empty
+
+def human_duration(start, stop=time.time()):
+    ret = ''
+    first = True
+    secs = stop - start
+    units = 'wdhms'
+    divisors = {'w': 86400 * 7, 'd': 86400, 'h': 3600, 'm': 60, 's': 1}
+    for unit in units:
+        divisor = divisors[unit]
+        if secs < divisor:
+            continue
+        amount = int(secs / divisor)
+        secs %= divisor
+        if not first:
+            ret += ' '
+        ret += "%d%c" % (amount, unit)
+        first = False
+    return ret
+
 
 class Op5MonitorServer(GenericServer):
     """
@@ -133,7 +153,7 @@ class Op5MonitorServer(GenericServer):
                     n["passiveonly"] = 0 if api['active_checks_enabled'] else 1
                     n["scheduled_downtime"] = 1 if api['scheduled_downtime_depth'] else 0
                     n['attempt'] = "%s/%s" % (str(api['current_attempt']), str(api['max_check_attempts']))
-                    n['duration'] = api['last_state_change']
+                    n['duration'] = human_duration(api['last_state_change'])
                     n['last_check'] = datetime.fromtimestamp(int(api['last_check'])).strftime('%Y-%m-%d %H:%M:%S')
                     n['status'] = self.STATUS_HOST_MAPPING[str(api['state'])]
                     n['status_information'] = api['plugin_output']
@@ -183,7 +203,7 @@ class Op5MonitorServer(GenericServer):
                     n["passiveonly"] = 0 if api['active_checks_enabled'] else 1
                     n["scheduled_downtime"] = 1 if api['scheduled_downtime_depth'] else 0
                     n['attempt'] = "%s/%s" % (str(api['current_attempt']), str(api['max_check_attempts']))
-                    n['duration'] = api['last_state_change']
+                    n['duration'] = human_duration(api['last_state_change'])
                     n['last_check'] = datetime.fromtimestamp(int(api['last_check'])).strftime('%Y-%m-%d %H:%M:%S')
                     n['status_information'] = api['plugin_output']
 
@@ -229,65 +249,45 @@ class Op5MonitorServer(GenericServer):
             webbrowser.open('%s/monitor/index.php/extinfo/details?host=%s&service=%s' % (self.monitor_url, host, service))
 
     def get_start_end(self, host):
-        last_update = datetime.utcnow()
-        start_time = last_update.contents[0]
-        magic_tuple = datetime.datetime.strptime(str(start_time), "%Y-%m-%d %H:%M:%S")
-        start_diff = datetime.timedelta(0, 10)
-        end_diff = datetime.timedelta(0, 7210)
-        start_time = magic_tuple + start_diff
-        end_time = magic_tuple + end_diff
-        return str(start_time), str(end_time)
+        return time.strftime("%Y-%m-%d %H:%M"), time.strftime("%Y-%m-%d %H:%M", time.localtime(time.time() + 7200))
+
+    def send_command(self, command, params=False):
+        url = self.monitor_url + self.api_cmd + '/' + command
+        self.FetchURL(url, "raw", urllib.urlencode(params))
 
     def _set_recheck(self, host, service):
+        params = {'host_name': host, 'check_time': int(time.time())}
         if not service:
-            values = {"requested_command": "SCHEDULE_HOST_CHECK"}
-            values.update({"cmd_param[host_name]": host})
+            command = 'SCHEDULE_HOST_CHECK'
         else:
             if self.hosts[host].services[service].is_passive_only():
                 return
-            values = {"requested_command": "SCHEDULE_SVC_CHECK"}
-            values.update({"cmd_param[service]": host + ";" + service})
-
-            time_diff = datetime.timedelta(0, 10)
-            remote_time = magic_tuple + datetime.utcnow()
-
-        values.update({"cmd_param[check_time]": remote_time})
-        values.update({"cmd_param[_force]": "1"})
-
-        self.FetchURL(self.commit_url, cgi_data=urllib.urlencode(values), giveback="raw")
+            command = 'SCHEDULE_SVC_CHECK'
+            params['service_description'] = service
+        self.send_command(command, params)
 
 
     def _set_acknowledge(self, host, service, author, comment, sticky, notify, persistent, all_services):
+        params = {'host_name': host, 'sticky': int(sticky),
+                  'notify': int(notify), 'persistent': int(persistent),
+                  'comment': comment}
         if not service:
-            values = {"requested_command": "ACKNOWLEDGE_HOST_PROBLEM"}
-            values.update({"cmd_param[host_name]": host})
+            command = 'ACKNOWLEDGE_HOST_PROBLEM'
         else:
-            values = {"requested_command": "ACKNOWLEDGE_SVC_PROBLEM"}
-            values.update({"cmd_param[service]": host + ";" + service})
-
-        values.update({"cmd_param[sticky]": int(sticky)})
-        values.update({"cmd_param[notify]": int(notify)})
-        values.update({"cmd_param[persistent]": int(persistent)})
-        values.update({"cmd_param[author]": self.get_username()})
-        values.update({"cmd_param[comment]": comment})
-
-        self.FetchURL(self.commit_url, cgi_data=urllib.urlencode(values), giveback="raw")
-
+            params['service_description'] = service
+            command = 'ACKNOWLEDGE_SVC_PROBLEM'
+        self.send_command(command, params)
 
     def _set_downtime(self, host, service, author, comment, fixed, start_time, end_time, hours, minutes):
+        start_time = int(time.mktime(time.strptime(start_time, "%Y-%m-%d %H:%M")))
+        end_time = int(time.mktime(time.strptime(end_time, "%Y-%m-%d %H:%M")))
+        duration = end_time - start_time
+        params = {'host_name': host, 'comment': comment,
+                  'fixed': fixed, 'trigger_id': '0', 'start_time': start_time,
+                  'end_time': end_time, 'duration': duration}
         if not service:
-            values = {"requested_command": "SCHEDULE_HOST_DOWNTIME"}
-            values.update({"cmd_param[host_name]": host})
+            command = 'SCHEDULE_HOST_DOWNTIME'
         else:
-            values = {"requested_command": "SCHEDULE_SVC_DOWNTIME"}
-            values.update({"cmd_param[service]": host + ";" + service})
-
-        values.update({"cmd_param[author]": author})
-        values.update({"cmd_param[comment]": comment})
-        values.update({"cmd_param[fixed]": fixed})
-        values.update({"cmd_param[trigger_id]": "0"})
-        values.update({"cmd_param[start_time]": start_time})
-        values.update({"cmd_param[end_time]": end_time})
-        values.update({"cmd_param[duration]": str(hours) + "." + str(minutes)})
-
-        self.FetchURL(self.commit_url, cgi_data=urllib.urlencode(values), giveback="raw")
+            command = 'SCHEDULE_SVC_DOWNTIME'
+            params['service_description'] = service
+        self.send_command(command, params)
