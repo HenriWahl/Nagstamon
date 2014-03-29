@@ -1051,7 +1051,7 @@ class GenericServer(object):
             HTTPheaders = self.HTTPheaders
         else:
             HTTPheaders = dict()
-            HTTPheaders["raw"] = HTTPheaders["obj"] = HTTPheaders["obj"] =  dict()
+            HTTPheaders["raw"] = HTTPheaders["obj"] = HTTPheaders["xml"] =  dict()
 
         try:
             try:
