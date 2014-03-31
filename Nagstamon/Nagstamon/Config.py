@@ -100,6 +100,12 @@ class Config(object):
         self.notify_if_unknown = True
         self.notify_if_unreachable = True
         self.notify_if_down = True
+        """
+        # not yet working
+        # Check_MK show-only-my-problems-they-are-way-enough feature
+        self.only_my_issues = False
+        """
+        # Regular expression filters
         self.re_host_enabled = False
         self.re_host_pattern = ""
         self.re_host_reverse = False
@@ -109,6 +115,7 @@ class Config(object):
         self.re_status_information_enabled = False
         self.re_status_information_pattern = ""
         self.re_status_information_reverse = False
+        # special feature for Centreon
         self.re_criticality_enabled = False
         self.re_criticality_pattern = ""
         self.re_criticality_reverse = False

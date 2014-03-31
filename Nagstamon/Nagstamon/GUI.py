@@ -2060,12 +2060,19 @@ class Popwin(object):
         # connect the treeviews of the servers to mouse clicks
         servervbox.TreeView.connect("button-press-event", servervbox.TreeviewPopupMenu, servervbox.TreeView, self.output.servers[server.get_name()])
 
+        """
+        # at the moment this feature does not work yet
+        # Check_MK special feature: easily switch between private and overall view
         if server.type == "Check_MK Multisite":
+            print servervbox.CheckButtonCheckMKVisibility.get_active()
             servervbox.HBoxCheckMK.set_no_show_all(False)
             servervbox.HBoxCheckMK.show_all()
+            servervbox.CheckButtonCheckMKVisibility.set_active(bool(self.conf.only_my_issues))
+            servervbox.CheckButtonCheckMKVisibility.connect("clicked", server.ToggleVisibility)
         else:
             servervbox.HBoxCheckMK.set_no_show_all(True)
             servervbox.HBoxCheckMK.hide_all()
+        """
 
         return servervbox
 
@@ -2453,8 +2460,11 @@ class ServerVBox(gtk.VBox):
         self.ButtonServices = ButtonWithIcon(output=self.output, label="Services", icon="services.png")
         self.ButtonHistory = ButtonWithIcon(output=self.output, label="History", icon="history.png")
 
+        """
+        # not yet working
         # Check_MK stuff
         self.CheckButtonCheckMKVisibility = gtk.CheckButton("Only my issues")
+        """
 
         # Label with status information
         self.LabelStatus = gtk.Label("")
@@ -2475,10 +2485,13 @@ class ServerVBox(gtk.VBox):
         self.HBoxLeft.add(self.ButtonServices)
         self.HBoxLeft.add(self.ButtonHistory)
 
+        """
+        # see above
         # Check_MK stuff
         self.HBoxCheckMK.add(gtk.VSeparator())
         self.HBoxCheckMK.add(self.CheckButtonCheckMKVisibility)
         self.HBoxLeft.add(self.HBoxCheckMK)
+        """
 
         # Status info
         self.HBoxLeft.add(gtk.VSeparator())

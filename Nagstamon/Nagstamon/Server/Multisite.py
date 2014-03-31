@@ -519,16 +519,29 @@ class MultisiteServer(GenericServer):
         result = self.FetchURL(url + '&' + urllib.urlencode(params), giveback = 'raw')
 
 
-    def ToggleVisibilityOfHostsServices(self, visibility):
+    def ToggleVisibility(self, widget):
         """
         Attempt to enable/disable visibility of all problems for user via
         /user_profile.py?cb_ua_force_authuser=0&cb_ua_force_authuser_webservice=0&filled_in=profile
         """
+
+        print widget.get_active()
+
         transid = self.FetchURL(self.urls["togglevisibility"], "obj").result.find(attrs={"name" : "_transid"})["value"]
 
+        print transid
+        print str(int(widget.get_active()))
+
+        cgi_data = urllib.urlencode({"cb_ua_force_authuser" : str(int(widget.get_active())),\
+                                     "cb_ua_force_authuser_webservice" : str(int(widget.get_active())),\
+                                     "filled_in" : "profile",\
+                                     "_transid" : transid,\
+                                     "_save" : "Save"})
+        print cgi_data
+
         self.FetchURL(self.urls["togglevisibility"], "raw", cgi_data=urllib.urlencode(\
-                                                                    {"cb_ua_force_authuser" : str(int(visibility)),\
-                                                                     "cb_ua_force_authuser_webservice" : str(int(visibility)),\
+                                                                    {"cb_ua_force_authuser" : str(int(widget.get_active())),\
+                                                                     "cb_ua_force_authuser_webservice" : str(int(widget.get_active())),\
                                                                      "filled_in" : "profile",\
                                                                      "_transid" : transid,\
-                                                                     "_save" : "Save"}))
+                                                                     "_save" : "Save"})).result
