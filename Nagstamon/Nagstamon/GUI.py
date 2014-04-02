@@ -2918,7 +2918,7 @@ class Settings(object):
         for k in kwds: self.__dict__[k] = kwds[k]
 
         # if not given default tab is empty
-        if not "first_page" in kwds: self.first_page = ""
+        if not "first_page" in kwds: self.first_page = "Servers"
 
         # set the gtkbuilder files
         self.builderfile = self.output.Resources + os.sep + "settings_dialog.ui"
