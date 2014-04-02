@@ -3106,7 +3106,7 @@ class Settings(object):
         # in case nagstamon runs the first time it should display a new server dialog
         if str(self.conf.unconfigured) == "True":
             self.output.statusbar.StatusBar.hide()
-            NewServer(servers=self.servers, output=self.output, settingsdialog=self, conf=self.conf)
+            self.output.GetDialog(dialog="NewServer", servers=self.servers, output=self.output, settingsdialog=self, conf=self.conf)
             # save settings
             self.conf.SaveConfig(output=self.output)
 
