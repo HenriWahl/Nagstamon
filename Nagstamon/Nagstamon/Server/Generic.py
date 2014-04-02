@@ -535,7 +535,7 @@ class GenericServer(object):
                                 if len(tds[4](text=not_empty)) == 0:
                                     n["status_information"] = ""
                                 else:
-                                    n["status_information"] = str(tds[4].string).encode("utf-8")
+                                    n["status_information"] = str(tds[4].string).encode("utf-8").replace("\n", " ")
                                 # attempts are not shown in case of hosts so it defaults to "N/A"
                                 n["attempt"] = "N/A"
                             else:
@@ -547,7 +547,7 @@ class GenericServer(object):
                                 if len(tds[5](text=not_empty)) == 0:
                                     n["status_information"] = ""
                                 else:
-                                    n["status_information"] = str(tds[5].string).encode("utf-8")
+                                    n["status_information"] = str(tds[5].string).encode("utf-8").replace("\n", " ")
 
                             # status flags
                             n["passiveonly"] = False

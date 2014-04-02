@@ -284,7 +284,7 @@ class MultisiteServer(GenericServer):
                     self.new_hosts[new_host].last_check = n["last_check"]
                     self.new_hosts[new_host].duration = n["duration"]
                     self.new_hosts[new_host].attempt = n["attempt"]
-                    self.new_hosts[new_host].status_information= n["status_information"]
+                    self.new_hosts[new_host].status_information= n["status_information"].replace("\n", " ")
                     self.new_hosts[new_host].site = n["site"]
                     self.new_hosts[new_host].address = n["address"]
                     # transisition to Check_MK 1.1.10p2
@@ -362,7 +362,7 @@ class MultisiteServer(GenericServer):
                     self.new_hosts[n["host"]].services[new_service].last_check = n["last_check"]
                     self.new_hosts[n["host"]].services[new_service].duration = n["duration"]
                     self.new_hosts[n["host"]].services[new_service].attempt = n["attempt"]
-                    self.new_hosts[n["host"]].services[new_service].status_information = n["status_information"]
+                    self.new_hosts[n["host"]].services[new_service].status_information = n["status_information"].replace("\n", " ")
                     self.new_hosts[n["host"]].services[new_service].passiveonly = n["passiveonly"]
                     self.new_hosts[n["host"]].services[new_service].flapping = n["flapping"]
                     self.new_hosts[n["host"]].services[new_service].site = n["site"]

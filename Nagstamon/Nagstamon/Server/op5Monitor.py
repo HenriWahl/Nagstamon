@@ -171,7 +171,7 @@ class Op5MonitorServer(GenericServer):
                         self.new_hosts[n['host']].passiveonly = n["passiveonly"]
                         self.new_hosts[n['host']].scheduled_downtime = n["scheduled_downtime"]
                         self.new_hosts[n['host']].status = n['status']
-                        self.new_hosts[n['host']].status_information = n['status_information']
+                        self.new_hosts[n['host']].status_information = n['status_information'].replace("\n", " ")
                         self.new_hosts[n['host']].status_type = n['status_type']
                     nagitems['hosts'].append(n)
                 del n
@@ -228,7 +228,7 @@ class Op5MonitorServer(GenericServer):
                         self.new_hosts[n['host']].services[n['service']].scheduled_downtime = n['duration']
                         self.new_hosts[n['host']].services[n['service']].scheduled_downtime = n['scheduled_downtime']
                         self.new_hosts[n['host']].services[n['service']].status = n['status']
-                        self.new_hosts[n['host']].services[n['service']].status_information = n['status_information']
+                        self.new_hosts[n['host']].services[n['service']].status_information = n['status_information'].replace("\n", " ")
 
                     nagitems['services'].append(n)
                 return Result()

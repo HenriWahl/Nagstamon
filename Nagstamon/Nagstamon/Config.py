@@ -23,9 +23,9 @@ import sys
 import ConfigParser
 import base64
 import zlib
-import sys
 
-#Determine if keyring module and an implementation is available for secure password storage
+
+# Determine if keyring module and an implementation is available for secure password storage
 try:
   import keyring
   keyring_available = not (keyring.get_keyring() is None)
