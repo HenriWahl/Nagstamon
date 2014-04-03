@@ -1685,6 +1685,11 @@ class StatusBar(object):
         if self.output.popwin.IsWanted() == True:
             # if popwin is not shown pop it up
             if self.output.popwin.Window.get_properties("visible")[0] == False or len(self.output.GUILock) == 0:
+                # workaround for Windows loyal popwin bug
+                # https://github.com/HenriWahl/Nagstamon/issues/63
+                if self.output.popwin.mousex == self.output.popwin.mousey == 0:
+                    rootwin = self.StatusBar.get_screen().get_root_window()
+                    self.output.popwin.mousex, self.output.popwin.mousey, foo = rootwin.get_pointer()
                 self.output.popwin.PopUp()
             else:
                 self.output.popwin.Close()
@@ -1968,6 +1973,11 @@ class Popwin(object):
         # switch between fullscreen and popup mode
         self.SwitchMode()
 
+        # helpers for Windows jumping popwin bug
+        # https://github.com/HenriWahl/Nagstamon/issues/63
+        self.mousex = 0
+        self.mousey = 0
+
 
     def SwitchMode(self):
         """
@@ -2235,16 +2245,26 @@ class Popwin(object):
             if str(self.conf.icon_in_systray) == "True":
                 # trayicon seems not to have a .get_pointer() method so we use
                 # its geometry information
+                """
                 if platform.system() == "Windows":
                     # otherwise this does not work in windows
-                    if self.mousex == self.mousey == 0:
-                        rootwin = self.output.statusbar.StatusBar.get_screen().get_root_window()
-                        self.mousex, self.mousey, foo = rootwin.get_pointer()
+
+                    print self.mousex, self.mousey
+
+                    #if self.mousex == self.mousey == 0:
+                    #    rootwin = self.output.statusbar.StatusBar.get_screen().get_root_window()
+                    #    self.mousex, self.mousey, foo = rootwin.get_pointer()
                     mousex, mousey = self.mousex, self.mousey
                     statusbar_mousex, statusbar_mousey = 0, int(self.conf.systray_popup_offset)
                 else:
                     mousex, mousey, foo, bar = self.output.statusbar.SysTray.get_geometry()[1]
                     statusbar_mousex, statusbar_mousey = 0, int(self.conf.systray_popup_offset)
+                """
+                # regardless of the platform the fix for https://github.com/HenriWahl/Nagstamon/issues/63
+                # to use self.mousex and self.mousey makes things easier
+                mousex, mousey = self.mousex, self.mousey
+                statusbar_mousex, statusbar_mousey = 0, int(self.conf.systray_popup_offset)
+
                 # set monitor for later applying the correct monitor geometry
                 self.output.current_monitor = self.output.statusbar.StatusBar.get_screen().get_monitor_at_point(mousex, mousey)
                 statusbarx0 = mousex - statusbar_mousex
