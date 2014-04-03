@@ -2203,7 +2203,10 @@ class Popwin(object):
             if self.output.GUILock.has_key("Popwin"):
                 # use gobject.idle_add() to be thread safe
                 gobject.idle_add(self.output.DeleteGUILock, self.__class__.__name__)
-            #self.Window.hide_all()
+
+            # reset mousex and mousey coordinates for Windows popwin workaround
+            self.mousex, self.mousey = 0, 0
+
             self.Window.set_visible(False)
             # notification off because user had a look to hosts/services recently
             self.output.NotificationOff()
@@ -2234,8 +2237,10 @@ class Popwin(object):
                 # its geometry information
                 if platform.system() == "Windows":
                     # otherwise this does not work in windows
-                    rootwin = self.output.statusbar.StatusBar.get_screen().get_root_window()
-                    mousex, mousey, foo = rootwin.get_pointer()
+                    if self.mousex == self.mousey == 0:
+                        rootwin = self.output.statusbar.StatusBar.get_screen().get_root_window()
+                        self.mousex, self.mousey, foo = rootwin.get_pointer()
+                    mousex, mousey = self.mousex, self.mousey
                     statusbar_mousex, statusbar_mousey = 0, int(self.conf.systray_popup_offset)
                 else:
                     mousex, mousey, foo, bar = self.output.statusbar.SysTray.get_geometry()[1]
