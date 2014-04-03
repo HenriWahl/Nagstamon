@@ -26,11 +26,16 @@ import zlib
 
 
 # Determine if keyring module and an implementation is available for secure password storage
+keyring_available = False
 try:
-  import keyring
-  keyring_available = not (keyring.get_keyring() is None)
+    import keyring
+    if platform.system() == "Linux":
+        if "SecretService" in dir(keyring.backends) and not (keyring.get_keyring() is None):
+            keyring_available = True
+    else:
+        keyring_available = not (keyring.get_keyring() is None)
 except ImportError:
-  keyring_available = False
+    keyring_available = False
 
 class Config(object):
     """
