@@ -25,17 +25,24 @@ import base64
 import zlib
 
 
-# Determine if keyring module and an implementation is available for secure password storage
+# global flag for keyring availabilty
 keyring_available = False
+# Determine if keyring module and an implementation is available for secure password storage
 try:
-    import keyring
+    # Linux systems should use keyring only if it comes with the distro, otherwise changes are small
+    # that keyring works at all
     if platform.system() == "Linux":
+        import keyring
         if "SecretService" in dir(keyring.backends) and not (keyring.get_keyring() is None):
             keyring_available = True
     else:
+        import Nagstamon.keyring as keyring
         keyring_available = not (keyring.get_keyring() is None)
-except ImportError:
+        print keyring.get_keyring()
+except ImportError, err:
     keyring_available = False
+    print err
+
 
 class Config(object):
     """
@@ -46,7 +53,6 @@ class Config(object):
             read config file and set the appropriate attributes
             supposed to be sensible defaults
         """
-        self.keyring_available = keyring_available
         # move from minute interval to seconds
         #self.update_interval = 1
         self.update_interval_seconds = 60
@@ -334,7 +340,7 @@ class Config(object):
                 servers[server].username = self.DeObfuscate(servers[server].username)
                 if servers[server].save_password == "False":
                     servers[server].password = ""
-		elif self.keyring_available:
+		elif keyring_available:
                     servers[server].password = keyring.get_password("Nagstamon", servers[server].username + "@" + servers[server].monitor_url) or ""
                 else:
                     servers[server].password = self.DeObfuscate(servers[server].password)
@@ -486,12 +492,12 @@ class Config(object):
                         if option == "username" or option == "password" or option == "proxy_username" or option == "proxy_password" or option == "autologin_key":
                             value = self.Obfuscate(self.__dict__[settingsdir][s].__dict__[option])
                             if option == "password":
-			       if self.__dict__[settingsdir][s].save_password == "False":
-                                 value = ""
-                               elif self.keyring_available:
-                                 if self.__dict__[settingsdir][s].password != "":
-                                   keyring.set_password("Nagstamon", self.__dict__[settingsdir][s].username + "@" + self.__dict__[settingsdir][s].monitor_url, self.__dict__[settingsdir][s].password)
-                                 value = ""
+                                if self.__dict__[settingsdir][s].save_password == "False":
+                                    value = ""
+                                elif keyring_available:
+                                    if self.__dict__[settingsdir][s].password != "":
+                                        keyring.set_password("Nagstamon", self.__dict__[settingsdir][s].username + "@" + self.__dict__[settingsdir][s].monitor_url, self.__dict__[settingsdir][s].password)
+                                    value = ""
                             config.set(setting + "_" + s, option, value)
                         else:
                             config.set(setting + "_" + s, option, self.__dict__[settingsdir][s].__dict__[option])

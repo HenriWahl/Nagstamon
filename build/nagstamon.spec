@@ -1,7 +1,7 @@
 # -*- mode: python -*-
 a = Analysis(['..\\Nagstamon\\nagstamon.py'],
              pathex=['..\\Nagstamon\\build'],
-             hiddenimports=[],
+             hiddenimports=['keyring'],
              hookspath=None)
 pyz = PYZ(a.pure)
 exe = EXE(pyz,
