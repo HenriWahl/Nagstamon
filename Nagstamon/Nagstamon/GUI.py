@@ -2534,13 +2534,13 @@ class ServerVBox(gtk.VBox):
 
         # Auth line
         self.HBoxAuth = gtk.HBox()
-        self.AuthLabelUsername = gtk.Label("Username:")
+        self.AuthLabelUsername = gtk.Label(" Username: ")
         self.AuthEntryUsername = gtk.Entry()
         self.AuthEntryUsername.set_can_focus(True)
-        self.AuthLabelPassword = gtk.Label("Password:")
+        self.AuthLabelPassword = gtk.Label(" Password: ")
         self.AuthEntryPassword = gtk.Entry()
         self.AuthEntryPassword.set_visibility(False)
-        self.AuthCheckbuttonSave = gtk.CheckButton("Save password")
+        self.AuthCheckbuttonSave = gtk.CheckButton("Save password ")
         self.AuthButtonOK = gtk.Button("   OK   ")
 
         self.HBoxAuth.add(self.AuthLabelUsername)

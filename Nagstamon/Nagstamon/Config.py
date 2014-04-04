@@ -29,7 +29,7 @@ import zlib
 keyring_available = False
 # Determine if keyring module and an implementation is available for secure password storage
 try:
-    # Linux systems should use keyring only if it comes with the distro, otherwise changes are small
+    # Linux systems should use keyring only if it comes with the distro, otherwise chances are small
     # that keyring works at all
     if platform.system() == "Linux":
         import keyring
@@ -337,19 +337,37 @@ class Config(object):
         # time saving config
         try:
             for server in servers:
+                # usernames for monitor server and proxy
                 servers[server].username = self.DeObfuscate(servers[server].username)
+                servers[server].proxy_username = self.DeObfuscate(servers[server].proxy_username)
+                # passwords for monitor server and proxy
                 if servers[server].save_password == "False":
                     servers[server].password = ""
-		elif keyring_available:
-                    servers[server].password = keyring.get_password("Nagstamon", servers[server].username + "@" + servers[server].monitor_url) or ""
-                else:
+                elif keyring_available:
+                    password = keyring.get_password("Nagstamon", "@".join((servers[server].username,\
+                                                                           servers[server].monitor_url))) or ""
+                    if password == "" and servers[server].password != "":
+                        servers[server].password = self.DeObfuscate(servers[server].password)
+                    else:
+                        servers[server].password = password
+                elif servers[server].password != "":
                     servers[server].password = self.DeObfuscate(servers[server].password)
+                # proxy password
+                if keyring_available:
+                    proxy_password = keyring.get_password("Nagstamon", "@".join(("proxy",\
+                                                                                 servers[server].proxy_username,\
+                                                                                 servers[server].proxy_address))) or ""
+                    if proxy_password == "" and servers[server].proxy_password != "":
+                        servers[server].proxy_password = self.DeObfuscate(servers[server].proxy_password)
+                    else:
+                        servers[server].proxy_password = proxy_password
+                elif servers[server].proxy_password != "":
+                    servers[server].proxy_password = self.DeObfuscate(servers[server].proxy_password)
+
                 # do only deobfuscating if any autologin_key is set - will be only Centreon
                 if servers[server].__dict__.has_key("autologin_key"):
                     if len(servers[server].__dict__["autologin_key"]) > 0:
                         servers[server].autologin_key  = self.DeObfuscate(servers[server].autologin_key)
-                servers[server].proxy_username = self.DeObfuscate(servers[server].proxy_username)
-                servers[server].proxy_password = self.DeObfuscate(servers[server].proxy_password)
         except:
             import traceback
             traceback.print_exc(file=sys.stdout)
@@ -496,7 +514,17 @@ class Config(object):
                                     value = ""
                                 elif keyring_available:
                                     if self.__dict__[settingsdir][s].password != "":
-                                        keyring.set_password("Nagstamon", self.__dict__[settingsdir][s].username + "@" + self.__dict__[settingsdir][s].monitor_url, self.__dict__[settingsdir][s].password)
+                                        keyring.set_password("Nagstamon", "@".join((self.__dict__[settingsdir][s].username,\
+                                                                                    self.__dict__[settingsdir][s].monitor_url)),\
+                                                                                    self.__dict__[settingsdir][s].password)
+                                    value = ""
+                            if option == "proxy_password":
+                                if keyring_available:
+                                    if self.__dict__[settingsdir][s].proxy_password != "":
+                                        keyring.set_password("Nagstamon", "@".join(("proxy",\
+                                                                                    self.__dict__[settingsdir][s].proxy_username,\
+                                                                                    self.__dict__[settingsdir][s].proxy_address)),\
+                                                                                    self.__dict__[settingsdir][s].proxy_password)
                                     value = ""
                             config.set(setting + "_" + s, option, value)
                         else:

@@ -121,6 +121,8 @@ for server in conf.servers.values():
     created_server = Actions.CreateServer(server, conf, debug_queue)
     if created_server is not None:
         servers[server.name] = created_server
+        # for the next time no auth needed
+        servers[server.name].refresh_authentication = False
 
 # Initiate Output
 output = GUI.GUI(conf=conf, servers=servers, Resources=Resources, debug_queue=debug_queue, GUILock=GUILock)
