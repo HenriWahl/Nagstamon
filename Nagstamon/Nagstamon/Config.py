@@ -38,10 +38,8 @@ try:
     else:
         import Nagstamon.keyring as keyring
         keyring_available = not (keyring.get_keyring() is None)
-        print keyring.get_keyring()
 except ImportError, err:
     keyring_available = False
-    print err
 
 
 class Config(object):
@@ -346,8 +344,9 @@ class Config(object):
                 elif keyring_available:
                     password = keyring.get_password("Nagstamon", "@".join((servers[server].username,\
                                                                            servers[server].monitor_url))) or ""
-                    if password == "" and servers[server].password != "":
-                        servers[server].password = self.DeObfuscate(servers[server].password)
+                    if password == "":
+                        if servers[server].password != "":
+                            servers[server].password = self.DeObfuscate(servers[server].password)
                     else:
                         servers[server].password = password
                 elif servers[server].password != "":
@@ -357,8 +356,9 @@ class Config(object):
                     proxy_password = keyring.get_password("Nagstamon", "@".join(("proxy",\
                                                                                  servers[server].proxy_username,\
                                                                                  servers[server].proxy_address))) or ""
-                    if proxy_password == "" and servers[server].proxy_password != "":
-                        servers[server].proxy_password = self.DeObfuscate(servers[server].proxy_password)
+                    if proxy_password == "":
+                        if servers[server].proxy_password != "":
+                            servers[server].proxy_password = self.DeObfuscate(servers[server].proxy_password)
                     else:
                         servers[server].proxy_password = proxy_password
                 elif servers[server].proxy_password != "":
@@ -547,7 +547,7 @@ class Config(object):
 
         except:
             import traceback
-            traceback.print_exc(file=sys.stdout)
+            traceback.print_exc(file=stdout)
 
 
     def Convert_Conf_to_Multiple_Servers(self):

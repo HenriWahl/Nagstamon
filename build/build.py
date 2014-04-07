@@ -74,7 +74,7 @@ def winmain():
                                                         default='.')
     parser.add_option('-f', '--file', dest='file', help='Nagstamon exec script', default='')
     parser.add_option('-i', '--iss', dest='iss', help='Inno setup installer file', default='nagstamon.iss')
-    parser.add_option('-p', '--pyinstaller', dest='pyinstaller', help='PyInstaller location', default='helpers\\pyinstaller-2.0')
+    parser.add_option('-p', '--pyinstaller', dest='pyinstaller', help='PyInstaller location', default='helpers\\pyinstaller-2.1')
     parser.add_option('-o', '--omit-gtk', action='store_true', dest='omit_gtk', default=False,
                                     help="Omits copying of required gtk files to application directory")
     options, args = parser.parse_args()
