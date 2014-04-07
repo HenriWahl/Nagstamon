@@ -38,7 +38,6 @@ try:
     else:
         import Nagstamon.keyring as keyring
         keyring_available = not (keyring.get_keyring() is None)
-        print keyring.get_keyring()
 except ImportError, err:
     keyring_available = False
     print err
