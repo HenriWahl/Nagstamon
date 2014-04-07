@@ -1,7 +1,26 @@
 # -*- mode: python -*-
 a = Analysis(['..\\Nagstamon\\nagstamon.py'],
              pathex=['..\\Nagstamon\\build'],
-             hiddenimports=['keyring'],
+             hiddenimports=['Nagstamon.keyring.credentials',\
+                            'Nagstamon.keyring.backends.file',\
+                            'Nagstamon.keyring.backends.Gnome',\
+                            'Nagstamon.keyring.backends.Google',\
+                            'Nagstamon.keyring.backends.keyczar',\
+                            'Nagstamon.keyring.backends.kwallet',\
+                            'Nagstamon.keyring.backends.multi',\
+                            'Nagstamon.keyring.backends.OS_X',\
+                            'Nagstamon.keyring.backends.pyfs',\
+                            'Nagstamon.keyring.backends.SecretService',\
+                            'Nagstamon.keyring.backends.Windows',\
+                            'Nagstamon.keyring.backends._win_crypto',\
+                            'Nagstamon.keyring.util.escape',\
+                            'Nagstamon.keyring.util.XDG',\
+                            'ctypes',\
+                            '_ctypes',\
+                            'ctypes._endian',\
+                            'ctypes.wintypes',\
+                            'pywintypes',\
+                            'win32cred'],
              hookspath=None)
 pyz = PYZ(a.pure)
 exe = EXE(pyz,
