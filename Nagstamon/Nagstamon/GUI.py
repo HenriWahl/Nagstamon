@@ -2566,6 +2566,12 @@ class ServerVBox(gtk.VBox):
         self.server.TreeView = gtk.TreeView()
         # enable hover effect
         self.server.TreeView.set_hover_selection(True)
+
+        self.server.TreeView.set_tooltip_column(6)
+        #self.server.TreeView.set_has_tooltip(True)
+        #self.server.TreeView.connect("query-tooltip", self.QueryTooltip)
+
+
         # enable grid lines
         if str(self.output.conf.show_grid) == "True":
             self.server.TreeView.set_grid_lines(gtk.TREE_VIEW_GRID_LINES_BOTH)
@@ -2633,7 +2639,6 @@ class ServerVBox(gtk.VBox):
 
             # make table sortable by clicking on column headers
             tab_column.set_clickable(True)
-            #tab_column.set_property('sort-indicator', True) # makes sorting arrows visible
             tab_column.connect('clicked', self.output.on_column_header_click, s, self.server.ListStore, self.server)
 
         # the whole TreeView memory leaky complex...
@@ -2641,6 +2646,11 @@ class ServerVBox(gtk.VBox):
         self.ListStore = self.server.ListStore
 
         self.add(self.TreeView)
+
+
+    def QueryTooltip(selfself, widget, x, y, kb_mode, tooltip):
+        tooltip.set_text("lalal " + str(x) + " " + str(y))
+        return True
 
 
     def TreeviewPopupMenu(self, widget, event, treeview, server):
