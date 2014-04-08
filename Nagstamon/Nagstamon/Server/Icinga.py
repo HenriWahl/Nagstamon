@@ -178,7 +178,7 @@ class IcingaServer(GenericServer):
                         self.new_hosts[host_name].last_check = h["last_check"]
                         self.new_hosts[host_name].duration = h["duration"]
                         self.new_hosts[host_name].attempt = h["attempts"]
-                        self.new_hosts[host_name].status_information= h["status_information"].encode("utf-8").replace("\n", " ")
+                        self.new_hosts[host_name].status_information= h["status_information"].encode("utf-8").replace("\n", " ").strip()
                         self.new_hosts[host_name].passiveonly = not(h["active_checks_enabled"])
                         self.new_hosts[host_name].notifications_disabled = not(h["notifications_enabled"])
                         self.new_hosts[host_name].flapping = h["is_flapping"]
@@ -234,7 +234,7 @@ class IcingaServer(GenericServer):
                         self.new_hosts[host_name].services[service_name].last_check = s["last_check"]
                         self.new_hosts[host_name].services[service_name].duration = s["duration"]
                         self.new_hosts[host_name].services[service_name].attempt = s["attempts"]
-                        self.new_hosts[host_name].services[service_name].status_information = s["status_information"].encode("utf-8").replace("\n", " ")
+                        self.new_hosts[host_name].services[service_name].status_information = s["status_information"].encode("utf-8").replace("\n", " ").strip()
                         self.new_hosts[host_name].services[service_name].passiveonly = not(s["active_checks_enabled"])
                         self.new_hosts[host_name].services[service_name].notifications_disabled = not(s["notifications_enabled"])
                         self.new_hosts[host_name].services[service_name].flapping = s["is_flapping"]
@@ -367,7 +367,7 @@ class IcingaServer(GenericServer):
                                 self.new_hosts[new_host].last_check = n["last_check"]
                                 self.new_hosts[new_host].duration = n["duration"]
                                 self.new_hosts[new_host].attempt = n["attempt"]
-                                self.new_hosts[new_host].status_information= n["status_information"].encode("utf-8").replace("\n", " ")
+                                self.new_hosts[new_host].status_information= n["status_information"].encode("utf-8").replace("\n", " ").strip()
                                 self.new_hosts[new_host].passiveonly = n["passiveonly"]
                                 self.new_hosts[new_host].notifications_disabled = n["notifications_disabled"]
                                 self.new_hosts[new_host].flapping = n["flapping"]
@@ -490,7 +490,7 @@ class IcingaServer(GenericServer):
                                 self.new_hosts[n["host"]].services[new_service].last_check = n["last_check"]
                                 self.new_hosts[n["host"]].services[new_service].duration = n["duration"]
                                 self.new_hosts[n["host"]].services[new_service].attempt = n["attempt"]
-                                self.new_hosts[n["host"]].services[new_service].status_information = n["status_information"].encode("utf-8").replace("\n", " ")
+                                self.new_hosts[n["host"]].services[new_service].status_information = n["status_information"].encode("utf-8").replace("\n", " ").strip()
                                 self.new_hosts[n["host"]].services[new_service].passiveonly = n["passiveonly"]
                                 self.new_hosts[n["host"]].services[new_service].notifications_disabled = n["notifications_disabled"]
                                 self.new_hosts[n["host"]].services[new_service].flapping = n["flapping"]

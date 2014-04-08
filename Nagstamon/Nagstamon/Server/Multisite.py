@@ -361,7 +361,7 @@ class MultisiteServer(GenericServer):
                     self.new_hosts[n["host"]].services[new_service].last_check = n["last_check"]
                     self.new_hosts[n["host"]].services[new_service].duration = n["duration"]
                     self.new_hosts[n["host"]].services[new_service].attempt = n["attempt"]
-                    self.new_hosts[n["host"]].services[new_service].status_information = n["status_information"].replace("\n", " ")
+                    self.new_hosts[n["host"]].services[new_service].status_information = n["status_information"].replace("\n", " ").strip()
                     self.new_hosts[n["host"]].services[new_service].passiveonly = n["passiveonly"]
                     self.new_hosts[n["host"]].services[new_service].flapping = n["flapping"]
                     self.new_hosts[n["host"]].services[new_service].site = n["site"]

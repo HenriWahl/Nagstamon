@@ -320,7 +320,7 @@ class NinjaServer(GenericServer):
         n["last_check"] = str(tds[5].contents[0])
         n["duration"] = str(tds[6].contents[0])
         n["attempt"] = "N/A"
-        n["status_information"] = str(tds[7].contents[0]).strip().replace("\n", " ")
+        n["status_information"] = str(tds[7].contents[0]).strip().replace("\n", " ").strip()
         n["visible"] = True
 
         # the last, hidden, span always contains an integer
@@ -346,7 +346,7 @@ class NinjaServer(GenericServer):
         n["last_check"] = str(tds[6].contents[0])
         n["duration"] = str(tds[7].contents[0])
         n["attempt"] = str(tds[8].contents[0])
-        n["status_information"] = str(tds[9].contents[0]).strip().replace("\n", " ")
+        n["status_information"] = str(tds[9].contents[0]).strip().replace("\n", " ").strip()
         n["visible"] = True
 
         # the last, hidden, span always contains an integer
