@@ -39,7 +39,11 @@ try:
         import Nagstamon.keyring as keyring
         keyring_available = not (keyring.get_keyring() is None)
 except ImportError, err:
+
     keyring_available = False
+
+    import traceback
+    traceback.print_exc(file=sys.stdout)
 
 
 class Config(object):
