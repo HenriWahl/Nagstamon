@@ -30,6 +30,7 @@ from Nagstamon.Server.Multisite import MultisiteServer
 from Nagstamon.Server.op5Monitor import Op5MonitorServer
 from Nagstamon.Server.Opsview import OpsviewServer
 from Nagstamon.Server.Thruk import ThrukServer
+from Nagstamon.Server.Zabbix import ZabbixServer
 
 
 # moved registration process because of circular dependencies
@@ -41,4 +42,5 @@ register_server(IcingaServer)
 register_server(Op5MonitorServer)
 register_server(OpsviewServer)
 register_server(ThrukServer)
+register_server(ZabbixServer)
 
