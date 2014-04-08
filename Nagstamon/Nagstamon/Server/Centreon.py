@@ -20,14 +20,10 @@
 import urllib, urllib2
 import webbrowser
 import socket
-import time
 import sys
-import cookielib
-import traceback
-import gc
 import re
+import copy
 
-from Nagstamon import Actions
 from Nagstamon.Objects import *
 from Nagstamon.Server.Generic import GenericServer
 
