@@ -82,7 +82,7 @@ class ZabbixServer(GenericServer):
             'UNKN': 'UNKNOWN',
             'PEND': 'PENDING',
             '0': 'OK',
-            '1': 'WARNING',
+            '1': 'UNKNOWN',
             '2': 'WARNING',
             '5': 'CRITICAL',
             '3': 'WARNING',
