@@ -16,6 +16,9 @@ from . import backends
 from .util import properties
 from .py27compat import add_metaclass, filter
 
+# enable platform checks to omit unnecessary errors
+import platform
+
 class KeyringBackendMeta(abc.ABCMeta):
     """
     A metaclass that's both an ABCMeta and a type that keeps a registry of
@@ -123,9 +126,19 @@ def _load_backend(name):
     mod.__name__
 
 def _load_backends():
-    "ensure that all keyring backends are loaded"
-    backends = ('file', 'Gnome', 'Google', 'keyczar', 'kwallet', 'multi',
-        'OS_X', 'pyfs', 'SecretService', 'Windows')
+    "ensure that all keyring backends are loaded that match OS"
+    if platform.system() == "Linux":
+        backends = ('file', 'Gnome', 'Google', 'keyczar', 'kwallet', 'multi',
+                    'pyfs', 'SecretService')
+    elif platform.system() == "Windows":
+        backends = ('file', 'Gnome', 'Google', 'keyczar', 'kwallet', 'multi',
+                    'pyfs', 'SecretService', 'Windows')
+    if platform.system() == "Darwin":
+        backends = ('file', 'Gnome', 'Google', 'keyczar', 'kwallet', 'multi',
+                    'OS_X', 'pyfs', 'SecretService')
+    else:
+        backends = ('file', 'Gnome', 'Google', 'keyczar', 'kwallet', 'multi',
+                    'OS_X', 'pyfs', 'SecretService', 'Windows')
     list(map(_load_backend, backends))
 
 @util.once
