@@ -33,6 +33,8 @@ import gtk
 import gobject
 import os
 import platform
+import sys
+import copy
 
 # testing pynotify support
 try:
@@ -50,11 +52,7 @@ except:
 # needed for actions e.g. triggered by pressed buttons
 from Nagstamon import Config
 from Nagstamon import Actions
-from Nagstamon import Objects
-from Nagstamon import Custom # used for initialization of custom components
-
-import sys
-import copy
+from Nagstamon import Custom
 
 
 class Sorting(object):
@@ -97,7 +95,7 @@ class GUI(object):
         self.name = "Nagstamon"
         self.version = "0.9.12-devel"
         self.website = "http://nagstamon.ifw-dresden.de/"
-        self.copyright = "©2008-2013 Henri Wahl et al.\nh.wahl@ifw-dresden.de"
+        self.copyright = "©2008-2014 Henri Wahl et al.\nh.wahl@ifw-dresden.de"
         self.comments = "Nagios status monitor for your desktop"
 
         # initialize overall status flag
@@ -126,7 +124,7 @@ class GUI(object):
         self.LISTSTORE_COLUMNS = [gobject.TYPE_STRING, gobject.TYPE_STRING, gobject.TYPE_STRING,\
                                   gobject.TYPE_STRING, gobject.TYPE_STRING, gobject.TYPE_STRING,\
                                   gobject.TYPE_STRING, gobject.TYPE_STRING, gobject.TYPE_STRING,\
-                                  gobject.TYPE_STRING,\
+                                  gobject.TYPE_STRING, gobject.TYPE_STRING,\
                                   gtk.gdk.Pixbuf, gtk.gdk.Pixbuf, gtk.gdk.Pixbuf, gtk.gdk.Pixbuf,\
                                   gtk.gdk.Pixbuf, gtk.gdk.Pixbuf, gtk.gdk.Pixbuf, gtk.gdk.Pixbuf,\
                                   gtk.gdk.Pixbuf, gtk.gdk.Pixbuf]
@@ -422,7 +420,7 @@ class GUI(object):
                     # first reset all events
                     self.events_current.clear()
 
-                    # run through all servers and hosts and servvices
+                    # run through all servers and hosts and services
                     for s in self.servers.values():
                         for host in s.hosts.values():
                             if not host.status == "UP":
@@ -443,7 +441,7 @@ class GUI(object):
 
                     # if some current event is not yet in event cache add it and mark it as fresh (=True)
                     for event in self.events_current.keys():
-                        if not event in self.events_history.keys():
+                        if not event in self.events_history.keys() and str(self.conf.highlight_new_events) == "True":
                             self.events_history[event] = True
                             self.events_notification[event] = True
 
@@ -470,6 +468,9 @@ class GUI(object):
                                 item = copy.deepcopy(single_item)
 
                                 line = list(server.get_columns(item))
+
+                                line.append("%s: %s\n%s" %((line[0], line[1], line[6])))
+
                                 line.append(self.TAB_FG_COLORS[item.status])
                                 line.append(self.TAB_BG_COLORS[item.status])
 
@@ -515,7 +516,7 @@ class GUI(object):
                                 # icons for services
                                 else:
                                     # if the hosting host of a service has any flags display them too
-                                    # a fresh service's host does not nead a freshness icon
+                                    # a fresh service's host does not need a freshness icon
                                     line.append(None)
 
                                     if server.hosts[item.host].is_acknowledged():
@@ -718,7 +719,7 @@ class GUI(object):
                 self.appindicator.Indicator.set_status(appindicator.STATUS_ATTENTION)
 
             # if there has been any status change notify user
-            # first find out which of all servers states is the worst similar to nagstamonObjects.GetStatus()
+            # first find out which of all servers states is the worst
             worst = 0
             worst_status = "UP"
 
@@ -2567,10 +2568,12 @@ class ServerVBox(gtk.VBox):
         # enable hover effect
         self.server.TreeView.set_hover_selection(True)
 
-        self.server.TreeView.set_tooltip_column(6)
-        #self.server.TreeView.set_has_tooltip(True)
-        #self.server.TreeView.connect("query-tooltip", self.QueryTooltip)
-
+        # tooltips or not
+        if str(self.output.conf.show_tooltips) == "True":
+            self.server.TreeView.set_has_tooltip(True)
+            self.server.TreeView.set_tooltip_column(7)
+        else:
+            self.server.TreeView.set_has_tooltip(False)
 
         # enable grid lines
         if str(self.output.conf.show_grid) == "True":
@@ -2586,7 +2589,7 @@ class ServerVBox(gtk.VBox):
 
         # offset for alternate column colors could increase readability
         # even and odd columns are calculated by column number
-        offset_color = {0:8, 1:9}
+        offset_color = {0:9, 1:10}
 
         for s, column in enumerate(self.server.COLUMNS):
             tab_column = gtk.TreeViewColumn(column.get_label())
@@ -2612,24 +2615,24 @@ class ServerVBox(gtk.VBox):
                 # set text from liststore and flag icons if existing
                 # why ever, in Windows(TM) the background looks better if applied separately
                 # to be honest, even looks better in Linux
-                tab_column.set_attributes(cell_txt, foreground=7, text=s)
+                tab_column.set_attributes(cell_txt, foreground=8, text=s)
                 tab_column.add_attribute(cell_txt, "cell-background", offset_color[s % 2])
-                tab_column.set_attributes(cell_img_fresh, pixbuf=10+offset_img[s])
+                tab_column.set_attributes(cell_img_fresh, pixbuf=11+offset_img[s])
                 tab_column.add_attribute(cell_img_fresh, "cell-background", offset_color[s % 2])
-                tab_column.set_attributes(cell_img_ack, pixbuf=11+offset_img[s])
+                tab_column.set_attributes(cell_img_ack, pixbuf=12+offset_img[s])
                 tab_column.add_attribute(cell_img_ack, "cell-background", offset_color[s % 2])
-                tab_column.set_attributes(cell_img_down, pixbuf=12+offset_img[s])
+                tab_column.set_attributes(cell_img_down, pixbuf=13+offset_img[s])
                 tab_column.add_attribute(cell_img_down, "cell-background", offset_color[s % 2])
-                tab_column.set_attributes(cell_img_flap, pixbuf=13+offset_img[s])
+                tab_column.set_attributes(cell_img_flap, pixbuf=14+offset_img[s])
                 tab_column.add_attribute(cell_img_flap, "cell-background", offset_color[s % 2])
-                tab_column.set_attributes(cell_img_pass, pixbuf=14+offset_img[s])
+                tab_column.set_attributes(cell_img_pass, pixbuf=15+offset_img[s])
                 tab_column.add_attribute(cell_img_pass, "cell-background", offset_color[s % 2])
                 tab_column.set_sizing(gtk.TREE_VIEW_COLUMN_AUTOSIZE)
             else:
                 # normal way for all other columns
                 cell_txt = gtk.CellRendererText()
                 tab_column.pack_start(cell_txt, False)
-                tab_column.set_attributes(cell_txt, foreground=7, text=s)
+                tab_column.set_attributes(cell_txt, foreground=8, text=s)
                 tab_column.add_attribute(cell_txt, "cell-background", offset_color[s % 2 ])
                 tab_column.set_sizing(gtk.TREE_VIEW_COLUMN_AUTOSIZE)
 
@@ -3203,7 +3206,7 @@ class Settings(object):
         """
         initialize some stuff at every call of this dialog
         """
-        # set first page of notebook tabs
+        # set first page of notebook tabs - meanwhile for some historic reason
         self.notebook.set_current_page(["Servers", "Display", "Filters", "Actions",\
                                         "Notification", "Colors", "Defaults"].index(self.first_page))
 
@@ -3217,6 +3220,7 @@ class Settings(object):
 
         # care about Centreon criticality filter
         self.ToggleRECriticalityFilter()
+        self.ToggleRECriticalityOptions()
 
         # toggle debug options
         self.ToggleDebugOptions()

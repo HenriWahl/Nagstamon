@@ -57,6 +57,8 @@ class Config(object):
         self.short_display = False
         self.long_display = True
         self.show_grid = True
+        self.show_tooltips = True
+        self.highlight_new_events = True
         self.default_sort_field = "Status"
         self.default_sort_order = "Ascending"
         self.filter_all_down_hosts = False
