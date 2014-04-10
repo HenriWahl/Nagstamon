@@ -2043,8 +2043,9 @@ class Popwin(object):
         server = self.output.servers[server_name]
         # put all infos into one VBox object
         servervbox = ServerVBox(output=self.output, server=server)
-        servervbox.Label.set_markup('<span weight="bold" size="large">%s@%s</span>' % (server.get_username(), server.get_name()))
-        servervbox.Label.set_alignment(0,0)
+        #servervbox.Label.set_markup('<span weight="bold" size="large">%s@%s</span>' % (server.get_username(), server.get_name()))
+        # initialize servervbox
+        servervbox.initialize(server)
         # set no show all to be able to hide label and treeview if it is empty in case of no hassle
         servervbox.set_no_show_all(True)
 
@@ -2075,7 +2076,6 @@ class Popwin(object):
         # at the moment this feature does not work yet
         # Check_MK special feature: easily switch between private and overall view
         if server.type == "Check_MK Multisite":
-            print servervbox.CheckButtonCheckMKVisibility.get_active()
             servervbox.HBoxCheckMK.set_no_show_all(False)
             servervbox.HBoxCheckMK.show_all()
             servervbox.CheckButtonCheckMKVisibility.set_active(bool(self.conf.only_my_issues))
@@ -2249,9 +2249,6 @@ class Popwin(object):
                 """
                 if platform.system() == "Windows":
                     # otherwise this does not work in windows
-
-                    print self.mousex, self.mousey
-
                     #if self.mousex == self.mousey == 0:
                     #    rootwin = self.output.statusbar.StatusBar.get_screen().get_root_window()
                     #    self.mousex, self.mousey, foo = rootwin.get_pointer()
@@ -2477,6 +2474,8 @@ class ServerVBox(gtk.VBox):
 
         # elements of server info VBox
         self.Label = gtk.Label()
+        self.Label.set_alignment(0,0)
+
         # once again a Windows(TM) workaround
         self.Server_EventBox = gtk.EventBox()
 
@@ -2568,6 +2567,7 @@ class ServerVBox(gtk.VBox):
         # enable hover effect
         self.server.TreeView.set_hover_selection(True)
 
+        """
         # tooltips or not
         if str(self.output.conf.show_tooltips) == "True":
             self.server.TreeView.set_has_tooltip(True)
@@ -2580,6 +2580,8 @@ class ServerVBox(gtk.VBox):
             self.server.TreeView.set_grid_lines(gtk.TREE_VIEW_GRID_LINES_BOTH)
         else:
             self.server.TreeView.set_grid_lines(gtk.TREE_VIEW_GRID_LINES_NONE)
+        """
+
         # Liststore
         self.server.ListStore = gtk.ListStore(*self.output.LISTSTORE_COLUMNS)
 
@@ -2651,9 +2653,22 @@ class ServerVBox(gtk.VBox):
         self.add(self.TreeView)
 
 
-    def QueryTooltip(selfself, widget, x, y, kb_mode, tooltip):
-        tooltip.set_text("lalal " + str(x) + " " + str(y))
-        return True
+    def initialize(self, server):
+        """
+        set settings, to be used by __init__ and after changed settings in Settings dialog
+        """
+        # user@server info label
+        self.Label.set_markup('<span weight="bold" size="large">%s@%s</span>' % (server.get_username(), server.get_name()))
+        # tooltips or not
+        if str(self.output.conf.show_tooltips) == "True":
+            self.server.TreeView.set_tooltip_column(7)
+        else:
+            self.server.TreeView.set_tooltip_column(-1)
+        # enable grid lines
+        if str(self.output.conf.show_grid) == "True":
+            self.server.TreeView.set_grid_lines(gtk.TREE_VIEW_GRID_LINES_BOTH)
+        else:
+            self.server.TreeView.set_grid_lines(gtk.TREE_VIEW_GRID_LINES_NONE)
 
 
     def TreeviewPopupMenu(self, widget, event, treeview, server):
@@ -3412,7 +3427,9 @@ class Settings(object):
                         self.output.popwin.ServerVBoxes[server.get_name()].set_visible(True)
                         self.output.popwin.ServerVBoxes[server.get_name()].set_no_show_all(False)
                         self.output.popwin.ServerVBoxes[server.get_name()].show_all()
-                        self.output.popwin.ServerVBoxes[server.get_name()].Label.set_markup('<span weight="bold" size="large">%s@%s</span>' % (server.get_username(), server.get_name()))
+                        #self.output.popwin.ServerVBoxes[server.get_name()].Label.set_markup('<span weight="bold" size="large">%s@%s</span>' % (server.get_username(), server.get_name()))
+                        # refresh servervboxes
+                        self.output.popwin.ServerVBoxes[server.get_name()].initialize(server)
                         # add box to the other ones
                         self.output.popwin.ScrolledVBox.add(self.output.popwin.ServerVBoxes[server.get_name()])
                         # add server sorting
@@ -3442,6 +3459,8 @@ class Settings(object):
 
             # sort server vboxes
             for server in server_list:
+                # refresh servervboxes
+                self.output.popwin.ServerVBoxes[server].initialize(self.output.servers[server])
                 self.output.popwin.ScrolledVBox.reorder_child(self.output.popwin.ServerVBoxes[server], server_list.index(server))
 
             # refresh servers combobox in popwin
