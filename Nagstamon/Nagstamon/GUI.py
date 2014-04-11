@@ -1485,6 +1485,14 @@ class StatusBar(object):
         self.CalculateFontSize()
 
         # Popup menu for statusbar
+        self._CreateMenu()
+
+
+    def _CreateMenu(self):
+        """
+        create statusbar menu, to be used by statusbar initialization and after Settings changes
+        """
+        # Popup menu for statusbar
         self.Menu = gtk.Menu()
         for i in ["Refresh", "Recheck all", "-----", "Monitors", "-----", "Settings...", "Save position", "About", "Exit"]:
             if i == "-----":
@@ -3479,6 +3487,11 @@ class Settings(object):
 
             # force refresh
             Actions.RefreshAllServers(servers=self.servers, output=self.output, conf=self.conf)
+
+            # renew popup menu for of statusbar
+            self.output.statusbar.Menu.destroy()
+            self.output.statusbar._CreateMenu()
+
 
         except:
             import traceback
