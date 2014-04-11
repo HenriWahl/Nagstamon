@@ -357,6 +357,24 @@
                   <placeholder/>
                 </child>
                 <child>
+                  <placeholder/>
+                </child>
+                <child>
+                  <placeholder/>
+                </child>
+                <child>
+                  <placeholder/>
+                </child>
+                <child>
+                  <placeholder/>
+                </child>
+                <child>
+                  <placeholder/>
+                </child>
+                <child>
+                  <placeholder/>
+                </child>
+                <child>
                   <object class="GtkLabel" id="label_display_size">
                     <property name="visible">True</property>
                     <property name="can_focus">False</property>
@@ -511,9 +529,6 @@
                   </packing>
                 </child>
                 <child>
-                  <placeholder/>
-                </child>
-                <child>
                   <object class="GtkRadioButton" id="input_radiobutton_long_display">
                     <property name="label" translatable="yes">Long  ("1 WARNING 4 CRITICAL")</property>
                     <property name="visible">True</property>
@@ -529,9 +544,6 @@
                     <property name="bottom_attach">2</property>
                     <property name="y_options">GTK_FILL</property>
                   </packing>
-                </child>
-                <child>
-                  <placeholder/>
                 </child>
                 <child>
                   <object class="GtkRadioButton" id="input_radiobutton_statusbar_floating">
@@ -568,9 +580,6 @@
                   </packing>
                 </child>
                 <child>
-                  <placeholder/>
-                </child>
-                <child>
                   <object class="GtkHBox" id="hbox_fullscreen_display">
                     <property name="visible">True</property>
                     <property name="can_focus">False</property>
@@ -605,9 +614,6 @@
                     <property name="bottom_attach">7</property>
                     <property name="y_options">GTK_FILL</property>
                   </packing>
-                </child>
-                <child>
-                  <placeholder/>
                 </child>
                 <child>
                   <object class="GtkRadioButton" id="input_radiobutton_popup_details_hover">
@@ -662,9 +668,6 @@
                   </packing>
                 </child>
                 <child>
-                  <placeholder/>
-                </child>
-                <child>
                   <object class="GtkRadioButton" id="input_radiobutton_close_details_clicking">
                     <property name="label" translatable="yes">Close when clicking statusbar</property>
                     <property name="visible">True</property>
@@ -681,9 +684,6 @@
                     <property name="bottom_attach">11</property>
                     <property name="y_options">GTK_FILL</property>
                   </packing>
-                </child>
-                <child>
-                  <placeholder/>
                 </child>
                 <child>
                   <object class="GtkRadioButton" id="input_radiobutton_icon_in_systray">
@@ -719,9 +719,6 @@
                     <property name="bottom_attach">7</property>
                     <property name="y_options">GTK_FILL</property>
                   </packing>
-                </child>
-                <child>
-                  <placeholder/>
                 </child>
                 <child>
                   <object class="GtkHBox" id="hbox_systray_popup_offset">
@@ -766,6 +763,9 @@
                     <property name="bottom_attach">6</property>
                     <property name="y_options">GTK_FILL</property>
                   </packing>
+                </child>
+                <child>
+                  <placeholder/>
                 </child>
               </object>
               <packing>
@@ -1135,7 +1135,6 @@
                 <child>
                   <object class="GtkHBox" id="hbox_re_criticality">
                     <property name="visible">True</property>
-                    <property name="sensitive">False</property>
                     <property name="can_focus">False</property>
                     <child>
                       <object class="GtkEntry" id="input_entry_re_criticality_pattern">
@@ -1892,6 +1891,9 @@
                                         <property name="top_attach">2</property>
                                         <property name="bottom_attach">3</property>
                                       </packing>
+                                    </child>
+                                    <child>
+                                      <placeholder/>
                                     </child>
                                     <child>
                                       <placeholder/>
@@ -2964,6 +2966,9 @@ As default all events of one refresh cycle will be used in one notification acti
                     <child>
                       <placeholder/>
                     </child>
+                    <child>
+                      <placeholder/>
+                    </child>
                   </object>
                   <packing>
                     <property name="top_attach">1</property>
@@ -2987,6 +2992,33 @@ As default all events of one refresh cycle will be used in one notification acti
                 <property name="n_rows">14</property>
                 <property name="n_columns">2</property>
                 <property name="row_spacing">5</property>
+                <child>
+                  <placeholder/>
+                </child>
+                <child>
+                  <placeholder/>
+                </child>
+                <child>
+                  <placeholder/>
+                </child>
+                <child>
+                  <placeholder/>
+                </child>
+                <child>
+                  <placeholder/>
+                </child>
+                <child>
+                  <placeholder/>
+                </child>
+                <child>
+                  <placeholder/>
+                </child>
+                <child>
+                  <placeholder/>
+                </child>
+                <child>
+                  <placeholder/>
+                </child>
                 <child>
                   <placeholder/>
                 </child>
@@ -3021,9 +3053,6 @@ As default all events of one refresh cycle will be used in one notification acti
                   </packing>
                 </child>
                 <child>
-                  <placeholder/>
-                </child>
-                <child>
                   <object class="GtkCheckButton" id="input_checkbutton_defaults_acknowledge_sticky">
                     <property name="label" translatable="yes">Sticky acknowledgement</property>
                     <property name="visible">True</property>
@@ -3038,9 +3067,6 @@ As default all events of one refresh cycle will be used in one notification acti
                     <property name="y_options">GTK_FILL</property>
                     <property name="x_padding">5</property>
                   </packing>
-                </child>
-                <child>
-                  <placeholder/>
                 </child>
                 <child>
                   <object class="GtkCheckButton" id="input_checkbutton_defaults_acknowledge_send_notification">
@@ -3059,9 +3085,6 @@ As default all events of one refresh cycle will be used in one notification acti
                   </packing>
                 </child>
                 <child>
-                  <placeholder/>
-                </child>
-                <child>
                   <object class="GtkCheckButton" id="input_checkbutton_defaults_acknowledge_persistent_comment">
                     <property name="label" translatable="yes">Persistent comment</property>
                     <property name="visible">True</property>
@@ -3078,9 +3101,6 @@ As default all events of one refresh cycle will be used in one notification acti
                   </packing>
                 </child>
                 <child>
-                  <placeholder/>
-                </child>
-                <child>
                   <object class="GtkCheckButton" id="input_checkbutton_defaults_acknowledge_all_services">
                     <property name="label" translatable="yes">Acknowledge all services on host</property>
                     <property name="visible">True</property>
@@ -3095,12 +3115,6 @@ As default all events of one refresh cycle will be used in one notification acti
                     <property name="y_options">GTK_FILL</property>
                     <property name="x_padding">5</property>
                   </packing>
-                </child>
-                <child>
-                  <placeholder/>
-                </child>
-                <child>
-                  <placeholder/>
                 </child>
                 <child>
                   <object class="GtkLabel" id="label_acknowledge_submit_result">
@@ -3159,12 +3173,6 @@ As default all events of one refresh cycle will be used in one notification acti
                     <property name="bottom_attach">14</property>
                     <property name="y_options">GTK_FILL</property>
                   </packing>
-                </child>
-                <child>
-                  <placeholder/>
-                </child>
-                <child>
-                  <placeholder/>
                 </child>
                 <child>
                   <object class="GtkHBox" id="hbox_defaults_downtime_comment">
@@ -3326,9 +3334,6 @@ As default all events of one refresh cycle will be used in one notification acti
                     <property name="bottom_attach">9</property>
                     <property name="y_options">GTK_FILL</property>
                   </packing>
-                </child>
-                <child>
-                  <placeholder/>
                 </child>
                 <child>
                   <object class="GtkHBox" id="hbox_defaults_acknowledge_comment">

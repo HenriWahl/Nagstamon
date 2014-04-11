@@ -3203,11 +3203,6 @@ class Settings(object):
         # initialize state of some GUI elements
         self.initialize()
 
-        """
-        # care about Centreon criticality filter
-        self.ToggleRECriticalityFilter()
-        """
-
 
     def show(self):
         # show filled settings dialog and wait thanks to gtk.run()
@@ -3256,7 +3251,6 @@ class Settings(object):
         self.ToggleNotificationActionCritical()
         self.ToggleNotificationActionDown()
         self.ToggleNotificationActionOk()
-        #self.ToggleNotificationCustomAction()
 
 
     def FillTreeView(self, treeview_widget, items, column_string, selected_item):
@@ -3726,15 +3720,10 @@ class Settings(object):
             3. If true, show the criticality filter options
         """
         self.builder.get_object("hbox_re_criticality").hide()
-        self.builder.get_object("input_entry_re_criticality_pattern").hide()
         self.builder.get_object("input_checkbutton_re_criticality_enabled").hide()
-        self.builder.get_object("input_checkbutton_re_criticality_reverse").hide()
         for server in self.conf.servers:
             if (str(self.conf.servers[server].enabled) == "True") and (str(self.conf.servers[server].type) == "Centreon"):
-                self.builder.get_object("hbox_re_criticality").show()
-                self.builder.get_object("input_entry_re_criticality_pattern").show()
                 self.builder.get_object("input_checkbutton_re_criticality_enabled").show()
-                self.builder.get_object("input_checkbutton_re_criticality_reverse").show()
 
 
     def ToggleSystrayPopupOffset(self, widget=None):
