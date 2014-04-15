@@ -383,8 +383,7 @@ class GenericServer(object):
                                      ("minutes", minutes),\
                                      ("btnSubmit","Commit")])
         # running remote cgi command
-        result = self.FetchURL(self.monitor_cgi_url + "/cmd.cgi", giveback="raw", cgi_data=cgi_data)
-        raw = result.result
+        self.FetchURL(self.monitor_cgi_url + "/cmd.cgi", giveback="raw", cgi_data=cgi_data)
 
 
     def set_submit_check_result(self, thread_obj):
@@ -423,7 +422,6 @@ class GenericServer(object):
         """
         try:
             result = self.FetchURL(self.monitor_cgi_url + "/cmd.cgi?" + urllib.urlencode({"cmd_typ":"55", "host":host}))
-            html = result.result
             start_time = dict(result.result.find(attrs={"name":"start_time"}).attrs)["value"]
             end_time = dict(result.result.find(attrs={"name":"end_time"}).attrs)["value"]
             # give values back as tuple
@@ -941,7 +939,7 @@ class GenericServer(object):
                 #The Criticality filter can be used only with centreon objects. Other objects don't have the criticality attribute.
                 if (str(self.type) == "Centreon") and (CriticalityIsFilteredOutByRE(service.criticality, self.conf) == True):
                     if str(self.conf.debug_mode) == "True":
-                        self.Debug(server=self.get_name(), debug="Filter: REGEXP Criticality " + str(host.name) + ";" + str(service.name))
+                        self.Debug(server=self.get_name(), debug="Filter: REGEXP Criticality %s;%s %s"  % ((str(host.name), str(service.name), str(service.criticality))))
                     service.visible = False
 
                 # Finegrain for the specific state

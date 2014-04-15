@@ -146,12 +146,21 @@ class MultisiteServer(GenericServer):
               'human_host':      self.monitor_url + "index.py?%s" %
                                                    urllib.urlencode({'start_url': 'view.py?view_name=hoststatus'}),
 
-              'api_host_act':    self.monitor_url + 'view.py?_transid=-1&_do_actions=yes&_do_confirm=Yes!&output_format=python&view_name=hoststatus',
-              'api_service_act': self.monitor_url + 'view.py?_transid=-1&_do_actions=yes&_do_confirm=Yes!&output_format=python&view_name=service',
-              'api_svcprob_act': self.monitor_url + 'view.py?_transid=-1&_do_actions=yes&_do_confirm=Yes!&output_format=python&view_name=svcproblems',
+              #'api_host_act':    self.monitor_url + 'view.py?_transid=-1&_do_actions=yes&_do_confirm=Yes!&output_format=python&view_name=hoststatus&filled_in=actions&lang=',
+              #'api_service_act': self.monitor_url + 'view.py?_transid=-1&_do_actions=yes&_do_confirm=Yes!&output_format=python&view_name=service&filled_in=actions&lang=',
+              #'api_svcprob_act': self.monitor_url + 'view.py?_transid=-1&_do_actions=yes&_do_confirm=Yes!&output_format=python&view_name=svcproblems&filled_in=actions&lang=',
+              'api_host_act':    self.monitor_url + 'view.py?_transid=-1&_do_actions=yes&_do_confirm=Yes!&view_name=hoststatus&filled_in=actions&lang=',
+              'api_service_act': self.monitor_url + 'view.py?_transid=-1&_do_actions=yes&_do_confirm=Yes!&view_name=service&filled_in=actions&lang=',
+              'api_svcprob_act': self.monitor_url + 'view.py?_transid=-1&_do_actions=yes&_do_confirm=Yes!&view_name=svcproblems&filled_in=actions&lang=',
+
+              #'api_host_act':    self.monitor_url + 'view.py?_do_actions=yes&_do_confirm=Yes!&output_format=python&view_name=hoststatus&lang=',
+              #'api_service_act': self.monitor_url + 'view.py?_do_actions=yes&_do_confirm=Yes!&output_format=python&view_name=service&lang=',
+              #'api_svcprob_act': self.monitor_url + 'view.py?_do_actions=yes&_do_confirm=Yes!&output_format=python&view_name=svcproblems&lang=',
+
               'human_events':    self.monitor_url + "index.py?%s" %
                                                    urllib.urlencode({'start_url': 'view.py?view_name=events'}),
-              'togglevisibility':self.monitor_url + "user_profile.py"
+              'togglevisibility':self.monitor_url + "user_profile.py",
+              'transid':         self.monitor_url + "view.py?actions=yes&filled_in=actions&host=$HOST$&service=$SERVICE$&view_name=service"
             }
 
             self.statemap = {
@@ -457,17 +466,22 @@ class MultisiteServer(GenericServer):
         }
         params.update(specific_params)
 
-        url = self.urls['api_host_act']
-
+        # service is now added in Actions.Action(): action_type "url-check_mk-multisite"
         if service != "":
-            params['service'] = service
             url = self.urls['api_service_act']
+        else:
+            url = self.urls['api_host_act']
 
         if str(self.conf.debug_mode) == "True":
             self.Debug(server=self.get_name(), host=host, debug ="Submitting action: " + url + '&' + urllib.urlencode(params))
 
-        result = self.FetchURL(url + '&' + urllib.urlencode(params), giveback = 'raw')
-
+        action = Actions.Action(type="url-check_mk-multisite",\
+                                string=url + '&' + urllib.urlencode(params),\
+                                conf=self.conf,\
+                                host = host,\
+                                service = service,\
+                                server=self)
+        action.run()
 
     def _set_downtime(self, host, service, author, comment, fixed, start_time, end_time, hours, minutes):
         self._action(self.hosts[host].site, host, service, {
@@ -517,26 +531,18 @@ class MultisiteServer(GenericServer):
 
         result = self.FetchURL(url + '&' + urllib.urlencode(params), giveback = 'raw')
 
-
+    """
     def ToggleVisibility(self, widget):
-        """
-        Attempt to enable/disable visibility of all problems for user via
-        /user_profile.py?cb_ua_force_authuser=0&cb_ua_force_authuser_webservice=0&filled_in=profile
-        """
+        #Attempt to enable/disable visibility of all problems for user via
+        #/user_profile.py?cb_ua_force_authuser=0&cb_ua_force_authuser_webservice=0&filled_in=profile
 
-        print widget.get_active()
-
+        # since werk #0766 http://mathias-kettner.de/check_mk_werks.php?werk_id=766 a real transid is needed
         transid = self.FetchURL(self.urls["togglevisibility"], "obj").result.find(attrs={"name" : "_transid"})["value"]
-
-        print transid
-        print str(int(widget.get_active()))
-
         cgi_data = urllib.urlencode({"cb_ua_force_authuser" : str(int(widget.get_active())),\
                                      "cb_ua_force_authuser_webservice" : str(int(widget.get_active())),\
                                      "filled_in" : "profile",\
                                      "_transid" : transid,\
                                      "_save" : "Save"})
-        print cgi_data
 
         self.FetchURL(self.urls["togglevisibility"], "raw", cgi_data=urllib.urlencode(\
                                                                     {"cb_ua_force_authuser" : str(int(widget.get_active())),\
@@ -544,3 +550,13 @@ class MultisiteServer(GenericServer):
                                                                      "filled_in" : "profile",\
                                                                      "_transid" : transid,\
                                                                      "_save" : "Save"})).result
+    """
+
+
+    def _get_transid(self, host, service):
+        """
+        get transid for an action
+        """
+        transid = self.FetchURL(self.urls["transid"].replace("$HOST$", host).replace("$SERVICE$", service.replace(" ", "+")),\
+                                "obj").result.find(attrs={"name" : "_transid"})["value"]
+        return transid

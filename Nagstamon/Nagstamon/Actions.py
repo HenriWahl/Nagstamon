@@ -640,18 +640,36 @@ class Action(threading.Thread):
                 if str(self.conf.debug_mode) == "True":
                     self.server.Debug(server=self.server.name, host=self.host, service=self.service, debug="ACTION: Browser " + string)
                 webbrowser.open(string)
-            elif self.action.type == "url":
+            elif action_type == "url":
                 # make string ready for URL
                 string = self._URLify(string)
                 # debug
                 if str(self.conf.debug_mode) == "True":
                     self.server.Debug(server=self.server.name, host=self.host, service=self.service, debug="ACTION: URL in background " + string)
                 self.server.FetchURL(string)
-            elif self.action.type == "command":
+            elif action_type == "command":
                 # debug
                 if str(self.conf.debug_mode) == "True":
                     self.server.Debug(server=self.server.name, host=self.host, service=self.service, debug="ACTION: COMMAND " + string)
                 subprocess.Popen(string, shell=True)
+            # special treatment for Check_MK/Multisite Transaction IDs
+            elif action_type == "url-check_mk-multisite":
+                if "?_transid=-1&" in string:
+                    # Python format is of no use her, only web interface gives an transaction id
+                    # since werk #0766 http://mathias-kettner.de/check_mk_werks.php?werk_id=766 a real transid is needed
+                    transid = self.server._get_transid(self.host, self.service)
+                    # insert fresh transid
+                    string = string.replace("?_transid=-1&", "?_transid=%s&" % (transid))
+                    string = string + "&actions=yes"
+                    if self.service != "":
+                        # if service exists add it and convert spaces to +
+                        string = string + "&service=%s" % (self.service.replace(" ", "+"))
+
+                    # debug
+                    if str(self.conf.debug_mode) == "True":
+                        self.server.Debug(server=self.server.name, host=self.host, service=self.service, debug="ACTION: Check_MK URL in background " + string)
+
+                    self.server.FetchURL(string)
         except:
             import traceback
             traceback.print_exc(file=sys.stdout)
@@ -659,10 +677,10 @@ class Action(threading.Thread):
 
     def _URLify(self, string):
         """
-        return a string that fulfills requirements for URL
+        return a string that fulfills requirements for URLs
         exclude several chars
         """
-        return urllib.quote(string, ":/=?&@")
+        return urllib.quote(string, ":/=?&@+")
 
 
 class LonesomeGarbageCollector(threading.Thread):
