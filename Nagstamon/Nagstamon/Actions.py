@@ -633,16 +633,18 @@ class Action(threading.Thread):
 
             # see what action to take
             if action_type == "browser":
-                # make string ready for URL
-                # should not be needed for browsers, see https://github.com/HenriWahl/Nagstamon/issues/34
-                ###string = self._URLify(string)
                 # debug
                 if str(self.conf.debug_mode) == "True":
                     self.server.Debug(server=self.server.name, host=self.host, service=self.service, debug="ACTION: Browser " + string)
                 webbrowser.open(string)
             elif action_type == "url":
-                # make string ready for URL
-                string = self._URLify(string)
+                # Check_MK uses transids - if this occurs in URL its very likely that a Check_MK-URL is called
+                if "$TRANSID$" in string:
+                    transid = self.server._get_transid(self.host, self.service)
+                    string = string.replace("$TRANSID$", transid)
+                else:
+                    # make string ready for URL
+                    string = self._URLify(string)
                 # debug
                 if str(self.conf.debug_mode) == "True":
                     self.server.Debug(server=self.server.name, host=self.host, service=self.service, debug="ACTION: URL in background " + string)
@@ -652,7 +654,8 @@ class Action(threading.Thread):
                 if str(self.conf.debug_mode) == "True":
                     self.server.Debug(server=self.server.name, host=self.host, service=self.service, debug="ACTION: COMMAND " + string)
                 subprocess.Popen(string, shell=True)
-            # special treatment for Check_MK/Multisite Transaction IDs
+
+            # special treatment for Check_MK/Multisite Transaction IDs, called by Multisite._action()
             elif action_type == "url-check_mk-multisite":
                 if "?_transid=-1&" in string:
                     # Python format is of no use her, only web interface gives an transaction id

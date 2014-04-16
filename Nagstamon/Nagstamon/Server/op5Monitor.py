@@ -22,7 +22,7 @@ import json
 import urllib
 import datetime
 import time
-import webbrowser
+#import webbrowser
 
 from datetime import datetime
 
@@ -245,9 +245,11 @@ class Op5MonitorServer(GenericServer):
 
     def open_tree_view(self, host, service):
         if not service:
-            webbrowser.open('%s/monitor/index.php/extinfo/details?host=%s' % (self.monitor_url, host))
+            url = "%s/monitor/index.php/extinfo/details?host=%s" % (self.monitor_url, host)
         else:
-            webbrowser.open('%s/monitor/index.php/extinfo/details?host=%s&service=%s' % (self.monitor_url, host, service))
+            url = "%s/monitor/index.php/extinfo/details?host=%s&service=%s" % (self.monitor_url, host, service)
+        action = Actions.Action(type="browser", string=url, conf=self.conf, server=self, host=host, service=service)
+        action.run()
 
     def get_start_end(self, host):
         return time.strftime("%Y-%m-%d %H:%M"), time.strftime("%Y-%m-%d %H:%M", time.localtime(time.time() + 7200))
