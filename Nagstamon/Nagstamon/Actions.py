@@ -612,6 +612,7 @@ class Action(threading.Thread):
                 action_type = self.action.type
             else:
                 string = self.string
+                cgi_data = self.cgi_data
                 action_type = self.type
 
             # mapping of variables and values
@@ -649,6 +650,18 @@ class Action(threading.Thread):
                 if str(self.conf.debug_mode) == "True":
                     self.server.Debug(server=self.server.name, host=self.host, service=self.service, debug="ACTION: URL in background " + string)
                 self.server.FetchURL(string)
+            elif action_type == "url-post":
+                # Check_MK uses transids - if this occurs in URL its very likely that a Check_MK-URL is called
+                if "$TRANSID$" in string:
+                    transid = self.server._get_transid(self.host, self.service)
+                    string = string.replace("$TRANSID$", transid)
+                else:
+                    # make string ready for URL
+                    string = self._URLify(string)
+                # debug
+                if str(self.conf.debug_mode) == "True":
+                    self.server.Debug(server=self.server.name, host=self.host, service=self.service, debug="ACTION: URL-POST in background " + string)
+                self.server.FetchURL(string, cgi_data=cgi_data)
             elif action_type == "command":
                 # debug
                 if str(self.conf.debug_mode) == "True":

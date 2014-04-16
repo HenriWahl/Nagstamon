@@ -22,7 +22,6 @@ import json
 import urllib
 import datetime
 import time
-#import webbrowser
 
 from datetime import datetime
 
@@ -256,11 +255,26 @@ class Op5MonitorServer(GenericServer):
 
 
     def send_command(self, command, params=False):
-        if not params.has_key("service_description"):
-            params["service_description"] = ""
-        url = self.monitor_url + self.api_cmd + '/' + command + "?" + urllib.urlencode(params)
-        action = Actions.Action(type="url", string=url, conf=self.conf, server=self,\
-                                host=params["host_name"], service=params["service_description"])
+        url = self.monitor_url + self.api_cmd + '/' + command
+        if 'service_description' in params.keys():
+            action = Actions.Action(
+                type="url-post",
+                string=url,
+                cgi_data=urllib.urlencode(params),
+                conf=self.conf,
+                server=self,
+                host=params["host_name"],
+                service=params["service_description"],
+            )
+        else:
+            action = Actions.Action(
+                type="url-post",
+                string=url,
+                cgi_data=urllib.urlencode(params),
+                conf=self.conf,
+                server=self,
+                host=params["host_name"],
+            )
         action.run()
 
 
