@@ -583,7 +583,8 @@ $PASSWORD$ - username's password on monitor
 $COMMENT-ACK$ - default acknowledge comment
 $COMMENT-DOWN$ - default downtime comment
 $COMMENT-SUBMIT$ - default submit check result comment
-</property>
+
+$TRANSID$ - only useful for Check_MK as _transid=$TRANSID$</property>
                 <property name="wrap">True</property>
                 <property name="width_chars">60</property>
               </object>

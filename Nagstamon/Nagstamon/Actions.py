@@ -606,7 +606,7 @@ class Action(threading.Thread):
         $COMMENT-SUBMIT$   - default submit check result comment
         """
         try:
-            # if run as custom action use given action definition, otherwise use for URLs
+            # if run as custom action use given action definition from conf, otherwise use for URLs
             if self.__dict__.has_key("action"):
                 string = self.action.string
                 action_type = self.action.type
