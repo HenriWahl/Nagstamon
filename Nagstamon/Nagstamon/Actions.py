@@ -606,14 +606,19 @@ class Action(threading.Thread):
         $COMMENT-SUBMIT$   - default submit check result comment
         """
         try:
-            # if run as custom action use given action definition
+            # if run as custom action use given action definition, otherwise use for URLs
             if self.__dict__.has_key("action"):
                 string = self.action.string
                 action_type = self.action.type
             else:
                 string = self.string
-                cgi_data = self.cgi_data
                 action_type = self.type
+
+            # used for POST request
+            if self.__dict__.has_key("cgi_data"):
+                cgi_data = self.cgi_data
+            else:
+                cgi_data = ""
 
             # mapping of variables and values
             mapping = { "$HOST$": self.host,\
@@ -636,13 +641,18 @@ class Action(threading.Thread):
             if action_type == "browser":
                 # debug
                 if str(self.conf.debug_mode) == "True":
-                    self.server.Debug(server=self.server.name, host=self.host, service=self.service, debug="ACTION: Browser " + string)
+                    self.server.Debug(server=self.server.name, host=self.host, service=self.service, debug="ACTION: BROWSER " + string)
                 webbrowser.open(string)
+            elif action_type == "command":
+                # debug
+                if str(self.conf.debug_mode) == "True":
+                    self.server.Debug(server=self.server.name, host=self.host, service=self.service, debug="ACTION: COMMAND " + string)
+                subprocess.Popen(string, shell=True)
             elif action_type == "url":
                 # Check_MK uses transids - if this occurs in URL its very likely that a Check_MK-URL is called
                 if "$TRANSID$" in string:
                     transid = self.server._get_transid(self.host, self.service)
-                    string = string.replace("$TRANSID$", transid)
+                    string = string.replace("$TRANSID$", transid).replace(" ", "+")
                 else:
                     # make string ready for URL
                     string = self._URLify(string)
@@ -650,24 +660,14 @@ class Action(threading.Thread):
                 if str(self.conf.debug_mode) == "True":
                     self.server.Debug(server=self.server.name, host=self.host, service=self.service, debug="ACTION: URL in background " + string)
                 self.server.FetchURL(string)
+            # used for example by Op5Monitor.py
             elif action_type == "url-post":
-                # Check_MK uses transids - if this occurs in URL its very likely that a Check_MK-URL is called
-                if "$TRANSID$" in string:
-                    transid = self.server._get_transid(self.host, self.service)
-                    string = string.replace("$TRANSID$", transid)
-                else:
-                    # make string ready for URL
-                    string = self._URLify(string)
+                # make string ready for URL
+                string = self._URLify(string)
                 # debug
                 if str(self.conf.debug_mode) == "True":
                     self.server.Debug(server=self.server.name, host=self.host, service=self.service, debug="ACTION: URL-POST in background " + string)
                 self.server.FetchURL(string, cgi_data=cgi_data)
-            elif action_type == "command":
-                # debug
-                if str(self.conf.debug_mode) == "True":
-                    self.server.Debug(server=self.server.name, host=self.host, service=self.service, debug="ACTION: COMMAND " + string)
-                subprocess.Popen(string, shell=True)
-
             # special treatment for Check_MK/Multisite Transaction IDs, called by Multisite._action()
             elif action_type == "url-check_mk-multisite":
                 if "?_transid=-1&" in string:
@@ -680,10 +680,9 @@ class Action(threading.Thread):
                     if self.service != "":
                         # if service exists add it and convert spaces to +
                         string = string + "&service=%s" % (self.service.replace(" ", "+"))
-
                     # debug
                     if str(self.conf.debug_mode) == "True":
-                        self.server.Debug(server=self.server.name, host=self.host, service=self.service, debug="ACTION: Check_MK URL in background " + string)
+                        self.server.Debug(server=self.server.name, host=self.host, service=self.service, debug="ACTION: URL-Check_MK in background " + string)
 
                     self.server.FetchURL(string)
         except:
