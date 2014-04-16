@@ -1418,6 +1418,78 @@ class GUI(object):
             self.events_history[event] = False
 
 
+    def ApplyServerModifications(self):
+        """
+        used by every dialog that modifies server settings
+        """
+        # kick out deleted or renamed servers,
+        # create new ones for new, renamed or re-enabled ones
+        for server in self.servers.values():
+            if not server.get_name() in self.popwin.ServerVBoxes:
+                self.popwin.ServerVBoxes[server.get_name()] = self.popwin.CreateServerVBox(server.get_name(), self)
+                if str(self.conf.servers[server.get_name()].enabled)== "True":
+                    self.popwin.ServerVBoxes[server.get_name()].set_visible(True)
+                    self.popwin.ServerVBoxes[server.get_name()].set_no_show_all(False)
+                    self.popwin.ServerVBoxes[server.get_name()].show_all()
+                    #self.output.popwin.ServerVBoxes[server.get_name()].Label.set_markup('<span weight="bold" size="large">%s@%s</span>' % (server.get_username(), server.get_name()))
+                    # refresh servervboxes
+                    self.popwin.ServerVBoxes[server.get_name()].initialize(server)
+                    # add box to the other ones
+                    self.popwin.ScrolledVBox.add(self.popwin.ServerVBoxes[server.get_name()])
+                    # add server sorting
+                    self.last_sorting[server.get_name()] = Sorting([(self.startup_sort_field,\
+                                                                  self.startup_sort_order ),\
+                                                                  (server.HOST_COLUMN_ID, gtk.SORT_ASCENDING)],\
+                                                                  len(server.COLUMNS)+1)
+        # delete not-current-anymore servers (disabled or renamed)
+        for server in self.popwin.ServerVBoxes.keys():
+            if not server in self.servers:
+                self.popwin.ServerVBoxes[server].hide_all()
+                self.popwin.ServerVBoxes[server].destroy()
+                self.popwin.ServerVBoxes.pop(server)
+
+        # reorder server VBoxes in case some names changed
+        # to sort the monitor servers alphabetically make a sortable list of their names
+        server_list = []
+        for server in self.conf.servers:
+            if str(self.conf.servers[server].enabled) == "True":
+                server_list.append(server)
+            else:
+                # destroy disabled server vboxes if they exist
+                if server in self.popwin.ServerVBoxes:
+                    self.popwin.ServerVBoxes[server].destroy()
+                    self.popwin.ServerVBoxes.pop(server)
+        server_list.sort(key=str.lower)
+
+        # sort server vboxes
+        for server in server_list:
+            # refresh servervboxes
+            self.popwin.ServerVBoxes[server].initialize(self.servers[server])
+            self.popwin.ScrolledVBox.reorder_child(self.popwin.ServerVBoxes[server], server_list.index(server))
+
+        # refresh servers combobox in popwin
+        # first remove all entries
+        for i in range(1, len(self.popwin.ComboboxMonitor.get_model())):
+            # "Choose monitor..." is the first entry so do not delete item index 0
+            self.popwin.ComboboxMonitor.remove_text(1)
+
+        # sort server names for list
+        server_list = list()
+        for server in self.conf.servers.keys():
+            server_list.append(server)
+        server_list.sort(key=str.lower)
+        # add all servers in sorted order
+        for server in server_list:
+            self.popwin.ComboboxMonitor.append_text(server)
+
+        # brutal renewal of popup menu for of statusbar because servers might have been added
+        self.output.statusbar.Menu.destroy()
+        self.output.statusbar._CreateMenu()
+
+        # force refresh
+        Actions.RefreshAllServers(servers=self.servers, output=self, conf=self.conf)
+
+
 class StatusBar(object):
     """
         statusbar object with appended systray icon
@@ -3420,6 +3492,7 @@ class Settings(object):
             if self.saved_fullscreen_state != str(self.conf.fullscreen):
                 self.output.popwin.SwitchMode()
 
+            """
             # kick out deleted or renamed servers,
             # create new ones for new, renamed or re-enabled ones
             for server in self.output.servers.values():
@@ -3487,11 +3560,10 @@ class Settings(object):
 
             # force refresh
             Actions.RefreshAllServers(servers=self.servers, output=self.output, conf=self.conf)
+            """
 
-            # renew popup menu for of statusbar
-            self.output.statusbar.Menu.destroy()
-            self.output.statusbar._CreateMenu()
-
+            # apply settings for modified servers
+            self.output.ApplyServerModifications()
 
         except:
             import traceback
@@ -3574,6 +3646,9 @@ class Settings(object):
                 self.servers.pop(server)
                 # fill settings dialog treeview
                 self.FillTreeView("servers_treeview", servers, "Servers", "selected_server")
+
+                # renew appearances of servers
+                self.output.ApplyServerModifications()
 
             dialog.destroy()
 
@@ -4040,6 +4115,9 @@ class GenericServer(object):
             # care about Centreon criticality filter
             self.output.Dialogs["Settings"].ToggleRECriticalityFilter()
 
+            # apply settings for modified servers
+            self.output.ApplyServerModifications()
+
             # destroy new server dialog
             gobject.idle_add(self.output.DeleteGUILock, str(self.__class__.__name__))
             self.dialog.hide()
@@ -4311,6 +4389,9 @@ class EditServer(GenericServer):
 
             # care about Centreon criticality filter
             self.output.Dialogs["Settings"].ToggleRECriticalityFilter()
+
+            # apply settings for modified servers
+            self.output.ApplyServerModifications()
 
             # hide dialog
             gobject.idle_add(self.output.DeleteGUILock, str(self.__class__.__name__))
