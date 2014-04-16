@@ -254,9 +254,13 @@ class Op5MonitorServer(GenericServer):
     def get_start_end(self, host):
         return time.strftime("%Y-%m-%d %H:%M"), time.strftime("%Y-%m-%d %H:%M", time.localtime(time.time() + 7200))
 
+
     def send_command(self, command, params=False):
-        url = self.monitor_url + self.api_cmd + '/' + command
-        self.FetchURL(url, "raw", urllib.urlencode(params))
+        url = self.monitor_url + self.api_cmd + '/' + command + "?" + urllib.urlencode(params)
+        action = Actions.Action(type="url", string=url, conf=self.conf, server=self,\
+                                host=params["host_name"], service=params["service_description"])
+        action.run()
+
 
     def _set_recheck(self, host, service):
         params = {'host_name': host, 'check_time': int(time.time())}
@@ -280,6 +284,7 @@ class Op5MonitorServer(GenericServer):
             params['service_description'] = service
             command = 'ACKNOWLEDGE_SVC_PROBLEM'
         self.send_command(command, params)
+
 
     def _set_downtime(self, host, service, author, comment, fixed, start_time, end_time, hours, minutes):
         start_time = int(time.mktime(time.strptime(start_time, "%Y-%m-%d %H:%M")))
