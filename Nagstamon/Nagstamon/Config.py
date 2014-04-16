@@ -36,11 +36,11 @@ try:
         if "SecretService" in dir(keyring.backends) and not (keyring.get_keyring() is None):
             keyring_available = True
     else:
-        import Nagstamon.keyring as keyring
+        import Nagstamon.keyring_custom as keyring
         keyring_available = not (keyring.get_keyring() is None)
-except ImportError:
+except ImportError, err:
+    print err
     keyring_available = False
-
 
 class Config(object):
     """
