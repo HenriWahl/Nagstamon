@@ -28,19 +28,22 @@ import zlib
 # global flag for keyring availabilty
 keyring_available = False
 # Determine if keyring module and an implementation is available for secure password storage
+
 try:
     # Linux systems should use keyring only if it comes with the distro, otherwise chances are small
     # that keyring works at all
     if platform.system() == "Linux":
         import keyring
-        if "SecretService" in dir(keyring.backends) and not (keyring.get_keyring() is None):
+        import secretstorage
+        print dir(keyring.backends)
+        if ("SecretService") in dir(keyring.backends) and not (keyring.get_keyring() is None):
             keyring_available = True
     else:
         import Nagstamon.keyring_custom as keyring
         keyring_available = not (keyring.get_keyring() is None)
-except ImportError, err:
-    print err
+except ImportError:
     keyring_available = False
+
 
 class Config(object):
     """
