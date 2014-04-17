@@ -33,9 +33,8 @@ try:
     # Linux systems should use keyring only if it comes with the distro, otherwise chances are small
     # that keyring works at all
     if platform.system() == "Linux":
-        import keyring
-        import secretstorage
-        print dir(keyring.backends)
+        # keyring and secretstorage have to be importable
+        import keyring, secretstorage
         if ("SecretService") in dir(keyring.backends) and not (keyring.get_keyring() is None):
             keyring_available = True
     else:
@@ -55,7 +54,6 @@ class Config(object):
             supposed to be sensible defaults
         """
         # move from minute interval to seconds
-        #self.update_interval = 1
         self.update_interval_seconds = 60
         self.short_display = False
         self.long_display = True
@@ -786,6 +784,8 @@ class Action(object):
     def __init__(self, **kwds):
         # to be or not to be enabled...
         self.enabled = True
+        # monitor type
+        self.monitor_type = ""
         # one of those: browser, url or command
         self.type = "browser"
         # thy name is...
