@@ -108,10 +108,11 @@ class ZabbixServer(GenericServer):
             try:
                 hosts = self.zapi.host.get(
                     {"output": ["host", "ip", "status", "available", "error", "errors_from"], "filter": {}})
-
-            except ZabbixError, e:
-                if e.terminate:
-                    return e.result
+            except:
+                # set checking flag back to False
+                self.isChecking = False
+                result, error = self.Error(sys.exc_info())
+                return Result(result=result, error=error)
 
             for host in hosts:
                 # johncan
