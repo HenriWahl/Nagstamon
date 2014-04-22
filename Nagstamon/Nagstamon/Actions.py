@@ -113,7 +113,7 @@ class RefreshLoopOneServer(threading.Thread):
                 # check if server is already checked
                 if self.server.isChecking == False:
                     # set server status for status field in popwin
-                    self.server.status = "Refreshing"
+                    self.server.status = "Refreshing (last updated %s)" % time.ctime()
                     gobject.idle_add(self.output.popwin.UpdateStatus, self.server)
                     # get current status
                     server_status = self.server.GetStatus(output=self.output)
@@ -149,7 +149,7 @@ class RefreshLoopOneServer(threading.Thread):
                         time.sleep(10)
                     else:
                         # set server status for status field in popwin
-                        self.server.status = "Connected"
+                        self.server.status = "Connected (last updated %s)" % time.ctime()
                         # tell gobject to care about GUI stuff - refresh display status
                         gobject.idle_add(self.output.RefreshDisplayStatus)
                         if str(self.conf.fullscreen) == "True":
