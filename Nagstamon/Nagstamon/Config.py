@@ -41,6 +41,8 @@ try:
         import Nagstamon.keyring_3_7 as keyring
         keyring_available = not (keyring.get_keyring() is None)
 except ImportError:
+    import traceback
+    traceback.print_exc(file=sys.stdout)
     keyring_available = False
 
 
