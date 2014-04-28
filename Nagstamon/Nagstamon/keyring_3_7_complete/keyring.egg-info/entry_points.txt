@@ -1,3 +1,0 @@
-[console_scripts]
-keyring = keyring.cli:main
-
