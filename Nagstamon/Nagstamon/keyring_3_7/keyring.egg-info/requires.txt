@@ -1,0 +1,6 @@
+
+
+[test]
+pytest
+mock
+pycrypto

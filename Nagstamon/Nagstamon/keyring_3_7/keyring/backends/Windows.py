@@ -8,7 +8,6 @@ from ..util import escape, properties
 from ..backend import KeyringBackend
 from ..errors import PasswordDeleteError, ExceptionRaisedContext
 from . import file
-from . import _win_crypto
 
 try:
     import pywintypes

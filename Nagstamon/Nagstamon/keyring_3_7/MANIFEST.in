@@ -1,0 +1,7 @@
+recursive-include keyring *.py
+recursive-include demo *.py
+include *.py
+include *.txt
+include *.rst
+include setup.cfg
+exclude .hg/last-message.txt
