@@ -538,7 +538,9 @@ class Notification(threading.Thread):
                     sound = PlaySound(sound=self.sound, Resources=self.Resources, conf=self.conf, servers=self.servers)
                     sound.start()
                     soundcount += 1
-                elif str(self.conf.notification_sound_repeat) == "True" and soundcount >= 2*int(self.conf.update_interval_seconds):
+                elif str(self.conf.notification_sound_repeat) == "True" and\
+                        soundcount >= 2*int(self.conf.update_interval_seconds) and\
+                        len([k for k,v in self.events_history.items() if v == True]) != 0:
                     soundcount = 0
                 else:
                     soundcount += 1
