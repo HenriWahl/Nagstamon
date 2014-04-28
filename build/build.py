@@ -117,7 +117,7 @@ def winmain():
         # copy gtk windows theme stuff to nagstamon directory
         os.system('xcopy %(gtk-windows-theme)s dist\\nagstamon /y /e /i /h /EXCLUDE:helpers\excludelist.txt' % opt_dict)
 
-        """
+
         if os.path.exists(os.path.join(*dist_location)):
             iss_location = '%(target)s\\%(installer)s\\windows\\%(iss)s' % opt_dict
             if os.path.isfile(iss_location):
@@ -140,7 +140,7 @@ def winmain():
                 execute_script_lines(['"%(iscc)s" nagstamon.iss'], opt_dict)
             else:
                 print 'Missing "%s" file' % iss_location
-        """
+
 
 def debmain():
     parser = OptionParser()

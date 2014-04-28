@@ -24,7 +24,6 @@ import ConfigParser
 import base64
 import zlib
 
-
 # global flag for keyring availabilty
 keyring_available = False
 # Determine if keyring module and an implementation is available for secure password storage
@@ -38,11 +37,10 @@ try:
         if ("SecretService") in dir(keyring.backends) and not (keyring.get_keyring() is None):
             keyring_available = True
     else:
+        # nagstamon.spec always have to match module path
         import Nagstamon.keyring_3_7 as keyring
         keyring_available = not (keyring.get_keyring() is None)
-except ImportError:
-    import traceback
-    traceback.print_exc(file=sys.stdout)
+except:
     keyring_available = False
 
 

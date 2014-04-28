@@ -1,20 +1,20 @@
 # -*- mode: python -*-
 a = Analysis(['..\\Nagstamon\\nagstamon.py'],
              pathex=['..\\Nagstamon\\build'],
-             hiddenimports=['Nagstamon.keyring.credentials',\
-                            'Nagstamon.keyring.backends.file',\
-                            'Nagstamon.keyring.backends.Gnome',\
-                            'Nagstamon.keyring.backends.Google',\
-                            'Nagstamon.keyring.backends.keyczar',\
-                            'Nagstamon.keyring.backends.kwallet',\
-                            'Nagstamon.keyring.backends.multi',\
-                            'Nagstamon.keyring.backends.OS_X',\
-                            'Nagstamon.keyring.backends.pyfs',\
-                            'Nagstamon.keyring.backends.SecretService',\
-                            'Nagstamon.keyring.backends.Windows',\
-                            'Nagstamon.keyring.backends._win_crypto',\
-                            'Nagstamon.keyring.util.escape',\
-                            'Nagstamon.keyring.util.XDG',\
+             hiddenimports=['Nagstamon.keyring_3_7.credentials',\
+                            'Nagstamon.keyring_3_7.backends.file',\
+                            'Nagstamon.keyring_3_7.backends.Gnome',\
+                            'Nagstamon.keyring_3_7.backends.Google',\
+                            'Nagstamon.keyring_3_7.backends.keyczar',\
+                            'Nagstamon.keyring_3_7.backends.kwallet',\
+                            'Nagstamon.keyring_3_7.backends.multi',\
+                            'Nagstamon.keyring_3_7.backends.OS_X',\
+                            'Nagstamon.keyring_3_7.backends.pyfs',\
+                            'Nagstamon.keyring_3_7.backends.SecretService',\
+                            'Nagstamon.keyring_3_7.backends.Windows',\
+                            'Nagstamon.keyring_3_7.backends._win_crypto',\
+                            'Nagstamon.keyring_3_7.util.escape',\
+                            'Nagstamon.keyring_3_7.util.XDG',\
                             'ctypes',\
                             '_ctypes',\
                             'ctypes._endian',\
