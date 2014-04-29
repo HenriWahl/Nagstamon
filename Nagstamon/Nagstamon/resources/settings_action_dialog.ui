@@ -108,6 +108,12 @@
               <placeholder/>
             </child>
             <child>
+              <placeholder/>
+            </child>
+            <child>
+              <placeholder/>
+            </child>
+            <child>
               <object class="GtkCheckButton" id="input_checkbutton_enabled">
                 <property name="label" translatable="yes">Enabled</property>
                 <property name="visible">True</property>
@@ -218,7 +224,7 @@
               </packing>
             </child>
             <child>
-              <object class="GtkHBox" id="hbox2">
+              <object class="GtkHBox" id="hbox_action_string">
                 <property name="visible">True</property>
                 <property name="can_focus">False</property>
                 <child>
@@ -338,72 +344,39 @@ Request given URL string in the background, for example to acknowledge a service
               </packing>
             </child>
             <child>
-              <object class="GtkHBox" id="hbox4">
+              <object class="GtkHBox" id="hbox_action_type">
                 <property name="visible">True</property>
                 <property name="can_focus">False</property>
                 <child>
-                  <object class="GtkHBox" id="hbox5">
+                  <object class="GtkComboBox" id="input_combo_action_type">
                     <property name="visible">True</property>
                     <property name="can_focus">False</property>
-                    <child>
-                      <object class="GtkComboBox" id="input_combo_action_type">
-                        <property name="width_request">250</property>
-                        <property name="visible">True</property>
-                        <property name="can_focus">False</property>
-                      </object>
-                      <packing>
-                        <property name="expand">True</property>
-                        <property name="fill">True</property>
-                        <property name="position">0</property>
-                      </packing>
-                    </child>
-                    <child>
-                      <object class="GtkLinkButton" id="linkbutton_help_type">
-                        <property name="label" translatable="yes">Help</property>
-                        <property name="visible">True</property>
-                        <property name="can_focus">True</property>
-                        <property name="receives_default">True</property>
-                        <property name="has_tooltip">True</property>
-                        <property name="relief">none</property>
-                        <property name="xalign">0</property>
-                        <signal name="clicked" handler="button_help_type_clicked" swapped="no"/>
-                      </object>
-                      <packing>
-                        <property name="expand">False</property>
-                        <property name="fill">False</property>
-                        <property name="position">1</property>
-                      </packing>
-                    </child>
                   </object>
                   <packing>
-                    <property name="expand">True</property>
-                    <property name="fill">True</property>
+                    <property name="expand">False</property>
+                    <property name="fill">False</property>
                     <property name="position">0</property>
                   </packing>
                 </child>
                 <child>
-                  <object class="GtkLabel" id="label_dummy1">
+                  <object class="GtkLinkButton" id="linkbutton_help_type">
+                    <property name="label" translatable="yes">Help</property>
                     <property name="visible">True</property>
-                    <property name="can_focus">False</property>
-                    <property name="ypad">2</property>
+                    <property name="can_focus">True</property>
+                    <property name="receives_default">True</property>
+                    <property name="has_tooltip">True</property>
+                    <property name="relief">none</property>
+                    <property name="xalign">0</property>
+                    <signal name="clicked" handler="button_help_type_clicked" swapped="no"/>
                   </object>
                   <packing>
-                    <property name="expand">True</property>
-                    <property name="fill">True</property>
+                    <property name="expand">False</property>
+                    <property name="fill">False</property>
                     <property name="position">1</property>
                   </packing>
                 </child>
                 <child>
-                  <object class="GtkLabel" id="label_dummy2">
-                    <property name="width_request">0</property>
-                    <property name="visible">True</property>
-                    <property name="can_focus">False</property>
-                  </object>
-                  <packing>
-                    <property name="expand">True</property>
-                    <property name="fill">True</property>
-                    <property name="position">2</property>
-                  </packing>
+                  <placeholder/>
                 </child>
               </object>
               <packing>
@@ -686,9 +659,6 @@ Request given URL string in the background, for example to acknowledge a service
               </packing>
             </child>
             <child>
-              <placeholder/>
-            </child>
-            <child>
               <object class="GtkLabel" id="label_close_popwin">
                 <property name="visible">True</property>
                 <property name="can_focus">False</property>
@@ -703,9 +673,6 @@ Request given URL string in the background, for example to acknowledge a service
                 <property name="top_attach">22</property>
                 <property name="bottom_attach">23</property>
               </packing>
-            </child>
-            <child>
-              <placeholder/>
             </child>
             <child>
               <object class="GtkRadioButton" id="input_radiobutton_leave_popwin_open">
@@ -725,16 +692,23 @@ Request given URL string in the background, for example to acknowledge a service
               </packing>
             </child>
             <child>
-              <placeholder/>
-            </child>
-            <child>
-              <placeholder/>
-            </child>
-            <child>
-              <object class="GtkComboBox" id="input_combo_monitor_type">
-                <property name="width_request">250</property>
+              <object class="GtkHBox" id="hbox_monitor_type">
                 <property name="visible">True</property>
                 <property name="can_focus">False</property>
+                <child>
+                  <object class="GtkComboBox" id="input_combo_monitor_type">
+                    <property name="visible">True</property>
+                    <property name="can_focus">False</property>
+                  </object>
+                  <packing>
+                    <property name="expand">False</property>
+                    <property name="fill">True</property>
+                    <property name="position">0</property>
+                  </packing>
+                </child>
+                <child>
+                  <placeholder/>
+                </child>
               </object>
               <packing>
                 <property name="left_attach">1</property>
@@ -742,6 +716,12 @@ Request given URL string in the background, for example to acknowledge a service
                 <property name="top_attach">3</property>
                 <property name="bottom_attach">4</property>
               </packing>
+            </child>
+            <child>
+              <placeholder/>
+            </child>
+            <child>
+              <placeholder/>
             </child>
           </object>
           <packing>

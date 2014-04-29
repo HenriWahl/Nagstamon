@@ -1,7 +1,7 @@
 # encoding: utf-8
 
 # Nagstamon - Nagios status monitor for your desktop
-# Copyright (C) 2008-2013 Henri Wahl <h.wahl@ifw-dresden.de> et al.
+# Copyright (C) 2008-2014 Henri Wahl <h.wahl@ifw-dresden.de> et al.
 #
 # This program is free software; you can redistribute it and/or modify
 # it under the terms of the GNU General Public License as published by
@@ -4365,15 +4365,28 @@ class GenericAction(object):
                           }
         self.builder.connect_signals(handlers_dict)
 
-        # fill combobox with options
-        combobox = self.builder.get_object("input_combo_action_type")
-        combomodel = gtk.ListStore(gobject.TYPE_STRING)
+        # fill combobox for action type with options
+        combobox_action_type = self.builder.get_object("input_combo_action_type")
+        combomodel_action_type = gtk.ListStore(gobject.TYPE_STRING)
         cr = gtk.CellRendererText()
-        combobox.pack_start(cr, True)
-        combobox.set_attributes(cr, text=0)
+        combobox_action_type.pack_start(cr, True)
+        combobox_action_type.set_attributes(cr, text=0)
         for action_type in ["Browser", "Command", "URL"]:
-            combomodel.append((action_type,))
-        combobox.set_model(combomodel)
+            combomodel_action_type.append((action_type,))
+        combobox_action_type.set_model(combomodel_action_type)
+
+        # fill combobox for monitor type with options
+        combobox_monitor_type = self.builder.get_object("input_combo_monitor_type")
+        combomodel_monitor_type = gtk.ListStore(gobject.TYPE_STRING)
+        cr = gtk.CellRendererText()
+        combobox_monitor_type.pack_start(cr, True)
+        combobox_monitor_type.set_attributes(cr, text=0)
+        monitor_types = Actions.get_registered_server_type_list()
+        monitor_types.sort()
+        monitor_types.insert(0, "All monitor servers")
+        for monitor_type in monitor_types:
+            combomodel_monitor_type.append((monitor_type,))
+        combobox_monitor_type.set_model(combomodel_monitor_type)
 
         self.initialize()
 
@@ -4396,8 +4409,11 @@ class GenericAction(object):
             # enable action by default
             self.builder.get_object("input_checkbutton_enabled").set_active(True)
             # action type combobox should be set to default
-            combobox = self.builder.get_object("input_combo_action_type")
-            combobox.set_active(0)
+            combobox_action_type = self.builder.get_object("input_combo_action_type")
+            combobox_action_type.set_active(0)
+            # monitor type combobox should be set to default
+            combobox_monitor_type = self.builder.get_object("input_monitor_action_type")
+            combobox_monitor_type.set_active(0)
         else:
             action = self.conf.actions[self.action]
         keys = action.__dict__.keys()
@@ -4465,9 +4481,9 @@ class GenericAction(object):
                             pass
 
         # set server type combobox which cannot be set by above hazard method
-        combobox = self.builder.get_object("input_combo_action_type")
-        active = combobox.get_active_iter()
-        model = combobox.get_model()
+        combobox_action_type = self.builder.get_object("input_combo_action_type")
+        active = combobox_action_type.get_active_iter()
+        model = combobox_action_type.get_model()
         new_action.type = model.get_value(active, 0).lower()
 
         # check if there is already an action named like the new one
@@ -4593,8 +4609,8 @@ class EditAction(GenericAction):
         self.dialog.set_title("Edit action " + self.action)
 
         # adjust combobox to used action type
-        self.combobox = self.builder.get_object("input_combo_action_type")
-        self.combobox.set_active({"browser":0, "command":1, "url":2}[self.conf.actions[self.action].type])
+        self.combobox_action_type = self.builder.get_object("input_combo_action_type")
+        self.combobox_action_type.set_active({"browser":0, "command":1, "url":2}[self.conf.actions[self.action].type])
 
 
     def OK(self, widget):
@@ -4625,9 +4641,9 @@ class EditAction(GenericAction):
                             pass
 
         # set server type combobox which cannot be set by above hazard method
-        combobox = self.builder.get_object("input_combo_action_type")
-        active = combobox.get_active_iter()
-        model = combobox.get_model()
+        combobox_action_type = self.builder.get_object("input_combo_action_type")
+        active = combobox_action_type.get_active_iter()
+        model = combobox_action_type.get_model()
         new_action.type = model.get_value(active, 0).lower()
 
         # check if there is already an action named like the new one
