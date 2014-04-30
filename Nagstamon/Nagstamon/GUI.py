@@ -2836,9 +2836,9 @@ class ServerVBox(gtk.VBox):
             # available default menu actions are monitor server dependent
             for i in self.server.MENU_ACTIONS:
                 # recheck is not necessary for passive set checks
-                if i == "Recheck" and\
-                   self.miserable_service and server.hosts[self.miserable_host].services[self.miserable_service].is_passive_only():
-                    pass
+                if i == "Recheck":
+                    if self.miserable_service and server.hosts[self.miserable_host].services[self.miserable_service].is_passive_only():
+                        pass
                 else:
                     menu_item = gtk.MenuItem(i)
                     menu_item.connect("activate", self.TreeviewPopupMenuResponse, i)
