@@ -714,7 +714,23 @@ class Config(object):
         defaultactions["Ninja-Configure-Service"] = Action(name="Ninja-Configure-Service", type="browser", filter_target_host=False,\
                                                     description="Configure service in browser.",\
                                                     string="$MONITOR$/index.php/configuration/configure/service/$HOST$?service=$SERVICE$", enabled=False)
-
+        defaultactions["Check_MK-1-Click-Acknowledge-Host"] = Action(name="Check_MK-1-Click-Acknowledge-Host", type="url",\
+                                                    description="Acknowledges a host with one click.",\
+                                                    filter_target_service=False, enabled=False,\
+                                                    string="$MONITOR$/view.py?_transid=$TRANSID$&_do_actions=yes&\
+                                                            _do_confirm=Yes!&output_format=python&view_name=hoststatus&\
+                                                            host=$HOST$&_ack_comment=$COMMENT-ACK$&\
+                                                            _acknowledge=Acknowledge")
+        defaultactions["Check_MK-1-Click-Acknowledge-Service"] = Action(name="Check_MK-1-Click-Acknowledge-Service", type="url",\
+                                                    description="Acknowledges a host with one click.",\
+                                                    filter_target_host=False, enabled=False,\
+                                                    string="$MONITOR$/view.py?_transid=$TRANSID$&_do_actions=yes&\
+                                                            _do_confirm=Yes!&output_format=python&view_name=service&\
+                                                            host=$HOST$&_ack_comment=$COMMENT-ACK$&\
+                                                            _acknowledge=Acknowledge&service=$SERVICE$")
+        defaultactions["Email"] = Action(name="Email", enabled=False, description="Send email to someone.", type="browser",\
+                                         string="mailto:servicedesk@my.org?subject=Monitor alert: $HOST$ - $SERVICE$ - \
+                                                $STATUS-INFO$&body=Please help!.%0d%0aBest regards from Nagstamon")
         return defaultactions
 
 
