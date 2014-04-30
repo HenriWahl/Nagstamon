@@ -94,7 +94,7 @@ class GUI(object):
         # Meta
         self.name = "Nagstamon"
         self.version = "0.9.12-devel"
-        self.website = "http://nagstamon.ifw-dresden.de/"
+        self.website = "https://nagstamon.ifw-dresden.de/"
         self.copyright = "©2008-2014 Henri Wahl et al.\nh.wahl@ifw-dresden.de"
         self.comments = "Nagios status monitor for your desktop"
 
@@ -4366,27 +4366,32 @@ class GenericAction(object):
         self.builder.connect_signals(handlers_dict)
 
         # fill combobox for action type with options
-        combobox_action_type = self.builder.get_object("input_combo_action_type")
-        combomodel_action_type = gtk.ListStore(gobject.TYPE_STRING)
+        self.combobox_action_type = self.builder.get_object("input_combo_action_type")
+        self.combomodel_action_type = gtk.ListStore(gobject.TYPE_STRING)
         cr = gtk.CellRendererText()
-        combobox_action_type.pack_start(cr, True)
-        combobox_action_type.set_attributes(cr, text=0)
+        self.combobox_action_type.pack_start(cr, True)
+        self.combobox_action_type.set_attributes(cr, text=0)
         for action_type in ["Browser", "Command", "URL"]:
-            combomodel_action_type.append((action_type,))
-        combobox_action_type.set_model(combomodel_action_type)
+            self.combomodel_action_type.append((action_type,))
+        self.combobox_action_type.set_model(self.combomodel_action_type)
 
         # fill combobox for monitor type with options
-        combobox_monitor_type = self.builder.get_object("input_combo_monitor_type")
-        combomodel_monitor_type = gtk.ListStore(gobject.TYPE_STRING)
+        self.combobox_monitor_type = self.builder.get_object("input_combo_monitor_type")
+        self.combomodel_monitor_type = gtk.ListStore(gobject.TYPE_STRING)
         cr = gtk.CellRendererText()
-        combobox_monitor_type.pack_start(cr, True)
-        combobox_monitor_type.set_attributes(cr, text=0)
-        monitor_types = Actions.get_registered_server_type_list()
-        monitor_types.sort()
-        monitor_types.insert(0, "All monitor servers")
-        for monitor_type in monitor_types:
-            combomodel_monitor_type.append((monitor_type,))
-        combobox_monitor_type.set_model(combomodel_monitor_type)
+        self.combobox_monitor_type.pack_start(cr, True)
+        self.combobox_monitor_type.set_attributes(cr, text=0)
+        self.monitor_types = sorted(Actions.get_registered_server_type_list())
+        # as default setting - would be "" in config file
+        self.monitor_types.insert(0, "All monitor servers")
+        # transform monitor types list to a dictionary with numbered values to handle combobox index later
+        self.monitor_types = dict(zip(self.monitor_types, range(len(self.monitor_types))))
+        for monitor_type in sorted(self.monitor_types.keys()):
+            self.combomodel_monitor_type.append((monitor_type,))
+        self.combobox_monitor_type.set_model(self.combomodel_monitor_type)
+
+        # if action applies to all monitors which is "" as default in config file its index is like "All monitor servers"
+        self.monitor_types[""] = 0
 
         self.initialize()
 
@@ -4409,13 +4414,19 @@ class GenericAction(object):
             # enable action by default
             self.builder.get_object("input_checkbutton_enabled").set_active(True)
             # action type combobox should be set to default
-            combobox_action_type = self.builder.get_object("input_combo_action_type")
-            combobox_action_type.set_active(0)
+            self.combobox_action_type = self.builder.get_object("input_combo_action_type")
+            self.combobox_action_type.set_active(0)
             # monitor type combobox should be set to default
-            combobox_monitor_type = self.builder.get_object("input_monitor_action_type")
-            combobox_monitor_type.set_active(0)
+            self.combobox_monitor_type = self.builder.get_object("input_combo_monitor_type")
+            self.combobox_monitor_type.set_active(0)
         else:
             action = self.conf.actions[self.action]
+            # adjust combobox to used action type
+            self.combobox_action_type = self.builder.get_object("input_combo_action_type")
+            self.combobox_action_type.set_active({"browser":0, "command":1, "url":2}[self.conf.actions[self.action].type])
+            self.combobox_action_type = self.builder.get_object("input_combo_monitor_type")
+            self.combobox_action_type.set_active(self.monitor_types[self.conf.actions[self.action].monitor_type])
+
         keys = action.__dict__.keys()
         # walk through all relevant input types to fill dialog with existing settings
         for i in ["input_entry_", "input_checkbutton_", "input_radiobutton_"]:
@@ -4480,11 +4491,22 @@ class GenericAction(object):
                         except:
                             pass
 
-        # set server type combobox which cannot be set by above hazard method
-        combobox_action_type = self.builder.get_object("input_combo_action_type")
-        active = combobox_action_type.get_active_iter()
-        model = combobox_action_type.get_model()
-        new_action.type = model.get_value(active, 0).lower()
+        # set action type combobox which cannot be set by above hazard method
+        self.combobox_action_type = self.builder.get_object("input_combo_action_type")
+        active = self.combobox_action_type.get_active_iter()
+        self.combomodel_action_type = self.combobox_action_type.get_model()
+        new_action.type = self.combomodel_action_type .get_value(active, 0).lower()
+
+        # set monitor type combobox which cannot be set by above hazard method
+        self.combobox_monitor_type = self.builder.get_object("input_combo_monitor_type")
+        active = self.combobox_monitor_type.get_active_iter()
+        self.combomodel_monitor_type = self.combobox_monitor_type.get_model()
+        new_action.monitor_type = self.combomodel_monitor_type.get_value(active, 0)
+
+        # if action applies to all monitor types its monitor_type should be ""
+        # because it is "All monitor servers" in Combobox
+        if not new_action.monitor_type in Actions.get_registered_server_type_list():
+            new_action.monitor_type = ""
 
         # check if there is already an action named like the new one
         if new_action.name in self.conf.actions:
@@ -4609,8 +4631,8 @@ class EditAction(GenericAction):
         self.dialog.set_title("Edit action " + self.action)
 
         # adjust combobox to used action type
-        self.combobox_action_type = self.builder.get_object("input_combo_action_type")
-        self.combobox_action_type.set_active({"browser":0, "command":1, "url":2}[self.conf.actions[self.action].type])
+        ###self.combobox_action_type = self.builder.get_object("input_combo_action_type")
+        ###self.combobox_action_type.set_active({"browser":0, "command":1, "url":2}[self.conf.actions[self.action].type])
 
 
     def OK(self, widget):
@@ -4641,10 +4663,21 @@ class EditAction(GenericAction):
                             pass
 
         # set server type combobox which cannot be set by above hazard method
-        combobox_action_type = self.builder.get_object("input_combo_action_type")
-        active = combobox_action_type.get_active_iter()
-        model = combobox_action_type.get_model()
+        self.combobox_action_type = self.builder.get_object("input_combo_action_type")
+        active = self.combobox_action_type.get_active_iter()
+        model = self.combobox_action_type.get_model()
         new_action.type = model.get_value(active, 0).lower()
+
+        # set monitor type combobox which cannot be set by above hazard method
+        self.combobox_monitor_type = self.builder.get_object("input_combo_monitor_type")
+        active = self.combobox_monitor_type.get_active_iter()
+        self.combomodel_monitor_type = self.combobox_monitor_type.get_model()
+        new_action.monitor_type = self.combomodel_monitor_type.get_value(active, 0)
+
+        # if action applies to all monitor types its monitor_type should be ""
+        # because it is "All monitor servers" in Combobox
+        if not new_action.monitor_type in Actions.get_registered_server_type_list():
+            new_action.monitor_type = ""
 
         # check if there is already an action named like the new one
         if new_action.name in self.conf.actions and new_action.name != self.action:
