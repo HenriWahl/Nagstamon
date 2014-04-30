@@ -345,7 +345,7 @@ class Config(object):
                 if servers[server].save_password == "False":
                     servers[server].password = ""
                 elif keyring_available:
-                    password = keyring.get_password("Nagstamon", "@".join((servers[server].username,\
+                    password = keyring.get_password("Nagstamon", "@".join((servers[server].username,
                                                                            servers[server].monitor_url))) or ""
                     if password == "":
                         if servers[server].password != "":
@@ -356,8 +356,8 @@ class Config(object):
                     servers[server].password = self.DeObfuscate(servers[server].password)
                 # proxy password
                 if keyring_available:
-                    proxy_password = keyring.get_password("Nagstamon", "@".join(("proxy",\
-                                                                                 servers[server].proxy_username,\
+                    proxy_password = keyring.get_password("Nagstamon", "@".join(("proxy",
+                                                                                 servers[server].proxy_username,
                                                                                  servers[server].proxy_address))) or ""
                     if proxy_password == "":
                         if servers[server].proxy_password != "":
@@ -517,16 +517,16 @@ class Config(object):
                                     value = ""
                                 elif keyring_available:
                                     if self.__dict__[settingsdir][s].password != "":
-                                        keyring.set_password("Nagstamon", "@".join((self.__dict__[settingsdir][s].username,\
-                                                                                    self.__dict__[settingsdir][s].monitor_url)),\
+                                        keyring.set_password("Nagstamon", "@".join((self.__dict__[settingsdir][s].username,
+                                                                                    self.__dict__[settingsdir][s].monitor_url)),
                                                                                     self.__dict__[settingsdir][s].password)
                                     value = ""
                             if option == "proxy_password":
                                 if keyring_available:
                                     if self.__dict__[settingsdir][s].proxy_password != "":
                                         keyring.set_password("Nagstamon", "@".join(("proxy",\
-                                                                                    self.__dict__[settingsdir][s].proxy_username,\
-                                                                                    self.__dict__[settingsdir][s].proxy_address)),\
+                                                                                    self.__dict__[settingsdir][s].proxy_username,
+                                                                                    self.__dict__[settingsdir][s].proxy_address)),
                                                                                     self.__dict__[settingsdir][s].proxy_password)
                                     value = ""
                             config.set(setting + "_" + s, option, value)
@@ -608,13 +608,13 @@ class Config(object):
             self.__dict__.has_key("app_vnc_bin") and \
             self.__dict__.has_key("app_vnc_options"):
             # create actions and fill them with old settings
-            self.actions["SSH"] = Action(name="SSH", type="command", description="Converted from pre 0.9.9 Nagstamon.",\
+            self.actions["SSH"] = Action(name="SSH", type="command", description="Converted from pre 0.9.9 Nagstamon.",
                                          string=self.app_ssh_bin + " " + self.app_ssh_options + " $ADDRESS$")
 
-            self.actions["RDP"] = Action(name="RDP", type="command", description="Converted from pre 0.9.9 Nagstamon.",\
+            self.actions["RDP"] = Action(name="RDP", type="command", description="Converted from pre 0.9.9 Nagstamon.",
                                          string=self.app_rdp_bin + " " + self.app_rdp_options + " $ADDRESS$")
 
-            self.actions["VNC"] = Action(name="VNC", type="command", description="Converted from pre 0.9.9 Nagstamon.",\
+            self.actions["VNC"] = Action(name="VNC", type="command", description="Converted from pre 0.9.9 Nagstamon.",
                                          string=self.app_vnc_bin + " " + self.app_vnc_options + " $ADDRESS$")
 
             # delete old settings from config
@@ -655,82 +655,80 @@ class Config(object):
         create some default actions like SSH and so on
         """
         if platform.system() == "Windows":
-            defaultactions = { "RDP": Action(name="RDP", description="Connect via RDP.",\
-                                    type="command", string="C:\windows\system32\mstsc.exe $ADDRESS$"),\
-                               "VNC": Action(name="VNC", description="Connect via VNC.",\
-                                    type="command", string="C:\Program Files\TightVNC\vncviewer.exe $ADDRESS$"),\
-                               "Telnet": Action(name="Telnet", description="Connect via Telnet.",\
-                                    type="command", string="C:\Windows\System32\Telnet.exe root@$ADDRESS$"),\
-                               "SSH": Action(name="SSH", description="Connect via SSH.",\
-                                    type="command", string="C:\Program Files\PuTTY\putty.exe -l root $ADDRESS$")\
+            defaultactions = { "RDP": Action(name="RDP", description="Connect via RDP.",
+                                    type="command", string="C:\windows\system32\mstsc.exe $ADDRESS$"),
+                               "VNC": Action(name="VNC", description="Connect via VNC.",
+                                    type="command", string="C:\Program Files\TightVNC\vncviewer.exe $ADDRESS$"),
+                               "Telnet": Action(name="Telnet", description="Connect via Telnet.",
+                                    type="command", string="C:\Windows\System32\Telnet.exe root@$ADDRESS$"),
+                               "SSH": Action(name="SSH", description="Connect via SSH.",
+                                    type="command", string="C:\Program Files\PuTTY\putty.exe -l root $ADDRESS$")
                                }
         elif platform.system() == "Darwin":
-            defaultactions = { "RDP": Action(name="RDP", description="Connect via RDP.",\
-                                    type="command", string="open rdp://$ADDRESS$"), \
-                               "VNC": Action(name="VNC", description="Connect via VNC.",\
-                                    type="command", string="open vnc://$ADDRESS$"), \
-                               "SSH": Action(name="SSH", description="Connect via SSH.",\
-                                    type="command", string="open ssh://root@$ADDRESS$"),\
-                               "Telnet": Action(name="Telnet", description="Connect via Telnet.",\
-                                    type="command", string="open telnet://root@$ADDRESS$")\
+            defaultactions = { "RDP": Action(name="RDP", description="Connect via RDP.",
+                                    type="command", string="open rdp://$ADDRESS$"),
+                               "VNC": Action(name="VNC", description="Connect via VNC.",
+                                    type="command", string="open vnc://$ADDRESS$"),
+                               "SSH": Action(name="SSH", description="Connect via SSH.",
+                                    type="command", string="open ssh://root@$ADDRESS$"),
+                               "Telnet": Action(name="Telnet", description="Connect via Telnet.",
+                                    type="command", string="open telnet://root@$ADDRESS$")
                                }
         else:
             # the Linux settings
-            defaultactions = { "RDP": Action(name="RDP", description="Connect via RDP.",\
-                                    type="command", string="/usr/bin/rdesktop -g 1024x768 $ADDRESS$"),\
-                               "VNC": Action(name="VNC", description="Connect via VNC.",\
-                                    type="command", string="/usr/bin/vncviewer $ADDRESS$"),\
-                               "SSH": Action(name="SSH", description="Connect via SSH.",\
-                                    type="command", string="/usr/bin/gnome-terminal -x ssh root@$ADDRESS$"),\
-                               "Telnet": Action(name="Telnet", description="Connect via Telnet.",\
-                                    type="command", string="/usr/bin/gnome-terminal -x telnet root@$ADDRESS$"),\
-                               "Update-Linux": Action(name="Update-Linux", description="Run remote update script.",\
-                                    type="command", string="/usr/bin/terminator -x ssh root@$HOST$ update.sh",\
-                                    enabled=False)\
+            defaultactions = { "RDP": Action(name="RDP", description="Connect via RDP.",
+                                    type="command", string="/usr/bin/rdesktop -g 1024x768 $ADDRESS$"),
+                               "VNC": Action(name="VNC", description="Connect via VNC.",
+                                    type="command", string="/usr/bin/vncviewer $ADDRESS$"),
+                               "SSH": Action(name="SSH", description="Connect via SSH.",
+                                    type="command", string="/usr/bin/gnome-terminal -x ssh root@$ADDRESS$"),
+                               "Telnet": Action(name="Telnet", description="Connect via Telnet.",
+                                    type="command", string="/usr/bin/gnome-terminal -x telnet root@$ADDRESS$"),
+                               "Update-Linux": Action(name="Update-Linux", description="Run remote update script.",
+                                    type="command", string="/usr/bin/terminator -x ssh root@$HOST$ update.sh",
+                                    enabled=False)
                                }
         # OS agnostic actions as examples
-        defaultactions["Nagios-1-Click-Acknowledge-Host"] = Action(name="Nagios-1-Click-Acknowledge-Host", type="url",\
-                                                    description="Acknowledges a host with one click.",\
-                                                    filter_target_service=False, enabled=False,\
+        defaultactions["Nagios-1-Click-Acknowledge-Host"] = Action(name="Nagios-1-Click-Acknowledge-Host", type="url",
+                                                    description="Acknowledges a host with one click.",
+                                                    filter_target_service=False, enabled=False,
                                                     string="$MONITOR-CGI$/cmd.cgi?cmd_typ=33&cmd_mod=2&host=$HOST$\
                                                     &com_author=$USERNAME$&com_data=acknowledged&btnSubmit=Commit")
-        defaultactions["Nagios-1-Click-Acknowledge-Service"] = Action(name="Nagios-1-Click-Acknowledge-Service", type="url",\
-                                                    description="Acknowledges a service with one click.",\
-                                                    filter_target_host=False, enabled=False,\
+        defaultactions["Nagios-1-Click-Acknowledge-Service"] = Action(name="Nagios-1-Click-Acknowledge-Service", type="url",
+                                                    description="Acknowledges a service with one click.",
+                                                    filter_target_host=False, enabled=False,
                                                     string="$MONITOR-CGI$/cmd.cgi?cmd_typ=34&cmd_mod=2&host=$HOST$\
                                                     &service=$SERVICE$&com_author=$USERNAME$&com_data=acknowledged&btnSubmit=Commit")
-        defaultactions["Opsview-Graph-Service"] = Action(name="Opsview-Graph-Service", type="browser",\
-                                                    description="Show graph in browser.", filter_target_host=False,\
+        defaultactions["Opsview-Graph-Service"] = Action(name="Opsview-Graph-Service", type="browser",
+                        description="Show graph in browser.", filter_target_host=False,
                                                     string="$MONITOR$/graph?service=$SERVICE$&host=$HOST$", enabled=False)
-        defaultactions["Opsview-History-Host"] = Action(name="Opsview-Host-Service", type="browser",\
-                                                    description="Show host in browser.", filter_target_host=True,\
+        defaultactions["Opsview-History-Host"] = Action(name="Opsview-Host-Service", type="browser",
+                                                    description="Show host in browser.", filter_target_host=True,
                                                     string="$MONITOR$/event?host=$HOST$", enabled=False)
-        defaultactions["Opsview-History-Service"] = Action(name="Opsview-History-Service", type="browser",\
-                                                    description="Show history in browser.", filter_target_host=True,\
+        defaultactions["Opsview-History-Service"] = Action(name="Opsview-History-Service", type="browser",
+                                                    description="Show history in browser.", filter_target_host=True,
                                                     string="$MONITOR$/event?host=$HOST$&service=$SERVICE$", enabled=False)
-        defaultactions["Ninja-Configure-Host"] = Action(name="Ninja-Configure-Host", type="browser",\
-                                                    description="Configure host in browser.",\
+        defaultactions["Ninja-Configure-Host"] = Action(name="Ninja-Configure-Host", type="browser",
+                                                    description="Configure host in browser.",
                                                     string="$MONITOR$/index.php/configuration/configure/host/$HOST$", enabled=False)
-        defaultactions["Ninja-Configure-Service"] = Action(name="Ninja-Configure-Service", type="browser", filter_target_host=False,\
-                                                    description="Configure service in browser.",\
+        defaultactions["Ninja-Configure-Service"] = Action(name="Ninja-Configure-Service", type="browser", filter_target_host=False,
+                                                    description="Configure service in browser.",
                                                     string="$MONITOR$/index.php/configuration/configure/service/$HOST$?service=$SERVICE$", enabled=False)
-        defaultactions["Check_MK-1-Click-Acknowledge-Host"] = Action(name="Check_MK-1-Click-Acknowledge-Host", type="url",\
-                                                    description="Acknowledges a host with one click.",\
-                                                    filter_target_service=False, enabled=False,\
-                                                    string="$MONITOR$/view.py?_transid=$TRANSID$&_do_actions=yes&\
-                                                            _do_confirm=Yes!&output_format=python&view_name=hoststatus&\
-                                                            host=$HOST$&_ack_comment=$COMMENT-ACK$&\
-                                                            _acknowledge=Acknowledge")
-        defaultactions["Check_MK-1-Click-Acknowledge-Service"] = Action(name="Check_MK-1-Click-Acknowledge-Service", type="url",\
-                                                    description="Acknowledges a host with one click.",\
-                                                    filter_target_host=False, enabled=False,\
-                                                    string="$MONITOR$/view.py?_transid=$TRANSID$&_do_actions=yes&\
-                                                            _do_confirm=Yes!&output_format=python&view_name=service&\
-                                                            host=$HOST$&_ack_comment=$COMMENT-ACK$&\
-                                                            _acknowledge=Acknowledge&service=$SERVICE$")
-        defaultactions["Email"] = Action(name="Email", enabled=False, description="Send email to someone.", type="browser",\
-                                         string="mailto:servicedesk@my.org?subject=Monitor alert: $HOST$ - $SERVICE$ - \
-                                                $STATUS-INFO$&body=Please help!.%0d%0aBest regards from Nagstamon")
+        defaultactions["Check_MK-1-Click-Acknowledge-Host"] = Action(name="Check_MK-1-Click-Acknowledge-Host", type="url",
+                                                    description="Acknowledges a host with one click.",
+                                                    filter_target_service=False, enabled=False,
+                                                    string="$MONITOR$/view.py?_transid=$TRANSID$&_do_actions=yes&_do_confirm=Yes!&output_format=python&view_name=hoststatus&host=$HOST$&_ack_comment=$COMMENT-ACK$&_acknowledge=Acknowledge")
+        defaultactions["Check_MK-1-Click-Acknowledge-Service"] = Action(name="Check_MK-1-Click-Acknowledge-Service", type="url",
+                                                    description="Acknowledges a host with one click.",
+                                                    filter_target_host=False, enabled=False,
+                                                    string="$MONITOR$/view.py?_transid=$TRANSID$&_do_actions=yes&_do_confirm=Yes!&output_format=python&view_name=service&host=$HOST$&_ack_comment=$COMMENT-ACK$&_acknowledge=Acknowledge&service=$SERVICE$")
+        defaultactions["Check_MK Edit host in WATO"] = Action(name="Check_MK Edit host in WATO", enabled=True,
+                                                     monitor_type="Check_MK Multisite",
+                                                     description="Edit host in WATO.",
+                                                     string="$MONITOR$/index.py?start_url=%2Fmonitor%2Fcheck_mk%2Fwato.py%3Fmode%3Dedithost%26host%3D$HOST$")
+        defaultactions["Email"] = Action(name="Email", enabled=False, description="Send email to someone.", type="browser",
+                                                    string="mailto:servicedesk@my.org?subject=Monitor alert: $HOST$ - $SERVICE$ - $STATUS-INFO$&body=Please help!.%0d%0aBest regards from Nagstamon")
+
         return defaultactions
 
 

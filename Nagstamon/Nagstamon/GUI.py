@@ -1397,6 +1397,10 @@ class GUI(object):
                 gobject.idle_add(self.output.AddGUILock, "EditAction")
                 self.Dialogs["EditAction"] = EditAction(output=self.output, settingsdialog=self.settingsdialog, conf=self.conf, action=self.selected_action)
                 self.Dialogs["EditAction"].show()
+            elif self.dialog == "CopyAction":
+                gobject.idle_add(self.output.AddGUILock, "CopyAction")
+                self.Dialogs["CopyAction"] = CopyAction(output=self.output, settingsdialog=self.settingsdialog, conf=self.conf, action=self.selected_action)
+                self.Dialogs["CopyAction"].show()
         else:
             # when being reused some dialogs need some extra values
             if self.dialog in ["Settings", "NewServer", "EditServer", "NewAction", "EditAction"]:
@@ -1408,6 +1412,8 @@ class GUI(object):
                     self.Dialogs["EditServer"].server = self.selected_server
                 if self.dialog == "EditAction":
                     self.Dialogs["EditAction"].action = self.selected_action
+                if self.dialog == "CopyAction":
+                    self.Dialogs["CopyAction"].action = self.selected_action
                 self.Dialogs[self.dialog].initialize()
                 self.Dialogs[self.dialog].show()
 
@@ -3095,6 +3101,7 @@ class Settings(object):
                           "button_help_notification_actions_clicked": self.ToggleNotificationActionsHelp,
                           "button_new_action": lambda a: self.output.GetDialog(dialog="NewAction", output=self.output, settingsdialog=self, conf=self.conf),
                           "button_edit_action": lambda e: self.output.GetDialog(dialog="EditAction", output=self.output, selected_action=self.selected_action, settingsdialog=self, conf=self.conf),
+                          "button_copy_action": lambda e: self.output.GetDialog(dialog="CopyAction", output=self.output, selected_action=self.selected_action, settingsdialog=self, conf=self.conf),
                           "button_delete_action": lambda d: self.DeleteAction(self.selected_action, self.conf.actions),
                           }
         self.builder.connect_signals(handlers_dict)
@@ -4630,10 +4637,6 @@ class EditAction(GenericAction):
         # set title of settings dialog
         self.dialog.set_title("Edit action " + self.action)
 
-        # adjust combobox to used action type
-        ###self.combobox_action_type = self.builder.get_object("input_combo_action_type")
-        ###self.combobox_action_type.set_active({"browser":0, "command":1, "url":2}[self.conf.actions[self.action].type])
-
 
     def OK(self, widget):
         """
@@ -4700,6 +4703,22 @@ class EditAction(GenericAction):
         """
         gobject.idle_add(self.output.DeleteGUILock, str(self.__class__.__name__))
         self.dialog.hide()
+
+
+class CopyAction(EditAction):
+    """
+        copying an action is mostly editing an action
+    """
+    def __init__(self, **kwds):
+        # add all keywords to object
+        for k in kwds: self.__dict__[k] = kwds[k]
+
+        GenericAction.__init__(self, **kwds)
+
+        # set title of settings dialog
+        self.dialog.set_title("Copy action " + self.action)
+
+        #self.entry_name = self.builder.get_object("input_entry_name")
 
 
 class AuthenticationDialog:

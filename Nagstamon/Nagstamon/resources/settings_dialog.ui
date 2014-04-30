@@ -137,7 +137,7 @@
                   </packing>
                 </child>
                 <child>
-                  <object class="GtkVBox" id="vbox1">
+                  <object class="GtkVBox" id="vbox_server-buttons">
                     <property name="visible">True</property>
                     <property name="can_focus">False</property>
                     <property name="spacing">5</property>
@@ -148,7 +148,7 @@
                         <property name="can_focus">False</property>
                         <property name="is_focus">True</property>
                         <property name="receives_default">False</property>
-                        <signal name="pressed" handler="button_new_server" swapped="no"/>
+                        <signal name="clicked" handler="button_new_server" swapped="no"/>
                       </object>
                       <packing>
                         <property name="expand">True</property>
@@ -162,7 +162,6 @@
                         <property name="visible">True</property>
                         <property name="can_focus">False</property>
                         <property name="receives_default">False</property>
-                        <signal name="pressed" handler="button_edit_server" swapped="no"/>
                         <signal name="clicked" handler="button_edit_server" swapped="no"/>
                       </object>
                       <packing>
@@ -172,19 +171,34 @@
                       </packing>
                     </child>
                     <child>
-                      <object class="GtkButton" id="button_delete_server">
-                        <property name="label" translatable="yes">Delete server</property>
+                      <object class="GtkButton" id="button_copy_server">
+                        <property name="label" translatable="yes">Copy server...</property>
                         <property name="visible">True</property>
                         <property name="can_focus">False</property>
-                        <property name="is_focus">True</property>
                         <property name="receives_default">False</property>
-                        <signal name="pressed" handler="button_delete_server" swapped="no"/>
                       </object>
                       <packing>
                         <property name="expand">True</property>
                         <property name="fill">True</property>
                         <property name="position">2</property>
                       </packing>
+                    </child>
+                    <child>
+                      <object class="GtkButton" id="button_delete_server">
+                        <property name="label" translatable="yes">Delete server</property>
+                        <property name="visible">True</property>
+                        <property name="can_focus">False</property>
+                        <property name="receives_default">False</property>
+                        <signal name="clicked" handler="button_delete_server" swapped="no"/>
+                      </object>
+                      <packing>
+                        <property name="expand">True</property>
+                        <property name="fill">True</property>
+                        <property name="position">3</property>
+                      </packing>
+                    </child>
+                    <child>
+                      <placeholder/>
                     </child>
                   </object>
                   <packing>
@@ -1431,6 +1445,20 @@
                       </packing>
                     </child>
                     <child>
+                      <object class="GtkButton" id="button_copy_action">
+                        <property name="label" translatable="yes">Copy action...</property>
+                        <property name="visible">True</property>
+                        <property name="can_focus">True</property>
+                        <property name="receives_default">False</property>
+                        <signal name="clicked" handler="button_copy_action" swapped="no"/>
+                      </object>
+                      <packing>
+                        <property name="expand">True</property>
+                        <property name="fill">True</property>
+                        <property name="position">2</property>
+                      </packing>
+                    </child>
+                    <child>
                       <object class="GtkButton" id="button_delete_action">
                         <property name="label" translatable="yes">Delete action</property>
                         <property name="visible">True</property>
@@ -1441,8 +1469,11 @@
                       <packing>
                         <property name="expand">True</property>
                         <property name="fill">True</property>
-                        <property name="position">2</property>
+                        <property name="position">3</property>
                       </packing>
+                    </child>
+                    <child>
+                      <placeholder/>
                     </child>
                   </object>
                   <packing>
@@ -1897,6 +1928,9 @@
                                         <property name="top_attach">2</property>
                                         <property name="bottom_attach">3</property>
                                       </packing>
+                                    </child>
+                                    <child>
+                                      <placeholder/>
                                     </child>
                                     <child>
                                       <placeholder/>
@@ -2899,6 +2933,9 @@ As default all events of one refresh cycle will be used in one notification acti
                         <property name="bottom_attach">8</property>
                         <property name="y_options">GTK_FILL</property>
                       </packing>
+                    </child>
+                    <child>
+                      <placeholder/>
                     </child>
                     <child>
                       <placeholder/>
