@@ -2767,13 +2767,13 @@ class ServerVBox(gtk.VBox):
             # context menu for detailed status overview, opens with a mouse click onto a listed item
             self.popupmenu = gtk.Menu()
 
-            # add custom actions - this is just a test!
+            # add custom actions
             actions_list=list(self.output.conf.actions)
             actions_list.sort(key=str.lower)
             for a in actions_list:
                 # shortcut for next lines
                 action = self.output.conf.actions[a]
-                if str(action.enabled) == "True":
+                if str(action.enabled) == "True" and action.monitor_type in ["", self.server.TYPE] :
                     # menu item visibility flag
                     item_visible = False
                     # check if clicked line is a service or host
