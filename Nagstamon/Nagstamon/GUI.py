@@ -1372,6 +1372,7 @@ class GUI(object):
         """
         for k in kwds: self.__dict__[k] = kwds[k]
 
+        # create dialogs if not yet existing
         if not self.dialog in self.Dialogs:
             if self.dialog == "Settings":
                 gobject.idle_add(self.output.AddGUILock, "Settings")
@@ -1403,7 +1404,7 @@ class GUI(object):
                 self.Dialogs["CopyAction"].show()
         else:
             # when being reused some dialogs need some extra values
-            if self.dialog in ["Settings", "NewServer", "EditServer", "NewAction", "EditAction"]:
+            if self.dialog in ["Settings", "NewServer", "EditServer", "NewAction", "EditAction", "CopyAction"]:
                 self.output.popwin.Close()
                 gobject.idle_add(self.output.AddGUILock, self.dialog)
                 if self.dialog == "Settings":
@@ -4628,11 +4629,11 @@ class EditAction(GenericAction):
     """
         generic settings of one particuliar new action server
     """
-    def __init__(self, **kwds):
-        # add all keywords to object
-        for k in kwds: self.__dict__[k] = kwds[k]
-
-        GenericAction.__init__(self, **kwds)
+    def initialize(self):
+        """
+            extra initialization needed for every call
+        """
+        GenericAction.initialize(self)
 
         # set title of settings dialog
         self.dialog.set_title("Edit action " + self.action)
@@ -4697,34 +4698,28 @@ class EditAction(GenericAction):
             self.dialog.hide()
 
 
-    def Cancel(self, widget):
-        """
-            settings dialog got cancelled
-        """
-        gobject.idle_add(self.output.DeleteGUILock, str(self.__class__.__name__))
-        self.dialog.hide()
-
-
-class CopyAction(EditAction):
+class CopyAction(GenericAction):
     """
-        copying an action is mostly editing an action
+        copies an existing action
     """
-    def __init__(self, **kwds):
-        # add all keywords to object
-        for k in kwds: self.__dict__[k] = kwds[k]
-
-        GenericAction.__init__(self, **kwds)
+    def initialize(self):
+        """
+        extra initialization needed for every call
+        """
+        # get existing properties from action like it was edited
+        GenericAction.initialize(self)
 
         # set title of settings dialog
         self.dialog.set_title("Copy action " + self.action)
 
-        #self.entry_name = self.builder.get_object("input_entry_name")
+        # modify name if action to indicate copy
+        self.entry_name = self.builder.get_object("input_entry_name")
+        self.entry_name.set_text("Copy of %s " % (self.entry_name.get_text()))
 
 
 class AuthenticationDialog:
     """
     used in case password should not be stored
-
     "server" is here a Config.Server() instance given from nagstamon.py at startup, not a GenericServer()!
     """
 
