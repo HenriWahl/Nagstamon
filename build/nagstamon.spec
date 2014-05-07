@@ -1,20 +1,20 @@
 # -*- mode: python -*-
 a = Analysis(['..\\Nagstamon\\nagstamon.py'],
              pathex=['..\\Nagstamon\\build'],
-             hiddenimports=['Nagstamon.keyring_3_7.credentials',\
-                            'Nagstamon.keyring_3_7.backends.file',\
-                            'Nagstamon.keyring_3_7.backends.Gnome',\
-                            'Nagstamon.keyring_3_7.backends.Google',\
-                            'Nagstamon.keyring_3_7.backends.keyczar',\
-                            'Nagstamon.keyring_3_7.backends.kwallet',\
-                            'Nagstamon.keyring_3_7.backends.multi',\
-                            'Nagstamon.keyring_3_7.backends.OS_X',\
-                            'Nagstamon.keyring_3_7.backends.pyfs',\
-                            'Nagstamon.keyring_3_7.backends.SecretService',\
-                            'Nagstamon.keyring_3_7.backends.Windows',\
-                            'Nagstamon.keyring_3_7.backends._win_crypto',\
-                            'Nagstamon.keyring_3_7.util.escape',\
-                            'Nagstamon.keyring_3_7.util.XDG',\
+             hiddenimports=['Nagstamon.thirdparty.keyring.credentials',\
+                            'Nagstamon.thirdparty.keyring.backends.file',\
+                            'Nagstamon.thirdparty.keyring.backends.Gnome',\
+                            'Nagstamon.thirdparty.keyring.backends.Google',\
+                            'Nagstamon.thirdparty.keyring.backends.keyczar',\
+                            'Nagstamon.thirdparty.keyring.backends.kwallet',\
+                            'Nagstamon.thirdparty.keyring.backends.multi',\
+                            'Nagstamon.thirdparty.keyring.backends.OS_X',\
+                            'Nagstamon.thirdparty.keyring.backends.pyfs',\
+                            'Nagstamon.thirdparty.keyring.backends.SecretService',\
+                            'Nagstamon.thirdparty.keyring.backends.Windows',\
+                            'Nagstamon.thirdparty.keyring.backends._win_crypto',\
+                            'Nagstamon.thirdparty.keyring.util.escape',\
+                            'Nagstamon.thirdparty.keyring.util.XDG',\
                             'ctypes',\
                             '_ctypes',\
                             'ctypes._endian',\

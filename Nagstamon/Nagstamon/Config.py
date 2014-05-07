@@ -41,8 +41,11 @@ try:
         import Nagstamon.thirdparty.keyring as keyring
         keyring_available = not (keyring.get_keyring() is None)
 except:
+    import traceback
+    traceback.print_exc(file=sys.stdout)
     keyring_available = False
 
+print keyring_available
 
 class Config(object):
     """
