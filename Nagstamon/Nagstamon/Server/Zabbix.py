@@ -29,7 +29,6 @@
 import sys
 import urllib
 import webbrowser
-import traceback
 import base64
 import time
 import datetime
@@ -37,7 +36,7 @@ import datetime
 from Nagstamon import Actions
 from Nagstamon.Objects import *
 from Nagstamon.Server.Generic import GenericServer
-from Nagstamon.zabbix_api import ZabbixAPI, ZabbixAPIException
+from Nagstamon.thirdparty.zabbix_api import ZabbixAPI, ZabbixAPIException
 
 
 class ZabbixError(Exception):
@@ -48,7 +47,7 @@ class ZabbixError(Exception):
 
 class ZabbixServer(GenericServer):
     """
-       special treatment for Check_MK Multisite JSON API
+       special treatment for Zabbix, taken from Check_MK Multisite JSON API
     """
     TYPE = 'Zabbix'
     zapi = None

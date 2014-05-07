@@ -38,7 +38,7 @@ try:
             keyring_available = True
     else:
         # nagstamon.spec always have to match module path
-        import Nagstamon.keyring_3_7 as keyring
+        import Nagstamon.thirdparty.keyring as keyring
         keyring_available = not (keyring.get_keyring() is None)
 except:
     keyring_available = False

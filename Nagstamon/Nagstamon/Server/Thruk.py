@@ -32,7 +32,7 @@ import copy
 try:
     from BeautifulSoup import BeautifulSoup, BeautifulStoneSoup
 except:
-    from Nagstamon.BeautifulSoup import BeautifulSoup, BeautifulStoneSoup
+    from Nagstamon.thirdparty.BeautifulSoup import BeautifulSoup, BeautifulStoneSoup
 
 from Nagstamon.Actions import HostIsFilteredOutByRE, ServiceIsFilteredOutByRE, StatusInformationIsFilteredOutByRE, not_empty
 from Nagstamon.Objects import *

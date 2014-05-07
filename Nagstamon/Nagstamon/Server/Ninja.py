@@ -37,7 +37,7 @@ from Nagstamon.Server.Generic import GenericServer, not_empty
 try:
     from BeautifulSoup import BeautifulSoup
 except:
-    from Nagstamon.BeautifulSoup import BeautifulSoup
+    from Nagstamon.thirdparty.BeautifulSoup import BeautifulSoup
 
 
 class NinjaServer(GenericServer):

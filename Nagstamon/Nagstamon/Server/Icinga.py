@@ -31,7 +31,7 @@ import base64
 try:
     from BeautifulSoup import BeautifulSoup
 except:
-    from Nagstamon.BeautifulSoup import BeautifulSoup
+    from Nagstamon.thirdparty.BeautifulSoup import BeautifulSoup
 
 from Nagstamon.Objects import *
 from Nagstamon.Actions import *

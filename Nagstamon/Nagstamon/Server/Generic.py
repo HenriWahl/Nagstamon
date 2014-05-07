@@ -36,7 +36,7 @@ import gobject
 try:
     from BeautifulSoup import BeautifulSoup, BeautifulStoneSoup
 except:
-    from Nagstamon.BeautifulSoup import BeautifulSoup, BeautifulStoneSoup
+    from Nagstamon.thirdparty.BeautifulSoup import BeautifulSoup, BeautifulStoneSoup
 from Nagstamon.Actions import HostIsFilteredOutByRE, ServiceIsFilteredOutByRE, StatusInformationIsFilteredOutByRE, CriticalityIsFilteredOutByRE, not_empty
 from Nagstamon.Objects import *
 
