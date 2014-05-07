@@ -4202,6 +4202,9 @@ class NewServer(GenericServer):
         # add all keywords to object
         for k in kwds: self.__dict__[k] = kwds[k]
 
+        # create new dummy server
+        self.server = ""
+
         GenericServer.__init__(self, **kwds)
 
         # set title of settings dialog
@@ -4679,7 +4682,6 @@ class NewAction(GenericAction):
     def __init__(self, **kwds):
         # add all keywords to object
         for k in kwds: self.__dict__[k] = kwds[k]
-
 
         # create new dummy action
         self.action = ""

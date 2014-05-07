@@ -45,7 +45,6 @@ except:
     traceback.print_exc(file=sys.stdout)
     keyring_available = False
 
-print keyring_available
 
 class Config(object):
     """
