@@ -1389,6 +1389,11 @@ class GUI(object):
                 self.Dialogs["EditServer"] = EditServer(servers=self.servers, output=self.output, settingsdialog=self.settingsdialog, conf=self.conf, server=self.selected_server)
                 self.Dialogs["EditServer"].show()
 
+            elif self.dialog == "CopyServer":
+                gobject.idle_add(self.output.AddGUILock, "CopyServer")
+                self.Dialogs["CopyServer"] = CopyServer(servers=self.servers, output=self.output, settingsdialog=self.settingsdialog, conf=self.conf, server=self.selected_server)
+                self.Dialogs["CopyServer"].show()
+
             elif self.dialog == "NewAction":
                 gobject.idle_add(self.output.AddGUILock, "NewAction")
                 self.Dialogs["NewAction"] = NewAction(output=self.output, settingsdialog=self.settingsdialog, conf=self.conf)
@@ -1404,13 +1409,15 @@ class GUI(object):
                 self.Dialogs["CopyAction"].show()
         else:
             # when being reused some dialogs need some extra values
-            if self.dialog in ["Settings", "NewServer", "EditServer", "NewAction", "EditAction", "CopyAction"]:
+            if self.dialog in ["Settings", "NewServer", "EditServer", "CopyServer", "NewAction", "EditAction", "CopyAction"]:
                 self.output.popwin.Close()
                 gobject.idle_add(self.output.AddGUILock, self.dialog)
                 if self.dialog == "Settings":
                     self.Dialogs["Settings"].first_page = self.first_page
                 if self.dialog == "EditServer":
                     self.Dialogs["EditServer"].server = self.selected_server
+                if self.dialog == "CopyServer":
+                    self.Dialogs["CopyServer"].server = self.selected_server
                 if self.dialog == "EditAction":
                     self.Dialogs["EditAction"].action = self.selected_action
                 if self.dialog == "CopyAction":
@@ -3076,6 +3083,7 @@ class Settings(object):
                           "button_cancel_clicked": self.Cancel,
                           "button_new_server": lambda n: self.output.GetDialog(dialog="NewServer", servers=self.servers, output=self.output, settingsdialog=self, conf=self.conf),
                           "button_edit_server": lambda e: self.output.GetDialog(dialog="EditServer", servers=self.servers, output=self.output, selected_server=self.selected_server, settingsdialog=self, conf=self.conf),
+                          "button_copy_server": lambda e: self.output.GetDialog(dialog="CopyServer", servers=self.servers, output=self.output, selected_server=self.selected_server, settingsdialog=self, conf=self.conf),
                           "button_delete_server": lambda d: self.DeleteServer(self.selected_server, self.conf.servers),
                           "button_check_for_new_version_now": self.CheckForNewVersionNow,
                           "checkbutton_enable_notification": self.ToggleNotification,
@@ -3931,33 +3939,69 @@ class GenericServer(object):
         """
         set server settings to default values
         """
-        # enable server by default
-        self.builder.get_object("input_checkbutton_enabled").set_active(True)
-        # do not save password by default
-        self.builder.get_object("input_checkbutton_save_password").set_active(False)
-        # disable proxy by default
-        self.builder.get_object("input_checkbutton_use_proxy").set_active(False)
 
-        # set first monitor type as default
-        self.combobox.set_active(0)
+        if self.server == "":
+            # new server
+            # enable server by default
+            self.builder.get_object("input_checkbutton_enabled").set_active(True)
+            # do not save password by default
+            self.builder.get_object("input_checkbutton_save_password").set_active(False)
+            # disable proxy by default
+            self.builder.get_object("input_checkbutton_use_proxy").set_active(False)
 
-        # default monitor server addresses
-        self.builder.get_object("input_entry_monitor_url").set_text("https://monitor-server")
-        self.builder.get_object("input_entry_monitor_cgi_url").set_text("https://monitor-server/monitor/cgi-bin")
-        # default user and password
-        self.builder.get_object("input_entry_username").set_text("user")
-        self.builder.get_object("input_entry_password").set_text("password")
-        # default proxy settings
-        self.builder.get_object("input_entry_proxy_address").set_text("http://proxy:port/")
-        self.builder.get_object("input_entry_proxy_username").set_text("proxyuser")
-        self.builder.get_object("input_entry_proxy_password").set_text("proxypassword")
+            # set first monitor type as default
+            self.combobox.set_active(0)
 
-        # show password - or not
-        self.ToggleSavePassword()
-        # show settings options for proxy - or not
-        self.ToggleProxy()
-        # disable autologin by default
-        self.ToggleAutoLoginKey()
+            # default monitor server addresses
+            self.builder.get_object("input_entry_monitor_url").set_text("https://monitor-server")
+            self.builder.get_object("input_entry_monitor_cgi_url").set_text("https://monitor-server/monitor/cgi-bin")
+            # default user and password
+            self.builder.get_object("input_entry_username").set_text("user")
+            self.builder.get_object("input_entry_password").set_text("password")
+            # default proxy settings
+            self.builder.get_object("input_entry_proxy_address").set_text("http://proxy:port/")
+            self.builder.get_object("input_entry_proxy_username").set_text("proxyuser")
+            self.builder.get_object("input_entry_proxy_password").set_text("proxypassword")
+
+            # show password - or not
+            self.ToggleSavePassword()
+            # show settings options for proxy - or not
+            self.ToggleProxy()
+            # disable autologin by default
+            self.ToggleAutoLoginKey()
+        else:
+            # edit or copy a server
+            keys = self.conf.servers[self.server].__dict__.keys()
+            # walk through all relevant input types to fill dialog with existing settings
+            for i in ["input_entry_", "input_checkbutton_", "input_radiobutton_", "input_spinbutton_"]:
+                for key in keys:
+                    j = self.builder.get_object(i + key)
+                    if not j:
+                        continue
+                    # some hazard, every widget has other methods to fill it with desired content
+                    # so we try them all, one of them should work
+                    try:
+                        j.set_text(self.conf.servers[self.server].__dict__[key])
+                    except:
+                        pass
+                    try:
+                        if str(self.conf.servers[self.server].__dict__[key]) == "True":
+                            j.set_active(True)
+                        if str(self.conf.servers[self.server].__dict__[key]) == "False":
+                            j.set_active(False)
+                    except:
+                        pass
+                    try:
+                        j.set_value(int(self.conf.servers[self.server].__dict__[key]))
+                    except:
+                        pass
+
+            # set server type combobox which cannot be set by above hazard method
+            servers = Actions.get_registered_server_type_list()
+            server_types = dict([(x[1], x[0]) for x in enumerate(servers)])
+
+            # set server type
+            self.combobox.set_active(server_types[self.conf.servers[self.server].type])
 
 
     def on_server_type_change(self, combobox):
@@ -4215,9 +4259,13 @@ class EditServer(GenericServer):
         """
         fill dialog with server settings
         """
+
+        GenericServer.initialize(self)
+
         # set title of settings dialog
         self.dialog.set_title("Edit server " + self.server)
 
+        """
         keys = self.conf.servers[self.server].__dict__.keys()
         # walk through all relevant input types to fill dialog with existing settings
         for i in ["input_entry_", "input_checkbutton_", "input_radiobutton_", "input_spinbutton_"]:
@@ -4249,7 +4297,7 @@ class EditServer(GenericServer):
 
         # set server type
         self.combobox.set_active(server_types[self.conf.servers[self.server].type])
-
+        """
 
     def OK(self, widget):
         """
@@ -4342,6 +4390,23 @@ class EditServer(GenericServer):
         """
         gobject.idle_add(self.output.DeleteGUILock, str(self.__class__.__name__))
         self.dialog.hide()
+
+
+
+class CopyServer(GenericServer):
+    """
+        copy a server
+    """
+    def initialize(self):
+        # get existing properties from action like it was edited
+        GenericServer.initialize(self)
+
+        # set title of settings dialog
+        self.dialog.set_title("Copy server " + self.server)
+
+        # modify name if action to indicate copy
+        self.entry_name = self.builder.get_object("input_entry_name")
+        self.entry_name.set_text("Copy of %s" % (self.entry_name.get_text()))
 
 
 class GenericAction(object):
@@ -4714,7 +4779,7 @@ class CopyAction(GenericAction):
 
         # modify name if action to indicate copy
         self.entry_name = self.builder.get_object("input_entry_name")
-        self.entry_name.set_text("Copy of %s " % (self.entry_name.get_text()))
+        self.entry_name.set_text("Copy of %s" % (self.entry_name.get_text()))
 
 
 class AuthenticationDialog:
