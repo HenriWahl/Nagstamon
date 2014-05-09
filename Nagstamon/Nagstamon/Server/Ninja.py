@@ -63,7 +63,12 @@ class NinjaServer(GenericServer):
 
     # A Monitor CGI URL is not necessary so hide it in settings
     # autologin is used only by Centreon
-    DISABLED_CONTROLS = ["label_monitor_cgi_url", "input_entry_monitor_cgi_url", "input_checkbutton_use_autologin", "label_autologin_key", "input_entry_autologin_key"]
+    DISABLED_CONTROLS = ["label_monitor_cgi_url",
+                         "input_entry_monitor_cgi_url",
+                         "input_checkbutton_use_autologin",
+                         "label_autologin_key",
+                         "input_entry_autologin_key",
+                         "input_checkbutton_use_display_name"]
 
 
     def __init__(self, **kwds):

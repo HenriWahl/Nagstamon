@@ -30,5 +30,8 @@ class NagiosServer(GenericServer):
     TYPE = 'Nagios'
 
     # autologin is used only by Centreon
-    DISABLED_CONTROLS = ["input_checkbutton_use_autologin", "label_autologin_key", "input_entry_autologin_key"]
+    DISABLED_CONTROLS = ["input_checkbutton_use_autologin",
+                         "label_autologin_key",
+                         "input_entry_autologin_key",
+                         "input_checkbutton_use_display_name"]
 

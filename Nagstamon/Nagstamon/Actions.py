@@ -758,57 +758,62 @@ def CreateServer(server=None, conf=None, debug_queue=None, resources=None):
         print 'Server type not supported: %s' % server.type
         return
     # give argument servername so CentreonServer could use it for initializing MD5 cache
-    nagiosserver = registered_servers[server.type](conf=conf, name=server.name)
-    nagiosserver.type = server.type
-    nagiosserver.monitor_url = server.monitor_url
-    nagiosserver.monitor_cgi_url = server.monitor_cgi_url
+    new_server = registered_servers[server.type](conf=conf, name=server.name)
+    new_server.type = server.type
+    new_server.monitor_url = server.monitor_url
+    new_server.monitor_cgi_url = server.monitor_cgi_url
     # add resources, needed for auth dialog
-    nagiosserver.Resources = resources
-    nagiosserver.username = server.username
-    nagiosserver.password = server.password
-    nagiosserver.use_autologin = server.use_autologin
-    nagiosserver.autologin_key = server.autologin_key
-    nagiosserver.use_proxy = server.use_proxy
-    nagiosserver.use_proxy_from_os = server.use_proxy_from_os
-    nagiosserver.proxy_address = server.proxy_address
-    nagiosserver.proxy_username = server.proxy_username
-    nagiosserver.proxy_password = server.proxy_password
+    new_server.Resources = resources
+    new_server.username = server.username
+    new_server.password = server.password
+    new_server.use_proxy = server.use_proxy
+    new_server.use_proxy_from_os = server.use_proxy_from_os
+    new_server.proxy_address = server.proxy_address
+    new_server.proxy_username = server.proxy_username
+    new_server.proxy_password = server.proxy_password
 
     # if password is not to be saved ask for it at startup
     if ( server.enabled == "True" and server.save_password == "False" and server.use_autologin == "False" ):
-        nagiosserver.refresh_authentication = True
+        new_server.refresh_authentication = True
 
     # access to thread-safe debug queue
-    nagiosserver.debug_queue = debug_queue
+    new_server.debug_queue = debug_queue
 
     # use server-owned attributes instead of redefining them with every request
-    nagiosserver.passman = urllib2.HTTPPasswordMgrWithDefaultRealm()
-    nagiosserver.passman.add_password(None, server.monitor_url, server.username, server.password)
-    nagiosserver.passman.add_password(None, server.monitor_cgi_url, server.username, server.password)
-    nagiosserver.basic_handler = urllib2.HTTPBasicAuthHandler(nagiosserver.passman)
-    nagiosserver.digest_handler = urllib2.HTTPDigestAuthHandler(nagiosserver.passman)
-    nagiosserver.proxy_auth_handler = urllib2.ProxyBasicAuthHandler(nagiosserver.passman)
+    new_server.passman = urllib2.HTTPPasswordMgrWithDefaultRealm()
+    new_server.passman.add_password(None, server.monitor_url, server.username, server.password)
+    new_server.passman.add_password(None, server.monitor_cgi_url, server.username, server.password)
+    new_server.basic_handler = urllib2.HTTPBasicAuthHandler(new_server.passman)
+    new_server.digest_handler = urllib2.HTTPDigestAuthHandler(new_server.passman)
+    new_server.proxy_auth_handler = urllib2.ProxyBasicAuthHandler(new_server.passman)
 
-    if str(nagiosserver.use_proxy) == "False":
+    if str(new_server.use_proxy) == "False":
         # use empty proxyhandler
-        nagiosserver.proxy_handler = urllib2.ProxyHandler({})
+        new_server.proxy_handler = urllib2.ProxyHandler({})
     elif str(server.use_proxy_from_os) == "False":
         # if proxy from OS is not used there is to add a authenticated proxy handler
-        nagiosserver.passman.add_password(None, nagiosserver.proxy_address, nagiosserver.proxy_username, nagiosserver.proxy_password)
-        nagiosserver.proxy_handler = urllib2.ProxyHandler({"http": nagiosserver.proxy_address, "https": nagiosserver.proxy_address})
-        nagiosserver.proxy_auth_handler = urllib2.ProxyBasicAuthHandler(nagiosserver.passman)
+        new_server.passman.add_password(None, new_server.proxy_address, new_server.proxy_username, new_server.proxy_password)
+        new_server.proxy_handler = urllib2.ProxyHandler({"http": new_server.proxy_address, "https": new_server.proxy_address})
+        new_server.proxy_auth_handler = urllib2.ProxyBasicAuthHandler(new_server.passman)
+
+    # Special FX
+    # Centreon
+    new_server.use_autologin = server.use_autologin
+    new_server.autologin_key = server.autologin_key
+    # Icinga
+    new_server.use_display_name = server.use_display_name
 
     # create permanent urlopener for server to avoid memory leak with millions of openers
-    nagiosserver.urlopener = BuildURLOpener(nagiosserver)
+    new_server.urlopener = BuildURLOpener(new_server)
     # server's individual preparations for HTTP connections (for example cookie creation), version of monitor
     if str(server.enabled) == "True":
-        nagiosserver.init_HTTP()
+        new_server.init_HTTP()
 
     # debug
     if str(conf.debug_mode) == "True":
-        nagiosserver.Debug(server=server.name, debug="Created server.")
+        new_server.Debug(server=server.name, debug="Created server.")
 
-    return nagiosserver
+    return new_server
 
 
 def not_empty(x):

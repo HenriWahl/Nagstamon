@@ -3898,7 +3898,6 @@ class GenericServer(object):
         # try to avoid shy dialog on MacOSX
         self.dialog.set_transient_for(self.settingsdialog.dialog)
 
-
         # assign handlers
         handlers_dict = { "button_ok_clicked" : self.OK,
                           "button_cancel_clicked" : self.Cancel,
@@ -4018,7 +4017,12 @@ class GenericServer(object):
         server = Actions.get_registered_servers()[model.get_value(active, 0)]
 
         # make everything visible
-        for item_id in ["label_monitor_cgi_url", "input_entry_monitor_cgi_url", "input_checkbutton_use_autologin", "label_autologin_key", "input_entry_autologin_key"]:
+        for item_id in ["label_monitor_cgi_url",
+                        "input_entry_monitor_cgi_url",
+                        "input_checkbutton_use_autologin",
+                        "label_autologin_key",
+                        "input_entry_autologin_key",
+                        "input_checkbutton_use_display_name"]:
             item = self.builder.get_object(item_id)
             if item is not None:
                 item.set_visible(True)
@@ -4168,7 +4172,11 @@ class GenericServer(object):
             toggle proxy from OS when using proxy is enabled
         """
         checkbutton = self.builder.get_object("input_checkbutton_use_proxy_from_os")
-        checkbutton.set_sensitive(self.builder.get_object("input_checkbutton_use_proxy").get_active())
+        #checkbutton.set_sensitive(self.builder.get_object("input_checkbutton_use_proxy").get_active())
+        if self.builder.get_object("input_checkbutton_use_proxy").get_active():
+            self.builder.get_object("input_checkbutton_use_proxy_from_os").show()
+        else:
+            self.builder.get_object("input_checkbutton_use_proxy_from_os").hide()
 
 
     def ToggleProxyAddress(self, widget=None):
@@ -4191,8 +4199,10 @@ class GenericServer(object):
                   "label_proxy_password",
                   "input_entry_proxy_password"):
             item = self.builder.get_object(n)
-            item.set_sensitive(state)
-
+            if state:
+                item.show()
+            else:
+                item.hide()
 
 class NewServer(GenericServer):
     """

@@ -137,10 +137,6 @@ class Config(object):
         self.re_status_information_enabled = False
         self.re_status_information_pattern = ""
         self.re_status_information_reverse = False
-        # special feature for Centreon
-        self.re_criticality_enabled = False
-        self.re_criticality_pattern = ""
-        self.re_criticality_reverse = False
         self.color_ok_text = self.default_color_ok_text = "#FFFFFF"
         self.color_ok_background = self.default_color_ok_background = "#006400"
         self.color_warning_text = self.default_color_warning_text = "#000000"
@@ -175,6 +171,12 @@ class Config(object):
         self.defaults_downtime_type_fixed = True
         self.defaults_downtime_type_flexible = False
         self.converted_from_single_configfile = False
+
+        # Special FX
+        # Centreon
+        self.re_criticality_enabled = False
+        self.re_criticality_pattern = ""
+        self.re_criticality_reverse = False
 
         # the app is unconfigured by default and will stay so if it
         # would not find a config file
@@ -788,8 +790,14 @@ class Server(object):
         self.proxy_address = ""
         self.proxy_username = ""
         self.proxy_password = ""
+
+        # special FX
+        # Centreon autologin
         self.use_autologin = False
         self.autologin_key = ""
+
+        # Icinga "host_display_name" instead of "host"
+        self.use_display_name = False
 
 
 class Action(object):
@@ -827,12 +835,15 @@ class Action(object):
         self.re_status_information_enabled = False
         self.re_status_information_pattern = ""
         self.re_status_information_reverse = False
-        self.re_criticality_enabled = False
-        self.re_criticality_pattern = ""
-        self.re_criticality_reverse = False
         # close powin or not, depends on personal preference
         self.close_popwin = True
         self.leave_popwin_open = False
+
+        # special FX
+        # Centreon criticality and autologin
+        self.re_criticality_enabled = False
+        self.re_criticality_pattern = ""
+        self.re_criticality_reverse = False
 
         # add and/or all keywords to object
         for k in kwds: self.__dict__[k] = kwds[k]

@@ -46,7 +46,9 @@ class IcingaServer(GenericServer):
     json = None
 
     # autologin is used only by Centreon
-    DISABLED_CONTROLS = ["input_checkbutton_use_autologin", "label_autologin_key", "input_entry_autologin_key"]
+    DISABLED_CONTROLS = ["input_checkbutton_use_autologin",
+                         "label_autologin_key",
+                         "input_entry_autologin_key"]
 
 
     def init_config(self):
@@ -163,11 +165,16 @@ class IcingaServer(GenericServer):
                     h = dict(host.items())
 
                     # host
-                    # according to http://sourceforge.net/p/nagstamon/bugs/83/ it might
-                    # better be host_name instead of host_display_name
-                    # legacy Icinga adjustments
-                    if h.has_key("host_name"): host_name = h["host_name"]
-                    elif h.has_key("host"): host_name = h["host"]
+                    if str(self.use_display_name) == "False":
+                        # according to http://sourceforge.net/p/nagstamon/bugs/83/ it might
+                        # better be host_name instead of host_display_name
+                        # legacy Icinga adjustments
+                        if h.has_key("host_name"): host_name = h["host_name"]
+                        elif h.has_key("host"): host_name = h["host"]
+                    else:
+                        # https://github.com/HenriWahl/Nagstamon/issues/46 on the other hand has
+                        # problems with that so here we go with extra display_name option
+                        host_name = h["host_display_name"]
 
                     # host objects contain service objects
                     if not self.new_hosts.has_key(host_name):
@@ -186,7 +193,6 @@ class IcingaServer(GenericServer):
                         self.new_hosts[host_name].scheduled_downtime = h["in_scheduled_downtime"]
                         self.new_hosts[host_name].status_type = status_type
                     del h, host_name
-
         except:
             # set checking flag back to False
             self.isChecking = False
@@ -209,9 +215,16 @@ class IcingaServer(GenericServer):
                     # make dict of tuples for better reading
                     s = dict(service.items())
 
-                    # legacy icinga hostname inconsistency
-                    if s.has_key("host_name"): host_name = s["host_name"]
-                    elif s.has_key("host"): host_name = s["host"]
+                    if str(self.use_display_name) == "False":
+                        # according to http://sourceforge.net/p/nagstamon/bugs/83/ it might
+                        # better be host_name instead of host_display_name
+                        # legacy Icinga adjustments
+                        if s.has_key("host_name"): host_name = s["host_name"]
+                        elif s.has_key("host"): host_name = s["host"]
+                    else:
+                        # https://github.com/HenriWahl/Nagstamon/issues/46 on the other hand has
+                        # problems with that so here we go with extra display_name option
+                        host_name = s["host_display_name"]
 
                     # host objects contain service objects
                     if not self.new_hosts.has_key(host_name):

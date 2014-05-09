@@ -36,8 +36,13 @@ import gobject
 try:
     from BeautifulSoup import BeautifulSoup, BeautifulStoneSoup
 except:
-    from Nagstamon.thirdparty.BeautifulSoup import BeautifulSoup, BeautifulStoneSoup
-from Nagstamon.Actions import HostIsFilteredOutByRE, ServiceIsFilteredOutByRE, StatusInformationIsFilteredOutByRE, CriticalityIsFilteredOutByRE, not_empty
+    from Nagstamon.thirdparty.BeautifulSoup import BeautifulSoup,\
+                                                   BeautifulStoneSoup
+from Nagstamon.Actions import HostIsFilteredOutByRE,\
+                              ServiceIsFilteredOutByRE,\
+                              StatusInformationIsFilteredOutByRE,\
+                              CriticalityIsFilteredOutByRE,\
+                              not_empty
 from Nagstamon.Objects import *
 
 
@@ -103,8 +108,6 @@ class GenericServer(object):
         self.monitor_cgi_url = ""
         self.username = ""
         self.password = ""
-        self.use_autologin = False
-        self.autologin_key = ""
         self.use_proxy = False
         self.use_proxy_from_os = False
         self.proxy_address = ""
@@ -150,6 +153,12 @@ class GenericServer(object):
         # to handle Icinga versions this information is necessary, might be of future use for others too
         self.version = ""
 
+        # Special FX
+        # Centreon
+        self.use_autologin = False
+        self.autologin_key = ""
+        # Icinga
+        self.use_display_name = False
 
     def init_HTTP(self):
         """
