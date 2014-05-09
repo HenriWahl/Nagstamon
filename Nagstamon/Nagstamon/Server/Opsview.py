@@ -95,8 +95,8 @@ class OpsviewServer(GenericServer):
         try:
             result = self.FetchURL(self.monitor_cgi_url + "/cmd.cgi?" + urllib.urlencode({"cmd_typ":"55", "host":host}))
             html = result.result
-            start_time = dict(result.result.find(attrs={"name":"start_time"}).attrs)["value"]
-            end_time = dict(result.result.find(attrs={"name":"end_time"}).attrs)["value"]
+            start_time = dict(result.result.find(attrs={"name":"starttime"}).attrs)["value"]
+            end_time = dict(result.result.find(attrs={"name":"endtime"}).attrs)["value"]
             # give values back as tuple
             return start_time, end_time
         except:
