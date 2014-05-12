@@ -161,6 +161,7 @@ class GenericServer(object):
         self.use_display_name_host = False
         self.use_display_name_service = False
 
+
     def init_HTTP(self):
         """
         partly not constantly working Basic Authorization requires extra Authorization headers,

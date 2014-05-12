@@ -1484,7 +1484,7 @@ class GUI(object):
         # refresh servers combobox in popwin
         # first remove all entries
         for i in range(1, len(self.popwin.ComboboxMonitor.get_model())):
-            # "Choose monitor..." is the first entry so do not delete item index 0
+            # "Go to monitor..." is the first entry so do not delete item index 0
             self.popwin.ComboboxMonitor.remove_text(1)
 
         # sort server names for list
@@ -1930,7 +1930,7 @@ class Popwin(object):
         self.AlMonitorLabel.add(self.HBoxNagiosButtons)
         self.ComboboxMonitor = gtk.combo_box_new_text()
         # fill Nagios server combobox with nagios servers
-        self.ComboboxMonitor.append_text("Choose monitor...")
+        self.ComboboxMonitor.append_text("Go to monitor...")
         submenu_items = list(self.output.servers)
         submenu_items.sort(key=str.lower)
         for i in submenu_items:
@@ -2850,8 +2850,8 @@ class ServerVBox(gtk.VBox):
             # available default menu actions are monitor server dependent
             for i in self.server.MENU_ACTIONS:
                 # recheck is not necessary for passive set checks
-                if i == "Recheck":
-                    if self.miserable_service and server.hosts[self.miserable_host].services[self.miserable_service].is_passive_only():
+                if i == "Recheck" and self.miserable_service\
+                        and server.hosts[self.miserable_host].services[self.miserable_service].is_passive_only():
                         pass
                 else:
                     menu_item = gtk.MenuItem(i)

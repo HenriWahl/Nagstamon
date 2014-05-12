@@ -160,7 +160,7 @@ Don&amp;apos;t put any status.cgi in there.</property>
             </child>
             <child>
               <object class="GtkCheckButton" id="input_checkbutton_save_password">
-                <property name="label" translatable="yes">Store password in system keyring</property>
+                <property name="label" translatable="yes">Save password</property>
                 <property name="visible">True</property>
                 <property name="can_focus">False</property>
                 <property name="is_focus">True</property>

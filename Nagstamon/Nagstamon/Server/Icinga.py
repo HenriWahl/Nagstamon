@@ -60,6 +60,18 @@ class IcingaServer(GenericServer):
         self.cgiurl_hosts = None
 
 
+    def init_HTTP(self):
+        """
+        Icinga 1.11 needs extra Referer header for actions
+        """
+        GenericServer.init_HTTP(self)
+
+        if not "Referer" in self.HTTPheaders:
+            # to execute actions since Icinga 1.11 a Referer Header is necessary
+            for giveback in ["raw", "obj"]:
+                self.HTTPheaders[giveback]["Referer"] = self.monitor_cgi_url + "/cmd.cgi"
+
+
     def get_server_version(self):
         """
         Try to get Icinga version for different URLs and JSON capabilities
