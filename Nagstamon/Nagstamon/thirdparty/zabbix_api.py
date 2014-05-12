@@ -268,8 +268,11 @@ class ZabbixAPI(object):
             raise ZabbixAPIException("Unknow protocol %s" % self.proto)
 
         urllib2.install_opener(opener)
-        response = opener.open(request, timeout=self.timeout)
-        self.debug(logging.INFO, "Response Code: " + str(response.code))
+        try:
+            response = opener.open(request, timeout=self.timeout)
+            self.debug(logging.INFO, "Response Code: " + str(response.code))
+        except urllib2.URLError:
+            raise ZabbixAPIException("Could not open URL <%s>" % response.url)
 
         # NOTE: Getting a 412 response code means the headers are not in the
         # list of allowed headers.
