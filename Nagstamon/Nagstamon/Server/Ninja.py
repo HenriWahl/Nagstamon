@@ -68,7 +68,8 @@ class NinjaServer(GenericServer):
                          "input_checkbutton_use_autologin",
                          "label_autologin_key",
                          "input_entry_autologin_key",
-                         "input_checkbutton_use_display_name"]
+                         "input_checkbutton_use_display_name_host",
+                         "input_checkbutton_use_display_name_service"]
 
 
     def __init__(self, **kwds):

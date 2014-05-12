@@ -158,7 +158,8 @@ class GenericServer(object):
         self.use_autologin = False
         self.autologin_key = ""
         # Icinga
-        self.use_display_name = False
+        self.use_display_name_host = False
+        self.use_display_name_service = False
 
     def init_HTTP(self):
         """

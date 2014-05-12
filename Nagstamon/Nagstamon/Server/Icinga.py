@@ -165,7 +165,7 @@ class IcingaServer(GenericServer):
                     h = dict(host.items())
 
                     # host
-                    if str(self.use_display_name) == "False":
+                    if str(self.use_display_name_host) == "False":
                         # according to http://sourceforge.net/p/nagstamon/bugs/83/ it might
                         # better be host_name instead of host_display_name
                         # legacy Icinga adjustments
@@ -215,7 +215,7 @@ class IcingaServer(GenericServer):
                     # make dict of tuples for better reading
                     s = dict(service.items())
 
-                    if str(self.use_display_name) == "False":
+                    if str(self.use_display_name_host) == "False":
                         # according to http://sourceforge.net/p/nagstamon/bugs/83/ it might
                         # better be host_name instead of host_display_name
                         # legacy Icinga adjustments
@@ -232,10 +232,13 @@ class IcingaServer(GenericServer):
                         self.new_hosts[host_name].name = host_name
                         self.new_hosts[host_name].status = "UP"
 
-                    # legacy Icinga adjustments
-                    if s.has_key("service_description"): service_name = s["service_description"]
-                    elif s.has_key("description"): service_name = s["description"]
-                    elif s.has_key("service"): service_name = s["service"]
+                    if str(self.use_display_name_host) == "False":
+                        # legacy Icinga adjustments
+                        if s.has_key("service_description"): service_name = s["service_description"]
+                        elif s.has_key("description"): service_name = s["description"]
+                        elif s.has_key("service"): service_name = s["service"]
+                    else:
+                        service_name = s["service_display_name"]
 
                     # if a service does not exist create its object
                     if not self.new_hosts[host_name].services.has_key(service_name):

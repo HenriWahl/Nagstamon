@@ -797,7 +797,8 @@ class Server(object):
         self.autologin_key = ""
 
         # Icinga "host_display_name" instead of "host"
-        self.use_display_name = False
+        self.use_display_name_host = False
+        self.use_display_name_service = False
 
 
 class Action(object):

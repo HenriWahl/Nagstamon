@@ -801,7 +801,8 @@ def CreateServer(server=None, conf=None, debug_queue=None, resources=None):
     new_server.use_autologin = server.use_autologin
     new_server.autologin_key = server.autologin_key
     # Icinga
-    new_server.use_display_name = server.use_display_name
+    new_server.use_display_name_host = server.use_display_name_host
+    new_server.use_display_name_service = server.use_display_name_service
 
     # create permanent urlopener for server to avoid memory leak with millions of openers
     new_server.urlopener = BuildURLOpener(new_server)
