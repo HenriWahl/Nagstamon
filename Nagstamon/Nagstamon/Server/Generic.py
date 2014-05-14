@@ -1078,11 +1078,7 @@ class GenericServer(object):
 
             # give back pure HTML or XML in case giveback is "raw"
             if giveback == "raw":
-                try:
-                    result = Result(result=urlcontent.read().decode("utf8"))
-                except:
-                    # in case something goes wrong with UTF-8 (https://github.com/HenriWahl/Nagstamon/issues/82)
-                    result = Result(result=urlcontent.read())
+                result = Result(result=urlcontent.read().decode("utf8"))
                 urlcontent.close()
                 del urlcontent
                 return result
