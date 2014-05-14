@@ -203,7 +203,7 @@ class ThrukServer(GenericServer):
                         self.new_hosts[h["name"]].server = self.name
                         self.new_hosts[h["name"]].status = self.STATES_MAPPING["hosts"][h["state"]]
                         self.new_hosts[h["name"]].last_check = datetime.datetime.fromtimestamp(int(h["last_check"])).isoformat(" ")
-                        self.new_hosts[h["name"]].duration = Actions.HumanReadableDurationThruk(h["last_state_change"])
+                        self.new_hosts[h["name"]].duration = Actions.HumanReadableDurationFromTimestamp(h["last_state_change"])
                         self.new_hosts[h["name"]].attempt = "%s/%s" % (h["current_attempt"], h["max_check_attempts"])
                         self.new_hosts[h["name"]].status_information= h["plugin_output"].encode("utf-8").replace("\n", " ").strip()
                         self.new_hosts[h["name"]].passiveonly = not(bool(int(h["active_checks_enabled"])))
@@ -254,7 +254,7 @@ class ThrukServer(GenericServer):
                         self.new_hosts[s["host_name"]].services[s["description"]].server = self.name
                         self.new_hosts[s["host_name"]].services[s["description"]].status = self.STATES_MAPPING["services"][s["state"]]
                         self.new_hosts[s["host_name"]].services[s["description"]].last_check = datetime.datetime.fromtimestamp(int(s["last_check"])).isoformat(" ")
-                        self.new_hosts[s["host_name"]].services[s["description"]].duration = Actions.HumanReadableDurationThruk(s["last_state_change"])
+                        self.new_hosts[s["host_name"]].services[s["description"]].duration = Actions.HumanReadableDurationFromTimestamp(s["last_state_change"])
                         self.new_hosts[s["host_name"]].services[s["description"]].attempt = "%s/%s" % (s["current_attempt"], s["max_check_attempts"])
                         self.new_hosts[s["host_name"]].services[s["description"]].status_information = s["plugin_output"].encode("utf-8").replace("\n", " ").strip()
                         self.new_hosts[s["host_name"]].services[s["description"]].passiveonly = not(bool(int(s["active_checks_enabled"])))

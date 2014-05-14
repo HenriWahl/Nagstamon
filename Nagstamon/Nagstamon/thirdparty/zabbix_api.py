@@ -272,7 +272,8 @@ class ZabbixAPI(object):
             response = opener.open(request, timeout=self.timeout)
             self.debug(logging.INFO, "Response Code: " + str(response.code))
         except urllib2.URLError:
-            raise ZabbixAPIException("Could not open URL <%s>" % response.url)
+            #raise ZabbixAPIException("Could not open URL <%s>" % response.url)
+            raise ZabbixAPIException("Could not open URL")
 
         # NOTE: Getting a 412 response code means the headers are not in the
         # list of allowed headers.

@@ -62,6 +62,7 @@ class ZabbixServer(GenericServer):
                          "input_checkbutton_use_display_name_host",
                          "input_checkbutton_use_display_name_service"]
 
+
     def __init__(self, **kwds):
         GenericServer.__init__(self, **kwds)
 
@@ -74,6 +75,7 @@ class ZabbixServer(GenericServer):
         self.username = self.conf.servers[self.get_name()].username
         self.password = self.conf.servers[self.get_name()].password
 
+
     def _login(self):
         try:
             self.zapi = ZabbixAPI(server=self.monitor_url, path="", log_level=0)
@@ -82,8 +84,9 @@ class ZabbixServer(GenericServer):
             result, error = self.Error(sys.exc_info())
             return Result(result=result, error=error)
 
+
     def init_HTTP(self):
-        # Fix eventually missing tailing "/" in url
+
         self.statemap = {
             'UNREACH': 'UNREACHABLE',
             'CRIT': 'CRITICAL',
@@ -97,6 +100,7 @@ class ZabbixServer(GenericServer):
             '3': 'WARNING',
             '4': 'CRITICAL'}
         GenericServer.init_HTTP(self)
+
 
     def _get_status(self):
         """
@@ -130,10 +134,10 @@ class ZabbixServer(GenericServer):
                 n = {
                     'host': host['host'],
                     'status': self.statemap.get(host['available'], host['available']),
-                    'last_check': int(time.time()),
-                    'duration': duration,
+                    'last_check': 'n/a',
+                    'duration': Actions.HumanReadableDurationFromTimestamp(host['errors_from']),
                     'status_information': host['error'],
-                    'attempt': '0/0',
+                    'attempt': '1/1',
                     'site': '',
                     'address': host['host'],
                 }
@@ -166,10 +170,6 @@ class ZabbixServer(GenericServer):
             result, error = self.Error(sys.exc_info())
             return Result(result=result, error=error)
 
-        # Add filters to the url which should only be applied to the service request
-        #if str(self.conf.filter_services_on_unreachable_hosts) == "True":
-        #    url_params += '&hst2=0'
-
         # services
         services = []
         groupids = []
@@ -179,11 +179,12 @@ class ZabbixServer(GenericServer):
             response = []
             try:
                 #service = self.zapi.trigger.get({"select_items":"extend","monitored":1,"only_true":1,"min_severity":3,"output":"extend","filter":{}})
+
                 triggers_list = []
                 if self.monitor_cgi_url:
                     group_list = self.monitor_cgi_url.split(',')
                     # johncan
-                    # self.Debug(str(group_list))
+                    #self.Debug(str(group_list))
                     hostgroup_ids = [x['groupid'] for x in self.zapi.hostgroup.get(
                         {'output': 'extend',
                          'with_monitored_items': True,
@@ -200,6 +201,7 @@ class ZabbixServer(GenericServer):
                         {'sortfield': 'lastchange', 'withUnacknowledgedEvents': True, "monitored": True,
                          "filter": {'value': 1}})
                 triggers_list = []
+
                 for trigger in zabbix_triggers:
                     triggers_list.append(trigger.get('triggerid'))
                 this_trigger = self.zapi.trigger.get(
@@ -210,7 +212,7 @@ class ZabbixServer(GenericServer):
                      'expandData': True}
                 )
                 # johncan
-                # self.Debug(str(this_trigger))
+                self.Debug(str(this_trigger))
                 if type(this_trigger) is dict:
                     for triggerid in this_trigger.keys():
                         services.append(this_trigger[triggerid])
@@ -226,6 +228,7 @@ class ZabbixServer(GenericServer):
                 else:
                     service = e.result.content
                     ret = e.result
+
             for service in services:
                 # johncan
                 # self.Debug(str(service))
@@ -237,11 +240,12 @@ class ZabbixServer(GenericServer):
                     'host': service['host'],
                     'service': service['description'],
                     'status': self.statemap.get(service['priority'], service['priority']),
-                    'attempt': '0/0',
-                    'duration': 60,
+                    # 1/1 attempt looks at least like there have been any attempt
+                    'attempt': '1/1',
+                    'duration': Actions.HumanReadableDurationFromTimestamp(service['lastchange']),
                     'status_information': state,
                     'passiveonly': 'no',
-                    'last_check': datetime.datetime.fromtimestamp(int(service['lastchange'])),
+                    'last_check': 'n/a',
                     'notifications': 'yes',
                     'flapping': 'no',
                     'site': '',

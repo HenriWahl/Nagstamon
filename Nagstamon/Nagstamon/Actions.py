@@ -942,7 +942,7 @@ def CriticalityIsFilteredOutByRE(criticality, conf=None):
         traceback.print_exc(file=sys.stdout)
 
 
-def HumanReadableDuration(seconds):
+def HumanReadableDurationFromSeconds(seconds):
     """
     convert seconds given by Opsview to the form Nagios gives them
     like 70d 3h 34m 34s
@@ -967,7 +967,7 @@ def HumanReadableDuration(seconds):
         return seconds
 
 
-def HumanReadableDurationThruk(timestamp):
+def HumanReadableDurationFromTimestamp(timestamp):
     """
     Thruk server supplies timestamp of latest state change which
     has to be subtracted from .now()
