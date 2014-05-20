@@ -220,8 +220,6 @@ class IcingaServer(GenericServer):
 
                 if error != "": return Result(result=jsonraw, error=error)
 
-                print jsonraw
-
                 jsondict = json.loads(jsonraw)
                 services = copy.deepcopy(jsondict["status"]["service_status"])
 
