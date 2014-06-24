@@ -13,7 +13,7 @@ Vcs-Browser: https://codeload.github.com/HenriWahl/Nagstamon/zip/master
 
 Package: nagstamon
 Architecture: all
-Depends: ${python:Depends}, ${misc:Depends}, python-gtk2, python-pkg-resources, librsvg2-common, sox
+Depends: ${python:Depends}, ${misc:Depends}, python-gtk2, python-pkg-resources, python-beautifulsoup, librsvg2-common, sox
 Suggests: python-keyring, python-secretstorage
 Description: Nagios status monitor which takes place in systray or on desktop
  Nagstamon is a Nagios status monitor which takes place in systray or 
