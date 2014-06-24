@@ -1,14 +1,15 @@
 nagstamon (1.0rc1) unstable; urgency=low
 
  * New upstream
-   - added support for Op5Monitor 6.3 instead of Ninja
    - added custom event notification with custom commands
    - added highlighting of new events
    - added storage of passwords in OS keyring
+   - added optional tooltip for full status information
    - added support for applying custom actions to specific monitor only
    - added copy buttons for servers and actions dialogs
-   - added experimental Zabbix support
    - added stopping notification if event already vanished
+   - added support for Op5Monitor 6.3 instead of Ninja
+   - added experimental Zabbix support
    - fixed old regression not-staying-on-top-bug
    - fixed Check_MK-Recheck-DOS-bug
    - fixed pop window size calculation on multiple screens
