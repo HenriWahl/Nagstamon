@@ -3962,12 +3962,6 @@ class GenericServer(object):
             self.builder.get_object("input_entry_proxy_username").set_text("proxyuser")
             self.builder.get_object("input_entry_proxy_password").set_text("proxypassword")
 
-            # show password - or not
-            self.ToggleSavePassword()
-            # show settings options for proxy - or not
-            self.ToggleProxy()
-            # disable autologin by default
-            self.ToggleAutoLoginKey()
         else:
             # edit or copy a server
             keys = self.conf.servers[self.server].__dict__.keys()
@@ -4001,6 +3995,13 @@ class GenericServer(object):
 
             # set server type
             self.combobox.set_active(server_types[self.conf.servers[self.server].type])
+
+        # show password - or not
+        self.ToggleSavePassword()
+        # show settings options for proxy - or not
+        self.ToggleProxy()
+        # disable autologin by default
+        self.ToggleAutoLoginKey()
 
 
     def on_server_type_change(self, combobox):
@@ -4163,9 +4164,8 @@ class GenericServer(object):
             Disable proxy options
         """
         checkbutton = self.builder.get_object("input_checkbutton_use_proxy")
-
-        self.ToggleProxyFromOS(checkbutton)
-        self.ToggleProxyAddress(checkbutton)
+        self.ToggleProxyFromOS(checkbutton.get_active())
+        self.ToggleProxyAddress(checkbutton.get_active())
 
 
     def ToggleProxyFromOS(self, widget=None):
@@ -4388,7 +4388,7 @@ class EditServer(GenericServer):
             self.settingsdialog.FillTreeView("servers_treeview", self.conf.servers, "Servers", "selected_server")
 
             # care about Centreon criticality filter
-            self.output.Dialogs["Settings"].ToggleRECriticalityFilter()
+            self.settingsdialog.ToggleRECriticalityFilter()
 
             # apply settings for modified servers
             self.output.ApplyServerModifications()

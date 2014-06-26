@@ -71,16 +71,6 @@ chmod -x %{buildroot}%{_datadir}/pixmaps/%{name}.svg
 mv %{buildroot}%{_bindir}/%{name}.py %{buildroot}%{_bindir}/%{name}
 
 # install the desktop file
-###%{__install} -m755 -d %{buildroot}%{_desktopdir}
-###%{__install} -m755 -d %{buildroot}%{_datadir}/pixmaps
-###%{__install} -m644 Nagstamon/resources/nagstamon.svg %{buildroot}%{_datadir}/pixmaps/nagstamon.svg
-###%{__install} -m644 %{SOURCE1} %{buildroot}%{_desktopdir}/nagstamon.desktop
-###
-###desktop-file-install --dir %{buildroot}%{_desktopdir} \
-###    --vendor OBS \
-###    --delete-original \
-###    %{buildroot}%{_desktopdir}/nagstamon.desktop
-
 desktop-file-install --dir %{buildroot}/%{_datadir}/applications\
                      --delete-original\
                      --set-icon=%{name}.svg\
