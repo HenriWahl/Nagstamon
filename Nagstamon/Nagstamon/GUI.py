@@ -4100,7 +4100,7 @@ class GenericServer(object):
             self.settingsdialog.FillTreeView("servers_treeview", self.conf.servers, "Servers", "selected_server")
 
             # care about Centreon criticality filter
-            self.output.Dialogs["Settings"].ToggleRECriticalityFilter()
+            self.settingsdialog.ToggleRECriticalityFilter()
 
             # apply settings for modified servers
             self.output.ApplyServerModifications()

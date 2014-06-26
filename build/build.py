@@ -166,9 +166,34 @@ fakeroot debian/rules binary; fakeroot debian/rules clean; rm debian'],
     print "\nFind .deb output in ../.\n"
 
 
+# from https://github.com/mizunokazumi/Nagstamon - Thanks!
+def rpmmain():
+    parser = OptionParser()
+    parser.add_option('-t', '--target', dest='target', help='Target application directory', default=DEFAULT_LOCATION)
+    parser.add_option('-r', '--redhat', dest='redhat', help='"redhat" directory location', default='')
+    options, args = parser.parse_args()
+    if not options.redhat:
+        options.redhat = '%s/%sredhat' % (options.target, INSTALLER_DIR)
+    else:
+        options.redhat = '%s/redhat' % options.debian
+    options.redhat = os.path.abspath(options.redhat)
+
+    print options.redhat
+    print options.target
+
+    if not os.path.isfile('%s/nagstamon.spec' % (options.redhat)):
+        print 'Missing required "nagstamon.spec" file in "%s" directory' % options.redhat
+        return
+    execute_script_lines(['cd %(target)s; ln -s %(redhat)s; tar -czf redhat/nagstamon_1.0rc1.tar.gz .; fakeroot rpmbuild --define "_sourcedir %(redhat)s" -ba redhat/nagstamon.spec; rm redhat'],
+                         get_opt_dict(options))
+
+    print "\nFind .rpm output in ../.\n"
+
+
 DISTS = {
     'debian': debmain,
-    'Ubuntu': debmain
+    'Ubuntu': debmain,
+    'fedora': rpmmain
 }
 
 if __name__ == '__main__':
