@@ -27,6 +27,7 @@ Requires: python-setuptools
 Requires: python-keyring
 Requires: python-SecretStorage
 Requires: python-crypto
+Requires: python-BeautifulSoup
 Requires: sox
 
 
@@ -43,6 +44,9 @@ sound. Hosts and services can be filtered by category and regular expressions.
 %prep
 %setup -n Nagstamon
 
+#Remove embedded BeautifulSoup http://sourceforge.net/p/nagstamon/bugs/44/
+rm -rf Nagstamon/thirdparty/BeautifulSoup.py
+
 %build
 cd ../
 %{__python} setup.py build
@@ -54,17 +58,33 @@ cd ../
 
 %{__chmod} +x %{buildroot}%{python_sitelib}/Nagstamon/Server/Multisite.py
 
+#Provide directory to install icon for desktop file
+mkdir -p %{buildroot}%{_datadir}/pixmaps
+
+#Copy icon to pixmaps directory
+cp Nagstamon/resources/%{name}.svg %{buildroot}%{_datadir}/pixmaps/%{name}.svg
+
+#Remove execute bit from icon
+chmod -x %{buildroot}%{_datadir}/pixmaps/%{name}.svg
+
+#Remove the file extension for convenience
+mv %{buildroot}%{_bindir}/%{name}.py %{buildroot}%{_bindir}/%{name}
+
 # install the desktop file
-%{__install} -m755 -d %{buildroot}%{_desktopdir}
-%{__install} -m755 -d %{buildroot}%{_datadir}/pixmaps
-%{__install} -m644 Nagstamon/resources/nagstamon.svg %{buildroot}%{_datadir}/pixmaps/nagstamon.svg
-%{__install} -m644 %{SOURCE1} %{buildroot}%{_desktopdir}/nagstamon.desktop
+###%{__install} -m755 -d %{buildroot}%{_desktopdir}
+###%{__install} -m755 -d %{buildroot}%{_datadir}/pixmaps
+###%{__install} -m644 Nagstamon/resources/nagstamon.svg %{buildroot}%{_datadir}/pixmaps/nagstamon.svg
+###%{__install} -m644 %{SOURCE1} %{buildroot}%{_desktopdir}/nagstamon.desktop
+###
+###desktop-file-install --dir %{buildroot}%{_desktopdir} \
+###    --vendor OBS \
+###    --delete-original \
+###    %{buildroot}%{_desktopdir}/nagstamon.desktop
 
-desktop-file-install --dir %{buildroot}%{_desktopdir} \
-    --vendor OBS \
-    --delete-original \
-    %{buildroot}%{_desktopdir}/nagstamon.desktop
-
+desktop-file-install --dir %{buildroot}/%{_datadir}/applications\
+                     --delete-original\
+                     --set-icon=%{name}.svg\
+                     %{buildroot}%{python_sitelib}/Nagstamon/resources/%{name}.desktop
 
 # fix for stupid strip issue
 #%{__chmod} -R u+w %{buildroot}/*
@@ -76,15 +96,16 @@ desktop-file-install --dir %{buildroot}%{_desktopdir} \
 %defattr(-, root, root, 0755)
 #%doc COPYRIGHT ChangeLog LICENSE
 %doc %{_mandir}/man?/*
-%{_bindir}/*
+%{_bindir}/%{name}
 %{_datadir}/pixmaps/*
-#%{_desktopdir}/OBS-nagstamon.desktop
+%{_datadir}/applications/%{name}.desktop
 %{python_sitelib}/Nagstamon
 %{python_sitelib}/nagstamon-*-py*.egg-info
 
 %changelog
-* Thu Jun 25 2014 Henri Wahl <h.wahl@ifw-dresden.de> - 1.0rc1
+* Thu Jun 26 2014 Henri Wahl <h.wahl@ifw-dresden.de> - 1.0rc1
 - Release candidate 1.
+- mixed in some lines from https://apps.fedoraproject.org/packages/nagstamon/sources/spec/
 
 * Sun Mar 03 2014 Vorontsov Igor <mizunokazumi@mail.ru> - 0.9.12-1.mizu
 - Initial package.
