@@ -204,8 +204,11 @@ class GUI(object):
         # when talking about "systray" the Windows variant of upper left desktop corner
         # statusbar is meant synonymical
         # if pointer on systray do popup the long-summary-status-window aka popwin
-        self.statusbar.SysTray.connect("activate", self.statusbar.SysTrayClicked)
-        self.statusbar.SysTray.connect("popup-menu", self.statusbar.MenuPopup)
+        if platform.system() == "Darwin":
+            self.statusbar.SysTray.connect("popup-menu", self.statusbar.SysTrayClickedPopup)
+        else:
+            self.statusbar.SysTray.connect("activate", self.statusbar.SysTrayClicked)
+            self.statusbar.SysTray.connect("popup-menu", self.statusbar.MenuPopup)
 
         # if pointer clicks on logo move stautsbar
         self.statusbar.LogoEventbox.connect("button-press-event", self.statusbar.LogoClicked)
@@ -1554,11 +1557,7 @@ class StatusBar(object):
             self.StatusBar.hide_all()
 
         # put Systray icon into statusbar object
-        # on MacOSX use only dummy
-        if platform.system() == "Darwin":
-            self.SysTray = DummyStatusIcon()
-        else:
-            self.SysTray = gtk.StatusIcon()
+        self.SysTray = gtk.StatusIcon()
         self.SysTray.set_from_file(self.output.Resources + os.sep + "nagstamon" + self.output.BitmapSuffix)
 
         # if systray icon should be shown show it
@@ -1760,6 +1759,13 @@ class StatusBar(object):
         self.Moving = False
         # to avoid wrong placed popwin in macosx
         gobject.idle_add(self.output.RefreshDisplayStatus)
+
+
+    def SysTrayClickedPopup(self, button=None, activate_time=None, widget=None, event=None):
+        """
+           for attaching SysTrayClicked to "popup-menu" event for MacOSX
+        """
+        self.SysTrayClicked(widget, event)
 
 
     def SysTrayClicked(self, widget=None, event=None):
@@ -3263,17 +3269,6 @@ class Settings(object):
         self.ColorsReset()
 
         # disable non useful gui settings
-        if platform.system() == "Darwin":
-            # MacOS doesn't need any option because there is only floating statusbar possible
-            self.builder.get_object("input_radiobutton_icon_in_systray").hide()
-            self.builder.get_object("hbox_systray_popup_offset").hide()
-            self.builder.get_object("input_radiobutton_statusbar_floating").hide()
-            self.builder.get_object("label_appearance").hide()
-            self.builder.get_object("input_radiobutton_fullscreen").hide()
-            self.builder.get_object("input_combo_fullscreen_display").hide()
-            self.builder.get_object("label_fullscreen_display").hide()
-            self.builder.get_object("input_checkbutton_notification_desktop").hide()
-            self.builder.get_object("input_radiobutton_appindicator").hide()
 
         # as of now there is no notification in Windows so disable it
         if platform.system() == "Windows":
