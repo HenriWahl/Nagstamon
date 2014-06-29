@@ -1242,12 +1242,16 @@ class GUI(object):
 
                         # Notification actions
                         if str(self.conf.notification_actions) == "True":
-                            if str(self.conf.notification_action_warning) == "True":
-                                Actions.RunNotificationAction(str(self.conf.notification_action_warning_string))
-                            if str(self.conf.notification_action_critical) == "True":
-                                Actions.RunNotificationAction(str(self.conf.notification_action_critical_string))
-                            if str(self.conf.notification_action_down) == "True":
-                                Actions.RunNotificationAction(str(self.conf.notification_action_down_string))
+                            for event in [k for k,v in self.events_notification.items() if v == True]:
+                                if str(self.conf.notification_action_warning) == "True":
+                                    action_warning_string = self.conf.notification_action_warning_string.replace("$EVENTS$", event)
+                                    Actions.RunNotificationAction(action_warning_string)
+                                if str(self.conf.notification_action_critical) == "True":
+                                    action_critical_string = self.conf.notification_action_critical_string.replace("$EVENTS$", event)
+                                    Actions.RunNotificationAction(action_critical_string)
+                                if str(self.conf.notification_action_down) == "True":
+                                    action_down_string = self.conf.notification_action_down_string.replace("$EVENTS$", event)
+                                    Actions.RunNotificationAction(action_down_string)
 
                         # if desired pop up status window
                         # sorry but does absolutely not work with windows and systray icon so I prefer to let it be
