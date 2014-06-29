@@ -1244,13 +1244,13 @@ class GUI(object):
                         if str(self.conf.notification_actions) == "True":
                             for event in [k for k,v in self.events_notification.items() if v == True]:
                                 if str(self.conf.notification_action_warning) == "True":
-                                    action_warning_string = self.conf.notification_action_warning_string.replace("$EVENT$", event)
+                                    action_warning_string = self.conf.notification_action_warning_string.replace("$EVENTS$", event)
                                     Actions.RunNotificationAction(action_warning_string)
                                 if str(self.conf.notification_action_critical) == "True":
-                                    action_critical_string = self.conf.notification_action_critical_string.replace("$EVENT$", event)
+                                    action_critical_string = self.conf.notification_action_critical_string.replace("$EVENTS$", event)
                                     Actions.RunNotificationAction(action_critical_string)
                                 if str(self.conf.notification_action_down) == "True":
-                                    action_down_string = self.conf.notification_action_down_string.replace("$EVENT$", event)
+                                    action_down_string = self.conf.notification_action_down_string.replace("$EVENTS$", event)
                                     Actions.RunNotificationAction(action_down_string)
 
                         # if desired pop up status window
