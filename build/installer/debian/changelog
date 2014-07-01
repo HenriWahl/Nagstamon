@@ -1,6 +1,6 @@
 nagstamon (1.0rc1) unstable; urgency=low
 
- * New upstream
+  * New upstream
    - added custom event notification with custom commands
    - added highlighting of new events
    - added storage of passwords in OS keyring
