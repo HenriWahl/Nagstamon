@@ -2988,6 +2988,9 @@ class AppIndicator(object):
         # Nagstamon Submenu
         self.Menu_Nagstamon = gtk.MenuItem("Nagstamon")
         self.Menu_Nagstamon.set_submenu(self.output.statusbar.Menu)
+        
+        print self.output.statusbar.Menu
+        
         self.Menu_Separator = gtk.SeparatorMenuItem()
         # Status menu items
         self.Menu_DOWN = gtk.MenuItem("")

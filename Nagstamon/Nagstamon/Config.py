@@ -35,7 +35,7 @@ try:
         # keyring and secretstorage have to be importable
         import keyring, secretstorage
         if ("SecretService") in dir(keyring.backends) and not (keyring.get_keyring() is None):
-            keyring_available = True
+			keyring_available = True
     else:
         # nagstamon.spec always have to match module path
         import Nagstamon.thirdparty.keyring as keyring
