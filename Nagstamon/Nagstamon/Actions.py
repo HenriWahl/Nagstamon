@@ -1008,6 +1008,7 @@ def MachineSortableDateMultisite(raw):
     """
     Multisite dates/times are so different to the others so it has to be handled separately
     """
+
     # dictionary for duration date string components
     d = {"M":0, "d":0, "h":0, "m":0, "s":0}
 

@@ -187,7 +187,7 @@ def rpmmain():
     execute_script_lines(['cd %(target)s; ln -s %(redhat)s; tar -czf redhat/nagstamon_1.0rc1.tar.gz .; fakeroot rpmbuild --define "_sourcedir %(redhat)s" -ba redhat/nagstamon.spec; rm redhat'],
                          get_opt_dict(options))
 
-    print "\nFind .rpm output in $HOME/rpmbuildRPMS/noarch/.\n"
+    print "\nFind .rpm output in $HOME/rpmbuild/RPMS/noarch/.\n"
 
 
 DISTS = {

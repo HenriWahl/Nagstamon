@@ -62,7 +62,7 @@ class CustomSortingColumn(Column):
         except ValueError, err: # value not in CHOICES
             try:
                 return cmp(cls.CHOICES.index(data1), cls.CHOICES.index(data2))
-            except:
+            except ValueError, err:
                 try:
                     return cls.CHOICES.index(data1)
                 except:

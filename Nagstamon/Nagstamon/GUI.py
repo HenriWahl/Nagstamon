@@ -1242,11 +1242,11 @@ class GUI(object):
 
                         # Notification actions
                         if str(self.conf.notification_actions) == "True":
-                            if str(self.conf.notification_action_warning) == "True":
+                            if str(self.conf.notification_action_warning) == "True" and status == "WARNING":
                                 Actions.RunNotificationAction(str(self.conf.notification_action_warning_string))
-                            if str(self.conf.notification_action_critical) == "True":
+                            if str(self.conf.notification_action_critical) == "True" and status == "CRITICAL":
                                 Actions.RunNotificationAction(str(self.conf.notification_action_critical_string))
-                            if str(self.conf.notification_action_down) == "True":
+                            if str(self.conf.notification_action_down) == "True" and status == "DOWN":
                                 Actions.RunNotificationAction(str(self.conf.notification_action_down_string))
 
                         # if desired pop up status window
@@ -3108,6 +3108,7 @@ class Settings(object):
                           "notification_action_down": self.ToggleNotificationActionDown,
                           "notification_action_ok": self.ToggleNotificationActionOk,
                           "button_help_notification_actions_clicked": self.ToggleNotificationActionsHelp,
+                          "button_help_notification_custom_actions_clicked": self.ToggleNotificationCustomActionsHelp,
                           "button_new_action": lambda a: self.output.GetDialog(dialog="NewAction", output=self.output, settingsdialog=self, conf=self.conf),
                           "button_edit_action": lambda e: self.output.GetDialog(dialog="EditAction", output=self.output, selected_action=self.selected_action, settingsdialog=self, conf=self.conf),
                           "button_copy_action": lambda e: self.output.GetDialog(dialog="CopyAction", output=self.output, selected_action=self.selected_action, settingsdialog=self, conf=self.conf),
@@ -3821,8 +3822,10 @@ class Settings(object):
         checkbutton = self.builder.get_object("input_checkbutton_notification_action_warning")
         if not checkbutton.get_active():
             options.hide()
+            checkbutton.set_label("WARNING")
         else:
             options.show()
+            checkbutton.set_label("WARNING:")
 
 
     def ToggleNotificationActionCritical(self, widget=None):
@@ -3833,8 +3836,10 @@ class Settings(object):
         checkbutton = self.builder.get_object("input_checkbutton_notification_action_critical")
         if not checkbutton.get_active():
             options.hide()
+            checkbutton.set_label("CRITICAL")
         else:
             options.show()
+            checkbutton.set_label("CRITICAL:")
 
 
     def ToggleNotificationActionDown(self, widget=None):
@@ -3845,8 +3850,10 @@ class Settings(object):
         checkbutton = self.builder.get_object("input_checkbutton_notification_action_down")
         if not checkbutton.get_active():
             options.hide()
+            checkbutton.set_label("DOWN")
         else:
             options.show()
+            checkbutton.set_label("DOWN:")
 
 
     def ToggleNotificationActionOk(self, widget=None):
@@ -3857,8 +3864,10 @@ class Settings(object):
         checkbutton = self.builder.get_object("input_checkbutton_notification_action_ok")
         if not checkbutton.get_active():
             options.hide()
+            checkbutton.set_label("OK")
         else:
             options.show()
+            checkbutton.set_label("OK:")
 
 
     def ToggleNotificationActionsHelp(self, widget=None):
@@ -3866,6 +3875,14 @@ class Settings(object):
             Toggle help label for action string
         """
         help = self.builder.get_object("label_help_notification_actions_description")
+        help.set_visible(not help.get_visible())
+
+
+    def ToggleNotificationCustomActionsHelp(self, widget=None):
+        """
+            Toggle help label for action string
+        """
+        help = self.builder.get_object("label_help_notification_custom_actions_description")
         help.set_visible(not help.get_visible())
 
 

@@ -16,10 +16,6 @@ BuildRoot: %{_tmppath}/%{name}-%{version}-%{release}-root
 Buildarch: noarch
 BuildRequires: desktop-file-utils
 BuildRequires: Distutils
-#BuildRequires: gnome-python2-libegg
-#BuildRequires: pygtk2-devel
-#BuildRequires: python-devel
-#BuildRequires: rpm-macros-rpmforge
 Requires: gnome-icon-theme
 Requires: pygtk2
 Requires: python >= 2.7
