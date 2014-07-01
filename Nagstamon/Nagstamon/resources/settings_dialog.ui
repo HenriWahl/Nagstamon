@@ -565,7 +565,7 @@
                 </child>
                 <child>
                   <object class="GtkRadioButton" id="input_radiobutton_statusbar_floating">
-                    <property name="label" translatable="yes">Statusbar floating</property>
+                    <property name="label" translatable="yes">Floating statusbar</property>
                     <property name="visible">True</property>
                     <property name="can_focus">False</property>
                     <property name="receives_default">False</property>
