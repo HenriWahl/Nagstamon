@@ -1954,12 +1954,9 @@ class Popwin(object):
         # nice separator
         self.HBoxMenu.add(gtk.VSeparator())
         self.ButtonMenu = ButtonWithIcon(output=self.output, label="", icon="menu.png")
-        self.ButtonMenu.set_no_show_all(True)
         self.HBoxMenu.add(self.ButtonMenu)
-        #self.ButtonMenu.connect("clicked", self.MenuPopUp)
         self.ButtonMenu.connect("button-press-event", self.MenuPopUp)
         self.ButtonClose = ButtonWithIcon(output=self.output, label="", icon="close.png")
-        self.ButtonClose.set_no_show_all(True)
         self.HBoxMenu.add(self.ButtonClose)
         # close popwin when its close button is pressed
         self.ButtonClose.connect("clicked", self.Close)
@@ -2102,7 +2099,6 @@ class Popwin(object):
             self.Window.set_skip_taskbar_hint(True)
             # change Close/Menu button in popup-mode
             self.ButtonClose.show()
-            self.ButtonMenu.hide()
         else:
             # find out dimension of all monitors
             if len(self.output.monitors) == 0:
@@ -2124,7 +2120,6 @@ class Popwin(object):
             self.Window.show_all()
             # change Close/Menu button in fullscreen-mode
             self.ButtonClose.hide()
-            self.ButtonMenu.show()
 
         # dummy return
         return True
