@@ -3960,8 +3960,10 @@ class GenericServer(object):
             # new server
             # enable server by default
             self.builder.get_object("input_checkbutton_enabled").set_active(True)
-            # do not save password by default
-            self.builder.get_object("input_checkbutton_save_password").set_active(False)
+            # disable autologin by default
+            self.ToggleAutoLoginKey()
+            # save password by default
+            self.builder.get_object("input_checkbutton_save_password").set_active(True)
             # disable proxy by default
             self.builder.get_object("input_checkbutton_use_proxy").set_active(False)
 
@@ -3978,7 +3980,6 @@ class GenericServer(object):
             self.builder.get_object("input_entry_proxy_address").set_text("http://proxy:port/")
             self.builder.get_object("input_entry_proxy_username").set_text("proxyuser")
             self.builder.get_object("input_entry_proxy_password").set_text("proxypassword")
-
         else:
             # edit or copy a server
             keys = self.conf.servers[self.server].__dict__.keys()
@@ -4014,11 +4015,9 @@ class GenericServer(object):
             self.combobox.set_active(server_types[self.conf.servers[self.server].type])
 
         # show password - or not
-        self.ToggleSavePassword()
+        #self.ToggleSavePassword()
         # show settings options for proxy - or not
         self.ToggleProxy()
-        # disable autologin by default
-        self.ToggleAutoLoginKey()
 
 
     def on_server_type_change(self, combobox):
@@ -4146,11 +4145,12 @@ class GenericServer(object):
         checkbutton = self.builder.get_object("input_checkbutton_save_password")
         is_active = checkbutton.get_active()
         item = self.builder.get_object("label_password")
-        item.set_sensitive( is_active )
+        item.set_sensitive(is_active)
         item = self.builder.get_object("input_entry_password")
-        item.set_sensitive( is_active )
+        item.set_sensitive(is_active)
         ###if not is_active:
         ###    item.set_text("")
+
 
     def ToggleAutoLoginKey(self, widget=None):
         """
@@ -4292,6 +4292,9 @@ class EditServer(GenericServer):
         """
 
         GenericServer.initialize(self)
+
+
+        print self.server
 
         # set title of settings dialog
         self.dialog.set_title("Edit server " + self.server)
