@@ -1938,7 +1938,8 @@ class Popwin(object):
         # set first item active
         self.ComboboxMonitor.set_active(0)
         self.HBoxCombobox.add(self.ComboboxMonitor)
-        self.AlMonitorComboBox.add(self.HBoxCombobox)
+        # add conmbobox to right-side menu
+        self.HBoxMenu.add(self.HBoxCombobox)
 
         # general buttons
         self.ButtonFilters = ButtonWithIcon(output=self.output, label="Filters", icon="settings.png")
