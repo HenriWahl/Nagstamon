@@ -1100,39 +1100,41 @@ class GUI(object):
         about.set_website(self.website)
         about.set_copyright(self.copyright)
         about.set_comments(self.comments)
-        about.set_authors(["Henri Wahl",\
-                           " ",\
-                           "Thank you very much for code",\
-                           "contributions, patches, packaging,",\
-                           "testing, hints and ideas:",\
-                           " ",\
-                           "Antoine Jacoutot",\
-                           "Benoît Soenen",\
-                           "Carl Chenet",\
-                           "Carl Helmertz",\
-                           "Davide Cecchetto",\
-                           "Emile Heitor ",\
-                           "John Conroy",\
-                           "Lars Michelsen",\
-                           "M. Cigdem Cebe",\
-                           "Mattias Ryrlén",\
-                           "Michał Rzeszut",\
-                           "Nikita Klimov",\
-                           "Patrick Cernko",\
-                           "Pawel Połewicz",\
-                           "Robin Sonefors",\
-                           "Salvatore LaMendola",\
-                           "Sandro Tosi",\
-                           "Sven Nierlein",\
-                           "Thomas Gelf",\
-                           "Tobias Scheerbaum",\
-                           "Yannick Charton",\
-                           " ",\
+        about.set_authors(["Henri Wahl",
+                           " ",
+                           "Thank you very much for code",
+                           "contributions, patches, packaging,",
+                           "testing, hints and ideas:",
+                           " ",
+                           "Antoine Jacoutot",
+                           "Anton Löfgren",
+                           "Benoît Soenen",
+                           "Carl Chenet",
+                           "Carl Helmertz",
+                           "Davide Cecchetto",
+                           "Emile Heitor ",
+                           "John Conroy",
+                           "Lars Michelsen",
+                           "M. Cigdem Cebe",
+                           "Martin Campbell",
+                           "Mattias Ryrlén",
+                           "Michał Rzeszut",
+                           "Nikita Klimov",
+                           "Patrick Cernko",
+                           "Pawel Połewicz",
+                           "Robin Sonefors",
+                           "Salvatore LaMendola",
+                           "Sandro Tosi",
+                           "Sven Nierlein",
+                           "Thomas Gelf",
+                           "Tobias Scheerbaum",
+                           "Yannick Charton",
+                           " ",
                            "...and those I forgot to mention but who helped a lot...",
-                           " ",\
-                           "Third party software used by Nagstamon",\
-                           "under their respective license:",\
-                           "BeautifulSoup - http://www.crummy.com/software/BeautifulSoup",\
+                           " ",
+                           "Third party software used by Nagstamon",
+                           "under their respective license:",
+                           "BeautifulSoup - http://www.crummy.com/software/BeautifulSoup",
                            "Pyinstaller - http://www.pyinstaller.org"])
         # read LICENSE file
         license = ""
