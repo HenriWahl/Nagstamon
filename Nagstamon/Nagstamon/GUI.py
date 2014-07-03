@@ -1940,7 +1940,8 @@ class Popwin(object):
         self.NagstamonLabel = gtk.Image()
         self.NagstamonLabel_Pixbuf = gtk.gdk.pixbuf_new_from_file(self.output.Resources + os.sep + "nagstamon_label.png")
         self.NagstamonLabel.set_from_pixbuf(self.NagstamonLabel_Pixbuf)
-        self.NagstamonVersion = gtk.Label("  " + self.output.version)
+        self.NagstamonVersion = gtk.Label()
+        self.NagstamonVersion.set_markup("<b>%s</b>" % (self.output.version))
 
         self.HBoxNagiosButtons.add(self.NagstamonLabel)
         self.HBoxNagiosButtons.add(self.NagstamonVersion)
