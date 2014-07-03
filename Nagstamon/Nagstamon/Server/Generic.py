@@ -278,6 +278,8 @@ class GenericServer(object):
             all_services = []
         self._set_acknowledge(thread_obj.host, thread_obj.service, thread_obj.author, thread_obj.comment,\
                               thread_obj.sticky, thread_obj.notify, thread_obj.persistent, all_services)
+        # resfresh immediately according to https://github.com/HenriWahl/Nagstamon/issues/86
+        self.thread.doRefresh = True
 
 
     def _set_acknowledge(self, host, service, author, comment, sticky, notify, persistent, all_services=[]):

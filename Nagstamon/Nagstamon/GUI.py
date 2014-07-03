@@ -797,15 +797,18 @@ class GUI(object):
         # if service is "" it must be a host
         if service == "":
             # set label for acknowledging a host
-            self.acknowledge_xml.get_object("input_label_host").set_text(host)
-            self.acknowledge_xml.get_object("label_service").hide()
-            self.acknowledge_xml.get_object("input_label_service").hide()
+            ###self.acknowledge_xml.get_object("input_label_host").set_text(host)
+            ###self.acknowledge_xml.get_object("label_service").hide()
+            ###self.acknowledge_xml.get_object("input_label_service").hide()
             self.acknowledge_dialog.set_title("Acknowledge host")
+            self.acknowledge_xml.get_object("input_label_description").set_markup("Host <b>%s</b>" % (host))
         else:
             # set label for acknowledging a service on host
-            self.acknowledge_xml.get_object("input_label_host").set_text(host)
-            self.acknowledge_xml.get_object("input_label_service").set_text(service)
+            ###self.acknowledge_xml.get_object("input_label_host").set_text(host)
+            ###self.acknowledge_xml.get_object("input_label_service").set_text(service)
             self.acknowledge_dialog.set_title("Acknowledge service")
+            self.acknowledge_xml.get_object("input_label_description").set_markup("Service <b>%s</b> on host <b>%s</b>" % (service, host))
+
 
         # default flags of Nagios acknowledgement
         self.acknowledge_xml.get_object("input_checkbutton_sticky_acknowledgement").set_active(eval(str(self.conf.defaults_acknowledge_sticky)))
@@ -901,15 +904,19 @@ class GUI(object):
         # if service is None it must be a host
         if service == "":
             # set label for acknowledging a host
-            self.downtime_xml.get_object("input_label_host").set_text(host)
-            self.downtime_xml.get_object("label_service").hide()
-            self.downtime_xml.get_object("input_label_service").hide()
+            ###self.downtime_xml.get_object("input_label_host").set_text(host)
+            ###self.downtime_xml.get_object("label_service").hide()
+            ###self.downtime_xml.get_object("input_label_service").hide()
             self.downtime_dialog.set_title("Downtime for host")
+            self.downtime_xml.get_object("input_label_description").set_markup("Host <b>%s</b>" % (host))
+
         else:
             # set label for acknowledging a service on host
-            self.downtime_xml.get_object("input_label_host").set_text(host)
-            self.downtime_xml.get_object("input_label_service").set_text(service)
+            ###self.downtime_xml.get_object("input_label_host").set_text(host)
+            ###self.downtime_xml.get_object("input_label_service").set_text(service)
             self.downtime_dialog.set_title("Downtime for service")
+            self.downtime_xml.get_object("input_label_description").set_markup("Service <b>%s</b> on host <b>%s</b>" % (service, host))
+
 
         # get start_time and end_time externally from Actions.Downtime_get_start_end() for not mixing GUI and actions too much
         start_time, end_time = Actions.Downtime_get_start_end(server=server, host=host)
@@ -1106,6 +1113,7 @@ class GUI(object):
                            "contributions, patches, packaging,",
                            "testing, hints and ideas:",
                            " ",
+                           "Andreas Ericsson",
                            "Antoine Jacoutot",
                            "Anton Löfgren",
                            "Benoît Soenen",
@@ -3163,7 +3171,7 @@ class Settings(object):
 
         # workaround for gazpacho-made glade-file - dunno why tab labels do not get named as they should be
         self.notebook = self.builder.get_object("notebook")
-        notebook_tabs =  ["Servers", "Display", "Filters", "Actions", "Notification", "Colors", "Defaults"]
+        notebook_tabs =  ["Servers", "Display", "Filters", "Actions", "Notifications", "Colors", "Defaults"]
         # now this presumably not necessary anymore workaround even gets extended as
         # determine-first-page-mechanism used for acknowledment dialog settings button
         page = 0
