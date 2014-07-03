@@ -1167,7 +1167,7 @@ class GUI(object):
 
         # use gobject.idle_add() to be thread safe
         gobject.idle_add(self.AddGUILock, str(self.__class__.__name__))
-        self.popwin.PopDown()
+        self.popwin.Close()
         about.run()
         # use gobject.idle_add() to be thread safe
         gobject.idle_add(self.DeleteGUILock, str(self.__class__.__name__))
