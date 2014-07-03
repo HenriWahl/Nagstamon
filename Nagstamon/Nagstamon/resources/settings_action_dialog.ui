@@ -114,6 +114,9 @@
               <placeholder/>
             </child>
             <child>
+              <placeholder/>
+            </child>
+            <child>
               <object class="GtkCheckButton" id="input_checkbutton_enabled">
                 <property name="label" translatable="yes">Enabled</property>
                 <property name="visible">True</property>
@@ -716,9 +719,6 @@ Request given URL string in the background, for example to acknowledge a service
                 <property name="top_attach">3</property>
                 <property name="bottom_attach">4</property>
               </packing>
-            </child>
-            <child>
-              <placeholder/>
             </child>
             <child>
               <placeholder/>

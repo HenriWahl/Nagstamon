@@ -54,9 +54,6 @@
                 <property name="can_focus">False</property>
                 <property name="xalign">0</property>
                 <property name="label" translatable="yes">Check result:</property>
-                <attributes>
-                  <attribute name="weight" value="bold"/>
-                </attributes>
               </object>
               <packing>
                 <property name="top_attach">2</property>
@@ -185,9 +182,6 @@
                 <property name="xalign">0</property>
                 <property name="ypad">3</property>
                 <property name="label" translatable="yes">Check output:</property>
-                <attributes>
-                  <attribute name="weight" value="bold"/>
-                </attributes>
               </object>
               <packing>
                 <property name="top_attach">10</property>
@@ -221,9 +215,6 @@
                 <property name="xalign">0</property>
                 <property name="ypad">3</property>
                 <property name="label" translatable="yes">Performance data:</property>
-                <attributes>
-                  <attribute name="weight" value="bold"/>
-                </attributes>
               </object>
               <packing>
                 <property name="top_attach">11</property>
@@ -274,9 +265,6 @@
                 <property name="can_focus">False</property>
                 <property name="xalign">0</property>
                 <property name="label" translatable="yes">Comment:</property>
-                <attributes>
-                  <attribute name="weight" value="bold"/>
-                </attributes>
               </object>
               <packing>
                 <property name="top_attach">12</property>
