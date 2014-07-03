@@ -797,18 +797,18 @@ class GUI(object):
         # if service is "" it must be a host
         if service == "":
             # set label for acknowledging a host
-            ###self.acknowledge_xml.get_object("input_label_host").set_text(host)
-            ###self.acknowledge_xml.get_object("label_service").hide()
-            ###self.acknowledge_xml.get_object("input_label_service").hide()
             self.acknowledge_dialog.set_title("Acknowledge host")
             self.acknowledge_xml.get_object("input_label_description").set_markup("Host <b>%s</b>" % (host))
         else:
             # set label for acknowledging a service on host
-            ###self.acknowledge_xml.get_object("input_label_host").set_text(host)
-            ###self.acknowledge_xml.get_object("input_label_service").set_text(service)
             self.acknowledge_dialog.set_title("Acknowledge service")
             self.acknowledge_xml.get_object("input_label_description").set_markup("Service <b>%s</b> on host <b>%s</b>" % (service, host))
 
+        # host and service labels are hidden to transport info to OK method
+        self.acknowledge_xml.get_object("input_label_host").set_text(host)
+        self.acknowledge_xml.get_object("input_label_host").hide()
+        self.acknowledge_xml.get_object("input_label_service").set_text(service)
+        self.acknowledge_xml.get_object("input_label_service").hide()
 
         # default flags of Nagios acknowledgement
         self.acknowledge_xml.get_object("input_checkbutton_sticky_acknowledgement").set_active(eval(str(self.conf.defaults_acknowledge_sticky)))
@@ -904,19 +904,19 @@ class GUI(object):
         # if service is None it must be a host
         if service == "":
             # set label for acknowledging a host
-            ###self.downtime_xml.get_object("input_label_host").set_text(host)
-            ###self.downtime_xml.get_object("label_service").hide()
-            ###self.downtime_xml.get_object("input_label_service").hide()
             self.downtime_dialog.set_title("Downtime for host")
             self.downtime_xml.get_object("input_label_description").set_markup("Host <b>%s</b>" % (host))
 
         else:
             # set label for acknowledging a service on host
-            ###self.downtime_xml.get_object("input_label_host").set_text(host)
-            ###self.downtime_xml.get_object("input_label_service").set_text(service)
             self.downtime_dialog.set_title("Downtime for service")
             self.downtime_xml.get_object("input_label_description").set_markup("Service <b>%s</b> on host <b>%s</b>" % (service, host))
 
+        # host and service labels are hidden to transport info to OK method
+        self.downtime_xml.get_object("input_label_host").set_text(host)
+        self.downtime_xml.get_object("input_label_host").hide()
+        self.downtime_xml.get_object("input_label_service").set_text(service)
+        self.downtime_xml.get_object("input_label_service").hide()
 
         # get start_time and end_time externally from Actions.Downtime_get_start_end() for not mixing GUI and actions too much
         start_time, end_time = Actions.Downtime_get_start_end(server=server, host=host)
@@ -1016,11 +1016,8 @@ class GUI(object):
         # if service is "" it must be a host
         if service == "":
             # set label for submitting results to an host
-            self.submitcheckresult_xml.get_object("input_label_host").set_text(host)
-            self.submitcheckresult_xml.get_object("label_service").hide()
-            self.submitcheckresult_xml.get_object("input_label_service").hide()
             self.submitcheckresult_dialog.set_title("Submit check result for host")
-            self.submitcheckresult_xml.get_object("label_service").hide()
+            self.submitcheckresult_xml.get_object("input_label_description").set_markup("Host <b>%s</b>" % (host))
             self.submitcheckresult_xml.get_object("input_radiobutton_result_ok").hide()
             self.submitcheckresult_xml.get_object("input_radiobutton_result_warning").hide()
             self.submitcheckresult_xml.get_object("input_radiobutton_result_critical").hide()
@@ -1028,15 +1025,20 @@ class GUI(object):
             self.submitcheckresult_xml.get_object("input_radiobutton_result_up").set_active(True)
         else:
             # set label for submitting results to a service on host
-            self.submitcheckresult_xml.get_object("input_label_host").set_text(host)
-            self.submitcheckresult_xml.get_object("input_label_service").set_text(service)
             self.submitcheckresult_dialog.set_title("Submit check result for service")
+            self.submitcheckresult_xml.get_object("input_label_description").set_markup("Service <b>%s</b> on host <b>%s</b>" % (service, host))
             self.submitcheckresult_xml.get_object("input_radiobutton_result_unreachable").hide()
             self.submitcheckresult_xml.get_object("input_radiobutton_result_up").hide()
             self.submitcheckresult_xml.get_object("input_radiobutton_result_down").hide()
         for i in server.SUBMIT_CHECK_RESULT_ARGS:
             self.submitcheckresult_xml.get_object("label_" + i).show()
             self.submitcheckresult_xml.get_object("input_entry_" + i).show()
+
+        # host and service labels are hidden to transport info to OK method
+        self.submitcheckresult_xml.get_object("input_label_host").set_text(host)
+        self.submitcheckresult_xml.get_object("input_label_host").hide()
+        self.submitcheckresult_xml.get_object("input_label_service").set_text(service)
+        self.submitcheckresult_xml.get_object("input_label_service").hide()
 
         self.submitcheckresult_xml.get_object("input_entry_comment").set_text(self.conf.defaults_submit_check_result_comment)
 
