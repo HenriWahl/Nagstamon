@@ -1953,10 +1953,13 @@ class Popwin(object):
         submenu_items.sort(key=str.lower)
         for i in submenu_items:
             self.ComboboxMonitor.append_text(i)
+
         # set first item active
         self.ComboboxMonitor.set_active(0)
-        self.HBoxCombobox.add(self.ComboboxMonitor)
+
         # add conmbobox to right-side menu
+        self.AlMonitorComboBox.add(self.ComboboxMonitor)
+        self.HBoxCombobox.add(self.AlMonitorComboBox)
         self.HBoxMenu.add(self.HBoxCombobox)
 
         # general buttons
@@ -1988,7 +1991,7 @@ class Popwin(object):
 
         # HBoxes en masse...
         self.HBoxAllButtons.add(self.AlMonitorLabel)
-        self.HBoxAllButtons.add(self.AlMonitorComboBox)
+        #self.HBoxAllButtons.add(self.AlMonitorComboBox)
         self.HBoxAllButtons.add(self.AlMenu)
 
         # threaded recheck all when refresh is clicked
@@ -2863,11 +2866,17 @@ class ServerVBox(gtk.VBox):
             # after the separator add actions
             # available default menu actions are monitor server dependent
             for i in self.server.MENU_ACTIONS:
-                # recheck is not necessary for passive set checks
-                if i == "Recheck" and self.miserable_service\
-                        and server.hosts[self.miserable_host].services[self.miserable_service].is_passive_only():
-                        pass
-                else:
+                # sometimes menu does not open due to "Recheck" so catch that exception
+                try:
+                    # recheck is not necessary for passive set checks
+                    if i == "Recheck" and self.miserable_service\
+                            and server.hosts[self.miserable_host].services[self.miserable_service].is_passive_only():
+                            pass
+                    else:
+                        menu_item = gtk.MenuItem(i)
+                        menu_item.connect("activate", self.TreeviewPopupMenuResponse, i)
+                        self.popupmenu.append(menu_item)
+                except:
                     menu_item = gtk.MenuItem(i)
                     menu_item.connect("activate", self.TreeviewPopupMenuResponse, i)
                     self.popupmenu.append(menu_item)
