@@ -782,6 +782,8 @@ class GUI(object):
         self.acknowledge_xml = gtk.Builder()
         self.acknowledge_xml.add_from_file(self.builderfile)
         self.acknowledge_dialog = self.acknowledge_xml.get_object("acknowledge_dialog")
+        # do not lose dialog behind other windows
+        self.acknowledge_dialog.set_keep_above(True)
 
         # connect with action
         # only OK needs to be connected - if this action gets canceled nothing happens
@@ -882,6 +884,8 @@ class GUI(object):
         self.downtime_xml = gtk.Builder()
         self.downtime_xml.add_from_file(self.builderfile)
         self.downtime_dialog = self.downtime_xml.get_object("downtime_dialog")
+        # do not lose dialog behind other windows
+        self.downtime_dialog.set_keep_above(True)
 
         # connect with action
         # only OK needs to be connected - if this action gets canceled nothing happens
@@ -995,6 +999,8 @@ class GUI(object):
         self.submitcheckresult_xml = gtk.Builder()
         self.submitcheckresult_xml.add_from_file(self.builderfile)
         self.submitcheckresult_dialog = self.submitcheckresult_xml.get_object("submit_check_result_dialog")
+        # do not lose dialog behind other windows
+        self.submitcheckresult_dialog.set_keep_above(True)
 
         # connect with action
         # only OK needs to be connected - if this action gets canceled nothing happens
