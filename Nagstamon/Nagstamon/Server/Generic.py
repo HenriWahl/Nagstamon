@@ -162,16 +162,6 @@ class GenericServer(object):
         self.use_display_name_service = False
 
 
-    def init_HTTP(self):
-        """
-        partly not constantly working Basic Authorization requires extra Authorization headers,
-        different between various server types
-        """
-        if self.HTTPheaders == {}:
-            for giveback in ["raw", "obj"]:
-                self.HTTPheaders[giveback] = {"Authorization": "Basic " + base64.b64encode(self.username + ":" + self.password)}
-
-
     def init_config(self):
         """
         set URLs for CGI - they are static and there is no need to set them with every cycle
@@ -195,6 +185,16 @@ class GenericServer(object):
         # hosts (up or down or unreachable)
         self.cgiurl_hosts = { "hard": self.monitor_cgi_url + "/status.cgi?hostgroup=all&style=hostdetail&hoststatustypes=12&hostprops=262144&limit=0",\
                               "soft": self.monitor_cgi_url + "/status.cgi?hostgroup=all&style=hostdetail&hoststatustypes=12&hostprops=524288&limit=0"}
+
+
+    def init_HTTP(self):
+        """
+        partly not constantly working Basic Authorization requires extra Authorization headers,
+        different between various server types
+        """
+        if self.HTTPheaders == {}:
+            for giveback in ["raw", "obj"]:
+                self.HTTPheaders[giveback] = {"Authorization": "Basic " + base64.b64encode(self.username + ":" + self.password)}
 
 
     def reset_HTTP(self):
@@ -759,7 +759,6 @@ class GenericServer(object):
         # get all trouble hosts/services from server specific _get_status()
         status = self._get_status()
         self.status, self.status_description = status.result, status.error
-
         if status.error != "":
             # ask for password if authorization failed
             if "HTTP Error 401" in status.error or \
@@ -767,27 +766,30 @@ class GenericServer(object):
                "HTTP Error 500" in status.error or \
                "Bad Session ID" in status.error or \
                "Login failed" in status.error:
+
                 if str(self.conf.servers[self.name].enabled) == "True":
                     # needed to get valid credentials
                     self.refresh_authentication = True
                     while status.error != "":
                         gobject.idle_add(output.RefreshDisplayStatus)
-
                         # clean existent authentication
                         self.reset_HTTP()
                         self.init_HTTP()
-
                         status = self._get_status()
                         self.status, self.status_description = status.result, status.error
                         # take a break not to DOS the monitor...
                         time.sleep(10)
-
                         # if monitor has been disabled do not try to connect to it
                         if str(self.conf.servers[self.name].enabled) == "False":
                             break
+                        # if reauthentication did not work already try again to get correct credentials
+                        self.refresh_authentication = True
             else:
                 self.isChecking = False
                 return Result(result=self.status, error=self.status_description)
+
+        # no rew authentication needed
+        self.refresh_authentication = False
 
         # this part has been before in GUI.RefreshDisplay() - wrong place, here it needs to be reset
         self.nagitems_filtered = {"services":{"CRITICAL":[], "WARNING":[], "UNKNOWN":[]}, "hosts":{"DOWN":[], "UNREACHABLE":[]}}

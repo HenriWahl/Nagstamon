@@ -211,6 +211,9 @@ class MultisiteServer(GenericServer):
                                                error = content))
 
         # in case of auth problem enable GUI auth part in popup
+
+        print self.CookieAuth, self.Cookie
+
         if self.CookieAuth == True and len(self.Cookie) == 0:
             self.refresh_authentication = True
             return Result(result="", error="Authentication failed")

@@ -386,6 +386,10 @@ class GUI(object):
                             self.popwin.ServerVBoxes[server.get_name()].AuthEntryUsername.set_text(server.username)
                         if self.popwin.ServerVBoxes[server.get_name()].AuthEntryPassword.get_text() == "":
                             self.popwin.ServerVBoxes[server.get_name()].AuthEntryPassword.set_text(server.password)
+                    else:
+                        # no re-authentication necessary
+                        self.popwin.ServerVBoxes[server.get_name()].HBoxAuth.hide_all()
+                        self.popwin.ServerVBoxes[server.get_name()].HBoxAuth.set_no_show_all(True)
 
                     # use a bunch of filtered nagitems, services and hosts sorted by different
                     # grades of severity
@@ -910,7 +914,6 @@ class GUI(object):
             # set label for acknowledging a host
             self.downtime_dialog.set_title("Downtime for host")
             self.downtime_xml.get_object("input_label_description").set_markup("Host <b>%s</b>" % (host))
-
         else:
             # set label for acknowledging a service on host
             self.downtime_dialog.set_title("Downtime for service")
@@ -1110,6 +1113,7 @@ class GUI(object):
             about nagstamon
         """
         about = gtk.AboutDialog()
+        about.set_keep_above(True)
         about.set_name(self.name)
         about.set_version(self.version)
         about.set_website(self.website)
@@ -1941,7 +1945,7 @@ class Popwin(object):
         self.NagstamonLabel_Pixbuf = gtk.gdk.pixbuf_new_from_file(self.output.Resources + os.sep + "nagstamon_label.png")
         self.NagstamonLabel.set_from_pixbuf(self.NagstamonLabel_Pixbuf)
         self.NagstamonVersion = gtk.Label()
-        self.NagstamonVersion.set_markup("<b>%s</b>" % (self.output.version))
+        self.NagstamonVersion.set_markup("<b>%s</b>  " % (self.output.version))
 
         self.HBoxNagiosButtons.add(self.NagstamonLabel)
         self.HBoxNagiosButtons.add(self.NagstamonVersion)
@@ -3012,9 +3016,6 @@ class AppIndicator(object):
         # Nagstamon Submenu
         self.Menu_Nagstamon = gtk.MenuItem("Nagstamon")
         self.Menu_Nagstamon.set_submenu(self.output.statusbar.Menu)
-        
-        print self.output.statusbar.Menu
-        
         self.Menu_Separator = gtk.SeparatorMenuItem()
         # Status menu items
         self.Menu_DOWN = gtk.MenuItem("")
@@ -4320,45 +4321,9 @@ class EditServer(GenericServer):
 
         GenericServer.initialize(self)
 
-
-        print self.server
-
         # set title of settings dialog
         self.dialog.set_title("Edit server " + self.server)
 
-        """
-        keys = self.conf.servers[self.server].__dict__.keys()
-        # walk through all relevant input types to fill dialog with existing settings
-        for i in ["input_entry_", "input_checkbutton_", "input_radiobutton_", "input_spinbutton_"]:
-            for key in keys:
-                j = self.builder.get_object(i + key)
-                if not j:
-                    continue
-                # some hazard, every widget has other methods to fill it with desired content
-                # so we try them all, one of them should work
-                try:
-                    j.set_text(self.conf.servers[self.server].__dict__[key])
-                except:
-                    pass
-                try:
-                    if str(self.conf.servers[self.server].__dict__[key]) == "True":
-                        j.set_active(True)
-                    if str(self.conf.servers[self.server].__dict__[key]) == "False":
-                        j.set_active(False)
-                except:
-                    pass
-                try:
-                    j.set_value(int(self.conf.servers[self.server].__dict__[key]))
-                except:
-                    pass
-
-        # set server type combobox which cannot be set by above hazard method
-        servers = Actions.get_registered_server_type_list()
-        server_types = dict([(x[1], x[0]) for x in enumerate(servers)])
-
-        # set server type
-        self.combobox.set_active(server_types[self.conf.servers[self.server].type])
-        """
 
     def OK(self, widget):
         """
