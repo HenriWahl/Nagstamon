@@ -2103,49 +2103,57 @@ class Popwin(object):
             switch between fullscreen and popup window mode
         """
 
-        if str(self.output.conf.fullscreen) == "False":
-            # for not letting statusbar throw a shadow onto popwin in any composition-window-manager this helps to
-            # keep a more consistent look - copied from StatusBar... anyway, doesn't work... well, next attempt:
-            # Windows will have an entry on taskbar when not using HINT_UTILITY
-            self.Window.set_visible(False)
-            if platform.system() == "Windows":
-                self.Window.set_type_hint(gtk.gdk.WINDOW_TYPE_HINT_UTILITY)
-            else:
-                self.Window.set_type_hint(gtk.gdk.WINDOW_TYPE_HINT_MENU)
-            #self.Window.set_visible(True)
+        try:
+            if str(self.output.conf.fullscreen) == "False":
+                # for not letting statusbar throw a shadow onto popwin in any composition-window-manager this helps to
+                # keep a more consistent look - copied from StatusBar... anyway, doesn't work... well, next attempt:
+                # Windows will have an entry on taskbar when not using HINT_UTILITY
+                ###self.Window.set_visible(False)
+                if platform.system() == "Windows":
+                    self.Window.set_type_hint(gtk.gdk.WINDOW_TYPE_HINT_UTILITY)
+                else:
+                    self.Window.set_type_hint(gtk.gdk.WINDOW_TYPE_HINT_MENU)
+                # make a nice popup of the toplevel window
+                self.Window.set_decorated(False)
+                self.Window.set_keep_above(True)
+                self.Window.unfullscreen()
+                # newer Ubuntus place a resize widget onto floating statusbar - please don't!
+                self.Window.set_resizable(False)
+                self.Window.set_property("skip-taskbar-hint", True)
+                self.Window.stick()
+                self.Window.set_skip_taskbar_hint(True)
 
-            # make a nice popup of the toplevel window
-            self.Window.set_decorated(False)
-            self.Window.set_keep_above(True)
-            self.Window.unfullscreen()
-            # newer Ubuntus place a resize widget onto floating statusbar - please don't!
-            self.Window.set_resizable(False)
-            self.Window.set_property("skip-taskbar-hint", True)
-            self.Window.stick()
-            self.Window.set_skip_taskbar_hint(True)
-            # change Close/Menu button in popup-mode
-            self.ButtonClose.show()
-        else:
-            # find out dimension of all monitors
-            if len(self.output.monitors) == 0:
-                for m in range(self.Window.get_screen().get_n_monitors()):
-                    monx0, mony0, monw, monh = self.Window.get_screen().get_monitor_geometry(m)
-                    self.output.monitors[m] = (monx0, mony0, monw, monh)
-            self.Window.set_visible(False)
-            self.Window.set_type_hint(gtk.gdk.WINDOW_TYPE_HINT_NORMAL)
-            self.Window.set_visible(True)
-            x0, y0, width, height = self.output.monitors[int(self.output.conf.fullscreen_display)]
-            self.Window.move(x0, y0)
-            self.Window.set_decorated(True)
-            self.Window.set_keep_above(False)
-            self.Window.set_resizable(True)
-            self.Window.set_property("skip-taskbar-hint", False)
-            self.Window.set_skip_taskbar_hint(False)
-            self.Window.unstick()
-            self.Window.fullscreen()
-            self.Window.show_all()
-            # change Close/Menu button in fullscreen-mode
-            self.ButtonClose.hide()
+                # change Close/Menu button in popup-mode
+                self.ButtonClose.set_no_show_all(True)
+                self.ButtonClose.show()
+            else:
+                # find out dimension of all monitors
+                if len(self.output.monitors) == 0:
+                    for m in range(self.Window.get_screen().get_n_monitors()):
+                        monx0, mony0, monw, monh = self.Window.get_screen().get_monitor_geometry(m)
+                        self.output.monitors[m] = (monx0, mony0, monw, monh)
+                self.Window.set_visible(False)
+                self.Window.set_type_hint(gtk.gdk.WINDOW_TYPE_HINT_NORMAL)
+                self.Window.set_visible(True)
+                x0, y0, width, height = self.output.monitors[int(self.output.conf.fullscreen_display)]
+                self.Window.move(x0, y0)
+                self.Window.set_decorated(True)
+                self.Window.set_keep_above(False)
+                self.Window.set_resizable(True)
+                self.Window.set_property("skip-taskbar-hint", False)
+                self.Window.set_skip_taskbar_hint(False)
+                self.Window.unstick()
+                self.Window.fullscreen()
+
+                # change Close/Menu button in fullscreen-mode
+                self.ButtonClose.set_no_show_all(True)
+                self.ButtonClose.hide()
+
+                self.Window.show_all()
+
+        except:
+            import traceback
+            traceback.print_exc(file=sys.stdout)
 
         # dummy return
         return True
@@ -3202,28 +3210,6 @@ class Settings(object):
         # fill treeviews
         self.FillTreeView("servers_treeview", self.conf.servers, "Servers", "selected_server")
         self.FillTreeView("actions_treeview", self.conf.actions, "Actions", "selected_action")
-
-        """
-        # all toggling should be done centralized in self.initialize()
-        # toggle debug options
-        self.ToggleDebugOptions()
-
-        # toggle custom sounds options
-        self.ToggleCustomSoundOptions()
-
-        # toggle icon in systray popup offset
-        self.ToggleSystrayPopupOffset()
-
-        # toggle fullscreen display selection combobox
-        self.ToggleFullscreenDisplay()
-
-        # toggle notification action options
-        self.ToggleNotificationActionWarning()
-        self.ToggleNotificationActionCritical()
-        self.ToggleNotificationActionDown()
-        self.ToggleNotificationActionOk()
-
-        """
 
         # set filters fore sound filechoosers
         filters = dict()
