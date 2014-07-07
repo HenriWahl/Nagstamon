@@ -1082,14 +1082,14 @@ class GenericServer(object):
 
             # give back pure HTML or XML in case giveback is "raw"
             if giveback == "raw":
-                result = Result(result=urlcontent.read().decode("utf8"))
+                result = Result(result=urlcontent.read().decode("utf8", errors="ignore"))
                 urlcontent.close()
                 del urlcontent
                 return result
 
             # objectified HTML
             if giveback == "obj":
-                yummysoup = BeautifulSoup(urlcontent.read().decode("utf8"), convertEntities=BeautifulSoup.ALL_ENTITIES)
+                yummysoup = BeautifulSoup(urlcontent.read().decode("utf8", errors="ignore"), convertEntities=BeautifulSoup.ALL_ENTITIES)
                 urlcontent.close()
                 del urlcontent
                 #return Result(result=copy.deepcopy(yummysoup))
@@ -1097,7 +1097,7 @@ class GenericServer(object):
 
             # objectified generic XML, valid at least for Opsview and Centreon
             elif giveback == "xml":
-                xmlobj = BeautifulStoneSoup(urlcontent.read().decode("utf8"), convertEntities=BeautifulStoneSoup.XML_ENTITIES)
+                xmlobj = BeautifulStoneSoup(urlcontent.read().decode("utf8", errors="ignore"), convertEntities=BeautifulStoneSoup.XML_ENTITIES)
                 urlcontent.close()
                 del urlcontent
                 #return Result(result=copy.deepcopy(xmlobj))
