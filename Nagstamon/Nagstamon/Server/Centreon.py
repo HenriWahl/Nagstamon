@@ -55,6 +55,7 @@ class CentreonServer(GenericServer):
     HARD_SOFT = {"(H)": "hard", "(S)": "soft"}
 
 
+
     def __init__(self, **kwds):
         # add all keywords to object, every mode searchs inside for its favorite arguments/keywords
         for k in kwds: self.__dict__[k] = kwds[k]
@@ -351,8 +352,10 @@ class CentreonServer(GenericServer):
                         self.new_hosts[str(l.hn.text)].server = self.name
                         self.new_hosts[str(l.hn.text)].status = str(l.cs.text)
                         # disgusting workaround for https://github.com/HenriWahl/Nagstamon/issues/91
-                        if self.new_hosts[str(l.hn.text)].status == "CRITIQUE":
-                            self.new_hosts[str(l.hn.text)].status = "CRITICAL"
+                        if self.new_hosts[str(l.hn.text)].status == "INDISPONIBLE":
+                            self.new_hosts[str(l.hn.text)].status = "DOWN"
+                        elif self.new_hosts[str(l.hn.text)].status == "INJOIGNABLE":
+                            self.new_hosts[str(l.hn.text)].status = "UNREACHABLE"
                         self.new_hosts[str(l.hn.text)].attempt, self.new_hosts[str(l.hn.text)].status_type  = str(l.tr.text).split(" ")
                         self.new_hosts[str(l.hn.text)].status_type = self.HARD_SOFT[self.new_hosts[str(l.hn.text)].status_type]
                         self.new_hosts[str(l.hn.text)].last_check = str(l.lc.text)
@@ -419,6 +422,10 @@ class CentreonServer(GenericServer):
                         # disgusting workaround for https://github.com/HenriWahl/Nagstamon/issues/91
                         if self.new_hosts[str(l.hn.text)].services[str(l.sd.text)].status == "CRITIQUE":
                             self.new_hosts[str(l.hn.text)].services[str(l.sd.text)].status = "CRITICAL"
+                        elif self.new_hosts[str(l.hn.text)].services[str(l.sd.text)].status == "INCONNU":
+                            self.new_hosts[str(l.hn.text)].services[str(l.sd.text)].status = "UNKNOWN"
+                        elif self.new_hosts[str(l.hn.text)].services[str(l.sd.text)].status == "ALERTE":
+                            self.new_hosts[str(l.hn.text)].services[str(l.sd.text)].status = "WARNING"
                         self.new_hosts[str(l.hn.text)].services[str(l.sd.text)].attempt, \
                             self.new_hosts[str(l.hn.text)].services[str(l.sd.text)].status_type = str(l.ca.text).split(" ")
                         self.new_hosts[str(l.hn.text)].services[str(l.sd.text)].status_type =\
