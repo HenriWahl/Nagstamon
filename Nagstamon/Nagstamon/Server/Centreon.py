@@ -323,6 +323,7 @@ class CentreonServer(GenericServer):
         try:
             result = self.FetchURL(nagcgiurl_hosts, giveback="xml")
             xmlobj, error = result.result, result.error
+
             if error != "": return Result(result=copy.deepcopy(xmlobj), error=copy.deepcopy(error))
 
             # in case there are no children session id is invalid
@@ -349,6 +350,9 @@ class CentreonServer(GenericServer):
                         self.new_hosts[str(l.hn.text)].name =  str(l.hn.text)
                         self.new_hosts[str(l.hn.text)].server = self.name
                         self.new_hosts[str(l.hn.text)].status = str(l.cs.text)
+                        # disgusting workaround for https://github.com/HenriWahl/Nagstamon/issues/91
+                        if self.new_hosts[str(l.hn.text)].status == "CRITIQUE":
+                            self.new_hosts[str(l.hn.text)].status = "CRITICAL"
                         self.new_hosts[str(l.hn.text)].attempt, self.new_hosts[str(l.hn.text)].status_type  = str(l.tr.text).split(" ")
                         self.new_hosts[str(l.hn.text)].status_type = self.HARD_SOFT[self.new_hosts[str(l.hn.text)].status_type]
                         self.new_hosts[str(l.hn.text)].last_check = str(l.lc.text)
@@ -384,6 +388,7 @@ class CentreonServer(GenericServer):
         try:
             result = self.FetchURL(nagcgiurl_services, giveback="xml")
             xmlobj, error = result.result, result.error
+
             if error != "": return Result(result=xmlobj, error=copy.deepcopy(error))
 
             # in case there are no children session id is invalid
@@ -411,6 +416,9 @@ class CentreonServer(GenericServer):
                         self.new_hosts[str(l.hn.text)].services[str(l.sd.text)].name = str(l.sd.text)
                         self.new_hosts[str(l.hn.text)].services[str(l.sd.text)].server = self.name
                         self.new_hosts[str(l.hn.text)].services[str(l.sd.text)].status = str(l.cs.text)
+                        # disgusting workaround for https://github.com/HenriWahl/Nagstamon/issues/91
+                        if self.new_hosts[str(l.hn.text)].services[str(l.sd.text)].status == "CRITIQUE":
+                            self.new_hosts[str(l.hn.text)].services[str(l.sd.text)].status = "CRITICAL"
                         self.new_hosts[str(l.hn.text)].services[str(l.sd.text)].attempt, \
                             self.new_hosts[str(l.hn.text)].services[str(l.sd.text)].status_type = str(l.ca.text).split(" ")
                         self.new_hosts[str(l.hn.text)].services[str(l.sd.text)].status_type =\
