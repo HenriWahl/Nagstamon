@@ -3,7 +3,7 @@
 
 Summary: Nagios status monitor for your desktop
 Name: nagstamon
-Version: 1.0rc1
+Version: 1.0rc2
 Release: 1.nagstamon%{?dist}
 License: GPL
 Group: Applications/Utilities
@@ -89,6 +89,9 @@ desktop-file-install --dir %{buildroot}/%{_datadir}/applications\
 %{python_sitelib}/nagstamon-*-py*.egg-info
 
 %changelog
+* Tue Jul 08 2014 Henri Wahl <h.wahl@ifw-dresden.de> - 1.0rc2
+- Release candidate 2
+
 * Thu Jun 26 2014 Henri Wahl <h.wahl@ifw-dresden.de> - 1.0rc1
 - Release candidate 1.
 - mixed in some lines from https://apps.fedoraproject.org/packages/nagstamon/sources/spec/

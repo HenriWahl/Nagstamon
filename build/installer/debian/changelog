@@ -1,3 +1,16 @@
+nagstamon (1.0rc2) unstable; urgency=low
+
+  * New upstream
+   - added automatic refreshing after acknowledging
+   - added permanent hamburger menu
+   - unified layout of dialogs
+   - fixed some GUI glitches
+   - fixed password saving bug
+   - fixed Centreon language inconsistencies
+   - fixed regression Umlaut bug
+
+ -- Henri Wahl <h.wahl@ifw-dresden.de>  Tue, 08 Jul 2014 11:00:00 +0200
+
 nagstamon (1.0rc1) unstable; urgency=low
 
   * New upstream
