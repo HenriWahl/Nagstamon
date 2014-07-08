@@ -3017,8 +3017,8 @@ class AppIndicator(object):
     def __init__(self, **kwds):
         # add all keywords to object, every mode searchs inside for its favorite arguments/keywords
         for k in kwds: self.__dict__[k] = kwds[k]
-        self.Indicator = appindicator.Indicator("Nagstamon", self.output.Resources + os.sep + "nagstamon" + self.output.BitmapSuffix,\
-                                                 appindicator.CATEGORY_APPLICATION_STATUS)
+        self.Indicator = appindicator.Indicator("Nagstamon", self.output.Resources + os.sep + "nagstamon_appindicator" +\
+                                                self.output.BitmapSuffix, appindicator.CATEGORY_APPLICATION_STATUS)
         # define all items on AppIndicator menu, which might be switched on and off depending of their relevance
         self.Menu = gtk.Menu()
         # Nagstamon Submenu
