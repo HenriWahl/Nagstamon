@@ -54,6 +54,12 @@ class CentreonServer(GenericServer):
     # HARD/SOFT state mapping
     HARD_SOFT = {"(H)": "hard", "(S)": "soft"}
 
+    # apparently necessesary because of non-english states as in https://github.com/HenriWahl/Nagstamon/issues/91
+    TRANSLATIONS = {"INDISPONIBLE": "DOWN",
+                    "INJOIGNABLE": "UNREACHABLE",
+                    "CRITIQUE": "CRITICAL",
+                    "INCONNU": "UNKNOWN",
+                    "ALERTE": "WARNING"}
 
 
     def __init__(self, **kwds):
@@ -352,10 +358,8 @@ class CentreonServer(GenericServer):
                         self.new_hosts[str(l.hn.text)].server = self.name
                         self.new_hosts[str(l.hn.text)].status = str(l.cs.text)
                         # disgusting workaround for https://github.com/HenriWahl/Nagstamon/issues/91
-                        if self.new_hosts[str(l.hn.text)].status == "INDISPONIBLE":
-                            self.new_hosts[str(l.hn.text)].status = "DOWN"
-                        elif self.new_hosts[str(l.hn.text)].status == "INJOIGNABLE":
-                            self.new_hosts[str(l.hn.text)].status = "UNREACHABLE"
+                        if self.new_hosts[str(l.hn.text)].status in self.TRANSLATIONS:
+                            self.new_hosts[str(l.hn.text)].status = self.TRANSLATIONS[self.new_hosts[str(l.hn.text)].status]
                         self.new_hosts[str(l.hn.text)].attempt, self.new_hosts[str(l.hn.text)].status_type  = str(l.tr.text).split(" ")
                         self.new_hosts[str(l.hn.text)].status_type = self.HARD_SOFT[self.new_hosts[str(l.hn.text)].status_type]
                         self.new_hosts[str(l.hn.text)].last_check = str(l.lc.text)
@@ -420,12 +424,9 @@ class CentreonServer(GenericServer):
                         self.new_hosts[str(l.hn.text)].services[str(l.sd.text)].server = self.name
                         self.new_hosts[str(l.hn.text)].services[str(l.sd.text)].status = str(l.cs.text)
                         # disgusting workaround for https://github.com/HenriWahl/Nagstamon/issues/91
-                        if self.new_hosts[str(l.hn.text)].services[str(l.sd.text)].status == "CRITIQUE":
-                            self.new_hosts[str(l.hn.text)].services[str(l.sd.text)].status = "CRITICAL"
-                        elif self.new_hosts[str(l.hn.text)].services[str(l.sd.text)].status == "INCONNU":
-                            self.new_hosts[str(l.hn.text)].services[str(l.sd.text)].status = "UNKNOWN"
-                        elif self.new_hosts[str(l.hn.text)].services[str(l.sd.text)].status == "ALERTE":
-                            self.new_hosts[str(l.hn.text)].services[str(l.sd.text)].status = "WARNING"
+                        if self.new_hosts[str(l.hn.text)].services[str(l.sd.text)].status in self.TRANSLATIONS:
+                            self.new_hosts[str(l.hn.text)].services[str(l.sd.text)].status = self.TRANSLATIONS[\
+                                self.new_hosts[str(l.hn.text)].services[str(l.sd.text)].status]
                         self.new_hosts[str(l.hn.text)].services[str(l.sd.text)].attempt, \
                             self.new_hosts[str(l.hn.text)].services[str(l.sd.text)].status_type = str(l.ca.text).split(" ")
                         self.new_hosts[str(l.hn.text)].services[str(l.sd.text)].status_type =\
