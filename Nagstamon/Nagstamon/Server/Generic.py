@@ -368,6 +368,8 @@ class GenericServer(object):
     def set_downtime(self, thread_obj):
         self._set_downtime(thread_obj.host, thread_obj.service, thread_obj.author, thread_obj.comment, thread_obj.fixed,
                            thread_obj.start_time, thread_obj.end_time, thread_obj.hours, thread_obj.minutes)
+        # resfresh immediately according to https://github.com/HenriWahl/Nagstamon/issues/86
+        self.thread.doRefresh = True
 
 
     def _set_downtime(self, host, service, author, comment, fixed, start_time, end_time, hours, minutes):
