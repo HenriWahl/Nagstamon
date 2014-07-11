@@ -93,7 +93,7 @@ class GUI(object):
 
         # Meta
         self.name = "Nagstamon"
-        self.version = "1.0rc2"
+        self.version = "1.0rc3"
         self.website = "https://nagstamon.ifw-dresden.de/"
         self.copyright = "©2008-2014 Henri Wahl et al.\nh.wahl@ifw-dresden.de"
         self.comments = "Nagios status monitor for your desktop"
@@ -1202,12 +1202,20 @@ class GUI(object):
             if version_status == "latest":
                 self.dialog = gtk.MessageDialog(parent=None, flags=gtk.DIALOG_MODAL, type=gtk.MESSAGE_INFO, buttons=gtk.BUTTONS_OK, \
                                            message_format="You are already using the\nlatest version of Nagstamon.\n\nLatest version: %s" % (version))
+                # keep message dialog in front
+                self.dialog.set_keep_above(True)
+                self.dialog.present()
+
                 self.dialog.run()
                 self.dialog.destroy()
             # if used version is out of date offer downloading latest one
             elif version_status == "out_of_date":
                 self.dialog = gtk.MessageDialog(parent=None, flags=gtk.DIALOG_MODAL, type=gtk.MESSAGE_WARNING, buttons=gtk.BUTTONS_YES_NO, \
                                            message_format="You are not using the latest version of Nagstamon.\n\nYour version:\t\t%s\nLatest version:\t%s\n\nDo you want to download the latest version?" % (self.version, version))
+                # keep message dialog in front
+                self.dialog.set_keep_above(True)
+                self.dialog.present()
+
                 response = self.dialog.run()
                 if response == gtk.RESPONSE_YES:
                     Actions.OpenNagstamonDownload(output=self)
