@@ -271,7 +271,7 @@ class ZabbixAPI(object):
         try:
             response = opener.open(request, timeout=self.timeout)
             self.debug(logging.INFO, "Response Code: " + str(response.code))
-        except urllib2.URLError:
+        except:
             #raise ZabbixAPIException("Could not open URL <%s>" % response.url)
             raise ZabbixAPIException("Could not open URL")
 
@@ -280,7 +280,11 @@ class ZabbixAPI(object):
         if response.code != 200:
             raise ZabbixAPIException("HTTP ERROR %s: %s"
                     % (response.status, response.reason))
-        reads = response.read()
+        try:
+            reads = response.read()
+        except:
+            raise ZabbixAPIException("Could not read response data.")
+
         if len(reads) == 0:
             raise ZabbixAPIException("Received zero answer")
         try:
