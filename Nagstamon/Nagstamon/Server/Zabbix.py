@@ -174,7 +174,17 @@ class ZabbixServer(GenericServer):
         services = []
         groupids = []
         zabbix_triggers = []
-        api_version = self.zapi.api_version()
+        try:
+            api_version = self.zapi.api_version()
+        except ZabbixAPIException:
+            # FIXME Is there a cleaner way to handle this? I just borrowed
+            # this code from 80 lines ahead. -- AGV
+            # set checking flag back to False
+            self.isChecking = False
+            result, error = self.Error(sys.exc_info())
+            print sys.exc_info()
+            return Result(result=result, error=error)
+
         try:
             response = []
             try:
@@ -219,6 +229,15 @@ class ZabbixServer(GenericServer):
                 elif type(this_trigger) is list:
                     for trigger in this_trigger:
                         services.append(trigger)
+
+            except ZabbixAPIException:
+                # FIXME Is there a cleaner way to handle this? I just borrowed
+                # this code from 80 lines ahead. -- AGV
+                # set checking flag back to False
+                self.isChecking = False
+                result, error = self.Error(sys.exc_info())
+                print sys.exc_info()
+                return Result(result=result, error=error)
 
             except ZabbixError, e:
                 #print "------------------------------------"
@@ -292,7 +311,7 @@ class ZabbixServer(GenericServer):
                     if 'svc_flapping' in service:
                         if service['svc_flapping'] == 'yes':
                             self.new_hosts[n["host"]].services[new_service].flapping = True
-        except ZabbixError:
+        except (ZabbixError, ZabbixAPIException):
             # set checking flag back to False
             self.isChecking = False
             result, error = self.Error(sys.exc_info())
