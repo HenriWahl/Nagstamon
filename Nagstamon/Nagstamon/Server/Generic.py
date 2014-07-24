@@ -464,7 +464,6 @@ class GenericServer(object):
         """
         multiple purpose open browser method for all open-a-browser-needs
         """
-
         # first close popwin
         if output <> None:
             output.popwin.Close()
@@ -767,7 +766,7 @@ class GenericServer(object):
                "HTTP Error 403" in status.error or \
                "HTTP Error 500" in status.error or \
                "bad session id" in status.error.lower() or \
-               "Login failed" in status.error:
+               "login failed" in status.error.lower():
 
                 if str(self.conf.servers[self.name].enabled) == "True":
                     # needed to get valid credentials

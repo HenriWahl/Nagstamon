@@ -2549,7 +2549,7 @@ class Popwin(object):
         try:
             active = widget.get_active_iter()
             model = widget.get_model()
-            self.output.servers[model.get_value(active, 0)].OpenBrowser(url_type="monitor")
+            self.output.servers[model.get_value(active, 0)].OpenBrowser(url_type="monitor", output=self.output)
         except:
             self.output.servers.values()[0].Error(sys.exc_info())
 
