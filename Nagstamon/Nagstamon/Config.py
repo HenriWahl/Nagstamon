@@ -712,12 +712,6 @@ class Config(object):
         defaultactions["Opsview-History-Service"] = Action(name="Opsview-History-Service", type="browser",
                                                     description="Show history in browser.", filter_target_host=True,
                                                     string="$MONITOR$/event?host=$HOST$&service=$SERVICE$", enabled=False)
-        defaultactions["Ninja-Configure-Host"] = Action(name="Ninja-Configure-Host", type="browser",
-                                                    description="Configure host in browser.",
-                                                    string="$MONITOR$/index.php/configuration/configure/host/$HOST$", enabled=False)
-        defaultactions["Ninja-Configure-Service"] = Action(name="Ninja-Configure-Service", type="browser", filter_target_host=False,
-                                                    description="Configure service in browser.",
-                                                    string="$MONITOR$/index.php/configuration/configure/service/$HOST$?service=$SERVICE$", enabled=False)
         defaultactions["Check_MK-1-Click-Acknowledge-Host"] = Action(name="Check_MK-1-Click-Acknowledge-Host", type="url",
                                                     description="Acknowledges a host with one click.",
                                                     filter_target_service=False, enabled=False,
