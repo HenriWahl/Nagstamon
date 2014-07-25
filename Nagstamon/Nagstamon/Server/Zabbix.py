@@ -1,5 +1,8 @@
 #!/usr/bin/python
 # -*- encoding: utf-8; py-indent-offset: 4 -*-
+#
+# Zabbix.py based on Check_MK Multisite.py
+#
 # +------------------------------------------------------------------+
 # |             ____ _               _        __  __ _  __           |
 # |            / ___| |__   ___  ___| | __   |  \/  | |/ /           |
@@ -128,8 +131,6 @@ class ZabbixServer(GenericServer):
                 return Result(result=result, error=error)
 
             for host in hosts:
-                # johncan
-                # self.Debug(str(host))
                 duration = int(time.time()) - int(host['errors_from'])
                 n = {
                     'host': host['host'],
@@ -157,13 +158,12 @@ class ZabbixServer(GenericServer):
                     self.new_hosts[new_host].status_information = n["status_information"]
                     self.new_hosts[new_host].site = n["site"]
                     self.new_hosts[new_host].address = n["address"]
-                    # transisition to Check_MK 1.1.10p2
-                    if 'host_in_downtime' in host:
-                        if host['host_in_downtime'] == 'yes':
-                            self.new_hosts[new_host].scheduled_downtime = True
-                    if 'host_acknowledged' in host:
-                        if host['host_acknowledged'] == 'yes':
-                            self.new_hosts[new_host].acknowledged = True
+                    #if 'host_in_downtime' in host:
+                    #    if host['host_in_downtime'] == 'yes':
+                    #        self.new_hosts[new_host].scheduled_downtime = True
+                    #if 'host_acknowledged' in host:
+                    #    if host['host_acknowledged'] == 'yes':
+                    #        self.new_hosts[new_host].acknowledged = True
 
         except ZabbixError:
             self.isChecking = False
@@ -193,16 +193,17 @@ class ZabbixServer(GenericServer):
                 triggers_list = []
                 if self.monitor_cgi_url:
                     group_list = self.monitor_cgi_url.split(',')
-                    # johncan
-                    #self.Debug(str(group_list))
+
+                    #hostgroup_ids = [x['groupid'] for x in self.zapi.hostgroup.get(
+                    #    {'output': 'extend',
+                    #     'with_monitored_items': True,
+                    #     'filter': {"name": group_list}}) if int(x['internal']) == 0]
+
+                    # only without filter there is anything shown at all
                     hostgroup_ids = [x['groupid'] for x in self.zapi.hostgroup.get(
-                        {'output': 'extend',
-                         'with_monitored_items': True,
-                         'filter': {"name": group_list}}) if int(x['internal']) == 0]
-                    # johncan
-                    # self.Debug(str(hostgroup_ids))
-                    # johncan
-                    # hostgroup_ids = [7]
+                                    {'output': 'extend', 'with_monitored_items': True})
+                                    if int(x['internal']) == 0]
+
                     zabbix_triggers = self.zapi.trigger.get(
                         {'sortfield': 'lastchange', 'withUnacknowledgedEvents': True, 'groupids': hostgroup_ids,
                          "monitored": True, "filter": {'value': 1}})
@@ -221,8 +222,6 @@ class ZabbixServer(GenericServer):
                      'select_items': 'extend',
                      'expandData': True}
                 )
-                # johncan
-                self.Debug(str(this_trigger))
                 if type(this_trigger) is dict:
                     for triggerid in this_trigger.keys():
                         services.append(this_trigger[triggerid])
@@ -249,8 +248,6 @@ class ZabbixServer(GenericServer):
                     ret = e.result
 
             for service in services:
-                # johncan
-                # self.Debug(str(service))
                 if api_version > '1.8':
                     state = '%s' % service['description']
                 else:
@@ -259,7 +256,7 @@ class ZabbixServer(GenericServer):
                     'host': service['host'],
                     'service': service['description'],
                     'status': self.statemap.get(service['priority'], service['priority']),
-                    # 1/1 attempt looks at least like there have been any attempt
+                    # 1/1 attempt looks at least like there has been any attempt
                     'attempt': '1/1',
                     'duration': Actions.HumanReadableDurationFromTimestamp(service['lastchange']),
                     'status_information': state,
@@ -292,25 +289,19 @@ class ZabbixServer(GenericServer):
                     self.new_hosts[n["host"]].services[new_service].duration = n["duration"]
                     self.new_hosts[n["host"]].services[new_service].attempt = n["attempt"]
                     self.new_hosts[n["host"]].services[new_service].status_information = n["status_information"]
-                    self.new_hosts[n["host"]].services[new_service].passiveonly = n["passiveonly"]
-                    self.new_hosts[n["host"]].services[new_service].flapping = n["flapping"]
+                    #self.new_hosts[n["host"]].services[new_service].passiveonly = n["passiveonly"]
+                    self.new_hosts[n["host"]].services[new_service].passiveonly = False
+                    #self.new_hosts[n["host"]].services[new_service].flapping = n["flapping"]
+                    self.new_hosts[n["host"]].services[new_service].flapping = False
                     self.new_hosts[n["host"]].services[new_service].site = n["site"]
                     self.new_hosts[n["host"]].services[new_service].address = n["host"]
                     self.new_hosts[n["host"]].services[new_service].command = n["command"]
                     self.new_hosts[n["host"]].services[new_service].triggerid = n["triggerid"]
 
-                    if 'svc_in_downtime' in service:
-                        if service['svc_in_downtime'] == 'yes':
-                            self.new_hosts[n["host"]].services[new_service].scheduled_downtime = True
-                    if 'svc_acknowledged' in service:
-                        if service['svc_acknowledged'] == 'yes':
-                            self.new_hosts[n["host"]].services[new_service].acknowledged = True
-                    if 'svc_is_active' in service:
-                        if service['svc_is_active'] == 'no':
-                            self.new_hosts[n["host"]].services[new_service].passiveonly = True
-                    if 'svc_flapping' in service:
-                        if service['svc_flapping'] == 'yes':
-                            self.new_hosts[n["host"]].services[new_service].flapping = True
+                    # workaround for non-existing (or not found) host status flag
+                    if n["service"] == "Host is down %s" % (n["host"]):
+                        self.new_hosts[n["host"]].status = "DOWN"
+
         except (ZabbixError, ZabbixAPIException):
             # set checking flag back to False
             self.isChecking = False
