@@ -280,28 +280,27 @@ class ZabbixServer(GenericServer):
                     self.new_hosts[n["host"]].address = n["host"]
                     # if a service does not exist create its object
                 if n["service"] not in  self.new_hosts[n["host"]].services:
-                    new_service = n["service"]
-                    self.new_hosts[n["host"]].services[new_service] = GenericService()
-                    self.new_hosts[n["host"]].services[new_service].host = n["host"]
-                    self.new_hosts[n["host"]].services[new_service].name = n["service"]
-                    self.new_hosts[n["host"]].services[new_service].status = n["status"]
-                    self.new_hosts[n["host"]].services[new_service].last_check = n["last_check"]
-                    self.new_hosts[n["host"]].services[new_service].duration = n["duration"]
-                    self.new_hosts[n["host"]].services[new_service].attempt = n["attempt"]
-                    self.new_hosts[n["host"]].services[new_service].status_information = n["status_information"]
-                    #self.new_hosts[n["host"]].services[new_service].passiveonly = n["passiveonly"]
-                    self.new_hosts[n["host"]].services[new_service].passiveonly = False
-                    #self.new_hosts[n["host"]].services[new_service].flapping = n["flapping"]
-                    self.new_hosts[n["host"]].services[new_service].flapping = False
-                    self.new_hosts[n["host"]].services[new_service].site = n["site"]
-                    self.new_hosts[n["host"]].services[new_service].address = n["host"]
-                    self.new_hosts[n["host"]].services[new_service].command = n["command"]
-                    self.new_hosts[n["host"]].services[new_service].triggerid = n["triggerid"]
-
                     # workaround for non-existing (or not found) host status flag
                     if n["service"] == "Host is down %s" % (n["host"]):
                         self.new_hosts[n["host"]].status = "DOWN"
-
+                    else:
+                        new_service = n["service"]
+                        self.new_hosts[n["host"]].services[new_service] = GenericService()
+                        self.new_hosts[n["host"]].services[new_service].host = n["host"]
+                        self.new_hosts[n["host"]].services[new_service].name = n["service"]
+                        self.new_hosts[n["host"]].services[new_service].status = n["status"]
+                        self.new_hosts[n["host"]].services[new_service].last_check = n["last_check"]
+                        self.new_hosts[n["host"]].services[new_service].duration = n["duration"]
+                        self.new_hosts[n["host"]].services[new_service].attempt = n["attempt"]
+                        self.new_hosts[n["host"]].services[new_service].status_information = n["status_information"]
+                        #self.new_hosts[n["host"]].services[new_service].passiveonly = n["passiveonly"]
+                        self.new_hosts[n["host"]].services[new_service].passiveonly = False
+                        #self.new_hosts[n["host"]].services[new_service].flapping = n["flapping"]
+                        self.new_hosts[n["host"]].services[new_service].flapping = False
+                        self.new_hosts[n["host"]].services[new_service].site = n["site"]
+                        self.new_hosts[n["host"]].services[new_service].address = n["host"]
+                        self.new_hosts[n["host"]].services[new_service].command = n["command"]
+                        self.new_hosts[n["host"]].services[new_service].triggerid = n["triggerid"]
         except (ZabbixError, ZabbixAPIException):
             # set checking flag back to False
             self.isChecking = False
