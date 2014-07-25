@@ -35,12 +35,14 @@ def human_duration(start):
     transform timestamp to human readable
     some changes necessary due to https://github.com/HenriWahl/Nagstamon/issues/93
     - move definition of stop out of def() statement because it kept static
-    - calculate secs with abs() because some timestamps came from the future
     """
-    ret = ''
-    first = True
     stop = time.time()
-    secs = abs(stop - start)
+    if stop <= start:
+        return "n/a"
+    else:
+        ret = ''
+    first = True
+    secs = stop - start
     units = 'wdhms'
     divisors = {'w': 86400 * 7, 'd': 86400, 'h': 3600, 'm': 60, 's': 1}
     for unit in units:
