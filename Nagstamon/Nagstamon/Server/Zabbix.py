@@ -287,7 +287,13 @@ class ZabbixServer(GenericServer):
                         new_service = n["service"]
                         self.new_hosts[n["host"]].services[new_service] = GenericService()
                         self.new_hosts[n["host"]].services[new_service].host = n["host"]
+
+                        # next dirty workaround to get Zabbix events to look Nagios-esque
+                        if (" on " or " is ") in n["service"]:
+                            for separator in [" on ", " is "]:
+                                n["service"] = n["service"].split(separator)[0]
                         self.new_hosts[n["host"]].services[new_service].name = n["service"]
+
                         self.new_hosts[n["host"]].services[new_service].status = n["status"]
                         self.new_hosts[n["host"]].services[new_service].last_check = n["last_check"]
                         self.new_hosts[n["host"]].services[new_service].duration = n["duration"]
