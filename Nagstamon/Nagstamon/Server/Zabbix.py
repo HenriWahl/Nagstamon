@@ -131,7 +131,6 @@ class ZabbixServer(GenericServer):
                 return Result(result=result, error=error)
 
             for host in hosts:
-                duration = int(time.time()) - int(host['errors_from'])
                 n = {
                     'host': host['host'],
                     'status': self.statemap.get(host['available'], host['available']),
@@ -158,13 +157,6 @@ class ZabbixServer(GenericServer):
                     self.new_hosts[new_host].status_information = n["status_information"]
                     self.new_hosts[new_host].site = n["site"]
                     self.new_hosts[new_host].address = n["address"]
-                    #if 'host_in_downtime' in host:
-                    #    if host['host_in_downtime'] == 'yes':
-                    #        self.new_hosts[new_host].scheduled_downtime = True
-                    #if 'host_acknowledged' in host:
-                    #    if host['host_acknowledged'] == 'yes':
-                    #        self.new_hosts[new_host].acknowledged = True
-
         except ZabbixError:
             self.isChecking = False
             result, error = self.Error(sys.exc_info())
@@ -283,6 +275,8 @@ class ZabbixServer(GenericServer):
                     # workaround for non-existing (or not found) host status flag
                     if n["service"] == "Host is down %s" % (n["host"]):
                         self.new_hosts[n["host"]].status = "DOWN"
+                        # also take duration from "service" aka trigger
+                        self.new_hosts[n["host"]].duration = n["duration"]
                     else:
                         new_service = n["service"]
                         self.new_hosts[n["host"]].services[new_service] = GenericService()
