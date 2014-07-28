@@ -17,6 +17,6 @@ and regular expressions.</description>
   <category>Network</category>
   <icon href="http://nagstamon.ifw-dresden.de/0install/nagstamon.png" type="image/png"/>
   <implementation id="sha1new=891c1e4d34f6c250f31630503860cb9cfad6d0ca" license="OSI Approved :: GNU General Public License v2" main="nagstamon.py" released="{released}" version="{version}">
-    <archive extract="Nagstamon" href="http://nagstamon.ifw-dresden.de/0install/Nagstamon-1.0rc1-{version}.tar.gz" size="400226" type="application/x-compressed-tar"/>
+    <archive extract="Nagstamon" href="http://nagstamon.ifw-dresden.de/0install/Nagstamon-1.0-{version}.tar.gz" size="400226" type="application/x-compressed-tar"/>
   </implementation>
 </interface>

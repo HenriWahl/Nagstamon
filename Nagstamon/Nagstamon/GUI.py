@@ -93,7 +93,7 @@ class GUI(object):
 
         # Meta
         self.name = "Nagstamon"
-        self.version = "1.0rc3"
+        self.version = "1.0"
         self.website = "https://nagstamon.ifw-dresden.de/"
         self.copyright = "©2008-2014 Henri Wahl et al.\nh.wahl@ifw-dresden.de"
         self.comments = "Nagios status monitor for your desktop"

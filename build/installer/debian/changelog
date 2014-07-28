@@ -1,3 +1,36 @@
+nagstamon (1.0) unstable; urgency=low
+
+  * New upstream
+   - added custom event notification with custom commands
+   - added highlighting of new events
+   - added storage of passwords in OS keyring
+   - added optional tooltip for full status information
+   - added support for applying custom actions to specific monitor only
+   - added copy buttons for servers and actions dialogs
+   - added stopping notification if event already vanished
+   - added support for Op5Monitor 6.3 instead of Ninja
+   - added experimental Zabbix support
+   - added automatic refreshing after acknowledging
+   - added permanent hamburger menu
+   - unified layout of dialogs
+   - various Check_MK improvements
+   - fixed old regression not-staying-on-top-bug
+   - fixed Check_MK-Recheck-DOS-bug
+   - fixed pop window size calculation on multiple screens
+   - fixed following popup window on multiple screens
+   - fixed hiding dialogs in MacOSX
+   - fixed ugly statusbar font in MacOSX
+   - fixed use of changed colors
+   - fixed non-ascending default sort order
+   - fixed Opsview downtime dialog
+   - fixed sometimes not working context menu
+   - fixed some GUI glitches
+   - fixed password saving bug
+   - fixed Centreon language inconsistencies
+   - fixed regression Umlaut bug
+
+ -- Henri Wahl <h.wahl@ifw-dresden.de>  Mon, 28 Jul 2014 09:30:00 +0200
+
 nagstamon (1.0rc2) unstable; urgency=low
 
   * New upstream
