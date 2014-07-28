@@ -1139,8 +1139,10 @@ class GenericServer(object):
 
             # workaround for URL-ified IP as described in SF bug 2967416
             # https://sourceforge.net/tracker/?func=detail&aid=2967416&group_id=236865&atid=1101370
-            if not ip.find("://") == -1:
-                ip = ip.split("://")[1]
+            if "://" in ip: ip = ip.split("://")[1]
+
+            # last-minute-workaround for https://github.com/HenriWahl/Nagstamon/issues/48
+            if "," in ip: ip = ip.split(",")[0]
 
             # print IP in debug mode
             if str(self.conf.debug_mode) == "True":
