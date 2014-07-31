@@ -92,6 +92,14 @@ def winmain():
     # arguments for xcopying gtk windows theme stuff
     opt_dict.update({ 'gtk-windows-theme':BUILD_HELPERS + os.sep + 'gtk-windows-theme' + os.sep + '*.*'})
 
+    # Microsoft C runtime DLLs 2008 SP1 are needed on older systems 
+    if not os.path.exists('installer/windows/Microsoft.VC90.CRT.manifest') or\
+       not os.path.exists('installer/windows/msvcm90.dll') or\
+       not os.path.exists('installer/windows/msvcp90.dll') or\
+       not os.path.exists('installer/windows/msvcr90.dll'):
+        print "Please put Microsoft C runtime DLL 2008 SP1 into installer/windows."
+        sys.exit(1)
+
     script_lines = [
         '%(pyinstaller)s\pyinstaller.py --noconfirm nagstamon.spec',
         'xcopy "%(resources_dir)s" dist\\nagstamon\\resources /y /e /i /h /EXCLUDE:helpers\excludelist.txt',
