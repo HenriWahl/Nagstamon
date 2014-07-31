@@ -95,6 +95,8 @@ def winmain():
     script_lines = [
         '%(pyinstaller)s\pyinstaller.py --noconfirm nagstamon.spec',
         'xcopy "%(resources_dir)s" dist\\nagstamon\\resources /y /e /i /h /EXCLUDE:helpers\excludelist.txt',
+        'xcopy "installer\\windows\\*.dll" dist\\nagstamon /y /i /h ',
+        'xcopy "installer\\windows\\*.manifest" dist\\nagstamon /y /i /h ',
         'cd %(dist)s & del /q /f %(exclude_dlls)s & cd ..'
     ]
 
