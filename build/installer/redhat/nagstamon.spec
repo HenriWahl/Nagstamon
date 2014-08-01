@@ -3,7 +3,7 @@
 
 Summary: Nagios status monitor for your desktop
 Name: nagstamon
-Version: 1.0
+Version: 1.0.1
 Release: 1.nagstamon%{?dist}
 License: GPL
 Group: Applications/Utilities
