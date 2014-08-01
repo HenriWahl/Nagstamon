@@ -2263,7 +2263,10 @@ class Popwin(object):
 
         # limit size of scrolled vbox
         vboxwidth, vboxheight = self.ScrolledVBox.size_request()
-        if vboxwidth > screenwidth: vboxwidth = screenwidth
+
+        # VBox should be as wide as the screen
+        # https://github.com/HenriWahl/Nagstamon/issues/100
+        vboxwidth = screenwidth
 
         # get dimensions of top button bar
         self.buttonswidth, self.buttonsheight = self.HBoxAllButtons.size_request()
@@ -2279,7 +2282,8 @@ class Popwin(object):
             # avoid silly scrollbar
             vboxheight += self.heightbuffer_internal
 
-        self.ScrolledWindow.set_size_request(-1, vboxheight)
+        #self.ScrolledWindow.set_size_request(-1, vboxheight)
+        self.ScrolledWindow.set_size_request(vboxwidth, vboxheight)
         # even if fullscreen this is necessary
         self.Window.set_size_request(self.buttonswidth, -1)
         self.Window.show_all()
