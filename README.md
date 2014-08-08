@@ -14,5 +14,7 @@ Successfully tested monitor versions include:
 
 Nagios 1.x, 2.x and 3.x, Icinga 1.2+, Opsview 3.5+, Centreon 2.1.x, Op5 Monitor 6.3+, Check_MK/Multisite 1.1.10+ and Thruk 1.5.0+.
 
+Experimental Zabbix 2.2+ support is included since Nagstamon 1.0.
 
-See http://nagstamon.ifw-dresden.de for further information.
+
+See https://nagstamon.ifw-dresden.de for further information.
