@@ -102,7 +102,7 @@ def winmain():
        not os.path.exists('installer/windows/msvcm90.dll') or\
        not os.path.exists('installer/windows/msvcp90.dll') or\
        not os.path.exists('installer/windows/msvcr90.dll'):
-        print "Please put Microsoft C runtime DLL 2008 SP1 into installer/windows."
+        print "Please put Microsoft C runtime DLL 2008 SP1 files (Microsoft.VC90.CRT.manifest, msvcm90.dl, msvcp90.dll and  msvcr90.dll) into installer/windows."
         sys.exit(1)
 
     script_lines = [
