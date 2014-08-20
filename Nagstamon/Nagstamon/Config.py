@@ -156,6 +156,8 @@ class Config(object):
             self.use_system_keyring = True
         else:
             self.use_system_keyring = False
+        # internal flag to determine if keyring is available at all - defaults to False
+        self.keyring_available = False
 
         # Special FX
         # Centreon
