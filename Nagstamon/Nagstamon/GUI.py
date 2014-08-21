@@ -1225,6 +1225,9 @@ class GUI(object):
         except:
             self.servers.values()[0].Error(sys.exc_info())
 
+        # return False to get removed as gobject idle source
+        return False
+
 
     def NotificationOn(self, status="UP", ducuw=None):
         """
@@ -1367,6 +1370,9 @@ class GUI(object):
         """
         self.GUILock[widget_name] = widget
 
+        # return False to get removed as gobject idle source
+        return False
+
 
     def DeleteGUILock(self, window_name):
         """
@@ -1379,6 +1385,9 @@ class GUI(object):
             #import traceback
             #traceback.print_exc(file=sys.stdout)
             pass
+
+        # return False to get removed as gobject idle source
+        return False
 
 
     def _FocusJump(self, widget=None, event=None, builder=None, next_widget=None):
@@ -1648,7 +1657,8 @@ class StatusBar(object):
             while self.LogoEventbox.size_request()[1] > self.Label.size_request()[1]:
                 self.Label.set_markup('<span size="%s"> Loading... </span>' % (fontsize))
                 fontsize += 250
-            self.output.fontsize = fontsize
+            # take away some pixels to fit into status bar
+            self.output.fontsize = fontsize - 250
         except:
             # in case of error define fixed fontsize
             self.output.fontsize = 10000
@@ -1850,6 +1860,9 @@ class StatusBar(object):
         self.conf.position_y = int(mousey - self.StatusBar.y)
         self.StatusBar.move(self.conf.position_x, self.conf.position_y)
 
+        # return False to get removed as gobject idle source
+        return False
+
 
     def ShowErrorMessage(self, message):
         """
@@ -1867,6 +1880,9 @@ class StatusBar(object):
             self.Resize()
         except:
             self.servers.values()[0].Error(sys.exc_info())
+
+        # return False to get removed as gobject idle source
+        return False
 
 
     def Flash(self):
@@ -2293,6 +2309,9 @@ class Popwin(object):
         self.Window.show_all()
         self.Window.set_visible(True)
 
+        # return False to get removed as gobject idle source
+        return False
+
 
     def LeavePopWin(self, widget=None, event=None):
         """
@@ -2574,6 +2593,9 @@ class Popwin(object):
             self.ServerVBoxes[server.get_name()].LabelStatus.set_markup('<span> Status: %s <span color="darkred">%s</span></span>' % (str(server.status), str(server.status_description).rsplit("\n", 1)[0]))
         except:
             server.Error(sys.exc_info())
+
+        # return False to get removed as gobject idle source
+        return False
 
 
     def IsWanted(self):
@@ -3493,11 +3515,14 @@ class Settings(object):
         # close popwin
         # catch Exception at first run when there cannot exist a popwin
         try:
-            self.output.popwin.PopDown()
+            # only useful if not on first run
+            if self.output.firstrun == False and self.conf.unconfigured == False:
+                self.output.popwin.PopDown()
         except:
             import traceback
             traceback.print_exc(file=sys.stdout)
-            self.servers.values()[0].Error(sys.exc_info())
+            # hunting https://github.com/HenriWahl/Nagstamon/issues/97 | https://github.com/HenriWahl/Nagstamon/issues/104
+            ###self.servers.values()[0].Error(sys.exc_info())
 
         if int(self.conf.update_interval_seconds) <= 0:
             self.conf.update_interval_seconds = 60
@@ -3508,7 +3533,7 @@ class Settings(object):
         # catch exceptions in case of misconfiguration
         try:
             # now it is not the first run anymore
-            self.firstrun = False
+            self.output.firstrun = False
             self.conf.unconfigured = False
 
             gobject.idle_add(self.output.DeleteGUILock, str(self.__class__.__name__))
