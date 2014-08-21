@@ -1531,6 +1531,10 @@ class GUI(object):
         # brutal renewal of popup menu for of statusbar because servers might have been added
         self.output.statusbar.Menu.destroy()
         self.output.statusbar._CreateMenu()
+        if self.conf.appindicator == True:
+            # otherwise Ubuntu loses its Nagstamon submenu
+            self.output.appindicator.Menu_Nagstamon.set_submenu(self.output.statusbar.Menu)
+
 
         # force refresh
         Actions.RefreshAllServers(servers=self.servers, output=self, conf=self.conf)

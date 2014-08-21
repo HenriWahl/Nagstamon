@@ -759,7 +759,7 @@ class Config(object):
                                                     description="Acknowledges a host with one click.",
                                                     filter_target_host=False, enabled=False,
                                                     string="$MONITOR$/view.py?_transid=$TRANSID$&_do_actions=yes&_do_confirm=Yes!&output_format=python&view_name=service&host=$HOST$&_ack_comment=$COMMENT-ACK$&_acknowledge=Acknowledge&service=$SERVICE$")
-        defaultactions["Check_MK Edit host in WATO"] = Action(name="Check_MK Edit host in WATO", enabled=True,
+        defaultactions["Check_MK Edit host in WATO"] = Action(name="Check_MK Edit host in WATO", enabled=False,
                                                      monitor_type="Check_MK Multisite",
                                                      description="Edit host in WATO.",
                                                      string="$MONITOR$/index.py?start_url=%2Fmonitor%2Fcheck_mk%2Fwato.py%3Fmode%3Dedithost%26host%3D$HOST$")
