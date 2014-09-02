@@ -150,12 +150,9 @@ class Config(object):
         self.defaults_downtime_type_fixed = True
         self.defaults_downtime_type_flexible = False
         self.converted_from_single_configfile = False
-        # looks like some people have major problems with keyring so an option to disable it would be nice
-        # defaults to False on Linux because of major problems there
-        if platform.system() in ("Windows", "Darwin"):
-            self.use_system_keyring = True
-        else:
-            self.use_system_keyring = False
+        # looks like some people have major problems with keyring so an option to disable it would make it accessible
+        # for them
+        self.use_system_keyring = False
         # internal flag to determine if keyring is available at all - defaults to False
         self.keyring_available = False
 
