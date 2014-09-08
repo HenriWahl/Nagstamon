@@ -3193,6 +3193,7 @@ class Settings(object):
         self.builder.connect_signals(handlers_dict)
 
         # keystore option has to be set/unset before it gets overwritten by the following loops
+        self.conf.keyring_available = self.conf.KeyringAvailable()
         self.ToggleSystemKeystore()
 
         keys = self.conf.__dict__.keys()
@@ -3525,8 +3526,6 @@ class Settings(object):
         except:
             import traceback
             traceback.print_exc(file=sys.stdout)
-            # hunting https://github.com/HenriWahl/Nagstamon/issues/97 | https://github.com/HenriWahl/Nagstamon/issues/104
-            ###self.servers.values()[0].Error(sys.exc_info())
 
         if int(self.conf.update_interval_seconds) <= 0:
             self.conf.update_interval_seconds = 60
@@ -3953,7 +3952,7 @@ class Settings(object):
         keyring checkbox if not
         """
         checkbutton = self.builder.get_object("input_checkbutton_use_system_keyring")
-        if not platform.os in ["Darwin", "Windows"]:
+        if not platform.system() in ["Darwin", "Windows"]:
             if self.conf.keyring_available:
                 checkbutton.set_visible(True)
             else:

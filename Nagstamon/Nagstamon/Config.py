@@ -328,6 +328,7 @@ class Config(object):
         load servers config - special treatment because of obfuscated passwords
         """
 
+        """
         # determine if keyring module and an implementation is available for secure password storage
         try:
             # Linux systems should use keyring only if it comes with the distro, otherwise chances are small
@@ -351,6 +352,9 @@ class Config(object):
             import traceback
             traceback.print_exc(file=sys.stdout)
             self.keyring_available = False
+        """
+
+        self.keyring_available = self.KeyringAvailable()
 
         servers = self.LoadMultipleConfig("servers", "server", "Server")
         # deobfuscate username + password inside a try-except loop
@@ -523,6 +527,8 @@ class Config(object):
         # only import keyring lib if configured to do so - to avoid Windows crashes
         # like https://github.com/HenriWahl/Nagstamon/issues/97
         if self.use_system_keyring == True:
+
+            """
             # determine if keyring module and an implementation is available for secure password storage
             try:
                 # Linux systems should use keyring only if it comes with the distro, otherwise chances are small
@@ -533,14 +539,23 @@ class Config(object):
                     if ("SecretService") in dir(keyring.backends) and not (keyring.get_keyring() is None):
                         self.keyring_available = True
                 else:
-                    # hint for packaging: nagstamon.spec always have to match module path
-                    # keyring has to be bound to object to be used later
-                    import Nagstamon.thirdparty.keyring as keyring
-                    self.keyring_available = not (keyring.get_keyring() is None)
+                    # only import keyring lib if configured to do so
+                    # necessary to avoid Windows crashes like https://github.com/HenriWahl/Nagstamon/issues/97
+                    if self.use_system_keyring == True:
+                        # hint for packaging: nagstamon.spec always have to match module path
+                        # keyring has to be bound to object to be used later
+                        import Nagstamon.thirdparty.keyring as keyring
+                        self.keyring_available = not (keyring.get_keyring() is None)
+                    else:
+                        self.keyring_available = False
             except:
                 import traceback
                 traceback.print_exc(file=sys.stdout)
                 self.keyring_available = False
+            """
+
+            self.keyring_available = self.KeyringAvailable()
+
         try:
             # one section for each setting
             for s in self.__dict__[settingsdir]:
@@ -635,6 +650,38 @@ class Config(object):
             self.__dict__.pop("password")
             self.__dict__.pop("use_proxy_yes")
             self.__dict__.pop("use_proxy_no")
+
+
+    def KeyringAvailable(self):
+        """
+            determine if keyring module and an implementation is available for secure password storage
+        """
+        try:
+            # Linux systems should use keyring only if it comes with the distro, otherwise chances are small
+            # that keyring works at all
+            if platform.system() == "Linux":
+                # keyring and secretstorage have to be importable
+                import keyring, secretstorage
+                if ("SecretService") in dir(keyring.backends) and not (keyring.get_keyring() is None):
+                    ###self.keyring_available = True
+                    return True
+            else:
+                # only import keyring lib if configured to do so
+                # necessary to avoid Windows crashes like https://github.com/HenriWahl/Nagstamon/issues/97
+                if self.use_system_keyring == True:
+                    # hint for packaging: nagstamon.spec always have to match module path
+                    # keyring has to be bound to object to be used later
+                    import Nagstamon.thirdparty.keyring as keyring
+                    ###self.keyring_available = not (keyring.get_keyring() is None)
+                    return  not (keyring.get_keyring() is None)
+                else:
+                    ####self.keyring_available = False
+                    return False
+        except:
+            import traceback
+            traceback.print_exc(file=sys.stdout)
+            ###self.keyring_available = False
+            return False
 
 
     def Convert_Conf_to_Custom_Actions(self):
