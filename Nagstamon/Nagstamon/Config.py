@@ -338,10 +338,15 @@ class Config(object):
                 if ("SecretService") in dir(keyring.backends) and not (keyring.get_keyring() is None):
                     self.keyring_available = True
             else:
-                # hint for packaging: nagstamon.spec always have to match module path
-                # keyring has to be bound to object to be used later
-                import Nagstamon.thirdparty.keyring as keyring
-                self.keyring_available = not (keyring.get_keyring() is None)
+                # only import keyring lib if configured to do so
+                # necessary to avoid Windows crashes like https://github.com/HenriWahl/Nagstamon/issues/97
+                if self.use_system_keyring == True:
+                    # hint for packaging: nagstamon.spec always have to match module path
+                    # keyring has to be bound to object to be used later
+                    import Nagstamon.thirdparty.keyring as keyring
+                    self.keyring_available = not (keyring.get_keyring() is None)
+                else:
+                    self.keyring_available = False
         except:
             import traceback
             traceback.print_exc(file=sys.stdout)
@@ -515,7 +520,8 @@ class Config(object):
         not just one like for e.g. sound file
         """
 
-        # only import keyring lib if configured to do so
+        # only import keyring lib if configured to do so - to avoid Windows crashes
+        # like https://github.com/HenriWahl/Nagstamon/issues/97
         if self.use_system_keyring == True:
             # determine if keyring module and an implementation is available for secure password storage
             try:
