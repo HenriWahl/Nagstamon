@@ -3192,6 +3192,9 @@ class Settings(object):
                           }
         self.builder.connect_signals(handlers_dict)
 
+        # keystore option has to be set/unset before it gets overwritten by the following loops
+        self.ToggleSystemKeystore()
+
         keys = self.conf.__dict__.keys()
         # walk through all relevant input types to fill dialog with existing settings
         for i in ["input_entry_", "input_checkbutton_", "input_radiobutton_", "input_spinbutton_", "input_filechooser_"]:
@@ -3402,6 +3405,7 @@ class Settings(object):
         self.ToggleNotificationActionCritical()
         self.ToggleNotificationActionDown()
         self.ToggleNotificationActionOk()
+        self.ToggleSystemKeystore()
 
 
     def FillTreeView(self, treeview_widget, items, column_string, selected_item):
@@ -3941,6 +3945,24 @@ class Settings(object):
         """
         help = self.builder.get_object("label_help_notification_custom_actions_description")
         help.set_visible(not help.get_visible())
+
+
+    def ToggleSystemKeystore(self, widget=None):
+        """
+        check on non-OSX/Windows systems if keyring and secretstorage modules are available and disable
+        keyring checkbox if not
+        """
+        checkbutton = self.builder.get_object("input_checkbutton_use_system_keyring")
+        if not platform.os in ["Darwin", "Windows"]:
+            if self.conf.keyring_available:
+                checkbutton.set_visible(True)
+            else:
+                checkbutton.set_visible(False)
+                # disable keyring in general
+                self.conf.use_system_keyring = False
+        # it's OK on Darwin and Windows
+        else:
+            checkbutton.set_visible(True)
 
 
     def PlaySound(self, playbutton=None):
