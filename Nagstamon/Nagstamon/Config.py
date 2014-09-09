@@ -150,10 +150,8 @@ class Config(object):
         self.defaults_downtime_type_fixed = True
         self.defaults_downtime_type_flexible = False
         self.converted_from_single_configfile = False
-        # looks like some people have major problems with keyring so an option to disable it would make
-        # Nagstamon usable for them
-        self.use_system_keyring = False
         # internal flag to determine if keyring is available at all - defaults to False
+        # use_system_keyring is checked and defined some lines later after config file was read
         self.keyring_available = False
 
         # Special FX
@@ -227,6 +225,21 @@ class Config(object):
                         object.__setattr__(self, i[0], BOOLPOOL[i[1]])
                     else:
                         object.__setattr__(self, i[0], i[1])
+                        
+            # because the switch from Nagstamon 1.0 to 1.0.1 brings the use_system_keyring property
+            # and all the thousands 1.0 installations no not know it yet it will be more comfortable
+            # for most of the Windows users if it is only defined as False after it was checked
+            # from config file
+            if not self.__dict__.has_key("use_system_keyring"):
+				if self.unconfigured == True:
+					# an unconfigured system should start with no keyring to prevent crashes
+					self.use_system_keyring = False
+				else:
+					# a configured system seemed to be able to run and thus use system keyring
+					if platform.system() in ["Windows", "Darwin"]:
+						self.use_system_keyring = True
+					else:
+						self.use_system_keyring = self.KeyringAvailable()
 
             # reset self.configdir to temporarily saved value in case it differs from
             # the one read from configfile and so it would fail to save next time
