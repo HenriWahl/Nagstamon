@@ -93,7 +93,7 @@ class GUI(object):
 
         # Meta
         self.name = "Nagstamon"
-        self.version = "1.0.1"
+        self.version = "1.0.1-devel"
         self.website = "https://nagstamon.ifw-dresden.de/"
         self.copyright = "©2008-2014 Henri Wahl et al.\nh.wahl@ifw-dresden.de"
         self.comments = "Nagios status monitor for your desktop"
@@ -3194,7 +3194,7 @@ class Settings(object):
 
         # keystore option has to be set/unset before it gets overwritten by the following loops
         self.conf.keyring_available = self.conf.KeyringAvailable()
-        self.ToggleSystemKeystore()
+        self.ToggleSystemKeyring()
 
         keys = self.conf.__dict__.keys()
         # walk through all relevant input types to fill dialog with existing settings
@@ -3406,7 +3406,7 @@ class Settings(object):
         self.ToggleNotificationActionCritical()
         self.ToggleNotificationActionDown()
         self.ToggleNotificationActionOk()
-        self.ToggleSystemKeystore()
+        self.ToggleSystemKeyring()
 
 
     def FillTreeView(self, treeview_widget, items, column_string, selected_item):
@@ -3946,7 +3946,7 @@ class Settings(object):
         help.set_visible(not help.get_visible())
 
 
-    def ToggleSystemKeystore(self, widget=None):
+    def ToggleSystemKeyring(self, widget=None):
         """
         check on non-OSX/Windows systems if keyring and secretstorage modules are available and disable
         keyring checkbox if not
@@ -3958,7 +3958,7 @@ class Settings(object):
             else:
                 checkbutton.set_visible(False)
                 # disable keyring in general
-                self.conf.use_system_keyring = False
+                #self.conf.use_system_keyring = False
         # it's OK on Darwin and Windows
         else:
             checkbutton.set_visible(True)

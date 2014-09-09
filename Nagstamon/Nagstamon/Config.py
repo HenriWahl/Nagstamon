@@ -150,8 +150,8 @@ class Config(object):
         self.defaults_downtime_type_fixed = True
         self.defaults_downtime_type_flexible = False
         self.converted_from_single_configfile = False
-        # looks like some people have major problems with keyring so an option to disable it would make it accessible
-        # for them
+        # looks like some people have major problems with keyring so an option to disable it would make
+        # Nagstamon usable for them
         self.use_system_keyring = False
         # internal flag to determine if keyring is available at all - defaults to False
         self.keyring_available = False
@@ -327,33 +327,6 @@ class Config(object):
         """
         load servers config - special treatment because of obfuscated passwords
         """
-
-        """
-        # determine if keyring module and an implementation is available for secure password storage
-        try:
-            # Linux systems should use keyring only if it comes with the distro, otherwise chances are small
-            # that keyring works at all
-            if platform.system() == "Linux":
-                # keyring and secretstorage have to be importable
-                import keyring, secretstorage
-                if ("SecretService") in dir(keyring.backends) and not (keyring.get_keyring() is None):
-                    self.keyring_available = True
-            else:
-                # only import keyring lib if configured to do so
-                # necessary to avoid Windows crashes like https://github.com/HenriWahl/Nagstamon/issues/97
-                if self.use_system_keyring == True:
-                    # hint for packaging: nagstamon.spec always have to match module path
-                    # keyring has to be bound to object to be used later
-                    import Nagstamon.thirdparty.keyring as keyring
-                    self.keyring_available = not (keyring.get_keyring() is None)
-                else:
-                    self.keyring_available = False
-        except:
-            import traceback
-            traceback.print_exc(file=sys.stdout)
-            self.keyring_available = False
-        """
-
         self.keyring_available = self.KeyringAvailable()
 
         servers = self.LoadMultipleConfig("servers", "server", "Server")
@@ -370,6 +343,11 @@ class Config(object):
                 if servers[server].save_password == "False":
                     servers[server].password = ""
                 elif self.keyring_available and self.use_system_keyring:
+                    # necessary to import on-the-fly due to possible Windows crashes
+                    try:
+                        import keyring
+                    except:
+                        import Nagstamon.thirdparty.keyring as keyring
                     password = keyring.get_password("Nagstamon", "@".join((servers[server].username,
                                                                            servers[server].monitor_url))) or ""
                     if password == "":
@@ -381,6 +359,11 @@ class Config(object):
                     servers[server].password = self.DeObfuscate(servers[server].password)
                 # proxy password
                 if self.keyring_available and self.use_system_keyring:
+                    # necessary to import on-the-fly due to possible Windows crashes
+                    try:
+                        import keyring
+                    except:
+                        import Nagstamon.thirdparty.keyring as keyring
                     proxy_password = keyring.get_password("Nagstamon", "@".join(("proxy",
                                                                                  servers[server].proxy_username,
                                                                                  servers[server].proxy_address))) or ""
@@ -504,7 +487,11 @@ class Config(object):
             f = open(os.path.normpath(self.configfile), "w")
             config.write(f)
             f.close()
-        except:
+        except Exception, err:
+            print err
+            import traceback
+            traceback.print_exc(file=sys.stdout)
+
             # debug
             if str(self.debug_mode) == "True":
                 if server != None:
@@ -527,88 +514,82 @@ class Config(object):
         # only import keyring lib if configured to do so - to avoid Windows crashes
         # like https://github.com/HenriWahl/Nagstamon/issues/97
         if self.use_system_keyring == True:
-
-            """
-            # determine if keyring module and an implementation is available for secure password storage
-            try:
-                # Linux systems should use keyring only if it comes with the distro, otherwise chances are small
-                # that keyring works at all
-                if platform.system() == "Linux":
-                    # keyring and secretstorage have to be importable
-                    import keyring, secretstorage
-                    if ("SecretService") in dir(keyring.backends) and not (keyring.get_keyring() is None):
-                        self.keyring_available = True
-                else:
-                    # only import keyring lib if configured to do so
-                    # necessary to avoid Windows crashes like https://github.com/HenriWahl/Nagstamon/issues/97
-                    if self.use_system_keyring == True:
-                        # hint for packaging: nagstamon.spec always have to match module path
-                        # keyring has to be bound to object to be used later
-                        import Nagstamon.thirdparty.keyring as keyring
-                        self.keyring_available = not (keyring.get_keyring() is None)
-                    else:
-                        self.keyring_available = False
-            except:
-                import traceback
-                traceback.print_exc(file=sys.stdout)
-                self.keyring_available = False
-            """
-
             self.keyring_available = self.KeyringAvailable()
 
-        try:
-            # one section for each setting
-            for s in self.__dict__[settingsdir]:
-                # depending on python version allow_no_value is allowed or not
-                if sys.version_info[0] < 3 and sys.version_info[1] < 7:
-                    config = ConfigParser.ConfigParser()
-                else:
-                    config = ConfigParser.ConfigParser(allow_no_value=True)
-                config.add_section(setting + "_" + s)
-                for option in self.__dict__[settingsdir][s].__dict__:
-                    # obfuscate certain entries in config file - special arrangement for servers
-                    if settingsdir == "servers":
-                        if option == "username" or option == "password" or option == "proxy_username" or option == "proxy_password" or option == "autologin_key":
-                            value = self.Obfuscate(self.__dict__[settingsdir][s].__dict__[option])
-                            if option == "password":
-                                if self.__dict__[settingsdir][s].save_password == "False":
-                                    value = ""
-                                elif self.keyring_available and self.use_system_keyring:
-                                    if self.__dict__[settingsdir][s].password != "":
+        # one section for each setting
+        for s in self.__dict__[settingsdir]:
+            # depending on python version allow_no_value is allowed or not
+            if sys.version_info[0] < 3 and sys.version_info[1] < 7:
+                config = ConfigParser.ConfigParser()
+            else:
+                config = ConfigParser.ConfigParser(allow_no_value=True)
+            config.add_section(setting + "_" + s)
+            for option in self.__dict__[settingsdir][s].__dict__:
+                # obfuscate certain entries in config file - special arrangement for servers
+                if settingsdir == "servers":
+                    #if option == "username" or option == "password" or option == "proxy_username" or option == "proxy_password" or option == "autologin_key":
+                    if option in ["username", "password", "proxy_username", "proxy_password", "autologin_key"]:
+                        value = self.Obfuscate(self.__dict__[settingsdir][s].__dict__[option])
+                        if option == "password":
+                            if self.__dict__[settingsdir][s].save_password == "False":
+                                value = ""
+                            elif self.keyring_available and self.use_system_keyring:
+                                if self.__dict__[settingsdir][s].password != "":
+                                    # necessary to import on-the-fly due to possible Windows crashes
+                                    try:
+                                        import keyring
+                                    except:
+                                        import Nagstamon.thirdparty.keyring as keyring
+                                    # provoke crash if password saving does not work - this is the case
+                                    # on newer Ubuntu releases
+                                    try:
                                         keyring.set_password("Nagstamon", "@".join((self.__dict__[settingsdir][s].username,
-                                                                                    self.__dict__[settingsdir][s].monitor_url)),
-                                                                                    self.__dict__[settingsdir][s].password)
-                                    value = ""
-                            if option == "proxy_password":
-                                if self.keyring_available and self.use_system_keyring:
-                                    if self.__dict__[settingsdir][s].proxy_password != "":
+                                                                                self.__dict__[settingsdir][s].monitor_url)),
+                                                                                self.__dict__[settingsdir][s].password)
+                                    except:
+                                        import traceback
+                                        traceback.print_exc(file=sys.stdout)
+                                        sys.exit(1)
+                                value = ""
+                        if option == "proxy_password":
+                            if self.keyring_available and self.use_system_keyring:
+                                # necessary to import on-the-fly due to possible Windows crashes
+                                try:
+                                    import keyring
+                                except:
+                                    import Nagstamon.thirdparty.keyring as keyring
+                                if self.__dict__[settingsdir][s].proxy_password != "":
+                                    # provoke crash if password saving does not work - this is the case
+                                    # on newer Ubuntu releases
+                                    try:
                                         keyring.set_password("Nagstamon", "@".join(("proxy",\
-                                                                                    self.__dict__[settingsdir][s].proxy_username,
-                                                                                    self.__dict__[settingsdir][s].proxy_address)),
-                                                                                    self.__dict__[settingsdir][s].proxy_password)
-                                    value = ""
-                            config.set(setting + "_" + s, option, value)
-                        else:
-                            config.set(setting + "_" + s, option, self.__dict__[settingsdir][s].__dict__[option])
+                                                                                self.__dict__[settingsdir][s].proxy_username,
+                                                                                self.__dict__[settingsdir][s].proxy_address)),
+                                                                                self.__dict__[settingsdir][s].proxy_password)
+                                    except:
+                                        import traceback
+                                        traceback.print_exc(file=sys.stdout)
+                                        sys.exit(1)
+
+                                value = ""
+                        config.set(setting + "_" + s, option, value)
                     else:
                         config.set(setting + "_" + s, option, self.__dict__[settingsdir][s].__dict__[option])
+                else:
+                    config.set(setting + "_" + s, option, self.__dict__[settingsdir][s].__dict__[option])
 
-                # open, save and close config_server file
-                if not os.path.exists(self.configdir + os.sep + settingsdir):
-                    os.mkdir(self.configdir + os.sep + settingsdir)
-                f = open(os.path.normpath(self.configdir + os.sep + settingsdir + os.sep + setting + "_" + s + ".conf"), "w")
-                config.write(f)
-                f.close()
+            # open, save and close config_server file
+            if not os.path.exists(self.configdir + os.sep + settingsdir):
+                os.mkdir(self.configdir + os.sep + settingsdir)
+            f = open(os.path.normpath(self.configdir + os.sep + settingsdir + os.sep + setting + "_" + s + ".conf"), "w")
+            config.write(f)
+            f.close()
 
-            # clean up old deleted/renamed config files
-            if os.path.exists(self.configdir + os.sep + settingsdir):
-                for f in os.listdir(self.configdir + os.sep + settingsdir):
-                    if not f.split(setting + "_")[1].split(".conf")[0] in self.__dict__[settingsdir]:
-                        os.unlink(self.configdir + os.sep + settingsdir + os.sep + f)
-
-        except:
-            import traceback
-            traceback.print_exc(file=stdout)
+        # clean up old deleted/renamed config files
+        if os.path.exists(self.configdir + os.sep + settingsdir):
+            for f in os.listdir(self.configdir + os.sep + settingsdir):
+                if not f.split(setting + "_")[1].split(".conf")[0] in self.__dict__[settingsdir]:
+                    os.unlink(self.configdir + os.sep + settingsdir + os.sep + f)
 
 
     def Convert_Conf_to_Multiple_Servers(self):
@@ -659,11 +640,10 @@ class Config(object):
         try:
             # Linux systems should use keyring only if it comes with the distro, otherwise chances are small
             # that keyring works at all
-            if platform.system() == "Linux":
+            if not platform.system() in ["Windows", "Darwin"]:
                 # keyring and secretstorage have to be importable
                 import keyring, secretstorage
                 if ("SecretService") in dir(keyring.backends) and not (keyring.get_keyring() is None):
-                    ###self.keyring_available = True
                     return True
             else:
                 # only import keyring lib if configured to do so
@@ -672,15 +652,12 @@ class Config(object):
                     # hint for packaging: nagstamon.spec always have to match module path
                     # keyring has to be bound to object to be used later
                     import Nagstamon.thirdparty.keyring as keyring
-                    ###self.keyring_available = not (keyring.get_keyring() is None)
                     return  not (keyring.get_keyring() is None)
                 else:
-                    ####self.keyring_available = False
                     return False
         except:
             import traceback
             traceback.print_exc(file=sys.stdout)
-            ###self.keyring_available = False
             return False
 
 
