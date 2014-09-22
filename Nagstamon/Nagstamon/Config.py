@@ -227,7 +227,7 @@ class Config(object):
                         object.__setattr__(self, i[0], i[1])
                         
             # because the switch from Nagstamon 1.0 to 1.0.1 brings the use_system_keyring property
-            # and all the thousands 1.0 installations no not know it yet it will be more comfortable
+            # and all the thousands 1.0 installations do not know it yet it will be more comfortable
             # for most of the Windows users if it is only defined as False after it was checked
             # from config file
             if not self.__dict__.has_key("use_system_keyring"):
@@ -483,6 +483,21 @@ class Config(object):
                 if not option in ["servers", "actions"]:
                     config.set("Nagstamon", option, self.__dict__[option])
 
+            # because the switch from Nagstamon 1.0 to 1.0.1 brings the use_system_keyring property
+            # and all the thousands 1.0 installations do not know it yet it will be more comfortable
+            # for most of the Windows users if it is only defined as False after it was checked
+            # from config file
+            if not self.__dict__.has_key("use_system_keyring"):
+                if self.unconfigured == True:
+                    # an unconfigured system should start with no keyring to prevent crashes
+                    self.use_system_keyring = False
+                else:
+                    # a configured system seemed to be able to run and thus use system keyring
+                    if platform.system() in ["Windows", "Darwin"]:
+                        self.use_system_keyring = True
+                    else:
+                        self.use_system_keyring = self.KeyringAvailable()
+
             # save servers dict
             self.SaveMultipleConfig("servers", "server")
 
@@ -659,6 +674,9 @@ class Config(object):
                 if ("SecretService") in dir(keyring.backends) and not (keyring.get_keyring() is None):
                     return True
             else:
+                # safety first - if not yet available disable it
+                if not self.__dict__.has_key("use_system_keyring"):
+                    self.use_system_keyring = False
                 # only import keyring lib if configured to do so
                 # necessary to avoid Windows crashes like https://github.com/HenriWahl/Nagstamon/issues/97
                 if self.use_system_keyring == True:
