@@ -2,12 +2,11 @@ nagstamon (1.0.1) stable; urgency=low
 
   * New upstream
    - added option to disable system keyring storage to prevent crashes
-   - fixed too narrow fullscreen display
    - reverted default sorting order to "Descending"
+   - fixed too narrow fullscreen display
    - fixed vanishing Nagstamon submenu in Ubuntu Appindicator
 
  -- Henri Wahl <h.wahl@ifw-dresden.de>  Mon, 22 Sep 2014 9:00:00 +0200
-
 
 nagstamon (1.0) stable; urgency=low
 
