@@ -199,7 +199,7 @@ def rpmmain():
     if not os.path.isfile('%s/nagstamon.spec' % (options.redhat)):
         print 'Missing required "nagstamon.spec" file in "%s" directory' % options.redhat
         return
-    execute_script_lines(['cd %(target)s; ln -s %(redhat)s; tar -czf redhat/nagstamon_%(version)s.tar.gz .; fakeroot rpmbuild --define "_sourcedir %(redhat)s" -ba redhat/nagstamon.spec; rm -rf redhat'],
+    execute_script_lines(['cd %(target)s; ln -s %(redhat)s; tar -czf redhat/Nagstamon-%(version)s.tar.gz .; fakeroot rpmbuild --define "_sourcedir %(redhat)s" -ba redhat/nagstamon.spec; rm -rf redhat'],
                          get_opt_dict(options))
 
     print "\nFind .rpm output in $HOME/rpmbuild/RPMS/noarch/.\n"

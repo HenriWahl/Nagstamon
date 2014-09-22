@@ -89,7 +89,7 @@ desktop-file-install --dir %{buildroot}/%{_datadir}/applications\
 %{python_sitelib}/nagstamon-*-py*.egg-info
 
 %changelog
-* Mon 22 Sep 2014 Henri Wahl <h.wahl@ifw-dresden.de> - 1.0.1
+* Mon Sep 22 2014 Henri Wahl <h.wahl@ifw-dresden.de> - 1.0.1
 - added option to disable system keyring storage to prevent crashes
 - fixed too narrow fullscreen display
 - reverted default sorting order to "Descending"
