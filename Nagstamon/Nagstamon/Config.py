@@ -231,15 +231,15 @@ class Config(object):
             # for most of the Windows users if it is only defined as False after it was checked
             # from config file
             if not self.__dict__.has_key("use_system_keyring"):
-				if self.unconfigured == True:
-					# an unconfigured system should start with no keyring to prevent crashes
-					self.use_system_keyring = False
-				else:
-					# a configured system seemed to be able to run and thus use system keyring
-					if platform.system() in ["Windows", "Darwin"]:
-						self.use_system_keyring = True
-					else:
-						self.use_system_keyring = self.KeyringAvailable()
+                if self.unconfigured == True:
+                    # an unconfigured system should start with no keyring to prevent crashes
+                    self.use_system_keyring = False
+                else:
+                    # a configured system seemed to be able to run and thus use system keyring
+                    if platform.system() in ["Windows", "Darwin"]:
+                        self.use_system_keyring = True
+                    else:
+                        self.use_system_keyring = self.KeyringAvailable()
 
             # reset self.configdir to temporarily saved value in case it differs from
             # the one read from configfile and so it would fail to save next time

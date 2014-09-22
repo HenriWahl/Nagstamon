@@ -9,7 +9,7 @@ License: GPL
 Group: Applications/Utilities
 URL: https://nagstamon.ifw-dresden.de/
 
-Source: http://downloads.sourceforge.net/project/nagstamon/nagstamon/nagstamon%20%{version}/nagstamon_%{version}.tar.gz
+Source: http://nagstamon.ifw-dresden.de/files-nagstamon/stable/Nagstamon-%{version}.tar.gz
 Source1: nagstamon.desktop
 BuildRoot: %{_tmppath}/%{name}-%{version}-%{release}-root
 
@@ -89,6 +89,12 @@ desktop-file-install --dir %{buildroot}/%{_datadir}/applications\
 %{python_sitelib}/nagstamon-*-py*.egg-info
 
 %changelog
+* Mon 22 Sep 2014 Henri Wahl <h.wahl@ifw-dresden.de> - 1.0.1
+- added option to disable system keyring storage to prevent crashes
+- fixed too narrow fullscreen display
+- reverted default sorting order to "Descending"
+- fixed vanishing Nagstamon submenu in Ubuntu Appindicator
+
 * Tue Jul 28 2014 Henri Wahl <h.wahl@ifw-dresden.de> - 1.0
 - added custom event notification with custom commands
 - added highlighting of new events
