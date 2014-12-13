@@ -102,13 +102,17 @@ class CentreonServer(GenericServer):
     def open_tree_view(self, host, service=""):
         if str(self.use_autologin) == "True":
             auth = "&autologin=1&useralias=" + self.username + "&token=" + self.autologin_key
-            if service == "":
+            if host == '_Module_Meta':
+                webbrowser.open(self.monitor_cgi_url + "/index.php?" + urllib.urlencode({"p":20206,"o":"meta"}) + auth )
+            elif service == "":
                 webbrowser.open(self.monitor_cgi_url + "/index.php?" + urllib.urlencode({"p":201,"o":"hd", "host_name":host}) + auth )
             else:
                 webbrowser.open(self.monitor_cgi_url + "/index.php?" + urllib.urlencode({"p":202, "o":"svcd",  "host_name":host, "service_description":service}) + auth )
         else:
+            if host == '_Module_Meta':
+                webbrowser.open(self.monitor_cgi_url + "/main.php?" + urllib.urlencode({"p":20206,"o":"meta"}))
             # must be a host if service is empty...
-            if service == "":
+            elif service == "":
                 webbrowser.open(self.monitor_cgi_url + "/main.php?" + urllib.urlencode({"p":201,"o":"hd", "host_name":host}))
             else:
                 webbrowser.open(self.monitor_cgi_url + "/main.php?" + urllib.urlencode({"p":202, "o":"svcd",  "host_name":host, "service_description":service}))
@@ -409,6 +413,25 @@ class CentreonServer(GenericServer):
                 xmlobj, error = result.result, result.error
                 if error != "": return Result(result="ERROR", error=copy.deepcopy(error))
 
+            # //----- META SERVICES -----
+            # define meta-services xml URL
+            nagcgiurl_meta_services = self.monitor_cgi_url + "/include/monitoring/status/Services/" + self.XML_NDO + "/serviceXML.php?" + urllib.urlencode({"num":0, "limit":999, "o":"meta", "sort_type":"status", "sid":self.SID})
+            # retrive meta-services xml STATUS
+            result_meta = self.FetchURL(nagcgiurl_meta_services, giveback="xml")
+            xmlobj_meta, error_meta = result_meta.result, result_meta.error
+            if error_meta != "": return Result(result=xmlobj_meta, error=copy.deepcopy(error_meta))
+            # INSERT META-services xml at the end of the services xml
+            try:
+                    xmlobj.insert( -1, xmlobj_meta.reponse )
+            except:
+                    # set checking flag back to False
+                    self.isChecking = False
+                    result, error = self.Error(sys.exc_info())
+                    return Result(result=result, error=error)
+            # do some cleanup
+            del xmlobj_meta
+            # ----- META SERVICES -----//
+
             for l in xmlobj.findAll("l"):
                 try:
                     # host objects contain service objects
@@ -423,6 +446,14 @@ class CentreonServer(GenericServer):
                         self.new_hosts[str(l.hn.text)].services[str(l.sd.text)].name = str(l.sd.text)
                         self.new_hosts[str(l.hn.text)].services[str(l.sd.text)].server = self.name
                         self.new_hosts[str(l.hn.text)].services[str(l.sd.text)].status = str(l.cs.text)
+                        # //----- META SERVICES -----
+                        # if it is a meta-service, add the "sdl" fild in parenthesis after the service name. ( used in _set_acknowledge() and _set_recheck() ) :
+                        if self.new_hosts[str(l.hn.text)].services[str(l.sd.text)].host == '_Module_Meta':
+                            self.new_hosts[str(l.hn.text)].services[str(l.sd.text)].name = '{} ({})'.format( 
+                                                                                                                    self.new_hosts[str(l.hn.text)].services[str(l.sd.text)].name,
+                                                                                                                    l.sdl.text
+                            )
+                        # ----- META SERVICES -----//
                         # disgusting workaround for https://github.com/HenriWahl/Nagstamon/issues/91
                         if self.new_hosts[str(l.hn.text)].services[str(l.sd.text)].status in self.TRANSLATIONS:
                             self.new_hosts[str(l.hn.text)].services[str(l.sd.text)].status = self.TRANSLATIONS[\
@@ -496,6 +527,15 @@ class CentreonServer(GenericServer):
                             "service_description":s, "force_check":"1", \
                             "persistent":int(persistent), "persistant":int(persistent),\
                             "sticky":int(sticky), "o":"svcd", "en":"1"})
+                    # //----- META SERVICES -----
+                    # in case of a meta-service, extract the "sdl" fild from the service name :
+                    if host == '_Module_Meta':
+                        m =  re.search(r"^.+ \((?P<sdl>.+)\)$", s)
+                        if m:
+                            sdl = m.group('sdl')
+                            cgi_data = urllib.urlencode({"p":"20206", "o":"meta", "cmd":"70", \
+                                                                        "select["+host+";"+sdl+"]":"1", "limit":"0"})
+                    # ----- META SERVICES -----//
                     # debug
                     if str(self.conf.debug_mode) == "True":
                         self.Debug(server=self.get_name(), host=host, service=s, debug=self.monitor_cgi_url + "/main.php?" + cgi_data)
@@ -515,7 +555,14 @@ class CentreonServer(GenericServer):
         # yes this procedure IS resource waste... suggestions welcome!
         try:
         # decision about host or service - they have different URLs
-            if service == "":
+            if host == '_Module_Meta':
+                m =  re.search(r"^.+ \((?P<sdl>.+)\)$", service)
+                if m:
+                    sdl = m.group('sdl')
+                    cgi_data = urllib.urlencode({"p":"20206", "o":"meta", "cmd":"3", \
+                                                                "select["+host+";"+sdl+"]":"1", "limit":"0"})
+                    url = self.monitor_cgi_url + "/main.php?" + cgi_data
+            elif service == "":
                 # ... it can only be a host, get its id
                 host_id = self._get_host_id(host)
                 # fill and encode CGI data
