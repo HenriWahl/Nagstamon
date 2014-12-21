@@ -31,8 +31,7 @@ import gtk
 
 # if running on windows import winsound
 import platform
-if platform.system() == "Windows":# necessary for Python-2.7.9-ssl-support-fix https://github.com/HenriWahl/Nagstamon/issues/126
-
+if platform.system() == "Windows":
     import winsound
 
 # Garbage collection
