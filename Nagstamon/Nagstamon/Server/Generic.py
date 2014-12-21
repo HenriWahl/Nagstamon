@@ -30,6 +30,9 @@ import traceback
 import base64
 import re
 import gobject
+# necessary for Python-2.7.9-ssl-support-fix https://github.com/HenriWahl/Nagstamon/issues/126
+if sys.version_info >= (2, 7, 9):
+    import ssl
 
 # to let Linux distributions use their own BeautifulSoup if existent try importing local BeautifulSoup first
 # see https://sourceforge.net/tracker/?func=detail&atid=1101370&aid=3302612&group_id=236865
@@ -141,6 +144,15 @@ class GenericServer(object):
         self.proxy_handler = None
         self.proxy_auth_handler = None
         self.urlopener = None
+        # necessary for Python-2.7.9-ssl-support-fix https://github.com/HenriWahl/Nagstamon/issues/126
+        if sys.version_info >= (2, 7, 9):
+            try:
+                self.https_handler = urllib2.HTTPSHandler(context=ssl._create_unverified_context())
+            except:
+                self.https_handler = urllib2.HTTPSHandler()
+        else:
+            self.https_handler = urllib2.HTTPSHandler()
+
         # headers for HTTP requests, might be needed for authorization on Nagios/Icinga Hosts
         self.HTTPheaders = dict()
         # attempt to use only one bound list of TreeViewColumns instead of ever increasing one

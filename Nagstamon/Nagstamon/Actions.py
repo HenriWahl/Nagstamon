@@ -31,7 +31,8 @@ import gtk
 
 # if running on windows import winsound
 import platform
-if platform.system() == "Windows":
+if platform.system() == "Windows":# necessary for Python-2.7.9-ssl-support-fix https://github.com/HenriWahl/Nagstamon/issues/126
+
     import winsound
 
 # Garbage collection
@@ -830,30 +831,33 @@ def BuildURLOpener(server):
     The MultipartPostHandler is needed for submitting multipart forms from Opsview
     """
     # trying with changed digest/basic auth order as some digest auth servers do not
-    # seem to work wi the previous way
+    # seem to work the previous way
     if str(server.use_proxy) == "False":
         server.proxy_handler = urllib2.ProxyHandler({})
-        urlopener = urllib2.build_opener(server.digest_handler,\
-                                         server.basic_handler,\
-                                         server.proxy_handler,\
-                                         urllib2.HTTPCookieProcessor(server.Cookie),\
+        urlopener = urllib2.build_opener(server.digest_handler,
+                                         server.basic_handler,
+                                         server.proxy_handler,
+                                         server.https_handler,
+                                         urllib2.HTTPCookieProcessor(server.Cookie),
                                          MultipartPostHandler)
     elif str(server.use_proxy) == "True":
         if str(server.use_proxy_from_os) == "True":
-            urlopener = urllib2.build_opener(server.digest_handler,\
-                                             server.basic_handler,\
-                                             urllib2.HTTPCookieProcessor(server.Cookie),\
+            urlopener = urllib2.build_opener(server.digest_handler,
+                                             server.basic_handler,
+                                             server.https_handler,
+                                             urllib2.HTTPCookieProcessor(server.Cookie),
                                              MultipartPostHandler)
         else:
             # if proxy from OS is not used there is to add a authenticated proxy handler
             server.passman.add_password(None, server.proxy_address, server.proxy_username, server.proxy_password)
             server.proxy_handler = urllib2.ProxyHandler({"http": server.proxy_address, "https": server.proxy_address})
             server.proxy_auth_handler = urllib2.ProxyBasicAuthHandler(server.passman)
-            urlopener = urllib2.build_opener(server.proxy_handler,\
-                                            server.proxy_auth_handler,\
-                                            server.digest_handler,\
-                                            server.basic_handler,\
-                                            urllib2.HTTPCookieProcessor(server.Cookie),\
+            urlopener = urllib2.build_opener(server.proxy_handler,
+                                            server.proxy_auth_handler,
+                                            server.digest_handler,
+                                            server.basic_handler,
+                                            server.https_handler,
+                                            urllib2.HTTPCookieProcessor(server.Cookie),
                                             MultipartPostHandler)
     return urlopener
 
