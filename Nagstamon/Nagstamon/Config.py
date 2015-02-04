@@ -936,3 +936,6 @@ class Action(object):
 
         # add and/or all keywords to object
         for k in kwds: self.__dict__[k] = kwds[k]
+
+# Initialize configuration to be accessed globally
+conf = Config()
