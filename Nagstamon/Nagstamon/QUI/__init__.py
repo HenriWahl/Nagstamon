@@ -22,4 +22,38 @@
 # for python2 and upcomping python3 compatiblity
 from __future__ import print_function, absolute_import, unicode_literals
 
-from Nagstamon.Config import conf
+from PyQt5.QtWidgets import *
+from PyQt5.QtGui import *
+from PyQt5.QtCore import *
+
+import os
+
+from Nagstamon.Config import (conf, RESOURCES, APPINFO)
+
+
+class SystemTrayIcon(QSystemTrayIcon):
+    """
+        Icon in system tray, works at least in Windows and OSX
+        Qt5 shows an empty icon in GNOME3
+    """
+    def __init__(self, icon):
+        QSystemTrayIcon.__init__(self, icon)
+        self.menu = QMenu()
+        exitaction = QAction("Exit", self)
+        exitaction.triggered.connect(QCoreApplication.instance().quit)
+        self.menu.addAction(exitaction)
+        self.setContextMenu(self.menu)
+
+
+class StatusWindow(QWidget):
+    def __init__(self):
+        QWidget.__init__(self)
+        #self.setWindowFlags(Qt.WindowStaysOnTopHint | Qt.FramelessWindowHint)
+        self.setWindowTitle(APPINFO.Name)
+        self.setWindowIcon(QIcon("%s%snagstamon.svg" % (RESOURCES, os.sep)))
+
+        
+
+
+systrayicon = SystemTrayIcon(QIcon("%s%snagstamon.svg" % (RESOURCES, os.sep)))
+statuswindow = StatusWindow()

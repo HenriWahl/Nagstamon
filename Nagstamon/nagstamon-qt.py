@@ -21,19 +21,12 @@
 # for python2 and upcomping python3 compatiblity
 from __future__ import print_function, absolute_import, unicode_literals
 
+from PyQt5.QtWidgets import *
+from PyQt5.QtGui import *
+from PyQt5.QtCore import *
+
 import sys
 import socket
-from PyQt5.QtWidgets import *
-
-# Initialize global configuration
-from Nagstamon.Config import (conf, RESOURCES)
-
-from Nagstamon.QUI import QUI
-
-from Nagstamon.Servers import SERVER_TYPES
-
-# dictionary for servers
-servers = dict()
 
 # fix/patch for https://bugs.launchpad.net/ubuntu/+source/nagstamon/+bug/732544
 socket.setdefaulttimeout(30)
@@ -41,6 +34,16 @@ socket.setdefaulttimeout(30)
 try:
     if __name__ == "__main__":
         app = QApplication(sys.argv)
+
+        # Initialize global configuration
+        from Nagstamon.Config import (conf, RESOURCES)
+
+        from Nagstamon.QUI import (systrayicon, statuswindow)
+        systrayicon.show()
+        statuswindow.show()
+
+        from Nagstamon.Servers import SERVER_TYPES
+
         sys.exit(app.exec_())
 except Exception as err:
     print(err)

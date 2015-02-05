@@ -19,6 +19,18 @@
 
 """Module Servers"""
 
+# for python2 and upcomping python3 compatiblity
+from __future__ import print_function, absolute_import, unicode_literals
+
+import urllib2
+
+from Nagstamon.Config import conf
+from Nagstamon.Actions import BuildURLOpener, MultipartPostHandler
+
+
+# dictionary for servers
+servers = dict()
+
 # contains dict with available server classes
 # key is type of server, value is server class
 # used for automatic config generation
@@ -42,7 +54,73 @@ def get_registered_servers():
 
 def get_registered_server_type_list():
     """ Returns available server type name list with order of registering """
-    return [x[0] for x in REGISTERED_SERVERS]
+    return [x[0] for x in SERVER_TYPES]
+
+
+def CreateServer(server=None):
+    # create Server from config
+    registered_servers = get_registered_servers()
+    if server.type not in registered_servers:
+        print('Server type not supported: %s' % server.type)
+        return
+    # give argument servername so CentreonServer could use it for initializing MD5 cache
+    new_server = registered_servers[server.type](name=server.name)
+    new_server.type = server.type
+    new_server.monitor_url = server.monitor_url
+    new_server.monitor_cgi_url = server.monitor_cgi_url
+    # add resources, needed for auth dialog
+    #new_server.Resources = resources
+    new_server.username = server.username
+    new_server.password = server.password
+    new_server.use_proxy = server.use_proxy
+    new_server.use_proxy_from_os = server.use_proxy_from_os
+    new_server.proxy_address = server.proxy_address
+    new_server.proxy_username = server.proxy_username
+    new_server.proxy_password = server.proxy_password
+
+    # if password is not to be saved ask for it at startup
+    if ( server.enabled == "True" and server.save_password == "False" and server.use_autologin == "False" ):
+        new_server.refresh_authentication = True
+
+    # access to thread-safe debug queue
+    #new_server.debug_queue = debug_queue
+
+    # use server-owned attributes instead of redefining them with every request
+    new_server.passman = urllib2.HTTPPasswordMgrWithDefaultRealm()
+    new_server.passman.add_password(None, server.monitor_url, server.username, server.password)
+    new_server.passman.add_password(None, server.monitor_cgi_url, server.username, server.password)
+    new_server.basic_handler = urllib2.HTTPBasicAuthHandler(new_server.passman)
+    new_server.digest_handler = urllib2.HTTPDigestAuthHandler(new_server.passman)
+    new_server.proxy_auth_handler = urllib2.ProxyBasicAuthHandler(new_server.passman)
+
+    if str(new_server.use_proxy) == "False":
+        # use empty proxyhandler
+        new_server.proxy_handler = urllib2.ProxyHandler({})
+    elif str(server.use_proxy_from_os) == "False":
+        # if proxy from OS is not used there is to add a authenticated proxy handler
+        new_server.passman.add_password(None, new_server.proxy_address, new_server.proxy_username, new_server.proxy_password)
+        new_server.proxy_handler = urllib2.ProxyHandler({"http": new_server.proxy_address, "https": new_server.proxy_address})
+        new_server.proxy_auth_handler = urllib2.ProxyBasicAuthHandler(new_server.passman)
+
+    # Special FX
+    # Centreon
+    new_server.use_autologin = server.use_autologin
+    new_server.autologin_key = server.autologin_key
+    # Icinga
+    new_server.use_display_name_host = server.use_display_name_host
+    new_server.use_display_name_service = server.use_display_name_service
+
+    # create permanent urlopener for server to avoid memory leak with millions of openers
+    new_server.urlopener = BuildURLOpener(new_server)
+    # server's individual preparations for HTTP connections (for example cookie creation), version of monitor
+    if str(server.enabled) == "True":
+        new_server.init_HTTP()
+
+    # debug
+    if str(conf.debug_mode) == "True":
+        new_server.Debug(server=server.name, debug="Created server.")
+
+    return new_server
 
 
 # load all existing server types
@@ -66,3 +144,21 @@ register_server(Op5MonitorServer)
 register_server(OpsviewServer)
 register_server(ThrukServer)
 register_server(ZabbixServer)
+
+# create servers
+for server in conf.servers.values():
+    """
+    if ( server.use_autologin == "False" and server.save_password == "False" and server.enabled == "True" ) or ( server.enabled == "True" and server.use_autologin == "True" and server.autologin_key == "" ):
+        # the auth dialog will fill the server's username and password with the given values
+        if platform.system() == "Darwin":
+            # MacOSX gets instable with default theme "Clearlooks" so use custom one with theme "Murrine"
+            gtk.rc_parse_string('gtk-theme-name = "Murrine"')
+
+        GUI.AuthenticationDialog(server=server, Resources=Resources, conf=conf, debug_queue=debug_queue)
+    """
+    created_server = CreateServer(server)
+    if created_server is not None:
+        servers[server.name] = created_server
+        # for the next time no auth needed
+        servers[server.name].refresh_authentication = False
+
