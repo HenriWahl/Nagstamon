@@ -1,7 +1,7 @@
 # encoding: utf-8
 
 # Nagstamon - Nagios status monitor for your desktop
-# Copyright (C) 2008-2014 Henri Wahl <h.wahl@ifw-dresden.de> et al.
+# Copyright (C) 2008-2015 Henri Wahl <h.wahl@ifw-dresden.de> et al.
 #
 # This program is free software; you can redistribute it and/or modify
 # it under the terms of the GNU General Public License as published by
@@ -17,5 +17,9 @@
 # along with this program; if not, write to the Free Software
 # Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA  02110-1301, USA
 
-"""Module Server"""
+"""Module QUI"""
 
+# for python2 and upcomping python3 compatiblity
+from __future__ import print_function, absolute_import, unicode_literals
+
+from Nagstamon.Config import conf

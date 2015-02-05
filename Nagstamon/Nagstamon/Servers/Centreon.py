@@ -25,7 +25,7 @@ import re
 import copy
 
 from Nagstamon.Objects import *
-from Nagstamon.Server.Generic import GenericServer
+from Nagstamon.Servers.Generic import GenericServer
 
 class CentreonServer(GenericServer):
     TYPE = 'Centreon'

@@ -20,4 +20,5 @@
 # for python2 and upcomping python3 compatiblity
 from __future__ import print_function, absolute_import, unicode_literals
 
-from Nagstamon.Config import conf
+from Nagstamon.Config import (conf, RESOURCES)
+

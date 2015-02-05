@@ -33,7 +33,7 @@ import copy
 
 from Nagstamon import Actions
 from Nagstamon.Objects import *
-from Nagstamon.Server.Generic import GenericServer
+from Nagstamon.Servers.Generic import GenericServer
 
 
 class MultisiteError(Exception):

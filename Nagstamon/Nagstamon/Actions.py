@@ -46,7 +46,7 @@ from Nagstamon import Objects
 from Nagstamon.Objects import Result
 
 #from Nagstamon import GUI
-import GUI
+#import GUI
 
 # import md5 for centreon url autologin encoding
 try:
