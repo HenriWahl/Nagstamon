@@ -26,6 +26,7 @@ import sys
 import ConfigParser
 import base64
 import zlib
+from collections import OrderedDict
 
 class APPINFO(object):
     """
@@ -162,7 +163,6 @@ class Config(object):
         self.defaults_downtime_comment = "scheduled downtime"
         self.defaults_downtime_type_fixed = True
         self.defaults_downtime_type_flexible = False
-        self.converted_from_single_configfile = False
         # internal flag to determine if keyring is available at all - defaults to False
         # use_system_keyring is checked and defined some lines later after config file was read
         self.keyring_available = False
@@ -206,9 +206,6 @@ class Config(object):
         # there may be situations where the name gets overwritten by a
         # wrong name so it will be stored here temporarily
         configdir_temp = self.configdir
-
-        # legacy configfile treatment
-        legacyconfigfile = self._LoadLegacyConfigFile()
 
         # default settings dicts
         self.servers = dict()
@@ -265,81 +262,6 @@ class Config(object):
 
             # seems like there is a config file so the app is not unconfigured anymore
             self.unconfigured = False
-
-            # if configfile has been converted from legacy configfile reset it to the new value
-            self.configfile = self.configdir + os.sep + "nagstamon.conf"
-
-        # flag to be evaluated after gui is initialized and used to show a notice if a legacy config file is used
-        # from command line
-        self.legacyconfigfile_notice = False
-
-        # in case it exists and it has not been used before read legacy config file once
-        if str(self.converted_from_single_configfile) == "False" and not legacyconfigfile == False:
-            # instantiate a Configparser to parse the conf file
-            # SF.net bug #3304423 could be fixed with allow_no_value argument which
-            # is only available since Python 2.7
-            if sys.version_info[0] < 3 and sys.version_info[1] < 7:
-                config = ConfigParser.ConfigParser()
-            else:
-                config = ConfigParser.ConfigParser(allow_no_value=True)
-            config.read(legacyconfigfile)
-
-            # go through all sections of the conf file
-            for section in config.sections():
-                if section.startswith("Server_"):
-                    # create server object for every server
-                    server_name = dict(config.items(section))["name"]
-                    self.servers[server_name] = Server()
-
-                    # go through all items of each sections
-                    for i in config.items(section):
-                            self.servers[server_name].__setattr__(i[0], i[1])
-
-                    # deobfuscate username + password inside a try-except loop
-                    # if entries have not been obfuscated yet this action should raise an error
-                    # and old values (from nagstamon < 0.9.0) stay and will be converted when next
-                    # time saving config
-                    try:
-                        self.servers[server_name].username = self.DeObfuscate(self.servers[server_name].username)
-                        if self.servers[server_name].save_password == "False":
-                            self.servers[server_name].password = ""
-                        else:
-                            self.servers[server_name].password = self.DeObfuscate(self.servers[server_name].password)
-                        self.servers[server_name].autologin_key  = self.DeObfuscate(self.servers[server_name].autologin_key)
-                        self.servers[server_name].proxy_username = self.DeObfuscate(self.servers[server_name].proxy_username)
-                        self.servers[server_name].proxy_password = self.DeObfuscate(self.servers[server_name].proxy_password)
-                    except:
-                        pass
-
-                elif section == "Nagstamon":
-                    # go through all items of each sections (in fact there is only on
-                    # section which has to be there to comply to the .INI file standard
-                    for i in config.items(section):
-                        # create a key of every config item with its appropriate value - but please no legacy config file
-                        if not i[0] == "configfile":
-                            object.__setattr__(self, i[0], i[1])
-
-            # add default actions as examples
-            self.actions.update(self._DefaultActions())
-
-            # set flag for config file not being evaluated again
-            self.converted_from_single_configfile = True
-            # of course Nagstamon is configured then
-            self.unconfigured = False
-
-            # add config dir in place of legacy config file
-            # in case there is a default install use the default config dir
-            if legacyconfigfile == os.path.normpath(os.path.normcase(os.path.expanduser('~') + os.sep + ".nagstamon.conf")):
-                self.configdir = os.path.normpath(os.path.normcase(os.path.expanduser('~') + os.sep + ".nagstamon"))
-            else:
-                self.configdir = legacyconfigfile + ".config"
-            self.configfile = self.configdir + os.sep + "nagstamon.conf"
-
-            # set flag to show legacy command line config file notice
-            self.legacyconfigfile_notice = True
-
-            # save converted configuration
-            self.SaveConfig()
 
         # Load actions if Nagstamon is not unconfigured, otherwise load defaults
         if str(self.unconfigured) == "True":
@@ -412,51 +334,16 @@ class Config(object):
         return servers
 
 
-    def _LoadLegacyConfigFile(self):
-        """
-        load any pre-0.9.9 config file
-        """
-        # default negative setting
-        legacyconfigfile = False
-
-        # try to use a given config file - there must be one given
-        # if sys.argv is larger than 1
-        if len(sys.argv) > 1:
-            if sys.argv[1].find("-psn") != -1:
-                legacyconfigfile = os.path.expanduser('~') + os.sep + ".nagstamon.conf"
-            else:
-                # allow to give a config file
-                legacyconfigfile = sys.argv[1]
-        # otherwise if there exits a configfile in current working directory it should be used
-        elif os.path.exists(os.getcwd() + os.sep + "nagstamon.conf"):
-            legacyconfigfile = os.getcwd() + os.sep + "nagstamon.conf"
-        else:
-            # ~/.nagstamon.conf is the user conf file
-            # os.path.expanduser('~') finds out the user HOME dir where
-            # nagstamon expects its conf file to be
-            legacyconfigfile = os.path.expanduser('~') + os.sep + ".nagstamon.conf"
-
-        # make path fit for actual os, normcase for letters and normpath for path
-        legacyconfigfile = os.path.normpath(os.path.normcase(legacyconfigfile))
-
-        if os.path.exists(legacyconfigfile) and os.path.isfile(legacyconfigfile):
-            return legacyconfigfile
-        else:
-            return False
-
-
     def LoadMultipleConfig(self, settingsdir, setting, configobj):
         """
         load generic config into settings dict and return to central config
         """
         # defaults as empty dict in case settings dir/files could not be found
-        settings = dict()
+        settings = OrderedDict()
 
         try:
             if os.path.exists(self.configdir + os.sep + settingsdir):
-                # dictionary that later gets returned back
-                settings = dict()
-                for f in os.listdir(self.configdir + os.sep + settingsdir):
+                for f in sorted(os.listdir(self.configdir + os.sep + settingsdir)):
                     if f.startswith(setting + "_") and f.endswith(".conf"):
                         if sys.version_info[0] < 3 and sys.version_info[1] < 7:
                             config = ConfigParser.ConfigParser()
@@ -632,47 +519,6 @@ class Config(object):
                     os.unlink(self.configdir + os.sep + settingsdir + os.sep + f)
 
 
-    def Convert_Conf_to_Multiple_Servers(self):
-        """
-            if there are settings found which come from older nagstamon version convert them -
-            now with multiple servers support these servers have their own settings
-
-            DEPRECATED I think, after 2,5 years have passed there should be no version less than 0.8.0 in the wild...
-        """
-
-        # check if old settings exist
-        if self.__dict__.has_key("nagios_url") and \
-            self.__dict__.has_key("nagios_cgi_url") and \
-            self.__dict__.has_key("username") and \
-            self.__dict__.has_key("password") and \
-            self.__dict__.has_key("use_proxy_yes") and \
-            self.__dict__.has_key("use_proxy_no"):
-            # create Server and fill it with old settings
-            server_name = "Default"
-            self.servers[server_name] = Server()
-            self.servers[server_name].name = server_name
-            self.servers[server_name].monitor_url = self.nagios_url
-            self.servers[server_name].monitor_cgi_url = self.nagios_cgi_url
-            self.servers[server_name].username = self.username
-            self.servers[server_name].password = self.password
-            # convert VERY old config files
-            try:
-                self.servers[server_name].use_proxy = self.use_proxy_yes
-            except:
-                self.servers[server_name].use_proxy = False
-            try:
-                self.servers[server_name].use_proxy_from_os = self.use_proxy_from_os_yes
-            except:
-                self.servers[server_name].use_proxy_from_os = False
-            # delete old settings from config
-            self.__dict__.pop("nagios_url")
-            self.__dict__.pop("nagios_cgi_url")
-            self.__dict__.pop("username")
-            self.__dict__.pop("password")
-            self.__dict__.pop("use_proxy_yes")
-            self.__dict__.pop("use_proxy_no")
-
-
     def KeyringAvailable(self):
         """
             determine if keyring module and an implementation is available for secure password storage
@@ -702,38 +548,6 @@ class Config(object):
             import traceback
             traceback.print_exc(file=sys.stdout)
             return False
-
-
-    def Convert_Conf_to_Custom_Actions(self):
-        """
-        any nagstamon minor to 0.9.9 will have extra ssh/rdp/vnc settings
-        which will be converted to custom actions here
-        """
-
-        # check if old settings exist
-        if self.__dict__.has_key("app_ssh_bin") and \
-            self.__dict__.has_key("app_ssh_options") and \
-            self.__dict__.has_key("app_rdp_bin") and \
-            self.__dict__.has_key("app_rdp_options") and \
-            self.__dict__.has_key("app_vnc_bin") and \
-            self.__dict__.has_key("app_vnc_options"):
-            # create actions and fill them with old settings
-            self.actions["SSH"] = Action(name="SSH", type="command", description="Converted from pre 0.9.9 Nagstamon.",
-                                         string=self.app_ssh_bin + " " + self.app_ssh_options + " $ADDRESS$")
-
-            self.actions["RDP"] = Action(name="RDP", type="command", description="Converted from pre 0.9.9 Nagstamon.",
-                                         string=self.app_rdp_bin + " " + self.app_rdp_options + " $ADDRESS$")
-
-            self.actions["VNC"] = Action(name="VNC", type="command", description="Converted from pre 0.9.9 Nagstamon.",
-                                         string=self.app_vnc_bin + " " + self.app_vnc_options + " $ADDRESS$")
-
-            # delete old settings from config
-            self.__dict__.pop("app_ssh_bin")
-            self.__dict__.pop("app_ssh_options")
-            self.__dict__.pop("app_rdp_bin")
-            self.__dict__.pop("app_rdp_options")
-            self.__dict__.pop("app_vnc_bin")
-            self.__dict__.pop("app_vnc_options")
 
 
     def Obfuscate(self, string, count=5):

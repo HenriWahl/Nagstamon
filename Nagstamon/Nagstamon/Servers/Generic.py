@@ -67,6 +67,7 @@ class GenericServer(object):
     # used for $STATUS$ variable for custom actions
     STATUS_INFO_COLUMN_ID = 6
 
+    """
     COLUMNS = [
         HostColumn,
         ServiceColumn,
@@ -76,6 +77,7 @@ class GenericServer(object):
         AttemptColumn,
         StatusInformationColumn
     ]
+    """
 
     DISABLED_CONTROLS = []
 
@@ -237,13 +239,14 @@ class GenericServer(object):
         return str(self.password)
 
 
+    """
     @classmethod
     def get_columns(cls, row):
-        """ Gets columns filled with row data """
+        # Gets columns filled with row data
         for column_class in cls.COLUMNS:
             # str() necessary because MacOSX Python cries otherwise
             yield str(column_class(row))
-
+    """
 
     def get_server_version(self):
         """

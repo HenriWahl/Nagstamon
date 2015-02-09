@@ -41,9 +41,9 @@ try:
         from Nagstamon.QUI import (systrayicon, statuswindow)
         systrayicon.show()
         statuswindow.show()
-
-        from Nagstamon.Servers import SERVER_TYPES
+        statuswindow.adjustSize()
 
         sys.exit(app.exec_())
 except Exception as err:
-    print(err)
+    import traceback
+    traceback.print_exc(file=sys.stdout)

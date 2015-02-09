@@ -17,9 +17,14 @@
 # along with this program; if not, write to the Free Software
 # Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA  02110-1301, USA
 
-import Actions
+# for python2 and upcomping python3 compatiblity
+from __future__ import print_function, absolute_import, unicode_literals
+
+from Nagstamon.Actions import UnifiedMachineSortableDate
 
 
+### TO BE REMOVED! ###
+"""
 class Column(object):
     ATTR_NAME = 'name'
     DEFAULT_VALUE = ''
@@ -38,8 +43,8 @@ class Column(object):
 
     @classmethod
     def get_label(cls):
-        """ Table header column label
-        """
+        # Table header column label
+
         return ' '.join([x.capitalize() for x in cls.ATTR_NAME.split('_')])
 
     @classmethod
@@ -52,7 +57,7 @@ class CustomSortingColumn(Column):
 
     @classmethod
     def sort_function(cls, model, iter1, iter2, column):
-        """ Overrides default sorting behaviour """
+        # Overrides default sorting behaviour
         data1, data2 = [model.get_value(x, column) for x in (iter1, iter2)]
         # this happens since liststore (aka tab_model) is an attribute of server and not created every time
         # new, so sometimes data2 is simply "None"
@@ -99,13 +104,13 @@ class DurationColumn(CustomSortingColumn):
 
     @classmethod
     def sort_function(cls, model, iter1, iter2, column):
-        """ Overrides default sorting behaviour """
+        # Overrides default sorting behaviour
         data1, data2 = [model.get_value(x, column) for x in (iter1, iter2)]
         try:
             first = Actions.MachineSortableDate(data1)
             second = Actions.MachineSortableDate(data2)
-        except ValueError, err:
-            print err
+        except ValueError as err:
+            print(err)
             return cmp(first, second)
         return first - second
 
@@ -117,11 +122,16 @@ class AttemptColumn(Column):
 class StatusInformationColumn(Column):
     ATTR_NAME = 'status_information'
 
+"""
+### /TO BE REMOVED! ###
+
 
 class GenericObject(object):
     """
     template for hosts and services
     """
+
+    STATES = ['WARNING', 'UNKNOWN', 'CRITICAL', 'UNREACHABLE', 'DOWN']
 
     def __init__(self):
         self.name = ""
@@ -142,6 +152,9 @@ class GenericObject(object):
         self.site = ""
         # server to be added to hash
         self.server = ""
+        # might help for sorting in Qt
+        self.host = ""
+        self.service = ""
 
 
     def is_passive_only(self):
@@ -194,6 +207,40 @@ class GenericObject(object):
         returns hash of event status information - different for host and service thus empty here
         """
         return ''
+
+
+    def get_columns(self, columns_wanted):
+        for c in columns_wanted:
+            yield str(self.__dict__[c])
+
+
+    # the following methods are used for sorted + methodcaller
+    def compare_host(self):
+        return self.host.lower()
+
+
+    def compare_service(self):
+        return self.service.lower()
+
+
+    def compare_status(self):
+        return self.STATES.index(self.status)
+
+
+    def compare_last_check(self):
+        return UnifiedMachineSortableDate(self.last_check)
+
+
+    def compare_duration(self):
+        return UnifiedMachineSortableDate(self.duration)
+
+
+    def compare_attempt(self):
+        return self.attempt
+
+
+    def compare_status_information(self):
+        return self.status_information
 
 
 class GenericHost(GenericObject):

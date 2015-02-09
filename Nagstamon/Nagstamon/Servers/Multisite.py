@@ -41,20 +41,17 @@ class MultisiteError(Exception):
         self.terminate = terminate
         self.result    = result
 
-
+"""
 class LastCheckColumnMultisite(Column):
-    """
-    because Check_MK has a pretty different date format (much better readable) it has to
-    be treaten differently
-
-    This is a custom version of LastCheckColumn to be used in list COLUMNS in class Multisite
-    """
+    #because Check_MK has a pretty different date format (much better readable) it has to
+    #be treaten differently
+    #This is a custom version of LastCheckColumn to be used in list COLUMNS in class Multisite
 
     ATTR_NAME = 'last_check'
 
     @classmethod
     def sort_function(cls, model, iter1, iter2, column):
-        """ Overrides default sorting behaviour """
+        # Overrides default sorting behaviour
 
         data1, data2 = [model.get_value(x, column) for x in (iter1, iter2)]
 
@@ -73,7 +70,7 @@ class DurationColumnMultisite(CustomSortingColumn):
 
     @classmethod
     def sort_function(cls, model, iter1, iter2, column):
-        """ Overrides default sorting behaviour """
+        # Overrides default sorting behaviour
         data1, data2 = [model.get_value(x, column) for x in (iter1, iter2)]
         try:
             first = Actions.MachineSortableDateMultisite(data1)
@@ -83,7 +80,7 @@ class DurationColumnMultisite(CustomSortingColumn):
             return cmp(first, second)
         # other order than default function
         return second - first
-
+"""
 
 class MultisiteServer(GenericServer):
     """
@@ -106,7 +103,7 @@ class MultisiteServer(GenericServer):
                          "input_entry_autologin_key",
                          "input_checkbutton_use_display_name_host",
                          "input_checkbutton_use_display_name_service"]
-
+    """
     COLUMNS = [
         HostColumn,
         ServiceColumn,
@@ -116,7 +113,7 @@ class MultisiteServer(GenericServer):
         AttemptColumn,
         StatusInformationColumn
     ]
-
+    """
 
     def __init__(self, **kwds):
         GenericServer.__init__(self, **kwds)

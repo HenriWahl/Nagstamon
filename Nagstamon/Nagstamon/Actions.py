@@ -27,7 +27,7 @@ import subprocess
 import re
 import sys
 import traceback
-import gtk
+###import gtk
 
 # if running on windows import winsound
 import platform
@@ -41,9 +41,6 @@ import gc
 import urllib2
 import mimetools, mimetypes
 import os, stat
-
-from Nagstamon import Objects
-from Nagstamon.Objects import Result
 
 #from Nagstamon import GUI
 #import GUI
@@ -1055,6 +1052,65 @@ def MachineSortableDateMultisite(raw):
 
     # convert collected duration data components into seconds for being comparable
     return 16934400 * d["M"] + 86400 * d["d"] + 3600 * d["h"] + 60 * d["m"] + d["s"]
+
+
+# unified machine readable date might go back to module Actions
+def UnifiedMachineSortableDate(self, raw):
+    """
+    Try to compute machine readable date for all types of monitor servers
+    """
+    # dictionary for duration date string components
+    d = {"M":0, "w":0, "d":0, "h":0, "m":0, "s":0}
+
+    # if for some reason the value is empty/none make it compatible: 0s
+    if raw == None: raw = "0s"
+
+    # Check_MK style
+    if ("-" in raw and ":" in raw) or ("sec" in raw or "min" in raw or "hrs" in raw or "days" in raw):
+        # check_mk has different formats - if duration takes too long it changes its scheme
+        if "-" in raw and ":" in raw:
+            datepart, timepart = raw.split(" ")
+            # need to convert years into months for later comparison
+            Y, M, D = datepart.split("-")
+            d["M"] = int(Y) * 12 + int(M)
+            d["d"] = int(D)
+            # time does not need to be changed
+            h, m, s = timepart.split(":")
+            d["h"], d["m"], d["s"] = int(h), int(m), int(s)
+            del datepart, timepart, Y, M, D, h, m, s
+        else:
+            # recalculate a timedelta of the given value
+            if "sec" in raw:
+                d["s"] = raw.split(" ")[0]
+                delta = datetime.datetime.now() - datetime.timedelta(seconds=int(d["s"]))
+            elif "min" in raw:
+                d["m"] = raw.split(" ")[0]
+                delta = datetime.datetime.now() - datetime.timedelta(minutes=int(d["m"]))
+            elif "hrs" in raw:
+                d["h"] = raw.split(" ")[0]
+                delta = datetime.datetime.now() - datetime.timedelta(hours=int(d["h"]))
+            elif "days" in raw:
+                d["d"] = raw.split(" ")[0]
+                delta = datetime.datetime.now() - datetime.timedelta(days=int(d["d"]))
+            else:
+                delta = datetime.datetime.now()
+
+            Y, M, d["d"], d["h"], d["m"], d["s"] = delta.strftime("%Y %m %d %H %M %S").split(" ")
+            # need to convert years into months for later comparison
+            d["M"] = int(Y) * 12 + int(M)
+
+        # int-ify d
+        for i in d: d[i] = int(d[i])
+    else:
+        # strip and replace necessary for Nagios duration values,
+        # split components of duration into dictionary
+        for c in raw.strip().replace("  ", " ").split(" "):
+            number, period = c[0:-1],c[-1]
+            d[period] = int(number)
+            del number, period
+
+    # convert collected duration data components into seconds for being comparable
+    return 16934400 * d["M"] + 604800 * d["w"] + 86400 * d["d"] + 3600 * d["h"] + 60 * d["m"] + d["s"]
 
 
 def MD5ify(string):

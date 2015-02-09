@@ -77,20 +77,25 @@ class SystemTrayIcon(QSystemTrayIcon):
 
 class StatusWindow(QWidget):
     def __init__(self):
+        """
+            Status window combined from status bar and popup window
+        """
         QWidget.__init__(self)
-        #self.setWindowFlags(Qt.WindowStaysOnTopHint | Qt.FramelessWindowHint)
-        self.setWindowFlags(Qt.WindowStaysOnTopHint)
+        self.setWindowFlags(Qt.WindowStaysOnTopHint | Qt.FramelessWindowHint)
+        #self.setWindowFlags(Qt.WindowStaysOnTopHint)
         self.setWindowTitle(APPINFO.Name)
         self.setWindowIcon(QIcon("%s%snagstamon.svg" % (RESOURCES, os.sep)))
 
-        self.vbox = QVBoxLayout()                   # global VBox
+        self.vbox = QVBoxLayout(spacing=0)                   # global VBox
         self.vbox.setContentsMargins(0, 0, 0, 0)    # no margin
 
-        self.hbox_bar = HBoxLayout(spacing=0)               # statusbar HBox
-        self.hbox_top = HBoxLayout()               # top VBox containing buttons
+        self.hbox_bar = HBoxLayout(spacing=0)       # statusbar HBox
+        self.hbox_top = HBoxLayout(spacing=10)                # top VBox containing buttons
+        self.vbox_servers = QVBoxLayout()            # HBox full of servers
 
         self.vbox.addLayout(self.hbox_bar)
         self.vbox.addLayout(self.hbox_top)
+        self.vbox.addLayout(self.vbox_servers)
 
         # define label first to get its size for svg logo dimensions
         self.label_bar = QLabel(" 1 2 3 ")
@@ -115,13 +120,11 @@ class StatusWindow(QWidget):
         self.button_recheck_all = QPushButton("Recheck all")
         self.button_refresh = QPushButton("Refresh")
         self.button_settings = QPushButton("Settings")
-        self.vseparator = QFrame()
-        self.vseparator.setFrameShape(QFrame.VLine)
-        self.vseparator.setFrameShadow(QFrame.Sunken)
-        self.button_hamburger_menu = QToolButton()
+        self.button_hamburger_menu = QPushButton()
         self.button_hamburger_menu.setIcon(QIcon("%s%smenu.svg" % (RESOURCES, os.sep)))
-        self.button_close = QToolButton()
+        self.button_close = QPushButton()
         self.button_close.setIcon(QIcon("%s%sclose.svg" % (RESOURCES, os.sep)))
+        self.button_close.clicked.connect(self.close)
 
         self.hbox_top.addWidget(self.logo)
         self.hbox_top.addWidget(self.label_version)
@@ -131,12 +134,41 @@ class StatusWindow(QWidget):
         self.hbox_top.addWidget(self.button_recheck_all)
         self.hbox_top.addWidget(self.button_refresh)
         self.hbox_top.addWidget(self.button_settings)
-        self.hbox_top.addWidget(self.vseparator)
         self.hbox_top.addWidget(self.button_hamburger_menu)
         self.hbox_top.addWidget(self.button_close)
 
-
         self.setLayout(self.vbox)
+
+        self.createServerVBoxes()
+
+
+    def createServerVBoxes(self):
+        for server in conf.servers.values():
+            self.vbox_servers.addLayout(ServerVBox(server))
+
+
+class ServerVBox(QVBoxLayout):
+    """
+        one VBox per server containing buttons and hosts/services listview
+    """
+    def __init__(self, server):
+        QVBoxLayout.__init__(self)
+        hbox = QHBoxLayout(spacing=10)
+
+        label = QLabel("<big><b>%s@%s</b></big>" % (server.username, server.name))
+        button_monitor = QPushButton("Monitor")
+        button_hosts = QPushButton("Hosts")
+        button_services = QPushButton("Services")
+        button_history = QPushButton("History")
+
+        hbox.addWidget(label)
+        hbox.addWidget(button_monitor)
+        hbox.addWidget(button_hosts)
+        hbox.addWidget(button_services)
+        hbox.addWidget(button_history)
+        hbox.addStretch()
+        self.addLayout(hbox)
+
 
 
 systrayicon = SystemTrayIcon(QIcon("%s%snagstamon.svg" % (RESOURCES, os.sep)))

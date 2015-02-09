@@ -23,19 +23,19 @@
 from __future__ import print_function, absolute_import, unicode_literals
 
 import urllib2
+from collections import OrderedDict
 
 from Nagstamon.Config import conf
 from Nagstamon.Actions import BuildURLOpener, MultipartPostHandler
 
-
 # dictionary for servers
-servers = dict()
+servers = OrderedDict()
 
 # contains dict with available server classes
 # key is type of server, value is server class
 # used for automatic config generation
 # and holding this information in one place
-SERVER_TYPES = []
+SERVER_TYPES = OrderedDict()
 
 def register_server(server):
     """ Once new server class in created,
@@ -43,28 +43,17 @@ def register_server(server):
     for being visible in config and
     accessible in application.
     """
-    if server.TYPE not in [x[0] for x in SERVER_TYPES]:
-        SERVER_TYPES.append((server.TYPE, server))
-
-
-def get_registered_servers():
-    """ Returns available server classes dict """
-    return dict(SERVER_TYPES)
-
-
-def get_registered_server_type_list():
-    """ Returns available server type name list with order of registering """
-    return [x[0] for x in SERVER_TYPES]
+    if server.TYPE not in SERVER_TYPES:
+        SERVER_TYPES[server.TYPE] = server
 
 
 def CreateServer(server=None):
     # create Server from config
-    registered_servers = get_registered_servers()
-    if server.type not in registered_servers:
+    if server.type not in SERVER_TYPES:
         print('Server type not supported: %s' % server.type)
         return
     # give argument servername so CentreonServer could use it for initializing MD5 cache
-    new_server = registered_servers[server.type](name=server.name)
+    new_server = SERVER_TYPES[server.type](name=server.name)
     new_server.type = server.type
     new_server.monitor_url = server.monitor_url
     new_server.monitor_cgi_url = server.monitor_cgi_url
@@ -161,4 +150,3 @@ for server in conf.servers.values():
         servers[server.name] = created_server
         # for the next time no auth needed
         servers[server.name].refresh_authentication = False
-
