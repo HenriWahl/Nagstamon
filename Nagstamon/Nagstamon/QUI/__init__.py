@@ -31,6 +31,8 @@ import os
 
 from Nagstamon.Config import (conf, RESOURCES, APPINFO)
 
+from Nagstamon.Servers import servers
+
 
 class HBoxLayout(QHBoxLayout):
     """
@@ -115,7 +117,7 @@ class StatusWindow(QWidget):
         self.logo.setSizePolicy(QSizePolicy.Minimum, QSizePolicy.Minimum)
 
         self.label_version = QLabel(APPINFO.Version)
-        self.combobox_monitors = QComboBox()
+        self.combobox_servers = QComboBox()
         self.button_filters = QPushButton("Filters")
         self.button_recheck_all = QPushButton("Recheck all")
         self.button_refresh = QPushButton("Refresh")
@@ -129,7 +131,7 @@ class StatusWindow(QWidget):
         self.hbox_top.addWidget(self.logo)
         self.hbox_top.addWidget(self.label_version)
         self.hbox_top.addStretch()
-        self.hbox_top.addWidget(self.combobox_monitors)
+        self.hbox_top.addWidget(self.combobox_servers)
         self.hbox_top.addWidget(self.button_filters)
         self.hbox_top.addWidget(self.button_recheck_all)
         self.hbox_top.addWidget(self.button_refresh)
@@ -143,8 +145,9 @@ class StatusWindow(QWidget):
 
 
     def createServerVBoxes(self):
-        for server in conf.servers.values():
-            self.vbox_servers.addLayout(ServerVBox(server))
+        for server in servers.values():
+            if server.enabled:
+                self.vbox_servers.addLayout(ServerVBox(server))
 
 
 class ServerVBox(QVBoxLayout):
@@ -153,22 +156,46 @@ class ServerVBox(QVBoxLayout):
     """
     def __init__(self, server):
         QVBoxLayout.__init__(self)
+
+
         hbox = QHBoxLayout(spacing=10)
 
         label = QLabel("<big><b>%s@%s</b></big>" % (server.username, server.name))
-        button_monitor = QPushButton("Monitor")
+        button_server = QPushButton("Monitor")
         button_hosts = QPushButton("Hosts")
         button_services = QPushButton("Services")
         button_history = QPushButton("History")
 
         hbox.addWidget(label)
-        hbox.addWidget(button_monitor)
+        hbox.addWidget(button_server)
         hbox.addWidget(button_hosts)
         hbox.addWidget(button_services)
         hbox.addWidget(button_history)
         hbox.addStretch()
         self.addLayout(hbox)
 
+        self.thread = QThread()
+        self.worker = ServerThreadWorker(server=server)
+        self.worker.moveToThread(self.thread)
+        self.thread.started.connect(self.worker.refreshStatus)
+        self.thread.start()
+
+        self.timer = QTimer()
+        self.timer.timeout.connect(self.worker.refreshStatus)
+        self.timer.start(1)
+
+
+class ServerThreadWorker(QObject):
+    """
+        attempt to run a server status update thread
+    """
+    def __init__(self, parent=None, server=None):
+        QObject.__init__(self)
+        self.server = server
+        self.server.init_config()
+
+    def refreshStatus(self):
+        status =  self.server.GetStatus()
 
 
 systrayicon = SystemTrayIcon(QIcon("%s%snagstamon.svg" % (RESOURCES, os.sep)))

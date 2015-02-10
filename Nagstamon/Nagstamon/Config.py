@@ -28,6 +28,9 @@ import base64
 import zlib
 from collections import OrderedDict
 
+# temporary dict for string-to-bool-conversion
+BOOLPOOL = {"False": False, "True": True}
+
 class APPINFO(object):
     """
     contains app information previously located in GUI.py
@@ -221,9 +224,6 @@ class Config(object):
                 config = ConfigParser.ConfigParser(allow_no_value=True)
             config.read(self.configfile)
 
-            # temporary dict for string-to-bool-conversion
-            BOOLPOOL = {"False": False, "True": True}
-
             # go through all sections of the conf file
             for section in config.sections():
                 # go through all items of each sections (in fact there is only on
@@ -264,7 +264,7 @@ class Config(object):
             self.unconfigured = False
 
         # Load actions if Nagstamon is not unconfigured, otherwise load defaults
-        if str(self.unconfigured) == "True":
+        if self.unconfigured == True:
             self.actions = self._DefaultActions()
 
         # do some conversion stuff needed because of config changes and code cleanup
@@ -358,7 +358,11 @@ class Config(object):
                         # go through all items of the server
                         for i in config.items(setting + "_" + name):
                             # create a key of every config item with its appropriate value
-                            settings[name].__setattr__(i[0], i[1])
+                            if i[1] in BOOLPOOL:
+                                value = BOOLPOOL[i[1]]
+                            else:
+                                value = i[1]
+                            settings[name].__setattr__(i[0], value)
         except:
             import traceback
             traceback.print_exc(file=sys.stdout)

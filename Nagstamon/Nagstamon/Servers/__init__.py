@@ -55,6 +55,7 @@ def CreateServer(server=None):
     # give argument servername so CentreonServer could use it for initializing MD5 cache
     new_server = SERVER_TYPES[server.type](name=server.name)
     new_server.type = server.type
+    new_server.enabled = server.enabled
     new_server.monitor_url = server.monitor_url
     new_server.monitor_cgi_url = server.monitor_cgi_url
     # add resources, needed for auth dialog
@@ -68,7 +69,7 @@ def CreateServer(server=None):
     new_server.proxy_password = server.proxy_password
 
     # if password is not to be saved ask for it at startup
-    if ( server.enabled == "True" and server.save_password == "False" and server.use_autologin == "False" ):
+    if (server.enabled == "True" and server.save_password == "False" and server.use_autologin == "False" ):
         new_server.refresh_authentication = True
 
     # access to thread-safe debug queue

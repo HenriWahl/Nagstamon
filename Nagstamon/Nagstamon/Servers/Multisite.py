@@ -35,6 +35,7 @@ from Nagstamon import Actions
 from Nagstamon.Objects import *
 from Nagstamon.Servers.Generic import GenericServer
 
+from Nagstamon.Config import conf
 
 class MultisiteError(Exception):
     def __init__(self, terminate, result):
@@ -317,7 +318,7 @@ class MultisiteServer(GenericServer):
             return Result(result=result, error=error)
 
         # Add filters to the url which should only be applied to the service request
-        if str(self.conf.filter_services_on_unreachable_hosts) == "True":
+        if str(conf.filter_services_on_unreachable_hosts) == "True":
             url_params += '&hst2=0'
 
         # services
@@ -416,7 +417,7 @@ class MultisiteServer(GenericServer):
         else:
             url = self.urls['human_service'] + urllib.urlencode({'x': 'site='+self.hosts[host].site+'&host='+host+'&service='+service}).replace('x=', '%26')
 
-        if str(self.conf.debug_mode) == "True":
+        if str(conf.debug_mode) == "True":
             self.Debug(server=self.get_name(), host=host, service=service, debug="Open host/service monitor web page " + url)
         webbrowser.open(url)
 
@@ -428,7 +429,7 @@ class MultisiteServer(GenericServer):
         """
 
         # the fastest method is taking hostname as used in monitor
-        if str(self.conf.connect_by_host) == "True" or host == "":
+        if str(conf.connect_by_host) == "True" or host == "":
             return Result(result=host)
 
         ip = ""
@@ -437,10 +438,10 @@ class MultisiteServer(GenericServer):
             if host in self.hosts:
                 ip = self.hosts[host].address
 
-            if str(self.conf.debug_mode) == "True":
+            if str(conf.debug_mode) == "True":
                 self.Debug(server=self.get_name(), host=host, debug ="IP of %s:" % (host) + " " + ip)
 
-            if str(self.conf.connect_by_dns) == "True":
+            if str(conf.connect_by_dns) == "True":
                 try:
                     address = socket.gethostbyaddr(ip)[0]
                 except:
@@ -471,12 +472,12 @@ class MultisiteServer(GenericServer):
         else:
             url = self.urls['api_host_act']
 
-        if str(self.conf.debug_mode) == "True":
+        if str(conf.debug_mode) == "True":
             self.Debug(server=self.get_name(), host=host, debug ="Submitting action: " + url + '&' + urllib.urlencode(params))
 
         action = Actions.Action(type="url-check_mk-multisite",\
                                 string=url + '&' + urllib.urlencode(params),\
-                                conf=self.conf,\
+                                conf=conf,\
                                 host = host,\
                                 service = service,\
                                 server=self)
@@ -525,7 +526,7 @@ class MultisiteServer(GenericServer):
         params['_resched_checks'] = 'Reschedule active checks'
         url = self.urls['api_svcprob_act']
 
-        if str(self.conf.debug_mode) == "True":
+        if str(conf.debug_mode) == "True":
             self.Debug(server=self.get_name(), debug ="Rechecking all action: " + url + '&' + urllib.urlencode(params))
 
         result = self.FetchURL(url + '&' + urllib.urlencode(params), giveback = 'raw')
