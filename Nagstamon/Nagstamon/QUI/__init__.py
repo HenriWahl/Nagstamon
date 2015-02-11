@@ -28,6 +28,7 @@ from PyQt5.QtCore import *
 from PyQt5.QtSvg import *
 
 import os
+from operator import methodcaller
 
 from Nagstamon.Config import (conf, RESOURCES, APPINFO)
 
@@ -86,7 +87,7 @@ class StatusWindow(QWidget):
         self.setWindowFlags(Qt.WindowStaysOnTopHint | Qt.FramelessWindowHint)
         #self.setWindowFlags(Qt.WindowStaysOnTopHint)
         self.setWindowTitle(APPINFO.Name)
-        self.setWindowIcon(QIcon("%s%snagstamon.svg" % (RESOURCES, os.sep)))
+        self.setWindowIcon(QIcon('%s%snagstamon.svg' % (RESOURCES, os.sep)))
 
         self.vbox = QVBoxLayout(spacing=0)                   # global VBox
         self.vbox.setContentsMargins(0, 0, 0, 0)    # no margin
@@ -100,8 +101,8 @@ class StatusWindow(QWidget):
         self.vbox.addLayout(self.vbox_servers)
 
         # define label first to get its size for svg logo dimensions
-        self.label_bar = QLabel(" 1 2 3 ")
-        self.label_bar.setStyleSheet("QLabel { background-color: green; }")
+        self.label_bar = QLabel(' 1 2 3 ')
+        self.label_bar.setStyleSheet('background-color: green;')
 
         # derive logo dimensions from status label
         self.logo_bar = QSvgWidget("%s%snagstamon_logo_bar.svg" % (RESOURCES, os.sep))
@@ -157,6 +158,7 @@ class ServerVBox(QVBoxLayout):
     def __init__(self, server):
         QVBoxLayout.__init__(self)
 
+        self.server = server
 
         hbox = QHBoxLayout(spacing=10)
 
@@ -166,6 +168,16 @@ class ServerVBox(QVBoxLayout):
         button_services = QPushButton("Services")
         button_history = QPushButton("History")
 
+        #self.table = TableWidget(headers, data_objects, len(data_objects), len(headers), sort_column, order)
+
+        self.headers = ['host', 'service', 'status', 'last_check', 'duration', 'attempt', 'status_information']
+        self.data = list()
+
+        sort_column = 'duration'
+        order = 'ascending'
+
+        self.table = TableWidget(self.headers, list(), 0, len(self.headers), sort_column, order)
+
         hbox.addWidget(label)
         hbox.addWidget(button_server)
         hbox.addWidget(button_hosts)
@@ -174,28 +186,203 @@ class ServerVBox(QVBoxLayout):
         hbox.addStretch()
         self.addLayout(hbox)
 
+        self.addWidget(self.table)
+
         self.thread = QThread()
         self.worker = ServerThreadWorker(server=server)
         self.worker.moveToThread(self.thread)
+        self.worker.new_status.connect(self.refresh)
         self.thread.started.connect(self.worker.refreshStatus)
         self.thread.start()
 
-        self.timer = QTimer()
-        self.timer.timeout.connect(self.worker.refreshStatus)
-        self.timer.start(1)
+
+    def refresh(self):
+        del(self.data[:])
+        for state in self.server.nagitems_filtered["hosts"].values():
+            for host in state:
+                self.data.append(host)
+
+        for state in self.server.nagitems_filtered["services"].values():
+            for service in state:
+                self.data.append(service)
+
+        self.table.setData(self.data)
 
 
 class ServerThreadWorker(QObject):
     """
         attempt to run a server status update thread
     """
+
+    new_status = pyqtSignal()
+
     def __init__(self, parent=None, server=None):
         QObject.__init__(self)
         self.server = server
+        self.timer = QTimer(self)
         self.server.init_config()
 
     def refreshStatus(self):
         status =  self.server.GetStatus()
+        self.new_status.emit()
+        # avoid memory leak by singleshooting next refresh after this one is finished
+        self.timer.singleShot(10000, self.refreshStatus)
+
+
+class CellWidget(QWidget):
+    def __init__(self, column=0, row=0, text='', color='black', background='white', icons=False):
+        QWidget.__init__(self)
+
+        self.column = column
+        self.row = row
+        self.text = text
+        self.color = color
+        self.background = background
+
+        self.hbox = QHBoxLayout(self)
+        self.label = QLabel(self.text)
+        self.icon = QLabel()
+        #self.icon.setPixmap(QPixmap('nagstamon.svg').scaled(20,20))
+
+        self.hbox.setContentsMargins(0, 0, 0, 0)
+        self.hbox.addWidget(self.label, 1)
+        #self.hbox.addWidget(self.icon)
+        self.hbox.setSpacing(0)
+
+        self.colorize()
+
+
+    def colorize(self):
+        self.setStyleSheet('color: %s; background-color: %s; padding: 15px; ' % (self.color, self.background))
+
+    def highlight(self):
+        self.setStyleSheet('color: %s; background-color: %s; padding: 15px;' % (self.color, 'darkgrey'))
+
+    def enterEvent(self, event):
+         self.parent().parent().highlightRow(self.row)
+
+
+    def leaveEvent(self, event):
+        self.parent().parent().colorizeRow(self.row)
+
+
+class TableWidget(QTableWidget):
+    def __init__(self, headers, data, columncount, rowcount, sort_column, order):
+        QTableWidget.__init__(self, columncount, rowcount)
+
+        self.SORT_ORDER = {'ascending': True, 'descending': False, 0: True, 1: False}
+
+        self.headers = headers
+        self.data = data
+        self.sort_column = sort_column
+        self.order = order
+
+        self.colors = {'DOWN': 'black',
+                  'WARNING': 'yellow',
+                  'CRITICAL': 'red',
+                  'UNKNOWN': 'orange',
+                  'UNREACHABLE': 'darkred'}
+
+        self.setData(data)
+        self.verticalHeader().hide()
+
+        # seems to be important for not getting somehow squeezed cells
+        self.resizeColumnsToContents()
+        self.resizeRowsToContents()
+
+        self.setSelectionBehavior(QAbstractItemView.SelectRows)
+        self.setSelectionMode(QAbstractItemView.SingleSelection)
+        self.setShowGrid(False)
+        self.setGridStyle(Qt.NoPen)
+        self.setHorizontalScrollBarPolicy(Qt.ScrollBarAlwaysOff)
+        self.setAutoScroll(False)
+
+        self.setHorizontalHeaderLabels(self.headers)
+        self.horizontalHeader().setSectionResizeMode(QHeaderView.ResizeToContents)
+
+        self.horizontalHeader().setDefaultAlignment(Qt.AlignLeft)
+        self.horizontalHeader().setStyleSheet('font-weight: bold;')
+        self.horizontalHeader().setSortIndicatorShown(True)
+        self.horizontalHeader().setSortIndicator(self.headers.index(self.sort_column), self.SORT_ORDER[self.order])
+
+        self.horizontalHeader().sortIndicatorChanged.connect(self.sortColumn)
+
+
+    def setData(self, data=None):
+
+        if data == None:
+            data = self.data
+
+        self.setRowCount(0)
+
+        # to keep GTK Treeview sort behaviour first by services
+        #first_sort = sorted(self.data, key=methodcaller('compare_service'))
+        first_sort = sorted(data, key=methodcaller('compare_service'))
+        for row, full_column in enumerate(sorted(first_sort, key=methodcaller('compare_%s' % \
+                                                (self.sort_column)), reverse=self.SORT_ORDER[self.order])):
+
+            # increase number of rows to be able to display anything
+            self.setRowCount(self.rowCount() + 1)
+
+            for column, cell in enumerate(full_column.get_columns(self.headers)):
+                widget = CellWidget(text=cell, background=self.colors[list(full_column.get_columns(self.headers))[2]],
+                                    row=row, column=column)
+                self.setCellWidget(row, column, widget)
+
+
+    def sortColumn(self, column, order):
+        self.sort_column = self.headers[column]
+        self.order = self.SORT_ORDER[order]
+
+        self.setData()
+
+    def realSize(self):
+
+        width = 0
+        height = 0
+
+        for c in range(0, self.columnCount()):
+            width += self.cellWidget(0, c).width()
+        for r in range(0, self.rowCount()):
+            height += self.cellWidget(r, 0).height()
+        del(c)
+        del(r)
+
+        return width, height
+
+
+    def realWidth(self):
+        width = 0
+        for c in range(0, self.columnCount()):
+            width += self.cellWidget(0, c).width()
+        del(c)
+
+        return width
+
+
+    def realHeight(self):
+        height = 0
+        for r in range(0, self.rowCount()):
+            height += self.cellWidget(r, 0).height()
+        del(r)
+
+        return height
+
+
+    def highlightRow(self, row):
+        for column in range(0, self.columnCount()):
+            self.cellWidget(row, column).highlight()
+
+
+    def colorizeRow(self, row):
+        for column in range(0, self.columnCount()):
+            self.cellWidget(row, column).colorize()
+
+
+    def deleteRow(self, event):
+        self.data.pop()
+        self.setData()
+        self.setRowCount(len(self.data))
 
 
 systrayicon = SystemTrayIcon(QIcon("%s%snagstamon.svg" % (RESOURCES, os.sep)))

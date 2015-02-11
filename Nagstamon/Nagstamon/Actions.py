@@ -1055,7 +1055,7 @@ def MachineSortableDateMultisite(raw):
 
 
 # unified machine readable date might go back to module Actions
-def UnifiedMachineSortableDate(self, raw):
+def UnifiedMachineSortableDate(raw):
     """
     Try to compute machine readable date for all types of monitor servers
     """
