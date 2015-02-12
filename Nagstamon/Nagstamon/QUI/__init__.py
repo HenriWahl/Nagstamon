@@ -168,15 +168,12 @@ class ServerVBox(QVBoxLayout):
         button_services = QPushButton("Services")
         button_history = QPushButton("History")
 
-        #self.table = TableWidget(headers, data_objects, len(data_objects), len(headers), sort_column, order)
-
         self.headers = ['host', 'service', 'status', 'last_check', 'duration', 'attempt', 'status_information']
-        self.data = list()
 
         sort_column = 'duration'
         order = 'ascending'
 
-        self.table = TableWidget(self.headers, list(), 0, len(self.headers), sort_column, order)
+        self.table = TableWidget(self.headers, 0, len(self.headers), sort_column, order, self.server)
 
         hbox.addWidget(label)
         hbox.addWidget(button_server)
@@ -197,16 +194,7 @@ class ServerVBox(QVBoxLayout):
 
 
     def refresh(self):
-        del(self.data[:])
-        for state in self.server.nagitems_filtered["hosts"].values():
-            for host in state:
-                self.data.append(host)
-
-        for state in self.server.nagitems_filtered["services"].values():
-            for service in state:
-                self.data.append(service)
-
-        self.table.setData(self.data)
+        self.table.setData(self.server.GetItemsList())
 
 
 class ServerThreadWorker(QObject):
@@ -226,7 +214,7 @@ class ServerThreadWorker(QObject):
         status =  self.server.GetStatus()
         self.new_status.emit()
         # avoid memory leak by singleshooting next refresh after this one is finished
-        self.timer.singleShot(10000, self.refreshStatus)
+        self.timer.singleShot(100, self.refreshStatus)
 
 
 class CellWidget(QWidget):
@@ -242,21 +230,23 @@ class CellWidget(QWidget):
         self.hbox = QHBoxLayout(self)
         self.label = QLabel(self.text)
         self.icon = QLabel()
-        #self.icon.setPixmap(QPixmap('nagstamon.svg').scaled(20,20))
+        self.icon.setPixmap(QPixmap("%s%snagstamon.svg" % (RESOURCES, os.sep)).scaled(20,20))
 
         self.hbox.setContentsMargins(0, 0, 0, 0)
         self.hbox.addWidget(self.label, 1)
-        #self.hbox.addWidget(self.icon)
+        self.hbox.addWidget(self.icon)
         self.hbox.setSpacing(0)
 
         self.colorize()
 
 
     def colorize(self):
-        self.setStyleSheet('color: %s; background-color: %s; padding: 15px; ' % (self.color, self.background))
+        #self.setStyleSheet('color: %s; background-color: %s; padding: 15px; ' % (self.color, self.background))
+        self.setStyleSheet('color: %s; background-color: %s; ' % (self.color, self.background))
+
 
     def highlight(self):
-        self.setStyleSheet('color: %s; background-color: %s; padding: 15px;' % (self.color, 'darkgrey'))
+        self.setStyleSheet('color: %s; background-color: %s;' % (self.color, 'darkgrey'))
 
     def enterEvent(self, event):
          self.parent().parent().highlightRow(self.row)
@@ -267,15 +257,15 @@ class CellWidget(QWidget):
 
 
 class TableWidget(QTableWidget):
-    def __init__(self, headers, data, columncount, rowcount, sort_column, order):
+    def __init__(self, headers, columncount, rowcount, sort_column, order, server):
         QTableWidget.__init__(self, columncount, rowcount)
 
         self.SORT_ORDER = {'ascending': True, 'descending': False, 0: True, 1: False}
 
         self.headers = headers
-        self.data = data
         self.sort_column = sort_column
         self.order = order
+        self.server = server
 
         self.colors = {'DOWN': 'black',
                   'WARNING': 'yellow',
@@ -283,7 +273,6 @@ class TableWidget(QTableWidget):
                   'UNKNOWN': 'orange',
                   'UNREACHABLE': 'darkred'}
 
-        self.setData(data)
         self.verticalHeader().hide()
 
         # seems to be important for not getting somehow squeezed cells
@@ -309,14 +298,13 @@ class TableWidget(QTableWidget):
 
 
     def setData(self, data=None):
-
-        if data == None:
-            data = self.data
-
+        self.clearContents()
         self.setRowCount(0)
 
+        # store position to avoid jumping slider
+        slider_position = self.verticalScrollBar().sliderPosition()
+
         # to keep GTK Treeview sort behaviour first by services
-        #first_sort = sorted(self.data, key=methodcaller('compare_service'))
         first_sort = sorted(data, key=methodcaller('compare_service'))
         for row, full_column in enumerate(sorted(first_sort, key=methodcaller('compare_%s' % \
                                                 (self.sort_column)), reverse=self.SORT_ORDER[self.order])):
@@ -329,12 +317,15 @@ class TableWidget(QTableWidget):
                                     row=row, column=column)
                 self.setCellWidget(row, column, widget)
 
+        # restore slider position
+        self.verticalScrollBar().setSliderPosition(slider_position)
+
 
     def sortColumn(self, column, order):
         self.sort_column = self.headers[column]
         self.order = self.SORT_ORDER[order]
+        self.setData(self.server.GetItemsList())
 
-        self.setData()
 
     def realSize(self):
 
@@ -371,18 +362,14 @@ class TableWidget(QTableWidget):
 
     def highlightRow(self, row):
         for column in range(0, self.columnCount()):
-            self.cellWidget(row, column).highlight()
+            if self.cellWidget(row, column) != None:
+                self.cellWidget(row, column).highlight()
 
 
     def colorizeRow(self, row):
         for column in range(0, self.columnCount()):
-            self.cellWidget(row, column).colorize()
-
-
-    def deleteRow(self, event):
-        self.data.pop()
-        self.setData()
-        self.setRowCount(len(self.data))
+            if self.cellWidget(row, column) != None:
+                self.cellWidget(row, column).colorize()
 
 
 systrayicon = SystemTrayIcon(QIcon("%s%snagstamon.svg" % (RESOURCES, os.sep)))

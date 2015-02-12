@@ -1005,7 +1005,7 @@ class GenericServer(object):
                             self.nagitems_filtered["services"]["UNKNOWN"].append(service)
                             self.unknowns += 1
 
-    # find out if there has been some status change to notify user
+        # find out if there has been some status change to notify user
         # compare sorted lists of filtered nagios items
         new_nagitems_filtered_list = []
 
@@ -1054,7 +1054,7 @@ class GenericServer(object):
         self.nagitems_filtered_list = copy.deepcopy(new_nagitems_filtered_list)
         del new_nagitems_filtered_list
 
-    # put new informations into respective dictionaries
+        # put new informations into respective dictionaries
         self.hosts = copy.deepcopy(self.new_hosts)
         self.new_hosts.clear()
 
@@ -1183,6 +1183,21 @@ class GenericServer(object):
 
         # give back host or ip
         return Result(result=address)
+
+
+    def GetItemsList(self):
+        """
+            Generator for plain listing of all filtered items, used in QUI for tableview
+        """
+        for state in self.nagitems_filtered["hosts"].values():
+            for host in state:
+                yield(host)
+
+        for state in self.nagitems_filtered["services"].values():
+            for service in state:
+                # small fix for sortability
+                service.service = service.name
+                yield(service)
 
 
     def Hook(self):
