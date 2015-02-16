@@ -29,10 +29,13 @@ from PyQt5.QtSvg import *
 
 import os
 from operator import methodcaller
+from collections import OrderedDict
 
 from Nagstamon.Config import (conf, RESOURCES, APPINFO)
 
 from Nagstamon.Servers import servers
+
+from Nagstamon.Objects import GenericService
 
 
 class HBoxLayout(QHBoxLayout):
@@ -84,8 +87,8 @@ class StatusWindow(QWidget):
             Status window combined from status bar and popup window
         """
         QWidget.__init__(self)
-        self.setWindowFlags(Qt.WindowStaysOnTopHint | Qt.FramelessWindowHint)
-        #self.setWindowFlags(Qt.WindowStaysOnTopHint)
+        #self.setWindowFlags(Qt.WindowStaysOnTopHint | Qt.FramelessWindowHint)
+        self.setWindowFlags(Qt.WindowStaysOnTopHint)
         self.setWindowTitle(APPINFO.Name)
         self.setWindowIcon(QIcon('%s%snagstamon.svg' % (RESOURCES, os.sep)))
 
@@ -168,13 +171,6 @@ class ServerVBox(QVBoxLayout):
         button_services = QPushButton("Services")
         button_history = QPushButton("History")
 
-        self.headers = ['host', 'service', 'status', 'last_check', 'duration', 'attempt', 'status_information']
-
-        sort_column = 'duration'
-        order = 'ascending'
-
-        self.table = TableWidget(self.headers, 0, len(self.headers), sort_column, order, self.server)
-
         hbox.addWidget(label)
         hbox.addWidget(button_server)
         hbox.addWidget(button_hosts)
@@ -183,7 +179,16 @@ class ServerVBox(QVBoxLayout):
         hbox.addStretch()
         self.addLayout(hbox)
 
-        self.addWidget(self.table)
+        #self.headers = ['host', 'service', 'status', 'last_check', 'duration', 'attempt', 'status_information']
+        self.headers = OrderedDict([('host', 'Host'), ('service', 'Service'),
+                                    ('status', 'Status'), ('last_check', 'Last Check'),
+                                    ('duration', 'Duration'), ('attempt', 'Attempt'),
+                                    ('status_information', 'Status Information')])
+        sort_column = 'duration'
+        order = 'ascending'
+        self.table = TableWidget(self.headers, 0, len(self.headers), sort_column, order, self.server)
+
+        self.addWidget(self.table, 1)
 
         self.thread = QThread()
         self.worker = ServerThreadWorker(server=server)
@@ -214,7 +219,7 @@ class ServerThreadWorker(QObject):
         status =  self.server.GetStatus()
         self.new_status.emit()
         # avoid memory leak by singleshooting next refresh after this one is finished
-        self.timer.singleShot(100, self.refreshStatus)
+        self.timer.singleShot(2000, self.refreshStatus)
 
 
 class CellWidget(QWidget):
@@ -228,25 +233,32 @@ class CellWidget(QWidget):
         self.background = background
 
         self.hbox = QHBoxLayout(self)
+        self.setLayout(self.hbox)
+
         self.label = QLabel(self.text)
-        self.icon = QLabel()
-        self.icon.setPixmap(QPixmap("%s%snagstamon.svg" % (RESOURCES, os.sep)).scaled(20,20))
+
+        self.icon = QIcon('%s%snagstamon.svg' % (RESOURCES, os.sep))
+        self.pixmap = QLabel()
+        self.pixmap.setPixmap(self.icon.pixmap(60,60))
 
         self.hbox.setContentsMargins(0, 0, 0, 0)
         self.hbox.addWidget(self.label, 1)
-        self.hbox.addWidget(self.icon)
+        self.hbox.addWidget(self.pixmap)
         self.hbox.setSpacing(0)
+
+        self.label.setStyleSheet('padding: 10px;')
+        self.pixmap.setStyleSheet('padding: 10px;')
 
         self.colorize()
 
 
     def colorize(self):
-        #self.setStyleSheet('color: %s; background-color: %s; padding: 15px; ' % (self.color, self.background))
-        self.setStyleSheet('color: %s; background-color: %s; ' % (self.color, self.background))
+        self.setStyleSheet('color: %s; background-color: %s;' % (self.color, self.background))
 
 
     def highlight(self):
         self.setStyleSheet('color: %s; background-color: %s;' % (self.color, 'darkgrey'))
+
 
     def enterEvent(self, event):
          self.parent().parent().highlightRow(self.row)
@@ -275,25 +287,21 @@ class TableWidget(QTableWidget):
 
         self.verticalHeader().hide()
 
-        # seems to be important for not getting somehow squeezed cells
-        self.resizeColumnsToContents()
-        self.resizeRowsToContents()
-
         self.setSelectionBehavior(QAbstractItemView.SelectRows)
         self.setSelectionMode(QAbstractItemView.SingleSelection)
         self.setShowGrid(False)
         self.setGridStyle(Qt.NoPen)
         self.setHorizontalScrollBarPolicy(Qt.ScrollBarAlwaysOff)
         self.setAutoScroll(False)
+        self.setSortingEnabled(True)
 
         self.setHorizontalHeaderLabels(self.headers)
         self.horizontalHeader().setSectionResizeMode(QHeaderView.ResizeToContents)
-
+        self.horizontalHeader().setStretchLastSection(True)
         self.horizontalHeader().setDefaultAlignment(Qt.AlignLeft)
         self.horizontalHeader().setStyleSheet('font-weight: bold;')
         self.horizontalHeader().setSortIndicatorShown(True)
-        self.horizontalHeader().setSortIndicator(self.headers.index(self.sort_column), self.SORT_ORDER[self.order])
-
+        self.horizontalHeader().setSortIndicator(list(self.headers).index(self.sort_column), self.SORT_ORDER[self.order])
         self.horizontalHeader().sortIndicatorChanged.connect(self.sortColumn)
 
 
@@ -302,27 +310,33 @@ class TableWidget(QTableWidget):
         self.setRowCount(0)
 
         # store position to avoid jumping slider
-        slider_position = self.verticalScrollBar().sliderPosition()
+        self.slider_position = self.verticalScrollBar().sliderPosition()
+
+        ###for i in dir(self.verticalScrollBar()): print(i)
 
         # to keep GTK Treeview sort behaviour first by services
         first_sort = sorted(data, key=methodcaller('compare_service'))
-        for row, full_column in enumerate(sorted(first_sort, key=methodcaller('compare_%s' % \
+        for row, nagitem in enumerate(sorted(first_sort, key=methodcaller('compare_%s' % \
                                                 (self.sort_column)), reverse=self.SORT_ORDER[self.order])):
-
             # increase number of rows to be able to display anything
             self.setRowCount(self.rowCount() + 1)
 
-            for column, cell in enumerate(full_column.get_columns(self.headers)):
-                widget = CellWidget(text=cell, background=self.colors[list(full_column.get_columns(self.headers))[2]],
-                                    row=row, column=column)
+            for column, cell in enumerate(nagitem.get_columns(self.headers)):
+                ###widget = CellWidget(text=cell, background=self.colors[list(full_column.get_columns(self.headers))[2]],
+                ###                    row=row, column=column)
+                widget = CellWidget(text=cell, background=self.colors[nagitem.status], row=row, column=column)
                 self.setCellWidget(row, column, widget)
 
+        # seems to be important for not getting somehow squeezed cells
+        self.resizeColumnsToContents()
+        self.resizeRowsToContents()
+
         # restore slider position
-        self.verticalScrollBar().setSliderPosition(slider_position)
+        self.verticalScrollBar().setSliderPosition(self.slider_position)
 
 
     def sortColumn(self, column, order):
-        self.sort_column = self.headers[column]
+        self.sort_column = self.headers.keys()[column]
         self.order = self.SORT_ORDER[order]
         self.setData(self.server.GetItemsList())
 

@@ -134,14 +134,14 @@ class GenericObject(object):
     STATES = ['WARNING', 'UNKNOWN', 'CRITICAL', 'UNREACHABLE', 'DOWN']
 
     def __init__(self):
-        self.name = ""
-        self.status = ""
+        self.name = " "
+        self.status = "UNKNOWN"
         self.status_information = ""
         # default state is soft, to be changed by to-be-written status_type check
         self.status_type = ""
-        self.last_check = ""
-        self.duration = ""
-        self.attempt = ""
+        self.last_check = "0s"
+        self.duration = "0s"
+        self.attempt = "1/1"
         self.passiveonly = False
         self.acknowledged = False
         self.notifications_disabled = False
@@ -149,12 +149,12 @@ class GenericObject(object):
         self.scheduled_downtime = False
         self.visible = True
         # Check_MK also has site info
-        self.site = ""
+        self.site = " "
         # server to be added to hash
-        self.server = ""
+        self.server = " "
         # might help for sorting in Qt
-        self.host = ""
-        self.service = ""
+        self.host = " "
+        self.service = " "
 
 
     def is_passive_only(self):
