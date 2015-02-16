@@ -37,6 +37,8 @@ from Nagstamon.Servers import servers
 
 from Nagstamon.Objects import GenericService
 
+# fixed icons for hosts/services attributes
+ICONS = dict()
 
 class HBoxLayout(QHBoxLayout):
     """
@@ -145,6 +147,9 @@ class StatusWindow(QWidget):
 
         self.setLayout(self.vbox)
 
+        # icons in ICONS have to be sized as fontsize
+        CreateIcons(self.label_bar.fontMetrics().height())
+
         self.createServerVBoxes()
 
 
@@ -199,7 +204,7 @@ class ServerVBox(QVBoxLayout):
 
 
     def refresh(self):
-        self.table.setData(self.server.GetItemsList())
+        self.table.setData(list(self.server.GetItemsList()))
 
 
 class ServerThreadWorker(QObject):
@@ -219,7 +224,7 @@ class ServerThreadWorker(QObject):
         status =  self.server.GetStatus()
         self.new_status.emit()
         # avoid memory leak by singleshooting next refresh after this one is finished
-        self.timer.singleShot(2000, self.refreshStatus)
+        self.timer.singleShot(10000, self.refreshStatus)
 
 
 class CellWidget(QWidget):
@@ -235,19 +240,21 @@ class CellWidget(QWidget):
         self.hbox = QHBoxLayout(self)
         self.setLayout(self.hbox)
 
+        # text field
         self.label = QLabel(self.text)
-
-        self.icon = QIcon('%s%snagstamon.svg' % (RESOURCES, os.sep))
-        self.pixmap = QLabel()
-        self.pixmap.setPixmap(self.icon.pixmap(60,60))
 
         self.hbox.setContentsMargins(0, 0, 0, 0)
         self.hbox.addWidget(self.label, 1)
-        self.hbox.addWidget(self.pixmap)
         self.hbox.setSpacing(0)
 
         self.label.setStyleSheet('padding: 10px;')
-        self.pixmap.setStyleSheet('padding: 10px;')
+
+        # hosts and services might contain attribute icons
+        if column in (0, 1):
+            self.pixmap = QLabel()
+            self.pixmap.setPixmap(ICONS["acknowledged"].pixmap(self.label.fontMetrics().height(), self.label.fontMetrics().height()))
+            self.hbox.addWidget(self.pixmap)
+            self.pixmap.setStyleSheet('padding: 10px;')
 
         self.colorize()
 
@@ -280,22 +287,21 @@ class TableWidget(QTableWidget):
         self.server = server
 
         self.colors = {'DOWN': 'black',
-                  'WARNING': 'yellow',
-                  'CRITICAL': 'red',
-                  'UNKNOWN': 'orange',
-                  'UNREACHABLE': 'darkred'}
+                       'WARNING': 'yellow',
+                       'CRITICAL': 'red',
+                       'UNKNOWN': 'orange',
+                       'UNREACHABLE': 'darkred'}
 
         self.verticalHeader().hide()
 
         self.setSelectionBehavior(QAbstractItemView.SelectRows)
         self.setSelectionMode(QAbstractItemView.SingleSelection)
-        self.setShowGrid(False)
-        self.setGridStyle(Qt.NoPen)
+        #self.setShowGrid(False)
         self.setHorizontalScrollBarPolicy(Qt.ScrollBarAlwaysOff)
         self.setAutoScroll(False)
         self.setSortingEnabled(True)
 
-        self.setHorizontalHeaderLabels(self.headers)
+        self.setHorizontalHeaderLabels(self.headers.values())
         self.horizontalHeader().setSectionResizeMode(QHeaderView.ResizeToContents)
         self.horizontalHeader().setStretchLastSection(True)
         self.horizontalHeader().setDefaultAlignment(Qt.AlignLeft)
@@ -306,24 +312,20 @@ class TableWidget(QTableWidget):
 
 
     def setData(self, data=None):
-        self.clearContents()
-        self.setRowCount(0)
+        #self.clearContents()
+        self.setRowCount(len(data))
 
         # store position to avoid jumping slider
-        self.slider_position = self.verticalScrollBar().sliderPosition()
-
-        ###for i in dir(self.verticalScrollBar()): print(i)
+        self.slider_value = self.verticalScrollBar().value()
 
         # to keep GTK Treeview sort behaviour first by services
         first_sort = sorted(data, key=methodcaller('compare_service'))
         for row, nagitem in enumerate(sorted(first_sort, key=methodcaller('compare_%s' % \
                                                 (self.sort_column)), reverse=self.SORT_ORDER[self.order])):
             # increase number of rows to be able to display anything
-            self.setRowCount(self.rowCount() + 1)
+            #self.setRowCount(self.rowCount() + 1)
 
             for column, cell in enumerate(nagitem.get_columns(self.headers)):
-                ###widget = CellWidget(text=cell, background=self.colors[list(full_column.get_columns(self.headers))[2]],
-                ###                    row=row, column=column)
                 widget = CellWidget(text=cell, background=self.colors[nagitem.status], row=row, column=column)
                 self.setCellWidget(row, column, widget)
 
@@ -332,7 +334,7 @@ class TableWidget(QTableWidget):
         self.resizeRowsToContents()
 
         # restore slider position
-        self.verticalScrollBar().setSliderPosition(self.slider_position)
+        self.verticalScrollBar().setValue(self.slider_value)
 
 
     def sortColumn(self, column, order):
@@ -384,6 +386,15 @@ class TableWidget(QTableWidget):
         for column in range(0, self.columnCount()):
             if self.cellWidget(row, column) != None:
                 self.cellWidget(row, column).colorize()
+
+
+def CreateIcons(fontsize):
+    """
+        fill global ICONS with pixmpas rendered from SVGs in fontsize dimensions
+    """
+    for attr in ('acknowledged', 'downtime', 'fresh', 'flapping', 'passive'):
+        icon = QIcon('%s%snagstamon_%s.svg' % (RESOURCES, os.sep, attr))
+        ICONS[attr] = icon
 
 
 systrayicon = SystemTrayIcon(QIcon("%s%snagstamon.svg" % (RESOURCES, os.sep)))
