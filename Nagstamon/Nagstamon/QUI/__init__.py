@@ -235,7 +235,7 @@ class ServerThreadWorker(QObject):
 
 
 class CellWidget(QWidget):
-    def __init__(self, column=0, row=0, text='', color='black', background='white', icons=False):
+    def __init__(self, column=0, row=0, text='', color='black', background='white', flags=''):
         QWidget.__init__(self)
 
         self.column = column
@@ -258,10 +258,13 @@ class CellWidget(QWidget):
 
         # hosts and services might contain attribute icons
         if column in (0, 1):
-            self.pixmap = QLabel()
-            self.pixmap.setPixmap(ICONS["acknowledged"].pixmap(self.label.fontMetrics().height(), self.label.fontMetrics().height()))
-            self.hbox.addWidget(self.pixmap)
-            self.pixmap.setStyleSheet('padding: 10px;')
+            for flag in flags:
+                self.icons = dict()
+                self.icons[flag] = QLabel()
+                self.icons[flag].setPixmap(ICONS[flag].pixmap(self.label.fontMetrics().height(), self.label.fontMetrics().height()))
+                self.icons[flag].setStyleSheet('padding: 10px;')
+                self.hbox.addWidget(self.icons[flag])
+
 
         self.colorize()
 
@@ -294,14 +297,7 @@ class TableWidget(QTableWidget):
         self.order = order
         self.server = server
 
-        """
-        self.colors = {'DOWN': 'black',
-                       'WARNING': 'yellow',
-                       'CRITICAL': 'red',
-                       'UNKNOWN': 'orange',
-                       'UNREACHABLE': 'darkred'}
-        """
-
+        # no vertical header needed
         self.verticalHeader().hide()
 
         self.setSelectionBehavior(QAbstractItemView.SelectRows)
@@ -325,10 +321,7 @@ class TableWidget(QTableWidget):
             fill table cells with data from filtered Nagios items
         """
         # maximum size needs no more than amount of data
-        self.setRowCount(self.server.nagitems_filtered_amount)
-
-        # store position to avoid jumping slider
-        self.slider_value = self.verticalScrollBar().value()
+        self.setRowCount(self.server.nagitems_filtered_count)
 
         # to keep GTK Treeview sort behaviour first by services
         first_sort = sorted(data, key=methodcaller('compare_service'))
@@ -340,16 +333,13 @@ class TableWidget(QTableWidget):
                                     color=conf.__dict__[COLORS[nagitem.status] + 'text'],
                                     background=conf.__dict__[COLORS[nagitem.status] + 'background'],
                                     row=row,
-                                    column=column)
+                                    column=column,
+                                    flags=nagitem.flags)
                 self.setCellWidget(row, column, widget)
 
         # seems to be important for not getting somehow squeezed cells
         self.resizeColumnsToContents()
         self.resizeRowsToContents()
-
-        # restore slider position
-        self.verticalScrollBar().setValue(self.slider_value)
-
         self.horizontalHeader().setStretchLastSection(True)
 
 
@@ -408,10 +398,10 @@ def CreateIcons(fontsize):
     """
         fill global ICONS with pixmpas rendered from SVGs in fontsize dimensions
     """
-    for attr in ('acknowledged', 'downtime', 'fresh', 'flapping', 'passive'):
+    for attr in ('acknowledged', 'downtime', 'flapping', 'new', 'passive'):
         icon = QIcon('%s%snagstamon_%s.svg' % (RESOURCES, os.sep, attr))
-        ICONS[attr] = icon
-
+        # use only first letter as key to match chars used in host/service.flag
+        ICONS[attr[0]] = icon
 
 systrayicon = SystemTrayIcon(QIcon("%s%snagstamon.svg" % (RESOURCES, os.sep)))
 statuswindow = StatusWindow()

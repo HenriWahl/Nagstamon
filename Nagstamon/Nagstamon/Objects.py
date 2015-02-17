@@ -134,14 +134,14 @@ class GenericObject(object):
     STATES = ['WARNING', 'UNKNOWN', 'CRITICAL', 'UNREACHABLE', 'DOWN']
 
     def __init__(self):
-        self.name = ""
-        self.status = ""
-        self.status_information = ""
+        self.name = ''
+        self.status = ''
+        self.status_information = ''
         # default state is soft, to be changed by to-be-written status_type check
-        self.status_type = ""
-        self.last_check = ""
-        self.duration = ""
-        self.attempt = ""
+        self.status_type = ''
+        self.last_check = ''
+        self.duration = ''
+        self.attempt = ''
         self.passiveonly = False
         self.acknowledged = False
         self.notifications_disabled = False
@@ -149,12 +149,15 @@ class GenericObject(object):
         self.scheduled_downtime = False
         self.visible = True
         # Check_MK also has site info
-        self.site = ""
+        self.site = ''
         # server to be added to hash
-        self.server = ""
+        self.server = ''
         # might help for sorting in Qt
-        self.host = ""
-        self.service = ""
+        self.host = ''
+        self.service = ''
+        # hopefully reduces resource usage for displaying icons in tableview
+        # instead of calling host/service methods look at this flag string
+        self.flags = ''
 
 
     def is_passive_only(self):

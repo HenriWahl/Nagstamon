@@ -109,7 +109,7 @@ class GenericServer(object):
         self.nagitems_filtered_list = list()
         self.nagitems_filtered = {"services":{"CRITICAL":[], "WARNING":[], "UNKNOWN":[]}, "hosts":{"DOWN":[], "UNREACHABLE":[]}}
         # number of filtered items
-        self.nagitems_filtered_amount = 0
+        self.nagitems_filtered_count = 0
         self.downs = 0
         self.unreachables = 0
         self.unknowns = 0
@@ -806,6 +806,17 @@ class GenericServer(object):
             if not host.status == "UP":
                 # add hostname for sorting
                 host.host = host.name
+                # store some host flags to be used in QUI for status icons
+                host.flags = ''
+                if host.is_passive_only():
+                    host.flags += 'p'
+                if host.is_flapping():
+                    host.flags += 'f'
+                if host.is_acknowledged():
+                    host.flags += 'a'
+                if host.is_in_scheduled_downtime():
+                    host.flags += 'd'
+
                 # Some generic filters
                 if host.acknowledged == True and str(conf.filter_acknowledged_hosts_services) == "True":
                     if str(conf.debug_mode) == "True":
@@ -879,6 +890,17 @@ class GenericServer(object):
             for service in host.services.values():
                 # add service name for sorting
                 service.service = service.name
+                # store some service flags to be used in QUI for status icons
+                service.flags = ''
+                if service.is_passive_only():
+                    service.flags += 'p'
+                if service.is_flapping():
+                    service.flags += 'f'
+                if service.is_acknowledged():
+                    service.flags += 'a'
+                if service.is_in_scheduled_downtime():
+                    service.flags += 'd'
+
                 # Some generic filtering
                 if service.acknowledged == True and str(conf.filter_acknowledged_hosts_services) == "True":
                     if str(conf.debug_mode) == "True":
@@ -1175,18 +1197,18 @@ class GenericServer(object):
         """
 
         # reset number of filtered items
-        self.nagitems_filtered_amount = 0
+        self.nagitems_filtered_count = 0
 
         for state in self.nagitems_filtered["hosts"].values():
             for host in state:
                 # increase number of items for use in table
-                self.nagitems_filtered_amount += 1
+                self.nagitems_filtered_count += 1
                 yield(host)
 
         for state in self.nagitems_filtered["services"].values():
             for service in state:
                 # increase number of items for use in table
-                self.nagitems_filtered_amount += 1
+                self.nagitems_filtered_count += 1
                 yield(service)
 
 
