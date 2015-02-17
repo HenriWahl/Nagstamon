@@ -40,6 +40,13 @@ from Nagstamon.Objects import GenericService
 # fixed icons for hosts/services attributes
 ICONS = dict()
 
+# fixed shortened and lowered color names for cells
+COLORS = {'WARNING':     'color_warning_',
+          'CRITICAL':    'color_critical_',
+          'DOWN':        'color_down_',
+          'UNKNOWN':     'color_unknown_',
+          'UNREACHABLE': 'color_unreachable_'}
+
 class HBoxLayout(QHBoxLayout):
     """
         Apparently necessary to get a HBox which is able to hide its children
@@ -189,8 +196,8 @@ class ServerVBox(QVBoxLayout):
                                     ('status', 'Status'), ('last_check', 'Last Check'),
                                     ('duration', 'Duration'), ('attempt', 'Attempt'),
                                     ('status_information', 'Status Information')])
-        sort_column = 'duration'
-        order = 'ascending'
+        sort_column = 'status'
+        order = 'descending'
         self.table = TableWidget(self.headers, 0, len(self.headers), sort_column, order, self.server)
 
         self.addWidget(self.table, 1)
@@ -204,7 +211,7 @@ class ServerVBox(QVBoxLayout):
 
 
     def refresh(self):
-        self.table.setData(list(self.server.GetItemsList()))
+        self.table.setData(list(self.server.GetItemsGenerator()))
 
 
 class ServerThreadWorker(QObject):
@@ -224,7 +231,7 @@ class ServerThreadWorker(QObject):
         status =  self.server.GetStatus()
         self.new_status.emit()
         # avoid memory leak by singleshooting next refresh after this one is finished
-        self.timer.singleShot(10000, self.refreshStatus)
+        self.timer.singleShot(1000, self.refreshStatus)
 
 
 class CellWidget(QWidget):
@@ -279,18 +286,21 @@ class TableWidget(QTableWidget):
     def __init__(self, headers, columncount, rowcount, sort_column, order, server):
         QTableWidget.__init__(self, columncount, rowcount)
 
-        self.SORT_ORDER = {'ascending': True, 'descending': False, 0: True, 1: False}
+        #self.SORT_ORDER = {'ascending': True, 'descending': False, 0: True, 1: False}
+        self.SORT_ORDER = {'descending': True, 'ascending': False, 0: True, 1: False}
 
         self.headers = headers
         self.sort_column = sort_column
         self.order = order
         self.server = server
 
+        """
         self.colors = {'DOWN': 'black',
                        'WARNING': 'yellow',
                        'CRITICAL': 'red',
                        'UNKNOWN': 'orange',
                        'UNREACHABLE': 'darkred'}
+        """
 
         self.verticalHeader().hide()
 
@@ -303,7 +313,6 @@ class TableWidget(QTableWidget):
 
         self.setHorizontalHeaderLabels(self.headers.values())
         self.horizontalHeader().setSectionResizeMode(QHeaderView.ResizeToContents)
-        self.horizontalHeader().setStretchLastSection(True)
         self.horizontalHeader().setDefaultAlignment(Qt.AlignLeft)
         self.horizontalHeader().setStyleSheet('font-weight: bold;')
         self.horizontalHeader().setSortIndicatorShown(True)
@@ -312,8 +321,11 @@ class TableWidget(QTableWidget):
 
 
     def setData(self, data=None):
-        #self.clearContents()
-        self.setRowCount(len(data))
+        """
+            fill table cells with data from filtered Nagios items
+        """
+        # maximum size needs no more than amount of data
+        self.setRowCount(self.server.nagitems_filtered_amount)
 
         # store position to avoid jumping slider
         self.slider_value = self.verticalScrollBar().value()
@@ -322,11 +334,13 @@ class TableWidget(QTableWidget):
         first_sort = sorted(data, key=methodcaller('compare_service'))
         for row, nagitem in enumerate(sorted(first_sort, key=methodcaller('compare_%s' % \
                                                 (self.sort_column)), reverse=self.SORT_ORDER[self.order])):
-            # increase number of rows to be able to display anything
-            #self.setRowCount(self.rowCount() + 1)
-
+            # fill every cell per row
             for column, cell in enumerate(nagitem.get_columns(self.headers)):
-                widget = CellWidget(text=cell, background=self.colors[nagitem.status], row=row, column=column)
+                widget = CellWidget(text=cell,
+                                    color=conf.__dict__[COLORS[nagitem.status] + 'text'],
+                                    background=conf.__dict__[COLORS[nagitem.status] + 'background'],
+                                    row=row,
+                                    column=column)
                 self.setCellWidget(row, column, widget)
 
         # seems to be important for not getting somehow squeezed cells
@@ -336,11 +350,13 @@ class TableWidget(QTableWidget):
         # restore slider position
         self.verticalScrollBar().setValue(self.slider_value)
 
+        self.horizontalHeader().setStretchLastSection(True)
+
 
     def sortColumn(self, column, order):
         self.sort_column = self.headers.keys()[column]
         self.order = self.SORT_ORDER[order]
-        self.setData(self.server.GetItemsList())
+        self.setData(self.server.GetItemsGenerator())
 
 
     def realSize(self):

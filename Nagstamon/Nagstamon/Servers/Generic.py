@@ -60,28 +60,6 @@ class GenericServer(object):
 
     TYPE = 'Generic'
 
-    """
-    # GUI sortable columns stuff
-    HOST_COLUMN_ID = 0
-    SERVICE_COLUMN_ID = 1
-    STATUS_COLUMN_ID = 2
-    LAST_CHECK_COLUMN_ID = 3
-    DURATION_COLUMN_ID = 4
-    ATTEMPT_COLUMN_ID = 5
-    # used for $STATUS$ variable for custom actions
-    STATUS_INFO_COLUMN_ID = 6
-
-    COLUMNS = [
-        HostColumn,
-        ServiceColumn,
-        StatusColumn,
-        LastCheckColumn,
-        DurationColumn,
-        AttemptColumn,
-        StatusInformationColumn
-    ]
-    """
-
     DISABLED_CONTROLS = []
 
     # dictionary to translate status bitmaps on webinterface into status flags
@@ -130,6 +108,8 @@ class GenericServer(object):
         self.States = ["UP", "UNKNOWN", "WARNING", "CRITICAL", "UNREACHABLE", "DOWN"]
         self.nagitems_filtered_list = list()
         self.nagitems_filtered = {"services":{"CRITICAL":[], "WARNING":[], "UNKNOWN":[]}, "hosts":{"DOWN":[], "UNREACHABLE":[]}}
+        # number of filtered items
+        self.nagitems_filtered_amount = 0
         self.downs = 0
         self.unreachables = 0
         self.unknowns = 0
@@ -824,6 +804,8 @@ class GenericServer(object):
         for host in self.new_hosts.values():
             # Don't enter the loop if we don't have a problem. Jump down to your problem services
             if not host.status == "UP":
+                # add hostname for sorting
+                host.host = host.name
                 # Some generic filters
                 if host.acknowledged == True and str(conf.filter_acknowledged_hosts_services) == "True":
                     if str(conf.debug_mode) == "True":
@@ -895,6 +877,8 @@ class GenericServer(object):
                         self.unreachables += 1
 
             for service in host.services.values():
+                # add service name for sorting
+                service.service = service.name
                 # Some generic filtering
                 if service.acknowledged == True and str(conf.filter_acknowledged_hosts_services) == "True":
                     if str(conf.debug_mode) == "True":
@@ -1185,18 +1169,24 @@ class GenericServer(object):
         return Result(result=address)
 
 
-    def GetItemsList(self):
+    def GetItemsGenerator(self):
         """
             Generator for plain listing of all filtered items, used in QUI for tableview
         """
+
+        # reset number of filtered items
+        self.nagitems_filtered_amount = 0
+
         for state in self.nagitems_filtered["hosts"].values():
             for host in state:
+                # increase number of items for use in table
+                self.nagitems_filtered_amount += 1
                 yield(host)
 
         for state in self.nagitems_filtered["services"].values():
             for service in state:
-                # small fix for sortability
-                service.service = service.name
+                # increase number of items for use in table
+                self.nagitems_filtered_amount += 1
                 yield(service)
 
 
