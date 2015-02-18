@@ -101,25 +101,16 @@ class StatusWindow(QWidget):
         self.setWindowTitle(APPINFO.Name)
         self.setWindowIcon(QIcon('%s%snagstamon.svg' % (RESOURCES, os.sep)))
 
-        self.vbox = QVBoxLayout(spacing=0)          # global VBox
+        self.vbox = QVBoxLayout(spacing=0)                   # global VBox
         self.vbox.setContentsMargins(0, 0, 0, 0)    # no margin
 
         self.hbox_bar = HBoxLayout(spacing=0)       # statusbar HBox
-        self.hbox_top = HBoxLayout(spacing=10)      # top VBox containing buttons
-        self.vbox_servers = QVBoxLayout()           # VBox full of servers
-
-        self.createServerVBoxes()
-
-        self.scrollarea = QScrollArea()
-        self.scrollarea_widget = QWidget()
-        self.scrollarea_widget.setStyleSheet('border-style: solid; border-width: 1px;')
-        self.scrollarea_widget.setLayout(self.vbox_servers)
-        self.scrollarea.setWidget(self.scrollarea_widget)
+        self.hbox_top = HBoxLayout(spacing=10)                # top VBox containing buttons
+        self.vbox_servers = QVBoxLayout()            # HBox full of servers
 
         self.vbox.addLayout(self.hbox_bar)
         self.vbox.addLayout(self.hbox_top)
-        #self.vbox.addLayout(self.vbox_servers)
-        self.vbox.addWidget(self.scrollarea)
+        self.vbox.addLayout(self.vbox_servers)
 
         # define label first to get its size for svg logo dimensions
         self.label_bar = QLabel(' 1 2 3 ')
@@ -166,12 +157,13 @@ class StatusWindow(QWidget):
         # icons in ICONS have to be sized as fontsize
         CreateIcons(self.label_bar.fontMetrics().height())
 
+        self.createServerVBoxes()
+
 
     def createServerVBoxes(self):
         for server in servers.values():
             if server.enabled:
-                server_vbox = (ServerVBox(server))
-                self.vbox_servers.addLayout(server_vbox)
+                self.vbox_servers.addLayout(ServerVBox(server))
 
 
 class ServerVBox(QVBoxLayout):
@@ -199,6 +191,7 @@ class ServerVBox(QVBoxLayout):
         hbox.addStretch()
         self.addLayout(hbox)
 
+        #self.headers = ['host', 'service', 'status', 'last_check', 'duration', 'attempt', 'status_information']
         self.headers = OrderedDict([('host', 'Host'), ('service', 'Service'),
                                     ('status', 'Status'), ('last_check', 'Last Check'),
                                     ('duration', 'Duration'), ('attempt', 'Attempt'),
@@ -218,6 +211,7 @@ class ServerVBox(QVBoxLayout):
 
 
     def refresh(self):
+
         self.table.setData(list(self.server.GetItemsGenerator()))
 
 
@@ -312,7 +306,7 @@ class TableWidget(QTableWidget):
         self.setHorizontalScrollBarPolicy(Qt.ScrollBarAlwaysOff)
         #self.setVerticalScrollBarPolicy(Qt.ScrollBarAlwaysOff)
         self.setAutoScroll(False)
-
+        #self.setAutoScroll(False)
         self.setSortingEnabled(True)
 
         self.setHorizontalHeaderLabels(self.headers.values())
@@ -322,8 +316,6 @@ class TableWidget(QTableWidget):
         self.horizontalHeader().setSortIndicatorShown(True)
         self.horizontalHeader().setSortIndicator(list(self.headers).index(self.sort_column), self.SORT_ORDER[self.order])
         self.horizontalHeader().sortIndicatorChanged.connect(self.sortColumn)
-
-        self.setSizePolicy(QSizePolicy.Fixed, QSizePolicy.Fixed)
 
 
     def setData(self, data=None):
@@ -360,7 +352,6 @@ class TableWidget(QTableWidget):
                         if nagitem.is_in_scheduled_downtime():
                             icons.append(ICONS["downtime"])
                     # add host icons for service item - e.g. in case host is in downtime
-                    # access host in self.servers to get its state
                     elif not nagitem.is_host() and column == 0:
                         if self.server.hosts[nagitem.host].is_acknowledged():
                             icons.append(ICONS["acknowledged"])
@@ -383,7 +374,6 @@ class TableWidget(QTableWidget):
 
                 else:
                     icons = False
-                # store widgets in self.data list
                 widget = CellWidget(text=cell,
                                     color=conf.__dict__[COLORS[nagitem.status] + 'text'],
                                     background=conf.__dict__[COLORS[nagitem.status] + 'background'],
@@ -392,24 +382,15 @@ class TableWidget(QTableWidget):
                                     icons=icons)
                 self.data[row].append(widget)
 
-
         # fill cells with data
         for row in range(0, self.rowCount()):
             for column in range(0, len(self.headers)):
                 self.setCellWidget(row, column, self.data[row][column])
 
-        # adjust size
-        width, height = self.realSize()
-        self.setMinimumSize(width, height)
-        self.adjustSize()
-
         # seems to be important for not getting somehow squeezed cells
         self.resizeColumnsToContents()
         self.resizeRowsToContents()
         self.horizontalHeader().setStretchLastSection(True)
-        self.hide()
-        self.show()
-
 
 
     def sortColumn(self, column, order):
@@ -419,7 +400,18 @@ class TableWidget(QTableWidget):
 
 
     def realSize(self):
-        return self.realWidth(), self.realHeight()
+
+        width = 0
+        height = 0
+
+        for c in range(0, self.columnCount()):
+            width += self.cellWidget(0, c).width()
+        for r in range(0, self.rowCount()):
+            height += self.cellWidget(r, 0).height()
+        del(c)
+        del(r)
+
+        return width, height
 
 
     def realWidth(self):
@@ -436,9 +428,6 @@ class TableWidget(QTableWidget):
         for r in range(0, self.rowCount()):
             height += self.cellWidget(r, 0).height()
         del(r)
-
-        # height of headers is still missing
-        height += self.horizontalHeader().height()
 
         return height
 
