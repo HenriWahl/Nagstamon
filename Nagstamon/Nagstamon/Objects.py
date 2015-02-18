@@ -125,19 +125,18 @@ class StatusInformationColumn(Column):
 """
 ### /TO BE REMOVED! ###
 
+STATES = ['WARNING', 'UNKNOWN', 'CRITICAL', 'UNREACHABLE', 'DOWN']
 
 class GenericObject(object):
     """
     template for hosts and services
     """
 
-    STATES = ['WARNING', 'UNKNOWN', 'CRITICAL', 'UNREACHABLE', 'DOWN']
-
     def __init__(self):
         self.name = ''
         self.status = ''
         self.status_information = ''
-        # default state is soft, to be changed by to-be-written status_type check
+        # default state is soft, to be changed by status_type check
         self.status_type = ''
         self.last_check = ''
         self.duration = ''
@@ -155,9 +154,6 @@ class GenericObject(object):
         # might help for sorting in Qt
         self.host = ''
         self.service = ''
-        # hopefully reduces resource usage for displaying icons in tableview
-        # instead of calling host/service methods look at this flag string
-        self.flags = ''
 
 
     def is_passive_only(self):
@@ -227,7 +223,7 @@ class GenericObject(object):
 
 
     def compare_status(self):
-        return self.STATES.index(self.status)
+        return STATES.index(self.status)
 
 
     def compare_last_check(self):
@@ -294,7 +290,7 @@ class GenericService(GenericObject):
 
     def is_host(self):
         """
-        decides where to put acknowledged/downtime pixbufs in Liststore for Treeview in Popwin
+            decides where to put acknowledged/downtime pixbufs in Liststore for Treeview in Popwin
         """
         return False
 

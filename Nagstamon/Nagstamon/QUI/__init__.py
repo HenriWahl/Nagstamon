@@ -211,6 +211,7 @@ class ServerVBox(QVBoxLayout):
 
 
     def refresh(self):
+
         self.table.setData(list(self.server.GetItemsGenerator()))
 
 
@@ -231,11 +232,11 @@ class ServerThreadWorker(QObject):
         status =  self.server.GetStatus()
         self.new_status.emit()
         # avoid memory leak by singleshooting next refresh after this one is finished
-        self.timer.singleShot(1000, self.refreshStatus)
+        self.timer.singleShot(10000, self.refreshStatus)
 
 
 class CellWidget(QWidget):
-    def __init__(self, column=0, row=0, text='', color='black', background='white', flags=''):
+    def __init__(self, column=0, row=0, text='', color='black', background='white', icons=''):
         QWidget.__init__(self)
 
         self.column = column
@@ -254,16 +255,15 @@ class CellWidget(QWidget):
         self.hbox.addWidget(self.label, 1)
         self.hbox.setSpacing(0)
 
-        self.label.setStyleSheet('padding: 10px;')
+        self.label.setStyleSheet('padding: 5px;')
 
         # hosts and services might contain attribute icons
-        if column in (0, 1):
-            for flag in flags:
-                self.icons = dict()
-                self.icons[flag] = QLabel()
-                self.icons[flag].setPixmap(ICONS[flag].pixmap(self.label.fontMetrics().height(), self.label.fontMetrics().height()))
-                self.icons[flag].setStyleSheet('padding: 10px;')
-                self.hbox.addWidget(self.icons[flag])
+        if column in (0, 1) and icons is not False:
+            for icon in icons:
+                icon_label = QLabel()
+                icon_label.setPixmap(icon.pixmap(self.label.fontMetrics().height(), self.label.fontMetrics().height()))
+                icon_label.setStyleSheet('padding-right: 5px;')
+                self.hbox.addWidget(icon_label)
 
 
         self.colorize()
@@ -304,7 +304,9 @@ class TableWidget(QTableWidget):
         self.setSelectionMode(QAbstractItemView.SingleSelection)
         #self.setShowGrid(False)
         self.setHorizontalScrollBarPolicy(Qt.ScrollBarAlwaysOff)
+        #self.setVerticalScrollBarPolicy(Qt.ScrollBarAlwaysOff)
         self.setAutoScroll(False)
+        #self.setAutoScroll(False)
         self.setSortingEnabled(True)
 
         self.setHorizontalHeaderLabels(self.headers.values())
@@ -323,19 +325,67 @@ class TableWidget(QTableWidget):
         # maximum size needs no more than amount of data
         self.setRowCount(self.server.nagitems_filtered_count)
 
+        # temporary cache for cell widgets - first compute cells, store in self.data
+        # then refresh cells from self.data
+        # first list contains rows
+        self.data = list()
+
         # to keep GTK Treeview sort behaviour first by services
         first_sort = sorted(data, key=methodcaller('compare_service'))
         for row, nagitem in enumerate(sorted(first_sort, key=methodcaller('compare_%s' % \
                                                 (self.sort_column)), reverse=self.SORT_ORDER[self.order])):
-            # fill every cell per row
+            # lists in rows list are columns
+            self.data.append(list())
+            # create every cell per row
             for column, cell in enumerate(nagitem.get_columns(self.headers)):
+                # check for icons to be used in cell widget
+                if column in (0, 1):
+                    icons = list()
+                    # add host icons
+                    if nagitem.is_host() and column == 0:
+                        if nagitem.is_acknowledged():
+                            icons.append(ICONS["acknowledged"])
+                        if nagitem.is_flapping():
+                            icons.append(ICONS["flapping"])
+                        if nagitem.is_passive_only():
+                            icons.append(ICONS["passive"])
+                        if nagitem.is_in_scheduled_downtime():
+                            icons.append(ICONS["downtime"])
+                    # add host icons for service item - e.g. in case host is in downtime
+                    elif not nagitem.is_host() and column == 0:
+                        if self.server.hosts[nagitem.host].is_acknowledged():
+                            icons.append(ICONS["acknowledged"])
+                        if self.server.hosts[nagitem.host].is_flapping():
+                            icons.append(ICONS["flapping"])
+                        if self.server.hosts[nagitem.host].is_passive_only():
+                            icons.append(ICONS["passive"])
+                        if self.server.hosts[nagitem.host].is_in_scheduled_downtime():
+                            icons.append(ICONS["downtime"])
+                    # add service icons
+                    elif not nagitem.is_host() and column == 1:
+                        if nagitem.is_acknowledged():
+                            icons.append(ICONS["acknowledged"])
+                        if nagitem.is_flapping():
+                            icons.append(ICONS["flapping"])
+                        if nagitem.is_passive_only():
+                            icons.append(ICONS["passive"])
+                        if nagitem.is_in_scheduled_downtime():
+                            icons.append(ICONS["downtime"])
+
+                else:
+                    icons = False
                 widget = CellWidget(text=cell,
                                     color=conf.__dict__[COLORS[nagitem.status] + 'text'],
                                     background=conf.__dict__[COLORS[nagitem.status] + 'background'],
                                     row=row,
                                     column=column,
-                                    flags=nagitem.flags)
-                self.setCellWidget(row, column, widget)
+                                    icons=icons)
+                self.data[row].append(widget)
+
+        # fill cells with data
+        for row in range(0, self.rowCount()):
+            for column in range(0, len(self.headers)):
+                self.setCellWidget(row, column, self.data[row][column])
 
         # seems to be important for not getting somehow squeezed cells
         self.resizeColumnsToContents()
@@ -400,8 +450,7 @@ def CreateIcons(fontsize):
     """
     for attr in ('acknowledged', 'downtime', 'flapping', 'new', 'passive'):
         icon = QIcon('%s%snagstamon_%s.svg' % (RESOURCES, os.sep, attr))
-        # use only first letter as key to match chars used in host/service.flag
-        ICONS[attr[0]] = icon
+        ICONS[attr] = icon
 
 systrayicon = SystemTrayIcon(QIcon("%s%snagstamon.svg" % (RESOURCES, os.sep)))
 statuswindow = StatusWindow()
