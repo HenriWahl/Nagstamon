@@ -106,11 +106,15 @@ class StatusWindow(QWidget):
 
         self.hbox_bar = HBoxLayout(spacing=0)       # statusbar HBox
         self.hbox_top = HBoxLayout(spacing=10)                # top VBox containing buttons
-        self.vbox_servers = QVBoxLayout()            # HBox full of servers
+        ###self.vbox_servers = QVBoxLayout()            # HBox full of servers
+        self.splitter_servers = QSplitter(Qt.Vertical)
 
         self.vbox.addLayout(self.hbox_bar)
         self.vbox.addLayout(self.hbox_top)
-        self.vbox.addLayout(self.vbox_servers)
+
+        ###self.vbox.addLayout(self.vbox_servers)
+        self.vbox.addWidget(self.splitter_servers)
+
 
         # define label first to get its size for svg logo dimensions
         self.label_bar = QLabel(' 1 2 3 ')
@@ -163,8 +167,11 @@ class StatusWindow(QWidget):
     def createServerVBoxes(self):
         for server in servers.values():
             if server.enabled:
-                self.vbox_servers.addLayout(ServerVBox(server))
-
+                #self.vbox_servers.addLayout(ServerVBox(server))
+                widget = QWidget()
+                widget.setLayout(ServerVBox(server))
+                widget.setSizePolicy(QSizePolicy.Maximum, QSizePolicy.Maximum)
+                self.splitter_servers.addWidget(widget)
 
 class ServerVBox(QVBoxLayout):
     """
@@ -392,6 +399,8 @@ class TableWidget(QTableWidget):
         self.resizeRowsToContents()
         self.horizontalHeader().setStretchLastSection(True)
 
+        self.setMaximumHeight(self.realHeight())
+
 
     def sortColumn(self, column, order):
         self.sort_column = self.headers.keys()[column]
@@ -400,18 +409,7 @@ class TableWidget(QTableWidget):
 
 
     def realSize(self):
-
-        width = 0
-        height = 0
-
-        for c in range(0, self.columnCount()):
-            width += self.cellWidget(0, c).width()
-        for r in range(0, self.rowCount()):
-            height += self.cellWidget(r, 0).height()
-        del(c)
-        del(r)
-
-        return width, height
+        return self.realWidth(), self.realHeight()
 
 
     def realWidth(self):
@@ -424,7 +422,8 @@ class TableWidget(QTableWidget):
 
 
     def realHeight(self):
-        height = 0
+        # height summary starts with headers' height
+        height = self.horizontalHeader().height()
         for r in range(0, self.rowCount()):
             height += self.cellWidget(r, 0).height()
         del(r)
