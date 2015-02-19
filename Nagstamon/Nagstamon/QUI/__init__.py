@@ -101,33 +101,41 @@ class StatusWindow(QWidget):
         self.setWindowTitle(APPINFO.Name)
         self.setWindowIcon(QIcon('%s%snagstamon.svg' % (RESOURCES, os.sep)))
 
-        self.vbox = QVBoxLayout(spacing=0)                   # global VBox
+        self.vbox = QVBoxLayout(spacing=0)          # global VBox
         self.vbox.setContentsMargins(0, 0, 0, 0)    # no margin
 
-        self.hbox_bar = HBoxLayout(spacing=0)       # statusbar HBox
-        self.hbox_top = HBoxLayout(spacing=10)                # top VBox containing buttons
-        ###self.vbox_servers = QVBoxLayout()            # HBox full of servers
-        self.splitter_servers = QSplitter(Qt.Vertical)
+        self.bar_hbox = HBoxLayout(spacing=0)       # statusbar HBox
+        self.top_hbox = HBoxLayout(spacing=10)      # top VBox containing buttons
 
-        self.vbox.addLayout(self.hbox_bar)
-        self.vbox.addLayout(self.hbox_top)
+        self.servers_vbox = QVBoxLayout()            # HBox full of servers
+        self.servers_vbox.setContentsMargins(0, 0, 0, 0)
 
-        ###self.vbox.addLayout(self.vbox_servers)
-        self.vbox.addWidget(self.splitter_servers)
+        self.servers_scrollarea = QScrollArea()     # scrollable area for server vboxes
+        self.servers_scrollarea_widget = QWidget()  # necessary widget to contain vbox for servers
 
+        self.createServerVBoxes()
+
+        self.servers_scrollarea_widget.setLayout(self.servers_vbox)
+        self.servers_scrollarea.setWidget(self.servers_scrollarea_widget)
+        self.servers_scrollarea.setWidgetResizable(True)
+
+        self.vbox.addLayout(self.bar_hbox)
+        self.vbox.addLayout(self.top_hbox)
+        self.vbox.addWidget(self.servers_scrollarea)
 
         # define label first to get its size for svg logo dimensions
-        self.label_bar = QLabel(' 1 2 3 ')
-        self.label_bar.setStyleSheet('background-color: green;')
+        self.bar_label = QLabel(' 1 2 3 ')
+        self.bar_label.setStyleSheet('background-color: green;')
+        self.bar_label.setSizePolicy(QSizePolicy.Fixed, QSizePolicy.Fixed)
 
         # derive logo dimensions from status label
-        self.logo_bar = QSvgWidget("%s%snagstamon_logo_bar.svg" % (RESOURCES, os.sep))
-        self.logo_bar.setSizePolicy(QSizePolicy.Minimum, QSizePolicy.Minimum)
-        self.logo_bar.setMinimumSize(self.label_bar.fontMetrics().height(), self.label_bar.fontMetrics().height())
+        self.bar_logo = QSvgWidget("%s%snagstamon_logo_bar.svg" % (RESOURCES, os.sep))
+        self.bar_logo.setSizePolicy(QSizePolicy.Minimum, QSizePolicy.Minimum)
+        self.bar_logo.setMinimumSize(self.bar_label.fontMetrics().height(), self.bar_label.fontMetrics().height())
 
-        self.hbox_bar.addWidget(self.logo_bar)
-        self.hbox_bar.addWidget(self.label_bar)
-        self.hbox_bar.addStretch()
+        self.bar_hbox.addWidget(self.bar_logo)
+        self.bar_hbox.addWidget(self.bar_label)
+        self.bar_hbox.addStretch()
 
         # top button box
         self.logo = QSvgWidget("%s%snagstamon_label.svg" % (RESOURCES, os.sep))
@@ -145,33 +153,31 @@ class StatusWindow(QWidget):
         self.button_close.setIcon(QIcon("%s%sclose.svg" % (RESOURCES, os.sep)))
         self.button_close.clicked.connect(self.close)
 
-        self.hbox_top.addWidget(self.logo)
-        self.hbox_top.addWidget(self.label_version)
-        self.hbox_top.addStretch()
-        self.hbox_top.addWidget(self.combobox_servers)
-        self.hbox_top.addWidget(self.button_filters)
-        self.hbox_top.addWidget(self.button_recheck_all)
-        self.hbox_top.addWidget(self.button_refresh)
-        self.hbox_top.addWidget(self.button_settings)
-        self.hbox_top.addWidget(self.button_hamburger_menu)
-        self.hbox_top.addWidget(self.button_close)
+        self.top_hbox.addWidget(self.logo)
+        self.top_hbox.addWidget(self.label_version)
+        self.top_hbox.addStretch()
+        self.top_hbox.addWidget(self.combobox_servers)
+        self.top_hbox.addWidget(self.button_filters)
+        self.top_hbox.addWidget(self.button_recheck_all)
+        self.top_hbox.addWidget(self.button_refresh)
+        self.top_hbox.addWidget(self.button_settings)
+        self.top_hbox.addWidget(self.button_hamburger_menu)
+        self.top_hbox.addWidget(self.button_close)
 
         self.setLayout(self.vbox)
 
         # icons in ICONS have to be sized as fontsize
-        CreateIcons(self.label_bar.fontMetrics().height())
-
-        self.createServerVBoxes()
+        CreateIcons(self.bar_label.fontMetrics().height())
 
 
     def createServerVBoxes(self):
+        """
+            internally used to create enabled servers to be displayed
+        """
         for server in servers.values():
             if server.enabled:
-                #self.vbox_servers.addLayout(ServerVBox(server))
-                widget = QWidget()
-                widget.setLayout(ServerVBox(server))
-                widget.setSizePolicy(QSizePolicy.Maximum, QSizePolicy.Maximum)
-                self.splitter_servers.addWidget(widget)
+                self.servers_vbox.addLayout(ServerVBox(server))
+
 
 class ServerVBox(QVBoxLayout):
     """
@@ -198,7 +204,6 @@ class ServerVBox(QVBoxLayout):
         hbox.addStretch()
         self.addLayout(hbox)
 
-        #self.headers = ['host', 'service', 'status', 'last_check', 'duration', 'attempt', 'status_information']
         self.headers = OrderedDict([('host', 'Host'), ('service', 'Service'),
                                     ('status', 'Status'), ('last_check', 'Last Check'),
                                     ('duration', 'Duration'), ('attempt', 'Attempt'),
@@ -218,7 +223,9 @@ class ServerVBox(QVBoxLayout):
 
 
     def refresh(self):
-
+        """
+            refresh table cells with new data by thread
+        """
         self.table.setData(list(self.server.GetItemsGenerator()))
 
 
@@ -272,7 +279,7 @@ class CellWidget(QWidget):
                 icon_label.setStyleSheet('padding-right: 5px;')
                 self.hbox.addWidget(icon_label)
 
-
+        # paint cell appropriately
         self.colorize()
 
 
@@ -296,7 +303,6 @@ class TableWidget(QTableWidget):
     def __init__(self, headers, columncount, rowcount, sort_column, order, server):
         QTableWidget.__init__(self, columncount, rowcount)
 
-        #self.SORT_ORDER = {'ascending': True, 'descending': False, 0: True, 1: False}
         self.SORT_ORDER = {'descending': True, 'ascending': False, 0: True, 1: False}
 
         self.headers = headers
@@ -309,12 +315,13 @@ class TableWidget(QTableWidget):
 
         self.setSelectionBehavior(QAbstractItemView.SelectRows)
         self.setSelectionMode(QAbstractItemView.SingleSelection)
-        #self.setShowGrid(False)
+        # has to be necessarily false to keep sanity if calculating table height
+        self.setShowGrid(False)
         self.setHorizontalScrollBarPolicy(Qt.ScrollBarAlwaysOff)
-        #self.setVerticalScrollBarPolicy(Qt.ScrollBarAlwaysOff)
         self.setAutoScroll(False)
-        #self.setAutoScroll(False)
         self.setSortingEnabled(True)
+
+        self.setSizePolicy(QSizePolicy.Ignored, QSizePolicy.Expanding)
 
         self.setHorizontalHeaderLabels(self.headers.values())
         self.horizontalHeader().setSectionResizeMode(QHeaderView.ResizeToContents)
@@ -399,20 +406,31 @@ class TableWidget(QTableWidget):
         self.resizeRowsToContents()
         self.horizontalHeader().setStretchLastSection(True)
 
-        self.setMaximumHeight(self.realHeight())
+        # force table to its maximal height, calculated by .realHeight()
+        self.setMinimumHeight(self.realHeight())
+        self.setSizePolicy(QSizePolicy.Ignored, QSizePolicy.Maximum)
 
 
     def sortColumn(self, column, order):
+        """
+            set data according to sort criteria
+        """
         self.sort_column = self.headers.keys()[column]
         self.order = self.SORT_ORDER[order]
         self.setData(self.server.GetItemsGenerator())
 
 
     def realSize(self):
+        """
+            width, height
+        """
         return self.realWidth(), self.realHeight()
 
 
     def realWidth(self):
+        """
+            calculate real table width as there is no method included
+        """
         width = 0
         for c in range(0, self.columnCount()):
             width += self.cellWidget(0, c).width()
@@ -422,11 +440,17 @@ class TableWidget(QTableWidget):
 
 
     def realHeight(self):
+        """
+            calculate real table height as there is no method included
+        """
         # height summary starts with headers' height
-        height = self.horizontalHeader().height()
-        for r in range(0, self.rowCount()):
-            height += self.cellWidget(r, 0).height()
-        del(r)
+        # apparently height works better/without scrollbar if some pixels are added
+        height = self.horizontalHeader().height() + 2
+        # it is necessary to ask every row directly because their heights differ :-(
+        for row in range(0, self.rowCount()):
+            height += (self.cellWidget(row, 0).height())
+            print()
+        del(row)
 
         return height
 
