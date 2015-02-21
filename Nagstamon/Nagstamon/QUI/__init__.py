@@ -104,7 +104,7 @@ class StatusWindow(QWidget):
         self.vbox = QVBoxLayout(spacing=0)          # global VBox
         self.vbox.setContentsMargins(0, 0, 0, 0)    # no margin
 
-        self.bar_hbox = HBoxLayout(spacing=0)       # statusbar HBox
+        #self.bar_hbox = HBoxLayout(spacing=0)       # statusbar HBox
         self.top_hbox = HBoxLayout(spacing=10)      # top VBox containing buttons
 
         self.servers_vbox = QVBoxLayout()            # HBox full of servers
@@ -177,6 +177,30 @@ class StatusWindow(QWidget):
         for server in servers.values():
             if server.enabled:
                 self.servers_vbox.addLayout(ServerVBox(server))
+
+
+class StatusBar(QLabel):
+    """
+        status bar is essentially a label
+    """
+    def __init__(self):
+        QLabel.__init__(self)
+
+        self.hbox = HBoxLayout(spacing=0)
+
+        # define label first to get its size for svg logo dimensions
+        self.label = QLabel(' 1 2 3 ')
+        self.label.setStyleSheet('background-color: green;')
+        self.label.setSizePolicy(QSizePolicy.Fixed, QSizePolicy.Fixed)
+
+        # derive logo dimensions from status label
+        self.logo = QSvgWidget("%s%snagstamon_logo_bar.svg" % (RESOURCES, os.sep))
+        self.logo.setSizePolicy(QSizePolicy.Minimum, QSizePolicy.Minimum)
+        self.logo.setMinimumSize(self.bar_label.fontMetrics().height(), self.bar_label.fontMetrics().height())
+
+        self.hbox.addWidget(self.bar_logo)
+        self.hbox.addWidget(self.bar_label)
+        self.hbox.addStretch()
 
 
 class ServerVBox(QVBoxLayout):
@@ -449,7 +473,6 @@ class TableWidget(QTableWidget):
         # it is necessary to ask every row directly because their heights differ :-(
         for row in range(0, self.rowCount()):
             height += (self.cellWidget(row, 0).height())
-            print()
         del(row)
 
         return height
