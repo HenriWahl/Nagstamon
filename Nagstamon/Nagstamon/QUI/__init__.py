@@ -105,6 +105,7 @@ class StatusWindow(QWidget):
         self.vbox.setContentsMargins(0, 0, 0, 0)    # no margin
 
         #self.bar_hbox = HBoxLayout(spacing=0)       # statusbar HBox
+        self.statusbar = StatusBar()       # statusbar HBox
         self.top_hbox = HBoxLayout(spacing=10)      # top VBox containing buttons
 
         self.servers_vbox = QVBoxLayout()            # HBox full of servers
@@ -119,23 +120,24 @@ class StatusWindow(QWidget):
         self.servers_scrollarea.setWidget(self.servers_scrollarea_widget)
         self.servers_scrollarea.setWidgetResizable(True)
 
-        self.vbox.addLayout(self.bar_hbox)
+        #self.vbox.addLayout(self.bar_hbox)
+        self.vbox.addWidget(self.statusbar)
         self.vbox.addLayout(self.top_hbox)
         self.vbox.addWidget(self.servers_scrollarea)
 
         # define label first to get its size for svg logo dimensions
-        self.bar_label = QLabel(' 1 2 3 ')
-        self.bar_label.setStyleSheet('background-color: green;')
-        self.bar_label.setSizePolicy(QSizePolicy.Fixed, QSizePolicy.Fixed)
+        #self.bar_label = QLabel(' 1 2 3 ')
+        #self.bar_label.setStyleSheet('background-color: green;')
+        #self.bar_label.setSizePolicy(QSizePolicy.Fixed, QSizePolicy.Fixed)
 
         # derive logo dimensions from status label
-        self.bar_logo = QSvgWidget("%s%snagstamon_logo_bar.svg" % (RESOURCES, os.sep))
-        self.bar_logo.setSizePolicy(QSizePolicy.Minimum, QSizePolicy.Minimum)
-        self.bar_logo.setMinimumSize(self.bar_label.fontMetrics().height(), self.bar_label.fontMetrics().height())
+        #self.bar_logo = QSvgWidget("%s%snagstamon_logo_bar.svg" % (RESOURCES, os.sep))
+        #self.bar_logo.setSizePolicy(QSizePolicy.Minimum, QSizePolicy.Minimum)
+        #self.bar_logo.setMinimumSize(self.bar_label.fontMetrics().height(), self.bar_label.fontMetrics().height())
 
-        self.bar_hbox.addWidget(self.bar_logo)
-        self.bar_hbox.addWidget(self.bar_label)
-        self.bar_hbox.addStretch()
+        #self.bar_hbox.addWidget(self.bar_logo)
+        #self.bar_hbox.addWidget(self.bar_label)
+        #self.bar_hbox.addStretch()
 
         # top button box
         self.logo = QSvgWidget("%s%snagstamon_label.svg" % (RESOURCES, os.sep))
@@ -167,7 +169,7 @@ class StatusWindow(QWidget):
         self.setLayout(self.vbox)
 
         # icons in ICONS have to be sized as fontsize
-        CreateIcons(self.bar_label.fontMetrics().height())
+        CreateIcons(self.statusbar.fontMetrics().height())
 
 
     def createServerVBoxes(self):
@@ -179,14 +181,15 @@ class StatusWindow(QWidget):
                 self.servers_vbox.addLayout(ServerVBox(server))
 
 
-class StatusBar(QLabel):
+class StatusBar(QWidget):
     """
-        status bar is essentially a label
+        status bar for short display of problems
     """
     def __init__(self):
-        QLabel.__init__(self)
+        QWidget.__init__(self)
 
         self.hbox = HBoxLayout(spacing=0)
+        self.setLayout(self.hbox)
 
         # define label first to get its size for svg logo dimensions
         self.label = QLabel(' 1 2 3 ')
@@ -196,10 +199,10 @@ class StatusBar(QLabel):
         # derive logo dimensions from status label
         self.logo = QSvgWidget("%s%snagstamon_logo_bar.svg" % (RESOURCES, os.sep))
         self.logo.setSizePolicy(QSizePolicy.Minimum, QSizePolicy.Minimum)
-        self.logo.setMinimumSize(self.bar_label.fontMetrics().height(), self.bar_label.fontMetrics().height())
+        self.logo.setMinimumSize(self.label.fontMetrics().height(), self.label.fontMetrics().height())
 
-        self.hbox.addWidget(self.bar_logo)
-        self.hbox.addWidget(self.bar_label)
+        self.hbox.addWidget(self.logo)
+        self.hbox.addWidget(self.label)
         self.hbox.addStretch()
 
 
@@ -471,6 +474,7 @@ class TableWidget(QTableWidget):
         # apparently height works better/without scrollbar if some pixels are added
         height = self.horizontalHeader().height() + 2
         # it is necessary to ask every row directly because their heights differ :-(
+        row = 0
         for row in range(0, self.rowCount()):
             height += (self.cellWidget(row, 0).height())
         del(row)
