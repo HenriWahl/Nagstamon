@@ -104,13 +104,11 @@ class StatusWindow(QWidget):
         self.vbox = QVBoxLayout(spacing=0)          # global VBox
         self.vbox.setContentsMargins(0, 0, 0, 0)    # no margin
 
-        #self.bar_hbox = HBoxLayout(spacing=0)       # statusbar HBox
-        self.statusbar = StatusBar()       # statusbar HBox
-        self.top_hbox = HBoxLayout(spacing=10)      # top VBox containing buttons
+        self.statusbar = StatusBar()   # statusbar HBox
+        self.toparea = TopArea()       # toparea HBox
 
         self.servers_vbox = QVBoxLayout()            # HBox full of servers
         self.servers_vbox.setContentsMargins(0, 0, 0, 0)
-
         self.servers_scrollarea = QScrollArea()     # scrollable area for server vboxes
         self.servers_scrollarea_widget = QWidget()  # necessary widget to contain vbox for servers
 
@@ -121,37 +119,8 @@ class StatusWindow(QWidget):
         self.servers_scrollarea.setWidgetResizable(True)
 
         self.vbox.addWidget(self.statusbar)
-        self.vbox.addLayout(self.top_hbox)
+        self.vbox.addWidget(self.toparea)
         self.vbox.addWidget(self.servers_scrollarea)
-
-        # top button box
-        self.logo = QSvgWidget("%s%snagstamon_label.svg" % (RESOURCES, os.sep))
-        self.logo.setSizePolicy(QSizePolicy.Minimum, QSizePolicy.Minimum)
-
-        self.label_version = QLabel(APPINFO.Version)
-        self.combobox_servers = QComboBox()
-        self.button_filters = QPushButton("Filters")
-        self.button_recheck_all = QPushButton("Recheck all")
-        self.button_refresh = QPushButton("Refresh")
-        self.button_settings = QPushButton("Settings")
-        self.button_hamburger_menu = QPushButton()
-        self.button_hamburger_menu.setIcon(QIcon("%s%smenu.svg" % (RESOURCES, os.sep)))
-        self.button_close = QPushButton()
-        self.button_close.setIcon(QIcon("%s%sclose.svg" % (RESOURCES, os.sep)))
-        self.button_close.clicked.connect(self.close)
-
-        # top_hbox should be defined in extra class like statusbar
-
-        self.top_hbox.addWidget(self.logo)
-        self.top_hbox.addWidget(self.label_version)
-        self.top_hbox.addStretch()
-        self.top_hbox.addWidget(self.combobox_servers)
-        self.top_hbox.addWidget(self.button_filters)
-        self.top_hbox.addWidget(self.button_recheck_all)
-        self.top_hbox.addWidget(self.button_refresh)
-        self.top_hbox.addWidget(self.button_settings)
-        self.top_hbox.addWidget(self.button_hamburger_menu)
-        self.top_hbox.addWidget(self.button_close)
 
         self.setLayout(self.vbox)
 
@@ -191,6 +160,43 @@ class StatusBar(QWidget):
         self.hbox.addWidget(self.logo)
         self.hbox.addWidget(self.label)
         self.hbox.addStretch()
+
+
+class TopArea(QWidget):
+    """
+        Top area of status window
+    """
+    def __init__(self):
+        QWidget.__init__(self)
+        self.hbox = HBoxLayout(spacing=10)      # top VBox containing buttons
+
+        # top button box
+        self.logo = QSvgWidget("%s%snagstamon_label.svg" % (RESOURCES, os.sep))
+        self.logo.setSizePolicy(QSizePolicy.Minimum, QSizePolicy.Minimum)
+
+        self.label_version = QLabel(APPINFO.Version)
+        self.combobox_servers = QComboBox()
+        self.button_filters = QPushButton("Filters")
+        self.button_recheck_all = QPushButton("Recheck all")
+        self.button_refresh = QPushButton("Refresh")
+        self.button_settings = QPushButton("Settings")
+        self.button_hamburger_menu = QPushButton()
+        self.button_hamburger_menu.setIcon(QIcon("%s%smenu.svg" % (RESOURCES, os.sep)))
+        self.button_close = QPushButton()
+        self.button_close.setIcon(QIcon("%s%sclose.svg" % (RESOURCES, os.sep)))
+        self.button_close.clicked.connect(self.close)
+
+        self.hbox.addWidget(self.logo)
+        self.hbox.addWidget(self.label_version)
+        self.hbox.addStretch()
+        self.hbox.addWidget(self.combobox_servers)
+        self.hbox.addWidget(self.button_filters)
+        self.hbox.addWidget(self.button_recheck_all)
+        self.hbox.addWidget(self.button_refresh)
+        self.hbox.addWidget(self.button_settings)
+        self.hbox.addWidget(self.button_hamburger_menu)
+        self.hbox.addWidget(self.button_close)
+
 
 
 class ServerVBox(QVBoxLayout):
