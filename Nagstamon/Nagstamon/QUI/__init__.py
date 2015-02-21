@@ -120,24 +120,9 @@ class StatusWindow(QWidget):
         self.servers_scrollarea.setWidget(self.servers_scrollarea_widget)
         self.servers_scrollarea.setWidgetResizable(True)
 
-        #self.vbox.addLayout(self.bar_hbox)
         self.vbox.addWidget(self.statusbar)
         self.vbox.addLayout(self.top_hbox)
         self.vbox.addWidget(self.servers_scrollarea)
-
-        # define label first to get its size for svg logo dimensions
-        #self.bar_label = QLabel(' 1 2 3 ')
-        #self.bar_label.setStyleSheet('background-color: green;')
-        #self.bar_label.setSizePolicy(QSizePolicy.Fixed, QSizePolicy.Fixed)
-
-        # derive logo dimensions from status label
-        #self.bar_logo = QSvgWidget("%s%snagstamon_logo_bar.svg" % (RESOURCES, os.sep))
-        #self.bar_logo.setSizePolicy(QSizePolicy.Minimum, QSizePolicy.Minimum)
-        #self.bar_logo.setMinimumSize(self.bar_label.fontMetrics().height(), self.bar_label.fontMetrics().height())
-
-        #self.bar_hbox.addWidget(self.bar_logo)
-        #self.bar_hbox.addWidget(self.bar_label)
-        #self.bar_hbox.addStretch()
 
         # top button box
         self.logo = QSvgWidget("%s%snagstamon_label.svg" % (RESOURCES, os.sep))
@@ -154,6 +139,8 @@ class StatusWindow(QWidget):
         self.button_close = QPushButton()
         self.button_close.setIcon(QIcon("%s%sclose.svg" % (RESOURCES, os.sep)))
         self.button_close.clicked.connect(self.close)
+
+        # top_hbox should be defined in extra class like statusbar
 
         self.top_hbox.addWidget(self.logo)
         self.top_hbox.addWidget(self.label_version)
@@ -358,6 +345,9 @@ class TableWidget(QTableWidget):
         self.horizontalHeader().setSortIndicator(list(self.headers).index(self.sort_column), self.SORT_ORDER[self.order])
         self.horizontalHeader().sortIndicatorChanged.connect(self.sortColumn)
 
+        # store width and height if they do not need to be recalculated
+        self.realWidth_cached = 0
+        self.realHeight_cached = 0
 
     def setData(self, data=None):
         """
@@ -458,12 +448,12 @@ class TableWidget(QTableWidget):
         """
             calculate real table width as there is no method included
         """
-        width = 0
+        self.realWidth_cached = 0
         for c in range(0, self.columnCount()):
-            width += self.cellWidget(0, c).width()
+            self.realWidth_cached += self.cellWidget(0, c).width()
         del(c)
 
-        return width
+        return self.realWidth_cached
 
 
     def realHeight(self):
@@ -472,14 +462,14 @@ class TableWidget(QTableWidget):
         """
         # height summary starts with headers' height
         # apparently height works better/without scrollbar if some pixels are added
-        height = self.horizontalHeader().height() + 2
+        self.realHeight_cached = self.horizontalHeader().height() + 2
         # it is necessary to ask every row directly because their heights differ :-(
         row = 0
         for row in range(0, self.rowCount()):
-            height += (self.cellWidget(row, 0).height())
+            self.realHeight_cached += (self.cellWidget(row, 0).height())
         del(row)
 
-        return height
+        return self.realHeight_cached
 
 
     def highlightRow(self, row):
