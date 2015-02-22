@@ -103,7 +103,7 @@ class ZabbixAPI(object):
     __username__ = ''
     __password__ = ''
 
-    auth = ''
+    auth = None
     url = '/api_jsonrpc.php'
     params = None
     method = None
@@ -176,6 +176,7 @@ class ZabbixAPI(object):
         self.r_query = deque([], maxlen=r_query_len)
         self.debug(logging.INFO, "url: " + self.url)
 
+
     def _setuplogging(self):
         self.logger = logging.getLogger("zabbix_api.%s" % self.__class__.__name__)
 
@@ -210,6 +211,17 @@ class ZabbixAPI(object):
 
         return json.dumps(obj)
 
+    def json_obj_auth(self, method, params={}):
+        obj = {'jsonrpc': '2.0',
+               'method': method,
+               'params': params,
+               'id': self.id
+              }
+
+        self.debug(logging.DEBUG, "json_obj: " + str(obj))
+
+        return json.dumps(obj)
+
     def login(self, user='', password='', save=True):
         if user != '':
             l_user = user
@@ -228,10 +240,10 @@ class ZabbixAPI(object):
         hashed_pw_string = "md5(" + hashlib.md5(l_password.encode('utf-8')).hexdigest() + ")"
         self.debug(logging.DEBUG, "Trying to login with %s:%s" % \
                 (repr(l_user), repr(hashed_pw_string)))
-        obj = self.json_obj('user.authenticate', {'user': l_user,
-                'password': l_password})
+        obj = self.json_obj('user.login', {'user': l_user,'password': l_password})
         result = self.do_request(obj)
         self.auth = result['result']
+		
 
     def test_login(self):
         if self.auth != '':
@@ -312,8 +324,10 @@ class ZabbixAPI(object):
 
     def api_version(self, **options):
         self.__checkauth__()
-        obj = self.do_request(self.json_obj('APIInfo.version', options))
+        try: obj = self.do_request(self.json_obj_auth('APIInfo.version', options))
+        except: obj = self.do_request(self.json_obj('APIInfo.version', options))
         return obj['result']
+
 
     def __checkauth__(self):
         if not self.logged_in():
