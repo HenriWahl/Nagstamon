@@ -23,7 +23,7 @@ import shutil
 import subprocess
 import sys
 
-# ignore some warnings which only confuse when running tests
+# ignore some warning which only confuse when running tests
 import warnings
 warnings.filterwarnings('ignore',
     "Parent module '.*' not found while handling absolute import")

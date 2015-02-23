@@ -40,12 +40,12 @@ from Nagstamon.Objects import GenericService
 # fixed icons for hosts/services attributes
 ICONS = dict()
 
-# fixed shortened and lowered color names for cells
-COLORS = {'WARNING':     'color_warning_',
-          'CRITICAL':    'color_critical_',
-          'DOWN':        'color_down_',
-          'UNKNOWN':     'color_unknown_',
-          'UNREACHABLE': 'color_unreachable_'}
+# fixed shortened and lowered color names for cells, also used by statusbar label snippets
+COLORS = OrderedDict([('DOWN', 'color_down_'),
+                      ('UNREACHABLE', 'color_unreachable_'),
+                      ('CRITICAL', 'color_critical_'),
+                      ('UNKNOWN', 'color_unknown_'),
+                      ('WARNING', 'color_warning_')])
 
 class HBoxLayout(QHBoxLayout):
     """
@@ -54,7 +54,7 @@ class HBoxLayout(QHBoxLayout):
     def __init__(self, spacing=None):
         QHBoxLayout.__init__(self)
         if not spacing == None:
-            self.setSpacing(0)                      # no spaces necessary between items
+            self.setSpacing(0)                  # no spaces necessary between items
         self.setContentsMargins(0, 0, 0, 0)     # no margin
 
 
@@ -96,21 +96,24 @@ class StatusWindow(QWidget):
             Status window combined from status bar and popup window
         """
         QWidget.__init__(self)
-        #self.setWindowFlags(Qt.WindowStaysOnTopHint | Qt.FramelessWindowHint)
-        self.setWindowFlags(Qt.WindowStaysOnTopHint)
+        self.setWindowFlags(Qt.WindowStaysOnTopHint | Qt.FramelessWindowHint)
+        #self.setWindowFlags(Qt.WindowStaysOnTopHint)
         self.setWindowTitle(APPINFO.Name)
         self.setWindowIcon(QIcon('%s%snagstamon.svg' % (RESOURCES, os.sep)))
 
         self.vbox = QVBoxLayout(spacing=0)          # global VBox
         self.vbox.setContentsMargins(0, 0, 0, 0)    # no margin
 
-        self.statusbar = StatusBar()   # statusbar HBox
-        self.toparea = TopArea()       # toparea HBox
+        self.statusbar = StatusBar()                # statusbar HBox
+        self.toparea = TopArea()                    # toparea HBox
+        self.toparea.hide()
+        self.toparea.button_close.clicked.connect(self.close)
 
-        self.servers_vbox = QVBoxLayout()            # HBox full of servers
+        self.servers_vbox = QVBoxLayout()           # HBox full of servers
         self.servers_vbox.setContentsMargins(0, 0, 0, 0)
         self.servers_scrollarea = QScrollArea()     # scrollable area for server vboxes
         self.servers_scrollarea_widget = QWidget()  # necessary widget to contain vbox for servers
+        self.servers_scrollarea.hide()
 
         self.createServerVBoxes()
 
@@ -134,7 +137,31 @@ class StatusWindow(QWidget):
         """
         for server in servers.values():
             if server.enabled:
-                self.servers_vbox.addLayout(ServerVBox(server))
+                server_vbox = ServerVBox(server)
+                ###server_vbox.worker.new_status.connect(self.statusbar.summarize_states)
+                self.servers_vbox.addLayout(server_vbox)
+
+
+    def hideStatusBar(self):
+        self.statusbar.hide()
+        self.toparea.show()
+        self.servers_scrollarea.show()
+        self.adjustSize()
+
+
+    def showStatusBar(self):
+        self.statusbar.show()
+        self.toparea.hide()
+        self.servers_scrollarea.hide()
+        self.adjustSize()
+
+
+    def enterEvent(self, event):
+        self.hideStatusBar()
+
+
+    def leaveEvent(self, event):
+        self.showStatusBar()
 
 
 class StatusBar(QWidget):
@@ -147,19 +174,78 @@ class StatusBar(QWidget):
         self.hbox = HBoxLayout(spacing=0)
         self.setLayout(self.hbox)
 
-        # define label first to get its size for svg logo dimensions
-        self.label = QLabel(' 1 2 3 ')
-        self.label.setStyleSheet('background-color: green;')
-        self.label.setSizePolicy(QSizePolicy.Fixed, QSizePolicy.Fixed)
+        # define labels first to get its size for svg logo dimensions
+        self.color_labels = OrderedDict()
+        self.color_labels['OK'] = StatusBarLabel('OK')
+        for state in COLORS:
+            self.color_labels[state] =  StatusBarLabel(state)
 
         # derive logo dimensions from status label
         self.logo = QSvgWidget("%s%snagstamon_logo_bar.svg" % (RESOURCES, os.sep))
         self.logo.setSizePolicy(QSizePolicy.Minimum, QSizePolicy.Minimum)
-        self.logo.setMinimumSize(self.label.fontMetrics().height(), self.label.fontMetrics().height())
-
+        self.logo.setMinimumSize(self.color_labels['OK'].fontMetrics().height(),
+                                 self.color_labels['OK'].fontMetrics().height())
+        # add widgets
         self.hbox.addWidget(self.logo)
-        self.hbox.addWidget(self.label)
-        self.hbox.addStretch()
+        self.hbox.addWidget(self.color_labels['OK'])
+        self.color_labels['OK'].show()
+
+        for state in COLORS:
+            self.hbox.addWidget(self.color_labels[state])
+
+        #self.hbox.addStretch()
+
+        # first summary
+        self.summarize_states()
+
+
+    def summarize_states(self):
+        """
+            display summaries of states in statusbar
+        """
+        # initial zeros
+        for label in self.color_labels.values():
+            label.number = 0
+
+        # only count numbers of enabled monitor servers
+        for server in (filter(lambda s: s.enabled, servers.values())):
+            for state in COLORS:
+                self.color_labels[state].number += server.__dict__[state.lower()]
+
+        # summarize all numbers - if all_numbers keeps 0 everthing seems to be OK
+        all_numbers = 0
+        # repaint colored labels or hide them if necessary
+        for label in self.color_labels.values():
+            if label.number == 0:
+                label.hide()
+            else:
+                label.setText(' %s ' % (label.number))
+                label.show()
+                all_numbers += label.number
+
+        if all_numbers == 0:
+            self.color_labels['OK'].show()
+        else:
+            self.color_labels['OK'].hide()
+
+
+class StatusBarLabel(QLabel):
+    """
+        one piece of the status bar labels for one state
+    """
+    def __init__(self, state):
+        QLabel.__init__(self)
+        self.setStyleSheet('color: %s; background-color: %s;' % (conf.__dict__['color_%s_text' % (state.lower())],
+                                                                 conf.__dict__['color_%s_background' % (state.lower())]))
+        self.setSizePolicy(QSizePolicy.Fixed, QSizePolicy.Fixed)
+        # hidden per default
+        self.hide()
+
+        # default text - only useful in case of OK Label
+        self.setText(' %s ' % (state))
+
+        # number of hosts/services of this state
+        self.number = 0
 
 
 class TopArea(QWidget):
@@ -184,7 +270,6 @@ class TopArea(QWidget):
         self.button_hamburger_menu.setIcon(QIcon("%s%smenu.svg" % (RESOURCES, os.sep)))
         self.button_close = QPushButton()
         self.button_close.setIcon(QIcon("%s%sclose.svg" % (RESOURCES, os.sep)))
-        self.button_close.clicked.connect(self.close)
 
         self.hbox.addWidget(self.logo)
         self.hbox.addWidget(self.label_version)
@@ -197,6 +282,7 @@ class TopArea(QWidget):
         self.hbox.addWidget(self.button_hamburger_menu)
         self.hbox.addWidget(self.button_close)
 
+        self.setLayout(self.hbox)
 
 
 class ServerVBox(QVBoxLayout):
@@ -235,10 +321,10 @@ class ServerVBox(QVBoxLayout):
         self.addWidget(self.table, 1)
 
         self.thread = QThread()
-        self.worker = ServerThreadWorker(server=server)
-        self.worker.moveToThread(self.thread)
-        self.worker.new_status.connect(self.refresh)
-        self.thread.started.connect(self.worker.refreshStatus)
+        self.worker_server = WorkerServer(server=server)
+        self.worker_server.moveToThread(self.thread)
+        self.worker_server.new_status.connect(self.refresh)
+        self.thread.started.connect(self.worker_server.refreshStatus)
         self.thread.start()
 
 
@@ -247,9 +333,11 @@ class ServerVBox(QVBoxLayout):
             refresh table cells with new data by thread
         """
         self.table.setData(list(self.server.GetItemsGenerator()))
+        # refresh statusbar
+        statuswindow.statusbar.summarize_states()
 
 
-class ServerThreadWorker(QObject):
+class WorkerServer(QObject):
     """
         attempt to run a server status update thread
     """
@@ -262,11 +350,16 @@ class ServerThreadWorker(QObject):
         self.timer = QTimer(self)
         self.server.init_config()
 
+
     def refreshStatus(self):
         status =  self.server.GetStatus()
         self.new_status.emit()
         # avoid memory leak by singleshooting next refresh after this one is finished
         self.timer.singleShot(10000, self.refreshStatus)
+
+
+class WorkerTable(QObject):
+    pass
 
 
 class CellWidget(QWidget):
@@ -352,8 +445,9 @@ class TableWidget(QTableWidget):
         self.horizontalHeader().sortIndicatorChanged.connect(self.sortColumn)
 
         # store width and height if they do not need to be recalculated
-        self.realWidth_cached = 0
-        self.realHeight_cached = 0
+        self.real_width = 0
+        self.real_height = 0
+
 
     def setData(self, data=None):
         """
@@ -454,12 +548,12 @@ class TableWidget(QTableWidget):
         """
             calculate real table width as there is no method included
         """
-        self.realWidth_cached = 0
+        self.real_width = 0
         for c in range(0, self.columnCount()):
-            self.realWidth_cached += self.cellWidget(0, c).width()
+            self.real_width += self.cellWidget(0, c).width()
         del(c)
 
-        return self.realWidth_cached
+        return self.real_width
 
 
     def realHeight(self):
@@ -468,14 +562,14 @@ class TableWidget(QTableWidget):
         """
         # height summary starts with headers' height
         # apparently height works better/without scrollbar if some pixels are added
-        self.realHeight_cached = self.horizontalHeader().height() + 2
+        self.real_height = self.horizontalHeader().height() + 2
         # it is necessary to ask every row directly because their heights differ :-(
         row = 0
         for row in range(0, self.rowCount()):
-            self.realHeight_cached += (self.cellWidget(row, 0).height())
+            self.real_height += (self.cellWidget(row, 0).height())
         del(row)
 
-        return self.realHeight_cached
+        return self.real_height
 
 
     def highlightRow(self, row):

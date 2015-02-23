@@ -5,7 +5,7 @@ import unittest2
 from unittest2.test.support import OldTestResult, catch_warnings
 
 import warnings
-# needed to enable the deprecation warnings
+# needed to enable the deprecation warning
 warnings.simplefilter('default')
 
 class TestWith(unittest2.TestCase):

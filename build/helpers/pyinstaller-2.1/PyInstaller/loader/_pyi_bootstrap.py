@@ -122,7 +122,7 @@ except ImportError:
     pass
 
 
-# In the Python interpreter 'warnings' module is imported when 'sys.warnoptions'
+# In the Python interpreter 'warning' module is imported when 'sys.warnoptions'
 # is not empty. Mimic this behavior in PyInstaller.
 if sys.warnoptions:
     import warnings

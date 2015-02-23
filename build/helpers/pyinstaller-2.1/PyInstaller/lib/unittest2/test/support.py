@@ -131,7 +131,7 @@ except ImportError:
     class catch_warnings(object):
         def __init__(self, record=False, module=None):
             self._record = record
-            self._module = sys.modules['warnings']
+            self._module = sys.modules['warning']
             self._entered = False
     
         def __repr__(self):

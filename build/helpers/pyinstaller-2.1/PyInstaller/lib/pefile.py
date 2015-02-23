@@ -2065,10 +2065,10 @@ class PE:
         
     
     def get_warnings(self):
-        """Return the list of warnings.
+        """Return the list of warning.
         
         Non-critical problems found when parsing the PE file are
-        appended to a list of warnings. This method returns the
+        appended to a list of warning. This method returns the
         full list.
         """
         
@@ -2076,10 +2076,10 @@ class PE:
         
     
     def show_warnings(self):
-        """Print the list of warnings.
+        """Print the list of warning.
         
         Non-critical problems found when parsing the PE file are
-        appended to a list of warnings. This method prints the
+        appended to a list of warning. This method prints the
         full list to standard output.
         """
         

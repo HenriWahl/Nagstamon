@@ -1232,7 +1232,7 @@ class GUI(object):
     def NotificationOn(self, status="UP", ducuw=None):
         """
             switch on whichever kind of notification
-            ducuw = downs, unreachables, criticals, unknowns, warnings
+            ducuw = down, unreachable, critical, unknown, warning
         """
         try:
             # check if notification for status is wanted

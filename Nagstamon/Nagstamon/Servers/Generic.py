@@ -110,11 +110,11 @@ class GenericServer(object):
         self.nagitems_filtered = {"services":{"CRITICAL":[], "WARNING":[], "UNKNOWN":[]}, "hosts":{"DOWN":[], "UNREACHABLE":[]}}
         # number of filtered items
         self.nagitems_filtered_count = 0
-        self.downs = 0
-        self.unreachables = 0
-        self.unknowns = 0
-        self.criticals = 0
-        self.warnings = 0
+        self.down = 0
+        self.unreachable = 0
+        self.unknown = 0
+        self.critical = 0
+        self.warning = 0
         self.status = ""
         self.status_description = ""
         # needed for looping server thread
@@ -795,11 +795,11 @@ class GenericServer(object):
 
         # initialize counts for various service/hosts states
         # count them with every miserable host/service respective to their meaning
-        self.downs = 0
-        self.unreachables = 0
-        self.unknowns = 0
-        self.criticals = 0
-        self.warnings = 0
+        self.down = 0
+        self.unreachable = 0
+        self.unknown = 0
+        self.critical = 0
+        self.warning = 0
 
         for host in self.new_hosts.values():
             # Don't enter the loop if we don't have a problem. Jump down to your problem services
@@ -864,7 +864,7 @@ class GenericServer(object):
 
                     if host.visible:
                         self.nagitems_filtered["hosts"]["DOWN"].append(host)
-                        self.downs += 1
+                        self.down += 1
 
                 if host.status == "UNREACHABLE":
                     if str(conf.filter_all_unreachable_hosts) == "True":
@@ -874,7 +874,7 @@ class GenericServer(object):
 
                     if host.visible:
                         self.nagitems_filtered["hosts"]["UNREACHABLE"].append(host)
-                        self.unreachables += 1
+                        self.unreachable += 1
 
             for service in host.services.values():
                 # add service name for sorting
@@ -969,7 +969,7 @@ class GenericServer(object):
                             service.visible = False
                         else:
                             self.nagitems_filtered["services"]["CRITICAL"].append(service)
-                            self.criticals += 1
+                            self.critical += 1
 
                     if service.status == "WARNING":
                         if str(conf.filter_all_warning_services) == "True":
@@ -978,7 +978,7 @@ class GenericServer(object):
                             service.visible = False
                         else:
                             self.nagitems_filtered["services"]["WARNING"].append(service)
-                            self.warnings += 1
+                            self.warning += 1
 
                     if service.status == "UNKNOWN":
                         if str(conf.filter_all_unknown_services) == "True":
@@ -987,7 +987,7 @@ class GenericServer(object):
                             service.visible = False
                         else:
                             self.nagitems_filtered["services"]["UNKNOWN"].append(service)
-                            self.unknowns += 1
+                            self.unknown += 1
 
         # find out if there has been some status change to notify user
         # compare sorted lists of filtered nagios items

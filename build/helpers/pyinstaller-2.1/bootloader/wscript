@@ -259,7 +259,7 @@ def configure(conf):
             conf.env.append_value('LINKFLAGS', '/MACHINE:X86')
         elif myarch == '64bit':
             conf.env.append_value('LINKFLAGS', '/MACHINE:X64')
-        # Enable 64bit porting warnings and other warnings too.
+        # Enable 64bit porting warning and other warning too.
         conf.env.append_value('CCFLAGS', '/W3')
         # We use SEH exceptions in winmain.c; make sure they are activated.
         conf.env.append_value('CCFLAGS', '/EHa')

@@ -198,7 +198,7 @@ def scan_code_for_ctypes(co, instrs, i):
     Detects ctypes dependencies, using reasonable heuristics that should
     cover most common ctypes usages; returns a tuple of two lists, one
     containing names of binaries detected as dependencies, the other containing
-    warnings.
+    warning.
     """
 
     def _libFromConst(i):
@@ -316,7 +316,7 @@ def _resolveCtypesImports(cbinaries):
     # local paths to library search paths, then replaces original values.
     old = _setPaths()
     for cbin in cbinaries:
-        # Ignore annoying warnings like:
+        # Ignore annoying warning like:
         # 'W: library kernel32.dll required via ctypes not found'
         # 'W: library coredll.dll required via ctypes not found'
         if cbin in ['coredll.dll', 'kernel32.dll']:
