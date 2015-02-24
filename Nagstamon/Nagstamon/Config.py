@@ -23,6 +23,7 @@ import sys
 import ConfigParser
 import base64
 import zlib
+from shutil import move
 
 
 class Config(object):
@@ -179,10 +180,24 @@ class Config(object):
         elif os.path.exists(os.getcwd() + os.sep + "nagstamon.config"):
             self.configdir = os.getcwd() + os.sep + "nagstamon.config"
         else:
-            # ~/.nagstamon/nagstamon.conf is the user conf file
-            # os.path.expanduser('~') finds out the user HOME dir where
-            # nagstamon expects its conf file to be
-            self.configdir = os.path.expanduser('~') + os.sep + ".nagstamon"
+            try:
+                from xdg import BaseDirectory
+                self.configdir = BaseDirectory.xdg_config_home + os.sep + "nagstamon"
+            except ImportError:
+                # ~/.nagstamon/nagstamon.conf is the user conf file
+                # os.path.expanduser('~') finds out the user HOME dir where
+                # nagstamon expects its conf file to be
+                self.configdir = os.path.expanduser('~') + os.sep + ".nagstamon"
+
+        if not os.path.isdir(self.configdir):
+            old_configdir_temp = os.path.expanduser('~') + os.sep + ".nagstamon"
+            if os.path.isdir(old_configdir_temp):
+                move(old_configdir_temp, self.configdir)
+            else:
+                os.mkdir(self.configdir)
+
+        if not os.path.isdir(self.configdir):
+            os.mkdir(self.configdir)
 
         self.configfile = self.configdir + os.sep + "nagstamon.conf"
 
@@ -225,7 +240,7 @@ class Config(object):
                         object.__setattr__(self, i[0], BOOLPOOL[i[1]])
                     else:
                         object.__setattr__(self, i[0], i[1])
-                        
+
             # because the switch from Nagstamon 1.0 to 1.0.1 brings the use_system_keyring property
             # and all the thousands 1.0 installations do not know it yet it will be more comfortable
             # for most of the Windows users if it is only defined as False after it was checked
