@@ -135,6 +135,8 @@ class StatusWindow(QWidget):
         self.relative_x = False
         self.relative_y = False
 
+        # needed for temporary storage of position
+        self.position_x = self.position_y = 0
 
 
     def createServerVBoxes(self):
@@ -150,24 +152,26 @@ class StatusWindow(QWidget):
 
     def showFullWindow(self):
         if not statuswindow.moving:
-            self.statusbar.placeholder.show()
+            self.statusbar.hide()
+            ###self.statusbar.placeholder.hide()
             self.toparea.show()
             self.servers_scrollarea.show()
             self.adjustSize()
-        #self.raise_()
-        #self.activateWindow()
+
+        self.position_x = self.x()
+        self.position_y = self.y()
 
 
     def hideFullWindow(self):
-        self.statusbar.placeholder.hide()
+        self.statusbar.show()
+        ###self.statusbar.placeholder.show()
         self.statusbar.adjustSize()
         self.toparea.hide()
         self.servers_scrollarea.hide()
+
+        self.move(self.position_x, self.position_y)
+
         self.adjustSize()
-
-
-    def enterEvent(self, event):
-        self.showFullWindow()
 
 
     def leaveEvent(self, event):
@@ -192,13 +196,6 @@ class StatusBar(QWidget):
 
         # derive logo dimensions from status label
         self.logo = StatusBarLogo(self.color_labels['OK'].fontMetrics().height())
-        """
-        self.logo = QSvgWidget("%s%snagstamon_logo_bar.svg" % (RESOURCES, os.sep))
-        #self.logo.setSizePolicy(QSizePolicy.Minimum, QSizePolicy.Minimum)
-        self.logo.setSizePolicy(QSizePolicy.Fixed, QSizePolicy.Fixed)
-        self.logo.setMinimumSize(self.color_labels['OK'].fontMetrics().height(),
-                                 self.color_labels['OK'].fontMetrics().height())
-        """
 
         # add widgets
         self.hbox.addWidget(self.logo)
@@ -208,11 +205,11 @@ class StatusBar(QWidget):
         for state in COLORS:
             self.hbox.addWidget(self.color_labels[state])
 
-        # placeholder to avoid stretched statusbar in casdse of fullsized window
-        self.placeholder = QLabel()
-        self.placeholder.setSizePolicy(QSizePolicy.Minimum, QSizePolicy.Maximum)
-        self.placeholder.hide()
-        self.hbox.addWidget(self.placeholder)
+        # placeholder to avoid stretched statusbar in case of fullsized window
+        ###self.placeholder = QLabel()
+        ###self.placeholder.setSizePolicy(QSizePolicy.Minimum, QSizePolicy.Maximum)
+        ###self.placeholder.hide()
+        ####self.hbox.addWidget(self.placeholder)
 
         # first summary
         self.summarize_states()
@@ -248,6 +245,17 @@ class StatusBar(QWidget):
             self.color_labels['OK'].hide()
 
 
+class StatusBarLogo(QSvgWidget):
+    """
+        Nagstamon logo for statusbar
+    """
+    def __init__(self, size):
+        QSvgWidget.__init__(self)
+        self.load("%s%snagstamon_logo_bar.svg" % (RESOURCES, os.sep))
+        self.setSizePolicy(QSizePolicy.Fixed, QSizePolicy.Fixed)
+        self.setMinimumSize(size, size)
+
+
     def mousePressEvent(self, event):
         # keep x and y relative to statusbar
         if not statuswindow.relative_x and not statuswindow.relative_y:
@@ -261,23 +269,15 @@ class StatusBar(QWidget):
         statuswindow.relative_y = False
         statuswindow.moving = False
 
+        self.position_x = self.x()
+        self.position_y = self.y()
+
 
     def mouseMoveEvent(self, event):
         statuswindow.moving = True
         statuswindow.move(event.globalX()-statuswindow.relative_x, event.globalY()-statuswindow.relative_y)
         #print(self.desktop.screenNumber(self))
         #print(self.desktop.availableGeometry(self))
-
-
-class StatusBarLogo(QSvgWidget):
-    """
-        Nagstamon logo for statusbar
-    """
-    def __init__(self, size):
-        QSvgWidget.__init__(self)
-        self.load("%s%snagstamon_logo_bar.svg" % (RESOURCES, os.sep))
-        self.setSizePolicy(QSizePolicy.Fixed, QSizePolicy.Fixed)
-        self.setMinimumSize(size, size)
 
 
 class StatusBarLabel(QLabel):
@@ -297,6 +297,9 @@ class StatusBarLabel(QLabel):
 
         # number of hosts/services of this state
         self.number = 0
+
+    def enterEvent(self, event):
+        statuswindow.showFullWindow()
 
 
 class TopArea(QWidget):
