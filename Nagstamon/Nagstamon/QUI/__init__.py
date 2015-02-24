@@ -130,6 +130,12 @@ class StatusWindow(QWidget):
         # icons in ICONS have to be sized as fontsize
         CreateIcons(self.statusbar.fontMetrics().height())
 
+        # needed for moving the statuswindow
+        self.moving = False
+        self.relative_x = False
+        self.relative_y = False
+
+
 
     def createServerVBoxes(self):
         """
@@ -142,26 +148,30 @@ class StatusWindow(QWidget):
                 self.servers_vbox.addLayout(server_vbox)
 
 
-    def hideStatusBar(self):
-        self.statusbar.hide()
-        self.toparea.show()
-        self.servers_scrollarea.show()
-        self.adjustSize()
+    def showFullWindow(self):
+        if not statuswindow.moving:
+            self.statusbar.placeholder.show()
+            self.toparea.show()
+            self.servers_scrollarea.show()
+            self.adjustSize()
+        #self.raise_()
+        #self.activateWindow()
 
 
-    def showStatusBar(self):
-        self.statusbar.show()
+    def hideFullWindow(self):
+        self.statusbar.placeholder.hide()
+        self.statusbar.adjustSize()
         self.toparea.hide()
         self.servers_scrollarea.hide()
         self.adjustSize()
 
 
     def enterEvent(self, event):
-        self.hideStatusBar()
+        self.showFullWindow()
 
 
     def leaveEvent(self, event):
-        self.showStatusBar()
+        self.hideFullWindow()
 
 
 class StatusBar(QWidget):
@@ -182,7 +192,8 @@ class StatusBar(QWidget):
 
         # derive logo dimensions from status label
         self.logo = QSvgWidget("%s%snagstamon_logo_bar.svg" % (RESOURCES, os.sep))
-        self.logo.setSizePolicy(QSizePolicy.Minimum, QSizePolicy.Minimum)
+        #self.logo.setSizePolicy(QSizePolicy.Minimum, QSizePolicy.Minimum)
+        self.logo.setSizePolicy(QSizePolicy.Fixed, QSizePolicy.Fixed)
         self.logo.setMinimumSize(self.color_labels['OK'].fontMetrics().height(),
                                  self.color_labels['OK'].fontMetrics().height())
         # add widgets
@@ -193,7 +204,11 @@ class StatusBar(QWidget):
         for state in COLORS:
             self.hbox.addWidget(self.color_labels[state])
 
-        #self.hbox.addStretch()
+        # placeholder to avoid stretched statusbar in casdse of fullsized window
+        self.placeholder = QLabel()
+        self.placeholder.setSizePolicy(QSizePolicy.Minimum, QSizePolicy.Maximum)
+        self.placeholder.hide()
+        self.hbox.addWidget(self.placeholder)
 
         # first summary
         self.summarize_states()
@@ -227,6 +242,27 @@ class StatusBar(QWidget):
             self.color_labels['OK'].show()
         else:
             self.color_labels['OK'].hide()
+
+
+    def mousePressEvent(self, event):
+        # keep x and y relative to statusbar
+        if not statuswindow.relative_x and not statuswindow.relative_y:
+            statuswindow.relative_x = event.x()
+            statuswindow.relative_y = event.y()
+        statuswindow.hideFullWindow()
+
+
+    def mouseReleaseEvent(self, event):
+        statuswindow.relative_x = False
+        statuswindow.relative_y = False
+        statuswindow.moving = False
+
+
+    def mouseMoveEvent(self, event):
+        statuswindow.moving = True
+        statuswindow.move(event.globalX()-statuswindow.relative_x, event.globalY()-statuswindow.relative_y)
+        #print(self.desktop.screenNumber(self))
+        #print(self.desktop.availableGeometry(self))
 
 
 class StatusBarLabel(QLabel):
@@ -289,6 +325,7 @@ class ServerVBox(QVBoxLayout):
     """
         one VBox per server containing buttons and hosts/services listview
     """
+
     def __init__(self, server):
         QVBoxLayout.__init__(self)
 
@@ -321,23 +358,22 @@ class ServerVBox(QVBoxLayout):
         self.addWidget(self.table, 1)
 
         self.thread = QThread()
-        self.worker_server = WorkerServer(server=server)
-        self.worker_server.moveToThread(self.thread)
-        self.worker_server.new_status.connect(self.refresh)
-        self.thread.started.connect(self.worker_server.refreshStatus)
+        self.worker = Worker(server=server)
+        self.worker.moveToThread(self.thread)
+        self.worker.new_status.connect(self.refresh)
+        self.thread.started.connect(self.worker.refresh)
         self.thread.start()
 
 
     def refresh(self):
-        """
-            refresh table cells with new data by thread
-        """
-        self.table.setData(list(self.server.GetItemsGenerator()))
-        # refresh statusbar
-        statuswindow.statusbar.summarize_states()
+        if not statuswindow.moving:
+            #refresh table cells with new data by thread
+            self.table.setData(list(self.server.GetItemsGenerator()))
+            # refresh statusbar
+            statuswindow.statusbar.summarize_states()
 
 
-class WorkerServer(QObject):
+class Worker(QObject):
     """
         attempt to run a server status update thread
     """
@@ -351,15 +387,12 @@ class WorkerServer(QObject):
         self.server.init_config()
 
 
-    def refreshStatus(self):
+    def refresh(self):
         status =  self.server.GetStatus()
         self.new_status.emit()
+
         # avoid memory leak by singleshooting next refresh after this one is finished
-        self.timer.singleShot(10000, self.refreshStatus)
-
-
-class WorkerTable(QObject):
-    pass
+        self.timer.singleShot(10000, self.refresh)
 
 
 class CellWidget(QWidget):
