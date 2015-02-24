@@ -191,11 +191,15 @@ class StatusBar(QWidget):
             self.color_labels[state] =  StatusBarLabel(state)
 
         # derive logo dimensions from status label
+        self.logo = StatusBarLogo(self.color_labels['OK'].fontMetrics().height())
+        """
         self.logo = QSvgWidget("%s%snagstamon_logo_bar.svg" % (RESOURCES, os.sep))
         #self.logo.setSizePolicy(QSizePolicy.Minimum, QSizePolicy.Minimum)
         self.logo.setSizePolicy(QSizePolicy.Fixed, QSizePolicy.Fixed)
         self.logo.setMinimumSize(self.color_labels['OK'].fontMetrics().height(),
                                  self.color_labels['OK'].fontMetrics().height())
+        """
+
         # add widgets
         self.hbox.addWidget(self.logo)
         self.hbox.addWidget(self.color_labels['OK'])
@@ -263,6 +267,17 @@ class StatusBar(QWidget):
         statuswindow.move(event.globalX()-statuswindow.relative_x, event.globalY()-statuswindow.relative_y)
         #print(self.desktop.screenNumber(self))
         #print(self.desktop.availableGeometry(self))
+
+
+class StatusBarLogo(QSvgWidget):
+    """
+        Nagstamon logo for statusbar
+    """
+    def __init__(self, size):
+        QSvgWidget.__init__(self)
+        self.load("%s%snagstamon_logo_bar.svg" % (RESOURCES, os.sep))
+        self.setSizePolicy(QSizePolicy.Fixed, QSizePolicy.Fixed)
+        self.setMinimumSize(size, size)
 
 
 class StatusBarLabel(QLabel):
@@ -495,7 +510,7 @@ class TableWidget(QTableWidget):
         self.data = list()
 
         # to keep GTK Treeview sort behaviour first by services
-        first_sort = sorted(data, key=methodcaller('compare_service'))
+        first_sort = sorted(data, key=methodcaller('compare_host'))
         for row, nagitem in enumerate(sorted(first_sort, key=methodcaller('compare_%s' % \
                                                 (self.sort_column)), reverse=self.SORT_ORDER[self.order])):
             # lists in rows list are columns
