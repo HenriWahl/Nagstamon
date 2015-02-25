@@ -408,12 +408,12 @@ class ServerVBox(QVBoxLayout):
 
         self.addWidget(self.table, 1)
 
-        self.thread = QThread()
-        self.worker = Worker(server=server)
-        self.worker.moveToThread(self.thread)
+        self.thread_server = QThread()
+        self.worker = self.Worker(server=server)
+        self.worker.moveToThread(self.thread_server)
         self.worker.new_status.connect(self.refresh)
-        self.thread.started.connect(self.worker.refresh)
-        self.thread.start()
+        self.thread_server.started.connect(self.worker.refresh)
+        self.thread_server.start()
 
 
     def refresh(self):
@@ -424,26 +424,26 @@ class ServerVBox(QVBoxLayout):
             statuswindow.statusbar.summarize_states()
 
 
-class Worker(QObject):
-    """
-        attempt to run a server status update thread
-    """
+    class Worker(QObject):
+        """
+            attempt to run a server status update thread
+        """
 
-    new_status = pyqtSignal()
+        new_status = pyqtSignal()
 
-    def __init__(self, parent=None, server=None):
-        QObject.__init__(self)
-        self.server = server
-        self.timer = QTimer(self)
-        self.server.init_config()
+        def __init__(self, parent=None, server=None):
+            QObject.__init__(self)
+            self.server = server
+            self.timer = QTimer(self)
+            self.server.init_config()
 
 
-    def refresh(self):
-        status =  self.server.GetStatus()
-        self.new_status.emit()
+        def refresh(self):
+            status =  self.server.GetStatus()
+            self.new_status.emit()
 
-        # avoid memory leak by singleshooting next refresh after this one is finished
-        self.timer.singleShot(10000, self.refresh)
+            # avoid memory leak by singleshooting next refresh after this one is finished
+            self.timer.singleShot(10000, self.refresh)
 
 
 class CellWidget(QWidget):
@@ -497,6 +497,9 @@ class CellWidget(QWidget):
 
 
 class TableWidget(QTableWidget):
+    """
+        Contains information for one monitor server as a table
+    """
     def __init__(self, headers, columncount, rowcount, sort_column, order, server):
         QTableWidget.__init__(self, columncount, rowcount)
 
