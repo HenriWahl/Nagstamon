@@ -269,15 +269,14 @@ class StatusBarLogo(QSvgWidget):
         statuswindow.relative_y = False
         statuswindow.moving = False
 
-        self.position_x = self.x()
-        self.position_y = self.y()
-
 
     def mouseMoveEvent(self, event):
         statuswindow.moving = True
         statuswindow.move(event.globalX()-statuswindow.relative_x, event.globalY()-statuswindow.relative_y)
         #print(self.desktop.screenNumber(self))
         #print(self.desktop.availableGeometry(self))
+        statuswindow.position_x = statuswindow.x()
+        statuswindow.position_y = statuswindow.y()
 
 
 class StatusBarLabel(QLabel):
@@ -311,8 +310,9 @@ class TopArea(QWidget):
         self.hbox = HBoxLayout(spacing=10)      # top VBox containing buttons
 
         # top button box
-        self.logo = QSvgWidget("%s%snagstamon_label.svg" % (RESOURCES, os.sep))
-        self.logo.setSizePolicy(QSizePolicy.Minimum, QSizePolicy.Minimum)
+        #self.logo = QSvgWidget("%s%snagstamon_logo_toparea.svg" % (RESOURCES, os.sep))
+        #self.logo.setSizePolicy(QSizePolicy.Minimum, QSizePolicy.Minimum)
+        self.logo = TopAreaLogo()
 
         self.label_version = QLabel(APPINFO.Version)
         self.combobox_servers = QComboBox()
@@ -337,6 +337,39 @@ class TopArea(QWidget):
         self.hbox.addWidget(self.button_close)
 
         self.setLayout(self.hbox)
+
+
+class TopAreaLogo(QSvgWidget):
+    """
+        Nagstamon logo for statusbar
+    """
+    def __init__(self):
+        QSvgWidget.__init__(self)
+        self.load("%s%snagstamon_logo_toparea.svg" % (RESOURCES, os.sep))
+        self.setSizePolicy(QSizePolicy.Fixed, QSizePolicy.Fixed)
+
+
+    def mousePressEvent(self, event):
+        # keep x and y relative to statusbar
+        if not statuswindow.relative_x and not statuswindow.relative_y:
+            statuswindow.relative_x = event.x()
+            statuswindow.relative_y = event.y()
+        statuswindow.hideFullWindow()
+
+
+    def mouseReleaseEvent(self, event):
+        statuswindow.relative_x = False
+        statuswindow.relative_y = False
+        statuswindow.moving = False
+
+
+    def mouseMoveEvent(self, event):
+        statuswindow.moving = True
+        statuswindow.move(event.globalX()-statuswindow.relative_x, event.globalY()-statuswindow.relative_y)
+        #print(self.desktop.screenNumber(self))
+        #print(self.desktop.availableGeometry(self))
+        statuswindow.position_x = statuswindow.x()
+        statuswindow.position_y = statuswindow.y()
 
 
 class ServerVBox(QVBoxLayout):
