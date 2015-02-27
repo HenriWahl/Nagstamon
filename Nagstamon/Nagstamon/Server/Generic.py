@@ -144,14 +144,8 @@ class GenericServer(object):
         self.proxy_handler = None
         self.proxy_auth_handler = None
         self.urlopener = None
-        # necessary for Python-2.7.9-ssl-support-fix https://github.com/HenriWahl/Nagstamon/issues/126
-        if sys.version_info >= (2, 7, 9):
-            try:
-                self.https_handler = urllib2.HTTPSHandler(context=ssl._create_unverified_context())
-            except:
-                self.https_handler = urllib2.HTTPSHandler()
-        else:
-            self.https_handler = urllib2.HTTPSHandler()
+
+        self.https_handler = urllib2.HTTPSHandler()
 
         # headers for HTTP requests, might be needed for authorization on Nagios/Icinga Hosts
         self.HTTPheaders = dict()
