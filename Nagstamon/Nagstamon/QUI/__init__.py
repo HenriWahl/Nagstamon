@@ -148,8 +148,6 @@ class StatusWindow(QWidget):
 
     def showFullWindow(self):
         if not statuswindow.moving:
-            self.position_x = self.x()
-            self.position_y = self.y()
             self.statusbar.hide()
             self.toparea.show()
             self.servers_scrollarea.show()
@@ -185,7 +183,8 @@ class StatusBar(QWidget):
             self.color_labels[state] =  StatusBarLabel(state)
 
         # derive logo dimensions from status label
-        self.logo = StatusBarLogo(self.color_labels['OK'].fontMetrics().height())
+        self.logo = SVGLogo("%s%snagstamon_logo_bar.svg" % (RESOURCES, os.sep),
+                            self.color_labels['OK'].fontMetrics().height())
 
         # add widgets
         self.hbox.addWidget(self.logo)
@@ -229,15 +228,16 @@ class StatusBar(QWidget):
             self.color_labels['OK'].hide()
 
 
-class StatusBarLogo(QSvgWidget):
+class SVGLogo(QSvgWidget):
     """
-        Nagstamon logo for statusbar, used as handle to drag statusbar around
+        SVG based logo, used for statusbar and toparea logos
     """
-    def __init__(self, size):
+    def __init__(self, file, size=None):
         QSvgWidget.__init__(self)
-        self.load("%s%snagstamon_logo_bar.svg" % (RESOURCES, os.sep))
+        self.load(file)
         self.setSizePolicy(QSizePolicy.Fixed, QSizePolicy.Fixed)
-        self.setMinimumSize(size, size)
+        if size != None:
+            self.setMinimumSize(size, size)
 
 
     def mousePressEvent(self, event):
@@ -257,6 +257,7 @@ class StatusBarLogo(QSvgWidget):
     def mouseMoveEvent(self, event):
         statuswindow.moving = True
         statuswindow.move(event.globalX()-statuswindow.relative_x, event.globalY()-statuswindow.relative_y)
+
 
 
 class StatusBarLabel(QLabel):
@@ -291,7 +292,7 @@ class TopArea(QWidget):
         self.hbox = HBoxLayout(spacing=10)      # top VBox containing buttons
 
         # top button box
-        self.logo = TopAreaLogo()
+        self.logo = SVGLogo("%s%snagstamon_logo_toparea.svg" % (RESOURCES, os.sep))
         self.label_version = QLabel(APPINFO.Version)
         self.combobox_servers = QComboBox()
         self.button_filters = QPushButton("Filters")
@@ -315,35 +316,6 @@ class TopArea(QWidget):
         self.hbox.addWidget(self.button_close)
 
         self.setLayout(self.hbox)
-
-
-class TopAreaLogo(QSvgWidget):
-    """
-        Nagstamon logo for statusbar, usable to drag statusbar around
-    """
-    def __init__(self):
-        QSvgWidget.__init__(self)
-        self.load("%s%snagstamon_logo_toparea.svg" % (RESOURCES, os.sep))
-        self.setSizePolicy(QSizePolicy.Fixed, QSizePolicy.Fixed)
-
-
-    def mousePressEvent(self, event):
-        # keep x and y relative to statusbar
-        if not statuswindow.relative_x and not statuswindow.relative_y:
-            statuswindow.relative_x = event.x()
-            statuswindow.relative_y = event.y()
-        statuswindow.hideFullWindow()
-
-
-    def mouseReleaseEvent(self, event):
-        statuswindow.relative_x = False
-        statuswindow.relative_y = False
-        statuswindow.moving = False
-
-
-    def mouseMoveEvent(self, event):
-        statuswindow.moving = True
-        statuswindow.move(event.globalX()-statuswindow.relative_x, event.globalY()-statuswindow.relative_y)
 
 
 class ServerVBox(QVBoxLayout):
