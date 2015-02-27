@@ -35,7 +35,7 @@ from Nagstamon.Config import (conf, RESOURCES, APPINFO)
 
 from Nagstamon.Servers import servers
 
-from Nagstamon.Objects import GenericService
+from Nagstamon.Objects import GenericObject, GenericService
 
 # fixed icons for hosts/services attributes
 ICONS = dict()
@@ -135,9 +135,6 @@ class StatusWindow(QWidget):
         self.relative_x = False
         self.relative_y = False
 
-        # needed for temporary storage of position
-        self.position_x = self.position_y = 0
-
 
     def createServerVBoxes(self):
         """
@@ -146,31 +143,24 @@ class StatusWindow(QWidget):
         for server in servers.values():
             if server.enabled:
                 server_vbox = ServerVBox(server)
-                ###server_vbox.worker.new_status.connect(self.statusbar.summarize_states)
                 self.servers_vbox.addLayout(server_vbox)
 
 
     def showFullWindow(self):
         if not statuswindow.moving:
+            self.position_x = self.x()
+            self.position_y = self.y()
             self.statusbar.hide()
-            ###self.statusbar.placeholder.hide()
             self.toparea.show()
             self.servers_scrollarea.show()
             self.adjustSize()
 
-        self.position_x = self.x()
-        self.position_y = self.y()
-
 
     def hideFullWindow(self):
         self.statusbar.show()
-        ###self.statusbar.placeholder.show()
         self.statusbar.adjustSize()
         self.toparea.hide()
         self.servers_scrollarea.hide()
-
-        self.move(self.position_x, self.position_y)
-
         self.adjustSize()
 
 
@@ -204,12 +194,6 @@ class StatusBar(QWidget):
 
         for state in COLORS:
             self.hbox.addWidget(self.color_labels[state])
-
-        # placeholder to avoid stretched statusbar in case of fullsized window
-        ###self.placeholder = QLabel()
-        ###self.placeholder.setSizePolicy(QSizePolicy.Minimum, QSizePolicy.Maximum)
-        ###self.placeholder.hide()
-        ####self.hbox.addWidget(self.placeholder)
 
         # first summary
         self.summarize_states()
@@ -247,7 +231,7 @@ class StatusBar(QWidget):
 
 class StatusBarLogo(QSvgWidget):
     """
-        Nagstamon logo for statusbar
+        Nagstamon logo for statusbar, used as handle to drag statusbar around
     """
     def __init__(self, size):
         QSvgWidget.__init__(self)
@@ -273,10 +257,6 @@ class StatusBarLogo(QSvgWidget):
     def mouseMoveEvent(self, event):
         statuswindow.moving = True
         statuswindow.move(event.globalX()-statuswindow.relative_x, event.globalY()-statuswindow.relative_y)
-        #print(self.desktop.screenNumber(self))
-        #print(self.desktop.availableGeometry(self))
-        statuswindow.position_x = statuswindow.x()
-        statuswindow.position_y = statuswindow.y()
 
 
 class StatusBarLabel(QLabel):
@@ -299,6 +279,7 @@ class StatusBarLabel(QLabel):
 
     def enterEvent(self, event):
         statuswindow.showFullWindow()
+        #(get_screen(event.globalX(), event.globalY()))
 
 
 class TopArea(QWidget):
@@ -310,10 +291,7 @@ class TopArea(QWidget):
         self.hbox = HBoxLayout(spacing=10)      # top VBox containing buttons
 
         # top button box
-        #self.logo = QSvgWidget("%s%snagstamon_logo_toparea.svg" % (RESOURCES, os.sep))
-        #self.logo.setSizePolicy(QSizePolicy.Minimum, QSizePolicy.Minimum)
         self.logo = TopAreaLogo()
-
         self.label_version = QLabel(APPINFO.Version)
         self.combobox_servers = QComboBox()
         self.button_filters = QPushButton("Filters")
@@ -341,7 +319,7 @@ class TopArea(QWidget):
 
 class TopAreaLogo(QSvgWidget):
     """
-        Nagstamon logo for statusbar
+        Nagstamon logo for statusbar, usable to drag statusbar around
     """
     def __init__(self):
         QSvgWidget.__init__(self)
@@ -366,10 +344,6 @@ class TopAreaLogo(QSvgWidget):
     def mouseMoveEvent(self, event):
         statuswindow.moving = True
         statuswindow.move(event.globalX()-statuswindow.relative_x, event.globalY()-statuswindow.relative_y)
-        #print(self.desktop.screenNumber(self))
-        #print(self.desktop.availableGeometry(self))
-        statuswindow.position_x = statuswindow.x()
-        statuswindow.position_y = statuswindow.y()
 
 
 class ServerVBox(QVBoxLayout):
@@ -408,42 +382,13 @@ class ServerVBox(QVBoxLayout):
 
         self.addWidget(self.table, 1)
 
-        self.thread_server = QThread()
-        self.worker = self.Worker(server=server)
-        self.worker.moveToThread(self.thread_server)
-        self.worker.new_status.connect(self.refresh)
-        self.thread_server.started.connect(self.worker.refresh)
-        self.thread_server.start()
-
 
     def refresh(self):
         if not statuswindow.moving:
-            #refresh table cells with new data by thread
-            self.table.setData(list(self.server.GetItemsGenerator()))
-            # refresh statusbar
+            #get_status table cells with new data by thread
+            self.table.set_data(list(self.server.GetItemsGenerator()))
+            # get_status statusbar
             statuswindow.statusbar.summarize_states()
-
-
-    class Worker(QObject):
-        """
-            attempt to run a server status update thread
-        """
-
-        new_status = pyqtSignal()
-
-        def __init__(self, parent=None, server=None):
-            QObject.__init__(self)
-            self.server = server
-            self.timer = QTimer(self)
-            self.server.init_config()
-
-
-        def refresh(self):
-            status =  self.server.GetStatus()
-            self.new_status.emit()
-
-            # avoid memory leak by singleshooting next refresh after this one is finished
-            self.timer.singleShot(10000, self.refresh)
 
 
 class CellWidget(QWidget):
@@ -469,7 +414,7 @@ class CellWidget(QWidget):
         self.label.setStyleSheet('padding: 5px;')
 
         # hosts and services might contain attribute icons
-        if column in (0, 1) and icons is not False:
+        if column in (0, 1) and icons is not [False]:
             for icon in icons:
                 icon_label = QLabel()
                 icon_label.setPixmap(icon.pixmap(self.label.fontMetrics().height(), self.label.fontMetrics().height()))
@@ -500,6 +445,10 @@ class TableWidget(QTableWidget):
     """
         Contains information for one monitor server as a table
     """
+
+    # send new data to worker
+    new_data = pyqtSignal(list, str, OrderedDict, bool)
+
     def __init__(self, headers, columncount, rowcount, sort_column, order, server):
         QTableWidget.__init__(self, columncount, rowcount)
 
@@ -535,76 +484,145 @@ class TableWidget(QTableWidget):
         self.real_width = 0
         self.real_height = 0
 
+        # a thread + worker is necessary to get new monitor server data in the background and
+        # to refresh the table cell by cell after new data is available
+        self.worker_thread = QThread()
+        self.worker = self.Worker(server=server)
+        self.worker.moveToThread(self.worker_thread)
 
-    def setData(self, data=None):
+        # if worker got new status data from monitor server get_status the table
+        self.worker.new_status.connect(self.refresh)
+        # if worker calculated next cell send it to GUI thread
+        self.worker.next_cell.connect(self.set_cell)
+        # when worker walked through all cells send a signal to table so it could get_status itself
+        self.worker.table_ready.connect(self.adjust_table)
+        # get status if started
+        self.worker_thread.started.connect(self.worker.get_status)
+        # start with priority 0 = lowest
+        self.worker_thread.start(0)
+
+        # connect signal new_data to worker slot fill_rows
+        self.new_data.connect(self.worker.fill_rows)
+
+
+    def refresh(self):
+        if not statuswindow.moving:
+            #get_status table cells with new data by thread
+            self.set_data(list(self.server.GetItemsGenerator()))
+            # get_status statusbar
+            statuswindow.statusbar.summarize_states()
+
+
+    class Worker(QObject):
+        """
+            attempt to run a server status update thread
+        """
+
+        # send signal if monitor server has new status data
+        new_status = pyqtSignal()
+        # send signal if next cell can be filled
+        next_cell = pyqtSignal(int, int, str, str, str, list)
+        # send signal if all cells are filled and table can be adjusted
+        table_ready = pyqtSignal()
+
+        def __init__(self, parent=None, server=None):
+            QObject.__init__(self)
+            self.server = server
+            self.timer = QTimer(self)
+            self.server.init_config()
+
+
+        def get_status(self):
+            status =  self.server.GetStatus()
+            self.new_status.emit()
+
+            # avoid memory leak by singleshooting next get_status after this one is finished
+            self.timer.singleShot(10000, self.get_status)
+
+
+        def fill_rows(self, data, sort_column, headers, reverse):
+            # to keep GTK Treeview sort behaviour first by services
+            first_sort = sorted(data, key=methodcaller('compare_host'))
+            for row, nagitem in enumerate(sorted(first_sort, key=methodcaller('compare_%s' % \
+                                                    (sort_column)), reverse=reverse)):
+                # lists in rows list are columns
+                #self.data.append(list())
+                # create every cell per row
+                for column, text in enumerate(nagitem.get_columns(headers)):
+                    # check for icons to be used in cell widget
+                    if column in (0, 1):
+                        icons = list()
+                        # add host icons
+                        if nagitem.is_host() and column == 0:
+                            if nagitem.is_acknowledged():
+                                icons.append(ICONS["acknowledged"])
+                            if nagitem.is_flapping():
+                                icons.append(ICONS["flapping"])
+                            if nagitem.is_passive_only():
+                                icons.append(ICONS["passive"])
+                            if nagitem.is_in_scheduled_downtime():
+                                icons.append(ICONS["downtime"])
+                        # add host icons for service item - e.g. in case host is in downtime
+                        elif not nagitem.is_host() and column == 0:
+                            if self.server.hosts[nagitem.host].is_acknowledged():
+                                icons.append(ICONS["acknowledged"])
+                            if self.server.hosts[nagitem.host].is_flapping():
+                                icons.append(ICONS["flapping"])
+                            if self.server.hosts[nagitem.host].is_passive_only():
+                                icons.append(ICONS["passive"])
+                            if self.server.hosts[nagitem.host].is_in_scheduled_downtime():
+                                icons.append(ICONS["downtime"])
+                        # add service icons
+                        elif not nagitem.is_host() and column == 1:
+                            if nagitem.is_acknowledged():
+                                icons.append(ICONS["acknowledged"])
+                            if nagitem.is_flapping():
+                                icons.append(ICONS["flapping"])
+                            if nagitem.is_passive_only():
+                                icons.append(ICONS["passive"])
+                            if nagitem.is_in_scheduled_downtime():
+                                icons.append(ICONS["downtime"])
+
+                    else:
+                        icons = [False]
+
+                    # send signal to paint next cell
+                    self.next_cell.emit(row, column, text,
+                                        conf.__dict__[COLORS[nagitem.status] + 'text'],
+                                        conf.__dict__[COLORS[nagitem.status] + 'background'],
+                                        icons)
+                # sleep some milliceconds to let the GUI thread do some work too
+                self.thread().msleep(5)
+
+            # after running through
+            self.table_ready.emit()
+
+
+    def set_cell(self, row, column, text, color, background, icons):
+        """
+            set data and widget for one cell
+        """
+        widget = CellWidget(text=text, color=color, background=background,
+                            row=row, column=column, icons=icons)
+        # fill cells with data
+        self.setCellWidget(row, column, widget)
+
+
+    def set_data(self, data=None):
         """
             fill table cells with data from filtered Nagios items
         """
         # maximum size needs no more than amount of data
         self.setRowCount(self.server.nagitems_filtered_count)
 
-        # temporary cache for cell widgets - first compute cells, store in self.data
-        # then refresh cells from self.data
-        # first list contains rows
-        self.data = list()
+        # send signal to worker
+        self.new_data.emit(data, self.sort_column, self.headers, self.SORT_ORDER[self.order])
 
-        # to keep GTK Treeview sort behaviour first by services
-        first_sort = sorted(data, key=methodcaller('compare_host'))
-        for row, nagitem in enumerate(sorted(first_sort, key=methodcaller('compare_%s' % \
-                                                (self.sort_column)), reverse=self.SORT_ORDER[self.order])):
-            # lists in rows list are columns
-            self.data.append(list())
-            # create every cell per row
-            for column, cell in enumerate(nagitem.get_columns(self.headers)):
-                # check for icons to be used in cell widget
-                if column in (0, 1):
-                    icons = list()
-                    # add host icons
-                    if nagitem.is_host() and column == 0:
-                        if nagitem.is_acknowledged():
-                            icons.append(ICONS["acknowledged"])
-                        if nagitem.is_flapping():
-                            icons.append(ICONS["flapping"])
-                        if nagitem.is_passive_only():
-                            icons.append(ICONS["passive"])
-                        if nagitem.is_in_scheduled_downtime():
-                            icons.append(ICONS["downtime"])
-                    # add host icons for service item - e.g. in case host is in downtime
-                    elif not nagitem.is_host() and column == 0:
-                        if self.server.hosts[nagitem.host].is_acknowledged():
-                            icons.append(ICONS["acknowledged"])
-                        if self.server.hosts[nagitem.host].is_flapping():
-                            icons.append(ICONS["flapping"])
-                        if self.server.hosts[nagitem.host].is_passive_only():
-                            icons.append(ICONS["passive"])
-                        if self.server.hosts[nagitem.host].is_in_scheduled_downtime():
-                            icons.append(ICONS["downtime"])
-                    # add service icons
-                    elif not nagitem.is_host() and column == 1:
-                        if nagitem.is_acknowledged():
-                            icons.append(ICONS["acknowledged"])
-                        if nagitem.is_flapping():
-                            icons.append(ICONS["flapping"])
-                        if nagitem.is_passive_only():
-                            icons.append(ICONS["passive"])
-                        if nagitem.is_in_scheduled_downtime():
-                            icons.append(ICONS["downtime"])
 
-                else:
-                    icons = False
-                widget = CellWidget(text=cell,
-                                    color=conf.__dict__[COLORS[nagitem.status] + 'text'],
-                                    background=conf.__dict__[COLORS[nagitem.status] + 'background'],
-                                    row=row,
-                                    column=column,
-                                    icons=icons)
-                self.data[row].append(widget)
-
-        # fill cells with data
-        for row in range(0, self.rowCount()):
-            for column in range(0, len(self.headers)):
-                self.setCellWidget(row, column, self.data[row][column])
-
+    def adjust_table(self):
+        """
+            adjust table dimensions after filling it
+        """
         # seems to be important for not getting somehow squeezed cells
         self.resizeColumnsToContents()
         self.resizeRowsToContents()
@@ -621,7 +639,7 @@ class TableWidget(QTableWidget):
         """
         self.sort_column = self.headers.keys()[column]
         self.order = self.SORT_ORDER[order]
-        self.setData(self.server.GetItemsGenerator())
+        self.set_data(self.server.GetItemsGenerator())
 
 
     def realSize(self):
@@ -679,5 +697,19 @@ def CreateIcons(fontsize):
         icon = QIcon('%s%snagstamon_%s.svg' % (RESOURCES, os.sep, attr))
         ICONS[attr] = icon
 
+
+def get_screen(x, y):
+    """
+        find out which screen the cursor is on
+    """
+    for screen in range(desktop.screenCount()):
+        # if coordinates are inside screen just break and return screen
+        if (desktop.screenGeometry(screen).contains(x, y)):
+            break
+    return screen
+
+
 systrayicon = SystemTrayIcon(QIcon("%s%snagstamon.svg" % (RESOURCES, os.sep)))
 statuswindow = StatusWindow()
+# access to variuos desktop parameters
+desktop = QApplication.desktop()

@@ -59,7 +59,7 @@ RecheckingAll = False
 
 def StartRefreshLoop(servers=None, output=None, conf=None):
     """
-    the everlasting refresh cycle - starts refresh cycle for every server as thread
+    the everlasting get_status cycle - starts get_status cycle for every server as thread
     """
 
     for server in servers.values():
@@ -74,7 +74,7 @@ class RefreshLoopOneServer(threading.Thread):
     """
     # kind of a stop please flag, if set to True run() should run no more
     stopped = False
-    # Check flag, if set and thread recognizes do a refresh, set to True at the beginning
+    # Check flag, if set and thread recognizes do a get_status, set to True at the beginning
     doRefresh = True
 
     def __init__(self, **kwds):
@@ -125,7 +125,7 @@ class RefreshLoopOneServer(threading.Thread):
                         # give server status description for future usage
                         self.server.status_description = str(server_status.error)
                         gobject.idle_add(self.output.popwin.UpdateStatus, self.server)
-                        # tell gobject to care about GUI stuff - refresh display status
+                        # tell gobject to care about GUI stuff - get_status display status
                         # use a flag to prevent all threads at once to write to statusbar label in case
                         # of lost network connectivity - this leads to a mysterious pango crash
                         if self.output.statusbar.isShowingError == False:
@@ -147,15 +147,15 @@ class RefreshLoopOneServer(threading.Thread):
                     else:
                         # set server status for status field in popwin
                         self.server.status = "Connected (last updated %s)" % time.ctime()
-                        # tell gobject to care about GUI stuff - refresh display status
+                        # tell gobject to care about GUI stuff - get_status display status
                         gobject.idle_add(self.output.RefreshDisplayStatus)
                         if str(self.conf.fullscreen) == "True":
                             gobject.idle_add(self.output.popwin.RefreshFullscreen)
-                        # wait for the doRefresh flag to be True, if it is, do a refresh
+                        # wait for the doRefresh flag to be True, if it is, do a get_status
                         if self.doRefresh == True:
                             if str(self.conf.debug_mode) == "True":
                                 self.server.Debug(server=self.server.get_name(), debug="Refreshing output - server is already checking: " + str(self.server.isChecking))
-                            # reset refresh flag
+                            # reset get_status flag
                             self.doRefresh = False
                             # call Hook() for extra action
                             self.server.Hook()
@@ -166,7 +166,7 @@ class RefreshLoopOneServer(threading.Thread):
                 self.server.count += 1
                 # call Hook() for extra action
                 self.server.Hook()
-                # refresh fullscreen window - maybe somehow raw approach
+                # get_status fullscreen window - maybe somehow raw approach
                 if str(self.conf.fullscreen) == "True":
                     gobject.idle_add(self.output.popwin.RefreshFullscreen)
 
@@ -339,7 +339,7 @@ class RecheckAll(threading.Thread):
                 # reset global flag
                 RecheckingAll = False
 
-                # after all and after a short delay to let the monitor apply the recheck requests refresh all to make changes visible soon
+                # after all and after a short delay to let the monitor apply the recheck requests get_status all to make changes visible soon
                 time.sleep(5)
                 RefreshAllServers(servers=self.servers, output=self.output, conf=self.conf)
                 # do some cleanup

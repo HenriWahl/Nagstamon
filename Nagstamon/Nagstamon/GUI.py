@@ -101,7 +101,7 @@ class GUI(object):
         # initialize overall status flag
         self.status_ok = True
 
-        # if run first it is impossible to refresh the display with
+        # if run first it is impossible to get_status the display with
         # non-existent settings so there has to be extra treatment
         # at the second run nagstamon will be configured and so no first run
         if self.conf.unconfigured:
@@ -253,7 +253,7 @@ class GUI(object):
         for server in self.servers.values():
             self.last_sorting[server.get_name()] = Sorting([(self.startup_sort_field, self.startup_sort_order ),
                                                             (server.HOST_COLUMN_ID, gtk.SORT_ASCENDING)],
-                                                           len(server.COLUMNS)+1) # stores sorting between table refresh
+                                                           len(server.COLUMNS)+1) # stores sorting between table get_status
 
         # store once created dialogs here to minimize memory usage
         self.Dialogs = {}
@@ -307,11 +307,11 @@ class GUI(object):
 
 
     def set_sorting(self, liststore, server):
-        """ Restores sorting after refresh """
+        """ Restores sorting after get_status """
         for id, order in self.get_last_sorting(server).iteritems():
             liststore.set_sort_column_id(id, order)
             # this makes sorting arrows visible according to
-            # sort order after refresh
+            # sort order after get_status
             column = self.popwin.ServerVBoxes[server.get_name()].TreeView.get_column(id)
             if column is not None:
                 column.set_property('sort-order', order)
@@ -346,16 +346,16 @@ class GUI(object):
 
     def RefreshDisplayStatus(self):
         """
-            load current nagios status and refresh trayicon and detailed treeview
+            load current nagios status and get_status trayicon and detailed treeview
             add only services which are not on maintained or acknowledged hosts
             this way applying the nagios filter more comfortably because in
             nagios one had to schedule/acknowledge every single service
         """
-        # refresh statusbar
+        # get_status statusbar
         # flag for overall status, needed by popwin.popup to decide if popup in case all is OK
         self.status_ok = False
 
-        # set handler to None for do not disconnecting it after display refresh
+        # set handler to None for do not disconnecting it after display get_status
         self.rows_reordered_handler = {}
 
         # local counters for summarize all miserable hosts
@@ -369,7 +369,7 @@ class GUI(object):
 
         # walk through all servers, RefreshDisplayStatus their hosts and their services
         for server in self.servers.values():
-            # only refresh monitor server output if enabled and only once every server loop
+            # only get_status monitor server output if enabled and only once every server loop
             if str(self.conf.servers[server.get_name()].enabled) == "True" or\
                server.refresh_authentication == True:
                 try:
@@ -576,7 +576,7 @@ class GUI(object):
                     # give new ListStore to the view, overwrites the old one automatically - theoretically
                     server.TreeView.set_model(server.ListStore)
 
-                    # restore sorting order from previous refresh
+                    # restore sorting order from previous get_status
                     self.set_sorting(server.ListStore, server)
 
                     # status field in server vbox in popwin
@@ -1487,7 +1487,7 @@ class GUI(object):
                     self.popwin.ServerVBoxes[server.get_name()].set_no_show_all(False)
                     self.popwin.ServerVBoxes[server.get_name()].show_all()
                     #self.output.popwin.ServerVBoxes[server.get_name()].Label.set_markup('<span weight="bold" size="large">%s@%s</span>' % (server.get_username(), server.get_name()))
-                    # refresh servervboxes
+                    # get_status servervboxes
                     self.popwin.ServerVBoxes[server.get_name()].initialize(server)
                     # add box to the other ones
                     self.popwin.ScrolledVBox.add(self.popwin.ServerVBoxes[server.get_name()])
@@ -1518,11 +1518,11 @@ class GUI(object):
 
         # sort server vboxes
         for server in server_list:
-            # refresh servervboxes
+            # get_status servervboxes
             self.popwin.ServerVBoxes[server].initialize(self.servers[server])
             self.popwin.ScrolledVBox.reorder_child(self.popwin.ServerVBoxes[server], server_list.index(server))
 
-        # refresh servers combobox in popwin
+        # get_status servers combobox in popwin
         # first remove all entries
         for i in range(1, len(self.popwin.ComboboxMonitor.get_model())):
             # "Go to monitor..." is the first entry so do not delete item index 0
@@ -1545,7 +1545,7 @@ class GUI(object):
             self.output.appindicator.Menu_Nagstamon.set_submenu(self.output.statusbar.Menu)
 
 
-        # force refresh
+        # force get_status
         Actions.RefreshAllServers(servers=self.servers, output=self, conf=self.conf)
 
 
@@ -1920,7 +1920,7 @@ class StatusBar(object):
     def Raise(self):
         """
         try to fix Debian bug #591875: eventually ends up lower in the window stacking order, and can't be raised
-        raising statusbar window with every refresh should do the job
+        raising statusbar window with every get_status should do the job
         also do NOT raise if statusbar menu is open because otherwise it will be overlapped
         """
         if str(self.conf.statusbar_floating) == "True":
@@ -2000,7 +2000,7 @@ class Popwin(object):
         # general buttons
         self.ButtonFilters = ButtonWithIcon(output=self.output, label="Filters", icon="settings.png")
         self.ButtonRecheckAll = ButtonWithIcon(output=self.output, label="Recheck all", icon="recheckall.png")
-        self.ButtonRefresh = ButtonWithIcon(output=self.output, label="Refresh", icon="refresh.png")
+        self.ButtonRefresh = ButtonWithIcon(output=self.output, label="Refresh", icon="get_status.png")
         self.ButtonSettings = ButtonWithIcon(output=self.output, label="Settings", icon="settings.png")
         self.HBoxMenu.add(self.ButtonFilters)
         self.HBoxMenu.add(self.ButtonRecheckAll)
@@ -2029,9 +2029,9 @@ class Popwin(object):
         #self.HBoxAllButtons.add(self.AlMonitorComboBox)
         self.HBoxAllButtons.add(self.AlMenu)
 
-        # threaded recheck all when refresh is clicked
+        # threaded recheck all when get_status is clicked
         self.ButtonRecheckAll.connect("clicked", self.output.RecheckAll)
-        # threaded refresh status information when refresh is clicked
+        # threaded get_status status information when get_status is clicked
         self.ButtonRefresh.connect("clicked", lambda r: Actions.RefreshAllServers(servers=self.output.servers, output=self.output, conf=self.conf))
         # open settings dialog when settings is clicked
         self.ButtonSettings.connect("clicked", lambda s: self.output.GetDialog(dialog="Settings", servers=self.output.servers, output=self.output, conf=self.conf, first_page="Servers"))
@@ -2276,7 +2276,7 @@ class Popwin(object):
 
     def RefreshFullscreen(self, widget=None, event=None):
         """
-        refresh fullscreen window
+        get_status fullscreen window
         """
         # get current monitor's settings
         screenx0, screeny0, screenwidth, screenheight = self.output.monitors[int(self.conf.fullscreen_display)]
@@ -2726,7 +2726,7 @@ class ServerVBox(gtk.VBox):
         self.Server_EventBox.add(self.VBox)
         self.add(self.Server_EventBox)
 
-        # new TreeView handling, not generating new items with every refresh cycle
+        # new TreeView handling, not generating new items with every get_status cycle
         self.server.TreeView = gtk.TreeView()
         # enable hover effect
         self.server.TreeView.set_hover_selection(True)
@@ -3025,7 +3025,7 @@ class ServerVBox(gtk.VBox):
         self.HBoxAuth.hide_all()
         self.HBoxAuth.set_no_show_all(True)
 
-        # refresh server label
+        # get_status server label
         self.Label.set_markup('<span weight="bold" size="large">%s@%s</span>' % (server.get_username(), server.get_name()))
 
         server.status = "Trying to reauthenticate..."
