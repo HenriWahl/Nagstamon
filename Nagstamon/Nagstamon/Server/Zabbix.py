@@ -253,7 +253,7 @@ class ZabbixServer(GenericServer):
                     'duration': Actions.HumanReadableDurationFromTimestamp(service['lastchange']),
                     'status_information': state,
                     'passiveonly': 'no',
-                    'last_check': service['priority'],
+                    'last_check': datetime.datetime.fromtimestamp(int(service['lastchange'])),
                     'notifications': 'yes',
                     'flapping': 'no',
                     'site': '',
