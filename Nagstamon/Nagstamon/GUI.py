@@ -117,8 +117,24 @@ class GUI(object):
         self.current_monitor = 0
 
         # define colors for detailed status table in dictionaries
-        self.TAB_BG_COLORS = { "UNKNOWN":str(self.conf.color_unknown_background), "CRITICAL":str(self.conf.color_critical_background), "WARNING":str(self.conf.color_warning_background), "DOWN":str(self.conf.color_down_background), "UNREACHABLE":str(self.conf.color_unreachable_background)  }
-        self.TAB_FG_COLORS = { "UNKNOWN":str(self.conf.color_unknown_text), "CRITICAL":str(self.conf.color_critical_text), "WARNING":str(self.conf.color_warning_text), "DOWN":str(self.conf.color_down_text), "UNREACHABLE":str(self.conf.color_unreachable_text) }
+        self.TAB_BG_COLORS = { 
+                          "UNKNOWN":str(self.conf.color_unknown_background), 
+						  "INFORMATION": str(self.conf.color_information_background), 
+						  "AVERAGE": str(self.conf.color_average_background), 
+						  "HIGH": str(self.conf.color_high_background), 
+						  "CRITICAL":str(self.conf.color_critical_background), 
+						  "WARNING":str(self.conf.color_warning_background), 
+						  "DOWN":str(self.conf.color_down_background), 
+						  "UNREACHABLE":str(self.conf.color_unreachable_background)  }
+        self.TAB_FG_COLORS = { 
+                          "UNKNOWN":str(self.conf.color_unknown_text), 
+						  "INFORMATION": str(self.conf.color_information_text), 
+						  "AVERAGE": str(self.conf.color_average_text), 
+						  "HIGH": str(self.conf.color_high_text), 
+						  "CRITICAL":str(self.conf.color_critical_text), 
+						  "WARNING":str(self.conf.color_warning_text), 
+						  "DOWN":str(self.conf.color_down_text), 
+						  "UNREACHABLE":str(self.conf.color_unreachable_text) }
 
         # define popwin table liststore types
         self.LISTSTORE_COLUMNS = [gobject.TYPE_STRING, gobject.TYPE_STRING, gobject.TYPE_STRING,\
@@ -364,6 +380,10 @@ class GUI(object):
         unknowns = 0
         criticals = 0
         warnings = 0
+
+        informations = 0
+        averages = 0
+        highs = 0
         # display "ERROR" in case of startup connection trouble
         errors = ""
 
@@ -400,13 +420,18 @@ class GUI(object):
                     unknowns += server.unknowns
                     criticals += server.criticals
                     warnings += server.warnings
-
+                    informations += server.informations
+                    averages += server.averages
+                    highs += server.highs
                     # if there is no trouble...
                     if len(server.nagitems_filtered["hosts"]["DOWN"]) == 0 and \
                        len(server.nagitems_filtered["hosts"]["UNREACHABLE"]) == 0 and \
                        len(server.nagitems_filtered["services"]["CRITICAL"]) == 0 and \
                        len(server.nagitems_filtered["services"]["WARNING"]) == 0 and \
                        len(server.nagitems_filtered["services"]["UNKNOWN"]) == 0 and \
+                       len(server.nagitems_filtered["services"]["INFORMATION"]) == 0 and \
+                       len(server.nagitems_filtered["services"]["AVERAGE"]) == 0 and \
+                       len(server.nagitems_filtered["services"]["HIGH"]) == 0 and \
                        server.status_description == "":
                         # ... there is no need to show a label or treeview...
                         self.popwin.ServerVBoxes[server.get_name()].hide()
@@ -597,7 +622,8 @@ class GUI(object):
             pass
 
         # everything OK
-        if unknowns == 0 and warnings == 0 and criticals == 0 and unreachables == 0 and downs == 0 and self.status_ok is not False:
+
+        if unknowns == 0 and warnings == 0 and criticals == 0 and unreachables == 0 and informations == 0 and averages == 0 and highs == 0 and downs == 0 and self.status_ok is not False:
             self.statusbar.statusbar_labeltext = '<span size="%s" background="%s" foreground="%s"> OK </span>' % (str(self.fontsize), str(self.conf.color_ok_background), str(self.conf.color_ok_text))
             self.statusbar.statusbar_labeltext_inverted = self.statusbar.statusbar_labeltext
             self.statusbar.Label.set_markup(self.statusbar.statusbar_labeltext)
@@ -653,9 +679,21 @@ class GUI(object):
                 if str(self.conf.long_display) == "True": warnings = str(warnings) + " WARNING"
                 self.statusbar.statusbar_labeltext += '<span size="%s" background="%s" foreground="%s"> %s </span>' % (str(self.fontsize), str(self.conf.color_warning_background), str(self.conf.color_warning_text), str(warnings))
                 self.statusbar.statusbar_labeltext_inverted += '<span size="%s" background="%s" foreground="%s"> %s </span>' % (str(self.fontsize), str(self.conf.color_warning_text), str(self.conf.color_warning_background), str(warnings))
+            if informations > 0:
+                if str(self.conf.long_display) == "True": informations = str(informations) + " INFORMATION"
+                self.statusbar.statusbar_labeltext += '<span size="%s" background="%s" foreground="%s"> %s </span>' % (str(self.fontsize), str(self.conf.color_unknown_background), str(self.conf.color_unknown_text), str(informations))
+                self.statusbar.statusbar_labeltext_inverted += '<span size="%s" background="%s" foreground="%s"> %s </span>' % (str(self.fontsize), str(self.conf.color_unknown_text), str(self.conf.color_unknown_background), str(informations))
+            if averages > 0:
+                if str(self.conf.long_display) == "True": averages = str(averages) + " AVERAGE"
+                self.statusbar.statusbar_labeltext += '<span size="%s" background="%s" foreground="%s"> %s </span>' % (str(self.fontsize), str(self.conf.color_average_background), str(self.conf.color_average_text), str(averages))
+                self.statusbar.statusbar_labeltext_inverted += '<span size="%s" background="%s" foreground="%s"> %s </span>' % (str(self.fontsize), str(self.conf.color_average_text), str(self.conf.color_average_background), str(averages))
+            if highs > 0:
+                if str(self.conf.long_display) == "True": highs = str(highs) + " HIGH"
+                self.statusbar.statusbar_labeltext += '<span size="%s" background="%s" foreground="%s"> %s </span>' % (str(self.fontsize), str(self.conf.color_high_background), str(self.conf.color_high_text), str(highs))
+                self.statusbar.statusbar_labeltext_inverted += '<span size="%s" background="%s" foreground="%s"> %s </span>' % (str(self.fontsize), str(self.conf.color_high_text), str(self.conf.color_high_background), str(highs))
 
             # if connections fails at starting do not display OK - Debian bug #617490
-            if unknowns == 0 and warnings == 0 and criticals == 0 and unreachables == 0 and downs == 0 and self.status_ok is False:
+            if unknowns == 0 and informations == 0 and averages  ==0 and highs == 0 and warnings == 0 and criticals == 0 and unreachables == 0 and downs == 0 and self.status_ok is False:
                 if str(self.conf.long_display) == "True":
                     errors = "ERROR"
                 else:
@@ -680,6 +718,7 @@ class GUI(object):
             # choose icon for systray  - the worst case decides the shown color
             if warnings > 0: color = "yellow"
             if unknowns > 0: color = "orange"
+            if unknowns > 0: color = "yellow"
             if criticals > 0: color = "red"
             if unreachables > 0: color = "darkred"
             if downs > 0: color = "black"
@@ -699,6 +738,21 @@ class GUI(object):
                     self.appindicator.Menu_UNKNOWN.show()
                 else:
                     self.appindicator.Menu_UNKNOWN.hide()
+                if informations > 0:
+                    self.appindicator.Menu_INFORMATION.set_label(str(informations) + " INFORMATION")
+                    self.appindicator.Menu_INFORMATION.show()
+                else:
+                    self.appindicator.Menu_INFORMATION.hide()
+                if averages > 0:
+                    self.appindicator.Menu_AVERAGE.set_label(str(averages) + " AVERAGE")
+                    self.appindicator.Menu_AVERAGE.show()
+                else:
+                    self.appindicator.Menu_AVERAGE.hide()
+                if highs > 0:
+                    self.appindicator.Menu_HIGH.set_label(str(highs) + " HIGH")
+                    self.appindicator.Menu_HIGH.show()
+                else:
+                    self.appindicator.Menu_HIGH.hide()
                 if criticals > 0:
                     self.appindicator.Menu_CRITICAL.set_label(str(criticals) + " CRITICAL")
                     self.appindicator.Menu_CRITICAL.show()
@@ -2049,8 +2103,26 @@ class Popwin(object):
         # define colors for detailed status table in dictionaries
         # need to be redefined here for MacOSX because there it is not
         # possible to reinitialize the whole GUI after config changes without a crash
-        self.output.TAB_BG_COLORS = { "UNKNOWN":str(self.conf.color_unknown_background), "CRITICAL":str(self.conf.color_critical_background), "WARNING":str(self.conf.color_warning_background), "DOWN":str(self.conf.color_down_background), "UNREACHABLE":str(self.conf.color_unreachable_background)  }
-        self.output.TAB_FG_COLORS = { "UNKNOWN":str(self.conf.color_unknown_text), "CRITICAL":str(self.conf.color_critical_text), "WARNING":str(self.conf.color_warning_text), "DOWN":str(self.conf.color_down_text), "UNREACHABLE":str(self.conf.color_unreachable_text) }
+        #self.output.TAB_BG_COLORS = { "UNKNOWN":str(self.conf.color_unknown_background), "INFORMATION": str(self.conf.color_information_background), "CRITICAL":str(self.conf.color_critical_background), "WARNING":str(self.conf.color_warning_background), "DOWN":str(self.conf.color_down_background), "UNREACHABLE":str(self.conf.color_unreachable_background)  }
+        #self.output.TAB_FG_COLORS = { "UNKNOWN":str(self.conf.color_unknown_text), "INFORMATION": str(self.conf.color_information_text), "CRITICAL":str(self.conf.color_critical_text), "WARNING":str(self.conf.color_warning_text), "DOWN":str(self.conf.color_down_text), "UNREACHABLE":str(self.conf.color_unreachable_text) }
+        self.TAB_BG_COLORS = { 
+                          "UNKNOWN":str(self.conf.color_unknown_background), 
+						  "INFORMATION": str(self.conf.color_information_background), 
+						  "AVERAGE": str(self.conf.color_average_background), 
+						  "HIGH": str(self.conf.color_high_background), 
+						  "CRITICAL":str(self.conf.color_critical_background), 
+						  "WARNING":str(self.conf.color_warning_background), 
+						  "DOWN":str(self.conf.color_down_background), 
+						  "UNREACHABLE":str(self.conf.color_unreachable_background)  }
+        self.TAB_FG_COLORS = { 
+                          "UNKNOWN":str(self.conf.color_unknown_text), 
+						  "INFORMATION": str(self.conf.color_information_text), 
+						  "AVERAGE": str(self.conf.color_average_text), 
+						  "HIGH": str(self.conf.color_high_text), 
+						  "CRITICAL":str(self.conf.color_critical_text), 
+						  "WARNING":str(self.conf.color_warning_text), 
+						  "DOWN":str(self.conf.color_down_text), 
+						  "UNREACHABLE":str(self.conf.color_unreachable_text) }
 
         # create a scrollable area for the treeview in case it is larger than the screen
         # in case there are too many failed services and hosts
@@ -3074,6 +3146,12 @@ class AppIndicator(object):
         self.Menu_CRITICAL.connect("activate", self.output.popwin.PopUp)
         self.Menu_UNKNOWN = gtk.MenuItem("")
         self.Menu_UNKNOWN.connect("activate", self.output.popwin.PopUp)
+        self.Menu_INFORMATION = gtk.MenuItem("")
+        self.Menu_INFORMATION.connect("activate", self.output.popwin.PopUp)
+        self.Menu_AVERAGE = gtk.MenuItem("")
+        self.Menu_AVERAGE.connect("activate", self.output.popwin.PopUp)
+        self.Menu_HIGH = gtk.MenuItem("")
+        self.Menu_HIGH.connect("activate", self.output.popwin.PopUp)
         self.Menu_WARNING = gtk.MenuItem("")
         self.Menu_WARNING.connect("activate", self.output.popwin.PopUp)
         # show detail popup, same effect as clicking one f the above
@@ -3088,6 +3166,9 @@ class AppIndicator(object):
         self.Menu.append(self.Menu_UNREACHABLE)
         self.Menu.append(self.Menu_CRITICAL)
         self.Menu.append(self.Menu_UNKNOWN)
+        self.Menu.append(self.Menu_INFORMATION)		
+        self.Menu.append(self.Menu_AVERAGE)		
+        self.Menu.append(self.Menu_HIGH)		
         self.Menu.append(self.Menu_WARNING)
         self.Menu.append(self.Menu_ShowDetails)
         self.Menu.append(self.Menu_OK)
