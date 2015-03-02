@@ -97,11 +97,11 @@ class ZabbixServer(GenericServer):
             'UNKN': 'UNKNOWN',
             'PEND': 'PENDING',
             '0': 'OK',
-            '1': 'UNKNOWN',
+            '1': 'INFORMATION',
             '2': 'WARNING',
             '5': 'CRITICAL',
-            '3': 'WARNING',
-            '4': 'CRITICAL'}
+            '3': 'AVERAGE',
+            '4': 'HIGH'}
         GenericServer.init_HTTP(self)
 
 
@@ -253,7 +253,7 @@ class ZabbixServer(GenericServer):
                     'duration': Actions.HumanReadableDurationFromTimestamp(service['lastchange']),
                     'status_information': state,
                     'passiveonly': 'no',
-                    'last_check': 'n/a',
+                    'last_check': service['priority'],
                     'notifications': 'yes',
                     'flapping': 'no',
                     'site': '',
