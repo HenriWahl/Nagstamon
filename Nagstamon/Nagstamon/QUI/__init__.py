@@ -97,7 +97,6 @@ class StatusWindow(QWidget):
         """
         QWidget.__init__(self)
         self.setWindowFlags(Qt.WindowStaysOnTopHint | Qt.FramelessWindowHint)
-        #self.setWindowFlags(Qt.WindowStaysOnTopHint)
         self.setWindowTitle(APPINFO.Name)
         self.setWindowIcon(QIcon('%s%snagstamon.svg' % (RESOURCES, os.sep)))
 
@@ -108,6 +107,15 @@ class StatusWindow(QWidget):
         self.toparea = TopArea()                    # toparea HBox
         self.toparea.hide()
         self.toparea.button_close.clicked.connect(self.close)
+
+        # connect logo of statusbar
+        self.statusbar.logo.window_moved.connect(self.store_position)
+        self.statusbar.logo.mouse_pressed.connect(self.hideFullWindow)
+
+        # when logo in toparea was pressed hurry up to save the position so the statusbar will not jump
+        self.toparea.logo.window_moved.connect(self.store_position)
+        self.toparea.logo.mouse_pressed.connect(self.store_position)
+        self.toparea.logo.mouse_pressed.connect(self.hideFullWindow)
 
         self.servers_vbox = QVBoxLayout()           # HBox full of servers
         self.servers_vbox.setContentsMargins(0, 0, 0, 0)
@@ -135,6 +143,10 @@ class StatusWindow(QWidget):
         self.relative_x = False
         self.relative_y = False
 
+        # store position for showing/hiding statuswindow
+        self.stored_x = self.x()
+        self.stored_y = self.y()
+
 
     def createServerVBoxes(self):
         """
@@ -146,12 +158,34 @@ class StatusWindow(QWidget):
                 self.servers_vbox.addLayout(server_vbox)
 
 
-    def showFullWindow(self):
+    def showFullWindow(self, event):
         if not statuswindow.moving:
             self.statusbar.hide()
             self.toparea.show()
             self.servers_scrollarea.show()
             self.adjustSize()
+            available_width = desktop.availableGeometry(self).width()
+            available_height = desktop.availableGeometry(self).height()
+            screen_x = desktop.availableGeometry(self).x()
+            screen_y = desktop.availableGeometry(self).y()
+
+            real_height = self.realHeight()
+            # width simply will be the current screen maximal width - less hassle!
+            width = available_width
+
+            if real_height < available_height:
+                height = real_height
+            else:
+                height = available_height - self.y() + screen_y
+
+            # store position for restoring it when hiding
+            self.stored_x = self.x()
+            self.stored_y = self.y()
+
+            # always stretch over whole screen width -thus screen_x, the leftmost pixel
+            self.move(screen_x, self.y())
+            self.setMaximumSize(width, height)
+            self.setMinimumSize(width, height)
 
 
     def hideFullWindow(self):
@@ -159,11 +193,85 @@ class StatusWindow(QWidget):
         self.statusbar.adjustSize()
         self.toparea.hide()
         self.servers_scrollarea.hide()
+        self.setMinimumSize(1, 1)
         self.adjustSize()
+        self.move(self.stored_x, self.stored_y)
+
+
+    def store_position(self):
+        # store position for restoring it when hiding
+        self.stored_x = self.x()
+        self.stored_y = self.y()
 
 
     def leaveEvent(self, event):
         self.hideFullWindow()
+
+
+    def realWidth(self):
+        """
+            calculate widest width of all server tables
+        """
+        width = 0
+        for server in self.servers_vbox.children():
+            if server.table.realWidth() > width:
+                width = server.table.realWidth()
+        return width
+
+
+    def realHeight(self):
+        """
+            calculate summary of all heights of all server tables plus height of toparea
+        """
+        height = 0
+        for server in self.servers_vbox.children():
+            height += server.table.realHeight()
+        height += self.toparea.sizeHint().height()
+        return height
+
+
+class NagstamonLogo(QSvgWidget):
+    """
+        SVG based logo, used for statusbar and toparea logos
+    """
+
+    window_moved = pyqtSignal()
+    mouse_pressed = pyqtSignal()
+
+    def __init__(self, file, size=None):
+        QSvgWidget.__init__(self)
+        self.load(file)
+        self.setSizePolicy(QSizePolicy.Fixed, QSizePolicy.Fixed)
+        # size needed for small Nagstamon logo in statusbar
+        if size != None:
+            self.setMinimumSize(size, size)
+
+
+    def mousePressEvent(self, event):
+        # keep x and y relative to statusbar
+        if not statuswindow.relative_x and not statuswindow.relative_y:
+            statuswindow.relative_x = event.x()
+            statuswindow.relative_y = event.y()
+        #statuswindow.hideFullWindow()
+        self.mouse_pressed.emit()
+
+
+    def mouseReleaseEvent(self, event):
+        statuswindow.relative_x = False
+        statuswindow.relative_y = False
+        statuswindow.moving = False
+
+
+    def mouseMoveEvent(self, event):
+        statuswindow.moving = True
+        statuswindow.move(event.globalX()-statuswindow.relative_x, event.globalY()-statuswindow.relative_y)
+        self.window_moved.emit()
+
+
+    def mouseEnterEvent(self, event):
+        # store window position if cursor enters logo
+        statuswindow.move(event.globalX()-statuswindow.relative_x, event.globalY()-statuswindow.relative_y)
+        self.window_moved.emit()
 
 
 class StatusBar(QWidget):
@@ -183,7 +291,7 @@ class StatusBar(QWidget):
             self.color_labels[state] =  StatusBarLabel(state)
 
         # derive logo dimensions from status label
-        self.logo = SVGLogo("%s%snagstamon_logo_bar.svg" % (RESOURCES, os.sep),
+        self.logo = NagstamonLogo("%s%snagstamon_logo_bar.svg" % (RESOURCES, os.sep),
                             self.color_labels['OK'].fontMetrics().height())
 
         # add widgets
@@ -227,37 +335,8 @@ class StatusBar(QWidget):
         else:
             self.color_labels['OK'].hide()
 
-
-class SVGLogo(QSvgWidget):
-    """
-        SVG based logo, used for statusbar and toparea logos
-    """
-    def __init__(self, file, size=None):
-        QSvgWidget.__init__(self)
-        self.load(file)
-        self.setSizePolicy(QSizePolicy.Fixed, QSizePolicy.Fixed)
-        if size != None:
-            self.setMinimumSize(size, size)
-
-
-    def mousePressEvent(self, event):
-        # keep x and y relative to statusbar
-        if not statuswindow.relative_x and not statuswindow.relative_y:
-            statuswindow.relative_x = event.x()
-            statuswindow.relative_y = event.y()
-        statuswindow.hideFullWindow()
-
-
-    def mouseReleaseEvent(self, event):
-        statuswindow.relative_x = False
-        statuswindow.relative_y = False
-        statuswindow.moving = False
-
-
-    def mouseMoveEvent(self, event):
-        statuswindow.moving = True
-        statuswindow.move(event.globalX()-statuswindow.relative_x, event.globalY()-statuswindow.relative_y)
-
+        # fix size after refresh
+        self.adjustSize()
 
 
 class StatusBarLabel(QLabel):
@@ -278,9 +357,9 @@ class StatusBarLabel(QLabel):
         # number of hosts/services of this state
         self.number = 0
 
+
     def enterEvent(self, event):
-        statuswindow.showFullWindow()
-        #(get_screen(event.globalX(), event.globalY()))
+        statuswindow.showFullWindow(event)
 
 
 class TopArea(QWidget):
@@ -292,7 +371,7 @@ class TopArea(QWidget):
         self.hbox = HBoxLayout(spacing=10)      # top VBox containing buttons
 
         # top button box
-        self.logo = SVGLogo("%s%snagstamon_logo_toparea.svg" % (RESOURCES, os.sep))
+        self.logo = NagstamonLogo("%s%snagstamon_logo_toparea.svg" % (RESOURCES, os.sep))
         self.label_version = QLabel(APPINFO.Version)
         self.combobox_servers = QComboBox()
         self.button_filters = QPushButton("Filters")
@@ -438,7 +517,9 @@ class TableWidget(QTableWidget):
         self.setSelectionMode(QAbstractItemView.SingleSelection)
         # has to be necessarily false to keep sanity if calculating table height
         self.setShowGrid(False)
+        # no scrollbars at tables because they will be scrollable by the global vertical scrollbar
         self.setHorizontalScrollBarPolicy(Qt.ScrollBarAlwaysOff)
+        self.setVerticalScrollBarPolicy(Qt.ScrollBarAlwaysOff)
         self.setAutoScroll(False)
         self.setSortingEnabled(True)
 
@@ -611,7 +692,7 @@ class TableWidget(QTableWidget):
         """
         self.sort_column = self.headers.keys()[column]
         self.order = self.SORT_ORDER[order]
-        self.set_data(self.server.GetItemsGenerator())
+        self.set_data(list(self.server.GetItemsGenerator()))
 
 
     def realSize(self):
@@ -626,9 +707,15 @@ class TableWidget(QTableWidget):
             calculate real table width as there is no method included
         """
         self.real_width = 0
-        for c in range(0, self.columnCount()):
-            self.real_width += self.cellWidget(0, c).width()
-        del(c)
+        for column in range(0, self.columnCount()):
+            # if there is no with yet at the start take some reasonable value
+            try:
+                self.real_width += self.cellWidget(0, column).width()
+            except:
+                self.real_width += 100
+        del(column)
+
+        # ---> evtl. muss einfach die breite des vertikalen scrollbalkens mit addiert werden?
 
         return self.real_width
 
@@ -643,7 +730,10 @@ class TableWidget(QTableWidget):
         # it is necessary to ask every row directly because their heights differ :-(
         row = 0
         for row in range(0, self.rowCount()):
-            self.real_height += (self.cellWidget(row, 0).height())
+            try:
+                self.real_height += (self.cellWidget(row, 0).height())
+            except:
+                self.real_height += 30
         del(row)
 
         return self.real_height
