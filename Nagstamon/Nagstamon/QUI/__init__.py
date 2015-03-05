@@ -159,15 +159,25 @@ class StatusWindow(QWidget):
 
 
     def showFullWindow(self, event):
+        """
+            used to show status window when its appearance is triggered, also adjusts geometry
+        """
         if not statuswindow.moving:
+            available_width = desktop.availableGeometry(self).width()
+            available_height = desktop.availableGeometry(self).height()
+            available_x = desktop.availableGeometry(self).x()
+            available_y = desktop.availableGeometry(self).y()
+
+            # take whole screen height into account when deciding about upper/lower-ness
+            # add available_x because it might vary on differently setup screens
+            if self.y() < desktop.screenGeometry(self).height()/2 + available_y:
+                top = True
+            else:
+                top = False
+
             self.statusbar.hide()
             self.toparea.show()
             self.servers_scrollarea.show()
-            self.adjustSize()
-            available_width = desktop.availableGeometry(self).width()
-            available_height = desktop.availableGeometry(self).height()
-            screen_x = desktop.availableGeometry(self).x()
-            screen_y = desktop.availableGeometry(self).y()
 
             real_height = self.realHeight()
             # width simply will be the current screen maximal width - less hassle!
@@ -176,16 +186,17 @@ class StatusWindow(QWidget):
             if real_height < available_height:
                 height = real_height
             else:
-                height = available_height - self.y() + screen_y
+                height = available_height - self.y() + available_y
 
             # store position for restoring it when hiding
             self.stored_x = self.x()
             self.stored_y = self.y()
 
             # always stretch over whole screen width -thus screen_x, the leftmost pixel
-            self.move(screen_x, self.y())
+            self.move(available_x, self.y())
             self.setMaximumSize(width, height)
             self.setMinimumSize(width, height)
+            self.adjustSize()
 
 
     def hideFullWindow(self):
