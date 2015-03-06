@@ -176,6 +176,7 @@ class StatusWindow(QWidget):
                 top = False
 
             real_height = self.realHeight()
+
             # width simply will be the current screen maximal width - less hassle!
             width = available_width
 
@@ -193,7 +194,6 @@ class StatusWindow(QWidget):
                     height = desktop.screenGeometry().height() - available_y -\
                              (desktop.screenGeometry().height() - (self.y() + self.height()))
                     y = available_y
-                    print(height)
                 else:
                     height = real_height
                     y = self.y() + self.height() - height
@@ -250,7 +250,11 @@ class StatusWindow(QWidget):
         """
         height = 0
         for server in self.servers_vbox.children():
-            height += server.table.realHeight()
+            height += server.realHeight()
+            # add spacing between vbox items
+            height += self.servers_vbox.spacing()
+
+        # add size of toparea
         height += self.toparea.sizeHint().height()
         return height
 
@@ -432,21 +436,21 @@ class ServerVBox(QVBoxLayout):
 
         self.server = server
 
-        hbox = QHBoxLayout(spacing=10)
+        self.hbox = QHBoxLayout(spacing=10)
 
-        label = QLabel("<big><b>%s@%s</b></big>" % (server.username, server.name))
-        button_server = QPushButton("Monitor")
-        button_hosts = QPushButton("Hosts")
-        button_services = QPushButton("Services")
-        button_history = QPushButton("History")
+        self.label = QLabel("<big><b>%s@%s</b></big>" % (server.username, server.name))
+        self.button_monitor = QPushButton("Monitor")
+        self.button_hosts = QPushButton("Hosts")
+        self.button_services = QPushButton("Services")
+        self.button_history = QPushButton("History")
 
-        hbox.addWidget(label)
-        hbox.addWidget(button_server)
-        hbox.addWidget(button_hosts)
-        hbox.addWidget(button_services)
-        hbox.addWidget(button_history)
-        hbox.addStretch()
-        self.addLayout(hbox)
+        self.hbox.addWidget(self.label)
+        self.hbox.addWidget(self.button_monitor)
+        self.hbox.addWidget(self.button_hosts)
+        self.hbox.addWidget(self.button_services)
+        self.hbox.addWidget(self.button_history)
+        self.hbox.addStretch()
+        self.addLayout(self.hbox)
 
         self.headers = OrderedDict([('host', 'Host'), ('service', 'Service'),
                                     ('status', 'Status'), ('last_check', 'Last Check'),
@@ -465,6 +469,23 @@ class ServerVBox(QVBoxLayout):
             self.table.set_data(list(self.server.GetItemsGenerator()))
             # get_status statusbar
             statuswindow.statusbar.summarize_states()
+
+
+    def realHeight(self):
+        """
+            return summarized real height of hbox items and table
+        """
+        height = self.table.realHeight()
+        # compare item heights, decide to take the largest
+        if self.label.height() > self.button_monitor.height():
+            height += self.label.height()
+        else:
+            height += self.button_monitor.height()
+
+        # important to add existing spacing
+        height += self.spacing()
+
+        return height
 
 
 class CellWidget(QWidget):
