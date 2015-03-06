@@ -175,25 +175,39 @@ class StatusWindow(QWidget):
             else:
                 top = False
 
-            self.statusbar.hide()
-            self.toparea.show()
-            self.servers_scrollarea.show()
-
             real_height = self.realHeight()
             # width simply will be the current screen maximal width - less hassle!
             width = available_width
 
-            if real_height < available_height:
-                height = real_height
+            # when statusbar resides in uppermost part of current screen extend from top to bottom
+            if top == True:
+                y = self.y()
+                if real_height < available_height:
+                    height = real_height
+                else:
+                    height = available_height - self.y() + available_y
+            # when statusbar hangs around in lowermost part of current screen extend from bottom to top
             else:
-                height = available_height - self.y() + available_y
+                # when height is to large for current screen cut it
+                if self.y() - real_height < available_y:
+                    height = desktop.screenGeometry().height() - available_y -\
+                             (desktop.screenGeometry().height() - (self.y() + self.height()))
+                    y = available_y
+                    print(height)
+                else:
+                    height = real_height
+                    y = self.y() + self.height() - height
+
+            self.statusbar.hide()
+            self.toparea.show()
+            self.servers_scrollarea.show()
 
             # store position for restoring it when hiding
             self.stored_x = self.x()
             self.stored_y = self.y()
 
             # always stretch over whole screen width -thus screen_x, the leftmost pixel
-            self.move(available_x, self.y())
+            self.move(available_x, y)
             self.setMaximumSize(width, height)
             self.setMinimumSize(width, height)
             self.adjustSize()
