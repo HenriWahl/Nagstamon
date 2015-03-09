@@ -110,12 +110,12 @@ class StatusWindow(QWidget):
 
         # connect logo of statusbar
         self.statusbar.logo.window_moved.connect(self.store_position)
-        self.statusbar.logo.mouse_pressed.connect(self.hideFullWindow)
+        self.statusbar.logo.mouse_pressed.connect(self.hide_window)
 
         # when logo in toparea was pressed hurry up to save the position so the statusbar will not jump
         self.toparea.logo.window_moved.connect(self.store_position)
         self.toparea.logo.mouse_pressed.connect(self.store_position)
-        self.toparea.logo.mouse_pressed.connect(self.hideFullWindow)
+        self.toparea.logo.mouse_pressed.connect(self.hide_window)
 
         self.servers_vbox = QVBoxLayout()           # HBox full of servers
         self.servers_vbox.setContentsMargins(0, 0, 0, 0)
@@ -147,6 +147,9 @@ class StatusWindow(QWidget):
         self.stored_x = self.x()
         self.stored_y = self.y()
 
+        # flag to mark if window is shown or nor
+        self.is_shown = False
+
 
     def createServerVBoxes(self):
         """
@@ -158,46 +161,13 @@ class StatusWindow(QWidget):
                 self.servers_vbox.addLayout(server_vbox)
 
 
-    def showFullWindow(self, event):
+    def show_window(self, event):
         """
             used to show status window when its appearance is triggered, also adjusts geometry
         """
         if not statuswindow.moving:
-            available_width = desktop.availableGeometry(self).width()
-            available_height = desktop.availableGeometry(self).height()
-            available_x = desktop.availableGeometry(self).x()
-            available_y = desktop.availableGeometry(self).y()
-
-            # take whole screen height into account when deciding about upper/lower-ness
-            # add available_x because it might vary on differently setup screens
-            if self.y() < desktop.screenGeometry(self).height()/2 + available_y:
-                top = True
-            else:
-                top = False
-
-            real_height = self.realHeight()
-
-            # width simply will be the current screen maximal width - less hassle!
-            width = available_width
-
-            # when statusbar resides in uppermost part of current screen extend from top to bottom
-            if top == True:
-                y = self.y()
-                if real_height < available_height:
-                    height = real_height
-                else:
-                    height = available_height - self.y() + available_y
-            # when statusbar hangs around in lowermost part of current screen extend from bottom to top
-            else:
-                # when height is to large for current screen cut it
-                if self.y() - real_height < available_y:
-                    height = desktop.screenGeometry().height() - available_y -\
-                             (desktop.screenGeometry().height() - (self.y() + self.height()))
-                    y = available_y
-                else:
-                    height = real_height
-                    y = self.y() + self.height() - height
-
+            width, height, x, y = self.calculate_size()
+            """
             self.statusbar.hide()
             self.toparea.show()
             self.servers_scrollarea.show()
@@ -206,14 +176,20 @@ class StatusWindow(QWidget):
             self.stored_x = self.x()
             self.stored_y = self.y()
 
-            # always stretch over whole screen width -thus screen_x, the leftmost pixel
-            self.move(available_x, y)
+            # always stretch over whole screen width - thus x = screen_x, the leftmost pixel
+            self.move(x, y)
             self.setMaximumSize(width, height)
             self.setMinimumSize(width, height)
             self.adjustSize()
+            """
+
+            self.resize_window(width, height, x, y)
+
+            # switch on
+            self.is_shown = True
 
 
-    def hideFullWindow(self):
+    def hide_window(self):
         self.statusbar.show()
         self.statusbar.adjustSize()
         self.toparea.hide()
@@ -221,6 +197,72 @@ class StatusWindow(QWidget):
         self.setMinimumSize(1, 1)
         self.adjustSize()
         self.move(self.stored_x, self.stored_y)
+
+        # switch off
+        self.is_shown = False
+
+
+    def calculate_size(self):
+        """
+            get size of popup window
+        """
+        available_width = desktop.availableGeometry(self).width()
+        available_height = desktop.availableGeometry(self).height()
+        available_x = desktop.availableGeometry(self).x()
+        available_y = desktop.availableGeometry(self).y()
+
+        # take whole screen height into account when deciding about upper/lower-ness
+        # add available_x because it might vary on differently setup screens
+        if self.y() < desktop.screenGeometry(self).height()/2 + available_y:
+            top = True
+        else:
+            top = False
+
+        real_height = self.realHeight()
+
+        # width simply will be the current screen maximal width - less hassle!
+        width = available_width
+
+        # when statusbar resides in uppermost part of current screen extend from top to bottom
+        if top == True:
+            y = self.y()
+            if real_height < available_height:
+                height = real_height
+            else:
+                height = available_height - self.y() + available_y
+        # when statusbar hangs around in lowermost part of current screen extend from bottom to top
+        else:
+            # when height is to large for current screen cut it
+            if self.y() - real_height < available_y:
+                height = desktop.screenGeometry().height() - available_y -\
+                         (desktop.screenGeometry().height() - (self.y() + self.height()))
+                y = available_y
+            else:
+                height = real_height
+                y = self.y() + self.height() - height
+
+        return width, height, available_x, y
+
+
+    def resize_window(self, width, height, x, y):
+        """
+            resize status window according to its new
+        """
+        self.statusbar.hide()
+        self.toparea.show()
+        self.servers_scrollarea.show()
+
+        # store position for restoring it when hiding
+        self.stored_x = self.x()
+        self.stored_y = self.y()
+
+        # always stretch over whole screen width - thus x = screen_x, the leftmost pixel
+        self.move(x, y)
+        self.setMaximumSize(width, height)
+        self.setMinimumSize(width, height)
+        self.adjustSize()
+
+        return True
 
 
     def store_position(self):
@@ -230,7 +272,7 @@ class StatusWindow(QWidget):
 
 
     def leaveEvent(self, event):
-        self.hideFullWindow()
+        self.hide_window()
 
 
     def realWidth(self):
@@ -281,7 +323,7 @@ class NagstamonLogo(QSvgWidget):
         if not statuswindow.relative_x and not statuswindow.relative_y:
             statuswindow.relative_x = event.x()
             statuswindow.relative_y = event.y()
-        #statuswindow.hideFullWindow()
+        #statuswindow.hide_window()
         self.mouse_pressed.emit()
 
 
@@ -388,7 +430,7 @@ class StatusBarLabel(QLabel):
 
 
     def enterEvent(self, event):
-        statuswindow.showFullWindow(event)
+        statuswindow.show_window(event)
 
 
 class TopArea(QWidget):
@@ -546,6 +588,7 @@ class TableWidget(QTableWidget):
     # send new data to worker
     new_data = pyqtSignal(list, str, OrderedDict, bool)
 
+
     def __init__(self, headers, columncount, rowcount, sort_column, order, server):
         QTableWidget.__init__(self, columncount, rowcount)
 
@@ -605,16 +648,55 @@ class TableWidget(QTableWidget):
 
 
     def refresh(self):
+        """
+            refresh status display
+        """
         if not statuswindow.moving:
-            #get_status table cells with new data by thread
+            # get_status table cells with new data by thread
             self.set_data(list(self.server.GetItemsGenerator()))
             # get_status statusbar
             statuswindow.statusbar.summarize_states()
 
 
+    def set_cell(self, row, column, text, color, background, icons):
+        """
+            set data and widget for one cell
+        """
+        widget = CellWidget(text=text, color=color, background=background,
+                            row=row, column=column, icons=icons)
+        # fill cells with data
+        self.setCellWidget(row, column, widget)
+
+
+    def set_data(self, data=None):
+        """
+            fill table cells with data from filtered Nagios items
+        """
+        # maximum size needs no more than amount of data
+        self.setRowCount(self.server.nagitems_filtered_count)
+
+        # send signal to worker
+        self.new_data.emit(data, self.sort_column, self.headers, self.SORT_ORDER[self.order])
+
+
+    def adjust_table(self):
+        """
+            adjust table dimensions after filling it
+        """
+        # seems to be important for not getting somehow squeezed cells
+        self.resizeColumnsToContents()
+        self.resizeRowsToContents()
+        self.horizontalHeader().setStretchLastSection(True)
+
+        # force table to its maximal height, calculated by .realHeight()
+        self.setMinimumHeight(self.realHeight())
+        self.setSizePolicy(QSizePolicy.Ignored, QSizePolicy.Maximum)
+
+
+
     class Worker(QObject):
         """
-            attempt to run a server status update thread
+            attempt to run a server status update thread - only needed by table so it is defined here inside table
         """
 
         # send signal if monitor server has new status data
@@ -695,41 +777,6 @@ class TableWidget(QTableWidget):
 
             # after running through
             self.table_ready.emit()
-
-
-    def set_cell(self, row, column, text, color, background, icons):
-        """
-            set data and widget for one cell
-        """
-        widget = CellWidget(text=text, color=color, background=background,
-                            row=row, column=column, icons=icons)
-        # fill cells with data
-        self.setCellWidget(row, column, widget)
-
-
-    def set_data(self, data=None):
-        """
-            fill table cells with data from filtered Nagios items
-        """
-        # maximum size needs no more than amount of data
-        self.setRowCount(self.server.nagitems_filtered_count)
-
-        # send signal to worker
-        self.new_data.emit(data, self.sort_column, self.headers, self.SORT_ORDER[self.order])
-
-
-    def adjust_table(self):
-        """
-            adjust table dimensions after filling it
-        """
-        # seems to be important for not getting somehow squeezed cells
-        self.resizeColumnsToContents()
-        self.resizeRowsToContents()
-        self.horizontalHeader().setStretchLastSection(True)
-
-        # force table to its maximal height, calculated by .realHeight()
-        self.setMinimumHeight(self.realHeight())
-        self.setSizePolicy(QSizePolicy.Ignored, QSizePolicy.Maximum)
 
 
     def sortColumn(self, column, order):
