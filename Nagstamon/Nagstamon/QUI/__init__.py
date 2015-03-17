@@ -158,7 +158,10 @@ class StatusWindow(QWidget):
         for server in servers.values():
             if server.enabled:
                 server_vbox = ServerVBox(server)
+                # connect to global resize signal
+                server_vbox.table.ready_to_resize.connect(self.adjust_size)
                 self.servers_vbox.addLayout(server_vbox)
+
 
 
     def show_window(self, event):
@@ -167,22 +170,6 @@ class StatusWindow(QWidget):
         """
         if not statuswindow.moving:
             width, height, x, y = self.calculate_size()
-            """
-            self.statusbar.hide()
-            self.toparea.show()
-            self.servers_scrollarea.show()
-
-            # store position for restoring it when hiding
-            self.stored_x = self.x()
-            self.stored_y = self.y()
-
-            # always stretch over whole screen width - thus x = screen_x, the leftmost pixel
-            self.move(x, y)
-            self.setMaximumSize(width, height)
-            self.setMinimumSize(width, height)
-            self.adjustSize()
-            """
-
             self.resize_window(width, height, x, y)
 
             # switch on
@@ -201,6 +188,9 @@ class StatusWindow(QWidget):
         # switch off
         self.is_shown = False
 
+        # flag to reflect top-ness of window/statusbar
+        self.top = False
+
 
     def calculate_size(self):
         """
@@ -212,11 +202,14 @@ class StatusWindow(QWidget):
         available_y = desktop.availableGeometry(self).y()
 
         # take whole screen height into account when deciding about upper/lower-ness
-        # add available_x because it might vary on differently setup screens
-        if self.y() < desktop.screenGeometry(self).height()/2 + available_y:
-            top = True
-        else:
-            top = False
+        # add available_y because it might vary on differently setup screens
+        # calculate top-ness only if window is closed
+        if self.is_shown == False:
+            if self.y() < desktop.screenGeometry(self).height()/2 + available_y:
+            ###if self.stored_y < desktop.screenGeometry(self).height()/2 + available_y:
+                self.top = True
+            else:
+                self.top = False
 
         real_height = self.realHeight()
 
@@ -224,7 +217,7 @@ class StatusWindow(QWidget):
         width = available_width
 
         # when statusbar resides in uppermost part of current screen extend from top to bottom
-        if top == True:
+        if self.top == True:
             y = self.y()
             if real_height < available_height:
                 height = real_height
@@ -252,9 +245,10 @@ class StatusWindow(QWidget):
         self.toparea.show()
         self.servers_scrollarea.show()
 
-        # store position for restoring it when hiding
-        self.stored_x = self.x()
-        self.stored_y = self.y()
+        # store position for restoring it when hiding - only if not shown of course
+        if self.is_shown == False:
+            self.stored_x = self.x()
+            self.stored_y = self.y()
 
         # always stretch over whole screen width - thus x = screen_x, the leftmost pixel
         self.move(x, y)
@@ -263,6 +257,15 @@ class StatusWindow(QWidget):
         self.adjustSize()
 
         return True
+
+
+    def adjust_size(self):
+        """
+            resize window if shown and needed
+        """
+        if self.is_shown == True:
+            width, height, x, y = self.calculate_size()
+            self.resize_window(width, height, x, y)
 
 
     def store_position(self):
@@ -505,14 +508,6 @@ class ServerVBox(QVBoxLayout):
         self.addWidget(self.table, 1)
 
 
-    def refresh(self):
-        if not statuswindow.moving:
-            #get_status table cells with new data by thread
-            self.table.set_data(list(self.server.GetItemsGenerator()))
-            # get_status statusbar
-            statuswindow.statusbar.summarize_states()
-
-
     def realHeight(self):
         """
             return summarized real height of hbox items and table
@@ -528,6 +523,27 @@ class ServerVBox(QVBoxLayout):
         height += self.spacing()
 
         return height
+
+
+    def show_all(self):
+        """
+            show all items in server vbox
+        """
+        for child in self.children():
+            # not every child item has .show()
+            if child.__dict__.has_key('show'):
+                child.show()
+
+
+    def hide_all(self):
+        """
+            hide all items in server vbox
+        """
+        for child in self.children():
+            # not every child item has .hide()
+            if child.__dict__.has_key('hide'):
+                child.hide()
+
 
 
 class CellWidget(QWidget):
@@ -587,6 +603,9 @@ class TableWidget(QTableWidget):
 
     # send new data to worker
     new_data = pyqtSignal(list, str, OrderedDict, bool)
+
+    # tell global window that it should be resized
+    ready_to_resize = pyqtSignal()
 
 
     def __init__(self, headers, columncount, rowcount, sort_column, order, server):
@@ -653,7 +672,8 @@ class TableWidget(QTableWidget):
         """
         if not statuswindow.moving:
             # get_status table cells with new data by thread
-            self.set_data(list(self.server.GetItemsGenerator()))
+            data = list(self.server.GetItemsGenerator())
+            self.set_data(data)
             # get_status statusbar
             statuswindow.statusbar.summarize_states()
 
@@ -690,8 +710,11 @@ class TableWidget(QTableWidget):
 
         # force table to its maximal height, calculated by .realHeight()
         self.setMinimumHeight(self.realHeight())
+        self.setMaximumHeight(self.realHeight())
         self.setSizePolicy(QSizePolicy.Ignored, QSizePolicy.Maximum)
 
+        # after setting table whole window can be repainted
+        self.ready_to_resize.emit()
 
 
     class Worker(QObject):
@@ -863,8 +886,13 @@ def get_screen(x, y):
             break
     return screen
 
-
+# system tray icon
 systrayicon = SystemTrayIcon(QIcon("%s%snagstamon.svg" % (RESOURCES, os.sep)))
+
+# combined statusbar/status window
 statuswindow = StatusWindow()
+# initially store position of status window
+statuswindow.store_position()
+
 # access to variuos desktop parameters
 desktop = QApplication.desktop()
