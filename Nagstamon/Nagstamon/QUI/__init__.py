@@ -206,7 +206,6 @@ class StatusWindow(QWidget):
         # calculate top-ness only if window is closed
         if self.is_shown == False:
             if self.y() < desktop.screenGeometry(self).height()/2 + available_y:
-            ###if self.stored_y < desktop.screenGeometry(self).height()/2 + available_y:
                 self.top = True
             else:
                 self.top = False
@@ -226,7 +225,8 @@ class StatusWindow(QWidget):
         # when statusbar hangs around in lowermost part of current screen extend from bottom to top
         else:
             # when height is to large for current screen cut it
-            if self.y() - real_height < available_y:
+            #if self.y() - real_height < available_y:
+            if self.y() + self.height() - real_height < available_y:
                 height = desktop.screenGeometry().height() - available_y -\
                          (desktop.screenGeometry().height() - (self.y() + self.height()))
                 y = available_y
@@ -891,8 +891,6 @@ systrayicon = SystemTrayIcon(QIcon("%s%snagstamon.svg" % (RESOURCES, os.sep)))
 
 # combined statusbar/status window
 statuswindow = StatusWindow()
-# initially store position of status window
-statuswindow.store_position()
 
 # access to variuos desktop parameters
 desktop = QApplication.desktop()
