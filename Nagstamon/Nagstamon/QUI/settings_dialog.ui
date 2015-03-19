@@ -27,7 +27,7 @@
    <item>
     <widget class="QTabWidget" name="tabs">
      <property name="currentIndex">
-      <number>6</number>
+      <number>0</number>
      </property>
      <widget class="QWidget" name="tab_servers">
       <attribute name="title">
@@ -37,14 +37,14 @@
        <item row="3" column="1" colspan="3">
         <layout class="QHBoxLayout" name="horizontalLayout_2">
          <item>
-          <widget class="QCheckBox" name="input_checkbutton_debug_mode">
+          <widget class="QCheckBox" name="input_checkbox_debug_mode">
            <property name="text">
             <string>Debug mode</string>
            </property>
           </widget>
          </item>
          <item>
-          <widget class="QCheckBox" name="input_checkbutton_debug_to_file">
+          <widget class="QCheckBox" name="input_checkbox_debug_to_file">
            <property name="enabled">
             <bool>true</bool>
            </property>
@@ -54,7 +54,7 @@
           </widget>
          </item>
          <item>
-          <widget class="QLineEdit" name="input_entry_debug_file"/>
+          <widget class="QLineEdit" name="input_lineedit_debug_file"/>
          </item>
         </layout>
        </item>
@@ -106,7 +106,7 @@
        <item row="2" column="1" colspan="3">
         <layout class="QHBoxLayout" name="horizontalLayout_3">
          <item>
-          <widget class="QCheckBox" name="input_checkbutton_use_system_keyring">
+          <widget class="QCheckBox" name="input_checkbox_use_system_keyring">
            <property name="text">
             <string>Use system keyring for server credentials</string>
            </property>
@@ -147,7 +147,7 @@
        <item row="4" column="1" colspan="3">
         <layout class="QHBoxLayout" name="horizontalLayout_4">
          <item>
-          <widget class="QCheckBox" name="input_checkbutton_check_for_new_version">
+          <widget class="QCheckBox" name="input_checkbox_check_for_new_version">
            <property name="text">
             <string>Check for new version at startup</string>
            </property>
@@ -285,7 +285,7 @@
          </property>
          <layout class="QGridLayout" name="gridLayout_3">
           <item row="4" column="0">
-           <widget class="QCheckBox" name="input_checkbutton_show_tooltips">
+           <widget class="QCheckBox" name="input_checkbox_show_tooltips">
             <property name="text">
              <string>Show tooltips in status details overview</string>
             </property>
@@ -296,6 +296,9 @@
             <property name="text">
              <string>Popup when hovering over statusbar</string>
             </property>
+            <attribute name="buttonGroup">
+             <string notr="true">buttonGroup</string>
+            </attribute>
            </widget>
           </item>
           <item row="1" column="0">
@@ -303,10 +306,13 @@
             <property name="text">
              <string>Popup when clicking statusbar</string>
             </property>
+            <attribute name="buttonGroup">
+             <string notr="true">buttonGroup</string>
+            </attribute>
            </widget>
           </item>
           <item row="2" column="0">
-           <widget class="QCheckBox" name="input_checkbutton_show_grid">
+           <widget class="QCheckBox" name="input_checkbox_show_grid">
             <property name="text">
              <string>Show grid in status details overview</string>
             </property>
@@ -317,6 +323,9 @@
             <property name="text">
              <string>Close when hovering out of popup</string>
             </property>
+            <attribute name="buttonGroup">
+             <string notr="true">buttonGroup_2</string>
+            </attribute>
            </widget>
           </item>
           <item row="1" column="1">
@@ -324,10 +333,13 @@
             <property name="text">
              <string>Close when clicking statusbar</string>
             </property>
+            <attribute name="buttonGroup">
+             <string notr="true">buttonGroup_2</string>
+            </attribute>
            </widget>
           </item>
           <item row="3" column="0">
-           <widget class="QCheckBox" name="input_checkbutton_highlight_new_events">
+           <widget class="QCheckBox" name="input_checkbox_highlight_new_events">
             <property name="text">
              <string>Highlight new events in status details overview</string>
             </property>
@@ -376,205 +388,20 @@
        <string>Filters</string>
       </attribute>
       <layout class="QGridLayout" name="gridLayout_4">
-       <item row="0" column="0">
-        <widget class="QGroupBox" name="groupbox_filters">
-         <property name="title">
-          <string>Filter out the following:</string>
+       <item row="8" column="0">
+        <widget class="QLabel" name="label_python_re">
+         <property name="text">
+          <string>See Python Regular Expressions HOWTO for filtering details</string>
          </property>
-         <layout class="QGridLayout" name="gridLayout_5">
-          <item row="17" column="0">
-           <widget class="QCheckBox" name="input_checkbutton_re_status_information_enabled">
-            <property name="text">
-             <string>CheckBox</string>
-            </property>
-           </widget>
-          </item>
-          <item row="1" column="0">
-           <widget class="QCheckBox" name="input_checkbutton_filter_all_unreachable_hosts">
-            <property name="text">
-             <string>All unreachable hosts</string>
-            </property>
-           </widget>
-          </item>
-          <item row="5" column="0">
-           <widget class="QCheckBox" name="input_checkbutton_filter_all_warning_services">
-            <property name="text">
-             <string>All warning services</string>
-            </property>
-           </widget>
-          </item>
-          <item row="3" column="0">
-           <widget class="QCheckBox" name="input_checkbutton_filter_all_critical_services">
-            <property name="text">
-             <string>All critical services</string>
-            </property>
-           </widget>
-          </item>
-          <item row="10" column="1">
-           <widget class="QCheckBox" name="input_checkbutton_filter_services_in_soft_state">
-            <property name="text">
-             <string>Services in soft state</string>
-            </property>
-           </widget>
-          </item>
-          <item row="3" column="1">
-           <widget class="QCheckBox" name="input_checkbutton_filter_hosts_services_maintenance">
-            <property name="text">
-             <string>Hosts &amp; services down for maintenance</string>
-            </property>
-           </widget>
-          </item>
-          <item row="4" column="0">
-           <widget class="QCheckBox" name="input_checkbutton_filter_all_unknown_services">
-            <property name="text">
-             <string>All unknown services</string>
-            </property>
-           </widget>
-          </item>
-          <item row="2" column="0">
-           <widget class="QCheckBox" name="input_checkbutton_filter_all_flapping_hosts">
-            <property name="text">
-             <string>All flapping hosts</string>
-            </property>
-           </widget>
-          </item>
-          <item row="20" column="0">
-           <widget class="QLabel" name="label_python_re">
-            <property name="text">
-             <string>See Python Regular Expressions HOWTO for filtering details</string>
-            </property>
-           </widget>
-          </item>
-          <item row="14" column="0">
-           <widget class="QCheckBox" name="input_checkbutton_re_service_enabled">
-            <property name="text">
-             <string>Regular expression for services</string>
-            </property>
-           </widget>
-          </item>
-          <item row="9" column="1">
-           <widget class="QCheckBox" name="input_checkbutton_filter_hosts_in_soft_state">
-            <property name="text">
-             <string>Hosts in soft state</string>
-            </property>
-           </widget>
-          </item>
-          <item row="8" column="1">
-           <widget class="QCheckBox" name="input_checkbutton_filter_services_on_unreachable_hosts">
-            <property name="text">
-             <string>Services on unreachable hosts</string>
-            </property>
-           </widget>
-          </item>
-          <item row="4" column="1">
-           <widget class="QCheckBox" name="input_checkbutton_filter_services_on_acknowledged_hosts">
-            <property name="text">
-             <string>Services on acknowledged hosts</string>
-            </property>
-           </widget>
-          </item>
-          <item row="5" column="1">
-           <widget class="QCheckBox" name="input_checkbutton_filter_services_on_down_hosts">
-            <property name="text">
-             <string>Services on down hosts</string>
-            </property>
-           </widget>
-          </item>
-          <item row="6" column="1">
-           <widget class="QCheckBox" name="input_checkbutton_filter_services_on_hosts_in_maintenance">
-            <property name="text">
-             <string>Services on hosts in maintenance</string>
-            </property>
-           </widget>
-          </item>
-          <item row="12" column="0" colspan="2">
-           <layout class="QHBoxLayout" name="horizontalLayout_8">
-            <item>
-             <widget class="QLineEdit" name="input_entry_re_host_pattern"/>
-            </item>
-            <item>
-             <widget class="QCheckBox" name="input_checkbutton_re_host_reverse">
-              <property name="text">
-               <string>reverse</string>
-              </property>
-             </widget>
-            </item>
-           </layout>
-          </item>
-          <item row="1" column="1">
-           <widget class="QCheckBox" name="input_checkbutton_filter_hosts_services_disabled_notifications">
-            <property name="text">
-             <string>Hosts &amp; services with disabled notifications</string>
-            </property>
-           </widget>
-          </item>
-          <item row="0" column="1">
-           <widget class="QCheckBox" name="input_checkbutton_filter_acknowledged_hosts_services">
-            <property name="text">
-             <string>Acknowledged hosts &amp; services</string>
-            </property>
-           </widget>
-          </item>
-          <item row="2" column="1">
-           <widget class="QCheckBox" name="input_checkbutton_filter_hosts_services_disabled_checks">
-            <property name="text">
-             <string>Hosts &amp; services with disabled checks</string>
-            </property>
-           </widget>
-          </item>
-          <item row="6" column="0">
-           <widget class="QCheckBox" name="input_checkbutton_filter_all_flapping_services">
-            <property name="text">
-             <string>All flapping services</string>
-            </property>
-           </widget>
-          </item>
-          <item row="0" column="0">
-           <widget class="QCheckBox" name="input_checkbutton_filter_all_down_hosts">
-            <property name="text">
-             <string>All down hosts</string>
-            </property>
-           </widget>
-          </item>
-          <item row="15" column="0" colspan="2">
-           <layout class="QHBoxLayout" name="horizontalLayout_9">
-            <item>
-             <widget class="QLineEdit" name="input_entry_re_service_pattern"/>
-            </item>
-            <item>
-             <widget class="QCheckBox" name="input_checkbutton_re_service_reverse">
-              <property name="text">
-               <string>reverse</string>
-              </property>
-             </widget>
-            </item>
-           </layout>
-          </item>
-          <item row="18" column="0" colspan="2">
-           <layout class="QHBoxLayout" name="horizontalLayout_10">
-            <item>
-             <widget class="QLineEdit" name="input_entry_re_status_information_pattern"/>
-            </item>
-            <item>
-             <widget class="QCheckBox" name="input_checkbutton_re_status_information_reverse">
-              <property name="text">
-               <string>reverse</string>
-              </property>
-             </widget>
-            </item>
-           </layout>
-          </item>
-          <item row="11" column="0">
-           <widget class="QCheckBox" name="input_checkbutton_re_host_enabled">
-            <property name="text">
-             <string>Regular expression for hosts</string>
-            </property>
-           </widget>
-          </item>
-         </layout>
         </widget>
        </item>
-       <item row="1" column="0">
+       <item row="3" column="0">
+        <widget class="QLineEdit" name="input_lineedit_re_host_pattern"/>
+       </item>
+       <item row="7" column="0">
+        <widget class="QLineEdit" name="input_lineedit_re_status_information_pattern"/>
+       </item>
+       <item row="9" column="0">
         <spacer name="verticalSpacer_5">
          <property name="orientation">
           <enum>Qt::Vertical</enum>
@@ -586,6 +413,179 @@
           </size>
          </property>
         </spacer>
+       </item>
+       <item row="6" column="0">
+        <widget class="QCheckBox" name="input_checkbox_re_status_information_enabled">
+         <property name="text">
+          <string>Regular expression for status informations</string>
+         </property>
+        </widget>
+       </item>
+       <item row="5" column="1">
+        <widget class="QCheckBox" name="input_checkbox_re_service_reverse">
+         <property name="text">
+          <string>reverse</string>
+         </property>
+        </widget>
+       </item>
+       <item row="5" column="0">
+        <widget class="QLineEdit" name="input_lineedit_re_service_pattern"/>
+       </item>
+       <item row="4" column="0">
+        <widget class="QCheckBox" name="input_checkbox_re_service_enabled">
+         <property name="text">
+          <string>Regular expression for services</string>
+         </property>
+        </widget>
+       </item>
+       <item row="1" column="0">
+        <widget class="QGroupBox" name="groupbox_filters">
+         <property name="title">
+          <string>Filter out the following:</string>
+         </property>
+         <layout class="QGridLayout" name="gridLayout_5">
+          <item row="10" column="1">
+           <widget class="QCheckBox" name="input_checkbox_filter_services_in_soft_state">
+            <property name="text">
+             <string>Services in soft state</string>
+            </property>
+           </widget>
+          </item>
+          <item row="1" column="0">
+           <widget class="QCheckBox" name="input_checkbox_filter_all_unreachable_hosts">
+            <property name="text">
+             <string>All unreachable hosts</string>
+            </property>
+           </widget>
+          </item>
+          <item row="5" column="1">
+           <widget class="QCheckBox" name="input_checkbox_filter_services_on_down_hosts">
+            <property name="text">
+             <string>Services on down hosts</string>
+            </property>
+           </widget>
+          </item>
+          <item row="8" column="1">
+           <widget class="QCheckBox" name="input_checkbox_filter_services_on_unreachable_hosts">
+            <property name="text">
+             <string>Services on unreachable hosts</string>
+            </property>
+           </widget>
+          </item>
+          <item row="0" column="1">
+           <widget class="QCheckBox" name="input_checkbox_filter_acknowledged_hosts_services">
+            <property name="text">
+             <string>Acknowledged hosts &amp; services</string>
+            </property>
+           </widget>
+          </item>
+          <item row="1" column="1">
+           <widget class="QCheckBox" name="input_checkbox_filter_hosts_services_disabled_notifications">
+            <property name="text">
+             <string>Hosts &amp; services with disabled notifications</string>
+            </property>
+           </widget>
+          </item>
+          <item row="9" column="1">
+           <widget class="QCheckBox" name="input_checkbox_filter_hosts_in_soft_state">
+            <property name="text">
+             <string>Hosts in soft state</string>
+            </property>
+           </widget>
+          </item>
+          <item row="3" column="0">
+           <widget class="QCheckBox" name="input_checkbox_filter_all_critical_services">
+            <property name="text">
+             <string>All critical services</string>
+            </property>
+           </widget>
+          </item>
+          <item row="2" column="1">
+           <widget class="QCheckBox" name="input_checkbox_filter_hosts_services_disabled_checks">
+            <property name="text">
+             <string>Hosts &amp; services with disabled checks</string>
+            </property>
+           </widget>
+          </item>
+          <item row="2" column="0">
+           <widget class="QCheckBox" name="input_checkbox_filter_all_flapping_hosts">
+            <property name="text">
+             <string>All flapping hosts</string>
+            </property>
+           </widget>
+          </item>
+          <item row="6" column="1">
+           <widget class="QCheckBox" name="input_checkbox_filter_services_on_hosts_in_maintenance">
+            <property name="text">
+             <string>Services on hosts in maintenance</string>
+            </property>
+           </widget>
+          </item>
+          <item row="4" column="0">
+           <widget class="QCheckBox" name="input_checkbox_filter_all_unknown_services">
+            <property name="text">
+             <string>All unknown services</string>
+            </property>
+           </widget>
+          </item>
+          <item row="5" column="0">
+           <widget class="QCheckBox" name="input_checkbox_filter_all_warning_services">
+            <property name="text">
+             <string>All warning services</string>
+            </property>
+           </widget>
+          </item>
+          <item row="4" column="1">
+           <widget class="QCheckBox" name="input_checkbox_filter_services_on_acknowledged_hosts">
+            <property name="text">
+             <string>Services on acknowledged hosts</string>
+            </property>
+           </widget>
+          </item>
+          <item row="3" column="1">
+           <widget class="QCheckBox" name="input_checkbox_filter_hosts_services_maintenance">
+            <property name="text">
+             <string>Hosts &amp; services down for maintenance</string>
+            </property>
+           </widget>
+          </item>
+          <item row="0" column="0">
+           <widget class="QCheckBox" name="input_checkbox_filter_all_down_hosts">
+            <property name="text">
+             <string>All down hosts</string>
+            </property>
+           </widget>
+          </item>
+          <item row="6" column="0">
+           <widget class="QCheckBox" name="input_checkbox_filter_all_flapping_services">
+            <property name="text">
+             <string>All flapping services</string>
+            </property>
+           </widget>
+          </item>
+         </layout>
+        </widget>
+       </item>
+       <item row="7" column="1">
+        <widget class="QCheckBox" name="input_checkbox_re_status_information_reverse">
+         <property name="text">
+          <string>reverse</string>
+         </property>
+        </widget>
+       </item>
+       <item row="3" column="1">
+        <widget class="QCheckBox" name="input_checkbox_re_host_reverse">
+         <property name="text">
+          <string>reverse</string>
+         </property>
+        </widget>
+       </item>
+       <item row="2" column="0">
+        <widget class="QCheckBox" name="input_checkbox_re_host_enabled">
+         <property name="text">
+          <string>Regular expression for hosts</string>
+         </property>
+        </widget>
        </item>
       </layout>
      </widget>
@@ -680,7 +680,7 @@
       </attribute>
       <layout class="QVBoxLayout" name="verticalLayout_6">
        <item>
-        <widget class="QCheckBox" name="input_checkbutton_notification">
+        <widget class="QCheckBox" name="input_checkbox_notification">
          <property name="text">
           <string>Enable notification</string>
          </property>
@@ -695,35 +695,35 @@
           <item>
            <layout class="QHBoxLayout" name="horizontalLayout_notifications">
             <item>
-             <widget class="QCheckBox" name="input_checkbutton_notify_if_warning">
+             <widget class="QCheckBox" name="input_checkbox_notify_if_warning">
               <property name="text">
                <string>WARNING</string>
               </property>
              </widget>
             </item>
             <item>
-             <widget class="QCheckBox" name="input_checkbutton_notify_if_critical">
+             <widget class="QCheckBox" name="input_checkbox_notify_if_critical">
               <property name="text">
                <string>CRITICAL</string>
               </property>
              </widget>
             </item>
             <item>
-             <widget class="QCheckBox" name="input_checkbutton_notify_if_unknown">
+             <widget class="QCheckBox" name="input_checkbox_notify_if_unknown">
               <property name="text">
                <string>UNKNOWN</string>
               </property>
              </widget>
             </item>
             <item>
-             <widget class="QCheckBox" name="input_checkbutton_notify_if_unreachable">
+             <widget class="QCheckBox" name="input_checkbox_notify_if_unreachable">
               <property name="text">
                <string>UNREACHABLE</string>
               </property>
              </widget>
             </item>
             <item>
-             <widget class="QCheckBox" name="input_checkbutton_notify_if_down">
+             <widget class="QCheckBox" name="input_checkbox_notify_if_down">
               <property name="text">
                <string>DOWN</string>
               </property>
@@ -732,28 +732,28 @@
            </layout>
           </item>
           <item>
-           <widget class="QCheckBox" name="input_checkbutton_notification_flashing">
+           <widget class="QCheckBox" name="input_checkbox_notification_flashing">
             <property name="text">
              <string>Flashing statusbar/appindicator/systray icon</string>
             </property>
            </widget>
           </item>
           <item>
-           <widget class="QCheckBox" name="input_checkbutton_notification_desktop">
+           <widget class="QCheckBox" name="input_checkbox_notification_desktop">
             <property name="text">
              <string>Desktop notification</string>
             </property>
            </widget>
           </item>
           <item>
-           <widget class="QCheckBox" name="input_checkbutton_notification_sound">
+           <widget class="QCheckBox" name="input_checkbox_notification_sound">
             <property name="text">
              <string>Enable sound</string>
             </property>
            </widget>
           </item>
           <item>
-           <widget class="QCheckBox" name="input_checkbutton_notification_sound_repeat">
+           <widget class="QCheckBox" name="input_checkbox_notification_sound_repeat">
             <property name="text">
              <string>Repeat sound until notification has been noticed</string>
             </property>
@@ -1077,28 +1077,28 @@
          </property>
          <layout class="QVBoxLayout" name="verticalLayout_10">
           <item>
-           <widget class="QCheckBox" name="input_checkbutton_defaults_acknowledge_sticky">
+           <widget class="QCheckBox" name="input_checkbox_defaults_acknowledge_sticky">
             <property name="text">
              <string>Sticky acknowledgement</string>
             </property>
            </widget>
           </item>
           <item>
-           <widget class="QCheckBox" name="input_checkbutton_defaults_acknowledge_send_notification">
+           <widget class="QCheckBox" name="input_checkbox_defaults_acknowledge_send_notification">
             <property name="text">
              <string>Send notification</string>
             </property>
            </widget>
           </item>
           <item>
-           <widget class="QCheckBox" name="input_checkbutton_defaults_acknowledge_persistent_comment">
+           <widget class="QCheckBox" name="input_checkbox_defaults_acknowledge_persistent_comment">
             <property name="text">
              <string>Persistent comment</string>
             </property>
            </widget>
           </item>
           <item>
-           <widget class="QCheckBox" name="input_checkbutton_defaults_acknowledge_all_services">
+           <widget class="QCheckBox" name="input_checkbox_defaults_acknowledge_all_services">
             <property name="text">
              <string>Acknowledge all services on host</string>
             </property>
@@ -1114,7 +1114,7 @@
              </widget>
             </item>
             <item>
-             <widget class="QLineEdit" name="input_entry_defaults_acknowledge_comment"/>
+             <widget class="QLineEdit" name="input_lineedit_defaults_acknowledge_comment"/>
             </item>
            </layout>
           </item>
@@ -1180,10 +1180,10 @@
            </widget>
           </item>
           <item row="0" column="3">
-           <widget class="QSpinBox" name="input_spinbutton_defaults_downtime_duration_minutes"/>
+           <widget class="QSpinBox" name="input_spinbox_defaults_downtime_duration_minutes"/>
           </item>
           <item row="0" column="1">
-           <widget class="QSpinBox" name="input_spinbutton_defaults_downtime_duration_hours"/>
+           <widget class="QSpinBox" name="input_spinbox_defaults_downtime_duration_hours"/>
           </item>
           <item row="0" column="2">
            <widget class="QLabel" name="label_duration_hour">
@@ -1200,7 +1200,7 @@
            </widget>
           </item>
           <item row="1" column="1" colspan="4">
-           <widget class="QLineEdit" name="input_entry_defaults_downtime_comment"/>
+           <widget class="QLineEdit" name="input_lineedit_defaults_downtime_comment"/>
           </item>
          </layout>
         </widget>
@@ -1212,7 +1212,7 @@
          </property>
          <layout class="QHBoxLayout" name="horizontalLayout_14">
           <item>
-           <widget class="QLabel" name="input_entry_defaults_submit_check_result_comment">
+           <widget class="QLabel" name="input_lineedit_defaults_submit_check_result_comment">
             <property name="text">
              <string>Comment:</string>
             </property>
@@ -1254,86 +1254,9 @@
   </layout>
  </widget>
  <resources/>
- <connections>
-  <connection>
-   <sender>button_box</sender>
-   <signal>accepted()</signal>
-   <receiver>settings_dialog</receiver>
-   <slot>accept()</slot>
-   <hints>
-    <hint type="sourcelabel">
-     <x>137</x>
-     <y>425</y>
-    </hint>
-    <hint type="destinationlabel">
-     <x>137</x>
-     <y>103</y>
-    </hint>
-   </hints>
-  </connection>
-  <connection>
-   <sender>button_box</sender>
-   <signal>rejected()</signal>
-   <receiver>settings_dialog</receiver>
-   <slot>reject()</slot>
-   <hints>
-    <hint type="sourcelabel">
-     <x>297</x>
-     <y>449</y>
-    </hint>
-    <hint type="destinationlabel">
-     <x>297</x>
-     <y>236</y>
-    </hint>
-   </hints>
-  </connection>
-  <connection>
-   <sender>input_checkbutton_debug_mode</sender>
-   <signal>toggled(bool)</signal>
-   <receiver>input_checkbutton_debug_to_file</receiver>
-   <slot>setVisible(bool)</slot>
-   <hints>
-    <hint type="sourcelabel">
-     <x>76</x>
-     <y>359</y>
-    </hint>
-    <hint type="destinationlabel">
-     <x>197</x>
-     <y>359</y>
-    </hint>
-   </hints>
-  </connection>
-  <connection>
-   <sender>input_checkbutton_debug_mode</sender>
-   <signal>toggled(bool)</signal>
-   <receiver>input_entry_debug_file</receiver>
-   <slot>setVisible(bool)</slot>
-   <hints>
-    <hint type="sourcelabel">
-     <x>76</x>
-     <y>359</y>
-    </hint>
-    <hint type="destinationlabel">
-     <x>338</x>
-     <y>360</y>
-    </hint>
-   </hints>
-  </connection>
-  <connection>
-   <sender>input_checkbutton_debug_to_file</sender>
-   <signal>toggled(bool)</signal>
-   <receiver>input_entry_debug_file</receiver>
-   <slot>setVisible(bool)</slot>
-   <hints>
-    <hint type="sourcelabel">
-     <x>197</x>
-     <y>359</y>
-    </hint>
-    <hint type="destinationlabel">
-     <x>338</x>
-     <y>360</y>
-    </hint>
-   </hints>
-  </connection>
- </connections>
+ <connections/>
+ <buttongroups>
+  <buttongroup name="buttonGroup"/>
+  <buttongroup name="buttonGroup_2"/>
+ </buttongroups>
 </ui>

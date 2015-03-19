@@ -35,7 +35,8 @@ from Nagstamon.Config import (conf, RESOURCES, APPINFO)
 
 from Nagstamon.Servers import servers
 
-from Nagstamon.Objects import GenericObject, GenericService
+from Nagstamon.QUI.settings_dialog import Ui_settings_dialog
+
 
 # fixed icons for hosts/services attributes
 ICONS = dict()
@@ -116,6 +117,11 @@ class StatusWindow(QWidget):
         self.toparea.logo.window_moved.connect(self.store_position)
         self.toparea.logo.mouse_pressed.connect(self.store_position)
         self.toparea.logo.mouse_pressed.connect(self.hide_window)
+
+        # buttons in toparea
+        self.toparea.button_settings.clicked.connect(self.hide_window)
+        self.toparea.button_settings.clicked.connect(dialogs.settings.window.show)
+
 
         self.servers_vbox = QVBoxLayout()           # HBox full of servers
         self.servers_vbox.setContentsMargins(0, 0, 0, 0)
@@ -402,10 +408,12 @@ class StatusBar(QWidget):
             else:
                 label.setText(' %s ' % (label.number))
                 label.show()
+                label.adjustSize()
                 all_numbers += label.number
 
         if all_numbers == 0:
             self.color_labels['OK'].show()
+            self.color_labels['OK'].adjustSize()
         else:
             self.color_labels['OK'].hide()
 
@@ -867,6 +875,32 @@ class TableWidget(QTableWidget):
                 self.cellWidget(row, column).colorize()
 
 
+class Dialogs(object):
+    """
+        class for accessing the dialogs
+    """
+    def __init__(self):
+        self.settings = Dialog(Ui_settings_dialog)
+        for element in dir(self.settings.ui):
+            if element.startswith('input_'):
+                if element.startswith('input_checkbox_'):
+                    if conf.__dict__[element.split('input_checkbox_')[1]] == True:
+                        self.settings.ui.__dict__[element].toggle()
+                if element.startswith('input_radiobutton_'):
+                    if conf.__dict__[element.split('input_radiobutton_')[1]] == True:
+                        self.settings.ui.__dict__[element].toggle()
+
+
+class Dialog(object):
+    """
+        one single dialog
+    """
+    def __init__(self, dialog):
+        self.window = QDialog()
+        self.ui = dialog()
+        self.ui.setupUi(self.window)
+
+
 def CreateIcons(fontsize):
     """
         fill global ICONS with pixmpas rendered from SVGs in fontsize dimensions
@@ -886,6 +920,10 @@ def get_screen(x, y):
             break
     return screen
 
+
+# access dialogs
+dialogs = Dialogs()
+
 # system tray icon
 systrayicon = SystemTrayIcon(QIcon("%s%snagstamon.svg" % (RESOURCES, os.sep)))
 
@@ -894,3 +932,4 @@ statuswindow = StatusWindow()
 
 # access to variuos desktop parameters
 desktop = QApplication.desktop()
+
