@@ -27,7 +27,7 @@
    <item>
     <widget class="QTabWidget" name="tabs">
      <property name="currentIndex">
-      <number>0</number>
+      <number>1</number>
      </property>
      <widget class="QWidget" name="tab_servers">
       <attribute name="title">
@@ -297,7 +297,7 @@
              <string>Popup when hovering over statusbar</string>
             </property>
             <attribute name="buttonGroup">
-             <string notr="true">buttonGroup</string>
+             <string notr="true">buttongroup_popup_statuswindow</string>
             </attribute>
            </widget>
           </item>
@@ -307,7 +307,7 @@
              <string>Popup when clicking statusbar</string>
             </property>
             <attribute name="buttonGroup">
-             <string notr="true">buttonGroup</string>
+             <string notr="true">buttongroup_popup_statuswindow</string>
             </attribute>
            </widget>
           </item>
@@ -324,7 +324,7 @@
              <string>Close when hovering out of popup</string>
             </property>
             <attribute name="buttonGroup">
-             <string notr="true">buttonGroup_2</string>
+             <string notr="true">buttongroup_close_statusbar</string>
             </attribute>
            </widget>
           </item>
@@ -334,7 +334,7 @@
              <string>Close when clicking statusbar</string>
             </property>
             <attribute name="buttonGroup">
-             <string notr="true">buttonGroup_2</string>
+             <string notr="true">buttongroup_close_statusbar</string>
             </attribute>
            </widget>
           </item>
@@ -1254,9 +1254,42 @@
   </layout>
  </widget>
  <resources/>
- <connections/>
+ <connections>
+  <connection>
+   <sender>button_box</sender>
+   <signal>accepted()</signal>
+   <receiver>settings_dialog</receiver>
+   <slot>accept()</slot>
+   <hints>
+    <hint type="sourcelabel">
+     <x>386</x>
+     <y>728</y>
+    </hint>
+    <hint type="destinationlabel">
+     <x>386</x>
+     <y>376</y>
+    </hint>
+   </hints>
+  </connection>
+  <connection>
+   <sender>button_box</sender>
+   <signal>rejected()</signal>
+   <receiver>settings_dialog</receiver>
+   <slot>reject()</slot>
+   <hints>
+    <hint type="sourcelabel">
+     <x>386</x>
+     <y>728</y>
+    </hint>
+    <hint type="destinationlabel">
+     <x>386</x>
+     <y>376</y>
+    </hint>
+   </hints>
+  </connection>
+ </connections>
  <buttongroups>
-  <buttongroup name="buttonGroup"/>
-  <buttongroup name="buttonGroup_2"/>
+  <buttongroup name="buttongroup_close_statusbar"/>
+  <buttongroup name="buttongroup_popup_statuswindow"/>
  </buttongroups>
 </ui>

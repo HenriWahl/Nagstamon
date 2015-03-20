@@ -2,7 +2,7 @@
 
 # Form implementation generated from reading ui file 'settings_dialog.ui'
 #
-# Created: Thu Mar 19 16:55:18 2015
+# Created: Fri Mar 20 10:15:33 2015
 #      by: PyQt5 UI code generator 5.4
 #
 # WARNING! All changes made in this file will be lost!
@@ -154,26 +154,26 @@ class Ui_settings_dialog(object):
         self.gridLayout_3.addWidget(self.input_checkbox_show_tooltips, 4, 0, 1, 1)
         self.input_radiobutton_popup_details_hover = QtWidgets.QRadioButton(self.groupbox_detailed_summary_popup)
         self.input_radiobutton_popup_details_hover.setObjectName("input_radiobutton_popup_details_hover")
-        self.buttonGroup = QtWidgets.QButtonGroup(settings_dialog)
-        self.buttonGroup.setObjectName("buttonGroup")
-        self.buttonGroup.addButton(self.input_radiobutton_popup_details_hover)
+        self.buttongroup_popup_statuswindow = QtWidgets.QButtonGroup(settings_dialog)
+        self.buttongroup_popup_statuswindow.setObjectName("buttongroup_popup_statuswindow")
+        self.buttongroup_popup_statuswindow.addButton(self.input_radiobutton_popup_details_hover)
         self.gridLayout_3.addWidget(self.input_radiobutton_popup_details_hover, 0, 0, 1, 1)
         self.input_radiobutton_popup_details_clicking = QtWidgets.QRadioButton(self.groupbox_detailed_summary_popup)
         self.input_radiobutton_popup_details_clicking.setObjectName("input_radiobutton_popup_details_clicking")
-        self.buttonGroup.addButton(self.input_radiobutton_popup_details_clicking)
+        self.buttongroup_popup_statuswindow.addButton(self.input_radiobutton_popup_details_clicking)
         self.gridLayout_3.addWidget(self.input_radiobutton_popup_details_clicking, 1, 0, 1, 1)
         self.input_checkbox_show_grid = QtWidgets.QCheckBox(self.groupbox_detailed_summary_popup)
         self.input_checkbox_show_grid.setObjectName("input_checkbox_show_grid")
         self.gridLayout_3.addWidget(self.input_checkbox_show_grid, 2, 0, 1, 1)
         self.input_radiobutton_close_details_hover = QtWidgets.QRadioButton(self.groupbox_detailed_summary_popup)
         self.input_radiobutton_close_details_hover.setObjectName("input_radiobutton_close_details_hover")
-        self.buttonGroup_2 = QtWidgets.QButtonGroup(settings_dialog)
-        self.buttonGroup_2.setObjectName("buttonGroup_2")
-        self.buttonGroup_2.addButton(self.input_radiobutton_close_details_hover)
+        self.buttongroup_close_statusbar = QtWidgets.QButtonGroup(settings_dialog)
+        self.buttongroup_close_statusbar.setObjectName("buttongroup_close_statusbar")
+        self.buttongroup_close_statusbar.addButton(self.input_radiobutton_close_details_hover)
         self.gridLayout_3.addWidget(self.input_radiobutton_close_details_hover, 0, 1, 1, 1)
         self.input_radiobutton_close_details_clicking = QtWidgets.QRadioButton(self.groupbox_detailed_summary_popup)
         self.input_radiobutton_close_details_clicking.setObjectName("input_radiobutton_close_details_clicking")
-        self.buttonGroup_2.addButton(self.input_radiobutton_close_details_clicking)
+        self.buttongroup_close_statusbar.addButton(self.input_radiobutton_close_details_clicking)
         self.gridLayout_3.addWidget(self.input_radiobutton_close_details_clicking, 1, 1, 1, 1)
         self.input_checkbox_highlight_new_events = QtWidgets.QCheckBox(self.groupbox_detailed_summary_popup)
         self.input_checkbox_highlight_new_events.setObjectName("input_checkbox_highlight_new_events")
@@ -591,7 +591,9 @@ class Ui_settings_dialog(object):
         self.verticalLayout.addWidget(self.button_box)
 
         self.retranslateUi(settings_dialog)
-        self.tabs.setCurrentIndex(0)
+        self.tabs.setCurrentIndex(1)
+        self.button_box.accepted.connect(settings_dialog.accept)
+        self.button_box.rejected.connect(settings_dialog.reject)
         QtCore.QMetaObject.connectSlotsByName(settings_dialog)
 
     def retranslateUi(self, settings_dialog):

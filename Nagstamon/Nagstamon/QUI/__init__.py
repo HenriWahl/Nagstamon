@@ -111,6 +111,7 @@ class StatusWindow(QWidget):
 
         # connect logo of statusbar
         self.statusbar.logo.window_moved.connect(self.store_position)
+        self.statusbar.logo.mouse_pressed.connect(self.store_position)
         self.statusbar.logo.mouse_pressed.connect(self.hide_window)
 
         # when logo in toparea was pressed hurry up to save the position so the statusbar will not jump
@@ -183,13 +184,14 @@ class StatusWindow(QWidget):
 
 
     def hide_window(self):
-        self.statusbar.show()
-        self.statusbar.adjustSize()
-        self.toparea.hide()
-        self.servers_scrollarea.hide()
-        self.setMinimumSize(1, 1)
-        self.adjustSize()
-        self.move(self.stored_x, self.stored_y)
+        if self.is_shown == True:
+            self.statusbar.show()
+            self.statusbar.adjustSize()
+            self.toparea.hide()
+            self.servers_scrollarea.hide()
+            self.setMinimumSize(1, 1)
+            self.adjustSize()
+            self.move(self.stored_x, self.stored_y)
 
         # switch off
         self.is_shown = False
@@ -332,7 +334,6 @@ class NagstamonLogo(QSvgWidget):
         if not statuswindow.relative_x and not statuswindow.relative_y:
             statuswindow.relative_x = event.x()
             statuswindow.relative_y = event.y()
-        #statuswindow.hide_window()
         self.mouse_pressed.emit()
 
 
