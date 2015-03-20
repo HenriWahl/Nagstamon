@@ -23,6 +23,9 @@
   <property name="locale">
    <locale language="C" country="AnyCountry"/>
   </property>
+  <property name="modal">
+   <bool>false</bool>
+  </property>
   <layout class="QVBoxLayout" name="verticalLayout">
    <item>
     <widget class="QTabWidget" name="tabs">
@@ -124,7 +127,7 @@
           </widget>
          </item>
          <item>
-          <widget class="QSpinBox" name="spinBox"/>
+          <widget class="QSpinBox" name="input_spinbox_update_interval_seconds"/>
          </item>
          <item>
           <spacer name="horizontalSpacer">
@@ -221,7 +224,7 @@
                </widget>
               </item>
               <item>
-               <widget class="QSpinBox" name="spinBox_2"/>
+               <widget class="QSpinBox" name="input_spinbox_systray_popup_offset"/>
               </item>
              </layout>
             </item>
@@ -239,14 +242,14 @@
             <item>
              <layout class="QHBoxLayout" name="horizontalLayout_17">
               <item>
-               <widget class="QLabel" name="input_combo_fullscreen_display">
+               <widget class="QLabel" name="label_fullscreen_display">
                 <property name="text">
                  <string>Display to use:</string>
                 </property>
                </widget>
               </item>
               <item>
-               <widget class="QComboBox" name="comboBox_3"/>
+               <widget class="QComboBox" name="input_combobox_fullscreen_display"/>
               </item>
              </layout>
             </item>
@@ -346,7 +349,7 @@
            </widget>
           </item>
           <item row="5" column="1">
-           <widget class="QComboBox" name="input_combo_default_sort_field"/>
+           <widget class="QComboBox" name="input_combobox_default_sort_field"/>
           </item>
           <item row="5" column="0">
            <widget class="QLabel" name="label_default_sort_field">
@@ -356,7 +359,7 @@
            </widget>
           </item>
           <item row="6" column="1">
-           <widget class="QComboBox" name="input_combo_default_sort_order"/>
+           <widget class="QComboBox" name="input_combobox_default_sort_order"/>
           </item>
           <item row="6" column="0">
            <widget class="QLabel" name="label_default_sort_order">

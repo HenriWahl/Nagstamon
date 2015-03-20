@@ -48,6 +48,16 @@ COLORS = OrderedDict([('DOWN', 'color_down_'),
                       ('UNKNOWN', 'color_unknown_'),
                       ('WARNING', 'color_warning_')])
 
+# headers for tablewidgets
+HEADERS = OrderedDict([('host', 'Host'), ('service', 'Service'),
+                       ('status', 'Status'), ('last_check', 'Last Check'),
+                       ('duration', 'Duration'), ('attempt', 'Attempt'),
+                       ('status_information', 'Status Information')])
+
+# sorting order for tablewidgets
+SORT_ORDER = {'descending': True, 'ascending': False, 0: True, 1: False}
+
+
 class HBoxLayout(QHBoxLayout):
     """
         Apparently necessary to get a HBox which is able to hide its children
@@ -114,6 +124,9 @@ class StatusWindow(QWidget):
         self.statusbar.logo.mouse_pressed.connect(self.store_position)
         self.statusbar.logo.mouse_pressed.connect(self.hide_window)
 
+        # after status summarization check if window hast to be resized
+        self.statusbar.resize.connect(self.adjustSize)
+
         # when logo in toparea was pressed hurry up to save the position so the statusbar will not jump
         self.toparea.logo.window_moved.connect(self.store_position)
         self.toparea.logo.mouse_pressed.connect(self.store_position)
@@ -168,7 +181,6 @@ class StatusWindow(QWidget):
                 # connect to global resize signal
                 server_vbox.table.ready_to_resize.connect(self.adjust_size)
                 self.servers_vbox.addLayout(server_vbox)
-
 
 
     def show_window(self, event):
@@ -359,6 +371,10 @@ class StatusBar(QWidget):
     """
         status bar for short display of problems
     """
+
+    # send signal to statuswindow
+    resize = pyqtSignal()
+
     def __init__(self):
         QWidget.__init__(self)
 
@@ -420,6 +436,9 @@ class StatusBar(QWidget):
 
         # fix size after refresh
         self.adjustSize()
+
+        # tell statuswindow its size might be adjusted
+        self.resize.emit()
 
 
 class StatusBarLabel(QLabel):
@@ -506,13 +525,9 @@ class ServerVBox(QVBoxLayout):
         self.hbox.addStretch()
         self.addLayout(self.hbox)
 
-        self.headers = OrderedDict([('host', 'Host'), ('service', 'Service'),
-                                    ('status', 'Status'), ('last_check', 'Last Check'),
-                                    ('duration', 'Duration'), ('attempt', 'Attempt'),
-                                    ('status_information', 'Status Information')])
         sort_column = 'status'
         order = 'descending'
-        self.table = TableWidget(self.headers, 0, len(self.headers), sort_column, order, self.server)
+        self.table = TableWidget(0, len(HEADERS), sort_column, order, self.server)
 
         self.addWidget(self.table, 1)
 
@@ -611,18 +626,15 @@ class TableWidget(QTableWidget):
     """
 
     # send new data to worker
-    new_data = pyqtSignal(list, str, OrderedDict, bool)
+    new_data = pyqtSignal(list, str, bool)
 
     # tell global window that it should be resized
     ready_to_resize = pyqtSignal()
 
 
-    def __init__(self, headers, columncount, rowcount, sort_column, order, server):
+    def __init__(self, columncount, rowcount, sort_column, order, server):
         QTableWidget.__init__(self, columncount, rowcount)
 
-        self.SORT_ORDER = {'descending': True, 'ascending': False, 0: True, 1: False}
-
-        self.headers = headers
         self.sort_column = sort_column
         self.order = order
         self.server = server
@@ -642,12 +654,12 @@ class TableWidget(QTableWidget):
 
         self.setSizePolicy(QSizePolicy.Ignored, QSizePolicy.Expanding)
 
-        self.setHorizontalHeaderLabels(self.headers.values())
+        self.setHorizontalHeaderLabels(HEADERS.values())
         self.horizontalHeader().setSectionResizeMode(QHeaderView.ResizeToContents)
         self.horizontalHeader().setDefaultAlignment(Qt.AlignLeft)
         self.horizontalHeader().setStyleSheet('font-weight: bold;')
         self.horizontalHeader().setSortIndicatorShown(True)
-        self.horizontalHeader().setSortIndicator(list(self.headers).index(self.sort_column), self.SORT_ORDER[self.order])
+        self.horizontalHeader().setSortIndicator(list(HEADERS).index(self.sort_column), SORT_ORDER[self.order])
         self.horizontalHeader().sortIndicatorChanged.connect(self.sortColumn)
 
         # store width and height if they do not need to be recalculated
@@ -705,7 +717,7 @@ class TableWidget(QTableWidget):
         self.setRowCount(self.server.nagitems_filtered_count)
 
         # send signal to worker
-        self.new_data.emit(data, self.sort_column, self.headers, self.SORT_ORDER[self.order])
+        self.new_data.emit(data, self.sort_column, SORT_ORDER[self.order])
 
 
     def adjust_table(self):
@@ -753,7 +765,7 @@ class TableWidget(QTableWidget):
             self.timer.singleShot(10000, self.get_status)
 
 
-        def fill_rows(self, data, sort_column, headers, reverse):
+        def fill_rows(self, data, sort_column, reverse):
             # to keep GTK Treeview sort behaviour first by services
             first_sort = sorted(data, key=methodcaller('compare_host'))
             for row, nagitem in enumerate(sorted(first_sort, key=methodcaller('compare_%s' % \
@@ -761,7 +773,7 @@ class TableWidget(QTableWidget):
                 # lists in rows list are columns
                 #self.data.append(list())
                 # create every cell per row
-                for column, text in enumerate(nagitem.get_columns(headers)):
+                for column, text in enumerate(nagitem.get_columns(HEADERS)):
                     # check for icons to be used in cell widget
                     if column in (0, 1):
                         icons = list()
@@ -815,8 +827,8 @@ class TableWidget(QTableWidget):
         """
             set data according to sort criteria
         """
-        self.sort_column = self.headers.keys()[column]
-        self.order = self.SORT_ORDER[order]
+        self.sort_column = HEADERS.keys()[column]
+        self.order = SORT_ORDER[order]
         self.set_data(list(self.server.GetItemsGenerator()))
 
 
@@ -882,6 +894,8 @@ class Dialogs(object):
     """
     def __init__(self):
         self.settings = Dialog(Ui_settings_dialog)
+        # start with servers tab
+        self.settings.ui.tabs.setCurrentIndex(0)
         for element in dir(self.settings.ui):
             if element.startswith('input_'):
                 if element.startswith('input_checkbox_'):
@@ -890,6 +904,25 @@ class Dialogs(object):
                 if element.startswith('input_radiobutton_'):
                     if conf.__dict__[element.split('input_radiobutton_')[1]] == True:
                         self.settings.ui.__dict__[element].toggle()
+                if element.startswith('input_lineedit_'):
+                    self.settings.ui.__dict__[element].setText(conf.__dict__[element.split('input_lineedit_')[1]])
+                if element.startswith('input_spinbox_'):
+                    self.settings.ui.__dict__[element].setValue(int(conf.__dict__[element.split('input_spinbox_')[1]]))
+
+        # just for fun: compare the next lines with the corresponding GTK madness... :-)
+
+        # fill default order fields combobox with headers names
+        self.settings.ui.input_combobox_default_sort_field.addItems(HEADERS.values())
+        self.settings.ui.input_combobox_default_sort_field.setCurrentText(conf.default_sort_field)
+
+        # fill default sort order combobox
+        self.settings.ui.input_combobox_default_sort_order.addItems(['Ascending', 'Descending'])
+        self.settings.ui.input_combobox_default_sort_order.setCurrentText(conf.default_sort_order)
+
+        # fill combobox with screens for fullscreen
+        for display in range(desktop.screenCount()):
+            self.settings.ui.input_combobox_fullscreen_display.addItem(str(display))
+        self.settings.ui.input_combobox_fullscreen_display.setCurrentText(conf.fullscreen_display)
 
 
 class Dialog(object):
@@ -921,6 +954,8 @@ def get_screen(x, y):
             break
     return screen
 
+# access to variuos desktop parameters
+desktop = QApplication.desktop()
 
 # access dialogs
 dialogs = Dialogs()
@@ -931,6 +966,5 @@ systrayicon = SystemTrayIcon(QIcon("%s%snagstamon.svg" % (RESOURCES, os.sep)))
 # combined statusbar/status window
 statuswindow = StatusWindow()
 
-# access to variuos desktop parameters
-desktop = QApplication.desktop()
+
 

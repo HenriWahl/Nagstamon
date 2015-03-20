@@ -147,8 +147,6 @@ class Config(object):
         self.color_down_background = self.default_color_down_background = "#000000"
         self.color_error_text = self.default_color_error_text= "#000000"
         self.color_error_background = self.default_color_error_background = "#D3D3D3"
-        # going to be obsolete even on Linux
-        #self.statusbar_systray = False
         self.statusbar_floating = True
         self.icon_in_systray = False
         self.appindicator = False
