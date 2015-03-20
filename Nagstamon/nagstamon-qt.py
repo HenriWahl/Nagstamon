@@ -44,6 +44,7 @@ try:
         statuswindow.adjustSize()
 
         sys.exit(app.exec_())
+
 except Exception as err:
     import traceback
     traceback.print_exc(file=sys.stdout)

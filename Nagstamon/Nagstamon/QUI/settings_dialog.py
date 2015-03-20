@@ -2,7 +2,7 @@
 
 # Form implementation generated from reading ui file 'settings_dialog.ui'
 #
-# Created: Fri Mar 20 13:24:57 2015
+# Created: Fri Mar 20 15:24:25 2015
 #      by: PyQt5 UI code generator 5.4
 #
 # WARNING! All changes made in this file will be lost!
@@ -75,9 +75,9 @@ class Ui_settings_dialog(object):
         spacerItem1 = QtWidgets.QSpacerItem(40, 20, QtWidgets.QSizePolicy.Expanding, QtWidgets.QSizePolicy.Minimum)
         self.horizontalLayout.addItem(spacerItem1)
         self.gridLayout.addLayout(self.horizontalLayout, 1, 1, 1, 3)
-        self.listWidget = QtWidgets.QListWidget(self.tab_servers)
-        self.listWidget.setObjectName("listWidget")
-        self.gridLayout.addWidget(self.listWidget, 0, 1, 1, 2)
+        self.list_servers = QtWidgets.QListWidget(self.tab_servers)
+        self.list_servers.setObjectName("list_servers")
+        self.gridLayout.addWidget(self.list_servers, 0, 1, 1, 2)
         self.horizontalLayout_4 = QtWidgets.QHBoxLayout()
         self.horizontalLayout_4.setObjectName("horizontalLayout_4")
         self.input_checkbox_check_for_new_version = QtWidgets.QCheckBox(self.tab_servers)
@@ -292,9 +292,6 @@ class Ui_settings_dialog(object):
         self.tab_actions.setObjectName("tab_actions")
         self.gridLayout_6 = QtWidgets.QGridLayout(self.tab_actions)
         self.gridLayout_6.setObjectName("gridLayout_6")
-        self.listview_actions = QtWidgets.QListView(self.tab_actions)
-        self.listview_actions.setObjectName("listview_actions")
-        self.gridLayout_6.addWidget(self.listview_actions, 0, 0, 1, 1)
         self.verticalLayout_4 = QtWidgets.QVBoxLayout()
         self.verticalLayout_4.setObjectName("verticalLayout_4")
         self.button_new_action = QtWidgets.QPushButton(self.tab_actions)
@@ -326,6 +323,9 @@ class Ui_settings_dialog(object):
         self.input_radiobutton_connect_by_ip.setObjectName("input_radiobutton_connect_by_ip")
         self.verticalLayout_5.addWidget(self.input_radiobutton_connect_by_ip)
         self.gridLayout_6.addWidget(self.groupbox_connection_method, 1, 0, 1, 1)
+        self.list_actions = QtWidgets.QListWidget(self.tab_actions)
+        self.list_actions.setObjectName("list_actions")
+        self.gridLayout_6.addWidget(self.list_actions, 0, 0, 1, 1)
         self.tabs.addTab(self.tab_actions, "")
         self.tab_notifications = QtWidgets.QWidget()
         self.tab_notifications.setObjectName("tab_notifications")
@@ -592,7 +592,7 @@ class Ui_settings_dialog(object):
         self.verticalLayout.addWidget(self.button_box)
 
         self.retranslateUi(settings_dialog)
-        self.tabs.setCurrentIndex(1)
+        self.tabs.setCurrentIndex(3)
         self.button_box.accepted.connect(settings_dialog.accept)
         self.button_box.rejected.connect(settings_dialog.reject)
         QtCore.QMetaObject.connectSlotsByName(settings_dialog)

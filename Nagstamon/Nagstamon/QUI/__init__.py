@@ -924,6 +924,16 @@ class Dialogs(object):
             self.settings.ui.input_combobox_fullscreen_display.addItem(str(display))
         self.settings.ui.input_combobox_fullscreen_display.setCurrentText(conf.fullscreen_display)
 
+        # fill servers listwidget with servers
+        for server in sorted(conf.servers, key=unicode.lower):
+           self.settings.ui.list_servers.addItem(server)
+
+        # fill actions listwidget with actions
+        for action in sorted(conf.actions, key=unicode.lower):
+           self.settings.ui.list_actions.addItem(action)
+
+
+
 
 class Dialog(object):
     """
