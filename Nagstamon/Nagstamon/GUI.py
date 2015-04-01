@@ -35,6 +35,7 @@ import os
 import platform
 import sys
 import copy
+from time import localtime, gmtime, strftime
 
 # testing pynotify support
 try:
@@ -1975,7 +1976,7 @@ class Popwin(object):
         self.NagstamonLabel_Pixbuf = gtk.gdk.pixbuf_new_from_file(self.output.Resources + os.sep + "nagstamon_label.png")
         self.NagstamonLabel.set_from_pixbuf(self.NagstamonLabel_Pixbuf)
         self.NagstamonVersion = gtk.Label()
-        self.NagstamonVersion.set_markup("<b>%s</b>  " % (self.output.version))
+        self.NagstamonVersion.set_markup("<b>%s</b> " % (self.output.version) + "                  " + "<b>%s</b>" % strftime("%a, %d %b %Y %H:%M:%S", localtime()))
 
         self.HBoxNagiosButtons.add(self.NagstamonLabel)
         self.HBoxNagiosButtons.add(self.NagstamonVersion)
