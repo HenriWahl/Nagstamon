@@ -2,8 +2,7 @@
 
 # Form implementation generated from reading ui file 'settings_dialog.ui'
 #
-# Created: Fri Mar 20 15:24:25 2015
-#      by: PyQt5 UI code generator 5.4
+# Created by: PyQt5 UI code generator 5.4.1
 #
 # WARNING! All changes made in this file will be lost!
 
@@ -75,9 +74,6 @@ class Ui_settings_dialog(object):
         spacerItem1 = QtWidgets.QSpacerItem(40, 20, QtWidgets.QSizePolicy.Expanding, QtWidgets.QSizePolicy.Minimum)
         self.horizontalLayout.addItem(spacerItem1)
         self.gridLayout.addLayout(self.horizontalLayout, 1, 1, 1, 3)
-        self.list_servers = QtWidgets.QListWidget(self.tab_servers)
-        self.list_servers.setObjectName("list_servers")
-        self.gridLayout.addWidget(self.list_servers, 0, 1, 1, 2)
         self.horizontalLayout_4 = QtWidgets.QHBoxLayout()
         self.horizontalLayout_4.setObjectName("horizontalLayout_4")
         self.input_checkbox_check_for_new_version = QtWidgets.QCheckBox(self.tab_servers)
@@ -89,6 +85,11 @@ class Ui_settings_dialog(object):
         self.button_check_for_new_version_now.setObjectName("button_check_for_new_version_now")
         self.horizontalLayout_4.addWidget(self.button_check_for_new_version_now)
         self.gridLayout.addLayout(self.horizontalLayout_4, 4, 1, 1, 3)
+        self.list_servers = QtWidgets.QListWidget(self.tab_servers)
+        self.list_servers.setMinimumSize(QtCore.QSize(0, 0))
+        self.list_servers.setMaximumSize(QtCore.QSize(16777215, 16777215))
+        self.list_servers.setObjectName("list_servers")
+        self.gridLayout.addWidget(self.list_servers, 0, 1, 1, 1)
         self.tabs.addTab(self.tab_servers, "")
         self.tab_display = QtWidgets.QWidget()
         self.tab_display.setObjectName("tab_display")
@@ -592,7 +593,7 @@ class Ui_settings_dialog(object):
         self.verticalLayout.addWidget(self.button_box)
 
         self.retranslateUi(settings_dialog)
-        self.tabs.setCurrentIndex(3)
+        self.tabs.setCurrentIndex(0)
         self.button_box.accepted.connect(settings_dialog.accept)
         self.button_box.rejected.connect(settings_dialog.reject)
         QtCore.QMetaObject.connectSlotsByName(settings_dialog)

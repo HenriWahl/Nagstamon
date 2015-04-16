@@ -30,7 +30,7 @@
    <item>
     <widget class="QTabWidget" name="tabs">
      <property name="currentIndex">
-      <number>3</number>
+      <number>0</number>
      </property>
      <widget class="QWidget" name="tab_servers">
       <attribute name="title">
@@ -144,9 +144,6 @@
          </item>
         </layout>
        </item>
-       <item row="0" column="1" colspan="2">
-        <widget class="QListWidget" name="list_servers"/>
-       </item>
        <item row="4" column="1" colspan="3">
         <layout class="QHBoxLayout" name="horizontalLayout_4">
          <item>
@@ -177,6 +174,22 @@
           </widget>
          </item>
         </layout>
+       </item>
+       <item row="0" column="1">
+        <widget class="QListWidget" name="list_servers">
+         <property name="minimumSize">
+          <size>
+           <width>0</width>
+           <height>0</height>
+          </size>
+         </property>
+         <property name="maximumSize">
+          <size>
+           <width>16777215</width>
+           <height>16777215</height>
+          </size>
+         </property>
+        </widget>
        </item>
       </layout>
      </widget>
@@ -1292,7 +1305,7 @@
   </connection>
  </connections>
  <buttongroups>
-  <buttongroup name="buttongroup_close_statusbar"/>
   <buttongroup name="buttongroup_popup_statuswindow"/>
+  <buttongroup name="buttongroup_close_statusbar"/>
  </buttongroups>
 </ui>

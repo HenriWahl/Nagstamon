@@ -238,14 +238,13 @@ class StatusWindow(QWidget):
         # when statusbar resides in uppermost part of current screen extend from top to bottom
         if self.top == True:
             y = self.y()
-            if real_height < available_height:
+            if self.y() + real_height < available_height + available_y:
                 height = real_height
             else:
                 height = available_height - self.y() + available_y
         # when statusbar hangs around in lowermost part of current screen extend from bottom to top
         else:
             # when height is to large for current screen cut it
-            #if self.y() - real_height < available_y:
             if self.y() + self.height() - real_height < available_y:
                 height = desktop.screenGeometry().height() - available_y -\
                          (desktop.screenGeometry().height() - (self.y() + self.height()))
@@ -852,7 +851,6 @@ class TableWidget(QTableWidget):
                 self.real_width += 100
         del(column)
 
-        # ---> evtl. muss einfach die breite des vertikalen scrollbalkens mit addiert werden?
 
         return self.real_width
 
@@ -931,7 +929,6 @@ class Dialogs(object):
         # fill actions listwidget with actions
         for action in sorted(conf.actions, key=unicode.lower):
            self.settings.ui.list_actions.addItem(action)
-
 
 
 
