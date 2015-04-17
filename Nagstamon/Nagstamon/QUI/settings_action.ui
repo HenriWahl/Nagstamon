@@ -1,13 +1,13 @@
 <?xml version="1.0" encoding="UTF-8"?>
 <ui version="4.0">
- <class>settings_action_dialog</class>
- <widget class="QDialog" name="settings_action_dialog">
+ <class>settings_action</class>
+ <widget class="QDialog" name="settings_action">
   <property name="geometry">
    <rect>
     <x>0</x>
     <y>0</y>
-    <width>561</width>
-    <height>717</height>
+    <width>1124</width>
+    <height>1197</height>
    </rect>
   </property>
   <property name="sizePolicy">
@@ -18,6 +18,9 @@
   </property>
   <property name="windowTitle">
    <string>Dialog</string>
+  </property>
+  <property name="modal">
+   <bool>true</bool>
   </property>
   <layout class="QGridLayout" name="gridLayout">
    <item row="18" column="0" colspan="7">
@@ -282,7 +285,7 @@ Request given URL string in the background, for example to acknowledge a service
   <connection>
    <sender>buttonBox</sender>
    <signal>accepted()</signal>
-   <receiver>settings_action_dialog</receiver>
+   <receiver>settings_action</receiver>
    <slot>accept()</slot>
    <hints>
     <hint type="sourcelabel">
@@ -298,7 +301,7 @@ Request given URL string in the background, for example to acknowledge a service
   <connection>
    <sender>buttonBox</sender>
    <signal>rejected()</signal>
-   <receiver>settings_action_dialog</receiver>
+   <receiver>settings_action</receiver>
    <slot>reject()</slot>
    <hints>
     <hint type="sourcelabel">

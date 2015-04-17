@@ -35,7 +35,10 @@ from Nagstamon.Config import (conf, RESOURCES, APPINFO)
 
 from Nagstamon.Servers import servers
 
-from Nagstamon.QUI.settings_dialog import Ui_settings_dialog
+# dialogs
+from Nagstamon.QUI.settings_main import Ui_settings_main
+from Nagstamon.QUI.settings_server import Ui_settings_server
+from Nagstamon.QUI.settings_action import Ui_settings_action
 
 
 # fixed icons for hosts/services attributes
@@ -891,45 +894,9 @@ class Dialogs(object):
         class for accessing the dialogs
     """
     def __init__(self):
-        self.settings = Dialog(Ui_settings_dialog)
-        # start with servers tab
-        self.settings.ui.tabs.setCurrentIndex(0)
-        for element in dir(self.settings.ui):
-            if element.startswith('input_'):
-                if element.startswith('input_checkbox_'):
-                    if conf.__dict__[element.split('input_checkbox_')[1]] == True:
-                        self.settings.ui.__dict__[element].toggle()
-                if element.startswith('input_radiobutton_'):
-                    if conf.__dict__[element.split('input_radiobutton_')[1]] == True:
-                        self.settings.ui.__dict__[element].toggle()
-                if element.startswith('input_lineedit_'):
-                    self.settings.ui.__dict__[element].setText(conf.__dict__[element.split('input_lineedit_')[1]])
-                if element.startswith('input_spinbox_'):
-                    self.settings.ui.__dict__[element].setValue(int(conf.__dict__[element.split('input_spinbox_')[1]]))
-
-        # just for fun: compare the next lines with the corresponding GTK madness... :-)
-
-        # fill default order fields combobox with headers names
-        self.settings.ui.input_combobox_default_sort_field.addItems(HEADERS.values())
-        self.settings.ui.input_combobox_default_sort_field.setCurrentText(conf.default_sort_field)
-
-        # fill default sort order combobox
-        self.settings.ui.input_combobox_default_sort_order.addItems(['Ascending', 'Descending'])
-        self.settings.ui.input_combobox_default_sort_order.setCurrentText(conf.default_sort_order)
-
-        # fill combobox with screens for fullscreen
-        for display in range(desktop.screenCount()):
-            self.settings.ui.input_combobox_fullscreen_display.addItem(str(display))
-        self.settings.ui.input_combobox_fullscreen_display.setCurrentText(conf.fullscreen_display)
-
-        # fill servers listwidget with servers
-        for server in sorted(conf.servers, key=unicode.lower):
-           self.settings.ui.list_servers.addItem(server)
-
-        # fill actions listwidget with actions
-        for action in sorted(conf.actions, key=unicode.lower):
-           self.settings.ui.list_actions.addItem(action)
-
+        #self.settings = Dialog(Ui_settings_main)
+        self.settings = Dialog_Settings(Ui_settings_main)
+        self.settings.initialize()
 
 
 class Dialog(object):
@@ -940,6 +907,112 @@ class Dialog(object):
         self.window = QDialog()
         self.ui = dialog()
         self.ui.setupUi(self.window)
+
+
+    def toggle_visibility(self, checkbox, widgets=[]):
+        # state of checkbox toggles visibility of widgets
+        if checkbox.isChecked():
+            for widget in widgets:
+                #widget.setVisible(True)
+                widget.show()
+        else:
+            for widget in widgets:
+                #widget.setVisible(False)
+                widget.hide()
+
+
+    def toggle(self):
+        pass
+
+
+class Dialog_Settings(Dialog):
+    """
+        class for settings dialog
+    """
+
+    def __init__(self, dialog):
+        Dialog.__init__(self, dialog)
+        # define checkbox-to-widgets dependencies which apply at initialization
+        # which widgets have to be hidden because of irrelevance
+        # dictionary holds checkbox/radiobutton as key and relevant widgets in list
+        self.TOGGLE_DEPS = {
+                            # debug mode
+                            self.ui.input_checkbox_debug_mode : [self.ui.input_checkbox_debug_to_file,\
+                                                         self.ui.input_lineedit_debug_file],
+                            # regular expressions for filtering hosts
+                            self.ui.input_checkbox_re_host_enabled : [self.ui.input_lineedit_re_host_pattern,\
+                                                                      self.ui.input_checkbox_re_host_reverse],
+                             # regular expressions for filtering services
+                            self.ui.input_checkbox_re_service_enabled : [self.ui.input_lineedit_re_service_pattern,\
+                                                                        self.ui.input_checkbox_re_service_reverse],
+                            # regular expressions for filtering status information
+                            self.ui.input_checkbox_re_status_information_enabled : [self.ui.input_lineedit_re_status_information_pattern,\
+                                                                                   self.ui.input_checkbox_re_status_information_reverse],
+                            # icon in systray and its offset - might became obsolete in Qt5
+                            self.ui.input_radiobutton_icon_in_systray : [self.ui.label_systray_popup_offset,\
+                                                                         self.ui.input_spinbox_systray_popup_offset],
+                            # display to use in fullscreen mode
+                            self.ui.input_radiobutton_fullscreen : [self.ui.label_fullscreen_display,\
+                                                                    self.ui.input_combobox_fullscreen_display],
+                            # notifications in general
+                            self.ui.input_checkbox_notification : [self.ui.notification_groupbox],
+                            # custom sounds
+                            self.ui.input_radiobutton_notification_custom_sound : [self.ui.notification_custom_sounds_groupbox],
+                            # notification actions
+                            self.ui.input_checkbutton_notification_actions : [self.ui.notification_actions_groupbox],
+                            # single custom notification action
+                            self.ui.input_checkbox_notification_custom_action : [self.ui.notification_custom_action_groupbox]
+                            }
+
+    def initialize(self, start_tab=0):
+        # apply configuration values
+        # start with servers tab
+        self.ui.tabs.setCurrentIndex(start_tab)
+        for element in dir(self.ui):
+            if element.startswith('input_'):
+                if element.startswith('input_checkbox_'):
+                    if conf.__dict__[element.split('input_checkbox_')[1]] == True:
+                        self.ui.__dict__[element].toggle()
+                if element.startswith('input_radiobutton_'):
+                    if conf.__dict__[element.split('input_radiobutton_')[1]] == True:
+                        self.ui.__dict__[element].toggle()
+                if element.startswith('input_lineedit_'):
+                    self.ui.__dict__[element].setText(conf.__dict__[element.split('input_lineedit_')[1]])
+                if element.startswith('input_spinbox_'):
+                    self.ui.__dict__[element].setValue(int(conf.__dict__[element.split('input_spinbox_')[1]]))
+
+        # just for fun: compare the next lines with the corresponding GTK madness... :-)
+
+        # fill default order fields combobox with headers names
+        self.ui.input_combobox_default_sort_field.addItems(HEADERS.values())
+        self.ui.input_combobox_default_sort_field.setCurrentText(conf.default_sort_field)
+
+        # fill default sort order combobox
+        self.ui.input_combobox_default_sort_order.addItems(['Ascending', 'Descending'])
+        self.ui.input_combobox_default_sort_order.setCurrentText(conf.default_sort_order)
+
+        # fill combobox with screens for fullscreen
+        for display in range(desktop.screenCount()):
+            self.ui.input_combobox_fullscreen_display.addItem(str(display))
+        self.ui.input_combobox_fullscreen_display.setCurrentText(conf.fullscreen_display)
+
+        # fill servers listwidget with servers
+        for server in sorted(conf.servers, key=unicode.lower):
+           self.ui.list_servers.addItem(server)
+
+        # fill actions listwidget with actions
+        for action in sorted(conf.actions, key=unicode.lower):
+           self.ui.list_actions.addItem(action)
+
+        # apply toggle-dependencies between checkboxes as certain widgets
+        for checkbox, widgets in self.TOGGLE_DEPS.items():
+            # toggle visibility
+            self.toggle_visibility(checkbox, widgets)
+            # connect checkbox/radiobutton to toggle method of dialog
+            checkbox.clicked.connect(self.toggle)
+
+        # important final size adjustment
+        self.window.adjustSize()
 
 
 def CreateIcons(fontsize):
