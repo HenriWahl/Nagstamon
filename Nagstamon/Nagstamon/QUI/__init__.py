@@ -139,7 +139,6 @@ class StatusWindow(QWidget):
         self.toparea.button_settings.clicked.connect(self.hide_window)
         self.toparea.button_settings.clicked.connect(dialogs.settings.window.show)
 
-
         self.servers_vbox = QVBoxLayout()           # HBox full of servers
         self.servers_vbox.setContentsMargins(0, 0, 0, 0)
         self.servers_scrollarea = QScrollArea()     # scrollable area for server vboxes
@@ -907,21 +906,32 @@ class Dialog(object):
         self.window = QDialog()
         self.ui = dialog()
         self.ui.setupUi(self.window)
+        # treat dialog content after pressing OK button
+        self.ui.button_box.accepted.connect(self.ok)
+
+        # dummy toggle dependencies
+        self.TOGGLE_DEPS = {}
 
 
     def toggle_visibility(self, checkbox, widgets=[]):
         # state of checkbox toggles visibility of widgets
         if checkbox.isChecked():
             for widget in widgets:
-                #widget.setVisible(True)
                 widget.show()
         else:
             for widget in widgets:
-                #widget.setVisible(False)
                 widget.hide()
+        # sometimes windows might be downsized after toggling some checkboxes
+        #self.window.adjustSize()
 
 
-    def toggle(self):
+    def toggle(self, checkbox):
+        # change state of depending widgets
+        self.toggle_visibility(checkbox, self.TOGGLE_DEPS[checkbox])
+
+
+    def ok(self):
+        # dummy OK treatment
         pass
 
 
@@ -929,7 +939,6 @@ class Dialog_Settings(Dialog):
     """
         class for settings dialog
     """
-
     def __init__(self, dialog):
         Dialog.__init__(self, dialog)
         # define checkbox-to-widgets dependencies which apply at initialization
@@ -964,22 +973,27 @@ class Dialog_Settings(Dialog):
                             self.ui.input_checkbox_notification_custom_action : [self.ui.notification_custom_action_groupbox]
                             }
 
+        # QSignalMapper needed to connect all toggle-needing-checkboxes/radiobuttons to one .toggle()-method which
+        # decides which sender to use as key in self.TOGGLE_DEPS
+        self.signalmapper = QSignalMapper()
+
+
     def initialize(self, start_tab=0):
         # apply configuration values
         # start with servers tab
         self.ui.tabs.setCurrentIndex(start_tab)
-        for element in dir(self.ui):
-            if element.startswith('input_'):
-                if element.startswith('input_checkbox_'):
-                    if conf.__dict__[element.split('input_checkbox_')[1]] == True:
-                        self.ui.__dict__[element].toggle()
-                if element.startswith('input_radiobutton_'):
-                    if conf.__dict__[element.split('input_radiobutton_')[1]] == True:
-                        self.ui.__dict__[element].toggle()
-                if element.startswith('input_lineedit_'):
-                    self.ui.__dict__[element].setText(conf.__dict__[element.split('input_lineedit_')[1]])
-                if element.startswith('input_spinbox_'):
-                    self.ui.__dict__[element].setValue(int(conf.__dict__[element.split('input_spinbox_')[1]]))
+        for widget in dir(self.ui):
+            if widget.startswith('input_'):
+                if widget.startswith('input_checkbox_'):
+                    if conf.__dict__[widget.split('input_checkbox_')[1]] == True:
+                        self.ui.__dict__[widget].toggle()
+                if widget.startswith('input_radiobutton_'):
+                    if conf.__dict__[widget.split('input_radiobutton_')[1]] == True:
+                        self.ui.__dict__[widget].toggle()
+                if widget.startswith('input_lineedit_'):
+                    self.ui.__dict__[widget].setText(conf.__dict__[widget.split('input_lineedit_')[1]])
+                if widget.startswith('input_spinbox_'):
+                    self.ui.__dict__[widget].setValue(int(conf.__dict__[widget.split('input_spinbox_')[1]]))
 
         # just for fun: compare the next lines with the corresponding GTK madness... :-)
 
@@ -1008,11 +1022,29 @@ class Dialog_Settings(Dialog):
         for checkbox, widgets in self.TOGGLE_DEPS.items():
             # toggle visibility
             self.toggle_visibility(checkbox, widgets)
-            # connect checkbox/radiobutton to toggle method of dialog
-            checkbox.clicked.connect(self.toggle)
+            # multiplex slot .toggle() by signal-mapping
+            self.signalmapper.setMapping(checkbox, checkbox)
+            checkbox.toggled.connect(self.signalmapper.map)
+
+        # finally map signals with .sender() - [QWidget] is important!
+        self.signalmapper.mapped[QWidget].connect(self.toggle)
 
         # important final size adjustment
         self.window.adjustSize()
+
+
+    def ok(self):
+        # do all stuff necessary after OK button was clicked
+        # put widget values into conf
+        for widget in self.ui.__dict__.values():
+            if widget.objectName().startswith("input_checkbox_"):
+                conf.__dict__[widget.objectName().split("input_checkbox_")[1]] = widget.isChecked()
+            if widget.objectName().startswith("input_radiobutton_"):
+                conf.__dict__[widget.objectName().split("input_radiobutton_")[1]] = widget.isChecked()
+            if widget.objectName().startswith("input_lineedit_"):
+                conf.__dict__[widget.objectName().split("input_lineedit_")[1]] = widget.text()
+            if widget.objectName().startswith("input_spinbox_"):
+                conf.__dict__[widget.objectName().split("input_spinbox_")[1]] = str(widget.value())
 
 
 def CreateIcons(fontsize):
@@ -1033,6 +1065,7 @@ def get_screen(x, y):
         if (desktop.screenGeometry(screen).contains(x, y)):
             break
     return screen
+
 
 # access to variuos desktop parameters
 desktop = QApplication.desktop()
