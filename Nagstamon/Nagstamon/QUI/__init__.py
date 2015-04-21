@@ -137,7 +137,7 @@ class StatusWindow(QWidget):
 
         # buttons in toparea
         self.toparea.button_settings.clicked.connect(self.hide_window)
-        self.toparea.button_settings.clicked.connect(dialogs.settings.window.show)
+        self.toparea.button_settings.clicked.connect(dialogs.settings.show)
 
         self.servers_vbox = QVBoxLayout()           # HBox full of servers
         self.servers_vbox.setContentsMargins(0, 0, 0, 0)
@@ -893,9 +893,12 @@ class Dialogs(object):
         class for accessing the dialogs
     """
     def __init__(self):
-        #self.settings = Dialog(Ui_settings_main)
+        # settings main dialog
         self.settings = Dialog_Settings(Ui_settings_main)
         self.settings.initialize()
+        # server settings dialog
+        self.server = Dialog_Server(Ui_settings_server)
+        self.server.initialize()
 
 
 class Dialog(object):
@@ -912,21 +915,43 @@ class Dialog(object):
         # dummy toggle dependencies
         self.TOGGLE_DEPS = {}
 
+        # window position to be used to fix strange movement bug
+        self.x = 0
+        self.y = 0
+
+
+    def initialize(self):
+        """
+            dummy initialize method
+        """
+        pass
+
+
+    def show(self):
+        """
+            simple how method, to be enriched
+        """
+        # reset window if only needs smaller screen estate
+        self.window.adjustSize()
+        self.window.show()
+
 
     def toggle_visibility(self, checkbox, widgets=[]):
-        # state of checkbox toggles visibility of widgets
+        """
+            state of checkbox toggles visibility of widgets
+        """
         if checkbox.isChecked():
             for widget in widgets:
                 widget.show()
         else:
             for widget in widgets:
                 widget.hide()
-        # sometimes windows might be downsized after toggling some checkboxes
-        #self.window.adjustSize()
 
 
     def toggle(self, checkbox):
-        # change state of depending widgets
+        """
+            change state of depending widgets
+        """
         self.toggle_visibility(checkbox, self.TOGGLE_DEPS[checkbox])
 
 
@@ -976,6 +1001,12 @@ class Dialog_Settings(Dialog):
         # QSignalMapper needed to connect all toggle-needing-checkboxes/radiobuttons to one .toggle()-method which
         # decides which sender to use as key in self.TOGGLE_DEPS
         self.signalmapper = QSignalMapper()
+
+        # connect server buttons to server dialogs
+        self.ui.button_new_server.clicked.connect(self.new_server)
+        self.ui.button_edit_server.clicked.connect(self.edit_server)
+        self.ui.button_copy_server.clicked.connect(self.copy_server)
+        self.ui.button_delete_server.clicked.connect(self.delete_server)
 
 
     def initialize(self, start_tab=0):
@@ -1046,10 +1077,42 @@ class Dialog_Settings(Dialog):
             if widget.objectName().startswith("input_spinbox_"):
                 conf.__dict__[widget.objectName().split("input_spinbox_")[1]] = str(widget.value())
 
+        # store configuration
+        conf.SaveConfig()
+
+
+    def new_server(self):
+        pass
+
+
+    def edit_server(self):
+        pass
+
+
+    def copy_server(self):
+        pass
+
+
+    def delete_server(self):
+        pass
+
+
+class Dialog_Server(Dialog):
+    def __init__(self, dialog):
+        Dialog.__init__(self, dialog)
+        # define checkbox-to-widgets dependencies which apply at initialization
+        # which widgets have to be hidden because of irrelevance
+        # dictionary holds checkbox/radiobutton as key and relevant widgets in list
+        self.TOGGLE_DEPS = {}
+
+        # QSignalMapper needed to connect all toggle-needing-checkboxes/radiobuttons to one .toggle()-method which
+        # decides which sender to use as key in self.TOGGLE_DEPS
+        self.signalmapper = QSignalMapper()
+
 
 def CreateIcons(fontsize):
     """
-        fill global ICONS with pixmpas rendered from SVGs in fontsize dimensions
+        fill global ICONS with pixmaps rendered from SVGs in fontsize dimensions
     """
     for attr in ('acknowledged', 'downtime', 'flapping', 'new', 'passive'):
         icon = QIcon('%s%snagstamon_%s.svg' % (RESOURCES, os.sep, attr))

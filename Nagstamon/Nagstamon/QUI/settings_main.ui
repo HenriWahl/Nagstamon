@@ -8,11 +8,11 @@
     <x>0</x>
     <y>0</y>
     <width>669</width>
-    <height>994</height>
+    <height>1032</height>
    </rect>
   </property>
   <property name="sizePolicy">
-   <sizepolicy hsizetype="Minimum" vsizetype="Minimum">
+   <sizepolicy hsizetype="MinimumExpanding" vsizetype="MinimumExpanding">
     <horstretch>0</horstretch>
     <verstretch>0</verstretch>
    </sizepolicy>
@@ -28,6 +28,9 @@
   </property>
   <property name="locale">
    <locale language="C" country="AnyCountry"/>
+  </property>
+  <property name="modal">
+   <bool>true</bool>
   </property>
   <layout class="QVBoxLayout" name="verticalLayout">
    <item>
@@ -239,7 +242,7 @@
           <item>
            <widget class="QRadioButton" name="input_radiobutton_appindicator">
             <property name="text">
-             <string>AppIndicator (Ubuntu &amp; friends)</string>
+             <string>AppIndicator (Ubuntu and friends)</string>
             </property>
            </widget>
           </item>
@@ -854,6 +857,13 @@
            </widget>
           </item>
           <item>
+           <widget class="QGroupBox" name="groupBox">
+            <property name="title">
+             <string>GroupBox</string>
+            </property>
+           </widget>
+          </item>
+          <item>
            <widget class="QCheckBox" name="input_checkbox_notification_sound_repeat">
             <property name="text">
              <string>Repeat sound until notification has been noticed</string>
@@ -875,9 +885,9 @@
            </widget>
           </item>
           <item>
-           <widget class="QGroupBox" name="notification_custom_sounds_groupbox">
+           <widget class="QGroupBox" name="notification_sounds_groupbox">
             <property name="title">
-             <string>Custom sounds:</string>
+             <string>Sounds:</string>
             </property>
             <layout class="QGridLayout" name="gridLayout_8">
              <item row="1" column="1">
@@ -1536,7 +1546,7 @@
   </connection>
  </connections>
  <buttongroups>
-  <buttongroup name="buttongroup_close_statusbar"/>
   <buttongroup name="buttongroup_popup_statuswindow"/>
+  <buttongroup name="buttongroup_close_statusbar"/>
  </buttongroups>
 </ui>
