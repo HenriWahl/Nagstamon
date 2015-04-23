@@ -7,8 +7,8 @@
    <rect>
     <x>0</x>
     <y>0</y>
-    <width>669</width>
-    <height>1032</height>
+    <width>665</width>
+    <height>1101</height>
    </rect>
   </property>
   <property name="sizePolicy">
@@ -42,7 +42,7 @@
       </sizepolicy>
      </property>
      <property name="currentIndex">
-      <number>0</number>
+      <number>4</number>
      </property>
      <widget class="QWidget" name="tab_servers">
       <attribute name="title">
@@ -213,8 +213,8 @@
          </property>
          <property name="sizeHint" stdset="0">
           <size>
-           <width>20</width>
-           <height>40</height>
+           <width>0</width>
+           <height>0</height>
           </size>
          </property>
         </spacer>
@@ -333,8 +333,8 @@
          </property>
          <property name="sizeHint" stdset="0">
           <size>
-           <width>20</width>
-           <height>40</height>
+           <width>0</width>
+           <height>0</height>
           </size>
          </property>
         </spacer>
@@ -479,8 +479,8 @@
          </property>
          <property name="sizeHint" stdset="0">
           <size>
-           <width>20</width>
-           <height>40</height>
+           <width>0</width>
+           <height>0</height>
           </size>
          </property>
         </spacer>
@@ -770,8 +770,8 @@
          </property>
          <property name="sizeHint" stdset="0">
           <size>
-           <width>20</width>
-           <height>40</height>
+           <width>0</width>
+           <height>0</height>
           </size>
          </property>
         </spacer>
@@ -857,103 +857,105 @@
            </widget>
           </item>
           <item>
-           <widget class="QGroupBox" name="groupBox">
-            <property name="title">
-             <string>GroupBox</string>
-            </property>
-           </widget>
-          </item>
-          <item>
-           <widget class="QCheckBox" name="input_checkbox_notification_sound_repeat">
-            <property name="text">
-             <string>Repeat sound until notification has been noticed</string>
-            </property>
-           </widget>
-          </item>
-          <item>
-           <widget class="QRadioButton" name="input_radiobutton_notification_default_sound">
-            <property name="text">
-             <string>Use default Nagios sounds</string>
-            </property>
-           </widget>
-          </item>
-          <item>
-           <widget class="QRadioButton" name="input_radiobutton_notification_custom_sound">
-            <property name="text">
-             <string>Use custom sounds</string>
-            </property>
-           </widget>
-          </item>
-          <item>
            <widget class="QGroupBox" name="notification_sounds_groupbox">
             <property name="title">
              <string>Sounds:</string>
             </property>
-            <layout class="QGridLayout" name="gridLayout_8">
-             <item row="1" column="1">
-              <widget class="QPushButton" name="pushButton_7">
+            <layout class="QGridLayout" name="gridLayout_16">
+             <item row="0" column="0" colspan="3">
+              <widget class="QCheckBox" name="input_checkbox_notification_sound_repeat">
                <property name="text">
-                <string>PushButton</string>
+                <string>Repeat sound until notification has been noticed</string>
                </property>
               </widget>
              </item>
-             <item row="0" column="2">
-              <widget class="QPushButton" name="button_play_warning">
+             <item row="3" column="0" colspan="2">
+              <widget class="QGroupBox" name="notification_custom_sounds_groupbox">
+               <property name="title">
+                <string>Custom sounds:</string>
+               </property>
+               <layout class="QGridLayout" name="gridLayout_8">
+                <item row="1" column="1">
+                 <widget class="QPushButton" name="pushButton_7">
+                  <property name="text">
+                   <string>PushButton</string>
+                  </property>
+                 </widget>
+                </item>
+                <item row="0" column="2">
+                 <widget class="QPushButton" name="button_play_warning">
+                  <property name="text">
+                   <string>Play</string>
+                  </property>
+                 </widget>
+                </item>
+                <item row="0" column="0">
+                 <widget class="QLabel" name="label_notification_sound_options_custom_sounds_warning">
+                  <property name="text">
+                   <string>WARNING:</string>
+                  </property>
+                 </widget>
+                </item>
+                <item row="1" column="0">
+                 <widget class="QLabel" name="label_notification_sound_options_custom_sounds_critical">
+                  <property name="text">
+                   <string>CRITICAL:</string>
+                  </property>
+                 </widget>
+                </item>
+                <item row="2" column="1">
+                 <widget class="QPushButton" name="pushButton_9">
+                  <property name="text">
+                   <string>PushButton</string>
+                  </property>
+                 </widget>
+                </item>
+                <item row="0" column="1">
+                 <widget class="QPushButton" name="pushButton_5">
+                  <property name="text">
+                   <string>PushButton</string>
+                  </property>
+                 </widget>
+                </item>
+                <item row="1" column="2">
+                 <widget class="QPushButton" name="button_play_critical">
+                  <property name="text">
+                   <string>Play</string>
+                  </property>
+                 </widget>
+                </item>
+                <item row="2" column="0">
+                 <widget class="QLabel" name="label_notification_sound_options_custom_sounds_down">
+                  <property name="text">
+                   <string>DOWN:</string>
+                  </property>
+                 </widget>
+                </item>
+                <item row="2" column="2">
+                 <widget class="QPushButton" name="button_play_down">
+                  <property name="text">
+                   <string>Play</string>
+                  </property>
+                 </widget>
+                </item>
+               </layout>
+              </widget>
+             </item>
+             <item row="2" column="0" colspan="3">
+              <widget class="QRadioButton" name="input_radiobutton_notification_custom_sound">
                <property name="text">
-                <string>Play</string>
+                <string>Use custom sounds</string>
                </property>
               </widget>
              </item>
-             <item row="0" column="0">
-              <widget class="QLabel" name="label_notification_sound_options_custom_sounds_warning">
+             <item row="1" column="0" colspan="3">
+              <widget class="QRadioButton" name="input_radiobutton_notification_default_sound">
                <property name="text">
-                <string>WARNING:</string>
+                <string>Use default Nagios sounds</string>
                </property>
               </widget>
              </item>
-             <item row="1" column="0">
-              <widget class="QLabel" name="label_notification_sound_options_custom_sounds_critical">
-               <property name="text">
-                <string>CRITICAL:</string>
-               </property>
-              </widget>
-             </item>
-             <item row="2" column="1">
-              <widget class="QPushButton" name="pushButton_9">
-               <property name="text">
-                <string>PushButton</string>
-               </property>
-              </widget>
-             </item>
-             <item row="0" column="1">
-              <widget class="QPushButton" name="pushButton_5">
-               <property name="text">
-                <string>PushButton</string>
-               </property>
-              </widget>
-             </item>
-             <item row="1" column="2">
-              <widget class="QPushButton" name="button_play_critical">
-               <property name="text">
-                <string>Play</string>
-               </property>
-              </widget>
-             </item>
-             <item row="2" column="0">
-              <widget class="QLabel" name="label_notification_sound_options_custom_sounds_down">
-               <property name="text">
-                <string>DOWN:</string>
-               </property>
-              </widget>
-             </item>
-             <item row="2" column="2">
-              <widget class="QPushButton" name="button_play_down">
-               <property name="text">
-                <string>Play</string>
-               </property>
-              </widget>
-             </item>
-             <item row="0" column="3">
+             <item row="3" column="2">
               <spacer name="horizontalSpacer_5">
                <property name="orientation">
                 <enum>Qt::Horizontal</enum>
@@ -1029,13 +1031,6 @@
                 <string>Custom notification action:</string>
                </property>
                <layout class="QGridLayout" name="gridLayout_7">
-                <item row="1" column="0">
-                 <widget class="QLabel" name="label_notification_custom_action_separator">
-                  <property name="text">
-                   <string>Event separator:</string>
-                  </property>
-                 </widget>
-                </item>
                 <item row="0" column="0">
                  <widget class="QLabel" name="label_notification_custom_action_string">
                   <property name="text">
@@ -1050,11 +1045,18 @@
                   </property>
                  </widget>
                 </item>
-                <item row="1" column="1">
-                 <widget class="QLineEdit" name="input_lineedit_notification_custom_action_string"/>
-                </item>
                 <item row="0" column="1">
                  <widget class="QLineEdit" name="input_lineedit_notification_custom_action_separator"/>
+                </item>
+                <item row="1" column="0">
+                 <widget class="QLabel" name="label_notification_custom_action_separator">
+                  <property name="text">
+                   <string>Event separator:</string>
+                  </property>
+                 </widget>
+                </item>
+                <item row="1" column="1">
+                 <widget class="QLineEdit" name="input_lineedit_notification_custom_action_string"/>
                 </item>
                </layout>
               </widget>
@@ -1078,8 +1080,8 @@
          </property>
          <property name="sizeHint" stdset="0">
           <size>
-           <width>20</width>
-           <height>40</height>
+           <width>0</width>
+           <height>0</height>
           </size>
          </property>
         </spacer>
@@ -1217,8 +1219,8 @@
          </property>
          <property name="sizeHint" stdset="0">
           <size>
-           <width>20</width>
-           <height>40</height>
+           <width>0</width>
+           <height>0</height>
           </size>
          </property>
         </spacer>
@@ -1482,8 +1484,8 @@
          </property>
          <property name="sizeHint" stdset="0">
           <size>
-           <width>20</width>
-           <height>40</height>
+           <width>0</width>
+           <height>0</height>
           </size>
          </property>
         </spacer>
@@ -1546,7 +1548,7 @@
   </connection>
  </connections>
  <buttongroups>
-  <buttongroup name="buttongroup_popup_statuswindow"/>
   <buttongroup name="buttongroup_close_statusbar"/>
+  <buttongroup name="buttongroup_popup_statuswindow"/>
  </buttongroups>
 </ui>

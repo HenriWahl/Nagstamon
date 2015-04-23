@@ -38,7 +38,7 @@ class OpsviewServer(GenericServer):
     """
        special treatment for Opsview XML based API
     """
-    TYPE = 'Opsview'
+    TYPE = u'Opsview'
 
     # Arguments available for submitting check results
     SUBMIT_CHECK_RESULT_ARGS = ["comment"]

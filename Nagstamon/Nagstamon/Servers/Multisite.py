@@ -42,52 +42,11 @@ class MultisiteError(Exception):
         self.terminate = terminate
         self.result    = result
 
-"""
-class LastCheckColumnMultisite(Column):
-    #because Check_MK has a pretty different date format (much better readable) it has to
-    #be treaten differently
-    #This is a custom version of LastCheckColumn to be used in list COLUMNS in class Multisite
-
-    ATTR_NAME = 'last_check'
-
-    @classmethod
-    def sort_function(cls, model, iter1, iter2, column):
-        # Overrides default sorting behaviour
-
-        data1, data2 = [model.get_value(x, column) for x in (iter1, iter2)]
-
-        try:
-            first = Actions.MachineSortableDateMultisite(data1)
-            second = Actions.MachineSortableDateMultisite(data2)
-        except ValueError, err:
-            print err
-            return cmp(first, second)
-        # other order than default function
-        return second - first
-
-
-class DurationColumnMultisite(CustomSortingColumn):
-    ATTR_NAME = 'duration'
-
-    @classmethod
-    def sort_function(cls, model, iter1, iter2, column):
-        # Overrides default sorting behaviour
-        data1, data2 = [model.get_value(x, column) for x in (iter1, iter2)]
-        try:
-            first = Actions.MachineSortableDateMultisite(data1)
-            second = Actions.MachineSortableDateMultisite(data2)
-        except ValueError, err:
-            print err
-            return cmp(first, second)
-        # other order than default function
-        return second - first
-"""
-
 class MultisiteServer(GenericServer):
     """
        special treatment for Check_MK Multisite JSON API
     """
-    TYPE = 'Check_MK Multisite'
+    TYPE = u'Check_MK Multisite'
 
     # URLs for browser shortlinks/buttons on popup window
     BROWSER_URLS= { "monitor": "$MONITOR$",\

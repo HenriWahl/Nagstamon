@@ -52,7 +52,7 @@ class ZabbixServer(GenericServer):
     """
        special treatment for Zabbix, taken from Check_MK Multisite JSON API
     """
-    TYPE = 'Zabbix'
+    TYPE = u'Zabbix'
     zapi = None
 
     # A Monitor CGI URL is not necessary so hide it in settings

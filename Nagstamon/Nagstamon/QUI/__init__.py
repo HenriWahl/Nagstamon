@@ -33,7 +33,7 @@ from collections import OrderedDict
 
 from Nagstamon.Config import (conf, RESOURCES, APPINFO)
 
-from Nagstamon.Servers import servers
+from Nagstamon.Servers import (SERVER_TYPES, servers)
 
 # dialogs
 from Nagstamon.QUI.settings_main import Ui_settings_main
@@ -990,6 +990,8 @@ class Dialog_Settings(Dialog):
                                                                     self.ui.input_combobox_fullscreen_display],
                             # notifications in general
                             self.ui.input_checkbox_notification : [self.ui.notification_groupbox],
+                            # sound at all
+                            self.ui.input_checkbox_notification_sound : [self.ui.notification_sounds_groupbox],
                             # custom sounds
                             self.ui.input_radiobutton_notification_custom_sound : [self.ui.notification_custom_sounds_groupbox],
                             # notification actions
@@ -1044,10 +1046,14 @@ class Dialog_Settings(Dialog):
         # fill servers listwidget with servers
         for server in sorted(conf.servers, key=unicode.lower):
            self.ui.list_servers.addItem(server)
+        # select first item
+        self.ui.list_servers.setCurrentRow(0)
 
         # fill actions listwidget with actions
         for action in sorted(conf.actions, key=unicode.lower):
            self.ui.list_actions.addItem(action)
+        # select first item
+        self.ui.list_actions.setCurrentRow(0)
 
         # apply toggle-dependencies between checkboxes as certain widgets
         for checkbox, widgets in self.TOGGLE_DEPS.items():
@@ -1082,10 +1088,16 @@ class Dialog_Settings(Dialog):
 
 
     def new_server(self):
+        dialogs.server.new()
         pass
 
 
     def edit_server(self):
+        """
+            edit existing server
+        """
+        print(self.ui.list_servers.currentItem().text())
+        print(conf.servers[self.ui.list_servers.currentItem().text()])
         pass
 
 
@@ -1108,6 +1120,23 @@ class Dialog_Server(Dialog):
         # QSignalMapper needed to connect all toggle-needing-checkboxes/radiobuttons to one .toggle()-method which
         # decides which sender to use as key in self.TOGGLE_DEPS
         self.signalmapper = QSignalMapper()
+
+        # fill default order fields combobox with monitor server types
+        self.ui.input_combobox_server_type.addItems(sorted(SERVER_TYPES.keys(), key=unicode.lower))
+        # default to Nagios as it is the mostly used monitor server
+        self.ui.input_combobox_server_type.setCurrentText("Nagios")
+
+        
+
+
+    def new(self):
+        """
+            create new server
+        """
+        # important final size adjustment
+        self.window.adjustSize()
+
+        self.window.show()
 
 
 def CreateIcons(fontsize):

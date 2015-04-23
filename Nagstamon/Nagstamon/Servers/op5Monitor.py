@@ -65,7 +65,7 @@ class Op5MonitorServer(GenericServer):
         As Nagios is the default server type all its methods are in GenericServer
     """
 
-    TYPE = 'op5Monitor'
+    TYPE = u'op5Monitor'
     api_count='/api/filter/count/?query='
     api_query='/api/filter/query/?query='
     api_cmd='/api/command'

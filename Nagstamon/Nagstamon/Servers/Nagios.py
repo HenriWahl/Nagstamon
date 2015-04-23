@@ -27,7 +27,7 @@ class NagiosServer(GenericServer):
         As Nagios is the default server type all its methods are in GenericServer
     """
 
-    TYPE = 'Nagios'
+    TYPE = u'Nagios'
 
     # autologin is used only by Centreon
     DISABLED_CONTROLS = ["input_checkbutton_use_autologin",

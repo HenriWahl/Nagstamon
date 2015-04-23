@@ -28,7 +28,7 @@ from Nagstamon.Objects import *
 from Nagstamon.Servers.Generic import GenericServer
 
 class CentreonServer(GenericServer):
-    TYPE = 'Centreon'
+    TYPE = u'Centreon'
     # centreon generic web interface uses a sid which is needed to ask for news
     SID = None
     # count for SID regeneration

@@ -42,7 +42,7 @@ class ThrukServer(GenericServer):
     """
         Thruk is derived from generic (Nagios) server
     """
-    TYPE = 'Thruk'
+    TYPE = u'Thruk'
 
     # autologin is used only by Centreon
     DISABLED_CONTROLS = ["input_checkbutton_use_autologin",

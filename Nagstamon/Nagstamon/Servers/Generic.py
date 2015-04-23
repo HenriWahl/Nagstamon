@@ -58,7 +58,7 @@ class GenericServer(object):
         Default values are for Nagios servers
     """
 
-    TYPE = 'Generic'
+    TYPE = u'Generic'
 
     DISABLED_CONTROLS = []
 
