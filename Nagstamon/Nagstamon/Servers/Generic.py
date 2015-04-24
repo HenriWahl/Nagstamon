@@ -60,8 +60,6 @@ class GenericServer(object):
 
     TYPE = u'Generic'
 
-    DISABLED_CONTROLS = []
-
     # dictionary to translate status bitmaps on webinterface into status flags
     # this are defaults from Nagios
     # "disabled.gif" is in Nagios for hosts the same as "passiveonly.gif" for services

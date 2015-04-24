@@ -896,6 +896,7 @@ class Dialogs(object):
         # settings main dialog
         self.settings = Dialog_Settings(Ui_settings_main)
         self.settings.initialize()
+
         # server settings dialog
         self.server = Dialog_Server(Ui_settings_server)
         self.server.initialize()
@@ -905,6 +906,11 @@ class Dialog(object):
     """
         one single dialog
     """
+    # dummy toggle dependencies
+    TOGGLE_DEPS = {}
+    # auxiliary list of checkboxes which HIDE some other widgets if triggered - for example proxy OS settings
+    TOGGLE_DEPS_INVERTED = []
+
     def __init__(self, dialog):
         self.window = QDialog()
         self.ui = dialog()
@@ -912,8 +918,9 @@ class Dialog(object):
         # treat dialog content after pressing OK button
         self.ui.button_box.accepted.connect(self.ok)
 
-        # dummy toggle dependencies
-        self.TOGGLE_DEPS = {}
+        # QSignalMapper needed to connect all toggle-needing-checkboxes/radiobuttons to one .toggle()-method which
+        # decides which sender to use as key in self.TOGGLE_DEPS
+        self.signalmapper = QSignalMapper()
 
         # window position to be used to fix strange movement bug
         self.x = 0
@@ -939,20 +946,43 @@ class Dialog(object):
     def toggle_visibility(self, checkbox, widgets=[]):
         """
             state of checkbox toggles visibility of widgets
+            some checkboxes might trigger an inverted behaviour - thus the 'inverted' value
         """
-        if checkbox.isChecked():
-            for widget in widgets:
-                widget.show()
+        if checkbox in self.TOGGLE_DEPS_INVERTED:
+            if checkbox.isChecked():
+                for widget in widgets:
+                    widget.hide()
+            else:
+                for widget in widgets:
+                    widget.show()
+        # normal case - clock on checkbox activates more options
         else:
-            for widget in widgets:
-                widget.hide()
+            if checkbox.isChecked():
+                for widget in widgets:
+                    widget.show()
+            else:
+                for widget in widgets:
+                    widget.hide()
 
 
-    def toggle(self, checkbox):
+    def toggle(self, checkbox, inverted=False):
         """
-            change state of depending widgets
+            change state of depending widgets, slot for signals from checkboxes in UI
         """
         self.toggle_visibility(checkbox, self.TOGGLE_DEPS[checkbox])
+
+
+    def toggle_toggles(self):
+        # apply toggle-dependencies between checkboxes as certain widgets
+        for checkbox, widgets in self.TOGGLE_DEPS.items():
+            # toggle visibility
+            self.toggle_visibility(checkbox, widgets)
+            # multiplex slot .toggle() by signal-mapping
+            self.signalmapper.setMapping(checkbox, checkbox)
+            checkbox.toggled.connect(self.signalmapper.map)
+
+        # finally map signals with .sender() - [QWidget] is important!
+        self.signalmapper.mapped[QWidget].connect(self.toggle)
 
 
     def ok(self):
@@ -971,22 +1001,22 @@ class Dialog_Settings(Dialog):
         # dictionary holds checkbox/radiobutton as key and relevant widgets in list
         self.TOGGLE_DEPS = {
                             # debug mode
-                            self.ui.input_checkbox_debug_mode : [self.ui.input_checkbox_debug_to_file,\
+                            self.ui.input_checkbox_debug_mode : [self.ui.input_checkbox_debug_to_file,
                                                          self.ui.input_lineedit_debug_file],
                             # regular expressions for filtering hosts
-                            self.ui.input_checkbox_re_host_enabled : [self.ui.input_lineedit_re_host_pattern,\
+                            self.ui.input_checkbox_re_host_enabled : [self.ui.input_lineedit_re_host_pattern,
                                                                       self.ui.input_checkbox_re_host_reverse],
                              # regular expressions for filtering services
-                            self.ui.input_checkbox_re_service_enabled : [self.ui.input_lineedit_re_service_pattern,\
+                            self.ui.input_checkbox_re_service_enabled : [self.ui.input_lineedit_re_service_pattern,
                                                                         self.ui.input_checkbox_re_service_reverse],
                             # regular expressions for filtering status information
-                            self.ui.input_checkbox_re_status_information_enabled : [self.ui.input_lineedit_re_status_information_pattern,\
+                            self.ui.input_checkbox_re_status_information_enabled : [self.ui.input_lineedit_re_status_information_pattern,
                                                                                    self.ui.input_checkbox_re_status_information_reverse],
                             # icon in systray and its offset - might became obsolete in Qt5
-                            self.ui.input_radiobutton_icon_in_systray : [self.ui.label_systray_popup_offset,\
+                            self.ui.input_radiobutton_icon_in_systray : [self.ui.label_systray_popup_offset,
                                                                          self.ui.input_spinbox_systray_popup_offset],
                             # display to use in fullscreen mode
-                            self.ui.input_radiobutton_fullscreen : [self.ui.label_fullscreen_display,\
+                            self.ui.input_radiobutton_fullscreen : [self.ui.label_fullscreen_display,
                                                                     self.ui.input_combobox_fullscreen_display],
                             # notifications in general
                             self.ui.input_checkbox_notification : [self.ui.notification_groupbox],
@@ -1000,15 +1030,14 @@ class Dialog_Settings(Dialog):
                             self.ui.input_checkbox_notification_custom_action : [self.ui.notification_custom_action_groupbox]
                             }
 
-        # QSignalMapper needed to connect all toggle-needing-checkboxes/radiobuttons to one .toggle()-method which
-        # decides which sender to use as key in self.TOGGLE_DEPS
-        self.signalmapper = QSignalMapper()
-
         # connect server buttons to server dialogs
         self.ui.button_new_server.clicked.connect(self.new_server)
         self.ui.button_edit_server.clicked.connect(self.edit_server)
         self.ui.button_copy_server.clicked.connect(self.copy_server)
         self.ui.button_delete_server.clicked.connect(self.delete_server)
+
+        # apply toggle-dependencies between checkboxes as certain widgets
+        self.toggle_toggles()
 
 
     def initialize(self, start_tab=0):
@@ -1055,17 +1084,6 @@ class Dialog_Settings(Dialog):
         # select first item
         self.ui.list_actions.setCurrentRow(0)
 
-        # apply toggle-dependencies between checkboxes as certain widgets
-        for checkbox, widgets in self.TOGGLE_DEPS.items():
-            # toggle visibility
-            self.toggle_visibility(checkbox, widgets)
-            # multiplex slot .toggle() by signal-mapping
-            self.signalmapper.setMapping(checkbox, checkbox)
-            checkbox.toggled.connect(self.signalmapper.map)
-
-        # finally map signals with .sender() - [QWidget] is important!
-        self.signalmapper.mapped[QWidget].connect(self.toggle)
-
         # important final size adjustment
         self.window.adjustSize()
 
@@ -1074,14 +1092,14 @@ class Dialog_Settings(Dialog):
         # do all stuff necessary after OK button was clicked
         # put widget values into conf
         for widget in self.ui.__dict__.values():
-            if widget.objectName().startswith("input_checkbox_"):
-                conf.__dict__[widget.objectName().split("input_checkbox_")[1]] = widget.isChecked()
-            if widget.objectName().startswith("input_radiobutton_"):
-                conf.__dict__[widget.objectName().split("input_radiobutton_")[1]] = widget.isChecked()
+            if widget.objectName().startswith('input_checkbox_'):
+                conf.__dict__[widget.objectName().split('input_checkbox_')[1]] = widget.isChecked()
+            if widget.objectName().startswith('input_radiobutton_'):
+                conf.__dict__[widget.objectName().split('input_radiobutton_')[1]] = widget.isChecked()
             if widget.objectName().startswith("input_lineedit_"):
-                conf.__dict__[widget.objectName().split("input_lineedit_")[1]] = widget.text()
-            if widget.objectName().startswith("input_spinbox_"):
-                conf.__dict__[widget.objectName().split("input_spinbox_")[1]] = str(widget.value())
+                conf.__dict__[widget.objectName().split('input_lineedit_')[1]] = widget.text()
+            if widget.objectName().startswith('input_spinbox_'):
+                conf.__dict__[widget.objectName().split('input_spinbox_')[1]] = str(widget.value())
 
         # store configuration
         conf.SaveConfig()
@@ -1115,18 +1133,59 @@ class Dialog_Server(Dialog):
         # define checkbox-to-widgets dependencies which apply at initialization
         # which widgets have to be hidden because of irrelevance
         # dictionary holds checkbox/radiobutton as key and relevant widgets in list
-        self.TOGGLE_DEPS = {}
+        self.TOGGLE_DEPS = {
+                            self.ui.input_checkbox_use_autologin : [self.ui.label_autologin_key,
+                                                                    self.ui.input_lineedit_autologin_key],
+                            self.ui.input_checkbox_use_proxy : [self.ui.proxy_groupbox],
 
-        # QSignalMapper needed to connect all toggle-needing-checkboxes/radiobuttons to one .toggle()-method which
-        # decides which sender to use as key in self.TOGGLE_DEPS
-        self.signalmapper = QSignalMapper()
+                            self.ui.input_checkbox_use_proxy_from_os : [self.ui.label_proxy_address,
+                                                                        self.ui.input_lineedit_proxy_address,
+                                                                        self.ui.label_proxy_username,
+                                                                        self.ui.input_lineedit_proxy_username,
+                                                                        self.ui.label_proxy_password,
+                                                                        self.ui.input_lineedit_proxy_password]
+                            }
+
+        self.TOGGLE_DEPS_INVERTED = [self.ui.input_checkbox_use_proxy_from_os]
+
+        # these widgets are shown or hidden depending on server type properties
+        self.VOLATILE_WIDGETS = {
+                                 self.ui.label_monitor_cgi_url : ['Nagios', 'Icinga', 'Opsview','Thruk'],
+                                 self.ui.input_lineedit_monitor_cgi_url : ['Nagios', 'Icinga', 'Opsview','Thruk'],
+                                 self.ui.input_checkbox_use_autologin : ['Centreon'],
+                                 self.ui.input_lineedit_autologin_key : ['Centreon'],
+                                 self.ui.label_autologin_key : ['Centreon'],
+                                 self.ui.input_checkbox_use_display_name_host : ['Icinga'],
+                                 self.ui.input_checkbox_use_display_name_service : ['Icinga']
+                                }
+
+        # mode depending on which button was pressed in settings main dialog
+        # one of "new, defaults to "new"
+        self.mode = 'new'
 
         # fill default order fields combobox with monitor server types
         self.ui.input_combobox_server_type.addItems(sorted(SERVER_TYPES.keys(), key=unicode.lower))
         # default to Nagios as it is the mostly used monitor server
-        self.ui.input_combobox_server_type.setCurrentText("Nagios")
+        self.ui.input_combobox_server_type.setCurrentText('Nagios')
 
-        
+        # detect change of server type which leads to certain options shown or hidden
+        self.ui.input_combobox_server_type.activated.connect(self.server_type_changed)
+
+        # initially hide not needed widgets
+        self.server_type_changed()
+
+        # apply toggle-dependencies between checkboxes as certain widgets
+        self.toggle_toggles()
+
+
+    def server_type_changed(self, server_type_index=0):
+        # server_type_index is not needed - we get the server type from .currentText()
+        # check if server type is listed in volatile widgets to decide if it has to be shown or hidden
+        for widget, server_types in self.VOLATILE_WIDGETS.items():
+            if self.ui.input_combobox_server_type.currentText() in server_types:
+                widget.show()
+            else:
+                widget.hide()
 
 
     def new(self):
@@ -1166,7 +1225,7 @@ desktop = QApplication.desktop()
 dialogs = Dialogs()
 
 # system tray icon
-systrayicon = SystemTrayIcon(QIcon("%s%snagstamon.svg" % (RESOURCES, os.sep)))
+systrayicon = SystemTrayIcon(QIcon('%s%snagstamon.svg' % (RESOURCES, os.sep)))
 
 # combined statusbar/status window
 statuswindow = StatusWindow()

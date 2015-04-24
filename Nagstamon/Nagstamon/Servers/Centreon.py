@@ -40,12 +40,6 @@ class CentreonServer(GenericServer):
                     "services": "$MONITOR$/main.php?p=20202&o=svcpb",\
                     "history": "$MONITOR$/main.php?p=203"}
 
-    # A Monitor CGI URL is not necessary so hide it in settings
-    DISABLED_CONTROLS = ["label_monitor_cgi_url",
-                         "input_entry_monitor_cgi_url",
-                         "input_checkbutton_use_display_name_host",
-                         "input_checkbutton_use_display_name_service"]
-
     # newer Centreon versions (2.3+?) have different URL paths with a "/ndo" fragment
     # will be checked by _get_ndo_url() but default is /xml/ndo/
     # new in Centreon 2.4 seems to be a /xml/broker/ URL so this will be tried first

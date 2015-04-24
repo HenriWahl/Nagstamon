@@ -7,7 +7,7 @@
    <rect>
     <x>0</x>
     <y>0</y>
-    <width>665</width>
+    <width>727</width>
     <height>1101</height>
    </rect>
   </property>
@@ -862,13 +862,6 @@
              <string>Sounds:</string>
             </property>
             <layout class="QGridLayout" name="gridLayout_16">
-             <item row="0" column="0" colspan="3">
-              <widget class="QCheckBox" name="input_checkbox_notification_sound_repeat">
-               <property name="text">
-                <string>Repeat sound until notification has been noticed</string>
-               </property>
-              </widget>
-             </item>
              <item row="3" column="0" colspan="2">
               <widget class="QGroupBox" name="notification_custom_sounds_groupbox">
                <property name="title">
@@ -941,20 +934,6 @@
                </layout>
               </widget>
              </item>
-             <item row="2" column="0" colspan="3">
-              <widget class="QRadioButton" name="input_radiobutton_notification_custom_sound">
-               <property name="text">
-                <string>Use custom sounds</string>
-               </property>
-              </widget>
-             </item>
-             <item row="1" column="0" colspan="3">
-              <widget class="QRadioButton" name="input_radiobutton_notification_default_sound">
-               <property name="text">
-                <string>Use default Nagios sounds</string>
-               </property>
-              </widget>
-             </item>
              <item row="3" column="2">
               <spacer name="horizontalSpacer_5">
                <property name="orientation">
@@ -967,6 +946,27 @@
                 </size>
                </property>
               </spacer>
+             </item>
+             <item row="0" column="0" colspan="2">
+              <widget class="QCheckBox" name="input_checkbox_notification_sound_repeat">
+               <property name="text">
+                <string>Repeat sound until notification has been noticed</string>
+               </property>
+              </widget>
+             </item>
+             <item row="1" column="0" colspan="2">
+              <widget class="QRadioButton" name="input_radiobutton_notification_default_sound">
+               <property name="text">
+                <string>Use default Nagios sounds</string>
+               </property>
+              </widget>
+             </item>
+             <item row="2" column="0" colspan="2">
+              <widget class="QRadioButton" name="input_radiobutton_notification_custom_sound">
+               <property name="text">
+                <string>Use custom sounds</string>
+               </property>
+              </widget>
              </item>
             </layout>
            </widget>
@@ -1548,7 +1548,7 @@
   </connection>
  </connections>
  <buttongroups>
-  <buttongroup name="buttongroup_close_statusbar"/>
   <buttongroup name="buttongroup_popup_statuswindow"/>
+  <buttongroup name="buttongroup_close_statusbar"/>
  </buttongroups>
 </ui>

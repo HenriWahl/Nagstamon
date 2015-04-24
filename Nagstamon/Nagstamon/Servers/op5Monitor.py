@@ -114,15 +114,6 @@ class Op5MonitorServer(GenericServer):
     api_default_host_query = api_default_host_query.replace(" ", "%20")
     api_default_svc_query = api_default_svc_query.replace(" ", "%20")
 
-    # autologin is used only by Centreon
-    DISABLED_CONTROLS = ["label_monitor_cgi_url",
-                         "input_entry_monitor_cgi_url",
-                         "input_checkbutton_use_autologin",
-                         "label_autologin_key",
-                         "input_entry_autologin_key",
-                         "input_checkbutton_use_display_name_host",
-                         "input_checkbutton_use_display_name_service"]
-
     # URLs for browser shortlinks/buttons on popup window
     BROWSER_URLS = { "monitor": "$MONITOR$/monitor",\
                     "hosts": "$MONITOR$/monitor/index.php/listview?q=%s" % '[hosts] all and state != 0'.replace(" ", "%20"),\

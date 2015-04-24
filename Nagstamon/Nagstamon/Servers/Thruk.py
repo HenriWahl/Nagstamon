@@ -44,13 +44,6 @@ class ThrukServer(GenericServer):
     """
     TYPE = u'Thruk'
 
-    # autologin is used only by Centreon
-    DISABLED_CONTROLS = ["input_checkbutton_use_autologin",
-                         "label_autologin_key",
-                         "input_entry_autologin_key",
-                         "input_checkbutton_use_display_name_host",
-                         "input_checkbutton_use_display_name_service"]
-
     # dictionary to translate status bitmaps on webinterface into status flags
     # this are defaults from Nagios
     # "disabled.gif" is in Nagios for hosts the same as "passiveonly.gif" for services

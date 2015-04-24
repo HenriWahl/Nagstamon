@@ -54,27 +54,6 @@ class MultisiteServer(GenericServer):
                     "services": "$MONITOR$/index.py?start_url=view.py?view_name=svcproblems",\
                     "history": '$MONITOR$/index.py?start_url=view.py?view_name=events'}
 
-    # A Monitor CGI URL is not necessary so hide it in settings
-    # autologin is used only by Centreon
-    DISABLED_CONTROLS = ["label_monitor_cgi_url",
-                         "input_entry_monitor_cgi_url",
-                         "input_checkbutton_use_autologin",
-                         "label_autologin_key",
-                         "input_entry_autologin_key",
-                         "input_checkbutton_use_display_name_host",
-                         "input_checkbutton_use_display_name_service"]
-    """
-    COLUMNS = [
-        HostColumn,
-        ServiceColumn,
-        StatusColumn,
-        LastCheckColumnMultisite,
-        DurationColumnMultisite,
-        AttemptColumn,
-        StatusInformationColumn
-    ]
-    """
-
     def __init__(self, **kwds):
         GenericServer.__init__(self, **kwds)
 
