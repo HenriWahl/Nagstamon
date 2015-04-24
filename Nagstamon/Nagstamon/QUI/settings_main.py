@@ -443,7 +443,7 @@ class Ui_settings_main(object):
         self.button_play_down.setObjectName("button_play_down")
         self.gridLayout_8.addWidget(self.button_play_down, 2, 2, 1, 1)
         self.gridLayout_16.addWidget(self.notification_custom_sounds_groupbox, 3, 0, 1, 2)
-        spacerItem8 = QtWidgets.QSpacerItem(40, 20, QtWidgets.QSizePolicy.Expanding, QtWidgets.QSizePolicy.Minimum)
+        spacerItem8 = QtWidgets.QSpacerItem(0, 0, QtWidgets.QSizePolicy.Expanding, QtWidgets.QSizePolicy.Minimum)
         self.gridLayout_16.addItem(spacerItem8, 3, 2, 1, 1)
         self.input_checkbox_notification_sound_repeat = QtWidgets.QCheckBox(self.notification_sounds_groupbox)
         self.input_checkbox_notification_sound_repeat.setObjectName("input_checkbox_notification_sound_repeat")

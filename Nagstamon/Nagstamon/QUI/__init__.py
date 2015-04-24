@@ -890,7 +890,7 @@ class TableWidget(QTableWidget):
 
 class Dialogs(object):
     """
-        class for accessing the dialogs
+        class for accessing all dialogs
     """
     def __init__(self):
         # settings main dialog
@@ -1026,6 +1026,12 @@ class Dialog_Settings(Dialog):
                             self.ui.input_radiobutton_notification_custom_sound : [self.ui.notification_custom_sounds_groupbox],
                             # notification actions
                             self.ui.input_checkbutton_notification_actions : [self.ui.notification_actions_groupbox],
+                            # several notification actions depending on status
+                            self.ui.input_checkbox_notification_action_warning : [self.ui.input_lineedit_notification_action_warning_string],
+                            self.ui.input_checkbox_notification_action_critical : [self.ui.input_lineedit_notification_action_critical_string],
+                            self.ui.input_checkbox_notification_action_down : [self.ui.input_lineedit_notification_action_down_string],
+                            self.ui.input_checkbox_notification_action_ok : [self.ui.input_lineedit_notification_action_ok_string],
+
                             # single custom notification action
                             self.ui.input_checkbox_notification_custom_action : [self.ui.notification_custom_action_groupbox]
                             }
@@ -1114,8 +1120,6 @@ class Dialog_Settings(Dialog):
         """
             edit existing server
         """
-        print(self.ui.list_servers.currentItem().text())
-        print(conf.servers[self.ui.list_servers.currentItem().text()])
         pass
 
 
@@ -1159,10 +1163,6 @@ class Dialog_Server(Dialog):
                                  self.ui.input_checkbox_use_display_name_service : ['Icinga']
                                 }
 
-        # mode depending on which button was pressed in settings main dialog
-        # one of "new, defaults to "new"
-        self.mode = 'new'
-
         # fill default order fields combobox with monitor server types
         self.ui.input_combobox_server_type.addItems(sorted(SERVER_TYPES.keys(), key=unicode.lower))
         # default to Nagios as it is the mostly used monitor server
@@ -1171,11 +1171,13 @@ class Dialog_Server(Dialog):
         # detect change of server type which leads to certain options shown or hidden
         self.ui.input_combobox_server_type.activated.connect(self.server_type_changed)
 
-        # initially hide not needed widgets
-        self.server_type_changed()
 
-        # apply toggle-dependencies between checkboxes as certain widgets
-        self.toggle_toggles()
+    ###def initialize(self):
+    ###    # initially hide not needed widgets
+    ###    self.server_type_changed()
+    ###
+    ###    # apply toggle-dependencies between checkboxes and certain widgets
+    ###    self.toggle_toggles()
 
 
     def server_type_changed(self, server_type_index=0):
@@ -1190,8 +1192,35 @@ class Dialog_Server(Dialog):
 
     def new(self):
         """
-            create new server
+            create new server, set default values
         """
+        ###self.initialize()
+
+        self.ui.input_checkbox_enabled.setChecked(True)
+        self.ui.input_combobox_server_type.setCurrentText('Nagios')
+        self.ui.input_lineedit_name.setText('Monitor server')
+        self.ui.input_lineedit_monitor_url.setText('https://monitor-server')
+        self.ui.input_lineedit_monitor_cgi_url.setText('https://monitor-server/monitor/cgi-bin')
+        self.ui.input_lineedit_username.setText('username')
+        self.ui.input_lineedit_password.setText('1234567890')
+        self.ui.input_checkbox_save_password.setChecked(False)
+        self.ui.input_checkbox_use_autologin.setChecked(False)
+        self.ui.input_lineedit_autologin_key.setText('')
+        self.ui.input_checkbox_use_proxy.setChecked(False)
+        self.ui.input_checkbox_use_proxy_from_os.setChecked(False)
+        self.ui.input_lineedit_proxy_address.setText('http://proxy:port/')
+        self.ui.input_lineedit_proxy_username.setText('proxyusername')
+        self.ui.input_lineedit_proxy_password.setText('1234567890')
+        self.ui.input_checkbox_use_display_name_host.setChecked(False)
+        self.ui.input_checkbox_use_display_name_service.setChecked(False)
+
+
+        # initially hide not needed widgets
+        self.server_type_changed()
+
+        # apply toggle-dependencies between checkboxes and certain widgets
+        self.toggle_toggles()
+
         # important final size adjustment
         self.window.adjustSize()
 
