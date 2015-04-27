@@ -910,6 +910,11 @@ class Dialog(object):
     TOGGLE_DEPS = {}
     # auxiliary list of checkboxes which HIDE some other widgets if triggered - for example proxy OS settings
     TOGGLE_DEPS_INVERTED = []
+    # widgets that might be enabled/disebled depending on monitor server type
+    VOLATILE_WIDGETS = {}
+    # names of widgets and their defaults
+    WIDGET_NAMES = {}
+
 
     def __init__(self, dialog):
         self.window = QDialog()
@@ -923,8 +928,8 @@ class Dialog(object):
         self.signalmapper = QSignalMapper()
 
         # window position to be used to fix strange movement bug
-        self.x = 0
-        self.y = 0
+        ###self.x = 0
+        ###self.y = 0
 
 
     def initialize(self):
@@ -1112,15 +1117,17 @@ class Dialog_Settings(Dialog):
 
 
     def new_server(self):
+        """
+            create new server
+        """
         dialogs.server.new()
-        pass
 
 
     def edit_server(self):
         """
             edit existing server
         """
-        pass
+        dialogs.server.edit()
 
 
     def copy_server(self):
@@ -1163,68 +1170,114 @@ class Dialog_Server(Dialog):
                                  self.ui.input_checkbox_use_display_name_service : ['Icinga']
                                 }
 
+        # default settings for new servers
+        # also used for edit and copy - filled with config settings
+        self.WIDGET_NAMES = {
+                        'input_checkbox_enabled' : True,
+                        'input_combobox_type' : 'Nagios',
+                        'input_lineedit_name' : 'Monitor server',
+                        'input_lineedit_monitor_url' : 'https://monitor-server',
+                        'input_lineedit_monitor_cgi_url' : 'https://monitor-server/monitor/cgi-bin',
+                        'input_lineedit_username' : 'username',
+                        'input_lineedit_password' : '1234567890',
+                        'input_checkbox_save_password' : False,
+                        'input_checkbox_use_autologin' : False,
+                        'input_lineedit_autologin_key' : '',
+                        'input_checkbox_use_proxy' : False,
+                        'input_checkbox_use_proxy_from_os' : False,
+                        'input_lineedit_proxy_address' : 'http://proxy:port/',
+                        'input_lineedit_proxy_username' : 'proxyusername',
+                        'input_lineedit_proxy_password' : '1234567890',
+                        'input_checkbox_use_display_name_host' : False,
+                        'input_checkbox_use_display_name_service' : False
+                       }
+
+
         # fill default order fields combobox with monitor server types
-        self.ui.input_combobox_server_type.addItems(sorted(SERVER_TYPES.keys(), key=unicode.lower))
+        self.ui.input_combobox_type.addItems(sorted(SERVER_TYPES.keys(), key=unicode.lower))
         # default to Nagios as it is the mostly used monitor server
-        self.ui.input_combobox_server_type.setCurrentText('Nagios')
+        self.ui.input_combobox_type.setCurrentText('Nagios')
 
         # detect change of server type which leads to certain options shown or hidden
-        self.ui.input_combobox_server_type.activated.connect(self.server_type_changed)
+        self.ui.input_combobox_type.activated.connect(self.server_type_changed)
 
-
-    ###def initialize(self):
-    ###    # initially hide not needed widgets
-    ###    self.server_type_changed()
-    ###
-    ###    # apply toggle-dependencies between checkboxes and certain widgets
-    ###    self.toggle_toggles()
+        # mode needed for evaluate dialog after ok button pressed - defaults to 'new'
+        self.mode = 'new'
 
 
     def server_type_changed(self, server_type_index=0):
         # server_type_index is not needed - we get the server type from .currentText()
         # check if server type is listed in volatile widgets to decide if it has to be shown or hidden
         for widget, server_types in self.VOLATILE_WIDGETS.items():
-            if self.ui.input_combobox_server_type.currentText() in server_types:
+            if self.ui.input_combobox_type.currentText() in server_types:
                 widget.show()
             else:
                 widget.hide()
 
 
+    def dialog_decoration(func):
+        """
+            try with a decorator instead of repeated calls
+        """
+        # function which decorates method
+        def decoration_function(self):
+
+            # call decorated function
+            func(self)
+
+            # initially hide not needed widgets
+            self.server_type_changed()
+
+            # apply toggle-dependencies between checkboxes and certain widgets
+            self.toggle_toggles()
+
+            # important final size adjustment
+            self.window.adjustSize()
+
+            self.window.show()
+
+        # give back decorated function
+        return(decoration_function)
+
+
+    @dialog_decoration
     def new(self):
         """
             create new server, set default values
         """
-        ###self.initialize()
+        self.mode = "new"
 
-        self.ui.input_checkbox_enabled.setChecked(True)
-        self.ui.input_combobox_server_type.setCurrentText('Nagios')
-        self.ui.input_lineedit_name.setText('Monitor server')
-        self.ui.input_lineedit_monitor_url.setText('https://monitor-server')
-        self.ui.input_lineedit_monitor_cgi_url.setText('https://monitor-server/monitor/cgi-bin')
-        self.ui.input_lineedit_username.setText('username')
-        self.ui.input_lineedit_password.setText('1234567890')
-        self.ui.input_checkbox_save_password.setChecked(False)
-        self.ui.input_checkbox_use_autologin.setChecked(False)
-        self.ui.input_lineedit_autologin_key.setText('')
-        self.ui.input_checkbox_use_proxy.setChecked(False)
-        self.ui.input_checkbox_use_proxy_from_os.setChecked(False)
-        self.ui.input_lineedit_proxy_address.setText('http://proxy:port/')
-        self.ui.input_lineedit_proxy_username.setText('proxyusername')
-        self.ui.input_lineedit_proxy_password.setText('1234567890')
-        self.ui.input_checkbox_use_display_name_host.setChecked(False)
-        self.ui.input_checkbox_use_display_name_service.setChecked(False)
+        # run through all widgets and and apply defaults
+        for name, value in self.WIDGET_NAMES.items():
+            if name.startswith('input_checkbox'):
+                self.ui.__dict__[name].setChecked(server_conf.__dict__[name])
+            elif name.startswith('input_combobox'):
+                self.ui.__dict__[name].setCurrentText(server_conf.__dict__[name])
+            elif name.startswith('input_lineedit'):
+                self.ui.__dict__[name].setText(server_conf.__dict__[name])
 
 
-        # initially hide not needed widgets
-        self.server_type_changed()
+    @dialog_decoration
+    def edit(self):
+        self.mode = "edit"
 
-        # apply toggle-dependencies between checkboxes and certain widgets
-        self.toggle_toggles()
+        # shorter server conf
+        server_conf = conf.servers[dialogs.settings.ui.list_servers.currentItem().text()]
 
-        # important final size adjustment
-        self.window.adjustSize()
+        # run through all widgets and and apply defaults
+        for name in self.WIDGET_NAMES:
+            if name.startswith('input_checkbox_'):
+                self.ui.__dict__[name].setChecked(server_conf.__dict__[name.split('input_checkbox_')[1]])
+            elif name.startswith('input_combobox_'):
+                self.ui.__dict__[name].setCurrentText(server_conf.__dict__[name.split('input_combobox_')[1]])
+            elif name.startswith('input_lineedit_'):
+                self.ui.__dict__[name].setText(server_conf.__dict__[name.split('input_lineedit_')[1]])
 
-        self.window.show()
+        # cleanup
+        del server_conf
+
+    def ok(self):
+        print(self.mode)
 
 
 def CreateIcons(fontsize):
