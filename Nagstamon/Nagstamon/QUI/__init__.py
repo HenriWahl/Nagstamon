@@ -30,6 +30,7 @@ from PyQt5.QtSvg import *
 import os
 from operator import methodcaller
 from collections import OrderedDict
+from copy import deepcopy
 
 from Nagstamon.Config import (conf, Server, RESOURCES, APPINFO)
 
@@ -772,7 +773,6 @@ class TableWidget(QTableWidget):
             for row, nagitem in enumerate(sorted(first_sort, key=methodcaller('compare_%s' % \
                                                     (sort_column)), reverse=reverse)):
                 # lists in rows list are columns
-                #self.data.append(list())
                 # create every cell per row
                 for column, text in enumerate(nagitem.get_columns(HEADERS)):
                     # check for icons to be used in cell widget
@@ -922,6 +922,7 @@ class Dialog(object):
         self.ui.setupUi(self.window)
         # treat dialog content after pressing OK button
         self.ui.button_box.accepted.connect(self.ok)
+        self.ui.button_box.rejected.connect(self.window.close)
 
         # QSignalMapper needed to connect all toggle-needing-checkboxes/radiobuttons to one .toggle()-method which
         # decides which sender to use as key in self.TOGGLE_DEPS
@@ -1163,6 +1164,7 @@ class Dialog_Server(Dialog):
         self.TOGGLE_DEPS_INVERTED = [self.ui.input_checkbox_use_proxy_from_os]
 
         # these widgets are shown or hidden depending on server type properties
+        # the servers listed at each widget do need them
         self.VOLATILE_WIDGETS = {
                                  self.ui.label_monitor_cgi_url : ['Nagios', 'Icinga', 'Opsview','Thruk'],
                                  self.ui.input_lineedit_monitor_cgi_url : ['Nagios', 'Icinga', 'Opsview','Thruk'],
@@ -1205,7 +1207,7 @@ class Dialog_Server(Dialog):
                 self.server_conf has to be set by decorated method
             """
 
-            # call decorated function
+            # call decorated method
             method(self)
 
             # run through all input widgets and and apply defaults from config
@@ -1221,10 +1223,6 @@ class Dialog_Server(Dialog):
                         setting = widget.split('input_lineedit_')[1]
                         self.ui.__dict__[widget].setText(self.server_conf.__dict__[setting])
 
-            # add copy notice to server name in copy mode
-            if self.mode == 'copy':
-                self.ui.input_lineedit_name.setText('Copy of ' + self.ui.input_lineedit_name.text())
-
             # initially hide not needed widgets
             self.server_type_changed()
 
@@ -1233,6 +1231,8 @@ class Dialog_Server(Dialog):
 
             # important final size adjustment
             self.window.adjustSize()
+
+
 
             self.window.show()
 
@@ -1249,6 +1249,8 @@ class Dialog_Server(Dialog):
 
         # create new server config object
         self.server_conf = Server()
+        # window title might be pretty simple
+        self.window.setWindowTitle('New server')
 
 
     @dialog_decoration
@@ -1260,6 +1262,8 @@ class Dialog_Server(Dialog):
 
         # shorter server conf
         self.server_conf = conf.servers[dialogs.settings.ui.list_servers.currentItem().text()]
+        # set window title
+        self.window.setWindowTitle('Edit %s' % (self.server_conf.name))
 
 
     @dialog_decoration
@@ -1268,20 +1272,77 @@ class Dialog_Server(Dialog):
             copy existing server
         """
         self.mode = 'copy'
-
         # shorter server conf
-        self.server_conf = conf.servers[dialogs.settings.ui.list_servers.currentItem().text()]
+        self.server_conf = deepcopy(conf.servers[dialogs.settings.ui.list_servers.currentItem().text()])
+        # set window title before name change to reflect copy
+        self.window.setWindowTitle('Copy %s' % (self.server_conf.name))
+        # indicate copy of other server
+        self.server_conf.name = 'Copy of ' + self.server_conf.name
 
 
     def ok(self):
-        print(self.mode)
+        """
+            evaluate state of widgets to get new configuration
+        """
+        # check that no duplicate name exists
+        if self.ui.input_lineedit_name.text() in servers and \
+          (self.mode in ['new', 'copy'] or \
+           self.mode == 'edit' and self.server_conf != conf.servers[self.ui.input_lineedit_name.text()]):
+            # cry if duplicate name exists
+            QMessageBox.critical(self.window, 'Nagstamon',
+                                 'The monitor server name <b>%s</b> is already used.' %\
+                                 (self.ui.input_lineedit_name.text()),
+                                 QMessageBox.Ok)
+        else:
+            for widget in self.ui.__dict__:
+                if widget.startswith('input_'):
+                    if widget.startswith('input_checkbox_'):
+                        setting = widget.split('input_checkbox_')[1]
+                        self.server_conf.__dict__[setting] = self.ui.__dict__[widget].isChecked()
+                    elif widget.startswith('input_combobox_'):
+                        setting = widget.split('input_combobox_')[1]
+                        self.server_conf.__dict__[setting] = self.ui.__dict__[widget].currentText()
+                    elif widget.startswith('input_lineedit_'):
+                        setting = widget.split('input_lineedit_')[1]
+                        self.server_conf.__dict__[setting] =  self.ui.__dict__[widget].text()
 
+            # new items have to be added to servers dictionary
+            if self.mode in ['new', 'copy']:
+                conf.servers[self.server_conf.name] = self.server_conf
+            else:
+                for key, value in conf.servers.items():
+                    if value == self.server_conf: print(key)
+
+            # URLs should not end with / - clean it
+            self.server_conf.monitor_url = self.server_conf.monitor_url.rstrip("/")
+            self.server_conf.monitor_cgi_url = self.server_conf.monitor_cgi_url.rstrip("/")
+
+            # some monitor servers do not need cgi-url - reuse self.VOLATILE_WIDGETS to find out which one
+            if not self.server_conf.type in self.VOLATILE_WIDGETS[self.ui.input_lineedit_monitor_cgi_url]:
+                self.server_conf.monitor_cgi_url = self.server_conf.monitor_url
+
+            # clear list of servers
+            dialogs.settings.ui.list_servers.clear()
+            # fill servers listwidget with servers
+            for server in sorted(conf.servers, key=unicode.lower):
+                dialogs.settings.ui.list_servers.addItem(server)
+            # select current edited item
+            print(dialogs.settings.ui.list_servers.findItems(self.server_conf.name, Qt.MatchExactly))
+            # activate currently created/edited server monitor item
+            dialogs.settings.ui.list_servers.setCurrentItem(
+                                dialogs.settings.ui.list_servers.findItems(self.server_conf.name, Qt.MatchExactly)[0])
+
+
+            self.window.close()
 
 
 def CreateIcons(fontsize):
     """
         fill global ICONS with pixmaps rendered from SVGs in fontsize dimensions
     """
+
+    print('Reminder: fontsize is not used in CreateIcons().')
+
     for attr in ('acknowledged', 'downtime', 'flapping', 'new', 'passive'):
         icon = QIcon('%s%snagstamon_%s.svg' % (RESOURCES, os.sep, attr))
         ICONS[attr] = icon
