@@ -1131,7 +1131,10 @@ class Dialog_Settings(Dialog):
 
 
     def copy_server(self):
-        pass
+        """
+            copy existing server
+        """
+        dialogs.server.copy()
 
 
     def delete_server(self):
@@ -1250,15 +1253,18 @@ class Dialog_Server(Dialog):
         # run through all widgets and and apply defaults
         for name, value in self.WIDGET_NAMES.items():
             if name.startswith('input_checkbox'):
-                self.ui.__dict__[name].setChecked(server_conf.__dict__[name])
+                self.ui.__dict__[name].setChecked(value)
             elif name.startswith('input_combobox'):
-                self.ui.__dict__[name].setCurrentText(server_conf.__dict__[name])
+                self.ui.__dict__[name].setCurrentText(value)
             elif name.startswith('input_lineedit'):
-                self.ui.__dict__[name].setText(server_conf.__dict__[name])
+                self.ui.__dict__[name].setText(value)
 
 
     @dialog_decoration
     def edit(self):
+        """
+            edit existing server
+        """
         self.mode = "edit"
 
         # shorter server conf
@@ -1275,6 +1281,33 @@ class Dialog_Server(Dialog):
 
         # cleanup
         del server_conf
+
+
+    @dialog_decoration
+    def copy(self):
+        """
+            copy existing server
+        """
+        self.mode = "copy"
+
+        # shorter server conf
+        server_conf = conf.servers[dialogs.settings.ui.list_servers.currentItem().text()]
+
+        # run through all widgets and and apply defaults
+        for name in self.WIDGET_NAMES:
+            if name.startswith('input_checkbox_'):
+                self.ui.__dict__[name].setChecked(server_conf.__dict__[name.split('input_checkbox_')[1]])
+            elif name.startswith('input_combobox_'):
+                self.ui.__dict__[name].setCurrentText(server_conf.__dict__[name.split('input_combobox_')[1]])
+            elif name.startswith('input_lineedit_'):
+                self.ui.__dict__[name].setText(server_conf.__dict__[name.split('input_lineedit_')[1]])
+
+        # add a copy notice to the server name
+        self.ui.input_lineedit_name.setText('Copy of ' + self.ui.input_lineedit_name.text())
+
+        # cleanup
+        del server_conf
+
 
     def ok(self):
         print(self.mode)
