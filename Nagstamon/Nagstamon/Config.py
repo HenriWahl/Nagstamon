@@ -694,23 +694,23 @@ class Server(object):
     """
     def __init__(self):
         self.enabled = True
-        self.type = "Nagios"
-        self.name = ""
-        self.monitor_url = ""
-        self.monitor_cgi_url = ""
-        self.username = ""
-        self.password = ""
-        self.save_password = True
+        self.type = 'Nagios'
+        self.name = 'Monitor server'
+        self.monitor_url = 'https://monitor-server'
+        self.monitor_cgi_url = 'https://monitor-server/monitor/cgi-bin'
+        self.username = 'username'
+        self.password = 'password'
+        self.save_password = False
         self.use_proxy = False
         self.use_proxy_from_os = False
-        self.proxy_address = ""
-        self.proxy_username = ""
-        self.proxy_password = ""
+        self.proxy_address = 'http://proxy:port/'
+        self.proxy_username = 'proxyusername'
+        self.proxy_password = 'proxypassword'
 
         # special FX
         # Centreon autologin
         self.use_autologin = False
-        self.autologin_key = ""
+        self.autologin_key = ''
 
         # Icinga "host_display_name" instead of "host"
         self.use_display_name_host = False

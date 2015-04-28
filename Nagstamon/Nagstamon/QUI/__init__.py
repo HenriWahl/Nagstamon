@@ -31,7 +31,7 @@ import os
 from operator import methodcaller
 from collections import OrderedDict
 
-from Nagstamon.Config import (conf, RESOURCES, APPINFO)
+from Nagstamon.Config import (conf, Server, RESOURCES, APPINFO)
 
 from Nagstamon.Servers import (SERVER_TYPES, servers)
 
@@ -1173,29 +1173,6 @@ class Dialog_Server(Dialog):
                                  self.ui.input_checkbox_use_display_name_service : ['Icinga']
                                 }
 
-        # default settings for new servers
-        # also used for edit and copy - filled with config settings
-        self.WIDGET_NAMES = {
-                        'input_checkbox_enabled' : True,
-                        'input_combobox_type' : 'Nagios',
-                        'input_lineedit_name' : 'Monitor server',
-                        'input_lineedit_monitor_url' : 'https://monitor-server',
-                        'input_lineedit_monitor_cgi_url' : 'https://monitor-server/monitor/cgi-bin',
-                        'input_lineedit_username' : 'username',
-                        'input_lineedit_password' : '1234567890',
-                        'input_checkbox_save_password' : False,
-                        'input_checkbox_use_autologin' : False,
-                        'input_lineedit_autologin_key' : '',
-                        'input_checkbox_use_proxy' : False,
-                        'input_checkbox_use_proxy_from_os' : False,
-                        'input_lineedit_proxy_address' : 'http://proxy:port/',
-                        'input_lineedit_proxy_username' : 'proxyusername',
-                        'input_lineedit_proxy_password' : '1234567890',
-                        'input_checkbox_use_display_name_host' : False,
-                        'input_checkbox_use_display_name_service' : False
-                       }
-
-
         # fill default order fields combobox with monitor server types
         self.ui.input_combobox_type.addItems(sorted(SERVER_TYPES.keys(), key=unicode.lower))
         # default to Nagios as it is the mostly used monitor server
@@ -1218,15 +1195,35 @@ class Dialog_Server(Dialog):
                 widget.hide()
 
 
-    def dialog_decoration(func):
+    def dialog_decoration(method):
         """
             try with a decorator instead of repeated calls
         """
         # function which decorates method
         def decoration_function(self):
+            """
+                self.server_conf has to be set by decorated method
+            """
 
             # call decorated function
-            func(self)
+            method(self)
+
+            # run through all input widgets and and apply defaults from config
+            for widget in self.ui.__dict__:
+                if widget.startswith('input_'):
+                    if widget.startswith('input_checkbox_'):
+                        setting = widget.split('input_checkbox_')[1]
+                        self.ui.__dict__[widget].setChecked(self.server_conf.__dict__[setting])
+                    elif widget.startswith('input_combobox_'):
+                        setting = widget.split('input_combobox_')[1]
+                        self.ui.__dict__[widget].setCurrentText(self.server_conf.__dict__[setting])
+                    elif widget.startswith('input_lineedit_'):
+                        setting = widget.split('input_lineedit_')[1]
+                        self.ui.__dict__[widget].setText(self.server_conf.__dict__[setting])
+
+            # add copy notice to server name in copy mode
+            if self.mode == 'copy':
+                self.ui.input_lineedit_name.setText('Copy of ' + self.ui.input_lineedit_name.text())
 
             # initially hide not needed widgets
             self.server_type_changed()
@@ -1248,16 +1245,10 @@ class Dialog_Server(Dialog):
         """
             create new server, set default values
         """
-        self.mode = "new"
+        self.mode = 'new'
 
-        # run through all widgets and and apply defaults
-        for name, value in self.WIDGET_NAMES.items():
-            if name.startswith('input_checkbox'):
-                self.ui.__dict__[name].setChecked(value)
-            elif name.startswith('input_combobox'):
-                self.ui.__dict__[name].setCurrentText(value)
-            elif name.startswith('input_lineedit'):
-                self.ui.__dict__[name].setText(value)
+        # create new server config object
+        self.server_conf = Server()
 
 
     @dialog_decoration
@@ -1265,22 +1256,10 @@ class Dialog_Server(Dialog):
         """
             edit existing server
         """
-        self.mode = "edit"
+        self.mode = 'edit'
 
         # shorter server conf
-        server_conf = conf.servers[dialogs.settings.ui.list_servers.currentItem().text()]
-
-        # run through all widgets and and apply defaults
-        for name in self.WIDGET_NAMES:
-            if name.startswith('input_checkbox_'):
-                self.ui.__dict__[name].setChecked(server_conf.__dict__[name.split('input_checkbox_')[1]])
-            elif name.startswith('input_combobox_'):
-                self.ui.__dict__[name].setCurrentText(server_conf.__dict__[name.split('input_combobox_')[1]])
-            elif name.startswith('input_lineedit_'):
-                self.ui.__dict__[name].setText(server_conf.__dict__[name.split('input_lineedit_')[1]])
-
-        # cleanup
-        del server_conf
+        self.server_conf = conf.servers[dialogs.settings.ui.list_servers.currentItem().text()]
 
 
     @dialog_decoration
@@ -1288,29 +1267,15 @@ class Dialog_Server(Dialog):
         """
             copy existing server
         """
-        self.mode = "copy"
+        self.mode = 'copy'
 
         # shorter server conf
-        server_conf = conf.servers[dialogs.settings.ui.list_servers.currentItem().text()]
-
-        # run through all widgets and and apply defaults
-        for name in self.WIDGET_NAMES:
-            if name.startswith('input_checkbox_'):
-                self.ui.__dict__[name].setChecked(server_conf.__dict__[name.split('input_checkbox_')[1]])
-            elif name.startswith('input_combobox_'):
-                self.ui.__dict__[name].setCurrentText(server_conf.__dict__[name.split('input_combobox_')[1]])
-            elif name.startswith('input_lineedit_'):
-                self.ui.__dict__[name].setText(server_conf.__dict__[name.split('input_lineedit_')[1]])
-
-        # add a copy notice to the server name
-        self.ui.input_lineedit_name.setText('Copy of ' + self.ui.input_lineedit_name.text())
-
-        # cleanup
-        del server_conf
+        self.server_conf = conf.servers[dialogs.settings.ui.list_servers.currentItem().text()]
 
 
     def ok(self):
         print(self.mode)
+
 
 
 def CreateIcons(fontsize):
