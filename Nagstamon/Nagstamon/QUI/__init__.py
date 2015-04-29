@@ -1259,9 +1259,10 @@ class Dialog_Server(Dialog):
             edit existing server
         """
         self.mode = 'edit'
-
         # shorter server conf
         self.server_conf = conf.servers[dialogs.settings.ui.list_servers.currentItem().text()]
+        # store monitor name in case it will be changed
+        self.previous_name = self.server_conf.name
         # set window title
         self.window.setWindowTitle('Edit %s' % (self.server_conf.name))
 
@@ -1310,8 +1311,12 @@ class Dialog_Server(Dialog):
             if self.mode in ['new', 'copy']:
                 conf.servers[self.server_conf.name] = self.server_conf
             else:
-                for key, value in conf.servers.items():
-                    if value == self.server_conf: print(key)
+                # if server has been renamed the old name has to disappear
+                if self.server_conf.name != self.previous_name:
+                    # add edited name
+                    conf.servers[self.server_conf.name] = self.server_conf
+                    # delete previous name
+                    conf.servers.pop(self.previous_name)
 
             # URLs should not end with / - clean it
             self.server_conf.monitor_url = self.server_conf.monitor_url.rstrip("/")
@@ -1326,12 +1331,11 @@ class Dialog_Server(Dialog):
             # fill servers listwidget with servers
             for server in sorted(conf.servers, key=unicode.lower):
                 dialogs.settings.ui.list_servers.addItem(server)
+
             # select current edited item
-            print(dialogs.settings.ui.list_servers.findItems(self.server_conf.name, Qt.MatchExactly))
-            # activate currently created/edited server monitor item
+            # activate currently created/edited server monitor item biy first search it in the list
             dialogs.settings.ui.list_servers.setCurrentItem(
                                 dialogs.settings.ui.list_servers.findItems(self.server_conf.name, Qt.MatchExactly)[0])
-
 
             self.window.close()
 

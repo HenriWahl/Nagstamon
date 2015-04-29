@@ -25,6 +25,16 @@ from __future__ import print_function, absolute_import, unicode_literals
 import urllib2
 from collections import OrderedDict
 
+# load all existing server types
+from Nagstamon.Servers.Nagios import NagiosServer
+from Nagstamon.Servers.Centreon import CentreonServer
+from Nagstamon.Servers.Icinga import IcingaServer
+from Nagstamon.Servers.Multisite import MultisiteServer
+from Nagstamon.Servers.op5Monitor import Op5MonitorServer
+from Nagstamon.Servers.Opsview import OpsviewServer
+from Nagstamon.Servers.Thruk import ThrukServer
+from Nagstamon.Servers.Zabbix import ZabbixServer
+
 from Nagstamon.Config import conf
 from Nagstamon.Actions import BuildURLOpener, MultipartPostHandler
 
@@ -113,27 +123,10 @@ def CreateServer(server=None):
     return new_server
 
 
-# load all existing server types
-from Nagstamon.Servers.Nagios import NagiosServer
-from Nagstamon.Servers.Centreon import CentreonServer
-from Nagstamon.Servers.Icinga import IcingaServer
-from Nagstamon.Servers.Multisite import MultisiteServer
-from Nagstamon.Servers.op5Monitor import Op5MonitorServer
-from Nagstamon.Servers.Opsview import OpsviewServer
-from Nagstamon.Servers.Thruk import ThrukServer
-from Nagstamon.Servers.Zabbix import ZabbixServer
-
-
 # moved registration process because of circular dependencies
-# order of registering affects sorting in server type list in add new server dialog
-register_server(NagiosServer)
-register_server(CentreonServer)
-register_server(MultisiteServer)
-register_server(IcingaServer)
-register_server(Op5MonitorServer)
-register_server(OpsviewServer)
-register_server(ThrukServer)
-register_server(ZabbixServer)
+for server in (CentreonServer, IcingaServer, MultisiteServer, NagiosServer,
+               Op5MonitorServer, OpsviewServer, ThrukServer, ZabbixServer):
+    register_server(server)
 
 # create servers
 for server in conf.servers.values():
