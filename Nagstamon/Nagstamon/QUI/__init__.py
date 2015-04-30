@@ -915,6 +915,9 @@ class Dialog(object):
     # names of widgets and their defaults
     WIDGET_NAMES = {}
 
+    # style stuff used by settings dialog for servers/actions listwidget
+    GRAY = QBrush(Qt.gray)
+
 
     def __init__(self, dialog):
         self.window = QDialog()
@@ -989,6 +992,17 @@ class Dialog(object):
 
         # finally map signals with .sender() - [QWidget] is important!
         self.signalmapper.mapped[QWidget].connect(self.toggle)
+
+
+    def fill_list(self, listwidget, config):
+        """
+             fill listwidget with items from config
+        """
+        for configitem in sorted(config, key=unicode.lower):
+            listitem = QListWidgetItem(configitem)
+            if config[configitem].enabled == False:
+                listitem.setForeground(self.GRAY)
+            listwidget.addItem(listitem)
 
 
     def ok(self):
@@ -1084,15 +1098,23 @@ class Dialog_Settings(Dialog):
             self.ui.input_combobox_fullscreen_display.addItem(str(display))
         self.ui.input_combobox_fullscreen_display.setCurrentText(conf.fullscreen_display)
 
+        """
         # fill servers listwidget with servers
-        for server in sorted(conf.servers, key=unicode.lower):
-           self.ui.list_servers.addItem(server)
+        for  server in sorted(conf.servers, key=unicode.lower):
+            item = QListWidgetItem(server)
+            if conf.servers[server].enabled == False:
+                item.setForeground(self.GRAY)
+            self.ui.list_servers.addItem(item)
+        """
+        # fill servers listwidget with servers
+        self.fill_list(self.ui.list_servers, conf.servers)
+
         # select first item
         self.ui.list_servers.setCurrentRow(0)
 
         # fill actions listwidget with actions
         for action in sorted(conf.actions, key=unicode.lower):
-           self.ui.list_actions.addItem(action)
+            self.ui.list_actions.addItem(action)
         # select first item
         self.ui.list_actions.setCurrentRow(0)
 
@@ -1286,7 +1308,7 @@ class Dialog_Server(Dialog):
             evaluate state of widgets to get new configuration
         """
         # check that no duplicate name exists
-        if self.ui.input_lineedit_name.text() in servers and \
+        if self.ui.input_lineedit_name.text() in conf.servers and \
           (self.mode in ['new', 'copy'] or \
            self.mode == 'edit' and self.server_conf != conf.servers[self.ui.input_lineedit_name.text()]):
             # cry if duplicate name exists
@@ -1328,9 +1350,13 @@ class Dialog_Server(Dialog):
 
             # clear list of servers
             dialogs.settings.ui.list_servers.clear()
+            """
             # fill servers listwidget with servers
             for server in sorted(conf.servers, key=unicode.lower):
                 dialogs.settings.ui.list_servers.addItem(server)
+            """
+            # fill servers listwidget with servers
+            self.fill_list(dialogs.settings.ui.list_servers, conf.servers)
 
             # select current edited item
             # activate currently created/edited server monitor item biy first search it in the list
