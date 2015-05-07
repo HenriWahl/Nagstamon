@@ -978,6 +978,8 @@ class Dialogs(object):
         self.server = Dialog_Server(Ui_settings_server)
         self.server.initialize()
 
+        actions dialog
+
 
 class Dialog(object):
     """
@@ -1498,10 +1500,10 @@ class Dialog_Server(Dialog):
             # refresh list of servers, give call the current server name to highlight it
             dialogs.settings.refresh_list_servers(current=self.server_conf.name)
 
+            self.window.close()
+
             # store server settings
             conf.SaveMultipleConfig("servers", "server")
-
-            self.window.close()
 
 
 def _createIcons(fontsize):

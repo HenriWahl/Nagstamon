@@ -400,9 +400,6 @@ class Config(object):
                     else:
                         self.use_system_keyring = self.KeyringAvailable()
 
-            # save servers dict
-            self.SaveMultipleConfig("servers", "server")
-
             # save actions dict
             self.SaveMultipleConfig("actions", "action")
 
