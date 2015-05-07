@@ -48,10 +48,9 @@ servers = OrderedDict()
 SERVER_TYPES = OrderedDict()
 
 def register_server(server):
-    """ Once new server class in created,
-    should be registered with this function
-    for being visible in config and
-    accessible in application.
+    """
+        Once new server class is created, should be registered with this function
+        for being visible in config and accessible in application.
     """
     if server.TYPE not in SERVER_TYPES:
         SERVER_TYPES[server.TYPE] = server
@@ -123,7 +122,7 @@ def CreateServer(server=None):
     return new_server
 
 
-# moved registration process because of circular dependencies
+# moved registration process here because of circular dependencies
 for server in (CentreonServer, IcingaServer, MultisiteServer, NagiosServer,
                Op5MonitorServer, OpsviewServer, ThrukServer, ZabbixServer):
     register_server(server)
@@ -140,6 +139,7 @@ for server in conf.servers.values():
         GUI.AuthenticationDialog(server=server, Resources=Resources, conf=conf, debug_queue=debug_queue)
     """
     created_server = CreateServer(server)
+
     if created_server is not None:
         servers[server.name] = created_server
         # for the next time no auth needed

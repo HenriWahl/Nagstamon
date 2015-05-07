@@ -39,6 +39,7 @@ try:
         from Nagstamon.Config import (conf, RESOURCES)
 
         from Nagstamon.QUI import (systrayicon, statuswindow)
+
         systrayicon.show()
         statuswindow.show()
         statuswindow.adjustSize()

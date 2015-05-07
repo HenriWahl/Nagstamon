@@ -34,7 +34,7 @@ from copy import deepcopy
 
 from Nagstamon.Config import (conf, Server, RESOURCES, APPINFO)
 
-from Nagstamon.Servers import (SERVER_TYPES, servers)
+from Nagstamon.Servers import (SERVER_TYPES, servers, CreateServer)
 
 # dialogs
 from Nagstamon.QUI.settings_main import Ui_settings_main
@@ -140,13 +140,16 @@ class StatusWindow(QWidget):
         self.toparea.button_settings.clicked.connect(self.hide_window)
         self.toparea.button_settings.clicked.connect(dialogs.settings.show)
 
-        self.servers_vbox = QVBoxLayout()           # HBox full of servers
+        self.servers_vbox = QVBoxLayout()           # VBox full of servers
         self.servers_vbox.setContentsMargins(0, 0, 0, 0)
         self.servers_scrollarea = QScrollArea()     # scrollable area for server vboxes
         self.servers_scrollarea_widget = QWidget()  # necessary widget to contain vbox for servers
         self.servers_scrollarea.hide()
 
-        self.createServerVBoxes()
+        # create vbox for each enabled server
+        for server in servers.values():
+            if server.enabled:
+                self.createServerVBox(server)
 
         self.servers_scrollarea_widget.setLayout(self.servers_vbox)
         self.servers_scrollarea.setWidget(self.servers_scrollarea_widget)
@@ -159,7 +162,7 @@ class StatusWindow(QWidget):
         self.setLayout(self.vbox)
 
         # icons in ICONS have to be sized as fontsize
-        CreateIcons(self.statusbar.fontMetrics().height())
+        _createIcons(self.statusbar.fontMetrics().height())
 
         # needed for moving the statuswindow
         self.moving = False
@@ -173,17 +176,59 @@ class StatusWindow(QWidget):
         # flag to mark if window is shown or nor
         self.is_shown = False
 
-
-    def createServerVBoxes(self):
-        """
-            internally used to create enabled servers to be displayed
-        """
+    """
+    def _createServerVBoxes(self):
+        # create server vboxed from current running servers
         for server in servers.values():
             if server.enabled:
                 server_vbox = ServerVBox(server)
                 # connect to global resize signal
                 server_vbox.table.ready_to_resize.connect(self.adjust_size)
                 self.servers_vbox.addLayout(server_vbox)
+    """
+
+    def createServerVBox(self, server):
+        """
+            internally used to create enabled servers to be displayed
+        """
+        # create server vboxed from current running servers
+        if server.enabled:
+            server_vbox = ServerVBox(server)
+            # connect to global resize signal
+            server_vbox.table.ready_to_resize.connect(self.adjust_size)
+            self.servers_vbox.addLayout(server_vbox)
+            return server_vbox
+        else:
+            return None
+
+
+    def sortServerVBoxes(self):
+        """
+            sort ServerVBoxes alphabetically
+        """
+        # shortly after applying changes a QObject might hang around in the children list which should
+        # be filtered out this way
+        vboxes_dict = dict()
+        for child in self.servers_vbox.children():
+            if child.__dict__.has_key('server'):
+                vboxes_dict[child.server.name] = child
+
+        # freshly set servers_scrollarea_widget and its layout servers_vbox
+        servers_vbox_new = QVBoxLayout()           # VBox full of servers
+        servers_vbox_new.setContentsMargins(0, 0, 0, 0)
+
+        # sort server vboxes
+        for vbox in sorted(vboxes_dict):
+            vboxes_dict[vbox].setParent(None)
+            servers_vbox_new.addLayout(vboxes_dict[vbox])
+
+        # switch to new servers_vbox
+        self.servers_vbox = servers_vbox_new
+        self.servers_scrollarea_widget = QWidget()  # necessary widget to contain vbox for servers
+        self.servers_scrollarea_widget.setLayout(self.servers_vbox)
+        self.servers_scrollarea.setWidget(self.servers_scrollarea_widget)
+
+        del(vboxes_dict)
 
 
     def show_window(self, event):
@@ -514,12 +559,14 @@ class ServerVBox(QVBoxLayout):
         self.hbox = QHBoxLayout(spacing=10)
 
         self.label = QLabel("<big><b>%s@%s</b></big>" % (server.username, server.name))
+        self.button_edit = QPushButton("Edit")
         self.button_monitor = QPushButton("Monitor")
         self.button_hosts = QPushButton("Hosts")
         self.button_services = QPushButton("Services")
         self.button_history = QPushButton("History")
 
         self.hbox.addWidget(self.label)
+        self.hbox.addWidget(self.button_edit)
         self.hbox.addWidget(self.button_monitor)
         self.hbox.addWidget(self.button_hosts)
         self.hbox.addWidget(self.button_services)
@@ -530,6 +577,8 @@ class ServerVBox(QVBoxLayout):
         sort_column = 'status'
         order = 'descending'
         self.table = TableWidget(0, len(HEADERS), sort_column, order, self.server)
+        # delete vbox if thread quits
+        self.table.worker_thread.finished.connect(self.delete)
 
         self.addWidget(self.table, 1)
 
@@ -570,6 +619,23 @@ class ServerVBox(QVBoxLayout):
             if child.__dict__.has_key('hide'):
                 child.hide()
 
+
+    def delete(self):
+        """
+            delete VBox and its children
+        """
+        for widget in (self.label, self.button_edit, self.button_monitor, self.button_hosts,
+                       self.button_services, self.button_history):
+            widget.hide()
+            self.removeWidget(widget)
+            #widget.destroy()
+            widget.deleteLater()
+        self.removeItem(self.hbox)
+        self.hbox.deleteLater()
+        self.table.hide()
+        #self.table.worker.finish.emit()
+        self.table.deleteLater()
+        self.deleteLater()
 
 
 class CellWidget(QWidget):
@@ -680,6 +746,8 @@ class TableWidget(QTableWidget):
         self.worker.next_cell.connect(self.set_cell)
         # when worker walked through all cells send a signal to table so it could get_status itself
         self.worker.table_ready.connect(self.adjust_table)
+        # quit thread if worker has finished
+        self.worker.finish.connect(self.worker_thread.quit)
         # get status if started
         self.worker_thread.started.connect(self.worker.get_status)
         # start with priority 0 = lowest
@@ -751,6 +819,12 @@ class TableWidget(QTableWidget):
         next_cell = pyqtSignal(int, int, str, str, str, list)
         # send signal if all cells are filled and table can be adjusted
         table_ready = pyqtSignal()
+        # send signal if ready to stop
+        finish = pyqtSignal()
+
+        # try to stop thread by evaluating this flag
+        running = True
+
 
         def __init__(self, parent=None, server=None):
             QObject.__init__(self)
@@ -763,8 +837,11 @@ class TableWidget(QTableWidget):
             status =  self.server.GetStatus()
             self.new_status.emit()
 
-            # avoid memory leak by singleshooting next get_status after this one is finished
-            self.timer.singleShot(10000, self.get_status)
+            if self.running == True:
+                # avoid memory leak by singleshooting next get_status after this one is finished
+                self.timer.singleShot(10000, self.get_status)
+            else:
+                self.finish.emit()
 
 
         def fill_rows(self, data, sort_column, reverse):
@@ -781,33 +858,33 @@ class TableWidget(QTableWidget):
                         # add host icons
                         if nagitem.is_host() and column == 0:
                             if nagitem.is_acknowledged():
-                                icons.append(ICONS["acknowledged"])
+                                icons.append(ICONS['acknowledged'])
                             if nagitem.is_flapping():
-                                icons.append(ICONS["flapping"])
+                                icons.append(ICONS['flapping'])
                             if nagitem.is_passive_only():
-                                icons.append(ICONS["passive"])
+                                icons.append(ICONS['passive'])
                             if nagitem.is_in_scheduled_downtime():
-                                icons.append(ICONS["downtime"])
+                                icons.append(ICONS['downtime'])
                         # add host icons for service item - e.g. in case host is in downtime
                         elif not nagitem.is_host() and column == 0:
                             if self.server.hosts[nagitem.host].is_acknowledged():
-                                icons.append(ICONS["acknowledged"])
+                                icons.append(ICONS['acknowledged'])
                             if self.server.hosts[nagitem.host].is_flapping():
-                                icons.append(ICONS["flapping"])
+                                icons.append(ICONS['flapping'])
                             if self.server.hosts[nagitem.host].is_passive_only():
-                                icons.append(ICONS["passive"])
+                                icons.append(ICONS['passive'])
                             if self.server.hosts[nagitem.host].is_in_scheduled_downtime():
-                                icons.append(ICONS["downtime"])
+                                icons.append(ICONS['downtime'])
                         # add service icons
                         elif not nagitem.is_host() and column == 1:
                             if nagitem.is_acknowledged():
-                                icons.append(ICONS["acknowledged"])
+                                icons.append(ICONS['acknowledged'])
                             if nagitem.is_flapping():
-                                icons.append(ICONS["flapping"])
+                                icons.append(ICONS['flapping'])
                             if nagitem.is_passive_only():
-                                icons.append(ICONS["passive"])
+                                icons.append(ICONS['passive'])
                             if nagitem.is_in_scheduled_downtime():
-                                icons.append(ICONS["downtime"])
+                                icons.append(ICONS['downtime'])
 
                     else:
                         icons = [False]
@@ -1098,14 +1175,6 @@ class Dialog_Settings(Dialog):
             self.ui.input_combobox_fullscreen_display.addItem(str(display))
         self.ui.input_combobox_fullscreen_display.setCurrentText(conf.fullscreen_display)
 
-        """
-        # fill servers listwidget with servers
-        for  server in sorted(conf.servers, key=unicode.lower):
-            item = QListWidgetItem(server)
-            if conf.servers[server].enabled == False:
-                item.setForeground(self.GRAY)
-            self.ui.list_servers.addItem(item)
-        """
         # fill servers listwidget with servers
         self.fill_list(self.ui.list_servers, conf.servers)
 
@@ -1161,7 +1230,61 @@ class Dialog_Settings(Dialog):
 
 
     def delete_server(self):
-        pass
+        """
+            delete server, stop its thread, remove from config and list
+        """
+        # server to delete from current row in servers list
+        server = conf.servers[self.ui.list_servers.currentItem().text()]
+
+        reply = QMessageBox.question(self.window, 'Nagstamon',
+                                     'Do you really want to delete monitor server <b>%s</b>?' % (server.name),
+                                     QMessageBox.Yes | QMessageBox.No, QMessageBox.No)
+
+        if reply == QMessageBox.Yes:
+            # in case server is enabled delete its vbox
+            if server.enabled:
+                for vbox in statuswindow.servers_vbox.children():
+                    if vbox.server.name == server.name:
+                        # stop thread by falsificate running flag
+                        vbox.table.worker.running = False
+                        vbox.table.worker.finish.emit()
+                        break
+
+            # kick server out of server instances
+            servers.pop(server.name)
+            # dito from config items
+            conf.servers.pop(server.name)
+
+            # refresh list
+            # row index 0 to x
+            row = self.ui.list_servers.currentRow()
+            # count real number, 1 to x
+            count = self.ui.list_servers.count()
+
+            # if deleted row was the last line the new current row has to be the new last line, accidently the same as count
+            if row == count - 1:
+                # use the penultimate item as the new current one
+                row = count - 2
+            else:
+                # go down one row
+                row = row + 1
+
+            # refresh list and mark new current row
+            self.refresh_list_servers(current=self.ui.list_servers.item(row).text())
+
+            del(row, count)
+
+        del(server)
+
+
+    def refresh_list_servers(self, current=''):
+        # clear list of servers
+        self.ui.list_servers.clear()
+        # fill servers listwidget with servers
+        self.fill_list(self.ui.list_servers, conf.servers)
+        # select current edited item
+        # activate currently created/edited server monitor item by first searching it in the list
+        self.ui.list_servers.setCurrentItem(self.ui.list_servers.findItems(current, Qt.MatchExactly)[0])
 
 
 class Dialog_Server(Dialog):
@@ -1254,8 +1377,6 @@ class Dialog_Server(Dialog):
             # important final size adjustment
             self.window.adjustSize()
 
-
-
             self.window.show()
 
         # give back decorated function
@@ -1284,7 +1405,7 @@ class Dialog_Server(Dialog):
         # shorter server conf
         self.server_conf = conf.servers[dialogs.settings.ui.list_servers.currentItem().text()]
         # store monitor name in case it will be changed
-        self.previous_name = self.server_conf.name
+        self.previous_server_conf = deepcopy(self.server_conf)
         # set window title
         self.window.setWindowTitle('Edit %s' % (self.server_conf.name))
 
@@ -1307,9 +1428,12 @@ class Dialog_Server(Dialog):
         """
             evaluate state of widgets to get new configuration
         """
+        # global statement necessary because of reordering of servers OrderedDict
+        global servers
+
         # check that no duplicate name exists
         if self.ui.input_lineedit_name.text() in conf.servers and \
-          (self.mode in ['new', 'copy'] or \
+          (self.mode in ['new', 'copy'] or
            self.mode == 'edit' and self.server_conf != conf.servers[self.ui.input_lineedit_name.text()]):
             # cry if duplicate name exists
             QMessageBox.critical(self.window, 'Nagstamon',
@@ -1317,6 +1441,7 @@ class Dialog_Server(Dialog):
                                  (self.ui.input_lineedit_name.text()),
                                  QMessageBox.Ok)
         else:
+            # get configuration from UI
             for widget in self.ui.__dict__:
                 if widget.startswith('input_'):
                     if widget.startswith('input_checkbox_'):
@@ -1329,49 +1454,64 @@ class Dialog_Server(Dialog):
                         setting = widget.split('input_lineedit_')[1]
                         self.server_conf.__dict__[setting] =  self.ui.__dict__[widget].text()
 
-            # new items have to be added to servers dictionary
-            if self.mode in ['new', 'copy']:
-                conf.servers[self.server_conf.name] = self.server_conf
-            else:
-                # if server has been renamed the old name has to disappear
-                if self.server_conf.name != self.previous_name:
-                    # add edited name
-                    conf.servers[self.server_conf.name] = self.server_conf
-                    # delete previous name
-                    conf.servers.pop(self.previous_name)
-
             # URLs should not end with / - clean it
-            self.server_conf.monitor_url = self.server_conf.monitor_url.rstrip("/")
-            self.server_conf.monitor_cgi_url = self.server_conf.monitor_cgi_url.rstrip("/")
+            self.server_conf.monitor_url = self.server_conf.monitor_url.rstrip('/')
+            self.server_conf.monitor_cgi_url = self.server_conf.monitor_cgi_url.rstrip('/')
+
+            # edited servers will be deleted and recreated with new configuration
+            if self.mode == 'edit':
+                # delete previous name
+                conf.servers.pop(self.previous_server_conf.name)
+                # add edited name
+                conf.servers[self.server_conf.name] = self.server_conf
+
+                # delete edited and now not needed server instance - if it exists
+                if servers.has_key(self.previous_server_conf.name):
+                    servers.pop(self.previous_server_conf.name)
+                """
+                try:
+                    servers.pop(self.previous_server_conf.name)
+                except:
+                    print('%s does not exist.' % (self.previous_server_conf.name))
+                """
+                # remove old server vbox from status window if still running
+                for vbox in statuswindow.servers_vbox.children():
+                    if vbox.server.name == self.previous_server_conf.name:
+                        # stop thread by falsificate running flag
+                        vbox.table.worker.running = False
+                        vbox.table.worker.finish.emit()
+                        # nothing more to do
+                        break
+
+            # add new server configuration in every case
+            conf.servers[self.server_conf.name] = self.server_conf
+            if self.server_conf.enabled == True:
+                # add new server instance to global servers dict
+                servers[self.server_conf.name] = CreateServer(self.server_conf)
+                # create vbox
+                statuswindow.createServerVBox(servers[self.server_conf.name])
+                # renew list of server vboxes in status window
+                statuswindow.sortServerVBoxes()
+
+            # reorder servers in dict to reflect changes
+            servers = OrderedDict(sorted(servers.items()))
 
             # some monitor servers do not need cgi-url - reuse self.VOLATILE_WIDGETS to find out which one
             if not self.server_conf.type in self.VOLATILE_WIDGETS[self.ui.input_lineedit_monitor_cgi_url]:
                 self.server_conf.monitor_cgi_url = self.server_conf.monitor_url
 
-            # clear list of servers
-            dialogs.settings.ui.list_servers.clear()
-            """
-            # fill servers listwidget with servers
-            for server in sorted(conf.servers, key=unicode.lower):
-                dialogs.settings.ui.list_servers.addItem(server)
-            """
-            # fill servers listwidget with servers
-            self.fill_list(dialogs.settings.ui.list_servers, conf.servers)
-
-            # select current edited item
-            # activate currently created/edited server monitor item biy first search it in the list
-            dialogs.settings.ui.list_servers.setCurrentItem(
-                                dialogs.settings.ui.list_servers.findItems(self.server_conf.name, Qt.MatchExactly)[0])
+            # refresh list of servers, give call the current server name to highlight it
+            dialogs.settings.refresh_list_servers(current=self.server_conf.name)
 
             self.window.close()
 
 
-def CreateIcons(fontsize):
+def _createIcons(fontsize):
     """
         fill global ICONS with pixmaps rendered from SVGs in fontsize dimensions
     """
 
-    print('Reminder: fontsize is not used in CreateIcons().')
+    print('Reminder: fontsize is not used in _createIcons().')
 
     for attr in ('acknowledged', 'downtime', 'flapping', 'new', 'passive'):
         icon = QIcon('%s%snagstamon_%s.svg' % (RESOURCES, os.sep, attr))
