@@ -1468,12 +1468,7 @@ class Dialog_Server(Dialog):
                 # delete edited and now not needed server instance - if it exists
                 if servers.has_key(self.previous_server_conf.name):
                     servers.pop(self.previous_server_conf.name)
-                """
-                try:
-                    servers.pop(self.previous_server_conf.name)
-                except:
-                    print('%s does not exist.' % (self.previous_server_conf.name))
-                """
+
                 # remove old server vbox from status window if still running
                 for vbox in statuswindow.servers_vbox.children():
                     if vbox.server.name == self.previous_server_conf.name:
@@ -1502,6 +1497,9 @@ class Dialog_Server(Dialog):
 
             # refresh list of servers, give call the current server name to highlight it
             dialogs.settings.refresh_list_servers(current=self.server_conf.name)
+
+            # store server settings
+            conf.SaveMultipleConfig("servers", "server")
 
             self.window.close()
 
@@ -1540,6 +1538,4 @@ systrayicon = SystemTrayIcon(QIcon('%s%snagstamon.svg' % (RESOURCES, os.sep)))
 
 # combined statusbar/status window
 statuswindow = StatusWindow()
-
-
 
