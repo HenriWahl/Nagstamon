@@ -32,7 +32,7 @@ from operator import methodcaller
 from collections import OrderedDict
 from copy import deepcopy
 
-from Nagstamon.Config import (conf, Server, RESOURCES, APPINFO)
+from Nagstamon.Config import (conf, Server, Action, RESOURCES, APPINFO)
 
 from Nagstamon.Servers import (SERVER_TYPES, servers, CreateServer)
 
@@ -978,7 +978,9 @@ class Dialogs(object):
         self.server = Dialog_Server(Ui_settings_server)
         self.server.initialize()
 
-        actions dialog
+        # action settings dialog
+        self.action = Dialog_Action(Ui_settings_action)
+        self.action.initialize()
 
 
 class Dialog(object):
@@ -1135,11 +1137,18 @@ class Dialog_Settings(Dialog):
                             self.ui.input_checkbox_notification_custom_action : [self.ui.notification_custom_action_groupbox]
                             }
 
-        # connect server buttons to server dialogs
+        # connect server buttons to server dialog
         self.ui.button_new_server.clicked.connect(self.new_server)
         self.ui.button_edit_server.clicked.connect(self.edit_server)
         self.ui.button_copy_server.clicked.connect(self.copy_server)
         self.ui.button_delete_server.clicked.connect(self.delete_server)
+
+        # connect action buttons to action dialog
+        self.ui.button_new_action.clicked.connect(self.new_action)
+        self.ui.button_edit_action.clicked.connect(self.edit_action)
+        self.ui.button_copy_action.clicked.connect(self.copy_action)
+        self.ui.button_delete_action.clicked.connect(self.delete_action)
+
 
         # apply toggle-dependencies between checkboxes as certain widgets
         self.toggle_toggles()
@@ -1289,7 +1298,39 @@ class Dialog_Settings(Dialog):
         self.ui.list_servers.setCurrentItem(self.ui.list_servers.findItems(current, Qt.MatchExactly)[0])
 
 
+
+    def new_action(self):
+        """
+            create new action
+        """
+        dialogs.action.new()
+
+
+    def edit_action(self):
+        """
+            edit existing action
+        """
+        pass
+
+
+    def copy_action(self):
+        """
+            copy existing action and edit it
+        """
+        pass
+
+
+    def delete_action(self):
+        """
+            delete an action
+        """
+        pass
+
+
 class Dialog_Server(Dialog):
+    """
+        Dialog used to setup one single server
+    """
     def __init__(self, dialog):
         Dialog.__init__(self, dialog)
         # define checkbox-to-widgets dependencies which apply at initialization
@@ -1504,6 +1545,87 @@ class Dialog_Server(Dialog):
 
             # store server settings
             conf.SaveMultipleConfig("servers", "server")
+
+
+class Dialog_Action(Dialog):
+    """
+        Dialog used to setup one single action
+    """
+    def __init__(self, dialog):
+        Dialog.__init__(self, dialog)
+
+        # define checkbox-to-widgets dependencies which apply at initialization
+        # which widgets have to be hidden because of irrelevance
+        # dictionary holds checkbox/radiobutton as key and relevant widgets in list
+        self.TOGGLE_DEPS = {
+                            self.ui.input_checkbox_re_host_enabled : [self.ui.input_lineedit_re_host_pattern,
+                                                                      self.ui.input_checkbox_re_host_reverse],
+                            self.ui.input_checkbox_re_service_enabled : [self.ui.input_lineedit_re_service_pattern,
+                                                                         self.ui.input_checkbox_re_service_reverse],
+
+                            self.ui.input_checkbox_re_status_information_enabled : [self.ui.input_lineedit_re_status_information_pattern,
+                                                                        self.ui.input_checkbox_re_status_information_reverse]
+                            }
+
+        # fill action types into combobox
+        self.ui.input_combobox_type.addItems(["Browser", "Command", "URL"])
+
+        # fill default order fields combobox with monitor server types
+        self.ui.input_combobox_monitor_type.addItem("All monitor servers")
+        self.ui.input_combobox_monitor_type.addItems(sorted(SERVER_TYPES.keys(), key=unicode.lower))
+        # default to Nagios as it is the mostly used monitor server
+        self.ui.input_combobox_monitor_type.setCurrentIndex(0)
+
+
+    def dialog_decoration(method):
+        """
+            try with a decorator instead of repeated calls
+        """
+        # function which decorates method
+        def decoration_function(self):
+            """
+                self.server_conf has to be set by decorated method
+            """
+
+            # call decorated method
+            method(self)
+
+            # run through all input widgets and and apply defaults from config
+            for widget in self.ui.__dict__:
+                if widget.startswith('input_'):
+                    if widget.startswith('input_checkbox_'):
+                        setting = widget.split('input_checkbox_')[1]
+                        self.ui.__dict__[widget].setChecked(self.action_conf.__dict__[setting])
+                    elif widget.startswith('input_combobox_'):
+                        setting = widget.split('input_combobox_')[1]
+                        self.ui.__dict__[widget].setCurrentText(self.action_conf.__dict__[setting])
+                    elif widget.startswith('input_lineedit_'):
+                        setting = widget.split('input_lineedit_')[1]
+                        self.ui.__dict__[widget].setText(self.action_conf.__dict__[setting])
+                    elif widget.startswith('input_plaintextedit_'):
+                        setting = widget.split('input_plaintextedit_')[1]
+                        self.ui.__dict__[widget].setPlainText(self.action_conf.__dict__[setting])
+
+            # apply toggle-dependencies between checkboxes and certain widgets
+            self.toggle_toggles()
+
+            # important final size adjustment
+            self.window.adjustSize()
+
+            self.window.show()
+
+        # give back decorated function
+        return(decoration_function)
+
+
+    @dialog_decoration
+    def new(self):
+        self.mode = 'new'
+
+        # create new server config object
+        self.action_conf = Action()
+        # window title might be pretty simple
+        self.window.setWindowTitle('New action')
 
 
 def _createIcons(fontsize):
