@@ -38,9 +38,10 @@ try:
         # Initialize global configuration
         from Nagstamon.Config import (conf, RESOURCES)
 
-        from Nagstamon.QUI import (systrayicon, statuswindow)
+        ###from Nagstamon.QUI import (systrayicon, statuswindow)
+        from Nagstamon.QUI import (statuswindow)
 
-        systrayicon.show()
+        ###systrayicon.show()
         statuswindow.show()
         statuswindow.adjustSize()
 

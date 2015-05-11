@@ -1149,7 +1149,6 @@ class Dialog_Settings(Dialog):
         self.ui.button_copy_action.clicked.connect(self.copy_action)
         self.ui.button_delete_action.clicked.connect(self.delete_action)
 
-
         # apply toggle-dependencies between checkboxes as certain widgets
         self.toggle_toggles()
 
@@ -1281,22 +1280,26 @@ class Dialog_Settings(Dialog):
                 row = row + 1
 
             # refresh list and mark new current row
-            self.refresh_list_servers(current=self.ui.list_servers.item(row).text())
+            self.refresh_list(list_widget=self.ui.list_servers,
+                              list_conf=conf.servers,
+                              current=self.ui.list_servers.item(row).text())
 
             del(row, count)
 
         del(server)
 
 
-    def refresh_list_servers(self, current=''):
+    def refresh_list(self, list_widget, list_conf, current=''):
+        """
+            refresh given 'list_widget' from given 'list_conf' and mark 'current' as current
+        """
         # clear list of servers
-        self.ui.list_servers.clear()
+        list_widget.clear()
         # fill servers listwidget with servers
-        self.fill_list(self.ui.list_servers, conf.servers)
+        self.fill_list(list_widget, list_conf)
         # select current edited item
         # activate currently created/edited server monitor item by first searching it in the list
-        self.ui.list_servers.setCurrentItem(self.ui.list_servers.findItems(current, Qt.MatchExactly)[0])
-
+        list_widget.setCurrentItem(list_widget.findItems(current, Qt.MatchExactly)[0])
 
 
     def new_action(self):
@@ -1310,21 +1313,55 @@ class Dialog_Settings(Dialog):
         """
             edit existing action
         """
-        pass
+        dialogs.action.edit()
 
 
     def copy_action(self):
         """
             copy existing action and edit it
         """
-        pass
+        dialogs.action.copy()
 
 
     def delete_action(self):
         """
-            delete an action
+            delete action remove from config and list
         """
-        pass
+        # action to delete from current row in actions list
+        action = conf.actions[self.ui.list_actions.currentItem().text()]
+
+        reply = QMessageBox.question(self.window, 'Nagstamon',
+                                     'Do you really want to delete action <b>%s</b>?' % (action.name),
+                                     QMessageBox.Yes | QMessageBox.No, QMessageBox.No)
+
+        if reply == QMessageBox.Yes:
+            # kick action out of server instances
+            #servers.pop(server.name)
+            # dito from config items
+            conf.actions.pop(action.name)
+
+            # refresh list
+            # row index 0 to x
+            row = self.ui.list_actions.currentRow()
+            # count real number, 1 to x
+            count = self.ui.list_actions.count()
+
+            # if deleted row was the last line the new current row has to be the new last line, accidently the same as count
+            if row == count - 1:
+                # use the penultimate item as the new current one
+                row = count - 2
+            else:
+                # go down one row
+                row = row + 1
+
+            # refresh list and mark new current row
+            #self.refresh_list_actions(current=self.ui.list_actions.item(row).text())
+            self.refresh_list(list_widget=self.ui.list_actions, list_conf=conf.actions, current=self.ui.list_actions.item(row).text())
+
+            del(row, count)
+
+        del(action)
+
 
 
 class Dialog_Server(Dialog):
@@ -1403,6 +1440,9 @@ class Dialog_Server(Dialog):
                 if widget.startswith('input_'):
                     if widget.startswith('input_checkbox_'):
                         setting = widget.split('input_checkbox_')[1]
+                        self.ui.__dict__[widget].setChecked(self.server_conf.__dict__[setting])
+                    if widget.startswith('input_radiobutton_'):
+                        setting = widget.split('input_radiobutton_')[1]
                         self.ui.__dict__[widget].setChecked(self.server_conf.__dict__[setting])
                     elif widget.startswith('input_combobox_'):
                         setting = widget.split('input_combobox_')[1]
@@ -1490,6 +1530,9 @@ class Dialog_Server(Dialog):
                     if widget.startswith('input_checkbox_'):
                         setting = widget.split('input_checkbox_')[1]
                         self.server_conf.__dict__[setting] = self.ui.__dict__[widget].isChecked()
+                    if widget.startswith('input_radiobutton_'):
+                        setting = widget.split('input_radiobutton_')[1]
+                        self.server_conf.__dict__[setting] = self.ui.__dict__[widget].isChecked()
                     elif widget.startswith('input_combobox_'):
                         setting = widget.split('input_combobox_')[1]
                         self.server_conf.__dict__[setting] = self.ui.__dict__[widget].currentText()
@@ -1539,7 +1582,9 @@ class Dialog_Server(Dialog):
                 self.server_conf.monitor_cgi_url = self.server_conf.monitor_url
 
             # refresh list of servers, give call the current server name to highlight it
-            dialogs.settings.refresh_list_servers(current=self.server_conf.name)
+            dialogs.settings.refresh_list(list_widget=dialogs.settings.ui.list_servers,
+                                          list_conf=conf.servers,
+                                          current=self.server_conf.name)
 
             self.window.close()
 
@@ -1586,7 +1631,6 @@ class Dialog_Action(Dialog):
             """
                 self.server_conf has to be set by decorated method
             """
-
             # call decorated method
             method(self)
 
@@ -1595,6 +1639,9 @@ class Dialog_Action(Dialog):
                 if widget.startswith('input_'):
                     if widget.startswith('input_checkbox_'):
                         setting = widget.split('input_checkbox_')[1]
+                        self.ui.__dict__[widget].setChecked(self.action_conf.__dict__[setting])
+                    if widget.startswith('input_radiobutton_'):
+                        setting = widget.split('input_radiobutton_')[1]
                         self.ui.__dict__[widget].setChecked(self.action_conf.__dict__[setting])
                     elif widget.startswith('input_combobox_'):
                         setting = widget.split('input_combobox_')[1]
@@ -1620,12 +1667,47 @@ class Dialog_Action(Dialog):
 
     @dialog_decoration
     def new(self):
+        """
+            create new server
+        """
         self.mode = 'new'
 
         # create new server config object
         self.action_conf = Action()
         # window title might be pretty simple
         self.window.setWindowTitle('New action')
+
+
+    @dialog_decoration
+    def edit(self):
+        """
+            edit existing action
+        """
+        self.mode = 'edit'
+        # shorter action conf
+        self.action_conf = conf.actions[dialogs.settings.ui.list_actions.currentItem().text()]
+        # store action name in case it will be changed
+        self.previous_action_conf = deepcopy(self.action_conf)
+        # set window title
+        self.window.setWindowTitle('Edit %s' % (self.action_conf.name))
+
+
+    @dialog_decoration
+    def copy(self):
+        """
+            copy existing action
+        """
+        self.mode = 'copy'
+        # shorter action conf
+        self.action_conf = deepcopy(conf.actions[dialogs.settings.ui.list_actions.currentItem().text()])
+        # set window title before name change to reflect copy
+        self.window.setWindowTitle('Copy %s' % (self.action_conf.name))
+        # indicate copy of other action
+        self.action_conf.name = 'Copy of ' + self.action_conf.name
+
+
+    def ok(self):
+        pass
 
 
 def _createIcons(fontsize):
