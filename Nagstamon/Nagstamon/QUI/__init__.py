@@ -1548,8 +1548,6 @@ class Dialog_Server(Dialog):
             if self.mode == 'edit':
                 # delete previous name
                 conf.servers.pop(self.previous_server_conf.name)
-                # add edited name
-                conf.servers[self.server_conf.name] = self.server_conf
 
                 # delete edited and now not needed server instance - if it exists
                 if servers.has_key(self.previous_server_conf.name):
@@ -1649,9 +1647,9 @@ class Dialog_Action(Dialog):
                     elif widget.startswith('input_lineedit_'):
                         setting = widget.split('input_lineedit_')[1]
                         self.ui.__dict__[widget].setText(self.action_conf.__dict__[setting])
-                    elif widget.startswith('input_plaintextedit_'):
-                        setting = widget.split('input_plaintextedit_')[1]
-                        self.ui.__dict__[widget].setPlainText(self.action_conf.__dict__[setting])
+                    elif widget.startswith('input_textedit_'):
+                        setting = widget.split('input_textedit_')[1]
+                        self.ui.__dict__[widget].setText(self.action_conf.__dict__[setting])
 
             # apply toggle-dependencies between checkboxes and certain widgets
             self.toggle_toggles()
@@ -1707,7 +1705,53 @@ class Dialog_Action(Dialog):
 
 
     def ok(self):
-        pass
+        """
+            evaluate state of widgets to get new configuration
+        """
+        # check that no duplicate name exists
+        if self.ui.input_lineedit_name.text() in conf.actions and \
+          (self.mode in ['new', 'copy'] or
+           self.mode == 'edit' and self.action_conf != conf.actions[self.ui.input_lineedit_name.text()]):
+            # cry if duplicate name exists
+            QMessageBox.critical(self.window, 'Nagstamon',
+                                 'The action name <b>%s</b> is already used.' %\
+                                 (self.ui.input_lineedit_name.text()),
+                                 QMessageBox.Ok)
+        else:
+            # get configuration from UI
+            for widget in self.ui.__dict__:
+                if widget.startswith('input_'):
+                    if widget.startswith('input_checkbox_'):
+                        setting = widget.split('input_checkbox_')[1]
+                        self.action_conf.__dict__[setting] = self.ui.__dict__[widget].isChecked()
+                    if widget.startswith('input_radiobutton_'):
+                        setting = widget.split('input_radiobutton_')[1]
+                        self.action_conf.__dict__[setting] = self.ui.__dict__[widget].isChecked()
+                    elif widget.startswith('input_combobox_'):
+                        setting = widget.split('input_combobox_')[1]
+                        self.action_conf.__dict__[setting] = self.ui.__dict__[widget].currentText()
+                    elif widget.startswith('input_lineedit_'):
+                        setting = widget.split('input_lineedit_')[1]
+                        self.action_conf.__dict__[setting] =  self.ui.__dict__[widget].text()
+                    elif widget.startswith('input_textedit_'):
+                        setting = widget.split('input_textedit_')[1]
+                        self.action_conf.__dict__[setting] =  self.ui.__dict__[widget].toPlainText()
+
+            # edited action will be deleted and recreated with new configuration
+            if self.mode == 'edit':
+                # delete previous name
+                conf.actions.pop(self.previous_action_conf.name)
+
+            # add edited  or new/copied action
+            conf.actions[self.action_conf.name] = self.action_conf
+
+            # refresh list of servers, give call the current server name to highlight it
+            dialogs.settings.refresh_list(list_widget=dialogs.settings.ui.list_actions,
+                                          list_conf=conf.actions,
+                                          current=self.action_conf.name)
+
+            # store server settings
+            conf.SaveMultipleConfig("actions", "action")
 
 
 def _createIcons(fontsize):

@@ -7,7 +7,7 @@
     <x>0</x>
     <y>0</y>
     <width>555</width>
-    <height>705</height>
+    <height>849</height>
    </rect>
   </property>
   <property name="sizePolicy">
@@ -207,33 +207,6 @@
      </property>
     </widget>
    </item>
-   <item row="7" column="0" rowspan="3" colspan="6">
-    <widget class="QPlainTextEdit" name="input_plaintextedit_string">
-     <property name="sizePolicy">
-      <sizepolicy hsizetype="MinimumExpanding" vsizetype="MinimumExpanding">
-       <horstretch>0</horstretch>
-       <verstretch>0</verstretch>
-      </sizepolicy>
-     </property>
-     <property name="toolTip">
-      <string>Available variables for action strings:
-
-$HOST$ - host as in monitor
-$SERVICE$ - service as in monitor
-$MONITOR$ - monitor address
-$MONITOR-CGI$ - monitor CGI address
-$ADDRESS$ - address of host, delivered from connection method
-$USERNAME$ - username on monitor
-$STATUS-INFO$ - status information for host or service
-$PASSWORD$ - username's password on monitor
-$COMMENT-ACK$ - default acknowledge comment
-$COMMENT-DOWN$ - default downtime comment
-$COMMENT-SUBMIT$ - default submit check result comment
-
-$TRANSID$ - only useful for Check_MK as _transid=$TRANSID$</string>
-     </property>
-    </widget>
-   </item>
    <item row="5" column="1" colspan="5">
     <widget class="QLineEdit" name="input_lineedit_description"/>
    </item>
@@ -264,6 +237,33 @@ Request given URL string in the background, for example to acknowledge a service
     <widget class="QCheckBox" name="input_checkbox_filter_target_host">
      <property name="text">
       <string>Host</string>
+     </property>
+    </widget>
+   </item>
+   <item row="7" column="0" rowspan="3" colspan="6">
+    <widget class="QTextEdit" name="input_textedit_string">
+     <property name="sizePolicy">
+      <sizepolicy hsizetype="MinimumExpanding" vsizetype="MinimumExpanding">
+       <horstretch>0</horstretch>
+       <verstretch>0</verstretch>
+      </sizepolicy>
+     </property>
+     <property name="toolTip">
+      <string>Available variables for action strings:
+
+$HOST$ - host as in monitor
+$SERVICE$ - service as in monitor
+$MONITOR$ - monitor address
+$MONITOR-CGI$ - monitor CGI address
+$ADDRESS$ - address of host, delivered from connection method
+$USERNAME$ - username on monitor
+$STATUS-INFO$ - status information for host or service
+$PASSWORD$ - username's password on monitor
+$COMMENT-ACK$ - default acknowledge comment
+$COMMENT-DOWN$ - default downtime comment
+$COMMENT-SUBMIT$ - default submit check result comment
+
+$TRANSID$ - only useful for Check_MK as _transid=$TRANSID$</string>
      </property>
     </widget>
    </item>

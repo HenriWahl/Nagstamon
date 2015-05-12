@@ -11,7 +11,7 @@ from PyQt5 import QtCore, QtGui, QtWidgets
 class Ui_settings_action(object):
     def setupUi(self, settings_action):
         settings_action.setObjectName("settings_action")
-        settings_action.resize(555, 705)
+        settings_action.resize(555, 849)
         sizePolicy = QtWidgets.QSizePolicy(QtWidgets.QSizePolicy.Minimum, QtWidgets.QSizePolicy.Preferred)
         sizePolicy.setHorizontalStretch(0)
         sizePolicy.setVerticalStretch(0)
@@ -116,20 +116,9 @@ class Ui_settings_action(object):
         self.button_box.setStandardButtons(QtWidgets.QDialogButtonBox.Cancel|QtWidgets.QDialogButtonBox.Ok)
         self.button_box.setObjectName("button_box")
         self.gridLayout.addWidget(self.button_box, 33, 0, 1, 6)
-        self.input_checkbox_filter_target_host = QtWidgets.QCheckBox(settings_action)
-        self.input_checkbox_filter_target_host.setObjectName("input_checkbox_filter_target_host")
-        self.gridLayout.addWidget(self.input_checkbox_filter_target_host, 13, 1, 1, 1)
         self.input_checkbox_filter_target_service = QtWidgets.QCheckBox(settings_action)
         self.input_checkbox_filter_target_service.setObjectName("input_checkbox_filter_target_service")
         self.gridLayout.addWidget(self.input_checkbox_filter_target_service, 14, 1, 1, 1)
-        self.input_plaintextedit_string = QtWidgets.QPlainTextEdit(settings_action)
-        sizePolicy = QtWidgets.QSizePolicy(QtWidgets.QSizePolicy.MinimumExpanding, QtWidgets.QSizePolicy.MinimumExpanding)
-        sizePolicy.setHorizontalStretch(0)
-        sizePolicy.setVerticalStretch(0)
-        sizePolicy.setHeightForWidth(self.input_plaintextedit_string.sizePolicy().hasHeightForWidth())
-        self.input_plaintextedit_string.setSizePolicy(sizePolicy)
-        self.input_plaintextedit_string.setObjectName("input_plaintextedit_string")
-        self.gridLayout.addWidget(self.input_plaintextedit_string, 7, 0, 3, 6)
         self.input_lineedit_description = QtWidgets.QLineEdit(settings_action)
         self.input_lineedit_description.setObjectName("input_lineedit_description")
         self.gridLayout.addWidget(self.input_lineedit_description, 5, 1, 1, 5)
@@ -142,6 +131,17 @@ class Ui_settings_action(object):
         self.input_combobox_type = QtWidgets.QComboBox(settings_action)
         self.input_combobox_type.setObjectName("input_combobox_type")
         self.gridLayout.addWidget(self.input_combobox_type, 1, 1, 1, 2)
+        self.input_checkbox_filter_target_host = QtWidgets.QCheckBox(settings_action)
+        self.input_checkbox_filter_target_host.setObjectName("input_checkbox_filter_target_host")
+        self.gridLayout.addWidget(self.input_checkbox_filter_target_host, 13, 1, 1, 1)
+        self.input_textedit_string = QtWidgets.QTextEdit(settings_action)
+        sizePolicy = QtWidgets.QSizePolicy(QtWidgets.QSizePolicy.MinimumExpanding, QtWidgets.QSizePolicy.MinimumExpanding)
+        sizePolicy.setHorizontalStretch(0)
+        sizePolicy.setVerticalStretch(0)
+        sizePolicy.setHeightForWidth(self.input_textedit_string.sizePolicy().hasHeightForWidth())
+        self.input_textedit_string.setSizePolicy(sizePolicy)
+        self.input_textedit_string.setObjectName("input_textedit_string")
+        self.gridLayout.addWidget(self.input_textedit_string, 7, 0, 3, 6)
 
         self.retranslateUi(settings_action)
         self.button_box.accepted.connect(settings_action.accept)
@@ -168,9 +168,20 @@ class Ui_settings_action(object):
         self.label_string.setText(_translate("settings_action", "String:"))
         self.label_status_popup.setText(_translate("settings_action", "Status popup window:"))
         self.input_checkbox_enabled.setText(_translate("settings_action", "Enabled"))
-        self.input_checkbox_filter_target_host.setText(_translate("settings_action", "Host"))
         self.input_checkbox_filter_target_service.setText(_translate("settings_action", "Service"))
-        self.input_plaintextedit_string.setToolTip(_translate("settings_action", "Available variables for action strings:\n"
+        self.input_combobox_type.setToolTip(_translate("settings_action", "Available action types:\n"
+"\n"
+"Browser:\n"
+"Use given string as URL, evaluate variables and open it in your default browser, for example a graph page in monitor.\n"
+"\n"
+"Command:\n"
+"Execute command as given in string and evaluate variables, for example to open SSH connection.\n"
+"\n"
+"URL:\n"
+"Request given URL string in the background, for example to acknowledge a service with one click.\n"
+""))
+        self.input_checkbox_filter_target_host.setText(_translate("settings_action", "Host"))
+        self.input_textedit_string.setToolTip(_translate("settings_action", "Available variables for action strings:\n"
 "\n"
 "$HOST$ - host as in monitor\n"
 "$SERVICE$ - service as in monitor\n"
@@ -185,15 +196,4 @@ class Ui_settings_action(object):
 "$COMMENT-SUBMIT$ - default submit check result comment\n"
 "\n"
 "$TRANSID$ - only useful for Check_MK as _transid=$TRANSID$"))
-        self.input_combobox_type.setToolTip(_translate("settings_action", "Available action types:\n"
-"\n"
-"Browser:\n"
-"Use given string as URL, evaluate variables and open it in your default browser, for example a graph page in monitor.\n"
-"\n"
-"Command:\n"
-"Execute command as given in string and evaluate variables, for example to open SSH connection.\n"
-"\n"
-"URL:\n"
-"Request given URL string in the background, for example to acknowledge a service with one click.\n"
-""))
 
