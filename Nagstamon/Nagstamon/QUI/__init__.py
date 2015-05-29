@@ -129,7 +129,7 @@ class StatusWindow(QWidget):
         self.statusbar.logo.mouse_pressed.connect(self.hide_window)
 
         # after status summarization check if window hast to be resized
-        self.statusbar.resize.connect(self.adjustSize)
+        self.statusbar.resize.connect(self.adjust_size)
 
         # when logo in toparea was pressed hurry up to save the position so the statusbar will not jump
         self.toparea.logo.window_moved.connect(self.store_position)
@@ -243,6 +243,7 @@ class StatusWindow(QWidget):
             self.is_shown = True
 
 
+    @pyqtSlot()
     def hide_window(self):
         if self.is_shown == True:
             self.statusbar.show()
@@ -326,6 +327,7 @@ class StatusWindow(QWidget):
         return True
 
 
+    @pyqtSlot()
     def adjust_size(self):
         """
             resize window if shown and needed
@@ -335,6 +337,7 @@ class StatusWindow(QWidget):
             self.resize_window(width, height, x, y)
 
 
+    @pyqtSlot()
     def store_position(self):
         # store position for restoring it when hiding
         self.stored_x = self.x()
@@ -620,6 +623,7 @@ class ServerVBox(QVBoxLayout):
                 child.hide()
 
 
+    @pyqtSlot()
     def delete(self):
         """
             delete VBox and its children
@@ -756,7 +760,7 @@ class TableWidget(QTableWidget):
         # connect signal new_data to worker slot fill_rows
         self.new_data.connect(self.worker.fill_rows)
 
-
+    @pyqtSlot()
     def refresh(self):
         """
             refresh status display
@@ -768,7 +772,7 @@ class TableWidget(QTableWidget):
             # get_status statusbar
             statuswindow.statusbar.summarize_states()
 
-
+    @pyqtSlot(int, int, str, str, str, list)
     def set_cell(self, row, column, text, color, background, icons):
         """
             set data and widget for one cell
@@ -789,7 +793,7 @@ class TableWidget(QTableWidget):
         # send signal to worker
         self.new_data.emit(data, self.sort_column, SORT_ORDER[self.order])
 
-
+    @pyqtSlot()
     def adjust_table(self):
         """
             adjust table dimensions after filling it
@@ -832,7 +836,7 @@ class TableWidget(QTableWidget):
             self.timer = QTimer(self)
             self.server.init_config()
 
-
+        @pyqtSlot()
         def get_status(self):
             status =  self.server.GetStatus()
             self.new_status.emit()
@@ -843,7 +847,7 @@ class TableWidget(QTableWidget):
             else:
                 self.finish.emit()
 
-
+        @pyqtSlot(list, str, bool)
         def fill_rows(self, data, sort_column, reverse):
             # to keep GTK Treeview sort behaviour first by services
             first_sort = sorted(data, key=methodcaller('compare_host'))
@@ -900,7 +904,7 @@ class TableWidget(QTableWidget):
             # after running through
             self.table_ready.emit()
 
-
+    @pyqtSlot(int, int)
     def sortColumn(self, column, order):
         """
             set data according to sort criteria
@@ -1055,6 +1059,7 @@ class Dialog(object):
                     widget.hide()
 
 
+    @pyqtSlot(QWidget, bool)
     def toggle(self, checkbox, inverted=False):
         """
             change state of depending widgets, slot for signals from checkboxes in UI
@@ -1086,6 +1091,7 @@ class Dialog(object):
             listwidget.addItem(listitem)
 
 
+    @pyqtSlot()
     def ok(self):
         # dummy OK treatment
         pass
@@ -1148,6 +1154,11 @@ class Dialog_Settings(Dialog):
         self.ui.button_edit_action.clicked.connect(self.edit_action)
         self.ui.button_copy_action.clicked.connect(self.copy_action)
         self.ui.button_delete_action.clicked.connect(self.delete_action)
+
+        # connect custom sound buttons
+        self.ui.button_choose_warning.clicked.connect(self.choose_file_warning)
+        self.ui.button_choose_critical.clicked.connect(self.choose_file_critical)
+        self.ui.button_choose_down.clicked.connect(self.choose_file_down)
 
         # apply toggle-dependencies between checkboxes as certain widgets
         self.toggle_toggles()
@@ -1218,6 +1229,7 @@ class Dialog_Settings(Dialog):
         conf.SaveConfig()
 
 
+    @pyqtSlot()
     def new_server(self):
         """
             create new server
@@ -1225,6 +1237,7 @@ class Dialog_Settings(Dialog):
         dialogs.server.new()
 
 
+    @pyqtSlot()
     def edit_server(self):
         """
             edit existing server
@@ -1232,6 +1245,7 @@ class Dialog_Settings(Dialog):
         dialogs.server.edit()
 
 
+    @pyqtSlot()
     def copy_server(self):
         """
             copy existing server
@@ -1239,6 +1253,7 @@ class Dialog_Settings(Dialog):
         dialogs.server.copy()
 
 
+    @pyqtSlot()
     def delete_server(self):
         """
             delete server, stop its thread, remove from config and list
@@ -1302,6 +1317,7 @@ class Dialog_Settings(Dialog):
         list_widget.setCurrentItem(list_widget.findItems(current, Qt.MatchExactly)[0])
 
 
+    @pyqtSlot()
     def new_action(self):
         """
             create new action
@@ -1309,6 +1325,7 @@ class Dialog_Settings(Dialog):
         dialogs.action.new()
 
 
+    @pyqtSlot()
     def edit_action(self):
         """
             edit existing action
@@ -1316,6 +1333,7 @@ class Dialog_Settings(Dialog):
         dialogs.action.edit()
 
 
+    @pyqtSlot()
     def copy_action(self):
         """
             copy existing action and edit it
@@ -1323,6 +1341,7 @@ class Dialog_Settings(Dialog):
         dialogs.action.copy()
 
 
+    @pyqtSlot()
     def delete_action(self):
         """
             delete action remove from config and list
@@ -1335,9 +1354,7 @@ class Dialog_Settings(Dialog):
                                      QMessageBox.Yes | QMessageBox.No, QMessageBox.No)
 
         if reply == QMessageBox.Yes:
-            # kick action out of server instances
-            #servers.pop(server.name)
-            # dito from config items
+            # kick action out of config items
             conf.actions.pop(action.name)
 
             # refresh list
@@ -1355,13 +1372,26 @@ class Dialog_Settings(Dialog):
                 row = row + 1
 
             # refresh list and mark new current row
-            #self.refresh_list_actions(current=self.ui.list_actions.item(row).text())
             self.refresh_list(list_widget=self.ui.list_actions, list_conf=conf.actions, current=self.ui.list_actions.item(row).text())
 
             del(row, count)
 
         del(action)
 
+
+    @pyqtSlot()
+    def choose_file_warning(self):
+        pass
+
+
+    @pyqtSlot()
+    def choose_file_critical(self):
+        pass
+
+
+    @pyqtSlot()
+    def choose_file_down(self):
+        pass
 
 
 class Dialog_Server(Dialog):
@@ -1412,6 +1442,7 @@ class Dialog_Server(Dialog):
         self.mode = 'new'
 
 
+    @pyqtSlot(int)
     def server_type_changed(self, server_type_index=0):
         # server_type_index is not needed - we get the server type from .currentText()
         # check if server type is listed in volatile widgets to decide if it has to be shown or hidden

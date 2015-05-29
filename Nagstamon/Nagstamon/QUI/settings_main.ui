@@ -868,14 +868,14 @@
                 <string>Custom sounds:</string>
                </property>
                <layout class="QGridLayout" name="gridLayout_8">
-                <item row="1" column="1">
-                 <widget class="QPushButton" name="pushButton_7">
+                <item row="1" column="2">
+                 <widget class="QPushButton" name="button_choose_critical">
                   <property name="text">
-                   <string>PushButton</string>
+                   <string>Choose file...</string>
                   </property>
                  </widget>
                 </item>
-                <item row="0" column="2">
+                <item row="0" column="3">
                  <widget class="QPushButton" name="button_play_warning">
                   <property name="text">
                    <string>Play</string>
@@ -896,21 +896,21 @@
                   </property>
                  </widget>
                 </item>
-                <item row="2" column="1">
-                 <widget class="QPushButton" name="pushButton_9">
+                <item row="2" column="2">
+                 <widget class="QPushButton" name="button_choose_down">
                   <property name="text">
-                   <string>PushButton</string>
+                   <string>Choose file...</string>
                   </property>
                  </widget>
                 </item>
-                <item row="0" column="1">
-                 <widget class="QPushButton" name="pushButton_5">
+                <item row="0" column="2">
+                 <widget class="QPushButton" name="button_choose_warning">
                   <property name="text">
-                   <string>PushButton</string>
+                   <string>Choose file...</string>
                   </property>
                  </widget>
                 </item>
-                <item row="1" column="2">
+                <item row="1" column="3">
                  <widget class="QPushButton" name="button_play_critical">
                   <property name="text">
                    <string>Play</string>
@@ -924,28 +924,24 @@
                   </property>
                  </widget>
                 </item>
-                <item row="2" column="2">
+                <item row="2" column="3">
                  <widget class="QPushButton" name="button_play_down">
                   <property name="text">
                    <string>Play</string>
                   </property>
                  </widget>
                 </item>
+                <item row="0" column="1">
+                 <widget class="QLineEdit" name="input_lineedit_notification_custom_sound_warning"/>
+                </item>
+                <item row="1" column="1">
+                 <widget class="QLineEdit" name="input_lineedit_notification_custom_sound_critical"/>
+                </item>
+                <item row="2" column="1">
+                 <widget class="QLineEdit" name="input_lineedit_notification_custom_sound_down"/>
+                </item>
                </layout>
               </widget>
-             </item>
-             <item row="3" column="2">
-              <spacer name="horizontalSpacer_5">
-               <property name="orientation">
-                <enum>Qt::Horizontal</enum>
-               </property>
-               <property name="sizeHint" stdset="0">
-                <size>
-                 <width>0</width>
-                 <height>0</height>
-                </size>
-               </property>
-              </spacer>
              </item>
              <item row="0" column="0" colspan="2">
               <widget class="QCheckBox" name="input_checkbox_notification_sound_repeat">
@@ -1548,7 +1544,7 @@
   </connection>
  </connections>
  <buttongroups>
-  <buttongroup name="buttongroup_popup_statuswindow"/>
   <buttongroup name="buttongroup_close_statusbar"/>
+  <buttongroup name="buttongroup_popup_statuswindow"/>
  </buttongroups>
 </ui>

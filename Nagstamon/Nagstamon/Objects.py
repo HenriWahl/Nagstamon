@@ -306,8 +306,8 @@ class Result(object):
     """
     multi purpose result object, used in Servers.Generic.FetchURL()
     """
-    result = ""
-    error = ""
+    result = u""
+    error = u""
 
     def __init__(self, **kwds):
         # add all keywords to object, every mode searchs inside for its favorite arguments/keywords

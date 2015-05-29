@@ -1068,6 +1068,9 @@ class GenericServer(object):
             HTTPheaders["raw"] = HTTPheaders["obj"] = HTTPheaders["xml"] =  dict()
 
         try:
+
+            # all the result.encode() and error.encode() is necessary since Python 2.7.9 coming in Fedora 22
+
             try:
                 # debug
                 if str(conf.debug_mode) == "True":
@@ -1079,7 +1082,7 @@ class GenericServer(object):
             except:
                 del url, cgi_data, request
                 result, error = self.Error(sys.exc_info())
-                return Result(result=result, error=error)
+                return Result(result=result.encode(), error=error.encode())
 
             # give back pure HTML or XML in case giveback is "raw"
             if giveback == "raw":
@@ -1107,10 +1110,10 @@ class GenericServer(object):
         except:
             # do some cleanup
             result, error = self.Error(sys.exc_info())
-            return Result(result=result, error=error)
+            return Result(result=result.encode(), error=error.encode())
 
         result, error = self.Error(sys.exc_info())
-        return Result(result=result, error=error)
+        return Result(result=result.encode(), error=error.encode())
 
 
     def GetHost(self, host):
