@@ -986,6 +986,9 @@ class Dialogs(object):
         self.action = Dialog_Action(Ui_settings_action)
         self.action.initialize()
 
+        # file chooser Dialog
+        self.file_chooser = QFileDialog()
+
 
 class Dialog(object):
     """
@@ -1156,9 +1159,9 @@ class Dialog_Settings(Dialog):
         self.ui.button_delete_action.clicked.connect(self.delete_action)
 
         # connect custom sound buttons
-        self.ui.button_choose_warning.clicked.connect(self.choose_file_warning)
-        self.ui.button_choose_critical.clicked.connect(self.choose_file_critical)
-        self.ui.button_choose_down.clicked.connect(self.choose_file_down)
+        self.ui.button_choose_warning.clicked.connect(self.choose_sound_file_warning)
+        self.ui.button_choose_critical.clicked.connect(self.choose_sound_file_critical)
+        self.ui.button_choose_down.clicked.connect(self.choose_sound_file_down)
 
         # apply toggle-dependencies between checkboxes as certain widgets
         self.toggle_toggles()
@@ -1379,19 +1382,37 @@ class Dialog_Settings(Dialog):
         del(action)
 
 
-    @pyqtSlot()
-    def choose_file_warning(self):
-        pass
+    def sound_file_decoration(method):
+        """
+            try to decorate sound file dialog
+        """
+        def decoration_function(self):
+            method(self)
+            file = dialogs.file_chooser.getOpenFileName(self.window,
+                                                       'Choose sound file for %s' % self.sound_file_type,
+                                                       filter = 'Sound files (*.mp3 *.MP3 *.mp4 *.MP4 '
+                                                                             '*.wav *.WAV *.ogg *.OGG);;'
+                                                                'All files (*)')
+
+        return(decoration_function)
 
 
     @pyqtSlot()
-    def choose_file_critical(self):
-        pass
+    @sound_file_decoration
+    def choose_sound_file_warning(self):
+        self.sound_file_type = 'WARNING'
 
 
     @pyqtSlot()
-    def choose_file_down(self):
-        pass
+    @sound_file_decoration
+    def choose_sound_file_critical(self):
+        self.sound_file_type = 'CRITICAL'
+
+
+    @pyqtSlot()
+    @sound_file_decoration
+    def choose_sound_file_down(self):
+        self.sound_file_type = 'DOWN'
 
 
 class Dialog_Server(Dialog):
