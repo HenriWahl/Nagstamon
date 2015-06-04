@@ -26,8 +26,10 @@ from PyQt5.QtWidgets import *
 from PyQt5.QtGui import *
 from PyQt5.QtCore import *
 from PyQt5.QtSvg import *
+from PyQt5.QtMultimedia import *
 
 import os
+import os.path
 from operator import methodcaller
 from collections import OrderedDict
 from copy import deepcopy
@@ -1158,10 +1160,31 @@ class Dialog_Settings(Dialog):
         self.ui.button_copy_action.clicked.connect(self.copy_action)
         self.ui.button_delete_action.clicked.connect(self.delete_action)
 
-        # connect custom sound buttons
+        # connect custom sound file buttons
         self.ui.button_choose_warning.clicked.connect(self.choose_sound_file_warning)
         self.ui.button_choose_critical.clicked.connect(self.choose_sound_file_critical)
         self.ui.button_choose_down.clicked.connect(self.choose_sound_file_down)
+
+        # connect custom sound file buttons
+        self.ui.button_play_warning.clicked.connect(self.play_sound_file_warning)
+        self.ui.button_play_critical.clicked.connect(self.play_sound_file_critical)
+        self.ui.button_play_down.clicked.connect(self.play_sound_file_down)
+
+        # set folder and play symbols to choose and play buttons
+        self.ui.button_choose_warning.setText('')
+        self.ui.button_choose_warning.setIcon(self.ui.button_play_warning.style().standardIcon(QStyle.SP_DirIcon))
+        self.ui.button_play_warning.setText('')
+        self.ui.button_play_warning.setIcon(self.ui.button_play_warning.style().standardIcon(QStyle.SP_MediaPlay))
+
+        self.ui.button_choose_critical.setText('')
+        self.ui.button_choose_critical.setIcon(self.ui.button_play_warning.style().standardIcon(QStyle.SP_DirIcon))
+        self.ui.button_play_critical.setText('')
+        self.ui.button_play_critical.setIcon(self.ui.button_play_warning.style().standardIcon(QStyle.SP_MediaPlay))
+
+        self.ui.button_choose_down.setText('')
+        self.ui.button_choose_down.setIcon(self.ui.button_play_warning.style().standardIcon(QStyle.SP_DirIcon))
+        self.ui.button_play_down.setText('')
+        self.ui.button_play_down.setIcon(self.ui.button_play_warning.style().standardIcon(QStyle.SP_MediaPlay))
 
         # apply toggle-dependencies between checkboxes as certain widgets
         self.toggle_toggles()
@@ -1382,37 +1405,84 @@ class Dialog_Settings(Dialog):
         del(action)
 
 
-    def sound_file_decoration(method):
+    def choose_sound_file_decoration(method):
         """
             try to decorate sound file dialog
         """
         def decoration_function(self):
+            # execute decorated function
             method(self)
+            # shortcut for widget to fill and revaluate
+            widget = self.ui.__dict__['input_lineedit_notification_custom_sound_%s' % self.sound_file_type]
+
+            # use 2 filters, sound files and all files
             file = dialogs.file_chooser.getOpenFileName(self.window,
-                                                       'Choose sound file for %s' % self.sound_file_type,
                                                        filter = 'Sound files (*.mp3 *.MP3 *.mp4 *.MP4 '
                                                                              '*.wav *.WAV *.ogg *.OGG);;'
-                                                                'All files (*)')
+                                                                'All files (*)')[0]
+
+            # only take filename if QFileDialog gave something useful back
+            if file != "":
+                widget.setText(file)
 
         return(decoration_function)
 
 
     @pyqtSlot()
-    @sound_file_decoration
+    @choose_sound_file_decoration
     def choose_sound_file_warning(self):
-        self.sound_file_type = 'WARNING'
+        self.sound_file_type = 'warning'
 
 
     @pyqtSlot()
-    @sound_file_decoration
+    @choose_sound_file_decoration
     def choose_sound_file_critical(self):
-        self.sound_file_type = 'CRITICAL'
+        self.sound_file_type = 'critical'
 
 
     @pyqtSlot()
-    @sound_file_decoration
+    @choose_sound_file_decoration
     def choose_sound_file_down(self):
-        self.sound_file_type = 'DOWN'
+        self.sound_file_type = 'down'
+
+
+    def play_sound_file_decoration(method):
+        """
+            try to decorate sound file dialog
+        """
+        def decoration_function(self):
+            # execute decorated function
+            method(self)
+            # shortcut for widget to fill and revaluate
+            widget = self.ui.__dict__['input_lineedit_notification_custom_sound_%s' % self.sound_file_type]
+
+            file = widget.text()
+
+            notification.set_media(file)
+
+            notification.play.emit()
+
+
+        return(decoration_function)
+
+
+    @pyqtSlot()
+    @play_sound_file_decoration
+    def play_sound_file_warning(self):
+        self.sound_file_type = 'warning'
+
+
+    @pyqtSlot()
+    @play_sound_file_decoration
+    def play_sound_file_critical(self):
+        self.sound_file_type = 'critical'
+
+
+    @pyqtSlot()
+    @play_sound_file_decoration
+    def play_sound_file_down(self):
+        self.sound_file_type = 'down'
+
 
 
 class Dialog_Server(Dialog):
@@ -1818,6 +1888,33 @@ def _createIcons(fontsize):
         ICONS[attr] = icon
 
 
+class Notification(QObject):
+    """
+        bundle various notifications like sounds and flashing statusbar
+    """
+
+    play = pyqtSignal()
+
+    def __init__(self):
+        QObject.__init__(self)
+        self.player = QMediaPlayer(parent=self)
+
+        self.player.setVolume(100)
+
+        self.playlist = QMediaPlaylist()
+        self.player.setPlaylist(self.playlist)
+
+        self.play.connect(self.player.play)
+
+
+    def set_media(self, file):
+        url = QUrl.fromLocalFile(file)
+        mediacontent = QMediaContent(url)
+        self.player.setMedia(mediacontent)
+        del url, mediacontent
+
+
+
 def get_screen(x, y):
     """
         find out which screen the cursor is on
@@ -1841,3 +1938,5 @@ systrayicon = SystemTrayIcon(QIcon('%s%snagstamon.svg' % (RESOURCES, os.sep)))
 # combined statusbar/status window
 statuswindow = StatusWindow()
 
+# bundled notifications
+notification = Notification()

@@ -18,7 +18,7 @@
 # Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA  02110-1301, USA
 
 import threading
-import gobject
+#import gobject
 import time
 import datetime
 import urllib
