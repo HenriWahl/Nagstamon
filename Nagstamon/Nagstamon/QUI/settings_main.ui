@@ -42,7 +42,7 @@
       </sizepolicy>
      </property>
      <property name="currentIndex">
-      <number>4</number>
+      <number>5</number>
      </property>
      <widget class="QWidget" name="tab_servers">
       <attribute name="title">
@@ -1104,30 +1104,30 @@
         </widget>
        </item>
        <item row="6" column="2">
-        <widget class="QPushButton" name="pushButton_20">
+        <widget class="QPushButton" name="input_button_color_unreachable_background">
          <property name="text">
-          <string>PushButton</string>
+          <string/>
          </property>
         </widget>
        </item>
        <item row="5" column="2">
-        <widget class="QPushButton" name="pushButton_18">
+        <widget class="QPushButton" name="input_button_color_unknown_background">
          <property name="text">
-          <string>PushButton</string>
+          <string/>
          </property>
         </widget>
        </item>
        <item row="8" column="1">
-        <widget class="QPushButton" name="pushButton_23">
+        <widget class="QPushButton" name="input_button_color_error_text">
          <property name="text">
-          <string>PushButton</string>
+          <string/>
          </property>
         </widget>
        </item>
        <item row="5" column="1">
-        <widget class="QPushButton" name="pushButton_17">
+        <widget class="QPushButton" name="input_button_color_unknown_text">
          <property name="text">
-          <string>PushButton</string>
+          <string/>
          </property>
         </widget>
        </item>
@@ -1146,9 +1146,9 @@
         </widget>
        </item>
        <item row="3" column="2">
-        <widget class="QPushButton" name="pushButton_14">
+        <widget class="QPushButton" name="input_button_color_warning_background">
          <property name="text">
-          <string>PushButton</string>
+          <string/>
          </property>
         </widget>
        </item>
@@ -1160,9 +1160,9 @@
         </widget>
        </item>
        <item row="7" column="2">
-        <widget class="QPushButton" name="pushButton_22">
+        <widget class="QPushButton" name="input_button_color_down_background">
          <property name="text">
-          <string>PushButton</string>
+          <string/>
          </property>
         </widget>
        </item>
@@ -1174,16 +1174,16 @@
         </widget>
        </item>
        <item row="4" column="2">
-        <widget class="QPushButton" name="pushButton_16">
+        <widget class="QPushButton" name="input_button_color_critical_background">
          <property name="text">
-          <string>PushButton</string>
+          <string/>
          </property>
         </widget>
        </item>
        <item row="2" column="1">
-        <widget class="QPushButton" name="pushButton_11">
+        <widget class="QPushButton" name="input_button_color_ok_text">
          <property name="text">
-          <string>PushButton</string>
+          <string/>
          </property>
         </widget>
        </item>
@@ -1222,37 +1222,37 @@
         </spacer>
        </item>
        <item row="7" column="1">
-        <widget class="QPushButton" name="pushButton_21">
+        <widget class="QPushButton" name="input_button_color_down_text">
          <property name="text">
-          <string>PushButton</string>
+          <string/>
          </property>
         </widget>
        </item>
        <item row="3" column="1">
-        <widget class="QPushButton" name="pushButton_13">
+        <widget class="QPushButton" name="input_button_color_warning_text">
          <property name="text">
-          <string>PushButton</string>
+          <string/>
          </property>
         </widget>
        </item>
        <item row="6" column="1">
-        <widget class="QPushButton" name="pushButton_19">
+        <widget class="QPushButton" name="input_button_color_unreachable_text">
          <property name="text">
-          <string>PushButton</string>
+          <string/>
          </property>
         </widget>
        </item>
        <item row="8" column="2">
-        <widget class="QPushButton" name="pushButton_24">
+        <widget class="QPushButton" name="input_button_color_error_background">
          <property name="text">
-          <string>PushButton</string>
+          <string/>
          </property>
         </widget>
        </item>
        <item row="4" column="1">
-        <widget class="QPushButton" name="pushButton_15">
+        <widget class="QPushButton" name="input_button_color_critical_text">
          <property name="text">
-          <string>PushButton</string>
+          <string/>
          </property>
         </widget>
        </item>
@@ -1282,9 +1282,9 @@
         </layout>
        </item>
        <item row="2" column="2">
-        <widget class="QPushButton" name="pushButton_25">
+        <widget class="QPushButton" name="input_button_color_ok_background">
          <property name="text">
-          <string>PushButton</string>
+          <string/>
          </property>
         </widget>
        </item>
@@ -1544,7 +1544,7 @@
   </connection>
  </connections>
  <buttongroups>
-  <buttongroup name="buttongroup_close_statusbar"/>
   <buttongroup name="buttongroup_popup_statuswindow"/>
+  <buttongroup name="buttongroup_close_statusbar"/>
  </buttongroups>
 </ui>

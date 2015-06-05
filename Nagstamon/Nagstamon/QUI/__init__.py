@@ -1019,7 +1019,7 @@ class Dialog(object):
 
         # QSignalMapper needed to connect all toggle-needing-checkboxes/radiobuttons to one .toggle()-method which
         # decides which sender to use as key in self.TOGGLE_DEPS
-        self.signalmapper = QSignalMapper()
+        self.signalmapper_toggles = QSignalMapper()
 
         # window position to be used to fix strange movement bug
         ###self.x = 0
@@ -1078,11 +1078,11 @@ class Dialog(object):
             # toggle visibility
             self.toggle_visibility(checkbox, widgets)
             # multiplex slot .toggle() by signal-mapping
-            self.signalmapper.setMapping(checkbox, checkbox)
-            checkbox.toggled.connect(self.signalmapper.map)
+            self.signalmapper_toggles.setMapping(checkbox, checkbox)
+            checkbox.toggled.connect(self.signalmapper_toggles.map)
 
         # finally map signals with .sender() - [QWidget] is important!
-        self.signalmapper.mapped[QWidget].connect(self.toggle)
+        self.signalmapper_toggles.mapped[QWidget].connect(self.toggle)
 
 
     def fill_list(self, listwidget, config):
@@ -1186,6 +1186,20 @@ class Dialog_Settings(Dialog):
         self.ui.button_play_down.setText('')
         self.ui.button_play_down.setIcon(self.ui.button_play_warning.style().standardIcon(QStyle.SP_MediaPlay))
 
+        # QSignalMapper needed to connect all color buttons to color dialogs
+        self.signalmapper_colors = QSignalMapper()
+
+        # connect color buttons with color dialog
+        for widget in [x for x in self.ui.__dict__ if x.startswith('input_button_color_')]:
+            button = self.ui.__dict__[widget]
+            item = widget.split('input_button_color_')[1]
+            # multiplex slot for open color dialog by signal-mapping
+            self.signalmapper_colors.setMapping(button, item)
+            button.clicked.connect(self.signalmapper_colors.map)
+
+        # finally map signals with .sender() - [<type>] is important!
+        self.signalmapper_colors.mapped[str].connect(self.color_chooser)
+
         # apply toggle-dependencies between checkboxes as certain widgets
         self.toggle_toggles()
 
@@ -1233,6 +1247,9 @@ class Dialog_Settings(Dialog):
             self.ui.list_actions.addItem(action)
         # select first item
         self.ui.list_actions.setCurrentRow(0)
+
+        # paint colors onto color selection buttons
+        self.paint_colors()
 
         # important final size adjustment
         self.window.adjustSize()
@@ -1483,6 +1500,29 @@ class Dialog_Settings(Dialog):
     def play_sound_file_down(self):
         self.sound_file_type = 'down'
 
+
+    def paint_colors(self):
+        """
+            fill color selection buttons with appropriate colors
+        """
+
+        # color buttons
+        for color in [x for x in conf.__dict__ if x.startswith('color_')]:
+            self.ui.__dict__['input_button_%s' % (color)].setStyleSheet('background-color: %s;' %
+                                                                         conf.__dict__[color])
+        # example color labels
+        for label in [x for x in self.ui.__dict__ if x.startswith('label_color_')]:
+            status = label.split('label_color_')[1]
+            self.ui.__dict__[label].setStyleSheet('color: %s; background: %s' %
+                                                  (conf.__dict__['color_%s_text' % (status)],
+                                                  (conf.__dict__['color_%s_background' % (status)])))
+
+
+    @pyqtSlot(str)
+    def color_chooser(self, item):
+        color = conf.__dict__['color_%s' % (item)]
+        color_dialog = QColorDialog(self.window)
+        new_color = color_dialog.getColor(parent=self.window)
 
 
 class Dialog_Server(Dialog):
@@ -1893,6 +1933,7 @@ class Notification(QObject):
         bundle various notifications like sounds and flashing statusbar
     """
 
+    # needed to let QMediaPlayer play
     play = pyqtSignal()
 
     def __init__(self):
@@ -1908,10 +1949,15 @@ class Notification(QObject):
 
 
     def set_media(self, file):
-        url = QUrl.fromLocalFile(file)
-        mediacontent = QMediaContent(url)
-        self.player.setMedia(mediacontent)
-        del url, mediacontent
+        # only existing file can be played
+        if os.path.exists(file):
+            url = QUrl.fromLocalFile(file)
+            mediacontent = QMediaContent(url)
+            self.player.setMedia(mediacontent)
+            del url, mediacontent
+        else:
+            QMessageBox.warning(None, 'Nagstamon', 'File <b>\'%s\'</b> does not exist.' % (file))
+
 
 
 
