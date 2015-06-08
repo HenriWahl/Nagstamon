@@ -1524,6 +1524,7 @@ class Dialog_Settings(Dialog):
                                                   (conf.__dict__['color_%s_text' % (status)],
                                                   (conf.__dict__['color_%s_background' % (status)])))
 
+
     @pyqtSlot(str)
     def color_chooser(self, item):
         """
