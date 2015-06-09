@@ -17,9 +17,6 @@
 # along with this program; if not, write to the Free Software
 # Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA  02110-1301, USA
 
-# for python2 and upcomping python3 compatiblity
-
-
 import urllib.request, urllib.parse, urllib.error
 import urllib.request, urllib.error, urllib.parse
 import http.cookiejar
@@ -31,19 +28,12 @@ import datetime
 import time
 import traceback
 import base64
-import re
+from bs4 import BeautifulSoup
 
 # necessary for Python-2.7.9-ssl-support-fix https://github.com/HenriWahl/Nagstamon/issues/126
+# maight not be necessary with Python3 or later Requests library
 if sys.version_info >= (2, 7, 9):
     import ssl
-
-# to let Linux distributions use their own BeautifulSoup if existent try importing local BeautifulSoup first
-# see https://sourceforge.net/tracker/?func=detail&atid=1101370&aid=3302612&group_id=236865
-try:
-    ###from BeautifulSoup import (BeautifulSoup, BeautifulStoneSoup)
-    from bs4 import BeautifulSoup
-except:
-    from Nagstamon.thirdparty.BeautifulSoup import (BeautifulSoup, BeautifulStoneSoup)
 
 from Nagstamon.Actions import (HostIsFilteredOutByRE,\
                               ServiceIsFilteredOutByRE,\
@@ -495,7 +485,7 @@ class GenericServer(object):
                 result = self.FetchURL(self.cgiurl_hosts[status_type])
                 htobj, error = result.result, result.error
 
-                if error != "": return Result(result=copy.deepcopy(htobj), error=copy.deepcopy(error))
+                if error != '': return Result(result=copy.deepcopy(htobj), error=copy.deepcopy(error))
 
                 # put a copy of a part of htobj into table to be able to delete htobj
                 # too mnuch copy.deepcopy()s here give recursion crashs
@@ -1071,9 +1061,7 @@ class GenericServer(object):
             HTTPheaders["raw"] = HTTPheaders["obj"] = HTTPheaders["xml"] =  dict()
 
         try:
-
             # all the result.encode() and error.encode() is necessary since Python 2.7.9 coming in Fedora 22
-
             try:
                 # debug
                 if str(conf.debug_mode) == "True":
@@ -1089,6 +1077,7 @@ class GenericServer(object):
 
             # give back pure HTML or XML in case giveback is "raw"
             if giveback == "raw":
+                print('URLCONTENT', type(urlcontent))
                 result = Result(result=urlcontent.read().decode("utf8", errors="ignore"))
                 urlcontent.close()
                 del urlcontent

@@ -21,22 +21,8 @@ from Nagstamon.Servers.Generic import GenericServer
 import urllib.request, urllib.parse, urllib.error
 import sys
 import copy
-# this seems to be necessary for json to be packaged by pyinstaller
-from encodings import hex_codec
 import json
-import base64
-
-# to let Linux distributions use their own BeautifulSoup if existent try importing local BeautifulSoup first
-# see https://sourceforge.net/tracker/?func=detail&atid=1101370&aid=3302612&group_id=236865
-"""
-try:
-    from BeautifulSoup import BeautifulSoup
-except:
-    from Nagstamon.thirdparty.BeautifulSoup import BeautifulSoup
-"""
 from bs4 import BeautifulSoup
-
-
 from Nagstamon.Objects import *
 from Nagstamon.Actions import *
 
