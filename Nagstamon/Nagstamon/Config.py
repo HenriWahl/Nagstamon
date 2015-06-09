@@ -17,13 +17,10 @@
 # along with this program; if not, write to the Free Software
 # Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA  02110-1301, USA
 
-# for python2 and upcomping python3 compatiblity
-from __future__ import print_function, absolute_import, unicode_literals
-
 import os
 import platform
 import sys
-import ConfigParser
+import configparser
 import base64
 import zlib
 from collections import OrderedDict
@@ -58,8 +55,8 @@ class Config(object):
         self.show_grid = True
         self.show_tooltips = True
         self.highlight_new_events = True
-        self.default_sort_field = "Status"
-        self.default_sort_order = "Descending"
+        self.default_sort_field = 'Status'
+        self.default_sort_order = 'Descending'
         self.filter_all_down_hosts = False
         self.filter_all_unreachable_hosts = False
         self.filter_all_flapping_hosts = False
@@ -102,51 +99,46 @@ class Config(object):
         self.notification_custom_sound_critical = None
         self.notification_custom_sound_down = None
         self.notification_action_warning = False
-        self.notification_action_warning_string = ""
+        self.notification_action_warning_string = ''
         self.notification_action_critical = False
-        self.notification_action_critical_string = ""
+        self.notification_action_critical_string = ''
         self.notification_action_down = False
-        self.notification_action_down_string = ""
+        self.notification_action_down_string = ''
         self.notification_action_ok = False
-        self.notification_action_ok_string = ""
+        self.notification_action_ok_string = ''
         self.notification_custom_action = False
-        self.notification_custom_action_string = False
-        self.notification_custom_action_separator = False
+        self.notification_custom_action_string = ''
+        self.notification_custom_action_separator = ''
         self.notification_custom_action_single = False
         self.notify_if_warning = True
         self.notify_if_critical = True
         self.notify_if_unknown = True
         self.notify_if_unreachable = True
         self.notify_if_down = True
-        """
-        # not yet working
-        # Check_MK show-only-my-problems-they-are-way-enough feature
-        self.only_my_issues = False
-        """
         # Regular expression filters
         self.re_host_enabled = False
-        self.re_host_pattern = ""
+        self.re_host_pattern = ''
         self.re_host_reverse = False
         self.re_service_enabled = False
-        self.re_service_pattern = ""
+        self.re_service_pattern = ''
         self.re_service_reverse = False
         self.re_status_information_enabled = False
-        self.re_status_information_pattern = ""
+        self.re_status_information_pattern = ''
         self.re_status_information_reverse = False
-        self.color_ok_text = self.default_color_ok_text = "#FFFFFF"
-        self.color_ok_background = self.default_color_ok_background = "#006400"
+        self.color_ok_text = self.default_color_ok_text = '#FFFFFF'
+        self.color_ok_background = self.default_color_ok_background = '#006400'
         self.color_warning_text = self.default_color_warning_text = "#000000"
-        self.color_warning_background = self.default_color_warning_background = "#FFFF00"
-        self.color_critical_text = self.default_color_critical_text = "#FFFFFF"
-        self.color_critical_background = self.default_color_critical_background = "#FF0000"
-        self.color_unknown_text = self.default_color_unknown_text = "#000000"
-        self.color_unknown_background = self.default_color_unknown_background = "#FFA500"
-        self.color_unreachable_text = self.default_color_unreachable_text = "#FFFFFF"
-        self.color_unreachable_background = self.default_color_unreachable_background = "#8B0000"
-        self.color_down_text = self.default_color_down_text = "#FFFFFF"
-        self.color_down_background = self.default_color_down_background = "#000000"
-        self.color_error_text = self.default_color_error_text= "#000000"
-        self.color_error_background = self.default_color_error_background = "#D3D3D3"
+        self.color_warning_background = self.default_color_warning_background = '#FFFF00'
+        self.color_critical_text = self.default_color_critical_text = '#FFFFFF'
+        self.color_critical_background = self.default_color_critical_background = '#FF0000'
+        self.color_unknown_text = self.default_color_unknown_text = '#000000'
+        self.color_unknown_background = self.default_color_unknown_background = '#FFA500'
+        self.color_unreachable_text = self.default_color_unreachable_text = '#FFFFFF'
+        self.color_unreachable_background = self.default_color_unreachable_background = '#8B0000'
+        self.color_down_text = self.default_color_down_text = '#FFFFFF'
+        self.color_down_background = self.default_color_down_background = '#000000'
+        self.color_error_text = self.default_color_error_text= '#000000'
+        self.color_error_background = self.default_color_error_background = '#D3D3D3'
         self.statusbar_floating = True
         self.icon_in_systray = False
         self.appindicator = False
@@ -157,11 +149,11 @@ class Config(object):
         self.defaults_acknowledge_send_notification = False
         self.defaults_acknowledge_persistent_comment = False
         self.defaults_acknowledge_all_services = False
-        self.defaults_acknowledge_comment = "acknowledged"
-        self.defaults_submit_check_result_comment = "check result submitted"
-        self.defaults_downtime_duration_hours = "2"
-        self.defaults_downtime_duration_minutes = "0"
-        self.defaults_downtime_comment = "scheduled downtime"
+        self.defaults_acknowledge_comment = 'acknowledged'
+        self.defaults_submit_check_result_comment = 'check result submitted'
+        self.defaults_downtime_duration_hours = 2
+        self.defaults_downtime_duration_minutes = 0
+        self.defaults_downtime_comment = 'scheduled downtime'
         self.defaults_downtime_type_fixed = True
         self.defaults_downtime_type_flexible = False
         # internal flag to determine if keyring is available at all - defaults to False
@@ -171,7 +163,7 @@ class Config(object):
         # Special FX
         # Centreon
         self.re_criticality_enabled = False
-        self.re_criticality_pattern = ""
+        self.re_criticality_pattern = ''
         self.re_criticality_reverse = False
 
         # the app is unconfigured by default and will stay so if it
@@ -182,23 +174,23 @@ class Config(object):
         # if sys.argv is larger than 1
         if len(sys.argv) > 1:
             # MacOSX related -psn argument by launchd
-            if sys.argv[1].find("-psn") != -1:
+            if sys.argv[1].find('-psn') != -1:
                 # new configdir approach
-                self.configdir = os.path.expanduser('~') + os.sep + ".nagstamon"
+                self.configdir = os.path.expanduser('~') + os.sep + '.nagstamon'
             else:
                 # allow to give a config file
                 self.configdir = sys.argv[1]
 
         # otherwise if there exits a configfile in current working directory it should be used
-        elif os.path.exists(os.getcwd() + os.sep + "nagstamon.config"):
-            self.configdir = os.getcwd() + os.sep + "nagstamon.config"
+        elif os.path.exists(os.getcwd() + os.sep + 'nagstamon.config'):
+            self.configdir = os.getcwd() + os.sep + 'nagstamon.config'
         else:
             # ~/.nagstamon/nagstamon.conf is the user conf file
             # os.path.expanduser('~') finds out the user HOME dir where
             # nagstamon expects its conf file to be
-            self.configdir = os.path.expanduser('~') + os.sep + ".nagstamon"
+            self.configdir = os.path.expanduser('~') + os.sep + '.nagstamon'
 
-        self.configfile = self.configdir + os.sep + "nagstamon.conf"
+        self.configfile = self.configdir + os.sep + 'nagstamon.conf'
 
         # make path fit for actual os, normcase for letters and normpath for path
         self.configfile = os.path.normpath(os.path.normcase(self.configfile))
@@ -213,20 +205,21 @@ class Config(object):
         self.actions = dict()
 
         if os.path.exists(self.configfile):
-            # instantiate a Configparser to parse the conf file
+            # instantiate a configparser to parse the conf file
             # SF.net bug #3304423 could be fixed with allow_no_value argument which
             # is only available since Python 2.7
-            if sys.version_info[0] < 3 and sys.version_info[1] < 7:
-                config = ConfigParser.ConfigParser()
-            else:
-                config = ConfigParser.ConfigParser(allow_no_value=True)
+            # since Python 3 '%' will be interpolated by default which crashes
+            # with some URLs
+            config = configparser.ConfigParser(allow_no_value=True, interpolation=None)
             config.read(self.configfile)
 
             # go through all sections of the conf file
             for section in config.sections():
                 # go through all items of each sections (in fact there is only on
                 # section which has to be there to comply to the .INI file standard
-                for i in config.items(section):
+
+                ###for i in config.items(section):
+                for i in config[section]:
                     # create a key of every config item with its appropriate value
                     # check first if it is a bool value and convert string if it is
                     if i[1] in BOOLPOOL:
@@ -238,7 +231,8 @@ class Config(object):
             # and all the thousands 1.0 installations do not know it yet it will be more comfortable
             # for most of the Windows users if it is only defined as False after it was checked
             # from config file
-            if not self.__dict__.has_key("use_system_keyring"):
+            #if not self.__dict__.has_key("use_system_keyring"):
+            if not 'use_system_keyring' in self.__dict__.keys():
                 if self.unconfigured == True:
                     # an unconfigured system should start with no keyring to prevent crashes
                     self.use_system_keyring = False
@@ -322,7 +316,7 @@ class Config(object):
                     servers[server].proxy_password = self.DeObfuscate(servers[server].proxy_password)
 
                 # do only deobfuscating if any autologin_key is set - will be only Centreon
-                if servers[server].__dict__.has_key("autologin_key"):
+                if 'autologin_key' in servers[server].__dict__.keys():
                     if len(servers[server].__dict__["autologin_key"]) > 0:
                         servers[server].autologin_key  = self.DeObfuscate(servers[server].autologin_key)
         except:
@@ -343,10 +337,7 @@ class Config(object):
             if os.path.exists(self.configdir + os.sep + settingsdir):
                 for f in sorted(os.listdir(self.configdir + os.sep + settingsdir)):
                     if f.startswith(setting + "_") and f.endswith(".conf"):
-                        if sys.version_info[0] < 3 and sys.version_info[1] < 7:
-                            config = ConfigParser.ConfigParser()
-                        else:
-                            config = ConfigParser.ConfigParser(allow_no_value=True)
+                        config = configparser.ConfigParser(allow_no_value=True, interpolation=None)
                         config.read(self.configdir + os.sep + settingsdir + os.sep + f)
 
                         # create object for every setting
@@ -377,8 +368,8 @@ class Config(object):
             # Make sure .nagstamon is created
             if not os.path.exists(self.configdir):
                 os.mkdir(self.configdir)
-            # save config file with ConfigParser
-            config = ConfigParser.ConfigParser()
+            # save config file with configparser
+            config = configparser.ConfigParser(allow_no_value=True, interpolation=None)
             # general section for Nagstamon
             config.add_section("Nagstamon")
             for option in self.__dict__:
@@ -389,7 +380,8 @@ class Config(object):
             # and all the thousands 1.0 installations do not know it yet it will be more comfortable
             # for most of the Windows users if it is only defined as False after it was checked
             # from config file
-            if not self.__dict__.has_key("use_system_keyring"):
+            ###if not self.__dict__.has_key("use_system_keyring"):
+            if not 'use_system_keyring' in self.__dict__.keys():
                 if self.unconfigured == True:
                     # an unconfigured system should start with no keyring to prevent crashes
                     self.use_system_keyring = False
@@ -444,11 +436,7 @@ class Config(object):
 
         # one section for each setting
         for s in self.__dict__[settingsdir]:
-            # depending on python version allow_no_value is allowed or not
-            if sys.version_info[0] < 3 and sys.version_info[1] < 7:
-                config = ConfigParser.ConfigParser()
-            else:
-                config = ConfigParser.ConfigParser(allow_no_value=True)
+            config = configparser.ConfigParser(allow_no_value=True, interpolation=None)
             config.add_section(setting + "_" + s)
             for option in self.__dict__[settingsdir][s].__dict__:
                 # obfuscate certain entries in config file - special arrangement for servers
@@ -532,7 +520,8 @@ class Config(object):
                     return True
             else:
                 # safety first - if not yet available disable it
-                if not self.__dict__.has_key("use_system_keyring"):
+                #if not self.__dict__.has_key("use_system_keyring"):
+                if not 'use_system_keyring' in self.__dict__.keys():
                     self.use_system_keyring = False
                 # only import keyring lib if configured to do so
                 # necessary to avoid Windows crashes like https://github.com/HenriWahl/Nagstamon/issues/97
@@ -563,13 +552,22 @@ class Config(object):
 
 
     def DeObfuscate(self, string, count=5):
+        """
+            Deobfucate previously obfuscated string
+        """
         string = base64.b64decode(string)
+
         for i in range(count):
             string = zlib.decompress(string)
+            string = string.decode()
             string = list(string)
             string.reverse()
             string = "".join(string)
             string = base64.b64decode(string)
+
+        # make unicode of bytes coming from bae64 operations
+        string = string.decode()
+
         return string
 
 
@@ -652,9 +650,11 @@ class Config(object):
     def _LegacyAdjustments(self):
         # mere cosmetics but might be more clear for future additions - changing any "nagios"-setting to "monitor"
         for s in self.servers.values():
-            if s.__dict__.has_key("nagios_url"):
+            ###if s.__dict__.has_key("nagios_url"):
+            if 'nagios_url' in s.__dict__.keys():
                 s.monitor_url = s.nagios_url
-            if s.__dict__.has_key("nagios_cgi_url"):
+            ###if s.__dict__.has_key("nagios_cgi_url"):
+            if 'nagios_cgi_url' in s.__dict__.keys():
                 s.monitor_cgi_url = s.nagios_cgi_url
 
             # to reduce complexity in Centreon there is also only one URL necessary
@@ -662,15 +662,17 @@ class Config(object):
                 s.monitor_url = s.monitor_cgi_url
 
         # switch to update interval in seconds not minutes
-        if self.__dict__.has_key("update_interval"):
+        ###if self.__dict__.has_key("update_interval"):
+        if 'update_interval' in self.__dict__.keys():
             self.update_interval_seconds = int(self.update_interval) * 60
-            self.__dict__.pop("update_interval")
+            self.__dict__.pop('update_interval')
 
         # remove support for GNOME2-trayicon-egg-stuff
-        if self.__dict__.has_key("statusbar_systray"):
-            if str(self.statusbar_systray) == "True":
-                self.icon_in_systray = "True"
-            self.__dict__.pop("statusbar_systray")
+        #if self.__dict__.has_key("statusbar_systray"):
+        if 'statusbar_systray' in self.__dict__.keys():
+            if self.statusbar_systray == True:
+                self.icon_in_systray = True
+            self.__dict__.pop('statusbar_systray')
 
 
     def GetNumberOfEnabledMonitors(self):

@@ -18,11 +18,11 @@
 # Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA  02110-1301, USA
 
 # for python2 and upcomping python3 compatiblity
-from __future__ import print_function, absolute_import, unicode_literals
 
-import urllib
-import urllib2
-import cookielib
+
+import urllib.request, urllib.parse, urllib.error
+import urllib.request, urllib.error, urllib.parse
+import http.cookiejar
 import sys
 import socket
 import copy
@@ -32,7 +32,7 @@ import time
 import traceback
 import base64
 import re
-###import gobject
+
 # necessary for Python-2.7.9-ssl-support-fix https://github.com/HenriWahl/Nagstamon/issues/126
 if sys.version_info >= (2, 7, 9):
     import ssl
@@ -40,16 +40,17 @@ if sys.version_info >= (2, 7, 9):
 # to let Linux distributions use their own BeautifulSoup if existent try importing local BeautifulSoup first
 # see https://sourceforge.net/tracker/?func=detail&atid=1101370&aid=3302612&group_id=236865
 try:
-    from BeautifulSoup import (BeautifulSoup, BeautifulStoneSoup)
+    ###from BeautifulSoup import (BeautifulSoup, BeautifulStoneSoup)
+    from bs4 import BeautifulSoup
 except:
     from Nagstamon.thirdparty.BeautifulSoup import (BeautifulSoup, BeautifulStoneSoup)
+
 from Nagstamon.Actions import (HostIsFilteredOutByRE,\
                               ServiceIsFilteredOutByRE,\
                               StatusInformationIsFilteredOutByRE,\
                               CriticalityIsFilteredOutByRE,\
                               not_empty)
 from Nagstamon.Objects import *
-
 from Nagstamon.Config import conf
 
 class GenericServer(object):
@@ -58,7 +59,7 @@ class GenericServer(object):
         Default values are for Nagios servers
     """
 
-    TYPE = u'Generic'
+    TYPE = 'Generic'
 
     # dictionary to translate status bitmaps on webinterface into status flags
     # this are defaults from Nagios
@@ -119,7 +120,7 @@ class GenericServer(object):
         self.count = 0
         # needed for RecheckAll - save start_time once for not having to get it for every recheck
         self.start_time = None
-        self.Cookie = cookielib.CookieJar()
+        self.Cookie = http.cookiejar.CookieJar()
         # use server-owned attributes instead of redefining them with every request
         self.passman = None
         self.basic_handler = None
@@ -130,11 +131,11 @@ class GenericServer(object):
         # necessary for Python-2.7.9-ssl-support-fix https://github.com/HenriWahl/Nagstamon/issues/126
         if sys.version_info >= (2, 7, 9):
             try:
-                self.https_handler = urllib2.HTTPSHandler(context=ssl._create_unverified_context())
+                self.https_handler = urllib.request.HTTPSHandler(context=ssl._create_unverified_context())
             except:
-                self.https_handler = urllib2.HTTPSHandler()
+                self.https_handler = urllib.request.HTTPSHandler()
         else:
-            self.https_handler = urllib2.HTTPSHandler()
+            self.https_handler = urllib.request.HTTPSHandler()
 
         # headers for HTTP requests, might be needed for authorization on Nagios/Icinga Hosts
         self.HTTPheaders = dict()
@@ -189,7 +190,9 @@ class GenericServer(object):
         """
         if self.HTTPheaders == {}:
             for giveback in ["raw", "obj"]:
-                self.HTTPheaders[giveback] = {"Authorization": "Basic " + base64.b64encode(self.username + ":" + self.password)}
+                # base64 string has to be encoded to bytes first
+                self.HTTPheaders[giveback] = {'Authorization': b'Basic ' +
+                                               base64.b64encode((self.username + ':' + self.password).encode())}
 
 
     def reset_HTTP(self):
@@ -246,7 +249,7 @@ class GenericServer(object):
                 # Do not check passive only checks
                 return
         # get start time from Nagios as HTML to use same timezone setting like the locally installed Nagios
-        result = self.FetchURL(self.monitor_cgi_url + "/cmd.cgi?" + urllib.urlencode({"cmd_typ":"96", "host":host}))
+        result = self.FetchURL(self.monitor_cgi_url + "/cmd.cgi?" + urllib.parse.urlencode({"cmd_typ":"96", "host":host}))
         self.start_time = dict(result.result.find(attrs={"name":"start_time"}).attrs)["value"]
         # decision about host or service - they have different URLs
         if service == "":
@@ -256,7 +259,7 @@ class GenericServer(object):
             # service @ host
             cmd_typ = "7"
         # ignore empty service in case of rechecking a host
-        cgi_data = urllib.urlencode([("cmd_typ", cmd_typ),\
+        cgi_data = urllib.parse.urlencode([("cmd_typ", cmd_typ),\
                                      ("cmd_mod", "2"),\
                                      ("host", host),\
                                      ("service", service),\
@@ -302,7 +305,7 @@ class GenericServer(object):
                 sticky_ack = "&sticky_ack=on"
             else:
                 sticky_ack = ""
-            cgi_data = urllib.urlencode([("cmd_typ","33"), ("cmd_mod","2"), ("host",host), ("com_author",author),\
+            cgi_data = urllib.parse.urlencode([("cmd_typ","33"), ("cmd_mod","2"), ("host",host), ("com_author",author),\
                                          ("com_data",comment), ("btnSubmit","Commit")])\
                                          + send_notification + persistent_comment + sticky_ack
             self.FetchURL(url, giveback="raw", cgi_data=cgi_data)
@@ -329,7 +332,7 @@ class GenericServer(object):
             # for whatever silly reason Icinga depends on the correct order of submitted form items...
             # see sf.net bug 3428844
             # so whe cannot use a dictionary with urllib but a tuple full of tuples
-            cgi_data = urllib.urlencode([("cmd_typ","34"), ("cmd_mod","2"), ("host",host), ("service",service),\
+            cgi_data = urllib.parse.urlencode([("cmd_typ","34"), ("cmd_mod","2"), ("host",host), ("service",service),\
                                          ("com_author",author), ("com_data",comment), ("btnSubmit","Commit")])\
                                          + send_notification + persistent_comment + sticky_ack
             # running remote cgi command
@@ -354,7 +357,7 @@ class GenericServer(object):
                     sticky_ack = "&sticky_ack=on"
                 else:
                     sticky_ack = ""
-                    cgi_data = urllib.urlencode([("cmd_typ","34"), ("cmd_mod","2"), ("host",host), ("service",s),\
+                    cgi_data = urllib.parse.urlencode([("cmd_typ","34"), ("cmd_mod","2"), ("host",host), ("service",s),\
                                                  ("com_author",author), ("com_data",comment), ("btnSubmit","Commit")])\
                                                  + send_notification + persistent_comment + sticky_ack
                     #running remote cgi command
@@ -379,7 +382,7 @@ class GenericServer(object):
 
         # for some reason Icinga is very fastidiuos about the order of CGI arguments, so please
         # here we go... it took DAYS :-(
-        cgi_data = urllib.urlencode([("cmd_typ", cmd_typ),\
+        cgi_data = urllib.parse.urlencode([("cmd_typ", cmd_typ),\
                                      ("cmd_mod", "2"),\
                                      ("trigger", "0"),\
                                      ("childoptions", "0"),\
@@ -411,7 +414,7 @@ class GenericServer(object):
         # decision about host or service - they have different URLs
         if service == "":
             # host
-            cgi_data = urllib.urlencode([("cmd_typ","87"), ("cmd_mod","2"), ("host",host),\
+            cgi_data = urllib.parse.urlencode([("cmd_typ","87"), ("cmd_mod","2"), ("host",host),\
                                          ("plugin_state",{"up":"0", "down":"1", "unreachable":"2"}[state]),\
                                          ("plugin_output",check_output),\
                                          ("performance_data",performance_data), ("btnSubmit","Commit")])
@@ -419,7 +422,7 @@ class GenericServer(object):
 
         if service != "":
             # service @ host
-            cgi_data = urllib.urlencode([("cmd_typ","30"), ("cmd_mod","2"), ("host",host), ("service",service),\
+            cgi_data = urllib.parse.urlencode([("cmd_typ","30"), ("cmd_mod","2"), ("host",host), ("service",service),\
                                          ("plugin_state",{"ok":"0", "warning":"1", "critical":"2", "unknown":"3"}[state]), ("plugin_output",check_output),\
                                          ("performance_data",performance_data), ("btnSubmit","Commit")])
             # running remote cgi command
@@ -432,7 +435,7 @@ class GenericServer(object):
         directly from web interface
         """
         try:
-            result = self.FetchURL(self.monitor_cgi_url + "/cmd.cgi?" + urllib.urlencode({"cmd_typ":"55", "host":host}))
+            result = self.FetchURL(self.monitor_cgi_url + "/cmd.cgi?" + urllib.parse.urlencode({"cmd_typ":"55", "host":host}))
             start_time = dict(result.result.find(attrs={"name":"start_time"}).attrs)["value"]
             end_time = dict(result.result.find(attrs={"name":"end_time"}).attrs)["value"]
             # give values back as tuple
@@ -452,8 +455,8 @@ class GenericServer(object):
         else:
             typ = 2
         if str(conf.debug_mode) == "True":
-            self.Debug(server=self.get_name(), host=host, service=service, debug="Open host/service monitor web page " + self.monitor_cgi_url + '/extinfo.cgi?' + urllib.urlencode({"type":typ, "host":host, "service":service}))
-        webbrowser.open(self.monitor_cgi_url + '/extinfo.cgi?' + urllib.urlencode({"type":typ, "host":host, "service":service}))
+            self.Debug(server=self.get_name(), host=host, service=service, debug="Open host/service monitor web page " + self.monitor_cgi_url + '/extinfo.cgi?' + urllib.parse.urlencode({"type":typ, "host":host, "service":service}))
+        webbrowser.open(self.monitor_cgi_url + '/extinfo.cgi?' + urllib.parse.urlencode({"type":typ, "host":host, "service":service}))
 
 
     def OpenBrowser(self, widget=None, url_type="", output=None):
@@ -461,7 +464,7 @@ class GenericServer(object):
         multiple purpose open browser method for all open-a-browser-needs
         """
         # first close popwin
-        if output <> None:
+        if output != None:
             output.popwin.Close()
 
         # run thread with action
@@ -577,7 +580,7 @@ class GenericServer(object):
                             nagitems["hosts"].append(n)
                             # after collection data in nagitems create objects from its informations
                             # host objects contain service objects
-                            if not self.new_hosts.has_key(n["host"]):
+                            if n["host"] not in self.new_hosts:
                                 new_host = n["host"]
                                 self.new_hosts[new_host] = GenericHost()
                                 self.new_hosts[new_host].name = n["host"]
@@ -685,7 +688,7 @@ class GenericServer(object):
                             nagitems["services"].append(n)
                             # after collection data in nagitems create objects of its informations
                             # host objects contain service objects
-                            if not self.new_hosts.has_key(n["host"]):
+                            if n["host"] not in self.new_hosts:
                                 self.new_hosts[n["host"]] = GenericHost()
                                 self.new_hosts[n["host"]].name = n["host"]
                                 self.new_hosts[n["host"]].status = "UP"
@@ -699,7 +702,7 @@ class GenericServer(object):
                                         self.new_hosts[n["host"]].__dict__[self.STATUS_MAPPING[icon]] = True
 
                             # if a service does not exist create its object
-                            if not self.new_hosts[n["host"]].services.has_key(n["service"]):
+                            if n["service"] not in self.new_hosts[n["host"]].services:
                                 new_service = n["service"]
                                 self.new_hosts[n["host"]].services[new_service] = GenericService()
                                 self.new_hosts[n["host"]].services[new_service].host = n["host"]
@@ -932,7 +935,7 @@ class GenericServer(object):
                 else:
                     # the old, actually wrong, behaviour
                     real_attempt, max_attempt = service.attempt.split("/")
-                    if real_attempt <> max_attempt and str(conf.filter_services_in_soft_state) == "True":
+                    if real_attempt != max_attempt and str(conf.filter_services_in_soft_state) == "True":
                         if str(conf.debug_mode) == "True":
                             self.Debug(server=self.get_name(), debug="Filter: SOFT STATE " + str(host.name) + ";" + str(service.name))
                         service.visible = False
@@ -1075,7 +1078,7 @@ class GenericServer(object):
                 # debug
                 if str(conf.debug_mode) == "True":
                     self.Debug(server=self.get_name(), debug="FetchURL: " + url + " CGI Data: " + str(cgi_data))
-                request = urllib2.Request(url, cgi_data, HTTPheaders[giveback])
+                request = urllib.request.Request(url, cgi_data, HTTPheaders[giveback])
                 # use opener - if cgi_data is not empty urllib uses a POST request
                 urlcontent = self.urlopener.open(request)
                 del url, cgi_data, request

@@ -19,9 +19,6 @@
 
 """Module QUI"""
 
-# for python2 and upcomping python3 compatiblity
-from __future__ import print_function, absolute_import, unicode_literals
-
 from PyQt5.QtWidgets import *
 from PyQt5.QtGui import *
 from PyQt5.QtCore import *
@@ -212,7 +209,8 @@ class StatusWindow(QWidget):
         # be filtered out this way
         vboxes_dict = dict()
         for child in self.servers_vbox.children():
-            if child.__dict__.has_key('server'):
+            ###if child.__dict__.has_key('server'):
+            if 'server' in child.__dict__.keys():
                 vboxes_dict[child.server.name] = child
 
         # freshly set servers_scrollarea_widget and its layout servers_vbox
@@ -611,7 +609,8 @@ class ServerVBox(QVBoxLayout):
         """
         for child in self.children():
             # not every child item has .show()
-            if child.__dict__.has_key('show'):
+            ###if child.__dict__.has_key('show'):
+            if 'show' in child.__dict__.keys():
                 child.show()
 
 
@@ -621,7 +620,8 @@ class ServerVBox(QVBoxLayout):
         """
         for child in self.children():
             # not every child item has .hide()
-            if child.__dict__.has_key('hide'):
+            ###if child.__dict__.has_key('hide'):
+            if 'hide' in child.__dict__.keys():
                 child.hide()
 
 
@@ -1090,7 +1090,8 @@ class Dialog(object):
         """
              fill listwidget with items from config
         """
-        for configitem in sorted(config, key=unicode.lower):
+        ###for configitem in sorted(config, key=unicode.lower):
+        for configitem in sorted(config, key=str.lower):
             listitem = QListWidgetItem(configitem)
             if config[configitem].enabled == False:
                 listitem.setForeground(self.GRAY)
@@ -1235,7 +1236,7 @@ class Dialog_Settings(Dialog):
         # fill combobox with screens for fullscreen
         for display in range(desktop.screenCount()):
             self.ui.input_combobox_fullscreen_display.addItem(str(display))
-        self.ui.input_combobox_fullscreen_display.setCurrentText(conf.fullscreen_display)
+        self.ui.input_combobox_fullscreen_display.setCurrentText(str(conf.fullscreen_display))
 
         # fill servers listwidget with servers
         self.fill_list(self.ui.list_servers, conf.servers)
@@ -1244,7 +1245,8 @@ class Dialog_Settings(Dialog):
         self.ui.list_servers.setCurrentRow(0)
 
         # fill actions listwidget with actions
-        for action in sorted(conf.actions, key=unicode.lower):
+        ###for action in sorted(conf.actions, key=unicode.lower):
+        for action in sorted(conf.actions, key=str.lower):
             self.ui.list_actions.addItem(action)
         # select first item
         self.ui.list_actions.setCurrentRow(0)
@@ -1585,7 +1587,8 @@ class Dialog_Server(Dialog):
                                 }
 
         # fill default order fields combobox with monitor server types
-        self.ui.input_combobox_type.addItems(sorted(SERVER_TYPES.keys(), key=unicode.lower))
+        ###self.ui.input_combobox_type.addItems(sorted(SERVER_TYPES.keys(), key=unicode.lower))
+        self.ui.input_combobox_type.addItems(sorted(SERVER_TYPES.keys(), key=str.lower))
         # default to Nagios as it is the mostly used monitor server
         self.ui.input_combobox_type.setCurrentText('Nagios')
 
@@ -1735,7 +1738,8 @@ class Dialog_Server(Dialog):
                 conf.servers.pop(self.previous_server_conf.name)
 
                 # delete edited and now not needed server instance - if it exists
-                if servers.has_key(self.previous_server_conf.name):
+                #if servers.has_key(self.previous_server_conf.name):
+                if self.previous_server_conf.name in servers.keys():
                     servers.pop(self.previous_server_conf.name)
 
                 # remove old server vbox from status window if still running
@@ -1800,7 +1804,8 @@ class Dialog_Action(Dialog):
 
         # fill default order fields combobox with monitor server types
         self.ui.input_combobox_monitor_type.addItem("All monitor servers")
-        self.ui.input_combobox_monitor_type.addItems(sorted(SERVER_TYPES.keys(), key=unicode.lower))
+        ###self.ui.input_combobox_monitor_type.addItems(sorted(SERVER_TYPES.keys(), key=unicode.lower))
+        self.ui.input_combobox_monitor_type.addItems(sorted(SERVER_TYPES.keys(), key=str.lower))
         # default to Nagios as it is the mostly used monitor server
         self.ui.input_combobox_monitor_type.setCurrentIndex(0)
 
@@ -1939,18 +1944,6 @@ class Dialog_Action(Dialog):
             conf.SaveMultipleConfig("actions", "action")
 
 
-def _createIcons(fontsize):
-    """
-        fill global ICONS with pixmaps rendered from SVGs in fontsize dimensions
-    """
-
-    print('Reminder: fontsize is not used in _createIcons().')
-
-    for attr in ('acknowledged', 'downtime', 'flapping', 'new', 'passive'):
-        icon = QIcon('%s%snagstamon_%s.svg' % (RESOURCES, os.sep, attr))
-        ICONS[attr] = icon
-
-
 class Notification(QObject):
     """
         bundle various notifications like sounds and flashing statusbar
@@ -1982,6 +1975,16 @@ class Notification(QObject):
             QMessageBox.warning(None, 'Nagstamon', 'File <b>\'%s\'</b> does not exist.' % (file))
 
 
+def _createIcons(fontsize):
+    """
+        fill global ICONS with pixmaps rendered from SVGs in fontsize dimensions
+    """
+
+    print('Reminder: fontsize is not used in _createIcons().')
+
+    for attr in ('acknowledged', 'downtime', 'flapping', 'new', 'passive'):
+        icon = QIcon('%s%snagstamon_%s.svg' % (RESOURCES, os.sep, attr))
+        ICONS[attr] = icon
 
 
 def get_screen(x, y):

@@ -19,10 +19,7 @@
 
 """Module Servers"""
 
-# for python2 and upcomping python3 compatiblity
-from __future__ import print_function, absolute_import, unicode_literals
-
-import urllib2
+import urllib.request, urllib.error, urllib.parse
 from collections import OrderedDict
 
 # load all existing server types
@@ -59,7 +56,7 @@ def register_server(server):
 def CreateServer(server=None):
     # create Server from config
     if server.type not in SERVER_TYPES:
-        print('Server type not supported: %s' % server.type)
+        print(('Server type not supported: %s' % server.type))
         return
     # give argument servername so CentreonServer could use it for initializing MD5 cache
     new_server = SERVER_TYPES[server.type](name=server.name)
@@ -85,21 +82,21 @@ def CreateServer(server=None):
     #new_server.debug_queue = debug_queue
 
     # use server-owned attributes instead of redefining them with every request
-    new_server.passman = urllib2.HTTPPasswordMgrWithDefaultRealm()
+    new_server.passman = urllib.request.HTTPPasswordMgrWithDefaultRealm()
     new_server.passman.add_password(None, server.monitor_url, server.username, server.password)
     new_server.passman.add_password(None, server.monitor_cgi_url, server.username, server.password)
-    new_server.basic_handler = urllib2.HTTPBasicAuthHandler(new_server.passman)
-    new_server.digest_handler = urllib2.HTTPDigestAuthHandler(new_server.passman)
-    new_server.proxy_auth_handler = urllib2.ProxyBasicAuthHandler(new_server.passman)
+    new_server.basic_handler = urllib.request.HTTPBasicAuthHandler(new_server.passman)
+    new_server.digest_handler = urllib.request.HTTPDigestAuthHandler(new_server.passman)
+    new_server.proxy_auth_handler = urllib.request.ProxyBasicAuthHandler(new_server.passman)
 
     if str(new_server.use_proxy) == "False":
         # use empty proxyhandler
-        new_server.proxy_handler = urllib2.ProxyHandler({})
+        new_server.proxy_handler = urllib.request.ProxyHandler({})
     elif str(server.use_proxy_from_os) == "False":
         # if proxy from OS is not used there is to add a authenticated proxy handler
         new_server.passman.add_password(None, new_server.proxy_address, new_server.proxy_username, new_server.proxy_password)
-        new_server.proxy_handler = urllib2.ProxyHandler({"http": new_server.proxy_address, "https": new_server.proxy_address})
-        new_server.proxy_auth_handler = urllib2.ProxyBasicAuthHandler(new_server.passman)
+        new_server.proxy_handler = urllib.request.ProxyHandler({"http": new_server.proxy_address, "https": new_server.proxy_address})
+        new_server.proxy_auth_handler = urllib.request.ProxyBasicAuthHandler(new_server.passman)
 
     # Special FX
     # Centreon
@@ -128,6 +125,7 @@ for server in (CentreonServer, IcingaServer, MultisiteServer, NagiosServer,
     register_server(server)
 
 # create servers
+#for server in list(conf.servers.values()):
 for server in conf.servers.values():
     """
     if ( server.use_autologin == "False" and server.save_password == "False" and server.enabled == "True" ) or ( server.enabled == "True" and server.use_autologin == "True" and server.autologin_key == "" ):

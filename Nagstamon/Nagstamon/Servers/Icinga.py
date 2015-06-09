@@ -18,7 +18,7 @@
 # Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA  02110-1301, USA
 
 from Nagstamon.Servers.Generic import GenericServer
-import urllib
+import urllib.request, urllib.parse, urllib.error
 import sys
 import copy
 # this seems to be necessary for json to be packaged by pyinstaller
@@ -28,10 +28,14 @@ import base64
 
 # to let Linux distributions use their own BeautifulSoup if existent try importing local BeautifulSoup first
 # see https://sourceforge.net/tracker/?func=detail&atid=1101370&aid=3302612&group_id=236865
+"""
 try:
     from BeautifulSoup import BeautifulSoup
 except:
     from Nagstamon.thirdparty.BeautifulSoup import BeautifulSoup
+"""
+from bs4 import BeautifulSoup
+
 
 from Nagstamon.Objects import *
 from Nagstamon.Actions import *
@@ -550,7 +554,7 @@ class IcingaServer(GenericServer):
                 # Do not check passive only checks
                 return
         # get start time from Nagios as HTML to use same timezone setting like the locally installed Nagios
-        result = self.FetchURL(self.monitor_cgi_url + "/cmd.cgi?" + urllib.urlencode({"cmd_typ":"96", "host":host}))
+        result = self.FetchURL(self.monitor_cgi_url + "/cmd.cgi?" + urllib.parse.urlencode({"cmd_typ":"96", "host":host}))
         self.start_time = dict(result.result.find(attrs={"name":"start_time"}).attrs)["value"]
 
         # decision about host or service - they have different URLs
@@ -561,7 +565,7 @@ class IcingaServer(GenericServer):
             # service @ host
             cmd_typ = "7"
         # ignore empty service in case of rechecking a host
-        cgi_data = urllib.urlencode([("cmd_typ", cmd_typ),\
+        cgi_data = urllib.parse.urlencode([("cmd_typ", cmd_typ),\
                                      ("cmd_mod", "2"),\
                                      ("host", host),\
                                      ("service", service),\

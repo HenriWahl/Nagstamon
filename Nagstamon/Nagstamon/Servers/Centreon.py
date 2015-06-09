@@ -17,7 +17,7 @@
 # along with this program; if not, write to the Free Software
 # Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA  02110-1301, USA
 
-import urllib, urllib2
+import urllib.request, urllib.parse, urllib.error, urllib.request, urllib.error, urllib.parse
 import webbrowser
 import socket
 import sys
@@ -97,19 +97,19 @@ class CentreonServer(GenericServer):
         if str(self.use_autologin) == "True":
             auth = "&autologin=1&useralias=" + self.username + "&token=" + self.autologin_key
             if host == '_Module_Meta':
-                webbrowser.open(self.monitor_cgi_url + "/index.php?" + urllib.urlencode({"p":20206,"o":"meta"}) + auth )
+                webbrowser.open(self.monitor_cgi_url + "/index.php?" + urllib.parse.urlencode({"p":20206,"o":"meta"}) + auth )
             elif service == "":
-                webbrowser.open(self.monitor_cgi_url + "/index.php?" + urllib.urlencode({"p":201,"o":"hd", "host_name":host}) + auth )
+                webbrowser.open(self.monitor_cgi_url + "/index.php?" + urllib.parse.urlencode({"p":201,"o":"hd", "host_name":host}) + auth )
             else:
-                webbrowser.open(self.monitor_cgi_url + "/index.php?" + urllib.urlencode({"p":202, "o":"svcd",  "host_name":host, "service_description":service}) + auth )
+                webbrowser.open(self.monitor_cgi_url + "/index.php?" + urllib.parse.urlencode({"p":202, "o":"svcd",  "host_name":host, "service_description":service}) + auth )
         else:
             if host == '_Module_Meta':
-                webbrowser.open(self.monitor_cgi_url + "/main.php?" + urllib.urlencode({"p":20206,"o":"meta"}))
+                webbrowser.open(self.monitor_cgi_url + "/main.php?" + urllib.parse.urlencode({"p":20206,"o":"meta"}))
             # must be a host if service is empty...
             elif service == "":
-                webbrowser.open(self.monitor_cgi_url + "/main.php?" + urllib.urlencode({"p":201,"o":"hd", "host_name":host}))
+                webbrowser.open(self.monitor_cgi_url + "/main.php?" + urllib.parse.urlencode({"p":201,"o":"hd", "host_name":host}))
             else:
-                webbrowser.open(self.monitor_cgi_url + "/main.php?" + urllib.urlencode({"p":202, "o":"svcd",  "host_name":host, "service_description":service}))
+                webbrowser.open(self.monitor_cgi_url + "/main.php?" + urllib.parse.urlencode({"p":202, "o":"svcd",  "host_name":host, "service_description":service}))
 
 
     def get_start_end(self, host):
@@ -117,7 +117,7 @@ class CentreonServer(GenericServer):
         get start and end time for downtime from Centreon server
         """
         try:
-            cgi_data = urllib.urlencode({"p":"20106",\
+            cgi_data = urllib.parse.urlencode({"p":"20106",\
                                          "o":"ah",\
                                          "host_name":host})
             result = self.FetchURL(self.monitor_cgi_url + "/main.php?" + cgi_data, giveback="obj")
@@ -144,7 +144,7 @@ class CentreonServer(GenericServer):
             return Result(result=host)
 
         # do a web interface search limited to only one result - the hostname
-        cgi_data = urllib.urlencode({"sid":self.SID,\
+        cgi_data = urllib.parse.urlencode({"sid":self.SID,\
                                     "search":host,\
                                     "num":0,\
                                     "limit":1,\
@@ -206,7 +206,7 @@ class CentreonServer(GenericServer):
               raw = self.FetchURL(self.monitor_cgi_url + "/index.php?p=101&autologin=1&useralias=" + self.username + "&token=" + self.autologin_key, giveback="raw")
               #p=101&autologin=1&useralias=foscarini&token=8sEvwyEcMt
             else:
-              login_data = urllib.urlencode({"useralias" : self.username, "password" : self.password, "submit" : "Login"})
+              login_data = urllib.parse.urlencode({"useralias" : self.username, "password" : self.password, "submit" : "Login"})
               raw = self.FetchURL(self.monitor_cgi_url + "/index.php",cgi_data=login_data, giveback="raw")
 
             del raw
@@ -224,8 +224,8 @@ class CentreonServer(GenericServer):
 	    Centreon + broker 2.3/2.4 - /include/monitoring/status/Hosts/xml/{ndo,broker}/hostXML.php according to configuration
 	    regexping HTML for Javascript
         """
-        cgi_data = urllib.urlencode({"p":201})
-        result = self.FetchURL(self.monitor_cgi_url + "/main.php?" + cgi_data, cgi_data=urllib.urlencode({"sid":self.SID}), giveback="raw")
+        cgi_data = urllib.parse.urlencode({"p":201})
+        result = self.FetchURL(self.monitor_cgi_url + "/main.php?" + cgi_data, cgi_data=urllib.parse.urlencode({"sid":self.SID}), giveback="raw")
         raw, error = result.result, result.error
 
         if error == "":
@@ -249,9 +249,9 @@ class CentreonServer(GenericServer):
         """
         get host_id via parsing raw html
         """
-        cgi_data = urllib.urlencode({"p":201,\
+        cgi_data = urllib.parse.urlencode({"p":201,\
                                     "o":"hd", "host_name":host})
-        result = self.FetchURL(self.monitor_cgi_url + "/main.php?" + cgi_data, cgi_data=urllib.urlencode({"sid":self.SID}), giveback="raw")
+        result = self.FetchURL(self.monitor_cgi_url + "/main.php?" + cgi_data, cgi_data=urllib.parse.urlencode({"sid":self.SID}), giveback="raw")
         raw, error = result.result, result.error
 
         if error == "":
@@ -280,13 +280,13 @@ class CentreonServer(GenericServer):
         """
         parse a ton of html to get a host and a service id...
         """
-        cgi_data = urllib.urlencode({"p":"20218",\
+        cgi_data = urllib.parse.urlencode({"p":"20218",\
                                      "host_name":host,\
                                      "service_description":service,\
                                      "o":"as"})
         # might look strange to have cgi_data 2 times, the first it is the "real" in URL and the second is the cgi_data parameter
         # from urllib to get the session id POSTed
-        result = self.FetchURL(self.monitor_cgi_url + "/main.php?"+ cgi_data, cgi_data=urllib.urlencode({"sid":self.SID}), giveback="raw")
+        result = self.FetchURL(self.monitor_cgi_url + "/main.php?"+ cgi_data, cgi_data=urllib.parse.urlencode({"sid":self.SID}), giveback="raw")
         raw, error = result.result, result.error
 
         # ids to give back, should contain two items, a host and a service id
@@ -295,7 +295,7 @@ class CentreonServer(GenericServer):
         if error == "":
             # search ids
             for l in raw.splitlines():
-                if l.find('selected="selected"') <> -1:
+                if l.find('selected="selected"') != -1:
                     ids.append(l.split('value="')[1].split('"')[0])
             else:
                 return ids
@@ -317,10 +317,10 @@ class CentreonServer(GenericServer):
             self._get_ndo_url()
 
         # services (unknown, warning or critical?)
-        nagcgiurl_services = self.monitor_cgi_url + "/include/monitoring/status/Services/" + self.XML_NDO + "/serviceXML.php?" + urllib.urlencode({"num":0, "limit":999, "o":"svcpb", "sort_type":"status", "sid":self.SID})
+        nagcgiurl_services = self.monitor_cgi_url + "/include/monitoring/status/Services/" + self.XML_NDO + "/serviceXML.php?" + urllib.parse.urlencode({"num":0, "limit":999, "o":"svcpb", "sort_type":"status", "sid":self.SID})
 
         # hosts (up or down or unreachable)
-        nagcgiurl_hosts = self.monitor_cgi_url + "/include/monitoring/status/Hosts/" + self.XML_NDO + "/hostXML.php?" + urllib.urlencode({"num":0, "limit":999, "o":"hpb", "sort_type":"status", "sid":self.SID})
+        nagcgiurl_hosts = self.monitor_cgi_url + "/include/monitoring/status/Hosts/" + self.XML_NDO + "/hostXML.php?" + urllib.parse.urlencode({"num":0, "limit":999, "o":"hpb", "sort_type":"status", "sid":self.SID})
 
         # hosts - mostly the down ones
         # unfortunately the hosts status page has a different structure so
@@ -409,7 +409,7 @@ class CentreonServer(GenericServer):
 
             # //----- META SERVICES -----
             # define meta-services xml URL
-            nagcgiurl_meta_services = self.monitor_cgi_url + "/include/monitoring/status/Services/" + self.XML_NDO + "/serviceXML.php?" + urllib.urlencode({"num":0, "limit":999, "o":"meta", "sort_type":"status", "sid":self.SID})
+            nagcgiurl_meta_services = self.monitor_cgi_url + "/include/monitoring/status/Services/" + self.XML_NDO + "/serviceXML.php?" + urllib.parse.urlencode({"num":0, "limit":999, "o":"meta", "sort_type":"status", "sid":self.SID})
             # retrive meta-services xml STATUS
             result_meta = self.FetchURL(nagcgiurl_meta_services, giveback="xml")
             xmlobj_meta, error_meta = result_meta.result, result_meta.error
@@ -492,7 +492,7 @@ class CentreonServer(GenericServer):
         try:
             if service == "":
                 # host
-                cgi_data = urllib.urlencode({"p":"20105", "cmd":"14", "host_name":host, \
+                cgi_data = urllib.parse.urlencode({"p":"20105", "cmd":"14", "host_name":host, \
                         "author":author, "comment":comment, "submit":"Add", "notify":int(notify),\
                         "persistent":int(persistent), "sticky":int(sticky), "ackhostservice":"0", "o":"hd", "en":"1"})
                 # debug
@@ -516,7 +516,7 @@ class CentreonServer(GenericServer):
                     # service @ host
                     # in case the Centreon guys one day fix their typos "persistent" and
                     # "persistent" will both be given (it is "persistant" in scheduling for downtime)
-                    cgi_data = urllib.urlencode({"p":"20215", "cmd":"15", "host_name":host, \
+                    cgi_data = urllib.parse.urlencode({"p":"20215", "cmd":"15", "host_name":host, \
                             "author":author, "comment":comment, "submit":"Add", "notify":int(notify),\
                             "service_description":s, "force_check":"1", \
                             "persistent":int(persistent), "persistant":int(persistent),\
@@ -527,7 +527,7 @@ class CentreonServer(GenericServer):
                         m =  re.search(r"^.+ \((?P<sdl>.+)\)$", s)
                         if m:
                             sdl = m.group('sdl')
-                            cgi_data = urllib.urlencode({"p":"20206", "o":"meta", "cmd":"70", \
+                            cgi_data = urllib.parse.urlencode({"p":"20206", "o":"meta", "cmd":"70", \
                                                                         "select["+host+";"+sdl+"]":"1", "limit":"0"})
                     # ----- META SERVICES -----//
                     # debug
@@ -553,14 +553,14 @@ class CentreonServer(GenericServer):
                 m =  re.search(r"^.+ \((?P<sdl>.+)\)$", service)
                 if m:
                     sdl = m.group('sdl')
-                    cgi_data = urllib.urlencode({"p":"20206", "o":"meta", "cmd":"3", \
+                    cgi_data = urllib.parse.urlencode({"p":"20206", "o":"meta", "cmd":"3", \
                                                                 "select["+host+";"+sdl+"]":"1", "limit":"0"})
                     url = self.monitor_cgi_url + "/main.php?" + cgi_data
             elif service == "":
                 # ... it can only be a host, get its id
                 host_id = self._get_host_id(host)
                 # fill and encode CGI data
-                cgi_data = urllib.urlencode({"cmd":"host_schedule_check", "actiontype":1,\
+                cgi_data = urllib.parse.urlencode({"cmd":"host_schedule_check", "actiontype":1,\
                                              "host_id":host_id, "sid":self.SID})
                 url = self.monitor_cgi_url + "/include/monitoring/objectDetails/xml/hostSendCommand.php?" + cgi_data
                 del host_id
@@ -568,7 +568,7 @@ class CentreonServer(GenericServer):
                 # service @ host
                 host_id, service_id = self._get_host_and_service_id(host, service)
                 # fill and encode CGI data
-                cgi_data = urllib.urlencode({"cmd":"service_schedule_check", "actiontype":1,\
+                cgi_data = urllib.parse.urlencode({"cmd":"service_schedule_check", "actiontype":1,\
                                              "host_id":host_id, "service_id":service_id, "sid":self.SID})
                 url = self.monitor_cgi_url + "/include/monitoring/objectDetails/xml/serviceSendCommand.php?" + cgi_data
                 del host_id, service_id
@@ -587,7 +587,7 @@ class CentreonServer(GenericServer):
             if service == "":
                 # host
                 host_id = self._get_host_id(host)
-                cgi_data = urllib.urlencode({"p":"20106",\
+                cgi_data = urllib.parse.urlencode({"p":"20106",\
                                              "host_id":host_id,\
                                              "host_or_hg[host_or_hg]":1,\
                                              "submitA":"Save",\
@@ -604,7 +604,7 @@ class CentreonServer(GenericServer):
             else:
                 # service
                 host_id, service_id = self._get_host_and_service_id(host, service)
-                cgi_data = urllib.urlencode({"p":"20218",\
+                cgi_data = urllib.parse.urlencode({"p":"20218",\
                                              "host_id":host_id,\
                                              "service_id":service_id,\
                                              "submitA":"Save",\

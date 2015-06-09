@@ -30,7 +30,7 @@
 # hax0rized by: lm@mathias-kettner.de
 
 import sys
-import urllib
+import urllib.request, urllib.parse, urllib.error
 import webbrowser
 import base64
 import time
@@ -52,7 +52,7 @@ class ZabbixServer(GenericServer):
     """
        special treatment for Zabbix, taken from Check_MK Multisite JSON API
     """
-    TYPE = u'Zabbix'
+    TYPE = 'Zabbix'
     zapi = None
 
     def __init__(self, **kwds):
@@ -163,7 +163,7 @@ class ZabbixServer(GenericServer):
             # set checking flag back to False
             self.isChecking = False
             result, error = self.Error(sys.exc_info())
-            print sys.exc_info()
+            print(sys.exc_info())
             return Result(result=result, error=error)
 
         try:
@@ -216,10 +216,10 @@ class ZabbixServer(GenericServer):
                 # set checking flag back to False
                 self.isChecking = False
                 result, error = self.Error(sys.exc_info())
-                print sys.exc_info()
+                print(sys.exc_info())
                 return Result(result=result, error=error)
 
-            except ZabbixError, e:
+            except ZabbixError as e:
                 #print "------------------------------------"
                 #print "%s" % e.result.error
                 if e.terminate:
@@ -294,7 +294,7 @@ class ZabbixServer(GenericServer):
             # set checking flag back to False
             self.isChecking = False
             result, error = self.Error(sys.exc_info())
-            print sys.exc_info()
+            print(sys.exc_info())
             return Result(result=result, error=error)
 
         return ret
@@ -317,10 +317,10 @@ class ZabbixServer(GenericServer):
         """
 
         if service == "":
-            url = self.urls['human_host'] + urllib.urlencode(
+            url = self.urls['human_host'] + urllib.parse.urlencode(
                 {'x': 'site=' + self.hosts[host].site + '&host=' + host}).replace('x=', '%26')
         else:
-            url = self.urls['human_service'] + urllib.urlencode(
+            url = self.urls['human_service'] + urllib.parse.urlencode(
                 {'x': 'site=' + self.hosts[host].site + '&host=' + host + '&service=' + service}).replace('x=', '%26')
 
         if str(self.conf.debug_mode) == "True":

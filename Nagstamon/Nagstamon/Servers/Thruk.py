@@ -20,19 +20,12 @@
 
 from Nagstamon.Servers.Generic import GenericServer
 import sys
-import cookielib
+import http.cookiejar
 import base64
 import json
 import datetime
-import urllib
+import urllib.request, urllib.parse, urllib.error
 import copy
-
-# to let Linux distributions use their own BeautifulSoup if existent try importing local BeautifulSoup first
-# see https://sourceforge.net/tracker/?func=detail&atid=1101370&aid=3302612&group_id=236865
-try:
-    from BeautifulSoup import BeautifulSoup, BeautifulStoneSoup
-except:
-    from Nagstamon.thirdparty.BeautifulSoup import BeautifulSoup, BeautifulStoneSoup
 
 from Nagstamon.Actions import HostIsFilteredOutByRE, ServiceIsFilteredOutByRE, StatusInformationIsFilteredOutByRE, not_empty
 from Nagstamon.Objects import *
@@ -42,7 +35,7 @@ class ThrukServer(GenericServer):
     """
         Thruk is derived from generic (Nagios) server
     """
-    TYPE = u'Thruk'
+    TYPE = 'Thruk'
 
     # dictionary to translate status bitmaps on webinterface into status flags
     # this are defaults from Nagios
@@ -93,7 +86,7 @@ class ThrukServer(GenericServer):
             # get cookie to access Check_MK web interface
             if len(self.Cookie) < 2:
                 # put all necessary data into url string
-                logindata = urllib.urlencode({"login":self.get_username(),\
+                logindata = urllib.parse.urlencode({"login":self.get_username(),\
                                  "password":self.get_password(),\
                                  "submit":"Login"})
                 # get cookie from login page via url retrieving as with other urls
@@ -129,7 +122,7 @@ class ThrukServer(GenericServer):
 
         # test for cookies
         # put all necessary data into url string
-        logindata = urllib.urlencode({"login":self.get_username(),\
+        logindata = urllib.parse.urlencode({"login":self.get_username(),\
                                  "password":self.get_password(),\
                                  "submit":"Login"})
         # get cookie from login page via url retrieving as with other urls
@@ -170,7 +163,7 @@ class ThrukServer(GenericServer):
                 hosts = json.loads(jsonraw)
 
                 for h in hosts:
-                    if not self.new_hosts.has_key(h["name"]):
+                    if h["name"] not in self.new_hosts:
                         ###new_host = h["name"]
                         self.new_hosts[h["name"]] = GenericHost()
                         self.new_hosts[h["name"]].name = h["name"]
@@ -213,14 +206,14 @@ class ThrukServer(GenericServer):
 
                 for s in services:
                     # host objects contain service objects
-                    if not self.new_hosts.has_key(s["host_name"]):
+                    if s["host_name"] not in self.new_hosts:
                         self.new_hosts[s["host_name"]] = GenericHost()
                         self.new_hosts[s["host_name"]].name = s["host_name"]
                         self.new_hosts[s["host_name"]].server = self.name
                         self.new_hosts[s["host_name"]].status = "UP"
 
                     # if a service does not exist create its object
-                    if not self.new_hosts[s["host_name"]].services.has_key(s["description"]):
+                    if s["description"] not in self.new_hosts[s["host_name"]].services:
                         ###new_service = s["description"]
                         self.new_hosts[s["host_name"]].services[s["description"]] = GenericService()
                         self.new_hosts[s["host_name"]].services[s["description"]].host = s["host_name"]

@@ -240,10 +240,10 @@ class Op5MonitorServer(GenericServer):
                     nagitems['services'].append(n)
                 return Result()
         except:
-            print "========================================== b0rked =========================================="
+            print("========================================== b0rked ==========================================")
             self.isChecking = False
             result,error = self.Error(sys.exc_info())
-            print error
+            print(error)
             return Result(result=result, error=error)
 
         return Result()

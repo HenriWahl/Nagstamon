@@ -26,7 +26,7 @@
 # hax0rized by: lm@mathias-kettner.de
 
 import sys
-import urllib
+import urllib.request, urllib.parse, urllib.error
 import webbrowser
 import time
 import copy
@@ -78,15 +78,15 @@ class MultisiteServer(GenericServer):
             self.urls = {
               'api_services':    self.monitor_url + "view.py?view_name=nagstamon_svc&output_format=python&lang=&limit=hard",
               'human_services':  self.monitor_url + "index.py?%s" % \
-                                                   urllib.urlencode({'start_url': 'view.py?view_name=nagstamon_svc'}),
+                                                   urllib.parse.urlencode({'start_url': 'view.py?view_name=nagstamon_svc'}),
               'human_service':   self.monitor_url + "index.py?%s" %
-                                                   urllib.urlencode({'start_url': 'view.py?view_name=service'}),
+                                                   urllib.parse.urlencode({'start_url': 'view.py?view_name=service'}),
 
               'api_hosts':       self.monitor_url + "view.py?view_name=nagstamon_hosts&output_format=python&lang=&limit=hard",
               'human_hosts':     self.monitor_url + "index.py?%s" %
-                                                   urllib.urlencode({'start_url': 'view.py?view_name=nagstamon_hosts'}),
+                                                   urllib.parse.urlencode({'start_url': 'view.py?view_name=nagstamon_hosts'}),
               'human_host':      self.monitor_url + "index.py?%s" %
-                                                   urllib.urlencode({'start_url': 'view.py?view_name=hoststatus'}),
+                                                   urllib.parse.urlencode({'start_url': 'view.py?view_name=hoststatus'}),
               # URLs do not need pythonic output because since werk #0766 API does not work with transid=-1 anymore
               # thus access to normal webinterface is used
               #'api_host_act':    self.monitor_url + 'view.py?_transid=-1&_do_actions=yes&_do_confirm=Yes!&output_format=python&view_name=hoststatus&filled_in=actions&lang=',
@@ -96,7 +96,7 @@ class MultisiteServer(GenericServer):
               'api_service_act': self.monitor_url + 'view.py?_transid=-1&_do_actions=yes&_do_confirm=Yes!&view_name=service&filled_in=actions&lang=',
               'api_svcprob_act': self.monitor_url + 'view.py?_transid=-1&_do_actions=yes&_do_confirm=Yes!&view_name=svcproblems&filled_in=actions&lang=',
               'human_events':    self.monitor_url + "index.py?%s" %
-                                                   urllib.urlencode({'start_url': 'view.py?view_name=events'}),
+                                                   urllib.parse.urlencode({'start_url': 'view.py?view_name=events'}),
               'togglevisibility':self.monitor_url + "user_profile.py",
               'transid':         self.monitor_url + "view.py?actions=yes&filled_in=actions&host=$HOST$&service=$SERVICE$&view_name=service"
             }
@@ -170,7 +170,7 @@ class MultisiteServer(GenericServer):
         login on cookie monitor site
         """
         # put all necessary data into url string
-        logindata = urllib.urlencode({"_username":self.get_username(),\
+        logindata = urllib.parse.urlencode({"_username":self.get_username(),\
                          "_password":self.get_password(),\
                          "_login":"1",\
                          "_origtarget": "",\
@@ -181,7 +181,7 @@ class MultisiteServer(GenericServer):
             urlcontent = self.urlopener.open(self.monitor_url + "/login.py", logindata)
             urlcontent.close()
         except:
-                    self.Error(sys.exc_info())
+            self.Error(sys.exc_info())
 
 
     def _get_status(self):
@@ -203,7 +203,7 @@ class MultisiteServer(GenericServer):
             response = []
             try:
                 response = self._get_url(self.urls['api_hosts'] + url_params)
-            except MultisiteError, e:
+            except MultisiteError as e:
                 if e.terminate:
                     return e.result
 
@@ -243,7 +243,7 @@ class MultisiteServer(GenericServer):
 
                     # hard/soft state for later filter evaluation
                     real_attempt, max_attempt = self.new_hosts[new_host].attempt.split("/")
-                    if real_attempt <> max_attempt:
+                    if real_attempt != max_attempt:
                         self.new_hosts[new_host].status_type = "soft"
                     else:
                         self.new_hosts[new_host].status_type = "hard"
@@ -264,7 +264,7 @@ class MultisiteServer(GenericServer):
             response = []
             try:
                 response = self._get_url(self.urls['api_services'] + url_params)
-            except MultisiteError, e:
+            except MultisiteError as e:
                 if e.terminate:
                     return e.result
                 else:
@@ -327,7 +327,7 @@ class MultisiteServer(GenericServer):
 
                     # hard/soft state for later filter evaluation
                     real_attempt, max_attempt = self.new_hosts[n["host"]].services[new_service].attempt.split("/")
-                    if real_attempt <> max_attempt:
+                    if real_attempt != max_attempt:
                         self.new_hosts[n["host"]].services[new_service].status_type = "soft"
                     else:
                         self.new_hosts[n["host"]].services[new_service].status_type = "hard"
@@ -351,9 +351,9 @@ class MultisiteServer(GenericServer):
         """
 
         if service == "":
-            url = self.urls['human_host'] + urllib.urlencode({'x': 'site='+self.hosts[host].site+'&host='+host}).replace('x=', '%26')
+            url = self.urls['human_host'] + urllib.parse.urlencode({'x': 'site='+self.hosts[host].site+'&host='+host}).replace('x=', '%26')
         else:
-            url = self.urls['human_service'] + urllib.urlencode({'x': 'site='+self.hosts[host].site+'&host='+host+'&service='+service}).replace('x=', '%26')
+            url = self.urls['human_service'] + urllib.parse.urlencode({'x': 'site='+self.hosts[host].site+'&host='+host+'&service='+service}).replace('x=', '%26')
 
         if str(conf.debug_mode) == "True":
             self.Debug(server=self.get_name(), host=host, service=service, debug="Open host/service monitor web page " + url)
@@ -411,10 +411,10 @@ class MultisiteServer(GenericServer):
             url = self.urls['api_host_act']
 
         if str(conf.debug_mode) == "True":
-            self.Debug(server=self.get_name(), host=host, debug ="Submitting action: " + url + '&' + urllib.urlencode(params))
+            self.Debug(server=self.get_name(), host=host, debug ="Submitting action: " + url + '&' + urllib.parse.urlencode(params))
 
         action = Actions.Action(type="url-check_mk-multisite",\
-                                string=url + '&' + urllib.urlencode(params),\
+                                string=url + '&' + urllib.parse.urlencode(params),\
                                 conf=conf,\
                                 host = host,\
                                 service = service,\
@@ -465,9 +465,9 @@ class MultisiteServer(GenericServer):
         url = self.urls['api_svcprob_act']
 
         if str(conf.debug_mode) == "True":
-            self.Debug(server=self.get_name(), debug ="Rechecking all action: " + url + '&' + urllib.urlencode(params))
+            self.Debug(server=self.get_name(), debug ="Rechecking all action: " + url + '&' + urllib.parse.urlencode(params))
 
-        result = self.FetchURL(url + '&' + urllib.urlencode(params), giveback = 'raw')
+        result = self.FetchURL(url + '&' + urllib.parse.urlencode(params), giveback = 'raw')
 
     """
     def ToggleVisibility(self, widget):

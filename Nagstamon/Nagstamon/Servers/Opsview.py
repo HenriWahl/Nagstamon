@@ -18,7 +18,7 @@
 # Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA  02110-1301, USA
 
 import sys
-import urllib
+import urllib.request, urllib.parse, urllib.error
 import webbrowser
 import copy
 
@@ -60,7 +60,7 @@ class OpsviewServer(GenericServer):
         # get cookie to access Opsview web interface to access Opsviews Nagios part
         if len(self.Cookie) == 0:
             # put all necessary data into url string
-            logindata = urllib.urlencode({"login_username":self.get_username(),\
+            logindata = urllib.parse.urlencode({"login_username":self.get_username(),\
                              "login_password":self.get_password(),\
                              "back":"",\
                              "app": "",\
@@ -89,7 +89,7 @@ class OpsviewServer(GenericServer):
         directly from web interface
         """
         try:
-            result = self.FetchURL(self.monitor_cgi_url + "/cmd.cgi?" + urllib.urlencode({"cmd_typ":"55", "host":host}))
+            result = self.FetchURL(self.monitor_cgi_url + "/cmd.cgi?" + urllib.parse.urlencode({"cmd_typ":"55", "host":host}))
             html = result.result
             start_time = dict(result.result.find(attrs={"name":"starttime"}).attrs)["value"]
             end_time = dict(result.result.find(attrs={"name":"endtime"}).attrs)["value"]
@@ -104,10 +104,10 @@ class OpsviewServer(GenericServer):
         # get action url for opsview downtime form
         if service == "":
             # host
-            cgi_data = urllib.urlencode({"cmd_typ":"55", "host":host})
+            cgi_data = urllib.parse.urlencode({"cmd_typ":"55", "host":host})
         else:
             # service
-            cgi_data = urllib.urlencode({"cmd_typ":"56", "host":host, "service":service})
+            cgi_data = urllib.parse.urlencode({"cmd_typ":"56", "host":host, "service":service})
         url = self.monitor_cgi_url + "/cmd.cgi"
         result = self.FetchURL(url, giveback="raw", cgi_data=cgi_data)
         html = result.result
@@ -127,7 +127,7 @@ class OpsviewServer(GenericServer):
         if service == "":
             # host - here Opsview uses the plain oldschool Nagios way of CGI
             url = self.monitor_cgi_url + "/cmd.cgi"
-            cgi_data = urllib.urlencode({"cmd_typ":"87", "cmd_mod":"2", "host":host,\
+            cgi_data = urllib.parse.urlencode({"cmd_typ":"87", "cmd_mod":"2", "host":host,\
                                          "plugin_state":{"up":"0", "down":"1", "unreachable":"2"}[state], "plugin_output":check_output,\
                                          "performance_data":performance_data, "btnSubmit":"Commit"})
             self.FetchURL(url, giveback="raw", cgi_data=cgi_data)
@@ -135,7 +135,7 @@ class OpsviewServer(GenericServer):
         if service != "":
             # service @ host - here Opsview brews something own
             url = self.monitor_url + "/state/service/" + self.hosts[host].services[service].service_object_id + "/change"
-            cgi_data = urllib.urlencode({"state":{"ok":"0", "warning":"1", "critical":"2", "unknown":"3"}[state],\
+            cgi_data = urllib.parse.urlencode({"state":{"ok":"0", "warning":"1", "critical":"2", "unknown":"3"}[state],\
                                          "comment":comment, "submit":"Commit"})
             # running remote cgi command
             self.FetchURL(url, giveback="raw", cgi_data=cgi_data)

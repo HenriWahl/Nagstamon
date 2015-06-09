@@ -18,16 +18,14 @@
 # Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA  02110-1301, USA
 
 import threading
-#import gobject
 import time
 import datetime
-import urllib
+import urllib.request, urllib.parse, urllib.error
 import webbrowser
 import subprocess
 import re
 import sys
 import traceback
-###import gtk
 
 # if running on windows import winsound
 import platform
@@ -38,8 +36,9 @@ if platform.system() == "Windows":
 import gc
 
 # import for MultipartPostHandler.py which is needed for Opsview downtime form
-import urllib2
-import mimetools, mimetypes
+import urllib.request, urllib.error, urllib.parse
+# does not exist in python3
+###import mimetools, mimetypes
 import os, stat
 
 #from Nagstamon import GUI
@@ -213,14 +212,14 @@ class DebugLoop(threading.Thread):
         try:
             threading.Thread.__init__(self, name="DebugLoop")
             self.setDaemon(1)
-        except Exception, err:
-            print err
+        except Exception as err:
+            print(err)
 
         # open debug file if needed
         if str(self.conf.debug_to_file) == "True" and self.stopped == False:
             try:
                 self.debug_file = open(self.conf.debug_file, "w")
-            except Exception, err:
+            except Exception as err:
                 # if path to file does not exist tell user
                 self.output.Dialog(message=err)
 
@@ -233,7 +232,7 @@ class DebugLoop(threading.Thread):
 
             try:
                 debug_string = self.debug_queue.get(True, 1)
-                print debug_string
+                print(debug_string)
                 if str(self.conf.debug_to_file) == "True" and self.__dict__.has_key("debug_file") and debug_string != "":
                     self.debug_file.write(debug_string + "\n")
             except:
@@ -694,26 +693,7 @@ class Action(threading.Thread):
         return a string that fulfills requirements for URLs
         exclude several chars
         """
-        return urllib.quote(string, ":/=?&@+")
-
-
-class LonesomeGarbageCollector(threading.Thread):
-    """
-    do repeatedly collect some garbage - before every server thread did but might make more sense done
-    at one place and time
-    """
-    def __init__(self):
-        # garbage collection
-        gc.enable()
-        threading.Thread.__init__(self)
-        self.setDaemon(1)
-
-
-    def run(self):
-        while True:
-            gc.collect()
-            # lets do a gc.collect() once every minute
-            time.sleep(60)
+        return urllib.parse.quote(string, ":/=?&@+")
 
 
 def TreeViewNagios(server, host, service):
@@ -752,7 +732,7 @@ def CreateServer(server=None, conf=None, debug_queue=None, resources=None):
     # create Server from config
     registered_servers = get_registered_servers()
     if server.type not in registered_servers:
-        print 'Server type not supported: %s' % server.type
+        print('Server type not supported: %s' % server.type)
         return
     # give argument servername so CentreonServer could use it for initializing MD5 cache
     new_server = registered_servers[server.type](conf=conf, name=server.name)
@@ -777,21 +757,21 @@ def CreateServer(server=None, conf=None, debug_queue=None, resources=None):
     new_server.debug_queue = debug_queue
 
     # use server-owned attributes instead of redefining them with every request
-    new_server.passman = urllib2.HTTPPasswordMgrWithDefaultRealm()
+    new_server.passman = urllib.request.HTTPPasswordMgrWithDefaultRealm()
     new_server.passman.add_password(None, server.monitor_url, server.username, server.password)
     new_server.passman.add_password(None, server.monitor_cgi_url, server.username, server.password)
-    new_server.basic_handler = urllib2.HTTPBasicAuthHandler(new_server.passman)
-    new_server.digest_handler = urllib2.HTTPDigestAuthHandler(new_server.passman)
-    new_server.proxy_auth_handler = urllib2.ProxyBasicAuthHandler(new_server.passman)
+    new_server.basic_handler = urllib.request.HTTPBasicAuthHandler(new_server.passman)
+    new_server.digest_handler = urllib.request.HTTPDigestAuthHandler(new_server.passman)
+    new_server.proxy_auth_handler = urllib.request.ProxyBasicAuthHandler(new_server.passman)
 
     if str(new_server.use_proxy) == "False":
         # use empty proxyhandler
-        new_server.proxy_handler = urllib2.ProxyHandler({})
+        new_server.proxy_handler = urllib.request.ProxyHandler({})
     elif str(server.use_proxy_from_os) == "False":
         # if proxy from OS is not used there is to add a authenticated proxy handler
         new_server.passman.add_password(None, new_server.proxy_address, new_server.proxy_username, new_server.proxy_password)
-        new_server.proxy_handler = urllib2.ProxyHandler({"http": new_server.proxy_address, "https": new_server.proxy_address})
-        new_server.proxy_auth_handler = urllib2.ProxyBasicAuthHandler(new_server.passman)
+        new_server.proxy_handler = urllib.request.ProxyHandler({"http": new_server.proxy_address, "https": new_server.proxy_address})
+        new_server.proxy_auth_handler = urllib.request.ProxyBasicAuthHandler(new_server.passman)
 
     # Special FX
     # Centreon
@@ -829,31 +809,31 @@ def BuildURLOpener(server):
     # trying with changed digest/basic auth order as some digest auth servers do not
     # seem to work the previous way
     if str(server.use_proxy) == "False":
-        server.proxy_handler = urllib2.ProxyHandler({})
-        urlopener = urllib2.build_opener(server.digest_handler,
+        server.proxy_handler = urllib.request.ProxyHandler({})
+        urlopener = urllib.request.build_opener(server.digest_handler,
                                          server.basic_handler,
                                          server.proxy_handler,
                                          server.https_handler,
-                                         urllib2.HTTPCookieProcessor(server.Cookie),
+                                         urllib.request.HTTPCookieProcessor(server.Cookie),
                                          MultipartPostHandler)
     elif str(server.use_proxy) == "True":
         if str(server.use_proxy_from_os) == "True":
-            urlopener = urllib2.build_opener(server.digest_handler,
+            urlopener = urllib.request.build_opener(server.digest_handler,
                                              server.basic_handler,
                                              server.https_handler,
-                                             urllib2.HTTPCookieProcessor(server.Cookie),
+                                             urllib.request.HTTPCookieProcessor(server.Cookie),
                                              MultipartPostHandler)
         else:
             # if proxy from OS is not used there is to add a authenticated proxy handler
             server.passman.add_password(None, server.proxy_address, server.proxy_username, server.proxy_password)
-            server.proxy_handler = urllib2.ProxyHandler({"http": server.proxy_address, "https": server.proxy_address})
-            server.proxy_auth_handler = urllib2.ProxyBasicAuthHandler(server.passman)
-            urlopener = urllib2.build_opener(server.proxy_handler,
+            server.proxy_handler = urllib.request.ProxyHandler({"http": server.proxy_address, "https": server.proxy_address})
+            server.proxy_auth_handler = urllib.request.ProxyBasicAuthHandler(server.passman)
+            urlopener = urllib.request.build_opener(server.proxy_handler,
                                             server.proxy_auth_handler,
                                             server.digest_handler,
                                             server.basic_handler,
                                             server.https_handler,
-                                            urllib2.HTTPCookieProcessor(server.Cookie),
+                                            urllib.request.HTTPCookieProcessor(server.Cookie),
                                             MultipartPostHandler)
     return urlopener
 
@@ -1136,8 +1116,8 @@ class Callable:
         self.__call__ = anycallable
 
 
-class MultipartPostHandler(urllib2.BaseHandler):
-    handler_order = urllib2.HTTPHandler.handler_order - 10 # needs to run first
+class MultipartPostHandler(urllib.request.BaseHandler):
+    handler_order = urllib.request.HTTPHandler.handler_order - 10 # needs to run first
 
     def http_request(self, request):
         data = request.get_data()
@@ -1148,13 +1128,17 @@ class MultipartPostHandler(urllib2.BaseHandler):
                     v_vars.append((key, value))
             except TypeError:
                 systype, value, traceback = sys.exc_info()
-                raise TypeError, "not a valid non-string sequence or mapping object", traceback
+                ###raise TypeError, "not a valid non-string sequence or mapping object", traceback
+                # https://www.python.org/dev/peps/pep-3109/
+                e = TypeError(value)
+                e.__traceback__ = T
+                raise 3
 
             boundary, data = self.multipart_encode(v_vars)
             contenttype = 'multipart/form-data; boundary=%s' % boundary
             if(request.has_header('Content-Type')
                and request.get_header('Content-Type').find('multipart/form-data') != 0):
-                print "Replacing %s with %s" % (request.get_header('content-type'), 'multipart/form-data')
+                print("Replacing %s with %s" % (request.get_header('content-type'), 'multipart/form-data'))
             request.add_unredirected_header('Content-Type', contenttype)
 
             request.add_data(data)
