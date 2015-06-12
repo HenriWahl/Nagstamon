@@ -161,7 +161,7 @@ def __add_options(parser):
                  help="Folder to store the generated spec file "
                       "(default: current directory)")
     g.add_option("-n", "--name",
-                 help="Name to assign to the bundled app and spec file "
+                 help="NAME to assign to the bundled app and spec file "
                       "(default: first script's basename)")
 
     g = parser.add_option_group('What to bundle, where to search')
@@ -174,7 +174,7 @@ def __add_options(parser):
     g.add_option('--hidden-import',
                  action='append',
                  metavar="MODULENAME", dest='hiddenimports',
-                 help='Name an import not visible in the code of the script(s). '
+                 help='NAME an import not visible in the code of the script(s). '
                  'This option can be used multiple times.')
     g.add_option("--additional-hooks-dir", action="append", dest="hookspath",
                  help="An additional path to search for hooks. "

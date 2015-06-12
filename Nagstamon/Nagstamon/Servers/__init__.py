@@ -33,7 +33,8 @@ from Nagstamon.Servers.Thruk import ThrukServer
 from Nagstamon.Servers.Zabbix import ZabbixServer
 
 from Nagstamon.Config import conf
-from Nagstamon.Actions import BuildURLOpener, MultipartPostHandler
+###from Nagstamon.Actions import BuildURLOpener, MultipartPostHandler
+from Nagstamon.Actions import BuildURLOpener
 
 # dictionary for servers
 servers = OrderedDict()
@@ -109,11 +110,11 @@ def CreateServer(server=None):
     # create permanent urlopener for server to avoid memory leak with millions of openers
     new_server.urlopener = BuildURLOpener(new_server)
     # server's individual preparations for HTTP connections (for example cookie creation), version of monitor
-    if str(server.enabled) == "True":
+    if server.enabled == True:
         new_server.init_HTTP()
 
     # debug
-    if str(conf.debug_mode) == "True":
+    if conf.debug_mode == True:
         new_server.Debug(server=server.name, debug="Created server.")
 
     return new_server

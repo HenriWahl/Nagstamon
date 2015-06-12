@@ -19,16 +19,16 @@ _STRICT_FRAMEWORK_RE = re.compile(r"""(?x)
 def framework_info(filename):
     """
     A framework name can take one of the following four forms:
-        Location/Name.framework/Versions/SomeVersion/Name_Suffix
-        Location/Name.framework/Versions/SomeVersion/Name
-        Location/Name.framework/Name_Suffix
-        Location/Name.framework/Name
+        Location/NAME.framework/Versions/SomeVersion/Name_Suffix
+        Location/NAME.framework/Versions/SomeVersion/NAME
+        Location/NAME.framework/Name_Suffix
+        Location/NAME.framework/NAME
 
     returns None if not found, or a mapping equivalent to:
         dict(
             location='Location',
-            name='Name.framework/Versions/SomeVersion/Name_Suffix',
-            shortname='Name',
+            name='NAME.framework/Versions/SomeVersion/Name_Suffix',
+            shortname='NAME',
             version='SomeVersion',
             suffix='Suffix',
         )

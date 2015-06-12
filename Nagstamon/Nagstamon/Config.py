@@ -28,15 +28,15 @@ from collections import OrderedDict
 # temporary dict for string-to-bool-conversion
 BOOLPOOL = {"False": False, "True": True}
 
-class APPINFO(object):
+class AppInfo(object):
     """
     contains app information previously located in GUI.py
     """
-    Name = "Nagstamon"
-    Version = "1.1-devel"
-    Website = "https://nagstamon.ifw-dresden.de/"
-    Copyright = "©2008-2015 Henri Wahl et al.\nh.wahl@ifw-dresden.de"
-    Comments = "Nagios status monitor for your desktop"
+    NAME = "Nagstamon"
+    VERSION = "1.1-devel"
+    WEBSITE = "https://nagstamon.ifw-dresden.de/"
+    COPYRIGHT = "©2008-2015 Henri Wahl et al.\nh.wahl@ifw-dresden.de"
+    COMMENTS = "Nagios status monitor for your desktop"
 
 
 class Config(object):
@@ -159,6 +159,8 @@ class Config(object):
         # internal flag to determine if keyring is available at all - defaults to False
         # use_system_keyring is checked and defined some lines later after config file was read
         self.keyring_available = False
+        # setting for keyring usage
+        self.use_system_keyring = False
 
         # Special FX
         # Centreon
@@ -218,8 +220,7 @@ class Config(object):
                 # go through all items of each sections (in fact there is only on
                 # section which has to be there to comply to the .INI file standard
 
-                ###for i in config.items(section):
-                for i in config[section]:
+                for i in config.items(section):
                     # create a key of every config item with its appropriate value
                     # check first if it is a bool value and convert string if it is
                     if i[1] in BOOLPOOL:
@@ -368,7 +369,7 @@ class Config(object):
             config.add_section("Nagstamon")
             for option in self.__dict__:
                 if not option in ["servers", "actions"]:
-                    config.set("Nagstamon", option, self.__dict__[option])
+                    config.set("Nagstamon", option, str(self.__dict__[option]))
 
             # because the switch from Nagstamon 1.0 to 1.0.1 brings the use_system_keyring property
             # and all the thousands 1.0 installations do not know it yet it will be more comfortable
@@ -473,12 +474,12 @@ class Config(object):
                                         traceback.print_exc(file=sys.stdout)
                                         sys.exit(1)
 
-                                value = ""
-                        config.set(setting + "_" + s, option, value)
+                                value = ''
+                        config.set(setting + '_' + s, option, str(value))
                     else:
-                        config.set(setting + "_" + s, option, self.__dict__[settingsdir][s].__dict__[option])
+                        config.set(setting + '_' + s, option, str(self.__dict__[settingsdir][s].__dict__[option]))
                 else:
-                    config.set(setting + "_" + s, option, self.__dict__[settingsdir][s].__dict__[option])
+                    config.set(setting + '_' + s, option, str(self.__dict__[settingsdir][s].__dict__[option]))
 
             # open, save and close config_server file
             if not os.path.exists(self.configdir + os.sep + settingsdir):
@@ -530,12 +531,19 @@ class Config(object):
         """
             Obfuscate a given string to store passwords etc.
         """
+
+        string = string.encode()
+
         for i in range(count):
-            string = list(base64.b64encode(string))
+            string = base64.b64encode(string).decode()
+            string = list(string)
             string.reverse()
             string = "".join(string)
+            string = string.encode()
             string = zlib.compress(string)
-        string = base64.b64encode(string)
+
+        # make unicode of bytes string
+        string = base64.b64encode(string).decode()
         return string
 
 
@@ -553,7 +561,7 @@ class Config(object):
             string = "".join(string)
             string = base64.b64decode(string)
 
-        # make unicode of bytes coming from bae64 operations
+        # make unicode of bytes coming from base64 operations
         string = string.decode()
 
         return string

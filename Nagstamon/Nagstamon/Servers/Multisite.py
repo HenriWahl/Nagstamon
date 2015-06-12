@@ -46,7 +46,7 @@ class MultisiteServer(GenericServer):
     """
        special treatment for Check_MK Multisite JSON API
     """
-    TYPE = u'Check_MK Multisite'
+    TYPE = 'Check_MK Multisite'
 
     # URLs for browser shortlinks/buttons on popup window
     BROWSER_URLS= { "monitor": "$MONITOR$",\
@@ -89,15 +89,11 @@ class MultisiteServer(GenericServer):
                                                    urllib.parse.urlencode({'start_url': 'view.py?view_name=hoststatus'}),
               # URLs do not need pythonic output because since werk #0766 API does not work with transid=-1 anymore
               # thus access to normal webinterface is used
-              #'api_host_act':    self.monitor_url + 'view.py?_transid=-1&_do_actions=yes&_do_confirm=Yes!&output_format=python&view_name=hoststatus&filled_in=actions&lang=',
-              #'api_service_act': self.monitor_url + 'view.py?_transid=-1&_do_actions=yes&_do_confirm=Yes!&output_format=python&view_name=service&filled_in=actions&lang=',
-              #'api_svcprob_act': self.monitor_url + 'view.py?_transid=-1&_do_actions=yes&_do_confirm=Yes!&output_format=python&view_name=svcproblems&filled_in=actions&lang=',
               'api_host_act':    self.monitor_url + 'view.py?_transid=-1&_do_actions=yes&_do_confirm=Yes!&view_name=hoststatus&filled_in=actions&lang=',
               'api_service_act': self.monitor_url + 'view.py?_transid=-1&_do_actions=yes&_do_confirm=Yes!&view_name=service&filled_in=actions&lang=',
               'api_svcprob_act': self.monitor_url + 'view.py?_transid=-1&_do_actions=yes&_do_confirm=Yes!&view_name=svcproblems&filled_in=actions&lang=',
               'human_events':    self.monitor_url + "index.py?%s" %
                                                    urllib.parse.urlencode({'start_url': 'view.py?view_name=events'}),
-              'togglevisibility':self.monitor_url + "user_profile.py",
               'transid':         self.monitor_url + "view.py?actions=yes&filled_in=actions&host=$HOST$&service=$SERVICE$&view_name=service"
             }
 
@@ -208,7 +204,7 @@ class MultisiteServer(GenericServer):
                     return e.result
 
             for row in response[1:]:
-                host= dict(zip(copy.deepcopy(response[0]), copy.deepcopy(row)))
+                host= dict(list(zip(copy.deepcopy(response[0]), copy.deepcopy(row))))
                 n = {
                     'host':               host['host'],
                     'status':             self.statemap.get(host['host_state'], host['host_state']),
@@ -221,7 +217,7 @@ class MultisiteServer(GenericServer):
                 }
 
                 # host objects contain service objects
-                if not self.new_hosts.has_key(n["host"]):
+                if n["host"] not in self.new_hosts:
                     new_host = n["host"]
                     self.new_hosts[new_host] = GenericHost()
                     self.new_hosts[new_host].name = n["host"]
@@ -234,10 +230,10 @@ class MultisiteServer(GenericServer):
                     self.new_hosts[new_host].site = n["site"]
                     self.new_hosts[new_host].address = n["address"]
                     # transisition to Check_MK 1.1.10p2
-                    if host.has_key('host_in_downtime'):
+                    if 'host_in_downtime' in host:
                         if host['host_in_downtime'] == 'yes':
                             self.new_hosts[new_host].scheduled_downtime = True
-                    if host.has_key('host_acknowledged'):
+                    if 'host_acknowledged' in host:
                         if host['host_acknowledged'] == 'yes':
                             self.new_hosts[new_host].acknowledged = True
 
@@ -251,6 +247,10 @@ class MultisiteServer(GenericServer):
             del response
 
         except:
+
+            import traceback
+            traceback.print_exc(file=sys.stdout)
+
             self.isChecking = False
             result, error = self.Error(sys.exc_info())
             return Result(result=result, error=error)
@@ -272,15 +272,15 @@ class MultisiteServer(GenericServer):
                     ret = copy.deepcopy(e.result)
 
             for row in response[1:]:
-                service = dict(zip(copy.deepcopy(response[0]), copy.deepcopy(row)))
+                service = dict(list(zip(copy.deepcopy(response[0]), copy.deepcopy(row))))
                 n = {
-                    'host':               service['host'].encode("utf-8"),
-                    'service':            service['service_description'].encode("utf-8"),
+                    'host':               service['host'],
+                    'service':            service['service_description'],
                     'status':             self.statemap.get(service['service_state'], service['service_state']),
                     'last_check':         service['svc_check_age'],
                     'duration':           service['svc_state_age'],
                     'attempt':            service['svc_attempt'],
-                    'status_information': service['svc_plugin_output'].encode("utf-8"),
+                    'status_information': service['svc_plugin_output'],
                     # Check_MK passive services can be re-scheduled by using the Check_MK service
                     'passiveonly':        service['svc_is_active'] == 'no' and not service['svc_check_command'].startswith('check_mk'),
                     'notifications':      service['svc_notifications_enabled'] == 'yes',
@@ -291,14 +291,14 @@ class MultisiteServer(GenericServer):
                 }
 
                 # host objects contain service objects
-                if not self.new_hosts.has_key(n["host"]):
+                if n["host"] not in self.new_hosts:
                     self.new_hosts[n["host"]] = GenericHost()
                     self.new_hosts[n["host"]].name = n["host"]
                     self.new_hosts[n["host"]].status = "UP"
                     self.new_hosts[n["host"]].site = n["site"]
                     self.new_hosts[n["host"]].address = n["address"]
                 # if a service does not exist create its object
-                if not self.new_hosts[n["host"]].services.has_key(n["service"]):
+                if n["service"] not in self.new_hosts[n["host"]].services:
                     new_service = n["service"]
                     self.new_hosts[n["host"]].services[new_service] = GenericService()
                     self.new_hosts[n["host"]].services[new_service].host = n["host"]
@@ -315,13 +315,13 @@ class MultisiteServer(GenericServer):
                     self.new_hosts[n["host"]].services[new_service].address = n["address"]
                     self.new_hosts[n["host"]].services[new_service].command = n["command"]
                     # transistion to Check_MK 1.1.10p2
-                    if service.has_key('svc_in_downtime'):
+                    if 'svc_in_downtime' in service:
                         if service['svc_in_downtime'] == 'yes':
                             self.new_hosts[n["host"]].services[new_service].scheduled_downtime = True
-                    if service.has_key('svc_acknowledged'):
+                    if 'svc_acknowledged' in service:
                         if service['svc_acknowledged'] == 'yes':
                             self.new_hosts[n["host"]].services[new_service].acknowledged = True
-                    if service.has_key('svc_flapping'):
+                    if 'svc_flapping' in service:
                         if service['svc_flapping'] == 'yes':
                             self.new_hosts[n["host"]].services[new_service].flapping = True
 
@@ -335,6 +335,12 @@ class MultisiteServer(GenericServer):
             del response
 
         except:
+
+
+            import traceback
+            traceback.print_exc(file=sys.stdout)
+
+
             # set checking flag back to False
             self.isChecking = False
             result, error = self.Error(sys.exc_info())
@@ -468,27 +474,6 @@ class MultisiteServer(GenericServer):
             self.Debug(server=self.get_name(), debug ="Rechecking all action: " + url + '&' + urllib.parse.urlencode(params))
 
         result = self.FetchURL(url + '&' + urllib.parse.urlencode(params), giveback = 'raw')
-
-    """
-    def ToggleVisibility(self, widget):
-        #Attempt to enable/disable visibility of all problems for user via
-        #/user_profile.py?cb_ua_force_authuser=0&cb_ua_force_authuser_webservice=0&filled_in=profile
-
-        # since werk #0766 http://mathias-kettner.de/check_mk_werks.php?werk_id=766 a real transid is needed
-        transid = self.FetchURL(self.urls["togglevisibility"], "obj").result.find(attrs={"name" : "_transid"})["value"]
-        cgi_data = urllib.urlencode({"cb_ua_force_authuser" : str(int(widget.get_active())),\
-                                     "cb_ua_force_authuser_webservice" : str(int(widget.get_active())),\
-                                     "filled_in" : "profile",\
-                                     "_transid" : transid,\
-                                     "_save" : "Save"})
-
-        self.FetchURL(self.urls["togglevisibility"], "raw", cgi_data=urllib.urlencode(\
-                                                                    {"cb_ua_force_authuser" : str(int(widget.get_active())),\
-                                                                     "cb_ua_force_authuser_webservice" : str(int(widget.get_active())),\
-                                                                     "filled_in" : "profile",\
-                                                                     "_transid" : transid,\
-                                                                     "_save" : "Save"})).result
-    """
 
 
     def _get_transid(self, host, service):

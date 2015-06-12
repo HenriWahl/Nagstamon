@@ -2627,7 +2627,7 @@ class Popwin(object):
 
 class ServerVBox(gtk.VBox):
     """
-    VBox which contains all infos about one monitor server: Name, Buttons, Treeview
+    VBox which contains all infos about one monitor server: NAME, Buttons, Treeview
     """
     def __init__(self, **kwds):
             # add all keywords to object, every mode searchs inside for its favorite arguments/keywords

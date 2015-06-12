@@ -467,7 +467,7 @@ class GenericTestCase(unittest.TestCase):
     def __init__(self, test_dir, func_name):
         """
         test_dir    Directory containing testing python scripts.
-        func_name   Name of test function to create.
+        func_name   NAME of test function to create.
         """
         self.test_name = test_dir + '/' + func_name
 

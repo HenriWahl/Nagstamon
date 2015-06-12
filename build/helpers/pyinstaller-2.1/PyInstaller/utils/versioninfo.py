@@ -55,7 +55,7 @@ def pefile_read_version(filename):
         }
     }
 
-    Version info can contain multiple languages.
+    VERSION info can contain multiple languages.
     """
     # TODO
     vers = {

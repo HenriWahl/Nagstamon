@@ -154,7 +154,7 @@ class Ui_settings_action(object):
         self.label_monitor_type.setText(_translate("settings_action", "Monitor type:"))
         self.label_description.setText(_translate("settings_action", "Description:"))
         self.label_action_type.setText(_translate("settings_action", "Action type:"))
-        self.label_name.setText(_translate("settings_action", "Name:"))
+        self.label_name.setText(_translate("settings_action", "NAME:"))
         self.label_target.setText(_translate("settings_action", "Target:"))
         self.input_checkbox_re_service_enabled.setText(_translate("settings_action", "Regular expressions for services"))
         self.input_radiobutton_close_popwin.setText(_translate("settings_action", "Close status popup window after action"))

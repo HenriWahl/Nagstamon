@@ -19,16 +19,16 @@ _DYLIB_RE = re.compile(r"""(?x)
 def dylib_info(filename):
     """
     A dylib name can take one of the following four forms:
-        Location/Name.SomeVersion_Suffix.dylib
-        Location/Name.SomeVersion.dylib
+        Location/NAME.SomeVersion_Suffix.dylib
+        Location/NAME.SomeVersion.dylib
         Location/Name_Suffix.dylib
-        Location/Name.dylib
+        Location/NAME.dylib
 
     returns None if not found or a mapping equivalent to:
         dict(
             location='Location',
-            name='Name.SomeVersion_Suffix.dylib',
-            shortname='Name',
+            name='NAME.SomeVersion_Suffix.dylib',
+            shortname='NAME',
             version='SomeVersion',
             suffix='Suffix',
         )

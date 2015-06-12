@@ -518,7 +518,7 @@ class Analysis(Target):
             hook_dir = os.path.dirname(os.path.abspath(hooks.__file__))
             files = glob.glob(hook_dir + os.sep + 'hook-*.py')
             for f in files:
-                # Name of the module this hook is for.
+                # NAME of the module this hook is for.
                 mod_name = os.path.basename(f).lstrip('hook-').rstrip('.py')
                 hook_mod_name = 'PyInstaller.hooks.hook-%s' % mod_name
                 # Loaded and initialized hook module.

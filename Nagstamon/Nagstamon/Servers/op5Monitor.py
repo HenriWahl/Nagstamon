@@ -146,10 +146,6 @@ class Op5MonitorServer(GenericServer):
 
             # Fetch Host info
             result = self.FetchURL(self.monitor_url + self.api_count + self.api_default_host_query, giveback="raw")
-
-            print('YEAH:', type(result.result))
-
-
             data = json.loads(result.result)
             if data['count']:
                 count = data['count']
@@ -245,12 +241,8 @@ class Op5MonitorServer(GenericServer):
                 return Result()
         except:
             print("========================================== b0rked ==========================================")
-
-            print(type(result.result))
-
             self.isChecking = False
             result,error = self.Error(sys.exc_info())
-            print(error)
             return Result(result=result, error=error)
 
         return Result()

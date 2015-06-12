@@ -304,7 +304,7 @@ class CArchive(pyi_archive.Archive):
           entry[2] is a flag for it's storage format (0==uncompressed,
           1==compressed)
           entry[3] is the entry's type code.
-          Version 5:
+          VERSION 5:
             If the type code is 'o':
               entry[0] is the runtime option
               eg: v  (meaning verbose imports)
@@ -314,7 +314,7 @@ class CArchive(pyi_archive.Archive):
         """
         (nm, pathnm, flag, typcd) = entry[:4]
         # FIXME Could we make the version 5 the default one?
-        # Version 5 - allow type 'o' = runtime option.
+        # VERSION 5 - allow type 'o' = runtime option.
         try:
             if typcd in ('o', 'd'):
                 s = ''

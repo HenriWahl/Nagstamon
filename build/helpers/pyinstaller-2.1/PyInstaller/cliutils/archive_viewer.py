@@ -162,7 +162,7 @@ def get_data(nm, arch):
 
 def show(nm, arch):
     if type(arch.toc) == type({}):
-        print " Name: (ispkg, pos, len)"
+        print " NAME: (ispkg, pos, len)"
         toc = arch.toc
     else:
         print " pos, length, uncompressed, iscompressed, type, name"

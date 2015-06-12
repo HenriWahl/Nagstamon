@@ -1177,7 +1177,7 @@ class ImportData(DataContainer):
     """Holds imported symbol's information.
     
     ordinal:    Ordinal of the symbol
-    name:       Name of the symbol
+    name:       NAME of the symbol
     bound:      If the symbol is bound, this contains
                 the address.
     """
@@ -1558,7 +1558,7 @@ class PE:
     __IMAGE_NT_HEADERS_format__ = ('IMAGE_NT_HEADERS', ('I,Signature',))
     
     __IMAGE_SECTION_HEADER_format__ = ('IMAGE_SECTION_HEADER',
-        ('8s,Name', 'I,Misc,Misc_PhysicalAddress,Misc_VirtualSize',
+        ('8s,NAME', 'I,Misc,Misc_PhysicalAddress,Misc_VirtualSize',
         'I,VirtualAddress', 'I,SizeOfRawData', 'I,PointerToRawData',
         'I,PointerToRelocations', 'I,PointerToLinenumbers',
         'H,NumberOfRelocations', 'H,NumberOfLinenumbers',
@@ -1570,11 +1570,11 @@ class PE:
     
     __IMAGE_IMPORT_DESCRIPTOR_format__ =  ('IMAGE_IMPORT_DESCRIPTOR',
         ('I,OriginalFirstThunk,Characteristics',
-        'I,TimeDateStamp', 'I,ForwarderChain', 'I,Name', 'I,FirstThunk'))
+        'I,TimeDateStamp', 'I,ForwarderChain', 'I,NAME', 'I,FirstThunk'))
     
     __IMAGE_EXPORT_DIRECTORY_format__ =  ('IMAGE_EXPORT_DIRECTORY',
         ('I,Characteristics',
-        'I,TimeDateStamp', 'H,MajorVersion', 'H,MinorVersion', 'I,Name',
+        'I,TimeDateStamp', 'H,MajorVersion', 'H,MinorVersion', 'I,NAME',
         'I,Base', 'I,NumberOfFunctions', 'I,NumberOfNames',
         'I,AddressOfFunctions', 'I,AddressOfNames', 'I,AddressOfNameOrdinals'))
     
@@ -1584,7 +1584,7 @@ class PE:
         'H,NumberOfNamedEntries', 'H,NumberOfIdEntries'))
     
     __IMAGE_RESOURCE_DIRECTORY_ENTRY_format__ = ('IMAGE_RESOURCE_DIRECTORY_ENTRY',
-        ('I,Name',
+        ('I,NAME',
         'I,OffsetToData'))
     
     __IMAGE_RESOURCE_DATA_ENTRY_format__ = ('IMAGE_RESOURCE_DATA_ENTRY',
@@ -2803,7 +2803,7 @@ class PE:
         if resource is None:
             return None
         
-        #resource.NameIsString = (resource.Name & 0x80000000L) >> 31
+        #resource.NameIsString = (resource.NAME & 0x80000000L) >> 31
         resource.NameOffset = resource.Name & 0x7FFFFFFFL
         
         resource.__pad = resource.Name & 0xFFFF0000L
@@ -3973,7 +3973,7 @@ class PE:
             return ''.join([convert_char(c) for c in s])
         
         if hasattr(self, 'VS_VERSIONINFO'):
-            dump.add_header('Version Information')
+            dump.add_header('VERSION Information')
             dump.add_lines(self.VS_VERSIONINFO.dump())
             dump.add_newline()
             
@@ -4014,7 +4014,7 @@ class PE:
             dump.add_header('Exported symbols')
             dump.add_lines(self.DIRECTORY_ENTRY_EXPORT.struct.dump())
             dump.add_newline()
-            dump.add_line('%-10s   %-10s  %s' % ('Ordinal', 'RVA', 'Name'))
+            dump.add_line('%-10s   %-10s  %s' % ('Ordinal', 'RVA', 'NAME'))
             for export in self.DIRECTORY_ENTRY_EXPORT.symbols:
                 if export.address is not None:
                     dump.add('%-10d 0x%08Xh    %s' % (
@@ -4091,7 +4091,7 @@ class PE:
             for resource_type in self.DIRECTORY_ENTRY_RESOURCE.entries:
                 
                 if resource_type.name is not None:
-                    dump.add_line('Name: [%s]' % resource_type.name, 2)
+                    dump.add_line('NAME: [%s]' % resource_type.name, 2)
                 else:
                     dump.add_line('Id: [0x%X] (%s)' % (
                         resource_type.struct.Id, RESOURCE_TYPE.get(
@@ -4107,7 +4107,7 @@ class PE:
                     for resource_id in resource_type.directory.entries:
                         
                         if resource_id.name is not None:
-                            dump.add_line('Name: [%s]' % resource_id.name, 6)
+                            dump.add_line('NAME: [%s]' % resource_id.name, 6)
                         else:
                             dump.add_line('Id: [0x%X]' % resource_id.struct.Id, 6)
                         

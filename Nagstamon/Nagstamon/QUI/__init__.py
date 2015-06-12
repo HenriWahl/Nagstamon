@@ -31,7 +31,7 @@ from operator import methodcaller
 from collections import OrderedDict
 from copy import deepcopy
 
-from Nagstamon.Config import (conf, Server, Action, RESOURCES, APPINFO)
+from Nagstamon.Config import (conf, Server, Action, RESOURCES, AppInfo)
 
 from Nagstamon.Servers import (SERVER_TYPES, servers, CreateServer)
 
@@ -102,6 +102,7 @@ class SystemTrayIcon(QSystemTrayIcon):
         exitaction.triggered.connect(QCoreApplication.instance().quit)
         self.menu.addAction(exitaction)
         self.setContextMenu(self.menu)
+        self.show()
 
 
 class StatusWindow(QWidget):
@@ -111,7 +112,7 @@ class StatusWindow(QWidget):
         """
         QWidget.__init__(self)
         self.setWindowFlags(Qt.WindowStaysOnTopHint | Qt.FramelessWindowHint)
-        self.setWindowTitle(APPINFO.Name)
+        self.setWindowTitle(AppInfo.NAME)
         self.setWindowIcon(QIcon('%s%snagstamon.svg' % (RESOURCES, os.sep)))
 
         self.vbox = QVBoxLayout(spacing=0)          # global VBox
@@ -524,7 +525,7 @@ class TopArea(QWidget):
 
         # top button box
         self.logo = NagstamonLogo("%s%snagstamon_logo_toparea.svg" % (RESOURCES, os.sep))
-        self.label_version = QLabel(APPINFO.Version)
+        self.label_version = QLabel(AppInfo.VERSION)
         self.combobox_servers = QComboBox()
         self.button_filters = QPushButton("Filters")
         self.button_recheck_all = QPushButton("Recheck all")

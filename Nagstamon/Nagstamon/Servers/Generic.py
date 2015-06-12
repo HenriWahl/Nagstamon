@@ -20,6 +20,11 @@
 import urllib.request, urllib.parse, urllib.error
 import urllib.request, urllib.error, urllib.parse
 import http.cookiejar
+
+import requests
+# disable annoying InsecureRequestWarning warnings
+requests.packages.urllib3.disable_warnings()
+
 import sys
 import socket
 import copy
@@ -27,13 +32,16 @@ import webbrowser
 import datetime
 import time
 import traceback
+import platform
 import base64
 from bs4 import BeautifulSoup
 
-# necessary for Python-2.7.9-ssl-support-fix https://github.com/HenriWahl/Nagstamon/issues/126
+"""
+#  necessary for Python-2.7.9-ssl-support-fix https://github.com/HenriWahl/Nagstamon/issues/126
 # maight not be necessary with Python3 or later Requests library
 if sys.version_info >= (2, 7, 9):
     import ssl
+"""
 
 from Nagstamon.Actions import (HostIsFilteredOutByRE,\
                               ServiceIsFilteredOutByRE,\
@@ -41,7 +49,7 @@ from Nagstamon.Actions import (HostIsFilteredOutByRE,\
                               CriticalityIsFilteredOutByRE,\
                               not_empty)
 from Nagstamon.Objects import *
-from Nagstamon.Config import conf
+from Nagstamon.Config import (conf, AppInfo)
 
 class GenericServer(object):
     """
@@ -110,6 +118,10 @@ class GenericServer(object):
         self.count = 0
         # needed for RecheckAll - save start_time once for not having to get it for every recheck
         self.start_time = None
+
+        # Requests-based connections
+        self.session = None
+
         self.Cookie = http.cookiejar.CookieJar()
         # use server-owned attributes instead of redefining them with every request
         self.passman = None
@@ -178,11 +190,53 @@ class GenericServer(object):
         partly not constantly working Basic Authorization requires extra Authorization headers,
         different between various server types
         """
+
+        """
         if self.HTTPheaders == {}:
             for giveback in ["raw", "obj"]:
                 # base64 string has to be encoded to bytes first
                 self.HTTPheaders[giveback] = {'Authorization': b'Basic ' +
-                                               base64.b64encode((self.username + ':' + self.password).encode())}
+                                                base64.b64encode((self.username + ':' + self.password).encode())}
+        """
+
+        if self.session == None:
+            self.session = requests.Session()
+            self.session.headers['User-Agent'] = '{0}/{1} {2}'.format(AppInfo.NAME, AppInfo.VERSION, platform.system())
+
+            # basic authentication
+            self.session.auth = (self.username, self.password)
+
+            # check if proxies have to been used
+            if self.use_proxy == True:
+                if self.use_proxy_from_os == True:
+                    # if .trust_enf is true the system environment will be evaluated
+                    self.session.trust_env = True
+                    self.session.proxies = dict()
+                else:
+                    # check if username and password are given and provide credentials if needed
+                    if self.proxy_username == self.proxy_password == '':
+                        user_pass = ''
+                    else:
+                        user_pass = '{0}:{1}@'.format(self.proxy_username, self.proxy_password)
+
+                    # split and analyze proxy URL
+                    proxy_address_parts = self.proxy_address.split('//')
+                    scheme = proxy_address_parts[0]
+                    host_port = ''.join(proxy_address_parts[1:])
+
+                    # use only valid schemes
+                    if scheme.lower() in ('http:', 'https:'):
+                        # merge proxy URL
+                        proxy_url = '{0}//{1}{2}'.format(scheme, user_pass, host_port)
+                        # fill session.proxies for both protocols
+                        self.session.proxies = {'http': proxy_url, 'https': proxy_url}
+            else:
+                # disable evaluation of environment variables
+                self.session.trust_env = False
+                self.session.proxies = None
+
+            # default to not check TLS validity
+            self.session.verify = False
 
 
     def reset_HTTP(self):
@@ -212,15 +266,6 @@ class GenericServer(object):
         """
         return str(self.password)
 
-
-    """
-    @classmethod
-    def get_columns(cls, row):
-        # Gets columns filled with row data
-        for column_class in cls.COLUMNS:
-            # str() necessary because MacOSX Python cries otherwise
-            yield str(column_class(row))
-    """
 
     def get_server_version(self):
         """
@@ -749,7 +794,8 @@ class GenericServer(object):
         # get all trouble hosts/services from server specific _get_status()
         status = self._get_status()
         self.status, self.status_description = status.result, status.error
-        if status.error != "":
+
+        if status.error != '':
             # ask for password if authorization failed
             if "HTTP Error 401" in status.error or \
                "HTTP Error 403" in status.error or \
@@ -987,7 +1033,6 @@ class GenericServer(object):
         for i in self.nagitems_filtered["hosts"].values():
             for h in i:
                 new_nagitems_filtered_list.append((h.name, h.status))
-
         for i in self.nagitems_filtered["services"].values():
             for s in i:
                 new_nagitems_filtered_list.append((s.host, s.name, s.status))
@@ -1059,28 +1104,35 @@ class GenericServer(object):
         else:
             HTTPheaders = dict()
             HTTPheaders["raw"] = HTTPheaders["obj"] = HTTPheaders["xml"] =  dict()
-
         try:
-            # all the result.encode() and error.encode() is necessary since Python 2.7.9 coming in Fedora 22
             try:
                 # debug
                 if str(conf.debug_mode) == "True":
                     self.Debug(server=self.get_name(), debug="FetchURL: " + url + " CGI Data: " + str(cgi_data))
+
+                """
                 request = urllib.request.Request(url, cgi_data, HTTPheaders[giveback])
                 # use opener - if cgi_data is not empty urllib uses a POST request
                 urlcontent = self.urlopener.open(request)
-                del url, cgi_data, request
-            except:
-                del url, cgi_data, request
+                """
+                if cgi_data == None:
+                    response = self.session.get(url)
+                else:
+                    response = self.session.post(url, data=cgi_data)
+
+            except Exception as err:
+
+                import traceback
+                traceback.print_exc(file=sys.stdout)
+                del url, cgi_data, response
+
                 result, error = self.Error(sys.exc_info())
-                return Result(result=result.encode(), error=error.encode())
+                return Result(result=reult.encode(), error=error.encode())
 
             # give back pure HTML or XML in case giveback is "raw"
             if giveback == "raw":
-                print('URLCONTENT', type(urlcontent))
-                result = Result(result=urlcontent.read().decode("utf8", errors="ignore"))
-                urlcontent.close()
-                del urlcontent
+                # .text gives content in unicode
+                result = Result(result=response.text)
                 return result
 
             # objectified HTML

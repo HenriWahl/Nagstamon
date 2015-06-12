@@ -42,6 +42,6 @@ def run():
         fp = codecs.open(out_filename, 'w', 'utf-8')
         fp.write(unicode(vs))
         fp.close()
-        print('Version info written to: %s' % out_filename)
+        print('VERSION info written to: %s' % out_filename)
     except KeyboardInterrupt:
         raise SystemExit("Aborted by user request.")

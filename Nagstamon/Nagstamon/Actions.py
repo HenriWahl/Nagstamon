@@ -801,10 +801,12 @@ def not_empty(x):
 
 def BuildURLOpener(server):
     """
-    if there should be no proxy used use an empty proxy_handler - only necessary in Windows,
-    where IE proxy settings are used automatically if available
-    In UNIX $HTTP_PROXY will be used
+        if there should be no proxy used use an empty proxy_handler - only necessary in Windows,
+        where IE proxy settings are used automatically if available
+        In UNIX $HTTP_PROXY will be used
+
     The MultipartPostHandler is needed for submitting multipart forms from Opsview
+
     """
     # trying with changed digest/basic auth order as some digest auth servers do not
     # seem to work the previous way
@@ -815,14 +817,16 @@ def BuildURLOpener(server):
                                          server.proxy_handler,
                                          server.https_handler,
                                          urllib.request.HTTPCookieProcessor(server.Cookie),
-                                         MultipartPostHandler)
+                                         ###MultipartPostHandler)
+                                        )
     elif str(server.use_proxy) == "True":
         if str(server.use_proxy_from_os) == "True":
             urlopener = urllib.request.build_opener(server.digest_handler,
                                              server.basic_handler,
                                              server.https_handler,
                                              urllib.request.HTTPCookieProcessor(server.Cookie),
-                                             MultipartPostHandler)
+                                             ###MultipartPostHandler)
+                                            )
         else:
             # if proxy from OS is not used there is to add a authenticated proxy handler
             server.passman.add_password(None, server.proxy_address, server.proxy_username, server.proxy_password)
@@ -834,7 +838,8 @@ def BuildURLOpener(server):
                                             server.basic_handler,
                                             server.https_handler,
                                             urllib.request.HTTPCookieProcessor(server.Cookie),
-                                            MultipartPostHandler)
+                                            ###MultipartPostHandler)
+                                            )
     return urlopener
 
 
@@ -1106,6 +1111,7 @@ def RunNotificationAction(action):
     """
     subprocess.Popen(action, shell=True)
 
+"""
 
 # <IMPORT>
 # Borrowed from http://pipe.scs.fsu.edu/PostHandler/MultipartPostHandler.py
@@ -1161,3 +1167,4 @@ class MultipartPostHandler(urllib.request.BaseHandler):
 
 # </IMPORT>
 
+"""
