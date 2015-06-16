@@ -26,6 +26,8 @@ import copy
 
 from Nagstamon.Objects import *
 from Nagstamon.Servers.Generic import GenericServer
+from Nagstamon.Config import conf
+
 
 class CentreonServer(GenericServer):
     TYPE = u'Centreon'
@@ -70,10 +72,9 @@ class CentreonServer(GenericServer):
         """
         initialize HTTP connection
         """
-        if self.HTTPheaders == {}:
+        if self.session == None:
             GenericServer.init_HTTP(self)
-            # Centreon xml giveback method just should exist
-            self.HTTPheaders["xml"] = {}
+
 
 
     def reset_HTTP(self):
@@ -123,7 +124,7 @@ class CentreonServer(GenericServer):
             result = self.FetchURL(self.monitor_cgi_url + "/main.php?" + cgi_data, giveback="obj")
             html, error = result.result, result.error
             if error == "":
-                html = result.result
+                ###html = result.result
                 start_time = html.find(attrs={"name":"start"}).attrMap["value"]
                 end_time = html.find(attrs={"name":"end"}).attrMap["value"]
 
@@ -140,7 +141,7 @@ class CentreonServer(GenericServer):
         hosts so we need to get ip anyway from web page
         """
         # the fastest method is taking hostname as used in monitor
-        if str(self.conf.connect_by_host) == "True" or host == "":
+        if str(conf.connect_by_host) == "True" or host == "":
             return Result(result=host)
 
         # do a web interface search limited to only one result - the hostname
@@ -162,7 +163,7 @@ class CentreonServer(GenericServer):
         if len(xmlobj) != 0:
             # when connection by DNS is not configured do it by IP
             try:
-                if str(self.conf.connect_by_dns) == "True":
+                if str(conf.connect_by_dns) == "True":
                    # try to get DNS name for ip, if not available use ip
                     try:
                         address = socket.gethostbyaddr(xmlobj.l.a.text)[0]
@@ -183,7 +184,7 @@ class CentreonServer(GenericServer):
             return Result(error=error)
 
         # print IP in debug mode
-        if str(self.conf.debug_mode) == "True":
+        if str(conf.debug_mode) == "True":
             self.Debug(server=self.get_name(), host=host, debug ="IP of %s:" % (host) + " " + address)
         # give back host or ip
         return Result(result=address)
@@ -204,13 +205,13 @@ class CentreonServer(GenericServer):
         try:
             if str(self.use_autologin) == "True":
               raw = self.FetchURL(self.monitor_cgi_url + "/index.php?p=101&autologin=1&useralias=" + self.username + "&token=" + self.autologin_key, giveback="raw")
-              #p=101&autologin=1&useralias=foscarini&token=8sEvwyEcMt
             else:
               login_data = urllib.parse.urlencode({"useralias" : self.username, "password" : self.password, "submit" : "Login"})
               raw = self.FetchURL(self.monitor_cgi_url + "/index.php",cgi_data=login_data, giveback="raw")
 
             del raw
-            sid = str(self.Cookie._cookies.values()[0].values()[0]["PHPSESSID"].value)
+
+            sid = self.session.cookies['PHPSESSID']
             return Result(result=sid)
         except:
             result, error = self.Error(sys.exc_info())
@@ -239,7 +240,7 @@ class CentreonServer(GenericServer):
               self.XML_NDO = "xml/broker"
             del raw
         else:
-            if str(self.conf.debug_mode) == "True":
+            if str(conf.debug_mode) == "True":
                 self.Debug(server=self.get_name(), debug = "Could not detect host/service status version. Using Centreon_Broker")
         # some cleanup
         del result, error
@@ -258,7 +259,7 @@ class CentreonServer(GenericServer):
             host_id = raw.partition("var host_id = '")[2].partition("'")[0]
             del raw
         else:
-            if str(self.conf.debug_mode) == "True":
+            if str(conf.debug_mode) == "True":
                 self.Debug(server=self.get_name(), debug = "Host ID could not be retrieved.")
 
         # some cleanup
@@ -267,7 +268,7 @@ class CentreonServer(GenericServer):
         # only if host_id is an usable integer return it
         try:
             if int(host_id):
-                if str(self.conf.debug_mode) == "True":
+                if str(conf.debug_mode) == "True":
                     self.Debug(server=self.get_name(), host=host, debug = "Host ID is " + host_id)
                 return host_id
             else:
@@ -300,7 +301,7 @@ class CentreonServer(GenericServer):
             else:
                 return ids
         else:
-            if str(self.conf.debug_mode) == "True":
+            if str(conf.debug_mode) == "True":
                 self.Debug(server=self.get_name(), host=host, service=service, debug = "IDs could not be retrieved.")
 
             return "", ""
@@ -312,8 +313,11 @@ class CentreonServer(GenericServer):
         """
         # get sid in case this has not yet been done
         if self.SID == None or self.SID == "":
+
+            print('SESSION ID?')
+
             self.SID = self._get_sid().result
-            # those ndo urls would not be changing too often so this check migth be done here
+            # those ndo urls would not be changing too often so this check might be done here
             self._get_ndo_url()
 
         # services (unknown, warning or critical?)
@@ -334,7 +338,7 @@ class CentreonServer(GenericServer):
             # in case there are no children session id is invalid
             if xmlobj == "<response>bad session id</response>" or str(xmlobj) == "Bad Session ID":
                 del xmlobj
-                if str(self.conf.debug_mode) == "True":
+                if str(conf.debug_mode) == "True":
                     self.Debug(server=self.get_name(), debug="Bad session ID, retrieving new one...")
 
                 # try again...
@@ -399,7 +403,7 @@ class CentreonServer(GenericServer):
             # in case there are no children session id is invalid
             if xmlobj == "<response>bad session id</response>" or xmlobj == "Bad Session ID":
                 # debug
-                if str(self.conf.debug_mode) == "True":
+                if str(conf.debug_mode) == "True":
                     self.Debug(server=self.get_name(), debug="Bad session ID, retrieving new one...")
                 # try again...
                 self.SID = self._get_sid().result
@@ -496,7 +500,7 @@ class CentreonServer(GenericServer):
                         "author":author, "comment":comment, "submit":"Add", "notify":int(notify),\
                         "persistent":int(persistent), "sticky":int(sticky), "ackhostservice":"0", "o":"hd", "en":"1"})
                 # debug
-                if str(self.conf.debug_mode) == "True":
+                if str(conf.debug_mode) == "True":
                     self.Debug(server=self.get_name(), host=host, debug=self.monitor_cgi_url + "/main.php?"+ cgi_data)
 
                 # running remote cgi command, also possible with GET method
@@ -531,7 +535,7 @@ class CentreonServer(GenericServer):
                                                                         "select["+host+";"+sdl+"]":"1", "limit":"0"})
                     # ----- META SERVICES -----//
                     # debug
-                    if str(self.conf.debug_mode) == "True":
+                    if str(conf.debug_mode) == "True":
                         self.Debug(server=self.get_name(), host=host, service=s, debug=self.monitor_cgi_url + "/main.php?" + cgi_data)
 
                     # running remote cgi command with GET method, for some strange reason only working if
@@ -598,7 +602,7 @@ class CentreonServer(GenericServer):
                                              "comment":comment,\
                                              "o":"ah"})
                 # debug
-                if str(self.conf.debug_mode) == "True":
+                if str(conf.debug_mode) == "True":
                     self.Debug(server=self.get_name(), host=host, debug=self.monitor_cgi_url + "/main.php?" + cgi_data)
 
             else:
@@ -614,7 +618,7 @@ class CentreonServer(GenericServer):
                                              "comment":comment,\
                                              "o":"as"})
                 # debug
-                if str(self.conf.debug_mode) == "True":
+                if str(conf.debug_mode) == "True":
                     self.Debug(server=self.get_name(), host=host, service=service, debug=self.monitor_cgi_url + "/main.php?" + cgi_data)
 
             # running remote cgi command
@@ -633,10 +637,10 @@ class CentreonServer(GenericServer):
         # renewing the SID once an hour might be enough
         # maybe this is unnecessary now that we authenticate via login/password, no md5
         if self.SIDcount >= 3600:
-            if str(self.conf.debug_mode) == "True":
+            if str(conf.debug_mode) == "True":
                 self.Debug(server=self.get_name(), debug="Old SID: " + self.SID + " " + str(self.Cookie))
             self.SID = self._get_sid().result
-            if str(self.conf.debug_mode) == "True":
+            if str(conf.debug_mode) == "True":
                 self.Debug(server=self.get_name(), debug="New SID: " + self.SID + " " + str(self.Cookie))
             self.SIDcount = 0
         else:

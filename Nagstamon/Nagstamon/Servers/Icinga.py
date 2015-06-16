@@ -50,10 +50,12 @@ class IcingaServer(GenericServer):
         """
         GenericServer.init_HTTP(self)
 
-        if not "Referer" in self.HTTPheaders:
+        print(self.session.headers)
+
+        ###if not "Referer" in self.HTTPheaders:
+        if not "Referer" in self.session.headers:
             # to execute actions since Icinga 1.11 a Referer Header is necessary
-            for giveback in ["raw", "obj"]:
-                self.HTTPheaders[giveback]["Referer"] = self.monitor_cgi_url + "/cmd.cgi"
+            self.session.headers["Referer"] = self.monitor_cgi_url + "/cmd.cgi"
 
 
     def get_server_version(self):
@@ -72,7 +74,8 @@ class IcingaServer(GenericServer):
             tacsoup = BeautifulSoup(tacraw)
             self.version = tacsoup.find("a", { "class" : "homepageURL" })
             # only extract version if HTML seemed to be OK
-            if self.version.__dict__.has_key("contents"):
+            ###if self.version.__dict__.has_key("contents"):
+            if 'contents' in self.version.__dict__:
                 self.version = self.version.contents[0].split("Icinga ")[1]
         elif tacraw.startswith("{"):
             # there seem to be problems with Icinga < 1.6
@@ -156,24 +159,31 @@ class IcingaServer(GenericServer):
                 jsondict = json.loads(jsonraw)
                 hosts = copy.deepcopy(jsondict["status"]["host_status"])
 
+                print(50*'#')
+                print(hosts)
+                print(50*'+')
+
                 for host in hosts:
                     # make dict of tuples for better reading
                     h = dict(host.items())
 
                     # host
-                    if str(self.use_display_name_host) == "False":
+                    if self.use_display_name_host == False:
                         # according to http://sourceforge.net/p/nagstamon/bugs/83/ it might
                         # better be host_name instead of host_display_name
                         # legacy Icinga adjustments
-                        if h.has_key("host_name"): host_name = h["host_name"]
-                        elif h.has_key("host"): host_name = h["host"]
+                        ###if h.has_key("host_name"): host_name = h["host_name"]
+                        if 'host_name' in h: host_name = h['host_name']
+                        ###elif h.has_key("host"): host_name = h['host']
+                        elif 'host' in h: host_name = h['host']
                     else:
                         # https://github.com/HenriWahl/Nagstamon/issues/46 on the other hand has
                         # problems with that so here we go with extra display_name option
                         host_name = h["host_display_name"]
 
                     # host objects contain service objects
-                    if not self.new_hosts.has_key(host_name):
+                    ###if not self.new_hosts.has_key(host_name):
+                    if not host_name in self.new_hosts:
                         self.new_hosts[host_name] = GenericHost()
                         self.new_hosts[host_name].name = host_name
                         self.new_hosts[host_name].server = self.name
@@ -181,7 +191,7 @@ class IcingaServer(GenericServer):
                         self.new_hosts[host_name].last_check = h["last_check"]
                         self.new_hosts[host_name].duration = h["duration"]
                         self.new_hosts[host_name].attempt = h["attempts"]
-                        self.new_hosts[host_name].status_information= h["status_information"].encode("utf-8").replace("\n", " ").strip()
+                        self.new_hosts[host_name].status_information= h["status_information"].replace("\n", " ").strip()
                         self.new_hosts[host_name].passiveonly = not(h["active_checks_enabled"])
                         self.new_hosts[host_name].notifications_disabled = not(h["notifications_enabled"])
                         self.new_hosts[host_name].flapping = h["is_flapping"]
@@ -190,6 +200,12 @@ class IcingaServer(GenericServer):
                         self.new_hosts[host_name].status_type = status_type
                     del h, host_name
         except:
+
+
+            import traceback
+            traceback.print_exc(file=sys.stdout)
+
+
             # set checking flag back to False
             self.isChecking = False
             result, error = self.Error(sys.exc_info())
@@ -207,6 +223,11 @@ class IcingaServer(GenericServer):
                 jsondict = json.loads(jsonraw)
                 services = copy.deepcopy(jsondict["status"]["service_status"])
 
+                print(50*'*')
+                print(services)
+                print(50*'~')
+
+
                 for service in services:
                     # make dict of tuples for better reading
                     s = dict(service.items())
@@ -215,29 +236,36 @@ class IcingaServer(GenericServer):
                         # according to http://sourceforge.net/p/nagstamon/bugs/83/ it might
                         # better be host_name instead of host_display_name
                         # legacy Icinga adjustments
-                        if s.has_key("host_name"): host_name = s["host_name"]
-                        elif s.has_key("host"): host_name = s["host"]
+                        ###if s.has_key("host_name"): host_name = s["host_name"]
+                        if 'host_name' in s: host_name = s['host_name']
+                        ###elif s.has_key("host"): host_name = s["host"]
+                        elif 'host' in s: host_name = s['host']
                     else:
                         # https://github.com/HenriWahl/Nagstamon/issues/46 on the other hand has
                         # problems with that so here we go with extra display_name option
                         host_name = s["host_display_name"]
 
                     # host objects contain service objects
-                    if not self.new_hosts.has_key(host_name):
+                    ###if not self.new_hosts.has_key(host_name):
+                    if not host_name in self.new_hosts:
                         self.new_hosts[host_name] = GenericHost()
                         self.new_hosts[host_name].name = host_name
                         self.new_hosts[host_name].status = "UP"
 
                     if str(self.use_display_name_host) == "False":
                         # legacy Icinga adjustments
-                        if s.has_key("service_description"): service_name = s["service_description"]
-                        elif s.has_key("description"): service_name = s["description"]
-                        elif s.has_key("service"): service_name = s["service"]
+                        ###if s.has_key("service_description"): service_name = s["service_description"]
+                        if 'service_description' in s: service_name = s["service_description"]
+                        ###elif s.has_key("description"): service_name = s["description"]
+                        elif 'description' in s: service_name = s['description']
+                        ###elif s.has_key("service"): service_name = s["service"]
+                        elif 'service' in s: service_name = s['service']
                     else:
                         service_name = s["service_display_name"]
 
                     # if a service does not exist create its object
-                    if not self.new_hosts[host_name].services.has_key(service_name):
+                    ###if not self.new_hosts[host_name].services.has_key(service_name):
+                    if not service_name in self.new_hosts[host_name].services:
                         self.new_hosts[host_name].services[service_name] = GenericService()
                         self.new_hosts[host_name].services[service_name].host = host_name
                         self.new_hosts[host_name].services[service_name].name = service_name
@@ -246,7 +274,7 @@ class IcingaServer(GenericServer):
                         self.new_hosts[host_name].services[service_name].last_check = s["last_check"]
                         self.new_hosts[host_name].services[service_name].duration = s["duration"]
                         self.new_hosts[host_name].services[service_name].attempt = s["attempts"]
-                        self.new_hosts[host_name].services[service_name].status_information = s["status_information"].encode("utf-8").replace("\n", " ").strip()
+                        self.new_hosts[host_name].services[service_name].status_information = s["status_information"].replace("\n", " ").strip()
                         self.new_hosts[host_name].services[service_name].passiveonly = not(s["active_checks_enabled"])
                         self.new_hosts[host_name].services[service_name].notifications_disabled = not(s["notifications_enabled"])
                         self.new_hosts[host_name].services[service_name].flapping = s["is_flapping"]
@@ -256,6 +284,10 @@ class IcingaServer(GenericServer):
                         self.new_hosts[host_name].services[service_name].status_type = status_type
                     del s, host_name, service_name
         except:
+
+            import traceback
+            traceback.print_exc(file=sys.stdout)
+
             # set checking flag back to False
             self.isChecking = False
             result, error = self.Error(sys.exc_info())
@@ -336,7 +368,7 @@ class IcingaServer(GenericServer):
                                 if len(tds[4](text=not_empty)) == 0:
                                     n["status_information"] = ""
                                 else:
-                                    n["status_information"] = str(tds[4].string).encode("utf-8")
+                                    n["status_information"] = str(tds[4].string)
                                     # attempts are not shown in case of hosts so it defaults to "N/A"
                                 n["attempt"] = "N/A"
                             else:
@@ -348,7 +380,7 @@ class IcingaServer(GenericServer):
                                 if len(tds[5](text=not_empty)) == 0:
                                     n["status_information"] = ""
                                 else:
-                                    n["status_information"] = str(tds[5].string).encode("utf-8")
+                                    n["status_information"] = str(tds[5].string)
 
                             # status flags
                             n["passiveonly"] = False
@@ -370,7 +402,8 @@ class IcingaServer(GenericServer):
                             nagitems["hosts"].append(n)
                             # after collection data in nagitems create objects from its informations
                             # host objects contain service objects
-                            if not self.new_hosts.has_key(n["host"]):
+                            #if not self.new_hosts.has_key(n["host"]):
+                            if not 'host' in self.new_hosts:
                                 new_host = n["host"]
                                 self.new_hosts[new_host] = GenericHost()
                                 self.new_hosts[new_host].name = n["host"]
@@ -379,7 +412,7 @@ class IcingaServer(GenericServer):
                                 self.new_hosts[new_host].last_check = n["last_check"]
                                 self.new_hosts[new_host].duration = n["duration"]
                                 self.new_hosts[new_host].attempt = n["attempt"]
-                                self.new_hosts[new_host].status_information= n["status_information"].encode("utf-8").replace("\n", " ").strip()
+                                self.new_hosts[new_host].status_information= n["status_information"].replace("\n", " ").strip()
                                 self.new_hosts[new_host].passiveonly = n["passiveonly"]
                                 self.new_hosts[new_host].notifications_disabled = n["notifications_disabled"]
                                 self.new_hosts[new_host].flapping = n["flapping"]
@@ -456,7 +489,7 @@ class IcingaServer(GenericServer):
                             if len(tds[6](text=not_empty)) == 0:
                                 n["status_information"] = ""
                             else:
-                                n["status_information"] = str(tds[6](text=not_empty)[0]).encode("utf-8")
+                                n["status_information"] = str(tds[6](text=not_empty)[0])
                                 # status flags
                             n["passiveonly"] = False
                             n["notifications_disabled"] = False
@@ -477,10 +510,11 @@ class IcingaServer(GenericServer):
                             nagitems["services"].append(n)
                             # after collection data in nagitems create objects of its informations
                             # host objects contain service objects
-                            if not self.new_hosts.has_key(n["host"]):
-                                self.new_hosts[n["host"]] = GenericHost()
-                                self.new_hosts[n["host"]].name = n["host"]
-                                self.new_hosts[n["host"]].status = "UP"
+                            ###if not self.new_hosts.has_key(n["host"]):
+                            if not n['host'] in  self.new_hosts:
+                                self.new_hosts[n['host']] = GenericHost()
+                                self.new_hosts[n['host']].name = n['host']
+                                self.new_hosts[n['host']].status = 'UP'
                                 # trying to fix https://sourceforge.net/tracker/index.php?func=detail&aid=3299790&group_id=236865&atid=1101370
                                 # if host is not down but in downtime or any other flag this should be evaluated too
                                 # map status icons to status flags
@@ -492,7 +526,8 @@ class IcingaServer(GenericServer):
                                 # cleaning
                                 del icons
                                 # if a service does not exist create its object
-                            if not self.new_hosts[n["host"]].services.has_key(n["service"]):
+                            ###if not self.new_hosts[n["host"]].services.has_key(n["service"]):
+                            if not n['service'] in self.new_hosts[n["host"]].services:
                                 new_service = n["service"]
                                 self.new_hosts[n["host"]].services[new_service] = GenericService()
                                 self.new_hosts[n["host"]].services[new_service].host = n["host"]
@@ -502,7 +537,7 @@ class IcingaServer(GenericServer):
                                 self.new_hosts[n["host"]].services[new_service].last_check = n["last_check"]
                                 self.new_hosts[n["host"]].services[new_service].duration = n["duration"]
                                 self.new_hosts[n["host"]].services[new_service].attempt = n["attempt"]
-                                self.new_hosts[n["host"]].services[new_service].status_information = n["status_information"].encode("utf-8").replace("\n", " ").strip()
+                                self.new_hosts[n["host"]].services[new_service].status_information = n["status_information"].replace("\n", " ").strip()
                                 self.new_hosts[n["host"]].services[new_service].passiveonly = n["passiveonly"]
                                 self.new_hosts[n["host"]].services[new_service].notifications_disabled = n["notifications_disabled"]
                                 self.new_hosts[n["host"]].services[new_service].flapping = n["flapping"]

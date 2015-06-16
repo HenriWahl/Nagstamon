@@ -20,14 +20,13 @@
 
 from Nagstamon.Servers.Generic import GenericServer
 import sys
-import http.cookiejar
-import base64
 import json
 import datetime
 import urllib.request, urllib.parse, urllib.error
 import copy
 
-from Nagstamon.Actions import HostIsFilteredOutByRE, ServiceIsFilteredOutByRE, StatusInformationIsFilteredOutByRE, not_empty
+
+from Nagstamon.Actions import HumanReadableDurationFromTimestamp
 from Nagstamon.Objects import *
 
 
@@ -77,24 +76,20 @@ class ThrukServer(GenericServer):
         """
         GenericServer.init_HTTP(self)
 
-        #if self.HTTPheaders == {}:
-        #    for giveback in ["raw", "obj"]:
-        #        self.HTTPheaders[giveback] = {"Authorization": "Basic " + base64.b64encode(self.get_username() + ":" + self.get_password())}
-
         # only if cookies are needed
         if self.CookieAuth:
             # get cookie to access Check_MK web interface
-            if len(self.Cookie) < 2:
+            if len(self.session.cookies) < 2:
                 # put all necessary data into url string
                 logindata = urllib.parse.urlencode({"login":self.get_username(),\
-                                 "password":self.get_password(),\
-                                 "submit":"Login"})
+                                                    "password":self.get_password(),\
+                                                    "submit":"Login"})
                 # get cookie from login page via url retrieving as with other urls
                 try:
                     # login and get cookie
                     # empty referer seems to be ignored so add it manually
-                    urlcontent = self.urlopener.open(self.monitor_cgi_url + "/login.cgi?", logindata + "&referer=")
-                    urlcontent.close()
+                    self.FetchURL(self.monitor_cgi_url + '/login.cgi?' + logindata + '&referer=')
+
                 except:
                     self.Error(sys.exc_info())
 
@@ -123,15 +118,15 @@ class ThrukServer(GenericServer):
         # test for cookies
         # put all necessary data into url string
         logindata = urllib.parse.urlencode({"login":self.get_username(),\
-                                 "password":self.get_password(),\
-                                 "submit":"Login"})
+                                            "password":self.get_password(),\
+                                            "submit":"Login"})
         # get cookie from login page via url retrieving as with other urls
         try:
             # login and get cookie
             # empty referer seems to be ignored so add it manually
-            urlcontent = self.urlopener.open(self.monitor_cgi_url + "/login.cgi?", logindata + "&referer=")
-            urlcontent.close()
-            if len(self.Cookie) > 0:
+            self.FetchURL(self.monitor_cgi_url + '/login.cgi?' + logindata + '&referer=')
+
+            if len(self.session.cookies) > 0:
                 self.CookieAuth = True
         except:
             self.Error(sys.exc_info())
@@ -150,12 +145,22 @@ class ThrukServer(GenericServer):
         try:
             # JSON experiments
             result = self.FetchURL(self.cgiurl_hosts, giveback="raw")
+
+            print(50*'+', '\n', result.result, result.error, '\n', 50*'+')
+
+
+
             jsonraw, error = copy.deepcopy(result.result), copy.deepcopy(result.error)
             if error != "": return Result(result=jsonraw, error=error)
 
             # in case basic auth did not work try form login cookie based login
             if jsonraw.startswith("<"):
                 self.CookieAuth = True
+
+
+                print(50*'+', '\n', jsonraw, '\n', 50*'+')
+
+
                 return Result(result=None, error="Login failed.")
 
             # in case JSON is not empty evaluate it
@@ -170,9 +175,9 @@ class ThrukServer(GenericServer):
                         self.new_hosts[h["name"]].server = self.name
                         self.new_hosts[h["name"]].status = self.STATES_MAPPING["hosts"][h["state"]]
                         self.new_hosts[h["name"]].last_check = datetime.datetime.fromtimestamp(int(h["last_check"])).isoformat(" ")
-                        self.new_hosts[h["name"]].duration = Actions.HumanReadableDurationFromTimestamp(h["last_state_change"])
+                        self.new_hosts[h["name"]].duration = HumanReadableDurationFromTimestamp(h["last_state_change"])
                         self.new_hosts[h["name"]].attempt = "%s/%s" % (h["current_attempt"], h["max_check_attempts"])
-                        self.new_hosts[h["name"]].status_information= h["plugin_output"].encode("utf-8").replace("\n", " ").strip()
+                        self.new_hosts[h["name"]].status_information= h["plugin_output"].replace("\n", " ").strip()
                         self.new_hosts[h["name"]].passiveonly = not(bool(int(h["active_checks_enabled"])))
                         self.new_hosts[h["name"]].notifications_disabled = bool(int(h["is_flapping"]))
                         self.new_hosts[h["name"]].flapping = bool(int(h["is_flapping"]))
@@ -181,6 +186,11 @@ class ThrukServer(GenericServer):
                         self.new_hosts[h["name"]].status_type =  {0: "soft", 1: "hard"}[h["state_type"]]
                     del h
         except:
+
+            import traceback
+            traceback.print_exc(file=sys.stdout)
+
+
             # set checking flag back to False
             self.isChecking = False
             result, error = self.Error(sys.exc_info())
@@ -221,9 +231,9 @@ class ThrukServer(GenericServer):
                         self.new_hosts[s["host_name"]].services[s["description"]].server = self.name
                         self.new_hosts[s["host_name"]].services[s["description"]].status = self.STATES_MAPPING["services"][s["state"]]
                         self.new_hosts[s["host_name"]].services[s["description"]].last_check = datetime.datetime.fromtimestamp(int(s["last_check"])).isoformat(" ")
-                        self.new_hosts[s["host_name"]].services[s["description"]].duration = Actions.HumanReadableDurationFromTimestamp(s["last_state_change"])
+                        self.new_hosts[s["host_name"]].services[s["description"]].duration = HumanReadableDurationFromTimestamp(s["last_state_change"])
                         self.new_hosts[s["host_name"]].services[s["description"]].attempt = "%s/%s" % (s["current_attempt"], s["max_check_attempts"])
-                        self.new_hosts[s["host_name"]].services[s["description"]].status_information = s["plugin_output"].encode("utf-8").replace("\n", " ").strip()
+                        self.new_hosts[s["host_name"]].services[s["description"]].status_information = s["plugin_output"].replace("\n", " ").strip()
                         self.new_hosts[s["host_name"]].services[s["description"]].passiveonly = not(bool(int(s["active_checks_enabled"])))
                         self.new_hosts[s["host_name"]].services[s["description"]].notifications_disabled = not(bool(int(s["notifications_enabled"])))
                         self.new_hosts[s["host_name"]].services[s["description"]].flapping = bool(int(s["is_flapping"]))
@@ -232,6 +242,11 @@ class ThrukServer(GenericServer):
                         self.new_hosts[s["host_name"]].services[s["description"]].status_type = {0: "soft", 1: "hard"}[s["state_type"]]
                         del s
         except:
+
+            import traceback
+            traceback.print_exc(file=sys.stdout)
+
+
             # set checking flag back to False
             self.isChecking = False
             result, error = self.Error(sys.exc_info())

@@ -122,6 +122,7 @@ class GenericServer(object):
         # Requests-based connections
         self.session = None
 
+        """
         self.Cookie = http.cookiejar.CookieJar()
         # use server-owned attributes instead of redefining them with every request
         self.passman = None
@@ -141,11 +142,15 @@ class GenericServer(object):
 
         # headers for HTTP requests, might be needed for authorization on Nagios/Icinga Hosts
         self.HTTPheaders = dict()
+        """
+
+        """
         # attempt to use only one bound list of TreeViewColumns instead of ever increasing one
         self.TreeView = None
         self.TreeViewColumns = list()
         self.ListStore = None
         self.ListStoreColumns = list()
+        """
         # flag which decides if authentication has to be renewed
         self.refresh_authentication = False
         # to handle Icinga versions this information is necessary, might be of future use for others too
@@ -1097,6 +1102,7 @@ class GenericServer(object):
 
         # run this method which checks itself if there is some action to take for initializing connection
         # if no_auth is true do not use Auth headers, used by Actions.CheckForNewVersion()
+        """
         if no_auth == False:
             self.init_HTTP()
             # to avoid race condition and credentials leak use local HTTPheaders
@@ -1104,17 +1110,14 @@ class GenericServer(object):
         else:
             HTTPheaders = dict()
             HTTPheaders["raw"] = HTTPheaders["obj"] = HTTPheaders["xml"] =  dict()
+        """
+
         try:
             try:
                 # debug
-                if str(conf.debug_mode) == "True":
+                if conf.debug_mode == True:
                     self.Debug(server=self.get_name(), debug="FetchURL: " + url + " CGI Data: " + str(cgi_data))
 
-                """
-                request = urllib.request.Request(url, cgi_data, HTTPheaders[giveback])
-                # use opener - if cgi_data is not empty urllib uses a POST request
-                urlcontent = self.urlopener.open(request)
-                """
                 if cgi_data == None:
                     response = self.session.get(url)
                 else:
@@ -1124,10 +1127,10 @@ class GenericServer(object):
 
                 import traceback
                 traceback.print_exc(file=sys.stdout)
-                del url, cgi_data, response
 
+                del url, cgi_data
                 result, error = self.Error(sys.exc_info())
-                return Result(result=reult.encode(), error=error.encode())
+                return Result(result=result, error=error)
 
             # give back pure HTML or XML in case giveback is "raw"
             if giveback == "raw":
@@ -1137,27 +1140,20 @@ class GenericServer(object):
 
             # objectified HTML
             if giveback == "obj":
-                yummysoup = BeautifulSoup(urlcontent.read().decode("utf8", errors="ignore"), convertEntities=BeautifulSoup.ALL_ENTITIES)
-                urlcontent.close()
-                del urlcontent
-                #return Result(result=copy.deepcopy(yummysoup))
+                yummysoup = BeautifulSoup(response.text)
                 return Result(result=yummysoup)
 
             # objectified generic XML, valid at least for Opsview and Centreon
             elif giveback == "xml":
-                xmlobj = BeautifulStoneSoup(urlcontent.read().decode("utf8", errors="ignore"), convertEntities=BeautifulStoneSoup.XML_ENTITIES)
-                urlcontent.close()
-                del urlcontent
-                #return Result(result=copy.deepcopy(xmlobj))
+                xmlobj = BeautifulSoup(response.text, 'xml')
                 return Result(result=xmlobj)
 
         except:
-            # do some cleanup
             result, error = self.Error(sys.exc_info())
-            return Result(result=result.encode(), error=error.encode())
+            return Result(result=result, error=error)
 
         result, error = self.Error(sys.exc_info())
-        return Result(result=result.encode(), error=error.encode())
+        return Result(result=result, error=error)
 
 
     def GetHost(self, host):

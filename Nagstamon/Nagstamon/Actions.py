@@ -782,7 +782,7 @@ def CreateServer(server=None, conf=None, debug_queue=None, resources=None):
     new_server.use_display_name_service = server.use_display_name_service
 
     # create permanent urlopener for server to avoid memory leak with millions of openers
-    new_server.urlopener = BuildURLOpener(new_server)
+    ###new_server.urlopener = BuildURLOpener(new_server)
     # server's individual preparations for HTTP connections (for example cookie creation), version of monitor
     if str(server.enabled) == "True":
         new_server.init_HTTP()
@@ -795,7 +795,9 @@ def CreateServer(server=None, conf=None, debug_queue=None, resources=None):
 
 
 def not_empty(x):
-    '''tiny helper function for BeautifulSoup in GenericServer.py to filter text elements'''
+    '''
+        tiny helper function for BeautifulSoup in GenericServer.py to filter text elements
+    '''
     return bool(x.replace('&nbsp;', '').strip())
 
 
@@ -959,9 +961,9 @@ def HumanReadableDurationFromTimestamp(timestamp):
     """
     try:
         td = datetime.datetime.now() - datetime.datetime.fromtimestamp(int(timestamp))
-        h = td.seconds / 3600
-        m = td.seconds % 3600 / 60
-        s = td.seconds % 60
+        h = int(td.seconds / 3600)
+        m = int(td.seconds % 3600 / 60)
+        s = int(td.seconds % 60)
         return "%sd %sh %sm %ss" % (td.days, h, m ,s)
     except:
         import traceback

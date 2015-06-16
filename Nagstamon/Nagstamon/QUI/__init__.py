@@ -1220,7 +1220,9 @@ class Dialog_Settings(Dialog):
                     if conf.__dict__[widget.split('input_radiobutton_')[1]] == True:
                         self.ui.__dict__[widget].toggle()
                 if widget.startswith('input_lineedit_'):
-                    self.ui.__dict__[widget].setText(conf.__dict__[widget.split('input_lineedit_')[1]])
+					# older versions of Nagstamon have a bool value for custom_action_separator
+					# which leads to a crash here - thus str() to solve this
+                    self.ui.__dict__[widget].setText(str(conf.__dict__[widget.split('input_lineedit_')[1]]))
                 if widget.startswith('input_spinbox_'):
                     self.ui.__dict__[widget].setValue(int(conf.__dict__[widget.split('input_spinbox_')[1]]))
 

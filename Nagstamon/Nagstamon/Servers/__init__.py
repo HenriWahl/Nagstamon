@@ -82,6 +82,7 @@ def CreateServer(server=None):
     # access to thread-safe debug queue
     #new_server.debug_queue = debug_queue
 
+    """
     # use server-owned attributes instead of redefining them with every request
     new_server.passman = urllib.request.HTTPPasswordMgrWithDefaultRealm()
     new_server.passman.add_password(None, server.monitor_url, server.username, server.password)
@@ -98,6 +99,7 @@ def CreateServer(server=None):
         new_server.passman.add_password(None, new_server.proxy_address, new_server.proxy_username, new_server.proxy_password)
         new_server.proxy_handler = urllib.request.ProxyHandler({"http": new_server.proxy_address, "https": new_server.proxy_address})
         new_server.proxy_auth_handler = urllib.request.ProxyBasicAuthHandler(new_server.passman)
+    """
 
     # Special FX
     # Centreon
@@ -107,8 +109,11 @@ def CreateServer(server=None):
     new_server.use_display_name_host = server.use_display_name_host
     new_server.use_display_name_service = server.use_display_name_service
 
+    """
     # create permanent urlopener for server to avoid memory leak with millions of openers
     new_server.urlopener = BuildURLOpener(new_server)
+    """
+
     # server's individual preparations for HTTP connections (for example cookie creation), version of monitor
     if server.enabled == True:
         new_server.init_HTTP()

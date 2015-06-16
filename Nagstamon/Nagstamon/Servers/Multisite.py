@@ -107,7 +107,8 @@ class MultisiteServer(GenericServer):
 
         if self.CookieAuth:
             # get cookie to access Check_MK web interface
-            if len(self.Cookie) == 0:
+            #if len(self.Cookie) == 0:
+            if len(self.session.cookies) == 0:
                 # if no cookie yet login
                 self._get_cookie_login()
 
@@ -143,7 +144,8 @@ class MultisiteServer(GenericServer):
                                                error = content))
 
         # in case of auth problem enable GUI auth part in popup
-        if self.CookieAuth == True and len(self.Cookie) == 0:
+        #if self.CookieAuth == True and len(self.Cookie) == 0:
+        if self.CookieAuth == True and len(self.session.cookies) == 0:
             self.refresh_authentication = True
             return Result(result="", error="Authentication failed")
 
@@ -151,7 +153,8 @@ class MultisiteServer(GenericServer):
         elif content.startswith('<'):
             self.CookieAuth = True
             # if first attempt login and then try to get data again
-            if len(self.Cookie) == 0:
+            ###if len(self.Cookie) == 0:
+            if len(self.session.cookies) == 0:
                 self._get_cookie_login()
                 result = self.FetchURL(url, 'raw')
                 content, error = result.result, result.error
@@ -174,8 +177,7 @@ class MultisiteServer(GenericServer):
         # get cookie from login page via url retrieving as with other urls
         try:
             # login and get cookie
-            urlcontent = self.urlopener.open(self.monitor_url + "/login.py", logindata)
-            urlcontent.close()
+            self.FetchURL(self.monitor_url + "/login.py", logindata)
         except:
             self.Error(sys.exc_info())
 
