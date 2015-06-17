@@ -698,7 +698,7 @@ class Server(object):
         self.save_password = False
         self.use_proxy = False
         self.use_proxy_from_os = False
-        self.proxy_address = 'http://proxy:port/'
+        self.proxy_address = 'http://proxyserver:port/'
         self.proxy_username = 'proxyusername'
         self.proxy_password = 'proxypassword'
 

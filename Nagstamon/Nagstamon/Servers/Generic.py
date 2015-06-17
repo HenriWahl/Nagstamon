@@ -1149,6 +1149,10 @@ class GenericServer(object):
                 return Result(result=xmlobj)
 
         except:
+
+            import traceback
+            traceback.print_exc(file=sys.stdout)
+
             result, error = self.Error(sys.exc_info())
             return Result(result=result, error=error)
 

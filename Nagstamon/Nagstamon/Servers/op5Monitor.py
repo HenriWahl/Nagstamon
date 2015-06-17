@@ -27,7 +27,7 @@ from datetime import datetime
 
 from Nagstamon import Actions
 from Nagstamon.Objects import *
-from Nagstamon.Servers.Generic import GenericServer, not_empty
+from Nagstamon.Servers.Generic import (GenericServer, not_empty)
 
 
 def human_duration(start):
@@ -65,7 +65,7 @@ class Op5MonitorServer(GenericServer):
         As Nagios is the default server type all its methods are in GenericServer
     """
 
-    TYPE = u'op5Monitor'
+    TYPE = 'op5Monitor'
     api_count='/api/filter/count/?query='
     api_query='/api/filter/query/?query='
     api_cmd='/api/command'
@@ -166,7 +166,8 @@ class Op5MonitorServer(GenericServer):
                     n['status_information'] = api['plugin_output']
                     n['status_type'] = api['state']
 
-                    if not self.new_hosts.has_key(n['host']):
+                    ###if not self.new_hosts.has_key(n['host']):
+                    if not n['host'] in self.new_hosts:
                         self.new_hosts[n['host']] = GenericHost()
                         self.new_hosts[n['host']].name = n['host']
                         self.new_hosts[n['host']].acknowledged = n["acknowledged"]
@@ -197,7 +198,8 @@ class Op5MonitorServer(GenericServer):
                     n['status'] = self.STATUS_HOST_MAPPING[str(api['host']['state'])]
                     n["passiveonly"] = 0 if api['host']['active_checks_enabled'] else 1
 
-                    if not self.new_hosts.has_key(n['host']):
+                    ###if not self.new_hosts.has_key(n['host']):
+                    if not n['host'] in self.new_hosts:
                         self.new_hosts[n['host']] = GenericHost()
                         self.new_hosts[n['host']].name = n['host']
                         self.new_hosts[n['host']].status = n['status']
@@ -214,12 +216,14 @@ class Op5MonitorServer(GenericServer):
                     n['last_check'] = datetime.fromtimestamp(int(api['last_check'])).strftime('%Y-%m-%d %H:%M:%S')
                     n['status_information'] = api['plugin_output']
 
-                    if not self.new_hosts.has_key(n['host']):
+                    ###if not self.new_hosts.has_key(n['host']):
+                    if not n['host'] in self.new_hosts:
                         self.new_hosts[n['host']] = GenericHost()
                         self.new_hosts[n['host']].name = n['host']
                         self.new_hosts[n['host']].status = n['status']
 
-                    if not self.new_hosts[n['host']].services.has_key(n['service']):
+                    ###if not self.new_hosts[n['host']].services.has_key(n['service']):
+                    if not n['service'] in self.new_hosts[n['host']].services:
                         n['status'] = self.STATUS_SVC_MAPPING[str(api['state'])]
 
                         self.new_hosts[n['host']].services[n['service']] = GenericService()
@@ -241,6 +245,13 @@ class Op5MonitorServer(GenericServer):
                 return Result()
         except:
             print("========================================== b0rked ==========================================")
+
+
+            import traceback
+            traceback.print_exc(file=sys.stdout)
+
+
+
             self.isChecking = False
             result,error = self.Error(sys.exc_info())
             return Result(result=result, error=error)

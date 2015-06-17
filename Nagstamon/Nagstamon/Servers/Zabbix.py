@@ -1,42 +1,14 @@
-#!/usr/bin/python
 # -*- encoding: utf-8; py-indent-offset: 4 -*-
 #
 # Zabbix.py based on Check_MK Multisite.py
-#
-# +------------------------------------------------------------------+
-# |             ____ _               _        __  __ _  __           |
-# |            / ___| |__   ___  ___| | __   |  \/  | |/ /           |
-# |           | |   | '_ \ / _ \/ __| |/ /   | |\/| | ' /            |
-# |           | |___| | | |  __/ (__|   <    | |  | | . \            |
-# |            \____|_| |_|\___|\___|_|\_\___|_|  |_|_|\_\           |
-# |                                                                  |
-# | Copyright Mathias Kettner 2010             mk@mathias-kettner.de |
-# |                                            lm@mathias-kettner.de |
-# +------------------------------------------------------------------+
-#
-# The official homepage is at http://mathias-kettner.de/check_mk.
-#
-# check_mk is free software;  you can redistribute it and/or modify it
-# under the  terms of the  GNU General Public License  as published by
-# the Free Software Foundation in version 2.  check_mk is  distributed
-# in the hope that it will be useful, but WITHOUT ANY WARRANTY;  with-
-# out even the implied warranty of  MERCHANTABILITY  or  FITNESS FOR A
-# PARTICULAR PURPOSE. See the  GNU General Public License for more de-
-# ails.  You should have  received  a copy of the  GNU  General Public
-# License along with GNU Make; see the file  COPYING.  If  not,  write
-# to the Free Software Foundation, Inc., 51 Franklin St,  Fifth Floor,
-# Boston, MA 02110-1301 USA.
-
-# hax0rized by: lm@mathias-kettner.de
 
 import sys
 import urllib.request, urllib.parse, urllib.error
 import webbrowser
-import base64
 import time
-import datetime
 
 from Nagstamon import Actions
+from Nagstamon.Config import conf
 from Nagstamon.Objects import *
 from Nagstamon.Servers.Generic import GenericServer
 from Nagstamon.thirdparty.zabbix_api import ZabbixAPI, ZabbixAPIException
@@ -64,8 +36,8 @@ class ZabbixServer(GenericServer):
 
         # Entries for monitor default actions in context menu
         self.MENU_ACTIONS = ["Recheck", "Acknowledge", "Downtime"]
-        self.username = self.conf.servers[self.get_name()].username
-        self.password = self.conf.servers[self.get_name()].password
+        self.username = conf.servers[self.get_name()].username
+        self.password = conf.servers[self.get_name()].password
 
 
     def _login(self):
@@ -302,7 +274,7 @@ class ZabbixServer(GenericServer):
     def _open_browser(self, url):
         webbrowser.open(url)
 
-        if str(self.conf.debug_mode) == "True":
+        if conf.debug_mode == True:
             self.Debug(server=self.get_name(), debug="Open web page " + url)
 
     def open_services(self):
@@ -323,7 +295,7 @@ class ZabbixServer(GenericServer):
             url = self.urls['human_service'] + urllib.parse.urlencode(
                 {'x': 'site=' + self.hosts[host].site + '&host=' + host + '&service=' + service}).replace('x=', '%26')
 
-        if str(self.conf.debug_mode) == "True":
+        if conf.debug_mode == True:
             self.Debug(server=self.get_name(), host=host, service=service,
                        debug="Open host/service monitor web page " + url)
         webbrowser.open(url)
@@ -335,7 +307,7 @@ class ZabbixServer(GenericServer):
         """
 
         # the fasted method is taking hostname as used in monitor
-        if str(self.conf.connect_by_host) == "True":
+        if conf.connect_by_host == True:
             return Result(result=host)
 
         ip = ""
@@ -344,10 +316,10 @@ class ZabbixServer(GenericServer):
             if host in self.hosts:
                 ip = self.hosts[host].address
 
-            if str(self.conf.debug_mode) == "True":
+            if conf.debug_mode == True:
                 self.Debug(server=self.get_name(), host=host, debug="IP of %s:" % host + " " + ip)
 
-            if str(self.conf.connect_by_dns) == "True":
+            if conf.connect_by_dns == True:
                 try:
                     address = socket.gethostbyaddr(ip)[0]
                 except:
