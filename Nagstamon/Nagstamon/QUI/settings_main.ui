@@ -42,7 +42,7 @@
       </sizepolicy>
      </property>
      <property name="currentIndex">
-      <number>5</number>
+      <number>6</number>
      </property>
      <widget class="QWidget" name="tab_servers">
       <attribute name="title">
@@ -1508,6 +1508,133 @@
    </item>
   </layout>
  </widget>
+ <tabstops>
+  <tabstop>tabs</tabstop>
+  <tabstop>list_servers</tabstop>
+  <tabstop>button_new_server</tabstop>
+  <tabstop>button_edit_server</tabstop>
+  <tabstop>button_copy_server</tabstop>
+  <tabstop>button_delete_server</tabstop>
+  <tabstop>input_spinbox_update_interval_seconds</tabstop>
+  <tabstop>input_checkbox_use_system_keyring</tabstop>
+  <tabstop>input_checkbox_debug_mode</tabstop>
+  <tabstop>input_checkbox_debug_to_file</tabstop>
+  <tabstop>input_lineedit_debug_file</tabstop>
+  <tabstop>input_checkbox_check_for_new_version</tabstop>
+  <tabstop>button_check_for_new_version_now</tabstop>
+  <tabstop>input_radiobutton_long_display</tabstop>
+  <tabstop>input_radiobutton_short_display</tabstop>
+  <tabstop>input_radiobutton_statusbar_floating</tabstop>
+  <tabstop>input_radiobutton_appindicator</tabstop>
+  <tabstop>input_radiobutton_icon_in_systray</tabstop>
+  <tabstop>input_spinbox_systray_popup_offset</tabstop>
+  <tabstop>input_radiobutton_fullscreen</tabstop>
+  <tabstop>input_combobox_fullscreen_display</tabstop>
+  <tabstop>input_radiobutton_popup_details_hover</tabstop>
+  <tabstop>input_radiobutton_close_details_hover</tabstop>
+  <tabstop>input_radiobutton_popup_details_clicking</tabstop>
+  <tabstop>input_radiobutton_close_details_clicking</tabstop>
+  <tabstop>input_checkbox_show_grid</tabstop>
+  <tabstop>input_checkbox_highlight_new_events</tabstop>
+  <tabstop>input_checkbox_show_tooltips</tabstop>
+  <tabstop>input_checkbox_filter_all_down_hosts</tabstop>
+  <tabstop>input_checkbox_filter_all_unreachable_hosts</tabstop>
+  <tabstop>input_checkbox_filter_all_flapping_hosts</tabstop>
+  <tabstop>input_checkbox_filter_all_critical_services</tabstop>
+  <tabstop>input_checkbox_filter_all_unknown_services</tabstop>
+  <tabstop>input_checkbox_filter_all_warning_services</tabstop>
+  <tabstop>input_checkbox_filter_all_flapping_services</tabstop>
+  <tabstop>input_checkbox_filter_acknowledged_hosts_services</tabstop>
+  <tabstop>input_checkbox_filter_hosts_services_disabled_notifications</tabstop>
+  <tabstop>input_checkbox_filter_hosts_services_disabled_checks</tabstop>
+  <tabstop>input_checkbox_filter_hosts_services_maintenance</tabstop>
+  <tabstop>input_checkbox_filter_services_on_acknowledged_hosts</tabstop>
+  <tabstop>input_checkbox_filter_services_on_down_hosts</tabstop>
+  <tabstop>input_checkbox_filter_services_on_hosts_in_maintenance</tabstop>
+  <tabstop>input_checkbox_filter_services_on_unreachable_hosts</tabstop>
+  <tabstop>input_checkbox_filter_hosts_in_soft_state</tabstop>
+  <tabstop>input_checkbox_filter_services_in_soft_state</tabstop>
+  <tabstop>input_checkbox_re_host_enabled</tabstop>
+  <tabstop>input_lineedit_re_host_pattern</tabstop>
+  <tabstop>input_checkbox_re_host_reverse</tabstop>
+  <tabstop>input_checkbox_re_service_enabled</tabstop>
+  <tabstop>input_lineedit_re_service_pattern</tabstop>
+  <tabstop>input_checkbox_re_service_reverse</tabstop>
+  <tabstop>input_checkbox_re_status_information_enabled</tabstop>
+  <tabstop>input_lineedit_re_status_information_pattern</tabstop>
+  <tabstop>input_checkbox_re_status_information_reverse</tabstop>
+  <tabstop>list_actions</tabstop>
+  <tabstop>button_new_action</tabstop>
+  <tabstop>button_edit_action</tabstop>
+  <tabstop>button_copy_action</tabstop>
+  <tabstop>button_delete_action</tabstop>
+  <tabstop>input_radiobutton_connect_by_host</tabstop>
+  <tabstop>input_radiobutton_connect_by_dns</tabstop>
+  <tabstop>input_radiobutton_connect_by_ip</tabstop>
+  <tabstop>input_checkbox_notification</tabstop>
+  <tabstop>input_checkbox_notify_if_warning</tabstop>
+  <tabstop>input_checkbox_notify_if_critical</tabstop>
+  <tabstop>input_checkbox_notify_if_unknown</tabstop>
+  <tabstop>input_checkbox_notify_if_unreachable</tabstop>
+  <tabstop>input_checkbox_notify_if_down</tabstop>
+  <tabstop>input_checkbox_notification_flashing</tabstop>
+  <tabstop>input_checkbox_notification_desktop</tabstop>
+  <tabstop>input_checkbox_notification_sound</tabstop>
+  <tabstop>input_checkbox_notification_sound_repeat</tabstop>
+  <tabstop>input_radiobutton_notification_default_sound</tabstop>
+  <tabstop>input_radiobutton_notification_custom_sound</tabstop>
+  <tabstop>input_lineedit_notification_custom_sound_warning</tabstop>
+  <tabstop>button_choose_warning</tabstop>
+  <tabstop>button_play_warning</tabstop>
+  <tabstop>input_lineedit_notification_custom_sound_critical</tabstop>
+  <tabstop>button_choose_critical</tabstop>
+  <tabstop>button_play_critical</tabstop>
+  <tabstop>input_lineedit_notification_custom_sound_down</tabstop>
+  <tabstop>button_choose_down</tabstop>
+  <tabstop>button_play_down</tabstop>
+  <tabstop>input_checkbutton_notification_actions</tabstop>
+  <tabstop>input_checkbox_notification_action_warning</tabstop>
+  <tabstop>input_lineedit_notification_action_warning_string</tabstop>
+  <tabstop>input_checkbox_notification_action_critical</tabstop>
+  <tabstop>input_lineedit_notification_action_critical_string</tabstop>
+  <tabstop>input_checkbox_notification_action_down</tabstop>
+  <tabstop>input_lineedit_notification_action_down_string</tabstop>
+  <tabstop>input_checkbox_notification_action_ok</tabstop>
+  <tabstop>input_lineedit_notification_action_ok_string</tabstop>
+  <tabstop>input_checkbox_notification_custom_action</tabstop>
+  <tabstop>input_lineedit_notification_custom_action_separator</tabstop>
+  <tabstop>input_lineedit_notification_custom_action_string</tabstop>
+  <tabstop>input_checkbox_notification_custom_action_single</tabstop>
+  <tabstop>input_button_color_ok_text</tabstop>
+  <tabstop>input_button_color_ok_background</tabstop>
+  <tabstop>input_button_color_warning_text</tabstop>
+  <tabstop>input_button_color_warning_background</tabstop>
+  <tabstop>input_button_color_critical_text</tabstop>
+  <tabstop>input_button_color_critical_background</tabstop>
+  <tabstop>input_button_color_unknown_text</tabstop>
+  <tabstop>input_button_color_unknown_background</tabstop>
+  <tabstop>input_button_color_unreachable_text</tabstop>
+  <tabstop>input_button_color_unreachable_background</tabstop>
+  <tabstop>input_button_color_down_text</tabstop>
+  <tabstop>input_button_color_down_background</tabstop>
+  <tabstop>input_button_color_error_text</tabstop>
+  <tabstop>input_button_color_error_background</tabstop>
+  <tabstop>button_colors_reset</tabstop>
+  <tabstop>button_colors_defaults</tabstop>
+  <tabstop>input_checkbox_defaults_acknowledge_sticky</tabstop>
+  <tabstop>input_checkbox_defaults_acknowledge_send_notification</tabstop>
+  <tabstop>input_checkbox_defaults_acknowledge_persistent_comment</tabstop>
+  <tabstop>input_checkbox_defaults_acknowledge_all_services</tabstop>
+  <tabstop>input_lineedit_defaults_acknowledge_comment</tabstop>
+  <tabstop>input_radiobutton_defaults_downtime_type_fixed</tabstop>
+  <tabstop>input_radiobutton_defaults_downtime_type_flexible</tabstop>
+  <tabstop>input_spinbox_defaults_downtime_duration_hours</tabstop>
+  <tabstop>input_spinbox_defaults_downtime_duration_minutes</tabstop>
+  <tabstop>input_lineedit_defaults_downtime_comment</tabstop>
+  <tabstop>input_lineedit_defaults_submit_check_result_comment</tabstop>
+  <tabstop>input_combobox_default_sort_field</tabstop>
+  <tabstop>input_combobox_default_sort_order</tabstop>
+ </tabstops>
  <resources/>
  <connections>
   <connection>
@@ -1517,8 +1644,8 @@
    <slot>accept()</slot>
    <hints>
     <hint type="sourcelabel">
-     <x>386</x>
-     <y>728</y>
+     <x>395</x>
+     <y>1091</y>
     </hint>
     <hint type="destinationlabel">
      <x>386</x>
@@ -1533,8 +1660,8 @@
    <slot>reject()</slot>
    <hints>
     <hint type="sourcelabel">
-     <x>386</x>
-     <y>728</y>
+     <x>395</x>
+     <y>1091</y>
     </hint>
     <hint type="destinationlabel">
      <x>386</x>
@@ -1544,7 +1671,7 @@
   </connection>
  </connections>
  <buttongroups>
-  <buttongroup name="buttongroup_popup_statuswindow"/>
   <buttongroup name="buttongroup_close_statusbar"/>
+  <buttongroup name="buttongroup_popup_statuswindow"/>
  </buttongroups>
 </ui>
