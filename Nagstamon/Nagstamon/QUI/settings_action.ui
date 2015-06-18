@@ -269,6 +269,27 @@ $TRANSID$ - only useful for Check_MK as _transid=$TRANSID$</string>
    </item>
   </layout>
  </widget>
+ <tabstops>
+  <tabstop>input_checkbox_enabled</tabstop>
+  <tabstop>input_combobox_type</tabstop>
+  <tabstop>input_combobox_monitor_type</tabstop>
+  <tabstop>input_lineedit_name</tabstop>
+  <tabstop>input_lineedit_description</tabstop>
+  <tabstop>input_textedit_string</tabstop>
+  <tabstop>input_checkbox_filter_target_host</tabstop>
+  <tabstop>input_checkbox_filter_target_service</tabstop>
+  <tabstop>input_checkbox_re_host_enabled</tabstop>
+  <tabstop>input_lineedit_re_host_pattern</tabstop>
+  <tabstop>input_checkbox_re_host_reverse</tabstop>
+  <tabstop>input_checkbox_re_service_enabled</tabstop>
+  <tabstop>input_lineedit_re_service_pattern</tabstop>
+  <tabstop>input_checkbox_re_service_reverse</tabstop>
+  <tabstop>input_checkbox_re_status_information_enabled</tabstop>
+  <tabstop>input_lineedit_re_status_information_pattern</tabstop>
+  <tabstop>input_checkbox_re_status_information_reverse</tabstop>
+  <tabstop>input_radiobutton_close_popwin</tabstop>
+  <tabstop>input_radiobutton_leave_popwin_open</tabstop>
+ </tabstops>
  <resources/>
  <connections>
   <connection>

@@ -170,6 +170,22 @@ class Ui_settings_server(object):
 
         self.retranslateUi(settings_server)
         QtCore.QMetaObject.connectSlotsByName(settings_server)
+        settings_server.setTabOrder(self.input_checkbox_enabled, self.input_combobox_type)
+        settings_server.setTabOrder(self.input_combobox_type, self.input_lineedit_name)
+        settings_server.setTabOrder(self.input_lineedit_name, self.input_lineedit_monitor_url)
+        settings_server.setTabOrder(self.input_lineedit_monitor_url, self.input_lineedit_monitor_cgi_url)
+        settings_server.setTabOrder(self.input_lineedit_monitor_cgi_url, self.input_lineedit_username)
+        settings_server.setTabOrder(self.input_lineedit_username, self.input_lineedit_password)
+        settings_server.setTabOrder(self.input_lineedit_password, self.input_checkbox_save_password)
+        settings_server.setTabOrder(self.input_checkbox_save_password, self.input_checkbox_use_autologin)
+        settings_server.setTabOrder(self.input_checkbox_use_autologin, self.input_lineedit_autologin_key)
+        settings_server.setTabOrder(self.input_lineedit_autologin_key, self.input_checkbox_use_proxy)
+        settings_server.setTabOrder(self.input_checkbox_use_proxy, self.input_lineedit_proxy_address)
+        settings_server.setTabOrder(self.input_lineedit_proxy_address, self.input_lineedit_proxy_username)
+        settings_server.setTabOrder(self.input_lineedit_proxy_username, self.input_lineedit_proxy_password)
+        settings_server.setTabOrder(self.input_lineedit_proxy_password, self.input_checkbox_use_proxy_from_os)
+        settings_server.setTabOrder(self.input_checkbox_use_proxy_from_os, self.input_checkbox_use_display_name_host)
+        settings_server.setTabOrder(self.input_checkbox_use_display_name_host, self.input_checkbox_use_display_name_service)
 
     def retranslateUi(self, settings_server):
         _translate = QtCore.QCoreApplication.translate

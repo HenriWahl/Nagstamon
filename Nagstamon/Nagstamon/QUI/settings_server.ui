@@ -311,6 +311,25 @@
    </item>
   </layout>
  </widget>
+ <tabstops>
+  <tabstop>input_checkbox_enabled</tabstop>
+  <tabstop>input_combobox_type</tabstop>
+  <tabstop>input_lineedit_name</tabstop>
+  <tabstop>input_lineedit_monitor_url</tabstop>
+  <tabstop>input_lineedit_monitor_cgi_url</tabstop>
+  <tabstop>input_lineedit_username</tabstop>
+  <tabstop>input_lineedit_password</tabstop>
+  <tabstop>input_checkbox_save_password</tabstop>
+  <tabstop>input_checkbox_use_autologin</tabstop>
+  <tabstop>input_lineedit_autologin_key</tabstop>
+  <tabstop>input_checkbox_use_proxy</tabstop>
+  <tabstop>input_lineedit_proxy_address</tabstop>
+  <tabstop>input_lineedit_proxy_username</tabstop>
+  <tabstop>input_lineedit_proxy_password</tabstop>
+  <tabstop>input_checkbox_use_proxy_from_os</tabstop>
+  <tabstop>input_checkbox_use_display_name_host</tabstop>
+  <tabstop>input_checkbox_use_display_name_service</tabstop>
+ </tabstops>
  <resources/>
  <connections/>
 </ui>
