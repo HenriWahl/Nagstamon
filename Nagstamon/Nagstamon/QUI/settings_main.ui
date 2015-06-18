@@ -42,7 +42,7 @@
       </sizepolicy>
      </property>
      <property name="currentIndex">
-      <number>5</number>
+      <number>6</number>
      </property>
      <widget class="QWidget" name="tab_servers">
       <attribute name="title">
@@ -1550,6 +1550,8 @@
   <tabstop>input_checkbox_show_grid</tabstop>
   <tabstop>input_checkbox_highlight_new_events</tabstop>
   <tabstop>input_checkbox_show_tooltips</tabstop>
+  <tabstop>input_combobox_default_sort_field</tabstop>
+  <tabstop>input_combobox_default_sort_order</tabstop>
   <tabstop>input_checkbox_filter_all_down_hosts</tabstop>
   <tabstop>input_checkbox_filter_all_unreachable_hosts</tabstop>
   <tabstop>input_checkbox_filter_all_flapping_hosts</tabstop>
@@ -1618,6 +1620,20 @@
   <tabstop>input_lineedit_notification_custom_action_separator</tabstop>
   <tabstop>input_lineedit_notification_custom_action_string</tabstop>
   <tabstop>input_checkbox_notification_custom_action_single</tabstop>
+  <tabstop>input_button_color_ok_text</tabstop>
+  <tabstop>input_button_color_ok_background</tabstop>
+  <tabstop>input_button_color_warning_text</tabstop>
+  <tabstop>input_button_color_warning_background</tabstop>
+  <tabstop>input_button_color_critical_text</tabstop>
+  <tabstop>input_button_color_critical_background</tabstop>
+  <tabstop>input_button_color_unknown_text</tabstop>
+  <tabstop>input_button_color_unknown_background</tabstop>
+  <tabstop>input_button_color_unreachable_text</tabstop>
+  <tabstop>input_button_color_unreachable_background</tabstop>
+  <tabstop>input_button_color_down_text</tabstop>
+  <tabstop>input_button_color_down_background</tabstop>
+  <tabstop>input_button_color_error_text</tabstop>
+  <tabstop>input_button_color_error_background</tabstop>
   <tabstop>button_colors_reset</tabstop>
   <tabstop>button_colors_defaults</tabstop>
   <tabstop>input_checkbox_defaults_acknowledge_sticky</tabstop>
@@ -1631,8 +1647,6 @@
   <tabstop>input_spinbox_defaults_downtime_duration_minutes</tabstop>
   <tabstop>input_lineedit_defaults_downtime_comment</tabstop>
   <tabstop>input_lineedit_defaults_submit_check_result_comment</tabstop>
-  <tabstop>input_combobox_default_sort_field</tabstop>
-  <tabstop>input_combobox_default_sort_order</tabstop>
  </tabstops>
  <resources/>
  <connections>
@@ -1643,8 +1657,8 @@
    <slot>accept()</slot>
    <hints>
     <hint type="sourcelabel">
-     <x>395</x>
-     <y>1091</y>
+     <x>404</x>
+     <y>986</y>
     </hint>
     <hint type="destinationlabel">
      <x>386</x>
@@ -1659,8 +1673,8 @@
    <slot>reject()</slot>
    <hints>
     <hint type="sourcelabel">
-     <x>395</x>
-     <y>1091</y>
+     <x>404</x>
+     <y>986</y>
     </hint>
     <hint type="destinationlabel">
      <x>386</x>

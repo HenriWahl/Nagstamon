@@ -1200,12 +1200,15 @@ class Dialog_Settings(Dialog):
             self.signalmapper_colors.setMapping(button, item)
             button.clicked.connect(self.signalmapper_colors.map)
 
+        # connect reset and defaults buttons
+        self.ui.button_colors_reset.clicked.connect(self.paint_colors)
+        self.ui.button_colors_defaults.clicked.connect(self.colors_defaults)
+
         # finally map signals with .sender() - [<type>] is important!
         self.signalmapper_colors.mapped[str].connect(self.color_chooser)
 
         # apply toggle-dependencies between checkboxes as certain widgets
         self.toggle_toggles()
-
 
 
     def initialize(self, start_tab=0):
@@ -1275,7 +1278,7 @@ class Dialog_Settings(Dialog):
             if widget.objectName().startswith('input_spinbox_'):
                 conf.__dict__[widget.objectName().split('input_spinbox_')[1]] = str(widget.value())
             if widget.objectName().startswith('input_button_color_'):
-                # get colot value from color buttom stylesheet
+                # get color value from color button stylesheet
                 color = self.ui.__dict__[widget.objectName()].styleSheet()
                 color = color.split(':')[1].strip().split(';')[0]
                 conf.__dict__[widget.objectName().split('input_button_')[1]] = color
@@ -1518,7 +1521,6 @@ class Dialog_Settings(Dialog):
         """
             fill color selection buttons with appropriate colors
         """
-
         # color buttons
         for color in [x for x in conf.__dict__ if x.startswith('color_')]:
             self.ui.__dict__['input_button_%s' % (color)].setStyleSheet('background-color: %s;'
@@ -1533,6 +1535,34 @@ class Dialog_Settings(Dialog):
                                                   (conf.__dict__['color_%s_text' % (status)],
                                                   (conf.__dict__['color_%s_background' % (status)])))
 
+
+    @pyqtSlot()
+    def colors_defaults(self):
+        """
+            apply default colors to buttons
+        """
+        # color buttons
+        for default_color in [x for x in conf.__dict__ if x.startswith('default_color_')]:
+            # cut 'default_' off to get color
+            color = default_color.split('default_')[1]
+            self.ui.__dict__['input_button_%s' % (color)].setStyleSheet('background-color: %s;'
+                                                                        'border-width: 1px;'
+                                                                        'border-color: black;'
+                                                                        'border-style: solid;'
+                                                                         % conf.__dict__[default_color])
+        # example color labels
+        for label in [x for x in self.ui.__dict__ if x.startswith('label_color_')]:
+            status = label.split('label_color_')[1]
+
+            # get color values from color button stylesheets
+            color_text = self.ui.__dict__['input_button_color_' + status + '_text'].styleSheet()
+            color_text = color_text.split(':')[1].strip().split(';')[0]
+            color_background = self.ui.__dict__['input_button_color_' + status + '_background'].styleSheet()
+            color_background = color_background.split(':')[1].strip().split(';')[0]
+
+            # apply color values from stylesheet to label
+            self.ui.__dict__[label].setStyleSheet('color: %s; background: %s' %
+                                                  (color_text, color_background))
 
     @pyqtSlot(str)
     def color_chooser(self, item):
