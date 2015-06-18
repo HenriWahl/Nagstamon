@@ -94,6 +94,8 @@ class Ui_settings_action(object):
         self.input_checkbox_re_status_information_reverse.setObjectName("input_checkbox_re_status_information_reverse")
         self.gridLayout.addWidget(self.input_checkbox_re_status_information_reverse, 26, 5, 1, 1)
         self.label_python_re = QtWidgets.QLabel(settings_action)
+        self.label_python_re.setOpenExternalLinks(True)
+        self.label_python_re.setTextInteractionFlags(QtCore.Qt.TextBrowserInteraction)
         self.label_python_re.setObjectName("label_python_re")
         self.gridLayout.addWidget(self.label_python_re, 27, 0, 1, 4)
         self.label_string = QtWidgets.QLabel(settings_action)

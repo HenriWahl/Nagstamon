@@ -233,6 +233,8 @@ class Ui_settings_main(object):
         self.horizontalLayout_9.addWidget(self.input_checkbox_re_host_reverse)
         self.gridLayout_4.addLayout(self.horizontalLayout_9, 4, 0, 2, 1)
         self.label_python_re = QtWidgets.QLabel(self.tab_filters)
+        self.label_python_re.setOpenExternalLinks(True)
+        self.label_python_re.setTextInteractionFlags(QtCore.Qt.TextBrowserInteraction)
         self.label_python_re.setObjectName("label_python_re")
         self.gridLayout_4.addWidget(self.label_python_re, 15, 0, 1, 1)
         spacerItem5 = QtWidgets.QSpacerItem(0, 0, QtWidgets.QSizePolicy.Minimum, QtWidgets.QSizePolicy.Expanding)
@@ -737,7 +739,7 @@ class Ui_settings_main(object):
         self.verticalLayout.addWidget(self.button_box)
 
         self.retranslateUi(settings_main)
-        self.tabs.setCurrentIndex(6)
+        self.tabs.setCurrentIndex(2)
         self.button_box.accepted.connect(settings_main.accept)
         self.button_box.rejected.connect(settings_main.reject)
         QtCore.QMetaObject.connectSlotsByName(settings_main)

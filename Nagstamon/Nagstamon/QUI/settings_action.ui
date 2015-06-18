@@ -158,6 +158,12 @@
      <property name="text">
       <string>&lt;a href=http://docs.python.org/howto/regex.html&gt;See Python Regular Expressions HOWTO for filtering details.&lt;/a&gt;</string>
      </property>
+     <property name="openExternalLinks">
+      <bool>true</bool>
+     </property>
+     <property name="textInteractionFlags">
+      <set>Qt::TextBrowserInteraction</set>
+     </property>
     </widget>
    </item>
    <item row="6" column="0">
