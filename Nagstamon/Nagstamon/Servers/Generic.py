@@ -33,23 +33,16 @@ import datetime
 import time
 import traceback
 import platform
-import base64
 from bs4 import BeautifulSoup
 
-"""
-#  necessary for Python-2.7.9-ssl-support-fix https://github.com/HenriWahl/Nagstamon/issues/126
-# maight not be necessary with Python3 or later Requests library
-if sys.version_info >= (2, 7, 9):
-    import ssl
-"""
-
-from Nagstamon.Actions import (HostIsFilteredOutByRE,\
-                              ServiceIsFilteredOutByRE,\
-                              StatusInformationIsFilteredOutByRE,\
-                              CriticalityIsFilteredOutByRE,\
-                              not_empty)
+from Nagstamon.Actions import (HostIsFilteredOutByRE,
+                               ServiceIsFilteredOutByRE,
+                               StatusInformationIsFilteredOutByRE,
+                               CriticalityIsFilteredOutByRE,
+                               not_empty)
 from Nagstamon.Objects import *
 from Nagstamon.Config import (conf, AppInfo)
+
 
 class GenericServer(object):
     """
@@ -80,6 +73,8 @@ class GenericServer(object):
                     "hosts": "$MONITOR-CGI$/status.cgi?hostgroup=all&style=hostdetail&hoststatustypes=12",\
                     "services": "$MONITOR-CGI$/status.cgi?host=all&servicestatustypes=253",\
                     "history": "$MONITOR-CGI$/history.cgi?host=all"}
+
+    USER_AGENT = '{0}/{1} {2}'.format(AppInfo.NAME, AppInfo.VERSION, platform.system())
 
 
     def __init__(self, **kwds):
@@ -195,22 +190,14 @@ class GenericServer(object):
         partly not constantly working Basic Authorization requires extra Authorization headers,
         different between various server types
         """
-
-        """
-        if self.HTTPheaders == {}:
-            for giveback in ["raw", "obj"]:
-                # base64 string has to be encoded to bytes first
-                self.HTTPheaders[giveback] = {'Authorization': b'Basic ' +
-                                                base64.b64encode((self.username + ':' + self.password).encode())}
-        """
-
         if self.session == None:
             self.session = requests.Session()
-            self.session.headers['User-Agent'] = '{0}/{1} {2}'.format(AppInfo.NAME, AppInfo.VERSION, platform.system())
+            self.session.headers['User-Agent'] = self.USER_AGENT
 
             # basic authentication
             self.session.auth = (self.username, self.password)
 
+            """
             # check if proxies have to been used
             if self.use_proxy == True:
                 if self.use_proxy_from_os == True:
@@ -239,16 +226,55 @@ class GenericServer(object):
                 # disable evaluation of environment variables
                 self.session.trust_env = False
                 self.session.proxies = None
+            """
 
             # default to not check TLS validity
             self.session.verify = False
+
+            # add proxy information
+            self.proxify(self.session)
+
+
+    def proxify(self, requester):
+        """
+            add proxy information to session or single request
+        """
+        # check if proxies have to be used
+        if self.use_proxy == True:
+            if self.use_proxy_from_os == True:
+                # if .trust_enf is true the system environment will be evaluated
+                requester.trust_env = True
+                requester.proxies = dict()
+            else:
+                # check if username and password are given and provide credentials if needed
+                if self.proxy_username == self.proxy_password == '':
+                    user_pass = ''
+                else:
+                    user_pass = '{0}:{1}@'.format(self.proxy_username, self.proxy_password)
+
+                # split and analyze proxy URL
+                proxy_address_parts = self.proxy_address.split('//')
+                scheme = proxy_address_parts[0]
+                host_port = ''.join(proxy_address_parts[1:])
+
+                # use only valid schemes
+                if scheme.lower() in ('http:', 'https:'):
+                    # merge proxy URL
+                    proxy_url = '{0}//{1}{2}'.format(scheme, user_pass, host_port)
+                    # fill session.proxies for both protocols
+                    requester.proxies = {'http': proxy_url, 'https': proxy_url}
+        else:
+            # disable evaluation of environment variables
+            requester.trust_env = False
+            requester.proxies = None
 
 
     def reset_HTTP(self):
         """
         if authentication fails try to reset any HTTP session stuff - might be different for different monitors
         """
-        self.HTTPheaders = dict()
+        ###self.HTTPheaders = dict()
+        self.session = None
 
 
     def get_name(self):
@@ -1102,15 +1128,6 @@ class GenericServer(object):
 
         # run this method which checks itself if there is some action to take for initializing connection
         # if no_auth is true do not use Auth headers, used by Actions.CheckForNewVersion()
-        """
-        if no_auth == False:
-            self.init_HTTP()
-            # to avoid race condition and credentials leak use local HTTPheaders
-            HTTPheaders = self.HTTPheaders
-        else:
-            HTTPheaders = dict()
-            HTTPheaders["raw"] = HTTPheaders["obj"] = HTTPheaders["xml"] =  dict()
-        """
 
         try:
             try:
@@ -1118,19 +1135,49 @@ class GenericServer(object):
                 if conf.debug_mode == True:
                     self.Debug(server=self.get_name(), debug="FetchURL: " + url + " CGI Data: " + str(cgi_data))
 
-                if multipart == False:
-                    if cgi_data == None:
-                        response = self.session.get(url)
+                # use session only for connections to monitor servers, other requests like looking for updates
+                # should go out without credentials
+                if no_auth == False:
+                    # most requests come without multipart/form-data
+                    if multipart == False:
+                        if cgi_data == None:
+                            response = self.session.get(url)
+                        else:
+                            response = self.session.post(url, data=cgi_data)
                     else:
-                        response = self.session.post(url, data=cgi_data)
+                        # Check_MK and Opsview nees multipart/form-data encoding
+                        # http://stackoverflow.com/questions/23120974/python-requests-post-multipart-form-data-without-filename-in-http-request#23131823
+                        form_data = dict()
+                        for key in cgi_data:
+                            form_data[key] = (None, cgi_data[key])
+                        # get response with cgi_data encodes as files
+                        response = self.session.post(url, files=form_data)
                 else:
-                    # Check_MK and Opsview nees multipart/form-data encoding
-                    # http://stackoverflow.com/questions/23120974/python-requests-post-multipart-form-data-without-filename-in-http-request#23131823
-                    form_data = dict()
-                    for key in cgi_data:
-                        form_data[key] = (None, cgi_data[key])
-                    # get response with cgi_data encodes as files
-                    response = self.session.post(url, files=form_data)
+                    # send request without authentication data
+                    temporary_session = requests.Session()
+
+                    # add proxy information if necessary
+                    self.proxify(temporary_session)
+
+                    # default to not check TLS validity
+                    temporary_session.verify = False
+
+                    # most requests come without multipart/form-data
+                    if multipart == False:
+                        if cgi_data == None:
+                            response = temporary_session.get(url)
+                        else:
+                            response = temporary_session.post(url, data=cgi_data)
+                    else:
+                        # Check_MK and Opsview nees multipart/form-data encoding
+                        # http://stackoverflow.com/questions/23120974/python-requests-post-multipart-form-data-without-filename-in-http-request#23131823
+                        form_data = dict()
+                        for key in cgi_data:
+                            form_data[key] = (None, cgi_data[key])
+                        # get response with cgi_data encodes as files
+                        response = temporary_session.post(url, files=form_data)
+
+                    del(temporary_session)
 
             except Exception as err:
 
