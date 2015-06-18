@@ -1177,6 +1177,7 @@ class GenericServer(object):
                         # get response with cgi_data encodes as files
                         response = temporary_session.post(url, files=form_data)
 
+                    # cleanup
                     del(temporary_session)
 
             except Exception as err:

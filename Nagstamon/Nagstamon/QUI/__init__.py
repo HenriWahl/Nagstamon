@@ -1207,6 +1207,7 @@ class Dialog_Settings(Dialog):
         self.toggle_toggles()
 
 
+
     def initialize(self, start_tab=0):
         # apply configuration values
         # start with servers tab
@@ -1520,8 +1521,11 @@ class Dialog_Settings(Dialog):
 
         # color buttons
         for color in [x for x in conf.__dict__ if x.startswith('color_')]:
-            self.ui.__dict__['input_button_%s' % (color)].setStyleSheet('background-color: %s;' %
-                                                                         conf.__dict__[color])
+            self.ui.__dict__['input_button_%s' % (color)].setStyleSheet('background-color: %s;'
+                                                                        'border-width: 1px;'
+                                                                        'border-color: black;'
+                                                                        'border-style: solid;'
+                                                                         % conf.__dict__[color])
         # example color labels
         for label in [x for x in self.ui.__dict__ if x.startswith('label_color_')]:
             status = label.split('label_color_')[1]
@@ -1540,8 +1544,11 @@ class Dialog_Settings(Dialog):
         new_color = QColorDialog.getColor(QColor(color), parent=self.window)
         # if canceled the color is invalid
         if new_color.isValid():
-            self.ui.__dict__['input_button_color_%s' % (item)].setStyleSheet('background: %s' %
-                                                                    new_color.name())
+            self.ui.__dict__['input_button_color_%s' % (item)].setStyleSheet('background-color: %s;'
+                                                                             'border-width: 1px;'
+                                                                             'border-color: black;'
+                                                                             'border-style: solid;'
+                                                                             % new_color.name())
             status = item.split('_')[0]
             # get color value from stylesheet to paint example
             text = self.ui.__dict__['input_button_color_%s_text' % (status)].styleSheet()
