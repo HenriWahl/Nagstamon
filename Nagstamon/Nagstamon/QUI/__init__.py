@@ -908,6 +908,7 @@ class TableWidget(QTableWidget):
             # after running through
             self.table_ready.emit()
 
+
     @pyqtSlot(int, int)
     def sortColumn(self, column, order):
         """
@@ -1489,12 +1490,12 @@ class Dialog_Settings(Dialog):
             # shortcut for widget to fill and revaluate
             widget = self.ui.__dict__['input_lineedit_notification_custom_sound_%s' % self.sound_file_type]
 
+            # get file path from widget
             file = widget.text()
 
-            notification.set_media(file)
-
-            notification.play.emit()
-
+            # tell mediaplayer to play file only if it exists
+            if notification.set_media(file) == True:
+                notification.play.emit()
 
         return(decoration_function)
 
@@ -2011,8 +2012,10 @@ class Notification(QObject):
             mediacontent = QMediaContent(url)
             self.player.setMedia(mediacontent)
             del url, mediacontent
+            return True
         else:
             QMessageBox.warning(None, 'Nagstamon', 'File <b>\'%s\'</b> does not exist.' % (file))
+            return False
 
 
 def _createIcons(fontsize):

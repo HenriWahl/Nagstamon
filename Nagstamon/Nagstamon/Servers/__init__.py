@@ -33,8 +33,6 @@ from Nagstamon.Servers.Thruk import ThrukServer
 from Nagstamon.Servers.Zabbix import ZabbixServer
 
 from Nagstamon.Config import conf
-###from Nagstamon.Actions import BuildURLOpener, MultipartPostHandler
-from Nagstamon.Actions import BuildURLOpener
 
 # dictionary for servers
 servers = OrderedDict()

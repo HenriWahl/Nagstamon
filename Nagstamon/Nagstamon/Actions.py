@@ -20,37 +20,42 @@
 import threading
 import time
 import datetime
-import urllib.request, urllib.parse, urllib.error
+###import urllib.request, urllib.parse, urllib.error
 import webbrowser
 import subprocess
 import re
 import sys
 import traceback
 
+"""
+
+Not necessary anymore due to QMultimedia
+
 # if running on windows import winsound
 import platform
 if platform.system() == "Windows":
     import winsound
+"""
 
-# Garbage collection
-import gc
-
-# import for MultipartPostHandler.py which is needed for Opsview downtime form
-import urllib.request, urllib.error, urllib.parse
 # does not exist in python3
 ###import mimetools, mimetypes
-import os, stat
+
+###import os, stat
 
 #from Nagstamon import GUI
 #import GUI
 
 # import md5 for centreon url autologin encoding
+from hashlib import md5
+
+"""
 try:
     #from python 2.5 md5 is in hashlib
     from hashlib import md5
 except:
     # older pythons use md5 lib
     from md5 import md5
+"""
 
 # flag which indicates if already rechecking all
 RecheckingAll = False
@@ -756,6 +761,7 @@ def CreateServer(server=None, conf=None, debug_queue=None, resources=None):
     # access to thread-safe debug queue
     new_server.debug_queue = debug_queue
 
+    """
     # use server-owned attributes instead of redefining them with every request
     new_server.passman = urllib.request.HTTPPasswordMgrWithDefaultRealm()
     new_server.passman.add_password(None, server.monitor_url, server.username, server.password)
@@ -772,6 +778,7 @@ def CreateServer(server=None, conf=None, debug_queue=None, resources=None):
         new_server.passman.add_password(None, new_server.proxy_address, new_server.proxy_username, new_server.proxy_password)
         new_server.proxy_handler = urllib.request.ProxyHandler({"http": new_server.proxy_address, "https": new_server.proxy_address})
         new_server.proxy_auth_handler = urllib.request.ProxyBasicAuthHandler(new_server.passman)
+    """
 
     # Special FX
     # Centreon
@@ -799,50 +806,6 @@ def not_empty(x):
         tiny helper function for BeautifulSoup in GenericServer.py to filter text elements
     '''
     return bool(x.replace('&nbsp;', '').strip())
-
-
-def BuildURLOpener(server):
-    """
-        if there should be no proxy used use an empty proxy_handler - only necessary in Windows,
-        where IE proxy settings are used automatically if available
-        In UNIX $HTTP_PROXY will be used
-
-    The MultipartPostHandler is needed for submitting multipart forms from Opsview
-
-    """
-    # trying with changed digest/basic auth order as some digest auth servers do not
-    # seem to work the previous way
-    if str(server.use_proxy) == "False":
-        server.proxy_handler = urllib.request.ProxyHandler({})
-        urlopener = urllib.request.build_opener(server.digest_handler,
-                                         server.basic_handler,
-                                         server.proxy_handler,
-                                         server.https_handler,
-                                         urllib.request.HTTPCookieProcessor(server.Cookie),
-                                         ###MultipartPostHandler)
-                                        )
-    elif str(server.use_proxy) == "True":
-        if str(server.use_proxy_from_os) == "True":
-            urlopener = urllib.request.build_opener(server.digest_handler,
-                                             server.basic_handler,
-                                             server.https_handler,
-                                             urllib.request.HTTPCookieProcessor(server.Cookie),
-                                             ###MultipartPostHandler)
-                                            )
-        else:
-            # if proxy from OS is not used there is to add a authenticated proxy handler
-            server.passman.add_password(None, server.proxy_address, server.proxy_username, server.proxy_password)
-            server.proxy_handler = urllib.request.ProxyHandler({"http": server.proxy_address, "https": server.proxy_address})
-            server.proxy_auth_handler = urllib.request.ProxyBasicAuthHandler(server.passman)
-            urlopener = urllib.request.build_opener(server.proxy_handler,
-                                            server.proxy_auth_handler,
-                                            server.digest_handler,
-                                            server.basic_handler,
-                                            server.https_handler,
-                                            urllib.request.HTTPCookieProcessor(server.Cookie),
-                                            ###MultipartPostHandler)
-                                            )
-    return urlopener
 
 
 def OpenNagstamonDownload(output=None):
