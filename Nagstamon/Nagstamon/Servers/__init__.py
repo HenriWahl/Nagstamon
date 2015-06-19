@@ -43,6 +43,7 @@ servers = OrderedDict()
 # and holding this information in one place
 SERVER_TYPES = OrderedDict()
 
+
 def register_server(server):
     """
         Once new server class is created, should be registered with this function

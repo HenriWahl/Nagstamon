@@ -20,42 +20,14 @@
 import threading
 import time
 import datetime
-###import urllib.request, urllib.parse, urllib.error
 import webbrowser
 import subprocess
 import re
 import sys
 import traceback
 
-"""
-
-Not necessary anymore due to QMultimedia
-
-# if running on windows import winsound
-import platform
-if platform.system() == "Windows":
-    import winsound
-"""
-
-# does not exist in python3
-###import mimetools, mimetypes
-
-###import os, stat
-
-#from Nagstamon import GUI
-#import GUI
-
 # import md5 for centreon url autologin encoding
 from hashlib import md5
-
-"""
-try:
-    #from python 2.5 md5 is in hashlib
-    from hashlib import md5
-except:
-    # older pythons use md5 lib
-    from md5 import md5
-"""
 
 # flag which indicates if already rechecking all
 RecheckingAll = False
@@ -463,51 +435,6 @@ class CheckForNewVersion(threading.Thread):
                 s.CheckingForNewVersion = False
 
 
-class PlaySound(threading.Thread):
-    """
-        play notification sound in a threadified way to omit hanging gui
-    """
-    def __init__(self, **kwds):
-        # add all keywords to object, every mode searchs inside for its favorite arguments/keywords
-        for k in kwds: self.__dict__[k] = kwds[k]
-        threading.Thread.__init__(self)
-        self.setDaemon(1)
-
-
-    def run(self):
-        if self.sound == "WARNING":
-            if str(self.conf.notification_default_sound) == "True":
-                self.Play(self.Resources + "/warning.wav")
-            else:
-                self.Play(self.conf.notification_custom_sound_warning)
-        elif self.sound == "CRITICAL":
-            if str(self.conf.notification_default_sound) == "True":
-                self.Play(self.Resources + "/critical.wav")
-            else:
-                self.Play(self.conf.notification_custom_sound_critical)
-        elif self.sound == "DOWN":
-            if str(self.conf.notification_default_sound) == "True":
-                self.Play(self.Resources + "/hostdown.wav")
-            else:
-                self.Play(self.conf.notification_custom_sound_down)
-        elif self.sound =="FILE":
-            self.Play(self.file)
-
-
-    def Play(self, file):
-        """
-            depending on platform choose method to play sound
-        """
-        # debug
-        if str(self.conf.debug_mode) == "True":
-            # once again taking .Debug() from first server
-            self.servers.values()[0].Debug(debug="Playing sound: " + str(file))
-        if not platform.system() == "Windows":
-            subprocess.Popen("play -q %s" % str(file), shell=True)
-        else:
-            winsound.PlaySound(file, winsound.SND_FILENAME)
-
-
 class Notification(threading.Thread):
     """
         Flash statusbar in a threadified way to omit hanging gui
@@ -548,31 +475,6 @@ class Notification(threading.Thread):
             time.sleep(0.5)
         # reset statusbar
         self.output.statusbar.Label.set_markup(self.output.statusbar.statusbar_labeltext)
-
-
-class MoveStatusbar(threading.Thread):
-    """
-        Move statusbar in a threadified way to omit hanging gui and Windows-GTK 2.22 trouble
-    """
-    def __init__(self, **kwds):
-        # add all keywords to object, every mode searchs inside for its favorite arguments/keywords
-        for k in kwds: self.__dict__[k] = kwds[k]
-        threading.Thread.__init__(self)
-        self.setDaemon(1)
-
-
-    def run(self):
-        # avoid flickering popwin while moving statusbar around
-        # gets re-enabled from popwin.setShowable()
-        if self.output.GUILock.has_key("Popwin"): self.output.popwin.Close()
-        self.output.popwin.showPopwin = False
-        # lock GUI while moving statusbar so no auth dialogs could pop up
-        self.output.AddGUILock(self.__class__.__name__)
-        # in case of moving statusbar do some moves
-        while self.output.statusbar.Moving == True:
-            gobject.idle_add(self.output.statusbar.Move)
-            time.sleep(0.01)
-        self.output.DeleteGUILock(self.__class__.__name__)
 
 
 class Action(threading.Thread):
@@ -705,100 +607,6 @@ def TreeViewNagios(server, host, service):
     # if the clicked row does not contain a service it mus be a host,
     # so the nagios query is different
     server.open_tree_view(host, service)
-
-
-# contains dict with available server classes
-# key is type of server, value is server class
-# used for automatic config generation
-# and holding this information in one place
-REGISTERED_SERVERS = []
-
-def register_server(server):
-    """ Once new server class in created,
-    should be registered with this function
-    for being visible in config and
-    accessible in application.
-    """
-    if server.TYPE not in [x[0] for x in REGISTERED_SERVERS]:
-        REGISTERED_SERVERS.append((server.TYPE, server))
-
-
-def get_registered_servers():
-    """ Returns available server classes dict """
-    return dict(REGISTERED_SERVERS)
-
-
-def get_registered_server_type_list():
-    """ Returns available server type name list with order of registering """
-    return [x[0] for x in REGISTERED_SERVERS]
-
-
-def CreateServer(server=None, conf=None, debug_queue=None, resources=None):
-    # create Server from config
-    registered_servers = get_registered_servers()
-    if server.type not in registered_servers:
-        print('Server type not supported: %s' % server.type)
-        return
-    # give argument servername so CentreonServer could use it for initializing MD5 cache
-    new_server = registered_servers[server.type](conf=conf, name=server.name)
-    new_server.type = server.type
-    new_server.monitor_url = server.monitor_url
-    new_server.monitor_cgi_url = server.monitor_cgi_url
-    # add resources, needed for auth dialog
-    new_server.Resources = resources
-    new_server.username = server.username
-    new_server.password = server.password
-    new_server.use_proxy = server.use_proxy
-    new_server.use_proxy_from_os = server.use_proxy_from_os
-    new_server.proxy_address = server.proxy_address
-    new_server.proxy_username = server.proxy_username
-    new_server.proxy_password = server.proxy_password
-
-    # if password is not to be saved ask for it at startup
-    if ( server.enabled == "True" and server.save_password == "False" and server.use_autologin == "False" ):
-        new_server.refresh_authentication = True
-
-    # access to thread-safe debug queue
-    new_server.debug_queue = debug_queue
-
-    """
-    # use server-owned attributes instead of redefining them with every request
-    new_server.passman = urllib.request.HTTPPasswordMgrWithDefaultRealm()
-    new_server.passman.add_password(None, server.monitor_url, server.username, server.password)
-    new_server.passman.add_password(None, server.monitor_cgi_url, server.username, server.password)
-    new_server.basic_handler = urllib.request.HTTPBasicAuthHandler(new_server.passman)
-    new_server.digest_handler = urllib.request.HTTPDigestAuthHandler(new_server.passman)
-    new_server.proxy_auth_handler = urllib.request.ProxyBasicAuthHandler(new_server.passman)
-
-    if str(new_server.use_proxy) == "False":
-        # use empty proxyhandler
-        new_server.proxy_handler = urllib.request.ProxyHandler({})
-    elif str(server.use_proxy_from_os) == "False":
-        # if proxy from OS is not used there is to add a authenticated proxy handler
-        new_server.passman.add_password(None, new_server.proxy_address, new_server.proxy_username, new_server.proxy_password)
-        new_server.proxy_handler = urllib.request.ProxyHandler({"http": new_server.proxy_address, "https": new_server.proxy_address})
-        new_server.proxy_auth_handler = urllib.request.ProxyBasicAuthHandler(new_server.passman)
-    """
-
-    # Special FX
-    # Centreon
-    new_server.use_autologin = server.use_autologin
-    new_server.autologin_key = server.autologin_key
-    # Icinga
-    new_server.use_display_name_host = server.use_display_name_host
-    new_server.use_display_name_service = server.use_display_name_service
-
-    # create permanent urlopener for server to avoid memory leak with millions of openers
-    ###new_server.urlopener = BuildURLOpener(new_server)
-    # server's individual preparations for HTTP connections (for example cookie creation), version of monitor
-    if str(server.enabled) == "True":
-        new_server.init_HTTP()
-
-    # debug
-    if str(conf.debug_mode) == "True":
-        new_server.Debug(server=server.name, debug="Created server.")
-
-    return new_server
 
 
 def not_empty(x):
@@ -1075,61 +883,3 @@ def RunNotificationAction(action):
     run action for notification
     """
     subprocess.Popen(action, shell=True)
-
-"""
-
-# <IMPORT>
-# Borrowed from http://pipe.scs.fsu.edu/PostHandler/MultipartPostHandler.py
-# Released under LGPL
-# Thank you Will Holcomb!
-class Callable:
-    def __init__(self, anycallable):
-        self.__call__ = anycallable
-
-
-class MultipartPostHandler(urllib.request.BaseHandler):
-    handler_order = urllib.request.HTTPHandler.handler_order - 10 # needs to run first
-
-    def http_request(self, request):
-        data = request.get_data()
-        if data is not None and type(data) != str:
-            v_vars = []
-            try:
-                for(key, value) in data.items():
-                    v_vars.append((key, value))
-            except TypeError:
-                systype, value, traceback = sys.exc_info()
-                ###raise TypeError, "not a valid non-string sequence or mapping object", traceback
-                # https://www.python.org/dev/peps/pep-3109/
-                e = TypeError(value)
-                e.__traceback__ = T
-                raise 3
-
-            boundary, data = self.multipart_encode(v_vars)
-            contenttype = 'multipart/form-data; boundary=%s' % boundary
-            if(request.has_header('Content-Type')
-               and request.get_header('Content-Type').find('multipart/form-data') != 0):
-                print("Replacing %s with %s" % (request.get_header('content-type'), 'multipart/form-data'))
-            request.add_unredirected_header('Content-Type', contenttype)
-
-            request.add_data(data)
-        return request
-
-    def multipart_encode(vars, boundary = None, buffer = None):
-        if boundary is None:
-            boundary = mimetools.choose_boundary()
-        if buffer is None:
-            buffer = ''
-        for(key, value) in vars:
-            buffer += '--%s\r\n' % boundary
-            buffer += 'Content-Disposition: form-data; name="%s"' % key
-            buffer += '\r\n\r\n' + value + '\r\n'
-        buffer += '--%s--\r\n\r\n' % boundary
-        return boundary, buffer
-
-    multipart_encode = Callable(multipart_encode)
-    https_request = http_request
-
-# </IMPORT>
-
-"""
