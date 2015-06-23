@@ -452,7 +452,7 @@ class GUI(object):
                     # use a liststore for treeview where the table headers all are strings - first empty it
                     # now added with some simple repair after settings dialog has been used
                     # because sometimes after settings changes ListStore and TreeView become NoneType
-                    # would be more logical to do this in Actions.CreateServer() but this gives a segfault :-(
+                    # would be more logical to do this in Actions.create_server() but this gives a segfault :-(
                     if not type(server.ListStore) == type(None):
                         server.ListStore.clear()
                     else:
@@ -735,7 +735,7 @@ class GUI(object):
             for server in self.servers.values():
                 if not server.WorstStatus == "UP":
                     # switch server status back because it has been recognized
-                    if server.States.index(server.WorstStatus) > worst:
+                    if server.STATES.index(server.WorstStatus) > worst:
                         worst_status = server.WorstStatus
                     # reset status of the server for only processing it once
                     server.WorstStatus = "UP"

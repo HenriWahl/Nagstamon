@@ -36,13 +36,17 @@ try:
         from Nagstamon.Config import (conf, RESOURCES)
 
         ###from Nagstamon.QUI import (systrayicon, statuswindow)
-        from Nagstamon.QUI import (statuswindow)
+        from Nagstamon.QUI import (statuswindow, check_version)
 
-        ###systrayicon.show()
         statuswindow.show()
         statuswindow.adjustSize()
 
+        if conf.check_for_new_version == True:
+            check_version.check(start_mode = True)
+
         sys.exit(app.exec_())
+
+
 
 except Exception as err:
     import traceback

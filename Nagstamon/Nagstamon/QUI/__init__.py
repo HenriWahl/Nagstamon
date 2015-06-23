@@ -33,7 +33,7 @@ from copy import deepcopy
 
 from Nagstamon.Config import (conf, Server, Action, RESOURCES, AppInfo)
 
-from Nagstamon.Servers import (SERVER_TYPES, servers, CreateServer)
+from Nagstamon.Servers import (SERVER_TYPES, servers, create_server, get_enabled_servers)
 
 # dialogs
 from Nagstamon.QUI.settings_main import Ui_settings_main
@@ -176,16 +176,6 @@ class StatusWindow(QWidget):
         # flag to mark if window is shown or nor
         self.is_shown = False
 
-    """
-    def _createServerVBoxes(self):
-        # create server vboxed from current running servers
-        for server in servers.values():
-            if server.enabled:
-                server_vbox = ServerVBox(server)
-                # connect to global resize signal
-                server_vbox.table.ready_to_resize.connect(self.adjust_size)
-                self.servers_vbox.addLayout(server_vbox)
-    """
 
     def createServerVBox(self, server):
         """
@@ -776,6 +766,7 @@ class TableWidget(QTableWidget):
             # get_status statusbar
             statuswindow.statusbar.summarize_states()
 
+
     @pyqtSlot(int, int, str, str, str, list)
     def set_cell(self, row, column, text, color, background, icons):
         """
@@ -796,6 +787,7 @@ class TableWidget(QTableWidget):
 
         # send signal to worker
         self.new_data.emit(data, self.sort_column, SORT_ORDER[self.order])
+
 
     @pyqtSlot()
     def adjust_table(self):
@@ -1157,6 +1149,9 @@ class Dialog_Settings(Dialog):
         self.ui.button_edit_server.clicked.connect(self.edit_server)
         self.ui.button_copy_server.clicked.connect(self.copy_server)
         self.ui.button_delete_server.clicked.connect(self.delete_server)
+
+        # connect check-for-updates button to update check
+        self.ui.button_check_for_new_version_now.clicked.connect(check_version.check)
 
         # connect action buttons to action dialog
         self.ui.button_new_action.clicked.connect(self.new_action)
@@ -1796,7 +1791,7 @@ class Dialog_Server(Dialog):
             conf.servers[self.server_conf.name] = self.server_conf
             if self.server_conf.enabled == True:
                 # add new server instance to global servers dict
-                servers[self.server_conf.name] = CreateServer(self.server_conf)
+                servers[self.server_conf.name] = create_server(self.server_conf)
                 # create vbox
                 statuswindow.createServerVBox(servers[self.server_conf.name])
                 # renew list of server vboxes in status window
@@ -2018,6 +2013,93 @@ class Notification(QObject):
             return False
 
 
+class CheckVersion(QObject):
+    """
+        checking for updates
+    """
+    def check(self, start_mode=False):
+        # list of enabled servers which connections outside should be used to check
+        self.enabled_servers = get_enabled_servers()
+
+        # set mode to be evaluated by worker
+        self.start_mode = start_mode
+
+        # thread for worker to avoid
+        self.worker_thread = QThread()
+        self.worker = self.Worker()
+
+        # if update check is ready it sends the message to GUI thread
+        self.worker.ready.connect(self.show_message)
+
+        # stop thread if worker has finished
+        self.worker.finished.connect(self.worker_thread.quit)
+
+        self.worker.moveToThread(self.worker_thread)
+        # run check when thread starts
+        self.worker_thread.started.connect(self.worker.check)
+        self.worker_thread.start(0)
+
+
+    @pyqtSlot(str)
+    def show_message(self, message):
+        """
+            message dialog must be shown from GUI thread
+        """
+        QMessageBox.information(None, 'Nagstamon version check',  message, QMessageBox.Ok)
+
+
+    class Worker(QObject):
+        """
+            check for new version in background
+        """
+        # send signal if some version information is available
+        ready = pyqtSignal(str)
+
+        finished = pyqtSignal()
+
+        def __init__(self):
+            QObject.__init__(self)
+
+
+        def check(self):
+            """
+                check for update using server connection
+            """
+            # get servers to be used for checking version
+            enabled_servers = get_enabled_servers()
+
+            # default latest version is 'unavailable'
+            latest_version = 'unavailable'
+            message = 'Cannot reach version check at <a href={0}>{0}</<a>.'.format(AppInfo.VERSION_URL)
+
+            # find at least one server which allows to get version information
+            for server in enabled_servers:
+
+                # retrieve VERSION_URL without auth information
+                response = server.FetchURL(AppInfo.VERSION_URL, giveback='raw', no_auth=True)
+
+                # stop searching if some valid information has been found
+                if response.error == "" and not response.result.startswith('<'):
+                    latest_version = response.result.strip()
+                    break
+
+            # compose message according to version information
+            if latest_version != 'unavailable':
+                if latest_version == AppInfo.VERSION:
+                    message = 'You are using the latest version <b>Nagstamon {0}</b>.'.format(AppInfo.VERSION)
+                else:
+                    message = 'The new version <b> Nagstamon {0}</b> is available.<p>' \
+                              'Get it at <a href={1}>{1}</a>.'.format(latest_version, AppInfo.WEBSITE + '/download')
+
+            # if run from startup do not cry if any error occured or nothing new is available
+            if check_version.start_mode == False or\
+               (check_version.start_mode == True and latest_version not in ('unavailable', AppInfo.VERSION)):
+                self.ready.emit(message)
+
+            # tell thread to finish
+            self.finished.emit()
+
+
 def _createIcons(fontsize):
     """
         fill global ICONS with pixmaps rendered from SVGs in fontsize dimensions
@@ -2041,6 +2123,9 @@ def get_screen(x, y):
     return screen
 
 
+# check for updates
+check_version = CheckVersion()
+
 # access to variuos desktop parameters
 desktop = QApplication.desktop()
 
@@ -2055,3 +2140,4 @@ statuswindow = StatusWindow()
 
 # bundled notifications
 notification = Notification()
+

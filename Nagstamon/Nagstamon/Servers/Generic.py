@@ -23,7 +23,12 @@ import http.cookiejar
 
 import requests
 # disable annoying InsecureRequestWarning warnings
-requests.packages.urllib3.disable_warnings()
+try:
+	requests.packages.urllib3.disable_warnings()
+except:
+	# older requests verssion might not have the packages submodule
+	# for example in Ubuntu 14.04
+	pass
 
 import sys
 import socket
@@ -74,13 +79,14 @@ class GenericServer(object):
                     "services": "$MONITOR-CGI$/status.cgi?host=all&servicestatustypes=253",\
                     "history": "$MONITOR-CGI$/history.cgi?host=all"}
 
-    USER_AGENT = '{0}/{1} {2}'.format(AppInfo.NAME, AppInfo.VERSION, platform.system())
+    USER_AGENT = '{0}/{1}/{2}'.format(AppInfo.NAME, AppInfo.VERSION, platform.system())
 
 
     def __init__(self, **kwds):
         # add all keywords to object, every mode searchs inside for its favorite arguments/keywords
         for k in kwds: self.__dict__[k] = kwds[k]
 
+        self.enabled = False
         self.type = ""
         self.monitor_url = ""
         self.monitor_cgi_url = ""
@@ -97,7 +103,7 @@ class GenericServer(object):
         self.isChecking = False
         self.CheckingForNewVersion = False
         self.WorstStatus = "UP"
-        self.States = ["UP", "UNKNOWN", "WARNING", "CRITICAL", "UNREACHABLE", "DOWN"]
+        self.STATES = ["UP", "UNKNOWN", "WARNING", "CRITICAL", "UNREACHABLE", "DOWN"]
         self.nagitems_filtered_list = list()
         self.nagitems_filtered = {"services":{"CRITICAL":[], "WARNING":[], "UNKNOWN":[]}, "hosts":{"DOWN":[], "UNREACHABLE":[]}}
         # number of filtered items
@@ -117,35 +123,6 @@ class GenericServer(object):
         # Requests-based connections
         self.session = None
 
-        """
-        self.Cookie = http.cookiejar.CookieJar()
-        # use server-owned attributes instead of redefining them with every request
-        self.passman = None
-        self.basic_handler = None
-        self.digest_handler = None
-        self.proxy_handler = None
-        self.proxy_auth_handler = None
-        self.urlopener = None
-        # necessary for Python-2.7.9-ssl-support-fix https://github.com/HenriWahl/Nagstamon/issues/126
-        if sys.version_info >= (2, 7, 9):
-            try:
-                self.https_handler = urllib.request.HTTPSHandler(context=ssl._create_unverified_context())
-            except:
-                self.https_handler = urllib.request.HTTPSHandler()
-        else:
-            self.https_handler = urllib.request.HTTPSHandler()
-
-        # headers for HTTP requests, might be needed for authorization on Nagios/Icinga Hosts
-        self.HTTPheaders = dict()
-        """
-
-        """
-        # attempt to use only one bound list of TreeViewColumns instead of ever increasing one
-        self.TreeView = None
-        self.TreeViewColumns = list()
-        self.ListStore = None
-        self.ListStoreColumns = list()
-        """
         # flag which decides if authentication has to be renewed
         self.refresh_authentication = False
         # to handle Icinga versions this information is necessary, might be of future use for others too
@@ -196,37 +173,6 @@ class GenericServer(object):
 
             # basic authentication
             self.session.auth = (self.username, self.password)
-
-            """
-            # check if proxies have to been used
-            if self.use_proxy == True:
-                if self.use_proxy_from_os == True:
-                    # if .trust_enf is true the system environment will be evaluated
-                    self.session.trust_env = True
-                    self.session.proxies = dict()
-                else:
-                    # check if username and password are given and provide credentials if needed
-                    if self.proxy_username == self.proxy_password == '':
-                        user_pass = ''
-                    else:
-                        user_pass = '{0}:{1}@'.format(self.proxy_username, self.proxy_password)
-
-                    # split and analyze proxy URL
-                    proxy_address_parts = self.proxy_address.split('//')
-                    scheme = proxy_address_parts[0]
-                    host_port = ''.join(proxy_address_parts[1:])
-
-                    # use only valid schemes
-                    if scheme.lower() in ('http:', 'https:'):
-                        # merge proxy URL
-                        proxy_url = '{0}//{1}{2}'.format(scheme, user_pass, host_port)
-                        # fill session.proxies for both protocols
-                        self.session.proxies = {'http': proxy_url, 'https': proxy_url}
-            else:
-                # disable evaluation of environment variables
-                self.session.trust_env = False
-                self.session.proxies = None
-            """
 
             # default to not check TLS validity
             self.session.verify = False
@@ -1094,12 +1040,12 @@ class GenericServer(object):
                 worst = 0
                 for d in diff_states:
                     # only check worst state if it is valid
-                    if d in self.States:
-                        if self.States.index(d) > worst:
-                            worst = self.States.index(d)
+                    if d in self.STATES:
+                        if self.STATES.index(d) > worst:
+                            worst = self.STATES.index(d)
 
                 # final worst state is one of the predefined states
-                self.WorstStatus = self.States[worst]
+                self.WorstStatus = self.STATES[worst]
 
         # copy of listed nagitems for next comparison
         self.nagitems_filtered_list = copy.deepcopy(new_nagitems_filtered_list)
@@ -1150,16 +1096,18 @@ class GenericServer(object):
                         form_data = dict()
                         for key in cgi_data:
                             form_data[key] = (None, cgi_data[key])
+
                         # get response with cgi_data encodes as files
                         response = self.session.post(url, files=form_data)
                 else:
                     # send request without authentication data
                     temporary_session = requests.Session()
+                    temporary_session.headers['User-Agent'] = self.USER_AGENT
 
                     # add proxy information if necessary
                     self.proxify(temporary_session)
 
-                    # default to not check TLS validity
+                    # default to not check TLS validity for temporary sessions
                     temporary_session.verify = False
 
                     # most requests come without multipart/form-data
@@ -1320,3 +1268,13 @@ class GenericServer(object):
         debug_string =  " ".join((head + ":",  str(datetime.datetime.now()), server, host, service, debug))
         # give debug info to debug loop for thread-save log-file writing
         self.debug_queue.put(debug_string)
+
+    """
+    def check_new_version_worker(self):
+        print(AppInfo.VERSION_URL)
+        response = self.FetchURL(AppInfo.VERSION_URL, giveback='raw', no_auth=True)
+        print('"' + response.error + '"')
+        latest_version = response.result.strip()
+        print('"' + latest_version + '"')
+        print(latest_version == AppInfo.VERSION)
+    """

@@ -53,7 +53,14 @@ def register_server(server):
         SERVER_TYPES[server.TYPE] = server
 
 
-def CreateServer(server=None):
+def get_enabled_servers():
+    """
+        list of enabled servers which connections outside should be used to check
+    """
+    return([x for x in servers.values() if x.enabled == True])
+
+
+def create_server(server=None):
     # create Server from config
     if server.type not in SERVER_TYPES:
         print(('Server type not supported: %s' % server.type))
@@ -81,25 +88,6 @@ def CreateServer(server=None):
     # access to thread-safe debug queue
     #new_server.debug_queue = debug_queue
 
-    """
-    # use server-owned attributes instead of redefining them with every request
-    new_server.passman = urllib.request.HTTPPasswordMgrWithDefaultRealm()
-    new_server.passman.add_password(None, server.monitor_url, server.username, server.password)
-    new_server.passman.add_password(None, server.monitor_cgi_url, server.username, server.password)
-    new_server.basic_handler = urllib.request.HTTPBasicAuthHandler(new_server.passman)
-    new_server.digest_handler = urllib.request.HTTPDigestAuthHandler(new_server.passman)
-    new_server.proxy_auth_handler = urllib.request.ProxyBasicAuthHandler(new_server.passman)
-
-    if str(new_server.use_proxy) == "False":
-        # use empty proxyhandler
-        new_server.proxy_handler = urllib.request.ProxyHandler({})
-    elif str(server.use_proxy_from_os) == "False":
-        # if proxy from OS is not used there is to add a authenticated proxy handler
-        new_server.passman.add_password(None, new_server.proxy_address, new_server.proxy_username, new_server.proxy_password)
-        new_server.proxy_handler = urllib.request.ProxyHandler({"http": new_server.proxy_address, "https": new_server.proxy_address})
-        new_server.proxy_auth_handler = urllib.request.ProxyBasicAuthHandler(new_server.passman)
-    """
-
     # Special FX
     # Centreon
     new_server.use_autologin = server.use_autologin
@@ -108,13 +96,9 @@ def CreateServer(server=None):
     new_server.use_display_name_host = server.use_display_name_host
     new_server.use_display_name_service = server.use_display_name_service
 
-    """
-    # create permanent urlopener for server to avoid memory leak with millions of openers
-    new_server.urlopener = BuildURLOpener(new_server)
-    """
-
     # server's individual preparations for HTTP connections (for example cookie creation), version of monitor
     if server.enabled == True:
+        new_server.enabled = True
         new_server.init_HTTP()
 
     # debug
@@ -141,7 +125,7 @@ for server in conf.servers.values():
 
         GUI.AuthenticationDialog(server=server, Resources=Resources, conf=conf, debug_queue=debug_queue)
     """
-    created_server = CreateServer(server)
+    created_server = create_server(server)
 
     if created_server is not None:
         servers[server.name] = created_server
