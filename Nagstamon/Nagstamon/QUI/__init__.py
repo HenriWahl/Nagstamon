@@ -105,6 +105,33 @@ class SystemTrayIcon(QSystemTrayIcon):
         self.show()
 
 
+class MenuAtCursor(QMenu):
+    """
+        open menu at position of mouse pointer - normal .exec() shows menu at (0, 0)
+    """
+
+    shown = pyqtSignal()
+    closed = pyqtSignal()
+
+    def __init__(self):
+        QMenu.__init__(self)
+
+
+    @pyqtSlot()
+    def show_at_cursor(self):
+        # send shown signal to tell status window to stay open if menu is displayes
+        self.shown.emit()
+        # get cursor coordinates and decrease them to show menu under mouse pointer
+        x = QCursor.pos().x() - 10
+        y = QCursor.pos().y() - 10
+        self.exec(QPoint(x, y))
+        del(x, y)
+
+
+    def closeEvent(self, event):
+        self.closed.emit()
+
+
 class StatusWindow(QWidget):
     def __init__(self):
         """
@@ -139,6 +166,12 @@ class StatusWindow(QWidget):
         # buttons in toparea
         self.toparea.button_settings.clicked.connect(self.hide_window)
         self.toparea.button_settings.clicked.connect(dialogs.settings.show)
+
+        # avoid hifing of statuswindow if menu is opened
+        self.toparea.hamburger_menu.shown.connect(self.lock)
+        self.toparea.hamburger_menu.closed.connect(self.unlock)
+        self.toparea.button_hamburger_menu.clicked.connect(self.toparea.hamburger_menu.show_at_cursor)
+
 
         self.servers_vbox = QVBoxLayout()           # VBox full of servers
         self.servers_vbox.setContentsMargins(0, 0, 0, 0)
@@ -175,6 +208,9 @@ class StatusWindow(QWidget):
 
         # flag to mark if window is shown or nor
         self.is_shown = False
+
+        # flag to avoid hiding window when a menu is shown
+        self.locked = False
 
 
     def createServerVBox(self, server):
@@ -236,7 +272,10 @@ class StatusWindow(QWidget):
 
     @pyqtSlot()
     def hide_window(self):
-        if self.is_shown == True:
+        """
+            hide window if not needed
+        """
+        if self.is_shown == True and self.locked == False:
             self.statusbar.show()
             self.statusbar.adjustSize()
             self.toparea.hide()
@@ -245,11 +284,11 @@ class StatusWindow(QWidget):
             self.adjustSize()
             self.move(self.stored_x, self.stored_y)
 
-        # switch off
-        self.is_shown = False
+            # switch off
+            self.is_shown = False
 
-        # flag to reflect top-ness of window/statusbar
-        self.top = False
+            # flag to reflect top-ness of window/statusbar
+            self.top = False
 
 
     def calculate_size(self):
@@ -363,6 +402,22 @@ class StatusWindow(QWidget):
         # add size of toparea
         height += self.toparea.sizeHint().height()
         return height
+
+
+    @pyqtSlot()
+    def lock(self):
+        """
+            lock window so it should not be hidden, e.g. if a menu is shown
+        """
+        self.locked = True
+
+
+    @pyqtSlot()
+    def unlock(self):
+        """
+            unlock window so it can be hidden again
+        """
+        self.locked = False
 
 
 class NagstamonLogo(QSvgWidget):
@@ -511,7 +566,8 @@ class TopArea(QWidget):
     """
     def __init__(self):
         QWidget.__init__(self)
-        self.hbox = HBoxLayout(spacing=10)      # top VBox containing buttons
+        self.hbox = HBoxLayout()      # top HBox containing buttons
+        self.hbox.setSpacing(5)
 
         # top button box
         self.logo = NagstamonLogo("%s%snagstamon_logo_toparea.svg" % (RESOURCES, os.sep))
@@ -521,10 +577,27 @@ class TopArea(QWidget):
         self.button_recheck_all = QPushButton("Recheck all")
         self.button_refresh = QPushButton("Refresh")
         self.button_settings = QPushButton("Settings")
+
         self.button_hamburger_menu = QPushButton()
         self.button_hamburger_menu.setIcon(QIcon("%s%smenu.svg" % (RESOURCES, os.sep)))
+        self.button_hamburger_menu.setStyleSheet('QPushButton {border-width: 0px;'
+                                                              'border-style: none;}'
+                                                 'QPushButton:hover {background-color: white;'
+                                                                    'border-radius: 4px;}')
+        self.hamburger_menu = MenuAtCursor()
+        exitaction = QAction("Exit", self)
+
+        # to be refined...
+        exitaction.triggered.connect(QCoreApplication.instance().quit)
+        self.hamburger_menu.addAction(exitaction)
+
         self.button_close = QPushButton()
         self.button_close.setIcon(QIcon("%s%sclose.svg" % (RESOURCES, os.sep)))
+        self.button_close.setStyleSheet('QPushButton {border-width: 0px;'
+                                                     'border-style: none;'
+                                                     'margin-right: 5px;}'
+                                        'QPushButton:hover {background-color: red;'
+                                                           'border-radius: 4px;}')
 
         self.hbox.addWidget(self.logo)
         self.hbox.addWidget(self.label_version)
@@ -550,7 +623,7 @@ class ServerVBox(QVBoxLayout):
 
         self.server = server
 
-        self.hbox = QHBoxLayout(spacing=10)
+        self.hbox = QHBoxLayout(spacing=5)
 
         self.label = QLabel("<big><b>%s@%s</b></big>" % (server.username, server.name))
         self.button_edit = QPushButton("Edit")
@@ -571,8 +644,12 @@ class ServerVBox(QVBoxLayout):
         sort_column = 'status'
         order = 'descending'
         self.table = TableWidget(0, len(HEADERS), sort_column, order, self.server)
+
         # delete vbox if thread quits
         self.table.worker_thread.finished.connect(self.delete)
+
+        ###self.table.itemClicked.connect(self.table.item_clicked)
+        ###self.table.itemChanged.connect(self.table.item_clicked)
 
         self.addWidget(self.table, 1)
 
@@ -611,7 +688,6 @@ class ServerVBox(QVBoxLayout):
         """
         for child in self.children():
             # not every child item has .hide()
-            ###if child.__dict__.has_key('hide'):
             if 'hide' in child.__dict__.keys():
                 child.hide()
 
@@ -635,8 +711,17 @@ class ServerVBox(QVBoxLayout):
         self.deleteLater()
 
 
+#class CellWidget(QTableWidgetItem, QWidget):
 class CellWidget(QWidget):
+    """
+        widget to be used as cells in tablewidgets
+    """
+
+    # send to tablewidget if cell clicked
+    clicked = pyqtSignal()
+
     def __init__(self, column=0, row=0, text='', color='black', background='white', icons=''):
+        #QTableWidgetItem.__init__(self)
         QWidget.__init__(self)
 
         self.column = column
@@ -685,6 +770,11 @@ class CellWidget(QWidget):
         self.parent().parent().colorizeRow(self.row)
 
 
+    def mouseReleaseEvent(self, event):
+        # send signal of clicked cell to table widget which cares further
+        self.clicked.emit()
+
+
 class TableWidget(QTableWidget):
     """
         Contains information for one monitor server as a table
@@ -731,6 +821,9 @@ class TableWidget(QTableWidget):
         self.real_width = 0
         self.real_height = 0
 
+        # store currentrly activated row
+        self.highlighted_row = 0
+
         # a thread + worker is necessary to get new monitor server data in the background and
         # to refresh the table cell by cell after new data is available
         self.worker_thread = QThread()
@@ -774,6 +867,10 @@ class TableWidget(QTableWidget):
         """
         widget = CellWidget(text=text, color=color, background=background,
                             row=row, column=column, icons=icons)
+
+        # if cell got clicked evaluate that click
+        widget.clicked.connect(self.cell_clicked)
+
         # fill cells with data
         self.setCellWidget(row, column, widget)
 
@@ -806,6 +903,90 @@ class TableWidget(QTableWidget):
 
         # after setting table whole window can be repainted
         self.ready_to_resize.emit()
+
+
+    @pyqtSlot(int, int)
+    def cell_clicked(self):
+        # simply use currently highlighted row as an index
+        host = self.cellWidget(self.highlighted_row, 0).text
+        service = self.cellWidget(self.highlighted_row, 1).text
+
+        menu = MenuAtCursor()
+        exitaction = QAction("Exit", self)
+
+        # to be refined...
+        exitaction.triggered.connect(QCoreApplication.instance().quit)
+        menu.addAction(exitaction)
+
+        menu.shown.connect(statuswindow.lock)
+        menu.closed.connect(statuswindow.unlock)
+        menu.show_at_cursor()
+
+
+    @pyqtSlot(int, int)
+    def sortColumn(self, column, order):
+        """
+            set data according to sort criteria
+        """
+        self.sort_column = HEADERS.keys()[column]
+        self.order = SORT_ORDER[order]
+        self.set_data(list(self.server.GetItemsGenerator()))
+
+
+    def realSize(self):
+        """
+            width, height
+        """
+        return self.realWidth(), self.realHeight()
+
+
+    def realWidth(self):
+        """
+            calculate real table width as there is no method included
+        """
+        self.real_width = 0
+        for column in range(0, self.columnCount()):
+            # if there is no with yet at the start take some reasonable value
+            try:
+                self.real_width += self.cellWidget(0, column).width()
+            except:
+                self.real_width += 100
+        del(column)
+
+        return self.real_width
+
+
+    def realHeight(self):
+        """
+            calculate real table height as there is no method included
+        """
+        # height summary starts with headers' height
+        # apparently height works better/without scrollbar if some pixels are added
+        self.real_height = self.horizontalHeader().height() + 2
+        # it is necessary to ask every row directly because their heights differ :-(
+        row = 0
+        for row in range(0, self.rowCount()):
+            try:
+                self.real_height += (self.cellWidget(row, 0).height())
+            except:
+                self.real_height += 30
+        del(row)
+
+        return self.real_height
+
+
+    def highlightRow(self, row):
+        for column in range(0, self.columnCount()):
+            if self.cellWidget(row, column) != None:
+                self.cellWidget(row, column).highlight()
+
+        self.highlighted_row = row
+
+
+    def colorizeRow(self, row):
+        for column in range(0, self.columnCount()):
+            if self.cellWidget(row, column) != None:
+                self.cellWidget(row, column).colorize()
 
 
     class Worker(QObject):
@@ -899,71 +1080,6 @@ class TableWidget(QTableWidget):
 
             # after running through
             self.table_ready.emit()
-
-
-    @pyqtSlot(int, int)
-    def sortColumn(self, column, order):
-        """
-            set data according to sort criteria
-        """
-        self.sort_column = HEADERS.keys()[column]
-        self.order = SORT_ORDER[order]
-        self.set_data(list(self.server.GetItemsGenerator()))
-
-
-    def realSize(self):
-        """
-            width, height
-        """
-        return self.realWidth(), self.realHeight()
-
-
-    def realWidth(self):
-        """
-            calculate real table width as there is no method included
-        """
-        self.real_width = 0
-        for column in range(0, self.columnCount()):
-            # if there is no with yet at the start take some reasonable value
-            try:
-                self.real_width += self.cellWidget(0, column).width()
-            except:
-                self.real_width += 100
-        del(column)
-
-
-        return self.real_width
-
-
-    def realHeight(self):
-        """
-            calculate real table height as there is no method included
-        """
-        # height summary starts with headers' height
-        # apparently height works better/without scrollbar if some pixels are added
-        self.real_height = self.horizontalHeader().height() + 2
-        # it is necessary to ask every row directly because their heights differ :-(
-        row = 0
-        for row in range(0, self.rowCount()):
-            try:
-                self.real_height += (self.cellWidget(row, 0).height())
-            except:
-                self.real_height += 30
-        del(row)
-
-        return self.real_height
-
-
-    def highlightRow(self, row):
-        for column in range(0, self.columnCount()):
-            if self.cellWidget(row, column) != None:
-                self.cellWidget(row, column).highlight()
-
-
-    def colorizeRow(self, row):
-        for column in range(0, self.columnCount()):
-            if self.cellWidget(row, column) != None:
-                self.cellWidget(row, column).colorize()
 
 
 class Dialogs(object):
