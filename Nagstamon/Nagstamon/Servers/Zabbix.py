@@ -176,7 +176,7 @@ class ZabbixServer(GenericServer):
                      'expandData': True}
                 )
                 if type(this_trigger) is dict:
-                    for triggerid in this_trigger.keys():
+                    for triggerid in list(this_trigger.keys()):
                         services.append(this_trigger[triggerid])
                 elif type(this_trigger) is list:
                     for trigger in this_trigger:

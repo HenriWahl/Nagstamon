@@ -109,9 +109,11 @@ class MenuAtCursor(QMenu):
     """
         open menu at position of mouse pointer - normal .exec() shows menu at (0, 0)
     """
-
     shown = pyqtSignal()
     closed = pyqtSignal()
+
+    # flag to avoid to fast popping up menus
+    available = True
 
     def __init__(self):
         QMenu.__init__(self)
@@ -119,16 +121,18 @@ class MenuAtCursor(QMenu):
 
     @pyqtSlot()
     def show_at_cursor(self):
-        # send shown signal to tell status window to stay open if menu is displayes
-        self.shown.emit()
-        # get cursor coordinates and decrease them to show menu under mouse pointer
-        x = QCursor.pos().x() - 10
-        y = QCursor.pos().y() - 10
-        self.exec(QPoint(x, y))
-        del(x, y)
+        if statuswindow.locked == False:
+            # send shown signal to tell status window to stay open if menu is displayes
+            self.shown.emit()
+            # get cursor coordinates and decrease them to show menu under mouse pointer
+            x = QCursor.pos().x() - 10
+            y = QCursor.pos().y() - 10
+            self.exec(QPoint(x, y))
+            del(x, y)
 
 
     def closeEvent(self, event):
+        # tell status window that there is no menu anymore
         self.closed.emit()
 
 
@@ -648,9 +652,6 @@ class ServerVBox(QVBoxLayout):
         # delete vbox if thread quits
         self.table.worker_thread.finished.connect(self.delete)
 
-        ###self.table.itemClicked.connect(self.table.item_clicked)
-        ###self.table.itemChanged.connect(self.table.item_clicked)
-
         self.addWidget(self.table, 1)
 
 
@@ -763,7 +764,8 @@ class CellWidget(QWidget):
 
 
     def enterEvent(self, event):
-         self.parent().parent().highlightRow(self.row)
+        if statuswindow.locked == False:
+            self.parent().parent().highlightRow(self.row)
 
 
     def leaveEvent(self, event):
@@ -772,7 +774,14 @@ class CellWidget(QWidget):
 
     def mouseReleaseEvent(self, event):
         # send signal of clicked cell to table widget which cares further
-        self.clicked.emit()
+
+        # only send signal if no menu is open -
+        # to avoid popping up menus if one menu should be closed by clicking elsewhere
+        if self.parent().parent().action_menu.available == True:
+            self.clicked.emit()
+        else:
+            # if this was blocked relese menu now
+            self.parent().parent().action_menu.available = True
 
 
 class TableWidget(QTableWidget):
@@ -823,6 +832,11 @@ class TableWidget(QTableWidget):
 
         # store currentrly activated row
         self.highlighted_row = 0
+
+        # action context menu
+        self.action_menu = MenuAtCursor()
+        # flag to avoid popping up menus when clicking somehwere
+        self.action_menu.available = True
 
         # a thread + worker is necessary to get new monitor server data in the background and
         # to refresh the table cell by cell after new data is available
@@ -905,22 +919,40 @@ class TableWidget(QTableWidget):
         self.ready_to_resize.emit()
 
 
-    @pyqtSlot(int, int)
+    @pyqtSlot()
     def cell_clicked(self):
         # simply use currently highlighted row as an index
+
         host = self.cellWidget(self.highlighted_row, 0).text
         service = self.cellWidget(self.highlighted_row, 1).text
 
-        menu = MenuAtCursor()
-        exitaction = QAction("Exit", self)
+        # empty the menu
+        self.action_menu.clear()
+
+        action_edit_actions = QAction('Edit actions...', self)
+
+        action_monitor = QAction('Monitor', self)
+        action_recheck = QAction('Recheck', self)
+        action_acknowledge = QAction('Acknowledge', self)
+        action_downtime = QAction('Downtime', self)
 
         # to be refined...
-        exitaction.triggered.connect(QCoreApplication.instance().quit)
-        menu.addAction(exitaction)
+        ###exitaction.triggered.connect(QCoreApplication.instance().quit)
 
-        menu.shown.connect(statuswindow.lock)
-        menu.closed.connect(statuswindow.unlock)
-        menu.show_at_cursor()
+        self.action_menu.addAction(action_edit_actions)
+
+        self.action_menu.addSeparator()
+        self.action_menu.addAction(action_monitor)
+        self.action_menu.addAction(action_recheck)
+        self.action_menu.addAction(action_acknowledge)
+        self.action_menu.addAction(action_downtime)
+
+        self.action_menu.shown.connect(statuswindow.lock)
+        self.action_menu.closed.connect(statuswindow.unlock)
+
+        self.action_menu.show_at_cursor()
+
+        self.action_menu.available = False
 
 
     @pyqtSlot(int, int)
@@ -928,7 +960,7 @@ class TableWidget(QTableWidget):
         """
             set data according to sort criteria
         """
-        self.sort_column = HEADERS.keys()[column]
+        self.sort_column = list(HEADERS.keys())[column]
         self.order = SORT_ORDER[order]
         self.set_data(list(self.server.GetItemsGenerator()))
 
@@ -980,6 +1012,7 @@ class TableWidget(QTableWidget):
             if self.cellWidget(row, column) != None:
                 self.cellWidget(row, column).highlight()
 
+        # store current highlighted row for context menu
         self.highlighted_row = row
 
 
