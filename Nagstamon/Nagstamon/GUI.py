@@ -2903,7 +2903,7 @@ class ServerVBox(gtk.VBox):
                 # populate context menu with service actions
                 if item_visible == True:
                     menu_item = gtk.MenuItem(a)
-                    menu_item.connect("activate", self.TreeviewPopupMenuResponse, a)
+                    #menu_item.connect("activate", self.TreeviewPopupMenuResponse, a)
                     self.popupmenu.append(menu_item)
 
                 del action, item_visible

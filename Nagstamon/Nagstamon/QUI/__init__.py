@@ -35,6 +35,8 @@ from Nagstamon.Config import (conf, Server, Action, RESOURCES, AppInfo)
 
 from Nagstamon.Servers import (SERVER_TYPES, servers, create_server, get_enabled_servers)
 
+from Nagstamon.Actions import IsFoundByRE
+
 # dialogs
 from Nagstamon.QUI.settings_main import Ui_settings_main
 from Nagstamon.QUI.settings_server import Ui_settings_server
@@ -56,6 +58,9 @@ HEADERS = OrderedDict([('host', 'Host'), ('service', 'Service'),
                        ('status', 'Status'), ('last_check', 'Last Check'),
                        ('duration', 'Duration'), ('attempt', 'Attempt'),
                        ('status_information', 'Status Information')])
+
+# list of headers keywords for action context menu
+HEADERS_LIST = list(HEADERS)
 
 # sorting order for tablewidgets
 SORT_ORDER = {'descending': True, 'ascending': False, 0: True, 1: False}
@@ -923,11 +928,74 @@ class TableWidget(QTableWidget):
     def cell_clicked(self):
         # simply use currently highlighted row as an index
 
-        host = self.cellWidget(self.highlighted_row, 0).text
-        service = self.cellWidget(self.highlighted_row, 1).text
+        miserable_host = self.cellWidget(self.highlighted_row, HEADERS_LIST.index('host')).text
+        miserable_service = self.cellWidget(self.highlighted_row, HEADERS_LIST.index('service')).text
+        miserable_status_info = self.cellWidget(self.highlighted_row, HEADERS_LIST.index('status_information')).text
 
         # empty the menu
         self.action_menu.clear()
+
+        # add custom actions
+        actions_list=list(conf.actions)
+        actions_list.sort(key=str.lower)
+        for a in actions_list:
+            # shortcut for next lines
+            action = conf.actions[a]
+            if action.enabled == True and action.monitor_type in ['', self.server.TYPE]:
+                # menu item visibility flag
+                item_visible = False
+                # check if clicked line is a service or host
+                # if it is check if the action is targeted on hosts or services
+                if miserable_service:
+                    if action.filter_target_service == True:
+                        # only check if there is some to check
+                        if action.re_host_enabled == True:
+                            if IsFoundByRE(miserable_host,
+                                                   action.re_host_pattern,
+                                                   action.re_host_reverse):
+                                item_visible = True
+                        # dito
+                        if action.re_service_enabled == True:
+                            if IsFoundByRE(miserable_service,
+                                                   action.re_service_pattern,
+                                                   action.re_service_reverse):
+                                item_visible = True
+                        # dito
+                        if action.re_status_information_enabled == True:
+                            if IsFoundByRE(miserable_service,
+                                                   action.re_status_information_pattern,
+                                                   action.re_status_information_reverse):
+                                item_visible = True
+
+                        # fallback if no regexp is selected
+                        if action.re_host_enabled == action.re_service_enabled == \
+                           action.re_status_information_enabled == False:
+                            item_visible = True
+
+                else:
+                    # hosts should only care about host specific actions, no services
+                    if action.filter_target_host == True:
+                        if action.re_host_enabled == True:
+                            if IsFoundByRE(miserable_host,\
+                                                   action.re_host_pattern,\
+                                                   action.re_host_reverse):
+                                item_visible = True
+                        else:
+                            # a non specific action will be displayed per default
+                            item_visible = True
+            else:
+                item_visible = False
+
+            # populate context menu with service actions
+            if item_visible == True:
+                #menu_item = gtk.MenuItem(a)
+                #menu_item.connect("activate", self.TreeviewPopupMenuResponse, a)
+                #self.popupmenu.append(menu_item)
+                
+                action_menuentry = QAction(a, self)
+                self.action_menu.addAction(action_menuentry)
+
+            del action, item_visible
 
         action_edit_actions = QAction('Edit actions...', self)
 
