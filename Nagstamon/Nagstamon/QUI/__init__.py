@@ -842,6 +842,10 @@ class TableWidget(QTableWidget):
         self.action_menu = MenuAtCursor()
         # flag to avoid popping up menus when clicking somehwere
         self.action_menu.available = True
+        # signalmapper for getting triggered actions
+        self.signalmapper_action_menu = QSignalMapper()
+        # connect menu to responder
+        self.signalmapper_action_menu.mapped[str].connect(self.action_menu_custom_response)
 
         # a thread + worker is necessary to get new monitor server data in the background and
         # to refresh the table cell by cell after new data is available
@@ -926,17 +930,22 @@ class TableWidget(QTableWidget):
 
     @pyqtSlot()
     def cell_clicked(self):
-        # simply use currently highlighted row as an index
+        # block context menu to avoid jumping menu chen clicking elsewhere to close it
+        self.action_menu.available = False
 
-        miserable_host = self.cellWidget(self.highlighted_row, HEADERS_LIST.index('host')).text
-        miserable_service = self.cellWidget(self.highlighted_row, HEADERS_LIST.index('service')).text
-        miserable_status_info = self.cellWidget(self.highlighted_row, HEADERS_LIST.index('status_information')).text
+        # simply use currently highlighted row as an index
+        self.miserable_host = self.cellWidget(self.highlighted_row, HEADERS_LIST.index('host')).text
+        self.miserable_service = self.cellWidget(self.highlighted_row, HEADERS_LIST.index('service')).text
+        self.miserable_status_info = self.cellWidget(self.highlighted_row, HEADERS_LIST.index('status_information')).text
 
         # empty the menu
         self.action_menu.clear()
 
+        # clear signal mappings
+        self.signalmapper_action_menu.removeMappings(self.signalmapper_action_menu)
+
         # add custom actions
-        actions_list=list(conf.actions)
+        actions_list = list(conf.actions)
         actions_list.sort(key=str.lower)
         for a in actions_list:
             # shortcut for next lines
@@ -946,23 +955,23 @@ class TableWidget(QTableWidget):
                 item_visible = False
                 # check if clicked line is a service or host
                 # if it is check if the action is targeted on hosts or services
-                if miserable_service:
+                if self.miserable_service:
                     if action.filter_target_service == True:
                         # only check if there is some to check
                         if action.re_host_enabled == True:
-                            if IsFoundByRE(miserable_host,
+                            if IsFoundByRE(self.miserable_host,
                                                    action.re_host_pattern,
                                                    action.re_host_reverse):
                                 item_visible = True
                         # dito
                         if action.re_service_enabled == True:
-                            if IsFoundByRE(miserable_service,
+                            if IsFoundByRE(self.miserable_service,
                                                    action.re_service_pattern,
                                                    action.re_service_reverse):
                                 item_visible = True
                         # dito
                         if action.re_status_information_enabled == True:
-                            if IsFoundByRE(miserable_service,
+                            if IsFoundByRE(self.miserable_service,
                                                    action.re_status_information_pattern,
                                                    action.re_status_information_reverse):
                                 item_visible = True
@@ -976,7 +985,7 @@ class TableWidget(QTableWidget):
                     # hosts should only care about host specific actions, no services
                     if action.filter_target_host == True:
                         if action.re_host_enabled == True:
-                            if IsFoundByRE(miserable_host,\
+                            if IsFoundByRE(self.miserable_host,\
                                                    action.re_host_pattern,\
                                                    action.re_host_reverse):
                                 item_visible = True
@@ -988,39 +997,92 @@ class TableWidget(QTableWidget):
 
             # populate context menu with service actions
             if item_visible == True:
-                #menu_item = gtk.MenuItem(a)
-                #menu_item.connect("activate", self.TreeviewPopupMenuResponse, a)
-                #self.popupmenu.append(menu_item)
-                
+                # create action
                 action_menuentry = QAction(a, self)
+                #add action
                 self.action_menu.addAction(action_menuentry)
+                # action to signalmapper
+                self.signalmapper_action_menu.setMapping(action_menuentry, a)
+                action_menuentry.triggered.connect(self.signalmapper_action_menu.map)
 
             del action, item_visible
 
+        # create adn add default actions
         action_edit_actions = QAction('Edit actions...', self)
+        action_edit_actions.triggered.connect(self.action_edit_actions)
 
         action_monitor = QAction('Monitor', self)
+        action_monitor.triggered.connect(self.action_monitor)
+
         action_recheck = QAction('Recheck', self)
+        action_recheck.triggered.connect(self.action_recheck)
+
         action_acknowledge = QAction('Acknowledge', self)
+        action_acknowledge.triggered.connect(self.action_acknowledge)
+
         action_downtime = QAction('Downtime', self)
+        action_downtime.triggered.connect(self.action_downtime)
 
-        # to be refined...
-        ###exitaction.triggered.connect(QCoreApplication.instance().quit)
-
+        # put actions into menu after separator
         self.action_menu.addAction(action_edit_actions)
-
         self.action_menu.addSeparator()
         self.action_menu.addAction(action_monitor)
         self.action_menu.addAction(action_recheck)
         self.action_menu.addAction(action_acknowledge)
         self.action_menu.addAction(action_downtime)
 
+        # connect menu to status window locking
         self.action_menu.shown.connect(statuswindow.lock)
         self.action_menu.closed.connect(statuswindow.unlock)
 
         self.action_menu.show_at_cursor()
 
-        self.action_menu.available = False
+
+    @pyqtSlot(str)
+    def action_menu_custom_response(self, action):
+        # avoid blocked context menu
+        self.action_menu.available = True
+        pass
+
+
+    @pyqtSlot()
+    def action_response_decorator(method):
+        """
+            decorate repeatedly called stuff
+        """
+        def decoration_function(self):
+            # avoid blocked context menu
+            self.action_menu.available = True
+            # run decorated method
+            method(self)
+            # default actions need closed statuswindow to display own dialogs
+            statuswindow.hide_window()
+        return(decoration_function)
+
+
+    @action_response_decorator
+    def action_edit_actions(self):
+        pass
+
+
+    @action_response_decorator
+    def action_monitor(self):
+        pass
+
+
+    @action_response_decorator
+    def action_recheck(self):
+        pass
+
+
+    @action_response_decorator
+    def action_acknowledge(self):
+        pass
+
+
+    @action_response_decorator
+    def action_downtime(self):
+        pass
 
 
     @pyqtSlot(int, int)
@@ -1673,21 +1735,20 @@ class Dialog_Settings(Dialog):
 
         return(decoration_function)
 
-
-    @pyqtSlot()
     @choose_sound_file_decoration
+    @pyqtSlot()
     def choose_sound_file_warning(self):
         self.sound_file_type = 'warning'
 
 
-    @pyqtSlot()
     @choose_sound_file_decoration
+    @pyqtSlot()
     def choose_sound_file_critical(self):
         self.sound_file_type = 'critical'
 
 
-    @pyqtSlot()
     @choose_sound_file_decoration
+    @pyqtSlot()
     def choose_sound_file_down(self):
         self.sound_file_type = 'down'
 
@@ -1711,21 +1772,20 @@ class Dialog_Settings(Dialog):
 
         return(decoration_function)
 
-
-    @pyqtSlot()
     @play_sound_file_decoration
+    @pyqtSlot()
     def play_sound_file_warning(self):
         self.sound_file_type = 'warning'
 
 
-    @pyqtSlot()
     @play_sound_file_decoration
+    @pyqtSlot()
     def play_sound_file_critical(self):
         self.sound_file_type = 'critical'
 
 
-    @pyqtSlot()
     @play_sound_file_decoration
+    @pyqtSlot()
     def play_sound_file_down(self):
         self.sound_file_type = 'down'
 
