@@ -41,6 +41,7 @@ from Nagstamon.Actions import IsFoundByRE
 from Nagstamon.QUI.settings_main import Ui_settings_main
 from Nagstamon.QUI.settings_server import Ui_settings_server
 from Nagstamon.QUI.settings_action import Ui_settings_action
+from Nagstamon.QUI.dialog_acknowledge import Ui_dialog_acknowledge
 
 
 # fixed icons for hosts/services attributes
@@ -77,7 +78,7 @@ class HBoxLayout(QHBoxLayout):
         self.setContentsMargins(0, 0, 0, 0)     # no margin
 
 
-    def hideItems(self):
+    def hide_items(self):
         """
             cruise through all child widgets and hide them
             self,count()-1 is needed because the last item is None
@@ -86,7 +87,7 @@ class HBoxLayout(QHBoxLayout):
             self.itemAt(item).widget().hide()
 
 
-    def showItems(self):
+    def show_items(self):
         """
             cruise through all child widgets and show them
             self,count()-1 is needed because the last item is None
@@ -103,8 +104,12 @@ class SystemTrayIcon(QSystemTrayIcon):
     def __init__(self, icon):
         QSystemTrayIcon.__init__(self, icon)
         self.menu = QMenu()
-        exitaction = QAction("Exit", self)
+        exitaction = QAction('Exit', self)
         exitaction.triggered.connect(QCoreApplication.instance().quit)
+
+        dummyaction = QAction('Dummy', self)
+        self.menu.addAction(dummyaction)
+
         self.menu.addAction(exitaction)
         self.setContextMenu(self.menu)
         self.show()
@@ -191,7 +196,7 @@ class StatusWindow(QWidget):
         # create vbox for each enabled server
         for server in servers.values():
             if server.enabled:
-                self.createServerVBox(server)
+                self.create_ServerVBox(server)
 
         self.servers_scrollarea_widget.setLayout(self.servers_vbox)
         self.servers_scrollarea.setWidget(self.servers_scrollarea_widget)
@@ -222,7 +227,7 @@ class StatusWindow(QWidget):
         self.locked = False
 
 
-    def createServerVBox(self, server):
+    def create_ServerVBox(self, server):
         """
             internally used to create enabled servers to be displayed
         """
@@ -237,7 +242,7 @@ class StatusWindow(QWidget):
             return None
 
 
-    def sortServerVBoxes(self):
+    def sort_ServerVBoxes(self):
         """
             sort ServerVBoxes alphabetically
         """
@@ -318,7 +323,7 @@ class StatusWindow(QWidget):
             else:
                 self.top = False
 
-        real_height = self.realHeight()
+        real_height = self.get_real_height()
 
         # width simply will be the current screen maximal width - less hassle!
         width = available_width
@@ -387,24 +392,24 @@ class StatusWindow(QWidget):
         self.hide_window()
 
 
-    def realWidth(self):
+    def get_real_width(self):
         """
             calculate widest width of all server tables
         """
         width = 0
         for server in self.servers_vbox.children():
-            if server.table.realWidth() > width:
-                width = server.table.realWidth()
+            if server.table.get_real_width() > width:
+                width = server.table.get_real_width()
         return width
 
 
-    def realHeight(self):
+    def get_real_height(self):
         """
             calculate summary of all heights of all server tables plus height of toparea
         """
         height = 0
         for server in self.servers_vbox.children():
-            height += server.realHeight()
+            height += server.get_real_height()
             # add spacing between vbox items
             height += self.servers_vbox.spacing()
 
@@ -660,11 +665,11 @@ class ServerVBox(QVBoxLayout):
         self.addWidget(self.table, 1)
 
 
-    def realHeight(self):
+    def get_real_height(self):
         """
             return summarized real height of hbox items and table
         """
-        height = self.table.realHeight()
+        height = self.table.get_real_height()
         # compare item heights, decide to take the largest
         if self.label.height() > self.button_monitor.height():
             height += self.label.height()
@@ -770,11 +775,11 @@ class CellWidget(QWidget):
 
     def enterEvent(self, event):
         if statuswindow.locked == False:
-            self.parent().parent().highlightRow(self.row)
+            self.parent().parent().highlight_row(self.row)
 
 
     def leaveEvent(self, event):
-        self.parent().parent().colorizeRow(self.row)
+        self.parent().parent().colorize_row(self.row)
 
 
     def mouseReleaseEvent(self, event):
@@ -800,6 +805,8 @@ class TableWidget(QTableWidget):
     # tell global window that it should be resized
     ready_to_resize = pyqtSignal()
 
+    # tell worker to get status after a recheck has been solicited
+    recheck = pyqtSignal()
 
     def __init__(self, columncount, rowcount, sort_column, order, server):
         QTableWidget.__init__(self, columncount, rowcount)
@@ -829,7 +836,7 @@ class TableWidget(QTableWidget):
         self.horizontalHeader().setStyleSheet('font-weight: bold;')
         self.horizontalHeader().setSortIndicatorShown(True)
         self.horizontalHeader().setSortIndicator(list(HEADERS).index(self.sort_column), SORT_ORDER[self.order])
-        self.horizontalHeader().sortIndicatorChanged.connect(self.sortColumn)
+        self.horizontalHeader().sortIndicatorChanged.connect(self.sort_columns)
 
         # store width and height if they do not need to be recalculated
         self.real_width = 0
@@ -919,9 +926,9 @@ class TableWidget(QTableWidget):
         self.resizeRowsToContents()
         self.horizontalHeader().setStretchLastSection(True)
 
-        # force table to its maximal height, calculated by .realHeight()
-        self.setMinimumHeight(self.realHeight())
-        self.setMaximumHeight(self.realHeight())
+        # force table to its maximal height, calculated by .get_real_height()
+        self.setMinimumHeight(self.get_real_height())
+        self.setMaximumHeight(self.get_real_height())
         self.setSizePolicy(QSizePolicy.Ignored, QSizePolicy.Maximum)
 
         # after setting table whole window can be repainted
@@ -1062,12 +1069,16 @@ class TableWidget(QTableWidget):
 
     @action_response_decorator
     def action_edit_actions(self):
-        pass
+        # buttons in toparee
+        statuswindow.hide_window()
+        # open actions tab (#3) of settings dialog
+        dialogs.settings.show(tab=3)
 
 
     @action_response_decorator
     def action_monitor(self):
-        pass
+        # open host/service monitor in browser
+        self.server.open_monitor(self.miserable_host, self.miserable_service)
 
 
     @action_response_decorator
@@ -1077,7 +1088,10 @@ class TableWidget(QTableWidget):
 
     @action_response_decorator
     def action_acknowledge(self):
-        pass
+        dialogs.acknowledge.show()
+        dialogs.acknowledge.initialize(server=self.server,
+                                       host=self.miserable_host,
+                                       service=self.miserable_service)
 
 
     @action_response_decorator
@@ -1086,7 +1100,7 @@ class TableWidget(QTableWidget):
 
 
     @pyqtSlot(int, int)
-    def sortColumn(self, column, order):
+    def sort_columns(self, column, order):
         """
             set data according to sort criteria
         """
@@ -1095,14 +1109,14 @@ class TableWidget(QTableWidget):
         self.set_data(list(self.server.GetItemsGenerator()))
 
 
-    def realSize(self):
+    def real_size(self):
         """
             width, height
         """
-        return self.realWidth(), self.realHeight()
+        return self.get_real_width(), self.get_real_height()
 
 
-    def realWidth(self):
+    def get_real_width(self):
         """
             calculate real table width as there is no method included
         """
@@ -1118,7 +1132,7 @@ class TableWidget(QTableWidget):
         return self.real_width
 
 
-    def realHeight(self):
+    def get_real_height(self):
         """
             calculate real table height as there is no method included
         """
@@ -1137,7 +1151,7 @@ class TableWidget(QTableWidget):
         return self.real_height
 
 
-    def highlightRow(self, row):
+    def highlight_row(self, row):
         for column in range(0, self.columnCount()):
             if self.cellWidget(row, column) != None:
                 self.cellWidget(row, column).highlight()
@@ -1146,7 +1160,7 @@ class TableWidget(QTableWidget):
         self.highlighted_row = row
 
 
-    def colorizeRow(self, row):
+    def colorize_row(self, row):
         for column in range(0, self.columnCount()):
             if self.cellWidget(row, column) != None:
                 self.cellWidget(row, column).colorize()
@@ -1176,6 +1190,7 @@ class TableWidget(QTableWidget):
             self.timer = QTimer(self)
             self.server.init_config()
 
+
         @pyqtSlot()
         def get_status(self):
             status =  self.server.GetStatus()
@@ -1186,6 +1201,7 @@ class TableWidget(QTableWidget):
                 self.timer.singleShot(10000, self.get_status)
             else:
                 self.finish.emit()
+
 
         @pyqtSlot(list, str, bool)
         def fill_rows(self, data, sort_column, reverse):
@@ -1262,6 +1278,10 @@ class Dialogs(object):
         self.action = Dialog_Action(Ui_settings_action)
         self.action.initialize()
 
+        # acknowledge dialog for miserable item context menu
+        self.acknowledge = Dialog_Acknowledge(Ui_dialog_acknowledge)
+        self.acknowledge.initialize()
+
         # file chooser Dialog
         self.file_chooser = QFileDialog()
 
@@ -1307,7 +1327,7 @@ class Dialog(object):
         pass
 
 
-    def show(self):
+    def show(self, tab=0):
         """
             simple how method, to be enriched
         """
@@ -1486,10 +1506,11 @@ class Dialog_Settings(Dialog):
         self.toggle_toggles()
 
 
-    def initialize(self, start_tab=0):
+    #def initialize(self, start_tab=0):
+    def initialize(self):
         # apply configuration values
         # start with servers tab
-        self.ui.tabs.setCurrentIndex(start_tab)
+        self.ui.tabs.setCurrentIndex(0)
         for widget in dir(self.ui):
             if widget.startswith('input_'):
                 if widget.startswith('input_checkbox_'):
@@ -1538,6 +1559,15 @@ class Dialog_Settings(Dialog):
 
         # important final size adjustment
         self.window.adjustSize()
+
+
+    def show(self, tab=0):
+        # jump to actions tab in settings dialog
+        self.ui.tabs.setCurrentIndex(tab)
+
+        # reset window if only needs smaller screen estate
+        self.window.adjustSize()
+        self.window.show()
 
 
     def ok(self):
@@ -2070,9 +2100,9 @@ class Dialog_Server(Dialog):
                 # add new server instance to global servers dict
                 servers[self.server_conf.name] = create_server(self.server_conf)
                 # create vbox
-                statuswindow.createServerVBox(servers[self.server_conf.name])
+                statuswindow.create_ServerVBox(servers[self.server_conf.name])
                 # renew list of server vboxes in status window
-                statuswindow.sortServerVBoxes()
+                statuswindow.sort_ServerVBoxes()
 
             # reorder servers in dict to reflect changes
             servers = OrderedDict(sorted(servers.items()))
@@ -2255,6 +2285,59 @@ class Dialog_Action(Dialog):
 
             # store server settings
             conf.SaveMultipleConfig("actions", "action")
+
+
+class Dialog_Acknowledge(Dialog):
+    """
+        Dialog for acknowledging host/service problems
+    """
+
+    # store host and service to be used for OK button evaluation
+    server = None
+    host = service = ''
+
+
+    def __init__(self, dialog):
+        Dialog.__init__(self, dialog)
+
+
+    def initialize(self, server=None, host='', service=''):
+        # store host and service to be used for OK button evaluation
+        self.host = host
+        self.service = service
+
+        # if service is "" it must be a host
+        if service == "":
+            # set label for acknowledging a host
+            self.window.setWindowTitle('Acknowledge host')
+            self.ui.input_label_description.setText('Host <b>%s</b>' % (host))
+        else:
+            # set label for acknowledging a service on host
+            self.window.setWindowTitle('Acknowledge service')
+            self.ui.input_label_description.setText('Service <b>%s</b> on host <b>%s</b>' % (service, host))
+
+        # default flags of monitor acknowledgement
+        self.ui.input_checkbox_sticky_acknowledgement.setChecked(conf.defaults_acknowledge_sticky)
+        self.ui.input_checkbox_send_notification.setChecked(conf.defaults_acknowledge_send_notification)
+        self.ui.input_checkbox_persistent_comment.setChecked(conf.defaults_acknowledge_persistent_comment)
+        self.ui.input_checkbox_acknowledge_all_services.setChecked(conf.defaults_acknowledge_all_services)
+
+        # default author + comment
+        # server will be None at first load which leads to a failure
+        if server != None:
+            self.ui.input_lineedit_author.setText(server.username)
+        self.ui.input_textedit_comment.setText(conf.defaults_acknowledge_comment)
+        self.ui.input_textedit_comment.setFocus()
+
+
+    def ok(self):
+        print('OKIDOKI', self.server, self.host, self.service)
+        author = self.ui.input_lineedit_author.text()
+        comment = self.ui.input_textedit_comment.toPlainText()
+        acknowledge_all_services = self.ui.input_checkbox_acknowledge_all_services.isChecked()
+        sticky = self.ui.input_checkbox_sticky_acknowledgement.isChecked()
+        notify = self.ui.input_checkbox_send_notification.isChecked()
+        persistent = self.ui.input_checkbox_persistent_comment.isChecked()
 
 
 class Notification(QObject):

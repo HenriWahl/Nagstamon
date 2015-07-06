@@ -259,7 +259,7 @@ class Op5MonitorServer(GenericServer):
         return Result()
 
 
-    def open_tree_view(self, host, service):
+    def open_monitor(self, host, service):
         if not service:
             url = "%s/monitor/index.php/extinfo/details?host=%s" % (self.monitor_url, host)
         else:

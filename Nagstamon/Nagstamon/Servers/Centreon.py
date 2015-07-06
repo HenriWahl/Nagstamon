@@ -93,7 +93,7 @@ class CentreonServer(GenericServer):
         pass
 
 
-    def open_tree_view(self, host, service=''):
+    def open_monitor(self, host, service=''):
         if self.use_autologin == True:
             auth = '&autologin=1&useralias=' + self.username + '&token=' + self.autologin_key
             if host == '_Module_Meta':

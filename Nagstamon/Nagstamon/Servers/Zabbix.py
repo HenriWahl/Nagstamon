@@ -271,19 +271,23 @@ class ZabbixServer(GenericServer):
 
         return ret
 
+
     def _open_browser(self, url):
         webbrowser.open(url)
 
         if conf.debug_mode == True:
             self.Debug(server=self.get_name(), debug="Open web page " + url)
 
+
     def open_services(self):
         self._open_browser(self.urls['human_services'])
+
 
     def open_hosts(self):
         self._open_browser(self.urls['human_hosts'])
 
-    def open_tree_view(self, host, service=""):
+
+    def open_monitor(self, host, service=""):
         """
         open monitor from treeview context menu
         """
@@ -299,6 +303,7 @@ class ZabbixServer(GenericServer):
             self.Debug(server=self.get_name(), host=host, service=service,
                        debug="Open host/service monitor web page " + url)
         webbrowser.open(url)
+
 
     def GetHost(self, host):
         """

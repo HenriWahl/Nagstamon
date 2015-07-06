@@ -467,7 +467,7 @@ class GenericServer(object):
             return "n/a", "n/a"
 
 
-    def open_tree_view(self, host, service=""):
+    def open_monitor(self, host, service=""):
         """
         open monitor from treeview context menu
         """

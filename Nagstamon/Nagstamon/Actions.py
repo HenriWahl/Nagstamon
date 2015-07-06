@@ -603,10 +603,12 @@ class Action(threading.Thread):
         return urllib.parse.quote(string, ":/=?&@+")
 
 
+"""
 def TreeViewNagios(server, host, service):
     # if the clicked row does not contain a service it mus be a host,
     # so the nagios query is different
     server.open_tree_view(host, service)
+"""
 
 
 def not_empty(x):

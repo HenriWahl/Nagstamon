@@ -227,6 +227,6 @@ class OpsviewServer(GenericServer):
         return Result()
 
 
-    def open_tree_view(self, host, service):
+    def open_monitor(self, host, service):
         webbrowser.open('%s/status/service?host=%s' % (self.monitor_url, host))
 
