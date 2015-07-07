@@ -37,7 +37,7 @@ class IcingaServer(GenericServer):
 
     def init_config(self):
         """
-        set URLs for CGI - they are static and there is no need to set them with every cycle
+            set URLs for CGI - they are static and there is no need to set them with every cycle
         """
         # dummy default empty cgi urls - get filled later when server version is known
         self.cgiurl_services = None
@@ -46,13 +46,10 @@ class IcingaServer(GenericServer):
 
     def init_HTTP(self):
         """
-        Icinga 1.11 needs extra Referer header for actions
+            Icinga 1.11 needs extra Referer header for actions
         """
         GenericServer.init_HTTP(self)
 
-        print(self.session.headers)
-
-        ###if not "Referer" in self.HTTPheaders:
         if not "Referer" in self.session.headers:
             # to execute actions since Icinga 1.11 a Referer Header is necessary
             self.session.headers["Referer"] = self.monitor_cgi_url + "/cmd.cgi"
@@ -60,7 +57,7 @@ class IcingaServer(GenericServer):
 
     def get_server_version(self):
         """
-        Try to get Icinga version for different URLs and JSON capabilities
+            Try to get Icinga version for different URLs and JSON capabilities
         """
         result = self.FetchURL("%s/tac.cgi?jsonoutput" % (self.monitor_cgi_url), giveback="raw")
 
@@ -91,7 +88,7 @@ class IcingaServer(GenericServer):
 
     def _get_status(self):
         """
-        Get status from Icinga Server, prefer JSON if possible
+            Get status from Icinga Server, prefer JSON if possible
         """
         try:
             if self.json == None:
@@ -141,7 +138,7 @@ class IcingaServer(GenericServer):
 
     def _get_status_JSON(self):
         """
-        Get status from Icinga Server - the JSON way
+            Get status from Icinga Server - the JSON way
         """
         # new_hosts dictionary
         self.new_hosts = dict()
@@ -158,10 +155,6 @@ class IcingaServer(GenericServer):
 
                 jsondict = json.loads(jsonraw)
                 hosts = copy.deepcopy(jsondict["status"]["host_status"])
-
-                print(50*'#')
-                print(hosts)
-                print(50*'+')
 
                 for host in hosts:
                     # make dict of tuples for better reading
@@ -222,11 +215,6 @@ class IcingaServer(GenericServer):
 
                 jsondict = json.loads(jsonraw)
                 services = copy.deepcopy(jsondict["status"]["service_status"])
-
-                print(50*'*')
-                print(services)
-                print(50*'~')
-
 
                 for service in services:
                     # make dict of tuples for better reading

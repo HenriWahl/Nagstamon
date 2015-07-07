@@ -146,20 +146,12 @@ class ThrukServer(GenericServer):
             # JSON experiments
             result = self.FetchURL(self.cgiurl_hosts, giveback="raw")
 
-            print(50*'+', '\n', result.result, result.error, '\n', 50*'+')
-
-
-
             jsonraw, error = copy.deepcopy(result.result), copy.deepcopy(result.error)
             if error != "": return Result(result=jsonraw, error=error)
 
             # in case basic auth did not work try form login cookie based login
             if jsonraw.startswith("<"):
                 self.CookieAuth = True
-
-
-                print(50*'+', '\n', jsonraw, '\n', 50*'+')
-
 
                 return Result(result=None, error="Login failed.")
 

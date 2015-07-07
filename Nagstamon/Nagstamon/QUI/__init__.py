@@ -808,6 +808,7 @@ class TableWidget(QTableWidget):
     # tell worker to get status after a recheck has been solicited
     recheck = pyqtSignal()
 
+
     def __init__(self, columncount, rowcount, sort_column, order, server):
         QTableWidget.__init__(self, columncount, rowcount)
 
@@ -875,6 +876,9 @@ class TableWidget(QTableWidget):
 
         # connect signal new_data to worker slot fill_rows
         self.new_data.connect(self.worker.fill_rows)
+
+        # connect signal for acknowledge
+        dialogs.acknowledge.acknowledge.connect(self.worker.acknowledge)
 
 
     @pyqtSlot()
@@ -1198,7 +1202,7 @@ class TableWidget(QTableWidget):
 
             if self.running == True:
                 # avoid memory leak by singleshooting next get_status after this one is finished
-                self.timer.singleShot(10000, self.get_status)
+                self.timer.singleShot(int(conf.update_interval_seconds) * 1000, self.get_status)
             else:
                 self.finish.emit()
 
@@ -1261,6 +1265,19 @@ class TableWidget(QTableWidget):
             self.table_ready.emit()
 
 
+        @pyqtSlot(dict)
+        def acknowledge(self, info_dict):
+            """
+                slot waiting for 'acknowledge' signal from ok button from acknowledge dialog
+                all information about target server, host, service and flags is contained
+                in dictionary 'info_dict'
+            """
+            # because all monitors are connected to this slot we must check which one sent the signal,
+            # otherwise there are several calls and not only one as wanted
+            if self.server == info_dict['server']:
+                pass
+
+
 class Dialogs(object):
     """
         class for accessing all dialogs
@@ -1286,7 +1303,7 @@ class Dialogs(object):
         self.file_chooser = QFileDialog()
 
 
-class Dialog(object):
+class Dialog(QObject):
     """
         one single dialog
     """
@@ -1304,6 +1321,7 @@ class Dialog(object):
 
 
     def __init__(self, dialog):
+        QObject.__init__(self)
         self.window = QDialog()
         self.ui = dialog()
         self.ui.setupUi(self.window)
@@ -2296,13 +2314,17 @@ class Dialog_Acknowledge(Dialog):
     server = None
     host = service = ''
 
+    # tell worker to acknowledge some troublesome item
+    acknowledge = pyqtSignal(dict)
+
 
     def __init__(self, dialog):
         Dialog.__init__(self, dialog)
 
 
     def initialize(self, server=None, host='', service=''):
-        # store host and service to be used for OK button evaluation
+        # store server, host and service to be used for OK button evaluation
+        self.server = server
         self.host = host
         self.service = service
 
@@ -2323,21 +2345,41 @@ class Dialog_Acknowledge(Dialog):
         self.ui.input_checkbox_acknowledge_all_services.setChecked(conf.defaults_acknowledge_all_services)
 
         # default author + comment
-        # server will be None at first load which leads to a failure
-        if server != None:
-            self.ui.input_lineedit_author.setText(server.username)
         self.ui.input_textedit_comment.setText(conf.defaults_acknowledge_comment)
         self.ui.input_textedit_comment.setFocus()
 
 
     def ok(self):
-        print('OKIDOKI', self.server, self.host, self.service)
-        author = self.ui.input_lineedit_author.text()
-        comment = self.ui.input_textedit_comment.toPlainText()
+        """
+            acknowledge miserable host/service
+        """
+        # various parameters for the CGI request
+        #author = self.server.username
+        #comment = self.ui.input_textedit_comment.toPlainText()
         acknowledge_all_services = self.ui.input_checkbox_acknowledge_all_services.isChecked()
-        sticky = self.ui.input_checkbox_sticky_acknowledgement.isChecked()
-        notify = self.ui.input_checkbox_send_notification.isChecked()
-        persistent = self.ui.input_checkbox_persistent_comment.isChecked()
+        #sticky = self.ui.input_checkbox_sticky_acknowledgement.isChecked()
+        #notify = self.ui.input_checkbox_send_notification.isChecked()
+        #persistent = self.ui.input_checkbox_persistent_comment.isChecked()
+
+        # create a list of all service of selected host to acknowledge them all
+        all_services = list()
+        if acknowledge_all_services == True:
+            for i in self.server.nagitems_filtered["services"].values():
+                for s in i:
+                    if s.host == self.host:
+                        all_services.append(s.name)
+
+        # send signal to tablewidget worker to care about acknowledging with supplied information
+        self.acknowledge.emit({'server': self.server,
+                               'host': self.host,
+                               'service': self.service,
+                               'author': self.server.username,
+                               'comnment': self.ui.input_textedit_comment.toPlainText(),
+                               'sticky': self.ui.input_checkbox_sticky_acknowledgement.isChecked(),
+                               'notify': self.ui.input_checkbox_send_notification.isChecked(),
+                               'persistent': self.ui.input_checkbox_persistent_comment.isChecked(),
+                               'acknowledge_all_services': acknowledge_all_services,
+                               'all_services': all_services})
 
 
 class Notification(QObject):

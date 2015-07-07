@@ -286,7 +286,7 @@ class GenericServer(object):
         self.FetchURL(self.monitor_cgi_url + "/cmd.cgi", giveback="raw", cgi_data=cgi_data)
 
 
-    def set_acknowledge(self, thread_obj):
+    def set_acknowledge_OLD(self, thread_obj):
         if thread_obj.acknowledge_all_services == True:
             all_services = thread_obj.all_services
         else:
@@ -295,6 +295,23 @@ class GenericServer(object):
                               thread_obj.sticky, thread_obj.notify, thread_obj.persistent, all_services)
         # resfresh immediately according to https://github.com/HenriWahl/Nagstamon/issues/86
         self.thread.doRefresh = True
+
+
+    def set_acknowledge(self, info_dict):
+        if info_dict['acknowledge_all_services'] == True:
+            all_services = info_dict['all_services']
+        else:
+            all_services = []
+        self._set_acknowledge(info_dict['host'],
+                              info_dict['service'],
+                              info_dict['author'],
+                              info_dict['comment'],
+                              info_dict['sticky'],
+                              info_dict['notify'],
+                              info_dict['persistent'],
+                              all_services)
+        # resfresh immediately according to https://github.com/HenriWahl/Nagstamon/issues/86
+        ###self.thread.doRefresh = True
 
 
     def _set_acknowledge(self, host, service, author, comment, sticky, notify, persistent, all_services=[]):
