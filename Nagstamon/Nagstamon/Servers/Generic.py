@@ -17,17 +17,17 @@
 # along with this program; if not, write to the Free Software
 # Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA  02110-1301, USA
 
+# about to become obsolete
 import urllib.request, urllib.parse, urllib.error
 import urllib.request, urllib.error, urllib.parse
-import http.cookiejar
 
 import requests
 # disable annoying InsecureRequestWarning warnings
 try:
     requests.packages.urllib3.disable_warnings()
 except:
-    # older requests verssion might not have the packages submodule
-    # for example in Ubuntu 14.04
+    # older requests version might not have the packages submodule
+    # for example the one in Ubuntu 14.04
     pass
 
 import sys
@@ -45,8 +45,10 @@ from Nagstamon.Actions import (HostIsFilteredOutByRE,
                                StatusInformationIsFilteredOutByRE,
                                CriticalityIsFilteredOutByRE,
                                not_empty)
-from Nagstamon.Objects import *
+from Nagstamon.Objects import (GenericService, GenericHost, Result)
 from Nagstamon.Config import (conf, AppInfo)
+
+from collections import OrderedDict
 
 
 class GenericServer(object):
@@ -310,13 +312,53 @@ class GenericServer(object):
                               info_dict['notify'],
                               info_dict['persistent'],
                               all_services)
+
         # resfresh immediately according to https://github.com/HenriWahl/Nagstamon/issues/86
         ###self.thread.doRefresh = True
 
 
     def _set_acknowledge(self, host, service, author, comment, sticky, notify, persistent, all_services=[]):
+        """
+            send acknowledge to monitor server - might be different on every monitor type
+        """
+
         url = self.monitor_cgi_url + "/cmd.cgi"
 
+        # the following flags apply to hosts and services
+        #
+        # according to sf.net bug #3304098 (https://sourceforge.net/tracker/?func=detail&atid=1101370&aid=3304098&group_id=236865)
+        # the send_notification-flag must not exist if it is set to "off", otherwise
+        # the Nagios core interpretes it as set, regardless its real value
+        #
+        # for whatever silly reason Icinga depends on the correct order of submitted form items...
+        # see sf.net bug 3428844
+        #
+        # Thanks to Icinga ORDER OF ARGUMENTS IS IMPORTANT HERE!
+        #
+        cgi_data = OrderedDict()
+        if service == '':
+            cgi_data['cmd_typ'] = '33'
+        else:
+            cgi_data['cmd_typ'] = '34'
+        cgi_data['cmd_mod'] = '2'
+        cgi_data['host'] = host
+        if service != '':
+            cgi_data['service'] = service
+        cgi_data['com_author'] = author
+        cgi_data['com_data'] = comment
+        cgi_data['btnSubmit'] = 'Commit'
+        if notify == True:
+            cgi_data['send_notification'] = 'on'
+        if persistent == True:
+            cgi_data['persistent'] = 'on'
+        if sticky == True:
+            cgi_data['sticky_ack'] = 'on'
+
+
+        self.FetchURL(url, giveback="raw", cgi_data=cgi_data)
+
+
+        """
         # decision about host or service - they have different URLs
         # do not care about the doube %s (%s%s) - its ok, "flags" cares about the necessary "&"
         if service == "":
@@ -324,20 +366,20 @@ class GenericServer(object):
             # according to sf.net bug #3304098 (https://sourceforge.net/tracker/?func=detail&atid=1101370&aid=3304098&group_id=236865)
             # the send_notification-flag must not exist if it is set to "off", otherwise
             # the Nagios core interpretes it as set, regardless its real value
-            if notify == True:
-                send_notification = "&send_notification=on"
-            else:
-                send_notification = ""
-            # dito for persistence...
-            if persistent == True:
-                persistent_comment = "&persistent=on"
-            else:
-                persistent_comment = ""
-            # ...and sticky acks too?
-            if sticky == True:
-                sticky_ack = "&sticky_ack=on"
-            else:
-                sticky_ack = ""
+            ###if notify == True:
+            ###    send_notification = "&send_notification=on"
+            ###else:
+            ###    send_notification = ""
+            #### dito for persistence...
+            ###if persistent == True:
+            ###    persistent_comment = "&persistent=on"
+            ###else:
+            ###    persistent_comment = ""
+            #### ...and sticky acks too?
+            ###if sticky == True:
+            ###    sticky_ack = "&sticky_ack=on"
+            ###else:
+            ###    sticky_ack = ""
             cgi_data = urllib.parse.urlencode(
                 [("cmd_typ", "33"), ("cmd_mod", "2"), ("host", host), ("com_author", author), \
                  ("com_data", comment), ("btnSubmit", "Commit")]) \
@@ -372,10 +414,13 @@ class GenericServer(object):
                        + send_notification + persistent_comment + sticky_ack
             # running remote cgi command
             self.FetchURL(url, giveback="raw", cgi_data=cgi_data)
-
+        """
         # acknowledge all services on a host
         if len(all_services) > 0:
+
             for s in all_services:
+
+                """
                 # services @ host
                 # the same applies here as with the host and send_notification
                 if notify == True:
@@ -397,7 +442,10 @@ class GenericServer(object):
                          ("com_author", author), ("com_data", comment), ("btnSubmit", "Commit")]) \
                                + send_notification + persistent_comment + sticky_ack
                     # running remote cgi command
-                    self.FetchURL(url, giveback="raw", cgi_data=cgi_data)
+                 """
+                cgi_data['cmd_typ'] = '34'
+                cgi_data['service'] = s
+                self.FetchURL(url, giveback="raw", cgi_data=cgi_data)
 
 
     def set_downtime(self, thread_obj):
@@ -692,79 +740,81 @@ class GenericServer(object):
                             # so if the hostname is empty the nagios status item should get
                             # its hostname from the previuos item - one reason to keep "nagitems"
                             try:
-                                n["host"] = str(tds[0](text=not_empty)[0])
+                                n['host'] = str(tds[0](text=not_empty)[0])
                             except:
-                                n["host"] = str(nagitems["services"][len(nagitems["services"]) - 1]["host"])
+                                n['host'] = str(nagitems['services'][len(nagitems['services']) - 1]['host'])
                             # service
-                            n["service"] = str(tds[1](text=not_empty)[0])
+                            n['service'] = str(tds[1](text=not_empty)[0])
                             # status
-                            n["status"] = str(tds[2](text=not_empty)[0])
+                            n['status'] = str(tds[2](text=not_empty)[0])
                             # last_check
-                            n["last_check"] = str(tds[3](text=not_empty)[0])
+                            n['last_check'] = str(tds[3](text=not_empty)[0])
                             # duration
-                            n["duration"] = str(tds[4](text=not_empty)[0])
+                            n['duration'] = str(tds[4](text=not_empty)[0])
                             # attempt
                             # to fix http://sourceforge.net/tracker/?func=detail&atid=1101370&aid=3280961&group_id=236865 .attempt needs
                             # to be stripped
-                            n["attempt"] = str(tds[5](text=not_empty)[0]).strip()
+                            n['attempt'] = str(tds[5](text=not_empty)[0]).strip()
                             # status_information
                             if len(tds[6](text=not_empty)) == 0:
-                                n["status_information"] = ""
+                                n['status_information'] = ''
                             else:
-                                n["status_information"] = str(tds[6](text=not_empty)[0]).encode("utf-8")
+                                ###n['status_information'] = str(tds[6](text=not_empty)[0]).encode('utf-8')
+                                n['status_information'] = str(tds[6](text=not_empty)[0])
                             # status flags
-                            n["passiveonly"] = False
-                            n["notifications_disabled"] = False
-                            n["flapping"] = False
-                            n["acknowledged"] = False
-                            n["scheduled_downtime"] = False
+                            n['passiveonly'] = False
+                            n['notifications_disabled'] = False
+                            n['flapping'] = False
+                            n['acknowledged'] = False
+                            n['scheduled_downtime'] = False
 
                             # map status icons to status flags
                             icons = tds[1].findAll('img')
                             for i in icons:
-                                icon = i["src"].split("/")[-1]
+                                icon = i['src'].split('/')[-1]
                                 if icon in self.STATUS_MAPPING:
                                     n[self.STATUS_MAPPING[icon]] = True
                             # cleaning
                             del icons
 
                             # add dictionary full of information about this service item to nagitems - only if service
-                            nagitems["services"].append(n)
+                            nagitems['services'].append(n)
                             # after collection data in nagitems create objects of its informations
                             # host objects contain service objects
-                            if n["host"] not in self.new_hosts:
-                                self.new_hosts[n["host"]] = GenericHost()
-                                self.new_hosts[n["host"]].name = n["host"]
-                                self.new_hosts[n["host"]].status = "UP"
+                            if n['host'] not in self.new_hosts:
+                                self.new_hosts[n['host']] = GenericHost()
+                                self.new_hosts[n['host']].name = n['host']
+                                self.new_hosts[n['host']].status = 'UP'
                                 # trying to fix https://sourceforge.net/tracker/index.php?func=detail&aid=3299790&group_id=236865&atid=1101370
                                 # if host is not down but in downtime or any other flag this should be evaluated too
                                 # map status icons to status flags
                                 icons = tds[0].findAll('img')
                                 for i in icons:
-                                    icon = i["src"].split("/")[-1]
+                                    icon = i['src'].split('/')[-1]
                                     if icon in self.STATUS_MAPPING:
-                                        self.new_hosts[n["host"]].__dict__[self.STATUS_MAPPING[icon]] = True
+                                        self.new_hosts[n['host']].__dict__[self.STATUS_MAPPING[icon]] = True
 
                             # if a service does not exist create its object
-                            if n["service"] not in self.new_hosts[n["host"]].services:
-                                new_service = n["service"]
+                            if n['service'] not in self.new_hosts[n['host']].services:
+                                new_service = n['service']
                                 self.new_hosts[n["host"]].services[new_service] = GenericService()
-                                self.new_hosts[n["host"]].services[new_service].host = n["host"]
-                                self.new_hosts[n["host"]].services[new_service].name = n["service"]
+                                self.new_hosts[n["host"]].services[new_service].host = n['host']
+                                self.new_hosts[n["host"]].services[new_service].name = n['service']
                                 self.new_hosts[n["host"]].services[new_service].server = self.name
-                                self.new_hosts[n["host"]].services[new_service].status = n["status"]
-                                self.new_hosts[n["host"]].services[new_service].last_check = n["last_check"]
-                                self.new_hosts[n["host"]].services[new_service].duration = n["duration"]
-                                self.new_hosts[n["host"]].services[new_service].attempt = n["attempt"]
+                                self.new_hosts[n["host"]].services[new_service].status = n['status']
+                                self.new_hosts[n["host"]].services[new_service].last_check = n['last_check']
+                                self.new_hosts[n["host"]].services[new_service].duration = n['duration']
+                                self.new_hosts[n["host"]].services[new_service].attempt = n['attempt']
+                                ###self.new_hosts[n["host"]].services[new_service].status_information = n[
+                                ###    'status_information'].encode('utf-8')
                                 self.new_hosts[n["host"]].services[new_service].status_information = n[
-                                    "status_information"].encode("utf-8")
-                                self.new_hosts[n["host"]].services[new_service].passiveonly = n["passiveonly"]
+                                    'status_information']
+                                self.new_hosts[n["host"]].services[new_service].passiveonly = n['passiveonly']
                                 self.new_hosts[n["host"]].services[new_service].notifications_disabled = n[
-                                    "notifications_disabled"]
-                                self.new_hosts[n["host"]].services[new_service].flapping = n["flapping"]
-                                self.new_hosts[n["host"]].services[new_service].acknowledged = n["acknowledged"]
-                                self.new_hosts[n["host"]].services[new_service].scheduled_downtime = n[
-                                    "scheduled_downtime"]
+                                    'notifications_disabled']
+                                self.new_hosts[n["host"]].services[new_service].flapping = n['flapping']
+                                self.new_hosts[n["host"]].services[new_service].acknowledged = n['acknowledged']
+                                self.new_hosts[n["host"]].services[new_service].scheduled_downtime = n['scheduled_downtime']
                                 self.new_hosts[n["host"]].services[new_service].status_type = status_type
                             del tds, n
                     except:
@@ -1155,7 +1205,6 @@ class GenericServer(object):
                         form_data = dict()
                         for key in cgi_data:
                             form_data[key] = (None, cgi_data[key])
-
                         # get response with cgi_data encodes as files
                         response = self.session.post(url, files=form_data)
                 else:

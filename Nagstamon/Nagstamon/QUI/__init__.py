@@ -1249,7 +1249,6 @@ class TableWidget(QTableWidget):
                                 icons.append(ICONS['passive'])
                             if nagitem.is_in_scheduled_downtime():
                                 icons.append(ICONS['downtime'])
-
                     else:
                         icons = [False]
 
@@ -1275,7 +1274,8 @@ class TableWidget(QTableWidget):
             # because all monitors are connected to this slot we must check which one sent the signal,
             # otherwise there are several calls and not only one as wanted
             if self.server == info_dict['server']:
-                pass
+                # pass dictionary to server's acknowledge machinery
+                self.server.set_acknowledge(info_dict)
 
 
 class Dialogs(object):
@@ -2374,7 +2374,7 @@ class Dialog_Acknowledge(Dialog):
                                'host': self.host,
                                'service': self.service,
                                'author': self.server.username,
-                               'comnment': self.ui.input_textedit_comment.toPlainText(),
+                               'comment': self.ui.input_textedit_comment.toPlainText(),
                                'sticky': self.ui.input_checkbox_sticky_acknowledgement.isChecked(),
                                'notify': self.ui.input_checkbox_send_notification.isChecked(),
                                'persistent': self.ui.input_checkbox_persistent_comment.isChecked(),
