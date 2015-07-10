@@ -32,7 +32,7 @@ import time
 import copy
 
 from Nagstamon import Actions
-from Nagstamon.Objects import *
+from Nagstamon.Objects import (GenericHost, GenericService, Result)
 from Nagstamon.Servers.Generic import GenericServer
 
 from Nagstamon.Config import conf
@@ -125,9 +125,7 @@ class MultisiteServer(GenericServer):
     def _get_url(self, url):
         result = self.FetchURL(url, 'raw')
         content, error = result.result, result.error
-
         if error != "":
-            #raise MultisiteError(True, Result(result = copy.deepcopy(content), error = error))
             raise MultisiteError(True, Result(result = content, error = error))
 
         if content.startswith('WARNING:'):
@@ -144,7 +142,6 @@ class MultisiteServer(GenericServer):
                                                error = content))
 
         # in case of auth problem enable GUI auth part in popup
-        #if self.CookieAuth == True and len(self.Cookie) == 0:
         if self.CookieAuth == True and len(self.session.cookies) == 0:
             self.refresh_authentication = True
             return Result(result="", error="Authentication failed")
@@ -153,7 +150,6 @@ class MultisiteServer(GenericServer):
         elif content.startswith('<'):
             self.CookieAuth = True
             # if first attempt login and then try to get data again
-            ###if len(self.Cookie) == 0:
             if len(self.session.cookies) == 0:
                 self._get_cookie_login()
                 result = self.FetchURL(url, 'raw')
@@ -179,7 +175,6 @@ class MultisiteServer(GenericServer):
             # login and get cookie
             self.FetchURL(self.monitor_url + '/login.py', cgi_data=login_data, multipart=True)
         except:
-
             import traceback
             traceback.print_exc(file=sys.stdout)
 
@@ -188,7 +183,7 @@ class MultisiteServer(GenericServer):
 
     def _get_status(self):
         """
-        Get status from Check_MK Server
+            Get status from Check_MK Server
         """
 
         ret = Result()

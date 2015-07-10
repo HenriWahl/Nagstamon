@@ -85,8 +85,10 @@ class Ui_dialog_downtime(object):
         self.button_change_defaults_downtime.setText(_translate("dialog_downtime", "Change downtime defaults..."))
         self.label_duration_minutes.setText(_translate("dialog_downtime", "minutes"))
         self.label_start_time.setText(_translate("dialog_downtime", "Start time:"))
+        self.input_lineedit_start_time.setText(_translate("dialog_downtime", "n/a"))
         self.label_end_time.setText(_translate("dialog_downtime", "End time:"))
         self.type_groupbox.setTitle(_translate("dialog_downtime", "Type"))
         self.input_radiobutton_type_fixed.setText(_translate("dialog_downtime", "Fixed"))
         self.input_radiobutton_type_flexible.setText(_translate("dialog_downtime", "Flexible"))
+        self.input_lineedit_end_time.setText(_translate("dialog_downtime", "n/a"))
 

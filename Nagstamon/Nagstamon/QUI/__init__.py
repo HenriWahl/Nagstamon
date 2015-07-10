@@ -30,6 +30,10 @@ import os.path
 from operator import methodcaller
 from collections import OrderedDict
 from copy import deepcopy
+import urllib.parse
+import webbrowser
+import subprocess
+import sys
 
 from Nagstamon.Config import (conf, Server, Action, RESOURCES, AppInfo)
 
@@ -42,6 +46,8 @@ from Nagstamon.QUI.settings_main import Ui_settings_main
 from Nagstamon.QUI.settings_server import Ui_settings_server
 from Nagstamon.QUI.settings_action import Ui_settings_action
 from Nagstamon.QUI.dialog_acknowledge import Ui_dialog_acknowledge
+from Nagstamon.QUI.dialog_downtime import Ui_dialog_downtime
+from Nagstamon.QUI.dialog_submit import Ui_dialog_submit
 
 
 # fixed icons for hosts/services attributes
@@ -806,7 +812,14 @@ class TableWidget(QTableWidget):
     ready_to_resize = pyqtSignal()
 
     # tell worker to get status after a recheck has been solicited
+    #
+    # UNUSED right now!
+    #
     recheck = pyqtSignal()
+
+    # action to be executed by worker
+    # 2 values: action and host/service info
+    request_action = pyqtSignal(dict, dict)
 
 
     def __init__(self, columncount, rowcount, sort_column, order, server):
@@ -879,6 +892,16 @@ class TableWidget(QTableWidget):
 
         # connect signal for acknowledge
         dialogs.acknowledge.acknowledge.connect(self.worker.acknowledge)
+
+        # connect signal to get start end time for downtime from worker
+        dialogs.downtime.get_start_end.connect(self.worker.get_start_end)
+        self.worker.set_start_end.connect(dialogs.downtime.set_start_end)
+
+        # connect signal for downtime
+        dialogs.downtime.downtime.connect(self.worker.downtime)
+
+        # execute action by worker
+        self.request_action.connect(self.worker.execute_action)
 
 
     @pyqtSlot()
@@ -1053,7 +1076,23 @@ class TableWidget(QTableWidget):
     def action_menu_custom_response(self, action):
         # avoid blocked context menu
         self.action_menu.available = True
-        pass
+        # send dict with action info and dict with host/service info
+        self.request_action.emit(conf.actions[action].__dict__, {'host': self.miserable_host,
+                                                                 'service': self.miserable_service,
+                                                                 'status-info': self.miserable_status_info,
+                                                                 'address': self.server.GetHost(self.miserable_host).result,
+                                                                 'monitor': self.server.monitor_url,
+                                                                 'monitor-cgi': self.server.monitor_cgi_url,
+                                                                 'username': self.server.username,
+                                                                 'password': self.server.password,
+                                                                 'comment-ack': conf.defaults_acknowledge_comment,
+                                                                 'comment-down': conf.defaults_downtime_comment,
+                                                                 'comment-submit': conf.defaults_submit_check_result_comment
+                                                                 })
+
+        # if action wants a closed status window it should be closed now
+        if conf.actions[action].close_popwin == True:
+            statuswindow.hide_window()
 
 
     @pyqtSlot()
@@ -1100,7 +1139,10 @@ class TableWidget(QTableWidget):
 
     @action_response_decorator
     def action_downtime(self):
-        pass
+        dialogs.downtime.show()
+        dialogs.downtime.initialize(server=self.server,
+                                    host=self.miserable_host,
+                                    service=self.miserable_service)
 
 
     @pyqtSlot(int, int)
@@ -1183,6 +1225,9 @@ class TableWidget(QTableWidget):
         table_ready = pyqtSignal()
         # send signal if ready to stop
         finish = pyqtSignal()
+
+        # send start and end of downtime
+        set_start_end = pyqtSignal(str, str)
 
         # try to stop thread by evaluating this flag
         running = True
@@ -1278,6 +1323,154 @@ class TableWidget(QTableWidget):
                 self.server.set_acknowledge(info_dict)
 
 
+        @pyqtSlot(dict)
+        def downtime(self, info_dict):
+            """
+                slot waiting for 'downtime' signal from ok button from downtime dialog
+                all information about target server, host, service and flags is contained
+                in dictionary 'info_dict'
+            """
+            # because all monitors are connected to this slot we must check which one sent the signal,
+            # otherwise there are several calls and not only one as wanted
+            if self.server == info_dict['server']:
+                # pass dictionary to server's downtime machinery
+                self.server.set_downtime(info_dict)
+
+
+        @pyqtSlot(str, str)
+        def get_start_end(self, server_name, host):
+            # because every server listens to this signal the name has to be filtered
+            if server_name == self.server.name:
+                start, end = self.server.get_start_end(host)
+                # send start/end time to slot
+                self.set_start_end.emit(start, end)
+
+
+        @pyqtSlot(dict, str)
+        def execute_action(self, action, info):
+            """
+                runs action, may it be custom or included like the Check_MK actions
+            """
+            # first replace placeholder variables in string with actual values
+            #
+            #Possible values for variables:
+            #$HOST$             - host as in monitor
+            #$SERVICE$          - service as in monitor
+            #$MONITOR$          - monitor address - not yet clear what exactly for
+            #$MONITOR-CGI$      - monitor CGI address - not yet clear what exactly for
+            #$ADDRESS$          - address of host, investigated by Server.GetHost()
+            #$STATUS-INFO$      - status information
+            #$USERNAME$         - username on monitor
+            #$PASSWORD$         - username's password on monitor - whatever for
+            #$COMMENT-ACK$      - default acknowledge comment
+            #$COMMENT-DOWN$     - default downtime comment
+            #$COMMENT-SUBMIT$   - default submit check result comment
+
+            try:
+                """
+
+                what?
+
+                # if run as custom action use given action definition from conf, otherwise use for URLs
+                if 'action' in action:
+                    string = action['string']
+                    action_type = self.action.type
+                else:
+                    string = self.string
+                    action_type = self.type
+                """
+                # used for POST request
+                if 'cgi_data' in action:
+                    cgi_data = action['cgi_data']
+                else:
+                    cgi_data = ''
+
+                # mapping of variables and values
+                mapping = { '$HOST$': info['host'],
+                            '$SERVICE$': info['service'],
+                            '$ADDRESS$': info['address'],
+                            '$MONITOR$': info['monitor'],
+                            '$MONITOR-CGI$': info['monitor-cgi'],
+                            '$STATUS-INFO$': info['status-info'],
+                            '$USERNAME$': info['username'],
+                            '$PASSWORD$': info['password'],
+                            '$COMMENT-ACK$': info['comment-ack'],
+                            '$COMMENT-DOWN$': info['comment-down'],
+                            '$COMMENT-SUBMIT$': info['comment-submit'],
+                            }
+
+                # take string form action
+                string = action['string']
+
+                # mapping mapping
+                for i in mapping:
+                    string = string.replace(i, mapping[i])
+
+                # see what action to take
+                if action['type'] == 'browser':
+                    # debug
+                    if conf.debug_mode == True:
+                        self.server.Debug(server=self.server.name, host=self.host, service=self.service, debug='ACTION: BROWSER ' + string)
+                    webbrowser.open(string)
+                elif action['type'] == 'command':
+                    # debug
+                    if conf.debug_mode == True:
+                        self.server.Debug(server=self.server.name, host=self.host, service=self.service, debug='ACTION: COMMAND ' + string)
+                    subprocess.Popen(string, shell=True)
+                elif action['type'] == 'url':
+                    # Check_MK uses transids - if this occurs in URL its very likely that a Check_MK-URL is called
+                    if '$TRANSID$' in string:
+                        ###transid = self.server._get_transid(self.host, self.service)
+                        transid = servers[info['server']]._get_transid(info['host'], info['service'])
+                        string = string.replace('$TRANSID$', transid).replace(' ', '+')
+                    else:
+                        # make string ready for URL
+                        string = self._URLify(string)
+                    # debug
+                    if conf.debug_mode == True:
+                        self.server.Debug(server=self.server.name, host=self.host, service=self.service, debug='ACTION: URL in background ' + string)
+                    ###self.server.FetchURL(string)
+                    info['server'].FetchURL(string)
+                # used for example by Op5Monitor.py
+                elif action['type'] == 'url-post':
+                    # make string ready for URL
+                    string = self._URLify(string)
+                    # debug
+                    if conf.debug_mode == True:
+                        self.server.Debug(server=self.server.name, host=self.host, service=self.service, debug='ACTION: URL-POST in background ' + string)
+                    ###self.server.FetchURL(string, cgi_data=cgi_data, multipart=True)
+                    servers[info['server']].FetchURL(string, cgi_data=cgi_data, multipart=True)
+                # special treatment for Check_MK/Multisite Transaction IDs, called by Multisite._action()
+                elif ['action_type'] == 'url-check_mk-multisite':
+                    if '?_transid=-1&' in string:
+                        # Python format is of no use her, only web interface gives an transaction id
+                        # since werk #0766 http://mathias-kettner.de/check_mk_werks.php?werk_id=766 a real transid is needed
+                        transid = self.server._get_transid(self.host, self.service)
+                        # insert fresh transid
+                        string = string.replace('?_transid=-1&', '?_transid=%s&' % (transid))
+                        string = string + '&actions=yes'
+                        ###if self.service != '':
+                        if info['service'] != '':
+                            # if service exists add it and convert spaces to +
+                            ###string = string + '&service=%s' % (self.service.replace(' ', '+'))
+                            string = string + '&service=%s' % (info['service'].replace(' ', '+'))
+                        # debug
+                        if conf.debug_mode == True:
+                            self.server.Debug(server=self.server.name, host=self.host, service=self.service, debug='ACTION: URL-Check_MK in background ' + string)
+
+                        ###self.server.FetchURL(string)
+                        servers[info['server']].FetchURL(string)
+            except:
+                import traceback
+                traceback.print_exc(file=sys.stdout)
+
+        def _URLify(self, string):
+            """
+                return a string that fulfills requirements for URLs
+                exclude several chars
+            """
+            return urllib.parse.quote(string, ":/=?&@+")
+
 class Dialogs(object):
     """
         class for accessing all dialogs
@@ -1298,6 +1491,14 @@ class Dialogs(object):
         # acknowledge dialog for miserable item context menu
         self.acknowledge = Dialog_Acknowledge(Ui_dialog_acknowledge)
         self.acknowledge.initialize()
+
+        # downtime dialog for miserable item context menu
+        self.downtime = Dialog_Downtime(Ui_dialog_downtime)
+        self.downtime.initialize()
+
+        # downtime dialog for miserable item context menu
+        self.submit = Dialog_Submit(Ui_dialog_submit)
+        self.submit.initialize()
 
         # file chooser Dialog
         self.file_chooser = QFileDialog()
@@ -2353,16 +2554,10 @@ class Dialog_Acknowledge(Dialog):
         """
             acknowledge miserable host/service
         """
-        # various parameters for the CGI request
-        #author = self.server.username
-        #comment = self.ui.input_textedit_comment.toPlainText()
-        acknowledge_all_services = self.ui.input_checkbox_acknowledge_all_services.isChecked()
-        #sticky = self.ui.input_checkbox_sticky_acknowledgement.isChecked()
-        #notify = self.ui.input_checkbox_send_notification.isChecked()
-        #persistent = self.ui.input_checkbox_persistent_comment.isChecked()
-
         # create a list of all service of selected host to acknowledge them all
         all_services = list()
+        acknowledge_all_services = self.ui.input_checkbox_acknowledge_all_services.isChecked()
+
         if acknowledge_all_services == True:
             for i in self.server.nagitems_filtered["services"].values():
                 for s in i:
@@ -2380,6 +2575,155 @@ class Dialog_Acknowledge(Dialog):
                                'persistent': self.ui.input_checkbox_persistent_comment.isChecked(),
                                'acknowledge_all_services': acknowledge_all_services,
                                'all_services': all_services})
+
+
+class Dialog_Downtime(Dialog):
+    """
+        Dialog for putting hosts/services into downtime
+    """
+
+    # send signal to get start and end of a downtime asynchronously
+    get_start_end = pyqtSignal(str, str)
+
+    # signal to tell worker to commit downtime
+    downtime = pyqtSignal(dict)
+
+    # store host and service to be used for OK button evaluation
+    server = None
+    host = service = ''
+
+    def __init__(self, dialog):
+        Dialog.__init__(self, dialog)
+
+
+    def initialize(self, server=None, host='', service=''):
+        # store server, host and service to be used for OK button evaluation
+        self.server = server
+        self.host = host
+        self.service = service
+
+        # if service is "" it must be a host
+        if service == "":
+            # set label for acknowledging a host
+            self.window.setWindowTitle('Downtime for host')
+            self.ui.input_label_description.setText('Host <b>%s</b>' % (host))
+        else:
+            # set label for acknowledging a service on host
+            self.window.setWindowTitle('Downtime for service')
+            self.ui.input_label_description.setText('Service <b>%s</b> on host <b>%s</b>' % (service, host))
+
+        # default flags of monitor acknowledgement
+        self.ui.input_spinbox_duration_hours.setValue(int(conf.defaults_downtime_duration_hours))
+        self.ui.input_spinbox_duration_minutes.setValue(int(conf.defaults_downtime_duration_minutes))
+        self.ui.input_radiobutton_type_fixed.setChecked(conf.defaults_downtime_type_fixed)
+        self.ui.input_radiobutton_type_flexible.setChecked(conf.defaults_downtime_type_flexible)
+
+        self.ui.input_lineedit_start_time.setText('n/a')
+        self.ui.input_lineedit_end_time.setText('n/a')
+
+        # default author + comment
+        self.ui.input_textedit_comment.setText(conf.defaults_downtime_comment)
+        self.ui.input_textedit_comment.setFocus()
+
+        if self.server != None:
+            # at first initialization server is still None
+            self.get_start_end.emit(self.server.name, self.host)
+
+
+    def ok(self):
+        """
+            schedule downtime for miserable host/service
+        """
+        # type of downtime - fixed or flexible
+        if self.ui.input_radiobutton_type_fixed.isChecked() == True:
+            fixed = 1
+        else:
+            fixed = 0
+
+        self.downtime.emit({'server': self.server,
+                            'host': self.host,
+                            'service': self.service,
+                            'author': self.server.username,
+                            'comment': self.ui.input_textedit_comment.toPlainText(),
+                            'fixed': fixed,
+                            'start_time': self.ui.input_lineedit_start_time.text(),
+                            'end_time': self.ui.input_lineedit_end_time.text(),
+                            'hours': int(self.ui.input_spinbox_duration_hours.value()),
+                            'minutes': int(self.ui.input_spinbox_duration_minutes.value())})
+
+
+    pyqtSlot(str, str)
+    def set_start_end(self, start, end):
+        """
+            put values sent by worker into start and end fields
+        """
+        self.ui.input_lineedit_start_time.setText(start)
+        self.ui.input_lineedit_end_time.setText(end)
+
+
+class Dialog_Submit(Dialog):
+    """
+        Dialog for submitting arbitrarily chosen results
+    """
+    # store host and service to be used for OK button evaluation
+    server = None
+    host = service = ''
+
+    def __init__(self, dialog):
+        Dialog.__init__(self, dialog)
+
+
+    def initialize(self, server=None, host='', service=''):
+        # store server, host and service to be used for OK button evaluation
+        self.server = server
+        self.host = host
+        self.service = service
+
+        # if service is "" it must be a host
+        if service == "":
+            # set label for acknowledging a host
+            self.window.setWindowTitle('Submit check result for host')
+            self.ui.input_label_description.setText('Host <b>%s</b>' % (host))
+        else:
+            # set label for acknowledging a service on host
+            self.window.setWindowTitle('Submit check result for service')
+            self.ui.input_label_description.setText('Service <b>%s</b> on host <b>%s</b>' % (service, host))
+
+        """
+        # default flags of monitor acknowledgement
+        self.ui.input_spinbox_duration_hours.setValue(int(conf.defaults_downtime_duration_hours))
+        self.ui.input_spinbox_duration_minutes.setValue(int(conf.defaults_downtime_duration_minutes))
+        self.ui.input_radiobutton_type_fixed.setChecked(conf.defaults_downtime_type_fixed)
+        self.ui.input_radiobutton_type_flexible.setChecked(conf.defaults_downtime_type_flexible)
+
+        # default author + comment
+        self.ui.input_textedit_comment.setText(conf.defaults_downtime_comment)
+        self.ui.input_textedit_comment.setFocus()
+
+        """
+
+
+    def ok(self):
+        """
+            schedule downtime for miserable host/service
+        """
+        # type of downtime - fixed or flexible
+        if self.ui.input_radiobutton_type_fixed.isChecked() == True:
+            fixed = 1
+        else:
+            fixed = 0
+
+        self.downtime.emit({'server': self.server,
+                            'host': self.host,
+                            'service': self.service,
+                            'author': self.server.username,
+                            'comment': self.ui.input_textedit_comment.toPlainText(),
+                            'fixed': fixed,
+                            'start_time': self.ui.input_lineedit_start_time.text(),
+                            'end_time': self.ui.input_lineedit_end_time.text(),
+                            'hours': int(self.ui.input_spinbox_duration_hours.value()),
+                            'minutes': int(self.ui.input_spinbox_duration_minutes.value())})
+
 
 
 class Notification(QObject):

@@ -357,12 +357,12 @@ class Downtime(threading.Thread):
     def run(self):
         self.server.set_downtime(self)
 
-
+"""
 def Downtime_get_start_end(server, host):
     # get start and end time from Nagios as HTML - the objectified HTML does not contain the form elements :-(
     # this used to happen in GUI.action_downtime_dialog_show but for a more strict separation it better stays here
     return server.get_start_end(host)
-
+"""
 
 class SubmitCheckResult(threading.Thread):
     """
@@ -475,140 +475,6 @@ class Notification(threading.Thread):
             time.sleep(0.5)
         # reset statusbar
         self.output.statusbar.Label.set_markup(self.output.statusbar.statusbar_labeltext)
-
-
-class Action(threading.Thread):
-    """
-    Execute custom actions triggered by context menu of popwin
-    parameters are action and hosts/service
-    """
-    def __init__(self, **kwds):
-        # add all keywords to object
-        self.host = ""
-        self.service = ""
-        self.status_info = ""
-
-        for k in kwds: self.__dict__[k] = kwds[k]
-
-        threading.Thread.__init__(self)
-        self.setDaemon(1)
-
-
-    def run(self):
-        # first replace placeholder variables in string with actual values
-        """
-        Possible values for variables:
-        $HOST$             - host as in monitor
-        $SERVICE$          - service as in monitor
-        $MONITOR$          - monitor address - not yet clear what exactly for
-        $MONITOR-CGI$      - monitor CGI address - not yet clear what exactly for
-        $ADDRESS$          - address of host, investigated by Server.GetHost()
-        $STATUS-INFO$           - status information
-        $USERNAME$         - username on monitor
-        $PASSWORD$         - username's password on monitor - whatever for
-        $COMMENT-ACK$      - default acknowledge comment
-        $COMMENT-DOWN$     - default downtime comment
-        $COMMENT-SUBMIT$   - default submit check result comment
-        """
-        try:
-            # if run as custom action use given action definition from conf, otherwise use for URLs
-            if self.__dict__.has_key("action"):
-                string = self.action.string
-                action_type = self.action.type
-            else:
-                string = self.string
-                action_type = self.type
-
-            # used for POST request
-            if self.__dict__.has_key("cgi_data"):
-                cgi_data = self.cgi_data
-            else:
-                cgi_data = ""
-
-            # mapping of variables and values
-            mapping = { "$HOST$": self.host,\
-                        "$SERVICE$": self.service,\
-                        "$ADDRESS$": self.server.GetHost(self.host).result,\
-                        "$MONITOR$": self.server.monitor_url,\
-                        "$MONITOR-CGI$": self.server.monitor_cgi_url,\
-                        "$STATUS-INFO$": self.status_info,\
-                        "$USERNAME$": self.server.username,\
-                        "$PASSWORD$": self.server.password,\
-                        "$COMMENT-ACK$": self.conf.defaults_acknowledge_comment,\
-                        "$COMMENT-DOWN$": self.conf.defaults_downtime_comment,\
-                        "$COMMENT-SUBMIT$": self.conf.defaults_submit_check_result_comment,
-                        }
-            # mapping mapping
-            for i in mapping:
-                string = string.replace(i, mapping[i])
-
-            # see what action to take
-            if action_type == "browser":
-                # debug
-                if str(self.conf.debug_mode) == "True":
-                    self.server.Debug(server=self.server.name, host=self.host, service=self.service, debug="ACTION: BROWSER " + string)
-                webbrowser.open(string)
-            elif action_type == "command":
-                # debug
-                if str(self.conf.debug_mode) == "True":
-                    self.server.Debug(server=self.server.name, host=self.host, service=self.service, debug="ACTION: COMMAND " + string)
-                subprocess.Popen(string, shell=True)
-            elif action_type == "url":
-                # Check_MK uses transids - if this occurs in URL its very likely that a Check_MK-URL is called
-                if "$TRANSID$" in string:
-                    transid = self.server._get_transid(self.host, self.service)
-                    string = string.replace("$TRANSID$", transid).replace(" ", "+")
-                else:
-                    # make string ready for URL
-                    string = self._URLify(string)
-                # debug
-                if str(self.conf.debug_mode) == "True":
-                    self.server.Debug(server=self.server.name, host=self.host, service=self.service, debug="ACTION: URL in background " + string)
-                self.server.FetchURL(string)
-            # used for example by Op5Monitor.py
-            elif action_type == "url-post":
-                # make string ready for URL
-                string = self._URLify(string)
-                # debug
-                if str(self.conf.debug_mode) == "True":
-                    self.server.Debug(server=self.server.name, host=self.host, service=self.service, debug="ACTION: URL-POST in background " + string)
-                self.server.FetchURL(string, cgi_data=cgi_data)
-            # special treatment for Check_MK/Multisite Transaction IDs, called by Multisite._action()
-            elif action_type == "url-check_mk-multisite":
-                if "?_transid=-1&" in string:
-                    # Python format is of no use her, only web interface gives an transaction id
-                    # since werk #0766 http://mathias-kettner.de/check_mk_werks.php?werk_id=766 a real transid is needed
-                    transid = self.server._get_transid(self.host, self.service)
-                    # insert fresh transid
-                    string = string.replace("?_transid=-1&", "?_transid=%s&" % (transid))
-                    string = string + "&actions=yes"
-                    if self.service != "":
-                        # if service exists add it and convert spaces to +
-                        string = string + "&service=%s" % (self.service.replace(" ", "+"))
-                    # debug
-                    if str(self.conf.debug_mode) == "True":
-                        self.server.Debug(server=self.server.name, host=self.host, service=self.service, debug="ACTION: URL-Check_MK in background " + string)
-
-                    self.server.FetchURL(string)
-        except:
-            import traceback
-            traceback.print_exc(file=sys.stdout)
-
-
-    def _URLify(self, string):
-        """
-        return a string that fulfills requirements for URLs
-        exclude several chars
-        """
-        return urllib.parse.quote(string, ":/=?&@+")
-
-
-"""
-def TreeViewNagios(server, host, service):
-    # if the clicked row does not contain a service it mus be a host,
-    # so the nagios query is different
-    server.open_tree_view(host, service)
-"""
 
 
 def not_empty(x):

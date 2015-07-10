@@ -288,18 +288,10 @@ class GenericServer(object):
         self.FetchURL(self.monitor_cgi_url + "/cmd.cgi", giveback="raw", cgi_data=cgi_data)
 
 
-    def set_acknowledge_OLD(self, thread_obj):
-        if thread_obj.acknowledge_all_services == True:
-            all_services = thread_obj.all_services
-        else:
-            all_services = []
-        self._set_acknowledge(thread_obj.host, thread_obj.service, thread_obj.author, thread_obj.comment, \
-                              thread_obj.sticky, thread_obj.notify, thread_obj.persistent, all_services)
-        # resfresh immediately according to https://github.com/HenriWahl/Nagstamon/issues/86
-        self.thread.doRefresh = True
-
-
     def set_acknowledge(self, info_dict):
+        """
+            different monitors might have different implementations of _set_acknowledge
+        """
         if info_dict['acknowledge_all_services'] == True:
             all_services = info_dict['all_services']
         else:
@@ -322,7 +314,7 @@ class GenericServer(object):
             send acknowledge to monitor server - might be different on every monitor type
         """
 
-        url = self.monitor_cgi_url + "/cmd.cgi"
+        url = self.monitor_cgi_url + '/cmd.cgi'
 
         # the following flags apply to hosts and services
         #
@@ -354,134 +346,60 @@ class GenericServer(object):
         if sticky == True:
             cgi_data['sticky_ack'] = 'on'
 
-
         self.FetchURL(url, giveback="raw", cgi_data=cgi_data)
 
-
-        """
-        # decision about host or service - they have different URLs
-        # do not care about the doube %s (%s%s) - its ok, "flags" cares about the necessary "&"
-        if service == "":
-            # host
-            # according to sf.net bug #3304098 (https://sourceforge.net/tracker/?func=detail&atid=1101370&aid=3304098&group_id=236865)
-            # the send_notification-flag must not exist if it is set to "off", otherwise
-            # the Nagios core interpretes it as set, regardless its real value
-            ###if notify == True:
-            ###    send_notification = "&send_notification=on"
-            ###else:
-            ###    send_notification = ""
-            #### dito for persistence...
-            ###if persistent == True:
-            ###    persistent_comment = "&persistent=on"
-            ###else:
-            ###    persistent_comment = ""
-            #### ...and sticky acks too?
-            ###if sticky == True:
-            ###    sticky_ack = "&sticky_ack=on"
-            ###else:
-            ###    sticky_ack = ""
-            cgi_data = urllib.parse.urlencode(
-                [("cmd_typ", "33"), ("cmd_mod", "2"), ("host", host), ("com_author", author), \
-                 ("com_data", comment), ("btnSubmit", "Commit")]) \
-                       + send_notification + persistent_comment + sticky_ack
-            self.FetchURL(url, giveback="raw", cgi_data=cgi_data)
-
-        # if host is acknowledged and all services should be to or if a service is acknowledged
-        # (and all other on this host too)
-        if service != "":
-            # service @ host
-            # the same applies here as with the host and send_notification
-            if notify == True:
-                send_notification = "&send_notification=on"
-            else:
-                send_notification = ""
-            # dito for persistence...
-            if persistent == True:
-                persistent_comment = "&persistent=on"
-            else:
-                persistent_comment = ""
-            # ...and sticky acks too?
-            if sticky == True:
-                sticky_ack = "&sticky_ack=on"
-            else:
-                sticky_ack = ""
-            # for whatever silly reason Icinga depends on the correct order of submitted form items...
-            # see sf.net bug 3428844
-            # so whe cannot use a dictionary with urllib but a tuple full of tuples
-            cgi_data = urllib.parse.urlencode(
-                [("cmd_typ", "34"), ("cmd_mod", "2"), ("host", host), ("service", service), \
-                 ("com_author", author), ("com_data", comment), ("btnSubmit", "Commit")]) \
-                       + send_notification + persistent_comment + sticky_ack
-            # running remote cgi command
-            self.FetchURL(url, giveback="raw", cgi_data=cgi_data)
-        """
         # acknowledge all services on a host
         if len(all_services) > 0:
-
             for s in all_services:
-
-                """
-                # services @ host
-                # the same applies here as with the host and send_notification
-                if notify == True:
-                    send_notification = "&send_notification=on"
-                else:
-                    send_notification = ""
-                # dito for persistence...
-                if persistent == True:
-                    persistent_comment = "&persistent=on"
-                else:
-                    persistent_comment = ""
-                # ...and sticky acks too?
-                if sticky == True:
-                    sticky_ack = "&sticky_ack=on"
-                else:
-                    sticky_ack = ""
-                    cgi_data = urllib.parse.urlencode(
-                        [("cmd_typ", "34"), ("cmd_mod", "2"), ("host", host), ("service", s), \
-                         ("com_author", author), ("com_data", comment), ("btnSubmit", "Commit")]) \
-                               + send_notification + persistent_comment + sticky_ack
-                    # running remote cgi command
-                 """
                 cgi_data['cmd_typ'] = '34'
                 cgi_data['service'] = s
                 self.FetchURL(url, giveback="raw", cgi_data=cgi_data)
 
 
-    def set_downtime(self, thread_obj):
-        self._set_downtime(thread_obj.host, thread_obj.service, thread_obj.author, thread_obj.comment, thread_obj.fixed,
-                           thread_obj.start_time, thread_obj.end_time, thread_obj.hours, thread_obj.minutes)
-        # resfresh immediately according to https://github.com/HenriWahl/Nagstamon/issues/86
-        self.thread.doRefresh = True
+    def set_downtime(self, info_dict):
+        """
+            different monitors might have different implementations of _set_downtime
+        """
+        self._set_downtime(info_dict['host'],
+                           info_dict['service'],
+                           info_dict['author'],
+                           info_dict['comment'],
+                           info_dict['fixed'],
+                           info_dict['start_time'],
+                           info_dict['end_time'],
+                           info_dict['hours'],
+                           info_dict['minutes'])
 
 
     def _set_downtime(self, host, service, author, comment, fixed, start_time, end_time, hours, minutes):
-        # decision about host or service - they have different URLs
-        if service == "":
-            # host
-            cmd_typ = "55"
-        else:
-            # service @ host
-            cmd_typ = "56"
+        """
+            finally send downtime command to monitor server
+        """
+        url = self.monitor_cgi_url + '/cmd.cgi'
 
         # for some reason Icinga is very fastidiuos about the order of CGI arguments, so please
         # here we go... it took DAYS :-(
-        cgi_data = urllib.parse.urlencode([("cmd_typ", cmd_typ), \
-                                           ("cmd_mod", "2"), \
-                                           ("trigger", "0"), \
-                                           ("childoptions", "0"), \
-                                           ("host", host), \
-                                           ("service", service), \
-                                           ("com_author", author), \
-                                           ("com_data", comment), \
-                                           ("fixed", fixed), \
-                                           ("start_time", start_time), \
-                                           ("end_time", end_time), \
-                                           ("hours", hours), \
-                                           ("minutes", minutes), \
-                                           ("btnSubmit", "Commit")])
+        cgi_data = OrderedDict()
+        if service == '':
+            cgi_data['cmd_typ'] = '55'
+        else:
+            cgi_data['cmd_typ'] = '56'
+        cgi_data['cmd_mod'] = '2'
+        cgi_data['trigger'] = '0'
+        cgi_data['host'] = host
+        if service != '':
+            cgi_data['service'] = service
+        cgi_data['com_author'] = author
+        cgi_data['com_data'] = comment
+        cgi_data['fixed'] = fixed
+        cgi_data['start_time'] = start_time
+        cgi_data['end_time'] = end_time
+        cgi_data['hours'] = hours
+        cgi_data['minutes'] = minutes
+        cgi_data['btnSubmit'] = 'Commit'
+
         # running remote cgi command
-        self.FetchURL(self.monitor_cgi_url + "/cmd.cgi", giveback="raw", cgi_data=cgi_data)
+        self.FetchURL(url, giveback="raw", cgi_data=cgi_data)
 
 
     def set_submit_check_result(self, thread_obj):
@@ -1205,8 +1123,10 @@ class GenericServer(object):
                         form_data = dict()
                         for key in cgi_data:
                             form_data[key] = (None, cgi_data[key])
+
                         # get response with cgi_data encodes as files
                         response = self.session.post(url, files=form_data)
+
                 else:
                     # send request without authentication data
                     temporary_session = requests.Session()
@@ -1234,7 +1154,7 @@ class GenericServer(object):
                         response = temporary_session.post(url, files=form_data)
 
                     # cleanup
-                    del (temporary_session)
+                    del temporary_session
 
             except Exception as err:
 
@@ -1282,35 +1202,35 @@ class GenericServer(object):
         """
 
         # the fasted method is taking hostname as used in monitor
-        if str(conf.connect_by_host) == "True" or host == "":
+        if conf.connect_by_host == True or host == '':
             return Result(result=host)
 
         # initialize ip string
-        ip = ""
+        ip = ''
 
         # glue nagios cgi url and hostinfo
-        cgiurl_host = self.monitor_cgi_url + "/extinfo.cgi?type=1&host=" + host
+        cgiurl_host = self.monitor_cgi_url + '/extinfo.cgi?type=1&host=' + host
 
         # get host info
-        result = self.FetchURL(cgiurl_host, giveback="obj")
+        result = self.FetchURL(cgiurl_host, giveback='obj')
         htobj = result.result
 
         try:
             # take ip from html soup
-            ip = htobj.findAll(name="div", attrs={"class": "data"})[-1].text
+            ip = htobj.findAll(name='div', attrs={'class': 'data'})[-1].text
 
             # workaround for URL-ified IP as described in SF bug 2967416
             # https://sourceforge.net/tracker/?func=detail&aid=2967416&group_id=236865&atid=1101370
-            if "://" in ip: ip = ip.split("://")[1]
+            if '://' in ip: ip = ip.split('://')[1]
 
             # last-minute-workaround for https://github.com/HenriWahl/Nagstamon/issues/48
-            if "," in ip: ip = ip.split(",")[0]
+            if ',' in ip: ip = ip.split(',')[0]
 
             # print IP in debug mode
-            if str(conf.debug_mode) == "True":
-                self.Debug(server=self.get_name(), host=host, debug="IP of %s:" % (host) + " " + ip)
+            if conf.debug_mode == True:
+                self.Debug(server=self.get_name(), host=host, debug='IP of %s:' % (host) + ' ' + ip)
             # when connection by DNS is not configured do it by IP
-            if str(conf.connect_by_dns) == "True":
+            if conf.connect_by_dns == True:
                 # try to get DNS name for ip, if not available use ip
                 try:
                     address = socket.gethostbyaddr(ip)[0]
