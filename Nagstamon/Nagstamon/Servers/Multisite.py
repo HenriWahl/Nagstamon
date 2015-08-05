@@ -406,38 +406,41 @@ class MultisiteServer(GenericServer):
 
     def _action(self, site, host, service, specific_params):
         params = {
-            'site':           self.hosts[host].site,
-            'host':           host,
+            'site':    self.hosts[host].site,
+            'host':    host,
         }
         params.update(specific_params)
 
         # service is now added in Actions.Action(): action_type "url-check_mk-multisite"
         if service != "":
             url = self.urls['api_service_act']
+            params['service'] = service.replace(' ', '+')
         else:
             url = self.urls['api_host_act']
+            params['service'] = ''
+
+        # get current transid
+        transid = self._get_transid(host, service)
+        url = url.replace('?_transid=-1&', '?_transid=%s&' % (transid))
 
         if str(conf.debug_mode) == "True":
             self.Debug(server=self.get_name(), host=host, debug ="Submitting action: " + url + '&' + urllib.parse.urlencode(params))
 
-        action = Actions.Action(type="url-check_mk-multisite",\
-                                string=url + '&' + urllib.parse.urlencode(params),\
-                                conf=conf,\
-                                host = host,\
-                                service = service,\
-                                server=self)
-        action.run()
+        # apply action
+        self.FetchURL(url + '&' + urllib.parse.urlencode(params))
+
 
     def _set_downtime(self, host, service, author, comment, fixed, start_time, end_time, hours, minutes):
         self._action(self.hosts[host].site, host, service, {
             '_down_comment':  author == self.username and comment or '%s: %s' % (author, comment),
-            '_down_flexible': fixed == 0 and 'on' or '',
-            '_down_custom':   'Custom+time+range',
+            '_down_flexible':  fixed == 0 and 'on' or '',
+            '_down_custom':    'Custom+time+range',
             '_down_from_date': start_time.split(' ')[0],
             '_down_from_time': start_time.split(' ')[1],
             '_down_to_date':   end_time.split(' ')[0],
             '_down_to_time':   end_time.split(' ')[1],
             '_down_duration':  '%s:%s' % (hours, minutes),
+            'actions':         'yes'
         })
 
 

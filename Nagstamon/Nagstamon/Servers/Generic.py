@@ -1166,7 +1166,7 @@ class GenericServer(object):
                 result, error = self.Error(sys.exc_info())
                 return Result(result=result, error=error)
 
-            # give back pure HTML or XML in case giveback is "raw"
+            # give back pure HTML or XML in case giveback is 'raw'
             if giveback == "raw":
                 # .text gives content in unicode
                 result = Result(result=response.text)
@@ -1174,12 +1174,12 @@ class GenericServer(object):
 
             # objectified HTML
             if giveback == "obj":
-                yummysoup = BeautifulSoup(response.text)
+                yummysoup = BeautifulSoup(response.text, 'lxml')
                 return Result(result=yummysoup)
 
             # objectified generic XML, valid at least for Opsview and Centreon
             elif giveback == "xml":
-                xmlobj = BeautifulSoup(response.text, 'xml')
+                xmlobj = BeautifulSoup(response.text, 'lxml-xml')
                 return Result(result=xmlobj)
 
         except:

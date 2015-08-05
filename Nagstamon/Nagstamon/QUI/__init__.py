@@ -1077,7 +1077,8 @@ class TableWidget(QTableWidget):
         # avoid blocked context menu
         self.action_menu.available = True
         # send dict with action info and dict with host/service info
-        self.request_action.emit(conf.actions[action].__dict__, {'host': self.miserable_host,
+        self.request_action.emit(conf.actions[action].__dict__, {'server': self.server.get_name(),
+                                                                 'host': self.miserable_host,
                                                                  'service': self.miserable_service,
                                                                  'status-info': self.miserable_status_info,
                                                                  'address': self.server.GetHost(self.miserable_host).result,
@@ -1420,7 +1421,6 @@ class TableWidget(QTableWidget):
                 elif action['type'] == 'url':
                     # Check_MK uses transids - if this occurs in URL its very likely that a Check_MK-URL is called
                     if '$TRANSID$' in string:
-                        ###transid = self.server._get_transid(self.host, self.service)
                         transid = servers[info['server']]._get_transid(info['host'], info['service'])
                         string = string.replace('$TRANSID$', transid).replace(' ', '+')
                     else:
@@ -1429,8 +1429,7 @@ class TableWidget(QTableWidget):
                     # debug
                     if conf.debug_mode == True:
                         self.server.Debug(server=self.server.name, host=self.host, service=self.service, debug='ACTION: URL in background ' + string)
-                    ###self.server.FetchURL(string)
-                    info['server'].FetchURL(string)
+                    servers[info['server']].FetchURL(string)
                 # used for example by Op5Monitor.py
                 elif action['type'] == 'url-post':
                     # make string ready for URL
@@ -1438,7 +1437,6 @@ class TableWidget(QTableWidget):
                     # debug
                     if conf.debug_mode == True:
                         self.server.Debug(server=self.server.name, host=self.host, service=self.service, debug='ACTION: URL-POST in background ' + string)
-                    ###self.server.FetchURL(string, cgi_data=cgi_data, multipart=True)
                     servers[info['server']].FetchURL(string, cgi_data=cgi_data, multipart=True)
                 # special treatment for Check_MK/Multisite Transaction IDs, called by Multisite._action()
                 elif ['action_type'] == 'url-check_mk-multisite':
@@ -1449,16 +1447,13 @@ class TableWidget(QTableWidget):
                         # insert fresh transid
                         string = string.replace('?_transid=-1&', '?_transid=%s&' % (transid))
                         string = string + '&actions=yes'
-                        ###if self.service != '':
                         if info['service'] != '':
                             # if service exists add it and convert spaces to +
-                            ###string = string + '&service=%s' % (self.service.replace(' ', '+'))
                             string = string + '&service=%s' % (info['service'].replace(' ', '+'))
                         # debug
                         if conf.debug_mode == True:
                             self.server.Debug(server=self.server.name, host=self.host, service=self.service, debug='ACTION: URL-Check_MK in background ' + string)
 
-                        ###self.server.FetchURL(string)
                         servers[info['server']].FetchURL(string)
             except:
                 import traceback
