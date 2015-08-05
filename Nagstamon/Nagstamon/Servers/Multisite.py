@@ -411,13 +411,14 @@ class MultisiteServer(GenericServer):
         }
         params.update(specific_params)
 
-        # service is now added in Actions.Action(): action_type "url-check_mk-multisite"
+        # decide about service or host url
         if service != "":
             url = self.urls['api_service_act']
-            params['service'] = service.replace(' ', '+')
         else:
             url = self.urls['api_host_act']
-            params['service'] = ''
+
+        # set service
+        params['service'] = service
 
         # get current transid
         transid = self._get_transid(host, service)
@@ -461,7 +462,8 @@ class MultisiteServer(GenericServer):
 
     def _set_recheck(self, host, service):
         p = {
-            '_resched_checks':    'Reschedule active checks',
+            '_resched_checks': 'Reschedule active checks',
+            '_resched_pread':  '0'
         }
         self._action(self.hosts[host].site, host, service, p)
 
@@ -482,8 +484,8 @@ class MultisiteServer(GenericServer):
 
     def _get_transid(self, host, service):
         """
-        get transid for an action
+            get transid for an action
         """
-        transid = self.FetchURL(self.urls["transid"].replace("$HOST$", host).replace("$SERVICE$", service.replace(" ", "+")),\
-                                "obj").result.find(attrs={"name" : "_transid"})["value"]
+        transid = self.FetchURL(self.urls['transid'].replace('$HOST$', host).replace('$SERVICE$', service.replace(' ', '+')),\
+                                'obj').result.find(attrs={'name' : '_transid'})['value']
         return transid

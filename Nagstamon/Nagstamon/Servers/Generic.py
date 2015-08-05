@@ -256,8 +256,8 @@ class GenericServer(object):
         pass
 
 
-    def set_recheck(self, thread_obj):
-        self._set_recheck(thread_obj.host, thread_obj.service)
+    def set_recheck(self, info_dict):
+        self._set_recheck(info_dict['host'], info_dict['service'])
 
 
     def _set_recheck(self, host, service):

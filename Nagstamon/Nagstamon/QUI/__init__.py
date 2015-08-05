@@ -812,10 +812,7 @@ class TableWidget(QTableWidget):
     ready_to_resize = pyqtSignal()
 
     # tell worker to get status after a recheck has been solicited
-    #
-    # UNUSED right now!
-    #
-    recheck = pyqtSignal()
+    recheck = pyqtSignal(dict)
 
     # action to be executed by worker
     # 2 values: action and host/service info
@@ -899,6 +896,9 @@ class TableWidget(QTableWidget):
 
         # connect signal for downtime
         dialogs.downtime.downtime.connect(self.worker.downtime)
+
+        # connect signal for recheck action
+        self.recheck.connect(self.worker.recheck)
 
         # execute action by worker
         self.request_action.connect(self.worker.execute_action)
@@ -1127,11 +1127,14 @@ class TableWidget(QTableWidget):
 
     @action_response_decorator
     def action_recheck(self):
-        pass
+        # send signal to worker recheck slot
+        self.recheck.emit({'host':    self.miserable_host,
+                           'service': self.miserable_service})
 
 
     @action_response_decorator
     def action_acknowledge(self):
+        # running worker method is left to OK button of dialog
         dialogs.acknowledge.show()
         dialogs.acknowledge.initialize(server=self.server,
                                        host=self.miserable_host,
@@ -1140,6 +1143,7 @@ class TableWidget(QTableWidget):
 
     @action_response_decorator
     def action_downtime(self):
+        # running worker method is left to OK button of dialog
         dialogs.downtime.show()
         dialogs.downtime.initialize(server=self.server,
                                     host=self.miserable_host,
@@ -1220,10 +1224,13 @@ class TableWidget(QTableWidget):
 
         # send signal if monitor server has new status data
         new_status = pyqtSignal()
+
         # send signal if next cell can be filled
         next_cell = pyqtSignal(int, int, str, str, str, list)
+
         # send signal if all cells are filled and table can be adjusted
         table_ready = pyqtSignal()
+
         # send signal if ready to stop
         finish = pyqtSignal()
 
@@ -1338,8 +1345,19 @@ class TableWidget(QTableWidget):
                 self.server.set_downtime(info_dict)
 
 
+        @pyqtSlot(dict)
+        def recheck(self, info_dict):
+            """
+                Slot to start server recheck method, getting signal from TableWidget context menu
+            """
+            self.server.set_recheck(info_dict)
+
+
         @pyqtSlot(str, str)
         def get_start_end(self, server_name, host):
+            """
+                Investigates start and end time of a downtime asynchronously
+            """
             # because every server listens to this signal the name has to be filtered
             if server_name == self.server.name:
                 start, end = self.server.get_start_end(host)
@@ -1438,6 +1456,7 @@ class TableWidget(QTableWidget):
                     if conf.debug_mode == True:
                         self.server.Debug(server=self.server.name, host=self.host, service=self.service, debug='ACTION: URL-POST in background ' + string)
                     servers[info['server']].FetchURL(string, cgi_data=cgi_data, multipart=True)
+                """
                 # special treatment for Check_MK/Multisite Transaction IDs, called by Multisite._action()
                 elif ['action_type'] == 'url-check_mk-multisite':
                     if '?_transid=-1&' in string:
@@ -1455,6 +1474,7 @@ class TableWidget(QTableWidget):
                             self.server.Debug(server=self.server.name, host=self.host, service=self.service, debug='ACTION: URL-Check_MK in background ' + string)
 
                         servers[info['server']].FetchURL(string)
+                """
             except:
                 import traceback
                 traceback.print_exc(file=sys.stdout)
