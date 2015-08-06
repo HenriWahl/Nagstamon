@@ -111,7 +111,7 @@ class SystemTrayIcon(QSystemTrayIcon):
         QSystemTrayIcon.__init__(self, icon)
         self.menu = QMenu()
         exitaction = QAction('Exit', self)
-        exitaction.triggered.connect(QCoreApplication.instance().quit)
+        exitaction.triggered.connect(exit)
 
         dummyaction = QAction('Dummy', self)
         self.menu.addAction(dummyaction)
@@ -128,7 +128,7 @@ class MenuAtCursor(QMenu):
     shown = pyqtSignal()
     closed = pyqtSignal()
 
-    # flag to avoid to fast popping up menus
+    # flag to avoid too fast popping up menus
     available = True
 
     def __init__(self):
@@ -168,7 +168,7 @@ class StatusWindow(QWidget):
         self.statusbar = StatusBar()                # statusbar HBox
         self.toparea = TopArea()                    # toparea HBox
         self.toparea.hide()
-        self.toparea.button_close.clicked.connect(self.close)
+        self.toparea.button_close.clicked.connect(self.hide_window)
 
         # connect logo of statusbar
         self.statusbar.logo.window_moved.connect(self.store_position)
@@ -192,7 +192,6 @@ class StatusWindow(QWidget):
         self.toparea.hamburger_menu.closed.connect(self.unlock)
         self.toparea.button_hamburger_menu.clicked.connect(self.toparea.hamburger_menu.show_at_cursor)
 
-
         self.servers_vbox = QVBoxLayout()           # VBox full of servers
         self.servers_vbox.setContentsMargins(0, 0, 0, 0)
         self.servers_scrollarea = QScrollArea()     # scrollable area for server vboxes
@@ -215,7 +214,7 @@ class StatusWindow(QWidget):
         self.setLayout(self.vbox)
 
         # icons in ICONS have to be sized as fontsize
-        _createIcons(self.statusbar.fontMetrics().height())
+        _create_icons(self.statusbar.fontMetrics().height())
 
         # needed for moving the statuswindow
         self.moving = False
@@ -456,13 +455,41 @@ class NagstamonLogo(QSvgWidget):
         if size != None:
             self.setMinimumSize(size, size)
 
+        self._create_menu()
+
+
+    def _create_menu(self):
+        # menu for
+        self.menu = MenuAtCursor()
+
+        action_settings = QAction('Settings...', self)
+        action_settings.triggered.connect(dialogs.settings.show)
+
+        action_save_position = QAction('Save position (not yet working)', self)
+
+        action_exit = QAction('Exit', self)
+        action_exit.triggered.connect(exit)
+
+        # put actions into menu after separator
+        self.menu.addAction(action_settings)
+        self.menu.addAction(action_save_position)
+        self.menu.addAction(action_exit)
+
 
     def mousePressEvent(self, event):
-        # keep x and y relative to statusbar
-        if not statuswindow.relative_x and not statuswindow.relative_y:
-            statuswindow.relative_x = event.x()
-            statuswindow.relative_y = event.y()
-        self.mouse_pressed.emit()
+        """
+            react differently to mouse button presses:
+            1 - left button, move window
+            2 - right button, popup menu
+        """
+        if event.button() == 1:
+            # keep x and y relative to statusbar
+            if not statuswindow.relative_x and not statuswindow.relative_y:
+                statuswindow.relative_x = event.x()
+                statuswindow.relative_y = event.y()
+            self.mouse_pressed.emit()
+        elif event.button() == 2:
+            self.menu.show_at_cursor()
 
 
     def mouseReleaseEvent(self, event):
@@ -605,11 +632,11 @@ class TopArea(QWidget):
                                                  'QPushButton:hover {background-color: white;'
                                                                     'border-radius: 4px;}')
         self.hamburger_menu = MenuAtCursor()
-        exitaction = QAction("Exit", self)
+        action_exit = QAction("Exit", self)
 
         # to be refined...
-        exitaction.triggered.connect(QCoreApplication.instance().quit)
-        self.hamburger_menu.addAction(exitaction)
+        action_exit.triggered.connect(exit)
+        self.hamburger_menu.addAction(action_exit)
 
         self.button_close = QPushButton()
         self.button_close.setIcon(QIcon("%s%sclose.svg" % (RESOURCES, os.sep)))
@@ -1617,7 +1644,6 @@ class Dialog(QObject):
         """
              fill listwidget with items from config
         """
-        ###for configitem in sorted(config, key=unicode.lower):
         for configitem in sorted(config, key=str.lower):
             listitem = QListWidgetItem(configitem)
             if config[configitem].enabled == False:
@@ -2861,12 +2887,12 @@ class CheckVersion(QObject):
             self.finished.emit()
 
 
-def _createIcons(fontsize):
+def _create_icons(fontsize):
     """
         fill global ICONS with pixmaps rendered from SVGs in fontsize dimensions
     """
 
-    print('Reminder: fontsize is not used in _createIcons().')
+    print('Reminder: fontsize is not used in _create_icons().')
 
     for attr in ('acknowledged', 'downtime', 'flapping', 'new', 'passive'):
         icon = QIcon('%s%snagstamon_%s.svg' % (RESOURCES, os.sep, attr))
@@ -2882,6 +2908,11 @@ def get_screen(x, y):
         if (desktop.screenGeometry(screen).contains(x, y)):
             break
     return screen
+
+
+@pyqtSlot()
+def exit():
+    QApplication.instance().quit()
 
 
 # check for updates
