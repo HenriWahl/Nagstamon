@@ -152,6 +152,58 @@ class MenuAtCursor(QMenu):
         self.closed.emit()
 
 
+class ComboBox_Servers(QComboBox):
+    """
+        combobox which does lock statuswindow so it does not close when opening combobox
+    """
+    shown = pyqtSignal()
+    #closed = pyqtSignal()
+    monitor_opened = pyqtSignal()
+
+    # flag to avoid silly focusOutEvent
+    freshly_opened = False
+
+
+    def __init__(self):
+        QComboBox.__init__(self)
+        # react to clicked monitor
+        self.activated.connect(self.response)
+
+
+    #def showEvent(self, event):
+    def mousePressEvent(self, event):
+        # first click opens combobox popup
+        self.freshly_opened = True
+        # tell status window that there is no combobox anymore
+        self.shown.emit()
+        self.showPopup()
+
+
+    def fill(self):
+        """
+            fill default order fields combobox with server names
+        """
+        self.clear()
+        self.addItem('Go to monitor...')
+        self.addItems(sorted(conf.servers.keys(), key=str.lower))
+
+
+    @pyqtSlot()
+    def response(self):
+        """
+            respnose to activated item in servers combobox
+        """
+        if self.currentText() in servers:
+            # open webbrowser with server URL
+            webbrowser.open(servers[self.currentText()].monitor_url)
+
+            # hide window to make room for webbrowser
+            self.monitor_opened.emit()
+
+
+        self.setCurrentIndex(0)
+
+
 class StatusWindow(QWidget):
     def __init__(self):
         """
@@ -187,7 +239,16 @@ class StatusWindow(QWidget):
         self.toparea.button_settings.clicked.connect(self.hide_window)
         self.toparea.button_settings.clicked.connect(dialogs.settings.show)
 
-        # avoid hifing of statuswindow if menu is opened
+        # avoid hiding of statuswindow if combobox is opened
+        self.toparea.combobox_servers.shown.connect(self.lock)
+        # if monitor was selected in combobox its monitor window is opened
+        self.toparea.combobox_servers.monitor_opened.connect(self.unlock)
+        self.toparea.combobox_servers.monitor_opened.connect(self.hide_window)
+
+        # attempt to allow closing window and combobox
+        self.toparea.mouse_entered.connect(self.unlock)
+
+        # avoid hiding of statuswindow if menu is opened
         self.toparea.hamburger_menu.shown.connect(self.lock)
         self.toparea.hamburger_menu.closed.connect(self.unlock)
         self.toparea.button_hamburger_menu.clicked.connect(self.toparea.hamburger_menu.show_at_cursor)
@@ -611,6 +672,9 @@ class TopArea(QWidget):
     """
         Top area of status window
     """
+
+    mouse_entered = pyqtSignal()
+
     def __init__(self):
         QWidget.__init__(self)
         self.hbox = HBoxLayout()      # top HBox containing buttons
@@ -619,11 +683,18 @@ class TopArea(QWidget):
         # top button box
         self.logo = NagstamonLogo("%s%snagstamon_logo_toparea.svg" % (RESOURCES, os.sep))
         self.label_version = QLabel(AppInfo.VERSION)
-        self.combobox_servers = QComboBox()
+        ###self.combobox_servers = QComboBox()
+        self.combobox_servers = ComboBox_Servers()
         self.button_filters = QPushButton("Filters")
         self.button_recheck_all = QPushButton("Recheck all")
         self.button_refresh = QPushButton("Refresh")
         self.button_settings = QPushButton("Settings")
+
+        # fill default order fields combobox with server names
+        self.combobox_servers.fill()
+
+        # do something if some server was selected
+        #####self.combobox_servers.activated.connect(self.combo)
 
         self.button_hamburger_menu = QPushButton()
         self.button_hamburger_menu.setIcon(QIcon("%s%smenu.svg" % (RESOURCES, os.sep)))
@@ -658,6 +729,11 @@ class TopArea(QWidget):
         self.hbox.addWidget(self.button_close)
 
         self.setLayout(self.hbox)
+
+
+    def enterEvent(self, event):
+        # unlock statuswindow if pointer touches statusbar
+        self.mouse_entered.emit()
 
 
 class ServerVBox(QVBoxLayout):
@@ -1780,7 +1856,7 @@ class Dialog_Settings(Dialog):
                     if conf.__dict__[widget.split('input_radiobutton_')[1]] == True:
                         self.ui.__dict__[widget].toggle()
                 if widget.startswith('input_lineedit_'):
-					# older versions of Nagstamon have a bool value for custom_action_separator
+                    # older versions of Nagstamon have a bool value for custom_action_separator
 					# which leads to a crash here - thus str() to solve this
                     self.ui.__dict__[widget].setText(str(conf.__dict__[widget.split('input_lineedit_')[1]]))
                 if widget.startswith('input_spinbox_'):
@@ -2190,7 +2266,6 @@ class Dialog_Server(Dialog):
                                 }
 
         # fill default order fields combobox with monitor server types
-        ###self.ui.input_combobox_type.addItems(sorted(SERVER_TYPES.keys(), key=unicode.lower))
         self.ui.input_combobox_type.addItems(sorted(SERVER_TYPES.keys(), key=str.lower))
         # default to Nagios as it is the mostly used monitor server
         self.ui.input_combobox_type.setCurrentText('Nagios')

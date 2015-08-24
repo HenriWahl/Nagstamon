@@ -467,22 +467,6 @@ class GenericServer(object):
             {"type": typ, "host": host, "service": service}))
 
 
-    def OpenBrowser(self, widget=None, url_type="", output=None):
-        """
-        multiple purpose open browser method for all open-a-browser-needs
-        """
-        # first close popwin
-        if output != None:
-            output.popwin.Close()
-
-        # run thread with action
-        action = Actions.Action(string=self.BROWSER_URLS[url_type], \
-                                type="browser", \
-                                conf=conf, \
-                                server=self)
-        action.run()
-
-
     def _get_status(self):
         """
         Get status from Nagios Server
