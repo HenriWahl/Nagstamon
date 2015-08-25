@@ -1158,12 +1158,12 @@ class GenericServer(object):
 
             # objectified HTML
             if giveback == "obj":
-                yummysoup = BeautifulSoup(response.text, 'lxml')
+                yummysoup = BeautifulSoup(response.text, 'html.parser')
                 return Result(result=yummysoup)
 
             # objectified generic XML, valid at least for Opsview and Centreon
             elif giveback == "xml":
-                xmlobj = BeautifulSoup(response.text, 'lxml-xml')
+                xmlobj = BeautifulSoup(response.text, 'html.parser')
                 return Result(result=xmlobj)
 
         except:

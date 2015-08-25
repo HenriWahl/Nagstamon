@@ -230,6 +230,11 @@ class StatusWindow(QWidget):
         # after status summarization check if window hast to be resized
         self.statusbar.resize.connect(self.adjust_size)
 
+        # statusbar label has been entered by mouse -> show
+        for label in self.statusbar.color_labels.values():
+            label.mouse_entered.connect(self.show_window)
+            label.mouse_entered.connect(self.lock)
+
         # when logo in toparea was pressed hurry up to save the position so the statusbar will not jump
         self.toparea.logo.window_moved.connect(self.store_position)
         self.toparea.logo.mouse_pressed.connect(self.store_position)
@@ -289,6 +294,9 @@ class StatusWindow(QWidget):
         # flag to mark if window is shown or nor
         self.is_shown = False
 
+        # timer for waiting to set is_shown flag
+        self.timer = QTimer(self)
+
         # flag to avoid hiding window when a menu is shown
         self.locked = False
 
@@ -337,17 +345,21 @@ class StatusWindow(QWidget):
 
         del(vboxes_dict)
 
-
-    def show_window(self, event):
+    @pyqtSlot()
+    def show_window(self, event=None):
         """
             used to show status window when its appearance is triggered, also adjusts geometry
         """
         if not statuswindow.moving:
+            # attempt to avoid flickering on MacOSX - already hide statusbar here
+            self.statusbar.hide()
+            # theory...
             width, height, x, y = self.calculate_size()
+            # ...and practice
             self.resize_window(width, height, x, y)
-
             # switch on
-            self.is_shown = True
+            # delayed because of flickering window in OSX
+            self.timer.singleShot(200, self.set_shown)
 
 
     @pyqtSlot()
@@ -429,10 +441,13 @@ class StatusWindow(QWidget):
             self.stored_y = self.y()
 
         # always stretch over whole screen width - thus x = screen_x, the leftmost pixel
-        self.move(x, y)
+        ###self.move(x, y)
         self.setMaximumSize(width, height)
         self.setMinimumSize(width, height)
         self.adjustSize()
+
+        # always stretch over whole screen width - thus x = screen_x, the leftmost pixel
+        self.move(x, y)
 
         return True
 
@@ -498,6 +513,13 @@ class StatusWindow(QWidget):
             unlock window so it can be hidden again
         """
         self.locked = False
+
+
+    def set_shown(self):
+        """
+            might help to avoid flickering on MacOSX, in cooperation with QTimer
+        """
+        self.is_shown = True
 
 
 class NagstamonLogo(QSvgWidget):
@@ -649,6 +671,9 @@ class StatusBarLabel(QLabel):
     """
         one piece of the status bar labels for one state
     """
+
+    mouse_entered = pyqtSignal()
+
     def __init__(self, state):
         QLabel.__init__(self)
         self.setStyleSheet('color: %s; background-color: %s;' % (conf.__dict__['color_%s_text' % (state.lower())],
@@ -665,7 +690,8 @@ class StatusBarLabel(QLabel):
 
 
     def enterEvent(self, event):
-        statuswindow.show_window(event)
+        if statuswindow.is_shown == False:
+            self.mouse_entered.emit()
 
 
 class TopArea(QWidget):
@@ -899,7 +925,7 @@ class CellWidget(QWidget):
         if self.parent().parent().action_menu.available == True:
             self.clicked.emit()
         else:
-            # if this was blocked relese menu now
+            # if this was blocked release menu now
             self.parent().parent().action_menu.available = True
 
 
@@ -1347,6 +1373,7 @@ class TableWidget(QTableWidget):
         def __init__(self, parent=None, server=None):
             QObject.__init__(self)
             self.server = server
+            # needed for update interval
             self.timer = QTimer(self)
             self.server.init_config()
 
