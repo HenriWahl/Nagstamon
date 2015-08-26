@@ -146,11 +146,21 @@ class GUI(object):
                 gtk.rc_parse_string('style "font" {font_name = "Lucida Grande"} widget_class "*" style "font"')
 
             # init MacOSX integration
-            import gtk_osxapplication
-            osxapp = gtk_osxapplication.OSXApplication()
+            osxapp = False
+            try:
+                import gtk_osxapplication
+                osxapp = gtk_osxapplication.OSXApplication()
+            except:
+                try:
+                    import gtkosx_application
+                    osxapp = gtkosx_application.Application()
+                except:
+                    pass
+
             # prevent blocking
-            osxapp.connect("NSApplicationBlockTermination", gtk.main_quit)
-            osxapp.ready()
+            if osxapp:
+                osxapp.connect("NSApplicationBlockTermination", gtk.main_quit)
+                osxapp.ready()
 
         # icons for acknowledgement/downtime visualization
         self.STATE_ICONS = dict()

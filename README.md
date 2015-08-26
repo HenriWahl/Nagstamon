@@ -3,6 +3,9 @@ Nagstamon
 
 **Major development at the moment only happens in the 'qt' branch.**
 
+To make this work on Yosemite:
+* brew install gtk-mac-integration
+
 Nagstamon is a Nagios status monitor for the desktop. It connects to multiple Nagios, Icinga, Opsview, Centreon, Op5 Monitor/Ninja, Check_MK Multisite and Thruk monitoring servers and resides in systray or as a floating statusbar at the desktop showing a brief summary of critical, warning, unknown, unreachable and down hosts and services and pops up a detailed status overview when moving the mouse pointer over it. Connecting to displayed hosts and services is easily established by context menu via SSH, RDP and VNC or any self defined actions. Users can be notified by sound. Hosts and services can be filtered by category and regular expressions.
 
 It is inspired by Nagios Checker for Firefox - just without an open Firefox window all the time to monitor the network.
