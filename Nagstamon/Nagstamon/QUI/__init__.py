@@ -61,6 +61,13 @@ COLORS = OrderedDict([('DOWN', 'color_down_'),
                       ('UNKNOWN', 'color_unknown_'),
                       ('WARNING', 'color_warning_')])
 
+# states to be used in statusbar if long version is used
+COLOR_STATE_NAMES = {'DOWN': {True: 'DOWN', False: ''},
+                     'UNREACHABLE': { True: 'UNREACHABLE', False: ''},
+                     'CRITICAL': { True: 'CRITICAL', False: ''},
+                     'UNKNOWN': { True: 'UNKNOWN', False: ''},
+                     'WARNING': { True: 'WARNING', False: ''}}
+
 # headers for tablewidgets
 HEADERS = OrderedDict([('host', 'Host'), ('service', 'Service'),
                        ('status', 'Status'), ('last_check', 'Last Check'),
@@ -211,6 +218,7 @@ class StatusWindow(QWidget):
         Either statusbar is shown or (toparea + scrolling area)
     """
 
+    # sent by .resize_window()
     resizing = pyqtSignal()
 
     def __init__(self):
@@ -228,7 +236,12 @@ class StatusWindow(QWidget):
         self.statusbar = StatusBar()                # statusbar HBox
         self.toparea = TopArea()                    # toparea HBox
         self.toparea.hide()
-        self.toparea.button_close.clicked.connect(self.hide_window)
+
+        self.servers_vbox = QVBoxLayout()           # VBox full of servers
+        self.servers_vbox.setContentsMargins(0, 0, 0, 0)
+        self.servers_scrollarea = QScrollArea()     # scrollable area for server vboxes
+        self.servers_scrollarea_widget = QWidget()  # necessary widget to contain vbox for servers
+        self.servers_scrollarea.hide()
 
         # connect logo of statusbar
         self.statusbar.logo.window_moved.connect(self.store_position)
@@ -251,6 +264,7 @@ class StatusWindow(QWidget):
         # buttons in toparea
         self.toparea.button_settings.clicked.connect(self.hide_window)
         self.toparea.button_settings.clicked.connect(dialogs.settings.show)
+        self.toparea.button_close.clicked.connect(self.hide_window)
 
         # avoid hiding of statuswindow if combobox is opened
         self.toparea.combobox_servers.shown.connect(self.lock)
@@ -266,12 +280,6 @@ class StatusWindow(QWidget):
         self.toparea.hamburger_menu.closed.connect(self.unlock)
         self.toparea.button_hamburger_menu.clicked.connect(self.toparea.hamburger_menu.show_at_cursor)
 
-        self.servers_vbox = QVBoxLayout()           # VBox full of servers
-        self.servers_vbox.setContentsMargins(0, 0, 0, 0)
-        self.servers_scrollarea = QScrollArea()     # scrollable area for server vboxes
-        self.servers_scrollarea_widget = QWidget()  # necessary widget to contain vbox for servers
-        self.servers_scrollarea.hide()
-
         # statusbar should hide and toparea and servers_scrollarea should show if window is resizing
         self.resizing.connect(self.statusbar.hide)
         self.resizing.connect(self.toparea.show)
@@ -280,7 +288,8 @@ class StatusWindow(QWidget):
         # create vbox for each enabled server
         for server in servers.values():
             if server.enabled:
-                self.create_ServerVBox(server)
+                ###self.create_ServerVBox(server)
+                self.servers_vbox.addLayout(self.create_ServerVBox(server))
 
         self.servers_scrollarea_widget.setLayout(self.servers_vbox)
         self.servers_scrollarea.setWidget(self.servers_scrollarea_widget)
@@ -326,7 +335,9 @@ class StatusWindow(QWidget):
             server_vbox = ServerVBox(server)
             # connect to global resize signal
             server_vbox.table.ready_to_resize.connect(self.adjust_size)
-            self.servers_vbox.addLayout(server_vbox)
+            # tell statusbar to summarize after table was refreshed
+            server_vbox.table.refreshed.connect(self.statusbar.summarize_states)
+            ###self.servers_vbox.addLayout(server_vbox)
             return server_vbox
         else:
             return None
@@ -445,10 +456,10 @@ class StatusWindow(QWidget):
 
     def resize_window(self, width, height, x, y):
         """
-            resize status window according to its new
+            resize status window according to its new size
         """
-
         # send signal to .hide slot of statusbar and .show of toparea and servers_scrollarea
+        # workaround for Windows glitches
         self.resizing.emit()
 
         # store position for restoring it when hiding - only if not shown of course
@@ -466,7 +477,7 @@ class StatusWindow(QWidget):
             # - Only on Windows the statusbar is moving FIRST before resizing - no matter which
             #   order was used
             # - Dirty workaround:
-            #   - store x and y in .move_to_* (also compatible with older Qt5 as in Ubuntu 14.04)
+            #   - store x and y in .move_to_*
             #   - start helper move_timer by timer singleshot to give statusbar some time to hide
             self.move_to_x, self.move_to_y = x, y
             self.timer.singleShot(10, self.move_timer)
@@ -475,13 +486,12 @@ class StatusWindow(QWidget):
 
         return True
 
-
+    @pyqtSlot()
     def move_timer(self):
         """
-            helper for move by QTimer.singleShot - attempt to avoid flivkering on Windows
+            helper for move by QTimer.singleShot - attempt to avoid flickering on Windows
         """
         self.move(self.move_to_x, self.move_to_y)
-        return True
 
 
     @pyqtSlot()
@@ -489,10 +499,16 @@ class StatusWindow(QWidget):
         """
             resize window if shown and needed
         """
+        # fully displayed statuswindow
         if self.is_shown == True:
             width, height, x, y = self.calculate_size()
             self.resize_window(width, height, x, y)
-
+        else:
+            # statusbar only
+            hint = self.sizeHint()
+            self.setMaximumSize(hint)
+            self.setMinimumSize(hint)
+            del hint
 
     @pyqtSlot()
     def store_position(self):
@@ -636,6 +652,9 @@ class StatusBar(QWidget):
     def __init__(self):
         QWidget.__init__(self)
 
+        self.setSizePolicy(QSizePolicy.Fixed, QSizePolicy.Fixed)
+
+
         self.hbox = HBoxLayout(spacing=0)
         self.setLayout(self.hbox)
 
@@ -674,14 +693,16 @@ class StatusBar(QWidget):
             for state in COLORS:
                 self.color_labels[state].number += server.__dict__[state.lower()]
 
-        # summarize all numbers - if all_numbers keeps 0 everthing seems to be OK
+        # summarize all numbers - if all_numbers keeps 0 everything seems to be OK
         all_numbers = 0
+
         # repaint colored labels or hide them if necessary
         for label in self.color_labels.values():
             if label.number == 0:
                 label.hide()
             else:
-                label.setText(' %s ' % (label.number))
+                label.setText(' %s ' % (' '.join((str(label.number),
+                                                  COLOR_STATE_NAMES[label.state][conf.long_display]))))
                 label.show()
                 label.adjustSize()
                 all_numbers += label.number
@@ -692,8 +713,11 @@ class StatusBar(QWidget):
         else:
             self.color_labels['OK'].hide()
 
-        # fix size after refresh
-        self.adjustSize()
+        # fix size after refresh - better done here to avoid ugly artefacts
+        hint = self.sizeHint()
+        self.setMaximumSize(hint)
+        self.setMinimumSize(hint)
+        del hint
 
         # tell statuswindow its size might be adjusted
         self.resize.emit()
@@ -710,7 +734,9 @@ class StatusBarLabel(QLabel):
         QLabel.__init__(self)
         self.setStyleSheet('color: %s; background-color: %s;' % (conf.__dict__['color_%s_text' % (state.lower())],
                                                                  conf.__dict__['color_%s_background' % (state.lower())]))
-        self.setSizePolicy(QSizePolicy.Fixed, QSizePolicy.Fixed)
+        # just let labels grow as much as they need
+        self.setSizePolicy(QSizePolicy.Maximum, QSizePolicy.Maximum)
+
         # hidden per default
         self.hide()
 
@@ -719,6 +745,9 @@ class StatusBarLabel(QLabel):
 
         # number of hosts/services of this state
         self.number = 0
+
+        # store state of label to access long state names in .summarize_states()
+        self.state = state
 
 
     def enterEvent(self, event):
@@ -972,6 +1001,9 @@ class TableWidget(QTableWidget):
     # tell global window that it should be resized
     ready_to_resize = pyqtSignal()
 
+    # sent by refresh() for statusbar
+    refreshed = pyqtSignal()
+
     # tell worker to get status after a recheck has been solicited
     recheck = pyqtSignal(dict)
 
@@ -1075,7 +1107,8 @@ class TableWidget(QTableWidget):
             data = list(self.server.GetItemsGenerator())
             self.set_data(data)
             # get_status statusbar
-            statuswindow.statusbar.summarize_states()
+            #statuswindow.statusbar.summarize_states()
+            self.refreshed.emit()
 
 
     @pyqtSlot(int, int, str, str, str, list)
