@@ -280,11 +280,6 @@ class StatusWindow(QWidget):
         self.toparea.hamburger_menu.closed.connect(self.unlock)
         self.toparea.button_hamburger_menu.clicked.connect(self.toparea.hamburger_menu.show_at_cursor)
 
-        # statusbar should hide and toparea and servers_scrollarea should show if window is resizing
-        self.resizing.connect(self.statusbar.hide)
-        self.resizing.connect(self.toparea.show)
-        self.resizing.connect(self.servers_scrollarea.show)
-
         # create vbox for each enabled server
         for server in servers.values():
             if server.enabled:
@@ -385,8 +380,11 @@ class StatusWindow(QWidget):
             # ...and practice
             self.resize_window(width, height, x, y)
             # switch on
-            # delayed because of flickering window in OSX
-            self.timer.singleShot(200, self.set_shown)
+            if platform.system() == 'Darwin':
+                # delayed because of flickering window in OSX
+                self.timer.singleShot(200, self.set_shown)
+            else:
+                self.set_shown()
 
 
     @pyqtSlot()
@@ -458,9 +456,10 @@ class StatusWindow(QWidget):
         """
             resize status window according to its new size
         """
-        # send signal to .hide slot of statusbar and .show of toparea and servers_scrollarea
-        # workaround for Windows glitches
-        self.resizing.emit()
+        # first hide statusbar and show the other status window components
+        self.statusbar.hide()
+        self.toparea.show()
+        self.servers_scrollarea.show()
 
         # store position for restoring it when hiding - only if not shown of course
         if self.is_shown == False:
@@ -486,6 +485,7 @@ class StatusWindow(QWidget):
 
         return True
 
+
     @pyqtSlot()
     def move_timer(self):
         """
@@ -499,6 +499,7 @@ class StatusWindow(QWidget):
         """
             resize window if shown and needed
         """
+        self.adjusting_size_lock = True
         # fully displayed statuswindow
         if self.is_shown == True:
             width, height, x, y = self.calculate_size()
@@ -509,6 +510,7 @@ class StatusWindow(QWidget):
             self.setMaximumSize(hint)
             self.setMinimumSize(hint)
             del hint
+
 
     @pyqtSlot()
     def store_position(self):
@@ -701,8 +703,8 @@ class StatusBar(QWidget):
             if label.number == 0:
                 label.hide()
             else:
-                label.setText(' %s ' % (' '.join((str(label.number),
-                                                  COLOR_STATE_NAMES[label.state][conf.long_display]))))
+                label.setText(' '.join((str(label.number),
+                                        COLOR_STATE_NAMES[label.state][conf.long_display])))
                 label.show()
                 label.adjustSize()
                 all_numbers += label.number
@@ -732,7 +734,8 @@ class StatusBarLabel(QLabel):
 
     def __init__(self, state):
         QLabel.__init__(self)
-        self.setStyleSheet('color: %s; background-color: %s;' % (conf.__dict__['color_%s_text' % (state.lower())],
+        self.setStyleSheet('padding-left: 1px; padding-right: 1px;'
+                           'color: %s; background-color: %s;' % (conf.__dict__['color_%s_text' % (state.lower())],
                                                                  conf.__dict__['color_%s_background' % (state.lower())]))
         # just let labels grow as much as they need
         self.setSizePolicy(QSizePolicy.Maximum, QSizePolicy.Maximum)
@@ -741,7 +744,7 @@ class StatusBarLabel(QLabel):
         self.hide()
 
         # default text - only useful in case of OK Label
-        self.setText(' %s ' % (state))
+        self.setText(state)
 
         # number of hosts/services of this state
         self.number = 0
@@ -779,9 +782,6 @@ class TopArea(QWidget):
 
         # fill default order fields combobox with server names
         self.combobox_servers.fill()
-
-        # do something if some server was selected
-        #####self.combobox_servers.activated.connect(self.combo)
 
         self.button_hamburger_menu = QPushButton()
         self.button_hamburger_menu.setIcon(QIcon("%s%smenu.svg" % (RESOURCES, os.sep)))
