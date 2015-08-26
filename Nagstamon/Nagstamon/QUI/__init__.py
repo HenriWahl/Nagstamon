@@ -34,6 +34,7 @@ import urllib.parse
 import webbrowser
 import subprocess
 import sys
+import platform
 
 from Nagstamon.Config import (conf, Server, Action, RESOURCES, AppInfo)
 
@@ -205,6 +206,13 @@ class ComboBox_Servers(QComboBox):
 
 
 class StatusWindow(QWidget):
+    """
+        Consists of statusbar, toparea and scrolling area.
+        Either statusbar is shown or (toparea + scrolling area)
+    """
+
+    resizing = pyqtSignal()
+
     def __init__(self):
         """
             Status window combined from status bar and popup window
@@ -227,7 +235,7 @@ class StatusWindow(QWidget):
         self.statusbar.logo.mouse_pressed.connect(self.store_position)
         self.statusbar.logo.mouse_pressed.connect(self.hide_window)
 
-        # after status summarization check if window hast to be resized
+        # after status summarization check if window has to be resized
         self.statusbar.resize.connect(self.adjust_size)
 
         # statusbar label has been entered by mouse -> show
@@ -264,6 +272,11 @@ class StatusWindow(QWidget):
         self.servers_scrollarea_widget = QWidget()  # necessary widget to contain vbox for servers
         self.servers_scrollarea.hide()
 
+        # statusbar should hide and toparea and servers_scrollarea should show if window is resizing
+        self.resizing.connect(self.statusbar.hide)
+        self.resizing.connect(self.toparea.show)
+        self.resizing.connect(self.servers_scrollarea.show)
+
         # create vbox for each enabled server
         for server in servers.values():
             if server.enabled:
@@ -290,6 +303,9 @@ class StatusWindow(QWidget):
         # store position for showing/hiding statuswindow
         self.stored_x = self.x()
         self.stored_y = self.y()
+
+        # helper values for QTimer.singleShot move attempt
+        self.move_to_x = self.move_to_y = 0
 
         # flag to mark if window is shown or nor
         self.is_shown = False
@@ -431,9 +447,9 @@ class StatusWindow(QWidget):
         """
             resize status window according to its new
         """
-        self.statusbar.hide()
-        self.toparea.show()
-        self.servers_scrollarea.show()
+
+        # send signal to .hide slot of statusbar and .show of toparea and servers_scrollarea
+        self.resizing.emit()
 
         # store position for restoring it when hiding - only if not shown of course
         if self.is_shown == False:
@@ -441,14 +457,30 @@ class StatusWindow(QWidget):
             self.stored_y = self.y()
 
         # always stretch over whole screen width - thus x = screen_x, the leftmost pixel
-        ###self.move(x, y)
         self.setMaximumSize(width, height)
         self.setMinimumSize(width, height)
         self.adjustSize()
 
-        # always stretch over whole screen width - thus x = screen_x, the leftmost pixel
-        self.move(x, y)
+        if platform.system() == 'Windows':
+            # absolutely strange, but no other solution available
+            # - Only on Windows the statusbar is moving FIRST before resizing - no matter which
+            #   order was used
+            # - Dirty workaround:
+            #   - store x and y in .move_to_* (also compatible with older Qt5 as in Ubuntu 14.04)
+            #   - start helper move_timer by timer singleshot to give statusbar some time to hide
+            self.move_to_x, self.move_to_y = x, y
+            self.timer.singleShot(10, self.move_timer)
+        else:
+            self.move(x, y)
 
+        return True
+
+
+    def move_timer(self):
+        """
+            helper for move by QTimer.singleShot - attempt to avoid flivkering on Windows
+        """
+        self.move(self.move_to_x, self.move_to_y)
         return True
 
 
