@@ -27,7 +27,7 @@ import copy
 
 
 from Nagstamon.Actions import HumanReadableDurationFromTimestamp
-from Nagstamon.Objects import *
+from Nagstamon.Objects import (GenericHost, GenericService, Result)
 
 
 class ThrukServer(GenericServer):
@@ -69,34 +69,38 @@ class ThrukServer(GenericServer):
         self.CookieAuth = False
 
 
+    def reset_HTTP(self):
+        """
+            brute force reset by GenericServer disturbs logging in into Thruk
+        """
+        # only reset session if Thruks 2 cookies are there
+        if len(self.session.cookies) > 1:
+            self.session = None
+
+
     def init_HTTP(self):
         """
-        partly not constantly working Basic Authorization requires extra Autorization headers,
-        different between various server types
+            partly not constantly working Basic Authorization requires extra Autorization headers,
+            different between various server types
         """
         GenericServer.init_HTTP(self)
 
         # only if cookies are needed
         if self.CookieAuth:
-            # get cookie to access Check_MK web interface
+            # get cookie to access Thruk web interface
+            # Thruk first send a test cookie, later an auth cookie
             if len(self.session.cookies) < 2:
-                # put all necessary data into url string
-                logindata = urllib.parse.urlencode({"login":self.get_username(),\
-                                                    "password":self.get_password(),\
-                                                    "submit":"Login"})
                 # get cookie from login page via url retrieving as with other urls
                 try:
                     # login and get cookie
-                    # empty referer seems to be ignored so add it manually
-                    self.FetchURL(self.monitor_cgi_url + '/login.cgi?' + logindata + '&referer=')
-
+                    self.login()
                 except:
                     self.Error(sys.exc_info())
 
 
     def init_config(self):
         """
-        set URLs for CGI - they are static and there is no need to set them with every cycle
+            set URLs for CGI - they are static and there is no need to set them with every cycle
         """
         # create filters like described in
         # http://www.nagios-wiki.de/nagios/tips/host-_und_serviceproperties_fuer_status.cgi?s=servicestatustypes
@@ -115,16 +119,10 @@ class ThrukServer(GenericServer):
                                                     "active_checks_enabled,notifications_enabled,is_flapping,"\
                                                     "acknowledged,scheduled_downtime_depth,state_type"
 
-        # test for cookies
-        # put all necessary data into url string
-        logindata = urllib.parse.urlencode({"login":self.get_username(),\
-                                            "password":self.get_password(),\
-                                            "submit":"Login"})
         # get cookie from login page via url retrieving as with other urls
         try:
             # login and get cookie
-            # empty referer seems to be ignored so add it manually
-            self.FetchURL(self.monitor_cgi_url + '/login.cgi?' + logindata + '&referer=')
+            self.login()
 
             if len(self.session.cookies) > 0:
                 self.CookieAuth = True
@@ -132,9 +130,20 @@ class ThrukServer(GenericServer):
             self.Error(sys.exc_info())
 
 
+    def login(self):
+        """
+            use pure session instead of FetchURL to get Thruk session
+        """
+        self.session.post(self.monitor_cgi_url+'/login.cgi?',
+                          data={'login': self.get_username(),
+                                'password': self.get_password(),
+                                'submit': 'Login',
+                                'referer': ''})
+
+
     def _get_status(self):
         """
-        Get status from Thruk Server
+            Get status from Thruk Server
         """
         # new_hosts dictionary
         self.new_hosts = dict()
@@ -144,7 +153,7 @@ class ThrukServer(GenericServer):
         # hosts must be analyzed separately
         try:
             # JSON experiments
-            result = self.FetchURL(self.cgiurl_hosts, giveback="raw")
+            result = self.FetchURL(self.cgiurl_hosts, giveback='raw')
 
             jsonraw, error = copy.deepcopy(result.result), copy.deepcopy(result.error)
             if error != "": return Result(result=jsonraw, error=error)
@@ -152,7 +161,6 @@ class ThrukServer(GenericServer):
             # in case basic auth did not work try form login cookie based login
             if jsonraw.startswith("<"):
                 self.CookieAuth = True
-
                 return Result(result=None, error="Login failed.")
 
             # in case JSON is not empty evaluate it
@@ -178,11 +186,8 @@ class ThrukServer(GenericServer):
                         self.new_hosts[h["name"]].status_type =  {0: "soft", 1: "hard"}[h["state_type"]]
                     del h
         except:
-
             import traceback
             traceback.print_exc(file=sys.stdout)
-
-
             # set checking flag back to False
             self.isChecking = False
             result, error = self.Error(sys.exc_info())
@@ -190,7 +195,6 @@ class ThrukServer(GenericServer):
 
         # services
         try:
-
             # JSON experiments
             result = self.FetchURL(self.cgiurl_services, giveback="raw")
             jsonraw, error = copy.deepcopy(result.result), copy.deepcopy(result.error)
@@ -234,11 +238,8 @@ class ThrukServer(GenericServer):
                         self.new_hosts[s["host_name"]].services[s["description"]].status_type = {0: "soft", 1: "hard"}[s["state_type"]]
                         del s
         except:
-
             import traceback
             traceback.print_exc(file=sys.stdout)
-
-
             # set checking flag back to False
             self.isChecking = False
             result, error = self.Error(sys.exc_info())

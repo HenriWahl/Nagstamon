@@ -1105,9 +1105,9 @@ class TableWidget(QTableWidget):
         if not statuswindow.moving:
             # get_status table cells with new data by thread
             data = list(self.server.GetItemsGenerator())
-            self.set_data(data)
-            # get_status statusbar
-            #statuswindow.statusbar.summarize_states()
+            if len(data) > 0:
+                self.set_data(data)
+            # tell statusbar it should update
             self.refreshed.emit()
 
 
@@ -1446,6 +1446,7 @@ class TableWidget(QTableWidget):
         @pyqtSlot()
         def get_status(self):
             status =  self.server.GetStatus()
+
             self.new_status.emit()
 
             if self.running == True:

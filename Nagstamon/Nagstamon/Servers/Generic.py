@@ -224,7 +224,6 @@ class GenericServer(object):
         """
         if authentication fails try to reset any HTTP session stuff - might be different for different monitors
         """
-        # ##self.HTTPheaders = dict()
         self.session = None
 
 
@@ -1073,7 +1072,7 @@ class GenericServer(object):
         return Result()
 
 
-    def FetchURL(self, url, giveback="obj", cgi_data=None, no_auth=False, multipart=False):
+    def FetchURL(self, url, giveback='obj', cgi_data=None, no_auth=False, multipart=False):
         """
         get content of given url, cgi_data only used if present
         "obj" FetchURL gives back a dict full of miserable hosts/services,
@@ -1102,7 +1101,7 @@ class GenericServer(object):
                         else:
                             response = self.session.post(url, data=cgi_data)
                     else:
-                        # Check_MK and Opsview nees multipart/form-data encoding
+                        # Check_MK and Opsview need multipart/form-data encoding
                         # http://stackoverflow.com/questions/23120974/python-requests-post-multipart-form-data-without-filename-in-http-request#23131823
                         form_data = dict()
                         for key in cgi_data:
