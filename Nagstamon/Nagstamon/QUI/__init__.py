@@ -456,20 +456,17 @@ class StatusWindow(QWidget):
         """
             resize status window according to its new size
         """
-        # first hide statusbar and show the other status window components
-        self.statusbar.hide()
-        self.toparea.show()
-        self.servers_scrollarea.show()
 
         # store position for restoring it when hiding - only if not shown of course
         if self.is_shown == False:
             self.stored_x = self.x()
             self.stored_y = self.y()
 
-        # always stretch over whole screen width - thus x = screen_x, the leftmost pixel
-        self.setMaximumSize(width, height)
-        self.setMinimumSize(width, height)
-        self.adjustSize()
+        # first hide statusbar and show the other status window components
+        self.statusbar.hide()
+        # show the other status window components
+        self.toparea.show()
+        self.servers_scrollarea.show()
 
         if platform.system() == 'Windows':
             # absolutely strange, but no other solution available
@@ -482,6 +479,11 @@ class StatusWindow(QWidget):
             self.timer.singleShot(10, self.move_timer)
         else:
             self.move(x, y)
+
+        # always stretch over whole screen width - thus x = screen_x, the leftmost pixel
+        self.setMaximumSize(width, height)
+        self.setMinimumSize(width, height)
+        self.adjustSize()
 
         return True
 
@@ -823,10 +825,31 @@ class TopArea(QWidget):
         self.mouse_entered.emit()
 
 
+class ServerStatusLabel(QLabel):
+    """
+        label for ServerVBox to show server connection state
+        extra class to apply simple slots for changing text or color
+    """
+    def __init__(self):
+        QLabel.__init__(self)
+
+
+    @pyqtSlot(str)
+    def change(self, text):
+        self.setText(text)
+
+
+    @pyqtSlot()
+    def reset(self):
+        self.setText('')
+
+
 class ServerVBox(QVBoxLayout):
     """
         one VBox per server containing buttons and hosts/services listview
     """
+
+    change_label_status = pyqtSignal(str)
 
     def __init__(self, server):
         QVBoxLayout.__init__(self)
@@ -841,6 +864,8 @@ class ServerVBox(QVBoxLayout):
         self.button_hosts = QPushButton("Hosts")
         self.button_services = QPushButton("Services")
         self.button_history = QPushButton("History")
+        self.label_status = ServerStatusLabel()
+
 
         self.hbox.addWidget(self.label)
         self.hbox.addWidget(self.button_edit)
@@ -848,6 +873,7 @@ class ServerVBox(QVBoxLayout):
         self.hbox.addWidget(self.button_hosts)
         self.hbox.addWidget(self.button_services)
         self.hbox.addWidget(self.button_history)
+        self.hbox.addWidget(self.label_status)
         self.hbox.addStretch()
         self.addLayout(self.hbox)
 
@@ -857,6 +883,9 @@ class ServerVBox(QVBoxLayout):
 
         # delete vbox if thread quits
         self.table.worker_thread.finished.connect(self.delete)
+
+        # connect worker to status label to reflect connectivity
+        self.table.worker.change_label_status.connect(self.label_status.change)
 
         self.addWidget(self.table, 1)
 
@@ -878,6 +907,7 @@ class ServerVBox(QVBoxLayout):
         return height
 
 
+    @pyqtSlot()
     def show_all(self):
         """
             show all items in server vbox
@@ -889,6 +919,7 @@ class ServerVBox(QVBoxLayout):
                 child.show()
 
 
+    @pyqtSlot()
     def hide_all(self):
         """
             hide all items in server vbox
@@ -1434,6 +1465,9 @@ class TableWidget(QTableWidget):
         # try to stop thread by evaluating this flag
         running = True
 
+        # signal to be sent to slot "change" of ServerStatusLabel
+        change_label_status = pyqtSignal(str)
+
 
         def __init__(self, parent=None, server=None):
             QObject.__init__(self)
@@ -1445,7 +1479,16 @@ class TableWidget(QTableWidget):
 
         @pyqtSlot()
         def get_status(self):
-            status =  self.server.GetStatus()
+
+            self.change_label_status.emit('Refreshing...')
+
+            status = self.server.GetStatus()
+            ###self.server.GetStatus()
+
+            if self.server.status_description == '':
+                self.change_label_status.emit('Connected')
+            else:
+                self.change_label_status.emit(status.error)
 
             self.new_status.emit()
 

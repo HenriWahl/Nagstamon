@@ -42,6 +42,7 @@ class MultisiteError(Exception):
         self.terminate = terminate
         self.result    = result
 
+
 class MultisiteServer(GenericServer):
     """
        special treatment for Check_MK Multisite JSON API
@@ -107,10 +108,10 @@ class MultisiteServer(GenericServer):
 
         if self.CookieAuth:
             # get cookie to access Check_MK web interface
-            #if len(self.Cookie) == 0:
-            if len(self.session.cookies) == 0:
-                # if no cookie yet login
-                self._get_cookie_login()
+            if 'cookies' in dir(self.session):
+                if len(self.session.cookies) == 0:
+                    # if no cookie yet login
+                    self._get_cookie_login()
 
         GenericServer.init_HTTP(self)
 
@@ -125,6 +126,7 @@ class MultisiteServer(GenericServer):
     def _get_url(self, url):
         result = self.FetchURL(url, 'raw')
         content, error = result.result, result.error
+
         if error != "":
             raise MultisiteError(True, Result(result = content, error = error))
 
@@ -144,7 +146,8 @@ class MultisiteServer(GenericServer):
         # in case of auth problem enable GUI auth part in popup
         if self.CookieAuth == True and len(self.session.cookies) == 0:
             self.refresh_authentication = True
-            return Result(result="", error="Authentication failed")
+            ###return Result(result="", error="Authentication failed")
+            return ''
 
        # looks like cookieauth
         elif content.startswith('<'):
@@ -155,7 +158,7 @@ class MultisiteServer(GenericServer):
                 result = self.FetchURL(url, 'raw')
                 content, error = result.result, result.error
                 if content.startswith('<'):
-                    return ""
+                    return ''
 
         return eval(content)
 
@@ -204,6 +207,9 @@ class MultisiteServer(GenericServer):
                 if e.terminate:
                     return e.result
 
+            if response == '':
+                return Result(result='', error='Login failed')
+
             for row in response[1:]:
                 host= dict(list(zip(copy.deepcopy(response[0]), copy.deepcopy(row))))
                 n = {
@@ -248,7 +254,6 @@ class MultisiteServer(GenericServer):
             del response
 
         except:
-
             import traceback
             traceback.print_exc(file=sys.stdout)
 
@@ -336,11 +341,8 @@ class MultisiteServer(GenericServer):
             del response
 
         except:
-
-
             import traceback
             traceback.print_exc(file=sys.stdout)
-
 
             # set checking flag back to False
             self.isChecking = False

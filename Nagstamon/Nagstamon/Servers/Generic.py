@@ -101,7 +101,7 @@ class GenericServer(object):
         self.proxy_password = ""
         self.hosts = dict()
         self.new_hosts = dict()
-        self.thread = None
+        ###self.thread = None
         self.isChecking = False
         self.CheckingForNewVersion = False
         self.WorstStatus = "UP"
@@ -766,11 +766,11 @@ class GenericServer(object):
                             "bad session id" in status.error.lower() or \
                             "login failed" in status.error.lower():
 
-                if str(conf.servers[self.name].enabled) == "True":
+                if conf.servers[self.name].enabled == True:
                     # needed to get valid credentials
                     self.refresh_authentication = True
+                    """
                     while status.error != "":
-                        # ##gobject.idle_add(output.RefreshDisplayStatus)
                         # clean existent authentication
                         self.reset_HTTP()
                         self.init_HTTP()
@@ -778,11 +778,18 @@ class GenericServer(object):
                         self.status, self.status_description = status.result, status.error
                         # take a break not to DOS the monitor...
                         time.sleep(10)
-                        # if monitor has been disabled do not try to connect to it
-                        if str(conf.servers[self.name].enabled) == "False":
+                        # if monitor has been disabled meanwhile do not try to connect to it
+                        if conf.servers[self.name].enabled == False:
                             break
                         # if reauthentication did not work already try again to get correct credentials
                         self.refresh_authentication = True
+                    """
+                    # clean existent authentication
+                    self.reset_HTTP()
+                    self.init_HTTP()
+                    status = self._get_status()
+                    self.status, self.status_description = status.result, status.error
+                    return(status)
             else:
                 self.isChecking = False
                 return Result(result=self.status, error=self.status_description)

@@ -161,7 +161,7 @@ class ThrukServer(GenericServer):
             # in case basic auth did not work try form login cookie based login
             if jsonraw.startswith("<"):
                 self.CookieAuth = True
-                return Result(result=None, error="Login failed.")
+                return Result(result=None, error="Login failed")
 
             # in case JSON is not empty evaluate it
             elif not jsonraw == "[]":
@@ -204,7 +204,7 @@ class ThrukServer(GenericServer):
             # in case basic auth did not work try form login cookie based login
             if jsonraw.startswith("<"):
                 self.CookieAuth = True
-                return Result(result=None, error="Login failed.")
+                return Result(result=None, error="Login failed")
 
             # in case JSON is not empty evaluate it
             elif not jsonraw == "[]":
