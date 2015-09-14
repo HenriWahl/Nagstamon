@@ -1,7 +1,20 @@
 Nagstamon
 =========
 
-**Major development at the moment only happens in the 'qt' branch.**
+**Major development at the moment only happens in the '2.0' branch.**
+
+
+v2.0 Roadmap (by Marcin Nowak)
+------------------------------
+ 
+ - [ ] pluggable Servers using setuptool`s entry points
+ - [ ] code cleanup 
+ - [ ] define new&clean Server`s public interface and create real abstract BaseServer class
+ - [ ] compatibility layer for old GenericServer
+
+
+Further notes
+-------------
 
 To make this work on Yosemite:
 * brew install gtk-mac-integration
