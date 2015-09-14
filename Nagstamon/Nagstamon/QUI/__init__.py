@@ -1010,15 +1010,10 @@ class CellWidget(QWidget):
 
 
     def mouseReleaseEvent(self, event):
-        # send signal of clicked cell to table widget which cares further
-
-        # only send signal if no menu is open -
-        # to avoid popping up menus if one menu should be closed by clicking elsewhere
-        if self.parent().parent().action_menu.available == True:
-            self.clicked.emit()
-        else:
-            # if this was blocked release menu now
-            self.parent().parent().action_menu.available = True
+        """
+            send signal of clicked cell to table widget which cares further
+        """
+        self.clicked.emit()
 
 
 class TableWidget(QTableWidget):
@@ -1083,7 +1078,7 @@ class TableWidget(QTableWidget):
         # action context menu
         self.action_menu = MenuAtCursor()
         # flag to avoid popping up menus when clicking somehwere
-        self.action_menu.available = True
+        ###self.action_menu.available = True
         # signalmapper for getting triggered actions
         self.signalmapper_action_menu = QSignalMapper()
         # connect menu to responder
@@ -1189,8 +1184,9 @@ class TableWidget(QTableWidget):
 
     @pyqtSlot()
     def cell_clicked(self):
+
         # block context menu to avoid jumping menu chen clicking elsewhere to close it
-        self.action_menu.available = False
+        ###self.action_menu.available = False
 
         # simply use currently highlighted row as an index
         self.miserable_host = self.cellWidget(self.highlighted_row, HEADERS_LIST.index('host')).text
@@ -1300,7 +1296,7 @@ class TableWidget(QTableWidget):
     @pyqtSlot(str)
     def action_menu_custom_response(self, action):
         # avoid blocked context menu
-        self.action_menu.available = True
+        ###self.action_menu.available = True
         # send dict with action info and dict with host/service info
         self.request_action.emit(conf.actions[action].__dict__, {'server': self.server.get_name(),
                                                                  'host': self.miserable_host,
@@ -1328,7 +1324,7 @@ class TableWidget(QTableWidget):
         """
         def decoration_function(self):
             # avoid blocked context menu
-            self.action_menu.available = True
+            ###self.action_menu.available = True
             # run decorated method
             method(self)
             # default actions need closed statuswindow to display own dialogs

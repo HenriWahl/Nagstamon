@@ -30,8 +30,9 @@ import urllib.request, urllib.parse, urllib.error
 import webbrowser
 import time
 import copy
+import html
 
-from Nagstamon import Actions
+###from Nagstamon import Actions
 from Nagstamon.Objects import (GenericHost, GenericService, Result)
 from Nagstamon.Servers.Generic import GenericServer
 
@@ -217,7 +218,7 @@ class MultisiteServer(GenericServer):
                     'status':             self.statemap.get(host['host_state'], host['host_state']),
                     'last_check':         host['host_check_age'],
                     'duration':           host['host_state_age'],
-                    'status_information': host['host_plugin_output'],
+                    'status_information': html.unescape(host['host_plugin_output'].replace("\n", " ")),
                     'attempt':            host['host_attempt'],
                     'site':               host['sitename_plain'],
                     'address':            host['host_address'],
@@ -233,7 +234,7 @@ class MultisiteServer(GenericServer):
                     self.new_hosts[new_host].last_check = n["last_check"]
                     self.new_hosts[new_host].duration = n["duration"]
                     self.new_hosts[new_host].attempt = n["attempt"]
-                    self.new_hosts[new_host].status_information= n["status_information"].replace("\n", " ")
+                    self.new_hosts[new_host].status_information= html.unescape(n["status_information"].replace("\n", " "))
                     self.new_hosts[new_host].site = n["site"]
                     self.new_hosts[new_host].address = n["address"]
                     # transisition to Check_MK 1.1.10p2
@@ -286,7 +287,7 @@ class MultisiteServer(GenericServer):
                     'last_check':         service['svc_check_age'],
                     'duration':           service['svc_state_age'],
                     'attempt':            service['svc_attempt'],
-                    'status_information': service['svc_plugin_output'],
+                    'status_information': html.unescape(service['svc_plugin_output'].replace("\n", " ")),
                     # Check_MK passive services can be re-scheduled by using the Check_MK service
                     'passiveonly':        service['svc_is_active'] == 'no' and not service['svc_check_command'].startswith('check_mk'),
                     'notifications':      service['svc_notifications_enabled'] == 'yes',
@@ -314,7 +315,7 @@ class MultisiteServer(GenericServer):
                     self.new_hosts[n["host"]].services[new_service].last_check = n["last_check"]
                     self.new_hosts[n["host"]].services[new_service].duration = n["duration"]
                     self.new_hosts[n["host"]].services[new_service].attempt = n["attempt"]
-                    self.new_hosts[n["host"]].services[new_service].status_information = n["status_information"].replace("\n", " ").strip()
+                    self.new_hosts[n["host"]].services[new_service].status_information = n["status_information"].strip()
                     self.new_hosts[n["host"]].services[new_service].passiveonly = n["passiveonly"]
                     self.new_hosts[n["host"]].services[new_service].flapping = n["flapping"]
                     self.new_hosts[n["host"]].services[new_service].site = n["site"]
