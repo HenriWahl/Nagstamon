@@ -18,7 +18,7 @@
 # Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA  02110-1301, USA
 
 
-from distutils.core import setup
+from setuptools import setup
 import sys
 
 CLASSIFIERS = [
@@ -37,7 +37,7 @@ CLASSIFIERS = [
 ]
 
 setup(name = 'nagstamon',
-    version = '1.0.1',
+    version = '1.1.0',
     license = 'GNU GPL v2',
     description = 'Nagios status monitor for desktop',
     long_description = 'Nagstamon is a Nagios status monitor which takes place in systray or on desktop (GNOME, KDE, Windows) as floating statusbar to inform you in realtime about the status of your Nagios and derivatives monitored network. It allows to connect to multiple Nagios, Icinga, Opsview, Op5Monitor, Check_MK/Multisite, Centreon and Thruk servers.',
@@ -46,10 +46,22 @@ setup(name = 'nagstamon',
     author_email = 'h.wahl@ifw-dresden.de',
     url = 'https://nagstamon.ifw-dresden.de',
     download_url = 'https://nagstamon.ifw-dresden.de/files-nagstamon/stable/',
+    dependency_links = ['setuptools'],
     scripts = ['nagstamon.py'],
     packages = ['Nagstamon', 'Nagstamon.Server', 'Nagstamon.thirdparty'],
     package_dir = {'Nagstamon':'Nagstamon'},
     package_data = {'Nagstamon':['resources/*']},
+    entry_points = '''
+        [nagstamon.servers]
+        Nagios = Nagstamon.Server.Nagios:NagiosServer
+        Centreon = Nagstamon.Server.Centreon:CentreonServer
+        Multisite = Nagstamon.Server.Multisite:MultisiteServer
+        Icinga = Nagstamon.Server.Icinga:IcingaServer
+        op5Monitor = Nagstamon.Server.op5Monitor:Op5MonitorServer
+        Opsview = Nagstamon.Server.Opsview:OpsviewServer
+        Thruk = Nagstamon.Server.Thruk:ThrukServer
+        Zabbix = Nagstamon.Server.Zabbix:ZabbixServer
+        Ninja = Nagstamon.Server.Ninja:NinjaServer
+    ''',
     data_files = [('%s/share/man/man1' % sys.prefix, ['Nagstamon/resources/nagstamon.1'])]
 )
-
