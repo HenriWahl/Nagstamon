@@ -21,7 +21,12 @@
 columns and other stuff.
 Imported in GUI module.
 """
+
 from Nagstamon.Actions import register_server
+
+import logging
+log = logging.getLogger('nagstamon')
+
 
 # moved registration process because of circular dependencies
 # order of registering affects sorting in server type list in add new server dialog
@@ -29,6 +34,10 @@ from Nagstamon.Actions import register_server
 import pkg_resources
 
 for ep in sorted(pkg_resources.iter_entry_points('nagstamon.servers'), key=lambda x: x.name):
-    cls = ep.load()
-    register_server(cls)
+    try:
+        cls = ep.load()
+    except ImportError, e:
+        log.error('Can\'t load `%s` plugin', ep, exc_info=e)
+    else:
+        register_server(cls)
 
