@@ -7,7 +7,7 @@ Nagstamon
 v2.0 Roadmap (by Marcin Nowak)
 ------------------------------
  
- - [ ] pluggable Servers using setuptool`s entry points
+ - [x] pluggable Servers using setuptool`s entry points
  - [ ] code cleanup 
  - [ ] define new&clean Server`s public interface and create real abstract BaseServer class
  - [ ] compatibility layer for old GenericServer
