@@ -466,7 +466,10 @@ class StatusWindow(QWidget):
         self.statusbar.hide()
         # show the other status window components
         self.toparea.show()
-        self.servers_scrollarea.show()
+
+        # here we should check if scroll_area should be shown at all
+        ###self.servers_scrollarea.show()
+        self.servers_scrollarea.hide()
 
         if platform.system() == 'Windows':
             # absolutely strange, but no other solution available
@@ -866,7 +869,6 @@ class ServerVBox(QVBoxLayout):
         self.button_history = QPushButton("History")
         self.label_status = ServerStatusLabel()
 
-
         self.hbox.addWidget(self.label)
         self.hbox.addWidget(self.button_edit)
         self.hbox.addWidget(self.button_monitor)
@@ -889,20 +891,28 @@ class ServerVBox(QVBoxLayout):
 
         self.addWidget(self.table, 1)
 
+        # as default do not show anything
+        self.hide_all()
+
 
     def get_real_height(self):
         """
             return summarized real height of hbox items and table
         """
-        height = self.table.get_real_height()
-        # compare item heights, decide to take the largest
-        if self.label.height() > self.button_monitor.height():
-            height += self.label.height()
+        if self.table.isVisible():
+            height = self.table.get_real_height()
         else:
-            height += self.button_monitor.height()
+            height = 0
 
-        # important to add existing spacing
-        height += self.spacing()
+        if self.label.isVisible() and self.button_monitor.isVisible():
+            # compare item heights, decide to take the largest
+            if self.label.height() > self.button_monitor.height():
+                height += self.label.height()
+            else:
+                height += self.button_monitor.height()
+
+            # important to add existing spacing
+            height += self.spacing()
 
         return height
 
@@ -924,10 +934,14 @@ class ServerVBox(QVBoxLayout):
         """
             hide all items in server vbox
         """
-        for child in self.children():
-            # not every child item has .hide()
-            if 'hide' in child.__dict__.keys():
-                child.hide()
+        self.label.hide()
+        self.button_edit.hide()
+        self.button_monitor.hide()
+        self.button_hosts.hide()
+        self.button_services.hide()
+        self.button_history.hide()
+        self.label_status.hide()
+        self.table.hide()
 
 
     @pyqtSlot()
