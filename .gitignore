@@ -1,3 +1,5 @@
 *.pyc
 *~
 .idea/
+.__pycache__/
+*.swp

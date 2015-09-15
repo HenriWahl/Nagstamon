@@ -754,6 +754,9 @@ class GenericServer(object):
             self.isChecking = False
             return Result()
 
+        # initialize HTTP first
+        self.init_HTTP()
+
         # get all trouble hosts/services from server specific _get_status()
         status = self._get_status()
         self.status, self.status_description = status.result, status.error

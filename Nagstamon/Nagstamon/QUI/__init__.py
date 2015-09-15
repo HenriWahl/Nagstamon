@@ -225,6 +225,7 @@ class StatusWindow(QWidget):
         """
             Status window combined from status bar and popup window
         """
+
         QWidget.__init__(self)
         self.setWindowFlags(Qt.WindowStaysOnTopHint | Qt.FramelessWindowHint)
         self.setWindowTitle(AppInfo.NAME)
@@ -283,7 +284,6 @@ class StatusWindow(QWidget):
         # create vbox for each enabled server
         for server in servers.values():
             if server.enabled:
-                ###self.create_ServerVBox(server)
                 self.servers_vbox.addLayout(self.create_ServerVBox(server))
 
         self.servers_scrollarea_widget.setLayout(self.servers_vbox)

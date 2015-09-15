@@ -96,10 +96,10 @@ def create_server(server=None):
     new_server.use_display_name_host = server.use_display_name_host
     new_server.use_display_name_service = server.use_display_name_service
 
-    # server's individual preparations for HTTP connections (for example cookie creation), version of monitor
+    # server's individual preparations for HTTP connections (for example cookie creation)
+    # is done in GetStatus() method of monitor
     if server.enabled == True:
         new_server.enabled = True
-        new_server.init_HTTP()
 
     # debug
     if conf.debug_mode == True:
