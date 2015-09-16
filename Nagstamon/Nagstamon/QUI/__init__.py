@@ -314,6 +314,9 @@ class StatusWindow(QWidget):
         # flag to mark if window is shown or nor
         self.is_shown = False
 
+        # if status_ok is true no server_vboxes are needed
+        self.status_ok = True
+
         # timer for waiting to set is_shown flag
         self.timer = QTimer(self)
 
@@ -375,6 +378,22 @@ class StatusWindow(QWidget):
         if not statuswindow.moving:
             # attempt to avoid flickering on MacOSX - already hide statusbar here
             self.statusbar.hide()
+
+
+            # first hide statusbar and show the other status window components
+            self.statusbar.hide()
+            # show the other status window components
+            self.toparea.show()
+
+            # here we should check if scroll_area should be shown at all
+            print('self.status_ok:', self.status_ok)
+            if self.status_ok:
+                self.servers_scrollarea.hide()
+            else:
+                self.servers_scrollarea.show()
+                print('SHOW')
+
+
             # theory...
             width, height, x, y = self.calculate_size()
             # ...and practice
@@ -462,14 +481,20 @@ class StatusWindow(QWidget):
             self.stored_x = self.x()
             self.stored_y = self.y()
 
+        """
         # first hide statusbar and show the other status window components
         self.statusbar.hide()
         # show the other status window components
         self.toparea.show()
 
         # here we should check if scroll_area should be shown at all
-        ###self.servers_scrollarea.show()
-        self.servers_scrollarea.hide()
+        print('self.status_ok:', self.status_ok)
+        if self.status_ok:
+            self.servers_scrollarea.hide()
+        else:
+            self.servers_scrollarea.show()
+            print('SHOW')
+        """
 
         if platform.system() == 'Windows':
             # absolutely strange, but no other solution available
@@ -504,6 +529,19 @@ class StatusWindow(QWidget):
         """
             resize window if shown and needed
         """
+
+        print('ADJUST_SIZE')
+
+
+        for vbox in self.servers_vbox.children():
+            print(vbox.server.name)
+            if vbox.server.all_ok:
+                self.status_ok = True
+                break
+            else:
+                self.status_ok = False
+                break
+
         self.adjusting_size_lock = True
         # fully displayed statuswindow
         if self.is_shown == True:
@@ -922,11 +960,16 @@ class ServerVBox(QVBoxLayout):
         """
             show all items in server vbox
         """
-        for child in self.children():
-            # not every child item has .show()
-            ###if child.__dict__.has_key('show'):
-            if 'show' in child.__dict__.keys():
-                child.show()
+        print('show_all')
+
+        self.label.show()
+        self.button_edit.show()
+        self.button_monitor.show()
+        self.button_hosts.show()
+        self.button_services.show()
+        self.button_history.show()
+        self.label_status.show()
+        self.table.show()
 
 
     @pyqtSlot()
@@ -1494,6 +1537,11 @@ class TableWidget(QTableWidget):
 
             status = self.server.GetStatus()
             ###self.server.GetStatus()
+
+            print(self.server.name, self.server.down)
+            print(self.server.name, self.server.critical)
+            print(self.server.name, self.server.warning)
+            print(self.server.name, "'" + self.server.status + "'")
 
             if self.server.status_description == '':
                 self.change_label_status.emit('Connected')

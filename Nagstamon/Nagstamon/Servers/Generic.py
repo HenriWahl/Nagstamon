@@ -104,7 +104,7 @@ class GenericServer(object):
         ###self.thread = None
         self.isChecking = False
         self.CheckingForNewVersion = False
-        self.WorstStatus = "UP"
+        self.worst_status = 'UP'
         self.STATES = ["UP", "UNKNOWN", "WARNING", "CRITICAL", "UNREACHABLE", "DOWN"]
         self.nagitems_filtered_list = list()
         self.nagitems_filtered = {"services": {"CRITICAL": [], "WARNING": [], "UNKNOWN": []},
@@ -116,6 +116,7 @@ class GenericServer(object):
         self.unknown = 0
         self.critical = 0
         self.warning = 0
+        self.all_ok = True
         self.status = ""
         self.status_description = ""
         # needed for looping server thread
@@ -750,7 +751,7 @@ class GenericServer(object):
 
         # check if server is enabled, if not, do not get any status
         if self.enabled == False:
-            self.WorstStatus = "UP"
+            self.worst_status = 'UP'
             self.isChecking = False
             return Result()
 
@@ -1039,7 +1040,7 @@ class GenericServer(object):
 
         # if both lists are identical there was no status change
         if (self.nagitems_filtered_list == new_nagitems_filtered_list):
-            self.WorstStatus = "UP"
+            self.worst_status = 'UP'
         else:
             # if the new list is shorter than the first and there are no different hosts
             # there one host/service must have been recovered, which is not worth a notification
@@ -1049,7 +1050,7 @@ class GenericServer(object):
                     # collect differences
                     diff.append(i)
             if len(diff) == 0:
-                self.WorstStatus = "UP"
+                self.worst_status = 'UP'
             else:
                 # if there are different hosts/services in list of new hosts there must be a notification
                 # get list of states for comparison
@@ -1065,7 +1066,17 @@ class GenericServer(object):
                             worst = self.STATES.index(d)
 
                 # final worst state is one of the predefined states
-                self.WorstStatus = self.STATES[worst]
+                self.worst_status = self.STATES[worst]
+
+        # when everything is OK set this flag for GUI to evaluate
+        if self.down == 0 and\
+           self.unreachable == 0 and\
+           self.unknown == 0 and\
+           self.critical == 0 and\
+           self.warning == 0:
+            self.all_ok = True
+        else:
+            self.all_ok = False
 
         # copy of listed nagitems for next comparison
         self.nagitems_filtered_list = copy.deepcopy(new_nagitems_filtered_list)
