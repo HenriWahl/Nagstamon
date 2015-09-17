@@ -1118,9 +1118,9 @@ class GenericServer(object):
                     # most requests come without multipart/form-data
                     if multipart == False:
                         if cgi_data == None:
-                            response = self.session.get(url)
+                            response = self.session.get(url, timeout=10)
                         else:
-                            response = self.session.post(url, data=cgi_data)
+                            response = self.session.post(url, data=cgi_data, timeout=10)
                     else:
                         # Check_MK and Opsview need multipart/form-data encoding
                         # http://stackoverflow.com/questions/23120974/python-requests-post-multipart-form-data-without-filename-in-http-request#23131823
@@ -1145,9 +1145,9 @@ class GenericServer(object):
                     # most requests come without multipart/form-data
                     if multipart == False:
                         if cgi_data == None:
-                            response = temporary_session.get(url)
+                            response = temporary_session.get(url, timeout=10)
                         else:
-                            response = temporary_session.post(url, data=cgi_data)
+                            response = temporary_session.post(url, data=cgi_data, timeout=10)
                     else:
                         # Check_MK and Opsview nees multipart/form-data encoding
                         # http://stackoverflow.com/questions/23120974/python-requests-post-multipart-form-data-without-filename-in-http-request#23131823
