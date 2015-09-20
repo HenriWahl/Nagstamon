@@ -80,8 +80,9 @@ HEADERS_LIST = list(HEADERS)
 # sorting order for tablewidgets
 SORT_ORDER = {'descending': True, 'ascending': False, 0: True, 1: False}
 
-# margin used in LayoutBoxes
-MARGIN = 5
+# space used in LayoutBoxes
+SPACE = 10
+
 
 class HBoxLayout(QHBoxLayout):
     """
@@ -233,16 +234,17 @@ class StatusWindow(QWidget):
         self.setWindowTitle(AppInfo.NAME)
         self.setWindowIcon(QIcon('%s%snagstamon.svg' % (RESOURCES, os.sep)))
 
-        self.vbox = QVBoxLayout(spacing=0)          # global VBox
+        self.vbox = QVBoxLayout()          # global VBox
+        self.vbox.setSpacing(0)                     # no spacing
         self.vbox.setContentsMargins(0, 0, 0, 0)    # no margin
 
         self.statusbar = StatusBar()                # statusbar HBox
         self.toparea = TopArea()                    # toparea HBox
         self.toparea.hide()
 
-        self.servers_vbox = QVBoxLayout()           # VBox full of servers
+        self.servers_vbox = QVBoxLayout(spacing=0)           # VBox full of servers
         self.servers_vbox.setContentsMargins(0, 0, 0, 0)
-        self.servers_vbox.setSpacing(0)
+
         self.servers_scrollarea = QScrollArea()     # scrollable area for server vboxes
         self.servers_scrollarea_widget = QWidget()  # necessary widget to contain vbox for servers
         self.servers_scrollarea.hide()
@@ -288,6 +290,7 @@ class StatusWindow(QWidget):
         for server in servers.values():
             if server.enabled:
                 self.servers_vbox.addLayout(self.create_ServerVBox(server))
+        self.servers_vbox.addStretch()
 
         self.servers_scrollarea_widget.setLayout(self.servers_vbox)
         self.servers_scrollarea.setWidget(self.servers_scrollarea_widget)
@@ -338,7 +341,9 @@ class StatusWindow(QWidget):
             server_vbox.table.ready_to_resize.connect(self.adjust_size)
             # tell statusbar to summarize after table was refreshed
             server_vbox.table.refreshed.connect(self.statusbar.summarize_states)
-            ###self.servers_vbox.addLayout(server_vbox)
+            # and to update status window
+            server_vbox.table.refreshed.connect(self.update_window)
+
             return server_vbox
         else:
             return None
@@ -352,13 +357,13 @@ class StatusWindow(QWidget):
         # be filtered out this way
         vboxes_dict = dict()
         for child in self.servers_vbox.children():
-            ###if child.__dict__.has_key('server'):
             if 'server' in child.__dict__.keys():
                 vboxes_dict[child.server.name] = child
 
         # freshly set servers_scrollarea_widget and its layout servers_vbox
         servers_vbox_new = QVBoxLayout()           # VBox full of servers
         servers_vbox_new.setContentsMargins(0, 0, 0, 0)
+        servers_vbox_new.setSpacing(0)
 
         # sort server vboxes
         for vbox in sorted(vboxes_dict):
@@ -389,7 +394,6 @@ class StatusWindow(QWidget):
             for vbox in self.servers_vbox.children():
                 if vbox.server.all_ok and vbox.server.status == '':
                     self.status_ok = True
-                    ###break
                 else:
                     self.status_ok = False
                     break
@@ -402,7 +406,9 @@ class StatusWindow(QWidget):
                 for vbox in self.servers_vbox.children():
                     if not vbox.server.all_ok and vbox.server.status == '':
                         vbox.show_all()
-                    elif vbox.server.status == 'ERROR':
+                    elif vbox.server.all_ok and vbox.server.status == '':
+                        vbox.hide_all()
+                    elif vbox.server.status != '':
                         vbox.show_only_header()
 
             # theory...
@@ -415,6 +421,15 @@ class StatusWindow(QWidget):
                 self.timer.singleShot(200, self.set_shown)
             else:
                 self.set_shown()
+
+
+    @pyqtSlot()
+    def update_window(self):
+        """
+            redraw window content
+        """
+        if self.is_shown:
+            self.show_window()
 
 
     @pyqtSlot()
@@ -478,6 +493,7 @@ class StatusWindow(QWidget):
             else:
                 height = real_height
                 y = self.y() + self.height() - height
+
 
         return width, height, available_x, y
 
@@ -555,7 +571,8 @@ class StatusWindow(QWidget):
         """
         width = 0
         for server in self.servers_vbox.children():
-            if server.table.get_real_width() > width:
+            ###if server.table.get_real_width() > width:
+            if server.table.real_width > width:
                 width = server.table.get_real_width()
         return width
 
@@ -569,7 +586,8 @@ class StatusWindow(QWidget):
             height += vbox.get_real_height()
 
         # add size of toparea and 2 times the MARGIN (top and bottom)
-        height += self.toparea.sizeHint().height() + 2 * MARGIN
+        ###height += self.toparea.sizeHint().height() + SPACE * 2
+        height += self.toparea.sizeHint().height() + 2
 
         return height
 
@@ -680,7 +698,6 @@ class StatusBar(QWidget):
         QWidget.__init__(self)
 
         self.setSizePolicy(QSizePolicy.Fixed, QSizePolicy.Fixed)
-
 
         self.hbox = HBoxLayout(spacing=0)
         self.setLayout(self.hbox)
@@ -794,7 +811,7 @@ class TopArea(QWidget):
         QWidget.__init__(self)
         self.hbox = HBoxLayout()      # top HBox containing buttons
         self.hbox.setSpacing(10)
-        self.hbox.setContentsMargins(MARGIN, MARGIN, MARGIN, MARGIN)
+        self.hbox.setContentsMargins(SPACE, SPACE, SPACE, SPACE)
 
         # top button box
         self.logo = NagstamonLogo("%s%snagstamon_logo_toparea.svg" % (RESOURCES, os.sep))
@@ -873,18 +890,30 @@ class ServerVBox(QVBoxLayout):
         one VBox per server containing buttons and hosts/services listview
     """
 
+    # used to update status label text like 'Connected-'
     change_label_status = pyqtSignal(str)
 
     def __init__(self, server):
         QVBoxLayout.__init__(self)
 
+        self.setSpacing(0)
+        self.setContentsMargins(0, 0, 0, 0)
+
         self.server = server
 
         self.header = QHBoxLayout()
-        self.header.setSpacing(10)
-        self.header.setContentsMargins(MARGIN, MARGIN, MARGIN, MARGIN)
+        ###self.header.setSpacing(10)
+        self.header.setSpacing(SPACE)
+        # top and bottom should be kept by padding
+        self.header.setContentsMargins(SPACE, 0, SPACE, 0)
+        ###self.header.setContentsMargins(10, 0, 10, 0)
 
         self.label = QLabel("<big><b>%s@%s</b></big>" % (server.username, server.name))
+        # let label padding keep top and bottom space
+        #self.label.setStyleSheet('background-color: orange; padding: {0}px;'.format(SPACE))
+        self.label.setStyleSheet('background-color: orange; padding-top: {0}px; padding-bottom: {0}px;'.format(SPACE))
+        ###self.label.setStyleSheet('padding-top: 10px; padding-bottom: 10 px;')
+
         self.button_edit = QPushButton("Edit")
         self.button_monitor = QPushButton("Monitor")
         self.button_hosts = QPushButton("Hosts")
@@ -902,8 +931,11 @@ class ServerVBox(QVBoxLayout):
         self.header.addStretch()
         self.addLayout(self.header)
 
-        sort_column = 'status'
-        order = 'descending'
+        ###sort_column = 'status'
+        ###order = 'descending'
+        sort_column = conf.default_sort_field.lower()
+        order = conf.default_sort_order.lower()
+
         self.table = TableWidget(0, len(HEADERS), sort_column, order, self.server)
 
         # delete vbox if thread quits
@@ -915,22 +947,25 @@ class ServerVBox(QVBoxLayout):
         self.addWidget(self.table, 1)
 
         # as default do not show anything
-        self.hide_all()
+        #self.hide_all()
+        self.show_only_header()
 
 
     def get_real_height(self):
         """
             return summarized real height of hbox items and table
         """
-        height = self.table.get_real_height()
 
+        ###height = self.table.get_real_height()
+        height = self.table.real_height
         if self.label.isVisible() and self.button_monitor.isVisible():
             # compare item heights, decide to take the largest and add 2 time the MARGIN (top and bottom)
             if self.label.sizeHint().height() > self.button_monitor.sizeHint().height():
-                height += self.label.sizeHint().height() + 2 * MARGIN
+                ###height += self.label.sizeHint().height() + SPACE * 2
+                height += self.label.sizeHint().height()
             else:
-                height += self.button_monitor.sizeHint().height() + 2 * MARGIN
-
+                ###height += self.button_monitor.sizeHint().height() + SPACE * 2
+                height += self.button_monitor.sizeHint().height()
         return height
 
 
@@ -947,9 +982,13 @@ class ServerVBox(QVBoxLayout):
         self.button_history.show()
         self.label_status.show()
 
+        ###self.label.setStyleSheet('padding: {0}px;'.format(SPACE))
+
         # special table treatment
         self.table.show()
         self.table.is_shown = True
+
+        ###self.header.setContentsMargins(SPACE, 0, SPACE, 0)
 
 
     @pyqtSlot()
@@ -965,9 +1004,15 @@ class ServerVBox(QVBoxLayout):
         self.button_history.show()
         self.label_status.show()
 
+        ###self.label.setStyleSheet('padding: {0}px;'.format(SPACE))
+
+
         # special table treatment
         self.table.hide()
         self.table.is_shown = False
+
+        ###self.header.setContentsMargins(SPACE, 0, SPACE, 0)
+
 
 
     @pyqtSlot()
@@ -975,6 +1020,7 @@ class ServerVBox(QVBoxLayout):
         """
             hide all items in server vbox
         """
+        #self.setContentsMargins(0, 0, 0, 0)
         self.label.hide()
         self.button_edit.hide()
         self.button_monitor.hide()
@@ -982,7 +1028,15 @@ class ServerVBox(QVBoxLayout):
         self.button_services.hide()
         self.button_history.hide()
         self.label_status.hide()
+
+        ###self.label.setStyleSheet('padding: 0px;')
+
+
+        # special table treatment
         self.table.hide()
+        self.table.is_shown = False
+
+        ###self.header.setContentsMargins(0, 0, 0, 0)
 
 
     @pyqtSlot()
@@ -1200,10 +1254,17 @@ class TableWidget(QTableWidget):
         data = list(self.server.GetItemsGenerator())
         if len(data) > 0:
             self.set_data(data)
+            # display table if there is something to display
+            self.is_shown = True
+        else:
+            self.is_shown = False
+
+        # pre-calculate dimensions
+        self.real_height = self.get_real_height()
+        self.real_width = self.get_real_width()
+
         # tell statusbar it should update
         self.refreshed.emit()
-
-
 
 
     @pyqtSlot(int, int, str, str, str, list)
@@ -1477,7 +1538,6 @@ class TableWidget(QTableWidget):
         """
             calculate real table height as there is no method included
         """
-
         if self.is_shown:
             # height summary starts with headers' height
             # apparently height works better/without scrollbar if some pixels are added
@@ -1487,12 +1547,25 @@ class TableWidget(QTableWidget):
             for row in range(0, self.rowCount()):
                 try:
                     self.real_height += (self.cellWidget(row, 0).sizeHint().height())
-                except Exception as err:
-                    print(err)
+                except:
                     self.real_height += 30
             del(row)
         else:
             self.real_height = 0
+        """
+        # height summary starts with headers' height
+        # apparently height works better/without scrollbar if some pixels are added
+        self.real_height = self.horizontalHeader().sizeHint().height() + 2
+        # it is necessary to ask every row directly because their heights differ :-(
+        row = 0
+        for row in range(0, self.rowCount()):
+            try:
+                self.real_height += (self.cellWidget(row, 0).sizeHint().height())
+            except Exception as err:
+                print(err)
+                self.real_height += 30
+        del(row)
+        """
 
         return self.real_height
 
@@ -1560,6 +1633,8 @@ class TableWidget(QTableWidget):
             else:
                 if status.error.startswith('requests.exceptions.ConnectTimeout'):
                     self.change_label_status.emit('Connection timeout.')
+                if status.error.startswith('requests.exceptions.ConnectionError'):
+                    self.change_label_status.emit('Connection error.')
                 else:
                     self.change_label_status.emit(self.server.status_description)
 
