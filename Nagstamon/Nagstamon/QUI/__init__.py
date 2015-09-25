@@ -88,10 +88,16 @@ class HBoxLayout(QHBoxLayout):
     """
         Apparently necessary to get a HBox which is able to hide its children
     """
-    def __init__(self, spacing=None):
-        QHBoxLayout.__init__(self)
-        if not spacing == None:
-            self.setSpacing(0)                  # no spaces necessary between items
+    def __init__(self, spacing=None, parent=None):
+
+        QHBoxLayout.__init__(self, parent)
+        ##QHBoxLayout.__init__(self)
+
+
+        if spacing == None:
+            self.setSpacing(0)
+        else:
+            self.setSpacing(spacing)
         self.setContentsMargins(0, 0, 0, 0)     # no margin
 
 
@@ -142,8 +148,8 @@ class MenuAtCursor(QMenu):
     # flag to avoid too fast popping up menus
     available = True
 
-    def __init__(self):
-        QMenu.__init__(self)
+    def __init__(self, parent=None):
+        QMenu.__init__(self, parent=parent)
 
 
     @pyqtSlot()
@@ -163,25 +169,40 @@ class MenuAtCursor(QMenu):
         self.closed.emit()
 
 
+class PushButton_Hamburger(QPushButton):
+    """
+        Pushbutton with menu for hamburger
+    """
+
+    pressed = pyqtSignal()
+
+    def __init__(self):
+        QPushButton.__init__(self)
+
+
+    def mousePressEvent(self, event):
+        print(event)
+        self.pressed.emit()
+        self.showMenu()
+
+
 class ComboBox_Servers(QComboBox):
     """
         combobox which does lock statuswindow so it does not close when opening combobox
     """
     shown = pyqtSignal()
-    #closed = pyqtSignal()
     monitor_opened = pyqtSignal()
 
     # flag to avoid silly focusOutEvent
     freshly_opened = False
 
 
-    def __init__(self):
-        QComboBox.__init__(self)
+    def __init__(self, parent=None):
+        QComboBox.__init__(self, parent=parent)
         # react to clicked monitor
         self.activated.connect(self.response)
 
 
-    #def showEvent(self, event):
     def mousePressEvent(self, event):
         # first click opens combobox popup
         self.freshly_opened = True
@@ -211,7 +232,6 @@ class ComboBox_Servers(QComboBox):
             # hide window to make room for webbrowser
             self.monitor_opened.emit()
 
-
         self.setCurrentIndex(0)
 
 
@@ -228,26 +248,37 @@ class StatusWindow(QWidget):
         """
             Status window combined from status bar and popup window
         """
-
         QWidget.__init__(self)
+        # immediately hide to avoid flicker on Windows and OSX
+        self.hide()
+
         self.setWindowFlags(Qt.WindowStaysOnTopHint | Qt.FramelessWindowHint)
         self.setWindowTitle(AppInfo.NAME)
         self.setWindowIcon(QIcon('%s%snagstamon.svg' % (RESOURCES, os.sep)))
 
-        self.vbox = QVBoxLayout()          # global VBox
+        self.vbox = QVBoxLayout(self)          # global VBox
         self.vbox.setSpacing(0)                     # no spacing
         self.vbox.setContentsMargins(0, 0, 0, 0)    # no margin
 
-        self.statusbar = StatusBar()                # statusbar HBox
-        self.toparea = TopArea()                    # toparea HBox
+        self.statusbar = StatusBar(parent=self)                # statusbar HBox
+        self.toparea = TopArea(parent=self)                    # toparea HBox
+        # no need to be seen first
         self.toparea.hide()
 
-        self.servers_vbox = QVBoxLayout(spacing=0)           # VBox full of servers
-        self.servers_vbox.setContentsMargins(0, 0, 0, 0)
-
-        self.servers_scrollarea = QScrollArea()     # scrollable area for server vboxes
-        self.servers_scrollarea_widget = QWidget()  # necessary widget to contain vbox for servers
+        self.servers_scrollarea = QScrollArea(self)     # scrollable area for server vboxes
+        # avoid horizontal scrollbars
+        self.servers_scrollarea.setHorizontalScrollBarPolicy(Qt.ScrollBarAlwaysOff)
+        ###self.servers_scrollarea_widget = QWidget(parent=self)  # necessary widget to contain vbox for servers
+        self.servers_scrollarea_widget = QWidget(self.servers_scrollarea)  # necessary widget to contain vbox for servers
         self.servers_scrollarea.hide()
+
+        self.vbox.addWidget(self.statusbar)
+        self.vbox.addWidget(self.toparea)
+        self.vbox.addWidget(self.servers_scrollarea)
+
+        self.servers_vbox = QVBoxLayout(self.servers_scrollarea)           # VBox full of servers
+        self.servers_vbox.setSpacing(0)
+        self.servers_vbox.setContentsMargins(0, 0, 0, 0)
 
         # connect logo of statusbar
         self.statusbar.logo.window_moved.connect(self.store_position)
@@ -282,9 +313,12 @@ class StatusWindow(QWidget):
         self.toparea.mouse_entered.connect(self.unlock)
 
         # avoid hiding of statuswindow if menu is opened
+        ###self.toparea.button_hamburger_menu.clicked.connect(self.lock)
+        self.toparea.button_hamburger_menu.pressed.connect(self.lock)
+
         self.toparea.hamburger_menu.shown.connect(self.lock)
         self.toparea.hamburger_menu.closed.connect(self.unlock)
-        self.toparea.button_hamburger_menu.clicked.connect(self.toparea.hamburger_menu.show_at_cursor)
+        ###self.toparea.button_hamburger_menu.clicked.connect(self.toparea.hamburger_menu.show_at_cursor)
 
         # create vbox for each enabled server
         for server in servers.values():
@@ -295,12 +329,6 @@ class StatusWindow(QWidget):
         self.servers_scrollarea_widget.setLayout(self.servers_vbox)
         self.servers_scrollarea.setWidget(self.servers_scrollarea_widget)
         self.servers_scrollarea.setWidgetResizable(True)
-
-        self.vbox.addWidget(self.statusbar)
-        self.vbox.addWidget(self.toparea)
-        self.vbox.addWidget(self.servers_scrollarea)
-
-        self.setLayout(self.vbox)
 
         # icons in ICONS have to be sized as fontsize
         _create_icons(self.statusbar.fontMetrics().height())
@@ -329,6 +357,8 @@ class StatusWindow(QWidget):
         # flag to avoid hiding window when a menu is shown
         self.locked = False
 
+        self.show()
+
 
     def create_ServerVBox(self, server):
         """
@@ -336,7 +366,8 @@ class StatusWindow(QWidget):
         """
         # create server vboxed from current running servers
         if server.enabled:
-            server_vbox = ServerVBox(server)
+            # without parent there is some flickering when starting
+            server_vbox = ServerVBox(server, parent=self)
             # connect to global resize signal
             server_vbox.table.ready_to_resize.connect(self.adjust_size)
             # tell statusbar to summarize after table was refreshed
@@ -367,6 +398,7 @@ class StatusWindow(QWidget):
 
         # sort server vboxes
         for vbox in sorted(vboxes_dict):
+            vboxes_dict[vbox].setParent(None)
             vboxes_dict[vbox].setParent(None)
             servers_vbox_new.addLayout(vboxes_dict[vbox])
 
@@ -586,7 +618,6 @@ class StatusWindow(QWidget):
             height += vbox.get_real_height()
 
         # add size of toparea and 2 times the MARGIN (top and bottom)
-        ###height += self.toparea.sizeHint().height() + SPACE * 2
         height += self.toparea.sizeHint().height() + 2
 
         return height
@@ -598,6 +629,7 @@ class StatusWindow(QWidget):
             lock window so it should not be hidden, e.g. if a menu is shown
         """
         self.locked = True
+        print('LOCKED!')
 
 
     @pyqtSlot()
@@ -623,20 +655,21 @@ class NagstamonLogo(QSvgWidget):
     window_moved = pyqtSignal()
     mouse_pressed = pyqtSignal()
 
-    def __init__(self, file, size=None):
-        QSvgWidget.__init__(self)
+    def __init__(self, file, width=None, height=None, parent=None):
+        QSvgWidget.__init__(self, parent=parent)
         self.load(file)
         self.setSizePolicy(QSizePolicy.Fixed, QSizePolicy.Fixed)
         # size needed for small Nagstamon logo in statusbar
-        if size != None:
-            self.setMinimumSize(size, size)
+        if width != None and height != None:
+            self.setMinimumSize(width, height)
+            self.setMaximumSize(width, height)
 
         self._create_menu()
 
 
     def _create_menu(self):
-        # menu for
-        self.menu = MenuAtCursor()
+        # menu for right click
+        self.menu = MenuAtCursor(parent=self)
 
         action_settings = QAction('Settings...', self)
         action_settings.triggered.connect(dialogs.settings.show)
@@ -694,23 +727,25 @@ class StatusBar(QWidget):
     # send signal to statuswindow
     resize = pyqtSignal()
 
-    def __init__(self):
-        QWidget.__init__(self)
+    def __init__(self, parent=None):
+        QWidget.__init__(self, parent=parent)
 
         self.setSizePolicy(QSizePolicy.Fixed, QSizePolicy.Fixed)
 
-        self.hbox = HBoxLayout(spacing=0)
+        self.hbox = HBoxLayout(spacing=0, parent=parent)
         self.setLayout(self.hbox)
 
         # define labels first to get its size for svg logo dimensions
         self.color_labels = OrderedDict()
-        self.color_labels['OK'] = StatusBarLabel('OK')
+        self.color_labels['OK'] = StatusBarLabel('OK', parent=parent)
         for state in COLORS:
-            self.color_labels[state] =  StatusBarLabel(state)
+            self.color_labels[state] =  StatusBarLabel(state, parent=parent)
 
         # derive logo dimensions from status label
         self.logo = NagstamonLogo("%s%snagstamon_logo_bar.svg" % (RESOURCES, os.sep),
-                            self.color_labels['OK'].fontMetrics().height())
+                            self.color_labels['OK'].fontMetrics().height(),
+                            self.color_labels['OK'].fontMetrics().height(),
+                            parent=parent)
 
         # add widgets
         self.hbox.addWidget(self.logo)
@@ -774,8 +809,8 @@ class StatusBarLabel(QLabel):
 
     mouse_entered = pyqtSignal()
 
-    def __init__(self, state):
-        QLabel.__init__(self)
+    def __init__(self, state, parent=None):
+        QLabel.__init__(self, parent=parent)
         self.setStyleSheet('padding-left: 1px; padding-right: 1px;'
                            'color: %s; background-color: %s;' % (conf.__dict__['color_%s_text' % (state.lower())],
                                                                  conf.__dict__['color_%s_background' % (state.lower())]))
@@ -807,31 +842,30 @@ class TopArea(QWidget):
 
     mouse_entered = pyqtSignal()
 
-    def __init__(self):
+    def __init__(self, parent=None):
         QWidget.__init__(self)
-        self.hbox = HBoxLayout()      # top HBox containing buttons
-        self.hbox.setSpacing(10)
-        self.hbox.setContentsMargins(SPACE, SPACE, SPACE, SPACE)
+        self.hbox = HBoxLayout(spacing=SPACE, parent=self)      # top HBox containing buttons
 
         # top button box
-        self.logo = NagstamonLogo("%s%snagstamon_logo_toparea.svg" % (RESOURCES, os.sep))
-        self.label_version = QLabel(AppInfo.VERSION)
-        ###self.combobox_servers = QComboBox()
-        self.combobox_servers = ComboBox_Servers()
-        self.button_filters = QPushButton("Filters")
-        self.button_recheck_all = QPushButton("Recheck all")
-        self.button_refresh = QPushButton("Refresh")
-        self.button_settings = QPushButton("Settings")
+        self.logo = NagstamonLogo('%s%snagstamon_logo_toparea.svg' % (RESOURCES, os.sep), width=144, height=42, parent=self)
+        self.label_version = QLabel(AppInfo.VERSION, parent=self)
+        self.combobox_servers = ComboBox_Servers(parent=self)
+        self.button_filters = QPushButton("Filters", parent=self)
+        self.button_recheck_all = QPushButton("Recheck all", parent=self)
+        self.button_refresh = QPushButton("Refresh", parent=self)
+        self.button_settings = QPushButton("Settings", parent=self)
 
         # fill default order fields combobox with server names
         self.combobox_servers.fill()
 
-        self.button_hamburger_menu = QPushButton()
-        self.button_hamburger_menu.setIcon(QIcon("%s%smenu.svg" % (RESOURCES, os.sep)))
+        ###self.button_hamburger_menu = QPushButton()
+        self.button_hamburger_menu = PushButton_Hamburger()
+        self.button_hamburger_menu.setIcon(QIcon('%s%smenu.svg' % (RESOURCES, os.sep)))
         self.button_hamburger_menu.setStyleSheet('QPushButton {border-width: 0px;'
                                                               'border-style: none;}'
-                                                 'QPushButton:hover {background-color: white;'
-                                                                    'border-radius: 4px;}')
+                                                 #'QPushButton:hover {background-color: white;'
+                                                 #                   'border-radius: 4px;}'
+                                                 'QPushButton::menu-indicator{image:url(none.jpg);}')
         self.hamburger_menu = MenuAtCursor()
         action_exit = QAction("Exit", self)
 
@@ -839,8 +873,10 @@ class TopArea(QWidget):
         action_exit.triggered.connect(exit)
         self.hamburger_menu.addAction(action_exit)
 
+        self.button_hamburger_menu.setMenu(self.hamburger_menu)
+
         self.button_close = QPushButton()
-        self.button_close.setIcon(QIcon("%s%sclose.svg" % (RESOURCES, os.sep)))
+        self.button_close.setIcon(QIcon('%s%sclose.svg' % (RESOURCES, os.sep)))
         self.button_close.setStyleSheet('QPushButton {border-width: 0px;'
                                                      'border-style: none;'
                                                      'margin-right: 5px;}'
@@ -871,8 +907,8 @@ class ServerStatusLabel(QLabel):
         label for ServerVBox to show server connection state
         extra class to apply simple slots for changing text or color
     """
-    def __init__(self):
-        QLabel.__init__(self)
+    def __init__(self, parent=None):
+        QLabel.__init__(self, parent=parent)
 
 
     @pyqtSlot(str)
@@ -893,33 +929,33 @@ class ServerVBox(QVBoxLayout):
     # used to update status label text like 'Connected-'
     change_label_status = pyqtSignal(str)
 
-    def __init__(self, server):
-        QVBoxLayout.__init__(self)
+    def __init__(self, server, parent=None):
+        QVBoxLayout.__init__(self, parent)
 
+        # no space around
         self.setSpacing(0)
         self.setContentsMargins(0, 0, 0, 0)
 
+        # server the vbox belongs to
         self.server = server
 
-        self.header = QHBoxLayout()
-        ###self.header.setSpacing(10)
-        self.header.setSpacing(SPACE)
+        # header containing monitor name, buttons and status
+        self.header = HBoxLayout(spacing=SPACE, parent=parent)
+        self.addLayout(self.header)
         # top and bottom should be kept by padding
-        self.header.setContentsMargins(SPACE, 0, SPACE, 0)
-        ###self.header.setContentsMargins(10, 0, 10, 0)
+        self.header.setContentsMargins(0, 0, SPACE, 0)
 
-        self.label = QLabel("<big><b>%s@%s</b></big>" % (server.username, server.name))
-        # let label padding keep top and bottom space
-        #self.label.setStyleSheet('background-color: orange; padding: {0}px;'.format(SPACE))
-        self.label.setStyleSheet('background-color: orange; padding-top: {0}px; padding-bottom: {0}px;'.format(SPACE))
-        ###self.label.setStyleSheet('padding-top: 10px; padding-bottom: 10 px;')
+        self.label = QLabel("<big><b>%s@%s</b></big>" % (server.username, server.name), parent=parent)
+        # let label padding keep top and bottom space - apparently no necessary on OSX
+        if platform.system() != 'Darwin':
+            self.label.setStyleSheet('padding-top: {0}px; padding-bottom: {0}px;'.format(SPACE))
 
-        self.button_edit = QPushButton("Edit")
-        self.button_monitor = QPushButton("Monitor")
-        self.button_hosts = QPushButton("Hosts")
-        self.button_services = QPushButton("Services")
-        self.button_history = QPushButton("History")
-        self.label_status = ServerStatusLabel()
+        self.button_edit = QPushButton("Edit", parent=parent)
+        self.button_monitor = QPushButton("Monitor", parent=parent)
+        self.button_hosts = QPushButton("Hosts", parent=parent)
+        self.button_services = QPushButton("Services", parent=parent)
+        self.button_history = QPushButton("History", parent=parent)
+        self.label_status = ServerStatusLabel(parent=parent)
 
         self.header.addWidget(self.label)
         self.header.addWidget(self.button_edit)
@@ -929,14 +965,13 @@ class ServerVBox(QVBoxLayout):
         self.header.addWidget(self.button_history)
         self.header.addWidget(self.label_status)
         self.header.addStretch()
-        self.addLayout(self.header)
 
         ###sort_column = 'status'
         ###order = 'descending'
         sort_column = conf.default_sort_field.lower()
         order = conf.default_sort_order.lower()
 
-        self.table = TableWidget(0, len(HEADERS), sort_column, order, self.server)
+        self.table = TableWidget(0, len(HEADERS), sort_column, order, self.server, parent=parent)
 
         # delete vbox if thread quits
         self.table.worker_thread.finished.connect(self.delete)
@@ -961,10 +996,8 @@ class ServerVBox(QVBoxLayout):
         if self.label.isVisible() and self.button_monitor.isVisible():
             # compare item heights, decide to take the largest and add 2 time the MARGIN (top and bottom)
             if self.label.sizeHint().height() > self.button_monitor.sizeHint().height():
-                ###height += self.label.sizeHint().height() + SPACE * 2
                 height += self.label.sizeHint().height()
             else:
-                ###height += self.button_monitor.sizeHint().height() + SPACE * 2
                 height += self.button_monitor.sizeHint().height()
         return height
 
@@ -982,13 +1015,9 @@ class ServerVBox(QVBoxLayout):
         self.button_history.show()
         self.label_status.show()
 
-        ###self.label.setStyleSheet('padding: {0}px;'.format(SPACE))
-
         # special table treatment
         self.table.show()
         self.table.is_shown = True
-
-        ###self.header.setContentsMargins(SPACE, 0, SPACE, 0)
 
 
     @pyqtSlot()
@@ -1004,15 +1033,9 @@ class ServerVBox(QVBoxLayout):
         self.button_history.show()
         self.label_status.show()
 
-        ###self.label.setStyleSheet('padding: {0}px;'.format(SPACE))
-
-
         # special table treatment
         self.table.hide()
         self.table.is_shown = False
-
-        ###self.header.setContentsMargins(SPACE, 0, SPACE, 0)
-
 
 
     @pyqtSlot()
@@ -1029,14 +1052,9 @@ class ServerVBox(QVBoxLayout):
         self.button_history.hide()
         self.label_status.hide()
 
-        ###self.label.setStyleSheet('padding: 0px;')
-
-
         # special table treatment
         self.table.hide()
         self.table.is_shown = False
-
-        ###self.header.setContentsMargins(0, 0, 0, 0)
 
 
     @pyqtSlot()
@@ -1067,9 +1085,8 @@ class CellWidget(QWidget):
     # send to tablewidget if cell clicked
     clicked = pyqtSignal()
 
-    def __init__(self, column=0, row=0, text='', color='black', background='white', icons=''):
-        #QTableWidgetItem.__init__(self)
-        QWidget.__init__(self)
+    def __init__(self, column=0, row=0, text='', color='black', background='white', icons='', parent=None):
+        QWidget.__init__(self, parent=parent)
 
         self.column = column
         self.row = row
@@ -1081,7 +1098,7 @@ class CellWidget(QWidget):
         self.setLayout(self.hbox)
 
         # text field
-        self.label = QLabel(self.text)
+        self.label = QLabel(self.text, parent=self)
 
         self.hbox.setContentsMargins(0, 0, 0, 0)
         self.hbox.addWidget(self.label, 1)
@@ -1092,7 +1109,7 @@ class CellWidget(QWidget):
         # hosts and services might contain attribute icons
         if column in (0, 1) and icons is not [False]:
             for icon in icons:
-                icon_label = QLabel()
+                icon_label = QLabel(parent=self)
                 icon_label.setPixmap(icon.pixmap(self.label.fontMetrics().height(), self.label.fontMetrics().height()))
                 icon_label.setStyleSheet('padding-right: 5px;')
                 self.hbox.addWidget(icon_label)
@@ -1147,8 +1164,8 @@ class TableWidget(QTableWidget):
     request_action = pyqtSignal(dict, dict)
 
 
-    def __init__(self, columncount, rowcount, sort_column, order, server):
-        QTableWidget.__init__(self, columncount, rowcount)
+    def __init__(self, columncount, rowcount, sort_column, order, server, parent=None):
+        QTableWidget.__init__(self, columncount, rowcount, parent=parent)
 
         self.sort_column = sort_column
         self.order = order
@@ -1185,7 +1202,7 @@ class TableWidget(QTableWidget):
         self.highlighted_row = 0
 
         # action context menu
-        self.action_menu = MenuAtCursor()
+        self.action_menu = MenuAtCursor(parent=self)
         # flag to avoid popping up menus when clicking somehwere
         ###self.action_menu.available = True
         # signalmapper for getting triggered actions
@@ -1273,7 +1290,7 @@ class TableWidget(QTableWidget):
             set data and widget for one cell
         """
         widget = CellWidget(text=text, color=color, background=background,
-                            row=row, column=column, icons=icons)
+                            row=row, column=column, icons=icons, parent=self)
 
         # if cell got clicked evaluate that click
         widget.clicked.connect(self.cell_clicked)
@@ -1636,8 +1653,8 @@ class TableWidget(QTableWidget):
                 if status.error.startswith('requests.exceptions.ConnectionError'):
                     self.change_label_status.emit('Connection error.')
                 else:
-                    self.change_label_status.emit(self.server.status_description)
-
+                    # kick out line breaks to avoid broken status window
+                    self.change_label_status.emit(self.server.status_description.replace('\n', ''))
 
             self.new_status.emit()
 
