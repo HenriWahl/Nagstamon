@@ -181,7 +181,6 @@ class PushButton_Hamburger(QPushButton):
 
 
     def mousePressEvent(self, event):
-        print(event)
         self.pressed.emit()
         self.showMenu()
 
@@ -629,7 +628,6 @@ class StatusWindow(QWidget):
             lock window so it should not be hidden, e.g. if a menu is shown
         """
         self.locked = True
-        print('LOCKED!')
 
 
     @pyqtSlot()
@@ -811,7 +809,9 @@ class StatusBarLabel(QLabel):
 
     def __init__(self, state, parent=None):
         QLabel.__init__(self, parent=parent)
-        self.setStyleSheet('padding-left: 1px; padding-right: 1px;'
+        self.setStyleSheet('padding-left: 1px;'
+                           'padding-right: 1px;'
+                           ###'font-size: 20px;'
                            'color: %s; background-color: %s;' % (conf.__dict__['color_%s_text' % (state.lower())],
                                                                  conf.__dict__['color_%s_background' % (state.lower())]))
         # just let labels grow as much as they need
@@ -1105,6 +1105,7 @@ class CellWidget(QWidget):
         self.hbox.setSpacing(0)
 
         self.label.setStyleSheet('padding: 5px;')
+        ###                         'font-size: 20px;')
 
         # hosts and services might contain attribute icons
         if column in (0, 1) and icons is not [False]:

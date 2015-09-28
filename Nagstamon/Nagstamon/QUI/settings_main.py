@@ -870,7 +870,7 @@ class Ui_settings_main(object):
 
     def retranslateUi(self, settings_main):
         _translate = QtCore.QCoreApplication.translate
-        settings_main.setWindowTitle(_translate("settings_main", "Nagstamon 1.1 settings"))
+        settings_main.setWindowTitle(_translate("settings_main", "Nagstamon 2.0-alpha settings"))
         self.input_checkbox_debug_mode.setText(_translate("settings_main", "Debug mode"))
         self.input_checkbox_debug_to_file.setText(_translate("settings_main", "Debug to file:"))
         self.button_new_server.setText(_translate("settings_main", "New server..."))

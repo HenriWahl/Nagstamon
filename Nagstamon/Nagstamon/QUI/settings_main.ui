@@ -24,7 +24,7 @@
    </size>
   </property>
   <property name="windowTitle">
-   <string>Nagstamon 1.1 settings</string>
+   <string>Nagstamon 2.0-alpha settings</string>
   </property>
   <property name="locale">
    <locale language="C" country="AnyCountry"/>

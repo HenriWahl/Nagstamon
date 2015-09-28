@@ -33,7 +33,7 @@ class AppInfo(object):
     contains app information previously located in GUI.py
     """
     NAME = 'Nagstamon'
-    VERSION = '1.1-devel'
+    VERSION = '2.0-alpha'
     WEBSITE = 'https://nagstamon.ifw-dresden.de'
     COPYRIGHT = '©2008-2015 Henri Wahl et al.\nh.wahl@ifw-dresden.de'
     COMMENTS = 'Nagios status monitor for your desktop'
@@ -769,20 +769,24 @@ conf = Config()
 RESOURCES = ""
 
 try:
-    import pkg_resources
-    RESOURCES = pkg_resources.resource_filename("Nagstamon", "resources")
+    # first try to find local resources directory in case Nagstamon was frozen with cx-Freeze for OSX or Windows
+    executable_dir = os.path.join(os.sep.join(sys.executable.split(os.sep)[:-1]))
+    if os.path.exists(os.path.normcase(os.sep.join((executable_dir, "resources")))):
+        RESOURCES = os.path.normcase(os.sep.join((executable_dir, "resources")))
+    else:
+        import pkg_resources
+        RESOURCES = pkg_resources.resource_filename("Nagstamon", "resources")
+
 except Exception as err:
     # get resources directory from current directory - only if not being set before by pkg_resources
     # try-excepts necessary for platforms like Windows .EXE
-    join = os.path.join
-    normcase = os.path.normcase
-    paths_to_check = [normcase(join(os.getcwd(), "Nagstamon", "resources")),
-            normcase(join(os.getcwd(), "resources"))]
+    paths_to_check = [os.path.normcase(os.path.join(os.getcwd(), "Nagstamon", "resources")),
+            os.path.normcase(os.path.join(os.getcwd(), "resources"))]
     try:
         # if resources dir is not available in CWD, try the
         # libs dir (site-packages) for the current Python
         from distutils.sysconfig import get_python_lib
-        paths_to_check.append(normcase(join(get_python_lib(), "Nagstamon", "resources")))
+        paths_to_check.append(os.path.normcase(os.path.join(get_python_lib(), "Nagstamon", "resources")))
     except:
         pass
 
@@ -790,7 +794,7 @@ except Exception as err:
     try:
         import site
         site.getusersitepackages() #make sure USER_SITE is set
-        paths_to_check.append(normcase(join(site.USER_SITE, "Nagstamon", "resources")))
+        paths_to_check.append(os.path.normcase(os.path.join(site.USER_SITE, "Nagstamon", "resources")))
     except:
         pass
 
