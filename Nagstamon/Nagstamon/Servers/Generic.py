@@ -120,7 +120,7 @@ class GenericServer(object):
         self.status = ""
         self.status_description = ""
         # needed for looping server thread
-        self.count = 0
+        self.thread_counter = 0
         # needed for RecheckAll - save start_time once for not having to get it for every recheck
         self.start_time = None
 

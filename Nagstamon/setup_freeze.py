@@ -1,7 +1,7 @@
 from cx_Freeze import setup, Executable
 
 NAME = 'Nagstamon'
-VERSION = '2.0-alpha'
+VERSION = '2.0-alpha-20150930'
 
 # Dependencies are automatically detected, but it might need
 # fine tuning.

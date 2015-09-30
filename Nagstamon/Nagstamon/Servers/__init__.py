@@ -101,6 +101,9 @@ def create_server(server=None):
     if server.enabled == True:
         new_server.enabled = True
 
+    # start with high thread counter so server update thread does not have to wait
+    new_server.thread_counter = conf.update_interval_seconds
+
     # debug
     if conf.debug_mode == True:
         new_server.Debug(server=server.name, debug="Created server.")

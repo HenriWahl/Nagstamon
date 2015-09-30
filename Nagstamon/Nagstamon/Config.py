@@ -26,14 +26,18 @@ import zlib
 from collections import OrderedDict
 
 # temporary dict for string-to-bool-conversion
-BOOLPOOL = {"False": False, "True": True}
+# the bool:bool relations are thought to make things easier in Dialog_Settings.ok()
+BOOLPOOL = {'False': False,
+            'True': True,
+            False: False,
+            True: True}
 
 class AppInfo(object):
     """
     contains app information previously located in GUI.py
     """
     NAME = 'Nagstamon'
-    VERSION = '2.0-alpha'
+    VERSION = '2.0-alpha-20150930'
     WEBSITE = 'https://nagstamon.ifw-dresden.de'
     COPYRIGHT = '©2008-2015 Henri Wahl et al.\nh.wahl@ifw-dresden.de'
     COMMENTS = 'Nagios status monitor for your desktop'
@@ -226,6 +230,8 @@ class Config(object):
                     # check first if it is a bool value and convert string if it is
                     if i[1] in BOOLPOOL:
                         object.__setattr__(self, i[0], BOOLPOOL[i[1]])
+                    elif i[1].isdecimal():
+                        object.__setattr__(self, i[0],int(i[1]))
                     else:
                         object.__setattr__(self, i[0], i[1])
                         
@@ -271,7 +277,7 @@ class Config(object):
         """
         self.keyring_available = self.KeyringAvailable()
 
-        servers = self.LoadMultipleConfig("servers", "server", "Server")
+        servers = self.LoadMultipleConfig('servers', 'server', 'Server')
         # deobfuscate username + password inside a try-except loop
         # if entries have not been obfuscated yet this action should raise an error
         # and old values (from nagstamon < 0.9.0) stay and will be converted when next
@@ -282,12 +288,12 @@ class Config(object):
                 servers[server].username = self.DeObfuscate(servers[server].username)
                 servers[server].proxy_username = self.DeObfuscate(servers[server].proxy_username)
                 # passwords for monitor server and proxy
-                if servers[server].save_password == "False":
+                if servers[server].save_password == 'False':
                     servers[server].password = ""
                 elif self.keyring_available and self.use_system_keyring:
                     # necessary to import on-the-fly due to possible Windows crashes
                     import keyring
-                    password = keyring.get_password("Nagstamon", "@".join((servers[server].username,
+                    password = keyring.get_password('Nagstamon', '@'.join((servers[server].username,
                                                                            servers[server].monitor_url))) or ""
                     if password == "":
                         if servers[server].password != "":
@@ -300,7 +306,7 @@ class Config(object):
                 if self.keyring_available and self.use_system_keyring:
                     # necessary to import on-the-fly due to possible Windows crashes
                     import keyring
-                    proxy_password = keyring.get_password("Nagstamon", "@".join(("proxy",
+                    proxy_password = keyring.get_password('Nagstamon', '@'.join(('proxy',
                                                                                  servers[server].proxy_username,
                                                                                  servers[server].proxy_address))) or ""
                     if proxy_password == "":
@@ -313,7 +319,7 @@ class Config(object):
 
                 # do only deobfuscating if any autologin_key is set - will be only Centreon
                 if 'autologin_key' in servers[server].__dict__.keys():
-                    if len(servers[server].__dict__["autologin_key"]) > 0:
+                    if len(servers[server].__dict__['autologin_key']) > 0:
                         servers[server].autologin_key  = self.DeObfuscate(servers[server].autologin_key)
         except:
             import traceback
@@ -332,19 +338,22 @@ class Config(object):
         try:
             if os.path.exists(self.configdir + os.sep + settingsdir):
                 for f in sorted(os.listdir(self.configdir + os.sep + settingsdir)):
-                    if f.startswith(setting + "_") and f.endswith(".conf"):
+                    if f.startswith(setting + '_') and f.endswith('.conf'):
                         config = configparser.ConfigParser(allow_no_value=True, interpolation=None)
                         config.read(self.configdir + os.sep + settingsdir + os.sep + f)
 
                         # create object for every setting
-                        name = f.split("_", 1)[1].rpartition(".")[0]
+                        name = f.split('_', 1)[1].rpartition('.')[0]
                         settings[name] = globals()[configobj]()
 
                         # go through all items of the server
-                        for i in config.items(setting + "_" + name):
+                        for i in config.items(setting + '_' + name):
                             # create a key of every config item with its appropriate value
                             if i[1] in BOOLPOOL:
                                 value = BOOLPOOL[i[1]]
+                            # in case there are numbers intify them to avoid later conversions
+                            elif i[1].isdecimal():
+                                value = int(i[1])
                             else:
                                 value = i[1]
                             settings[name].__setattr__(i[0], value)
@@ -367,10 +376,10 @@ class Config(object):
             # save config file with configparser
             config = configparser.ConfigParser(allow_no_value=True, interpolation=None)
             # general section for Nagstamon
-            config.add_section("Nagstamon")
+            config.add_section('Nagstamon')
             for option in self.__dict__:
-                if not option in ["servers", "actions"]:
-                    config.set("Nagstamon", option, str(self.__dict__[option]))
+                if not option in ['servers', 'actions']:
+                    config.set('Nagstamon', option, str(self.__dict__[option]))
 
             # because the switch from Nagstamon 1.0 to 1.0.1 brings the use_system_keyring property
             # and all the thousands 1.0 installations do not know it yet it will be more comfortable
@@ -383,13 +392,13 @@ class Config(object):
                     self.use_system_keyring = False
                 else:
                     # a configured system seemed to be able to run and thus use system keyring
-                    if platform.system() in ["Windows", "Darwin"]:
+                    if platform.system() in ['Windows', 'Darwin']:
                         self.use_system_keyring = True
                     else:
                         self.use_system_keyring = self.KeyringAvailable()
 
             # save actions dict
-            self.SaveMultipleConfig("actions", "action")
+            self.SaveMultipleConfig('actions', 'action')
 
             # debug
             if str(self.debug_mode) == "True":
@@ -679,7 +688,8 @@ class Config(object):
         # to be returned
         number = 0
         for server in self.servers.values():
-            if str(server.enabled) == "True":
+            ###if str(server.enabled) == "True":
+            if server.enabled == True:
                 number += 1
         return number
 

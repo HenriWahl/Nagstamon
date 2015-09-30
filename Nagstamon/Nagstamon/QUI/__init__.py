@@ -36,7 +36,7 @@ import subprocess
 import sys
 import platform
 
-from Nagstamon.Config import (conf, Server, Action, RESOURCES, AppInfo)
+from Nagstamon.Config import (conf, Server, Action, RESOURCES, AppInfo, BOOLPOOL)
 
 from Nagstamon.Servers import (SERVER_TYPES, servers, create_server, get_enabled_servers)
 
@@ -356,6 +356,13 @@ class StatusWindow(QWidget):
         # flag to avoid hiding window when a menu is shown
         self.locked = False
 
+        # a thread + worker is necessary to do actions thread-safe in background
+        # like debugging
+        self.worker_thread = QThread()
+        self.worker = self.Worker()
+        self.worker.moveToThread(self.worker_thread)
+
+        # finally show up
         self.show()
 
 
@@ -383,6 +390,9 @@ class StatusWindow(QWidget):
         """
             sort ServerVBoxes alphabetically
         """
+
+        print('SORT')
+
         # shortly after applying changes a QObject might hang around in the children list which should
         # be filtered out this way
         vboxes_dict = dict()
@@ -643,6 +653,14 @@ class StatusWindow(QWidget):
             might help to avoid flickering on MacOSX, in cooperation with QTimer
         """
         self.is_shown = True
+
+
+    class Worker(QObject):
+        """
+           run a thread for exampler for debugging
+        """
+        def __init__(self):
+            QObject.__init__(self)
 
 
 class NagstamonLogo(QSvgWidget):
@@ -1224,7 +1242,8 @@ class TableWidget(QTableWidget):
         # when worker walked through all cells send a signal to table so it could get_status itself
         self.worker.table_ready.connect(self.adjust_table)
         # quit thread if worker has finished
-        self.worker.finish.connect(self.worker_thread.quit)
+        #self.worker.finish.connect(self.worker_thread.quit)
+        self.worker.finish.connect(self.finish_worker_thread)
         # get status if started
         self.worker_thread.started.connect(self.worker.get_status)
         # start with priority 0 = lowest
@@ -1603,6 +1622,17 @@ class TableWidget(QTableWidget):
                 self.cellWidget(row, column).colorize()
 
 
+    @pyqtSlot()
+    def finish_worker_thread(self):
+        """
+            attempt to shutdown thread cleanly
+        """
+        # tell thread to quit
+        self.worker_thread.quit()
+        # wait until thread is really stopped
+        self.worker_thread.wait()
+
+
     class Worker(QObject):
         """
             attempt to run a server status update thread - only needed by table so it is defined here inside table
@@ -1640,29 +1670,43 @@ class TableWidget(QTableWidget):
 
         @pyqtSlot()
         def get_status(self):
-
-            self.change_label_status.emit('Refreshing...')
-
-            status = self.server.GetStatus()
-            ###self.server.GetStatus()
-
-            if self.server.status_description == '':
-                self.change_label_status.emit('Connected')
-            else:
-                if status.error.startswith('requests.exceptions.ConnectTimeout'):
-                    self.change_label_status.emit('Connection timeout.')
-                if status.error.startswith('requests.exceptions.ConnectionError'):
-                    self.change_label_status.emit('Connection error.')
+            """
+                check every second if thread still has to run
+                if interval time is reached get status
+            """
+            # if counter is at least update interval get status
+            if self.server.thread_counter >= conf.update_interval_seconds:
+                # reflect status retrieval attempt on server vbox label
+                self.change_label_status.emit('Refreshing...')
+                # get status from server instance
+                status = self.server.GetStatus()
+                # all is OK if no error info came back
+                if self.server.status_description == '':
+                    self.change_label_status.emit('Connected')
                 else:
-                    # kick out line breaks to avoid broken status window
-                    self.change_label_status.emit(self.server.status_description.replace('\n', ''))
+                    # try to display some more user friendly error description
+                    if status.error.startswith('requests.exceptions.ConnectTimeout'):
+                        self.change_label_status.emit('Connection timeout')
+                    elif status.error.startswith('requests.exceptions.ConnectionError'):
+                        self.change_label_status.emit('Connection error')
+                    else:
+                        # kick out line breaks to avoid broken status window
+                        self.change_label_status.emit(self.server.status_description.replace('\n', ''))
 
-            self.new_status.emit()
+                # reset counter for this thread
+                self.server.thread_counter = 0
 
+                # tell news about new status available
+                self.new_status.emit()
+
+            # increase thread counter
+            self.server.thread_counter += 1
+
+            # if running flag is still set call myself after 1 second
             if self.running == True:
-                # avoid memory leak by singleshooting next get_status after this one is finished
-                self.timer.singleShot(int(conf.update_interval_seconds) * 1000, self.get_status)
+                self.timer.singleShot(1000, self.get_status)
             else:
+                # tell tableview to finish worker_thread
                 self.finish.emit()
 
 
@@ -2227,6 +2271,13 @@ class Dialog_Settings(Dialog):
                 color = color.split(':')[1].strip().split(';')[0]
                 conf.__dict__[widget.objectName().split('input_button_')[1]] = color
 
+        # convert some strings to integers and bools
+        for item in conf.__dict__:
+            if type(conf.__dict__[item]) == str:
+                if conf.__dict__[item] in BOOLPOOL:
+                    conf.__dict__[item] = BOOLPOOL[conf.__dict__[item]]
+                elif conf.__dict__[item].isdecimal():
+                    conf.__dict__[item] = int(conf.__dict__[item])
 
         # store configuration
         conf.SaveConfig()
@@ -2713,6 +2764,14 @@ class Dialog_Server(Dialog):
             self.server_conf.monitor_url = self.server_conf.monitor_url.rstrip('/')
             self.server_conf.monitor_cgi_url = self.server_conf.monitor_cgi_url.rstrip('/')
 
+            # convert some strings to integers and bools
+            for item in self.server_conf.__dict__:
+                if type(self.server_conf.__dict__[item]) == str:
+                    if self.server_conf.__dict__[item] in BOOLPOOL:
+                        self.server_conf.__dict__[item] = BOOLPOOL[self.server_conf.__dict__[item]]
+                    elif self.server_conf.__dict__[item].isdecimal():
+                        self.server_conf.__dict__[item] = int(self.server_conf.__dict__[item])
+
             # edited servers will be deleted and recreated with new configuration
             if self.mode == 'edit':
                 # delete previous name
@@ -2738,7 +2797,9 @@ class Dialog_Server(Dialog):
                 # add new server instance to global servers dict
                 servers[self.server_conf.name] = create_server(self.server_conf)
                 # create vbox
-                statuswindow.create_ServerVBox(servers[self.server_conf.name])
+                ###statuswindow.create_ServerVBox(servers[self.server_conf.name])
+                statuswindow.servers_vbox.addLayout(statuswindow.create_ServerVBox(servers[self.server_conf.name]))
+
                 # renew list of server vboxes in status window
                 statuswindow.sort_ServerVBoxes()
 
@@ -3254,7 +3315,7 @@ class CheckVersion(QObject):
                     message = 'You are using the latest version <b>Nagstamon {0}</b>.'.format(AppInfo.VERSION)
                 else:
                     message = 'The new version <b> Nagstamon {0}</b> is available.<p>' \
-                              'Get it at <a href={1}>{1}</a>.'.format(latest_version, AppInfo.WEBSITE + '/download')
+                              'Get it at <a href={1}>{1}</a>.'.format(latest_version, AppInfo.WEBSITE + '/nagstamon-20')
 
             # if run from startup do not cry if any error occured or nothing new is available
             if check_version.start_mode == False or\
@@ -3290,6 +3351,16 @@ def get_screen(x, y):
 
 @pyqtSlot()
 def exit():
+    """
+        stop al child threads before quitting instance
+    """
+    # tell all tableview threads to stop
+    for server_vbox in statuswindow.servers_vbox.children():
+        server_vbox.table.worker.finish.emit()
+    # wait until all threads are stopped
+    for server_vbox in statuswindow.servers_vbox.children():
+        server_vbox.table.worker_thread.wait()
+    # bye bye
     QApplication.instance().quit()
 
 
