@@ -304,6 +304,10 @@ class MultisiteServer(GenericServer):
                     if host.has_key('host_acknowledged'):
                         if host['host_acknowledged'] == 'yes':
                             self.new_hosts[new_host].acknowledged = True
+		    if host.has_key('host_notifications_enabled'):
+                        if host['host_notifications_enabled'] == 'no':
+                            self.new_hosts[new_host].notifications_enabled = True
+
 
                     # hard/soft state for later filter evaluation
                     real_attempt, max_attempt = self.new_hosts[new_host].attempt.split("/")
@@ -388,6 +392,11 @@ class MultisiteServer(GenericServer):
                     if service.has_key('svc_flapping'):
                         if service['svc_flapping'] == 'yes':
                             self.new_hosts[n["host"]].services[new_service].flapping = True
+                    if service.has_key('svc_notifications_enabled'):
+                        if service['svc_notifications_enabled'] == 'no':
+                            self.new_hosts[n["host"]].services[new_service].notifications_disabled = True
+
+
 
                     # hard/soft state for later filter evaluation
                     real_attempt, max_attempt = self.new_hosts[n["host"]].services[new_service].attempt.split("/")
