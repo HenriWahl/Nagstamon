@@ -397,7 +397,6 @@ class MultisiteServer(GenericServer):
                             self.new_hosts[n["host"]].services[new_service].notifications_disabled = True
 
 
-
                     # hard/soft state for later filter evaluation
                     real_attempt, max_attempt = self.new_hosts[n["host"]].services[new_service].attempt.split("/")
                     if real_attempt <> max_attempt:
