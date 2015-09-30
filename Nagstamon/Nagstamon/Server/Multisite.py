@@ -306,7 +306,7 @@ class MultisiteServer(GenericServer):
                             self.new_hosts[new_host].acknowledged = True
 		    if host.has_key('host_notifications_enabled'):
                         if host['host_notifications_enabled'] == 'no':
-                            self.new_hosts[new_host].notifications_enabled = True
+                            self.new_hosts[new_host].notifications_disabled = True
 
 
                     # hard/soft state for later filter evaluation
