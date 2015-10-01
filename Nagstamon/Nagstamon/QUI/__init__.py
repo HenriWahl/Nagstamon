@@ -3429,6 +3429,9 @@ def exit():
     # stop statuswindow worker
     statuswindow.worker.running = False
 
+    # save configuration
+    conf.SaveConfig()
+
     # tell all tableview threads to stop
     for server_vbox in statuswindow.servers_vbox.children():
         server_vbox.table.worker.finish.emit()

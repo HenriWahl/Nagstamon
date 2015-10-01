@@ -402,18 +402,23 @@ class Config(object):
             # save actions dict
             self.SaveMultipleConfig('actions', 'action')
 
-            # debug
-            if self.debug_mode:
-                debug_queue.append('DEBUG: {0} Saving configuration to file {1}'.format(str(datetime.datetime.now()),
-                                                                                            self.configfile))
             # open, save and close config file
             f = open(os.path.normpath(self.configfile), "w")
             config.write(f)
             f.close()
 
+            # debug
+            if self.debug_mode:
+                debug_queue.append('DEBUG: {0} Saving configuration to file {1}'.format(str(datetime.datetime.now()),
+                                                                                            self.configfile))
         except Exception as err:
             import traceback
             traceback.print_exc(file=sys.stdout)
+            # debug
+            if self.debug_mode:
+                debug_queue.append('ERROR: {0} {1} while saving configuration to file {2}'.format(str(datetime.datetime.now()),
+                                                                                                  err,
+                                                                                                  self.configfile))
 
 
     def SaveMultipleConfig(self, settingsdir, setting):

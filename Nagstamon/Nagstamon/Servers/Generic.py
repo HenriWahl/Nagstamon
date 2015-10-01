@@ -1311,8 +1311,6 @@ class GenericServer(object):
         if debug != '':
             log_line.append(debug)
 
-        #debug_string = ' '.join((head + ':', str(datetime.datetime.now()), server, host, service, debug))
-        # give debug info to debug loop for thread-save log-file writing
-        ###self.debug_queue.put(debug_string)
+        # put debug info into debug queue
         debug_queue.append(' '.join(log_line))
 
