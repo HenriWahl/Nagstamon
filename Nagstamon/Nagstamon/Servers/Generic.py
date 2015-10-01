@@ -457,7 +457,7 @@ class GenericServer(object):
             typ = 1
         else:
             typ = 2
-        if str(conf.debug_mode) == 'True':
+        if conf.debug_mode:
             self.Debug(server=self.get_name(), host=host, service=service,
                        debug='Open host/service monitor web page ' + self.monitor_cgi_url + '/extinfo.cgi?' + urllib.parse.urlencode(
                            {'type': typ, 'host': host, 'service': service}))
@@ -820,59 +820,59 @@ class GenericServer(object):
                 # add hostname for sorting
                 host.host = host.name
                 # Some generic filters
-                if host.acknowledged == True and str(conf.filter_acknowledged_hosts_services) == 'True':
-                    if str(conf.debug_mode) == 'True':
+                if host.acknowledged == True and conf.filter_acknowledged_hosts_services == True:
+                    if conf.debug_mode:
                         self.Debug(server=self.get_name(), debug='Filter: ACKNOWLEDGED ' + str(host.name))
                     host.visible = False
 
                 if host.notifications_disabled == True and str(
                         conf.filter_hosts_services_disabled_notifications) == 'True':
-                    if str(conf.debug_mode) == 'True':
+                    if conf.debug_mode:
                         self.Debug(server=self.get_name(), debug='Filter: NOTIFICATIONS ' + str(host.name))
                     host.visible = False
 
-                if host.passiveonly == True and str(conf.filter_hosts_services_disabled_checks) == 'True':
-                    if str(conf.debug_mode) == 'True':
+                if host.passiveonly == True and conf.filter_hosts_services_disabled_checks == True:
+                    if conf.debug_mode:
                         self.Debug(server=self.get_name(), debug='Filter: PASSIVEONLY ' + str(host.name))
                     host.visible = False
 
-                if host.scheduled_downtime == True and str(conf.filter_hosts_services_maintenance) == 'True':
-                    if str(conf.debug_mode) == 'True':
+                if host.scheduled_downtime == True and conf.filter_hosts_services_maintenance == True:
+                    if conf.debug_mode:
                         self.Debug(server=self.get_name(), debug='Filter: DOWNTIME ' + str(host.name))
                     host.visible = False
 
-                if host.flapping == True and str(conf.filter_all_flapping_hosts) == 'True':
-                    if str(conf.debug_mode) == 'True':
+                if host.flapping == True and conf.filter_all_flapping_hosts == True:
+                    if conf.debug_mode:
                         self.Debug(server=self.get_name(), debug='Filter: FLAPPING HOST ' + str(host.name))
                     host.visible = False
 
                 # Check_MK and OP5 do not show the status_type so their host.status_type will be empty
                 if host.status_type != '':
-                    if str(conf.filter_hosts_in_soft_state) == 'True' and host.status_type == 'soft':
-                        if str(conf.debug_mode) == 'True':
+                    if conf.filter_hosts_in_soft_state == True and host.status_type == 'soft':
+                        if conf.debug_mode:
                             self.Debug(server=self.get_name(), debug='Filter: SOFT STATE ' + str(host.name))
                         host.visible = False
 
                 if HostIsFilteredOutByRE(host.name, conf) == True:
-                    if str(conf.debug_mode) == 'True':
+                    if conf.debug_mode:
                         self.Debug(server=self.get_name(), debug='Filter: REGEXP ' + str(host.name))
                     host.visible = False
 
                 if StatusInformationIsFilteredOutByRE(host.status_information, conf) == True:
-                    if str(conf.debug_mode) == 'True':
+                    if conf.debug_mode:
                         self.Debug(server=self.get_name(), debug='Filter: REGEXP ' + str(host.name))
                     host.visible = False
 
                 # The Criticality filter can be used only with centreon objects. Other objects don't have the criticality attribute.
                 if (str(self.type) == 'Centreon') and (CriticalityIsFilteredOutByRE(host.criticality, conf) == True):
-                    if str(conf.debug_mode) == 'True':
+                    if conf.debug_mode:
                         self.Debug(server=self.get_name(), debug='Filter: REGEXP Criticality ' + str(host.name))
                     host.visible = False
 
                 # Finegrain for the specific state
                 if host.status == 'DOWN':
-                    if str(conf.filter_all_down_hosts) == 'True':
-                        if str(conf.debug_mode) == 'True':
+                    if conf.filter_all_down_hosts == True:
+                        if conf.debug_mode:
                             self.Debug(server=self.get_name(), debug='Filter: DOWN ' + str(host.name))
                         host.visible = False
 
@@ -881,8 +881,8 @@ class GenericServer(object):
                         self.down += 1
 
                 if host.status == 'UNREACHABLE':
-                    if str(conf.filter_all_unreachable_hosts) == 'True':
-                        if str(conf.debug_mode) == 'True':
+                    if conf.filter_all_unreachable_hosts == True:
+                        if conf.debug_mode:
                             self.Debug(server=self.get_name(), debug='Filter: UNREACHABLE ' + str(host.name))
                         host.visible = False
 
@@ -894,59 +894,59 @@ class GenericServer(object):
                 # add service name for sorting
                 service.service = service.name
                 # Some generic filtering
-                if service.acknowledged == True and str(conf.filter_acknowledged_hosts_services) == 'True':
-                    if str(conf.debug_mode) == 'True':
+                if service.acknowledged == True and conf.filter_acknowledged_hosts_services == True:
+                    if conf.debug_mode:
                         self.Debug(server=self.get_name(),
                                    debug='Filter: ACKNOWLEDGED ' + str(host.name) + ';' + str(service.name))
                     service.visible = False
 
                 if service.notifications_disabled == True and str(
                         conf.filter_hosts_services_disabled_notifications) == 'True':
-                    if str(conf.debug_mode) == 'True':
+                    if conf.debug_mode:
                         self.Debug(server=self.get_name(),
                                    debug='Filter: NOTIFICATIONS ' + str(host.name) + ';' + str(service.name))
                     service.visible = False
 
-                if service.passiveonly == True and str(conf.filter_hosts_services_disabled_checks) == 'True':
-                    if str(conf.debug_mode) == 'True':
+                if service.passiveonly == True and conf.filter_hosts_services_disabled_checks == True:
+                    if conf.debug_mode:
                         self.Debug(server=self.get_name(),
                                    debug='Filter: PASSIVEONLY ' + str(host.name) + ';' + str(service.name))
                     service.visible = False
 
-                if service.scheduled_downtime == True and str(conf.filter_hosts_services_maintenance) == 'True':
-                    if str(conf.debug_mode) == 'True':
+                if service.scheduled_downtime == True and conf.filter_hosts_services_maintenance == True:
+                    if conf.debug_mode:
                         self.Debug(server=self.get_name(),
                                    debug='Filter: DOWNTIME ' + str(host.name) + ';' + str(service.name))
                     service.visible = False
 
-                if service.flapping == True and str(conf.filter_all_flapping_services) == 'True':
-                    if str(conf.debug_mode) == 'True':
+                if service.flapping == True and conf.filter_all_flapping_services == True:
+                    if conf.debug_mode:
                         self.Debug(server=self.get_name(),
                                    debug='Filter: FLAPPING SERVICE ' + str(host.name) + ';' + str(service.name))
                     service.visible = False
 
-                if host.scheduled_downtime == True and str(conf.filter_services_on_hosts_in_maintenance) == 'True':
-                    if str(conf.debug_mode) == 'True':
+                if host.scheduled_downtime == True and conf.filter_services_on_hosts_in_maintenance == True:
+                    if conf.debug_mode:
                         self.Debug(server=self.get_name(),
                                    debug='Filter: Service on host in DOWNTIME ' + str(host.name) + ';' + str(
                                        service.name))
                     service.visible = False
 
-                if host.acknowledged == True and str(conf.filter_services_on_acknowledged_hosts) == 'True':
-                    if str(conf.debug_mode) == 'True':
+                if host.acknowledged == True and conf.filter_services_on_acknowledged_hosts == True:
+                    if conf.debug_mode:
                         self.Debug(server=self.get_name(),
                                    debug='Filter: Service on acknowledged host' + str(host.name) + ';' + str(
                                        service.name))
                     service.visible = False
 
-                if host.status == 'DOWN' and str(conf.filter_services_on_down_hosts) == 'True':
-                    if str(conf.debug_mode) == 'True':
+                if host.status == 'DOWN' and conf.filter_services_on_down_hosts == True:
+                    if conf.debug_mode:
                         self.Debug(server=self.get_name(),
                                    debug='Filter: Service on host in DOWN ' + str(host.name) + ';' + str(service.name))
                     service.visible = False
 
-                if host.status == 'UNREACHABLE' and str(conf.filter_services_on_unreachable_hosts) == 'True':
-                    if str(conf.debug_mode) == 'True':
+                if host.status == 'UNREACHABLE' and conf.filter_services_on_unreachable_hosts == True:
+                    if conf.debug_mode:
                         self.Debug(server=self.get_name(),
                                    debug='Filter: Service on host in UNREACHABLE ' + str(host.name) + ';' + str(
                                        service.name))
@@ -954,41 +954,41 @@ class GenericServer(object):
 
                 # Check_MK and OP5 do not show the status_type so their host.status_type will be empty
                 if service.status_type != '':
-                    if str(conf.filter_services_in_soft_state) == 'True' and service.status_type == 'soft':
-                        if str(conf.debug_mode) == 'True':
+                    if conf.filter_services_in_soft_state == True and service.status_type == 'soft':
+                        if conf.debug_mode:
                             self.Debug(server=self.get_name(),
                                        debug='Filter: SOFT STATE ' + str(host.name) + ';' + str(service.name))
                         service.visible = False
                 else:
                     # the old, actually wrong, behaviour
                     real_attempt, max_attempt = service.attempt.split('/')
-                    if real_attempt != max_attempt and str(conf.filter_services_in_soft_state) == 'True':
-                        if str(conf.debug_mode) == 'True':
+                    if real_attempt != max_attempt and conf.filter_services_in_soft_state == True:
+                        if conf.debug_mode:
                             self.Debug(server=self.get_name(),
                                        debug='Filter: SOFT STATE ' + str(host.name) + ';' + str(service.name))
                         service.visible = False
 
                 if HostIsFilteredOutByRE(host.name, conf) == True:
-                    if str(conf.debug_mode) == 'True':
+                    if conf.debug_mode:
                         self.Debug(server=self.get_name(),
                                    debug='Filter: REGEXP ' + str(host.name) + ';' + str(service.name))
                     service.visible = False
 
                 if ServiceIsFilteredOutByRE(service.get_name(), conf) == True:
-                    if str(conf.debug_mode) == 'True':
+                    if conf.debug_mode:
                         self.Debug(server=self.get_name(),
                                    debug='Filter: REGEXP ' + str(host.name) + ';' + str(service.name))
                     service.visible = False
 
                 if StatusInformationIsFilteredOutByRE(service.status_information, conf) == True:
-                    if str(conf.debug_mode) == 'True':
+                    if conf.debug_mode:
                         self.Debug(server=self.get_name(),
                                    debug='Filter: REGEXP ' + str(host.name) + ';' + str(service.name))
                     service.visible = False
 
                 # The Criticality filter can be used only with centreon objects. Other objects don't have the criticality attribute.
                 if (str(self.type) == 'Centreon') and (CriticalityIsFilteredOutByRE(service.criticality, conf) == True):
-                    if str(conf.debug_mode) == 'True':
+                    if conf.debug_mode:
                         self.Debug(server=self.get_name(), debug='Filter: REGEXP Criticality %s;%s %s' % (
                         (str(host.name), str(service.name), str(service.criticality))))
                     service.visible = False
@@ -996,8 +996,8 @@ class GenericServer(object):
                 # Finegrain for the specific state
                 if service.visible:
                     if service.status == 'CRITICAL':
-                        if str(conf.filter_all_critical_services) == 'True':
-                            if str(conf.debug_mode) == 'True':
+                        if conf.filter_all_critical_services == True:
+                            if conf.debug_mode:
                                 self.Debug(server=self.get_name(),
                                            debug='Filter: CRITICAL ' + str(host.name) + ';' + str(service.name))
                             service.visible = False
@@ -1006,8 +1006,8 @@ class GenericServer(object):
                             self.critical += 1
 
                     if service.status == 'WARNING':
-                        if str(conf.filter_all_warning_services) == 'True':
-                            if str(conf.debug_mode) == 'True':
+                        if conf.filter_all_warning_services == True:
+                            if conf.debug_mode:
                                 self.Debug(server=self.get_name(),
                                            debug='Filter: WARNING ' + str(host.name) + ';' + str(service.name))
                             service.visible = False
@@ -1016,8 +1016,8 @@ class GenericServer(object):
                             self.warning += 1
 
                     if service.status == 'UNKNOWN':
-                        if str(conf.filter_all_unknown_services) == 'True':
-                            if str(conf.debug_mode) == 'True':
+                        if conf.filter_all_unknown_services == True:
+                            if conf.debug_mode:
                                 self.Debug(server=self.get_name(),
                                            debug='Filter: UNKNOWN ' + str(host.name) + ';' + str(service.name))
                             service.visible = False
@@ -1286,7 +1286,7 @@ class GenericServer(object):
         '''
             Handle errors somehow - print them or later log them into not yet existing log file
         '''
-        if str(conf.debug_mode) == 'True':
+        if conf.debug_mode:
             debug = ''
             for line in traceback.format_exception(error[0], error[1], error[2], 5):
                 debug += line

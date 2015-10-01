@@ -47,9 +47,9 @@ def RefreshAllServers(servers=None, output=None, conf=None):
 
     for server in servers.values():
         # check if server is already checked
-        if server.isChecking == False and str(conf.servers[server.get_name()].enabled) == "True":
+        if server.isChecking == False and conf.servers[server.get_name()].enabled == True:
             #debug
-            if str(conf.debug_mode) == "True":
+            if conf.debug_mode:
                 server.Debug(server=server.get_name(), debug="Checking server...")
 
             server.thread.Refresh()
@@ -58,61 +58,6 @@ def RefreshAllServers(servers=None, output=None, conf=None):
             server.status = "Refreshing"
             gobject.idle_add(output.popwin.UpdateStatus, server)
 
-
-class DebugLoop(threading.Thread):
-    """
-    run and empty debug_queue into debug log file
-    """
-    # stop flag
-    stopped = False
-
-    def __init__(self, **kwds):
-        # add all keywords to object, every mode searchs inside for its favorite arguments/keywords
-        for k in kwds: self.__dict__[k] = kwds[k]
-
-        # check if DebugLoop is already looping - if it does do not run another one
-        for t in threading.enumerate():
-            if t.getName() == "DebugLoop":
-                # loop gets stopped as soon as it starts - maybe waste
-                self.stopped = True
-
-        # initiate Loop
-        try:
-            threading.Thread.__init__(self, name="DebugLoop")
-            self.setDaemon(1)
-        except Exception as err:
-            print(err)
-
-        # open debug file if needed
-        if str(self.conf.debug_to_file) == "True" and self.stopped == False:
-            try:
-                self.debug_file = open(self.conf.debug_file, "w")
-            except Exception as err:
-                # if path to file does not exist tell user
-                self.output.Dialog(message=err)
-
-
-    def run(self):
-        # as long as debugging is wanted do it
-        while self.stopped == False and str(self.conf.debug_mode) == "True":
-            # .get() waits until there is something to get - needs timeout in case no debug messages fly in
-            debug_string = ""
-
-            try:
-                debug_string = self.debug_queue.get(True, 1)
-                print(debug_string)
-                if str(self.conf.debug_to_file) == "True" and self.__dict__.has_key("debug_file") and debug_string != "":
-                    self.debug_file.write(debug_string + "\n")
-            except:
-                pass
-
-            # if no debugging is needed anymore stop it
-            if str(self.conf.debug_mode) == "False": self.stopped = True
-
-
-    def Stop(self):
-        # simply sets the stopped flag to True to let the above while stop this thread when checking next
-        self.stopped = True
 
 
 class RecheckAll(threading.Thread):
@@ -299,7 +244,7 @@ def HostIsFilteredOutByRE(host, conf=None):
         helper for applying RE filters in Generic.GetStatus()
     """
     try:
-        if str(conf.re_host_enabled) == "True":
+        if conf.re_host_enabled == True:
             return IsFoundByRE(host, conf.re_host_pattern, conf.re_host_reverse)
         # if RE are disabled return True because host is not filtered
         return False
@@ -313,7 +258,7 @@ def ServiceIsFilteredOutByRE(service, conf=None):
         helper for applying RE filters in Generic.GetStatus()
     """
     try:
-        if str(conf.re_service_enabled) == "True":
+        if conf.re_service_enabled == True:
             return IsFoundByRE(service, conf.re_service_pattern, conf.re_service_reverse)
         # if RE are disabled return True because host is not filtered
         return False
@@ -327,7 +272,7 @@ def StatusInformationIsFilteredOutByRE(status_information, conf=None):
         helper for applying RE filters in Generic.GetStatus()
     """
     try:
-        if str(conf.re_status_information_enabled) == "True":
+        if conf.re_status_information_enabled == True:
             return IsFoundByRE(status_information, conf.re_status_information_pattern, conf.re_status_information_reverse)
         # if RE are disabled return True because host is not filtered
         return False
@@ -341,7 +286,7 @@ def CriticalityIsFilteredOutByRE(criticality, conf=None):
         helper for applying RE filters in Generic.GetStatus()
     """
     try:
-        if str(conf.re_criticality_enabled) == "True":
+        if conf.re_criticality_enabled == True:
             return IsFoundByRE(criticality, conf.re_criticality_pattern, conf.re_criticality_reverse)
         # if RE are disabled return True because host is not filtered
         return False

@@ -263,7 +263,7 @@ class MultisiteServer(GenericServer):
             return Result(result=result, error=error)
 
         # Add filters to the url which should only be applied to the service request
-        if str(conf.filter_services_on_unreachable_hosts) == "True":
+        if conf.filter_services_on_unreachable_hosts == True:
             url_params += '&hst2=0'
 
         # services
@@ -365,7 +365,7 @@ class MultisiteServer(GenericServer):
         else:
             url = self.urls['human_service'] + urllib.parse.urlencode({'x': 'site='+self.hosts[host].site+'&host='+host+'&service='+service}).replace('x=', '%26')
 
-        if str(conf.debug_mode) == "True":
+        if conf.debug_mode == True:
             self.Debug(server=self.get_name(), host=host, service=service, debug="Open host/service monitor web page " + url)
         webbrowser.open(url)
 
@@ -377,7 +377,7 @@ class MultisiteServer(GenericServer):
         """
 
         # the fastest method is taking hostname as used in monitor
-        if str(conf.connect_by_host) == "True" or host == "":
+        if conf.connect_by_host == True or host == "":
             return Result(result=host)
 
         ip = ""
@@ -386,10 +386,10 @@ class MultisiteServer(GenericServer):
             if host in self.hosts:
                 ip = self.hosts[host].address
 
-            if str(conf.debug_mode) == "True":
+            if conf.debug_mode == True:
                 self.Debug(server=self.get_name(), host=host, debug ="IP of %s:" % (host) + " " + ip)
 
-            if str(conf.connect_by_dns) == "True":
+            if conf.connect_by_dns == True:
                 try:
                     address = socket.gethostbyaddr(ip)[0]
                 except:
@@ -427,7 +427,7 @@ class MultisiteServer(GenericServer):
         transid = self._get_transid(host, service)
         url = url.replace('?_transid=-1&', '?_transid=%s&' % (transid))
 
-        if str(conf.debug_mode) == "True":
+        if conf.debug_mode == True:
             self.Debug(server=self.get_name(), host=host, debug ="Submitting action: " + url + '&' + urllib.parse.urlencode(params))
 
         # apply action
@@ -479,7 +479,7 @@ class MultisiteServer(GenericServer):
         params['_resched_checks'] = 'Reschedule active checks'
         url = self.urls['api_svcprob_act']
 
-        if str(conf.debug_mode) == "True":
+        if conf.debug_mode == True:
             self.Debug(server=self.get_name(), debug ="Rechecking all action: " + url + '&' + urllib.parse.urlencode(params))
 
         result = self.FetchURL(url + '&' + urllib.parse.urlencode(params), giveback = 'raw')
