@@ -23,7 +23,10 @@ import sys
 import configparser
 import base64
 import zlib
+import datetime
 from collections import OrderedDict
+
+from Nagstamon.Helpers import debug_queue
 
 # temporary dict for string-to-bool-conversion
 # the bool:bool relations are thought to make things easier in Dialog_Settings.ok()
@@ -364,10 +367,9 @@ class Config(object):
         return settings
 
 
-    def SaveConfig(self, output=None, server=None, debug_queue=None):
+    def SaveConfig(self):
         """
             save config file
-            "output", "server" and debug_queue are used only for debug purpose - which one is given will be taken
         """
         try:
             # Make sure .nagstamon is created
@@ -401,30 +403,17 @@ class Config(object):
             self.SaveMultipleConfig('actions', 'action')
 
             # debug
-            ####if str(self.debug_mode) == "True":
-            ###    if server != None:
-            ###        server.Debug(server="", debug="Saving config to " + self.configfile)
-            ###    elif output != None:
-            ###        output.servers.values()[0].Debug(server="", debug="Saving config to " + self.configfile)
-
+            if self.debug_mode:
+                debug_queue.append('DEBUG: {0} Saving configuration to file {1}'.format(str(datetime.datetime.now()),
+                                                                                            self.configfile))
             # open, save and close config file
             f = open(os.path.normpath(self.configfile), "w")
             config.write(f)
             f.close()
+
         except Exception as err:
             import traceback
             traceback.print_exc(file=sys.stdout)
-
-            # debug
-            ###if str(self.debug_mode) == "True":
-            ###    if server != None:
-            ###        server.Debug(server="", debug="Saving config to " + self.configfile)
-            ###    elif output != None:
-            ###        output.servers.values()[0].Debug(server="", debug="Saving config to " + self.configfile)
-            ###    elif debug_queue != None:
-            ###        debug_string =  " ".join((head + ":",  str(datetime.datetime.now()), "Saving config to " + self.configfile))
-            ###        # give debug info to debug loop for thread-save log-file writing
-            ###        self.debug_queue.put(debug_string)
 
 
     def SaveMultipleConfig(self, settingsdir, setting):
