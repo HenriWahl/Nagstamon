@@ -401,11 +401,11 @@ class Config(object):
             self.SaveMultipleConfig('actions', 'action')
 
             # debug
-            if str(self.debug_mode) == "True":
-                if server != None:
-                    server.Debug(server="", debug="Saving config to " + self.configfile)
-                elif output != None:
-                    output.servers.values()[0].Debug(server="", debug="Saving config to " + self.configfile)
+            ####if str(self.debug_mode) == "True":
+            ###    if server != None:
+            ###        server.Debug(server="", debug="Saving config to " + self.configfile)
+            ###    elif output != None:
+            ###        output.servers.values()[0].Debug(server="", debug="Saving config to " + self.configfile)
 
             # open, save and close config file
             f = open(os.path.normpath(self.configfile), "w")
@@ -416,15 +416,15 @@ class Config(object):
             traceback.print_exc(file=sys.stdout)
 
             # debug
-            if str(self.debug_mode) == "True":
-                if server != None:
-                    server.Debug(server="", debug="Saving config to " + self.configfile)
-                elif output != None:
-                    output.servers.values()[0].Debug(server="", debug="Saving config to " + self.configfile)
-                elif debug_queue != None:
-                    debug_string =  " ".join((head + ":",  str(datetime.datetime.now()), "Saving config to " + self.configfile))
-                    # give debug info to debug loop for thread-save log-file writing
-                    self.debug_queue.put(debug_string)
+            ###if str(self.debug_mode) == "True":
+            ###    if server != None:
+            ###        server.Debug(server="", debug="Saving config to " + self.configfile)
+            ###    elif output != None:
+            ###        output.servers.values()[0].Debug(server="", debug="Saving config to " + self.configfile)
+            ###    elif debug_queue != None:
+            ###        debug_string =  " ".join((head + ":",  str(datetime.datetime.now()), "Saving config to " + self.configfile))
+            ###        # give debug info to debug loop for thread-save log-file writing
+            ###        self.debug_queue.put(debug_string)
 
 
     def SaveMultipleConfig(self, settingsdir, setting):

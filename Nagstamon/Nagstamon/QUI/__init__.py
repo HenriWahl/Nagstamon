@@ -35,12 +35,13 @@ import webbrowser
 import subprocess
 import sys
 import platform
+import time
 
 from Nagstamon.Config import (conf, Server, Action, RESOURCES, AppInfo, BOOLPOOL)
 
 from Nagstamon.Servers import (SERVER_TYPES, servers, create_server, get_enabled_servers)
 
-from Nagstamon.Helpers import IsFoundByRE
+from Nagstamon.Helpers import (IsFoundByRE, debug_queue)
 
 # dialogs
 from Nagstamon.QUI.settings_main import Ui_settings_main
@@ -49,7 +50,6 @@ from Nagstamon.QUI.settings_action import Ui_settings_action
 from Nagstamon.QUI.dialog_acknowledge import Ui_dialog_acknowledge
 from Nagstamon.QUI.dialog_downtime import Ui_dialog_downtime
 from Nagstamon.QUI.dialog_submit import Ui_dialog_submit
-
 
 # fixed icons for hosts/services attributes
 ICONS = dict()
@@ -361,6 +361,13 @@ class StatusWindow(QWidget):
         self.worker_thread = QThread()
         self.worker = self.Worker()
         self.worker.moveToThread(self.worker_thread)
+        # start thread and debugging loop if debugging is enabled
+        if conf.debug_mode:
+            self.worker_thread.started.connect(self.worker.debug_loop)
+        # start debug loop by signal
+        self.worker.start_debug_loop.connect(self.worker.debug_loop)
+        # start with priority 0 = lowest
+        self.worker_thread.start(0)
 
         # finally show up
         self.show()
@@ -659,8 +666,61 @@ class StatusWindow(QWidget):
         """
            run a thread for example for debugging
         """
+
+        # used by DialogSettings.ok() to tell debug loop it should start
+        start_debug_loop = pyqtSignal()
+
         def __init__(self):
             QObject.__init__(self)
+            # flag to decide if thread has to run or to be stopped
+            self.running = True
+            # flag if debug_loop is looping
+            self.debug_loop_looping = False
+            # default debug dile does not exist
+            self.debug_file = None
+
+
+        def open_debug_file(self):
+            # open file and truncate
+            self.debug_file = open(conf.debug_file, "w")
+
+
+        def close_debug_file(self):
+            # close and reset file
+            self.debug_file.close()
+            self.debug_file = None
+
+
+        @pyqtSlot()
+        def debug_loop(self):
+            """
+                if debugging is enabled, poll debug_queue list and print/write its contents
+            """
+            if conf.debug_mode:
+                self.debug_loop_looping = True
+
+                # as long thread is supposed to run
+                while self.running and self.debug_loop_looping:
+                    # only log something if there is something to tell
+                    while len(debug_queue) > 0:
+                        # always get oldest item of queue list - FIFO
+                        debug_line = (debug_queue.pop(0))
+                        # output to console
+                        print(debug_line)
+                        if conf.debug_to_file:
+                            # if there is no file handle available get it
+                            if self.debug_file == None:
+                                self.open_debug_file()
+                            # log line per line
+                            self.debug_file.write(debug_line + "\n")
+                    # wait second until next poll
+                    time.sleep(1)
+
+                # unset looping
+                self.debug_mode_looping = False
+                # close file if any
+                if self.debug_file != None:
+                    self.close_debug_file()
 
 
 class NagstamonLogo(QSvgWidget):
@@ -2279,6 +2339,15 @@ class Dialog_Settings(Dialog):
                 elif conf.__dict__[item].isdecimal():
                     conf.__dict__[item] = int(conf.__dict__[item])
 
+        # start debug loop if debugging is enabled
+        if conf.debug_mode:
+            # only start debugging loop if it not already loops
+            if statuswindow.worker.debug_loop_looping == False:
+                statuswindow.worker.start_debug_loop.emit()
+        else:
+            # set flag to tell debug loop it should stop please
+            statuswindow.worker.debug_loop_looping = False
+
         # store configuration
         conf.SaveConfig()
 
@@ -3357,12 +3426,19 @@ def exit():
     # hide statuswindow first ro avoid lag when waiting for finished threads
     statuswindow.hide()
 
+    # stop statuswindow worker
+    statuswindow.worker.running = False
+
     # tell all tableview threads to stop
     for server_vbox in statuswindow.servers_vbox.children():
         server_vbox.table.worker.finish.emit()
     # wait until all threads are stopped
     for server_vbox in statuswindow.servers_vbox.children():
-        server_vbox.table.worker_thread.wait()
+        server_vbox.table.worker_thread.wait(1)
+
+    # wait until statuswindow worker has finished
+    statuswindow.worker_thread.wait(1)
+
     # bye bye
     QApplication.instance().quit()
 

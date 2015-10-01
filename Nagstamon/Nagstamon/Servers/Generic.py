@@ -41,7 +41,8 @@ from Nagstamon.Helpers import (HostIsFilteredOutByRE,
                                ServiceIsFilteredOutByRE,
                                StatusInformationIsFilteredOutByRE,
                                CriticalityIsFilteredOutByRE,
-                               not_empty)
+                               not_empty,
+                               debug_queue)
 from Nagstamon.Objects import (GenericService, GenericHost, Result)
 from Nagstamon.Config import (conf, AppInfo)
 
@@ -1296,9 +1297,22 @@ class GenericServer(object):
 
     def Debug(self, server='', host='', service='', debug='', head='DEBUG'):
         '''
-        centralized debugging
+            centralized debugging
         '''
-        debug_string = ' '.join((head + ':', str(datetime.datetime.now()), server, host, service, debug))
+
+        # initialize items in line to be logged
+        log_line = [head + ':', str(datetime.datetime.now())]
+        if server != '':
+            log_line.append(server)
+        if host != '':
+            log_line.append(host)
+        if service != '':
+            log_line.append(service)
+        if debug != '':
+            log_line.append(debug)
+
+        #debug_string = ' '.join((head + ':', str(datetime.datetime.now()), server, host, service, debug))
         # give debug info to debug loop for thread-save log-file writing
-        self.debug_queue.put(debug_string)
+        ###self.debug_queue.put(debug_string)
+        debug_queue.append(' '.join(log_line))
 

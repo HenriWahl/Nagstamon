@@ -32,6 +32,11 @@ from hashlib import md5
 # flag which indicates if already rechecking all
 ###RecheckingAll = False
 
+# experimenting with new debug queue
+# queue.Queue() needs threading module which might be not such a good idea to be used
+# because QThread is already in use
+debug_queue = list()
+
 
 def RefreshAllServers(servers=None, output=None, conf=None):
     """
