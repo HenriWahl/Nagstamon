@@ -17,10 +17,6 @@
 # along with this program; if not, write to the Free Software
 # Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA  02110-1301, USA
 
-# about to become obsolete
-import urllib.request, urllib.parse, urllib.error
-import urllib.request, urllib.error, urllib.parse
-
 import requests
 # disable annoying InsecureRequestWarning warnings
 try:
@@ -35,9 +31,10 @@ import socket
 import copy
 import webbrowser
 import datetime
-import time
+###import time
 import traceback
 import platform
+import urllib.parse
 from bs4 import BeautifulSoup
 
 from Nagstamon.Helpers import (HostIsFilteredOutByRE,
@@ -52,34 +49,34 @@ from collections import OrderedDict
 
 
 class GenericServer(object):
-    """
+    '''
         Abstract server which serves as template for all other types
         Default values are for Nagios servers
-    """
+    '''
 
     TYPE = 'Generic'
 
     # dictionary to translate status bitmaps on webinterface into status flags
     # this are defaults from Nagios
-    # "disabled.gif" is in Nagios for hosts the same as "passiveonly.gif" for services
-    STATUS_MAPPING = {"ack.gif": "acknowledged", \
-                      "passiveonly.gif": "passiveonly", \
-                      "disabled.gif": "passiveonly", \
-                      "ndisabled.gif": "notifications_disabled", \
-                      "downtime.gif": "scheduled_downtime", \
-                      "flapping.gif": "flapping"}
+    # 'disabled.gif' is in Nagios for hosts the same as 'passiveonly.gif' for services
+    STATUS_MAPPING = {'ack.gif': 'acknowledged', \
+                      'passiveonly.gif': 'passiveonly', \
+                      'disabled.gif': 'passiveonly', \
+                      'ndisabled.gif': 'notifications_disabled', \
+                      'downtime.gif': 'scheduled_downtime', \
+                      'flapping.gif': 'flapping'}
 
     # Entries for monitor default actions in context menu
-    MENU_ACTIONS = ["Monitor", "Recheck", "Acknowledge", "Submit check result", "Downtime"]
+    MENU_ACTIONS = ['Monitor', 'Recheck', 'Acknowledge', 'Submit check result', 'Downtime']
 
     # Arguments available for submitting check results
-    SUBMIT_CHECK_RESULT_ARGS = ["check_output", "performance_data"]
+    SUBMIT_CHECK_RESULT_ARGS = ['check_output', 'performance_data']
 
     # URLs for browser shortlinks/buttons on popup window
-    BROWSER_URLS = {"monitor": "$MONITOR$", \
-                    "hosts": "$MONITOR-CGI$/status.cgi?hostgroup=all&style=hostdetail&hoststatustypes=12", \
-                    "services": "$MONITOR-CGI$/status.cgi?host=all&servicestatustypes=253", \
-                    "history": "$MONITOR-CGI$/history.cgi?host=all"}
+    BROWSER_URLS = {'monitor': '$MONITOR$', \
+                    'hosts': '$MONITOR-CGI$/status.cgi?hostgroup=all&style=hostdetail&hoststatustypes=12', \
+                    'services': '$MONITOR-CGI$/status.cgi?host=all&servicestatustypes=253', \
+                    'history': '$MONITOR-CGI$/history.cgi?host=all'}
 
     USER_AGENT = '{0}/{1}/{2}'.format(AppInfo.NAME, AppInfo.VERSION, platform.system())
 
@@ -89,26 +86,26 @@ class GenericServer(object):
         for k in kwds: self.__dict__[k] = kwds[k]
 
         self.enabled = False
-        self.type = ""
-        self.monitor_url = ""
-        self.monitor_cgi_url = ""
-        self.username = ""
-        self.password = ""
+        self.type = ''
+        self.monitor_url = ''
+        self.monitor_cgi_url = ''
+        self.username = ''
+        self.password = ''
         self.use_proxy = False
         self.use_proxy_from_os = False
-        self.proxy_address = ""
-        self.proxy_username = ""
-        self.proxy_password = ""
+        self.proxy_address = ''
+        self.proxy_username = ''
+        self.proxy_password = ''
         self.hosts = dict()
         self.new_hosts = dict()
         ###self.thread = None
         self.isChecking = False
         self.CheckingForNewVersion = False
         self.worst_status = 'UP'
-        self.STATES = ["UP", "UNKNOWN", "WARNING", "CRITICAL", "UNREACHABLE", "DOWN"]
+        self.STATES = ['UP', 'UNKNOWN', 'WARNING', 'CRITICAL', 'UNREACHABLE', 'DOWN']
         self.nagitems_filtered_list = list()
-        self.nagitems_filtered = {"services": {"CRITICAL": [], "WARNING": [], "UNKNOWN": []},
-                                  "hosts": {"DOWN": [], "UNREACHABLE": []}}
+        self.nagitems_filtered = {'services': {'CRITICAL': [], 'WARNING': [], 'UNKNOWN': []},
+                                  'hosts': {'DOWN': [], 'UNREACHABLE': []}}
         # number of filtered items
         self.nagitems_filtered_count = 0
         self.down = 0
@@ -117,8 +114,8 @@ class GenericServer(object):
         self.critical = 0
         self.warning = 0
         self.all_ok = True
-        self.status = ""
-        self.status_description = ""
+        self.status = ''
+        self.status_description = ''
         # needed for looping server thread
         self.thread_counter = 0
         # needed for RecheckAll - save start_time once for not having to get it for every recheck
@@ -130,25 +127,25 @@ class GenericServer(object):
         # flag which decides if authentication has to be renewed
         self.refresh_authentication = False
         # to handle Icinga versions this information is necessary, might be of future use for others too
-        self.version = ""
+        self.version = ''
 
         # Special FX
         # Centreon
         self.use_autologin = False
-        self.autologin_key = ""
+        self.autologin_key = ''
         # Icinga
         self.use_display_name_host = False
         self.use_display_name_service = False
 
 
     def init_config(self):
-        """
-        set URLs for CGI - they are static and there is no need to set them with every cycle
-        """
+        '''
+            set URLs for CGI - they are static and there is no need to set them with every cycle
+        '''
         # create filters like described in
         # http://www.nagios-wiki.de/nagios/tips/host-_und_serviceproperties_fuer_status.cgi?s=servicestatustypes
         #
-        # the following variables are not necessary anymore as with "new" filtering
+        # the following variables are not necessary anymore as with 'new' filtering
         #
         # hoststatus
         # hoststatustypes = 12
@@ -160,19 +157,19 @@ class GenericServer(object):
 
         # services (unknown, warning or critical?) as dictionary, sorted by hard and soft state type
         self.cgiurl_services = {
-        "hard": self.monitor_cgi_url + "/status.cgi?host=all&servicestatustypes=253&serviceprops=262144&limit=0", \
-        "soft": self.monitor_cgi_url + "/status.cgi?host=all&servicestatustypes=253&serviceprops=524288&limit=0"}
+        'hard': self.monitor_cgi_url + '/status.cgi?host=all&servicestatustypes=253&serviceprops=262144&limit=0', \
+        'soft': self.monitor_cgi_url + '/status.cgi?host=all&servicestatustypes=253&serviceprops=524288&limit=0'}
         # hosts (up or down or unreachable)
         self.cgiurl_hosts = {
-        "hard": self.monitor_cgi_url + "/status.cgi?hostgroup=all&style=hostdetail&hoststatustypes=12&hostprops=262144&limit=0", \
-        "soft": self.monitor_cgi_url + "/status.cgi?hostgroup=all&style=hostdetail&hoststatustypes=12&hostprops=524288&limit=0"}
+        'hard': self.monitor_cgi_url + '/status.cgi?hostgroup=all&style=hostdetail&hoststatustypes=12&hostprops=262144&limit=0', \
+        'soft': self.monitor_cgi_url + '/status.cgi?hostgroup=all&style=hostdetail&hoststatustypes=12&hostprops=524288&limit=0'}
 
 
     def init_HTTP(self):
-        """
-        partly not constantly working Basic Authorization requires extra Authorization headers,
-        different between various server types
-        """
+        '''
+            partly not constantly working Basic Authorization requires extra Authorization headers,
+            different between various server types
+        '''
         if self.session == None:
             self.session = requests.Session()
             self.session.headers['User-Agent'] = self.USER_AGENT
@@ -188,9 +185,9 @@ class GenericServer(object):
 
 
     def proxify(self, requester):
-        """
+        '''
             add proxy information to session or single request
-        """
+        '''
         # check if proxies have to be used
         if self.use_proxy == True:
             if self.use_proxy_from_os == True:
@@ -222,37 +219,37 @@ class GenericServer(object):
 
 
     def reset_HTTP(self):
-        """
-        if authentication fails try to reset any HTTP session stuff - might be different for different monitors
-        """
+        '''
+            if authentication fails try to reset any HTTP session stuff - might be different for different monitors
+        '''
         self.session = None
 
 
     def get_name(self):
-        """
+        '''
         return stringified name
-        """
+        '''
         return str(self.name)
 
 
     def get_username(self):
-        """
+        '''
         return stringified username
-        """
+        '''
         return str(self.username)
 
 
     def get_password(self):
-        """
+        '''
         return stringified password
-        """
+        '''
         return str(self.password)
 
 
     def get_server_version(self):
-        """
+        '''
         dummy function, at the moment only used by Icinga
-        """
+        '''
         pass
 
 
@@ -261,37 +258,37 @@ class GenericServer(object):
 
 
     def _set_recheck(self, host, service):
-        if service != "":
+        if service != '':
             if self.hosts[host].services[service].is_passive_only():
                 # Do not check passive only checks
                 return
         # get start time from Nagios as HTML to use same timezone setting like the locally installed Nagios
         result = self.FetchURL(
-            self.monitor_cgi_url + "/cmd.cgi?" + urllib.parse.urlencode({"cmd_typ": "96", "host": host}))
-        self.start_time = dict(result.result.find(attrs={"name": "start_time"}).attrs)["value"]
+            self.monitor_cgi_url + '/cmd.cgi?' + urllib.parse.urlencode({'cmd_typ': '96', 'host': host}))
+        self.start_time = dict(result.result.find(attrs={'name': 'start_time'}).attrs)['value']
         # decision about host or service - they have different URLs
-        if service == "":
+        if service == '':
             # host
-            cmd_typ = "96"
+            cmd_typ = '96'
         else:
             # service @ host
-            cmd_typ = "7"
+            cmd_typ = '7'
         # ignore empty service in case of rechecking a host
-        cgi_data = urllib.parse.urlencode([("cmd_typ", cmd_typ), \
-                                           ("cmd_mod", "2"), \
-                                           ("host", host), \
-                                           ("service", service), \
-                                           ("start_time", self.start_time), \
-                                           ("force_check", "on"), \
-                                           ("btnSubmit", "Commit")])
+        cgi_data = urllib.parse.urlencode([('cmd_typ', cmd_typ), \
+                                           ('cmd_mod', '2'), \
+                                           ('host', host), \
+                                           ('service', service), \
+                                           ('start_time', self.start_time), \
+                                           ('force_check', 'on'), \
+                                           ('btnSubmit', 'Commit')])
         # execute POST request
-        self.FetchURL(self.monitor_cgi_url + "/cmd.cgi", giveback="raw", cgi_data=cgi_data)
+        self.FetchURL(self.monitor_cgi_url + '/cmd.cgi', giveback='raw', cgi_data=cgi_data)
 
 
     def set_acknowledge(self, info_dict):
-        """
+        '''
             different monitors might have different implementations of _set_acknowledge
-        """
+        '''
         if info_dict['acknowledge_all_services'] == True:
             all_services = info_dict['all_services']
         else:
@@ -310,16 +307,16 @@ class GenericServer(object):
 
 
     def _set_acknowledge(self, host, service, author, comment, sticky, notify, persistent, all_services=[]):
-        """
+        '''
             send acknowledge to monitor server - might be different on every monitor type
-        """
+        '''
 
         url = self.monitor_cgi_url + '/cmd.cgi'
 
         # the following flags apply to hosts and services
         #
         # according to sf.net bug #3304098 (https://sourceforge.net/tracker/?func=detail&atid=1101370&aid=3304098&group_id=236865)
-        # the send_notification-flag must not exist if it is set to "off", otherwise
+        # the send_notification-flag must not exist if it is set to 'off', otherwise
         # the Nagios core interpretes it as set, regardless its real value
         #
         # for whatever silly reason Icinga depends on the correct order of submitted form items...
@@ -346,20 +343,20 @@ class GenericServer(object):
         if sticky == True:
             cgi_data['sticky_ack'] = 'on'
 
-        self.FetchURL(url, giveback="raw", cgi_data=cgi_data)
+        self.FetchURL(url, giveback='raw', cgi_data=cgi_data)
 
         # acknowledge all services on a host
         if len(all_services) > 0:
             for s in all_services:
                 cgi_data['cmd_typ'] = '34'
                 cgi_data['service'] = s
-                self.FetchURL(url, giveback="raw", cgi_data=cgi_data)
+                self.FetchURL(url, giveback='raw', cgi_data=cgi_data)
 
 
     def set_downtime(self, info_dict):
-        """
+        '''
             different monitors might have different implementations of _set_downtime
-        """
+        '''
         self._set_downtime(info_dict['host'],
                            info_dict['service'],
                            info_dict['author'],
@@ -372,9 +369,9 @@ class GenericServer(object):
 
 
     def _set_downtime(self, host, service, author, comment, fixed, start_time, end_time, hours, minutes):
-        """
+        '''
             finally send downtime command to monitor server
-        """
+        '''
         url = self.monitor_cgi_url + '/cmd.cgi'
 
         # for some reason Icinga is very fastidiuos about the order of CGI arguments, so please
@@ -399,7 +396,7 @@ class GenericServer(object):
         cgi_data['btnSubmit'] = 'Commit'
 
         # running remote cgi command
-        self.FetchURL(url, giveback="raw", cgi_data=cgi_data)
+        self.FetchURL(url, giveback='raw', cgi_data=cgi_data)
 
 
     def set_submit_check_result(self, thread_obj):
@@ -408,73 +405,73 @@ class GenericServer(object):
 
 
     def _set_submit_check_result(self, host, service, state, comment, check_output, performance_data):
-        """
-        worker for submitting check result
-        """
-        url = self.monitor_cgi_url + "/cmd.cgi"
+        '''
+            worker for submitting check result
+        '''
+        url = self.monitor_cgi_url + '/cmd.cgi'
 
         # decision about host or service - they have different URLs
-        if service == "":
+        if service == '':
             # host
-            cgi_data = urllib.parse.urlencode([("cmd_typ", "87"), ("cmd_mod", "2"), ("host", host), \
-                                               ("plugin_state", {"up": "0", "down": "1", "unreachable": "2"}[state]), \
-                                               ("plugin_output", check_output), \
-                                               ("performance_data", performance_data), ("btnSubmit", "Commit")])
-            self.FetchURL(url, giveback="raw", cgi_data=cgi_data)
+            cgi_data = urllib.parse.urlencode([('cmd_typ', '87'), ('cmd_mod', '2'), ('host', host), \
+                                               ('plugin_state', {'up': '0', 'down': '1', 'unreachable': '2'}[state]), \
+                                               ('plugin_output', check_output), \
+                                               ('performance_data', performance_data), ('btnSubmit', 'Commit')])
+            self.FetchURL(url, giveback='raw', cgi_data=cgi_data)
 
-        if service != "":
+        if service != '':
             # service @ host
             cgi_data = urllib.parse.urlencode(
-                [("cmd_typ", "30"), ("cmd_mod", "2"), ("host", host), ("service", service), \
-                 ("plugin_state", {"ok": "0", "warning": "1", "critical": "2", "unknown": "3"}[state]),
-                 ("plugin_output", check_output), \
-                 ("performance_data", performance_data), ("btnSubmit", "Commit")])
+                [('cmd_typ', '30'), ('cmd_mod', '2'), ('host', host), ('service', service), \
+                 ('plugin_state', {'ok': '0', 'warning': '1', 'critical': '2', 'unknown': '3'}[state]),
+                 ('plugin_output', check_output), \
+                 ('performance_data', performance_data), ('btnSubmit', 'Commit')])
             # running remote cgi command
-            self.FetchURL(url, giveback="raw", cgi_data=cgi_data)
+            self.FetchURL(url, giveback='raw', cgi_data=cgi_data)
 
 
     def get_start_end(self, host):
-        """
-        for GUI to get actual downtime start and end from server - they may vary so it's better to get
-        directly from web interface
-        """
+        '''
+            for GUI to get actual downtime start and end from server - they may vary so it's better to get
+            directly from web interface
+        '''
         try:
             result = self.FetchURL(
-                self.monitor_cgi_url + "/cmd.cgi?" + urllib.parse.urlencode({"cmd_typ": "55", "host": host}))
-            start_time = dict(result.result.find(attrs={"name": "start_time"}).attrs)["value"]
-            end_time = dict(result.result.find(attrs={"name": "end_time"}).attrs)["value"]
+                self.monitor_cgi_url + '/cmd.cgi?' + urllib.parse.urlencode({'cmd_typ': '55', 'host': host}))
+            start_time = dict(result.result.find(attrs={'name': 'start_time'}).attrs)['value']
+            end_time = dict(result.result.find(attrs={'name': 'end_time'}).attrs)['value']
             # give values back as tuple
             return start_time, end_time
         except:
             self.Error(sys.exc_info())
-            return "n/a", "n/a"
+            return 'n/a', 'n/a'
 
 
-    def open_monitor(self, host, service=""):
-        """
-        open monitor from treeview context menu
-        """
-        # only type is important so do not care of service "" in case of host monitor
-        if service == "":
+    def open_monitor(self, host, service=''):
+        '''
+            open monitor from treeview context menu
+        '''
+        # only type is important so do not care of service '' in case of host monitor
+        if service == '':
             typ = 1
         else:
             typ = 2
-        if str(conf.debug_mode) == "True":
+        if str(conf.debug_mode) == 'True':
             self.Debug(server=self.get_name(), host=host, service=service,
-                       debug="Open host/service monitor web page " + self.monitor_cgi_url + '/extinfo.cgi?' + urllib.parse.urlencode(
-                           {"type": typ, "host": host, "service": service}))
+                       debug='Open host/service monitor web page ' + self.monitor_cgi_url + '/extinfo.cgi?' + urllib.parse.urlencode(
+                           {'type': typ, 'host': host, 'service': service}))
         webbrowser.open(self.monitor_cgi_url + '/extinfo.cgi?' + urllib.parse.urlencode(
-            {"type": typ, "host": host, "service": service}))
+            {'type': typ, 'host': host, 'service': service}))
 
 
     def _get_status(self):
-        """
-        Get status from Nagios Server
-        """
+        '''
+            Get status from Nagios Server
+        '''
         # create Nagios items dictionary with to lists for services and hosts
         # every list will contain a dictionary for every failed service/host
         # this dictionary is only temporarily
-        nagitems = {"services": [], "hosts": []}
+        nagitems = {'services': [], 'hosts': []}
 
         # new_hosts dictionary
         self.new_hosts = dict()
@@ -483,7 +480,7 @@ class GenericServer(object):
         # unfortunately the hosts status page has a different structure so
         # hosts must be analyzed separately
         try:
-            for status_type in "hard", "soft":
+            for status_type in 'hard', 'soft':
                 result = self.FetchURL(self.cgiurl_hosts[status_type])
                 htobj, error = result.result, result.error
 
@@ -520,15 +517,15 @@ class GenericServer(object):
                             tds = tr('td', recursive=False)
                             # host
                             try:
-                                n["host"] = str(tds[0].table.tr.td.table.tr.td.a.string)
+                                n['host'] = str(tds[0].table.tr.td.table.tr.td.a.string)
                             except:
-                                n["host"] = str(nagitems[len(nagitems) - 1]["host"])
+                                n['host'] = str(nagitems[len(nagitems) - 1]['host'])
                             # status
-                            n["status"] = str(tds[1].string)
+                            n['status'] = str(tds[1].string)
                             # last_check
-                            n["last_check"] = str(tds[2].string)
+                            n['last_check'] = str(tds[2].string)
                             # duration
-                            n["duration"] = str(tds[3].string)
+                            n['duration'] = str(tds[3].string)
                             # division between Nagios and Icinga in real life... where
                             # Nagios has only 5 columns there are 7 in Icinga 1.3...
                             # ... and 6 in Icinga 1.2 :-)
@@ -536,59 +533,62 @@ class GenericServer(object):
                                 # the old Nagios table
                                 # status_information
                                 if len(tds[4](text=not_empty)) == 0:
-                                    n["status_information"] = ""
+                                    n['status_information'] = ''
                                 else:
-                                    n["status_information"] = str(tds[4].string).encode("utf-8").replace("\n",
-                                                                                                         " ").strip()
-                                # attempts are not shown in case of hosts so it defaults to "N/A"
-                                n["attempt"] = "N/A"
+                                    ###n['status_information'] = str(tds[4].string).encode('utf-8').replace('\n',
+                                    ###                                                                     ' ').strip()
+                                    n['status_information'] = str(tds[4].string).replace('\n', ' ').strip()
+                                # attempts are not shown in case of hosts so it defaults to 'n/a'
+                                n['attempt'] = 'n/a'
                             else:
                                 # attempts are shown for hosts
                                 # to fix http://sourceforge.net/tracker/?func=detail&atid=1101370&aid=3280961&group_id=236865 .attempt needs
                                 # to be stripped
-                                n["attempt"] = str(tds[4].string).strip()
+                                n['attempt'] = str(tds[4].string).strip()
                                 # status_information
                                 if len(tds[5](text=not_empty)) == 0:
-                                    n["status_information"] = ""
+                                    n['status_information'] = ''
                                 else:
-                                    n["status_information"] = str(tds[5].string).encode("utf-8").replace("\n",
-                                                                                                         " ").strip()
+                                    ###n['status_information'] = str(tds[5].string).encode('utf-8').replace('\n',
+                                    n['status_information'] = str(tds[5].string).replace('\n',
+                                                                                                         ' ').strip()
 
                             # status flags
-                            n["passiveonly"] = False
-                            n["notifications_disabled"] = False
-                            n["flapping"] = False
-                            n["acknowledged"] = False
-                            n["scheduled_downtime"] = False
+                            n['passiveonly'] = False
+                            n['notifications_disabled'] = False
+                            n['flapping'] = False
+                            n['acknowledged'] = False
+                            n['scheduled_downtime'] = False
 
                             # map status icons to status flags
                             icons = tds[0].findAll('img')
                             for i in icons:
-                                icon = i["src"].split("/")[-1]
+                                icon = i['src'].split('/')[-1]
                                 if icon in self.STATUS_MAPPING:
                                     n[self.STATUS_MAPPING[icon]] = True
                             # cleaning
                             del icons
 
                             # add dictionary full of information about this host item to nagitems
-                            nagitems["hosts"].append(n)
+                            nagitems['hosts'].append(n)
                             # after collection data in nagitems create objects from its informations
                             # host objects contain service objects
-                            if n["host"] not in self.new_hosts:
-                                new_host = n["host"]
+                            if n['host'] not in self.new_hosts:
+                                new_host = n['host']
                                 self.new_hosts[new_host] = GenericHost()
-                                self.new_hosts[new_host].name = n["host"]
+                                self.new_hosts[new_host].name = n['host']
                                 self.new_hosts[new_host].server = self.name
-                                self.new_hosts[new_host].status = n["status"]
-                                self.new_hosts[new_host].last_check = n["last_check"]
-                                self.new_hosts[new_host].duration = n["duration"]
-                                self.new_hosts[new_host].attempt = n["attempt"]
-                                self.new_hosts[new_host].status_information = n["status_information"].encode("utf-8")
-                                self.new_hosts[new_host].passiveonly = n["passiveonly"]
-                                self.new_hosts[new_host].notifications_disabled = n["notifications_disabled"]
-                                self.new_hosts[new_host].flapping = n["flapping"]
-                                self.new_hosts[new_host].acknowledged = n["acknowledged"]
-                                self.new_hosts[new_host].scheduled_downtime = n["scheduled_downtime"]
+                                self.new_hosts[new_host].status = n['status']
+                                self.new_hosts[new_host].last_check = n['last_check']
+                                self.new_hosts[new_host].duration = n['duration']
+                                self.new_hosts[new_host].attempt = n['attempt']
+                                ###self.new_hosts[new_host].status_information = n['status_information'].encode('utf-8')
+                                self.new_hosts[new_host].status_information = n['status_information']
+                                self.new_hosts[new_host].passiveonly = n['passiveonly']
+                                self.new_hosts[new_host].notifications_disabled = n['notifications_disabled']
+                                self.new_hosts[new_host].flapping = n['flapping']
+                                self.new_hosts[new_host].acknowledged = n['acknowledged']
+                                self.new_hosts[new_host].scheduled_downtime = n['scheduled_downtime']
                                 self.new_hosts[new_host].status_type = status_type
                             del tds, n
                     except:
@@ -606,10 +606,10 @@ class GenericServer(object):
 
         # services
         try:
-            for status_type in "hard", "soft":
+            for status_type in 'hard', 'soft':
                 result = self.FetchURL(self.cgiurl_services[status_type])
                 htobj, error = result.result, result.error
-                if error != "": return Result(result=copy.deepcopy(htobj), error=copy.deepcopy(error))
+                if error != '': return Result(result=copy.deepcopy(htobj), error=copy.deepcopy(error))
 
                 # too much copy.deepcopy()s here give recursion crashs
                 table = htobj('table', {'class': 'status'})[0]
@@ -640,7 +640,7 @@ class GenericServer(object):
                             # the resulting table of Nagios status.cgi table omits the
                             # hostname of a failing service if there are more than one
                             # so if the hostname is empty the nagios status item should get
-                            # its hostname from the previuos item - one reason to keep "nagitems"
+                            # its hostname from the previuos item - one reason to keep 'nagitems'
                             try:
                                 n['host'] = str(tds[0](text=not_empty)[0])
                             except:
@@ -699,25 +699,25 @@ class GenericServer(object):
                             # if a service does not exist create its object
                             if n['service'] not in self.new_hosts[n['host']].services:
                                 new_service = n['service']
-                                self.new_hosts[n["host"]].services[new_service] = GenericService()
-                                self.new_hosts[n["host"]].services[new_service].host = n['host']
-                                self.new_hosts[n["host"]].services[new_service].name = n['service']
-                                self.new_hosts[n["host"]].services[new_service].server = self.name
-                                self.new_hosts[n["host"]].services[new_service].status = n['status']
-                                self.new_hosts[n["host"]].services[new_service].last_check = n['last_check']
-                                self.new_hosts[n["host"]].services[new_service].duration = n['duration']
-                                self.new_hosts[n["host"]].services[new_service].attempt = n['attempt']
-                                ###self.new_hosts[n["host"]].services[new_service].status_information = n[
+                                self.new_hosts[n['host']].services[new_service] = GenericService()
+                                self.new_hosts[n['host']].services[new_service].host = n['host']
+                                self.new_hosts[n['host']].services[new_service].name = n['service']
+                                self.new_hosts[n['host']].services[new_service].server = self.name
+                                self.new_hosts[n['host']].services[new_service].status = n['status']
+                                self.new_hosts[n['host']].services[new_service].last_check = n['last_check']
+                                self.new_hosts[n['host']].services[new_service].duration = n['duration']
+                                self.new_hosts[n['host']].services[new_service].attempt = n['attempt']
+                                ###self.new_hosts[n['host']].services[new_service].status_information = n[
                                 ###    'status_information'].encode('utf-8')
-                                self.new_hosts[n["host"]].services[new_service].status_information = n[
+                                self.new_hosts[n['host']].services[new_service].status_information = n[
                                     'status_information']
-                                self.new_hosts[n["host"]].services[new_service].passiveonly = n['passiveonly']
-                                self.new_hosts[n["host"]].services[new_service].notifications_disabled = n[
+                                self.new_hosts[n['host']].services[new_service].passiveonly = n['passiveonly']
+                                self.new_hosts[n['host']].services[new_service].notifications_disabled = n[
                                     'notifications_disabled']
-                                self.new_hosts[n["host"]].services[new_service].flapping = n['flapping']
-                                self.new_hosts[n["host"]].services[new_service].acknowledged = n['acknowledged']
-                                self.new_hosts[n["host"]].services[new_service].scheduled_downtime = n['scheduled_downtime']
-                                self.new_hosts[n["host"]].services[new_service].status_type = status_type
+                                self.new_hosts[n['host']].services[new_service].flapping = n['flapping']
+                                self.new_hosts[n['host']].services[new_service].acknowledged = n['acknowledged']
+                                self.new_hosts[n['host']].services[new_service].scheduled_downtime = n['scheduled_downtime']
+                                self.new_hosts[n['host']].services[new_service].status_type = status_type
                             del tds, n
                     except:
                         self.Error(sys.exc_info())
@@ -740,11 +740,11 @@ class GenericServer(object):
 
 
     def GetStatus(self, output=None):
-        """
-        get nagios status information from cgiurl and give it back
-        as dictionary
-        output parameter is needed in case authentication failed so that popwin might ask for credentials
-        """
+        '''
+            get nagios status information from cgiurl and give it back
+            as dictionary
+            output parameter is needed in case authentication failed so that popwin might ask for credentials
+        '''
 
         # set checking flag to be sure only one thread cares about this server
         self.isChecking = True
@@ -764,17 +764,17 @@ class GenericServer(object):
 
         if status.error != '':
             # ask for password if authorization failed
-            if "HTTP Error 401" in status.error or \
-                            "HTTP Error 403" in status.error or \
-                            "HTTP Error 500" in status.error or \
-                            "bad session id" in status.error.lower() or \
-                            "login failed" in status.error.lower():
+            if 'HTTP Error 401' in status.error or \
+                            'HTTP Error 403' in status.error or \
+                            'HTTP Error 500' in status.error or \
+                            'bad session id' in status.error.lower() or \
+                            'login failed' in status.error.lower():
 
                 if conf.servers[self.name].enabled == True:
                     # needed to get valid credentials
                     self.refresh_authentication = True
-                    """
-                    while status.error != "":
+                    '''
+                    while status.error != '':
                         # clean existent authentication
                         self.reset_HTTP()
                         self.init_HTTP()
@@ -787,7 +787,7 @@ class GenericServer(object):
                             break
                         # if reauthentication did not work already try again to get correct credentials
                         self.refresh_authentication = True
-                    """
+                    '''
                     # clean existent authentication
                     self.reset_HTTP()
                     self.init_HTTP()
@@ -802,8 +802,8 @@ class GenericServer(object):
         self.refresh_authentication = False
 
         # this part has been before in GUI.RefreshDisplay() - wrong place, here it needs to be reset
-        self.nagitems_filtered = {"services": {"CRITICAL": [], "WARNING": [], "UNKNOWN": []},
-                                  "hosts": {"DOWN": [], "UNREACHABLE": []}}
+        self.nagitems_filtered = {'services': {'CRITICAL': [], 'WARNING': [], 'UNKNOWN': []},
+                                  'hosts': {'DOWN': [], 'UNREACHABLE': []}}
 
         # initialize counts for various service/hosts states
         # count them with every miserable host/service respective to their meaning
@@ -815,223 +815,223 @@ class GenericServer(object):
 
         for host in self.new_hosts.values():
             # Don't enter the loop if we don't have a problem. Jump down to your problem services
-            if not host.status == "UP":
+            if not host.status == 'UP':
                 # add hostname for sorting
                 host.host = host.name
                 # Some generic filters
-                if host.acknowledged == True and str(conf.filter_acknowledged_hosts_services) == "True":
-                    if str(conf.debug_mode) == "True":
-                        self.Debug(server=self.get_name(), debug="Filter: ACKNOWLEDGED " + str(host.name))
+                if host.acknowledged == True and str(conf.filter_acknowledged_hosts_services) == 'True':
+                    if str(conf.debug_mode) == 'True':
+                        self.Debug(server=self.get_name(), debug='Filter: ACKNOWLEDGED ' + str(host.name))
                     host.visible = False
 
                 if host.notifications_disabled == True and str(
-                        conf.filter_hosts_services_disabled_notifications) == "True":
-                    if str(conf.debug_mode) == "True":
-                        self.Debug(server=self.get_name(), debug="Filter: NOTIFICATIONS " + str(host.name))
+                        conf.filter_hosts_services_disabled_notifications) == 'True':
+                    if str(conf.debug_mode) == 'True':
+                        self.Debug(server=self.get_name(), debug='Filter: NOTIFICATIONS ' + str(host.name))
                     host.visible = False
 
-                if host.passiveonly == True and str(conf.filter_hosts_services_disabled_checks) == "True":
-                    if str(conf.debug_mode) == "True":
-                        self.Debug(server=self.get_name(), debug="Filter: PASSIVEONLY " + str(host.name))
+                if host.passiveonly == True and str(conf.filter_hosts_services_disabled_checks) == 'True':
+                    if str(conf.debug_mode) == 'True':
+                        self.Debug(server=self.get_name(), debug='Filter: PASSIVEONLY ' + str(host.name))
                     host.visible = False
 
-                if host.scheduled_downtime == True and str(conf.filter_hosts_services_maintenance) == "True":
-                    if str(conf.debug_mode) == "True":
-                        self.Debug(server=self.get_name(), debug="Filter: DOWNTIME " + str(host.name))
+                if host.scheduled_downtime == True and str(conf.filter_hosts_services_maintenance) == 'True':
+                    if str(conf.debug_mode) == 'True':
+                        self.Debug(server=self.get_name(), debug='Filter: DOWNTIME ' + str(host.name))
                     host.visible = False
 
-                if host.flapping == True and str(conf.filter_all_flapping_hosts) == "True":
-                    if str(conf.debug_mode) == "True":
-                        self.Debug(server=self.get_name(), debug="Filter: FLAPPING HOST " + str(host.name))
+                if host.flapping == True and str(conf.filter_all_flapping_hosts) == 'True':
+                    if str(conf.debug_mode) == 'True':
+                        self.Debug(server=self.get_name(), debug='Filter: FLAPPING HOST ' + str(host.name))
                     host.visible = False
 
                 # Check_MK and OP5 do not show the status_type so their host.status_type will be empty
-                if host.status_type != "":
-                    if str(conf.filter_hosts_in_soft_state) == "True" and host.status_type == "soft":
-                        if str(conf.debug_mode) == "True":
-                            self.Debug(server=self.get_name(), debug="Filter: SOFT STATE " + str(host.name))
+                if host.status_type != '':
+                    if str(conf.filter_hosts_in_soft_state) == 'True' and host.status_type == 'soft':
+                        if str(conf.debug_mode) == 'True':
+                            self.Debug(server=self.get_name(), debug='Filter: SOFT STATE ' + str(host.name))
                         host.visible = False
 
                 if HostIsFilteredOutByRE(host.name, conf) == True:
-                    if str(conf.debug_mode) == "True":
-                        self.Debug(server=self.get_name(), debug="Filter: REGEXP " + str(host.name))
+                    if str(conf.debug_mode) == 'True':
+                        self.Debug(server=self.get_name(), debug='Filter: REGEXP ' + str(host.name))
                     host.visible = False
 
                 if StatusInformationIsFilteredOutByRE(host.status_information, conf) == True:
-                    if str(conf.debug_mode) == "True":
-                        self.Debug(server=self.get_name(), debug="Filter: REGEXP " + str(host.name))
+                    if str(conf.debug_mode) == 'True':
+                        self.Debug(server=self.get_name(), debug='Filter: REGEXP ' + str(host.name))
                     host.visible = False
 
                 # The Criticality filter can be used only with centreon objects. Other objects don't have the criticality attribute.
-                if (str(self.type) == "Centreon") and (CriticalityIsFilteredOutByRE(host.criticality, conf) == True):
-                    if str(conf.debug_mode) == "True":
-                        self.Debug(server=self.get_name(), debug="Filter: REGEXP Criticality " + str(host.name))
+                if (str(self.type) == 'Centreon') and (CriticalityIsFilteredOutByRE(host.criticality, conf) == True):
+                    if str(conf.debug_mode) == 'True':
+                        self.Debug(server=self.get_name(), debug='Filter: REGEXP Criticality ' + str(host.name))
                     host.visible = False
 
                 # Finegrain for the specific state
-                if host.status == "DOWN":
-                    if str(conf.filter_all_down_hosts) == "True":
-                        if str(conf.debug_mode) == "True":
-                            self.Debug(server=self.get_name(), debug="Filter: DOWN " + str(host.name))
+                if host.status == 'DOWN':
+                    if str(conf.filter_all_down_hosts) == 'True':
+                        if str(conf.debug_mode) == 'True':
+                            self.Debug(server=self.get_name(), debug='Filter: DOWN ' + str(host.name))
                         host.visible = False
 
                     if host.visible:
-                        self.nagitems_filtered["hosts"]["DOWN"].append(host)
+                        self.nagitems_filtered['hosts']['DOWN'].append(host)
                         self.down += 1
 
-                if host.status == "UNREACHABLE":
-                    if str(conf.filter_all_unreachable_hosts) == "True":
-                        if str(conf.debug_mode) == "True":
-                            self.Debug(server=self.get_name(), debug="Filter: UNREACHABLE " + str(host.name))
+                if host.status == 'UNREACHABLE':
+                    if str(conf.filter_all_unreachable_hosts) == 'True':
+                        if str(conf.debug_mode) == 'True':
+                            self.Debug(server=self.get_name(), debug='Filter: UNREACHABLE ' + str(host.name))
                         host.visible = False
 
                     if host.visible:
-                        self.nagitems_filtered["hosts"]["UNREACHABLE"].append(host)
+                        self.nagitems_filtered['hosts']['UNREACHABLE'].append(host)
                         self.unreachable += 1
 
             for service in host.services.values():
                 # add service name for sorting
                 service.service = service.name
                 # Some generic filtering
-                if service.acknowledged == True and str(conf.filter_acknowledged_hosts_services) == "True":
-                    if str(conf.debug_mode) == "True":
+                if service.acknowledged == True and str(conf.filter_acknowledged_hosts_services) == 'True':
+                    if str(conf.debug_mode) == 'True':
                         self.Debug(server=self.get_name(),
-                                   debug="Filter: ACKNOWLEDGED " + str(host.name) + ";" + str(service.name))
+                                   debug='Filter: ACKNOWLEDGED ' + str(host.name) + ';' + str(service.name))
                     service.visible = False
 
                 if service.notifications_disabled == True and str(
-                        conf.filter_hosts_services_disabled_notifications) == "True":
-                    if str(conf.debug_mode) == "True":
+                        conf.filter_hosts_services_disabled_notifications) == 'True':
+                    if str(conf.debug_mode) == 'True':
                         self.Debug(server=self.get_name(),
-                                   debug="Filter: NOTIFICATIONS " + str(host.name) + ";" + str(service.name))
+                                   debug='Filter: NOTIFICATIONS ' + str(host.name) + ';' + str(service.name))
                     service.visible = False
 
-                if service.passiveonly == True and str(conf.filter_hosts_services_disabled_checks) == "True":
-                    if str(conf.debug_mode) == "True":
+                if service.passiveonly == True and str(conf.filter_hosts_services_disabled_checks) == 'True':
+                    if str(conf.debug_mode) == 'True':
                         self.Debug(server=self.get_name(),
-                                   debug="Filter: PASSIVEONLY " + str(host.name) + ";" + str(service.name))
+                                   debug='Filter: PASSIVEONLY ' + str(host.name) + ';' + str(service.name))
                     service.visible = False
 
-                if service.scheduled_downtime == True and str(conf.filter_hosts_services_maintenance) == "True":
-                    if str(conf.debug_mode) == "True":
+                if service.scheduled_downtime == True and str(conf.filter_hosts_services_maintenance) == 'True':
+                    if str(conf.debug_mode) == 'True':
                         self.Debug(server=self.get_name(),
-                                   debug="Filter: DOWNTIME " + str(host.name) + ";" + str(service.name))
+                                   debug='Filter: DOWNTIME ' + str(host.name) + ';' + str(service.name))
                     service.visible = False
 
-                if service.flapping == True and str(conf.filter_all_flapping_services) == "True":
-                    if str(conf.debug_mode) == "True":
+                if service.flapping == True and str(conf.filter_all_flapping_services) == 'True':
+                    if str(conf.debug_mode) == 'True':
                         self.Debug(server=self.get_name(),
-                                   debug="Filter: FLAPPING SERVICE " + str(host.name) + ";" + str(service.name))
+                                   debug='Filter: FLAPPING SERVICE ' + str(host.name) + ';' + str(service.name))
                     service.visible = False
 
-                if host.scheduled_downtime == True and str(conf.filter_services_on_hosts_in_maintenance) == "True":
-                    if str(conf.debug_mode) == "True":
+                if host.scheduled_downtime == True and str(conf.filter_services_on_hosts_in_maintenance) == 'True':
+                    if str(conf.debug_mode) == 'True':
                         self.Debug(server=self.get_name(),
-                                   debug="Filter: Service on host in DOWNTIME " + str(host.name) + ";" + str(
+                                   debug='Filter: Service on host in DOWNTIME ' + str(host.name) + ';' + str(
                                        service.name))
                     service.visible = False
 
-                if host.acknowledged == True and str(conf.filter_services_on_acknowledged_hosts) == "True":
-                    if str(conf.debug_mode) == "True":
+                if host.acknowledged == True and str(conf.filter_services_on_acknowledged_hosts) == 'True':
+                    if str(conf.debug_mode) == 'True':
                         self.Debug(server=self.get_name(),
-                                   debug="Filter: Service on acknowledged host" + str(host.name) + ";" + str(
+                                   debug='Filter: Service on acknowledged host' + str(host.name) + ';' + str(
                                        service.name))
                     service.visible = False
 
-                if host.status == "DOWN" and str(conf.filter_services_on_down_hosts) == "True":
-                    if str(conf.debug_mode) == "True":
+                if host.status == 'DOWN' and str(conf.filter_services_on_down_hosts) == 'True':
+                    if str(conf.debug_mode) == 'True':
                         self.Debug(server=self.get_name(),
-                                   debug="Filter: Service on host in DOWN " + str(host.name) + ";" + str(service.name))
+                                   debug='Filter: Service on host in DOWN ' + str(host.name) + ';' + str(service.name))
                     service.visible = False
 
-                if host.status == "UNREACHABLE" and str(conf.filter_services_on_unreachable_hosts) == "True":
-                    if str(conf.debug_mode) == "True":
+                if host.status == 'UNREACHABLE' and str(conf.filter_services_on_unreachable_hosts) == 'True':
+                    if str(conf.debug_mode) == 'True':
                         self.Debug(server=self.get_name(),
-                                   debug="Filter: Service on host in UNREACHABLE " + str(host.name) + ";" + str(
+                                   debug='Filter: Service on host in UNREACHABLE ' + str(host.name) + ';' + str(
                                        service.name))
                     service.visible = False
 
                 # Check_MK and OP5 do not show the status_type so their host.status_type will be empty
-                if service.status_type != "":
-                    if str(conf.filter_services_in_soft_state) == "True" and service.status_type == "soft":
-                        if str(conf.debug_mode) == "True":
+                if service.status_type != '':
+                    if str(conf.filter_services_in_soft_state) == 'True' and service.status_type == 'soft':
+                        if str(conf.debug_mode) == 'True':
                             self.Debug(server=self.get_name(),
-                                       debug="Filter: SOFT STATE " + str(host.name) + ";" + str(service.name))
+                                       debug='Filter: SOFT STATE ' + str(host.name) + ';' + str(service.name))
                         service.visible = False
                 else:
                     # the old, actually wrong, behaviour
-                    real_attempt, max_attempt = service.attempt.split("/")
-                    if real_attempt != max_attempt and str(conf.filter_services_in_soft_state) == "True":
-                        if str(conf.debug_mode) == "True":
+                    real_attempt, max_attempt = service.attempt.split('/')
+                    if real_attempt != max_attempt and str(conf.filter_services_in_soft_state) == 'True':
+                        if str(conf.debug_mode) == 'True':
                             self.Debug(server=self.get_name(),
-                                       debug="Filter: SOFT STATE " + str(host.name) + ";" + str(service.name))
+                                       debug='Filter: SOFT STATE ' + str(host.name) + ';' + str(service.name))
                         service.visible = False
 
                 if HostIsFilteredOutByRE(host.name, conf) == True:
-                    if str(conf.debug_mode) == "True":
+                    if str(conf.debug_mode) == 'True':
                         self.Debug(server=self.get_name(),
-                                   debug="Filter: REGEXP " + str(host.name) + ";" + str(service.name))
+                                   debug='Filter: REGEXP ' + str(host.name) + ';' + str(service.name))
                     service.visible = False
 
                 if ServiceIsFilteredOutByRE(service.get_name(), conf) == True:
-                    if str(conf.debug_mode) == "True":
+                    if str(conf.debug_mode) == 'True':
                         self.Debug(server=self.get_name(),
-                                   debug="Filter: REGEXP " + str(host.name) + ";" + str(service.name))
+                                   debug='Filter: REGEXP ' + str(host.name) + ';' + str(service.name))
                     service.visible = False
 
                 if StatusInformationIsFilteredOutByRE(service.status_information, conf) == True:
-                    if str(conf.debug_mode) == "True":
+                    if str(conf.debug_mode) == 'True':
                         self.Debug(server=self.get_name(),
-                                   debug="Filter: REGEXP " + str(host.name) + ";" + str(service.name))
+                                   debug='Filter: REGEXP ' + str(host.name) + ';' + str(service.name))
                     service.visible = False
 
                 # The Criticality filter can be used only with centreon objects. Other objects don't have the criticality attribute.
-                if (str(self.type) == "Centreon") and (CriticalityIsFilteredOutByRE(service.criticality, conf) == True):
-                    if str(conf.debug_mode) == "True":
-                        self.Debug(server=self.get_name(), debug="Filter: REGEXP Criticality %s;%s %s" % (
+                if (str(self.type) == 'Centreon') and (CriticalityIsFilteredOutByRE(service.criticality, conf) == True):
+                    if str(conf.debug_mode) == 'True':
+                        self.Debug(server=self.get_name(), debug='Filter: REGEXP Criticality %s;%s %s' % (
                         (str(host.name), str(service.name), str(service.criticality))))
                     service.visible = False
 
                 # Finegrain for the specific state
                 if service.visible:
-                    if service.status == "CRITICAL":
-                        if str(conf.filter_all_critical_services) == "True":
-                            if str(conf.debug_mode) == "True":
+                    if service.status == 'CRITICAL':
+                        if str(conf.filter_all_critical_services) == 'True':
+                            if str(conf.debug_mode) == 'True':
                                 self.Debug(server=self.get_name(),
-                                           debug="Filter: CRITICAL " + str(host.name) + ";" + str(service.name))
+                                           debug='Filter: CRITICAL ' + str(host.name) + ';' + str(service.name))
                             service.visible = False
                         else:
-                            self.nagitems_filtered["services"]["CRITICAL"].append(service)
+                            self.nagitems_filtered['services']['CRITICAL'].append(service)
                             self.critical += 1
 
-                    if service.status == "WARNING":
-                        if str(conf.filter_all_warning_services) == "True":
-                            if str(conf.debug_mode) == "True":
+                    if service.status == 'WARNING':
+                        if str(conf.filter_all_warning_services) == 'True':
+                            if str(conf.debug_mode) == 'True':
                                 self.Debug(server=self.get_name(),
-                                           debug="Filter: WARNING " + str(host.name) + ";" + str(service.name))
+                                           debug='Filter: WARNING ' + str(host.name) + ';' + str(service.name))
                             service.visible = False
                         else:
-                            self.nagitems_filtered["services"]["WARNING"].append(service)
+                            self.nagitems_filtered['services']['WARNING'].append(service)
                             self.warning += 1
 
-                    if service.status == "UNKNOWN":
-                        if str(conf.filter_all_unknown_services) == "True":
-                            if str(conf.debug_mode) == "True":
+                    if service.status == 'UNKNOWN':
+                        if str(conf.filter_all_unknown_services) == 'True':
+                            if str(conf.debug_mode) == 'True':
                                 self.Debug(server=self.get_name(),
-                                           debug="Filter: UNKNOWN " + str(host.name) + ";" + str(service.name))
+                                           debug='Filter: UNKNOWN ' + str(host.name) + ';' + str(service.name))
                             service.visible = False
                         else:
-                            self.nagitems_filtered["services"]["UNKNOWN"].append(service)
+                            self.nagitems_filtered['services']['UNKNOWN'].append(service)
                             self.unknown += 1
 
         # find out if there has been some status change to notify user
         # compare sorted lists of filtered nagios items
         new_nagitems_filtered_list = []
 
-        for i in self.nagitems_filtered["hosts"].values():
+        for i in self.nagitems_filtered['hosts'].values():
             for h in i:
                 new_nagitems_filtered_list.append((h.name, h.status))
-        for i in self.nagitems_filtered["services"].values():
+        for i in self.nagitems_filtered['services'].values():
             for s in i:
                 new_nagitems_filtered_list.append((s.host, s.name, s.status))
 
@@ -1094,14 +1094,14 @@ class GenericServer(object):
 
 
     def FetchURL(self, url, giveback='obj', cgi_data=None, no_auth=False, multipart=False):
-        """
+        '''
             get content of given url, cgi_data only used if present
-            "obj" FetchURL gives back a dict full of miserable hosts/services,
-            "xml" giving back as objectified xml
-            "raw" it gives back pure HTML - useful for finding out IP or new version
+            'obj' FetchURL gives back a dict full of miserable hosts/services,
+            'xml' giving back as objectified xml
+            'raw' it gives back pure HTML - useful for finding out IP or new version
             existence of cgi_data forces urllib to use POST instead of GET requests
             NEW: gives back a list containing result and, if necessary, a more clear error description
-        """
+        '''
 
         # run this method which checks itself if there is some action to take for initializing connection
         # if no_auth is true do not use Auth headers, used by check for new version
@@ -1109,7 +1109,7 @@ class GenericServer(object):
             try:
                 # debug
                 if conf.debug_mode == True:
-                    self.Debug(server=self.get_name(), debug="FetchURL: " + url + " CGI Data: " + str(cgi_data))
+                    self.Debug(server=self.get_name(), debug='FetchURL: ' + url + ' CGI Data: ' + str(cgi_data))
 
                 # use session only for connections to monitor servers, other requests like looking for updates
                 # should go out without credentials
@@ -1170,18 +1170,18 @@ class GenericServer(object):
                 return Result(result=result, error=error)
 
             # give back pure HTML or XML in case giveback is 'raw'
-            if giveback == "raw":
+            if giveback == 'raw':
                 # .text gives content in unicode
                 result = Result(result=response.text)
                 return result
 
             # objectified HTML
-            if giveback == "obj":
+            if giveback == 'obj':
                 yummysoup = BeautifulSoup(response.text, 'html.parser')
                 return Result(result=yummysoup)
 
             # objectified generic XML, valid at least for Opsview and Centreon
-            elif giveback == "xml":
+            elif giveback == 'xml':
                 xmlobj = BeautifulSoup(response.text, 'html.parser')
                 return Result(result=xmlobj)
 
@@ -1199,10 +1199,10 @@ class GenericServer(object):
 
 
     def GetHost(self, host):
-        """
+        '''
         find out ip or hostname of given host to access hosts/devices which do not appear in DNS but
         have their ip saved in Nagios
-        """
+        '''
 
         # the fasted method is taking hostname as used in monitor
         if conf.connect_by_host == True or host == '':
@@ -1253,20 +1253,20 @@ class GenericServer(object):
 
 
     def GetItemsGenerator(self):
-        """
+        '''
             Generator for plain listing of all filtered items, used in QUI for tableview
-        """
+        '''
 
         # reset number of filtered items
         self.nagitems_filtered_count = 0
 
-        for state in self.nagitems_filtered["hosts"].values():
+        for state in self.nagitems_filtered['hosts'].values():
             for host in state:
                 # increase number of items for use in table
                 self.nagitems_filtered_count += 1
                 yield (host)
 
-        for state in self.nagitems_filtered["services"].values():
+        for state in self.nagitems_filtered['services'].values():
             for service in state:
                 # increase number of items for use in table
                 self.nagitems_filtered_count += 1
@@ -1274,31 +1274,31 @@ class GenericServer(object):
 
 
     def Hook(self):
-        """
-        allows to add some extra actions for a monitor server to be executed in RefreshLoop
-        inspired by Centreon and its seemingly Alzheimer desease regarding session ID/Cookie/whatever
-        """
+        '''
+            allows to add some extra actions for a monitor server to be executed in RefreshLoop
+            inspired by Centreon and its seemingly Alzheimer desease regarding session ID/Cookie/whatever
+        '''
         pass
 
 
     def Error(self, error):
-        """
-        Handle errors somehow - print them or later log them into not yet existing log file
-        """
-        if str(conf.debug_mode) == "True":
-            debug = ""
+        '''
+            Handle errors somehow - print them or later log them into not yet existing log file
+        '''
+        if str(conf.debug_mode) == 'True':
+            debug = ''
             for line in traceback.format_exception(error[0], error[1], error[2], 5):
                 debug += line
-            self.Debug(server=self.get_name(), debug=debug, head="ERROR")
+            self.Debug(server=self.get_name(), debug=debug, head='ERROR')
 
-        return ["ERROR", traceback.format_exception_only(error[0], error[1])[0]]
+        return ['ERROR', traceback.format_exception_only(error[0], error[1])[0]]
 
 
-    def Debug(self, server="", host="", service="", debug="", head="DEBUG"):
-        """
+    def Debug(self, server='', host='', service='', debug='', head='DEBUG'):
+        '''
         centralized debugging
-        """
-        debug_string = " ".join((head + ":", str(datetime.datetime.now()), server, host, service, debug))
+        '''
+        debug_string = ' '.join((head + ':', str(datetime.datetime.now()), server, host, service, debug))
         # give debug info to debug loop for thread-save log-file writing
         self.debug_queue.put(debug_string)
 

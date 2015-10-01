@@ -657,7 +657,7 @@ class StatusWindow(QWidget):
 
     class Worker(QObject):
         """
-           run a thread for exampler for debugging
+           run a thread for example for debugging
         """
         def __init__(self):
             QObject.__init__(self)
