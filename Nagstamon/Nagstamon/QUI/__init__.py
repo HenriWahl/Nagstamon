@@ -3352,8 +3352,11 @@ def get_screen(x, y):
 @pyqtSlot()
 def exit():
     """
-        stop al child threads before quitting instance
+        stop all child threads before quitting instance
     """
+    # hide statuswindow first ro avoid lag when waiting for finished threads
+    statuswindow.hide()
+
     # tell all tableview threads to stop
     for server_vbox in statuswindow.servers_vbox.children():
         server_vbox.table.worker.finish.emit()

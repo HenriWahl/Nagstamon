@@ -20,8 +20,8 @@
 import sys
 import json
 import urllib
-import datetime
 import time
+import webbrowser
 
 from datetime import datetime
 
@@ -264,8 +264,8 @@ class Op5MonitorServer(GenericServer):
             url = "%s/monitor/index.php/extinfo/details?host=%s" % (self.monitor_url, host)
         else:
             url = "%s/monitor/index.php/extinfo/details?host=%s&service=%s" % (self.monitor_url, host, service)
-        action = Actions.Action(type="browser", string=url, conf=self.conf, server=self, host=host, service=service)
-        action.run()
+        webbrowser.open(url)
+
 
     def get_start_end(self, host):
         return time.strftime("%Y-%m-%d %H:%M"), time.strftime("%Y-%m-%d %H:%M", time.localtime(time.time() + 7200))
@@ -273,26 +273,7 @@ class Op5MonitorServer(GenericServer):
 
     def send_command(self, command, params=False):
         url = self.monitor_url + self.api_cmd + '/' + command
-        if 'service_description' in params.keys():
-            action = Actions.Action(
-                type="url-post",
-                string=url,
-                cgi_data=urllib.urlencode(params),
-                conf=self.conf,
-                server=self,
-                host=params["host_name"],
-                service=params["service_description"],
-            )
-        else:
-            action = Actions.Action(
-                type="url-post",
-                string=url,
-                cgi_data=urllib.urlencode(params),
-                conf=self.conf,
-                server=self,
-                host=params["host_name"],
-            )
-        action.run()
+        self.FetchURL(url, cgi_data=params, giveback='raw')
 
 
     def _set_recheck(self, host, service):
