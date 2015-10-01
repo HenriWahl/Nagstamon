@@ -23,8 +23,8 @@ import sys
 import copy
 import json
 from bs4 import BeautifulSoup
-from Nagstamon.Objects import *
-from Nagstamon.Actions import *
+from Nagstamon.Objects import (GenericHost, GenericService, Result)
+from Nagstamon.Helpers import not_empty
 
 
 class IcingaServer(GenericServer):

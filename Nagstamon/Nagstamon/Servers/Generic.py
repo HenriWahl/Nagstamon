@@ -40,7 +40,7 @@ import traceback
 import platform
 from bs4 import BeautifulSoup
 
-from Nagstamon.Actions import (HostIsFilteredOutByRE,
+from Nagstamon.Helpers import (HostIsFilteredOutByRE,
                                ServiceIsFilteredOutByRE,
                                StatusInformationIsFilteredOutByRE,
                                CriticalityIsFilteredOutByRE,
@@ -1095,17 +1095,16 @@ class GenericServer(object):
 
     def FetchURL(self, url, giveback='obj', cgi_data=None, no_auth=False, multipart=False):
         """
-        get content of given url, cgi_data only used if present
-        "obj" FetchURL gives back a dict full of miserable hosts/services,
-        "xml" giving back as objectified xml
-        "raw" it gives back pure HTML - useful for finding out IP or new version
-        existence of cgi_data forces urllib to use POST instead of GET requests
-        NEW: gives back a list containing result and, if necessary, a more clear error description
+            get content of given url, cgi_data only used if present
+            "obj" FetchURL gives back a dict full of miserable hosts/services,
+            "xml" giving back as objectified xml
+            "raw" it gives back pure HTML - useful for finding out IP or new version
+            existence of cgi_data forces urllib to use POST instead of GET requests
+            NEW: gives back a list containing result and, if necessary, a more clear error description
         """
 
         # run this method which checks itself if there is some action to take for initializing connection
-        # if no_auth is true do not use Auth headers, used by Actions.CheckForNewVersion()
-
+        # if no_auth is true do not use Auth headers, used by check for new version
         try:
             try:
                 # debug

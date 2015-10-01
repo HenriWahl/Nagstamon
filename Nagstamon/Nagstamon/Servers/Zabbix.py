@@ -7,9 +7,9 @@ import urllib.request, urllib.parse, urllib.error
 import webbrowser
 import time
 
-from Nagstamon import Actions
+from Nagstamon.Helpers import HumanReadableDurationFromTimestamp
 from Nagstamon.Config import conf
-from Nagstamon.Objects import *
+from Nagstamon.Objects import (GenericHost, GenericService, Result)
 from Nagstamon.Servers.Generic import GenericServer
 from Nagstamon.thirdparty.zabbix_api import ZabbixAPI, ZabbixAPIException
 
@@ -96,7 +96,7 @@ class ZabbixServer(GenericServer):
                     'host': host['host'],
                     'status': self.statemap.get(host['available'], host['available']),
                     'last_check': 'n/a',
-                    'duration': Actions.HumanReadableDurationFromTimestamp(host['errors_from']),
+                    'duration': HumanReadableDurationFromTimestamp(host['errors_from']),
                     'status_information': host['error'],
                     'attempt': '1/1',
                     'site': '',
@@ -211,7 +211,7 @@ class ZabbixServer(GenericServer):
                     'status': self.statemap.get(service['priority'], service['priority']),
                     # 1/1 attempt looks at least like there has been any attempt
                     'attempt': '1/1',
-                    'duration': Actions.HumanReadableDurationFromTimestamp(service['lastchange']),
+                    'duration': HumanReadableDurationFromTimestamp(service['lastchange']),
                     'status_information': state,
                     'passiveonly': 'no',
                     'last_check': 'n/a',

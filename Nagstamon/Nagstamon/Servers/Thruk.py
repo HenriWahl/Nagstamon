@@ -22,11 +22,11 @@ from Nagstamon.Servers.Generic import GenericServer
 import sys
 import json
 import datetime
-import urllib.request, urllib.parse, urllib.error
+####import urllib.request, urllib.parse, urllib.error
 import copy
 
 
-from Nagstamon.Actions import HumanReadableDurationFromTimestamp
+from Nagstamon.Helpers import HumanReadableDurationFromTimestamp
 from Nagstamon.Objects import (GenericHost, GenericService, Result)
 
 

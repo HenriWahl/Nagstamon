@@ -40,7 +40,7 @@ from Nagstamon.Config import (conf, Server, Action, RESOURCES, AppInfo, BOOLPOOL
 
 from Nagstamon.Servers import (SERVER_TYPES, servers, create_server, get_enabled_servers)
 
-from Nagstamon.Actions import IsFoundByRE
+from Nagstamon.Helpers import IsFoundByRE
 
 # dialogs
 from Nagstamon.QUI.settings_main import Ui_settings_main

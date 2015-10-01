@@ -25,8 +25,8 @@ import time
 
 from datetime import datetime
 
-from Nagstamon import Actions
-from Nagstamon.Objects import *
+#from Nagstamon.Helpers import
+from Nagstamon.Objects import (GenericHost, GenericService, Result)
 from Nagstamon.Servers.Generic import GenericServer
 
 

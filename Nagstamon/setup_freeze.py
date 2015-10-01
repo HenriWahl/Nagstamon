@@ -1,7 +1,16 @@
 from cx_Freeze import setup, Executable
+import platform
+
 
 NAME = 'Nagstamon'
 VERSION = '2.0-alpha-20150930'
+
+# condition is necessary because if qt.conf exists in folder Nagstamon will have the plain basic Qt5 look
+# which does rather not fit well into desktop environment
+if platform.system() in ['Windows', 'Darwin']:
+    os_dependent_include_files = ['Nagstamon/resources/qt.conf', 'Nagstamon/resources']
+else:
+    os_dependent_include_files = ['Nagstamon/resources']
 
 # Dependencies are automatically detected, but it might need
 # fine tuning.
@@ -15,7 +24,7 @@ build_exe_options = dict(packages = ['PyQt5.QtNetwork',
                                     'keyring.backends.pyfs',
                                     'keyring.backends.SecretService',
                                     'keyring.backends.Windows'],
-                        include_files = ['Nagstamon/resources/qt.conf', 'Nagstamon/resources'],
+                        include_files = os_dependent_include_files,
                         include_msvcr = True,
                         excludes = [])
 

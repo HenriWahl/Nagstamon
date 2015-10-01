@@ -22,9 +22,10 @@ import urllib.request, urllib.parse, urllib.error
 import webbrowser
 import copy
 
-from Nagstamon import Actions
-from Nagstamon.Objects import *
+#from Nagstamon import Helpers
+from Nagstamon.Objects import (GenericHost, GenericService, Result)
 from Nagstamon.Servers.Generic import GenericServer
+from Nagstamon.Helpers import HumanReadableDurationFromSeconds
 
 
 class OpsviewService(GenericService):
@@ -176,7 +177,7 @@ class OpsviewServer(GenericServer):
                 self.new_hosts[str(hostdict["name"])].status = str(hostdict["state"].upper())
                 self.new_hosts[str(hostdict["name"])].status_type = str(hostdict["state_type"])
                 self.new_hosts[str(hostdict["name"])].last_check = str(hostdict["last_check"])
-                self.new_hosts[str(hostdict["name"])].duration = Actions.HumanReadableDurationFromSeconds(hostdict["state_duration"])
+                self.new_hosts[str(hostdict["name"])].duration = HumanReadableDurationFromSeconds(hostdict["state_duration"])
                 self.new_hosts[str(hostdict["name"])].attempt = str(hostdict["current_check_attempt"])+ "/" + str(hostdict["max_check_attempts"])
                 self.new_hosts[str(hostdict["name"])].status_information = str(hostdict["output"].replace("\n", " "))
                 # if host is in downtime add it to known maintained hosts
@@ -198,7 +199,7 @@ class OpsviewServer(GenericServer):
                     self.new_hosts[str(hostdict["name"])].services[str(servicedict["name"])].status = str(servicedict["state"].upper())
                     self.new_hosts[str(hostdict["name"])].services[str(servicedict["name"])].status_type = str(servicedict["state_type"])
                     self.new_hosts[str(hostdict["name"])].services[str(servicedict["name"])].last_check = str(servicedict["last_check"])
-                    self.new_hosts[str(hostdict["name"])].services[str(servicedict["name"])].duration = Actions.HumanReadableDurationFromSeconds(servicedict["state_duration"])
+                    self.new_hosts[str(hostdict["name"])].services[str(servicedict["name"])].duration = HumanReadableDurationFromSeconds(servicedict["state_duration"])
                     self.new_hosts[str(hostdict["name"])].services[str(servicedict["name"])].attempt = str(servicedict["current_check_attempt"])+ "/" + str(servicedict["max_check_attempts"])
                     self.new_hosts[str(hostdict["name"])].services[str(servicedict["name"])].status_information= str(servicedict["output"].replace("\n", " "))
                     if servicedict['downtime'] == "2":
