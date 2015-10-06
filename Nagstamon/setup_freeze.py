@@ -3,7 +3,7 @@ import platform
 
 
 NAME = 'Nagstamon'
-VERSION = '2.0-alpha-20150930'
+VERSION = '2.0-alpha-20151001'
 
 # condition is necessary because if qt.conf exists in folder Nagstamon will have the plain basic Qt5 look
 # which does rather not fit well into desktop environment

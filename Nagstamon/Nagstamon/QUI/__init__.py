@@ -332,6 +332,13 @@ class StatusWindow(QWidget):
         # icons in ICONS have to be sized as fontsize
         _create_icons(self.statusbar.fontMetrics().height())
 
+        # show statusbar/statuswindow on last saved position
+        # when coordinates are inside known screens
+        if get_screen(conf.position_x, conf.position_y) != None:
+            self.move(conf.position_x, conf.position_y)
+        else:
+            self.move(0,0)
+
         # needed for moving the statuswindow
         self.moving = False
         self.relative_x = False
@@ -662,6 +669,16 @@ class StatusWindow(QWidget):
         self.is_shown = True
 
 
+    def store_position_to_conf(self):
+        """
+            store postion of statuswindow/statusbar
+        """
+        # minimize window to statusbar only to get real position
+        self.hide_window()
+        conf.position_x = self.x()
+        conf.position_y = self.y()
+
+
     class Worker(QObject):
         """
            run a thread for example for debugging
@@ -750,7 +767,8 @@ class NagstamonLogo(QSvgWidget):
         action_settings = QAction('Settings...', self)
         action_settings.triggered.connect(dialogs.settings.show)
 
-        action_save_position = QAction('Save position (not yet working)', self)
+        action_save_position = QAction('Save position', self)
+        action_save_position.triggered.connect(self.save_postion)
 
         action_exit = QAction('Exit', self)
         action_exit.triggered.connect(exit)
@@ -793,6 +811,14 @@ class NagstamonLogo(QSvgWidget):
         # store window position if cursor enters logo
         statuswindow.move(event.globalX()-statuswindow.relative_x, event.globalY()-statuswindow.relative_y)
         self.window_moved.emit()
+
+
+    def save_postion(self):
+        """
+            save position from window into config
+        """
+        statuswindow.store_position_to_conf()
+        conf.SaveConfig()
 
 
 class StatusBar(QWidget):
@@ -2339,6 +2365,9 @@ class Dialog_Settings(Dialog):
                 elif conf.__dict__[item].isdecimal():
                     conf.__dict__[item] = int(conf.__dict__[item])
 
+        # store postion of statuswindow/statusbar
+        statuswindow.store_position_to_conf()
+
         # start debug loop if debugging is enabled
         if conf.debug_mode:
             # only start debugging loop if it not already loops
@@ -3409,13 +3438,20 @@ def _create_icons(fontsize):
 
 def get_screen(x, y):
     """
-        find out which screen the cursor is on
+        find out which screen the given coordinates belong to
+        gives back 'None' if coordinates are out of any known screen
     """
-    for screen in range(desktop.screenCount()):
+    number_of_screens = desktop.screenCount()
+    for screen in range(number_of_screens + 1):
         # if coordinates are inside screen just break and return screen
         if (desktop.screenGeometry(screen).contains(x, y)):
             break
-    return screen
+
+    # when 'screen' reached number_of_screens no screen was found, thus return None
+    if screen == number_of_screens:
+        return None
+    else:
+        return screen
 
 
 @pyqtSlot()
@@ -3423,6 +3459,9 @@ def exit():
     """
         stop all child threads before quitting instance
     """
+    # store postion of statuswindow/statusbar
+    statuswindow.store_position_to_conf()
+
     # hide statuswindow first ro avoid lag when waiting for finished threads
     statuswindow.hide()
 
