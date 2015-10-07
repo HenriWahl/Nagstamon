@@ -89,10 +89,7 @@ class HBoxLayout(QHBoxLayout):
         Apparently necessary to get a HBox which is able to hide its children
     """
     def __init__(self, spacing=None, parent=None):
-
         QHBoxLayout.__init__(self, parent)
-        ##QHBoxLayout.__init__(self)
-
 
         if spacing == None:
             self.setSpacing(0)
@@ -297,6 +294,11 @@ class StatusWindow(QWidget):
         self.toparea.logo.mouse_pressed.connect(self.store_position)
         self.toparea.logo.mouse_pressed.connect(self.hide_window)
 
+        # when version label in toparea was pressed hurry up to save the position so the statusbar will not jump
+        self.toparea.label_version.window_moved.connect(self.store_position)
+        self.toparea.label_version.mouse_pressed.connect(self.store_position)
+        self.toparea.label_version.mouse_pressed.connect(self.hide_window)
+
         # buttons in toparea
         self.toparea.button_settings.clicked.connect(self.hide_window)
         self.toparea.button_settings.clicked.connect(dialogs.settings.show)
@@ -404,9 +406,6 @@ class StatusWindow(QWidget):
         """
             sort ServerVBoxes alphabetically
         """
-
-        print('SORT')
-
         # shortly after applying changes a QObject might hang around in the children list which should
         # be filtered out this way
         vboxes_dict = dict()
@@ -671,7 +670,7 @@ class StatusWindow(QWidget):
 
     def store_position_to_conf(self):
         """
-            store postion of statuswindow/statusbar
+            store position of statuswindow/statusbar
         """
         # minimize window to statusbar only to get real position
         self.hide_window()
@@ -740,25 +739,20 @@ class StatusWindow(QWidget):
                     self.close_debug_file()
 
 
-class NagstamonLogo(QSvgWidget):
+class _Draggable_TopArea_Widget(QWidget):
     """
-        SVG based logo, used for statusbar and toparea logos
+        Used to give various toparea widgets draggability
     """
 
     window_moved = pyqtSignal()
     mouse_pressed = pyqtSignal()
 
-    def __init__(self, file, width=None, height=None, parent=None):
-        QSvgWidget.__init__(self, parent=parent)
-        self.load(file)
-        self.setSizePolicy(QSizePolicy.Fixed, QSizePolicy.Fixed)
-        # size needed for small Nagstamon logo in statusbar
-        if width != None and height != None:
-            self.setMinimumSize(width, height)
-            self.setMaximumSize(width, height)
-
+    """
+    def __init__(self, parent=None):
+        QWidget.__init__(self, parent=parent)
+        # should be done by derivatives too
         self._create_menu()
-
+    """
 
     def _create_menu(self):
         # menu for right click
@@ -768,7 +762,7 @@ class NagstamonLogo(QSvgWidget):
         action_settings.triggered.connect(dialogs.settings.show)
 
         action_save_position = QAction('Save position', self)
-        action_save_position.triggered.connect(self.save_postion)
+        action_save_position.triggered.connect(self.save_position)
 
         action_exit = QAction('Exit', self)
         action_exit.triggered.connect(exit)
@@ -777,6 +771,14 @@ class NagstamonLogo(QSvgWidget):
         self.menu.addAction(action_settings)
         self.menu.addAction(action_save_position)
         self.menu.addAction(action_exit)
+
+
+    def save_position(self):
+        """
+            save position from window into config
+        """
+        statuswindow.store_position_to_conf()
+        conf.SaveConfig()
 
 
     def mousePressEvent(self, event):
@@ -813,12 +815,24 @@ class NagstamonLogo(QSvgWidget):
         self.window_moved.emit()
 
 
-    def save_postion(self):
-        """
-            save position from window into config
-        """
-        statuswindow.store_position_to_conf()
-        conf.SaveConfig()
+class NagstamonLogo(QSvgWidget, _Draggable_TopArea_Widget):
+    """
+        SVG based logo, used for statusbar and toparea logos
+    """
+    window_moved = pyqtSignal()
+    mouse_pressed = pyqtSignal()
+
+    def __init__(self, file, width=None, height=None, parent=None):
+        QSvgWidget.__init__(self, parent=parent)
+        self.load(file)
+        self.setSizePolicy(QSizePolicy.Fixed, QSizePolicy.Fixed)
+        # size needed for small Nagstamon logo in statusbar
+        if width != None and height != None:
+            self.setMinimumSize(width, height)
+            self.setMaximumSize(width, height)
+
+        # from Draggable_TopArea_Widget()
+        self._create_menu()
 
 
 class StatusBar(QWidget):
@@ -837,7 +851,7 @@ class StatusBar(QWidget):
         self.hbox = HBoxLayout(spacing=0, parent=parent)
         self.setLayout(self.hbox)
 
-        # define labels first to get its size for svg logo dimensions
+        # define labels first to get their size for svg logo dimensions
         self.color_labels = OrderedDict()
         self.color_labels['OK'] = StatusBarLabel('OK', parent=parent)
         for state in COLORS:
@@ -939,6 +953,18 @@ class StatusBarLabel(QLabel):
             self.mouse_entered.emit()
 
 
+class TopArea_Version(QLabel, _Draggable_TopArea_Widget):
+
+    window_moved = pyqtSignal()
+    mouse_pressed = pyqtSignal()
+
+    def __init__(self, parent=None):
+        QLabel.__init__(self, AppInfo.VERSION, parent=parent)
+
+        # from Draggable_TopArea_Widget()
+        self._create_menu()
+
+
 class TopArea(QWidget):
     """
         Top area of status window
@@ -952,7 +978,8 @@ class TopArea(QWidget):
 
         # top button box
         self.logo = NagstamonLogo('%s%snagstamon_logo_toparea.svg' % (RESOURCES, os.sep), width=144, height=42, parent=self)
-        self.label_version = QLabel(AppInfo.VERSION, parent=self)
+        ###self.label_version = QLabel(AppInfo.VERSION, parent=self)
+        self.label_version = TopArea_Version(parent=self)
         self.combobox_servers = ComboBox_Servers(parent=self)
         self.button_filters = QPushButton("Filters", parent=self)
         self.button_recheck_all = QPushButton("Recheck all", parent=self)
@@ -2365,7 +2392,7 @@ class Dialog_Settings(Dialog):
                 elif conf.__dict__[item].isdecimal():
                     conf.__dict__[item] = int(conf.__dict__[item])
 
-        # store postion of statuswindow/statusbar
+        # store position of statuswindow/statusbar
         statuswindow.store_position_to_conf()
 
         # start debug loop if debugging is enabled
@@ -3459,7 +3486,7 @@ def exit():
     """
         stop all child threads before quitting instance
     """
-    # store postion of statuswindow/statusbar
+    # store position of statuswindow/statusbar
     statuswindow.store_position_to_conf()
 
     # hide statuswindow first ro avoid lag when waiting for finished threads
