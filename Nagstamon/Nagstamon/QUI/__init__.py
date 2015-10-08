@@ -231,6 +231,79 @@ class ComboBox_Servers(QComboBox):
         self.setCurrentIndex(0)
 
 
+class _TopArea_Draggable_Widget(QWidget):
+    """
+        Used to give various toparea widgets draggability
+    """
+
+    window_moved = pyqtSignal()
+    mouse_pressed = pyqtSignal()
+
+
+    def _create_menu(self):
+        # menu for right click
+        self.menu = MenuAtCursor(parent=self)
+
+        action_settings = QAction('Settings...', self)
+        action_settings.triggered.connect(dialogs.settings.show)
+
+        action_save_position = QAction('Save position', self)
+        action_save_position.triggered.connect(self.save_position)
+
+        action_exit = QAction('Exit', self)
+        action_exit.triggered.connect(exit)
+
+        # put actions into menu after separator
+        self.menu.addAction(action_settings)
+        self.menu.addAction(action_save_position)
+        self.menu.addAction(action_exit)
+
+
+    def save_position(self):
+        """
+            save position from window into config
+        """
+        statuswindow.store_position_to_conf()
+        conf.SaveConfig()
+
+
+    def mousePressEvent(self, event):
+        """
+            react differently to mouse button presses:
+            1 - left button, move window
+            2 - right button, popup menu
+        """
+        if event.button() == 1:
+            self.mouse_pressed.emit()
+            # keep x and y relative to statusbar
+            if not statuswindow.relative_x and not statuswindow.relative_y:
+                statuswindow.relative_x = event.x()
+                statuswindow.relative_y = event.y()
+        elif event.button() == 2:
+            self.menu.show_at_cursor()
+
+
+    def mouseReleaseEvent(self, event):
+        # reset all helper values
+        statuswindow.relative_x = False
+        statuswindow.relative_y = False
+        statuswindow.moving = False
+
+
+    def mouseMoveEvent(self, event):
+        # lock window as moving
+        statuswindow.moving = True
+        statuswindow.move(event.globalX()-statuswindow.relative_x, event.globalY()-statuswindow.relative_y)
+        self.window_moved.emit()
+
+    """
+    def mouseEnterEvent(self, event):
+        # store window position if cursor enters widget
+        statuswindow.move(event.globalX()-statuswindow.relative_x, event.globalY()-statuswindow.relative_y)
+        self.window_moved.emit()
+    """
+
+
 class StatusWindow(QWidget):
     """
         Consists of statusbar, toparea and scrolling area.
@@ -239,6 +312,10 @@ class StatusWindow(QWidget):
 
     # sent by .resize_window()
     resizing = pyqtSignal()
+
+    # send when window shrinks down to statusbar or closes
+    ###closed = pyqtSignal()
+
 
     def __init__(self):
         """
@@ -278,8 +355,9 @@ class StatusWindow(QWidget):
 
         # connect logo of statusbar
         self.statusbar.logo.window_moved.connect(self.store_position)
+        self.statusbar.logo.window_moved.connect(self.hide_window)
         self.statusbar.logo.mouse_pressed.connect(self.store_position)
-        self.statusbar.logo.mouse_pressed.connect(self.hide_window)
+        ###self.statusbar.logo.mouse_pressed.connect(self.hide_window)
 
         # after status summarization check if window has to be resized
         self.statusbar.resize.connect(self.adjust_size)
@@ -291,13 +369,21 @@ class StatusWindow(QWidget):
 
         # when logo in toparea was pressed hurry up to save the position so the statusbar will not jump
         self.toparea.logo.window_moved.connect(self.store_position)
+        self.toparea.logo.window_moved.connect(self.hide_window)
         self.toparea.logo.mouse_pressed.connect(self.store_position)
-        self.toparea.logo.mouse_pressed.connect(self.hide_window)
+        ###self.toparea.logo.mouse_pressed.connect(self.hide_window)
 
         # when version label in toparea was pressed hurry up to save the position so the statusbar will not jump
         self.toparea.label_version.window_moved.connect(self.store_position)
+        self.toparea.label_version.window_moved.connect(self.hide_window)
         self.toparea.label_version.mouse_pressed.connect(self.store_position)
-        self.toparea.label_version.mouse_pressed.connect(self.hide_window)
+        ###self.toparea.label_version.mouse_pressed.connect(self.hide_window)
+
+        # when empty space in toparea was pressed hurry up to save the position so the statusbar will not jump
+        self.toparea.label_empty_space.window_moved.connect(self.store_position)
+        self.toparea.label_empty_space.window_moved.connect(self.hide_window)
+        self.toparea.label_empty_space.mouse_pressed.connect(self.store_position)
+        ###self.toparea.label_empty_space.mouse_pressed.connect(self.hide_window)
 
         # buttons in toparea
         self.toparea.button_settings.clicked.connect(self.hide_window)
@@ -506,6 +592,21 @@ class StatusWindow(QWidget):
             # flag to reflect top-ness of window/statusbar
             self.top = False
 
+            # correct position if moving and cursor startet outside statusbar
+            if self.moving:
+                mouse_x = QCursor.pos().x()
+                mouse_y = QCursor.pos().y()
+                # when cursor is outside moved window correct the cooridnates of statusbar/statuswindow
+                if not statuswindow.geometry().contains(mouse_x, mouse_y):
+                    rect = statuswindow.geometry()
+                    corrected_x = int(mouse_x - rect.width()/2)
+                    corrected_y = int(mouse_y - rect.height()/2)
+                    # calculate new relative values
+                    self.relative_x = mouse_x - corrected_x
+                    self.relative_y = mouse_y - corrected_y
+                    statuswindow.move(corrected_x, corrected_y)
+                    del(mouse_x, mouse_y, corrected_x, corrected_y)
+
 
     def calculate_size(self):
         """
@@ -611,8 +712,9 @@ class StatusWindow(QWidget):
     @pyqtSlot()
     def store_position(self):
         # store position for restoring it when hiding
-        self.stored_x = self.x()
-        self.stored_y = self.y()
+        if not self.is_shown:
+            self.stored_x = self.x()
+            self.stored_y = self.y()
 
 
     def leaveEvent(self, event):
@@ -739,83 +841,7 @@ class StatusWindow(QWidget):
                     self.close_debug_file()
 
 
-class _Draggable_TopArea_Widget(QWidget):
-    """
-        Used to give various toparea widgets draggability
-    """
-
-    window_moved = pyqtSignal()
-    mouse_pressed = pyqtSignal()
-
-    """
-    def __init__(self, parent=None):
-        QWidget.__init__(self, parent=parent)
-        # should be done by derivatives too
-        self._create_menu()
-    """
-
-    def _create_menu(self):
-        # menu for right click
-        self.menu = MenuAtCursor(parent=self)
-
-        action_settings = QAction('Settings...', self)
-        action_settings.triggered.connect(dialogs.settings.show)
-
-        action_save_position = QAction('Save position', self)
-        action_save_position.triggered.connect(self.save_position)
-
-        action_exit = QAction('Exit', self)
-        action_exit.triggered.connect(exit)
-
-        # put actions into menu after separator
-        self.menu.addAction(action_settings)
-        self.menu.addAction(action_save_position)
-        self.menu.addAction(action_exit)
-
-
-    def save_position(self):
-        """
-            save position from window into config
-        """
-        statuswindow.store_position_to_conf()
-        conf.SaveConfig()
-
-
-    def mousePressEvent(self, event):
-        """
-            react differently to mouse button presses:
-            1 - left button, move window
-            2 - right button, popup menu
-        """
-        if event.button() == 1:
-            # keep x and y relative to statusbar
-            if not statuswindow.relative_x and not statuswindow.relative_y:
-                statuswindow.relative_x = event.x()
-                statuswindow.relative_y = event.y()
-            self.mouse_pressed.emit()
-        elif event.button() == 2:
-            self.menu.show_at_cursor()
-
-
-    def mouseReleaseEvent(self, event):
-        statuswindow.relative_x = False
-        statuswindow.relative_y = False
-        statuswindow.moving = False
-
-
-    def mouseMoveEvent(self, event):
-        statuswindow.moving = True
-        statuswindow.move(event.globalX()-statuswindow.relative_x, event.globalY()-statuswindow.relative_y)
-        self.window_moved.emit()
-
-
-    def mouseEnterEvent(self, event):
-        # store window position if cursor enters logo
-        statuswindow.move(event.globalX()-statuswindow.relative_x, event.globalY()-statuswindow.relative_y)
-        self.window_moved.emit()
-
-
-class NagstamonLogo(QSvgWidget, _Draggable_TopArea_Widget):
+class NagstamonLogo(QSvgWidget, _TopArea_Draggable_Widget):
     """
         SVG based logo, used for statusbar and toparea logos
     """
@@ -831,7 +857,7 @@ class NagstamonLogo(QSvgWidget, _Draggable_TopArea_Widget):
             self.setMinimumSize(width, height)
             self.setMaximumSize(width, height)
 
-        # from Draggable_TopArea_Widget()
+        # from _TopArea_Draggable_Widget
         self._create_menu()
 
 
@@ -953,15 +979,15 @@ class StatusBarLabel(QLabel):
             self.mouse_entered.emit()
 
 
-class TopArea_Version(QLabel, _Draggable_TopArea_Widget):
+class TopArea_Draggable_Label(QLabel, _TopArea_Draggable_Widget):
 
     window_moved = pyqtSignal()
     mouse_pressed = pyqtSignal()
 
-    def __init__(self, parent=None):
-        QLabel.__init__(self, AppInfo.VERSION, parent=parent)
+    def __init__(self, text='', parent=None):
+        QLabel.__init__(self, text, parent=parent)
 
-        # from Draggable_TopArea_Widget()
+        # from _TopArea_Draggable_Widget
         self._create_menu()
 
 
@@ -978,8 +1004,9 @@ class TopArea(QWidget):
 
         # top button box
         self.logo = NagstamonLogo('%s%snagstamon_logo_toparea.svg' % (RESOURCES, os.sep), width=144, height=42, parent=self)
-        ###self.label_version = QLabel(AppInfo.VERSION, parent=self)
-        self.label_version = TopArea_Version(parent=self)
+        self.label_version = TopArea_Draggable_Label(text=AppInfo.VERSION, parent=self)
+        self.label_empty_space = TopArea_Draggable_Label(text='', parent=self)
+        self.label_empty_space.setSizePolicy(QSizePolicy.Expanding, QSizePolicy.Ignored)
         self.combobox_servers = ComboBox_Servers(parent=self)
         self.button_filters = QPushButton("Filters", parent=self)
         self.button_recheck_all = QPushButton("Recheck all", parent=self)
@@ -1016,7 +1043,7 @@ class TopArea(QWidget):
 
         self.hbox.addWidget(self.logo)
         self.hbox.addWidget(self.label_version)
-        self.hbox.addStretch()
+        self.hbox.addWidget(self.label_empty_space)
         self.hbox.addWidget(self.combobox_servers)
         self.hbox.addWidget(self.button_filters)
         self.hbox.addWidget(self.button_recheck_all)
