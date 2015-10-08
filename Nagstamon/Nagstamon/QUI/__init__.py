@@ -231,13 +231,13 @@ class ComboBox_Servers(QComboBox):
         self.setCurrentIndex(0)
 
 
-class _TopArea_Draggable_Widget(QWidget):
+class Draggable_TopArea_Widget(QWidget):
     """
         Used to give various toparea widgets draggability
     """
-
     window_moved = pyqtSignal()
     mouse_pressed = pyqtSignal()
+    mouse_released = pyqtSignal()
 
 
     def _create_menu(self):
@@ -276,18 +276,26 @@ class _TopArea_Draggable_Widget(QWidget):
         if event.button() == 1:
             self.mouse_pressed.emit()
             # keep x and y relative to statusbar
-            if not statuswindow.relative_x and not statuswindow.relative_y:
-                statuswindow.relative_x = event.x()
-                statuswindow.relative_y = event.y()
-        elif event.button() == 2:
-            self.menu.show_at_cursor()
+        # if not set calculate relative position
+        if not statuswindow.relative_x and not statuswindow.relative_y:
+            statuswindow.relative_x = event.globalX() - statuswindow.x()
+            statuswindow.relative_y = event.globalY() - statuswindow.y()
 
 
     def mouseReleaseEvent(self, event):
-        # reset all helper values
-        statuswindow.relative_x = False
-        statuswindow.relative_y = False
-        statuswindow.moving = False
+        # decide if moving or menu should be treated
+        if event.button() == 1:
+            # reset all helper values
+            statuswindow.relative_x = False
+            statuswindow.relative_y = False
+            statuswindow.moving = False
+            # if popup window should be closed by clicking do it now
+            if statuswindow.is_shown and conf.close_details_clicking:
+                statuswindow.hide_window()
+            elif statuswindow.is_shown == False:
+                self.mouse_released.emit()
+        elif event.button() == 2:
+            self.menu.show_at_cursor()
 
 
     def mouseMoveEvent(self, event):
@@ -302,6 +310,20 @@ class _TopArea_Draggable_Widget(QWidget):
         statuswindow.move(event.globalX()-statuswindow.relative_x, event.globalY()-statuswindow.relative_y)
         self.window_moved.emit()
     """
+
+class Draggable_TopArea_Label(QLabel, Draggable_TopArea_Widget):
+    """
+       label with dragging capabilities used by toparea
+    """
+    window_moved = pyqtSignal()
+    mouse_pressed = pyqtSignal()
+    mouse_released = pyqtSignal()
+
+    def __init__(self, text='', parent=None):
+        QLabel.__init__(self, text, parent=parent)
+
+        # from _Draggable_Widget
+        self._create_menu()
 
 
 class StatusWindow(QWidget):
@@ -364,8 +386,9 @@ class StatusWindow(QWidget):
 
         # statusbar label has been entered by mouse -> show
         for label in self.statusbar.color_labels.values():
-            label.mouse_entered.connect(self.show_window)
-            label.mouse_entered.connect(self.lock)
+            label.mouse_entered.connect(self.show_window_after_checking_for_hover)
+            label.mouse_released.connect(self.show_window_after_checking_for_clicking)
+            ###label.mouse_entered.connect(self.lock)
 
         # when logo in toparea was pressed hurry up to save the position so the statusbar will not jump
         self.toparea.logo.window_moved.connect(self.store_position)
@@ -400,12 +423,10 @@ class StatusWindow(QWidget):
         self.toparea.mouse_entered.connect(self.unlock)
 
         # avoid hiding of statuswindow if menu is opened
-        ###self.toparea.button_hamburger_menu.clicked.connect(self.lock)
         self.toparea.button_hamburger_menu.pressed.connect(self.lock)
 
         self.toparea.hamburger_menu.shown.connect(self.lock)
         self.toparea.hamburger_menu.closed.connect(self.unlock)
-        ###self.toparea.button_hamburger_menu.clicked.connect(self.toparea.hamburger_menu.show_at_cursor)
 
         # create vbox for each enabled server
         for server in servers.values():
@@ -520,11 +541,29 @@ class StatusWindow(QWidget):
 
 
     @pyqtSlot()
+    def show_window_after_checking_for_clicking(self):
+        """
+            being called after clicking statusbar - check if window should be showed
+        """
+        if conf.popup_details_clicking:
+            self.show_window()
+
+
+    @pyqtSlot()
+    def show_window_after_checking_for_hover(self):
+        """
+            being called after hovering over statusbar - check if wondiw should be showed
+        """
+        if conf.popup_details_hover:
+            self.show_window()
+
+
+    @pyqtSlot()
     def show_window(self, event=None):
         """
             used to show status window when its appearance is triggered, also adjusts geometry
         """
-        if not statuswindow.moving:
+        if not self.moving:
             # attempt to avoid flickering on MacOSX - already hide statusbar here
             self.statusbar.hide()
 
@@ -577,7 +616,9 @@ class StatusWindow(QWidget):
         """
             hide window if not needed
         """
-        if self.is_shown == True and self.locked == False:
+        # only hide if shown and not locked or if not yet hidden if moving
+        if self.is_shown == True and self.locked == False or\
+           self.is_shown == True and self.moving == True:
             self.statusbar.show()
             self.statusbar.adjustSize()
             self.toparea.hide()
@@ -718,7 +759,10 @@ class StatusWindow(QWidget):
 
 
     def leaveEvent(self, event):
-        self.hide_window()
+        ###self.hide_window()
+        # check first if popup has to be shown by hovering or clicking
+        if conf.close_details_hover:
+            self.hide_window()
 
 
     def get_real_width(self):
@@ -841,12 +885,14 @@ class StatusWindow(QWidget):
                     self.close_debug_file()
 
 
-class NagstamonLogo(QSvgWidget, _TopArea_Draggable_Widget):
+class NagstamonLogo(QSvgWidget, Draggable_TopArea_Widget):
     """
         SVG based logo, used for statusbar and toparea logos
     """
     window_moved = pyqtSignal()
     mouse_pressed = pyqtSignal()
+    mouse_released = pyqtSignal()
+
 
     def __init__(self, file, width=None, height=None, parent=None):
         QSvgWidget.__init__(self, parent=parent)
@@ -901,6 +947,7 @@ class StatusBar(QWidget):
         self.summarize_states()
 
 
+    @pyqtSlot()
     def summarize_states(self):
         """
             display summaries of states in statusbar
@@ -944,15 +991,25 @@ class StatusBar(QWidget):
         self.resize.emit()
 
 
-class StatusBarLabel(QLabel):
+###class StatusBarLabel(QLabel):
+class StatusBarLabel(Draggable_TopArea_Label):
     """
         one piece of the status bar labels for one state
     """
 
+    # yell if statusbar is moved
+    window_moved = pyqtSignal()
+
+    # needed for popup after hover
     mouse_entered = pyqtSignal()
 
+    # needed for popup after click
+    mouse_pressed = pyqtSignal()
+    mouse_released = pyqtSignal()
+
     def __init__(self, state, parent=None):
-        QLabel.__init__(self, parent=parent)
+        ###QLabel.__init__(self, parent=parent)
+        Draggable_TopArea_Label.__init__(self, parent=parent)
         self.setStyleSheet('padding-left: 1px;'
                            'padding-right: 1px;'
                            ###'font-size: 20px;'
@@ -979,16 +1036,33 @@ class StatusBarLabel(QLabel):
             self.mouse_entered.emit()
 
 
-class TopArea_Draggable_Label(QLabel, _TopArea_Draggable_Widget):
+    def mouseReleaseEvent(self, event):
+        # decide if moving or menu should be treated
+        if event.button() == 1:
+            # reset all helper values
+            statuswindow.relative_x = False
+            statuswindow.relative_y = False
+            # if popup window should be closed by clicking do it now
+            if statuswindow.is_shown and conf.close_details_clicking:
+                statuswindow.hide_window()
+            elif statuswindow.is_shown == False and statuswindow.moving == False:
+                self.mouse_released.emit()
+            statuswindow.moving = False
+        # right-button click action
+        elif event.button() == 2:
+            self.menu.show_at_cursor()
 
-    window_moved = pyqtSignal()
-    mouse_pressed = pyqtSignal()
 
-    def __init__(self, text='', parent=None):
-        QLabel.__init__(self, text, parent=parent)
+    def mouseMoveEvent(self, event):
+        # lock window as moving
+        # if not set calculate relative position
+        if not statuswindow.relative_x and not statuswindow.relative_y:
+            statuswindow.relative_x = event.globalX() - statuswindow.x()
+            statuswindow.relative_y = event.globalY() - statuswindow.y()
 
-        # from _TopArea_Draggable_Widget
-        self._create_menu()
+        statuswindow.moving = True
+        statuswindow.move(event.globalX()-statuswindow.relative_x, event.globalY()-statuswindow.relative_y)
+        self.window_moved.emit()
 
 
 class TopArea(QWidget):
@@ -1004,8 +1078,8 @@ class TopArea(QWidget):
 
         # top button box
         self.logo = NagstamonLogo('%s%snagstamon_logo_toparea.svg' % (RESOURCES, os.sep), width=144, height=42, parent=self)
-        self.label_version = TopArea_Draggable_Label(text=AppInfo.VERSION, parent=self)
-        self.label_empty_space = TopArea_Draggable_Label(text='', parent=self)
+        self.label_version = Draggable_TopArea_Label(text=AppInfo.VERSION, parent=self)
+        self.label_empty_space = Draggable_TopArea_Label(text='', parent=self)
         self.label_empty_space.setSizePolicy(QSizePolicy.Expanding, QSizePolicy.Ignored)
         self.combobox_servers = ComboBox_Servers(parent=self)
         self.button_filters = QPushButton("Filters", parent=self)
@@ -1021,8 +1095,8 @@ class TopArea(QWidget):
         self.button_hamburger_menu.setIcon(QIcon('%s%smenu.svg' % (RESOURCES, os.sep)))
         self.button_hamburger_menu.setStyleSheet('QPushButton {border-width: 0px;'
                                                               'border-style: none;}'
-                                                 #'QPushButton:hover {background-color: white;'
-                                                 #                   'border-radius: 4px;}'
+                                                 'QPushButton:hover {background-color: white;'
+                                                                    'border-radius: 4px;}'
                                                  'QPushButton::menu-indicator{image:url(none.jpg);}')
         self.hamburger_menu = MenuAtCursor()
         action_exit = QAction("Exit", self)
@@ -1060,7 +1134,7 @@ class TopArea(QWidget):
         self.mouse_entered.emit()
 
 
-class ServerStatusLabel(QLabel):
+class ServerStatusLabel(Draggable_TopArea_Label):
     """
         label for ServerVBox to show server connection state
         extra class to apply simple slots for changing text or color
