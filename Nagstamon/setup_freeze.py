@@ -1,36 +1,44 @@
 from cx_Freeze import setup, Executable
 import platform
 
+# workaround to get directory of Qt5 plugins to add missing 'mediaservice' folder needed for audio on OSX and Windows
+import os.path
+from PyQt5 import QtCore
+if platform.system() == 'Windows':
+    QTPLUGINS = os.path.join(os.path.dirname(QtCore.__file__), 'plugins')
+elif platform.system() == 'Darwin':
+    # works of course only with Fink-based Qt5-installation
+    QTPLUGINS = '/sw/lib/qt5-mac/plugins'
+
 
 NAME = 'Nagstamon'
-VERSION = '2.0-alpha-20151001'
+VERSION = '2.0-alpha-20151009'
 
 # condition is necessary because if qt.conf exists in folder Nagstamon will have the plain basic Qt5 look
 # which does rather not fit well into desktop environment
 if platform.system() in ['Windows', 'Darwin']:
-    os_dependent_include_files = ['Nagstamon/resources/qt.conf', 'Nagstamon/resources']
+    os_dependent_include_files = ['Nagstamon/resources/qt.conf',
+                                  'Nagstamon/resources',
+                                  '{0}/mediaservice'.format(QTPLUGINS)]
 else:
     os_dependent_include_files = ['Nagstamon/resources']
 
 # Dependencies are automatically detected, but it might need
 # fine tuning.
 build_exe_options = dict(packages = ['PyQt5.QtNetwork',
-                                    'keyring.backends.file',
-                                    'keyring.backends.Gnome',
-                                    'keyring.backends.Google',
-                                    'keyring.backends.kwallet',
-                                    'keyring.backends.multi',
-                                    'keyring.backends.OS_X',
-                                    'keyring.backends.pyfs',
-                                    'keyring.backends.SecretService',
-                                    'keyring.backends.Windows'],
+                                     'PyQt5.QtMultimedia',
+                                     'keyring.backends.file',
+                                     'keyring.backends.Gnome',
+                                     'keyring.backends.Google',
+                                     'keyring.backends.kwallet',
+                                     'keyring.backends.multi',
+                                     'keyring.backends.OS_X',
+                                     'keyring.backends.pyfs',
+                                     'keyring.backends.SecretService',
+                                     'keyring.backends.Windows'],
                         include_files = os_dependent_include_files,
                         include_msvcr = True,
                         excludes = [])
-
-# put in platform specific options via shell script call like
-# :\tools\python\python.exe setup.py build_exe --include-files=Nagstamon/resources/qt.conf,Nagstamon/resources
-
 
 bdist_mac_options = dict(iconfile = 'Nagstamon/resources/nagstamon.icns')
 

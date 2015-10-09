@@ -233,7 +233,7 @@ class ComboBox_Servers(QComboBox):
 
 class _Draggable_Widget(QWidget):
     """
-        Used to give various toparea widgets draggability
+        Used to give various toparea and statusbar widgets draggability
     """
     # yell if statusbar is moved
     window_moved = pyqtSignal()
@@ -293,7 +293,9 @@ class _Draggable_Widget(QWidget):
 
 
     def mouseReleaseEvent(self, event):
-        # decide if moving or menu should be treated
+        """
+            decide if moving or menu should be treated after mouse button was released
+        """
         if event.button() == 1:
             # if popup window should be closed by clicking do it now
             if statuswindow.is_shown and conf.close_details_clicking:
@@ -311,6 +313,9 @@ class _Draggable_Widget(QWidget):
 
 
     def mouseMoveEvent(self, event):
+        """
+            do the moving action
+        """
         # lock window as moving
         # if not set calculate relative position
         if not statuswindow.relative_x and not statuswindow.relative_y:
@@ -319,20 +324,17 @@ class _Draggable_Widget(QWidget):
 
         statuswindow.moving = True
         statuswindow.move(event.globalX()-statuswindow.relative_x, event.globalY()-statuswindow.relative_y)
-        """
-        print('statuswindow.relative_x:', statuswindow.relative_x)
-        print('statuswindow.relative_y:', statuswindow.relative_y)
-        print('statuswindow.x:', statuswindow.x())
-        print('statuswindow.y:', statuswindow.y())
-        print('event.globalX:', event.globalX())
-        print('event.globalY:', event.globalY())
 
-        print()
-        """
+        # needed for OSX - otherwise statusbar stays blank while moving
+        statuswindow.update()
+        
         self.window_moved.emit()
 
 
     def enterEvent(self, event):
+        """
+            tell the world that mouse entered the widget - interesting for hover popup
+        """
         if statuswindow.is_shown == False:
             self.mouse_entered.emit()
 
