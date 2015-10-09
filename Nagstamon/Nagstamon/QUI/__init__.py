@@ -231,11 +231,17 @@ class ComboBox_Servers(QComboBox):
         self.setCurrentIndex(0)
 
 
-class Draggable_TopArea_Widget(QWidget):
+class _Draggable_Widget(QWidget):
     """
         Used to give various toparea widgets draggability
     """
+    # yell if statusbar is moved
     window_moved = pyqtSignal()
+
+    # needed for popup after hover
+    mouse_entered = pyqtSignal()
+
+    # needed for popup after click
     mouse_pressed = pyqtSignal()
     mouse_released = pyqtSignal()
 
@@ -300,24 +306,35 @@ class Draggable_TopArea_Widget(QWidget):
 
     def mouseMoveEvent(self, event):
         # lock window as moving
+        # if not set calculate relative position
+        if not statuswindow.relative_x and not statuswindow.relative_y:
+            statuswindow.relative_x = event.globalX() - statuswindow.x()
+            statuswindow.relative_y = event.globalY() - statuswindow.y()
+
         statuswindow.moving = True
         statuswindow.move(event.globalX()-statuswindow.relative_x, event.globalY()-statuswindow.relative_y)
         self.window_moved.emit()
 
-    """
-    def mouseEnterEvent(self, event):
-        # store window position if cursor enters widget
-        statuswindow.move(event.globalX()-statuswindow.relative_x, event.globalY()-statuswindow.relative_y)
-        self.window_moved.emit()
-    """
 
-class Draggable_TopArea_Label(QLabel, Draggable_TopArea_Widget):
+    def enterEvent(self, event):
+        if statuswindow.is_shown == False:
+            self.mouse_entered.emit()
+
+
+class Draggable_Label(QLabel, _Draggable_Widget):
     """
        label with dragging capabilities used by toparea
     """
+    # yell if statusbar is moved
     window_moved = pyqtSignal()
+
+    # needed for popup after hover
+    mouse_entered = pyqtSignal()
+
+    # needed for popup after click
     mouse_pressed = pyqtSignal()
     mouse_released = pyqtSignal()
+
 
     def __init__(self, text='', parent=None):
         QLabel.__init__(self, text, parent=parent)
@@ -885,14 +902,19 @@ class StatusWindow(QWidget):
                     self.close_debug_file()
 
 
-class NagstamonLogo(QSvgWidget, Draggable_TopArea_Widget):
+class NagstamonLogo(QSvgWidget, _Draggable_Widget):
     """
         SVG based logo, used for statusbar and toparea logos
     """
+    # yell if statusbar is moved
     window_moved = pyqtSignal()
+
+    # needed for popup after hover
+    mouse_entered = pyqtSignal()
+
+    # needed for popup after click
     mouse_pressed = pyqtSignal()
     mouse_released = pyqtSignal()
-
 
     def __init__(self, file, width=None, height=None, parent=None):
         QSvgWidget.__init__(self, parent=parent)
@@ -991,8 +1013,7 @@ class StatusBar(QWidget):
         self.resize.emit()
 
 
-###class StatusBarLabel(QLabel):
-class StatusBarLabel(Draggable_TopArea_Label):
+class StatusBarLabel(Draggable_Label):
     """
         one piece of the status bar labels for one state
     """
@@ -1008,8 +1029,7 @@ class StatusBarLabel(Draggable_TopArea_Label):
     mouse_released = pyqtSignal()
 
     def __init__(self, state, parent=None):
-        ###QLabel.__init__(self, parent=parent)
-        Draggable_TopArea_Label.__init__(self, parent=parent)
+        Draggable_Label.__init__(self, parent=parent)
         self.setStyleSheet('padding-left: 1px;'
                            'padding-right: 1px;'
                            ###'font-size: 20px;'
@@ -1031,40 +1051,6 @@ class StatusBarLabel(Draggable_TopArea_Label):
         self.state = state
 
 
-    def enterEvent(self, event):
-        if statuswindow.is_shown == False:
-            self.mouse_entered.emit()
-
-
-    def mouseReleaseEvent(self, event):
-        # decide if moving or menu should be treated
-        if event.button() == 1:
-            # reset all helper values
-            statuswindow.relative_x = False
-            statuswindow.relative_y = False
-            # if popup window should be closed by clicking do it now
-            if statuswindow.is_shown and conf.close_details_clicking:
-                statuswindow.hide_window()
-            elif statuswindow.is_shown == False and statuswindow.moving == False:
-                self.mouse_released.emit()
-            statuswindow.moving = False
-        # right-button click action
-        elif event.button() == 2:
-            self.menu.show_at_cursor()
-
-
-    def mouseMoveEvent(self, event):
-        # lock window as moving
-        # if not set calculate relative position
-        if not statuswindow.relative_x and not statuswindow.relative_y:
-            statuswindow.relative_x = event.globalX() - statuswindow.x()
-            statuswindow.relative_y = event.globalY() - statuswindow.y()
-
-        statuswindow.moving = True
-        statuswindow.move(event.globalX()-statuswindow.relative_x, event.globalY()-statuswindow.relative_y)
-        self.window_moved.emit()
-
-
 class TopArea(QWidget):
     """
         Top area of status window
@@ -1078,8 +1064,8 @@ class TopArea(QWidget):
 
         # top button box
         self.logo = NagstamonLogo('%s%snagstamon_logo_toparea.svg' % (RESOURCES, os.sep), width=144, height=42, parent=self)
-        self.label_version = Draggable_TopArea_Label(text=AppInfo.VERSION, parent=self)
-        self.label_empty_space = Draggable_TopArea_Label(text='', parent=self)
+        self.label_version = Draggable_Label(text=AppInfo.VERSION, parent=self)
+        self.label_empty_space = Draggable_Label(text='', parent=self)
         self.label_empty_space.setSizePolicy(QSizePolicy.Expanding, QSizePolicy.Ignored)
         self.combobox_servers = ComboBox_Servers(parent=self)
         self.button_filters = QPushButton("Filters", parent=self)
@@ -1134,7 +1120,7 @@ class TopArea(QWidget):
         self.mouse_entered.emit()
 
 
-class ServerStatusLabel(Draggable_TopArea_Label):
+class ServerStatusLabel(Draggable_Label):
     """
         label for ServerVBox to show server connection state
         extra class to apply simple slots for changing text or color
