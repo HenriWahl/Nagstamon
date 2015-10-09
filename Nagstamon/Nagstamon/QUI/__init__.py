@@ -295,15 +295,17 @@ class _Draggable_Widget(QWidget):
     def mouseReleaseEvent(self, event):
         # decide if moving or menu should be treated
         if event.button() == 1:
-            # reset all helper values
-            statuswindow.relative_x = False
-            statuswindow.relative_y = False
-            statuswindow.moving = False
             # if popup window should be closed by clicking do it now
             if statuswindow.is_shown and conf.close_details_clicking:
                 statuswindow.hide_window()
             elif statuswindow.is_shown == False:
                 self.mouse_released.emit()
+
+            # reset all helper values
+            statuswindow.relative_x = False
+            statuswindow.relative_y = False
+            statuswindow.moving = False
+
         elif event.button() == 2:
             self.menu.show_at_cursor()
 
@@ -667,9 +669,6 @@ class StatusWindow(QWidget):
 
             # flag to reflect top-ness of window/statusbar
             self.top = False
-
-            # check if cursor is outside statusbar when moving
-            self.correct_moving_position()
 
 
     @pyqtSlot()
