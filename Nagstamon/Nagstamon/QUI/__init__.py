@@ -247,8 +247,12 @@ class _Draggable_Widget(QWidget):
 
 
     def _create_menu(self):
-        # menu for right click
-        self.menu = MenuAtCursor(parent=self)
+        """
+            menu for right click
+        """
+        #self.menu = MenuAtCursor(parent=self)
+        # if parent is 'self' menu gets the same colored style as label
+        self.menu = MenuAtCursor(parent=None)
 
         action_settings = QAction('Settings...', self)
         action_settings.triggered.connect(dialogs.settings.show)
@@ -313,6 +317,16 @@ class _Draggable_Widget(QWidget):
 
         statuswindow.moving = True
         statuswindow.move(event.globalX()-statuswindow.relative_x, event.globalY()-statuswindow.relative_y)
+        """
+        print('statuswindow.relative_x:', statuswindow.relative_x)
+        print('statuswindow.relative_y:', statuswindow.relative_y)
+        print('statuswindow.x:', statuswindow.x())
+        print('statuswindow.y:', statuswindow.y())
+        print('event.globalX:', event.globalX())
+        print('event.globalY:', event.globalY())
+
+        print()
+        """
         self.window_moved.emit()
 
 
@@ -395,6 +409,7 @@ class StatusWindow(QWidget):
         # connect logo of statusbar
         self.statusbar.logo.window_moved.connect(self.store_position)
         self.statusbar.logo.window_moved.connect(self.hide_window)
+        self.statusbar.logo.window_moved.connect(self.correct_moving_position)
         self.statusbar.logo.mouse_pressed.connect(self.store_position)
         ###self.statusbar.logo.mouse_pressed.connect(self.hide_window)
 
@@ -410,18 +425,21 @@ class StatusWindow(QWidget):
         # when logo in toparea was pressed hurry up to save the position so the statusbar will not jump
         self.toparea.logo.window_moved.connect(self.store_position)
         self.toparea.logo.window_moved.connect(self.hide_window)
+        self.toparea.logo.window_moved.connect(self.correct_moving_position)
         self.toparea.logo.mouse_pressed.connect(self.store_position)
         ###self.toparea.logo.mouse_pressed.connect(self.hide_window)
 
         # when version label in toparea was pressed hurry up to save the position so the statusbar will not jump
         self.toparea.label_version.window_moved.connect(self.store_position)
         self.toparea.label_version.window_moved.connect(self.hide_window)
+        self.toparea.label_version.window_moved.connect(self.correct_moving_position)
         self.toparea.label_version.mouse_pressed.connect(self.store_position)
         ###self.toparea.label_version.mouse_pressed.connect(self.hide_window)
 
         # when empty space in toparea was pressed hurry up to save the position so the statusbar will not jump
         self.toparea.label_empty_space.window_moved.connect(self.store_position)
         self.toparea.label_empty_space.window_moved.connect(self.hide_window)
+        self.toparea.label_empty_space.window_moved.connect(self.correct_moving_position)
         self.toparea.label_empty_space.mouse_pressed.connect(self.store_position)
         ###self.toparea.label_empty_space.mouse_pressed.connect(self.hide_window)
 
@@ -650,20 +668,28 @@ class StatusWindow(QWidget):
             # flag to reflect top-ness of window/statusbar
             self.top = False
 
-            # correct position if moving and cursor startet outside statusbar
-            if self.moving:
-                mouse_x = QCursor.pos().x()
-                mouse_y = QCursor.pos().y()
-                # when cursor is outside moved window correct the cooridnates of statusbar/statuswindow
-                if not statuswindow.geometry().contains(mouse_x, mouse_y):
-                    rect = statuswindow.geometry()
-                    corrected_x = int(mouse_x - rect.width()/2)
-                    corrected_y = int(mouse_y - rect.height()/2)
-                    # calculate new relative values
-                    self.relative_x = mouse_x - corrected_x
-                    self.relative_y = mouse_y - corrected_y
-                    statuswindow.move(corrected_x, corrected_y)
-                    del(mouse_x, mouse_y, corrected_x, corrected_y)
+            # check if cursor is outside statusbar when moving
+            self.correct_moving_position()
+
+
+    @pyqtSlot()
+    def correct_moving_position(self):
+        """
+            correct position if moving and cursor startet outside statusbar
+        """
+        if self.moving:
+            mouse_x = QCursor.pos().x()
+            mouse_y = QCursor.pos().y()
+            # when cursor is outside moved window correct the coordinates of statusbar/statuswindow
+            if not statuswindow.geometry().contains(mouse_x, mouse_y):
+                rect = statuswindow.geometry()
+                corrected_x = int(mouse_x - rect.width()/2)
+                corrected_y = int(mouse_y - rect.height()/2)
+                # calculate new relative values
+                self.relative_x = mouse_x - corrected_x
+                self.relative_y = mouse_y - corrected_y
+                statuswindow.move(corrected_x, corrected_y)
+                del(mouse_x, mouse_y, corrected_x, corrected_y)
 
 
     def calculate_size(self):
