@@ -10,7 +10,6 @@ elif platform.system() == 'Darwin':
     # works of course only with Fink-based Qt5-installation
     QTPLUGINS = '/sw/lib/qt5-mac/plugins'
 
-
 NAME = 'Nagstamon'
 VERSION = '2.0-alpha-20151009'
 
@@ -21,12 +20,12 @@ if platform.system() in ['Windows', 'Darwin']:
                                   'Nagstamon/resources',
                                   '{0}/mediaservice'.format(QTPLUGINS)]
 else:
-    os_dependent_include_files = ['Nagstamon/resources']
+    os_dependent_include_files = ['Nagstamon/resources',
+                                  '{0}/mediaservice'.format(QTPLUGINS)]
 
 # Dependencies are automatically detected, but it might need
 # fine tuning.
 build_exe_options = dict(packages = ['PyQt5.QtNetwork',
-                                     'PyQt5.QtMultimedia',
                                      'keyring.backends.file',
                                      'keyring.backends.Gnome',
                                      'keyring.backends.Google',

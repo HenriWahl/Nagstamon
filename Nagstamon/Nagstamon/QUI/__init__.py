@@ -139,8 +139,8 @@ class MenuAtCursor(QMenu):
     """
         open menu at position of mouse pointer - normal .exec() shows menu at (0, 0)
     """
-    shown = pyqtSignal()
-    closed = pyqtSignal()
+    ###shown = pyqtSignal()
+    ###closed = pyqtSignal()
 
     # flag to avoid too fast popping up menus
     available = True
@@ -153,18 +153,18 @@ class MenuAtCursor(QMenu):
     def show_at_cursor(self):
         if statuswindow.locked == False:
             # send shown signal to tell status window to stay open if menu is displayes
-            self.shown.emit()
+            ###self.shown.emit()
             # get cursor coordinates and decrease them to show menu under mouse pointer
             x = QCursor.pos().x() - 10
             y = QCursor.pos().y() - 10
             self.exec(QPoint(x, y))
             del(x, y)
 
-
+    """
     def closeEvent(self, event):
         # tell status window that there is no menu anymore
         self.closed.emit()
-
+    """
 
 class PushButton_Hamburger(QPushButton):
     """
@@ -186,7 +186,7 @@ class ComboBox_Servers(QComboBox):
     """
         combobox which does lock statuswindow so it does not close when opening combobox
     """
-    shown = pyqtSignal()
+    ###shown = pyqtSignal()
     monitor_opened = pyqtSignal()
 
     # flag to avoid silly focusOutEvent
@@ -203,7 +203,7 @@ class ComboBox_Servers(QComboBox):
         # first click opens combobox popup
         self.freshly_opened = True
         # tell status window that there is no combobox anymore
-        self.shown.emit()
+        ###self.shown.emit()
         self.showPopup()
 
 
@@ -453,19 +453,19 @@ class StatusWindow(QWidget):
         self.toparea.button_close.clicked.connect(self.hide_window)
 
         # avoid hiding of statuswindow if combobox is opened
-        self.toparea.combobox_servers.shown.connect(self.lock)
+        ###self.toparea.combobox_servers.shown.connect(self.lock)
         # if monitor was selected in combobox its monitor window is opened
-        self.toparea.combobox_servers.monitor_opened.connect(self.unlock)
+        ###self.toparea.combobox_servers.monitor_opened.connect(self.unlock)
         self.toparea.combobox_servers.monitor_opened.connect(self.hide_window)
 
         # attempt to allow closing window and combobox
-        self.toparea.mouse_entered.connect(self.unlock)
+        ###self.toparea.mouse_entered.connect(self.unlock)
 
         # avoid hiding of statuswindow if menu is opened
-        self.toparea.button_hamburger_menu.pressed.connect(self.lock)
+        ###self.toparea.button_hamburger_menu.pressed.connect(self.lock)
 
-        self.toparea.hamburger_menu.shown.connect(self.lock)
-        self.toparea.hamburger_menu.closed.connect(self.unlock)
+        ###self.toparea.hamburger_menu.shown.connect(self.lock)
+        ###self.toparea.hamburger_menu.closed.connect(self.unlock)
 
         # create vbox for each enabled server
         for server in servers.values():
@@ -803,10 +803,19 @@ class StatusWindow(QWidget):
 
 
     def leaveEvent(self, event):
-        ###self.hide_window()
+        """
+            check if popup has to be hidden depending ou mouse position
+        """
         # check first if popup has to be shown by hovering or clicking
         if conf.close_details_hover:
-            self.hide_window()
+            # only hide window if cursor is outside of it
+            mouse_x = QCursor.pos().x()
+            mouse_y = QCursor.pos().y()
+            if mouse_x < self.x() or mouse_x > self.x() + self.width() or\
+               mouse_y < self.y() or mouse_y > self.y() + self.height():
+                self.hide_window()
+
+            del(mouse_x, mouse_y)
 
 
     def get_real_width(self):
@@ -1321,7 +1330,6 @@ class ServerVBox(QVBoxLayout):
         self.deleteLater()
 
 
-#class CellWidget(QTableWidgetItem, QWidget):
 class CellWidget(QWidget):
     """
         widget to be used as cells in tablewidgets
@@ -1330,7 +1338,7 @@ class CellWidget(QWidget):
     # send to tablewidget if cell clicked
     clicked = pyqtSignal()
 
-    def __init__(self, column=0, row=0, text='', color='black', background='white', icons='', parent=None):
+    def __init__(self, column=0, row=0, text='', color='black', background='white', icons='', tooltip='', parent=None):
         QWidget.__init__(self, parent=parent)
 
         self.column = column
@@ -1348,6 +1356,9 @@ class CellWidget(QWidget):
         self.hbox.setContentsMargins(0, 0, 0, 0)
         self.hbox.addWidget(self.label, 1)
         self.hbox.setSpacing(0)
+
+        self.setToolTip(tooltip)
+        ###self.toolTip.setStyleSheet('color: {0}'.format('black'))
 
         self.label.setStyleSheet('padding: 5px;')
         ###                         'font-size: 20px;')
@@ -1531,13 +1542,14 @@ class TableWidget(QTableWidget):
         self.refreshed.emit()
 
 
-    @pyqtSlot(int, int, str, str, str, list)
-    def set_cell(self, row, column, text, color, background, icons):
+    @pyqtSlot(int, int, str, str, str, list, str)
+    def set_cell(self, row, column, text, color, background, icons, tooltip):
         """
             set data and widget for one cell
         """
         widget = CellWidget(text=text, color=color, background=background,
-                            row=row, column=column, icons=icons, parent=self)
+                            row=row, column=column, icons=icons, tooltip=tooltip,
+                            parent=self)
 
         # if cell got clicked evaluate that click
         widget.clicked.connect(self.cell_clicked)
@@ -1681,8 +1693,8 @@ class TableWidget(QTableWidget):
         self.action_menu.addAction(action_downtime)
 
         # connect menu to status window locking
-        self.action_menu.shown.connect(statuswindow.lock)
-        self.action_menu.closed.connect(statuswindow.unlock)
+        ###self.action_menu.shown.connect(statuswindow.lock)
+        ###self.action_menu.closed.connect(statuswindow.unlock)
 
         self.action_menu.show_at_cursor()
 
@@ -1869,7 +1881,7 @@ class TableWidget(QTableWidget):
         new_status = pyqtSignal()
 
         # send signal if next cell can be filled
-        next_cell = pyqtSignal(int, int, str, str, str, list)
+        next_cell = pyqtSignal(int, int, str, str, str, list, str)
 
         # send signal if all cells are filled and table can be adjusted
         table_ready = pyqtSignal()
@@ -1943,6 +1955,23 @@ class TableWidget(QTableWidget):
             first_sort = sorted(data, key=methodcaller('compare_host'))
             for row, nagitem in enumerate(sorted(first_sort, key=methodcaller('compare_%s' % \
                                                     (sort_column)), reverse=reverse)):
+
+                # on Qt 5.5.0 there is a bug in OSX version which renders tooltips useless
+                # see https://bugreports.qt.io/browse/QTBUG-26669
+                # thus disable tooltips on MacOSX
+                if not platform.system() == 'Darwin' and QT_VERSION_STR == '5.5.0':
+                    # only if tooltips are wanted take status_information for the whole row
+                    if conf.show_tooltips:
+                        tooltip = '<div style=color:black;' \
+                                  '           white-space:pre><b>{0}: {1}</b></div>' \
+                                  '<div style=color:black>{2}</div>'.format(nagitem.host,
+                                                        nagitem.service,
+                                                        nagitem.status_information)
+                    else:
+                        tooltip = ''
+                else:
+                    tooltip = ''
+
                 # lists in rows list are columns
                 # create every cell per row
                 for column, text in enumerate(nagitem.get_columns(HEADERS)):
@@ -1986,7 +2015,8 @@ class TableWidget(QTableWidget):
                     self.next_cell.emit(row, column, text,
                                         conf.__dict__[COLORS[nagitem.status] + 'text'],
                                         conf.__dict__[COLORS[nagitem.status] + 'background'],
-                                        icons)
+                                        icons, tooltip)
+
                 # sleep some milliceconds to let the GUI thread do some work too
                 self.thread().msleep(5)
 
