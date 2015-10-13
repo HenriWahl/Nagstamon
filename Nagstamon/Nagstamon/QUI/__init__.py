@@ -467,6 +467,13 @@ class StatusWindow(QWidget):
         ###self.toparea.hamburger_menu.shown.connect(self.lock)
         ###self.toparea.hamburger_menu.closed.connect(self.unlock)
 
+        # worker and thread duo needed for notifications
+        self.worker_notification_thread = QThread()
+        self.worker_notification = self.Worker_Notification()
+        self.worker_notification.moveToThread(self.worker_notification_thread)
+        # start with priority 0 = lowest
+        self.worker_notification_thread.start(0)
+
         # create vbox for each enabled server
         for server in servers.values():
             if server.enabled:
@@ -540,6 +547,8 @@ class StatusWindow(QWidget):
             server_vbox.table.ready_to_resize.connect(self.adjust_size)
             # tell statusbar to summarize after table was refreshed
             server_vbox.table.refreshed.connect(self.statusbar.summarize_states)
+            # tell notification worker to do something
+            server_vbox.table.refreshed.connect(self.worker_notification.notify)
             # and to update status window
             server_vbox.table.refreshed.connect(self.update_window)
 
@@ -936,6 +945,20 @@ class StatusWindow(QWidget):
                 # close file if any
                 if self.debug_file != None:
                     self.close_debug_file()
+
+
+    class Worker_Notification(QObject):
+        """
+           run a thread for doing all notification stuff
+        """
+
+        def __init__(self):
+            QObject.__init__(self)
+
+
+        @pyqtSlot()
+        def notify(self):
+            pass
 
 
 class NagstamonLogo(QSvgWidget, _Draggable_Widget):
@@ -1959,7 +1982,7 @@ class TableWidget(QTableWidget):
                 # on Qt 5.5.0 there is a bug in OSX version which renders tooltips useless
                 # see https://bugreports.qt.io/browse/QTBUG-26669
                 # thus disable tooltips on MacOSX
-                if not platform.system() == 'Darwin' and QT_VERSION_STR == '5.5.0':
+                if not (platform.system() == 'Darwin' and QT_VERSION_STR == '5.5.0'):
                     # only if tooltips are wanted take status_information for the whole row
                     if conf.show_tooltips:
                         tooltip = '<div style=color:black;' \
@@ -3648,6 +3671,9 @@ def exit():
     # wait until all threads are stopped
     for server_vbox in statuswindow.servers_vbox.children():
         server_vbox.table.worker_thread.wait(1)
+
+    # wait until statuswindow notification worker has finished
+    statuswindow.worker_notification_thread.wait(1)
 
     # wait until statuswindow worker has finished
     statuswindow.worker_thread.wait(1)
