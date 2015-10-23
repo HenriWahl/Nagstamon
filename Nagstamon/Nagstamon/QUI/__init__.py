@@ -41,7 +41,7 @@ from Nagstamon.Config import (conf, Server, Action, RESOURCES, AppInfo, BOOLPOOL
 
 from Nagstamon.Servers import (SERVER_TYPES, servers, create_server, get_enabled_servers)
 
-from Nagstamon.Helpers import (IsFoundByRE, debug_queue)
+from Nagstamon.Helpers import (IsFoundByRE, debug_queue, STATES)
 
 # dialogs
 from Nagstamon.QUI.settings_main import Ui_settings_main
@@ -370,6 +370,9 @@ class StatusWindow(QWidget):
     # sent by .resize_window()
     resizing = pyqtSignal()
 
+    # send when windows opens, e.g. for stopping notifications
+    showing = pyqtSignal()
+
     # send when window shrinks down to statusbar or closes
     hiding = pyqtSignal()
 
@@ -555,7 +558,8 @@ class StatusWindow(QWidget):
             server_vbox.table.worker.new_status.connect(self.statusbar.summarize_states)
 
             # tell notification worker to do something AFTER the table was updated
-            server_vbox.table.refreshed.connect(self.worker_notification.notify)
+            ####server_vbox.table.refreshed.connect(self.worker_notification.notify)
+            server_vbox.table.status_changed.connect(self.worker_notification.notify)
 
             # and to update status window
             server_vbox.table.refreshed.connect(self.update_window)
@@ -563,6 +567,10 @@ class StatusWindow(QWidget):
             # tell table it should remove freshness of formely new items when window closes
             # because apparently the new events have been seen now
             self.hiding.connect(server_vbox.table.worker.unfresh_event_history)
+
+            # stop notifcation if statuswindow pops up
+            self.showing.connect(self.worker_notification.stop)
+
 
             return server_vbox
         else:
@@ -661,6 +669,8 @@ class StatusWindow(QWidget):
             else:
                 self.set_shown()
 
+            # tell others like notification that statuswindow shows up now
+            self.showing.emit()
 
             # activate window to get focus
             # NOT a good idea because stealing focus!
@@ -972,14 +982,32 @@ class StatusWindow(QWidget):
            run a thread for doing all notification stuff
         """
 
+        is_notifying = False
+        worst_notification_status = 'UP'
+
         def __init__(self):
             QObject.__init__(self)
 
 
-        @pyqtSlot()
-        def notify(self):
+        @pyqtSlot(str, str)
+        def notify(self, server_name, worst_status):
+            """
+                start notification
+            """
+            if STATES.index(worst_status) > STATES.index(self.worst_notification_status) or\
+               self.is_notifying == False:
+                self.worst_notification_status = worst_status
+                self.is_notifying = True
 
-            pass
+
+        @pyqtSlot()
+        def stop(self):
+            """
+                stop notification if there is no need anymore
+            """
+            if self.is_notifying:
+                self.worst_notification_status = 'UP'
+                self.is_notifying = False
 
 
 class NagstamonLogo(QSvgWidget, _Draggable_Widget):
@@ -1461,7 +1489,7 @@ class TableWidget(QTableWidget):
     recheck = pyqtSignal(dict)
 
     # tell notification that status of server has changed
-    ###status_changed = pyqtSignal(str)
+    status_changed = pyqtSignal(str, str)
 
     # action to be executed by worker
     # 2 values: action and host/service info
@@ -1579,6 +1607,12 @@ class TableWidget(QTableWidget):
 
             # tell statusbar it should update
             self.refreshed.emit()
+
+            # check if status changed and notification is necessary
+            # send signal because there are unseen events
+            if self.server.get_events_history_count() > 0:
+                self.status_changed.emit(self.server.name, self.server.worst_status)
+
 
 
     @pyqtSlot(int, int, str, str, str, list, str)
@@ -3672,11 +3706,17 @@ def get_screen(x, y):
         find out which screen the given coordinates belong to
         gives back 'None' if coordinates are out of any known screen
     """
+    # integerify these values as they *might* be strings
+    x = int(x)
+    y = int(y)
+
     number_of_screens = desktop.screenCount()
     for screen in range(number_of_screens + 1):
         # if coordinates are inside screen just break and return screen
         if (desktop.screenGeometry(screen).contains(x, y)):
             break
+
+    del(x,y)
 
     # when 'screen' reached number_of_screens no screen was found, thus return None
     if screen == number_of_screens:

@@ -41,7 +41,8 @@ from Nagstamon.Helpers import (HostIsFilteredOutByRE,
                                StatusInformationIsFilteredOutByRE,
                                CriticalityIsFilteredOutByRE,
                                not_empty,
-                               debug_queue)
+                               debug_queue,
+                               STATES)
 from Nagstamon.Objects import (GenericService, GenericHost, Result)
 from Nagstamon.Config import (conf, AppInfo)
 
@@ -101,7 +102,8 @@ class GenericServer(object):
         self.isChecking = False
         self.CheckingForNewVersion = False
         self.worst_status = 'UP'
-        self.STATES = ['UP', 'UNKNOWN', 'WARNING', 'CRITICAL', 'UNREACHABLE', 'DOWN']
+        ###self.STATES = ['UP', 'UNKNOWN', 'WARNING', 'CRITICAL', 'UNREACHABLE', 'DOWN']
+        self.STATES = STATES
         self.nagitems_filtered_list = list()
         self.nagitems_filtered = {'services': {'CRITICAL': [], 'WARNING': [], 'UNKNOWN': []},
                                   'hosts': {'DOWN': [], 'UNREACHABLE': []}}
@@ -1349,3 +1351,9 @@ class GenericServer(object):
         # put debug info into debug queue
         debug_queue.append(' '.join(log_line))
 
+
+    def get_events_history_count(self):
+        """
+            return number of unseen events - those which are set True as unseen
+        """
+        return(len(list((e for e in self.events_history if self.events_history[e] == True))))

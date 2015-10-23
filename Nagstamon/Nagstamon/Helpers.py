@@ -37,6 +37,9 @@ from hashlib import md5
 # because QThread is already in use
 debug_queue = list()
 
+# states needed for gravity comparison for notification and Generic.py
+STATES = ['UP', 'UNKNOWN', 'WARNING', 'CRITICAL', 'UNREACHABLE', 'DOWN']
+
 
 def RefreshAllServers(servers=None, output=None, conf=None):
     """

@@ -741,7 +741,7 @@ class GUI(object):
                     server.WorstStatus = "UP"
                 if not worst_status == "UP" and str(self.conf.notification) == "True":
                     self.NotificationOn(status=worst_status, ducuw=(downs, unreachables, criticals, unknowns, warnings))
-                    # store latst worst status for decide if there has to be notification action
+                    # store latest worst status for decide if there has to be notification action
                     # when all is OK some lines later
                     self.last_worst_status = worst_status
 
