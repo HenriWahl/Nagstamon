@@ -31,7 +31,6 @@ import socket
 import copy
 import webbrowser
 import datetime
-###import time
 import traceback
 import platform
 import urllib.parse
@@ -99,7 +98,6 @@ class GenericServer(object):
         self.proxy_password = ''
         self.hosts = dict()
         self.new_hosts = dict()
-        ###self.thread = None
         self.isChecking = False
         self.CheckingForNewVersion = False
         self.worst_status = 'UP'
@@ -117,6 +115,16 @@ class GenericServer(object):
         self.all_ok = True
         self.status = ''
         self.status_description = ''
+
+        # The events_* are recycled from GUI.py
+        # history of events to track status changes for notifications
+        # events that came in
+        self.events_current = {}
+        # events that had been already displayed in popwin and need no extra mark
+        self.events_history = {}
+        # events to be given to custom notification, maybe to desktop notification too
+        self.events_notification = {}
+
         # needed for looping server thread
         self.thread_counter = 0
         # needed for RecheckAll - save start_time once for not having to get it for every recheck
@@ -734,7 +742,7 @@ class GenericServer(object):
             return Result(result=result, error=error)
 
         # some cleanup
-        del nagitems
+        del(nagitems)
 
         # dummy return in case all is OK
         return Result()
@@ -1086,6 +1094,33 @@ class GenericServer(object):
         # put new informations into respective dictionaries
         self.hosts = copy.deepcopy(self.new_hosts)
         self.new_hosts.clear()
+
+        # taken from GUI.RefreshDisplay() - get event history for notification
+        # first clear current events
+        self.events_current.clear()
+        # get all nagitems
+        for host in self.hosts.values():
+            if not host.status == 'UP':
+                # only if host is not filtered out add it to current events
+                # the boolean is meaningless for current events
+                if host.visible:
+                    self.events_current[host.get_hash()] = True
+            for service in host.services.values():
+                # same for services of host
+                if service.visible:
+                    self.events_current[service.get_hash()] = True
+
+        # check if some cached event still is relevant - kick it out if not
+        for event in list(self.events_history.keys()):
+            if not event in self.events_current.keys():
+                self.events_history.pop(event)
+                self.events_notification.pop(event)
+
+        # if some current event is not yet in event cache add it and mark it as fresh (=True)
+        for event in list(self.events_current.keys()):
+            if not event in self.events_history.keys() and conf.highlight_new_events:
+                self.events_history[event] = True
+                self.events_notification[event] = True
 
         # after all checks are done unset checking flag
         self.isChecking = False

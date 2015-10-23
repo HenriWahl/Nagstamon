@@ -10,8 +10,10 @@ elif platform.system() == 'Darwin':
     # works of course only with Fink-based Qt5-installation
     QTPLUGINS = '/sw/lib/qt5-mac/plugins'
 
-NAME = 'Nagstamon'
-VERSION = '2.0-alpha-20151013'
+from Nagstamon.Config import AppInfo
+
+NAME = AppInfo.NAME
+VERSION = AppInfo.VERSION
 
 # condition is necessary because if qt.conf exists in folder Nagstamon will have the plain basic Qt5 look
 # which does rather not fit well into desktop environment

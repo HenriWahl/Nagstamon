@@ -371,7 +371,7 @@ class StatusWindow(QWidget):
     resizing = pyqtSignal()
 
     # send when window shrinks down to statusbar or closes
-    ###closed = pyqtSignal()
+    hiding = pyqtSignal()
 
 
     def __init__(self):
@@ -383,6 +383,9 @@ class StatusWindow(QWidget):
         self.hide()
 
         self.setWindowFlags(Qt.WindowStaysOnTopHint | Qt.FramelessWindowHint)
+        # show tooltips even if popup window has no focus
+        self.setAttribute(Qt.WA_AlwaysShowToolTips)
+
         self.setWindowTitle(AppInfo.NAME)
         self.setWindowIcon(QIcon('%s%snagstamon.svg' % (RESOURCES, os.sep)))
 
@@ -543,14 +546,23 @@ class StatusWindow(QWidget):
         if server.enabled:
             # without parent there is some flickering when starting
             server_vbox = ServerVBox(server, parent=self)
+
             # connect to global resize signal
             server_vbox.table.ready_to_resize.connect(self.adjust_size)
+
             # tell statusbar to summarize after table was refreshed
-            server_vbox.table.refreshed.connect(self.statusbar.summarize_states)
-            # tell notification worker to do something
+            ###server_vbox.table.refreshed.connect(self.statusbar.summarize_states)
+            server_vbox.table.worker.new_status.connect(self.statusbar.summarize_states)
+
+            # tell notification worker to do something AFTER the table was updated
             server_vbox.table.refreshed.connect(self.worker_notification.notify)
+
             # and to update status window
             server_vbox.table.refreshed.connect(self.update_window)
+
+            # tell table it should remove freshness of formely new items when window closes
+            # because apparently the new events have been seen now
+            self.hiding.connect(server_vbox.table.worker.unfresh_event_history)
 
             return server_vbox
         else:
@@ -650,6 +662,11 @@ class StatusWindow(QWidget):
                 self.set_shown()
 
 
+            # activate window to get focus
+            # NOT a good idea because stealing focus!
+            ###self.activateWindow()
+
+
     @pyqtSlot()
     def update_window(self):
         """
@@ -680,6 +697,9 @@ class StatusWindow(QWidget):
 
             # flag to reflect top-ness of window/statusbar
             self.top = False
+
+            # tell the world that window goes down
+            self.hiding.emit()
 
 
     @pyqtSlot()
@@ -958,6 +978,7 @@ class StatusWindow(QWidget):
 
         @pyqtSlot()
         def notify(self):
+
             pass
 
 
@@ -1439,6 +1460,9 @@ class TableWidget(QTableWidget):
     # tell worker to get status after a recheck has been solicited
     recheck = pyqtSignal(dict)
 
+    # tell notification that status of server has changed
+    ###status_changed = pyqtSignal(str)
+
     # action to be executed by worker
     # 2 values: action and host/service info
     request_action = pyqtSignal(dict, dict)
@@ -1496,7 +1520,7 @@ class TableWidget(QTableWidget):
         self.worker = self.Worker(server=server)
         self.worker.moveToThread(self.worker_thread)
 
-        # if worker got new status data from monitor server get_status the table
+        # if worker got new status data from monitor server get_status the table should be refreshed
         self.worker.new_status.connect(self.refresh)
         # if worker calculated next cell send it to GUI thread
         self.worker.next_cell.connect(self.set_cell)
@@ -1538,31 +1562,23 @@ class TableWidget(QTableWidget):
         """
             refresh status display
         """
-        """
+        # do nothing if window is moving to avoid lagging movement
         if not statuswindow.moving:
             # get_status table cells with new data by thread
             data = list(self.server.GetItemsGenerator())
             if len(data) > 0:
                 self.set_data(data)
+                # display table if there is something to display
+                self.is_shown = True
+            else:
+                self.is_shown = False
+
+            # pre-calculate dimensions
+            self.real_height = self.get_real_height()
+            self.real_width = self.get_real_width()
+
             # tell statusbar it should update
             self.refreshed.emit()
-        """
-
-        # get_status table cells with new data by thread
-        data = list(self.server.GetItemsGenerator())
-        if len(data) > 0:
-            self.set_data(data)
-            # display table if there is something to display
-            self.is_shown = True
-        else:
-            self.is_shown = False
-
-        # pre-calculate dimensions
-        self.real_height = self.get_real_height()
-        self.real_width = self.get_real_width()
-
-        # tell statusbar it should update
-        self.refreshed.emit()
 
 
     @pyqtSlot(int, int, str, str, str, list, str)
@@ -1982,7 +1998,8 @@ class TableWidget(QTableWidget):
                 # on Qt 5.5.0 there is a bug in OSX version which renders tooltips useless
                 # see https://bugreports.qt.io/browse/QTBUG-26669
                 # thus disable tooltips on MacOSX
-                if not (platform.system() == 'Darwin' and QT_VERSION_STR == '5.5.0'):
+                # seems strange to use string '5.4.1' here but this is the PyQt version on Fink based OSX environment
+                if not (platform.system() == 'Darwin' and QT_VERSION_STR == '5.4.1'):
                     # only if tooltips are wanted take status_information for the whole row
                     if conf.show_tooltips:
                         tooltip = '<div style=color:black;' \
@@ -2000,7 +2017,10 @@ class TableWidget(QTableWidget):
                 for column, text in enumerate(nagitem.get_columns(HEADERS)):
                     # check for icons to be used in cell widget
                     if column in (0, 1):
+                        # icons to be added
                         icons = list()
+                        # hash for freshness comparison
+                        hash = nagitem.get_hash()
                         # add host icons
                         if nagitem.is_host() and column == 0:
                             if nagitem.is_acknowledged():
@@ -2011,6 +2031,9 @@ class TableWidget(QTableWidget):
                                 icons.append(ICONS['passive'])
                             if nagitem.is_in_scheduled_downtime():
                                 icons.append(ICONS['downtime'])
+                            if hash in self.server.events_history and\
+                                       self.server.events_history[hash] == True:
+                                        icons.append(ICONS['new'])
                         # add host icons for service item - e.g. in case host is in downtime
                         elif not nagitem.is_host() and column == 0:
                             if self.server.hosts[nagitem.host].is_acknowledged():
@@ -2021,6 +2044,9 @@ class TableWidget(QTableWidget):
                                 icons.append(ICONS['passive'])
                             if self.server.hosts[nagitem.host].is_in_scheduled_downtime():
                                 icons.append(ICONS['downtime'])
+                            ###if hash in self.server.events_history and\
+                            ###           self.server.events_history[hash] == True:
+                            ###            icons.append(ICONS['new'])
                         # add service icons
                         elif not nagitem.is_host() and column == 1:
                             if nagitem.is_acknowledged():
@@ -2031,6 +2057,9 @@ class TableWidget(QTableWidget):
                                 icons.append(ICONS['passive'])
                             if nagitem.is_in_scheduled_downtime():
                                 icons.append(ICONS['downtime'])
+                            if hash in self.server.events_history and\
+                                       self.server.events_history[hash] == True:
+                                        icons.append(ICONS['new'])
                     else:
                         icons = [False]
 
@@ -2215,6 +2244,14 @@ class TableWidget(QTableWidget):
                 exclude several chars
             """
             return urllib.parse.quote(string, ":/=?&@+")
+
+
+        @pyqtSlot()
+        def unfresh_event_history(self):
+            # set all flagged-as-fresh-events to un-fresh
+            for event in self.server.events_history.keys():
+                self.server.events_history[event] = False
+
 
 class Dialogs(object):
     """
