@@ -476,6 +476,9 @@ class StatusWindow(QWidget):
         # worker and thread duo needed for notifications
         self.worker_notification_thread = QThread()
         self.worker_notification = self.Worker_Notification()
+        # flashing statusbar
+        self.worker_notification.start_flash.connect(self.statusbar.flash)
+        self.worker_notification.stop_flash.connect(self.statusbar.reset)
         self.worker_notification.moveToThread(self.worker_notification_thread)
         # start with priority 0 = lowest
         self.worker_notification_thread.start(0)
@@ -559,7 +562,7 @@ class StatusWindow(QWidget):
 
             # tell notification worker to do something AFTER the table was updated
             ####server_vbox.table.refreshed.connect(self.worker_notification.notify)
-            server_vbox.table.status_changed.connect(self.worker_notification.notify)
+            server_vbox.table.status_changed.connect(self.worker_notification.start)
 
             # and to update status window
             server_vbox.table.refreshed.connect(self.update_window)
@@ -982,6 +985,10 @@ class StatusWindow(QWidget):
            run a thread for doing all notification stuff
         """
 
+        # tell statusbar labels to flash
+        start_flash = pyqtSignal()
+        stop_flash = pyqtSignal()
+
         is_notifying = False
         worst_notification_status = 'UP'
 
@@ -990,7 +997,7 @@ class StatusWindow(QWidget):
 
 
         @pyqtSlot(str, str)
-        def notify(self, server_name, worst_status):
+        def start(self, server_name, worst_status):
             """
                 start notification
             """
@@ -998,6 +1005,16 @@ class StatusWindow(QWidget):
                self.is_notifying == False:
                 self.worst_notification_status = worst_status
                 self.is_notifying = True
+
+                # flashing statusbar
+                if conf.notification_flashing:
+                    self.start_flash.emit()
+
+                """
+                # tell mediaplayer to play file only if it exists
+                if notification.set_media(file) == True:
+                    notification.play.emit()
+                """
 
 
         @pyqtSlot()
@@ -1008,6 +1025,9 @@ class StatusWindow(QWidget):
             if self.is_notifying:
                 self.worst_notification_status = 'UP'
                 self.is_notifying = False
+
+                # no more flashing statusbar
+                self.stop_flash.emit()
 
 
 class NagstamonLogo(QSvgWidget, _Draggable_Widget):
@@ -1045,6 +1065,10 @@ class StatusBar(QWidget):
     # send signal to statuswindow
     resize = pyqtSignal()
 
+    # needed to maintain flashing labels
+    labels_invert = pyqtSignal()
+    labels_reset = pyqtSignal()
+
     def __init__(self, parent=None):
         QWidget.__init__(self, parent=parent)
 
@@ -1058,6 +1082,8 @@ class StatusBar(QWidget):
         self.color_labels['OK'] = StatusBarLabel('OK', parent=parent)
         for state in COLORS:
             self.color_labels[state] =  StatusBarLabel(state, parent=parent)
+            self.labels_invert.connect(self.color_labels[state].invert)
+            self.labels_reset.connect(self.color_labels[state].reset)
 
         # derive logo dimensions from status label
         self.logo = NagstamonLogo("%s%snagstamon_logo_bar.svg" % (RESOURCES, os.sep),
@@ -1072,6 +1098,9 @@ class StatusBar(QWidget):
 
         for state in COLORS:
             self.hbox.addWidget(self.color_labels[state])
+
+        # timer for singleshots for flashing
+        self.timer = QTimer()
 
         # first summary
         self.summarize_states()
@@ -1121,6 +1150,30 @@ class StatusBar(QWidget):
         self.resize.emit()
 
 
+    @pyqtSlot()
+    def flash(self):
+        """
+            send color inversion signal to labels
+        """
+
+        # only if currently a notification is necessary
+        if statuswindow.worker_notification.is_notifying:
+            self.labels_invert.emit()
+
+            # fire up  a singleshot to reset color soon
+            self.timer.singleShot(500, self.reset)
+            # even later call itself to invert colors as flash
+            self.timer.singleShot(1000, self.flash)
+
+
+    @pyqtSlot()
+    def reset(self):
+        """
+            tel labels to set original colors
+        """
+        self.labels_reset.emit()
+
+
 class StatusBarLabel(Draggable_Label):
     """
         one piece of the status bar labels for one state
@@ -1157,6 +1210,24 @@ class StatusBarLabel(Draggable_Label):
 
         # store state of label to access long state names in .summarize_states()
         self.state = state
+
+
+    @pyqtSlot()
+    def invert(self):
+        self.setStyleSheet('padding-left: 1px;'
+                           'padding-right: 1px;'
+                           ###'font-size: 20px;'
+                           'color: %s; background-color: %s;' % (conf.__dict__['color_%s_background' % (self.state.lower())],
+                                                                 conf.__dict__['color_%s_text' % (self.state.lower())]))
+
+
+    @pyqtSlot()
+    def reset(self):
+        self.setStyleSheet('padding-left: 1px;'
+                           'padding-right: 1px;'
+                           ###'font-size: 20px;'
+                           'color: %s; background-color: %s;' % (conf.__dict__['color_%s_text' % (self.state.lower())],
+                                                                 conf.__dict__['color_%s_background' % (self.state.lower())]))
 
 
 class TopArea(QWidget):
@@ -3571,7 +3642,7 @@ class Dialog_Submit(Dialog):
 
 class Notification(QObject):
     """
-        bundle various notifications like sounds and flashing statusbar
+        bundle various notifications like sounds and notification actions
     """
 
     # needed to let QMediaPlayer play
