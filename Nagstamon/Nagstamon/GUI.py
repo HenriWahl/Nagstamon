@@ -1247,7 +1247,7 @@ class GUI(object):
                         self.Notifying = True
                         # debug
                         if str(self.conf.debug_mode) == "True":
-                            self.servers.values()[0].Debug(debug="Notification on.")
+                            self.servers.values()[0].Debug(debug="MediaPlayer on.")
                         # threaded statusbar flash
                         if str(self.conf.notification_flashing) == "True":
                             if  str(self.conf.icon_in_systray) == "True":
@@ -1275,7 +1275,7 @@ class GUI(object):
                                 self.notify_bubble.add_action("action", "Open popup window", self.popwin.PopUp)
                             self.notify_bubble.show()
 
-                        # Notification actions
+                        # MediaPlayer actions
                         if str(self.conf.notification_actions) == "True":
                             if str(self.conf.notification_action_warning) == "True" and status == "WARNING":
                                 Actions.RunNotificationAction(str(self.conf.notification_action_warning_string))
@@ -1328,7 +1328,7 @@ class GUI(object):
             self.Notifying = False
             # debug
             if str(self.conf.debug_mode) == "True":
-                self.servers.values()[0].Debug(debug="Notification off.")
+                self.servers.values()[0].Debug(debug="MediaPlayer off.")
             if  str(self.conf.icon_in_systray) == "True":
                 self.statusbar.SysTray.set_blinking(False)
             elif  str(self.conf.statusbar_floating) == "True":
@@ -1770,7 +1770,7 @@ class StatusBar(object):
                 self.Moving = False
                 self.MenuPopup(widget=self.Menu, event=event)
 
-        # switch off Notification
+        # switch off MediaPlayer
         self.output.NotificationOff()
 
 
@@ -2263,7 +2263,7 @@ class Popwin(object):
 
                 # set combobox to default value
                 self.ComboboxMonitor.set_active(0)
-                # switch off Notification
+                # switch off MediaPlayer
                 self.output.NotificationOff()
                 # register as open window
                 # use gobject.idle_add() to be thread safe
@@ -3373,7 +3373,7 @@ class Settings(object):
         """
         # set first page of notebook tabs - meanwhile for some historic reason
         self.notebook.set_current_page(["Servers", "Display", "Filters", "Actions",\
-                                        "Notification", "Colors", "Defaults"].index(self.first_page))
+                                        "MediaPlayer", "Colors", "Defaults"].index(self.first_page))
 
         # store fullscreen state to avoid innecessary popwin flickering
         self.saved_fullscreen_state = str(self.conf.fullscreen)

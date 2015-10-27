@@ -963,7 +963,7 @@ class Ui_settings_main(object):
         self.input_radiobutton_notification_default_sound.setText(_translate("settings_main", "Use default Nagios sounds"))
         self.input_radiobutton_notification_custom_sound.setText(_translate("settings_main", "Use custom sounds"))
         self.input_checkbutton_notification_actions.setText(_translate("settings_main", "Enable notification actions"))
-        self.notification_actions_groupbox.setTitle(_translate("settings_main", "Notification actions:"))
+        self.notification_actions_groupbox.setTitle(_translate("settings_main", "MediaPlayer actions:"))
         self.input_checkbox_notification_action_critical.setText(_translate("settings_main", "CRITICAL"))
         self.input_checkbox_notification_action_down.setText(_translate("settings_main", "DOWN"))
         self.input_checkbox_notification_action_ok.setText(_translate("settings_main", "OK"))

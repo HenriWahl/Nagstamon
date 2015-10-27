@@ -479,6 +479,9 @@ class StatusWindow(QWidget):
         # flashing statusbar
         self.worker_notification.start_flash.connect(self.statusbar.flash)
         self.worker_notification.stop_flash.connect(self.statusbar.reset)
+        # stop notification if window gets hidden
+        self.hiding.connect(self.worker_notification.stop)
+
         self.worker_notification.moveToThread(self.worker_notification_thread)
         # start with priority 0 = lowest
         self.worker_notification_thread.start(0)
@@ -853,8 +856,9 @@ class StatusWindow(QWidget):
             # only hide window if cursor is outside of it
             mouse_x = QCursor.pos().x()
             mouse_y = QCursor.pos().y()
-            if mouse_x < self.x() or mouse_x > self.x() + self.width() or\
-               mouse_y < self.y() or mouse_y > self.y() + self.height():
+            # <= and >= necessary because sometimes mouse_* is the same as self.*()
+            if mouse_x <= self.x() or mouse_x >= self.x() + self.width() or\
+               mouse_y <= self.y() or mouse_y >= self.y() + self.height():
                 self.hide_window()
 
             del(mouse_x, mouse_y)
@@ -990,6 +994,7 @@ class StatusWindow(QWidget):
         stop_flash = pyqtSignal()
 
         is_notifying = False
+        # current worst state worth a notification
         worst_notification_status = 'UP'
 
         def __init__(self):
@@ -1010,11 +1015,19 @@ class StatusWindow(QWidget):
                 if conf.notification_flashing:
                     self.start_flash.emit()
 
-                """
-                # tell mediaplayer to play file only if it exists
-                if notification.set_media(file) == True:
-                    notification.play.emit()
-                """
+
+                print(RESOURCES)
+
+                if conf.notification_sound:
+                    if conf.notification_default_sound:
+                        # at the moment there are only sounds for down, critical and warning
+                        if worst_status in ['DOWN', 'CRITICAL', 'WARNING']:
+                            # when default .wav sound file could be loaded play it
+                            if mediaplayer.set_media('{0}{1}{2}.wav'.format(RESOURCES,
+                                                                            os.sep,
+                                                                            worst_status.lower())) == True:
+                                # after loading file fire up signal to actually play it
+                                mediaplayer.play.emit()
 
 
         @pyqtSlot()
@@ -2921,8 +2934,8 @@ class Dialog_Settings(Dialog):
             file = widget.text()
 
             # tell mediaplayer to play file only if it exists
-            if notification.set_media(file) == True:
-                notification.play.emit()
+            if mediaplayer.set_media(file) == True:
+                mediaplayer.play.emit()
 
         return(decoration_function)
 
@@ -3640,9 +3653,9 @@ class Dialog_Submit(Dialog):
 
 
 
-class Notification(QObject):
+class MediaPlayer(QObject):
     """
-        bundle various notifications like sounds and notification actions
+        play media files for notification
     """
 
     # needed to let QMediaPlayer play
@@ -3845,6 +3858,6 @@ systrayicon = SystemTrayIcon(QIcon('%s%snagstamon.svg' % (RESOURCES, os.sep)))
 # combined statusbar/status window
 statuswindow = StatusWindow()
 
-# bundled notifications
-notification = Notification()
+# versatile mediaplayer
+mediaplayer = MediaPlayer()
 
