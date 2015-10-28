@@ -151,20 +151,15 @@ class MenuAtCursor(QMenu):
 
     @pyqtSlot()
     def show_at_cursor(self):
-        if statuswindow.locked == False:
-            # send shown signal to tell status window to stay open if menu is displayes
-            ###self.shown.emit()
-            # get cursor coordinates and decrease them to show menu under mouse pointer
-            x = QCursor.pos().x() - 10
-            y = QCursor.pos().y() - 10
-            self.exec(QPoint(x, y))
-            del(x, y)
+        """
+            pop up at mouse pointer position, lock itself to avoid permamently popping menus on Windows
+        """
+        # get cursor coordinates and decrease them to show menu under mouse pointer
+        x = QCursor.pos().x() - 10
+        y = QCursor.pos().y() - 10
+        self.exec(QPoint(x, y))
+        del(x, y)
 
-    """
-    def closeEvent(self, event):
-        # tell status window that there is no menu anymore
-        self.closed.emit()
-    """
 
 class PushButton_Hamburger(QPushButton):
     """
@@ -1011,7 +1006,10 @@ class StatusWindow(QWidget):
             if (STATES.index(worst_status) > STATES.index(self.worst_notification_status) or\
                self.is_notifying == False) and\
                conf.__dict__['notify_if_{0}'.format(worst_status.lower())] == True:
+                # keep last worst state worth a notification for comparison 3 lines above
                 self.worst_notification_status = worst_status
+
+                # set flag to avoid innecessary notification
                 self.is_notifying = True
 
                 # flashing statusbar
@@ -1234,23 +1232,24 @@ class StatusBar(QWidget):
         """
             send color inversion signal to labels
         """
-
         # only if currently a notification is necessary
         if statuswindow.worker_notification.is_notifying:
             self.labels_invert.emit()
 
             # fire up  a singleshot to reset color soon
             self.timer.singleShot(500, self.reset)
-            # even later call itself to invert colors as flash
-            self.timer.singleShot(1000, self.flash)
 
 
     @pyqtSlot()
     def reset(self):
         """
-            tel labels to set original colors
+            tell labels to set original colors
         """
         self.labels_reset.emit()
+        # only if currently a notification is necessary
+        if statuswindow.worker_notification.is_notifying:
+            # even later call itself to invert colors as flash
+            self.timer.singleShot(500, self.flash)
 
 
 class StatusBarLabel(Draggable_Label):
@@ -1422,7 +1421,7 @@ class ServerVBox(QVBoxLayout):
         self.header.setContentsMargins(0, 0, SPACE, 0)
 
         self.label = QLabel("<big><b>%s@%s</b></big>" % (server.username, server.name), parent=parent)
-        # let label padding keep top and bottom space - apparently no necessary on OSX
+        # let label padding keep top and bottom space - apparently not necessary on OSX
         if platform.system() != 'Darwin':
             self.label.setStyleSheet('padding-top: {0}px; padding-bottom: {0}px;'.format(SPACE))
 
@@ -1580,7 +1579,6 @@ class CellWidget(QWidget):
         self.hbox.setSpacing(0)
 
         self.setToolTip(tooltip)
-        ###self.toolTip.setStyleSheet('color: {0}'.format('black'))
 
         self.label.setStyleSheet('padding: 5px;')
         ###                         'font-size: 20px;')
@@ -1686,7 +1684,7 @@ class TableWidget(QTableWidget):
         # action context menu
         self.action_menu = MenuAtCursor(parent=self)
         # flag to avoid popping up menus when clicking somehwere
-        ###self.action_menu.available = True
+        self.action_menu.available = True
         # signalmapper for getting triggered actions
         self.signalmapper_action_menu = QSignalMapper()
         # connect menu to responder
@@ -1812,119 +1810,124 @@ class TableWidget(QTableWidget):
 
     @pyqtSlot()
     def cell_clicked(self):
+        """
+            Windows reacts different to clicks into table cells than Linux and MacOSX
+            Therefore the .available flag is necessary
+        """
+        if self.action_menu.available or platform.system() != 'Windows':
 
-        # block context menu to avoid jumping menu chen clicking elsewhere to close it
-        ###self.action_menu.available = False
+            # set flag for Windows
+            self.action_menu.available = False
 
-        # simply use currently highlighted row as an index
-        self.miserable_host = self.cellWidget(self.highlighted_row, HEADERS_LIST.index('host')).text
-        self.miserable_service = self.cellWidget(self.highlighted_row, HEADERS_LIST.index('service')).text
-        self.miserable_status_info = self.cellWidget(self.highlighted_row, HEADERS_LIST.index('status_information')).text
+            # simply use currently highlighted row as an index
+            self.miserable_host = self.cellWidget(self.highlighted_row, HEADERS_LIST.index('host')).text
+            self.miserable_service = self.cellWidget(self.highlighted_row, HEADERS_LIST.index('service')).text
+            self.miserable_status_info = self.cellWidget(self.highlighted_row, HEADERS_LIST.index('status_information')).text
 
-        # empty the menu
-        self.action_menu.clear()
+            # empty the menu
+            self.action_menu.clear()
 
-        # clear signal mappings
-        self.signalmapper_action_menu.removeMappings(self.signalmapper_action_menu)
+            # clear signal mappings
+            self.signalmapper_action_menu.removeMappings(self.signalmapper_action_menu)
 
-        # add custom actions
-        actions_list = list(conf.actions)
-        actions_list.sort(key=str.lower)
-        for a in actions_list:
-            # shortcut for next lines
-            action = conf.actions[a]
-            if action.enabled == True and action.monitor_type in ['', self.server.TYPE]:
-                # menu item visibility flag
-                item_visible = False
-                # check if clicked line is a service or host
-                # if it is check if the action is targeted on hosts or services
-                if self.miserable_service:
-                    if action.filter_target_service == True:
-                        # only check if there is some to check
-                        if action.re_host_enabled == True:
-                            if IsFoundByRE(self.miserable_host,
-                                                   action.re_host_pattern,
-                                                   action.re_host_reverse):
+            # add custom actions
+            actions_list = list(conf.actions)
+            actions_list.sort(key=str.lower)
+            for a in actions_list:
+                # shortcut for next lines
+                action = conf.actions[a]
+                if action.enabled == True and action.monitor_type in ['', self.server.TYPE]:
+                    # menu item visibility flag
+                    item_visible = False
+                    # check if clicked line is a service or host
+                    # if it is check if the action is targeted on hosts or services
+                    if self.miserable_service:
+                        if action.filter_target_service == True:
+                            # only check if there is some to check
+                            if action.re_host_enabled == True:
+                                if IsFoundByRE(self.miserable_host,
+                                                       action.re_host_pattern,
+                                                       action.re_host_reverse):
+                                    item_visible = True
+                            # dito
+                            if action.re_service_enabled == True:
+                                if IsFoundByRE(self.miserable_service,
+                                                       action.re_service_pattern,
+                                                       action.re_service_reverse):
+                                    item_visible = True
+                            # dito
+                            if action.re_status_information_enabled == True:
+                                if IsFoundByRE(self.miserable_service,
+                                                       action.re_status_information_pattern,
+                                                       action.re_status_information_reverse):
+                                    item_visible = True
+
+                            # fallback if no regexp is selected
+                            if action.re_host_enabled == action.re_service_enabled == \
+                               action.re_status_information_enabled == False:
                                 item_visible = True
-                        # dito
-                        if action.re_service_enabled == True:
-                            if IsFoundByRE(self.miserable_service,
-                                                   action.re_service_pattern,
-                                                   action.re_service_reverse):
-                                item_visible = True
-                        # dito
-                        if action.re_status_information_enabled == True:
-                            if IsFoundByRE(self.miserable_service,
-                                                   action.re_status_information_pattern,
-                                                   action.re_status_information_reverse):
-                                item_visible = True
 
-                        # fallback if no regexp is selected
-                        if action.re_host_enabled == action.re_service_enabled == \
-                           action.re_status_information_enabled == False:
-                            item_visible = True
-
+                    else:
+                        # hosts should only care about host specific actions, no services
+                        if action.filter_target_host == True:
+                            if action.re_host_enabled == True:
+                                if IsFoundByRE(self.miserable_host,\
+                                                       action.re_host_pattern,\
+                                                       action.re_host_reverse):
+                                    item_visible = True
+                            else:
+                                # a non specific action will be displayed per default
+                                item_visible = True
                 else:
-                    # hosts should only care about host specific actions, no services
-                    if action.filter_target_host == True:
-                        if action.re_host_enabled == True:
-                            if IsFoundByRE(self.miserable_host,\
-                                                   action.re_host_pattern,\
-                                                   action.re_host_reverse):
-                                item_visible = True
-                        else:
-                            # a non specific action will be displayed per default
-                            item_visible = True
-            else:
-                item_visible = False
+                    item_visible = False
 
-            # populate context menu with service actions
-            if item_visible == True:
-                # create action
-                action_menuentry = QAction(a, self)
-                #add action
-                self.action_menu.addAction(action_menuentry)
-                # action to signalmapper
-                self.signalmapper_action_menu.setMapping(action_menuentry, a)
-                action_menuentry.triggered.connect(self.signalmapper_action_menu.map)
+                # populate context menu with service actions
+                if item_visible == True:
+                    # create action
+                    action_menuentry = QAction(a, self)
+                    #add action
+                    self.action_menu.addAction(action_menuentry)
+                    # action to signalmapper
+                    self.signalmapper_action_menu.setMapping(action_menuentry, a)
+                    action_menuentry.triggered.connect(self.signalmapper_action_menu.map)
 
-            del action, item_visible
+                del action, item_visible
 
-        # create adn add default actions
-        action_edit_actions = QAction('Edit actions...', self)
-        action_edit_actions.triggered.connect(self.action_edit_actions)
+            # create adn add default actions
+            action_edit_actions = QAction('Edit actions...', self)
+            action_edit_actions.triggered.connect(self.action_edit_actions)
 
-        action_monitor = QAction('Monitor', self)
-        action_monitor.triggered.connect(self.action_monitor)
+            action_monitor = QAction('Monitor', self)
+            action_monitor.triggered.connect(self.action_monitor)
 
-        action_recheck = QAction('Recheck', self)
-        action_recheck.triggered.connect(self.action_recheck)
+            action_recheck = QAction('Recheck', self)
+            action_recheck.triggered.connect(self.action_recheck)
 
-        action_acknowledge = QAction('Acknowledge', self)
-        action_acknowledge.triggered.connect(self.action_acknowledge)
+            action_acknowledge = QAction('Acknowledge', self)
+            action_acknowledge.triggered.connect(self.action_acknowledge)
 
-        action_downtime = QAction('Downtime', self)
-        action_downtime.triggered.connect(self.action_downtime)
+            action_downtime = QAction('Downtime', self)
+            action_downtime.triggered.connect(self.action_downtime)
 
-        # put actions into menu after separator
-        self.action_menu.addAction(action_edit_actions)
-        self.action_menu.addSeparator()
-        self.action_menu.addAction(action_monitor)
-        self.action_menu.addAction(action_recheck)
-        self.action_menu.addAction(action_acknowledge)
-        self.action_menu.addAction(action_downtime)
+            # put actions into menu after separator
+            self.action_menu.addAction(action_edit_actions)
+            self.action_menu.addSeparator()
+            self.action_menu.addAction(action_monitor)
+            self.action_menu.addAction(action_recheck)
+            self.action_menu.addAction(action_acknowledge)
+            self.action_menu.addAction(action_downtime)
 
-        # connect menu to status window locking
-        ###self.action_menu.shown.connect(statuswindow.lock)
-        ###self.action_menu.closed.connect(statuswindow.unlock)
+            # show menu
+            self.action_menu.show_at_cursor()
+        else:
+            self.action_menu.available = True
 
-        self.action_menu.show_at_cursor()
 
 
     @pyqtSlot(str)
     def action_menu_custom_response(self, action):
         # avoid blocked context menu
-        ###self.action_menu.available = True
+        self.action_menu.available = True
         # send dict with action info and dict with host/service info
         self.request_action.emit(conf.actions[action].__dict__, {'server': self.server.get_name(),
                                                                  'host': self.miserable_host,
@@ -1941,7 +1944,7 @@ class TableWidget(QTableWidget):
                                                                  })
 
         # if action wants a closed status window it should be closed now
-        if conf.actions[action].close_popwin == True:
+        if conf.actions[action].close_popwin:
             statuswindow.hide_window()
 
 
@@ -1952,7 +1955,7 @@ class TableWidget(QTableWidget):
         """
         def decoration_function(self):
             # avoid blocked context menu
-            ###self.action_menu.available = True
+            self.action_menu.available = True
             # run decorated method
             method(self)
             # default actions need closed statuswindow to display own dialogs
