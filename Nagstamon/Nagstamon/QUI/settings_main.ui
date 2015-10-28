@@ -42,7 +42,7 @@
       </sizepolicy>
      </property>
      <property name="currentIndex">
-      <number>2</number>
+      <number>4</number>
      </property>
      <widget class="QWidget" name="tab_servers">
       <attribute name="title">
@@ -974,7 +974,7 @@
            </widget>
           </item>
           <item>
-           <widget class="QCheckBox" name="input_checkbutton_notification_actions">
+           <widget class="QCheckBox" name="input_checkbox_notification_actions">
             <property name="text">
              <string>Enable notification actions</string>
             </property>
@@ -1033,29 +1033,29 @@
                 <string>Custom notification action:</string>
                </property>
                <layout class="QGridLayout" name="gridLayout_7">
-                <item row="0" column="0">
+                <item row="1" column="0">
                  <widget class="QLabel" name="label_notification_custom_action_string">
                   <property name="text">
                    <string>Action string:</string>
                   </property>
                  </widget>
                 </item>
-                <item row="2" column="0" colspan="2">
+                <item row="3" column="0" colspan="2">
                  <widget class="QCheckBox" name="input_checkbox_notification_custom_action_single">
                   <property name="text">
                    <string>Run one single action for every event</string>
                   </property>
                  </widget>
                 </item>
-                <item row="0" column="1">
-                 <widget class="QLineEdit" name="input_lineedit_notification_custom_action_separator"/>
-                </item>
-                <item row="1" column="0">
+                <item row="2" column="0">
                  <widget class="QLabel" name="label_notification_custom_action_separator">
                   <property name="text">
                    <string>Event separator:</string>
                   </property>
                  </widget>
+                </item>
+                <item row="2" column="1">
+                 <widget class="QLineEdit" name="input_lineedit_notification_custom_action_separator"/>
                 </item>
                 <item row="1" column="1">
                  <widget class="QLineEdit" name="input_lineedit_notification_custom_action_string"/>
@@ -1613,7 +1613,7 @@
   <tabstop>input_lineedit_notification_custom_sound_down</tabstop>
   <tabstop>button_choose_down</tabstop>
   <tabstop>button_play_down</tabstop>
-  <tabstop>input_checkbutton_notification_actions</tabstop>
+  <tabstop>input_checkbox_notification_actions</tabstop>
   <tabstop>input_checkbox_notification_action_warning</tabstop>
   <tabstop>input_lineedit_notification_action_warning_string</tabstop>
   <tabstop>input_checkbox_notification_action_critical</tabstop>
@@ -1623,8 +1623,6 @@
   <tabstop>input_checkbox_notification_action_ok</tabstop>
   <tabstop>input_lineedit_notification_action_ok_string</tabstop>
   <tabstop>input_checkbox_notification_custom_action</tabstop>
-  <tabstop>input_lineedit_notification_custom_action_separator</tabstop>
-  <tabstop>input_lineedit_notification_custom_action_string</tabstop>
   <tabstop>input_checkbox_notification_custom_action_single</tabstop>
   <tabstop>input_button_color_ok_text</tabstop>
   <tabstop>input_button_color_ok_background</tabstop>
@@ -1690,7 +1688,7 @@
   </connection>
  </connections>
  <buttongroups>
-  <buttongroup name="buttongroup_close_statusbar"/>
   <buttongroup name="buttongroup_popup_statuswindow"/>
+  <buttongroup name="buttongroup_close_statusbar"/>
  </buttongroups>
 </ui>

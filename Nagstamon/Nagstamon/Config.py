@@ -103,9 +103,12 @@ class Config(object):
         self.notification_sound_repeat = False
         self.notification_default_sound = True
         self.notification_custom_sound = False
-        self.notification_custom_sound_warning = None
-        self.notification_custom_sound_critical = None
-        self.notification_custom_sound_down = None
+        ###self.notification_custom_sound_warning = None
+        self.notification_custom_sound_warning = ''
+        ###self.notification_custom_sound_critical = None
+        self.notification_custom_sound_critical = ''
+        ###self.notification_custom_sound_down = None
+        self.notification_custom_sound_down = ''
         self.notification_action_warning = False
         self.notification_action_warning_string = ''
         self.notification_action_critical = False
@@ -118,6 +121,7 @@ class Config(object):
         self.notification_custom_action_string = ''
         self.notification_custom_action_separator = ''
         self.notification_custom_action_single = False
+        self.notify_if_up = False
         self.notify_if_warning = True
         self.notify_if_critical = True
         self.notify_if_unknown = True

@@ -40,6 +40,9 @@ debug_queue = list()
 # states needed for gravity comparison for notification and Generic.py
 STATES = ['UP', 'UNKNOWN', 'WARNING', 'CRITICAL', 'UNREACHABLE', 'DOWN']
 
+# sound at the moment is only available for these states
+STATES_SOUND = ['WARNING', 'CRITICAL', 'DOWN']
+
 
 def RefreshAllServers(servers=None, output=None, conf=None):
     """
