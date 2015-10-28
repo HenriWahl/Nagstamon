@@ -397,6 +397,23 @@ class ZabbixServer(GenericServer):
     def _set_downtime(self, host, service, author, comment, fixed, start_time, end_time, hours, minutes):
         pass
 
+    def set_acknowledge(self, thread_obj):
+        # Default value...
+        ack_service = thread_obj.service
+        if thread_obj.acknowledge_all_services == True:
+            all_services = thread_obj.all_services
+        else:
+            all_services = []
+            # Get the correct service name.
+            for service_k in thread_obj.server.hosts[thread_obj.host].services:
+                service_v = thread_obj.server.hosts[thread_obj.host].services[service_k]
+                if service_v.name == thread_obj.service:
+                    ack_service = service_k
+        self._set_acknowledge(thread_obj.host, ack_service, thread_obj.author, thread_obj.comment,\
+                              thread_obj.sticky, thread_obj.notify, thread_obj.persistent, all_services)
+        # resfresh immediately according to https://github.com/HenriWahl/Nagstamon/issues/86
+        self.thread.doRefresh = True
+
     def _set_acknowledge(self, host, service, author, comment, sticky, notify, persistent, all_services=[]):
         triggerid = self.hosts[host].services[service].triggerid
         p = {
