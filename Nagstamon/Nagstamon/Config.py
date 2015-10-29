@@ -666,13 +666,11 @@ class Config(object):
                 s.monitor_url = s.monitor_cgi_url
 
         # switch to update interval in seconds not minutes
-        ###if self.__dict__.has_key("update_interval"):
         if 'update_interval' in self.__dict__.keys():
             self.update_interval_seconds = int(self.update_interval) * 60
             self.__dict__.pop('update_interval')
 
         # remove support for GNOME2-trayicon-egg-stuff
-        #if self.__dict__.has_key("statusbar_systray"):
         if 'statusbar_systray' in self.__dict__.keys():
             if self.statusbar_systray == True:
                 self.icon_in_systray = True

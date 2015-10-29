@@ -459,7 +459,7 @@ class StatusWindow(QWidget):
         # flashing statusbar
         self.worker_notification.start_flash.connect(self.statusbar.flash)
         self.worker_notification.stop_flash.connect(self.statusbar.reset)
-        # stop notification if window gets hidden
+        # stop notification if window gets shown or hidden
         self.hiding.connect(self.worker_notification.stop)
 
         self.worker_notification.moveToThread(self.worker_notification_thread)
@@ -540,23 +540,23 @@ class StatusWindow(QWidget):
             server_vbox.table.ready_to_resize.connect(self.adjust_size)
 
             # tell statusbar to summarize after table was refreshed
-            ###server_vbox.table.refreshed.connect(self.statusbar.summarize_states)
             server_vbox.table.worker.new_status.connect(self.statusbar.summarize_states)
 
+            # if problems go themselves there is no need to notify user anymore
+            server_vbox.table.worker.problems_vanished.connect(self.worker_notification.stop)
+
             # tell notification worker to do something AFTER the table was updated
-            ####server_vbox.table.refreshed.connect(self.worker_notification.notify)
             server_vbox.table.status_changed.connect(self.worker_notification.start)
 
             # and to update status window
             server_vbox.table.refreshed.connect(self.update_window)
 
-            # tell table it should remove freshness of formely new items when window closes
+            # tell table it should remove freshness of formerly new items when window closes
             # because apparently the new events have been seen now
             self.hiding.connect(server_vbox.table.worker.unfresh_event_history)
 
             # stop notifcation if statuswindow pops up
             self.showing.connect(self.worker_notification.stop)
-
 
             return server_vbox
         else:
@@ -853,6 +853,7 @@ class StatusWindow(QWidget):
             ###if server.table.get_real_width() > width:
             if server.table.real_width > width:
                 width = server.table.get_real_width()
+
         return width
 
 
@@ -868,14 +869,6 @@ class StatusWindow(QWidget):
         height += self.toparea.sizeHint().height() + 2
 
         return height
-
-
-    ###@pyqtSlot()
-    ###def lock(self):
-    ###    """
-    ###        lock window so it should not be hidden, e.g. if a menu is shown
-    ###    """
-    ###   self.locked = True
 
 
     def set_shown(self):
@@ -974,10 +967,19 @@ class StatusWindow(QWidget):
         # tell statusbar labels to flash
         start_flash = pyqtSignal()
         stop_flash = pyqtSignal()
+        # tell mediaplayer to load and play sound file
+        load_sound = pyqtSignal(str)
+        play_sound = pyqtSignal()
 
+        # flag about current notification state
         is_notifying = False
+
+        # only one enabled server should have the right to send play_sound signal
+        notifying_server = ''
+
         # current worst state worth a notification
         worst_notification_status = 'UP'
+
 
         def __init__(self):
             QObject.__init__(self)
@@ -998,13 +1000,20 @@ class StatusWindow(QWidget):
 
                 # set flag to avoid innecessary notification
                 self.is_notifying = True
+                if self.notifying_server == '':
+                    self.notifying_server = server_name
 
                 # flashing statusbar
                 if conf.notification_flashing:
                     self.start_flash.emit()
 
+
+
                 # what about flashing SYSTRAY ICON?
 
+
+
+                # Play default sounds via mediaplayer
                 if conf.notification_sound:
                     sound_file = ''
                     # at the moment there are only sounds for down, critical and warning
@@ -1015,10 +1024,14 @@ class StatusWindow(QWidget):
                             sound_file = '{0}{1}{2}.wav'.format(RESOURCES, os.sep, worst_status.lower())
                         elif conf.notification_custom_sound:
                             sound_file = conf.__dict__['notification_custom_sound_{0}'.format(worst_status.lower())]
-                        # when sound file could be loaded play it
-                        if mediaplayer.set_media(sound_file) == True:
-                            # after loading file fire up signal to actually play it
-                            mediaplayer.play.emit()
+
+                        # once loaded file will be played by every server, even if it is
+                        # not the self.notifying_server that loaded it
+                        self.load_sound.emit(sound_file)
+
+                        # only one enabled server should access the mediaplayer
+                        if self.notifying_server == server_name:
+                            self.play_sound.emit()
 
                 # Notification actions
                 if conf.notification_actions:
@@ -1070,6 +1083,13 @@ class StatusWindow(QWidget):
                 for event in servers[server_name].events_notification:
                     servers[server_name].events_notification[event] = False
 
+            # repeated sound
+            # only let one enabled server play sound to avoid a larger cacophony
+            if self.is_notifying and\
+               conf.notification_sound_repeat and\
+               self.notifying_server == server_name:
+                self.play_sound.emit()
+
 
         @pyqtSlot()
         def stop(self):
@@ -1082,6 +1102,9 @@ class StatusWindow(QWidget):
 
                 # no more flashing statusbar
                 self.stop_flash.emit()
+
+                # reset notifying server, waiting for next notification
+                self.notifying_server = ''
 
 
         def execute_action(self, server_name, custom_action_string):
@@ -1222,7 +1245,6 @@ class StatusBar(QWidget):
         # only if currently a notification is necessary
         if statuswindow.worker_notification.is_notifying:
             self.labels_invert.emit()
-
             # fire up  a singleshot to reset color soon
             self.timer.singleShot(500, self.reset)
 
@@ -2110,6 +2132,9 @@ class TableWidget(QTableWidget):
         # signal to be sent to slot "change" of ServerStatusLabel
         change_label_status = pyqtSignal(str)
 
+        # send notification a stop message if problems vanished without being noticed
+        problems_vanished = pyqtSignal()
+
 
         def __init__(self, parent=None, server=None):
             QObject.__init__(self)
@@ -2146,6 +2171,12 @@ class TableWidget(QTableWidget):
 
                 # reset counter for this thread
                 self.server.thread_counter = 0
+
+                # if failures have gone and nobody took notice switch notification off again
+                if len([k for k,v in self.server.events_history.items() if v == True]) == 0 and\
+                        statuswindow.worker_notification.is_notifying == True:
+                    # tell notification that unnoticed problems are gone
+                    self.problems_vanished.emit()
 
                 # tell news about new status available
                 self.new_status.emit()
@@ -2217,9 +2248,6 @@ class TableWidget(QTableWidget):
                                 icons.append(ICONS['passive'])
                             if self.server.hosts[nagitem.host].is_in_scheduled_downtime():
                                 icons.append(ICONS['downtime'])
-                            ###if hash in self.server.events_history and\
-                            ###           self.server.events_history[hash] == True:
-                            ###            icons.append(ICONS['new'])
                         # add service icons
                         elif not nagitem.is_host() and column == 1:
                             if nagitem.is_acknowledged():
@@ -3713,7 +3741,7 @@ class MediaPlayer(QObject):
         play media files for notification
     """
     # needed to let QMediaPlayer play
-    play = pyqtSignal()
+    ###play = pyqtSignal()
 
     # needed to show error in a thread-safe way
     send_message = pyqtSignal(str, str)
@@ -3725,12 +3753,12 @@ class MediaPlayer(QObject):
         self.player.setVolume(100)
         self.playlist = QMediaPlaylist()
         self.player.setPlaylist(self.playlist)
-        self.play.connect(self.player.play)
 
-        # let tatuswindow show message
+        # let statuswindow show message
         self.send_message.connect(statuswindow.show_message)
 
 
+    @pyqtSlot(str)
     def set_media(self, file):
         # only existing file can be played
         if os.path.exists(file):
@@ -3740,10 +3768,15 @@ class MediaPlayer(QObject):
             del url, mediacontent
             return True
         else:
-            #QMessageBox.warning(None, 'Nagstamon', 'File <b>\'%s\'</b> does not exist.' % (file))
+            # cry and tell no file was found
             self.send_message.emit('warning', 'File <b>\'{0}\'</b> does not exist.'.format(file))
-
             return False
+
+
+    @pyqtSlot()
+    def play(self):
+        # just play sound
+        self.player.play()
 
 
 class CheckVersion(QObject):
@@ -3920,4 +3953,7 @@ statuswindow = StatusWindow()
 
 # versatile mediaplayer
 mediaplayer = MediaPlayer()
+# connect with sound play control
+statuswindow.worker_notification.load_sound.connect(mediaplayer.set_media)
+statuswindow.worker_notification.play_sound.connect(mediaplayer.play)
 

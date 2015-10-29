@@ -1275,7 +1275,7 @@ class GUI(object):
                                 self.notify_bubble.add_action("action", "Open popup window", self.popwin.PopUp)
                             self.notify_bubble.show()
 
-                        # MediaPlayer actions
+                        # Notification actions
                         if str(self.conf.notification_actions) == "True":
                             if str(self.conf.notification_action_warning) == "True" and status == "WARNING":
                                 Actions.RunNotificationAction(str(self.conf.notification_action_warning_string))
