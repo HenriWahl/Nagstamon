@@ -608,7 +608,7 @@ class StatusWindow(QWidget):
         """
             being called after hovering over statusbar - check if wondiw should be showed
         """
-        if conf.popup_details_hover and n:
+        if conf.popup_details_hover:
             self.show_window()
 
 
@@ -617,13 +617,8 @@ class StatusWindow(QWidget):
         """
             used to show status window when its appearance is triggered, also adjusts geometry
         """
+        # do not show up when being dragged around
         if not self.moving:
-            # attempt to avoid flickering on MacOSX - already hide statusbar here
-            self.statusbar.hide()
-
-            # show the other status window components
-            self.toparea.show()
-
             for vbox in self.servers_vbox.children():
                 if vbox.server.all_ok and vbox.server.status == '':
                     self.status_ok = True
@@ -632,9 +627,13 @@ class StatusWindow(QWidget):
                     break
 
             # here we should check if scroll_area should be shown at all
-            if self.status_ok:
-                self.servers_scrollarea.hide()
-            else:
+            if not self.status_ok:
+                # attempt to avoid flickering on MacOSX - already hide statusbar here
+                self.statusbar.hide()
+
+                # show the other status window components
+                self.toparea.show()
+
                 self.servers_scrollarea.show()
                 for vbox in self.servers_vbox.children():
                     if not vbox.server.all_ok and vbox.server.status == '':
@@ -644,23 +643,23 @@ class StatusWindow(QWidget):
                     elif vbox.server.status != '':
                         vbox.show_only_header()
 
-            # theory...
-            width, height, x, y = self.calculate_size()
-            # ...and practice
-            self.resize_window(width, height, x, y)
-            # switch on
-            if platform.system() == 'Darwin':
-                # delayed because of flickering window in OSX
-                self.timer.singleShot(200, self.set_shown)
-            else:
-                self.set_shown()
+                # theory...
+                width, height, x, y = self.calculate_size()
+                # ...and practice
+                self.resize_window(width, height, x, y)
+                # switch on
+                if platform.system() == 'Darwin':
+                    # delayed because of flickering window in OSX
+                    self.timer.singleShot(200, self.set_shown)
+                else:
+                    self.set_shown()
 
-            # tell others like notification that statuswindow shows up now
-            self.showing.emit()
+                # tell others like notification that statuswindow shows up now
+                self.showing.emit()
 
-            # activate window to get focus
-            # NOT a good idea because stealing focus!
-            ###self.activateWindow()
+                # activate window to get focus
+                # NOT a good idea because stealing focus!
+                ###self.activateWindow()
 
 
     @pyqtSlot()
