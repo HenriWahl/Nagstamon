@@ -425,21 +425,18 @@ class StatusWindow(QWidget):
         for label in self.statusbar.color_labels.values():
             label.mouse_entered.connect(self.show_window_after_checking_for_hover)
             label.mouse_released.connect(self.show_window_after_checking_for_clicking)
-            ###label.mouse_entered.connect(self.lock)
 
         # when logo in toparea was pressed hurry up to save the position so the statusbar will not jump
         self.toparea.logo.window_moved.connect(self.store_position)
         self.toparea.logo.window_moved.connect(self.hide_window)
         self.toparea.logo.window_moved.connect(self.correct_moving_position)
         self.toparea.logo.mouse_pressed.connect(self.store_position)
-        ###self.toparea.logo.mouse_pressed.connect(self.hide_window)
 
         # when version label in toparea was pressed hurry up to save the position so the statusbar will not jump
         self.toparea.label_version.window_moved.connect(self.store_position)
         self.toparea.label_version.window_moved.connect(self.hide_window)
         self.toparea.label_version.window_moved.connect(self.correct_moving_position)
         self.toparea.label_version.mouse_pressed.connect(self.store_position)
-        ###self.toparea.label_version.mouse_pressed.connect(self.hide_window)
 
         # when empty space in toparea was pressed hurry up to save the position so the statusbar will not jump
         self.toparea.label_empty_space.window_moved.connect(self.store_position)
@@ -453,20 +450,8 @@ class StatusWindow(QWidget):
         self.toparea.button_settings.clicked.connect(dialogs.settings.show)
         self.toparea.button_close.clicked.connect(self.hide_window)
 
-        # avoid hiding of statuswindow if combobox is opened
-        ###self.toparea.combobox_servers.shown.connect(self.lock)
         # if monitor was selected in combobox its monitor window is opened
-        ###self.toparea.combobox_servers.monitor_opened.connect(self.unlock)
         self.toparea.combobox_servers.monitor_opened.connect(self.hide_window)
-
-        # attempt to allow closing window and combobox
-        ###self.toparea.mouse_entered.connect(self.unlock)
-
-        # avoid hiding of statuswindow if menu is opened
-        ###self.toparea.button_hamburger_menu.pressed.connect(self.lock)
-
-        ###self.toparea.hamburger_menu.shown.connect(self.lock)
-        ###self.toparea.hamburger_menu.closed.connect(self.unlock)
 
         # worker and thread duo needed for notifications
         self.worker_notification_thread = QThread()
@@ -623,7 +608,7 @@ class StatusWindow(QWidget):
         """
             being called after hovering over statusbar - check if wondiw should be showed
         """
-        if conf.popup_details_hover:
+        if conf.popup_details_hover and n:
             self.show_window()
 
 
@@ -693,7 +678,8 @@ class StatusWindow(QWidget):
             hide window if not needed
         """
         # only hide if shown and not locked or if not yet hidden if moving
-        if self.is_shown == True and self.locked == False or\
+        ###if self.is_shown == True and self.locked == False or\
+        if self.is_shown == True or\
            self.is_shown == True and self.moving == True:
             self.statusbar.show()
             self.statusbar.adjustSize()
@@ -885,20 +871,12 @@ class StatusWindow(QWidget):
         return height
 
 
-    @pyqtSlot()
-    def lock(self):
-        """
-            lock window so it should not be hidden, e.g. if a menu is shown
-        """
-        self.locked = True
-
-
-    @pyqtSlot()
-    def unlock(self):
-        """
-            unlock window so it can be hidden again
-        """
-        self.locked = False
+    ###@pyqtSlot()
+    ###def lock(self):
+    ###    """
+    ###        lock window so it should not be hidden, e.g. if a menu is shown
+    ###    """
+    ###   self.locked = True
 
 
     def set_shown(self):
@@ -1603,8 +1581,8 @@ class CellWidget(QWidget):
         self.setStyleSheet('color: %s; background-color: %s;' % (self.color, 'darkgrey'))
 
 
-    def enterEvent(self, event):
-        if statuswindow.locked == False:
+    def enterEvent(self, eventt):
+        if not self.parent().parent().action_menu.isVisible():
             self.parent().parent().highlight_row(self.row)
 
 
@@ -1654,8 +1632,8 @@ class TableWidget(QTableWidget):
         # no vertical header needed
         self.verticalHeader().hide()
 
-        self.setSelectionBehavior(QAbstractItemView.SelectRows)
-        self.setSelectionMode(QAbstractItemView.SingleSelection)
+        self.setSelectionBehavior(QAbstractItemView.SelectItems)
+        self.setSelectionMode(QAbstractItemView.NoSelection)
         # has to be necessarily false to keep sanity if calculating table height
         self.setShowGrid(False)
         # no scrollbars at tables because they will be scrollable by the global vertical scrollbar
@@ -1669,7 +1647,7 @@ class TableWidget(QTableWidget):
         self.setHorizontalHeaderLabels(HEADERS.values())
         self.horizontalHeader().setSectionResizeMode(QHeaderView.ResizeToContents)
         self.horizontalHeader().setDefaultAlignment(Qt.AlignLeft)
-        self.horizontalHeader().setStyleSheet('font-weight: bold;')
+        ###self.horizontalHeader().setStyleSheet('font-weight: bold;')
         self.horizontalHeader().setSortIndicatorShown(True)
         self.horizontalHeader().setSortIndicator(list(HEADERS).index(self.sort_column), SORT_ORDER[self.order])
         self.horizontalHeader().sortIndicatorChanged.connect(self.sort_columns)
