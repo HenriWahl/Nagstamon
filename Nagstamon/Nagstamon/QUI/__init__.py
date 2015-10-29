@@ -895,6 +895,16 @@ class StatusWindow(QWidget):
         conf.position_y = self.y()
 
 
+    @pyqtSlot(str, str)
+    def show_message(self, msg_type, message):
+        """
+            show message from other thread like MediaPlayer
+        """
+        title = " ".join((AppInfo.NAME, msg_type))
+        if msg_type == 'warning':
+            QMessageBox.warning(None, title, message)
+
+
     class Worker(QObject):
         """
            run a thread for example for debugging
@@ -3702,20 +3712,23 @@ class MediaPlayer(QObject):
     """
         play media files for notification
     """
-
     # needed to let QMediaPlayer play
     play = pyqtSignal()
+
+    # needed to show error in a thread-safe way
+    send_message = pyqtSignal(str, str)
 
     def __init__(self):
         QObject.__init__(self)
         self.player = QMediaPlayer(parent=self)
 
         self.player.setVolume(100)
-
         self.playlist = QMediaPlaylist()
         self.player.setPlaylist(self.playlist)
-
         self.play.connect(self.player.play)
+
+        # let tatuswindow show message
+        self.send_message.connect(statuswindow.show_message)
 
 
     def set_media(self, file):
@@ -3727,7 +3740,9 @@ class MediaPlayer(QObject):
             del url, mediacontent
             return True
         else:
-            QMessageBox.warning(None, 'Nagstamon', 'File <b>\'%s\'</b> does not exist.' % (file))
+            #QMessageBox.warning(None, 'Nagstamon', 'File <b>\'%s\'</b> does not exist.' % (file))
+            self.send_message.emit('warning', 'File <b>\'{0}\'</b> does not exist.'.format(file))
+
             return False
 
 
