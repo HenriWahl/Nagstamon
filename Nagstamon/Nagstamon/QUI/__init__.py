@@ -810,13 +810,20 @@ class StatusWindow(QWidget):
         # fully displayed statuswindow
         if self.is_shown == True:
             width, height, x, y = self.calculate_size()
-            self.resize_window(width, height, x, y)
         else:
             # statusbar only
             hint = self.sizeHint()
+            # on MacOSX and Windows statusbar will not shrink automatically, so this workaround hopefully helps
+            width = hint.width()
+            height = hint.height()
+            x = self.x()
+            y = self.y()
             self.setMaximumSize(hint)
             self.setMinimumSize(hint)
-            del hint
+            del(hint)
+        self.resize_window(width, height, x, y)
+        del(width, height, x, y)
+
 
 
     @pyqtSlot()
@@ -1232,7 +1239,6 @@ class StatusBar(QWidget):
         self.setMaximumSize(hint)
         self.setMinimumSize(hint)
         del hint
-
         # tell statuswindow its size might be adjusted
         self.resize.emit()
 
