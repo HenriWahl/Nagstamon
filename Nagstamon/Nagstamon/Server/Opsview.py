@@ -48,10 +48,10 @@ class OpsviewServer(GenericServer):
     SUBMIT_CHECK_RESULT_ARGS = ["comment"]
 
     # URLs for browser shortlinks/buttons on popup window
-    BROWSER_URLS= { "monitor": "$MONITOR$/monitoring/#!/allproblems",\
-                    "hosts": "$MONITOR$/status/host?hostgroupid=1&state=1",\
-                    "services": "$MONITOR$/status/service?state=1&state=2&state=3",\
-                    "history": "$MONITOR$/event"}
+    BROWSER_URLS= { "monitor": "$MONITOR$/monitoring",\
+                    "hosts": "$MONITOR$/monitoring/#!/allproblems",\
+                    "services": "$MONITOR$/monitoring/#!/allproblems",\
+                    "history": "$MONITOR$/monitoring/#!/events"}
 
     # autologin is used only by Centreon
     DISABLED_CONTROLS = ["input_checkbutton_use_autologin",
