@@ -64,6 +64,7 @@ class OpsviewServer(GenericServer):
                          "input_checkbutton_persistent_comment",
                          "input_checkbutton_acknowledge_all_services",
                          # turn off options on downloads box
+                         "hbox_duration",
                          "input_radiobutton_type_fixed",
                          "input_radiobutton_type_fixed",
                          "input_spinbutton_duration_hours",
@@ -209,7 +210,7 @@ class OpsviewServer(GenericServer):
         # because we filter them out later
         # the REST API gets all host and service info in one call
         try:
-            result = self.FetchURL(self.monitor_url + "/rest/status/service?state=1&state=2&state=3&filter=unhandled", giveback="raw")
+            result = self.FetchURL(self.monitor_url + "/rest/status/service?state=1&state=2&state=3", giveback="raw")
             data = json.loads(result.result)
 
             if str(self.conf.debug_mode) == "True":
@@ -223,7 +224,7 @@ class OpsviewServer(GenericServer):
                 # states come in lower case from Opsview
                 self.new_hosts[host["name"]].status = str(host["state"].upper())
                 self.new_hosts[host["name"]].status_type = str(host["state_type"])
-                self.new_hosts[host["name"]].last_check = str(host["last_check"])
+                self.new_hosts[host["name"]].last_check = datetime.fromtimestamp(int(host["last_check"])).strftime("%Y-%m-%d %H:%M:%S %z")
                 self.new_hosts[host["name"]].duration = Actions.HumanReadableDurationFromSeconds(host["state_duration"])
                 self.new_hosts[host["name"]].attempt = host["current_check_attempt"]+ "/" + host["max_check_attempts"]
                 self.new_hosts[host["name"]].status_information = host["output"].replace("\n", " ")
@@ -246,7 +247,7 @@ class OpsviewServer(GenericServer):
                     # states come in lower case from Opsview
                     self.new_hosts[host["name"]].services[service["name"]].status = service["state"].upper()
                     self.new_hosts[host["name"]].services[service["name"]].status_type = service["state_type"]
-                    self.new_hosts[host["name"]].services[service["name"]].last_check = service["last_check"]
+                    self.new_hosts[host["name"]].services[service["name"]].last_check = datetime.fromtimestamp(int(service["last_check"])).strftime("%Y-%m-%d %H:%M:%S %z")
                     self.new_hosts[host["name"]].services[service["name"]].duration = Actions.HumanReadableDurationFromSeconds(service["state_duration"])
                     self.new_hosts[host["name"]].services[service["name"]].attempt = service["current_check_attempt"]+ "/" + service["max_check_attempts"]
                     self.new_hosts[host["name"]].services[service["name"]].status_information= service["output"].replace("\n", " ")
