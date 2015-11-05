@@ -24,6 +24,7 @@ import copy
 import pprint
 import json
 
+from datetime import datetime, timedelta
 from ast import literal_eval
 
 from Nagstamon import Actions
@@ -59,8 +60,15 @@ class OpsviewServer(GenericServer):
                          "input_entry_autologin_key",
                          "input_checkbutton_use_display_name_host",
                          "input_checkbutton_use_display_name_service",
+                         # turn off options on ack box
                          "input_checkbutton_persistent_comment",
                          "input_checkbutton_acknowledge_all_services",
+                         # turn off options on downloads box
+                         "input_radiobutton_type_fixed",
+                         "input_radiobutton_type_fixed",
+                         "input_spinbutton_duration_hours",
+                         "input_spinbutton_duration_minutes"
+                         "input_entry_author",
                          ]
 
 
@@ -103,39 +111,33 @@ class OpsviewServer(GenericServer):
 
     def get_start_end(self, host):
         """
-        for GUI to get actual downtime start and end from server - they may vary so it's better to get
+        Set a default of starttime of "now" and endtime is "now + 24 hours"
         directly from web interface
         """
-        try:
-            result = self.FetchURL(self.monitor_cgi_url + "/cmd.cgi?" + urllib.urlencode({"cmd_typ":"55", "host":host}))
-            html = result.result
-            start_time = dict(result.result.find(attrs={"name":"starttime"}).attrs)["value"]
-            end_time = dict(result.result.find(attrs={"name":"endtime"}).attrs)["value"]
-            # give values back as tuple
-            return start_time, end_time
-        except:
-            self.Error(sys.exc_info())
-            return "n/a", "n/a"
+        start = datetime.now()
+        end = datetime.now() + timedelta(hours=24)
 
+        return str(start.strftime("%Y-%m-%d %H:%M:%S")), str(end.strftime("%Y-%m-%d %H:%M:%S"))
 
     def _set_downtime(self, host, service, author, comment, fixed, start_time, end_time, hours, minutes):
-        # get action url for opsview downtime form
-        if service == "":
-            # host
-            cgi_data = urllib.urlencode({"cmd_typ":"55", "host":host})
-        else:
-            # service
-            cgi_data = urllib.urlencode({"cmd_typ":"56", "host":host, "service":service})
-        url = self.monitor_cgi_url + "/cmd.cgi"
-        result = self.FetchURL(url, giveback="raw", cgi_data=cgi_data)
-        html = result.result
-        # which opsview form action to call
-        action = html.split('" enctype="multipart/form-data">')[0].split('action="')[-1]
-        # this time cgi_data does not get encoded because it will be submitted via multipart
-        # to build value for hidden form field old cgi_data is used
-        cgi_data = { "from" : url + "?" + cgi_data, "comment": comment, "starttime": start_time, "endtime": end_time }
-        self.FetchURL(self.monitor_url + action, giveback="raw", cgi_data=cgi_data)
+        url = self.monitor_url + "/rest/downtime?"
 
+        data = dict();
+        data["comment"]=str(comment)
+        data["starttime"]=start_time
+        data["endtime"]=end_time
+
+        if service == "":
+            data["hst.hostname"]=str(host)
+
+        if service != "":
+            data["svc.hostname"]=str(host)
+            data["svc.servicename"]=str(service)
+
+        cgi_data = urllib.urlencode(data)
+
+        self.Debug(server=self.get_name(), debug="Downtime url: " + url)
+        self.FetchURL(url + cgi_data, giveback="raw", cgi_data=({ }))
 
     def _set_submit_check_result(self, host, service, state, comment, check_output, performance_data):
         """
