@@ -181,7 +181,23 @@ class OpsviewServer(GenericServer):
 
         self.Debug(server=self.get_name(), debug="ACK url: " + url)
         self.FetchURL(url + cgi_data, giveback="raw", cgi_data=({ }))
-    
+
+    def _set_recheck(self, host, service):
+        """
+        Sumit recheck request for host or service
+        """
+        url = self.monitor_url + "/rest/recheck?"
+
+        data=dict();
+        data["host"]=str(host)
+
+        if service != "":
+            data["servicecheck"]=str(service)
+
+        cgi_data = urllib.urlencode(data)
+
+        self.Debug(server=self.get_name(), debug="Recheck url: " + url)
+        self.FetchURL(url + cgi_data, giveback="raw", cgi_data=({ }))
 
     def _get_status(self):
         """
