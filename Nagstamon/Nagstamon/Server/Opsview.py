@@ -69,6 +69,8 @@ class OpsviewServer(GenericServer):
                          "input_spinbutton_duration_hours",
                          "input_spinbutton_duration_minutes"
                          "input_entry_author",
+                         # turn off cgi url config
+                         "input_entry_monitor_cgi_url",
                          ]
 
 
