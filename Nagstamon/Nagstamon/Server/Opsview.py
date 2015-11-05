@@ -58,7 +58,10 @@ class OpsviewServer(GenericServer):
                          "label_autologin_key",
                          "input_entry_autologin_key",
                          "input_checkbutton_use_display_name_host",
-                         "input_checkbutton_use_display_name_service"]
+                         "input_checkbutton_use_display_name_service",
+                         "input_checkbutton_persistent_comment",
+                         "input_checkbutton_acknowledge_all_services",
+                         ]
 
 
     def init_HTTP(self):
@@ -140,21 +143,45 @@ class OpsviewServer(GenericServer):
         """
         # decision about host or service - they have different URLs
         if service == "":
+            url = self.monitor_url + "/rest/status"
             # host - here Opsview uses the plain oldschool Nagios way of CGI
-            url = self.monitor_cgi_url + "/cmd.cgi"
-            cgi_data = urllib.urlencode({"cmd_typ":"87", "cmd_mod":"2", "host":host,\
-                                         "plugin_state":{"up":"0", "down":"1", "unreachable":"2"}[state], "plugin_output":check_output,\
-                                         "performance_data":performance_data, "btnSubmit":"Commit"})
+            cgi_data = urllib.urlencode({"svc.hostname":host, "comment":comment, "new_state":{"ok":"0", "warning":"1", "critical":"2", "unknown":"3"}[state]})
             self.FetchURL(url, giveback="raw", cgi_data=cgi_data)
 
         if service != "":
+            url = self.monitor_url + "/rest/status?svc.serviceid=" + self.hosts[host].services[service].service_object_id
             # service @ host - here Opsview brews something own
-            url = self.monitor_url + "/state/service/" + self.hosts[host].services[service].service_object_id + "/change"
-            cgi_data = urllib.urlencode({"state":{"ok":"0", "warning":"1", "critical":"2", "unknown":"3"}[state],\
-                                         "comment":comment, "submit":"Commit"})
+            #url = self.monitor_url + "/state/service/" + self.hosts[host].services[service].service_object_id + "/change"
+            #cgi_data = urllib.urlencode({"state":{"ok":"0", "warning":"1", "critical":"2", "unknown":"3"}[state],\
+            #                             "comment":comment, "submit":"Commit"})
+
+            self.Debug(server=self.get_name(), debug="SVCID " + self.hosts[host].services[service].service_object_id)
+
+            cgi_data = urllib.urlencode({"comment":comment, "new_state":{"ok":"0", "warning":"1", "critical":"2", "unknown":"3"}[state]})
+            self.Debug(server=self.get_name(), debug="URI " + cgi_data)
             # running remote cgi command
             self.FetchURL(url, giveback="raw", cgi_data=cgi_data)
 
+    def _set_acknowledge(self, host, service, author, comment, sticky, notify, persistent, all_services=[]):
+        """
+        Sumit acknowledgement for host or service
+        """
+        url = self.monitor_url + "/rest/acknowledge?"
+
+        data=dict();
+        data["notify"]=str(notify)
+        data["sticky"]=str(sticky)
+        data["comment"]=str(comment)
+        data["host"]=str(host)
+
+        if service != "":
+            data["servicecheck"]=str(service)
+
+        cgi_data = urllib.urlencode(data)
+
+        self.Debug(server=self.get_name(), debug="ACK url: " + url)
+        self.FetchURL(url + cgi_data, giveback="raw", cgi_data=({ }))
+    
 
     def _get_status(self):
         """
@@ -164,7 +191,7 @@ class OpsviewServer(GenericServer):
         # because we filter them out later
         # the REST API gets all host and service info in one call
         try:
-            result = self.FetchURL(self.monitor_url + "/rest/status/service?state=1&state=2&state=3", giveback="raw")
+            result = self.FetchURL(self.monitor_url + "/rest/status/service?state=1&state=2&state=3&filter=unhandled", giveback="raw")
             data = json.loads(result.result)
 
             if str(self.conf.debug_mode) == "True":
@@ -226,5 +253,5 @@ class OpsviewServer(GenericServer):
 
 
     def open_tree_view(self, host, service):
-        webbrowser.open('%s/status/service?host=%s' % (self.monitor_url, host))
+        webbrowser.open('%s/monitoring/#!?autoSelectHost=%s' % (self.monitor_url, host))
 
