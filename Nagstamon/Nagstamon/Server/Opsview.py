@@ -141,26 +141,24 @@ class OpsviewServer(GenericServer):
         """
         worker for submitting check result
         """
-        # decision about host or service - they have different URLs
+        url = self.monitor_url + "/rest/status?"
+
+        data = dict();
+        data["comment"]=str(comment)
+        data["new_state"]=({"ok":0,"warning":1,"critical":2,"unknown":3})[state]
+
         if service == "":
-            url = self.monitor_url + "/rest/status"
-            # host - here Opsview uses the plain oldschool Nagios way of CGI
-            cgi_data = urllib.urlencode({"svc.hostname":host, "comment":comment, "new_state":{"ok":"0", "warning":"1", "critical":"2", "unknown":"3"}[state]})
-            self.FetchURL(url, giveback="raw", cgi_data=cgi_data)
+            data["hst.hostname"]=str(host)
 
         if service != "":
-            url = self.monitor_url + "/rest/status?svc.serviceid=" + self.hosts[host].services[service].service_object_id
-            # service @ host - here Opsview brews something own
-            #url = self.monitor_url + "/state/service/" + self.hosts[host].services[service].service_object_id + "/change"
-            #cgi_data = urllib.urlencode({"state":{"ok":"0", "warning":"1", "critical":"2", "unknown":"3"}[state],\
-            #                             "comment":comment, "submit":"Commit"})
+            data["svc.hostname"]=str(host)
+            data["svc.servicename"]=str(service)
 
-            self.Debug(server=self.get_name(), debug="SVCID " + self.hosts[host].services[service].service_object_id)
+        cgi_data = urllib.urlencode(data)
 
-            cgi_data = urllib.urlencode({"comment":comment, "new_state":{"ok":"0", "warning":"1", "critical":"2", "unknown":"3"}[state]})
-            self.Debug(server=self.get_name(), debug="URI " + cgi_data)
-            # running remote cgi command
-            self.FetchURL(url, giveback="raw", cgi_data=cgi_data)
+        self.Debug(server=self.get_name(), debug="Submit result url: " + url)
+        self.FetchURL(url + cgi_data, giveback="raw", cgi_data=({ }))
+
 
     def _set_acknowledge(self, host, service, author, comment, sticky, notify, persistent, all_services=[]):
         """
