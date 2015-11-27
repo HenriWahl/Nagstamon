@@ -1440,10 +1440,6 @@ class ServerVBox(QVBoxLayout):
     """
         one VBox per server containing buttons and hosts/services listview
     """
-
-    # send signal to server edit dialog
-    ###edit_server = pyqtSignal(str)
-
     # used to update status label text like 'Connected-'
     change_label_status = pyqtSignal(str)
 
@@ -1505,7 +1501,6 @@ class ServerVBox(QVBoxLayout):
         self.addWidget(self.table, 1)
 
         # as default do not show anything
-        #self.hide_all()
         self.show_only_header()
 
 
@@ -1585,16 +1580,18 @@ class ServerVBox(QVBoxLayout):
         """
             delete VBox and its children
         """
-        for widget in (self.label, self.button_edit, self.button_monitor, self.button_hosts,
-                       self.button_services, self.button_history):
+        for widget in (self.label,
+                       self.button_edit,
+                       self.button_monitor,
+                       self.button_hosts,
+                       self.button_services,
+                       self.button_history,
+                       self.label_status):
             widget.hide()
-            self.removeWidget(widget)
-            #widget.destroy()
             widget.deleteLater()
         self.removeItem(self.header)
         self.header.deleteLater()
         self.table.hide()
-        #self.table.worker.finish.emit()
         self.table.deleteLater()
         self.deleteLater()
 
@@ -3355,14 +3352,6 @@ class Dialog_Server(Dialog):
 
             # edited servers will be deleted and recreated with new configuration
             if self.mode == 'edit':
-                # delete previous name
-                conf.servers.pop(self.previous_server_conf.name)
-
-                # delete edited and now not needed server instance - if it exists
-                #if servers.has_key(self.previous_server_conf.name):
-                if self.previous_server_conf.name in servers.keys():
-                    servers.pop(self.previous_server_conf.name)
-
                 # remove old server vbox from status window if still running
                 for vbox in statuswindow.servers_vbox.children():
                     if vbox.server.name == self.previous_server_conf.name:
@@ -3372,15 +3361,21 @@ class Dialog_Server(Dialog):
                         # nothing more to do
                         break
 
+                # delete previous name
+                conf.servers.pop(self.previous_server_conf.name)
+
+                # delete edited and now not needed server instance - if it exists
+                if self.previous_server_conf.name in servers.keys():
+                    servers.pop(self.previous_server_conf.name)
+
+
             # add new server configuration in every case
             conf.servers[self.server_conf.name] = self.server_conf
             if self.server_conf.enabled == True:
                 # add new server instance to global servers dict
                 servers[self.server_conf.name] = create_server(self.server_conf)
                 # create vbox
-                ###statuswindow.create_ServerVBox(servers[self.server_conf.name])
                 statuswindow.servers_vbox.addLayout(statuswindow.create_ServerVBox(servers[self.server_conf.name]))
-
                 # renew list of server vboxes in status window
                 statuswindow.sort_ServerVBoxes()
 
