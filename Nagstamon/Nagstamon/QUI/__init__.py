@@ -660,13 +660,13 @@ class StatusWindow(QWidget):
 
                 self.servers_scrollarea.show()
                 for vbox in self.servers_vbox.children():
-                    if not vbox.server.all_ok and vbox.server.status == '':
+                    if not vbox.server.all_ok:
                         vbox.show_all()
                     elif vbox.server.all_ok and vbox.server.status == '':
                         vbox.hide_all()
+                    # show at least server vbox header to notify about connection or other errors
                     elif vbox.server.status != '':
                         vbox.show_only_header()
-
                 # theory...
                 width, height, x, y = self.calculate_size()
                 # ...and practice
@@ -689,7 +689,7 @@ class StatusWindow(QWidget):
     @pyqtSlot()
     def update_window(self):
         """
-            redraw window content
+            redraw window content, to be effective only when window is shown
         """
         if self.is_shown:
             self.show_window()
@@ -782,7 +782,6 @@ class StatusWindow(QWidget):
             else:
                 height = real_height
                 y = self.y() + self.height() - height
-
 
         return width, height, available_x, y
 
@@ -1601,7 +1600,7 @@ class ServerVBox(QVBoxLayout):
             call dialogs.server.edit() with server name
         """
         statuswindow.hide_window()
-        dialogs.server.edit(self.server.name)
+        dialogs.server.edit(server_name=self.server.name)
 
 
 class CellWidget(QWidget):
@@ -3220,13 +3219,13 @@ class Dialog_Server(Dialog):
             try with a decorator instead of repeated calls
         """
         # function which decorates method
-        def decoration_function(self, *args):
+        def decoration_function(self, **kwargs):
             """
                 self.server_conf has to be set by decorated method
             """
 
             # call decorated method
-            method(self)
+            method(self, **kwargs)
 
             # run through all input widgets and and apply defaults from config
             for widget in self.ui.__dict__:
@@ -3273,7 +3272,6 @@ class Dialog_Server(Dialog):
 
 
     @dialog_decoration
-    @pyqtSlot(str)
     def edit(self, server_name=None):
         """
             edit existing server
