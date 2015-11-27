@@ -1441,6 +1441,9 @@ class ServerVBox(QVBoxLayout):
         one VBox per server containing buttons and hosts/services listview
     """
 
+    # send signal to server edit dialog
+    ###edit_server = pyqtSignal(str)
+
     # used to update status label text like 'Connected-'
     change_label_status = pyqtSignal(str)
 
@@ -1472,6 +1475,8 @@ class ServerVBox(QVBoxLayout):
         self.button_history = PushButton_BrowserURL(text='History', parent=parent, server=self.server, url_type='history')
         self.label_status = ServerStatusLabel(parent=parent)
 
+        self.button_edit.clicked.connect(self.edit_server)
+
         self.button_monitor.clicked.connect(self.button_monitor.open_url)
         self.button_hosts.clicked.connect(self.button_hosts.open_url)
         self.button_services.clicked.connect(self.button_services.open_url)
@@ -1486,8 +1491,6 @@ class ServerVBox(QVBoxLayout):
         self.header.addWidget(self.label_status)
         self.header.addStretch()
 
-        ###sort_column = 'status'
-        ###order = 'descending'
         sort_column = conf.default_sort_field.lower()
         order = conf.default_sort_order.lower()
 
@@ -1594,6 +1597,14 @@ class ServerVBox(QVBoxLayout):
         #self.table.worker.finish.emit()
         self.table.deleteLater()
         self.deleteLater()
+
+
+    def edit_server(self):
+        """
+            call dialogs.server.edit() with server name
+        """
+        statuswindow.hide_window()
+        dialogs.server.edit(self.server.name)
 
 
 class CellWidget(QWidget):
@@ -3212,7 +3223,7 @@ class Dialog_Server(Dialog):
             try with a decorator instead of repeated calls
         """
         # function which decorates method
-        def decoration_function(self):
+        def decoration_function(self, *args):
             """
                 self.server_conf has to be set by decorated method
             """
@@ -3265,13 +3276,18 @@ class Dialog_Server(Dialog):
 
 
     @dialog_decoration
-    def edit(self):
+    @pyqtSlot(str)
+    def edit(self, server_name=None):
         """
             edit existing server
+            when called by Edit button in ServerVBox use given server_name to get server config
         """
         self.mode = 'edit'
         # shorter server conf
-        self.server_conf = conf.servers[dialogs.settings.ui.list_servers.currentItem().text()]
+        if server_name == None:
+            self.server_conf = conf.servers[dialogs.settings.ui.list_servers.currentItem().text()]
+        else:
+            self.server_conf = conf.servers[server_name]
         # store monitor name in case it will be changed
         self.previous_server_conf = deepcopy(self.server_conf)
         # set window title
