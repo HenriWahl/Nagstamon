@@ -1038,11 +1038,7 @@ class StatusWindow(QWidget):
                 if conf.notification_flashing:
                     self.start_flash.emit()
 
-
-
                 # what about flashing SYSTRAY ICON?
-
-
 
                 # Play default sounds via mediaplayer
                 if conf.notification_sound:
@@ -2216,7 +2212,8 @@ class TableWidget(QTableWidget):
 
                 # if failures have gone and nobody took notice switch notification off again
                 if len([k for k,v in self.server.events_history.items() if v == True]) == 0 and\
-                        statuswindow.worker_notification.is_notifying == True:
+                        statuswindow.worker_notification.is_notifying == True and\
+                        statuswindow.worker_notification.notifying_server == self.server.name:
                     # tell notification that unnoticed problems are gone
                     self.problems_vanished.emit()
 
