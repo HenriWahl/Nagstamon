@@ -139,9 +139,6 @@ class MenuAtCursor(QMenu):
     """
         open menu at position of mouse pointer - normal .exec() shows menu at (0, 0)
     """
-    ###shown = pyqtSignal()
-    ###closed = pyqtSignal()
-
     # flag to avoid too fast popping up menus
     available = True
 
@@ -175,6 +172,33 @@ class PushButton_Hamburger(QPushButton):
     def mousePressEvent(self, event):
         self.pressed.emit()
         self.showMenu()
+
+
+class PushButton_BrowserURL(QPushButton):
+    """
+        QPushButton for ServerVBox which opens certain URL if clicked
+    """
+    def __init__(self, text='', parent=None, server=None, url_type=''):
+        QPushButton.__init__(self, text, parent=parent)
+        self.server = server
+        self.url_type = url_type
+
+    @pyqtSlot()
+    def open_url(self):
+        """
+            open URL from BROWSER_URLS in webbrowser
+        """
+        # BROWSER_URLS come with $MONITOR$ instead of real monitor url - heritage from actions
+        url = self.server.BROWSER_URLS[self.url_type].replace('$MONITOR$', self.server.monitor_url)
+
+        if conf.debug_mode:
+            self.Debug(server=self.server.get_name(), debug='Open {0} web page {1}'.format(self.url_type, url))
+
+        # use Python method to open browser
+        webbrowser.open(url)
+
+        # hide statuswindow to get screen space for browser
+        statuswindow.hide_window()
 
 
 class ComboBox_Servers(QComboBox):
@@ -817,6 +841,7 @@ class StatusWindow(QWidget):
             width = hint.width()
             height = hint.height()
             x = self.x()
+
             y = self.y()
             self.setMaximumSize(hint)
             self.setMinimumSize(hint)
@@ -1440,12 +1465,17 @@ class ServerVBox(QVBoxLayout):
         if platform.system() != 'Darwin':
             self.label.setStyleSheet('padding-top: {0}px; padding-bottom: {0}px;'.format(SPACE))
 
-        self.button_edit = QPushButton("Edit", parent=parent)
-        self.button_monitor = QPushButton("Monitor", parent=parent)
-        self.button_hosts = QPushButton("Hosts", parent=parent)
-        self.button_services = QPushButton("Services", parent=parent)
-        self.button_history = QPushButton("History", parent=parent)
+        self.button_edit = QPushButton('Edit', parent=parent)
+        self.button_monitor = PushButton_BrowserURL(text='Monitor', parent=parent, server=self.server, url_type='monitor')
+        self.button_hosts = PushButton_BrowserURL(text='Hosts', parent=parent, server=self.server, url_type='hosts')
+        self.button_services = PushButton_BrowserURL(text='Services', parent=parent, server=self.server, url_type='services')
+        self.button_history = PushButton_BrowserURL(text='History', parent=parent, server=self.server, url_type='history')
         self.label_status = ServerStatusLabel(parent=parent)
+
+        self.button_monitor.clicked.connect(self.button_monitor.open_url)
+        self.button_hosts.clicked.connect(self.button_hosts.open_url)
+        self.button_services.clicked.connect(self.button_services.open_url)
+        self.button_history.clicked.connect(self.button_history.open_url)
 
         self.header.addWidget(self.label)
         self.header.addWidget(self.button_edit)
@@ -1936,7 +1966,6 @@ class TableWidget(QTableWidget):
             self.action_menu.show_at_cursor()
         else:
             self.action_menu.available = True
-
 
 
     @pyqtSlot(str)

@@ -22,8 +22,9 @@ if platform.system() in ['Windows', 'Darwin']:
                                   'Nagstamon/resources',
                                   '{0}/mediaservice'.format(QTPLUGINS)]
 else:
-    os_dependent_include_files = ['Nagstamon/resources',
-                                  '{0}/mediaservice'.format(QTPLUGINS)]
+    os_dependent_include_files = ['Nagstamon/resources']
+#    os_dependent_include_files = ['Nagstamon/resources',
+#                                  '{0}/mediaservice'.format(QTPLUGINS)]
 
 # Dependencies are automatically detected, but it might need
 # fine tuning.
