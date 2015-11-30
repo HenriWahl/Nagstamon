@@ -403,10 +403,13 @@ class StatusWindow(QWidget):
         QWidget.__init__(self)
         # immediately hide to avoid flicker on Windows and OSX
         self.hide()
-
+        # statusbar and detail window should be frameless and stay on top
         self.setWindowFlags(Qt.WindowStaysOnTopHint | Qt.FramelessWindowHint)
+
         # show tooltips even if popup window has no focus
         self.setAttribute(Qt.WA_AlwaysShowToolTips)
+        # attempt to get old behavior from GTK2 version to stay on all virtual desktops
+        ###self.setAttribute(Qt.WA_X11NetWmWindowTypeMenu)
 
         self.setWindowTitle(AppInfo.NAME)
         self.setWindowIcon(QIcon('%s%snagstamon.svg' % (RESOURCES, os.sep)))
@@ -928,6 +931,9 @@ class StatusWindow(QWidget):
         if msg_type == 'warning':
             QMessageBox.warning(None, title, message)
 
+        elif msg_type == 'information':
+            QMessageBox.information(None, title, message)
+
 
     class Worker(QObject):
         """
@@ -1368,7 +1374,6 @@ class TopArea(QWidget):
         # fill default order fields combobox with server names
         self.combobox_servers.fill()
 
-        ###self.button_hamburger_menu = QPushButton()
         self.button_hamburger_menu = PushButton_Hamburger()
         self.button_hamburger_menu.setIcon(QIcon('%s%smenu.svg' % (RESOURCES, os.sep)))
         self.button_hamburger_menu.setStyleSheet('QPushButton {border-width: 0px;'
@@ -1378,11 +1383,8 @@ class TopArea(QWidget):
                                                  'QPushButton::menu-indicator{image:url(none.jpg);}')
         self.hamburger_menu = MenuAtCursor()
         action_exit = QAction("Exit", self)
-
-        # to be refined...
         action_exit.triggered.connect(exit)
         self.hamburger_menu.addAction(action_exit)
-
         self.button_hamburger_menu.setMenu(self.hamburger_menu)
 
         self.button_close = QPushButton()
@@ -3781,9 +3783,6 @@ class MediaPlayer(QObject):
     """
         play media files for notification
     """
-    # needed to let QMediaPlayer play
-    ###play = pyqtSignal()
-
     # needed to show error in a thread-safe way
     send_message = pyqtSignal(str, str)
 
@@ -3824,6 +3823,7 @@ class CheckVersion(QObject):
     """
         checking for updates
     """
+
     def check(self, start_mode=False):
         # list of enabled servers which connections outside should be used to check
         self.enabled_servers = get_enabled_servers()
