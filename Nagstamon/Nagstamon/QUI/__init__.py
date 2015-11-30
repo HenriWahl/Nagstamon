@@ -473,6 +473,7 @@ class StatusWindow(QWidget):
         ###self.toparea.label_empty_space.mouse_pressed.connect(self.hide_window)
 
         # buttons in toparea
+        self.toparea.button_refresh.clicked.connect(self.refresh)
         self.toparea.button_settings.clicked.connect(self.hide_window)
         self.toparea.button_settings.clicked.connect(dialogs.settings.show)
         self.toparea.button_close.clicked.connect(self.hide_window)
@@ -933,6 +934,17 @@ class StatusWindow(QWidget):
 
         elif msg_type == 'information':
             QMessageBox.information(None, title, message)
+
+
+    @pyqtSlot()
+    def refresh(self):
+        """
+            tell all enabled servers to refresh their information
+        """
+        for server in get_enabled_servers():
+            # manipulate server thread counter so it will refresh when next looking
+            # at thread counter
+            server.thread_counter = conf.update_interval_seconds
 
 
     class Worker(QObject):
