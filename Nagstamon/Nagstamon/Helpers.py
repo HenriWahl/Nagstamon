@@ -44,28 +44,6 @@ STATES = ['UP', 'UNKNOWN', 'WARNING', 'CRITICAL', 'UNREACHABLE', 'DOWN']
 STATES_SOUND = ['WARNING', 'CRITICAL', 'DOWN']
 
 
-def RefreshAllServers(servers=None, output=None, conf=None):
-    """
-    one refreshing action, starts threads, one per polled server
-    """
-    # first delete all freshness flags
-    output.UnfreshEventHistory()
-
-    for server in servers.values():
-        # check if server is already checked
-        if server.isChecking == False and conf.servers[server.get_name()].enabled == True:
-            #debug
-            if conf.debug_mode:
-                server.Debug(server=server.get_name(), debug="Checking server...")
-
-            server.thread.Refresh()
-
-            # set server status for status field in popwin
-            server.status = "Refreshing"
-            gobject.idle_add(output.popwin.UpdateStatus, server)
-
-
-
 class RecheckAll(threading.Thread):
     """
     recheck all services/hosts

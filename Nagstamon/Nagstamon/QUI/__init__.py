@@ -395,6 +395,8 @@ class StatusWindow(QWidget):
     # send when window shrinks down to statusbar or closes
     hiding = pyqtSignal()
 
+    # signal to be sent to all server workers to recheck all
+    recheck = pyqtSignal()
 
     def __init__(self):
         """
@@ -473,6 +475,7 @@ class StatusWindow(QWidget):
         ###self.toparea.label_empty_space.mouse_pressed.connect(self.hide_window)
 
         # buttons in toparea
+        self.toparea.button_recheck_all.clicked.connect(self.recheck_all)
         self.toparea.button_refresh.clicked.connect(self.refresh)
         self.toparea.button_settings.clicked.connect(self.hide_window)
         self.toparea.button_settings.clicked.connect(dialogs.settings.show)
@@ -585,6 +588,9 @@ class StatusWindow(QWidget):
 
             # stop notifcation if statuswindow pops up
             self.showing.connect(self.worker_notification.stop)
+
+            # tell server worker to recheck all hosts and services
+            self.recheck.connect(server_vbox.table.worker.recheck_all)
 
             return server_vbox
         else:
@@ -937,12 +943,20 @@ class StatusWindow(QWidget):
 
 
     @pyqtSlot()
+    def recheck_all(self):
+        """
+            tell servers to recheck all hosts and services
+        """
+        self.recheck.emit()
+
+
+    @pyqtSlot()
     def refresh(self):
         """
             tell all enabled servers to refresh their information
         """
         for server in get_enabled_servers():
-            # manipulate server thread counter so it will refresh when next looking
+            # manipulate server thread counter so get_status loop will refresh when next looking
             # at thread counter
             server.thread_counter = conf.update_interval_seconds
 
@@ -2363,7 +2377,27 @@ class TableWidget(QTableWidget):
             """
                 Slot to start server recheck method, getting signal from TableWidget context menu
             """
+            print(info_dict)
             self.server.set_recheck(info_dict)
+
+
+        @pyqtSlot()
+        def recheck_all(self):
+            """
+                call server.set_recheck for every single host/service
+            """
+            # special treatment for Check_MK Multisite because there is only one URL call necessary
+            if self.server.type != 'Check_MK Multisite':
+                for status in self.server.nagitems_filtered['hosts'].items():
+                    for host in status[1]:
+                        self.server.set_recheck({'host': host.name, 'service': ''})
+                for status in self.server.nagitems_filtered['services'].items():
+                    for service in status[1]:
+                        self.server.set_recheck({'host': service.host, 'service': service.name})
+                del(status)
+            else:
+                # Check_MK Multisite does it its own way
+                self.server.recheck_all()
 
 
         @pyqtSlot(str, str)
@@ -3770,25 +3804,10 @@ class Dialog_Submit(Dialog):
 
     def ok(self):
         """
-            schedule downtime for miserable host/service
+            submit arbitrary check result
         """
-        # type of downtime - fixed or flexible
-        if self.ui.input_radiobutton_type_fixed.isChecked() == True:
-            fixed = 1
-        else:
-            fixed = 0
 
-        self.downtime.emit({'server': self.server,
-                            'host': self.host,
-                            'service': self.service,
-                            'author': self.server.username,
-                            'comment': self.ui.input_textedit_comment.toPlainText(),
-                            'fixed': fixed,
-                            'start_time': self.ui.input_lineedit_start_time.text(),
-                            'end_time': self.ui.input_lineedit_end_time.text(),
-                            'hours': int(self.ui.input_spinbox_duration_hours.value()),
-                            'minutes': int(self.ui.input_spinbox_duration_minutes.value())})
-
+        print('Submitting check results still has to be implemented')
 
 
 class MediaPlayer(QObject):
