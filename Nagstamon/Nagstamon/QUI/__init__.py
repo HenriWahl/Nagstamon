@@ -2010,6 +2010,12 @@ class TableWidget(QTableWidget):
             self.action_menu.addAction(action_acknowledge)
             self.action_menu.addAction(action_downtime)
 
+            # not all servers allow to submit fake check results
+            if 'Submit check result' in self.server.MENU_ACTIONS:
+                action_submit = QAction('Submit check result', self)
+                action_submit.triggered.connect(self.action_submit)
+                self.action_menu.addAction(action_submit)
+
             # show menu
             self.action_menu.show_at_cursor()
         else:
@@ -2090,6 +2096,15 @@ class TableWidget(QTableWidget):
         # running worker method is left to OK button of dialog
         dialogs.downtime.show()
         dialogs.downtime.initialize(server=self.server,
+                                    host=self.miserable_host,
+                                    service=self.miserable_service)
+
+
+    @action_response_decorator
+    def action_submit(self):
+        # running worker method is left to OK button of dialog
+        dialogs.submit.show()
+        dialogs.submit.initialize(server=self.server,
                                     host=self.miserable_host,
                                     service=self.miserable_service)
 

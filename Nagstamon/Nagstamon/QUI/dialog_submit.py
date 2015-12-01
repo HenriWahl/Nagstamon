@@ -2,7 +2,7 @@
 
 # Form implementation generated from reading ui file 'dialog_submit.ui'
 #
-# Created by: PyQt5 UI code generator 5.4.1
+# Created by: PyQt5 UI code generator 5.5.1
 #
 # WARNING! All changes made in this file will be lost!
 
@@ -11,24 +11,13 @@ from PyQt5 import QtCore, QtGui, QtWidgets
 class Ui_dialog_submit(object):
     def setupUi(self, dialog_submit):
         dialog_submit.setObjectName("dialog_submit")
-        dialog_submit.resize(473, 581)
+        dialog_submit.resize(473, 572)
+        dialog_submit.setMaximumSize(QtCore.QSize(16777215, 16777215))
         self.gridLayout = QtWidgets.QGridLayout(dialog_submit)
         self.gridLayout.setObjectName("gridLayout")
         self.label_performance_data = QtWidgets.QLabel(dialog_submit)
         self.label_performance_data.setObjectName("label_performance_data")
         self.gridLayout.addWidget(self.label_performance_data, 4, 0, 1, 1, QtCore.Qt.AlignTop)
-        self.input_textedit_check_output = QtWidgets.QTextEdit(dialog_submit)
-        self.input_textedit_check_output.setTabChangesFocus(True)
-        self.input_textedit_check_output.setObjectName("input_textedit_check_output")
-        self.gridLayout.addWidget(self.input_textedit_check_output, 2, 1, 1, 1)
-        self.input_textedit_comment = QtWidgets.QTextEdit(dialog_submit)
-        self.input_textedit_comment.setTabChangesFocus(True)
-        self.input_textedit_comment.setObjectName("input_textedit_comment")
-        self.gridLayout.addWidget(self.input_textedit_comment, 6, 1, 1, 1)
-        self.input_textedit_performance_data = QtWidgets.QTextEdit(dialog_submit)
-        self.input_textedit_performance_data.setTabChangesFocus(True)
-        self.input_textedit_performance_data.setObjectName("input_textedit_performance_data")
-        self.gridLayout.addWidget(self.input_textedit_performance_data, 4, 1, 1, 1)
         self.label_check_output = QtWidgets.QLabel(dialog_submit)
         self.label_check_output.setObjectName("label_check_output")
         self.gridLayout.addWidget(self.label_check_output, 2, 0, 1, 1, QtCore.Qt.AlignTop)
@@ -75,6 +64,15 @@ class Ui_dialog_submit(object):
         self.button_box.setObjectName("button_box")
         self.horizontalLayout.addWidget(self.button_box)
         self.gridLayout.addLayout(self.horizontalLayout, 9, 0, 2, 2)
+        self.input_textedit_check_output = QtWidgets.QPlainTextEdit(dialog_submit)
+        self.input_textedit_check_output.setObjectName("input_textedit_check_output")
+        self.gridLayout.addWidget(self.input_textedit_check_output, 2, 1, 1, 1)
+        self.input_textedit_performance_data = QtWidgets.QPlainTextEdit(dialog_submit)
+        self.input_textedit_performance_data.setObjectName("input_textedit_performance_data")
+        self.gridLayout.addWidget(self.input_textedit_performance_data, 4, 1, 1, 1)
+        self.input_textedit_comment = QtWidgets.QPlainTextEdit(dialog_submit)
+        self.input_textedit_comment.setObjectName("input_textedit_comment")
+        self.gridLayout.addWidget(self.input_textedit_comment, 6, 1, 1, 1)
 
         self.retranslateUi(dialog_submit)
         self.button_box.accepted.connect(dialog_submit.accept)

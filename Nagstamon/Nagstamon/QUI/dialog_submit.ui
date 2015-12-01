@@ -7,8 +7,14 @@
     <x>0</x>
     <y>0</y>
     <width>473</width>
-    <height>581</height>
+    <height>572</height>
    </rect>
+  </property>
+  <property name="maximumSize">
+   <size>
+    <width>16777215</width>
+    <height>16777215</height>
+   </size>
   </property>
   <property name="windowTitle">
    <string>Submit check result</string>
@@ -18,27 +24,6 @@
     <widget class="QLabel" name="label_performance_data">
      <property name="text">
       <string>Performance data:</string>
-     </property>
-    </widget>
-   </item>
-   <item row="2" column="1">
-    <widget class="QTextEdit" name="input_textedit_check_output">
-     <property name="tabChangesFocus">
-      <bool>true</bool>
-     </property>
-    </widget>
-   </item>
-   <item row="6" column="1">
-    <widget class="QTextEdit" name="input_textedit_comment">
-     <property name="tabChangesFocus">
-      <bool>true</bool>
-     </property>
-    </widget>
-   </item>
-   <item row="4" column="1">
-    <widget class="QTextEdit" name="input_textedit_performance_data">
-     <property name="tabChangesFocus">
-      <bool>true</bool>
      </property>
     </widget>
    </item>
@@ -141,6 +126,15 @@
       </widget>
      </item>
     </layout>
+   </item>
+   <item row="2" column="1">
+    <widget class="QPlainTextEdit" name="input_textedit_check_output"/>
+   </item>
+   <item row="4" column="1">
+    <widget class="QPlainTextEdit" name="input_textedit_performance_data"/>
+   </item>
+   <item row="6" column="1">
+    <widget class="QPlainTextEdit" name="input_textedit_comment"/>
    </item>
   </layout>
  </widget>

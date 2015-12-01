@@ -13,6 +13,12 @@
   <property name="windowTitle">
    <string>Acknowledge</string>
   </property>
+  <property name="sizeGripEnabled">
+   <bool>true</bool>
+  </property>
+  <property name="modal">
+   <bool>true</bool>
+  </property>
   <layout class="QGridLayout" name="gridLayout">
    <item row="4" column="0">
     <widget class="QTextEdit" name="input_textedit_comment">
