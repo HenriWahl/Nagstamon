@@ -7,7 +7,7 @@
     <x>0</x>
     <y>0</y>
     <width>473</width>
-    <height>572</height>
+    <height>443</height>
    </rect>
   </property>
   <property name="maximumSize">
@@ -19,29 +19,48 @@
   <property name="windowTitle">
    <string>Submit check result</string>
   </property>
+  <property name="sizeGripEnabled">
+   <bool>true</bool>
+  </property>
+  <property name="modal">
+   <bool>true</bool>
+  </property>
   <layout class="QGridLayout" name="gridLayout">
-   <item row="4" column="0" alignment="Qt::AlignTop">
-    <widget class="QLabel" name="label_performance_data">
-     <property name="text">
-      <string>Performance data:</string>
+   <item row="5" column="2">
+    <widget class="QLineEdit" name="input_lineedit_performance_data">
+     <property name="sizePolicy">
+      <sizepolicy hsizetype="Expanding" vsizetype="Maximum">
+       <horstretch>0</horstretch>
+       <verstretch>0</verstretch>
+      </sizepolicy>
      </property>
     </widget>
    </item>
-   <item row="2" column="0" alignment="Qt::AlignTop">
+   <item row="3" column="0" alignment="Qt::AlignTop">
     <widget class="QLabel" name="label_check_output">
      <property name="text">
       <string>Check output:</string>
      </property>
     </widget>
    </item>
-   <item row="6" column="0" alignment="Qt::AlignTop">
-    <widget class="QLabel" name="label_comment">
-     <property name="text">
-      <string>Comment:</string>
+   <item row="3" column="2">
+    <widget class="QLineEdit" name="input_lineedit_check_output">
+     <property name="sizePolicy">
+      <sizepolicy hsizetype="Expanding" vsizetype="Maximum">
+       <horstretch>0</horstretch>
+       <verstretch>0</verstretch>
+      </sizepolicy>
      </property>
     </widget>
    </item>
-   <item row="1" column="0" colspan="2">
+   <item row="5" column="0" alignment="Qt::AlignTop">
+    <widget class="QLabel" name="label_performance_data">
+     <property name="text">
+      <string>Performance data:</string>
+     </property>
+    </widget>
+   </item>
+   <item row="1" column="0" colspan="4">
     <widget class="QGroupBox" name="check_result_groupbox">
      <property name="title">
       <string>Check result</string>
@@ -99,14 +118,21 @@
      </layout>
     </widget>
    </item>
-   <item row="0" column="0" colspan="2">
+   <item row="7" column="0" alignment="Qt::AlignTop">
+    <widget class="QLabel" name="label_comment">
+     <property name="text">
+      <string>Comment:</string>
+     </property>
+    </widget>
+   </item>
+   <item row="0" column="0" colspan="4">
     <widget class="QLabel" name="input_label_description">
      <property name="text">
       <string>description - set by QUI.py</string>
      </property>
     </widget>
    </item>
-   <item row="9" column="0" rowspan="2" colspan="2">
+   <item row="10" column="0" rowspan="2" colspan="4">
     <layout class="QHBoxLayout" name="horizontalLayout">
      <item>
       <widget class="QPushButton" name="button_change_defaults_submit_check_result">
@@ -127,17 +153,31 @@
      </item>
     </layout>
    </item>
-   <item row="2" column="1">
-    <widget class="QPlainTextEdit" name="input_textedit_check_output"/>
-   </item>
-   <item row="4" column="1">
-    <widget class="QPlainTextEdit" name="input_textedit_performance_data"/>
-   </item>
-   <item row="6" column="1">
-    <widget class="QPlainTextEdit" name="input_textedit_comment"/>
+   <item row="7" column="2">
+    <widget class="QLineEdit" name="input_lineedit_comment">
+     <property name="sizePolicy">
+      <sizepolicy hsizetype="Expanding" vsizetype="Maximum">
+       <horstretch>0</horstretch>
+       <verstretch>0</verstretch>
+      </sizepolicy>
+     </property>
+    </widget>
    </item>
   </layout>
  </widget>
+ <tabstops>
+  <tabstop>input_radiobutton_result_ok</tabstop>
+  <tabstop>input_radiobutton_result_up</tabstop>
+  <tabstop>input_radiobutton_result_warning</tabstop>
+  <tabstop>input_radiobutton_result_critical</tabstop>
+  <tabstop>input_radiobutton_result_unreachable</tabstop>
+  <tabstop>input_radiobutton_result_unknown</tabstop>
+  <tabstop>input_radiobutton_result_down</tabstop>
+  <tabstop>input_lineedit_check_output</tabstop>
+  <tabstop>input_lineedit_performance_data</tabstop>
+  <tabstop>input_lineedit_comment</tabstop>
+  <tabstop>button_change_defaults_submit_check_result</tabstop>
+ </tabstops>
  <resources/>
  <connections>
   <connection>

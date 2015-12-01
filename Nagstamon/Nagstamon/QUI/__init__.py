@@ -3711,8 +3711,8 @@ class Dialog_Acknowledge(Dialog):
         self.ui.input_checkbox_acknowledge_all_services.setChecked(conf.defaults_acknowledge_all_services)
 
         # default author + comment
-        self.ui.input_textedit_comment.setText(conf.defaults_acknowledge_comment)
-        self.ui.input_textedit_comment.setFocus()
+        self.ui.input_lineedit_comment.setText(conf.defaults_acknowledge_comment)
+        self.ui.input_lineedit_comment.setFocus()
 
 
     def ok(self):
@@ -3734,7 +3734,7 @@ class Dialog_Acknowledge(Dialog):
                                'host': self.host,
                                'service': self.service,
                                'author': self.server.username,
-                               'comment': self.ui.input_textedit_comment.toPlainText(),
+                               'comment': self.ui.input_lineedit_comment.text(),
                                'sticky': self.ui.input_checkbox_sticky_acknowledgement.isChecked(),
                                'notify': self.ui.input_checkbox_send_notification.isChecked(),
                                'persistent': self.ui.input_checkbox_persistent_comment.isChecked(),
@@ -3787,8 +3787,8 @@ class Dialog_Downtime(Dialog):
         self.ui.input_lineedit_end_time.setText('n/a')
 
         # default author + comment
-        self.ui.input_textedit_comment.setText(conf.defaults_downtime_comment)
-        self.ui.input_textedit_comment.setFocus()
+        self.ui.input_lineedit_comment.setText(conf.defaults_downtime_comment)
+        self.ui.input_lineedit_comment.setFocus()
 
         if self.server != None:
             # at first initialization server is still None
@@ -3809,7 +3809,7 @@ class Dialog_Downtime(Dialog):
                             'host': self.host,
                             'service': self.service,
                             'author': self.server.username,
-                            'comment': self.ui.input_textedit_comment.toPlainText(),
+                            'comment': self.ui.input_lineedit_comment.text(),
                             'fixed': fixed,
                             'start_time': self.ui.input_lineedit_start_time.text(),
                             'end_time': self.ui.input_lineedit_end_time.text(),

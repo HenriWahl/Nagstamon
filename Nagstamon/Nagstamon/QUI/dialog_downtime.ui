@@ -7,7 +7,7 @@
     <x>0</x>
     <y>0</y>
     <width>409</width>
-    <height>374</height>
+    <height>324</height>
    </rect>
   </property>
   <property name="windowTitle">
@@ -20,8 +20,12 @@
    <bool>true</bool>
   </property>
   <layout class="QGridLayout" name="gridLayout">
-   <item row="8" column="1">
-    <widget class="QSpinBox" name="input_spinbox_duration_hours"/>
+   <item row="3" column="1" colspan="4">
+    <widget class="QLineEdit" name="input_lineedit_end_time">
+     <property name="text">
+      <string>n/a</string>
+     </property>
+    </widget>
    </item>
    <item row="0" column="0" colspan="5">
     <widget class="QLabel" name="input_label_description">
@@ -30,10 +34,10 @@
      </property>
     </widget>
    </item>
-   <item row="8" column="2">
-    <widget class="QLabel" name="label_duration_hours">
+   <item row="8" column="4">
+    <widget class="QLabel" name="label_duration_minutes">
      <property name="text">
-      <string>hours</string>
+      <string>minutes</string>
      </property>
     </widget>
    </item>
@@ -44,36 +48,15 @@
      </property>
     </widget>
    </item>
-   <item row="14" column="0" rowspan="2" colspan="5">
-    <layout class="QHBoxLayout" name="horizontalLayout">
-     <item>
-      <widget class="QPushButton" name="button_change_defaults_downtime">
-       <property name="text">
-        <string>Change downtime defaults...</string>
-       </property>
-      </widget>
-     </item>
-     <item>
-      <widget class="QDialogButtonBox" name="button_box">
-       <property name="orientation">
-        <enum>Qt::Horizontal</enum>
-       </property>
-       <property name="standardButtons">
-        <set>QDialogButtonBox::Cancel|QDialogButtonBox::Ok</set>
-       </property>
-      </widget>
-     </item>
-    </layout>
-   </item>
-   <item row="8" column="4">
-    <widget class="QLabel" name="label_duration_minutes">
+   <item row="3" column="0">
+    <widget class="QLabel" name="label_end_time">
      <property name="text">
-      <string>minutes</string>
+      <string>End time:</string>
      </property>
     </widget>
    </item>
-   <item row="8" column="3">
-    <widget class="QSpinBox" name="input_spinbox_duration_minutes"/>
+   <item row="1" column="0" colspan="5">
+    <widget class="QLineEdit" name="input_lineedit_comment"/>
    </item>
    <item row="2" column="0">
     <widget class="QLabel" name="label_start_time">
@@ -89,12 +72,8 @@
      </property>
     </widget>
    </item>
-   <item row="3" column="0">
-    <widget class="QLabel" name="label_end_time">
-     <property name="text">
-      <string>End time:</string>
-     </property>
-    </widget>
+   <item row="8" column="1">
+    <widget class="QSpinBox" name="input_spinbox_duration_hours"/>
    </item>
    <item row="9" column="0" colspan="5">
     <widget class="QGroupBox" name="type_groupbox">
@@ -119,22 +98,49 @@
      </layout>
     </widget>
    </item>
-   <item row="3" column="1" colspan="4">
-    <widget class="QLineEdit" name="input_lineedit_end_time">
+   <item row="14" column="0" rowspan="2" colspan="5">
+    <layout class="QHBoxLayout" name="horizontalLayout">
+     <item>
+      <widget class="QPushButton" name="button_change_defaults_downtime">
+       <property name="text">
+        <string>Change downtime defaults...</string>
+       </property>
+      </widget>
+     </item>
+     <item>
+      <widget class="QDialogButtonBox" name="button_box">
+       <property name="orientation">
+        <enum>Qt::Horizontal</enum>
+       </property>
+       <property name="standardButtons">
+        <set>QDialogButtonBox::Cancel|QDialogButtonBox::Ok</set>
+       </property>
+      </widget>
+     </item>
+    </layout>
+   </item>
+   <item row="8" column="2">
+    <widget class="QLabel" name="label_duration_hours">
      <property name="text">
-      <string>n/a</string>
+      <string>hours</string>
      </property>
     </widget>
    </item>
-   <item row="1" column="0" colspan="5">
-    <widget class="QTextEdit" name="input_textedit_comment">
-     <property name="tabChangesFocus">
-      <bool>true</bool>
-     </property>
-    </widget>
+   <item row="8" column="3">
+    <widget class="QSpinBox" name="input_spinbox_duration_minutes"/>
    </item>
   </layout>
  </widget>
+ <tabstops>
+  <tabstop>input_lineedit_comment</tabstop>
+  <tabstop>input_lineedit_start_time</tabstop>
+  <tabstop>input_lineedit_end_time</tabstop>
+  <tabstop>input_spinbox_duration_hours</tabstop>
+  <tabstop>input_spinbox_duration_minutes</tabstop>
+  <tabstop>input_radiobutton_type_fixed</tabstop>
+  <tabstop>input_radiobutton_type_flexible</tabstop>
+  <tabstop>button_change_defaults_downtime</tabstop>
+ </tabstops>
  <resources/>
  <connections>
   <connection>
