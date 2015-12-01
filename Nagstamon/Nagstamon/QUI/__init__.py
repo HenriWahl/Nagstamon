@@ -956,6 +956,9 @@ class StatusWindow(QWidget):
             tell all enabled servers to refresh their information
         """
         for server in get_enabled_servers():
+            if conf.debug_mode:
+                server.Debug(server=server.name, debug='Refreshing all hosts and services')
+
             # manipulate server thread counter so get_status loop will refresh when next looking
             # at thread counter
             server.thread_counter = conf.update_interval_seconds
@@ -1445,18 +1448,31 @@ class ServerStatusLabel(Draggable_Label):
         label for ServerVBox to show server connection state
         extra class to apply simple slots for changing text or color
     """
+
+    # storage for label text if it needs to be restored
+    text_old = ''
+
     def __init__(self, parent=None):
         QLabel.__init__(self, parent=parent)
 
 
     @pyqtSlot(str)
     def change(self, text):
+        # store old text in case it needs to be reused
+        self.text_old = self.text()
+        # set new text
         self.setText(text)
 
 
     @pyqtSlot()
     def reset(self):
         self.setText('')
+
+
+    @pyqtSlot()
+    def restore(self):
+        # restore text, used by recheck_all of tablewidget worker
+        self.setText(self.text_old)
 
 
 class ServerVBox(QVBoxLayout):
@@ -1520,6 +1536,7 @@ class ServerVBox(QVBoxLayout):
 
         # connect worker to status label to reflect connectivity
         self.table.worker.change_label_status.connect(self.label_status.change)
+        self.table.worker.restore_label_status.connect(self.label_status.restore)
 
         self.addWidget(self.table, 1)
 
@@ -2198,8 +2215,14 @@ class TableWidget(QTableWidget):
         # signal to be sent to slot "change" of ServerStatusLabel
         change_label_status = pyqtSignal(str)
 
+        # signal to be sent to slot "restore" of ServerStatusLabel
+        restore_label_status = pyqtSignal()
+
         # send notification a stop message if problems vanished without being noticed
         problems_vanished = pyqtSignal()
+
+        # flag to keep recheck_all from being started more than once
+        rechecking_all = False
 
 
         def __init__(self, parent=None, server=None):
@@ -2377,7 +2400,13 @@ class TableWidget(QTableWidget):
             """
                 Slot to start server recheck method, getting signal from TableWidget context menu
             """
-            print(info_dict)
+            if conf.debug_mode:
+                # host
+                if info_dict['service'] == '':
+                    self.server.Debug(server=self.server.name, debug='Rechecking host {0}'.format(info_dict['host']))
+                else:
+                    self.server.Debug(server=self.server.name, debug='Rechecking service {0} on host {1}'.format(info_dict['service'], info_dict['host']))
+            # call server recheck method
             self.server.set_recheck(info_dict)
 
 
@@ -2386,19 +2415,41 @@ class TableWidget(QTableWidget):
             """
                 call server.set_recheck for every single host/service
             """
-            # special treatment for Check_MK Multisite because there is only one URL call necessary
-            if self.server.type != 'Check_MK Multisite':
-                for status in self.server.nagitems_filtered['hosts'].items():
-                    for host in status[1]:
-                        self.server.set_recheck({'host': host.name, 'service': ''})
-                for status in self.server.nagitems_filtered['services'].items():
-                    for service in status[1]:
-                        self.server.set_recheck({'host': service.host, 'service': service.name})
-                del(status)
+            # only if no already rechecking
+            if self.rechecking_all == False:
+                # block rechecking
+                self.rechecking_all = True
+                # change label of server vbox
+                self.change_label_status.emit('Rechecking all...')
+                if conf.debug_mode:
+                    self.server.Debug(server=self.server.name, debug='Start rechecking all')
+                # special treatment for Check_MK Multisite because there is only one URL call necessary
+                if self.server.type != 'Check_MK Multisite':
+                    # make a copy to preserve hosts/service to recheck - just in case something changes meanwhile
+                    nagitems_filtered = deepcopy(self.server.nagitems_filtered)
+                    for status in nagitems_filtered['hosts'].items():
+                        for host in status[1]:
+                            if conf.debug_mode:
+                                self.server.Debug(server=self.server.name, debug='Rechecking host {0}'.format(host.name))
+                            # call server recheck method
+                            self.server.set_recheck({'host': host.name, 'service': ''})
+                    for status in nagitems_filtered['services'].items():
+                        for service in status[1]:
+                            if conf.debug_mode:
+                                self.server.Debug(server=self.server.name, debug='Rechecking service {0} on host {1}'.format(service.name, service.host))
+                            # call server recheck method
+                            self.server.set_recheck({'host': service.host, 'service': service.name})
+                    del(nagitems_filtered, status)
+                else:
+                    # Check_MK Multisite does it its own way
+                    self.server.recheck_all()
+                # release rechecking lock
+                self.rechecking = False
+                # restore server status label
+                self.restore_label_status.emit()
             else:
-                # Check_MK Multisite does it its own way
-                self.server.recheck_all()
-
+                if conf.debug_mode:
+                    self.server.Debug(server=self.server.name, debug='Already rechecking all')
 
         @pyqtSlot(str, str)
         def get_start_end(self, server_name, host):
