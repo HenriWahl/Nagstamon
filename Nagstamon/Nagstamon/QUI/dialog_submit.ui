@@ -36,7 +36,7 @@
      </property>
     </widget>
    </item>
-   <item row="3" column="0" alignment="Qt::AlignTop">
+   <item row="3" column="0" alignment="Qt::AlignVCenter">
     <widget class="QLabel" name="label_check_output">
      <property name="text">
       <string>Check output:</string>
@@ -53,7 +53,7 @@
      </property>
     </widget>
    </item>
-   <item row="5" column="0" alignment="Qt::AlignTop">
+   <item row="5" column="0" alignment="Qt::AlignVCenter">
     <widget class="QLabel" name="label_performance_data">
      <property name="text">
       <string>Performance data:</string>
@@ -70,6 +70,9 @@
        <widget class="QRadioButton" name="input_radiobutton_result_ok">
         <property name="text">
          <string>OK</string>
+        </property>
+        <property name="checked">
+         <bool>true</bool>
         </property>
        </widget>
       </item>
@@ -118,7 +121,7 @@
      </layout>
     </widget>
    </item>
-   <item row="7" column="0" alignment="Qt::AlignTop">
+   <item row="7" column="0" alignment="Qt::AlignVCenter">
     <widget class="QLabel" name="label_comment">
      <property name="text">
       <string>Comment:</string>

@@ -44,6 +44,7 @@ class Ui_dialog_submit(object):
         self.verticalLayout = QtWidgets.QVBoxLayout(self.check_result_groupbox)
         self.verticalLayout.setObjectName("verticalLayout")
         self.input_radiobutton_result_ok = QtWidgets.QRadioButton(self.check_result_groupbox)
+        self.input_radiobutton_result_ok.setChecked(True)
         self.input_radiobutton_result_ok.setObjectName("input_radiobutton_result_ok")
         self.verticalLayout.addWidget(self.input_radiobutton_result_ok)
         self.input_radiobutton_result_up = QtWidgets.QRadioButton(self.check_result_groupbox)

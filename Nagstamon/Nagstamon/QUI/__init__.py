@@ -2652,7 +2652,6 @@ class Dialog(QObject):
     VOLATILE_WIDGETS = {}
     # names of widgets and their defaults
     WIDGET_NAMES = {}
-
     # style stuff used by settings dialog for servers/actions listwidget
     GRAY = QBrush(Qt.gray)
 
@@ -3265,6 +3264,13 @@ class Dialog_Settings(Dialog):
             self.ui.__dict__['label_color_%s' % (status)].setStyleSheet('color: %s; background: %s' %
                                                                        (text, background))
 
+    def get_list_servers_background_color(self):
+        """
+            absolutely unnecessary but just cosmetic need to get the background color of the servers listview
+            to use it for QLineEdits too which have a rather boring gray backgground color
+        """
+        print(self.ui.list_server.styleSheet())
+
 
 class Dialog_Server(Dialog):
     """
@@ -3849,23 +3855,36 @@ class Dialog_Submit(Dialog):
             # set label for acknowledging a host
             self.window.setWindowTitle('Submit check result for host')
             self.ui.input_label_description.setText('Host <b>%s</b>' % (host))
+            # services do not need all states
+            self.ui.input_radiobutton_result_up.show()
+            self.ui.input_radiobutton_result_ok.hide()
+            self.ui.input_radiobutton_result_warning.hide()
+            self.ui.input_radiobutton_result_critical.hide()
+            self.ui.input_radiobutton_result_unknown.show()
+            self.ui.input_radiobutton_result_unreachable.show()
+            self.ui.input_radiobutton_result_down.show()
+            # activate first radiobutton
+            self.ui.input_radiobutton_result_up.setChecked(True)
         else:
             # set label for acknowledging a service on host
             self.window.setWindowTitle('Submit check result for service')
             self.ui.input_label_description.setText('Service <b>%s</b> on host <b>%s</b>' % (service, host))
+            # hosts do not need all states
+            self.ui.input_radiobutton_result_up.hide()
+            self.ui.input_radiobutton_result_ok.show()
+            self.ui.input_radiobutton_result_warning.show()
+            self.ui.input_radiobutton_result_critical.show()
+            self.ui.input_radiobutton_result_unknown.show()
+            self.ui.input_radiobutton_result_unreachable.hide()
+            self.ui.input_radiobutton_result_down.hide()
+            # activate first radiobutton
+            self.ui.input_radiobutton_result_ok.setChecked(True)
 
-        """
-        # default flags of monitor acknowledgement
-        self.ui.input_spinbox_duration_hours.setValue(int(conf.defaults_downtime_duration_hours))
-        self.ui.input_spinbox_duration_minutes.setValue(int(conf.defaults_downtime_duration_minutes))
-        self.ui.input_radiobutton_type_fixed.setChecked(conf.defaults_downtime_type_fixed)
-        self.ui.input_radiobutton_type_flexible.setChecked(conf.defaults_downtime_type_flexible)
-
-        # default author + comment
-        self.ui.input_textedit_comment.setText(conf.defaults_downtime_comment)
-        self.ui.input_textedit_comment.setFocus()
-
-        """
+        # clear text fields
+        self.ui.input_lineedit_check_output.setText('')
+        self.ui.input_lineedit_performance_data.setText('')
+        self.ui.input_lineedit_comment.setText(conf.defaults_submit_check_result_comment)
+        self.ui.input_lineedit_check_output.setFocus()
 
 
     def ok(self):
