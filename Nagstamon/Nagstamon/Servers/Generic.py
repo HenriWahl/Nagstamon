@@ -410,9 +410,21 @@ class GenericServer(object):
         self.FetchURL(url, giveback='raw', cgi_data=cgi_data)
 
 
-    def set_submit_check_result(self, thread_obj):
+    def set_submit_check_result_OLD(self, thread_obj):
         self._set_submit_check_result(thread_obj.host, thread_obj.service, thread_obj.state, thread_obj.comment, \
                                       thread_obj.check_output, thread_obj.performance_data)
+
+
+    def set_submit_check_result(self, info_dict):
+        """
+            start specific submission part
+        """
+        self._set_submit_check_result(info_dict['host'],
+                                      info_dict['service'],
+                                      info_dict['state'],
+                                      info_dict['comment'],
+                                      info_dict['check_output'],
+                                      info_dict['performance_data'])
 
 
     def _set_submit_check_result(self, host, service, state, comment, check_output, performance_data):
@@ -1314,7 +1326,7 @@ class GenericServer(object):
     def Hook(self):
         '''
             allows to add some extra actions for a monitor server to be executed in RefreshLoop
-            inspired by Centreon and its seemingly Alzheimer desease regarding session ID/Cookie/whatever
+            inspired by Centreon and its seemingly Alzheimer disease regarding session ID/Cookie/whatever
         '''
         pass
 

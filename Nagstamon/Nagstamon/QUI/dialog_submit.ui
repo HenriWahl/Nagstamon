@@ -135,7 +135,7 @@
      </property>
     </widget>
    </item>
-   <item row="10" column="0" rowspan="2" colspan="4">
+   <item row="11" column="0" rowspan="2" colspan="4">
     <layout class="QHBoxLayout" name="horizontalLayout">
      <item>
       <widget class="QPushButton" name="button_change_defaults_submit_check_result">
@@ -165,6 +165,19 @@
       </sizepolicy>
      </property>
     </widget>
+   </item>
+   <item row="10" column="0">
+    <spacer name="verticalSpacer">
+     <property name="orientation">
+      <enum>Qt::Vertical</enum>
+     </property>
+     <property name="sizeHint" stdset="0">
+      <size>
+       <width>20</width>
+       <height>40</height>
+      </size>
+     </property>
+    </spacer>
    </item>
   </layout>
  </widget>

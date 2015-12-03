@@ -1816,6 +1816,9 @@ class TableWidget(QTableWidget):
         # connect signal for downtime
         dialogs.downtime.downtime.connect(self.worker.downtime)
 
+        # connect signal for submit check result
+        dialogs.submit.submit.connect(self.worker.submit)
+
         # connect signal for recheck action
         self.recheck.connect(self.worker.recheck)
 
@@ -2408,6 +2411,20 @@ class TableWidget(QTableWidget):
             if self.server == info_dict['server']:
                 # pass dictionary to server's downtime machinery
                 self.server.set_downtime(info_dict)
+
+
+        @pyqtSlot(dict)
+        def submit(self, info_dict):
+            """
+                slot waiting for 'submit' signal from ok button from submit dialog
+                all information about target server, host, service and flags is contained
+                in dictionary 'info_dict'
+            """
+            # because all monitors are connected to this slot we must check which one sent the signal,
+            # otherwise there are several calls and not only one as wanted
+            if self.server == info_dict['server']:
+                # pass dictionary to server's downtime machinery
+                self.server.set_submit_check_result(info_dict)
 
 
         @pyqtSlot(dict)
@@ -3264,13 +3281,6 @@ class Dialog_Settings(Dialog):
             self.ui.__dict__['label_color_%s' % (status)].setStyleSheet('color: %s; background: %s' %
                                                                        (text, background))
 
-    def get_list_servers_background_color(self):
-        """
-            absolutely unnecessary but just cosmetic need to get the background color of the servers listview
-            to use it for QLineEdits too which have a rather boring gray backgground color
-        """
-        print(self.ui.list_server.styleSheet())
-
 
 class Dialog_Server(Dialog):
     """
@@ -3840,6 +3850,8 @@ class Dialog_Submit(Dialog):
     server = None
     host = service = ''
 
+    submit = pyqtSignal(dict)
+
     def __init__(self, dialog):
         Dialog.__init__(self, dialog)
 
@@ -3891,8 +3903,22 @@ class Dialog_Submit(Dialog):
         """
             submit arbitrary check result
         """
+        # default state
+        state = "ok"
 
-        print('Submitting check results still has to be implemented')
+        for button in ["ok", "up", "warning", "critical", "unreachable", "unknown", "down"]:
+            if self.ui.__dict__['input_radiobutton_result_' + button ].isChecked():
+                state = button
+                break
+
+        # tell worker to submit
+        self.submit.emit({'server': self.server,
+                          'host': self.host,
+                          'service': self.service,
+                          'state': state,
+                          'comment': self.ui.input_lineedit_comment.text(),
+                          'check_output': self.ui.input_lineedit_check_output.text(),
+                          'performance_data': self.ui.input_lineedit_performance_data.text()})
 
 
 class MediaPlayer(QObject):
