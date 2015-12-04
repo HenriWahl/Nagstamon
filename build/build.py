@@ -208,6 +208,7 @@ def rpmmain():
 DISTS = {
     'debian': debmain,
     'Ubuntu': debmain,
+    'LinuxMint': debmain,
     'fedora': rpmmain
 }
 
