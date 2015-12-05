@@ -26,21 +26,15 @@ import zlib
 import datetime
 from collections import OrderedDict
 
-from Nagstamon.Helpers import debug_queue
-
-# temporary dict for string-to-bool-conversion
-# the bool:bool relations are thought to make things easier in Dialog_Settings.ok()
-BOOLPOOL = {'False': False,
-            'True': True,
-            False: False,
-            True: True}
+from Nagstamon.Helpers import (debug_queue,
+                               BOOLPOOL)
 
 class AppInfo(object):
     """
     contains app information previously located in GUI.py
     """
     NAME = 'Nagstamon'
-    VERSION = '2.0-alpha-20151201'
+    VERSION = '2.0-alpha-20151204'
     WEBSITE = 'https://nagstamon.ifw-dresden.de'
     COPYRIGHT = '©2008-2015 Henri Wahl et al.\nh.wahl@ifw-dresden.de'
     COMMENTS = 'Nagios status monitor for your desktop'

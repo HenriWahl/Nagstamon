@@ -24,7 +24,6 @@ from PyQt5.QtCore import *
 
 import sys
 import socket
-import platform
 
 # fix/patch for https://bugs.launchpad.net/ubuntu/+source/nagstamon/+bug/732544
 socket.setdefaulttimeout(30)

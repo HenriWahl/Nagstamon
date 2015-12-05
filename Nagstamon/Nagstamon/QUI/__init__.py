@@ -37,11 +37,23 @@ import sys
 import platform
 import time
 
-from Nagstamon.Config import (conf, Server, Action, RESOURCES, AppInfo, BOOLPOOL)
+from Nagstamon.Config import (conf,
+                              Server,
+                              Action,
+                              RESOURCES,
+                              AppInfo)
 
-from Nagstamon.Servers import (SERVER_TYPES, servers, create_server, get_enabled_servers)
+from Nagstamon.Servers import (SERVER_TYPES,
+                               servers,
+                               create_server,
+                               get_enabled_servers,
+                               get_worst_status)
 
-from Nagstamon.Helpers import (IsFoundByRE, debug_queue, STATES, STATES_SOUND)
+from Nagstamon.Helpers import (is_found_by_re,
+                               debug_queue,
+                               STATES,
+                               STATES_SOUND,
+                               BOOLPOOL)
 
 # dialogs
 from Nagstamon.QUI.settings_main import Ui_settings_main
@@ -121,8 +133,28 @@ class SystemTrayIcon(QSystemTrayIcon):
         Icon in system tray, works at least in Windows and OSX
         Qt5 shows an empty icon in GNOME3
     """
-    def __init__(self, icon):
-        QSystemTrayIcon.__init__(self, icon)
+    def __init__(self):
+        QSystemTrayIcon.__init__(self)
+
+        self.icons = {}
+
+        # load all state icons + extra
+        for state in STATES + ['OK', 'ERROR', 'EMPTY']:
+            icon_file = '{0}{1}nagstamon_systrayicon_{2}.svg'.format(RESOURCES, os.sep, state.lower())
+            if os.path.exists(icon_file):
+                self.icons[state] = QIcon('{0}{1}nagstamon_systrayicon_{2}.svg'.format(RESOURCES, os.sep, state.lower()))
+
+        # little workaround to match statuswindow.worker_notification.worst_notification_status
+        self.icons['UP'] = self.icons['OK']
+
+        self.setIcon(self.icons['OK'])
+
+        # store icon for flashing
+        self.current_icon = None
+
+        # timer for singleshots for flashing
+        self.timer = QTimer()
+
         self.menu = QMenu()
         exitaction = QAction('Exit', self)
         exitaction.triggered.connect(exit)
@@ -130,9 +162,67 @@ class SystemTrayIcon(QSystemTrayIcon):
         dummyaction = QAction('Dummy', self)
         self.menu.addAction(dummyaction)
 
+        self.activated.connect(self.icon_clicked)
+
         self.menu.addAction(exitaction)
-        self.setContextMenu(self.menu)
+
+        # MacOSX does not distinguish between left and right click so menu will go to upper menu bar
+        if platform.system() != 'Darwin':
+            self.setContextMenu(self.menu)
         self.show()
+
+
+    @pyqtSlot(QEvent)
+    def icon_clicked(self, event):
+        # only react on left mouse click
+        if event == (QSystemTrayIcon.Trigger or QSystemTrayIcon.DoubleClick):
+            pass
+
+
+    @pyqtSlot()
+    def show_state(self):
+        """
+            get worst status and display it in systray
+        """
+        worst_status = get_worst_status()
+        self.setIcon(self.icons[worst_status])
+        # set current icon for flshing
+        self.current_icon = self.icons[worst_status]
+        del(worst_status)
+
+
+    @pyqtSlot()
+    def flash(self):
+        """
+            send color inversion signal to labels
+        """
+        # only if currently a notification is necessary
+        if statuswindow.worker_notification.is_notifying:
+            # store current icon to get it reset back
+            if self.current_icon == None:
+                self.current_icon = self.icons[statuswindow.worker_notification.worst_notification_status]
+            # use empty SVG icon to display emptiness
+            self.setIcon(self.icons['EMPTY'])
+            # fire up  a singleshot to reset color soon
+            self.timer.singleShot(500, self.reset)
+
+
+
+    @pyqtSlot()
+    def reset(self):
+        """
+            tell labels to set original colors
+        """
+        # only if currently a notification is necessary
+        if statuswindow.worker_notification.is_notifying:
+            # set curent status icon
+            self.setIcon(self.current_icon)
+            # even later call itself to invert colors as flash
+            self.timer.singleShot(500, self.flash)
+        else:
+            if self.current_icon != None:
+                self.setIcon(self.current_icon)
+            self.current_icon = None
 
 
 class MenuAtCursor(QMenu):
@@ -484,12 +574,18 @@ class StatusWindow(QWidget):
         # if monitor was selected in combobox its monitor window is opened
         self.toparea.combobox_servers.monitor_opened.connect(self.hide_window)
 
+        # refresh all information after changed settings
+        dialogs.settings.changed.connect(self.refresh)
+
         # worker and thread duo needed for notifications
         self.worker_notification_thread = QThread()
         self.worker_notification = self.Worker_Notification()
         # flashing statusbar
         self.worker_notification.start_flash.connect(self.statusbar.flash)
         self.worker_notification.stop_flash.connect(self.statusbar.reset)
+        # flashing statusicon
+        self.worker_notification.start_flash.connect(systrayicon.flash)
+        self.worker_notification.stop_flash.connect(systrayicon.reset)
         # stop notification if window gets shown or hidden
         self.hiding.connect(self.worker_notification.stop)
 
@@ -572,6 +668,7 @@ class StatusWindow(QWidget):
 
             # tell statusbar to summarize after table was refreshed
             server_vbox.table.worker.new_status.connect(self.statusbar.summarize_states)
+            server_vbox.table.worker.new_status.connect(systrayicon.show_state)
 
             # if problems go themselves there is no need to notify user anymore
             server_vbox.table.worker.problems_vanished.connect(self.worker_notification.stop)
@@ -1052,17 +1149,17 @@ class StatusWindow(QWidget):
 
 
         @pyqtSlot(str, str)
-        def start(self, server_name, worst_status):
+        def start(self, server_name, worst_status_diff):
             """
                 start notification
             """
             # only if not notifying yet or the current state is worse than the prior AND
             # only when the current state is configured to be honking about
-            if (STATES.index(worst_status) > STATES.index(self.worst_notification_status) or\
+            if (STATES.index(worst_status_diff) > STATES.index(self.worst_notification_status) or\
                self.is_notifying == False) and\
-               conf.__dict__['notify_if_{0}'.format(worst_status.lower())] == True:
+               conf.__dict__['notify_if_{0}'.format(worst_status_diff.lower())] == True:
                 # keep last worst state worth a notification for comparison 3 lines above
-                self.worst_notification_status = worst_status
+                self.worst_notification_status = worst_status_diff
 
                 # set flag to avoid innecessary notification
                 self.is_notifying = True
@@ -1074,18 +1171,19 @@ class StatusWindow(QWidget):
                     self.start_flash.emit()
 
                 # what about flashing SYSTRAY ICON?
+                # gets notified like
 
                 # Play default sounds via mediaplayer
                 if conf.notification_sound:
                     sound_file = ''
                     # at the moment there are only sounds for down, critical and warning
                     # only honk if notifications are wanted for this state
-                    if worst_status in STATES_SOUND:
+                    if worst_status_diff in STATES_SOUND:
                         if conf.notification_default_sound:
                             # default .wav sound files are in resources folder
-                            sound_file = '{0}{1}{2}.wav'.format(RESOURCES, os.sep, worst_status.lower())
+                            sound_file = '{0}{1}{2}.wav'.format(RESOURCES, os.sep, worst_status_diff.lower())
                         elif conf.notification_custom_sound:
-                            sound_file = conf.__dict__['notification_custom_sound_{0}'.format(worst_status.lower())]
+                            sound_file = conf.__dict__['notification_custom_sound_{0}'.format(worst_status_diff.lower())]
 
                         # once loaded file will be played by every server, even if it is
                         # not the self.notifying_server that loaded it
@@ -1097,11 +1195,11 @@ class StatusWindow(QWidget):
 
                 # Notification actions
                 if conf.notification_actions:
-                    if conf.notification_action_warning == True and worst_status == 'WARNING':
+                    if conf.notification_action_warning == True and worst_status_diff == 'WARNING':
                         self.execute_action(server_name, conf.notification_action_warning_string)
-                    if conf.notification_action_critical == True and worst_status == 'CRITICAL':
+                    if conf.notification_action_critical == True and worst_status_diff == 'CRITICAL':
                         self.execute_action(server_name, conf.notification_action_critical_string)
-                    if conf.notification_action_down == True and worst_status == 'DOWN':
+                    if conf.notification_action_down == True and worst_status_diff == 'DOWN':
                         self.execute_action(server_name, conf.notification_action_down_string)
 
             # Custom event notification - valid vor ALL events, thus without status comparison
@@ -1162,7 +1260,7 @@ class StatusWindow(QWidget):
                 self.worst_notification_status = 'UP'
                 self.is_notifying = False
 
-                # no more flashing statusbar
+                # no more flashing statusbar and systray
                 self.stop_flash.emit()
 
                 # reset notifying server, waiting for next notification
@@ -1855,7 +1953,7 @@ class TableWidget(QTableWidget):
             # check if status changed and notification is necessary
             # send signal because there are unseen events
             if self.server.get_events_history_count() > 0:
-                self.status_changed.emit(self.server.name, self.server.worst_status)
+                self.status_changed.emit(self.server.name, self.server.worst_status_diff)
 
 
     @pyqtSlot(int, int, str, str, str, list, str)
@@ -1941,19 +2039,19 @@ class TableWidget(QTableWidget):
                         if action.filter_target_service == True:
                             # only check if there is some to check
                             if action.re_host_enabled == True:
-                                if IsFoundByRE(self.miserable_host,
+                                if is_found_by_re(self.miserable_host,
                                                        action.re_host_pattern,
                                                        action.re_host_reverse):
                                     item_visible = True
                             # dito
                             if action.re_service_enabled == True:
-                                if IsFoundByRE(self.miserable_service,
+                                if is_found_by_re(self.miserable_service,
                                                        action.re_service_pattern,
                                                        action.re_service_reverse):
                                     item_visible = True
                             # dito
                             if action.re_status_information_enabled == True:
-                                if IsFoundByRE(self.miserable_service,
+                                if is_found_by_re(self.miserable_service,
                                                        action.re_status_information_pattern,
                                                        action.re_status_information_reverse):
                                     item_visible = True
@@ -1967,7 +2065,7 @@ class TableWidget(QTableWidget):
                         # hosts should only care about host specific actions, no services
                         if action.filter_target_host == True:
                             if action.re_host_enabled == True:
-                                if IsFoundByRE(self.miserable_host,\
+                                if is_found_by_re(self.miserable_host,\
                                                        action.re_host_pattern,\
                                                        action.re_host_reverse):
                                     item_visible = True
@@ -2771,6 +2869,10 @@ class Dialog_Settings(Dialog):
     """
         class for settings dialog
     """
+
+    # signal to be fired if OK button was clicked and new settinga applied
+    changed = pyqtSignal()
+
     def __init__(self, dialog):
         Dialog.__init__(self, dialog)
         # define checkbox-to-widgets dependencies which apply at initialization
@@ -2980,6 +3082,9 @@ class Dialog_Settings(Dialog):
 
         # store configuration
         conf.SaveConfig()
+
+        # tell statuswindow to refresh due to new settings
+        self.changed.emit()
 
 
     @pyqtSlot()
@@ -4129,7 +4234,8 @@ desktop = QApplication.desktop()
 dialogs = Dialogs()
 
 # system tray icon
-systrayicon = SystemTrayIcon(QIcon('%s%snagstamon.svg' % (RESOURCES, os.sep)))
+#systrayicon = SystemTrayIcon(QIcon('%s%snagstamon.svg' % (RESOURCES, os.sep)))
+systrayicon = SystemTrayIcon()
 
 # combined statusbar/status window
 statuswindow = StatusWindow()

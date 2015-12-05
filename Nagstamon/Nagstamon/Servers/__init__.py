@@ -34,6 +34,8 @@ from Nagstamon.Servers.Zabbix import ZabbixServer
 
 from Nagstamon.Config import conf
 
+from Nagstamon.Helpers import STATES
+
 # dictionary for servers
 servers = OrderedDict()
 
@@ -58,6 +60,17 @@ def get_enabled_servers():
         list of enabled servers which connections outside should be used to check
     """
     return([x for x in servers.values() if x.enabled == True])
+
+
+def get_worst_status():
+    """
+        get worst status of all servers
+    """
+    worst_status = 'UP'
+    for server in get_enabled_servers():
+        if STATES.index(server.worst_status_current) > STATES.index(worst_status):
+            worst_status = server.worst_status_current
+    return worst_status
 
 
 def create_server(server=None):

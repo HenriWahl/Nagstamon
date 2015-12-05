@@ -36,14 +36,18 @@ import platform
 import urllib.parse
 from bs4 import BeautifulSoup
 
-from Nagstamon.Helpers import (HostIsFilteredOutByRE,
+from Nagstamon.Helpers import (host_is_filtered_out_by_re,
                                ServiceIsFilteredOutByRE,
                                StatusInformationIsFilteredOutByRE,
                                CriticalityIsFilteredOutByRE,
                                not_empty,
                                debug_queue,
                                STATES)
-from Nagstamon.Objects import (GenericService, GenericHost, Result)
+
+from Nagstamon.Objects import (GenericService,
+                               GenericHost,
+                               Result)
+
 from Nagstamon.Config import (conf, AppInfo)
 
 from collections import OrderedDict
@@ -101,9 +105,8 @@ class GenericServer(object):
         self.new_hosts = dict()
         self.isChecking = False
         self.CheckingForNewVersion = False
-        self.worst_status = 'UP'
-        ###self.STATES = ['UP', 'UNKNOWN', 'WARNING', 'CRITICAL', 'UNREACHABLE', 'DOWN']
-        self.STATES = STATES
+        # store current and difference of worst state for notification
+        self.worst_status_diff = self.worst_status_current = 'UP'
         self.nagitems_filtered_list = list()
         self.nagitems_filtered = {'services': {'CRITICAL': [], 'WARNING': [], 'UNKNOWN': []},
                                   'hosts': {'DOWN': [], 'UNREACHABLE': []}}
@@ -774,7 +777,7 @@ class GenericServer(object):
 
         # check if server is enabled, if not, do not get any status
         if self.enabled == False:
-            self.worst_status = 'UP'
+            self.worst_status_diff = 'UP'
             self.isChecking = False
             return Result()
 
@@ -875,7 +878,7 @@ class GenericServer(object):
                             self.Debug(server=self.get_name(), debug='Filter: SOFT STATE ' + str(host.name))
                         host.visible = False
 
-                if HostIsFilteredOutByRE(host.name, conf) == True:
+                if host_is_filtered_out_by_re(host.name, conf) == True:
                     if conf.debug_mode:
                         self.Debug(server=self.get_name(), debug='Filter: REGEXP ' + str(host.name))
                     host.visible = False
@@ -990,7 +993,7 @@ class GenericServer(object):
                                        debug='Filter: SOFT STATE ' + str(host.name) + ';' + str(service.name))
                         service.visible = False
 
-                if HostIsFilteredOutByRE(host.name, conf) == True:
+                if host_is_filtered_out_by_re(host.name, conf) == True:
                     if conf.debug_mode:
                         self.Debug(server=self.get_name(),
                                    debug='Filter: REGEXP ' + str(host.name) + ';' + str(service.name))
@@ -1061,9 +1064,11 @@ class GenericServer(object):
         # sort for better comparison
         new_nagitems_filtered_list.sort()
 
+        # in the following lines worst_status_diff only changes from UP to another value if there was some change in the
+        # worst status - if it is the same as before it will just keep UP
         # if both lists are identical there was no status change
         if (self.nagitems_filtered_list == new_nagitems_filtered_list):
-            self.worst_status = 'UP'
+            self.worst_status_diff = 'UP'
         else:
             # if the new list is shorter than the first and there are no different hosts
             # there one host/service must have been recovered, which is not worth a notification
@@ -1073,7 +1078,7 @@ class GenericServer(object):
                     # collect differences
                     diff.append(i)
             if len(diff) == 0:
-                self.worst_status = 'UP'
+                self.worst_status_diff = 'UP'
             else:
                 # if there are different hosts/services in list of new hosts there must be a notification
                 # get list of states for comparison
@@ -1084,12 +1089,25 @@ class GenericServer(object):
                 worst = 0
                 for d in diff_states:
                     # only check worst state if it is valid
-                    if d in self.STATES:
-                        if self.STATES.index(d) > worst:
-                            worst = self.STATES.index(d)
+                    if d in STATES:
+                        if STATES.index(d) > worst:
+                            worst = STATES.index(d)
 
                 # final worst state is one of the predefined states
-                self.worst_status = self.STATES[worst]
+                self.worst_status_diff = STATES[worst]
+
+        # get the current worst state, needed at least for systraystatusicon
+        self.worst_status_current = 'UP'
+        if self.down > 0:
+            self.worst_status_current = 'DOWN'
+        elif self.unreachable > 0:
+            self.worst_status_current = 'UNREACHABLE'
+        elif self.critical > 0:
+            self.worst_status_current = 'CRITICAL'
+        elif self.warning > 0:
+            self.worst_status_current = 'WARNING'
+        elif self.unknown > 0:
+            self.worst_status_current = 'UNKNOWN'
 
         # when everything is OK set this flag for GUI to evaluate
         if self.down == 0 and\
