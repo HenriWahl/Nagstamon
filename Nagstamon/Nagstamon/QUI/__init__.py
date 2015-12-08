@@ -19,17 +19,8 @@
 
 """Module QUI"""
 
-from PyQt5.QtWidgets import *
-from PyQt5.QtGui import *
-from PyQt5.QtCore import *
-from PyQt5.QtSvg import *
-from PyQt5.QtMultimedia import *
-
 import os
 import os.path
-from operator import methodcaller
-from collections import OrderedDict
-from copy import deepcopy
 import urllib.parse
 import webbrowser
 import subprocess
@@ -37,11 +28,20 @@ import sys
 import platform
 import time
 
+from PyQt5.QtWidgets import *
+from PyQt5.QtGui import *
+from PyQt5.QtCore import *
+from PyQt5.QtSvg import *
+from PyQt5.QtMultimedia import *
+
+from operator import methodcaller
+from collections import OrderedDict
+from copy import deepcopy
+
 from Nagstamon.Config import (conf,
                               Server,
                               Action,
                               RESOURCES,
-                              THIRDPARTY,
                               AppInfo)
 
 from Nagstamon.Servers import (SERVER_TYPES,
@@ -67,6 +67,8 @@ from Nagstamon.QUI.dialog_submit import Ui_dialog_submit
 # only on X11/Linux thirdparty path should be added because it contains the Xlib module
 # needed to tell window manager via EWMH to keep Nagstamon window on all virtual desktops
 if not platform.system() in ['Darwin', 'Windows']:
+    # extract thirdparty path from resources path
+    THIRDPARTY = os.sep.join(RESOURCES.split(os.sep)[0:-1] + ['thirdparty'])
     sys.path.insert(0, THIRDPARTY)
     from Nagstamon.thirdparty.ewmh import EWMH
 
@@ -700,14 +702,16 @@ class StatusWindow(QWidget):
         if not platform.system() in ('Darwin', 'Windows'):
             # ewmh.py in thirdparty directory
             ewmh = EWMH()
-            # activate window...
-            self.activateWindow()
-            # ...to get its ID, Apparently there seems to be no other way to get X11 window ID in Qt5
-            xwin_id = ewmh.getActiveWindow()
-            # tell windowmanager via EWMH to display statusbar everywhere
-            ewmh.setWmDesktop(xwin_id, 0xffffffff)
-            # apply wish
-            ewmh.display.flush()
+            # get all windows...
+            windows = list(ewmh.getClientList())
+            # and check their wm_clas_name, hoping to find Nagstamon
+            for window in windows:
+                if window.get_wm_class()[0] == os.path.basename(sys.argv[0]):
+                    # tell windowmanager via EWMH to display statusbar everywhere
+                    ewmh.setWmDesktop(window.id, 0xffffffff)
+                    # apply wish
+                    ewmh.display.flush()
+                    break
 
 
     def create_ServerVBox(self, server):

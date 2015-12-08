@@ -805,6 +805,3 @@ except Exception as err:
         if os.path.exists(path):
             RESOURCES = path
             break
-
-# extract thirdparty path from resources path
-THIRDPARTY = os.sep.join(RESOURCES.split(os.sep)[0:-1] + ['thirdparty'])
