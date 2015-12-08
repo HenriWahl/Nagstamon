@@ -540,6 +540,10 @@ class StatusWindow(QWidget):
         QWidget.__init__(self)
         # immediately hide to avoid flicker on Windows and OSX
         self.hide()
+
+        # avoid quitting when using Qt.Tool flag and closing settings dialog
+        QApplication.setQuitOnLastWindowClosed(False)
+
         # statusbar and detail window should be frameless and stay on top
         self.setWindowFlags(Qt.WindowStaysOnTopHint | Qt.FramelessWindowHint | Qt.Tool)
 
@@ -4308,7 +4312,5 @@ statuswindow = StatusWindow()
 
 # versatile mediaplayer
 mediaplayer = MediaPlayer()
-# connect with sound play control
-###statuswindow.worker_notification.load_sound.connect(mediaplayer.set_media)
-###statuswindow.worker_notification.play_sound.connect(mediaplayer.play)
+
 
