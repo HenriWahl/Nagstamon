@@ -66,12 +66,12 @@ from Nagstamon.QUI.dialog_submit import Ui_dialog_submit
 
 # only on X11/Linux thirdparty path should be added because it contains the Xlib module
 # needed to tell window manager via EWMH to keep Nagstamon window on all virtual desktops
+# TODO: test if X11 or Wayland is used
 if not platform.system() in ['Darwin', 'Windows']:
-    # extract thirdparty path from resources path
+    # extract thirdparty path from resources path - make submodules accessible by thirdparty modules
     THIRDPARTY = os.sep.join(RESOURCES.split(os.sep)[0:-1] + ['thirdparty'])
     sys.path.insert(0, THIRDPARTY)
     from Nagstamon.thirdparty.ewmh import EWMH
-
 
 # fixed icons for hosts/services attributes
 ICONS = dict()
@@ -541,7 +541,7 @@ class StatusWindow(QWidget):
         # immediately hide to avoid flicker on Windows and OSX
         self.hide()
         # statusbar and detail window should be frameless and stay on top
-        self.setWindowFlags(Qt.WindowStaysOnTopHint | Qt.FramelessWindowHint)
+        self.setWindowFlags(Qt.WindowStaysOnTopHint | Qt.FramelessWindowHint | Qt.Tool)
 
         # show tooltips even if popup window has no focus
         self.setAttribute(Qt.WA_AlwaysShowToolTips)
