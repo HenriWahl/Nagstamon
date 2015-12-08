@@ -41,6 +41,7 @@ from Nagstamon.Config import (conf,
                               Server,
                               Action,
                               RESOURCES,
+                              THIRDPARTY,
                               AppInfo)
 
 from Nagstamon.Servers import (SERVER_TYPES,
@@ -62,6 +63,13 @@ from Nagstamon.QUI.settings_action import Ui_settings_action
 from Nagstamon.QUI.dialog_acknowledge import Ui_dialog_acknowledge
 from Nagstamon.QUI.dialog_downtime import Ui_dialog_downtime
 from Nagstamon.QUI.dialog_submit import Ui_dialog_submit
+
+# only on X11/Linux thirdparty path should be added because it contains the Xlib module
+# needed to tell window manager via EWMH to keep Nagstamon window on all virtual desktops
+if not platform.system() in ['Darwin', 'Windows']:
+    sys.path.insert(0, THIRDPARTY)
+    from Nagstamon.thirdparty.ewmh import EWMH
+
 
 # fixed icons for hosts/services attributes
 ICONS = dict()
@@ -687,6 +695,19 @@ class StatusWindow(QWidget):
 
         # finally show up
         self.show()
+
+        # X11/Linux needs some special treetment to get the statusbar floating on all virtual desktops
+        if not platform.system() in ('Darwin', 'Windows'):
+            # ewmh.py in thirdparty directory
+            ewmh = EWMH()
+            # activate window...
+            self.activateWindow()
+            # ...to get its ID, Apparently there seems to be no other way to get X11 window ID in Qt5
+            xwin_id = ewmh.getActiveWindow()
+            # tell windowmanager via EWMH to display statusbar everywhere
+            ewmh.setWmDesktop(xwin_id, 0xffffffff)
+            # apply wish
+            ewmh.display.flush()
 
 
     def create_ServerVBox(self, server):
