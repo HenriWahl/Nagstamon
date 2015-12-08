@@ -136,17 +136,14 @@ class SystemTrayIcon(QSystemTrayIcon):
     def __init__(self):
         QSystemTrayIcon.__init__(self)
 
+        # icons are in dictionary
         self.icons = {}
-
-        # load all state icons + extra
-        for state in STATES + ['OK', 'ERROR', 'EMPTY']:
-            icon_file = '{0}{1}nagstamon_systrayicon_{2}.svg'.format(RESOURCES, os.sep, state.lower())
-            if os.path.exists(icon_file):
-                self.icons[state] = QIcon('{0}{1}nagstamon_systrayicon_{2}.svg'.format(RESOURCES, os.sep, state.lower()))
-
+        self.create_icons()
+        # empty icon for flashing notification
+        self.icons['EMPTY'] = QIcon('{0}{1}nagstamon_systrayicon_empty.svg'.format(RESOURCES, os.sep))
         # little workaround to match statuswindow.worker_notification.worst_notification_status
         self.icons['UP'] = self.icons['OK']
-
+        # default icon is OK
         self.setIcon(self.icons['OK'])
 
         # store icon for flashing
@@ -170,6 +167,45 @@ class SystemTrayIcon(QSystemTrayIcon):
         if platform.system() != 'Darwin':
             self.setContextMenu(self.menu)
         self.show()
+
+        # when there are new settings/colors recreate icons
+        dialogs.settings.changed.connect(self.create_icons)
+
+
+    @pyqtSlot()
+    def create_icons(self):
+        """
+            create icons from template, applying colors
+        """
+        # get template from file
+        svg_template_file = open('{0}{1}nagstamon_systrayicon_template.svg'.format(RESOURCES, os.sep))
+        svg_template_xml = svg_template_file.readlines()
+
+        # create icons for all states
+        for state in  ['OK', 'UNKNOWN', 'WARNING', 'CRITICAL', 'UNREACHABLE', 'DOWN', 'ERROR']:
+            # current SVG XML for state icon, derived from svg_template_cml
+            svg_state_xml = list()
+
+            # replace dummy text and background colors with configured ones
+            for line in svg_template_xml:
+                line = line.replace('fill:#ff00ff', 'fill:' + conf.__dict__['color_' + state.lower() + '_text'])
+                line = line.replace('fill:#00ff00', 'fill:' + conf.__dict__['color_' + state.lower() + '_background'])
+                svg_state_xml.append(line)
+
+            # create XML stream of SVG
+            svg_xml_stream = QXmlStreamReader(''.join(svg_state_xml))
+            # create renderer for SVG and put SVG XML into renderer
+            svg_renderer = QSvgRenderer(svg_xml_stream)
+            # pixmap to be painted on
+            svg_pixmap = QPixmap(64, 64)
+            # initiate painter which paints onto paintdevice pixmap
+            svg_painter = QPainter(svg_pixmap)
+            # render svg to pixmap
+            svg_renderer.render(svg_painter)
+            # close painting
+            svg_painter.end()
+            # put pixmap into icon
+            self.icons[state] = QIcon(svg_pixmap)
 
 
     @pyqtSlot(QEvent)
@@ -205,7 +241,6 @@ class SystemTrayIcon(QSystemTrayIcon):
             self.setIcon(self.icons['EMPTY'])
             # fire up  a singleshot to reset color soon
             self.timer.singleShot(500, self.reset)
-
 
 
     @pyqtSlot()
@@ -1337,14 +1372,17 @@ class StatusBar(QWidget):
                             self.color_labels['OK'].fontMetrics().height(),
                             self.color_labels['OK'].fontMetrics().height(),
                             parent=parent)
-
         # add widgets
         self.hbox.addWidget(self.logo)
         self.hbox.addWidget(self.color_labels['OK'])
         self.color_labels['OK'].show()
 
+        # add state labels
         for state in COLORS:
             self.hbox.addWidget(self.color_labels[state])
+
+        # when there are new settings/colors refresh labels
+        dialogs.settings.changed.connect(self.reset)
 
         # timer for singleshots for flashing
         self.timer = QTimer()
@@ -4043,6 +4081,9 @@ class MediaPlayer(QObject):
 
         # let statuswindow show message
         self.send_message.connect(statuswindow.show_message)
+        # connect with statuswindow notification worker
+        statuswindow.worker_notification.load_sound.connect(self.set_media)
+        statuswindow.worker_notification.play_sound.connect(self.play)
 
 
     @pyqtSlot(str)
@@ -4243,6 +4284,6 @@ statuswindow = StatusWindow()
 # versatile mediaplayer
 mediaplayer = MediaPlayer()
 # connect with sound play control
-statuswindow.worker_notification.load_sound.connect(mediaplayer.set_media)
-statuswindow.worker_notification.play_sound.connect(mediaplayer.play)
+###statuswindow.worker_notification.load_sound.connect(mediaplayer.set_media)
+###statuswindow.worker_notification.play_sound.connect(mediaplayer.play)
 

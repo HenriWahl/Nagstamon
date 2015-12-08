@@ -1,5 +1,6 @@
 <?xml version="1.0" encoding="UTF-8" standalone="no"?>
 <!-- Created with Inkscape (http://www.inkscape.org/) -->
+
 <svg
    xmlns:dc="http://purl.org/dc/elements/1.1/"
    xmlns:cc="http://creativecommons.org/ns#"
@@ -13,11 +14,10 @@
    height="400"
    id="svg2"
    sodipodi:version="0.32"
-   inkscape:version="0.46"
-   sodipodi:docname="nagstamon_red.svg"
+   inkscape:version="0.91 r13725"
+   sodipodi:docname="nagstamon_systrayicon_template.svg"
    inkscape:output_extension="org.inkscape.output.svg.inkscape"
    version="1.0"
-   inkscape:export-filename="/home/IFWNT/hw5/Data/Projekte/nagstamon/source/resources/nagstamon_red.png"
    inkscape:export-xdpi="3.5775654"
    inkscape:export-ydpi="3.5775654">
   <defs
@@ -123,7 +123,7 @@
      inkscape:pageopacity="0.0"
      inkscape:pageshadow="2"
      inkscape:zoom="1.235"
-     inkscape:cx="-126.14351"
+     inkscape:cx="5.2631579"
      inkscape:cy="206.82653"
      inkscape:document-units="px"
      inkscape:current-layer="g3518"
@@ -141,12 +141,13 @@
      guidetolerance="10"
      inkscape:snap-intersection-line-segments="true"
      inkscape:snap-center="true"
-     inkscape:window-width="1182"
-     inkscape:window-height="870"
-     inkscape:window-x="6"
-     inkscape:window-y="48"
+     inkscape:window-width="1920"
+     inkscape:window-height="1163"
+     inkscape:window-x="1080"
+     inkscape:window-y="182"
      gridtolerance="10"
-     inkscape:snap-nodes="false">
+     inkscape:snap-nodes="false"
+     inkscape:window-maximized="1">
     <inkscape:grid
        type="xygrid"
        id="grid2391"
@@ -203,7 +204,6 @@
          width="399.99994"
          id="rect2410"
          style="fill:#434343;fill-opacity:0;stroke:none;stroke-width:1.90700673999999992;stroke-miterlimit:4;stroke-dasharray:none;stroke-opacity:1"
-         inkscape:export-filename="/home/IFWNT/hw5/Data/Projekte/nagiostray/path3488.png"
          inkscape:export-xdpi="10.383548"
          inkscape:export-ydpi="10.383548"
          ry="0"
@@ -215,7 +215,6 @@
          width="399.99994"
          id="rect3470"
          style="fill:#434343;fill-opacity:1;stroke:none;stroke-width:1.90700674;stroke-miterlimit:4;stroke-dasharray:none;stroke-opacity:1"
-         inkscape:export-filename="/home/IFWNT/hw5/Data/Projekte/nagiostray/path3488.png"
          inkscape:export-xdpi="10.383548"
          inkscape:export-ydpi="10.383548"
          ry="39.583015"
@@ -227,7 +226,6 @@
          width="378.37833"
          id="rect3171"
          style="fill:url(#linearGradient3181);fill-opacity:1;stroke:none;stroke-width:1.90700674;stroke-miterlimit:4;stroke-dasharray:none;stroke-opacity:1"
-         inkscape:export-filename="/home/IFWNT/hw5/Data/Projekte/nagiostray/path3488.png"
          inkscape:export-xdpi="10.383548"
          inkscape:export-ydpi="10.383548"
          ry="37.109081"
@@ -239,7 +237,6 @@
          width="356.75671"
          id="rect3173"
          style="fill:url(#linearGradient3189);fill-opacity:1;stroke:none;stroke-width:1.90700674;stroke-miterlimit:4;stroke-dasharray:none;stroke-opacity:1"
-         inkscape:export-filename="/home/IFWNT/hw5/Data/Projekte/nagiostray/path3488.png"
          inkscape:export-xdpi="10.383548"
          inkscape:export-ydpi="10.383548"
          ry="34.635136"
@@ -251,7 +248,6 @@
          width="313.51349"
          id="rect3197"
          style="fill:url(#linearGradient3199);fill-opacity:1;stroke:none;stroke-width:1.90700674;stroke-miterlimit:4;stroke-dasharray:none;stroke-opacity:1"
-         inkscape:export-filename="/home/IFWNT/hw5/Data/Projekte/nagiostray/path3488.png"
          inkscape:export-xdpi="10.383548"
          inkscape:export-ydpi="10.383548"
          ry="29.687263"
@@ -261,17 +257,18 @@
          x="224.99568"
          height="275.91965"
          width="291.89185"
-         id="rect3201"
-         style="fill:#ee0000;fill-opacity:1;stroke:none;stroke-width:1.90700673999999992;stroke-miterlimit:4;stroke-dasharray:none;stroke-opacity:1"
-         inkscape:export-filename="/home/IFWNT/hw5/Data/Projekte/nagiostray/path3488.png"
+         id="background"
+         style="fill:#00ff00;fill-opacity:1;stroke:none;stroke-width:1.90700674;stroke-miterlimit:4;stroke-dasharray:none;stroke-opacity:1"
          inkscape:export-xdpi="10.383548"
          inkscape:export-ydpi="10.383548"
          ry="27.213316"
-         rx="27.213316" />
+         rx="27.213316"
+         inkscape:label="#background" />
       <path
-         style="font-size:40px;font-style:normal;font-weight:normal;opacity:1;fill:#ffffff;fill-opacity:1;stroke:none;stroke-width:1px;stroke-linecap:butt;stroke-linejoin:miter;stroke-opacity:1;font-family:Bitstream Vera Sans"
+         style="font-size:40px;font-style:normal;font-weight:normal;opacity:1;fill:#ff00ff;fill-opacity:1;stroke:none;stroke-width:1px;stroke-linecap:butt;stroke-linejoin:miter;stroke-opacity:1;font-family:Bitstream Vera Sans"
          d="M 281.51824,343.34718 L 339.18047,343.34718 L 411.9958,485.41023 L 411.9958,343.34718 L 460.94165,343.34718 L 460.94165,550.47618 L 403.27941,550.47618 L 330.4641,408.41313 L 330.4641,550.47618 L 281.51824,550.47618 L 281.51824,343.34718"
-         id="text3349" />
+         id="foreground"
+         inkscape:label="#foreground" />
       <path
          style="fill:url(#linearGradient3205);fill-opacity:1;stroke:none;stroke-width:1.90700673999999992;stroke-miterlimit:4;stroke-opacity:1"
          d="M 252.20902,314.88565 L 489.67424,314.88565 C 504.75041,314.88565 516.88755,327.02279 516.88755,342.09897 L 516.88751,370.06971 C 519.26772,372.9607 446.78871,378.20791 429.5544,391.01844 C 395.05202,416.66459 364.37807,440.88666 331.98641,462.25598 C 319.96565,470.18628 286.5455,497.08921 224.99568,502.05352 L 224.99571,342.09897 C 224.99571,327.02279 237.13285,314.88565 252.20902,314.88565 z"
