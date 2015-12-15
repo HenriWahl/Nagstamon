@@ -143,6 +143,10 @@ class SystemTrayIcon(QSystemTrayIcon):
         Icon in system tray, works at least in Windows and OSX
         Qt5 shows an empty icon in GNOME3
     """
+
+    show_popwin = pyqtSignal()
+    hide_popwin = pyqtSignal()
+
     def __init__(self):
         QSystemTrayIcon.__init__(self)
 
@@ -165,12 +169,8 @@ class SystemTrayIcon(QSystemTrayIcon):
         self.menu = QMenu()
         exitaction = QAction('Exit', self)
         exitaction.triggered.connect(exit)
-
         dummyaction = QAction('Dummy', self)
         self.menu.addAction(dummyaction)
-
-        self.activated.connect(self.icon_clicked)
-
         self.menu.addAction(exitaction)
 
         # MacOSX does not distinguish between left and right click so menu will go to upper menu bar
@@ -180,6 +180,14 @@ class SystemTrayIcon(QSystemTrayIcon):
 
         # when there are new settings/colors recreate icons
         dialogs.settings.changed.connect(self.create_icons)
+
+        # treat clicks
+        self.activated.connect(self.icon_clicked)
+
+        # store x and y of coursor when being clicked as there seems to be no way
+        # to get the systray icons position
+        self.x_cursor = False
+        self.y_cursor = False
 
 
     @pyqtSlot()
@@ -207,7 +215,7 @@ class SystemTrayIcon(QSystemTrayIcon):
             # create renderer for SVG and put SVG XML into renderer
             svg_renderer = QSvgRenderer(svg_xml_stream)
             # pixmap to be painted on
-            svg_pixmap = QPixmap(64, 64)
+            svg_pixmap = QPixmap(128, 128)
             # initiate painter which paints onto paintdevice pixmap
             svg_painter = QPainter(svg_pixmap)
             # render svg to pixmap
@@ -222,7 +230,12 @@ class SystemTrayIcon(QSystemTrayIcon):
     def icon_clicked(self, event):
         # only react on left mouse click
         if event == (QSystemTrayIcon.Trigger or QSystemTrayIcon.DoubleClick):
-            pass
+            self.x_cursor = QCursor.pos().x()
+            self.y_cursor = QCursor.pos().y()
+            if statuswindow.is_shown:
+                self.hide_popwin.emit()
+            else:
+                self.show_popwin.emit()
 
 
     @pyqtSlot()
@@ -427,6 +440,7 @@ class _Draggable_Widget(QWidget):
         """
             save position from window into config
         """
+
         statuswindow.store_position_to_conf()
         conf.SaveConfig()
 
@@ -626,6 +640,10 @@ class StatusWindow(QWidget):
         # refresh all information after changed settings
         dialogs.settings.changed.connect(self.refresh)
 
+        # show status popup when systray icon was clicked
+        systrayicon.show_popwin.connect(self.show_window_systrayicon)
+        systrayicon.hide_popwin.connect(self.hide_window)
+
         # worker and thread duo needed for notifications
         self.worker_notification_thread = QThread()
         self.worker_notification = self.Worker_Notification()
@@ -700,7 +718,8 @@ class StatusWindow(QWidget):
         self.worker_thread.start(0)
 
         # finally show up
-        self.show()
+        #self.show()
+        self.switch_mode()
 
         # X11/Linux needs some special treetment to get the statusbar floating on all virtual desktops
         if not platform.system() in ('Darwin', 'Windows'):
@@ -716,6 +735,19 @@ class StatusWindow(QWidget):
                     # apply wish
                     ewmh.display.flush()
                     break
+
+
+    def switch_mode(self):
+        """
+            apply presentation mode
+        """
+        if conf.statusbar_floating:
+            systrayicon.hide()
+            self.show_window()
+        elif conf.icon_in_systray:
+            systrayicon.show()
+            self.statusbar.hide()
+            self.hide()
 
 
     def create_ServerVBox(self, server):
@@ -808,6 +840,48 @@ class StatusWindow(QWidget):
 
 
     @pyqtSlot()
+    def show_window_systrayicon(self):
+        """
+            handle clicks onto systray icon
+        """
+
+        mouse_x = QCursor.pos().x()
+        mouse_y = QCursor.pos().y()
+
+        self.move(mouse_x, mouse_y)
+
+        available_width = desktop.availableGeometry(self).width()
+        available_height = desktop.availableGeometry(self).height()
+        available_x = desktop.availableGeometry(self).x()
+        available_y = desktop.availableGeometry(self).y()
+
+        x = 0
+        y = 0
+
+        if not self.is_shown:
+
+            if mouse_x > (available_width + available_x)/2:
+                x = available_x + available_width - self.statusbar.width()
+            else:
+                x = available_x +  self.statusbar.width()
+
+            if mouse_y > (available_height - available_y)/2:
+                y = available_height - available_y
+
+            self.move(x,y)
+            #self.statusbar.show()
+            #self.show()
+            ### JUST A TEST
+            #self.set_shown()
+            self.show_window()
+        else:
+            #self.statusbar.hide()
+            self.hide()
+            ### JUST A TEST
+            #self.is_shown = False
+
+
+    @pyqtSlot()
     def show_window(self, event=None):
         """
             used to show status window when its appearance is triggered, also adjusts geometry
@@ -828,8 +902,8 @@ class StatusWindow(QWidget):
 
                 # show the other status window components
                 self.toparea.show()
-
                 self.servers_scrollarea.show()
+
                 for vbox in self.servers_vbox.children():
                     if not vbox.server.all_ok:
                         vbox.show_all()
@@ -872,11 +946,11 @@ class StatusWindow(QWidget):
             hide window if not needed
         """
         # only hide if shown and not locked or if not yet hidden if moving
-        ###if self.is_shown == True and self.locked == False or\
         if self.is_shown == True or\
            self.is_shown == True and self.moving == True:
-            self.statusbar.show()
-            self.statusbar.adjustSize()
+            if conf.statusbar_floating:
+                self.statusbar.show()
+                self.statusbar.adjustSize()
             self.toparea.hide()
             self.servers_scrollarea.hide()
             self.setMinimumSize(1, 1)
@@ -917,42 +991,75 @@ class StatusWindow(QWidget):
         """
             get size of popup window
         """
-        available_width = desktop.availableGeometry(self).width()
-        available_height = desktop.availableGeometry(self).height()
-        available_x = desktop.availableGeometry(self).x()
-        available_y = desktop.availableGeometry(self).y()
+        if conf.statusbar_floating:
+            screen_or_widget = self
+        elif conf.icon_in_systray:
+            screen_or_widget = get_screen(systrayicon.x_cursor, systrayicon.y_cursor)
+        available_width = desktop.availableGeometry(screen_or_widget).width()
+        available_height = desktop.availableGeometry(screen_or_widget).height()
+        available_x = desktop.availableGeometry(screen_or_widget).x()
+        available_y = desktop.availableGeometry(screen_or_widget).y()
+        del(screen_or_widget)
 
         # take whole screen height into account when deciding about upper/lower-ness
         # add available_y because it might vary on differently setup screens
         # calculate top-ness only if window is closed
-        if self.is_shown == False:
-            if self.y() < desktop.screenGeometry(self).height()/2 + available_y:
-                self.top = True
-            else:
-                self.top = False
+        if conf.statusbar_floating:
+            if self.is_shown == False:
+                if self.y() < desktop.screenGeometry(self).height()/2 + available_y:
+                    self.top = True
+                else:
+                    self.top = False
+        elif conf.icon_in_systray:
+            if systrayicon.y_cursor:
+                if systrayicon.y_cursor < desktop.screenGeometry(self).height()/2 + available_y:
+                    self.top = True
+                else:
+                    self.top = False
 
         real_height = self.get_real_height()
 
         # width simply will be the current screen maximal width - less hassle!
         width = available_width
 
-        # when statusbar resides in uppermost part of current screen extend from top to bottom
-        if self.top == True:
-            y = self.y()
-            if self.y() + real_height < available_height + available_y:
-                height = real_height
+        if conf.statusbar_floating:
+            # when statusbar resides in uppermost part of current screen extend from top to bottom
+            if self.top == True:
+                y = self.y()
+                if self.y() + real_height < available_height + available_y:
+                    height = real_height
+                else:
+                    height = available_height - self.y() + available_y
+            # when statusbar hangs around in lowermost part of current screen extend from bottom to top
             else:
-                height = available_height - self.y() + available_y
-        # when statusbar hangs around in lowermost part of current screen extend from bottom to top
-        else:
-            # when height is to large for current screen cut it
-            if self.y() + self.height() - real_height < available_y:
-                height = desktop.screenGeometry().height() - available_y -\
-                         (desktop.screenGeometry().height() - (self.y() + self.height()))
+                # when height is to large for current screen cut it
+                if self.y() + self.height() - real_height < available_y:
+                    height = desktop.screenGeometry().height() - available_y -\
+                             (desktop.screenGeometry().height() - (self.y() + self.height()))
+                    y = available_y
+                else:
+                    height = real_height
+                    y = self.y() + self.height() - height
+
+        elif conf.icon_in_systray:
+            # when systrayicon resides in uppermost part of current screen extend from top to bottom
+            if self.top == True:
                 y = available_y
+                if self.y() + real_height < available_height + available_y:
+                    height = real_height
+                else:
+                    #height = available_height - self.y() + available_y
+                    height = available_height - available_y
+            # when statusbar hangs around in lowermost part of current screen extend from bottom to top
             else:
-                height = real_height
-                y = self.y() + self.height() - height
+                # when height is to large for current screen cut it
+                if self.y() + self.height() - real_height < available_y:
+                    height = desktop.screenGeometry().height() - available_y -\
+                             (desktop.screenGeometry().height() - (self.y() + self.height()))
+                    y = available_y
+                else:
+                    height = real_height
+                    y = available_height - real_height
 
         return width, height, available_x, y
 
@@ -1084,10 +1191,12 @@ class StatusWindow(QWidget):
         """
             store position of statuswindow/statusbar
         """
-        # minimize window to statusbar only to get real position
-        self.hide_window()
-        conf.position_x = self.x()
-        conf.position_y = self.y()
+        # only useful if statusbar is floating
+        if conf.statusbar_floating:
+            # minimize window to statusbar only to get real position
+            self.hide_window()
+            conf.position_x = self.x()
+            conf.position_y = self.y()
 
 
     @pyqtSlot(str, str)
@@ -4304,7 +4413,6 @@ desktop = QApplication.desktop()
 dialogs = Dialogs()
 
 # system tray icon
-#systrayicon = SystemTrayIcon(QIcon('%s%snagstamon.svg' % (RESOURCES, os.sep)))
 systrayicon = SystemTrayIcon()
 
 # combined statusbar/status window

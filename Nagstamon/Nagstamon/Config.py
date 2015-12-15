@@ -34,7 +34,7 @@ class AppInfo(object):
     contains app information previously located in GUI.py
     """
     NAME = 'Nagstamon'
-    VERSION = '2.0-alpha-20151204'
+    VERSION = '2.0-alpha-20151215'
     WEBSITE = 'https://nagstamon.ifw-dresden.de'
     COPYRIGHT = '©2008-2015 Henri Wahl et al.\nh.wahl@ifw-dresden.de'
     COMMENTS = 'Nagios status monitor for your desktop'
@@ -385,7 +385,6 @@ class Config(object):
             # and all the thousands 1.0 installations do not know it yet it will be more comfortable
             # for most of the Windows users if it is only defined as False after it was checked
             # from config file
-            ###if not self.__dict__.has_key("use_system_keyring"):
             if not 'use_system_keyring' in self.__dict__.keys():
                 if self.unconfigured == True:
                     # an unconfigured system should start with no keyring to prevent crashes
