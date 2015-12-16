@@ -300,8 +300,28 @@ class RecheckAll(threading.Thread):
                         server.status = "Rechecking all started"
                         gobject.idle_add(self.output.popwin.UpdateStatus, server)
 
+			# special treatment for Centreon because we only want to recheck services with problems
+			if server.type == "Centreon":
+				for host in server.hosts.values():
+					# construct an unique key which refers to rechecking thread in dictionary
+                                	rechecks_dict[server.get_name() + ": " + host.get_name()] = Recheck(server=server, host=host.get_name(), service="")
+                                	rechecks_dict[server.get_name() + ": " + host.get_name()].start()
+	                                # debug
+        	                        if str(self.conf.debug_mode) == "True":
+        	                            server.Debug(server=server.get_name(), host=host.get_name(), debug="Rechecking...")
+                                	for service in host.services.values():
+                                    		# dito
+                                    		if service.is_passive_only() == True:
+                                        		continue
+				    		if service.status != "OK":
+                                    			rechecks_dict[server.get_name() + ": " + host.get_name() + ": " + service.get_name()] = Recheck(server=server, host=host.get_name(), service=service.get_name())
+                                    			rechecks_dict[server.get_name() + ": " + host.get_name() + ": " + service.get_name()].start()
+                                    			# debug
+                                    			if str(self.conf.debug_mode) == "True":
+                                        			server.Debug(server=server.get_name(), host=host.get_name(), service=service.get_name(), debug="Rechecking...")
+
                         # special treatment for Check_MK Multisite because there is only one URL call necessary
-                        if server.type != "Check_MK Multisite":
+                        elif server.type != "Check_MK Multisite":
                             for host in server.hosts.values():
                                 # construct an unique key which refers to rechecking thread in dictionary
                                 rechecks_dict[server.get_name() + ": " + host.get_name()] = Recheck(server=server, host=host.get_name(), service="")
@@ -1120,4 +1140,3 @@ class MultipartPostHandler(urllib2.BaseHandler):
     https_request = http_request
 
 # </IMPORT>
-
