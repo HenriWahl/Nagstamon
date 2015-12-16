@@ -637,16 +637,6 @@ class CentreonServer(GenericServer):
             if service == "":
                 # host
                 host_id = self._get_host_id(host)
-#                cgi_data = urllib.urlencode({"p":"20106",\
-#                                             "host_id":host_id,\
-#                                             "host_or_hg[host_or_hg]":1,\
-#                                             "submitA":"Save",\
-#                                             "persistent":int(fixed),\
-#                                             "persistant":int(fixed),\
-#                                             "start":start_time,\
-#                                             "end":end_time,\
-#                                             "comment":comment,\
-#                                             "o":"ah"})
                 cgi_data = urllib.urlencode({"p":"20106",\
                                              "host_or_hg[host_or_hg]":"1",\
                                              "host_id":host_id,\
@@ -665,15 +655,6 @@ class CentreonServer(GenericServer):
             else:
                 # service
                 host_id, service_id = self._get_host_and_service_id(host, service)
-                #cgi_data = urllib.urlencode({"p":"20218",\
-                #                             "service_id":service_id,\
-                #                             "host_id":host_id,\
-                #                             "submitA":"Save",\
-                #                             "persistant":int(fixed),\
-                #                             "start":start_time,\
-                #                             "end":end_time,\
-                #                             "comment":comment,\
-                #                             "o":"as"})
                 cgi_data = urllib.urlencode({"p":"20218",\
 					     "host_id":host_id,\
 					     "service_id":service_id,\
