@@ -138,6 +138,7 @@ class HBoxLayout(QHBoxLayout):
             self.itemAt(item).widget().show()
 
 
+#class SystemTrayIcon(QSystemTrayIcon):
 class SystemTrayIcon(QSystemTrayIcon):
     """
         Icon in system tray, works at least in Windows and OSX
@@ -228,6 +229,9 @@ class SystemTrayIcon(QSystemTrayIcon):
 
     @pyqtSlot(QEvent)
     def icon_clicked(self, event):
+        """
+            evaluate mouse click
+        """
         # only react on left mouse click
         if event == (QSystemTrayIcon.Trigger or QSystemTrayIcon.DoubleClick):
             self.x_cursor = QCursor.pos().x()
@@ -637,6 +641,9 @@ class StatusWindow(QWidget):
         # if monitor was selected in combobox its monitor window is opened
         self.toparea.combobox_servers.monitor_opened.connect(self.hide_window)
 
+        # change to systray or floating statusbar if changed
+        dialogs.settings.changed.connect(self.switch_mode)
+
         # refresh all information after changed settings
         dialogs.settings.changed.connect(self.refresh)
 
@@ -742,10 +749,17 @@ class StatusWindow(QWidget):
             apply presentation mode
         """
         if conf.statusbar_floating:
+            # no need for systray
             systrayicon.hide()
-            self.show_window()
+            self.hide_window()
+            self.statusbar.show()
+            # go to configured position and show up
+            self.move(conf.position_x, conf.position_y)
+
         elif conf.icon_in_systray:
+            # yeah! systray!
             systrayicon.show()
+            # no need for window and its parts
             self.statusbar.hide()
             self.hide()
 
@@ -845,11 +859,14 @@ class StatusWindow(QWidget):
             handle clicks onto systray icon
         """
 
+        # where is the pointer which clicked onto systray icon
         mouse_x = QCursor.pos().x()
         mouse_y = QCursor.pos().y()
 
+        # move into direction of systray - where the cursor hangs around too
         self.move(mouse_x, mouse_y)
 
+        # get available desktop specs
         available_width = desktop.availableGeometry(self).width()
         available_height = desktop.availableGeometry(self).height()
         available_x = desktop.availableGeometry(self).x()
@@ -869,16 +886,9 @@ class StatusWindow(QWidget):
                 y = available_height - available_y
 
             self.move(x,y)
-            #self.statusbar.show()
-            #self.show()
-            ### JUST A TEST
-            #self.set_shown()
             self.show_window()
         else:
-            #self.statusbar.hide()
-            self.hide()
-            ### JUST A TEST
-            #self.is_shown = False
+            self.hide_window()
 
 
     @pyqtSlot()
@@ -923,12 +933,10 @@ class StatusWindow(QWidget):
                 else:
                     self.set_shown()
 
+                self.show()
+
                 # tell others like notification that statuswindow shows up now
                 self.showing.emit()
-
-                # activate window to get focus
-                # NOT a good idea because stealing focus!
-                ###self.activateWindow()
 
 
     @pyqtSlot()
@@ -1017,6 +1025,7 @@ class StatusWindow(QWidget):
                 else:
                     self.top = False
 
+        # get height from tablewidgets
         real_height = self.get_real_height()
 
         # width simply will be the current screen maximal width - less hassle!
@@ -1044,11 +1053,12 @@ class StatusWindow(QWidget):
         elif conf.icon_in_systray:
             # when systrayicon resides in uppermost part of current screen extend from top to bottom
             if self.top == True:
+                # when being top y is of course the available one
                 y = available_y
                 if self.y() + real_height < available_height + available_y:
                     height = real_height
                 else:
-                    #height = available_height - self.y() + available_y
+                    # if bigger than screen shrink to maximal real_height
                     height = available_height - available_y
             # when statusbar hangs around in lowermost part of current screen extend from bottom to top
             else:
@@ -1342,9 +1352,6 @@ class StatusWindow(QWidget):
                 # flashing statusbar
                 if conf.notification_flashing:
                     self.start_flash.emit()
-
-                # what about flashing SYSTRAY ICON?
-                # gets notified like
 
                 # Play default sounds via mediaplayer
                 if conf.notification_sound:
@@ -3067,9 +3074,6 @@ class Dialog_Settings(Dialog):
                             # regular expressions for filtering status information
                             self.ui.input_checkbox_re_status_information_enabled : [self.ui.input_lineedit_re_status_information_pattern,
                                                                                    self.ui.input_checkbox_re_status_information_reverse],
-                            # icon in systray and its offset - might became obsolete in Qt5
-                            self.ui.input_radiobutton_icon_in_systray : [self.ui.label_systray_popup_offset,
-                                                                         self.ui.input_spinbox_systray_popup_offset],
                             # display to use in fullscreen mode
                             self.ui.input_radiobutton_fullscreen : [self.ui.label_fullscreen_display,
                                                                     self.ui.input_combobox_fullscreen_display],
@@ -3218,7 +3222,11 @@ class Dialog_Settings(Dialog):
         self.window.show()
 
 
-    def ok(self):
+    def  ok(self):
+        # store position of statuswindow/statusbar only if statusbar is floating
+        if conf.statusbar_floating:
+            statuswindow.store_position_to_conf()
+
         # do all stuff necessary after OK button was clicked
         # put widget values into conf
         for widget in self.ui.__dict__.values():
@@ -3243,9 +3251,6 @@ class Dialog_Settings(Dialog):
                     conf.__dict__[item] = BOOLPOOL[conf.__dict__[item]]
                 elif conf.__dict__[item].isdecimal():
                     conf.__dict__[item] = int(conf.__dict__[item])
-
-        # store position of statuswindow/statusbar
-        statuswindow.store_position_to_conf()
 
         # start debug loop if debugging is enabled
         if conf.debug_mode:

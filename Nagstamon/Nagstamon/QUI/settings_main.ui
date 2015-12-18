@@ -42,7 +42,7 @@
       </sizepolicy>
      </property>
      <property name="currentIndex">
-      <number>4</number>
+      <number>1</number>
      </property>
      <widget class="QWidget" name="tab_servers">
       <attribute name="title">
@@ -247,29 +247,11 @@
            </widget>
           </item>
           <item>
-           <layout class="QHBoxLayout" name="horizontalLayout_6">
-            <item>
-             <widget class="QRadioButton" name="input_radiobutton_icon_in_systray">
-              <property name="text">
-               <string>Icon in systray</string>
-              </property>
-             </widget>
-            </item>
-            <item>
-             <layout class="QHBoxLayout" name="horizontalLayout_7">
-              <item>
-               <widget class="QLabel" name="label_systray_popup_offset">
-                <property name="text">
-                 <string>Systray-popup-offset:</string>
-                </property>
-               </widget>
-              </item>
-              <item>
-               <widget class="QSpinBox" name="input_spinbox_systray_popup_offset"/>
-              </item>
-             </layout>
-            </item>
-           </layout>
+           <widget class="QRadioButton" name="input_radiobutton_icon_in_systray">
+            <property name="text">
+             <string>Icon in systray</string>
+            </property>
+           </widget>
           </item>
           <item>
            <layout class="QHBoxLayout" name="horizontalLayout_16">
@@ -1545,8 +1527,6 @@
   <tabstop>input_radiobutton_short_display</tabstop>
   <tabstop>input_radiobutton_statusbar_floating</tabstop>
   <tabstop>input_radiobutton_appindicator</tabstop>
-  <tabstop>input_radiobutton_icon_in_systray</tabstop>
-  <tabstop>input_spinbox_systray_popup_offset</tabstop>
   <tabstop>input_radiobutton_fullscreen</tabstop>
   <tabstop>input_combobox_fullscreen_display</tabstop>
   <tabstop>input_radiobutton_popup_details_hover</tabstop>

@@ -2,7 +2,7 @@
 
 # Form implementation generated from reading ui file 'settings_main.ui'
 #
-# Created by: PyQt5 UI code generator 5.5
+# Created by: PyQt5 UI code generator 5.5.1
 #
 # WARNING! All changes made in this file will be lost!
 
@@ -114,21 +114,9 @@ class Ui_settings_main(object):
         self.input_radiobutton_appindicator = QtWidgets.QRadioButton(self.groupbox_appearance)
         self.input_radiobutton_appindicator.setObjectName("input_radiobutton_appindicator")
         self.verticalLayout_3.addWidget(self.input_radiobutton_appindicator)
-        self.horizontalLayout_6 = QtWidgets.QHBoxLayout()
-        self.horizontalLayout_6.setObjectName("horizontalLayout_6")
         self.input_radiobutton_icon_in_systray = QtWidgets.QRadioButton(self.groupbox_appearance)
         self.input_radiobutton_icon_in_systray.setObjectName("input_radiobutton_icon_in_systray")
-        self.horizontalLayout_6.addWidget(self.input_radiobutton_icon_in_systray)
-        self.horizontalLayout_7 = QtWidgets.QHBoxLayout()
-        self.horizontalLayout_7.setObjectName("horizontalLayout_7")
-        self.label_systray_popup_offset = QtWidgets.QLabel(self.groupbox_appearance)
-        self.label_systray_popup_offset.setObjectName("label_systray_popup_offset")
-        self.horizontalLayout_7.addWidget(self.label_systray_popup_offset)
-        self.input_spinbox_systray_popup_offset = QtWidgets.QSpinBox(self.groupbox_appearance)
-        self.input_spinbox_systray_popup_offset.setObjectName("input_spinbox_systray_popup_offset")
-        self.horizontalLayout_7.addWidget(self.input_spinbox_systray_popup_offset)
-        self.horizontalLayout_6.addLayout(self.horizontalLayout_7)
-        self.verticalLayout_3.addLayout(self.horizontalLayout_6)
+        self.verticalLayout_3.addWidget(self.input_radiobutton_icon_in_systray)
         self.horizontalLayout_16 = QtWidgets.QHBoxLayout()
         self.horizontalLayout_16.setObjectName("horizontalLayout_16")
         self.input_radiobutton_fullscreen = QtWidgets.QRadioButton(self.groupbox_appearance)
@@ -739,7 +727,7 @@ class Ui_settings_main(object):
         self.verticalLayout.addWidget(self.button_box)
 
         self.retranslateUi(settings_main)
-        self.tabs.setCurrentIndex(4)
+        self.tabs.setCurrentIndex(1)
         self.button_box.accepted.connect(settings_main.accept)
         self.button_box.rejected.connect(settings_main.reject)
         QtCore.QMetaObject.connectSlotsByName(settings_main)
@@ -759,9 +747,7 @@ class Ui_settings_main(object):
         settings_main.setTabOrder(self.input_radiobutton_long_display, self.input_radiobutton_short_display)
         settings_main.setTabOrder(self.input_radiobutton_short_display, self.input_radiobutton_statusbar_floating)
         settings_main.setTabOrder(self.input_radiobutton_statusbar_floating, self.input_radiobutton_appindicator)
-        settings_main.setTabOrder(self.input_radiobutton_appindicator, self.input_radiobutton_icon_in_systray)
-        settings_main.setTabOrder(self.input_radiobutton_icon_in_systray, self.input_spinbox_systray_popup_offset)
-        settings_main.setTabOrder(self.input_spinbox_systray_popup_offset, self.input_radiobutton_fullscreen)
+        settings_main.setTabOrder(self.input_radiobutton_appindicator, self.input_radiobutton_fullscreen)
         settings_main.setTabOrder(self.input_radiobutton_fullscreen, self.input_combobox_fullscreen_display)
         settings_main.setTabOrder(self.input_combobox_fullscreen_display, self.input_radiobutton_popup_details_hover)
         settings_main.setTabOrder(self.input_radiobutton_popup_details_hover, self.input_radiobutton_close_details_hover)
@@ -884,7 +870,6 @@ class Ui_settings_main(object):
         self.input_radiobutton_statusbar_floating.setText(_translate("settings_main", "Floating statusbar"))
         self.input_radiobutton_appindicator.setText(_translate("settings_main", "AppIndicator (Ubuntu and friends)"))
         self.input_radiobutton_icon_in_systray.setText(_translate("settings_main", "Icon in systray"))
-        self.label_systray_popup_offset.setText(_translate("settings_main", "Systray-popup-offset:"))
         self.input_radiobutton_fullscreen.setText(_translate("settings_main", "Fullscreen"))
         self.label_fullscreen_display.setText(_translate("settings_main", "Display to use:"))
         self.groupbox_display_size.setTitle(_translate("settings_main", "Statusbar display size:"))

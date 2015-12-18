@@ -34,7 +34,7 @@ class AppInfo(object):
     contains app information previously located in GUI.py
     """
     NAME = 'Nagstamon'
-    VERSION = '2.0-alpha-20151215'
+    VERSION = '2.0-alpha-20151217'
     WEBSITE = 'https://nagstamon.ifw-dresden.de'
     COPYRIGHT = '©2008-2015 Henri Wahl et al.\nh.wahl@ifw-dresden.de'
     COMMENTS = 'Nagios status monitor for your desktop'
@@ -150,7 +150,6 @@ class Config(object):
         self.appindicator = False
         self.fullscreen = False
         self.fullscreen_display = 0
-        self.systray_popup_offset= 10
         self.defaults_acknowledge_sticky = False
         self.defaults_acknowledge_send_notification = False
         self.defaults_acknowledge_persistent_comment = False
