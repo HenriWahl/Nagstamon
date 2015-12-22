@@ -38,6 +38,14 @@ from operator import methodcaller
 from collections import OrderedDict
 from copy import deepcopy
 
+if platform.system() == 'Linux':
+
+    # excecption treatment!
+
+    from dbus import (Interface,
+                      SessionBus)
+    from dbus.mainloop.pyqt5 import DBusQtMainLoop
+
 from Nagstamon.Config import (conf,
                               Server,
                               Action,
@@ -2043,7 +2051,6 @@ class TableWidget(QTableWidget):
         self.setHorizontalHeaderLabels(HEADERS.values())
         self.horizontalHeader().setSectionResizeMode(QHeaderView.ResizeToContents)
         self.horizontalHeader().setDefaultAlignment(Qt.AlignLeft)
-        ###self.horizontalHeader().setStyleSheet('font-weight: bold;')
         self.horizontalHeader().setSortIndicatorShown(True)
         self.horizontalHeader().setSortIndicator(list(HEADERS).index(self.sort_column), SORT_ORDER[self.order])
         self.horizontalHeader().sortIndicatorChanged.connect(self.sort_columns)
@@ -2605,6 +2612,9 @@ class TableWidget(QTableWidget):
                 else:
                     tooltip = ''
 
+                # store icon calculations in row_cache to increase painting speed
+                row_cache = list()
+
                 # lists in rows list are columns
                 # create every cell per row
                 for column, text in enumerate(nagitem.get_columns(HEADERS)):
@@ -2653,11 +2663,19 @@ class TableWidget(QTableWidget):
                     else:
                         icons = [False]
 
+                    # store text and icons in cache
+                    row_cache.append({ 'text': text, 'icons': icons})
+
+                # paint cells without extra icon calculation - done before
+                for column in range(len(row_cache)):
                     # send signal to paint next cell
-                    self.next_cell.emit(row, column, text,
+                    self.next_cell.emit(row, column, row_cache[column]['text'],
                                         conf.__dict__[COLORS[nagitem.status] + 'text'],
                                         conf.__dict__[COLORS[nagitem.status] + 'background'],
-                                        icons, tooltip)
+                                        row_cache[column]['icons'],
+                                        tooltip)
+
+                del(row_cache)
 
                 # sleep some milliceconds to let the GUI thread do some work too
                 self.thread().msleep(5)
@@ -4338,6 +4356,24 @@ class CheckVersion(QObject):
             self.finished.emit()
 
 
+class DBus(object):
+    """
+        Create connection to DBus for desktop notification for Linux/Unix
+    """
+    def __init__(self):
+        if platform.system() == 'Linux':
+            if 'dbus' in sys.modules:
+                dbus_mainloop = DBusQtMainLoop(set_as_default=True)
+                dbus_bus = SessionBus(dbus_mainloop)
+                dbus_object = dbus_bus.get_object('org.freedesktop.Notifications',
+                                              '/org/freedesktop/Notifications')
+                self.dbus_interface = Interface(dbus_object,
+                                                dbus_interface='org.freedesktop.Notifications')
+                self.exists = True
+        else:
+            self.exists = False
+
+
 def _create_icons(fontsize):
     """
         fill global ICONS with pixmaps rendered from SVGs in fontsize dimensions
@@ -4426,4 +4462,5 @@ statuswindow = StatusWindow()
 # versatile mediaplayer
 mediaplayer = MediaPlayer()
 
-
+# DBus initialization
+dbus_connection = DBus()
