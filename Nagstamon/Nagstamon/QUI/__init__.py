@@ -38,14 +38,6 @@ from operator import methodcaller
 from collections import OrderedDict
 from copy import deepcopy
 
-if platform.system() == 'Linux':
-
-    # excecption treatment!
-
-    from dbus import (Interface,
-                      SessionBus)
-    from dbus.mainloop.pyqt5 import DBusQtMainLoop
-
 from Nagstamon.Config import (conf,
                               Server,
                               Action,
@@ -56,7 +48,8 @@ from Nagstamon.Servers import (SERVER_TYPES,
                                servers,
                                create_server,
                                get_enabled_servers,
-                               get_worst_status)
+                               get_worst_status,
+                               get_status_count)
 
 from Nagstamon.Helpers import (is_found_by_re,
                                debug_queue,
@@ -80,6 +73,14 @@ if not platform.system() in ['Darwin', 'Windows']:
     THIRDPARTY = os.sep.join(RESOURCES.split(os.sep)[0:-1] + ['thirdparty'])
     sys.path.insert(0, THIRDPARTY)
     from Nagstamon.thirdparty.ewmh import EWMH
+
+if platform.system() == 'Linux':
+
+    # excecption treatment!
+
+    from dbus import (Interface,
+                      SessionBus)
+    from dbus.mainloop.pyqt5 import DBusQtMainLoop
 
 # fixed icons for hosts/services attributes
 ICONS = dict()
@@ -668,6 +669,9 @@ class StatusWindow(QWidget):
         # flashing statusicon
         self.worker_notification.start_flash.connect(systrayicon.flash)
         self.worker_notification.stop_flash.connect(systrayicon.reset)
+        # desktop notification
+        self.worker_notification.desktop_notification.connect(self.desktop_notification)
+
         # stop notification if window gets shown or hidden
         self.hiding.connect(self.worker_notification.stop)
 
@@ -1252,6 +1256,19 @@ class StatusWindow(QWidget):
             server.thread_counter = conf.update_interval_seconds
 
 
+    @pyqtSlot(dict)
+    def desktop_notification(self, current_status_count):
+        """
+            show desktop notification - must be called from same thread as DBus intialization
+        """
+        # compile message from status counts
+        message = ''
+        for state in ['DOWN', 'UNREACHABLE', 'CRITICAL', 'WARNING', 'UNKNOWN']:
+            if current_status_count[state] > 0:
+                message += '{0} {1} '.format(str(current_status_count[state]), state)
+        dbus_connection.show(AppInfo.NAME, message)
+
+
     class Worker(QObject):
         """
            run a thread for example for debugging
@@ -1325,6 +1342,9 @@ class StatusWindow(QWidget):
         load_sound = pyqtSignal(str)
         play_sound = pyqtSignal()
 
+        # tell statuswindow to use desktop notification
+        desktop_notification = pyqtSignal(dict)
+
         # flag about current notification state
         is_notifying = False
 
@@ -1333,6 +1353,9 @@ class StatusWindow(QWidget):
 
         # current worst state worth a notification
         worst_notification_status = 'UP'
+
+        # desktop notification needs to store count of states
+        status_count = dict()
 
 
         def __init__(self):
@@ -1438,6 +1461,16 @@ class StatusWindow(QWidget):
                self.notifying_server == server_name:
                 self.play_sound.emit()
 
+            # desktop notification
+            if conf.notification_desktop and :
+                # get status count from servers
+                current_status_count = get_status_count()
+                if current_status_count != self.status_count:
+                    self.desktop_notification.emit(current_status_count)
+                # store status count for next comparison
+                self.status_count = current_status_count
+                del(current_status_count)
+
 
         @pyqtSlot()
         def stop(self):
@@ -1462,7 +1495,6 @@ class StatusWindow(QWidget):
             if conf.debug_mode:
                 servers[server_name].Debug(debug='NOTIFICATION: ' + custom_action_string)
             subprocess.Popen(custom_action_string, shell=True)
-
 
 
 class NagstamonLogo(QSvgWidget, _Draggable_Widget):
@@ -4361,6 +4393,16 @@ class DBus(object):
         Create connection to DBus for desktop notification for Linux/Unix
     """
     def __init__(self):
+
+        self.id = 0
+        self.actions = []
+        self.timeout = 0
+        # in case Nagstamon is installed by package manager use its icon
+        self.icon = 'nagstamon'
+        # use Nagstamon image if icon is not available from system
+        # see https://developer.gnome.org/notification-spec/#icons-and-images
+        self.hints = {'image-path': '%s%snagstamon.svg' % (RESOURCES, os.sep)}
+
         if platform.system() == 'Linux':
             if 'dbus' in sys.modules:
                 dbus_mainloop = DBusQtMainLoop(set_as_default=True)
@@ -4369,9 +4411,23 @@ class DBus(object):
                                               '/org/freedesktop/Notifications')
                 self.dbus_interface = Interface(dbus_object,
                                                 dbus_interface='org.freedesktop.Notifications')
-                self.exists = True
+                self.connected = True
         else:
-            self.exists = False
+            self.connected = False
+
+
+    def show(self, summary, message):
+        if self.connected:
+            notification_id = self.dbus_interface.Notify(AppInfo.NAME,
+                                                         self.id,
+                                                         self.icon,
+                                                         summary,
+                                                         message,
+                                                         self.actions,
+                                                         self.hints,
+                                                         self.timeout)
+            # reuse ID
+            self.id = int(notification_id)
 
 
 def _create_icons(fontsize):

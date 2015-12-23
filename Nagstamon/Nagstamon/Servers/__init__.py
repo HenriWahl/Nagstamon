@@ -73,6 +73,25 @@ def get_worst_status():
     return worst_status
 
 
+def get_status_count():
+    """
+        get all states of all servers and count them
+    """
+    state_count = {'UNKNOWN': 0,
+                   'WARNING': 0,
+                   'CRITICAL': 0,
+                   'UNREACHABLE': 0,
+                   'DOWN': 0}
+    for server in get_enabled_servers():
+        state_count['UNKNOWN'] += server.unknown
+        state_count['WARNING'] += server.warning
+        state_count['CRITICAL'] += server.critical
+        state_count['UNREACHABLE'] += server.unreachable
+        state_count['DOWN'] += server.down
+
+    return(state_count)
+
+
 def create_server(server=None):
     # create Server from config
     if server.type not in SERVER_TYPES:
