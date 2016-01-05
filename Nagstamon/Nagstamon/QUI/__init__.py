@@ -692,21 +692,10 @@ class StatusWindow(QWidget):
         # icons in ICONS have to be sized as fontsize
         _create_icons(self.statusbar.fontMetrics().height())
 
-        # show statusbar/statuswindow on last saved position
-        # when coordinates are inside known screens
-        if get_screen(conf.position_x, conf.position_y) != None:
-            self.move(conf.position_x, conf.position_y)
-        else:
-            self.move(0,0)
-
         # needed for moving the statuswindow
         self.moving = False
         self.relative_x = False
         self.relative_y = False
-
-        # store position for showing/hiding statuswindow
-        self.stored_x = self.x()
-        self.stored_y = self.y()
 
         # helper values for QTimer.singleShot move attempt
         self.move_to_x = self.move_to_y = 0
@@ -737,7 +726,6 @@ class StatusWindow(QWidget):
         self.worker_thread.start(0)
 
         # finally show up
-        #self.show()
         self.switch_mode()
 
         # X11/Linux needs some special treetment to get the statusbar floating on all virtual desktops
@@ -765,8 +753,16 @@ class StatusWindow(QWidget):
             systrayicon.hide()
             self.hide_window()
             self.statusbar.show()
-            # go to configured position and show up
-            self.move(conf.position_x, conf.position_y)
+            # show statusbar/statuswindow on last saved position
+            # when coordinates are inside known screens
+            if get_screen(conf.position_x, conf.position_y) != None:
+                self.move(conf.position_x, conf.position_y)
+            else:
+                # get available desktop specs
+                available_x = desktop.availableGeometry(self).x()
+                available_y = desktop.availableGeometry(self).y()
+                self.move(available_x, available_y)
+
 
         elif conf.icon_in_systray:
             # yeah! systray!
@@ -774,6 +770,10 @@ class StatusWindow(QWidget):
             # no need for window and its parts
             self.statusbar.hide()
             self.hide()
+
+        # store position for showing/hiding statuswindow
+        self.stored_x = self.x()
+        self.stored_y = self.y()
 
 
     def create_ServerVBox(self, server):
