@@ -74,13 +74,13 @@ if not platform.system() in ['Darwin', 'Windows']:
     sys.path.insert(0, THIRDPARTY)
     from Nagstamon.thirdparty.ewmh import EWMH
 
-if platform.system() == 'Linux':
-
-    # excecption treatment!
-
-    from dbus import (Interface,
-                      SessionBus)
-    from dbus.mainloop.pyqt5 import DBusQtMainLoop
+if not platform.system() in ['Darwin', 'Windows']:
+    try:
+        from dbus import (Interface,
+                          SessionBus)
+        from dbus.mainloop.pyqt5 import DBusQtMainLoop
+    except:
+        print('No DBus for desktop notification available.')
 
 # fixed icons for hosts/services attributes
 ICONS = dict()
@@ -1462,7 +1462,7 @@ class StatusWindow(QWidget):
                 self.play_sound.emit()
 
             # desktop notification
-            if conf.notification_desktop and :
+            if conf.notification_desktop:
                 # get status count from servers
                 current_status_count = get_status_count()
                 if current_status_count != self.status_count:
@@ -3170,6 +3170,10 @@ class Dialog_Settings(Dialog):
         self.ui.button_play_critical.clicked.connect(self.play_sound_file_critical)
         self.ui.button_play_down.clicked.connect(self.play_sound_file_down)
 
+        # only show desktop notification on systems that support it
+        if not dbus_connection.connected:
+            self.ui.input_checkbox_notification_desktop.hide()
+
         # set folder and play symbols to choose and play buttons
         self.ui.button_choose_warning.setText('')
         self.ui.button_choose_warning.setIcon(self.ui.button_play_warning.style().standardIcon(QStyle.SP_DirIcon))
@@ -4403,7 +4407,7 @@ class DBus(object):
         # see https://developer.gnome.org/notification-spec/#icons-and-images
         self.hints = {'image-path': '%s%snagstamon.svg' % (RESOURCES, os.sep)}
 
-        if platform.system() == 'Linux':
+        if not platform.system() in ['Darwin', 'Windows']:
             if 'dbus' in sys.modules:
                 dbus_mainloop = DBusQtMainLoop(set_as_default=True)
                 dbus_bus = SessionBus(dbus_mainloop)
@@ -4417,6 +4421,9 @@ class DBus(object):
 
 
     def show(self, summary, message):
+        """
+            simply show message
+        """
         if self.connected:
             notification_id = self.dbus_interface.Notify(AppInfo.NAME,
                                                          self.id,
@@ -4506,6 +4513,9 @@ check_version = CheckVersion()
 # access to variuos desktop parameters
 desktop = QApplication.desktop()
 
+# DBus initialization
+dbus_connection = DBus()
+
 # access dialogs
 dialogs = Dialogs()
 
@@ -4517,6 +4527,3 @@ statuswindow = StatusWindow()
 
 # versatile mediaplayer
 mediaplayer = MediaPlayer()
-
-# DBus initialization
-dbus_connection = DBus()
