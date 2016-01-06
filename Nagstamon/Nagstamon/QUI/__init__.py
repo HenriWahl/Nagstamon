@@ -576,8 +576,8 @@ class StatusWindow(QWidget):
 
         # show tooltips even if popup window has no focus
         self.setAttribute(Qt.WA_AlwaysShowToolTips)
-        # attempt to get old behavior from GTK2 version to stay on all virtual desktops
-        ###self.setAttribute(Qt.WA_X11NetWmWindowTypeMenu)
+        # avoid hiding window if it has no focus - necessary on OSX
+        self.setAttribute(Qt.WA_MacAlwaysShowToolWindow)
 
         self.setWindowTitle(AppInfo.NAME)
         self.setWindowIcon(QIcon('%s%snagstamon.svg' % (RESOURCES, os.sep)))
