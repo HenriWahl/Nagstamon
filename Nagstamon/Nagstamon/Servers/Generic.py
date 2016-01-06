@@ -475,7 +475,7 @@ class GenericServer(object):
 
     def open_monitor(self, host, service=''):
         '''
-            open monitor from treeview context menu
+            open monitor from tablewidget context menu
         '''
         # only type is important so do not care of service '' in case of host monitor
         if service == '':
@@ -488,6 +488,17 @@ class GenericServer(object):
                            {'type': typ, 'host': host, 'service': service}))
         webbrowser.open(self.monitor_cgi_url + '/extinfo.cgi?' + urllib.parse.urlencode(
             {'type': typ, 'host': host, 'service': service}))
+
+
+    def open_monitor_webpage(self):
+        '''
+            open monitor from systray/toparea context menu
+        '''
+
+        if conf.debug_mode:
+            self.Debug(server=self.get_name(),
+                       debug='Open monitor web page ' + self.monitor_cgi_url)
+        webbrowser.open(self.monitor_url)
 
 
     def _get_status(self):

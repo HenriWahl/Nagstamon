@@ -149,7 +149,6 @@ for server in (CentreonServer, IcingaServer, MultisiteServer, NagiosServer,
     register_server(server)
 
 # create servers
-#for server in list(conf.servers.values()):
 for server in conf.servers.values():
     """
     if ( server.use_autologin == "False" and server.save_password == "False" and server.enabled == "True" ) or ( server.enabled == "True" and server.use_autologin == "True" and server.autologin_key == "" ):

@@ -176,18 +176,6 @@ class SystemTrayIcon(QSystemTrayIcon):
         # timer for singleshots for flashing
         self.timer = QTimer()
 
-        self.menu = QMenu()
-        exitaction = QAction('Exit', self)
-        exitaction.triggered.connect(exit)
-        dummyaction = QAction('Dummy', self)
-        self.menu.addAction(dummyaction)
-        self.menu.addAction(exitaction)
-
-        # MacOSX does not distinguish between left and right click so menu will go to upper menu bar
-        if platform.system() != 'Darwin':
-            self.setContextMenu(self.menu)
-        self.show()
-
         # when there are new settings/colors recreate icons
         dialogs.settings.changed.connect(self.create_icons)
 
@@ -198,6 +186,16 @@ class SystemTrayIcon(QSystemTrayIcon):
         # to get the systray icons position
         self.x_cursor = False
         self.y_cursor = False
+
+
+    @pyqtSlot(QMenu)
+    def set_menu(self, menu):
+        """
+            create current menu for right clicks
+        """
+        # MacOSX does not distinguish between left and right click so menu will go to upper menu bar
+        if platform.system() != 'Darwin':
+            self.setContextMenu(menu)
 
 
     @pyqtSlot()
@@ -319,6 +317,71 @@ class MenuAtCursor(QMenu):
         del(x, y)
 
 
+class MenuContext(MenuAtCursor):
+    """
+        clas for universal context menu, used at systray icon and hamburger menu
+    """
+
+    menu_ready = pyqtSignal(QMenu)
+
+    def __init__(self):
+
+        MenuAtCursor.__init__(self)
+
+        self.menu_ready.connect(systrayicon.set_menu)
+        self.menu_ready.connect(statuswindow.toparea.button_hamburger_menu.set_menu)
+        dialogs.settings.changed.connect(self.initialize)
+
+        self.initialize()
+
+    @pyqtSlot()
+    def initialize(self):
+        """
+            add actions and servers to menu
+        """
+
+        # first clear to get rid of old servers
+        self.clear()
+
+        self.action_refresh = QAction('Refresh', self)
+        self.action_refresh.triggered.connect(statuswindow.refresh)
+        self.addAction(self.action_refresh)
+
+        self.action_recheck = QAction('Recheck', self)
+        self.action_recheck.triggered.connect(statuswindow.recheck_all)
+        self.addAction(self.action_recheck)
+
+        self.addSeparator()
+
+        # dict to hold all servers - more flexible this way
+        self.action_servers = dict()
+
+        # connect every server to its monitoring webpage
+        for server in servers:
+            self.action_servers[server] = QAction(server, self)
+            self.action_servers[server].triggered.connect(servers[server].open_monitor_webpage)
+            self.addAction(self.action_servers[server])
+
+        self.addSeparator()
+
+        self.action_settings = QAction('Settings...', self)
+        self.action_settings.triggered.connect(statuswindow.hide_window)
+        self.action_settings.triggered.connect(dialogs.settings.show)
+        self.addAction(self.action_settings)
+
+        self.action_save_position = QAction('Save position', self)
+        self.addAction(self.action_save_position)
+
+        self.action_exit = QAction('Exit', self)
+        self.action_exit.triggered.connect(exit)
+        self.addAction(self.action_exit)
+
+
+
+        self.menu_ready.emit(self)
+
+
+
 class PushButton_Hamburger(QPushButton):
     """
         Pushbutton with menu for hamburger
@@ -333,6 +396,10 @@ class PushButton_Hamburger(QPushButton):
     def mousePressEvent(self, event):
         self.pressed.emit()
         self.showMenu()
+
+    pyqtSlot(QMenu)
+    def set_menu(self, menu):
+        self.setMenu(menu)
 
 
 class PushButton_BrowserURL(QPushButton):
@@ -366,7 +433,6 @@ class ComboBox_Servers(QComboBox):
     """
         combobox which does lock statuswindow so it does not close when opening combobox
     """
-    ###shown = pyqtSignal()
     monitor_opened = pyqtSignal()
 
     # flag to avoid silly focusOutEvent
@@ -383,7 +449,6 @@ class ComboBox_Servers(QComboBox):
         # first click opens combobox popup
         self.freshly_opened = True
         # tell status window that there is no combobox anymore
-        ###self.shown.emit()
         self.showPopup()
 
 
@@ -594,7 +659,6 @@ class StatusWindow(QWidget):
         self.servers_scrollarea = QScrollArea(self)     # scrollable area for server vboxes
         # avoid horizontal scrollbars
         self.servers_scrollarea.setHorizontalScrollBarPolicy(Qt.ScrollBarAlwaysOff)
-        ###self.servers_scrollarea_widget = QWidget(parent=self)  # necessary widget to contain vbox for servers
         self.servers_scrollarea_widget = QWidget(self.servers_scrollarea)  # necessary widget to contain vbox for servers
         self.servers_scrollarea.hide()
 
@@ -605,6 +669,8 @@ class StatusWindow(QWidget):
         self.servers_vbox = QVBoxLayout(self.servers_scrollarea)           # VBox full of servers
         self.servers_vbox.setSpacing(0)
         self.servers_vbox.setContentsMargins(0, 0, 0, 0)
+
+        #self.menu = QMenuBar()
 
         # connect logo of statusbar
         self.statusbar.logo.window_moved.connect(self.store_position)
@@ -734,7 +800,7 @@ class StatusWindow(QWidget):
             ewmh = EWMH()
             # get all windows...
             windows = list(ewmh.getClientList())
-            # and check their wm_clas_name, hoping to find Nagstamon
+            # and check their wm_class_name, hoping to find Nagstamon
             for window in windows:
                 if window.get_wm_class()[0] == os.path.basename(sys.argv[0]):
                     # tell windowmanager via EWMH to display statusbar everywhere
@@ -1735,6 +1801,7 @@ class TopArea(QWidget):
         action_exit = QAction("Exit", self)
         action_exit.triggered.connect(exit)
         self.hamburger_menu.addAction(action_exit)
+
         self.button_hamburger_menu.setMenu(self.hamburger_menu)
 
         self.button_close = QPushButton()
@@ -3833,12 +3900,13 @@ class Dialog_Server(Dialog):
                 if self.previous_server_conf.name in servers.keys():
                     servers.pop(self.previous_server_conf.name)
 
-
             # add new server configuration in every case
             conf.servers[self.server_conf.name] = self.server_conf
+
+            # add new server instance to global servers dict
+            servers[self.server_conf.name] = create_server(self.server_conf)
+
             if self.server_conf.enabled == True:
-                # add new server instance to global servers dict
-                servers[self.server_conf.name] = create_server(self.server_conf)
                 # create vbox
                 statuswindow.servers_vbox.addLayout(statuswindow.create_ServerVBox(servers[self.server_conf.name]))
                 # renew list of server vboxes in status window
@@ -3887,7 +3955,6 @@ class Dialog_Action(Dialog):
 
         # fill default order fields combobox with monitor server types
         self.ui.input_combobox_monitor_type.addItem("All monitor servers")
-        ###self.ui.input_combobox_monitor_type.addItems(sorted(SERVER_TYPES.keys(), key=unicode.lower))
         self.ui.input_combobox_monitor_type.addItems(sorted(SERVER_TYPES.keys(), key=str.lower))
         # default to Nagios as it is the mostly used monitor server
         self.ui.input_combobox_monitor_type.setCurrentIndex(0)
@@ -4449,6 +4516,48 @@ def _create_icons(fontsize):
         ICONS[attr] = icon
 
 
+def _create_menuXXXX():
+    """
+         menu to be used for floating statusbar and OSX menubar
+    """
+    if platform.system() == 'Darwin':
+        menu = QMenuBar()
+    else:
+        menu = QMenu()
+
+    menu.action_refresh = QAction('Refresh', menu)
+    ###menu.action_refresh.triggered.connect(statuswindow.refresh)
+    menu.addAction(menu.action_refresh)
+
+    menu.action_recheck = QAction('Recheck', menu)
+    ###action_recheck.triggered.connect(statuswindow.recheck_all)
+    menu.addAction(menu.action_recheck)
+
+    menu.addSeparator()
+
+    menu.action_servers = dict()
+
+    for server in servers:
+        menu.action_servers[server] = QAction(server, menu)
+        menu.addAction(menu.action_servers[server])
+
+    menu.addSeparator()
+
+    menu.action_settings = QAction('Settings...', menu)
+    ###action_settings.triggered.connect(statuswindow.hide_window)
+    ###action_settings.triggered.connect(dialogs.settings.show)
+    menu.addAction(menu.action_settings)
+
+    menu.action_save_position = QAction('Save position', menu)
+    menu.addAction(menu.action_save_position)
+
+    menu.action_exit = QAction('Exit', menu)
+    ##menu.action_exit.triggered.connect(exit)
+    menu.addAction(menu.action_exit)
+
+    return menu
+
+
 def get_screen(x, y):
     """
         find out which screen the given coordinates belong to
@@ -4524,6 +4633,9 @@ systrayicon = SystemTrayIcon()
 
 # combined statusbar/status window
 statuswindow = StatusWindow()
+
+# context menu for systray and statuswindow
+menu = MenuContext()
 
 # versatile mediaplayer
 mediaplayer = MediaPlayer()
