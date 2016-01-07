@@ -154,6 +154,8 @@ class SystemTrayIcon(QSystemTrayIcon):
         Qt5 shows an empty icon in GNOME3
     """
 
+    show_menu = pyqtSignal()
+
     show_popwin = pyqtSignal()
     hide_popwin = pyqtSignal()
 
@@ -247,6 +249,8 @@ class SystemTrayIcon(QSystemTrayIcon):
                 self.hide_popwin.emit()
             else:
                 self.show_popwin.emit()
+        elif event == QSystemTrayIcon.Context and platform.system() == 'Windows':
+            self.show_menu.emit()
 
 
     @pyqtSlot()
@@ -324,8 +328,8 @@ class MenuContext(MenuAtCursor):
 
     menu_ready = pyqtSignal(QMenu)
 
-    def __init__(self):
-        MenuAtCursor.__init__(self)
+    def __init__(self, parent=None):
+        MenuAtCursor.__init__(self, parent=parent)
 
         # connect all relevant widgets which should show the context menu
         self.menu_ready.connect(systrayicon.set_menu)
@@ -383,7 +387,6 @@ class MenuContext(MenuAtCursor):
         self.action_exit = QAction('Exit', self)
         self.action_exit.triggered.connect(exit)
         self.addAction(self.action_exit)
-
 
         # tell all widgets to use the new menu
         self.menu_ready.emit(self)
