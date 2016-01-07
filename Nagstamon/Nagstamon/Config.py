@@ -226,15 +226,17 @@ class Config(object):
                 # section which has to be there to comply to the .INI file standard
 
                 for i in config.items(section):
-                    # create a key of every config item with its appropriate value
-                    # check first if it is a bool value and convert string if it is
-                    if i[1] in BOOLPOOL:
-                        object.__setattr__(self, i[0], BOOLPOOL[i[1]])
-                    elif i[1].isdecimal():
-                        object.__setattr__(self, i[0],int(i[1]))
-                    else:
-                        object.__setattr__(self, i[0], i[1])
-                        
+                    # omit config file info as it makes no sense to store its path
+                    if not i[0] in ('configfile', 'configdir'):
+                        # create a key of every config item with its appropriate value
+                        # check first if it is a bool value and convert string if it is
+                        if i[1] in BOOLPOOL:
+                            object.__setattr__(self, i[0], BOOLPOOL[i[1]])
+                        elif i[1].isdecimal():
+                            object.__setattr__(self, i[0],int(i[1]))
+                        else:
+                            object.__setattr__(self, i[0], i[1])
+
             # because the switch from Nagstamon 1.0 to 1.0.1 brings the use_system_keyring property
             # and all the thousands 1.0 installations do not know it yet it will be more comfortable
             # for most of the Windows users if it is only defined as False after it was checked
@@ -352,7 +354,9 @@ class Config(object):
                             if i[1] in BOOLPOOL:
                                 value = BOOLPOOL[i[1]]
                             # in case there are numbers intify them to avoid later conversions
-                            elif i[1].isdecimal():
+                            # treat negative value specially as .isdecimal() will not detect it
+                            elif i[1].isdecimal() or \
+                                 (i[1].startswith('-') and i[1].split('-')[1].isdecimal()):
                                 value = int(i[1])
                             else:
                                 value = i[1]
@@ -377,7 +381,7 @@ class Config(object):
             # general section for Nagstamon
             config.add_section('Nagstamon')
             for option in self.__dict__:
-                if not option in ['servers', 'actions']:
+                if not option in ['servers', 'actions', 'configfile', 'configdir']:
                     config.set('Nagstamon', option, str(self.__dict__[option]))
 
             # because the switch from Nagstamon 1.0 to 1.0.1 brings the use_system_keyring property

@@ -319,17 +319,23 @@ class MenuAtCursor(QMenu):
 
 class MenuContext(MenuAtCursor):
     """
-        clas for universal context menu, used at systray icon and hamburger menu
+        class for universal context menu, used at systray icon and hamburger menu
     """
 
     menu_ready = pyqtSignal(QMenu)
 
     def __init__(self):
-
         MenuAtCursor.__init__(self)
 
+        # connect all relevant widgets which should show the context menu
         self.menu_ready.connect(systrayicon.set_menu)
         self.menu_ready.connect(statuswindow.toparea.button_hamburger_menu.set_menu)
+        self.menu_ready.connect(statuswindow.toparea.logo.set_menu)
+        self.menu_ready.connect(statuswindow.toparea.label_version.set_menu)
+        self.menu_ready.connect(statuswindow.toparea.label_empty_space.set_menu)
+        self.menu_ready.connect(statuswindow.statusbar.logo.set_menu)
+        for color_label in statuswindow.statusbar.color_labels.values():
+            self.menu_ready.connect(color_label.set_menu)
         dialogs.settings.changed.connect(self.initialize)
 
         self.initialize()
@@ -369,17 +375,27 @@ class MenuContext(MenuAtCursor):
         self.action_settings.triggered.connect(dialogs.settings.show)
         self.addAction(self.action_settings)
 
-        self.action_save_position = QAction('Save position', self)
-        self.addAction(self.action_save_position)
+        if conf.statusbar_floating:
+            self.action_save_position = QAction('Save position', self)
+            self.action_save_position.triggered.connect(self.save_position)
+            self.addAction(self.action_save_position)
 
         self.action_exit = QAction('Exit', self)
         self.action_exit.triggered.connect(exit)
         self.addAction(self.action_exit)
 
 
-
+        # tell all widgets to use the new menu
         self.menu_ready.emit(self)
 
+
+    def save_position(self):
+        """
+            save position from window into config
+        """
+
+        statuswindow.store_position_to_conf()
+        conf.SaveConfig()
 
 
 class PushButton_Hamburger(QPushButton):
@@ -491,27 +507,9 @@ class _Draggable_Widget(QWidget):
     mouse_released = pyqtSignal()
 
 
-    def _create_menu(self):
-        """
-            menu for right click
-        """
-        #self.menu = MenuAtCursor(parent=self)
-        # if parent is 'self' menu gets the same colored style as label
-        self.menu = MenuAtCursor(parent=None)
-
-        action_settings = QAction('Settings...', self)
-        action_settings.triggered.connect(dialogs.settings.show)
-
-        action_save_position = QAction('Save position', self)
-        action_save_position.triggered.connect(self.save_position)
-
-        action_exit = QAction('Exit', self)
-        action_exit.triggered.connect(exit)
-
-        # put actions into menu after separator
-        self.menu.addAction(action_settings)
-        self.menu.addAction(action_save_position)
-        self.menu.addAction(action_exit)
+    pyqtSlot(QMenu)
+    def set_menu(self, menu):
+        self.menu = menu
 
 
     def save_position(self):
@@ -602,9 +600,6 @@ class Draggable_Label(QLabel, _Draggable_Widget):
 
     def __init__(self, text='', parent=None):
         QLabel.__init__(self, text, parent=parent)
-
-        # from _Draggable_Widget
-        self._create_menu()
 
 
 class StatusWindow(QWidget):
@@ -964,6 +959,11 @@ class StatusWindow(QWidget):
                 y = available_height - available_y
 
             self.move(x,y)
+
+            # under unfortunate circumstances statusbar might have the the moving flag true
+            # fix it here because it makes no sense
+            self.moving = False
+
             self.show_window()
         else:
             self.hide_window()
@@ -1585,9 +1585,6 @@ class NagstamonLogo(QSvgWidget, _Draggable_Widget):
         if width != None and height != None:
             self.setMinimumSize(width, height)
             self.setMaximumSize(width, height)
-
-        # from _TopArea_Draggable_Widget
-        self._create_menu()
 
 
 class StatusBar(QWidget):
@@ -4514,48 +4511,6 @@ def _create_icons(fontsize):
     for attr in ('acknowledged', 'downtime', 'flapping', 'new', 'passive'):
         icon = QIcon('%s%snagstamon_%s.svg' % (RESOURCES, os.sep, attr))
         ICONS[attr] = icon
-
-
-def _create_menuXXXX():
-    """
-         menu to be used for floating statusbar and OSX menubar
-    """
-    if platform.system() == 'Darwin':
-        menu = QMenuBar()
-    else:
-        menu = QMenu()
-
-    menu.action_refresh = QAction('Refresh', menu)
-    ###menu.action_refresh.triggered.connect(statuswindow.refresh)
-    menu.addAction(menu.action_refresh)
-
-    menu.action_recheck = QAction('Recheck', menu)
-    ###action_recheck.triggered.connect(statuswindow.recheck_all)
-    menu.addAction(menu.action_recheck)
-
-    menu.addSeparator()
-
-    menu.action_servers = dict()
-
-    for server in servers:
-        menu.action_servers[server] = QAction(server, menu)
-        menu.addAction(menu.action_servers[server])
-
-    menu.addSeparator()
-
-    menu.action_settings = QAction('Settings...', menu)
-    ###action_settings.triggered.connect(statuswindow.hide_window)
-    ###action_settings.triggered.connect(dialogs.settings.show)
-    menu.addAction(menu.action_settings)
-
-    menu.action_save_position = QAction('Save position', menu)
-    menu.addAction(menu.action_save_position)
-
-    menu.action_exit = QAction('Exit', menu)
-    ##menu.action_exit.triggered.connect(exit)
-    menu.addAction(menu.action_exit)
-
-    return menu
 
 
 def get_screen(x, y):
