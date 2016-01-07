@@ -964,7 +964,7 @@ class StatusWindow(QWidget):
             self.move(x,y)
 
             # under unfortunate circumstances statusbar might have the the moving flag true
-            # fix it here because it makes no sense
+            # fix it here because it makes no sense but my cause non-appearing statuswindow
             self.moving = False
 
             self.show_window()
@@ -1145,8 +1145,8 @@ class StatusWindow(QWidget):
             else:
                 # when height is to large for current screen cut it
                 if self.y() + self.height() - real_height < available_y:
-                    height = desktop.screenGeometry().height() - available_y -\
-                             (desktop.screenGeometry().height() - (self.y() + self.height()))
+                    # simply take the available max height if there is no more screen real estate
+                    height = available_height
                     y = available_y
                 else:
                     height = real_height
