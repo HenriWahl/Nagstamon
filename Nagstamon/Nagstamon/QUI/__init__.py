@@ -623,6 +623,7 @@ class StatusWindow(QWidget):
     # signal to be sent to all server workers to recheck all
     recheck = pyqtSignal()
 
+
     def __init__(self):
         """
             Status window combined from status bar and popup window
@@ -634,14 +635,19 @@ class StatusWindow(QWidget):
         # avoid quitting when using Qt.Tool flag and closing settings dialog
         QApplication.setQuitOnLastWindowClosed(False)
 
+        # apply font if any is set
+        if conf.font != '':
+            QApplication.setFont(QFont(conf.font))
+
         # statusbar and detail window should be frameless and stay on top
-        ###self.setWindowFlags(Qt.WindowStaysOnTopHint | Qt.FramelessWindowHint | Qt.Tool)
+        # tool flag helps to be invisible in taskbar
+        self.setWindowFlags(Qt.WindowStaysOnTopHint | Qt.FramelessWindowHint | Qt.Tool)
         self.setWindowFlags(Qt.WindowStaysOnTopHint | Qt.FramelessWindowHint)
 
         # show tooltips even if popup window has no focus
         self.setAttribute(Qt.WA_AlwaysShowToolTips)
         # avoid hiding window if it has no focus - necessary on OSX if using flag Qt.Tool
-        ###self.setAttribute(Qt.WA_MacAlwaysShowToolWindow)
+        self.setAttribute(Qt.WA_MacAlwaysShowToolWindow)
 
         self.setWindowTitle(AppInfo.NAME)
         self.setWindowIcon(QIcon('%s%snagstamon.svg' % (RESOURCES, os.sep)))
@@ -1942,8 +1948,6 @@ class ServerVBox(QVBoxLayout):
         """
             return summarized real height of hbox items and table
         """
-
-        ###height = self.table.get_real_height()
         height = self.table.real_height
         if self.label.isVisible() and self.button_monitor.isVisible():
             # compare item heights, decide to take the largest and add 2 time the MARGIN (top and bottom)
@@ -2068,7 +2072,7 @@ class CellWidget(QWidget):
         self.setToolTip(tooltip)
 
         self.label.setStyleSheet('padding: 5px;')
-        ###                         'font-size: 20px;')
+        ###                         'font-size: 12pt;')
 
         # hosts and services might contain attribute icons
         if column in (0, 1) and icons is not [False]:
@@ -2556,20 +2560,6 @@ class TableWidget(QTableWidget):
             del(row)
         else:
             self.real_height = 0
-        """
-        # height summary starts with headers' height
-        # apparently height works better/without scrollbar if some pixels are added
-        self.real_height = self.horizontalHeader().sizeHint().height() + 2
-        # it is necessary to ask every row directly because their heights differ :-(
-        row = 0
-        for row in range(0, self.rowCount()):
-            try:
-                self.real_height += (self.cellWidget(row, 0).sizeHint().height())
-            except Exception as err:
-                print(err)
-                self.real_height += 30
-        del(row)
-        """
 
         return self.real_height
 
@@ -2704,7 +2694,7 @@ class TableWidget(QTableWidget):
                 # see https://bugreports.qt.io/browse/QTBUG-26669
                 # thus disable tooltips on MacOSX
                 # seems strange to use string '5.4.1' here but this is the PyQt version on Fink based OSX environment
-                if not (platform.system() == 'Darwin' and QT_VERSION_STR == '5.4.1'):
+                if not (platform.system() == 'Darwin' and QT_VERSION_STR == '5.5.1'):
                     # only if tooltips are wanted take status_information for the whole row
                     if conf.show_tooltips:
                         tooltip = '<div style=color:black;' \
@@ -3227,6 +3217,11 @@ class Dialog_Settings(Dialog):
         # connect check-for-updates button to update check
         self.ui.button_check_for_new_version_now.clicked.connect(check_version.check)
 
+        # connect font chooser button to font choosing dialog
+        self.ui.button_fontchooser.clicked.connect(self.font_chooser)
+        # store font as default
+        self.font = QApplication.font()
+
         # connect action buttons to action dialog
         self.ui.button_new_action.clicked.connect(self.new_action)
         self.ui.button_edit_action.clicked.connect(self.edit_action)
@@ -3327,7 +3322,6 @@ class Dialog_Settings(Dialog):
         self.ui.list_servers.setCurrentRow(0)
 
         # fill actions listwidget with actions
-        ###for action in sorted(conf.actions, key=unicode.lower):
         for action in sorted(conf.actions, key=str.lower):
             self.ui.list_actions.addItem(action)
         # select first item
@@ -3387,6 +3381,10 @@ class Dialog_Settings(Dialog):
         else:
             # set flag to tell debug loop it should stop please
             statuswindow.worker.debug_loop_looping = False
+
+        # apply font
+        QApplication.setFont(self.font)
+        conf.font = self.font.toString()
 
         # store configuration
         conf.SaveConfig()
@@ -3693,6 +3691,14 @@ class Dialog_Settings(Dialog):
             # set example color
             self.ui.__dict__['label_color_%s' % (status)].setStyleSheet('color: %s; background: %s' %
                                                                        (text, background))
+
+
+    @pyqtSlot()
+    def font_chooser(self):
+        """
+            use font dialog to choose a font
+        """
+        self.font = QFontDialog.getFont(QApplication.font(), parent=self.window)[0]
 
 
 class Dialog_Server(Dialog):
