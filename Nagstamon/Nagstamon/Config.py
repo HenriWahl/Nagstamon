@@ -1,7 +1,7 @@
 # encoding: utf-8
 
 # Nagstamon - Nagios status monitor for your desktop
-# Copyright (C) 2008-2014 Henri Wahl <h.wahl@ifw-dresden.de> et al.
+# Copyright (C) 2008-2015 Henri Wahl <h.wahl@ifw-dresden.de> et al.
 #
 # This program is free software; you can redistribute it and/or modify
 # it under the terms of the GNU General Public License as published by
@@ -20,9 +20,25 @@
 import os
 import platform
 import sys
-import ConfigParser
+import configparser
 import base64
 import zlib
+import datetime
+from collections import OrderedDict
+
+from Nagstamon.Helpers import (debug_queue,
+                               BOOLPOOL)
+
+class AppInfo(object):
+    """
+    contains app information previously located in GUI.py
+    """
+    NAME = 'Nagstamon'
+    VERSION = '2.0-alpha-20160108'
+    WEBSITE = 'https://nagstamon.ifw-dresden.de'
+    COPYRIGHT = '©2008-2016 Henri Wahl et al.\nh.wahl@ifw-dresden.de'
+    COMMENTS = 'Nagios status monitor for your desktop'
+    VERSION_URL = WEBSITE + '/version/unstable'
 
 
 class Config(object):
@@ -41,8 +57,8 @@ class Config(object):
         self.show_grid = True
         self.show_tooltips = True
         self.highlight_new_events = True
-        self.default_sort_field = "Status"
-        self.default_sort_order = "Descending"
+        self.default_sort_field = 'status'
+        self.default_sort_order = 'descending'
         self.filter_all_down_hosts = False
         self.filter_all_unreachable_hosts = False
         self.filter_all_flapping_hosts = False
@@ -81,83 +97,78 @@ class Config(object):
         self.notification_sound_repeat = False
         self.notification_default_sound = True
         self.notification_custom_sound = False
-        self.notification_custom_sound_warning = None
-        self.notification_custom_sound_critical = None
-        self.notification_custom_sound_down = None
+        self.notification_custom_sound_warning = ''
+        self.notification_custom_sound_critical = ''
+        self.notification_custom_sound_down = ''
         self.notification_action_warning = False
-        self.notification_action_warning_string = ""
+        self.notification_action_warning_string = ''
         self.notification_action_critical = False
-        self.notification_action_critical_string = ""
+        self.notification_action_critical_string = ''
         self.notification_action_down = False
-        self.notification_action_down_string = ""
+        self.notification_action_down_string = ''
         self.notification_action_ok = False
-        self.notification_action_ok_string = ""
+        self.notification_action_ok_string = ''
         self.notification_custom_action = False
-        self.notification_custom_action_string = False
-        self.notification_custom_action_separator = False
+        self.notification_custom_action_string = ''
+        self.notification_custom_action_separator = ''
         self.notification_custom_action_single = False
+        self.notify_if_up = False
         self.notify_if_warning = True
         self.notify_if_critical = True
         self.notify_if_unknown = True
         self.notify_if_unreachable = True
         self.notify_if_down = True
-        """
-        # not yet working
-        # Check_MK show-only-my-problems-they-are-way-enough feature
-        self.only_my_issues = False
-        """
         # Regular expression filters
         self.re_host_enabled = False
-        self.re_host_pattern = ""
+        self.re_host_pattern = ''
         self.re_host_reverse = False
         self.re_service_enabled = False
-        self.re_service_pattern = ""
+        self.re_service_pattern = ''
         self.re_service_reverse = False
         self.re_status_information_enabled = False
-        self.re_status_information_pattern = ""
+        self.re_status_information_pattern = ''
         self.re_status_information_reverse = False
-        self.color_ok_text = self.default_color_ok_text = "#FFFFFF"
-        self.color_ok_background = self.default_color_ok_background = "#006400"
+        self.color_ok_text = self.default_color_ok_text = '#FFFFFF'
+        self.color_ok_background = self.default_color_ok_background = '#006400'
         self.color_warning_text = self.default_color_warning_text = "#000000"
-        self.color_warning_background = self.default_color_warning_background = "#FFFF00"
-        self.color_critical_text = self.default_color_critical_text = "#FFFFFF"
-        self.color_critical_background = self.default_color_critical_background = "#FF0000"
-        self.color_unknown_text = self.default_color_unknown_text = "#000000"
-        self.color_unknown_background = self.default_color_unknown_background = "#FFA500"
-        self.color_unreachable_text = self.default_color_unreachable_text = "#FFFFFF"
-        self.color_unreachable_background = self.default_color_unreachable_background = "#8B0000"
-        self.color_down_text = self.default_color_down_text = "#FFFFFF"
-        self.color_down_background = self.default_color_down_background = "#000000"
-        self.color_error_text = self.default_color_error_text= "#000000"
-        self.color_error_background = self.default_color_error_background = "#D3D3D3"
-        # going to be obsolete even on Linux
-        #self.statusbar_systray = False
+        self.color_warning_background = self.default_color_warning_background = '#FFFF00'
+        self.color_critical_text = self.default_color_critical_text = '#FFFFFF'
+        self.color_critical_background = self.default_color_critical_background = '#FF0000'
+        self.color_unknown_text = self.default_color_unknown_text = '#000000'
+        self.color_unknown_background = self.default_color_unknown_background = '#FFA500'
+        self.color_unreachable_text = self.default_color_unreachable_text = '#FFFFFF'
+        self.color_unreachable_background = self.default_color_unreachable_background = '#8B0000'
+        self.color_down_text = self.default_color_down_text = '#FFFFFF'
+        self.color_down_background = self.default_color_down_background = '#000000'
+        self.color_error_text = self.default_color_error_text= '#000000'
+        self.color_error_background = self.default_color_error_background = '#D3D3D3'
         self.statusbar_floating = True
         self.icon_in_systray = False
         self.appindicator = False
         self.fullscreen = False
         self.fullscreen_display = 0
-        self.systray_popup_offset= 10
+        self.font = ''
         self.defaults_acknowledge_sticky = False
         self.defaults_acknowledge_send_notification = False
         self.defaults_acknowledge_persistent_comment = False
         self.defaults_acknowledge_all_services = False
-        self.defaults_acknowledge_comment = "acknowledged"
-        self.defaults_submit_check_result_comment = "check result submitted"
-        self.defaults_downtime_duration_hours = "2"
-        self.defaults_downtime_duration_minutes = "0"
-        self.defaults_downtime_comment = "scheduled downtime"
+        self.defaults_acknowledge_comment = 'acknowledged'
+        self.defaults_submit_check_result_comment = 'check result submitted'
+        self.defaults_downtime_duration_hours = 2
+        self.defaults_downtime_duration_minutes = 0
+        self.defaults_downtime_comment = 'scheduled downtime'
         self.defaults_downtime_type_fixed = True
         self.defaults_downtime_type_flexible = False
-        self.converted_from_single_configfile = False
         # internal flag to determine if keyring is available at all - defaults to False
         # use_system_keyring is checked and defined some lines later after config file was read
         self.keyring_available = False
+        # setting for keyring usage
+        self.use_system_keyring = False
 
         # Special FX
         # Centreon
         self.re_criticality_enabled = False
-        self.re_criticality_pattern = ""
+        self.re_criticality_pattern = ''
         self.re_criticality_reverse = False
 
         # the app is unconfigured by default and will stay so if it
@@ -168,23 +179,23 @@ class Config(object):
         # if sys.argv is larger than 1
         if len(sys.argv) > 1:
             # MacOSX related -psn argument by launchd
-            if sys.argv[1].find("-psn") != -1:
+            if sys.argv[1].find('-psn') != -1:
                 # new configdir approach
-                self.configdir = os.path.expanduser('~') + os.sep + ".nagstamon"
+                self.configdir = os.path.expanduser('~') + os.sep + '.nagstamon'
             else:
                 # allow to give a config file
                 self.configdir = sys.argv[1]
 
-        # otherwise if there exits a configfile in current working directory it should be used
-        elif os.path.exists(os.getcwd() + os.sep + "nagstamon.config"):
-            self.configdir = os.getcwd() + os.sep + "nagstamon.config"
+        # otherwise if there exits a configdir in current working directory it should be used
+        elif os.path.exists(os.getcwd() + os.sep + 'nagstamon.config'):
+            self.configdir = os.getcwd() + os.sep + 'nagstamon.config'
         else:
             # ~/.nagstamon/nagstamon.conf is the user conf file
             # os.path.expanduser('~') finds out the user HOME dir where
             # nagstamon expects its conf file to be
-            self.configdir = os.path.expanduser('~') + os.sep + ".nagstamon"
+            self.configdir = os.path.expanduser('~') + os.sep + '.nagstamon'
 
-        self.configfile = self.configdir + os.sep + "nagstamon.conf"
+        self.configfile = self.configdir + os.sep + 'nagstamon.conf'
 
         # make path fit for actual os, normcase for letters and normpath for path
         self.configfile = os.path.normpath(os.path.normcase(self.configfile))
@@ -194,43 +205,42 @@ class Config(object):
         # wrong name so it will be stored here temporarily
         configdir_temp = self.configdir
 
-        # legacy configfile treatment
-        legacyconfigfile = self._LoadLegacyConfigFile()
-
         # default settings dicts
         self.servers = dict()
         self.actions = dict()
 
         if os.path.exists(self.configfile):
-            # instantiate a Configparser to parse the conf file
+            # instantiate a configparser to parse the conf file
             # SF.net bug #3304423 could be fixed with allow_no_value argument which
             # is only available since Python 2.7
-            if sys.version_info[0] < 3 and sys.version_info[1] < 7:
-                config = ConfigParser.ConfigParser()
-            else:
-                config = ConfigParser.ConfigParser(allow_no_value=True)
+            # since Python 3 '%' will be interpolated by default which crashes
+            # with some URLs
+            config = configparser.ConfigParser(allow_no_value=True, interpolation=None)
             config.read(self.configfile)
-
-            # temporary dict for string-to-bool-conversion
-            BOOLPOOL = {"False": False, "True": True}
 
             # go through all sections of the conf file
             for section in config.sections():
                 # go through all items of each sections (in fact there is only on
                 # section which has to be there to comply to the .INI file standard
+
                 for i in config.items(section):
-                    # create a key of every config item with its appropriate value
-                    # check first if it is a bool value and convert string if it is
-                    if i[1] in BOOLPOOL:
-                        object.__setattr__(self, i[0], BOOLPOOL[i[1]])
-                    else:
-                        object.__setattr__(self, i[0], i[1])
-                        
+                    # omit config file info as it makes no sense to store its path
+                    if not i[0] in ('configfile', 'configdir'):
+                        # create a key of every config item with its appropriate value
+                        # check first if it is a bool value and convert string if it is
+                        if i[1] in BOOLPOOL:
+                            object.__setattr__(self, i[0], BOOLPOOL[i[1]])
+                        elif i[1].isdecimal():
+                            object.__setattr__(self, i[0],int(i[1]))
+                        else:
+                            object.__setattr__(self, i[0], i[1])
+
             # because the switch from Nagstamon 1.0 to 1.0.1 brings the use_system_keyring property
             # and all the thousands 1.0 installations do not know it yet it will be more comfortable
             # for most of the Windows users if it is only defined as False after it was checked
             # from config file
-            if not self.__dict__.has_key("use_system_keyring"):
+            #if not self.__dict__.has_key("use_system_keyring"):
+            if not 'use_system_keyring' in self.__dict__.keys():
                 if self.unconfigured == True:
                     # an unconfigured system should start with no keyring to prevent crashes
                     self.use_system_keyring = False
@@ -253,83 +263,8 @@ class Config(object):
             # seems like there is a config file so the app is not unconfigured anymore
             self.unconfigured = False
 
-            # if configfile has been converted from legacy configfile reset it to the new value
-            self.configfile = self.configdir + os.sep + "nagstamon.conf"
-
-        # flag to be evaluated after gui is initialized and used to show a notice if a legacy config file is used
-        # from command line
-        self.legacyconfigfile_notice = False
-
-        # in case it exists and it has not been used before read legacy config file once
-        if str(self.converted_from_single_configfile) == "False" and not legacyconfigfile == False:
-            # instantiate a Configparser to parse the conf file
-            # SF.net bug #3304423 could be fixed with allow_no_value argument which
-            # is only available since Python 2.7
-            if sys.version_info[0] < 3 and sys.version_info[1] < 7:
-                config = ConfigParser.ConfigParser()
-            else:
-                config = ConfigParser.ConfigParser(allow_no_value=True)
-            config.read(legacyconfigfile)
-
-            # go through all sections of the conf file
-            for section in config.sections():
-                if section.startswith("Server_"):
-                    # create server object for every server
-                    server_name = dict(config.items(section))["name"]
-                    self.servers[server_name] = Server()
-
-                    # go through all items of each sections
-                    for i in config.items(section):
-                            self.servers[server_name].__setattr__(i[0], i[1])
-
-                    # deobfuscate username + password inside a try-except loop
-                    # if entries have not been obfuscated yet this action should raise an error
-                    # and old values (from nagstamon < 0.9.0) stay and will be converted when next
-                    # time saving config
-                    try:
-                        self.servers[server_name].username = self.DeObfuscate(self.servers[server_name].username)
-                        if self.servers[server_name].save_password == "False":
-                            self.servers[server_name].password = ""
-                        else:
-                            self.servers[server_name].password = self.DeObfuscate(self.servers[server_name].password)
-                        self.servers[server_name].autologin_key  = self.DeObfuscate(self.servers[server_name].autologin_key)
-                        self.servers[server_name].proxy_username = self.DeObfuscate(self.servers[server_name].proxy_username)
-                        self.servers[server_name].proxy_password = self.DeObfuscate(self.servers[server_name].proxy_password)
-                    except:
-                        pass
-
-                elif section == "Nagstamon":
-                    # go through all items of each sections (in fact there is only on
-                    # section which has to be there to comply to the .INI file standard
-                    for i in config.items(section):
-                        # create a key of every config item with its appropriate value - but please no legacy config file
-                        if not i[0] == "configfile":
-                            object.__setattr__(self, i[0], i[1])
-
-            # add default actions as examples
-            self.actions.update(self._DefaultActions())
-
-            # set flag for config file not being evaluated again
-            self.converted_from_single_configfile = True
-            # of course Nagstamon is configured then
-            self.unconfigured = False
-
-            # add config dir in place of legacy config file
-            # in case there is a default install use the default config dir
-            if legacyconfigfile == os.path.normpath(os.path.normcase(os.path.expanduser('~') + os.sep + ".nagstamon.conf")):
-                self.configdir = os.path.normpath(os.path.normcase(os.path.expanduser('~') + os.sep + ".nagstamon"))
-            else:
-                self.configdir = legacyconfigfile + ".config"
-            self.configfile = self.configdir + os.sep + "nagstamon.conf"
-
-            # set flag to show legacy command line config file notice
-            self.legacyconfigfile_notice = True
-
-            # save converted configuration
-            self.SaveConfig()
-
         # Load actions if Nagstamon is not unconfigured, otherwise load defaults
-        if str(self.unconfigured) == "True":
+        if self.unconfigured == True:
             self.actions = self._DefaultActions()
 
         # do some conversion stuff needed because of config changes and code cleanup
@@ -342,7 +277,7 @@ class Config(object):
         """
         self.keyring_available = self.KeyringAvailable()
 
-        servers = self.LoadMultipleConfig("servers", "server", "Server")
+        servers = self.LoadMultipleConfig('servers', 'server', 'Server')
         # deobfuscate username + password inside a try-except loop
         # if entries have not been obfuscated yet this action should raise an error
         # and old values (from nagstamon < 0.9.0) stay and will be converted when next
@@ -353,15 +288,12 @@ class Config(object):
                 servers[server].username = self.DeObfuscate(servers[server].username)
                 servers[server].proxy_username = self.DeObfuscate(servers[server].proxy_username)
                 # passwords for monitor server and proxy
-                if servers[server].save_password == "False":
+                if servers[server].save_password == 'False':
                     servers[server].password = ""
                 elif self.keyring_available and self.use_system_keyring:
                     # necessary to import on-the-fly due to possible Windows crashes
-                    try:
-                        import keyring
-                    except:
-                        import Nagstamon.thirdparty.keyring as keyring
-                    password = keyring.get_password("Nagstamon", "@".join((servers[server].username,
+                    import keyring
+                    password = keyring.get_password('Nagstamon', '@'.join((servers[server].username,
                                                                            servers[server].monitor_url))) or ""
                     if password == "":
                         if servers[server].password != "":
@@ -373,11 +305,8 @@ class Config(object):
                 # proxy password
                 if self.keyring_available and self.use_system_keyring:
                     # necessary to import on-the-fly due to possible Windows crashes
-                    try:
-                        import keyring
-                    except:
-                        import Nagstamon.thirdparty.keyring as keyring
-                    proxy_password = keyring.get_password("Nagstamon", "@".join(("proxy",
+                    import keyring
+                    proxy_password = keyring.get_password('Nagstamon', '@'.join(('proxy',
                                                                                  servers[server].proxy_username,
                                                                                  servers[server].proxy_address))) or ""
                     if proxy_password == "":
@@ -389,8 +318,8 @@ class Config(object):
                     servers[server].proxy_password = self.DeObfuscate(servers[server].proxy_password)
 
                 # do only deobfuscating if any autologin_key is set - will be only Centreon
-                if servers[server].__dict__.has_key("autologin_key"):
-                    if len(servers[server].__dict__["autologin_key"]) > 0:
+                if 'autologin_key' in servers[server].__dict__.keys():
+                    if len(servers[server].__dict__['autologin_key']) > 0:
                         servers[server].autologin_key  = self.DeObfuscate(servers[server].autologin_key)
         except:
             import traceback
@@ -399,66 +328,37 @@ class Config(object):
         return servers
 
 
-    def _LoadLegacyConfigFile(self):
-        """
-        load any pre-0.9.9 config file
-        """
-        # default negative setting
-        legacyconfigfile = False
-
-        # try to use a given config file - there must be one given
-        # if sys.argv is larger than 1
-        if len(sys.argv) > 1:
-            if sys.argv[1].find("-psn") != -1:
-                legacyconfigfile = os.path.expanduser('~') + os.sep + ".nagstamon.conf"
-            else:
-                # allow to give a config file
-                legacyconfigfile = sys.argv[1]
-        # otherwise if there exits a configfile in current working directory it should be used
-        elif os.path.exists(os.getcwd() + os.sep + "nagstamon.conf"):
-            legacyconfigfile = os.getcwd() + os.sep + "nagstamon.conf"
-        else:
-            # ~/.nagstamon.conf is the user conf file
-            # os.path.expanduser('~') finds out the user HOME dir where
-            # nagstamon expects its conf file to be
-            legacyconfigfile = os.path.expanduser('~') + os.sep + ".nagstamon.conf"
-
-        # make path fit for actual os, normcase for letters and normpath for path
-        legacyconfigfile = os.path.normpath(os.path.normcase(legacyconfigfile))
-
-        if os.path.exists(legacyconfigfile) and os.path.isfile(legacyconfigfile):
-            return legacyconfigfile
-        else:
-            return False
-
-
     def LoadMultipleConfig(self, settingsdir, setting, configobj):
         """
         load generic config into settings dict and return to central config
         """
         # defaults as empty dict in case settings dir/files could not be found
-        settings = dict()
+        settings = OrderedDict()
 
         try:
             if os.path.exists(self.configdir + os.sep + settingsdir):
-                # dictionary that later gets returned back
-                settings = dict()
-                for f in os.listdir(self.configdir + os.sep + settingsdir):
-                    if f.startswith(setting + "_") and f.endswith(".conf"):
-                        if sys.version_info[0] < 3 and sys.version_info[1] < 7:
-                            config = ConfigParser.ConfigParser()
-                        else:
-                            config = ConfigParser.ConfigParser(allow_no_value=True)
+                for f in sorted(os.listdir(self.configdir + os.sep + settingsdir)):
+                    if f.startswith(setting + '_') and f.endswith('.conf'):
+                        config = configparser.ConfigParser(allow_no_value=True, interpolation=None)
                         config.read(self.configdir + os.sep + settingsdir + os.sep + f)
 
                         # create object for every setting
-                        name = f.split("_", 1)[1].rpartition(".")[0]
+                        name = f.split('_', 1)[1].rpartition('.')[0]
                         settings[name] = globals()[configobj]()
 
                         # go through all items of the server
-                        for i in config.items(setting + "_" + name):
+                        for i in config.items(setting + '_' + name):
                             # create a key of every config item with its appropriate value
-                            settings[name].__setattr__(i[0], i[1])
+                            if i[1] in BOOLPOOL:
+                                value = BOOLPOOL[i[1]]
+                            # in case there are numbers intify them to avoid later conversions
+                            # treat negative value specially as .isdecimal() will not detect it
+                            elif i[1].isdecimal() or \
+                                 (i[1].startswith('-') and i[1].split('-')[1].isdecimal()):
+                                value = int(i[1])
+                            else:
+                                value = i[1]
+                            settings[name].__setattr__(i[0], value)
         except:
             import traceback
             traceback.print_exc(file=sys.stdout)
@@ -466,70 +366,57 @@ class Config(object):
         return settings
 
 
-    def SaveConfig(self, output=None, server=None, debug_queue=None):
+    def SaveConfig(self):
         """
             save config file
-            "output", "server" and debug_queue are used only for debug purpose - which one is given will be taken
         """
         try:
             # Make sure .nagstamon is created
             if not os.path.exists(self.configdir):
-                os.mkdir(self.configdir)
-            # save config file with ConfigParser
-            config = ConfigParser.ConfigParser()
+                os.makedirs(self.configdir)
+            # save config file with configparser
+            config = configparser.ConfigParser(allow_no_value=True, interpolation=None)
             # general section for Nagstamon
-            config.add_section("Nagstamon")
+            config.add_section('Nagstamon')
             for option in self.__dict__:
-                if not option in ["servers", "actions"]:
-                    config.set("Nagstamon", option, self.__dict__[option])
+                if not option in ['servers', 'actions', 'configfile', 'configdir']:
+                    config.set('Nagstamon', option, str(self.__dict__[option]))
 
             # because the switch from Nagstamon 1.0 to 1.0.1 brings the use_system_keyring property
             # and all the thousands 1.0 installations do not know it yet it will be more comfortable
             # for most of the Windows users if it is only defined as False after it was checked
             # from config file
-            if not self.__dict__.has_key("use_system_keyring"):
+            if not 'use_system_keyring' in self.__dict__.keys():
                 if self.unconfigured == True:
                     # an unconfigured system should start with no keyring to prevent crashes
                     self.use_system_keyring = False
                 else:
                     # a configured system seemed to be able to run and thus use system keyring
-                    if platform.system() in ["Windows", "Darwin"]:
+                    if platform.system() in ['Windows', 'Darwin']:
                         self.use_system_keyring = True
                     else:
                         self.use_system_keyring = self.KeyringAvailable()
 
-            # save servers dict
-            self.SaveMultipleConfig("servers", "server")
-
             # save actions dict
-            self.SaveMultipleConfig("actions", "action")
-
-            # debug
-            if str(self.debug_mode) == "True":
-                if server != None:
-                    server.Debug(server="", debug="Saving config to " + self.configfile)
-                elif output != None:
-                    output.servers.values()[0].Debug(server="", debug="Saving config to " + self.configfile)
+            self.SaveMultipleConfig('actions', 'action')
 
             # open, save and close config file
             f = open(os.path.normpath(self.configfile), "w")
             config.write(f)
             f.close()
-        except Exception, err:
-            print err
-            import traceback
-            traceback.print_exc(file=sys.stdout)
 
             # debug
-            if str(self.debug_mode) == "True":
-                if server != None:
-                    server.Debug(server="", debug="Saving config to " + self.configfile)
-                elif output != None:
-                    output.servers.values()[0].Debug(server="", debug="Saving config to " + self.configfile)
-                elif debug_queue != None:
-                    debug_string =  " ".join((head + ":",  str(datetime.datetime.now()), "Saving config to " + self.configfile))
-                    # give debug info to debug loop for thread-save log-file writing
-                    self.debug_queue.put(debug_string)
+            if self.debug_mode:
+                debug_queue.append('DEBUG: {0} Saving configuration to file {1}'.format(str(datetime.datetime.now()),
+                                                                                            self.configfile))
+        except Exception as err:
+            import traceback
+            traceback.print_exc(file=sys.stdout)
+            # debug
+            if self.debug_mode:
+                debug_queue.append('ERROR: {0} {1} while saving configuration to file {2}'.format(str(datetime.datetime.now()),
+                                                                                                  err,
+                                                                                                  self.configfile))
 
 
     def SaveMultipleConfig(self, settingsdir, setting):
@@ -546,11 +433,7 @@ class Config(object):
 
         # one section for each setting
         for s in self.__dict__[settingsdir]:
-            # depending on python version allow_no_value is allowed or not
-            if sys.version_info[0] < 3 and sys.version_info[1] < 7:
-                config = ConfigParser.ConfigParser()
-            else:
-                config = ConfigParser.ConfigParser(allow_no_value=True)
+            config = configparser.ConfigParser(allow_no_value=True, interpolation=None)
             config.add_section(setting + "_" + s)
             for option in self.__dict__[settingsdir][s].__dict__:
                 # obfuscate certain entries in config file - special arrangement for servers
@@ -564,10 +447,7 @@ class Config(object):
                             elif self.keyring_available and self.use_system_keyring:
                                 if self.__dict__[settingsdir][s].password != "":
                                     # necessary to import on-the-fly due to possible Windows crashes
-                                    try:
-                                        import keyring
-                                    except:
-                                        import Nagstamon.thirdparty.keyring as keyring
+                                    import keyring
                                     # provoke crash if password saving does not work - this is the case
                                     # on newer Ubuntu releases
                                     try:
@@ -582,10 +462,7 @@ class Config(object):
                         if option == "proxy_password":
                             if self.keyring_available and self.use_system_keyring:
                                 # necessary to import on-the-fly due to possible Windows crashes
-                                try:
-                                    import keyring
-                                except:
-                                    import Nagstamon.thirdparty.keyring as keyring
+                                import keyring
                                 if self.__dict__[settingsdir][s].proxy_password != "":
                                     # provoke crash if password saving does not work - this is the case
                                     # on newer Ubuntu releases
@@ -599,16 +476,16 @@ class Config(object):
                                         traceback.print_exc(file=sys.stdout)
                                         sys.exit(1)
 
-                                value = ""
-                        config.set(setting + "_" + s, option, value)
+                                value = ''
+                        config.set(setting + '_' + s, option, str(value))
                     else:
-                        config.set(setting + "_" + s, option, self.__dict__[settingsdir][s].__dict__[option])
+                        config.set(setting + '_' + s, option, str(self.__dict__[settingsdir][s].__dict__[option]))
                 else:
-                    config.set(setting + "_" + s, option, self.__dict__[settingsdir][s].__dict__[option])
+                    config.set(setting + '_' + s, option, str(self.__dict__[settingsdir][s].__dict__[option]))
 
             # open, save and close config_server file
             if not os.path.exists(self.configdir + os.sep + settingsdir):
-                os.mkdir(self.configdir + os.sep + settingsdir)
+                os.makedirs(self.configdir + os.sep + settingsdir)
             f = open(os.path.normpath(self.configdir + os.sep + settingsdir + os.sep + setting + "_" + s + ".conf"), "w")
             config.write(f)
             f.close()
@@ -618,47 +495,6 @@ class Config(object):
             for f in os.listdir(self.configdir + os.sep + settingsdir):
                 if not f.split(setting + "_")[1].split(".conf")[0] in self.__dict__[settingsdir]:
                     os.unlink(self.configdir + os.sep + settingsdir + os.sep + f)
-
-
-    def Convert_Conf_to_Multiple_Servers(self):
-        """
-            if there are settings found which come from older nagstamon version convert them -
-            now with multiple servers support these servers have their own settings
-
-            DEPRECATED I think, after 2,5 years have passed there should be no version less than 0.8.0 in the wild...
-        """
-
-        # check if old settings exist
-        if self.__dict__.has_key("nagios_url") and \
-            self.__dict__.has_key("nagios_cgi_url") and \
-            self.__dict__.has_key("username") and \
-            self.__dict__.has_key("password") and \
-            self.__dict__.has_key("use_proxy_yes") and \
-            self.__dict__.has_key("use_proxy_no"):
-            # create Server and fill it with old settings
-            server_name = "Default"
-            self.servers[server_name] = Server()
-            self.servers[server_name].name = server_name
-            self.servers[server_name].monitor_url = self.nagios_url
-            self.servers[server_name].monitor_cgi_url = self.nagios_cgi_url
-            self.servers[server_name].username = self.username
-            self.servers[server_name].password = self.password
-            # convert VERY old config files
-            try:
-                self.servers[server_name].use_proxy = self.use_proxy_yes
-            except:
-                self.servers[server_name].use_proxy = False
-            try:
-                self.servers[server_name].use_proxy_from_os = self.use_proxy_from_os_yes
-            except:
-                self.servers[server_name].use_proxy_from_os = False
-            # delete old settings from config
-            self.__dict__.pop("nagios_url")
-            self.__dict__.pop("nagios_cgi_url")
-            self.__dict__.pop("username")
-            self.__dict__.pop("password")
-            self.__dict__.pop("use_proxy_yes")
-            self.__dict__.pop("use_proxy_no")
 
 
     def KeyringAvailable(self):
@@ -675,14 +511,15 @@ class Config(object):
                     return True
             else:
                 # safety first - if not yet available disable it
-                if not self.__dict__.has_key("use_system_keyring"):
+                #if not self.__dict__.has_key("use_system_keyring"):
+                if not 'use_system_keyring' in self.__dict__.keys():
                     self.use_system_keyring = False
                 # only import keyring lib if configured to do so
                 # necessary to avoid Windows crashes like https://github.com/HenriWahl/Nagstamon/issues/97
                 if self.use_system_keyring == True:
                     # hint for packaging: nagstamon.spec always have to match module path
                     # keyring has to be bound to object to be used later
-                    import Nagstamon.thirdparty.keyring as keyring
+                    import keyring
                     return  not (keyring.get_keyring() is None)
                 else:
                     return False
@@ -692,59 +529,43 @@ class Config(object):
             return False
 
 
-    def Convert_Conf_to_Custom_Actions(self):
-        """
-        any nagstamon minor to 0.9.9 will have extra ssh/rdp/vnc settings
-        which will be converted to custom actions here
-        """
-
-        # check if old settings exist
-        if self.__dict__.has_key("app_ssh_bin") and \
-            self.__dict__.has_key("app_ssh_options") and \
-            self.__dict__.has_key("app_rdp_bin") and \
-            self.__dict__.has_key("app_rdp_options") and \
-            self.__dict__.has_key("app_vnc_bin") and \
-            self.__dict__.has_key("app_vnc_options"):
-            # create actions and fill them with old settings
-            self.actions["SSH"] = Action(name="SSH", type="command", description="Converted from pre 0.9.9 Nagstamon.",
-                                         string=self.app_ssh_bin + " " + self.app_ssh_options + " $ADDRESS$")
-
-            self.actions["RDP"] = Action(name="RDP", type="command", description="Converted from pre 0.9.9 Nagstamon.",
-                                         string=self.app_rdp_bin + " " + self.app_rdp_options + " $ADDRESS$")
-
-            self.actions["VNC"] = Action(name="VNC", type="command", description="Converted from pre 0.9.9 Nagstamon.",
-                                         string=self.app_vnc_bin + " " + self.app_vnc_options + " $ADDRESS$")
-
-            # delete old settings from config
-            self.__dict__.pop("app_ssh_bin")
-            self.__dict__.pop("app_ssh_options")
-            self.__dict__.pop("app_rdp_bin")
-            self.__dict__.pop("app_rdp_options")
-            self.__dict__.pop("app_vnc_bin")
-            self.__dict__.pop("app_vnc_options")
-
-
     def Obfuscate(self, string, count=5):
         """
             Obfuscate a given string to store passwords etc.
         """
+
+        string = string.encode()
+
         for i in range(count):
-            string = list(base64.b64encode(string))
+            string = base64.b64encode(string).decode()
+            string = list(string)
             string.reverse()
             string = "".join(string)
+            string = string.encode()
             string = zlib.compress(string)
-        string = base64.b64encode(string)
+
+        # make unicode of bytes string
+        string = base64.b64encode(string).decode()
         return string
 
 
     def DeObfuscate(self, string, count=5):
+        """
+            Deobfucate previously obfuscated string
+        """
         string = base64.b64decode(string)
+
         for i in range(count):
             string = zlib.decompress(string)
+            string = string.decode()
             string = list(string)
             string.reverse()
             string = "".join(string)
             string = base64.b64decode(string)
+
+        # make unicode of bytes coming from base64 operations
+        string = string.decode()
+
         return string
 
 
@@ -827,9 +648,11 @@ class Config(object):
     def _LegacyAdjustments(self):
         # mere cosmetics but might be more clear for future additions - changing any "nagios"-setting to "monitor"
         for s in self.servers.values():
-            if s.__dict__.has_key("nagios_url"):
+            ###if s.__dict__.has_key("nagios_url"):
+            if 'nagios_url' in s.__dict__.keys():
                 s.monitor_url = s.nagios_url
-            if s.__dict__.has_key("nagios_cgi_url"):
+            ###if s.__dict__.has_key("nagios_cgi_url"):
+            if 'nagios_cgi_url' in s.__dict__.keys():
                 s.monitor_cgi_url = s.nagios_cgi_url
 
             # to reduce complexity in Centreon there is also only one URL necessary
@@ -837,15 +660,15 @@ class Config(object):
                 s.monitor_url = s.monitor_cgi_url
 
         # switch to update interval in seconds not minutes
-        if self.__dict__.has_key("update_interval"):
+        if 'update_interval' in self.__dict__.keys():
             self.update_interval_seconds = int(self.update_interval) * 60
-            self.__dict__.pop("update_interval")
+            self.__dict__.pop('update_interval')
 
         # remove support for GNOME2-trayicon-egg-stuff
-        if self.__dict__.has_key("statusbar_systray"):
-            if str(self.statusbar_systray) == "True":
-                self.icon_in_systray = "True"
-            self.__dict__.pop("statusbar_systray")
+        if 'statusbar_systray' in self.__dict__.keys():
+            if self.statusbar_systray == True:
+                self.icon_in_systray = True
+            self.__dict__.pop('statusbar_systray')
 
 
     def GetNumberOfEnabledMonitors(self):
@@ -855,7 +678,8 @@ class Config(object):
         # to be returned
         number = 0
         for server in self.servers.values():
-            if str(server.enabled) == "True":
+            ###if str(server.enabled) == "True":
+            if server.enabled == True:
                 number += 1
         return number
 
@@ -866,23 +690,23 @@ class Server(object):
     """
     def __init__(self):
         self.enabled = True
-        self.type = "Nagios"
-        self.name = ""
-        self.monitor_url = ""
-        self.monitor_cgi_url = ""
-        self.username = ""
-        self.password = ""
-        self.save_password = True
+        self.type = 'Nagios'
+        self.name = 'Monitor server'
+        self.monitor_url = 'https://monitor-server'
+        self.monitor_cgi_url = 'https://monitor-server/monitor/cgi-bin'
+        self.username = 'username'
+        self.password = 'password'
+        self.save_password = False
         self.use_proxy = False
         self.use_proxy_from_os = False
-        self.proxy_address = ""
-        self.proxy_username = ""
-        self.proxy_password = ""
+        self.proxy_address = 'http://proxyserver:port/'
+        self.proxy_username = 'proxyusername'
+        self.proxy_password = 'proxypassword'
 
         # special FX
         # Centreon autologin
         self.use_autologin = False
-        self.autologin_key = ""
+        self.autologin_key = ''
 
         # Icinga "host_display_name" instead of "host"
         self.use_display_name_host = False
@@ -936,3 +760,48 @@ class Action(object):
 
         # add and/or all keywords to object
         for k in kwds: self.__dict__[k] = kwds[k]
+
+
+# Initialize configuration to be accessed globally
+conf = Config()
+
+# try to get resources path if nagstamon got be installed by setup.py
+RESOURCES = ""
+
+try:
+    # first try to find local resources directory in case Nagstamon was frozen with cx-Freeze for OSX or Windows
+    executable_dir = os.path.join(os.sep.join(sys.executable.split(os.sep)[:-1]))
+    if os.path.exists(os.path.normcase(os.sep.join((executable_dir, "resources")))):
+        RESOURCES = os.path.normcase(os.sep.join((executable_dir, "resources")))
+    else:
+        import pkg_resources
+        RESOURCES = pkg_resources.resource_filename("Nagstamon", "resources")
+
+except Exception as err:
+    # get resources directory from current directory - only if not being set before by pkg_resources
+    # try-excepts necessary for platforms like Windows .EXE
+    paths_to_check = [os.path.normcase(os.path.join(os.getcwd(), "Nagstamon", "resources")),
+            os.path.normcase(os.path.join(os.getcwd(), "resources"))]
+    try:
+        # if resources dir is not available in CWD, try the
+        # libs dir (site-packages) for the current Python
+        from distutils.sysconfig import get_python_lib
+        paths_to_check.append(os.path.normcase(os.path.join(get_python_lib(), "Nagstamon", "resources")))
+    except:
+        pass
+
+    #if we're still out of luck, maybe this was a user scheme install
+    try:
+        import site
+        site.getusersitepackages() #make sure USER_SITE is set
+        paths_to_check.append(os.path.normcase(os.path.join(site.USER_SITE, "Nagstamon", "resources")))
+    except:
+        pass
+
+    # add directory nagstamon.py where nagstamon.py resides for cases like 0install without installed pkg-resources
+    paths_to_check.append(os.sep.join(sys.argv[0].split(os.sep)[:-1] + ["Nagstamon", "resources"]))
+
+    for path in paths_to_check:
+        if os.path.exists(path):
+            RESOURCES = path
+            break
