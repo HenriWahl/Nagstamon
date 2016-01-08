@@ -97,11 +97,8 @@ class Config(object):
         self.notification_sound_repeat = False
         self.notification_default_sound = True
         self.notification_custom_sound = False
-        ###self.notification_custom_sound_warning = None
         self.notification_custom_sound_warning = ''
-        ###self.notification_custom_sound_critical = None
         self.notification_custom_sound_critical = ''
-        ###self.notification_custom_sound_down = None
         self.notification_custom_sound_down = ''
         self.notification_action_warning = False
         self.notification_action_warning_string = ''
@@ -150,6 +147,7 @@ class Config(object):
         self.appindicator = False
         self.fullscreen = False
         self.fullscreen_display = 0
+        self.font = ''
         self.defaults_acknowledge_sticky = False
         self.defaults_acknowledge_send_notification = False
         self.defaults_acknowledge_persistent_comment = False
