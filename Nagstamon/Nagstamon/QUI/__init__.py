@@ -635,12 +635,13 @@ class StatusWindow(QWidget):
         QApplication.setQuitOnLastWindowClosed(False)
 
         # statusbar and detail window should be frameless and stay on top
-        self.setWindowFlags(Qt.WindowStaysOnTopHint | Qt.FramelessWindowHint | Qt.Tool)
+        ###self.setWindowFlags(Qt.WindowStaysOnTopHint | Qt.FramelessWindowHint | Qt.Tool)
+        self.setWindowFlags(Qt.WindowStaysOnTopHint | Qt.FramelessWindowHint)
 
         # show tooltips even if popup window has no focus
         self.setAttribute(Qt.WA_AlwaysShowToolTips)
-        # avoid hiding window if it has no focus - necessary on OSX
-        self.setAttribute(Qt.WA_MacAlwaysShowToolWindow)
+        # avoid hiding window if it has no focus - necessary on OSX if using flag Qt.Tool
+        ###self.setAttribute(Qt.WA_MacAlwaysShowToolWindow)
 
         self.setWindowTitle(AppInfo.NAME)
         self.setWindowIcon(QIcon('%s%snagstamon.svg' % (RESOURCES, os.sep)))
@@ -668,14 +669,19 @@ class StatusWindow(QWidget):
         self.servers_vbox.setSpacing(0)
         self.servers_vbox.setContentsMargins(0, 0, 0, 0)
 
-        #self.menu = QMenuBar()
+        # test with OSX top menubar
+        if platform.system() == 'Darwin':
+            self.menubar = QMenuBar()
+            action_exit = QAction('exit', self.menubar)
+            action_settings = QAction('settings', self.menubar)
+            self.menubar.addAction(action_settings)
+            self.menubar.addAction(action_exit)
 
         # connect logo of statusbar
         self.statusbar.logo.window_moved.connect(self.store_position)
         self.statusbar.logo.window_moved.connect(self.hide_window)
         self.statusbar.logo.window_moved.connect(self.correct_moving_position)
         self.statusbar.logo.mouse_pressed.connect(self.store_position)
-        ###self.statusbar.logo.mouse_pressed.connect(self.hide_window)
 
         # after status summarization check if window has to be resized
         self.statusbar.resize.connect(self.adjust_size)
@@ -702,7 +708,6 @@ class StatusWindow(QWidget):
         self.toparea.label_empty_space.window_moved.connect(self.hide_window)
         self.toparea.label_empty_space.window_moved.connect(self.correct_moving_position)
         self.toparea.label_empty_space.mouse_pressed.connect(self.store_position)
-        ###self.toparea.label_empty_space.mouse_pressed.connect(self.hide_window)
 
         # buttons in toparea
         self.toparea.button_recheck_all.clicked.connect(self.recheck_all)
@@ -1146,6 +1151,7 @@ class StatusWindow(QWidget):
                 # when height is to large for current screen cut it
                 if self.y() + self.height() - real_height < available_y:
                     # simply take the available max height if there is no more screen real estate
+                    # possible because systrayicon resides aside from available space, in fact cutting it
                     height = available_height
                     y = available_y
                 else:
@@ -4597,3 +4603,4 @@ menu = MenuContext()
 
 # versatile mediaplayer
 mediaplayer = MediaPlayer()
+

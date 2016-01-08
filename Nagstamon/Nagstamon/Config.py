@@ -34,7 +34,7 @@ class AppInfo(object):
     contains app information previously located in GUI.py
     """
     NAME = 'Nagstamon'
-    VERSION = '2.0-alpha-20160107'
+    VERSION = '2.0-alpha-20160108'
     WEBSITE = 'https://nagstamon.ifw-dresden.de'
     COPYRIGHT = '©2008-2016 Henri Wahl et al.\nh.wahl@ifw-dresden.de'
     COMMENTS = 'Nagios status monitor for your desktop'
@@ -188,7 +188,7 @@ class Config(object):
                 # allow to give a config file
                 self.configdir = sys.argv[1]
 
-        # otherwise if there exits a configfile in current working directory it should be used
+        # otherwise if there exits a configdir in current working directory it should be used
         elif os.path.exists(os.getcwd() + os.sep + 'nagstamon.config'):
             self.configdir = os.getcwd() + os.sep + 'nagstamon.config'
         else:
