@@ -21,26 +21,23 @@
 columns and other stuff.
 Imported in GUI module.
 """
+
 from Nagstamon.Actions import register_server
 
-from Nagstamon.Server.Nagios import NagiosServer
-from Nagstamon.Server.Centreon import CentreonServer
-from Nagstamon.Server.Icinga import IcingaServer
-from Nagstamon.Server.Multisite import MultisiteServer
-from Nagstamon.Server.op5Monitor import Op5MonitorServer
-from Nagstamon.Server.Opsview import OpsviewServer
-from Nagstamon.Server.Thruk import ThrukServer
-from Nagstamon.Server.Zabbix import ZabbixServer
+import logging
+log = logging.getLogger('nagstamon')
 
 
 # moved registration process because of circular dependencies
 # order of registering affects sorting in server type list in add new server dialog
-register_server(NagiosServer)
-register_server(CentreonServer)
-register_server(MultisiteServer)
-register_server(IcingaServer)
-register_server(Op5MonitorServer)
-register_server(OpsviewServer)
-register_server(ThrukServer)
-register_server(ZabbixServer)
+
+import pkg_resources
+
+for ep in sorted(pkg_resources.iter_entry_points('nagstamon.servers'), key=lambda x: x.name):
+    try:
+        cls = ep.load()
+    except ImportError, e:
+        log.error('Can\'t load `%s` plugin', ep, exc_info=e)
+    else:
+        register_server(cls)
 
