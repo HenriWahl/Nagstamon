@@ -124,6 +124,14 @@ class Config(object):
         self.color_critical_background = self.default_color_critical_background = "#FF0000"
         self.color_unknown_text = self.default_color_unknown_text = "#000000"
         self.color_unknown_background = self.default_color_unknown_background = "#FFA500"
+
+        self.color_information_text = self.default_color_warning_text = "#000000"
+        self.color_information_background = self.default_color_warning_background = "#D6F6FF"
+        self.color_high_text = self.default_color_critical_text = "#000000"
+        self.color_high_background = self.default_color_critical_background = "#FF9999"
+        self.color_average_text = self.default_color_critical_text = "#000000"
+        self.color_average_background = self.default_color_critical_background = "#FFB689"
+
         self.color_unreachable_text = self.default_color_unreachable_text = "#FFFFFF"
         self.color_unreachable_background = self.default_color_unreachable_background = "#8B0000"
         self.color_down_text = self.default_color_down_text = "#FFFFFF"

@@ -122,14 +122,19 @@ class GenericServer(object):
         self.isChecking = False
         self.CheckingForNewVersion = False
         self.WorstStatus = "UP"
-        self.States = ["UP", "UNKNOWN", "WARNING", "CRITICAL", "UNREACHABLE", "DOWN"]
+        self.States = ["UP", "UNKNOWN", "WARNING", "CRITICAL", "UNREACHABLE", "DOWN", "INFORMATION", "AVERAGE", "HIGH"]
         self.nagitems_filtered_list = list()
-        self.nagitems_filtered = {"services":{"CRITICAL":[], "WARNING":[], "UNKNOWN":[]}, "hosts":{"DOWN":[], "UNREACHABLE":[]}}
+        self.nagitems_filtered = {"services":{"CRITICAL":[], "WARNING":[], "UNKNOWN":[], "INFORMATION":[], "AVERAGE":[], "HIGH":[]}, "hosts":{"DOWN":[], "UNREACHABLE":[]}}
         self.downs = 0
         self.unreachables = 0
         self.unknowns = 0
         self.criticals = 0
         self.warnings = 0
+
+        self.informations = 0
+        self.averages = 0
+        self.highs = 0
+
         self.status = ""
         self.status_description = ""
         # needed for looping server thread
@@ -805,7 +810,7 @@ class GenericServer(object):
         self.refresh_authentication = False
 
         # this part has been before in GUI.RefreshDisplay() - wrong place, here it needs to be reset
-        self.nagitems_filtered = {"services":{"CRITICAL":[], "WARNING":[], "UNKNOWN":[]}, "hosts":{"DOWN":[], "UNREACHABLE":[]}}
+        self.nagitems_filtered = {"services":{"CRITICAL":[], "WARNING":[], "UNKNOWN":[], "INFORMATION":[], "AVERAGE":[], "HIGH":[]}, "hosts":{"DOWN":[], "UNREACHABLE":[]}}
 
         # initialize counts for various service/hosts states
         # count them with every miserable host/service respective to their meaning
@@ -814,6 +819,9 @@ class GenericServer(object):
         self.unknowns = 0
         self.criticals = 0
         self.warnings = 0
+        self.informations = 0
+        self.averages = 0
+        self.highs = 0
 
         for host in self.new_hosts.values():
             # Don't enter the loop if we don't have a problem. Jump down to your problem services
@@ -1002,6 +1010,33 @@ class GenericServer(object):
                         else:
                             self.nagitems_filtered["services"]["UNKNOWN"].append(service)
                             self.unknowns += 1
+
+                    if service.status == "INFORMATION":
+                        if str(self.conf.filter_all_unknown_services) == "True":
+                            if str(self.conf.debug_mode) == "True":
+                                self.Debug(server=self.get_name(), debug="Filter: INFORMATION " + str(host.name) + ";" + str(service.name))
+                            service.visible = False
+                        else:
+                            self.nagitems_filtered["services"]["INFORMATION"].append(service)
+                            self.informations += 1
+
+                    if service.status == "AVERAGE":
+                        if str(self.conf.filter_all_unknown_services) == "True":
+                            if str(self.conf.debug_mode) == "True":
+                                self.Debug(server=self.get_name(), debug="Filter: AVERAGE " + str(host.name) + ";" + str(service.name))
+                            service.visible = False
+                        else:
+                            self.nagitems_filtered["services"]["AVERAGE"].append(service)
+                            self.averages += 1
+
+                    if service.status == "HIGH":
+                        if str(self.conf.filter_all_unknown_services) == "True":
+                            if str(self.conf.debug_mode) == "True":
+                                self.Debug(server=self.get_name(), debug="Filter: HIGH " + str(host.name) + ";" + str(service.name))
+                            service.visible = False
+                        else:
+                            self.nagitems_filtered["services"]["HIGH"].append(service)
+                            self.highs += 1
 
     # find out if there has been some status change to notify user
         # compare sorted lists of filtered nagios items
