@@ -436,10 +436,12 @@ class PushButton_BrowserURL(QPushButton):
             open URL from BROWSER_URLS in webbrowser
         """
         # BROWSER_URLS come with $MONITOR$ instead of real monitor url - heritage from actions
-        url = self.server.BROWSER_URLS[self.url_type].replace('$MONITOR$', self.server.monitor_url)
+        url = self.server.BROWSER_URLS[self.url_type]
+        url = url.replace('$MONITOR$', self.server.monitor_url)
+        url = url.replace('$MONITOR-CGI$', self.server.monitor_cgi_url)
 
         if conf.debug_mode:
-            self.Debug(server=self.server.get_name(), debug='Open {0} web page {1}'.format(self.url_type, url))
+            self.server.Debug(server=self.server.get_name(), debug='Open {0} web page {1}'.format(self.url_type, url))
 
         # use Python method to open browser
         webbrowser.open(url)
@@ -642,7 +644,6 @@ class StatusWindow(QWidget):
         # statusbar and detail window should be frameless and stay on top
         # tool flag helps to be invisible in taskbar
         self.setWindowFlags(Qt.WindowStaysOnTopHint | Qt.FramelessWindowHint | Qt.Tool)
-        self.setWindowFlags(Qt.WindowStaysOnTopHint | Qt.FramelessWindowHint)
 
         # show tooltips even if popup window has no focus
         self.setAttribute(Qt.WA_AlwaysShowToolTips)
@@ -1601,6 +1602,9 @@ class NagstamonLogo(QSvgWidget, _Draggable_Widget):
             self.setMinimumSize(width, height)
             self.setMaximumSize(width, height)
 
+    @pyqtSlot()
+    def adjust_size(self):
+        pass
 
 class StatusBar(QWidget):
     """
@@ -2693,7 +2697,6 @@ class TableWidget(QTableWidget):
                 # on Qt 5.5.0 there is a bug in OSX version which renders tooltips useless
                 # see https://bugreports.qt.io/browse/QTBUG-26669
                 # thus disable tooltips on MacOSX
-                # seems strange to use string '5.4.1' here but this is the PyQt version on Fink based OSX environment
                 if not (platform.system() == 'Darwin' and QT_VERSION_STR == '5.5.1'):
                     # only if tooltips are wanted take status_information for the whole row
                     if conf.show_tooltips:
@@ -2980,25 +2983,6 @@ class TableWidget(QTableWidget):
                     if conf.debug_mode == True:
                         self.server.Debug(server=self.server.name, host=self.host, service=self.service, debug='ACTION: URL-POST in background ' + string)
                     servers[info['server']].FetchURL(string, cgi_data=cgi_data, multipart=True)
-                """
-                # special treatment for Check_MK/Multisite Transaction IDs, called by Multisite._action()
-                elif ['action_type'] == 'url-check_mk-multisite':
-                    if '?_transid=-1&' in string:
-                        # Python format is of no use her, only web interface gives an transaction id
-                        # since werk #0766 http://mathias-kettner.de/check_mk_werks.php?werk_id=766 a real transid is needed
-                        transid = self.server._get_transid(self.host, self.service)
-                        # insert fresh transid
-                        string = string.replace('?_transid=-1&', '?_transid=%s&' % (transid))
-                        string = string + '&actions=yes'
-                        if info['service'] != '':
-                            # if service exists add it and convert spaces to +
-                            string = string + '&service=%s' % (info['service'].replace(' ', '+'))
-                        # debug
-                        if conf.debug_mode == True:
-                            self.server.Debug(server=self.server.name, host=self.host, service=self.service, debug='ACTION: URL-Check_MK in background ' + string)
-
-                        servers[info['server']].FetchURL(string)
-                """
             except:
                 import traceback
                 traceback.print_exc(file=sys.stdout)
