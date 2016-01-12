@@ -114,6 +114,16 @@ SORT_ORDER = {'descending': True, 'ascending': False, 0: True, 1: False}
 # space used in LayoutBoxes
 SPACE = 10
 
+# save default font to be able to reset to it
+DEFAULT_FONT = QApplication.font()
+
+# take global FONT from conf if it exists
+if conf.font != '':
+    FONT = QFont()
+    FONT.fromString(conf.font)
+else:
+    FONT = DEFAULT_FONT
+
 
 class HBoxLayout(QHBoxLayout):
     """
@@ -638,8 +648,8 @@ class StatusWindow(QWidget):
         QApplication.setQuitOnLastWindowClosed(False)
 
         # apply font if any is set
-        if conf.font != '':
-            QApplication.setFont(QFont(conf.font))
+        ###if conf.font != '':
+        ###    QApplication.setFont(QFont(conf.font))
 
         # statusbar and detail window should be frameless and stay on top
         # tool flag helps to be invisible in taskbar
@@ -647,13 +657,15 @@ class StatusWindow(QWidget):
 
         # show tooltips even if popup window has no focus
         self.setAttribute(Qt.WA_AlwaysShowToolTips)
-        # avoid hiding window if it has no focus - necessary on OSX if using flag Qt.Tool
-        self.setAttribute(Qt.WA_MacAlwaysShowToolWindow)
+
+        if platform.system() == 'Darwin':
+            # avoid hiding window if it has no focus - necessary on OSX if using flag Qt.Tool
+            self.setAttribute(Qt.WA_MacAlwaysShowToolWindow)
 
         self.setWindowTitle(AppInfo.NAME)
         self.setWindowIcon(QIcon('%s%snagstamon.svg' % (RESOURCES, os.sep)))
 
-        self.vbox = QVBoxLayout(self)          # global VBox
+        self.vbox = QVBoxLayout(self)               # global VBox
         self.vbox.setSpacing(0)                     # no spacing
         self.vbox.setContentsMargins(0, 0, 0, 0)    # no margin
 
@@ -765,8 +777,8 @@ class StatusWindow(QWidget):
         self.servers_scrollarea.setWidget(self.servers_scrollarea_widget)
         self.servers_scrollarea.setWidgetResizable(True)
 
-        # icons in ICONS have to be sized as fontsize
-        _create_icons(self.statusbar.fontMetrics().height())
+        # icons in ICONS
+        _create_icons()
 
         # needed for moving the statuswindow
         self.moving = False
@@ -1602,9 +1614,12 @@ class NagstamonLogo(QSvgWidget, _Draggable_Widget):
             self.setMinimumSize(width, height)
             self.setMaximumSize(width, height)
 
-    @pyqtSlot()
-    def adjust_size(self):
-        pass
+
+    def adjust_size(self, height=None, width=None):
+        if width != None and height != None:
+            self.setMinimumSize(width, height)
+            self.setMaximumSize(width, height)
+
 
 class StatusBar(QWidget):
     """
@@ -1635,7 +1650,7 @@ class StatusBar(QWidget):
             self.labels_reset.connect(self.color_labels[state].reset)
 
         # derive logo dimensions from status label
-        self.logo = NagstamonLogo("%s%snagstamon_logo_bar.svg" % (RESOURCES, os.sep),
+        self.logo = NagstamonLogo('%s%snagstamon_logo_bar.svg' % (RESOURCES, os.sep),
                             self.color_labels['OK'].fontMetrics().height(),
                             self.color_labels['OK'].fontMetrics().height(),
                             parent=parent)
@@ -1651,11 +1666,16 @@ class StatusBar(QWidget):
         # when there are new settings/colors refresh labels
         dialogs.settings.changed.connect(self.reset)
 
+        # when new setings are applied adjust font size
+        dialogs.settings.changed.connect(self.adjust_size)
+
         # timer for singleshots for flashing
         self.timer = QTimer()
 
+        self.adjust_size()
+
         # first summary
-        self.summarize_states()
+        ###self.summarize_states()
 
 
     @pyqtSlot()
@@ -1723,6 +1743,28 @@ class StatusBar(QWidget):
         if statuswindow.worker_notification.is_notifying:
             # even later call itself to invert colors as flash
             self.timer.singleShot(500, self.flash)
+
+
+    @pyqtSlot()
+    def adjust_size(self):
+        """
+            apply new size of widgets, especially Nagstamon logo
+            run through all labels to the the max height in case not all labels
+            are shown at the same time - which is very likely the case
+        """
+        # take height for logo
+        height = 0
+
+        # run through labels to set font and get height for logo
+        for label in self.color_labels.values():
+            label.setFont(FONT)
+            if label.fontMetrics().height() > height:
+                height = label.fontMetrics().height()
+
+        self.logo.adjust_size(height, height)
+
+        # avoid flickerung/artefact by updating immediately
+        self.summarize_states()
 
 
 class StatusBarLabel(Draggable_Label):
@@ -3203,8 +3245,12 @@ class Dialog_Settings(Dialog):
 
         # connect font chooser button to font choosing dialog
         self.ui.button_fontchooser.clicked.connect(self.font_chooser)
+        # connect revert-to-default-font button
+        self.ui.button_default_font.clicked.connect(self.font_default)
         # store font as default
-        self.font = QApplication.font()
+        self.font = FONT
+        # show current font in label_font
+        self.ui.label_font.setFont(FONT)
 
         # connect action buttons to action dialog
         self.ui.button_new_action.clicked.connect(self.new_action)
@@ -3328,6 +3374,10 @@ class Dialog_Settings(Dialog):
 
 
     def  ok(self):
+        """
+            what to do if OK was pressed
+        """
+        global FONT
         # store position of statuswindow/statusbar only if statusbar is floating
         if conf.statusbar_floating:
             statuswindow.store_position_to_conf()
@@ -3367,8 +3417,10 @@ class Dialog_Settings(Dialog):
             statuswindow.worker.debug_loop_looping = False
 
         # apply font
-        QApplication.setFont(self.font)
+        #QApplication.setFont(self.font)
         conf.font = self.font.toString()
+        # update global font
+        FONT = self.font
 
         # store configuration
         conf.SaveConfig()
@@ -3682,7 +3734,18 @@ class Dialog_Settings(Dialog):
         """
             use font dialog to choose a font
         """
-        self.font = QFontDialog.getFont(QApplication.font(), parent=self.window)[0]
+        #self.font = QFontDialog.getFont(QApplication.font(), parent=self.window)[0]
+        self.font = QFontDialog.getFont(self.font, parent=self.window)[0]
+        self.ui.label_font.setFont(self.font)
+
+
+    @pyqtSlot()
+    def font_default(self):
+        """
+            reset font to default font which was valod when Nagstamon was launched
+        """
+        self.ui.label_font.setFont(DEFAULT_FONT)
+        self.font = DEFAULT_FONT
 
 
 class Dialog_Server(Dialog):
@@ -4500,13 +4563,10 @@ class DBus(object):
             self.id = int(notification_id)
 
 
-def _create_icons(fontsize):
+def _create_icons():
     """
-        fill global ICONS with pixmaps rendered from SVGs in fontsize dimensions
+        fill global ICONS with pixmaps rendered from SVGs
     """
-
-    print('Reminder: fontsize is not used in _create_icons().')
-
     for attr in ('acknowledged', 'downtime', 'flapping', 'new', 'passive'):
         icon = QIcon('%s%snagstamon_%s.svg' % (RESOURCES, os.sep, attr))
         ICONS[attr] = icon
