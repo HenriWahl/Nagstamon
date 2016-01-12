@@ -2097,6 +2097,11 @@ class CellWidget(QWidget):
     clicked = pyqtSignal()
 
     def __init__(self, column=0, row=0, text='', color='black', background='white', icons='', tooltip='', parent=None):
+        """
+            one cell of a server's table
+        """
+        global FONT
+
         QWidget.__init__(self, parent=parent)
 
         self.column = column
@@ -2110,6 +2115,7 @@ class CellWidget(QWidget):
 
         # text field
         self.label = QLabel(self.text, parent=self)
+        self.label.setFont(FONT)
 
         self.hbox.setContentsMargins(0, 0, 0, 0)
         self.hbox.addWidget(self.label, 1)
@@ -2182,11 +2188,16 @@ class TableWidget(QTableWidget):
 
 
     def __init__(self, columncount, rowcount, sort_column, order, server, parent=None):
+        """
+            set up a tableview for a server
+        """
         QTableWidget.__init__(self, columncount, rowcount, parent=parent)
 
         self.sort_column = sort_column
         self.order = order
         self.server = server
+
+        self.setFont(FONT)
 
         # no vertical header needed
         self.verticalHeader().hide()
