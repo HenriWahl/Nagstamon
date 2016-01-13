@@ -457,7 +457,8 @@ class PushButton_BrowserURL(QPushButton):
         webbrowser.open(url)
 
         # hide statuswindow to get screen space for browser
-        statuswindow.hide_window()
+        if not conf.fullscreen:
+            statuswindow.hide_window()
 
 
 class ComboBox_Servers(QComboBox):
@@ -557,7 +558,9 @@ class _Draggable_Widget(QWidget):
         """
         if event.button() == 1:
             # if popup window should be closed by clicking do it now
-            if statuswindow.is_shown and conf.close_details_clicking:
+            if statuswindow.is_shown and\
+               conf.close_details_clicking and\
+               not conf.fullscreen:
                 statuswindow.hide_window()
             elif statuswindow.is_shown == False:
                 self.mouse_released.emit()
@@ -647,13 +650,10 @@ class StatusWindow(QWidget):
         # avoid quitting when using Qt.Tool flag and closing settings dialog
         QApplication.setQuitOnLastWindowClosed(False)
 
-        # apply font if any is set
-        ###if conf.font != '':
-        ###    QApplication.setFont(QFont(conf.font))
-
         # statusbar and detail window should be frameless and stay on top
         # tool flag helps to be invisible in taskbar
         self.setWindowFlags(Qt.WindowStaysOnTopHint | Qt.FramelessWindowHint | Qt.Tool)
+        ###self.setWindowFlags(Qt.WindowStaysOnTopHint | Qt.FramelessWindowHint)
 
         # show tooltips even if popup window has no focus
         self.setAttribute(Qt.WA_AlwaysShowToolTips)
@@ -813,23 +813,11 @@ class StatusWindow(QWidget):
         # start with priority 0 = lowest
         self.worker_thread.start(0)
 
+        # ewmh.py in thirdparty directory needed to keep floating statusbar on all desktops in Linux
+        self.ewmh = EWMH()
+
         # finally show up
         self.switch_mode()
-
-        # X11/Linux needs some special treetment to get the statusbar floating on all virtual desktops
-        if not platform.system() in ('Darwin', 'Windows'):
-            # ewmh.py in thirdparty directory
-            ewmh = EWMH()
-            # get all windows...
-            windows = list(ewmh.getClientList())
-            # and check their wm_class_name, hoping to find Nagstamon
-            for window in windows:
-                if window.get_wm_class()[0] == os.path.basename(sys.argv[0]):
-                    # tell windowmanager via EWMH to display statusbar everywhere
-                    ewmh.setWmDesktop(window.id, 0xffffffff)
-                    # apply wish
-                    ewmh.display.flush()
-                    break
 
 
     def switch_mode(self):
@@ -851,6 +839,14 @@ class StatusWindow(QWidget):
                 available_y = desktop.availableGeometry(self).y()
                 self.move(available_x, available_y)
 
+            self.show()
+
+            # X11/Linux needs some special treatment to get the statusbar floating on all virtual desktops
+            if not platform.system() in ('Darwin', 'Windows'):
+                # get all windows...
+                winid = self.winId().__int__()
+                self.ewmh.setWmDesktop(winid, 0xffffffff)
+                self.ewmh.display.flush()
 
         elif conf.icon_in_systray:
             # yeah! systray!
@@ -858,6 +854,24 @@ class StatusWindow(QWidget):
             # no need for window and its parts
             self.statusbar.hide()
             self.hide()
+
+        elif conf.fullscreen:
+
+            ###systrayicon.hide()
+            systrayicon.show()
+            self.statusbar.hide()
+            #self.toparea.show()
+
+
+            #self.setWindowFlags(Qt.Widget)
+            self.setWindowFlags(Qt.Window)
+
+            self.showFullScreen()
+            self.show()
+
+            print('FULLSCREEN')
+            self.toparea.show()
+
 
         # store position for showing/hiding statuswindow
         self.stored_x = self.x()
@@ -898,6 +912,9 @@ class StatusWindow(QWidget):
 
             # tell server worker to recheck all hosts and services
             self.recheck.connect(server_vbox.table.worker.recheck_all)
+
+
+            print(server_vbox)
 
             return server_vbox
         else:
@@ -1058,26 +1075,29 @@ class StatusWindow(QWidget):
         """
             hide window if not needed
         """
-        # only hide if shown and not locked or if not yet hidden if moving
-        if self.is_shown == True or\
-           self.is_shown == True and self.moving == True:
-            if conf.statusbar_floating:
-                self.statusbar.show()
-                self.statusbar.adjustSize()
-            self.toparea.hide()
-            self.servers_scrollarea.hide()
-            self.setMinimumSize(1, 1)
-            self.adjustSize()
-            self.move(self.stored_x, self.stored_y)
+        if not conf.fullscreen:
+            # only hide if shown and not locked or if not yet hidden if moving
+            if self.is_shown == True or\
+               self.is_shown == True and self.moving == True:
+                if conf.statusbar_floating:
+                    self.statusbar.show()
+                    self.statusbar.adjustSize()
+                self.toparea.hide()
+                self.servers_scrollarea.hide()
+                self.setMinimumSize(1, 1)
+                self.adjustSize()
+                self.move(self.stored_x, self.stored_y)
 
-            # switch off
-            self.is_shown = False
+                # switch off
+                self.is_shown = False
 
-            # flag to reflect top-ness of window/statusbar
-            self.top = False
+                # flag to reflect top-ness of window/statusbar
+                self.top = False
 
-            # tell the world that window goes down
-            self.hiding.emit()
+                # tell the world that window goes down
+                self.hiding.emit()
+        else:
+            print('FULLY')
 
 
     @pyqtSlot()
@@ -1257,7 +1277,7 @@ class StatusWindow(QWidget):
             check if popup has to be hidden depending ou mouse position
         """
         # check first if popup has to be shown by hovering or clicking
-        if conf.close_details_hover:
+        if conf.close_details_hover and not conf.fullscreen:
             # only hide window if cursor is outside of it
             mouse_x = QCursor.pos().x()
             mouse_y = QCursor.pos().y()
@@ -2045,7 +2065,6 @@ class ServerVBox(QVBoxLayout):
         """
             hide all items in server vbox
         """
-        #self.setContentsMargins(0, 0, 0, 0)
         self.label.hide()
         self.button_edit.hide()
         self.button_monitor.hide()
@@ -2084,7 +2103,8 @@ class ServerVBox(QVBoxLayout):
         """
             call dialogs.server.edit() with server name
         """
-        statuswindow.hide_window()
+        if not conf.fullscreen:
+            statuswindow.hide_window()
         dialogs.server.edit(server_name=self.server.name)
 
 
@@ -2499,7 +2519,7 @@ class TableWidget(QTableWidget):
                                                                  })
 
         # if action wants a closed status window it should be closed now
-        if conf.actions[action].close_popwin:
+        if conf.actions[action].close_popwin and not conf.fullscreen:
             statuswindow.hide_window()
 
 
@@ -2514,14 +2534,16 @@ class TableWidget(QTableWidget):
             # run decorated method
             method(self)
             # default actions need closed statuswindow to display own dialogs
-            statuswindow.hide_window()
+            if not conf.fullscreen:
+                statuswindow.hide_window()
         return(decoration_function)
 
 
     @action_response_decorator
     def action_edit_actions(self):
         # buttons in toparee
-        statuswindow.hide_window()
+        if not conf.fullscreen:
+            statuswindow.hide_window()
         # open actions tab (#3) of settings dialog
         dialogs.settings.show(tab=3)
 

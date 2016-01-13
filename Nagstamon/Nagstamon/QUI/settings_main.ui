@@ -42,7 +42,7 @@
       </sizepolicy>
      </property>
      <property name="currentIndex">
-      <number>1</number>
+      <number>5</number>
      </property>
      <widget class="QWidget" name="tab_servers">
       <attribute name="title">
@@ -370,7 +370,7 @@
           <string>Appearance:</string>
          </property>
          <layout class="QGridLayout" name="gridLayout_17">
-          <item row="3" column="0">
+          <item row="2" column="0">
            <layout class="QHBoxLayout" name="horizontalLayout_16">
             <item>
              <widget class="QRadioButton" name="input_radiobutton_fullscreen">
@@ -408,17 +408,10 @@
             </item>
            </layout>
           </item>
-          <item row="2" column="0">
+          <item row="1" column="0">
            <widget class="QRadioButton" name="input_radiobutton_icon_in_systray">
             <property name="text">
              <string>Icon in systray</string>
-            </property>
-           </widget>
-          </item>
-          <item row="1" column="0">
-           <widget class="QRadioButton" name="input_radiobutton_appindicator">
-            <property name="text">
-             <string>AppIndicator (Ubuntu and friends)</string>
             </property>
            </widget>
           </item>
@@ -1169,7 +1162,7 @@
          <item>
           <widget class="QPushButton" name="button_colors_defaults">
            <property name="text">
-            <string>Defaults</string>
+            <string>Revert to default colors</string>
            </property>
           </widget>
          </item>
@@ -1585,7 +1578,6 @@
   <tabstop>input_radiobutton_long_display</tabstop>
   <tabstop>input_radiobutton_short_display</tabstop>
   <tabstop>input_radiobutton_statusbar_floating</tabstop>
-  <tabstop>input_radiobutton_appindicator</tabstop>
   <tabstop>input_radiobutton_fullscreen</tabstop>
   <tabstop>input_combobox_fullscreen_display</tabstop>
   <tabstop>input_radiobutton_popup_details_hover</tabstop>
