@@ -8,7 +8,7 @@
     <x>0</x>
     <y>0</y>
     <width>727</width>
-    <height>996</height>
+    <height>974</height>
    </rect>
   </property>
   <property name="sizePolicy">
@@ -42,7 +42,7 @@
       </sizepolicy>
      </property>
      <property name="currentIndex">
-      <number>4</number>
+      <number>5</number>
      </property>
      <widget class="QWidget" name="tab_servers">
       <attribute name="title">
@@ -226,79 +226,6 @@
        <string>Display</string>
       </attribute>
       <layout class="QGridLayout" name="gridLayout_2">
-       <item row="2" column="0">
-        <widget class="QGroupBox" name="groupbox_appearance">
-         <property name="title">
-          <string>Appearance:</string>
-         </property>
-         <layout class="QVBoxLayout" name="verticalLayout_3">
-          <item>
-           <widget class="QRadioButton" name="input_radiobutton_statusbar_floating">
-            <property name="text">
-             <string>Floating statusbar</string>
-            </property>
-           </widget>
-          </item>
-          <item>
-           <widget class="QRadioButton" name="input_radiobutton_appindicator">
-            <property name="text">
-             <string>AppIndicator (Ubuntu and friends)</string>
-            </property>
-           </widget>
-          </item>
-          <item>
-           <layout class="QHBoxLayout" name="horizontalLayout_6">
-            <item>
-             <widget class="QRadioButton" name="input_radiobutton_icon_in_systray">
-              <property name="text">
-               <string>Icon in systray</string>
-              </property>
-             </widget>
-            </item>
-            <item>
-             <layout class="QHBoxLayout" name="horizontalLayout_7">
-              <item>
-               <widget class="QLabel" name="label_systray_popup_offset">
-                <property name="text">
-                 <string>Systray-popup-offset:</string>
-                </property>
-               </widget>
-              </item>
-              <item>
-               <widget class="QSpinBox" name="input_spinbox_systray_popup_offset"/>
-              </item>
-             </layout>
-            </item>
-           </layout>
-          </item>
-          <item>
-           <layout class="QHBoxLayout" name="horizontalLayout_16">
-            <item>
-             <widget class="QRadioButton" name="input_radiobutton_fullscreen">
-              <property name="text">
-               <string>Fullscreen</string>
-              </property>
-             </widget>
-            </item>
-            <item>
-             <layout class="QHBoxLayout" name="horizontalLayout_17">
-              <item>
-               <widget class="QLabel" name="label_fullscreen_display">
-                <property name="text">
-                 <string>Display to use:</string>
-                </property>
-               </widget>
-              </item>
-              <item>
-               <widget class="QComboBox" name="input_combobox_fullscreen_display"/>
-              </item>
-             </layout>
-            </item>
-           </layout>
-          </item>
-         </layout>
-        </widget>
-       </item>
        <item row="0" column="0">
         <widget class="QGroupBox" name="groupbox_display_size">
          <property name="title">
@@ -326,7 +253,7 @@
          </layout>
         </widget>
        </item>
-       <item row="6" column="0">
+       <item row="10" column="0">
         <spacer name="verticalSpacer_4">
          <property name="orientation">
           <enum>Qt::Vertical</enum>
@@ -339,7 +266,7 @@
          </property>
         </spacer>
        </item>
-       <item row="5" column="0">
+       <item row="9" column="0">
         <widget class="QGroupBox" name="groupbox_detailed_summary_popup">
          <property name="title">
           <string>Statusbar details popup:</string>
@@ -431,6 +358,114 @@
             </item>
             <item row="1" column="1">
              <widget class="QComboBox" name="input_combobox_default_sort_order"/>
+            </item>
+           </layout>
+          </item>
+         </layout>
+        </widget>
+       </item>
+       <item row="2" column="0">
+        <widget class="QGroupBox" name="groupbox_appearance">
+         <property name="title">
+          <string>Appearance:</string>
+         </property>
+         <layout class="QGridLayout" name="gridLayout_17">
+          <item row="2" column="0">
+           <layout class="QHBoxLayout" name="horizontalLayout_16">
+            <item>
+             <widget class="QRadioButton" name="input_radiobutton_fullscreen">
+              <property name="text">
+               <string>Fullscreen</string>
+              </property>
+             </widget>
+            </item>
+            <item>
+             <layout class="QHBoxLayout" name="horizontalLayout_17">
+              <item>
+               <widget class="QLabel" name="label_fullscreen_display">
+                <property name="text">
+                 <string>Display to use:</string>
+                </property>
+               </widget>
+              </item>
+              <item>
+               <widget class="QComboBox" name="input_combobox_fullscreen_display"/>
+              </item>
+              <item>
+               <spacer name="horizontalSpacer_6">
+                <property name="orientation">
+                 <enum>Qt::Horizontal</enum>
+                </property>
+                <property name="sizeHint" stdset="0">
+                 <size>
+                  <width>40</width>
+                  <height>20</height>
+                 </size>
+                </property>
+               </spacer>
+              </item>
+             </layout>
+            </item>
+           </layout>
+          </item>
+          <item row="1" column="0">
+           <widget class="QRadioButton" name="input_radiobutton_icon_in_systray">
+            <property name="text">
+             <string>Icon in systray</string>
+            </property>
+           </widget>
+          </item>
+          <item row="0" column="0">
+           <widget class="QRadioButton" name="input_radiobutton_statusbar_floating">
+            <property name="text">
+             <string>Floating statusbar</string>
+            </property>
+           </widget>
+          </item>
+         </layout>
+        </widget>
+       </item>
+       <item row="3" column="0">
+        <widget class="QGroupBox" name="groupbox_font">
+         <property name="title">
+          <string>Font:</string>
+         </property>
+         <layout class="QVBoxLayout" name="verticalLayout_3">
+          <item>
+           <layout class="QVBoxLayout" name="verticalLayout_13">
+            <item>
+             <widget class="QLabel" name="label_font">
+              <property name="frameShape">
+               <enum>QFrame::Box</enum>
+              </property>
+              <property name="frameShadow">
+               <enum>QFrame::Sunken</enum>
+              </property>
+              <property name="text">
+               <string>The CRITICAL Fox jumped over the WARNING dog.</string>
+              </property>
+              <property name="wordWrap">
+               <bool>true</bool>
+              </property>
+             </widget>
+            </item>
+            <item>
+             <layout class="QHBoxLayout" name="horizontalLayout_6">
+              <item>
+               <widget class="QPushButton" name="button_fontchooser">
+                <property name="text">
+                 <string>Change Font...</string>
+                </property>
+               </widget>
+              </item>
+              <item>
+               <widget class="QPushButton" name="button_default_font">
+                <property name="text">
+                 <string>Revert to default font</string>
+                </property>
+               </widget>
+              </item>
+             </layout>
             </item>
            </layout>
           </item>
@@ -1127,7 +1162,7 @@
          <item>
           <widget class="QPushButton" name="button_colors_defaults">
            <property name="text">
-            <string>Defaults</string>
+            <string>Revert to default colors</string>
            </property>
           </widget>
          </item>
@@ -1528,7 +1563,6 @@
   </layout>
  </widget>
  <tabstops>
-  <tabstop>tabs</tabstop>
   <tabstop>list_servers</tabstop>
   <tabstop>button_new_server</tabstop>
   <tabstop>button_edit_server</tabstop>
@@ -1544,9 +1578,6 @@
   <tabstop>input_radiobutton_long_display</tabstop>
   <tabstop>input_radiobutton_short_display</tabstop>
   <tabstop>input_radiobutton_statusbar_floating</tabstop>
-  <tabstop>input_radiobutton_appindicator</tabstop>
-  <tabstop>input_radiobutton_icon_in_systray</tabstop>
-  <tabstop>input_spinbox_systray_popup_offset</tabstop>
   <tabstop>input_radiobutton_fullscreen</tabstop>
   <tabstop>input_combobox_fullscreen_display</tabstop>
   <tabstop>input_radiobutton_popup_details_hover</tabstop>
@@ -1623,6 +1654,8 @@
   <tabstop>input_checkbox_notification_action_ok</tabstop>
   <tabstop>input_lineedit_notification_action_ok_string</tabstop>
   <tabstop>input_checkbox_notification_custom_action</tabstop>
+  <tabstop>input_lineedit_notification_custom_action_string</tabstop>
+  <tabstop>input_lineedit_notification_custom_action_separator</tabstop>
   <tabstop>input_checkbox_notification_custom_action_single</tabstop>
   <tabstop>input_button_color_ok_text</tabstop>
   <tabstop>input_button_color_ok_background</tabstop>
@@ -1651,6 +1684,7 @@
   <tabstop>input_spinbox_defaults_downtime_duration_minutes</tabstop>
   <tabstop>input_lineedit_defaults_downtime_comment</tabstop>
   <tabstop>input_lineedit_defaults_submit_check_result_comment</tabstop>
+  <tabstop>input_radiobutton_icon_in_systray</tabstop>
  </tabstops>
  <resources/>
  <connections>
@@ -1688,7 +1722,7 @@
   </connection>
  </connections>
  <buttongroups>
-  <buttongroup name="buttongroup_popup_statuswindow"/>
   <buttongroup name="buttongroup_close_statusbar"/>
+  <buttongroup name="buttongroup_popup_statuswindow"/>
  </buttongroups>
 </ui>

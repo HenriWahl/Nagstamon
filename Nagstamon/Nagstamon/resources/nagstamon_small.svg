@@ -17,7 +17,6 @@
    sodipodi:docname="nagstamon_small.svg"
    inkscape:output_extension="org.inkscape.output.svg.inkscape"
    version="1.0"
-   inkscape:export-filename="/home/IFWNT/hw5/Data/Projekte/nagiostray/source/nagstamon_small.png"
    inkscape:export-xdpi="3.5454545"
    inkscape:export-ydpi="3.5454545">
   <defs
@@ -176,7 +175,6 @@
          x="170.94165"
          y="253.66972"
          ry="0"
-         inkscape:export-filename="/home/IFWNT/hw5/Data/Projekte/nagiostray/source/nagstamon_small.png"
          inkscape:export-xdpi="3.5340314"
          inkscape:export-ydpi="3.5340314" />
       <rect
@@ -186,7 +184,6 @@
          width="19"
          id="rect3173"
          style="fill:url(#linearGradient3189);fill-opacity:1;stroke:none;stroke-width:1.90700674;stroke-miterlimit:4;stroke-dasharray:none;stroke-opacity:1"
-         inkscape:export-filename="/home/IFWNT/hw5/Data/Projekte/nagstamon/source/resources/nagstamon_small.png"
          inkscape:export-xdpi="80.526314"
          inkscape:export-ydpi="80.526314"
          ry="0" />
@@ -197,7 +194,6 @@
          width="16.696966"
          id="rect3197"
          style="fill:url(#linearGradient3199);fill-opacity:1;stroke:none;stroke-width:1.90700674;stroke-miterlimit:4;stroke-dasharray:none;stroke-opacity:1"
-         inkscape:export-filename="/home/IFWNT/hw5/Data/Projekte/nagstamon/source/resources/nagstamon_small.png"
          inkscape:export-xdpi="80.526314"
          inkscape:export-ydpi="80.526314"
          ry="1.8024346" />
@@ -208,14 +204,12 @@
          width="15.545451"
          id="rect3201"
          style="fill:#000000;fill-opacity:1;stroke:none;stroke-width:1.90700674;stroke-miterlimit:4;stroke-dasharray:none;stroke-opacity:1"
-         inkscape:export-filename="/home/IFWNT/hw5/Data/Projekte/nagstamon/source/resources/nagstamon_small.png"
          inkscape:export-xdpi="80.526314"
          inkscape:export-ydpi="80.526314"
          ry="1.6522315" />
       <g
          id="g2417"
          transform="matrix(-5.7575751e-2,0,0,-6.071408e-2,202.17388,288.20978)"
-         inkscape:export-filename="/home/IFWNT/hw5/Data/Projekte/nagstamon/source/resources/nagstamon_small.png"
          inkscape:export-xdpi="80.526314"
          inkscape:export-ydpi="80.526314">
         <path
@@ -242,7 +236,6 @@
          style="font-size:40px;font-style:normal;font-weight:normal;opacity:1;fill:#000000;fill-opacity:1;stroke:none;stroke-width:1px;stroke-linecap:butt;stroke-linejoin:miter;stroke-opacity:1;font-family:Bitstream Vera Sans"
          d="M 176.034,255.46121 L 178.91095,255.46121 L 182.54392,262.95675 L 182.54392,255.46121 L 184.98594,255.46121 L 184.98594,266.38975 L 182.10905,266.38975 L 178.47608,258.89422 L 178.47608,266.38975 L 176.034,266.38975 L 176.034,255.46121"
          id="text3349"
-         inkscape:export-filename="/home/IFWNT/hw5/Data/Projekte/nagstamon/source/resources/nagstamon_small.png"
          inkscape:export-xdpi="80.526314"
          inkscape:export-ydpi="80.526314" />
       <path
@@ -250,7 +243,6 @@
          d="M 174.32288,254.24693 L 186.73296,254.24693 C 187.61056,254.24693 188.30285,254.98996 188.3015,255.90138 C 188.3015,256.534 188.3015,256.6755 188.3015,256.6755 C 188.3015,257.78146 185.17509,256.13653 180.81664,259.7112 C 176.45822,263.28589 173.33179,263.35405 172.75602,263.35405 L 172.75602,255.89917 C 172.75602,254.98382 173.45485,254.24693 174.32288,254.24693 z"
          id="path3333"
          sodipodi:nodetypes="cccszccc"
-         inkscape:export-filename="/home/IFWNT/hw5/Data/Projekte/nagstamon/source/resources/nagstamon_small.png"
          inkscape:export-xdpi="80.526314"
          inkscape:export-ydpi="80.526314" />
     </g>

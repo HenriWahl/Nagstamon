@@ -1,0 +1,123 @@
+2007-06-10  Mike Grant <mgg@nobodymuch.org>
+
+        * (many files): (mgg) Converted tabs to spaces throughout the
+          codebase, using reindent.py (SF id: 1559082)
+
+2007-03-18  Mike Grant <mgg@nobodymuch.org>
+
+        * Xlib/display.py: (mgg) Added a get_atom alias that uses the
+          internal cache
+        * Xlib/xobject/drawable.py: (mgg) Added a raise_window() alias
+          to the Window class
+
+2007-02-15  Mike Grant <mgg@nobodymuch.org>
+
+        * Xlib/xauth.py: (mgg) Python 2.5 didn't like the way the buffer
+          type was used, resulting in X authorisation failure, so
+          reverted to using slices
+
+2006-11-22 Mike Grant <mgg@nobodymuch.org>
+
+        * Xlib/ext/record.py: Addition of RECORD extension by Alex Badea
+          <decampos@users.sourceforge.net>, SF patch id #1538663 (demo
+          program in python-xlib/examples/record_demo.py)
+
+2006-09-20 Mike Meyer <mwm@mired.org>
+
+        * Xlib/ext/xinerama.py: (mwm) Addition of Xinerama extension
+
+2006-07-22  Mike Grant <mgg@nobodymuch.org>
+
+	Various typo fixes, general updates.
+
+	Changelog hasn't been maintained since 2002, but some of the more
+	significant comments from cvs logs follow:
+
+	* Xlib/display.py: (petli) Fix bug in refresh_keyboard_mapping:
+	  ignore modifier and pointer remappings. Plays nice with pydoc.
+	  Copied some text from the docs to __doc__ strings in 
+	  Xlib/display.py so that they appear when you use pydoc.
+	  Completed documentation for Display objects.
+	* Xlib/XK.py: (calroc99) Minor doc string changes.  Called
+	  load_keysym_group() for miscellany and latin1 keysyms, rather
+	  than importing the modules.
+	* Xlib/keysymdef/*: (calroc99) Small change to keysym loading.
+	  Works the same way.
+	* Xlib/support/*, Xlib/xauth.py, Xlib/error.py: (petli) Added 
+	  ~/.Xauthority parsing by Python code instead of relying on 
+	  /usr/X11R6/bin/xauth.  Not activated yet in all cases yet?
+	  Activated in unix_support.py.
+	* Xlib/xobject/drawable.py: (petli) Fix bugs in definition and
+	  method of GrabButton/Pointer
+	* Xlib/xobject/icccm.py: (petli) Add WithdrawnState to WMHints
+	* doc/*: (petli) documentation updates, typos and completing
+	  documentation for Display objects
+
+
+2002-03-30  Peter Liljenberg  <peter.liljenberg@esdgkonsult.com>
+
+	* support/unix_connect.py: Handle fcntl/FCNTL changes in Python
+	2.2. 
+
+2002-03-11  Peter Liljenberg  <peter.liljenberg@esdgkonsult.com>
+
+	* xobject/drawable.py (Drawable.fill_arc): This should be a
+	PolyFillArc. 
+
+Fri Jan 19 17:49:45 2001  Peter Liljenberg  <petli@cendio.se>
+
+	* XK.py: Moved all keysyms into separate modules, based on their
+	category.  By default only the miscellany and latin1 keysyms are
+	loaded, and other have to be loaded by importing the
+	Xlib.keysymdef.<category> module, or calling
+	load_keysym_group('category'). 
+
+	* display.py (Display.lookup_string): 
+	(Display.rebind_string):
+
+	Functions to translate keysyms to strings, and binding keysyms to
+	new strings.
+	
+
+2001-01-16    <petli@cendio.se>
+
+	* xobject/drawable.py (Window.send_event): 
+	* display.py (Display.send_event): Changed the order of the
+	event_mask and propagate arguments.
+
+2001-01-10    <petli@cendio.se>
+
+	* display.py (Display._update_keymap): The first half of the
+	update algorithm operated on an earlier type of code->sym map than
+	the second half.  Stupid, stupid.  It would have been nice with a
+	type-checker now.
+
+Tue Jan  9 13:03:19 2001  Peter Liljenberg  <petli@cendio.se>
+
+	* display.py (Display._update_keymap): Fixed call to append with
+ 	1.5.2 semantics, broke in newer Pythons.
+	
+2000-12-22    <petli@cendio.se>
+
+	* display.py (Display.keycode_to_keysym): 
+	(Display.keysym_to_keycode): 
+	(Display.keysym_to_keycodes): 
+	(Display.refresh_keyboard_mapping): 
+	(Display._update_keymap):
+	Added keymap cache implementation.
+
+2000-12-21    <petli@cendio.se>
+
+	* xobject/colormap.py (Colormap.alloc_named_color): Extended to
+	handle #000000 style color specifications.
+
+	* xobject/drawable.py (Window.reparent): Renamed from
+	reparent_window. 
+
+	* display.py (Display.set_error_handler): Added.
+
+2000-12-20    <petli@cendio.se>
+
+	* display.py (_BaseDisplay):
+	Implement a cache of atom names.
+

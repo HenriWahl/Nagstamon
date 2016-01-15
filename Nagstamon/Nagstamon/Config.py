@@ -26,23 +26,17 @@ import zlib
 import datetime
 from collections import OrderedDict
 
-from Nagstamon.Helpers import debug_queue
-
-# temporary dict for string-to-bool-conversion
-# the bool:bool relations are thought to make things easier in Dialog_Settings.ok()
-BOOLPOOL = {'False': False,
-            'True': True,
-            False: False,
-            True: True}
+from Nagstamon.Helpers import (debug_queue,
+                               BOOLPOOL)
 
 class AppInfo(object):
     """
     contains app information previously located in GUI.py
     """
     NAME = 'Nagstamon'
-    VERSION = '2.0-alpha-20151030'
+    VERSION = '2.0-alpha-20160112'
     WEBSITE = 'https://nagstamon.ifw-dresden.de'
-    COPYRIGHT = '©2008-2015 Henri Wahl et al.\nh.wahl@ifw-dresden.de'
+    COPYRIGHT = '©2008-2016 Henri Wahl et al.\nh.wahl@ifw-dresden.de'
     COMMENTS = 'Nagios status monitor for your desktop'
     VERSION_URL = WEBSITE + '/version/unstable'
 
@@ -103,11 +97,8 @@ class Config(object):
         self.notification_sound_repeat = False
         self.notification_default_sound = True
         self.notification_custom_sound = False
-        ###self.notification_custom_sound_warning = None
         self.notification_custom_sound_warning = ''
-        ###self.notification_custom_sound_critical = None
         self.notification_custom_sound_critical = ''
-        ###self.notification_custom_sound_down = None
         self.notification_custom_sound_down = ''
         self.notification_action_warning = False
         self.notification_action_warning_string = ''
@@ -156,7 +147,7 @@ class Config(object):
         self.appindicator = False
         self.fullscreen = False
         self.fullscreen_display = 0
-        self.systray_popup_offset= 10
+        self.font = ''
         self.defaults_acknowledge_sticky = False
         self.defaults_acknowledge_send_notification = False
         self.defaults_acknowledge_persistent_comment = False
@@ -195,7 +186,7 @@ class Config(object):
                 # allow to give a config file
                 self.configdir = sys.argv[1]
 
-        # otherwise if there exits a configfile in current working directory it should be used
+        # otherwise if there exits a configdir in current working directory it should be used
         elif os.path.exists(os.getcwd() + os.sep + 'nagstamon.config'):
             self.configdir = os.getcwd() + os.sep + 'nagstamon.config'
         else:
@@ -233,15 +224,17 @@ class Config(object):
                 # section which has to be there to comply to the .INI file standard
 
                 for i in config.items(section):
-                    # create a key of every config item with its appropriate value
-                    # check first if it is a bool value and convert string if it is
-                    if i[1] in BOOLPOOL:
-                        object.__setattr__(self, i[0], BOOLPOOL[i[1]])
-                    elif i[1].isdecimal():
-                        object.__setattr__(self, i[0],int(i[1]))
-                    else:
-                        object.__setattr__(self, i[0], i[1])
-                        
+                    # omit config file info as it makes no sense to store its path
+                    if not i[0] in ('configfile', 'configdir'):
+                        # create a key of every config item with its appropriate value
+                        # check first if it is a bool value and convert string if it is
+                        if i[1] in BOOLPOOL:
+                            object.__setattr__(self, i[0], BOOLPOOL[i[1]])
+                        elif i[1].isdecimal():
+                            object.__setattr__(self, i[0],int(i[1]))
+                        else:
+                            object.__setattr__(self, i[0], i[1])
+
             # because the switch from Nagstamon 1.0 to 1.0.1 brings the use_system_keyring property
             # and all the thousands 1.0 installations do not know it yet it will be more comfortable
             # for most of the Windows users if it is only defined as False after it was checked
@@ -359,7 +352,9 @@ class Config(object):
                             if i[1] in BOOLPOOL:
                                 value = BOOLPOOL[i[1]]
                             # in case there are numbers intify them to avoid later conversions
-                            elif i[1].isdecimal():
+                            # treat negative value specially as .isdecimal() will not detect it
+                            elif i[1].isdecimal() or \
+                                 (i[1].startswith('-') and i[1].split('-')[1].isdecimal()):
                                 value = int(i[1])
                             else:
                                 value = i[1]
@@ -384,14 +379,13 @@ class Config(object):
             # general section for Nagstamon
             config.add_section('Nagstamon')
             for option in self.__dict__:
-                if not option in ['servers', 'actions']:
+                if not option in ['servers', 'actions', 'configfile', 'configdir']:
                     config.set('Nagstamon', option, str(self.__dict__[option]))
 
             # because the switch from Nagstamon 1.0 to 1.0.1 brings the use_system_keyring property
             # and all the thousands 1.0 installations do not know it yet it will be more comfortable
             # for most of the Windows users if it is only defined as False after it was checked
             # from config file
-            ###if not self.__dict__.has_key("use_system_keyring"):
             if not 'use_system_keyring' in self.__dict__.keys():
                 if self.unconfigured == True:
                     # an unconfigured system should start with no keyring to prevent crashes

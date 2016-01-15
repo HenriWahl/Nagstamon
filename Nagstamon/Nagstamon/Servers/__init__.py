@@ -35,6 +35,8 @@ from Nagstamon.Servers.Livestatus import LivestatusServer
 
 from Nagstamon.Config import conf
 
+from Nagstamon.Helpers import STATES
+
 # dictionary for servers
 servers = OrderedDict()
 
@@ -59,6 +61,36 @@ def get_enabled_servers():
         list of enabled servers which connections outside should be used to check
     """
     return([x for x in servers.values() if x.enabled == True])
+
+
+def get_worst_status():
+    """
+        get worst status of all servers
+    """
+    worst_status = 'UP'
+    for server in get_enabled_servers():
+        if STATES.index(server.worst_status_current) > STATES.index(worst_status):
+            worst_status = server.worst_status_current
+    return worst_status
+
+
+def get_status_count():
+    """
+        get all states of all servers and count them
+    """
+    state_count = {'UNKNOWN': 0,
+                   'WARNING': 0,
+                   'CRITICAL': 0,
+                   'UNREACHABLE': 0,
+                   'DOWN': 0}
+    for server in get_enabled_servers():
+        state_count['UNKNOWN'] += server.unknown
+        state_count['WARNING'] += server.warning
+        state_count['CRITICAL'] += server.critical
+        state_count['UNREACHABLE'] += server.unreachable
+        state_count['DOWN'] += server.down
+
+    return(state_count)
 
 
 def create_server(server=None):
@@ -119,7 +151,6 @@ for server in (CentreonServer, IcingaServer, MultisiteServer, NagiosServer,
     register_server(server)
 
 # create servers
-#for server in list(conf.servers.values()):
 for server in conf.servers.values():
     """
     if ( server.use_autologin == "False" and server.save_password == "False" and server.enabled == "True" ) or ( server.enabled == "True" and server.use_autologin == "True" and server.autologin_key == "" ):
