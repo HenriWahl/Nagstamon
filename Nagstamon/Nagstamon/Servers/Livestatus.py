@@ -17,37 +17,6 @@
 # along with this program; if not, write to the Free Software
 # Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA  02110-1301, USA
 
-import requests
-# disable annoying InsecureRequestWarning warnings
-try:
-    requests.packages.urllib3.disable_warnings()
-except:
-    # older requests version might not have the packages submodule
-    # for example the one in Ubuntu 14.04
-    pass
-
-# import sys
-# import socket
-# import copy
-# import webbrowser
-# import datetime
-# import traceback
-# import platform
-# import urllib.parse
-# from bs4 import BeautifulSoup
-#
-# from Nagstamon.Helpers import (HostIsFilteredOutByRE,
-#                                ServiceIsFilteredOutByRE,
-#                                StatusInformationIsFilteredOutByRE,
-#                                CriticalityIsFilteredOutByRE,
-#                                not_empty,
-#                                debug_queue,
-#                                STATES)
-# from Nagstamon.Objects import (GenericService, GenericHost, Result)
-# from Nagstamon.Config import (conf, AppInfo)
-
-# from collections import OrderedDict
-
 from Nagstamon.Objects import Result
 from Nagstamon.Objects import GenericHost
 from Nagstamon.Objects import GenericService
@@ -62,10 +31,6 @@ import re
 import json
 import socket
 import time
-try:
-    from urlparse import urlparse
-except ImportError:
-    from urllib.parse import urlparse  # noqa
 
 
 def format_timestamp(timestamp):
@@ -102,6 +67,7 @@ class LivestatusServer(GenericServer):
 
     def init_config(self):
         log.info(self.monitor_url)
+        # we abuse the monitor_url for the connection information
         self.address = ('localhost', 6558)
         m = re.match('.*?://([^:/]+?)(?::(\d+))?(?:/|$)', self.monitor_url)
         if m:
@@ -123,7 +89,7 @@ class LivestatusServer(GenericServer):
         data.append('')
         data.append('')
         s = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
-        log.info('connecting')
+        log.debug('connecting')
         s.connect(self.address)
         s.send('\n'.join(data).encode('utf8'))
         log.debug('response is %s', response)
@@ -164,11 +130,15 @@ class LivestatusServer(GenericServer):
         data = []
         ts = str(int(time.time()) + 5)  # current epoch timestamp + 5 seconds
         for line in cmd:
-            data.append('COMMAND [' + ts + '] ' + line.replace('TIMESTAMP', ts))
+            line = 'COMMAND [TIMESTAMP] ' + line
+            data.append(line.replace('TIMESTAMP', ts))
         self.communicate(data, response=False)
 
     def table(self, data):
-        """take a livestatus answer and format it as a table."""
+        """take a livestatus answer and format it as a table,
+        list of dictionaries
+        [ {host: 'foo1', service: 'bar1'}, {host: 'foo2', service: 'bar2'} ]
+        """
         try:
             header = data[0]
         except IndexError:
@@ -179,6 +149,9 @@ class LivestatusServer(GenericServer):
     def _get_status(self):
         """fetch any host/service not in OK state
         store the information in self.new_hosts
+        applies basic filtering. All additional
+        filtering and merging new_hosts to hosts
+        is left to nagstamon
         """
         log.debug('_get_status')
         self.new_hosts = dict()
