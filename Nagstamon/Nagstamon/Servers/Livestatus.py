@@ -69,6 +69,7 @@ except ImportError:
 
 
 def format_timestamp(timestamp):
+    """format unix timestamp"""
     ts_tuple = time.localtime(timestamp)
     return time.strftime('%Y-%m-%d %H:%M:%S', ts_tuple)
 
@@ -95,18 +96,13 @@ def service_to_host(data):
 
 
 class LivestatusServer(GenericServer):
-    '''
-        Abstract server which serves as template for all other types
-        Default values are for Nagios servers
-    '''
+    """A server running MK Livestatus plugin. Tested with icinga2"""
 
     TYPE = 'Livestatus'
 
     def init_config(self):
         log.info(self.monitor_url)
-        host = 'localhost'
-        port = 6558
-        # apdhjioapsdj://host
+        self.address = ('localhost', 6558)
         m = re.match('.*?://([^:/]+?)(?::(\d+))?(?:/|$)', self.monitor_url)
         if m:
             host, port = m.groups()
@@ -132,7 +128,7 @@ class LivestatusServer(GenericServer):
         s.send('\n'.join(data).encode('utf8'))
         log.debug('response is %s', response)
         if not response:
-            log.debug('no response required, closing')
+            log.debug('no response required, disconnect')
             s.close()
             return ''
         result = bytes()
@@ -161,14 +157,18 @@ class LivestatusServer(GenericServer):
         return result
 
     def command(self, *cmd):
+        """execute nagios command via livestatus socket.
+        For commands see
+        https://old.nagios.org/developerinfo/externalcommands/commandlist.php
+        """
         data = []
-        ts = str(int(time.time()) + 5)
+        ts = str(int(time.time()) + 5)  # current epoch timestamp + 5 seconds
         for line in cmd:
             data.append('COMMAND [' + ts + '] ' + line.replace('TIMESTAMP', ts))
         self.communicate(data, response=False)
 
     def table(self, data):
-        """take a livestatus answer and format it as a table"""
+        """take a livestatus answer and format it as a table."""
         try:
             header = data[0]
         except IndexError:
@@ -195,11 +195,14 @@ class LivestatusServer(GenericServer):
         # services
         data = self.get("services", raw=filters)
         for s in self.table(data):
+            # service are attached to host objects
             if s['host_name'] in self.new_hosts:
                 host = self.new_hosts[s['host_name']]
             else:
                 # need to create the host
-                xdata = service_to_host(s)
+                # icinga2 adds all host information to the server
+                # prefixed with HOST_
+                xdata = service_to_host(s)  # any field starting with HOST_
                 host = self._create_host(xdata)
                 self.new_hosts[host.name] = host
             service = self._create_service(s)
@@ -207,22 +210,11 @@ class LivestatusServer(GenericServer):
             host.services[service.name] = service
         return Result()
 
-    def get_host(self, name):
-        if name in self.new_hosts:
-            return self.new_hosts[name]
-        host = GenericHost()
-        host.name = name
-        host.status = 'UP'
-        self.new_hosts[name] = host
-        return host
-
-    def _create_object(self, ObjectClass, data):
-        """generate eiter GenericService or GenericHost and populate it
-        with given json data"""
-        result = ObjectClass()
-        # result.name = s['display_name']
+    def _update_object(self, obj, data):
+        """populate the generic fields of obj (GenericHost or GenericService)
+        from data."""
+        result = obj
         result.server = self.name
-        # result.status = result_states[s['state']]
         result.last_check = format_timestamp(data['last_check'])
         result.duration = duration(data['last_state_change'])
         result.attempt = data['current_attempt']
@@ -240,7 +232,7 @@ class LivestatusServer(GenericServer):
 
     def _create_host(self, data):
         """create GenericHost from json data"""
-        result = self._create_object(GenericHost, data)
+        result = self._update_object(GenericHost(), data)
         result.name = data['name']
         host_states = {0: 'UP', 1: 'DOWN', 2: 'UNKNOWN'}
         result.status = host_states[data['state']]
@@ -248,7 +240,7 @@ class LivestatusServer(GenericServer):
 
     def _create_service(self, data):
         """create GenericService from json data"""
-        result = self._create_object(GenericService, data)
+        result = self._update_object(GenericService(), data)
         result.name = data['display_name']
         service_states = {0: 'OK', 1: 'WARNING', 2: 'CRITICAL', 3: 'UNKNOWN'}
         result.status = service_states[data['state']]
@@ -267,9 +259,7 @@ class LivestatusServer(GenericServer):
         self.command(';'.join(cmd))
 
     def set_acknowledge(self, info_dict):
-        """acknowledge a service or host, or all"""
-        # ACKNOWLEDGE_SVC_PROBLEM;host;service;sticky;notify;persist;author;comment
-        # ACKNOWLEDGE_HOST_PROBLEM;host;sticky;notify;persist;author;comment
+        """acknowledge a service or host"""
         host = info_dict['host']
         service = info_dict['service']
         if service:
