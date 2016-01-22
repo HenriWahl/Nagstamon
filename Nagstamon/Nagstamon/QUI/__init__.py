@@ -578,19 +578,20 @@ class _Draggable_Widget(QWidget):
         """
             do the moving action
         """
-        # lock window as moving
-        # if not set calculate relative position
-        if not statuswindow.relative_x and not statuswindow.relative_y:
-            statuswindow.relative_x = event.globalX() - statuswindow.x()
-            statuswindow.relative_y = event.globalY() - statuswindow.y()
+        if not conf.fullscreen:
+            # lock window as moving
+            # if not set calculate relative position
+            if not statuswindow.relative_x and not statuswindow.relative_y:
+                statuswindow.relative_x = event.globalX() - statuswindow.x()
+                statuswindow.relative_y = event.globalY() - statuswindow.y()
 
-        statuswindow.moving = True
-        statuswindow.move(event.globalX()-statuswindow.relative_x, event.globalY()-statuswindow.relative_y)
+            statuswindow.moving = True
+            statuswindow.move(event.globalX()-statuswindow.relative_x, event.globalY()-statuswindow.relative_y)
 
-        # needed for OSX - otherwise statusbar stays blank while moving
-        statuswindow.update()
-        
-        self.window_moved.emit()
+            # needed for OSX - otherwise statusbar stays blank while moving
+            statuswindow.update()
+
+            self.window_moved.emit()
 
 
     def enterEvent(self, event):
@@ -644,16 +645,12 @@ class StatusWindow(QWidget):
             Status window combined from status bar and popup window
         """
         QWidget.__init__(self)
+
         # immediately hide to avoid flicker on Windows and OSX
         self.hide()
 
         # avoid quitting when using Qt.Tool flag and closing settings dialog
         QApplication.setQuitOnLastWindowClosed(False)
-
-        # statusbar and detail window should be frameless and stay on top
-        # tool flag helps to be invisible in taskbar
-        self.setWindowFlags(Qt.WindowStaysOnTopHint | Qt.FramelessWindowHint | Qt.Tool)
-        ###self.setWindowFlags(Qt.WindowStaysOnTopHint | Qt.FramelessWindowHint)
 
         # show tooltips even if popup window has no focus
         self.setAttribute(Qt.WA_AlwaysShowToolTips)
@@ -771,7 +768,12 @@ class StatusWindow(QWidget):
         for server in servers.values():
             if server.enabled:
                 self.servers_vbox.addLayout(self.create_ServerVBox(server))
-        self.servers_vbox.addStretch()
+
+        # vertically expanding spacer item for fullscreen
+        #self.spaceritem = QSpacerItem(0, 1000, QSizePolicy.Minimum, QSizePolicy.Expanding)
+        ###self.servers_vbox.addSpacerItem(self.spaceritem)
+
+        self.sort_ServerVBoxes()
 
         self.servers_scrollarea_widget.setLayout(self.servers_vbox)
         self.servers_scrollarea.setWidget(self.servers_scrollarea_widget)
@@ -814,7 +816,8 @@ class StatusWindow(QWidget):
         self.worker_thread.start(0)
 
         # ewmh.py in thirdparty directory needed to keep floating statusbar on all desktops in Linux
-        self.ewmh = EWMH()
+        if not platform.system() in ('Darwin', 'Windows'):
+            self.ewmh = EWMH()
 
         # finally show up
         self.switch_mode()
@@ -824,6 +827,11 @@ class StatusWindow(QWidget):
         """
             apply presentation mode
         """
+
+        # statusbar and detail window should be frameless and stay on top
+        # tool flag helps to be invisible in taskbar
+        self.setWindowFlags(Qt.WindowStaysOnTopHint | Qt.FramelessWindowHint | Qt.Tool)
+
         if conf.statusbar_floating:
             # no need for systray
             systrayicon.hide()
@@ -857,21 +865,18 @@ class StatusWindow(QWidget):
 
         elif conf.fullscreen:
 
-            ###systrayicon.hide()
-            systrayicon.show()
+            self.setWindowFlags(Qt.Widget)
+
             self.statusbar.hide()
-            #self.toparea.show()
-
-
-            #self.setWindowFlags(Qt.Widget)
-            self.setWindowFlags(Qt.Window)
-
-            self.showFullScreen()
-            self.show()
-
-            print('FULLSCREEN')
             self.toparea.show()
+            self.servers_scrollarea.show()
+            self.show_window()
+            self.hide()
 
+            if not platform.system() == 'Windows':
+                self.showFullScreen()
+            else:
+                self.showMaximized()
 
         # store position for showing/hiding statuswindow
         self.stored_x = self.x()
@@ -913,9 +918,6 @@ class StatusWindow(QWidget):
             # tell server worker to recheck all hosts and services
             self.recheck.connect(server_vbox.table.worker.recheck_all)
 
-
-            print(server_vbox)
-
             return server_vbox
         else:
             return None
@@ -942,6 +944,13 @@ class StatusWindow(QWidget):
             vboxes_dict[vbox].setParent(None)
             vboxes_dict[vbox].setParent(None)
             servers_vbox_new.addLayout(vboxes_dict[vbox])
+
+        # add expanding stretching item at the end for fullscreen beauty
+        #servers_vbox_new.addSpacerItem(QSpacerItem(0, 0, QSizePolicy.Minimum, QSizePolicy.Expanding))
+        #servers_vbox_new.addSpacerItem(self.spaceritem)
+        servers_vbox_new.addSpacerItem(QSpacerItem(0, desktop.availableGeometry(self).height(),
+                                                   QSizePolicy.Minimum, QSizePolicy.Expanding))
+        #servers_vbox_new.addSpacerItem(QSpacerItem(0, 0, QSizePolicy.Minimum, QSizePolicy.Ignored))
 
         # switch to new servers_vbox
         self.servers_vbox = servers_vbox_new
@@ -1029,12 +1038,13 @@ class StatusWindow(QWidget):
 
             # here we should check if scroll_area should be shown at all
             if not self.status_ok:
-                # attempt to avoid flickering on MacOSX - already hide statusbar here
-                self.statusbar.hide()
+                if not conf.fullscreen:
+                    # attempt to avoid flickering on MacOSX - already hide statusbar here
+                    self.statusbar.hide()
 
-                # show the other status window components
-                self.toparea.show()
-                self.servers_scrollarea.show()
+                    # show the other status window components
+                    self.toparea.show()
+                    self.servers_scrollarea.show()
 
                 for vbox in self.servers_vbox.children():
                     if not vbox.server.all_ok:
@@ -1044,21 +1054,23 @@ class StatusWindow(QWidget):
                     # show at least server vbox header to notify about connection or other errors
                     elif vbox.server.status != '':
                         vbox.show_only_header()
-                # theory...
-                width, height, x, y = self.calculate_size()
-                # ...and practice
-                self.resize_window(width, height, x, y)
-                # switch on
-                if platform.system() == 'Darwin':
-                    # delayed because of flickering window in OSX
-                    self.timer.singleShot(200, self.set_shown)
-                else:
-                    self.set_shown()
 
-                self.show()
+                if not conf.fullscreen:
+                    # theory...
+                    width, height, x, y = self.calculate_size()
+                    # ...and practice
+                    self.resize_window(width, height, x, y)
+                    # switch on
+                    if platform.system() == 'Darwin':
+                        # delayed because of flickering window in OSX
+                        self.timer.singleShot(200, self.set_shown)
+                    else:
+                        self.set_shown()
 
-                # tell others like notification that statuswindow shows up now
-                self.showing.emit()
+                    self.show()
+
+                    # tell others like notification that statuswindow shows up now
+                    self.showing.emit()
 
 
     @pyqtSlot()
@@ -1066,7 +1078,7 @@ class StatusWindow(QWidget):
         """
             redraw window content, to be effective only when window is shown
         """
-        if self.is_shown:
+        if self.is_shown or conf.fullscreen:
             self.show_window()
 
 
@@ -1096,8 +1108,6 @@ class StatusWindow(QWidget):
 
                 # tell the world that window goes down
                 self.hiding.emit()
-        else:
-            print('FULLY')
 
 
     @pyqtSlot()
@@ -1243,25 +1253,25 @@ class StatusWindow(QWidget):
         """
             resize window if shown and needed
         """
-        self.adjusting_size_lock = True
-        # fully displayed statuswindow
-        if self.is_shown == True:
-            width, height, x, y = self.calculate_size()
-        else:
-            # statusbar only
-            hint = self.sizeHint()
-            # on MacOSX and Windows statusbar will not shrink automatically, so this workaround hopefully helps
-            width = hint.width()
-            height = hint.height()
-            x = self.x()
+        if not conf.fullscreen:
+            self.adjusting_size_lock = True
+            # fully displayed statuswindow
+            if self.is_shown == True:
+                width, height, x, y = self.calculate_size()
+            else:
+                # statusbar only
+                hint = self.sizeHint()
+                # on MacOSX and Windows statusbar will not shrink automatically, so this workaround hopefully helps
+                width = hint.width()
+                height = hint.height()
+                x = self.x()
 
-            y = self.y()
-            self.setMaximumSize(hint)
-            self.setMinimumSize(hint)
-            del(hint)
-        self.resize_window(width, height, x, y)
-        del(width, height, x, y)
-
+                y = self.y()
+                self.setMaximumSize(hint)
+                self.setMinimumSize(hint)
+                del(hint)
+            self.resize_window(width, height, x, y)
+            del(width, height, x, y)
 
 
     @pyqtSlot()
@@ -2270,7 +2280,6 @@ class TableWidget(QTableWidget):
         # when worker walked through all cells send a signal to table so it could get_status itself
         self.worker.table_ready.connect(self.adjust_table)
         # quit thread if worker has finished
-        #self.worker.finish.connect(self.worker_thread.quit)
         self.worker.finish.connect(self.finish_worker_thread)
         # get status if started
         self.worker_thread.started.connect(self.worker.get_status)
@@ -2318,7 +2327,6 @@ class TableWidget(QTableWidget):
                 self.is_shown = True
             else:
                 self.is_shown = False
-
             # pre-calculate dimensions
             self.real_height = self.get_real_height()
             self.real_width = self.get_real_width()
@@ -3187,7 +3195,9 @@ class Dialog(QObject):
         """
             change state of depending widgets, slot for signals from checkboxes in UI
         """
-        self.toggle_visibility(checkbox, self.TOGGLE_DEPS[checkbox])
+        # Due to older Qt5 in Ubuntu 14.04 signalmapper has to use strings
+        self.toggle_visibility(self.ui.__dict__[checkbox],
+                               self.TOGGLE_DEPS[self.ui.__dict__[checkbox]])
 
 
     def toggle_toggles(self):
@@ -3196,11 +3206,12 @@ class Dialog(QObject):
             # toggle visibility
             self.toggle_visibility(checkbox, widgets)
             # multiplex slot .toggle() by signal-mapping
-            self.signalmapper_toggles.setMapping(checkbox, checkbox)
+            # Due to older Qt5 in Ubuntu 14.04 signalmapper has to use strings
+            self.signalmapper_toggles.setMapping(checkbox, checkbox.objectName())
             checkbox.toggled.connect(self.signalmapper_toggles.map)
 
         # finally map signals with .sender() - [QWidget] is important!
-        self.signalmapper_toggles.mapped[QWidget].connect(self.toggle)
+        self.signalmapper_toggles.mapped[str].connect(self.toggle)
 
 
     def fill_list(self, listwidget, config):
