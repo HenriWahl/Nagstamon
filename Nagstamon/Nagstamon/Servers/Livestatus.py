@@ -24,7 +24,6 @@ from Nagstamon.Servers.Generic import GenericServer
 from Nagstamon.Config import conf
 
 import logging
-logging.basicConfig(level=logging.DEBUG)
 log = logging.getLogger('Livestatus')
 
 import re
@@ -92,7 +91,6 @@ class LivestatusServer(GenericServer):
         log.debug('connecting')
         s.connect(self.address)
         s.send('\n'.join(data).encode('utf8'))
-        log.debug('response is %s', response)
         if not response:
             log.debug('no response required, disconnect')
             s.close()
