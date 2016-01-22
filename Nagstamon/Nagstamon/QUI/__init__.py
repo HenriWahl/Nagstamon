@@ -327,7 +327,7 @@ class MenuAtCursor(QMenu):
         # get cursor coordinates and decrease them to show menu under mouse pointer
         x = QCursor.pos().x() - 10
         y = QCursor.pos().y() - 10
-        self.exec(QPoint(x, y))
+        self.exec(QPoint(x, y))  # noqa
         del(x, y)
 
 
@@ -591,7 +591,10 @@ class _Draggable_Widget(QWidget):
             # needed for OSX - otherwise statusbar stays blank while moving
             statuswindow.update()
 
-            self.window_moved.emit()
+        # needed for OSX - otherwise statusbar stays blank while moving
+        statuswindow.update()
+
+        self.window_moved.emit()
 
 
     def enterEvent(self, event):
@@ -2751,6 +2754,7 @@ class TableWidget(QTableWidget):
 
                 # if failures have gone and nobody took notice switch notification off again
                 if len([k for k,v in self.server.events_history.items() if v == True]) == 0 and\
+                        statuswindow and \
                         statuswindow.worker_notification.is_notifying == True and\
                         statuswindow.worker_notification.notifying_server == self.server.name:
                     # tell notification that unnoticed problems are gone
@@ -4690,6 +4694,7 @@ dialogs = Dialogs()
 systrayicon = SystemTrayIcon()
 
 # combined statusbar/status window
+statuswindow = None
 statuswindow = StatusWindow()
 
 # context menu for systray and statuswindow
