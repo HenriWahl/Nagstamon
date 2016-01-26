@@ -773,10 +773,6 @@ class StatusWindow(QWidget):
             if server.enabled:
                 self.servers_vbox.addLayout(self.create_ServerVBox(server))
 
-        # vertically expanding spacer item for fullscreen
-        #self.spaceritem = QSpacerItem(0, 1000, QSizePolicy.Minimum, QSizePolicy.Expanding)
-        ###self.servers_vbox.addSpacerItem(self.spaceritem)
-
         self.sort_ServerVBoxes()
 
         self.servers_scrollarea_widget.setLayout(self.servers_vbox)
@@ -831,14 +827,6 @@ class StatusWindow(QWidget):
         """
             apply presentation mode
         """
-        if not conf.fullscreen:
-            # statusbar and detail window should be frameless and stay on top
-            # tool flag helps to be invisible in taskbar
-            self.setWindowFlags(Qt.WindowStaysOnTopHint | Qt.FramelessWindowHint | Qt.Tool)
-        else:
-            # keep window entry in taskbar and thus no Qt.Tool
-            self.setWindowFlags(Qt.Widget | Qt.FramelessWindowHint)
-
         if conf.statusbar_floating:
             # no need for systray
             systrayicon.hide()
@@ -854,13 +842,15 @@ class StatusWindow(QWidget):
                 available_y = desktop.availableGeometry(self).y()
                 self.move(available_x, available_y)
 
-            if platform.system() == 'Windows':
-                # pray that this may help to get statusbar staying at top wif window stack
-                self.activateWindow()
-                self.raise_()
+            # first set window flags to avoid frame/frameless flickering
+            self.setWindowFlags(Qt.FramelessWindowHint | Qt.Tool)
 
             # necessary to be shown before Linux EWMH-mantra can be applied
             self.show()
+
+            # statusbar and detail window should be frameless and stay on top
+            # tool flag helps to be invisible in taskbar
+            self.setWindowFlags(Qt.WindowStaysOnTopHint | Qt.FramelessWindowHint | Qt.Tool)
 
             # X11/Linux needs some special treatment to get the statusbar floating on all virtual desktops
             if not platform.system() in ('Darwin', 'Windows'):
@@ -870,8 +860,13 @@ class StatusWindow(QWidget):
                 self.ewmh.display.flush()
 
         elif conf.icon_in_systray:
+            # statusbar and detail window should be frameless and stay on top
+            # tool flag helps to be invisible in taskbar
+            self.setWindowFlags(Qt.WindowStaysOnTopHint | Qt.FramelessWindowHint | Qt.Tool)
+
             # yeah! systray!
             systrayicon.show()
+
             # no need for window and its parts
             self.statusbar.hide()
             self.hide()
@@ -885,11 +880,15 @@ class StatusWindow(QWidget):
             screen_geometry = get_screen_geometry(conf.fullscreen_display)
             self.move(screen_geometry.x(), screen_geometry.y())
 
+            # keep window entry in taskbar and thus no Qt.Tool
+            self.setWindowFlags(Qt.Widget | Qt.FramelessWindowHint)
+
             self.show_window()
             # fullscreen mode is rather buggy on everything other than OSX so just use a maximized window
             if platform.system() == 'Darwin':
                 self.showFullScreen()
             else:
+                self.show()
                 self.showMaximized()
 
         # store position for showing/hiding statuswindow
