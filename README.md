@@ -1,7 +1,7 @@
 Nagstamon
 =========
 
-**This branch is a port Nagstamon from GTK 2 to Qt 5 and from Python 2 to Python 3.**
+**This branch is a port of Nagstamon from GTK 2 to Qt 5 and from Python 2 to Python 3.**
 
 **First alpha releases are now available at https://nagstamon.ifw-dresden.de/download**
 
