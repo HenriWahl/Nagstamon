@@ -24,7 +24,7 @@ from Nagstamon.Servers.Generic import GenericServer
 from Nagstamon.Config import conf
 
 import logging
-logging.basicConfig(level=logging.DEBUG)
+logging.basicConfig(level=logging.ERROR)
 log = logging.getLogger('Livestatus')
 
 import re

@@ -157,7 +157,6 @@ class HBoxLayout(QHBoxLayout):
             self.itemAt(item).widget().show()
 
 
-#class SystemTrayIcon(QSystemTrayIcon):
 class SystemTrayIcon(QSystemTrayIcon):
     """
         Icon in system tray, works at least in Windows and OSX
@@ -657,6 +656,8 @@ class StatusWindow(QWidget):
 
         # show tooltips even if popup window has no focus
         self.setAttribute(Qt.WA_AlwaysShowToolTips)
+        
+        self.setAttribute(Qt.WA_ShowWithoutActivating)
 
         if platform.system() == 'Darwin':
             # avoid hiding window if it has no focus - necessary on OSX if using flag Qt.Tool
@@ -739,7 +740,7 @@ class StatusWindow(QWidget):
         self.toparea.combobox_servers.monitor_opened.connect(self.hide_window)
 
         # change to systray or floating statusbar if changed
-        dialogs.settings.changed.connect(self.switch_mode)
+        ###dialogs.settings.changed.connect(self.switch_mode)
 
         # refresh all information after changed settings
         dialogs.settings.changed.connect(self.refresh)
@@ -823,17 +824,20 @@ class StatusWindow(QWidget):
             self.ewmh = EWMH()
 
         # finally show up
-        self.switch_mode()
+        self.set_mode()
 
 
-    def switch_mode(self):
+    def set_mode(self):
         """
             apply presentation mode
         """
-
-        # statusbar and detail window should be frameless and stay on top
-        # tool flag helps to be invisible in taskbar
-        self.setWindowFlags(Qt.WindowStaysOnTopHint | Qt.FramelessWindowHint | Qt.Tool)
+        if not conf.fullscreen:
+            # statusbar and detail window should be frameless and stay on top
+            # tool flag helps to be invisible in taskbar
+            self.setWindowFlags(Qt.WindowStaysOnTopHint | Qt.FramelessWindowHint | Qt.Tool)
+        else:
+            # keep window entry in taskbar and thus no Qt.Tool
+            self.setWindowFlags(Qt.Widget | Qt.FramelessWindowHint)
 
         if conf.statusbar_floating:
             # no need for systray
@@ -850,6 +854,12 @@ class StatusWindow(QWidget):
                 available_y = desktop.availableGeometry(self).y()
                 self.move(available_x, available_y)
 
+            if platform.system() == 'Windows':
+                # pray that this may help to get statusbar staying at top wif window stack
+                self.activateWindow()
+                self.raise_()
+
+            # necessary to be shown before Linux EWMH-mantra can be applied
             self.show()
 
             # X11/Linux needs some special treatment to get the statusbar floating on all virtual desktops
@@ -867,16 +877,17 @@ class StatusWindow(QWidget):
             self.hide()
 
         elif conf.fullscreen:
-
-            self.setWindowFlags(Qt.Widget)
-
             self.statusbar.hide()
             self.toparea.show()
             self.servers_scrollarea.show()
-            self.show_window()
-            self.hide()
 
-            if not platform.system() == 'Windows':
+            # get screen geometry to get right screen to position window on
+            screen_geometry = get_screen_geometry(conf.fullscreen_display)
+            self.move(screen_geometry.x(), screen_geometry.y())
+
+            self.show_window()
+            # fullscreen mode is rather buggy on everything other than OSX so just use a maximized window
+            if platform.system() == 'Darwin':
                 self.showFullScreen()
             else:
                 self.showMaximized()
@@ -920,6 +931,9 @@ class StatusWindow(QWidget):
 
             # tell server worker to recheck all hosts and services
             self.recheck.connect(server_vbox.table.worker.recheck_all)
+
+            # refresh table after changed settings
+            dialogs.settings.changed.connect(server_vbox.table.refresh)
 
             return server_vbox
         else:
@@ -2676,8 +2690,9 @@ class TableWidget(QTableWidget):
         """
         # tell thread to quit
         self.worker_thread.quit()
+        ###self.worker_thread.terminate()
         # wait until thread is really stopped
-        self.worker_thread.wait()
+        self.worker_thread.wait(1000)
 
 
     class Worker(QObject):
@@ -3425,10 +3440,18 @@ class Dialog_Settings(Dialog):
         """
             what to do if OK was pressed
         """
-        global FONT
+        global FONT, statuswindow, menu
+
         # store position of statuswindow/statusbar only if statusbar is floating
         if conf.statusbar_floating:
             statuswindow.store_position_to_conf()
+
+        # store hash of all display settingas as display_mode to decide if statuswindow has to be recreated
+        display_mode = str(conf.statusbar_floating) +\
+                       str(conf.icon_in_systray) +\
+                       str(conf.appindicator) +\
+                       str(conf.fullscreen) +\
+                       str(conf.fullscreen_display)
 
         # do all stuff necessary after OK button was clicked
         # put widget values into conf
@@ -3441,6 +3464,8 @@ class Dialog_Settings(Dialog):
                 conf.__dict__[widget.objectName().split('input_lineedit_')[1]] = widget.text()
             if widget.objectName().startswith('input_spinbox_'):
                 conf.__dict__[widget.objectName().split('input_spinbox_')[1]] = str(widget.value())
+            if widget.objectName().startswith('input_combobox_'):
+                conf.__dict__[widget.objectName().split('input_combobox_')[1]] = widget.currentText()
             if widget.objectName().startswith('input_button_color_'):
                 # get color value from color button stylesheet
                 color = self.ui.__dict__[widget.objectName()].styleSheet()
@@ -3465,13 +3490,58 @@ class Dialog_Settings(Dialog):
             statuswindow.worker.debug_loop_looping = False
 
         # apply font
-        #QApplication.setFont(self.font)
         conf.font = self.font.toString()
         # update global font
         FONT = self.font
 
         # store configuration
         conf.SaveConfig()
+
+        # stop statuswindow worker
+        statuswindow.worker.running = False
+
+        # save configuration
+        conf.SaveConfig()
+
+        # when display mode was changed its the easiest to destroy the old status window and create a new one
+        # store display_mode to decide if statuswindow has to be recreated
+        if display_mode != str(conf.statusbar_floating) +\
+                           str(conf.icon_in_systray) +\
+                           str(conf.appindicator) +\
+                           str(conf.fullscreen) +\
+                           str(conf.fullscreen_display):
+
+            # stop statuswindow worker
+            statuswindow.worker.running = False
+
+            # hide window to avoid laggy GUI - better none than laggy
+            statuswindow.hide()
+
+            # tell all tableview threads to stop
+            for server_vbox in statuswindow.servers_vbox.children():
+                server_vbox.table.worker.finish.emit()
+            # wait until all threads are stopped
+            for server_vbox in statuswindow.servers_vbox.children():
+                server_vbox.table.worker_thread.wait(1000)
+                #server_vbox.table.worker_thread.wait()
+
+            # wait until statuswindow notification worker has finished
+            statuswindow.worker_notification_thread.wait(1000)
+            #statuswindow.worker_notification_thread.wait()
+
+            # wait until statuswindow worker has finished
+            statuswindow.worker_thread.wait(1000)
+            #statuswindow.worker_thread.wait()
+
+            # kick out ol' statuswindow
+            #statuswindow.hide()
+            statuswindow.destroy(True, True)
+
+            # create new global one
+            statuswindow = StatusWindow()
+
+            # context menu for systray and statuswindow
+            menu = MenuContext()
 
         # tell statuswindow to refresh due to new settings
         self.changed.emit()
@@ -4499,6 +4569,7 @@ class CheckVersion(QObject):
 
         # stop thread if worker has finished
         self.worker.finished.connect(self.worker_thread.quit)
+        ###self.worker.finished.connect(self.worker_thread.terminate)
 
         self.worker.moveToThread(self.worker_thread)
         # run check when thread starts
@@ -4644,6 +4715,20 @@ def get_screen(x, y):
         return screen
 
 
+def get_screen_geometry(screen_number):
+    """
+        set screen for fullscreen
+    """
+    number_of_screens = desktop.screenCount()
+    for screen in range(number_of_screens + 1):
+        if screen == screen_number:
+            return desktop.screenGeometry(screen)
+
+    # if not enough displays available reset to display 0
+    return desktop.screenGeometry(0)
+
+
+
 @pyqtSlot()
 def exit():
     """
@@ -4666,13 +4751,16 @@ def exit():
         server_vbox.table.worker.finish.emit()
     # wait until all threads are stopped
     for server_vbox in statuswindow.servers_vbox.children():
-        server_vbox.table.worker_thread.wait(1)
+        server_vbox.table.worker_thread.wait(1000)
+        #server_vbox.table.worker_thread.wait()
 
     # wait until statuswindow notification worker has finished
-    statuswindow.worker_notification_thread.wait(1)
+    statuswindow.worker_notification_thread.wait(1000)
+    #statuswindow.worker_notification_thread.wait()
 
     # wait until statuswindow worker has finished
-    statuswindow.worker_thread.wait(1)
+    statuswindow.worker_thread.wait(1000)
+    #statuswindow.worker_thread.wait()
 
     # bye bye
     QApplication.instance().quit()
