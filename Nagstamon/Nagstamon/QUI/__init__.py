@@ -4664,8 +4664,8 @@ class DBus(object):
         self.id = 0
         self.actions = []
         self.timeout = 0
-        # in case Nagstamon is installed by package manager use its icon
-        self.icon = 'nagstamon'
+        # use icon from resources in hints, not the package icon - doesn't work neither
+        self.icon = ''
         # use Nagstamon image if icon is not available from system
         # see https://developer.gnome.org/notification-spec/#icons-and-images
         self.hints = {'image-path': '%s%snagstamon.svg' % (RESOURCES, os.sep)}
