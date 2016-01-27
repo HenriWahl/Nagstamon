@@ -196,11 +196,6 @@ class SystemTrayIcon(QSystemTrayIcon):
         # treat clicks
         self.activated.connect(self.icon_clicked)
 
-        # store x and y of coursor when being clicked as there seems to be no way
-        # to get the systray icons position
-        self.x_cursor = False
-        self.y_cursor = False
-
 
     @pyqtSlot(QMenu)
     def set_menu(self, menu):
@@ -255,8 +250,6 @@ class SystemTrayIcon(QSystemTrayIcon):
         """
         # only react on left mouse click
         if event == (QSystemTrayIcon.Trigger or QSystemTrayIcon.DoubleClick):
-            self.x_cursor = QCursor.pos().x()
-            self.y_cursor = QCursor.pos().y()
             if statuswindow.is_shown:
                 self.hide_popwin.emit()
             else:
@@ -631,7 +624,6 @@ class StatusWindow(QWidget):
         Consists of statusbar, toparea and scrolling area.
         Either statusbar is shown or (toparea + scrolling area)
     """
-
     # sent by .resize_window()
     resizing = pyqtSignal()
 
@@ -742,9 +734,6 @@ class StatusWindow(QWidget):
         # if monitor was selected in combobox its monitor window is opened
         self.toparea.combobox_servers.monitor_opened.connect(self.hide_window)
 
-        # change to systray or floating statusbar if changed
-        ###dialogs.settings.changed.connect(self.switch_mode)
-
         # refresh all information after changed settings
         dialogs.settings.changed.connect(self.refresh)
 
@@ -763,6 +752,9 @@ class StatusWindow(QWidget):
         self.worker_notification.stop_flash.connect(systrayicon.reset)
         # desktop notification
         self.worker_notification.desktop_notification.connect(self.desktop_notification)
+
+        # react to open button in notification bubble
+        dbus_connection.open_statuswindow.connect(self.show_window_from_notification_bubble)
 
         # stop notification if window gets shown or hidden
         self.hiding.connect(self.worker_notification.stop)
@@ -978,11 +970,8 @@ class StatusWindow(QWidget):
             servers_vbox_new.addLayout(vboxes_dict[vbox])
 
         # add expanding stretching item at the end for fullscreen beauty
-        #servers_vbox_new.addSpacerItem(QSpacerItem(0, 0, QSizePolicy.Minimum, QSizePolicy.Expanding))
-        #servers_vbox_new.addSpacerItem(self.spaceritem)
         servers_vbox_new.addSpacerItem(QSpacerItem(0, desktop.availableGeometry(self).height(),
                                                    QSizePolicy.Minimum, QSizePolicy.Expanding))
-        #servers_vbox_new.addSpacerItem(QSpacerItem(0, 0, QSizePolicy.Minimum, QSizePolicy.Ignored))
 
         # switch to new servers_vbox
         self.servers_vbox = servers_vbox_new
@@ -1012,35 +1001,44 @@ class StatusWindow(QWidget):
 
 
     @pyqtSlot()
+    def show_window_from_notification_bubble(self):
+        """
+            show status window after button being clicked in notification bubble
+        """
+        if conf.statusbar_floating:
+            self.show_window()
+        elif conf.icon_in_systray:
+            self.show_window_systrayicon()
+
+
+    @pyqtSlot()
     def show_window_systrayicon(self):
         """
             handle clicks onto systray icon
         """
-
-        # where is the pointer which clicked onto systray icon
-        mouse_x = QCursor.pos().x()
-        mouse_y = QCursor.pos().y()
-
-        # move into direction of systray - where the cursor hangs around too
-        self.move(mouse_x, mouse_y)
-
-        # get available desktop specs
-        available_width = desktop.availableGeometry(self).width()
-        available_height = desktop.availableGeometry(self).height()
-        available_x = desktop.availableGeometry(self).x()
-        available_y = desktop.availableGeometry(self).y()
-
-        x = 0
-        y = 0
-
         if not self.is_shown:
 
-            if mouse_x > (available_width + available_x)/2:
+            # where is the pointer which clicked onto systray icon
+            icon_x = systrayicon.geometry().x()
+            icon_y = systrayicon.geometry().y()
+
+            # move into direction of systray - where the cursor hangs around too
+            self.move(icon_x, icon_y)
+
+            # get available desktop specs
+            available_width = desktop.availableGeometry(self).width()
+            available_height = desktop.availableGeometry(self).height()
+            available_x = desktop.availableGeometry(self).x()
+            available_y = desktop.availableGeometry(self).y()
+
+            y = 0
+
+            if icon_x > (available_width + available_x)/2:
                 x = available_x + available_width - self.statusbar.width()
             else:
                 x = available_x +  self.statusbar.width()
 
-            if mouse_y > (available_height - available_y)/2:
+            if icon_y > (available_height - available_y)/2:
                 y = available_height - available_y
 
             self.move(x,y)
@@ -1169,7 +1167,8 @@ class StatusWindow(QWidget):
         if conf.statusbar_floating:
             screen_or_widget = self
         elif conf.icon_in_systray:
-            screen_or_widget = get_screen(systrayicon.x_cursor, systrayicon.y_cursor)
+            screen_or_widget = get_screen(systrayicon.geometry().x(),
+                                          systrayicon.geometry().y())
         available_width = desktop.availableGeometry(screen_or_widget).width()
         available_height = desktop.availableGeometry(screen_or_widget).height()
         available_x = desktop.availableGeometry(screen_or_widget).x()
@@ -1186,11 +1185,13 @@ class StatusWindow(QWidget):
                 else:
                     self.top = False
         elif conf.icon_in_systray:
-            if systrayicon.y_cursor:
-                if systrayicon.y_cursor < desktop.screenGeometry(self).height()/2 + available_y:
-                    self.top = True
-                else:
-                    self.top = False
+            if systrayicon.geometry().y() < desktop.screenGeometry(self).height()/2 + available_y:
+                self.top = True
+            else:
+                self.top = False
+            ###else:
+            ###    # default fallback non-top-ness
+            ###    self.top = False
 
         # get height from tablewidgets
         real_height = self.get_real_height()
@@ -4655,14 +4656,17 @@ class CheckVersion(QObject):
             self.finished.emit()
 
 
-class DBus(object):
+class DBus(QObject):
     """
         Create connection to DBus for desktop notification for Linux/Unix
     """
-    def __init__(self):
 
+    open_statuswindow = pyqtSignal()
+
+    def __init__(self):
+        QObject.__init__(self)
         self.id = 0
-        self.actions = []
+        self.actions = [('open'), 'Open status window']
         self.timeout = 0
         # use icon from resources in hints, not the package icon - doesn't work neither
         self.icon = ''
@@ -4678,7 +4682,11 @@ class DBus(object):
                                               '/org/freedesktop/Notifications')
                 self.dbus_interface = Interface(dbus_object,
                                                 dbus_interface='org.freedesktop.Notifications')
+                # connect button to action
+                self.dbus_interface.connect_to_signal('ActionInvoked', self.action_callback)
+
                 self.connected = True
+
         else:
             self.connected = False
 
@@ -4698,6 +4706,14 @@ class DBus(object):
                                                          self.timeout)
             # reuse ID
             self.id = int(notification_id)
+
+
+    def action_callback(self, dummy, action):
+        """
+            react to clicked action button in notification bubble
+        """
+        if action == 'open':
+            self.open_statuswindow.emit()
 
 
 def _create_icons():
