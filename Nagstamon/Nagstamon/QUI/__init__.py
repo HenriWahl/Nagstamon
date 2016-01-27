@@ -124,6 +124,9 @@ if conf.font != '':
 else:
     FONT = DEFAULT_FONT
 
+# completely silly but no other rescue for Windows-hides-statusbar-after-display-mode-change problem
+NUMBER_OF_DISPLAY_CHANGES = 0
+
 
 class HBoxLayout(QHBoxLayout):
     """
@@ -842,15 +845,28 @@ class StatusWindow(QWidget):
                 available_y = desktop.availableGeometry(self).y()
                 self.move(available_x, available_y)
 
-            # first set window flags to avoid frame/frameless flickering
-            self.setWindowFlags(Qt.FramelessWindowHint | Qt.Tool)
+            # feels like kindergarten but every OS needs another order of setting flags...
+            if platform.system() == 'Windows':
+                # workaround for Windows-hides-statusbar-after-display-mode-change problem
+                if NUMBER_OF_DISPLAY_CHANGES == 0:
+                    # first set window flags to avoid frame/frameless flickering
+                    self.setWindowFlags(Qt.FramelessWindowHint | Qt.Tool)
+                else:
+                    self.setWindowFlags(Qt.WindowStaysOnTopHint | Qt.FramelessWindowHint | Qt.Tool)
 
-            # necessary to be shown before Linux EWMH-mantra can be applied
-            self.show()
+                # necessary to be shown before Linux EWMH-mantra can be applied
+                self.show()
 
-            # statusbar and detail window should be frameless and stay on top
-            # tool flag helps to be invisible in taskbar
-            self.setWindowFlags(Qt.WindowStaysOnTopHint | Qt.FramelessWindowHint | Qt.Tool)
+                # statusbar and detail window should be frameless and stay on top
+                # tool flag helps to be invisible in taskbar
+                self.setWindowFlags(Qt.WindowStaysOnTopHint | Qt.FramelessWindowHint | Qt.Tool)
+            else:
+                # statusbar and detail window should be frameless and stay on top
+                # tool flag helps to be invisible in taskbar
+                self.setWindowFlags(Qt.WindowStaysOnTopHint | Qt.FramelessWindowHint | Qt.Tool)
+
+                # necessary to be shown before Linux EWMH-mantra can be applied
+                self.show()
 
             # X11/Linux needs some special treatment to get the statusbar floating on all virtual desktops
             if not platform.system() in ('Darwin', 'Windows'):
@@ -3439,7 +3455,7 @@ class Dialog_Settings(Dialog):
         """
             what to do if OK was pressed
         """
-        global FONT, statuswindow, menu
+        global FONT, statuswindow, menu, NUMBER_OF_DISPLAY_CHANGES
 
         # store position of statuswindow/statusbar only if statusbar is floating
         if conf.statusbar_floating:
@@ -3509,6 +3525,9 @@ class Dialog_Settings(Dialog):
                            str(conf.appindicator) +\
                            str(conf.fullscreen) +\
                            str(conf.fullscreen_display):
+
+            # increase number of display changes for silly Windows-hides-statusbar-after-display-mode-change problem
+            NUMBER_OF_DISPLAY_CHANGES += 1
 
             # stop statuswindow worker
             statuswindow.worker.running = False
