@@ -827,6 +827,7 @@ class StatusWindow(QWidget):
             systrayicon.hide()
             self.hide_window()
             self.statusbar.show()
+
             # show statusbar/statuswindow on last saved position
             # when coordinates are inside known screens
             if get_screen(conf.position_x, conf.position_y) != None:
@@ -1022,6 +1023,12 @@ class StatusWindow(QWidget):
             icon_x = systrayicon.geometry().x()
             icon_y = systrayicon.geometry().y()
 
+            # strangely enough on KDE the systray icon geometry gives back 0, 0 as coordinates
+            if icon_x == 0:
+                icon_x = QCursor.pos().x()
+            if icon_y == 0:
+                icon_y = QCursor.pos().y()
+
             # move into direction of systray - where the cursor hangs around too
             self.move(icon_x, icon_y)
 
@@ -1167,8 +1174,19 @@ class StatusWindow(QWidget):
         if conf.statusbar_floating:
             screen_or_widget = self
         elif conf.icon_in_systray:
-            screen_or_widget = get_screen(systrayicon.geometry().x(),
-                                          systrayicon.geometry().y())
+
+            # where is the pointer which clicked onto systray icon
+            icon_x = systrayicon.geometry().x()
+            icon_y = systrayicon.geometry().y()
+
+            # strangely enough on KDE the systray icon geometry gives back 0, 0 as coordinates
+            if icon_x == 0:
+                icon_x = QCursor.pos().x()
+            if icon_y == 0:
+                icon_y = QCursor.pos().y()
+
+            screen_or_widget = get_screen(icon_x, icon_y)
+
         available_width = desktop.availableGeometry(screen_or_widget).width()
         available_height = desktop.availableGeometry(screen_or_widget).height()
         available_x = desktop.availableGeometry(screen_or_widget).x()
@@ -1185,13 +1203,10 @@ class StatusWindow(QWidget):
                 else:
                     self.top = False
         elif conf.icon_in_systray:
-            if systrayicon.geometry().y() < desktop.screenGeometry(self).height()/2 + available_y:
+            if icon_y < desktop.screenGeometry(self).height()/2 + available_y:
                 self.top = True
             else:
                 self.top = False
-            ###else:
-            ###    # default fallback non-top-ness
-            ###    self.top = False
 
         # get height from tablewidgets
         real_height = self.get_real_height()

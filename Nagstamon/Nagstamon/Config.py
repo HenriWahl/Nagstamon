@@ -34,7 +34,7 @@ class AppInfo(object):
     contains app information previously located in GUI.py
     """
     NAME = 'Nagstamon'
-    VERSION = '2.0-alpha-20160126'
+    VERSION = '2.0-alpha-20160128'
     WEBSITE = 'https://nagstamon.ifw-dresden.de'
     COPYRIGHT = '©2008-2016 Henri Wahl et al.\nh.wahl@ifw-dresden.de'
     COMMENTS = 'Nagios status monitor for your desktop'
@@ -230,7 +230,12 @@ class Config(object):
                         # check first if it is a bool value and convert string if it is
                         if i[1] in BOOLPOOL:
                             object.__setattr__(self, i[0], BOOLPOOL[i[1]])
-                        elif i[1].isdecimal():
+                        ##elif i[1].isdecimal():
+                        ##    object.__setattr__(self, i[0],int(i[1]))
+                        # in case there are numbers intify them to avoid later conversions
+                        # treat negative value specially as .isdecimal() will not detect it
+                        elif i[1].isdecimal() or \
+                             (i[1].startswith('-') and i[1].split('-')[1].isdecimal()):
                             object.__setattr__(self, i[0],int(i[1]))
                         else:
                             object.__setattr__(self, i[0], i[1])

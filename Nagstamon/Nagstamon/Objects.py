@@ -206,6 +206,7 @@ class Result(object):
     """
     result = ''
     error = ''
+    status = 0
 
     def __init__(self, **kwds):
         # add all keywords to object, every mode searchs inside for its favorite arguments/keywords

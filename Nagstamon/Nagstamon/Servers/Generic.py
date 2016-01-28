@@ -1239,42 +1239,40 @@ class GenericServer(object):
                     del temporary_session
 
             except Exception as err:
-
-                import traceback
-
                 traceback.print_exc(file=sys.stdout)
 
                 del url, cgi_data
                 result, error = self.Error(sys.exc_info())
-                return Result(result=result, error=error)
+                return Result(result=result, error=error, status=-1)
+
+
+            print(response)
+            print(response.status_code)
+
 
             # give back pure HTML or XML in case giveback is 'raw'
             if giveback == 'raw':
                 # .text gives content in unicode
-                result = Result(result=response.text)
-                return result
+                return Result(result=response.text, status=response.status_code)
 
             # objectified HTML
             if giveback == 'obj':
                 yummysoup = BeautifulSoup(response.text, 'html.parser')
-                return Result(result=yummysoup)
+                return Result(result=yummysoup, status=response.status_code)
 
             # objectified generic XML, valid at least for Opsview and Centreon
             elif giveback == 'xml':
                 xmlobj = BeautifulSoup(response.text, 'html.parser')
-                return Result(result=xmlobj)
+                return Result(result=xmlobj, status=response.status_code)
 
         except:
-
-            import traceback
-
             traceback.print_exc(file=sys.stdout)
 
             result, error = self.Error(sys.exc_info())
-            return Result(result=result, error=error)
+            return Result(result=result, error=error, status=response.status_code)
 
         result, error = self.Error(sys.exc_info())
-        return Result(result=result, error=error)
+        return Result(result=result, error=error, status=response.status_code)
 
 
     def GetHost(self, host):
