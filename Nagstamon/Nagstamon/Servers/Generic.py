@@ -519,9 +519,11 @@ class GenericServer(object):
         try:
             for status_type in 'hard', 'soft':
                 result = self.FetchURL(self.cgiurl_hosts[status_type])
-                htobj, error = result.result, result.error
-
-                if error != '': return Result(result=copy.deepcopy(htobj), error=copy.deepcopy(error))
+                htobj, error, status_code = result.result, result.error, result.status_code
+                if error != '' or status_code > 400:
+                    return Result(result=copy.deepcopy(htobj),
+                                              error=copy.deepcopy(error),
+                                              status_code=copy.deepcopy(status_code))
 
                 # put a copy of a part of htobj into table to be able to delete htobj
                 # too mnuch copy.deepcopy()s here give recursion crashs
@@ -589,7 +591,6 @@ class GenericServer(object):
                                     ###n['status_information'] = str(tds[5].string).encode('utf-8').replace('\n',
                                     n['status_information'] = str(tds[5].string).replace('\n',
                                                                                                          ' ').strip()
-
                             # status flags
                             n['passiveonly'] = False
                             n['notifications_disabled'] = False
@@ -645,8 +646,11 @@ class GenericServer(object):
         try:
             for status_type in 'hard', 'soft':
                 result = self.FetchURL(self.cgiurl_services[status_type])
-                htobj, error = result.result, result.error
-                if error != '': return Result(result=copy.deepcopy(htobj), error=copy.deepcopy(error))
+                htobj, error, status_code = result.result, result.error, result.status_code
+                if error != '' or status_code > 400:
+                    return Result(result=copy.deepcopy(htobj),
+                                  error=copy.deepcopy(error),
+                                  status_code=code.deepcopy(status_code))
 
                 # too much copy.deepcopy()s here give recursion crashs
                 table = htobj('table', {'class': 'status'})[0]
@@ -797,15 +801,18 @@ class GenericServer(object):
 
         # get all trouble hosts/services from server specific _get_status()
         status = self._get_status()
-        self.status, self.status_description = status.result, status.error
+        self.status = status.result
+        self.status_description = status.error
+        self.status_code = status.status_code
 
-        if status.error != '':
+        if status.error != '' or status.status_code > 400:
             # ask for password if authorization failed
             if 'HTTP Error 401' in status.error or \
-                            'HTTP Error 403' in status.error or \
-                            'HTTP Error 500' in status.error or \
-                            'bad session id' in status.error.lower() or \
-                            'login failed' in status.error.lower():
+               'HTTP Error 403' in status.error or \
+               'HTTP Error 500' in status.error or \
+               'bad session id' in status.error.lower() or \
+               'login failed' in status.error.lower() or \
+               status.status_code in [401, 403]:
 
                 if conf.servers[self.name].enabled == True:
                     # needed to get valid credentials
@@ -829,11 +836,15 @@ class GenericServer(object):
                     self.reset_HTTP()
                     self.init_HTTP()
                     status = self._get_status()
-                    self.status, self.status_description = status.result, status.error
+                    self.status = status.result
+                    self.status_description = status.error
+                    self.status_code = status.status_code
                     return(status)
             else:
                 self.isChecking = False
-                return Result(result=self.status, error=self.status_description)
+                return Result(result=self.status,
+                              error=self.status_description,
+                              status_code=self.status_code)
 
         # no rew authentication needed
         self.refresh_authentication = False
@@ -1243,36 +1254,31 @@ class GenericServer(object):
 
                 del url, cgi_data
                 result, error = self.Error(sys.exc_info())
-                return Result(result=result, error=error, status=-1)
-
-
-            print(response)
-            print(response.status_code)
-
+                return Result(result=result, error=error, status_code=-1)
 
             # give back pure HTML or XML in case giveback is 'raw'
             if giveback == 'raw':
                 # .text gives content in unicode
-                return Result(result=response.text, status=response.status_code)
+                return Result(result=response.text, status_code=response.status_code)
 
             # objectified HTML
             if giveback == 'obj':
                 yummysoup = BeautifulSoup(response.text, 'html.parser')
-                return Result(result=yummysoup, status=response.status_code)
+                return Result(result=yummysoup, status_code=response.status_code)
 
             # objectified generic XML, valid at least for Opsview and Centreon
             elif giveback == 'xml':
                 xmlobj = BeautifulSoup(response.text, 'html.parser')
-                return Result(result=xmlobj, status=response.status_code)
+                return Result(result=xmlobj, status_code=response.status_code)
 
         except:
             traceback.print_exc(file=sys.stdout)
 
             result, error = self.Error(sys.exc_info())
-            return Result(result=result, error=error, status=response.status_code)
+            return Result(result=result, error=error, status_code=response.status_code)
 
         result, error = self.Error(sys.exc_info())
-        return Result(result=result, error=error, status=response.status_code)
+        return Result(result=result, error=error, status_code=response.status_code)
 
 
     def GetHost(self, host):
