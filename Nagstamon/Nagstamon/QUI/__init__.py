@@ -27,6 +27,7 @@ import subprocess
 import sys
 import platform
 import time
+import random
 
 from PyQt5.QtWidgets import *
 from PyQt5.QtGui import *
@@ -1022,7 +1023,6 @@ class StatusWindow(QWidget):
             # where is the pointer which clicked onto systray icon
             icon_x = systrayicon.geometry().x()
             icon_y = systrayicon.geometry().y()
-
             # strangely enough on KDE the systray icon geometry gives back 0, 0 as coordinates
             if icon_x == 0:
                 icon_x = QCursor.pos().x()
@@ -4678,10 +4678,14 @@ class DBus(QObject):
 
     open_statuswindow = pyqtSignal()
 
+    # random ID needed because otherwise all instances of Nagstamon
+    # will get commands by clicking on notification bubble via DBUS
+    random_id = str(int(random.random() * 100000))
+
     def __init__(self):
         QObject.__init__(self)
         self.id = 0
-        self.actions = [('open'), 'Open status window']
+        self.actions = [('open' + self.random_id), 'Open status window']
         self.timeout = 0
         # use icon from resources in hints, not the package icon - doesn't work neither
         self.icon = ''
@@ -4691,7 +4695,7 @@ class DBus(QObject):
 
         if not platform.system() in ['Darwin', 'Windows']:
             if 'dbus' in sys.modules:
-                dbus_mainloop = DBusQtMainLoop(set_as_default=True)
+                dbus_mainloop = DBusQtMainLoop(set_as_default=False)
                 dbus_bus = SessionBus(dbus_mainloop)
                 dbus_object = dbus_bus.get_object('org.freedesktop.Notifications',
                                               '/org/freedesktop/Notifications')
@@ -4727,7 +4731,7 @@ class DBus(QObject):
         """
             react to clicked action button in notification bubble
         """
-        if action == 'open':
+        if action == 'open' + self.random_id:
             self.open_statuswindow.emit()
 
 
