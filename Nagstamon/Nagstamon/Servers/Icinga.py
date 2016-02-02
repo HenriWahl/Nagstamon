@@ -68,7 +68,7 @@ class IcingaServer(GenericServer):
 
         if tacraw.startswith("<"):
             self.json = False
-            tacsoup = BeautifulSoup(tacraw)
+            tacsoup = BeautifulSoup(tacraw, 'html.parser')
             self.version = tacsoup.find("a", { "class" : "homepageURL" })
             # only extract version if HTML seemed to be OK
             ###if self.version.__dict__.has_key("contents"):

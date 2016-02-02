@@ -34,7 +34,7 @@ class AppInfo(object):
     contains app information previously located in GUI.py
     """
     NAME = 'Nagstamon'
-    VERSION = '2.0-alpha-20160128'
+    VERSION = '2.0-alpha-20160202'
     WEBSITE = 'https://nagstamon.ifw-dresden.de'
     COPYRIGHT = '©2008-2016 Henri Wahl et al.\nh.wahl@ifw-dresden.de'
     COMMENTS = 'Nagios status monitor for your desktop'
@@ -439,40 +439,40 @@ class Config(object):
         # one section for each setting
         for s in self.__dict__[settingsdir]:
             config = configparser.ConfigParser(allow_no_value=True, interpolation=None)
-            config.add_section(setting + "_" + s)
+            config.add_section(setting + '_' + s)
             for option in self.__dict__[settingsdir][s].__dict__:
                 # obfuscate certain entries in config file - special arrangement for servers
-                if settingsdir == "servers":
+                if settingsdir == 'servers':
                     #if option == "username" or option == "password" or option == "proxy_username" or option == "proxy_password" or option == "autologin_key":
-                    if option in ["username", "password", "proxy_username", "proxy_password", "autologin_key"]:
+                    if option in ['username', 'password', 'proxy_username', 'proxy_password', 'autologin_key']:
                         value = self.Obfuscate(self.__dict__[settingsdir][s].__dict__[option])
-                        if option == "password":
-                            if self.__dict__[settingsdir][s].save_password == "False":
-                                value = ""
+                        if option == 'password':
+                            if self.__dict__[settingsdir][s].save_password == False:
+                                value = ''
                             elif self.keyring_available and self.use_system_keyring:
-                                if self.__dict__[settingsdir][s].password != "":
+                                if self.__dict__[settingsdir][s].password != '':
                                     # necessary to import on-the-fly due to possible Windows crashes
                                     import keyring
                                     # provoke crash if password saving does not work - this is the case
                                     # on newer Ubuntu releases
                                     try:
-                                        keyring.set_password("Nagstamon", "@".join((self.__dict__[settingsdir][s].username,
+                                        keyring.set_password('Nagstamon', '@'.join((self.__dict__[settingsdir][s].username,
                                                                                 self.__dict__[settingsdir][s].monitor_url)),
                                                                                 self.__dict__[settingsdir][s].password)
                                     except:
                                         import traceback
                                         traceback.print_exc(file=sys.stdout)
                                         sys.exit(1)
-                                value = ""
-                        if option == "proxy_password":
+                                value = ''
+                        if option == 'proxy_password':
                             if self.keyring_available and self.use_system_keyring:
                                 # necessary to import on-the-fly due to possible Windows crashes
                                 import keyring
-                                if self.__dict__[settingsdir][s].proxy_password != "":
+                                if self.__dict__[settingsdir][s].proxy_password != '':
                                     # provoke crash if password saving does not work - this is the case
                                     # on newer Ubuntu releases
                                     try:
-                                        keyring.set_password("Nagstamon", "@".join(("proxy",\
+                                        keyring.set_password('Nagstamon', '@'.join(('proxy',\
                                                                                 self.__dict__[settingsdir][s].proxy_username,
                                                                                 self.__dict__[settingsdir][s].proxy_address)),
                                                                                 self.__dict__[settingsdir][s].proxy_password)

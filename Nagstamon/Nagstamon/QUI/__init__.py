@@ -913,6 +913,11 @@ class StatusWindow(QWidget):
         """
         # create server vboxed from current running servers
         if server.enabled:
+
+            # display authentication dialog if password is not known
+            if not conf.servers[server.name].save_password:
+                dialogs.authentication.show_dialog(server.name)
+
             # without parent there is some flickering when starting
             server_vbox = ServerVBox(server, parent=self)
 
@@ -4663,6 +4668,9 @@ class Dialog_Authentication(Dialog):
 
             # store server settings
             conf.SaveMultipleConfig('servers', 'server')
+
+        # reset server connection
+        self.server.reset_HTTP()
 
         # force server to recheck right now
         self.server.thread_counter = conf.update_interval_seconds
