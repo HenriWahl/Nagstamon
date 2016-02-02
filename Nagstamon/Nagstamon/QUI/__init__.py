@@ -1075,8 +1075,11 @@ class StatusWindow(QWidget):
         """
         # do not show up when being dragged around
         if not self.moving:
+            # check if really all is OK
             for vbox in self.servers_vbox.children():
-                if vbox.server.all_ok and vbox.server.status == '':
+                if vbox.server.all_ok and\
+                   vbox.server.status == '' and\
+                   not vbox.server.refresh_authentication:
                     self.status_ok = True
                 else:
                     self.status_ok = False
@@ -1095,11 +1098,11 @@ class StatusWindow(QWidget):
                 for vbox in self.servers_vbox.children():
                     if not vbox.server.all_ok:
                         vbox.show_all()
+                    # show at least server vbox header to notify about connection or other errors
+                    elif vbox.server.status != '' or vbox.server.refresh_authentication:
+                        vbox.show_only_header()
                     elif vbox.server.all_ok and vbox.server.status == '':
                         vbox.hide_all()
-                    # show at least server vbox header to notify about connection or other errors
-                    elif vbox.server.status != '':
-                        vbox.show_only_header()
 
                 if not conf.fullscreen:
                     # theory...
@@ -2833,7 +2836,8 @@ class TableWidget(QTableWidget):
 
                 # all is OK if no error info came back
                 if self.server.status_description == '' and\
-                   self.server.status_code < 400:
+                   self.server.status_code < 400 and\
+                   not self.server.refresh_authentication:
                     self.change_label_status.emit('Connected', '')
                 else:
                     # try to display some more user friendly error description
@@ -2841,7 +2845,8 @@ class TableWidget(QTableWidget):
                         self.change_label_status.emit('Connection timeout', '')
                     elif status.error.startswith('requests.exceptions.ConnectionError'):
                         self.change_label_status.emit('Connection error', '')
-                    elif self.server.status_code in [401, 403]:
+                    elif self.server.status_code in [401, 403] or\
+                         self.server.refresh_authentication:
                         self.change_label_status.emit('Authentication problem', 'critical')
                     else:
                         # kick out line breaks to avoid broken status window

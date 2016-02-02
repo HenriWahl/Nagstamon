@@ -797,9 +797,12 @@ class GenericServer(object):
 
         # get all trouble hosts/services from server specific _get_status()
         status = self._get_status()
-        self.status = status.result
-        self.status_description = status.error
-        self.status_code = status.status_code
+        if status != None:
+            self.status = status.result
+            self.status_description = status.error
+            self.status_code = status.status_code
+        else:
+            return Result()
 
         if status.error != '' or status.status_code > 400:
             # ask for password if authorization failed
@@ -812,6 +815,9 @@ class GenericServer(object):
                 if conf.servers[self.name].enabled == True:
                     # needed to get valid credentials
                     self.refresh_authentication = True
+
+                    print('YYYYYYYYYYYIZZZZZZZZZZZZZZZZZz')
+
                     '''
                     while status.error != '':
                         # clean existent authentication
