@@ -1,21 +1,35 @@
 <?xml version="1.0" encoding="UTF-8"?>
 <ui version="4.0">
- <class>Dialog</class>
- <widget class="QDialog" name="Dialog">
+ <class>dialog_authentication</class>
+ <widget class="QDialog" name="dialog_authentication">
   <property name="geometry">
    <rect>
     <x>0</x>
     <y>0</y>
-    <width>567</width>
+    <width>453</width>
     <height>259</height>
    </rect>
   </property>
   <property name="windowTitle">
    <string>Authentication</string>
   </property>
+  <property name="modal">
+   <bool>true</bool>
+  </property>
   <layout class="QGridLayout" name="gridLayout">
-   <item row="5" column="1">
-    <widget class="QLineEdit" name="input_lineedit_autologin_key"/>
+   <item row="1" column="0">
+    <widget class="QLabel" name="label_username">
+     <property name="text">
+      <string>Username:</string>
+     </property>
+    </widget>
+   </item>
+   <item row="5" column="0">
+    <widget class="QLabel" name="label_autologin_key">
+     <property name="text">
+      <string>Autologin key:</string>
+     </property>
+    </widget>
    </item>
    <item row="4" column="1">
     <widget class="QCheckBox" name="input_checkbox_use_autologin">
@@ -31,22 +45,8 @@
      </property>
     </widget>
    </item>
-   <item row="1" column="0">
-    <widget class="QLabel" name="label_username">
-     <property name="text">
-      <string>Username:</string>
-     </property>
-    </widget>
-   </item>
-   <item row="5" column="0">
-    <widget class="QLabel" name="label_autologin_key">
-     <property name="text">
-      <string>Autologin key:</string>
-     </property>
-    </widget>
-   </item>
-   <item row="1" column="1">
-    <widget class="QLineEdit" name="input_lineedit_username"/>
+   <item row="5" column="1">
+    <widget class="QLineEdit" name="input_lineedit_autologin_key"/>
    </item>
    <item row="2" column="1">
     <widget class="QLineEdit" name="input_lineedit_password">
@@ -61,6 +61,9 @@
       <string>Save password</string>
      </property>
     </widget>
+   </item>
+   <item row="1" column="1">
+    <widget class="QLineEdit" name="input_lineedit_username"/>
    </item>
    <item row="6" column="0" colspan="2">
     <layout class="QHBoxLayout" name="horizontalLayout">
@@ -79,9 +82,12 @@
       </widget>
      </item>
      <item>
-      <widget class="QPushButton" name="button">
-       <property name="text">
-        <string>OK</string>
+      <widget class="QDialogButtonBox" name="button_box">
+       <property name="standardButtons">
+        <set>QDialogButtonBox::Cancel|QDialogButtonBox::Ok</set>
+       </property>
+       <property name="centerButtons">
+        <bool>false</bool>
        </property>
       </widget>
      </item>

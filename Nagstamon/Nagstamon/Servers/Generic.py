@@ -120,6 +120,7 @@ class GenericServer(object):
         self.all_ok = True
         self.status = ''
         self.status_description = ''
+        self.status_code = 0
 
         # The events_* are recycled from GUI.py
         # history of events to track status changes for notifications
@@ -411,11 +412,6 @@ class GenericServer(object):
 
         # running remote cgi command
         self.FetchURL(url, giveback='raw', cgi_data=cgi_data)
-
-
-    def set_submit_check_result_OLD(self, thread_obj):
-        self._set_submit_check_result(thread_obj.host, thread_obj.service, thread_obj.state, thread_obj.comment, \
-                                      thread_obj.check_output, thread_obj.performance_data)
 
 
     def set_submit_check_result(self, info_dict):
@@ -813,7 +809,6 @@ class GenericServer(object):
                'bad session id' in status.error.lower() or \
                'login failed' in status.error.lower() or \
                status.status_code in [401, 403]:
-
                 if conf.servers[self.name].enabled == True:
                     # needed to get valid credentials
                     self.refresh_authentication = True

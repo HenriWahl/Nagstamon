@@ -65,6 +65,7 @@ from Nagstamon.QUI.settings_action import Ui_settings_action
 from Nagstamon.QUI.dialog_acknowledge import Ui_dialog_acknowledge
 from Nagstamon.QUI.dialog_downtime import Ui_dialog_downtime
 from Nagstamon.QUI.dialog_submit import Ui_dialog_submit
+from Nagstamon.QUI.dialog_authentication import Ui_dialog_authentication
 
 # only on X11/Linux thirdparty path should be added because it contains the Xlib module
 # needed to tell window manager via EWMH to keep Nagstamon window on all virtual desktops
@@ -363,7 +364,7 @@ class MenuContext(MenuAtCursor):
         self.action_refresh.triggered.connect(statuswindow.refresh)
         self.addAction(self.action_refresh)
 
-        self.action_recheck = QAction('Recheck', self)
+        self.action_recheck = QAction('Recheck all', self)
         self.action_recheck.triggered.connect(statuswindow.recheck_all)
         self.addAction(self.action_recheck)
 
@@ -930,6 +931,9 @@ class StatusWindow(QWidget):
 
             # and to update status window
             server_vbox.table.refreshed.connect(self.update_window)
+
+            # hide statuswindow if authentication dialog is to be shown
+            server_vbox.button_authenticate.clicked.connect(self.hide_window)
 
             # tell table it should remove freshness of formerly new items when window closes
             # because apparently the new events have been seen now
@@ -1864,7 +1868,6 @@ class StatusBarLabel(Draggable_Label):
         Draggable_Label.__init__(self, parent=parent)
         self.setStyleSheet('padding-left: 1px;'
                            'padding-right: 1px;'
-                           ###'font-size: 20px;'
                            'color: %s; background-color: %s;' % (conf.__dict__['color_%s_text' % (state.lower())],
                                                                  conf.__dict__['color_%s_background' % (state.lower())]))
         # just let labels grow as much as they need
@@ -1887,7 +1890,6 @@ class StatusBarLabel(Draggable_Label):
     def invert(self):
         self.setStyleSheet('padding-left: 1px;'
                            'padding-right: 1px;'
-                           ###'font-size: 20px;'
                            'color: %s; background-color: %s;' % (conf.__dict__['color_%s_background' % (self.state.lower())],
                                                                  conf.__dict__['color_%s_text' % (self.state.lower())]))
 
@@ -1896,7 +1898,6 @@ class StatusBarLabel(Draggable_Label):
     def reset(self):
         self.setStyleSheet('padding-left: 1px;'
                            'padding-right: 1px;'
-                           ###'font-size: 20px;'
                            'color: %s; background-color: %s;' % (conf.__dict__['color_%s_text' % (self.state.lower())],
                                                                  conf.__dict__['color_%s_background' % (self.state.lower())]))
 
@@ -1980,22 +1981,32 @@ class ServerStatusLabel(Draggable_Label):
         QLabel.__init__(self, parent=parent)
 
 
-    @pyqtSlot(str)
-    def change(self, text):
-        # store old text in case it needs to be reused
+    @pyqtSlot(str, str)
+    def change(self, text, style=''):
+        # store old text and stylesheet in case it needs to be reused
         self.text_old = self.text()
+        self.stylesheet_old = self.styleSheet()
+
+        # set stylesheet depending on submitted style
+        if style == 'critical':
+            self.setStyleSheet('color: red;'
+                               'font-weight: bold;')
+        elif style == '':
+            self.setStyleSheet('')
         # set new text
         self.setText(text)
 
 
     @pyqtSlot()
     def reset(self):
+        self.setStyleSheet(self.stylesheet_old)
         self.setText('')
 
 
     @pyqtSlot()
     def restore(self):
         # restore text, used by recheck_all of tablewidget worker
+        self.setStyleSheet(self.stylesheet_old)
         self.setText(self.text_old)
 
 
@@ -2004,7 +2015,10 @@ class ServerVBox(QVBoxLayout):
         one VBox per server containing buttons and hosts/services listview
     """
     # used to update status label text like 'Connected-'
-    change_label_status = pyqtSignal(str)
+    change_label_status = pyqtSignal(str, str)
+
+    # signal to submit server to authentication dialog
+    authenticate = pyqtSignal(str)
 
     def __init__(self, server, parent=None):
         QVBoxLayout.__init__(self, parent)
@@ -2022,17 +2036,15 @@ class ServerVBox(QVBoxLayout):
         # top and bottom should be kept by padding
         self.header.setContentsMargins(0, 0, SPACE, 0)
 
-        self.label = QLabel("<big><b>%s@%s</b></big>" % (server.username, server.name), parent=parent)
-        # let label padding keep top and bottom space - apparently not necessary on OSX
-        if platform.system() != 'Darwin':
-            self.label.setStyleSheet('padding-top: {0}px; padding-bottom: {0}px;'.format(SPACE))
-
+        self.label = QLabel(parent=parent)
+        self.update_label()
         self.button_edit = QPushButton('Edit', parent=parent)
         self.button_monitor = PushButton_BrowserURL(text='Monitor', parent=parent, server=self.server, url_type='monitor')
         self.button_hosts = PushButton_BrowserURL(text='Hosts', parent=parent, server=self.server, url_type='hosts')
         self.button_services = PushButton_BrowserURL(text='Services', parent=parent, server=self.server, url_type='services')
         self.button_history = PushButton_BrowserURL(text='History', parent=parent, server=self.server, url_type='history')
         self.label_status = ServerStatusLabel(parent=parent)
+        self.button_authenticate = QPushButton('Authenticate', parent=parent)
 
         self.button_edit.clicked.connect(self.edit_server)
 
@@ -2048,6 +2060,7 @@ class ServerVBox(QVBoxLayout):
         self.header.addWidget(self.button_services)
         self.header.addWidget(self.button_history)
         self.header.addWidget(self.label_status)
+        self.header.addWidget(self.button_authenticate)
         self.header.addStretch()
 
         sort_column = conf.default_sort_field.lower()
@@ -2061,6 +2074,15 @@ class ServerVBox(QVBoxLayout):
         # connect worker to status label to reflect connectivity
         self.table.worker.change_label_status.connect(self.label_status.change)
         self.table.worker.restore_label_status.connect(self.label_status.restore)
+
+        # connect reauthentication button to authentication state
+        self.table.worker.button_authenticate_show.connect(self.button_authenticate.show)
+        self.table.worker.button_authenticate_hide.connect(self.button_authenticate.hide)
+
+        # care about authentications
+        self.button_authenticate.clicked.connect(self.authenticate_server)
+        self.authenticate.connect(dialogs.authentication.show_dialog)
+        dialogs.authentication.update.connect(self.update_label)
 
         self.addWidget(self.table, 1)
 
@@ -2094,6 +2116,7 @@ class ServerVBox(QVBoxLayout):
         self.button_services.show()
         self.button_history.show()
         self.label_status.show()
+        self.button_authenticate.hide()
 
         # special table treatment
         self.table.show()
@@ -2130,6 +2153,7 @@ class ServerVBox(QVBoxLayout):
         self.button_services.hide()
         self.button_history.hide()
         self.label_status.hide()
+        self.button_authenticate.hide()
 
         # special table treatment
         self.table.hide()
@@ -2164,6 +2188,21 @@ class ServerVBox(QVBoxLayout):
         if not conf.fullscreen:
             statuswindow.hide_window()
         dialogs.server.edit(server_name=self.server.name)
+
+
+    def authenticate_server(self):
+        """
+            send signal to open authentication dialog with self.server
+        """
+        self.authenticate.emit(self.server.name)
+
+
+    @pyqtSlot()
+    def update_label(self):
+        self.label.setText("<big><b>%s@%s</b></big>" % (self.server.username, self.server.name))
+        # let label padding keep top and bottom space - apparently not necessary on OSX
+        if platform.system() != 'Darwin':
+            self.label.setStyleSheet('padding-top: {0}px; padding-bottom: {0}px;'.format(SPACE))
 
 
 class CellWidget(QWidget):
@@ -2750,7 +2789,7 @@ class TableWidget(QTableWidget):
         running = True
 
         # signal to be sent to slot "change" of ServerStatusLabel
-        change_label_status = pyqtSignal(str)
+        change_label_status = pyqtSignal(str, str)
 
         # signal to be sent to slot "restore" of ServerStatusLabel
         restore_label_status = pyqtSignal()
@@ -2760,6 +2799,10 @@ class TableWidget(QTableWidget):
 
         # flag to keep recheck_all from being started more than once
         rechecking_all = False
+
+        # signals to show/hide reauthentication
+        button_authenticate_show = pyqtSignal()
+        button_authenticate_hide = pyqtSignal()
 
 
         def __init__(self, parent=None, server=None):
@@ -2779,21 +2822,31 @@ class TableWidget(QTableWidget):
             # if counter is at least update interval get status
             if self.server.thread_counter >= conf.update_interval_seconds:
                 # reflect status retrieval attempt on server vbox label
-                self.change_label_status.emit('Refreshing...')
+                self.change_label_status.emit('Refreshing...', '')
                 # get status from server instance
                 status = self.server.GetStatus()
+
                 # all is OK if no error info came back
-                if self.server.status_description == '':
-                    self.change_label_status.emit('Connected')
+                if self.server.status_description == '' and\
+                   self.server.status_code < 400:
+                    self.change_label_status.emit('Connected', '')
                 else:
                     # try to display some more user friendly error description
                     if status.error.startswith('requests.exceptions.ConnectTimeout'):
-                        self.change_label_status.emit('Connection timeout')
+                        self.change_label_status.emit('Connection timeout', '')
                     elif status.error.startswith('requests.exceptions.ConnectionError'):
-                        self.change_label_status.emit('Connection error')
+                        self.change_label_status.emit('Connection error', '')
+                    elif self.server.status_code in [401, 403]:
+                        self.change_label_status.emit('Authentication problem', 'critical')
                     else:
                         # kick out line breaks to avoid broken status window
-                        self.change_label_status.emit(self.server.status_description.replace('\n', ''))
+                        self.change_label_status.emit(self.server.status_description.replace('\n', ''), '')
+
+                # depending on authentication state show reauthentication button
+                if self.server.refresh_authentication:
+                    self.button_authenticate_show.emit()
+                else:
+                    self.button_authenticate_hide.emit()
 
                 # reset counter for this thread
                 self.server.thread_counter = 0
@@ -2982,7 +3035,7 @@ class TableWidget(QTableWidget):
                 # block rechecking
                 self.rechecking_all = True
                 # change label of server vbox
-                self.change_label_status.emit('Rechecking all...')
+                self.change_label_status.emit('Rechecking all...', '')
                 if conf.debug_mode:
                     self.server.Debug(server=self.server.name, debug='Start rechecking all')
                 # special treatment for Check_MK Multisite because there is only one URL call necessary
@@ -3163,6 +3216,10 @@ class Dialogs(object):
         # downtime dialog for miserable item context menu
         self.submit = Dialog_Submit(Ui_dialog_submit)
         self.submit.initialize()
+
+        # authentication dialog for username/password
+        self.authentication = Dialog_Authentication(Ui_dialog_authentication)
+        self.authentication.initialize()
 
         # file chooser Dialog
         self.file_chooser = QFileDialog()
@@ -4138,7 +4195,7 @@ class Dialog_Server(Dialog):
             self.window.close()
 
             # store server settings
-            conf.SaveMultipleConfig("servers", "server")
+            conf.SaveMultipleConfig('servers', 'server')
 
 
 class Dialog_Action(Dialog):
@@ -4525,7 +4582,7 @@ class Dialog_Submit(Dialog):
         state = "ok"
 
         for button in ["ok", "up", "warning", "critical", "unreachable", "unknown", "down"]:
-            if self.ui.__dict__['input_radiobutton_result_' + button ].isChecked():
+            if self.ui.__dict__['input_radiobutton_result_' + button].isChecked():
                 state = button
                 break
 
@@ -4537,6 +4594,81 @@ class Dialog_Submit(Dialog):
                           'comment': self.ui.input_lineedit_comment.text(),
                           'check_output': self.ui.input_lineedit_check_output.text(),
                           'performance_data': self.ui.input_lineedit_performance_data.text()})
+
+
+class Dialog_Authentication(Dialog):
+    """
+        Dialog for authentication
+    """
+    # store server
+    server = None
+
+    # signal for telling server_vbox label to update
+    update = pyqtSignal(str)
+
+    def __init__(self, dialog):
+        Dialog.__init__(self, dialog)
+
+
+    def initialize(self):
+        """
+            setup dialog fitting to server
+        """
+        if self.server != None:
+            self.window.setWindowTitle('Authenticate {0}'.format(self.server.name))
+            if self.server.type == 'Centreon':
+                self.ui.input_checkbox_use_autologin.show()
+                self.ui.input_lineedit_autologin_key.show()
+                self.ui.label_autologin_key.show()
+            else:
+                self.ui.input_checkbox_use_autologin.hide()
+                self.ui.input_lineedit_autologin_key.hide()
+                self.ui.label_autologin_key.hide()
+
+            # set existing values
+            self.ui.input_lineedit_username.setText(self.server.username)
+            self.ui.input_lineedit_password.setText(self.server.password)
+            self.ui.input_checkbox_save_password.setChecked(conf.servers[self.server.name].save_password)
+            # Centreon specific
+            self.ui.input_checkbox_use_autologin.setChecked(self.server.use_autologin)
+            self.ui.input_lineedit_autologin_key.setText(self.server.autologin_key)
+
+
+    @pyqtSlot(str)
+    def show_dialog(self, server):
+        """
+            initialize and show authentication dialog
+        """
+        self.server = servers[server]
+        self.initialize()
+        self.show()
+
+
+    def ok(self):
+        """
+            Take username and password
+        """
+
+        # close window fist to avoid lagging UI
+        self.window.close()
+
+        self.server.username = self.ui.input_lineedit_username.text()
+        self.server.password = self.ui.input_lineedit_password.text()
+
+        # store password if it should be saved
+        if self.ui.input_checkbox_save_password.isChecked():
+            conf.servers[self.server.name].username = self.server.username
+            conf.servers[self.server.name].password = self.server.password
+            conf.servers[self.server.name].save_password = self.ui.input_checkbox_save_password.isChecked()
+
+            # store server settings
+            conf.SaveMultipleConfig('servers', 'server')
+
+        # force server to recheck right now
+        self.server.thread_counter = conf.update_interval_seconds
+
+        # update server_vbox label
+        self.update.emit(self.server.name)
 
 
 class MediaPlayer(QObject):
