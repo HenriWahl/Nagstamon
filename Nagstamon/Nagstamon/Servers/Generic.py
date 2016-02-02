@@ -815,24 +815,6 @@ class GenericServer(object):
                 if conf.servers[self.name].enabled == True:
                     # needed to get valid credentials
                     self.refresh_authentication = True
-
-                    print('YYYYYYYYYYYIZZZZZZZZZZZZZZZZZz')
-
-                    '''
-                    while status.error != '':
-                        # clean existent authentication
-                        self.reset_HTTP()
-                        self.init_HTTP()
-                        status = self._get_status()
-                        self.status, self.status_description = status.result, status.error
-                        # take a break not to DOS the monitor...
-                        time.sleep(10)
-                        # if monitor has been disabled meanwhile do not try to connect to it
-                        if conf.servers[self.name].enabled == False:
-                            break
-                        # if reauthentication did not work already try again to get correct credentials
-                        self.refresh_authentication = True
-                    '''
                     # clean existent authentication
                     self.reset_HTTP()
                     self.init_HTTP()
