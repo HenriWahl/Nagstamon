@@ -32,6 +32,7 @@ from Nagstamon.Servers.Opsview import OpsviewServer
 from Nagstamon.Servers.Thruk import ThrukServer
 from Nagstamon.Servers.Zabbix import ZabbixServer
 from Nagstamon.Servers.Livestatus import LivestatusServer
+from Nagstamon.Servers.Zenoss import ZenossServer
 
 from Nagstamon.Config import conf
 
@@ -147,7 +148,7 @@ def create_server(server=None):
 # moved registration process here because of circular dependencies
 for server in (CentreonServer, IcingaServer, MultisiteServer, NagiosServer,
                Op5MonitorServer, OpsviewServer, ThrukServer, ZabbixServer,
-               LivestatusServer):
+               LivestatusServer, ZenossServer):
     register_server(server)
 
 # create servers

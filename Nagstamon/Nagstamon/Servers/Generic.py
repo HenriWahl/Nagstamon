@@ -85,6 +85,8 @@ class GenericServer(object):
 
     USER_AGENT = '{0}/{1}/{2}'.format(AppInfo.NAME, AppInfo.VERSION, platform.system())
 
+    # needed to check return code of monitor server in case of false authentication
+    STATUS_CODES_NO_AUTH = [401, 403]
 
     def __init__(self, **kwds):
         # add all keywords to object, every mode searchs inside for its favorite arguments/keywords
@@ -811,7 +813,7 @@ class GenericServer(object):
                'HTTP Error 500' in status.error or \
                'bad session id' in status.error.lower() or \
                'login failed' in status.error.lower() or \
-               status.status_code in [401, 403]:
+               status.status_code in self.STATUS_CODES_NO_AUTH:
                 if conf.servers[self.name].enabled == True:
                     # needed to get valid credentials
                     self.refresh_authentication = True

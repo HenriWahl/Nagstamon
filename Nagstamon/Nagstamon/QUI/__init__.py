@@ -2845,7 +2845,7 @@ class TableWidget(QTableWidget):
                         self.change_label_status.emit('Connection timeout', '')
                     elif status.error.startswith('requests.exceptions.ConnectionError'):
                         self.change_label_status.emit('Connection error', '')
-                    elif self.server.status_code in [401, 403] or\
+                    elif self.server.status_code in self.server.STATUS_CODES_NO_AUTH or\
                          self.server.refresh_authentication:
                         self.change_label_status.emit('Authentication problem', 'critical')
                     else:

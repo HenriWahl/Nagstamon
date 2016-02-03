@@ -128,6 +128,9 @@ class Op5MonitorServer(GenericServer):
         self.STATUS_SVC_MAPPING = {'0':'OK', '1':'WARNING', '2':'CRITICAL', '3':'UNKNOWN'}
         self.STATUS_HOST_MAPPING = {'0':'UP', '1':'DOWN', '2':'UNREACHABLE'}
 
+        # Op5Monitor gives a 500 when auth is wrong
+        self.STATUS_CODES_NO_AUTH.append(500)
+
 
     def _get_status(self):
         """
@@ -166,7 +169,6 @@ class Op5MonitorServer(GenericServer):
                     n['status_information'] = api['plugin_output']
                     n['status_type'] = api['state']
 
-                    ###if not self.new_hosts.has_key(n['host']):
                     if not n['host'] in self.new_hosts:
                         self.new_hosts[n['host']] = GenericHost()
                         self.new_hosts[n['host']].name = n['host']
@@ -198,7 +200,6 @@ class Op5MonitorServer(GenericServer):
                     n['status'] = self.STATUS_HOST_MAPPING[str(api['host']['state'])]
                     n["passiveonly"] = 0 if api['host']['active_checks_enabled'] else 1
 
-                    ###if not self.new_hosts.has_key(n['host']):
                     if not n['host'] in self.new_hosts:
                         self.new_hosts[n['host']] = GenericHost()
                         self.new_hosts[n['host']].name = n['host']
@@ -216,13 +217,11 @@ class Op5MonitorServer(GenericServer):
                     n['last_check'] = datetime.fromtimestamp(int(api['last_check'])).strftime('%Y-%m-%d %H:%M:%S')
                     n['status_information'] = api['plugin_output']
 
-                    ###if not self.new_hosts.has_key(n['host']):
                     if not n['host'] in self.new_hosts:
                         self.new_hosts[n['host']] = GenericHost()
                         self.new_hosts[n['host']].name = n['host']
                         self.new_hosts[n['host']].status = n['status']
 
-                    ###if not self.new_hosts[n['host']].services.has_key(n['service']):
                     if not n['service'] in self.new_hosts[n['host']].services:
                         n['status'] = self.STATUS_SVC_MAPPING[str(api['state'])]
 
@@ -246,15 +245,15 @@ class Op5MonitorServer(GenericServer):
         except:
             print("========================================== b0rked ==========================================")
 
-
             import traceback
             traceback.print_exc(file=sys.stdout)
 
-
-
             self.isChecking = False
-            result,error = self.Error(sys.exc_info())
-            return Result(result=result, error=error)
+            # store status_code for returning result to tell GUI to reauthenticate
+            status_code = result.status_code
+
+            result, error = self.Error(sys.exc_info())
+            return Result(result=result, error=error, status_code=status_code)
 
         return Result()
 
