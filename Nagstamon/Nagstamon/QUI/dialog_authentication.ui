@@ -6,9 +6,15 @@
    <rect>
     <x>0</x>
     <y>0</y>
-    <width>453</width>
+    <width>1400</width>
     <height>226</height>
    </rect>
+  </property>
+  <property name="minimumSize">
+   <size>
+    <width>400</width>
+    <height>0</height>
+   </size>
   </property>
   <property name="windowTitle">
    <string>Authentication</string>
@@ -49,10 +55,26 @@
     <widget class="QLineEdit" name="input_lineedit_autologin_key"/>
    </item>
    <item row="0" column="1">
-    <widget class="QLineEdit" name="input_lineedit_username"/>
+    <widget class="QLineEdit" name="input_lineedit_username">
+     <property name="frame">
+      <bool>true</bool>
+     </property>
+    </widget>
    </item>
    <item row="1" column="1">
     <widget class="QLineEdit" name="input_lineedit_password">
+     <property name="minimumSize">
+      <size>
+       <width>200</width>
+       <height>0</height>
+      </size>
+     </property>
+     <property name="baseSize">
+      <size>
+       <width>0</width>
+       <height>0</height>
+      </size>
+     </property>
      <property name="echoMode">
       <enum>QLineEdit::Password</enum>
      </property>
@@ -67,20 +89,6 @@
    </item>
    <item row="5" column="0" colspan="2">
     <layout class="QHBoxLayout" name="horizontalLayout">
-     <item>
-      <widget class="QPushButton" name="button_exit">
-       <property name="text">
-        <string>Exit Nagstamon</string>
-       </property>
-      </widget>
-     </item>
-     <item>
-      <widget class="QPushButton" name="button_disable">
-       <property name="text">
-        <string>Disable monitor</string>
-       </property>
-      </widget>
-     </item>
      <item>
       <widget class="QDialogButtonBox" name="button_box">
        <property name="standardButtons">
