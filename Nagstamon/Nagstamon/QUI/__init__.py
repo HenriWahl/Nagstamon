@@ -129,6 +129,14 @@ else:
 # completely silly but no other rescue for Windows-hides-statusbar-after-display-mode-change problem
 NUMBER_OF_DISPLAY_CHANGES = 0
 
+# static CSS part of tablewidget cell colorization
+# value selection depends on conf.show_grid
+CSS_GRID = {False: '',\
+            True: 'border-style: none none dotted dotted;'
+                  'border-width: 1px;'}
+CSS_GRID_ICON = {False: '',\
+            True: 'border-style: none none dotted none;'
+                  'border-width: 1px;'}
 
 class HBoxLayout(QHBoxLayout):
     """
@@ -358,14 +366,6 @@ class MenuContext(MenuAtCursor):
         MenuAtCursor.__init__(self, parent=parent)
 
         # connect all relevant widgets which should show the context menu
-        #self.menu_ready.connect(systrayicon.set_menu)
-        #self.menu_ready.connect(statuswindow.toparea.button_hamburger_menu.set_menu)
-        #self.menu_ready.connect(statuswindow.toparea.logo.set_menu)
-        #self.menu_ready.connect(statuswindow.toparea.label_version.set_menu)
-        #self.menu_ready.connect(statuswindow.toparea.label_empty_space.set_menu)
-        #self.menu_ready.connect(statuswindow.statusbar.logo.set_menu)
-        #self.menu_ready.connect(statuswindow.label_error.logo.set_menu)
-
         for widget in systrayicon,\
                       statuswindow.toparea.button_hamburger_menu,\
                       statuswindow.toparea.logo,\
@@ -2328,14 +2328,14 @@ class CellWidget(QWidget):
         self.setToolTip(tooltip)
 
         self.label.setStyleSheet('padding: 5px;')
-        ###                         'font-size: 12pt;')
 
         # hosts and services might contain attribute icons
         if column in (0, 1) and icons is not [False]:
             for icon in icons:
                 icon_label = QLabel(parent=self)
                 icon_label.setPixmap(icon.pixmap(self.label.fontMetrics().height(), self.label.fontMetrics().height()))
-                icon_label.setStyleSheet('padding-right: 5px;')
+                icon_label.setStyleSheet('padding-right: 5px;'
+                                         '%s' % (CSS_GRID_ICON[conf.show_grid]))
                 self.hbox.addWidget(icon_label)
 
         # paint cell appropriately
@@ -2343,11 +2343,18 @@ class CellWidget(QWidget):
 
 
     def colorize(self):
-        self.setStyleSheet('color: %s; background-color: %s;' % (self.color, self.background))
+        """
+            paint cell with color fitting state and grid option
+        """
+        self.setStyleSheet('color: %s;'
+                           'background-color: %s;'
+                            '%s' % (self.color, self.background, CSS_GRID[conf.show_grid]))
 
 
     def highlight(self):
-        self.setStyleSheet('color: %s; background-color: %s;' % (self.color, 'darkgrey'))
+        self.setStyleSheet('color: %s;'
+                           'background-color: %s;'
+                           '%s' % (self.color, 'darkgrey',  CSS_GRID[conf.show_grid]))
 
 
     def enterEvent(self, eventt):
@@ -2835,6 +2842,9 @@ class TableWidget(QTableWidget):
 
 
     def colorize_row(self, row):
+        """
+            colorize whole row
+        """
         for column in range(0, self.columnCount()):
             if self.cellWidget(row, column) != None:
                 self.cellWidget(row, column).colorize()
