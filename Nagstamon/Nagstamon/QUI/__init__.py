@@ -173,6 +173,9 @@ class SystemTrayIcon(QSystemTrayIcon):
     show_popwin = pyqtSignal()
     hide_popwin = pyqtSignal()
 
+    # flag for displaying error icon in case of error
+    error_shown = False
+
     def __init__(self):
         QSystemTrayIcon.__init__(self)
 
@@ -265,11 +268,14 @@ class SystemTrayIcon(QSystemTrayIcon):
         """
             get worst status and display it in systray
         """
-        worst_status = get_worst_status()
-        self.setIcon(self.icons[worst_status])
-        # set current icon for flshing
-        self.current_icon = self.icons[worst_status]
-        del(worst_status)
+        if self.error_shown == False:
+            worst_status = get_worst_status()
+            self.setIcon(self.icons[worst_status])
+            # set current icon for flshing
+            self.current_icon = self.icons[worst_status]
+            del(worst_status)
+        else:
+            self.setIcon(self.icons['ERROR'])
 
 
     @pyqtSlot()
@@ -281,7 +287,10 @@ class SystemTrayIcon(QSystemTrayIcon):
         if statuswindow.worker_notification.is_notifying:
             # store current icon to get it reset back
             if self.current_icon == None:
-                self.current_icon = self.icons[statuswindow.worker_notification.worst_notification_status]
+                if self.error_shown == False:
+                    self.current_icon = self.icons[statuswindow.worker_notification.worst_notification_status]
+                else:
+                    self.current_icon = self.icons['ERROR']
             # use empty SVG icon to display emptiness
             self.setIcon(self.icons['EMPTY'])
             # fire up  a singleshot to reset color soon
@@ -303,6 +312,16 @@ class SystemTrayIcon(QSystemTrayIcon):
             if self.current_icon != None:
                 self.setIcon(self.current_icon)
             self.current_icon = None
+
+
+    @pyqtSlot()
+    def set_error(self):
+        self.error_shown = True
+
+
+    @pyqtSlot()
+    def reset_error(self):
+        self.error_shown = False
 
 
 class MenuAtCursor(QMenu):
@@ -949,7 +968,11 @@ class StatusWindow(QWidget):
 
             # show error message in statusbar
             server_vbox.table.worker.show_error.connect(self.statusbar.set_message)
-            server_vbox.table.worker.hide_error.connect(self.statusbar.delete_message)
+            server_vbox.table.worker.hide_error.connect(self.statusbar.reset_message)
+
+            # show error icon in systray
+            server_vbox.table.worker.show_error.connect(systrayicon.set_error)
+            server_vbox.table.worker.hide_error.connect(systrayicon.reset_error)
 
             # tell notification worker to do something AFTER the table was updated
             server_vbox.table.status_changed.connect(self.worker_notification.start)
@@ -1904,7 +1927,7 @@ class StatusBar(QWidget):
 
 
     @pyqtSlot()
-    def delete_message(self):
+    def reset_message(self):
         """
             delete error message
         """

@@ -12,7 +12,7 @@ class Ui_dialog_authentication(object):
     def setupUi(self, dialog_authentication):
         dialog_authentication.setObjectName("dialog_authentication")
         dialog_authentication.resize(1400, 226)
-        dialog_authentication.setMinimumSize(QtCore.QSize(400, 0))
+        dialog_authentication.setMinimumSize(QtCore.QSize(350, 0))
         dialog_authentication.setModal(True)
         self.gridLayout = QtWidgets.QGridLayout(dialog_authentication)
         self.gridLayout.setObjectName("gridLayout")
