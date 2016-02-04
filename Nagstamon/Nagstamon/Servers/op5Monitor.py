@@ -243,10 +243,8 @@ class Op5MonitorServer(GenericServer):
                     nagitems['services'].append(n)
                 return Result()
         except:
-            print("========================================== b0rked ==========================================")
-
-            import traceback
-            traceback.print_exc(file=sys.stdout)
+            ###import traceback
+            ###traceback.print_exc(file=sys.stdout)
 
             self.isChecking = False
             # store status_code for returning result to tell GUI to reauthenticate

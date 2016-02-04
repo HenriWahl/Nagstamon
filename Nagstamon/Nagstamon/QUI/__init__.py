@@ -339,14 +339,26 @@ class MenuContext(MenuAtCursor):
         MenuAtCursor.__init__(self, parent=parent)
 
         # connect all relevant widgets which should show the context menu
-        self.menu_ready.connect(systrayicon.set_menu)
-        self.menu_ready.connect(statuswindow.toparea.button_hamburger_menu.set_menu)
-        self.menu_ready.connect(statuswindow.toparea.logo.set_menu)
-        self.menu_ready.connect(statuswindow.toparea.label_version.set_menu)
-        self.menu_ready.connect(statuswindow.toparea.label_empty_space.set_menu)
-        self.menu_ready.connect(statuswindow.statusbar.logo.set_menu)
+        #self.menu_ready.connect(systrayicon.set_menu)
+        #self.menu_ready.connect(statuswindow.toparea.button_hamburger_menu.set_menu)
+        #self.menu_ready.connect(statuswindow.toparea.logo.set_menu)
+        #self.menu_ready.connect(statuswindow.toparea.label_version.set_menu)
+        #self.menu_ready.connect(statuswindow.toparea.label_empty_space.set_menu)
+        #self.menu_ready.connect(statuswindow.statusbar.logo.set_menu)
+        #self.menu_ready.connect(statuswindow.label_error.logo.set_menu)
+
+        for widget in systrayicon,\
+                      statuswindow.toparea.button_hamburger_menu,\
+                      statuswindow.toparea.logo,\
+                      statuswindow.toparea.label_version,\
+                      statuswindow.toparea.label_empty_space,\
+                      statuswindow.statusbar.logo,\
+                      statuswindow.statusbar.label_message:
+            self.menu_ready.connect(widget.set_menu)
+
         for color_label in statuswindow.statusbar.color_labels.values():
             self.menu_ready.connect(color_label.set_menu)
+
         dialogs.settings.changed.connect(self.initialize)
 
         self.initialize()
@@ -708,6 +720,10 @@ class StatusWindow(QWidget):
             label.mouse_entered.connect(self.show_window_after_checking_for_hover)
             label.mouse_released.connect(self.show_window_after_checking_for_clicking)
 
+        # connect message label to hover
+        self.statusbar.label_message.mouse_entered.connect(self.show_window_after_checking_for_hover)
+        self.statusbar.label_message.mouse_released.connect(self.show_window_after_checking_for_hover)
+
         # when logo in toparea was pressed hurry up to save the position so the statusbar will not jump
         self.toparea.logo.window_moved.connect(self.store_position)
         self.toparea.logo.window_moved.connect(self.hide_window)
@@ -930,6 +946,10 @@ class StatusWindow(QWidget):
 
             # if problems go themselves there is no need to notify user anymore
             server_vbox.table.worker.problems_vanished.connect(self.worker_notification.stop)
+
+            # show error message in statusbar
+            server_vbox.table.worker.show_error.connect(self.statusbar.set_message)
+            server_vbox.table.worker.hide_error.connect(self.statusbar.delete_message)
 
             # tell notification worker to do something AFTER the table was updated
             server_vbox.table.status_changed.connect(self.worker_notification.start)
@@ -1723,6 +1743,9 @@ class StatusBar(QWidget):
     labels_invert = pyqtSignal()
     labels_reset = pyqtSignal()
 
+    # flag about error label is show or not
+    message_shown = False
+
     def __init__(self, parent=None):
         QWidget.__init__(self, parent=parent)
 
@@ -1734,6 +1757,7 @@ class StatusBar(QWidget):
         # define labels first to get their size for svg logo dimensions
         self.color_labels = OrderedDict()
         self.color_labels['OK'] = StatusBarLabel('OK', parent=parent)
+
         for state in COLORS:
             self.color_labels[state] =  StatusBarLabel(state, parent=parent)
             self.labels_invert.connect(self.color_labels[state].invert)
@@ -1744,14 +1768,23 @@ class StatusBar(QWidget):
                             self.color_labels['OK'].fontMetrics().height(),
                             self.color_labels['OK'].fontMetrics().height(),
                             parent=parent)
+
+        # label for error message(s)
+        self.label_message = StatusBarLabel('error', parent=parent)
+        self.labels_invert.connect(self.label_message.invert)
+        self.labels_reset.connect(self.label_message.reset)
+
         # add widgets
         self.hbox.addWidget(self.logo)
         self.hbox.addWidget(self.color_labels['OK'])
-        self.color_labels['OK'].show()
 
         # add state labels
         for state in COLORS:
             self.hbox.addWidget(self.color_labels[state])
+
+        # label for error messages
+        self.hbox.addWidget(self.label_message)
+        self.label_message.hide()
 
         # when there are new settings/colors refresh labels
         dialogs.settings.changed.connect(self.reset)
@@ -1796,7 +1829,7 @@ class StatusBar(QWidget):
                 label.adjustSize()
                 all_numbers += label.number
 
-        if all_numbers == 0:
+        if all_numbers == 0 and not self.message_shown:
             self.color_labels['OK'].show()
             self.color_labels['OK'].adjustSize()
         else:
@@ -1851,10 +1884,33 @@ class StatusBar(QWidget):
             if label.fontMetrics().height() > height:
                 height = label.fontMetrics().height()
 
+        self.label_message.setFont(FONT)
+
+        # adjust logo size to fit to label size
         self.logo.adjust_size(height, height)
 
         # avoid flickerung/artefact by updating immediately
         self.summarize_states()
+
+
+    @pyqtSlot(str)
+    def set_message(self, message):
+        """
+            display error message
+        """
+        self.message_shown = True
+        self.label_message.setText(message)
+        self.label_message.show()
+
+
+    @pyqtSlot()
+    def delete_message(self):
+        """
+            delete error message
+        """
+        self.message_shown = False
+        self.label_message.setText('')
+        self.label_message.hide()
 
 
 class StatusBarLabel(Draggable_Label):
@@ -2812,6 +2868,9 @@ class TableWidget(QTableWidget):
         button_authenticate_show = pyqtSignal()
         button_authenticate_hide = pyqtSignal()
 
+        # signals to control error message in statusbar
+        show_error = pyqtSignal(str)
+        hide_error = pyqtSignal()
 
         def __init__(self, parent=None, server=None):
             QObject.__init__(self)
@@ -2839,6 +2898,8 @@ class TableWidget(QTableWidget):
                    self.server.status_code < 400 and\
                    not self.server.refresh_authentication:
                     self.change_label_status.emit('Connected', '')
+                    # tell statusbar there is no error
+                    self.hide_error.emit()
                 else:
                     # try to display some more user friendly error description
                     if status.error.startswith('requests.exceptions.ConnectTimeout'):
@@ -2851,6 +2912,9 @@ class TableWidget(QTableWidget):
                     else:
                         # kick out line breaks to avoid broken status window
                         self.change_label_status.emit(self.server.status_description.replace('\n', ''), '')
+
+                    # tell statusbar there is some error to display
+                    self.show_error.emit('ERROR')
 
                 # depending on authentication state show reauthentication button
                 if self.server.refresh_authentication:
