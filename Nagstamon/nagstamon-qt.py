@@ -30,13 +30,10 @@ socket.setdefaulttimeout(30)
 
 try:
     if __name__ == "__main__":
-
-        app = QApplication(sys.argv)
-
         # Initialize global configuration
         from Nagstamon.Config import (conf, RESOURCES)
 
-        from Nagstamon.QUI import (statuswindow, check_version)
+        from Nagstamon.QUI import (APP, statuswindow, check_version)
 
         statuswindow.show()
         statuswindow.adjustSize()
@@ -44,7 +41,7 @@ try:
         if conf.check_for_new_version == True:
             check_version.check(start_mode = True)
 
-        sys.exit(app.exec_())
+        sys.exit(APP.exec_())
 
 
 

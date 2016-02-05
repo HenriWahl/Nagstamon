@@ -84,8 +84,17 @@ if not platform.system() in ['Darwin', 'Windows']:
     except:
         print('No DBus for desktop notification available.')
 
+# global application instance
+APP = QApplication(sys.argv)
+APP.setDesktopSettingsAware(False)
+APP.setEffectEnabled(Qt.UI_AnimateTooltip)
+APP.setEffectEnabled(Qt.UI_FadeTooltip)
+
 # fixed icons for hosts/services attributes
 ICONS = dict()
+
+# static empty list for cellwidgets without icons - not necessary to create a new list with every cellwidget
+ICONS_FALSE = [False]
 
 # fixed shortened and lowered color names for cells, also used by statusbar label snippets
 COLORS = OrderedDict([('DOWN', 'color_down_'),
@@ -117,7 +126,7 @@ SORT_ORDER = {'descending': True, 'ascending': False, 0: True, 1: False}
 SPACE = 10
 
 # save default font to be able to reset to it
-DEFAULT_FONT = QApplication.font()
+DEFAULT_FONT = APP.font()
 
 # take global FONT from conf if it exists
 if conf.font != '':
@@ -134,10 +143,11 @@ NUMBER_OF_DISPLAY_CHANGES = 0
 # this way grid styles do not have to be evaluated freshly in every cell
 
 CSS_GRID_FALSE = ''
-CSS_GRID_TRUE = 'border-style: dotted none none dotted;'\
-                'border-width: 1px;'
-CSS_GRID_ICON_TRUE = 'border-style: dotted none none none;'\
-                     'border-width: 1px;'
+CSS_GRID_TRUE = '''border-style: dotted hide hide dotted;
+                   border-width: 1px;'''
+CSS_GRID_ICON_TRUE = '''padding-right: 5px;
+                        border-style: dotted hide hide hide;
+                        border-width: 1px;'''
 
 CSS_GRID = {False: CSS_GRID_FALSE,
             True: CSS_GRID_TRUE,
@@ -150,8 +160,8 @@ CSS_GRID = {False: CSS_GRID_FALSE,
             (False, 5): CSS_GRID_FALSE,
             (False, 6): CSS_GRID_FALSE,
 
-            (True, 0): 'border-style: dotted none none none;'
-                       'border-width: 1px;',
+            (True, 0): '''border-style: dotted hide hide hide;
+                          border-width: 1px;''',
             (True, 1): CSS_GRID_TRUE,
             (True, 2): CSS_GRID_TRUE,
             (True, 3): CSS_GRID_TRUE,
@@ -168,6 +178,10 @@ CSS_GRID_ICON = {False: CSS_GRID_FALSE,
                  (True, 0): CSS_GRID_ICON_TRUE,
                  (True, 1): CSS_GRID_ICON_TRUE}
 
+
+# set style for tooltips globally - to sad not all properties can be set here
+APP.setStyleSheet('''QToolTip { margin: 3px;
+                                }''')
 
 class HBoxLayout(QHBoxLayout):
     """
@@ -711,7 +725,7 @@ class StatusWindow(QWidget):
         self.hide()
 
         # avoid quitting when using Qt.Tool flag and closing settings dialog
-        QApplication.setQuitOnLastWindowClosed(False)
+        APP.setQuitOnLastWindowClosed(False)
 
         # show tooltips even if popup window has no focus
         self.setAttribute(Qt.WA_AlwaysShowToolTips)
@@ -772,7 +786,7 @@ class StatusWindow(QWidget):
 
         # connect message label to hover
         self.statusbar.label_message.mouse_entered.connect(self.show_window_after_checking_for_hover)
-        self.statusbar.label_message.mouse_released.connect(self.show_window_after_checking_for_hover)
+        self.statusbar.label_message.mouse_released.connect(self.show_window_after_checking_for_clicking)
 
         # when logo in toparea was pressed hurry up to save the position so the statusbar will not jump
         self.toparea.logo.window_moved.connect(self.store_position)
@@ -1079,7 +1093,7 @@ class StatusWindow(QWidget):
     @pyqtSlot()
     def show_window_after_checking_for_hover(self):
         """
-            being called after hovering over statusbar - check if wondiw should be showed
+            being called after hovering over statusbar - check if window should be showed
         """
         if conf.popup_details_hover:
             self.show_window()
@@ -1798,7 +1812,10 @@ class StatusBar(QWidget):
     labels_reset = pyqtSignal()
 
     # flag about error label is show or not
-    message_shown = False
+    ###message_shown = False
+
+    # count errors to know if error label has to be shown
+    error_count = 0
 
     def __init__(self, parent=None):
         QWidget.__init__(self, parent=parent)
@@ -1851,9 +1868,6 @@ class StatusBar(QWidget):
 
         self.adjust_size()
 
-        # first summary
-        ###self.summarize_states()
-
 
     @pyqtSlot()
     def summarize_states(self):
@@ -1883,7 +1897,8 @@ class StatusBar(QWidget):
                 label.adjustSize()
                 all_numbers += label.number
 
-        if all_numbers == 0 and not self.message_shown:
+        ###if all_numbers == 0 and not self.message_shown:
+        if all_numbers == 0 and self.error_count == 0:
             self.color_labels['OK'].show()
             self.color_labels['OK'].adjustSize()
         else:
@@ -1950,9 +1965,10 @@ class StatusBar(QWidget):
     @pyqtSlot(str)
     def set_message(self, message):
         """
-            display error message
+            display error message if any error exists
         """
-        self.message_shown = True
+        ###self.message_shown = True
+        self.error_count += 1
         self.label_message.setText(message)
         self.label_message.show()
 
@@ -1960,11 +1976,13 @@ class StatusBar(QWidget):
     @pyqtSlot()
     def reset_message(self):
         """
-            delete error message
+            delete error message if there is no error
         """
-        self.message_shown = False
-        self.label_message.setText('')
-        self.label_message.hide()
+        ###self.message_shown = False
+        self.error_count -= 1
+        if self.error_count == 0:
+            self.label_message.setText('')
+            self.label_message.hide()
 
 
 class StatusBarLabel(Draggable_Label):
@@ -1984,10 +2002,11 @@ class StatusBarLabel(Draggable_Label):
 
     def __init__(self, state, parent=None):
         Draggable_Label.__init__(self, parent=parent)
-        self.setStyleSheet('padding-left: 1px;'
-                           'padding-right: 1px;'
-                           'color: %s; background-color: %s;' % (conf.__dict__['color_%s_text' % (state.lower())],
-                                                                 conf.__dict__['color_%s_background' % (state.lower())]))
+        self.setStyleSheet('''padding-left: 1px;
+                              padding-right: 1px;
+                              color: %s; background-color: %s;'''
+                              % (conf.__dict__['color_%s_text' % (state.lower())],
+                                 conf.__dict__['color_%s_background' % (state.lower())]))
         # just let labels grow as much as they need
         self.setSizePolicy(QSizePolicy.Maximum, QSizePolicy.Maximum)
 
@@ -2006,18 +2025,20 @@ class StatusBarLabel(Draggable_Label):
 
     @pyqtSlot()
     def invert(self):
-        self.setStyleSheet('padding-left: 1px;'
-                           'padding-right: 1px;'
-                           'color: %s; background-color: %s;' % (conf.__dict__['color_%s_background' % (self.state.lower())],
-                                                                 conf.__dict__['color_%s_text' % (self.state.lower())]))
+        self.setStyleSheet('''padding-left: 1px;
+                              padding-right: 1px;
+                              color: %s; background-color: %s;'''
+                              % (conf.__dict__['color_%s_background' % (self.state.lower())],
+                                 conf.__dict__['color_%s_text' % (self.state.lower())]))
 
 
     @pyqtSlot()
     def reset(self):
-        self.setStyleSheet('padding-left: 1px;'
-                           'padding-right: 1px;'
-                           'color: %s; background-color: %s;' % (conf.__dict__['color_%s_text' % (self.state.lower())],
-                                                                 conf.__dict__['color_%s_background' % (self.state.lower())]))
+        self.setStyleSheet('''padding-left: 1px;
+                              padding-right: 1px;
+                              color: %s; background-color: %s;'''
+                              % (conf.__dict__['color_%s_text' % (self.state.lower())],
+                                 conf.__dict__['color_%s_background' % (self.state.lower())]))
 
 
 class TopArea(QWidget):
@@ -2047,11 +2068,11 @@ class TopArea(QWidget):
 
         self.button_hamburger_menu = PushButton_Hamburger()
         self.button_hamburger_menu.setIcon(QIcon('%s%smenu.svg' % (RESOURCES, os.sep)))
-        self.button_hamburger_menu.setStyleSheet('QPushButton {border-width: 0px;'
-                                                              'border-style: none;}'
-                                                 'QPushButton:hover {background-color: white;'
-                                                                    'border-radius: 4px;}'
-                                                 'QPushButton::menu-indicator{image:url(none.jpg);}')
+        self.button_hamburger_menu.setStyleSheet('''QPushButton {border-width: 0px;
+                                                                 border-style: none;}
+                                                    QPushButton:hover {background-color: white;
+                                                                      border-radius: 4px;}
+                                                    QPushButton::menu-indicator{image:url(none.jpg);}''')
         self.hamburger_menu = MenuAtCursor()
         action_exit = QAction("Exit", self)
         action_exit.triggered.connect(exit)
@@ -2061,11 +2082,11 @@ class TopArea(QWidget):
 
         self.button_close = QPushButton()
         self.button_close.setIcon(QIcon('%s%sclose.svg' % (RESOURCES, os.sep)))
-        self.button_close.setStyleSheet('QPushButton {border-width: 0px;'
-                                                     'border-style: none;'
-                                                     'margin-right: 5px;}'
-                                        'QPushButton:hover {background-color: red;'
-                                                           'border-radius: 4px;}')
+        self.button_close.setStyleSheet('''QPushButton {border-width: 0px;
+                                                        border-style: none;
+                                                        margin-right: 5px;}
+                                           QPushButton:hover {background-color: red;
+                                                              border-radius: 4px;}''')
 
         self.hbox.addWidget(self.logo)
         self.hbox.addWidget(self.label_version)
@@ -2107,8 +2128,8 @@ class ServerStatusLabel(Draggable_Label):
 
         # set stylesheet depending on submitted style
         if style == 'critical':
-            self.setStyleSheet('color: red;'
-                               'font-weight: bold;')
+            self.setStyleSheet('''color: red;
+                                 font-weight: bold;''')
         elif style == '':
             self.setStyleSheet('')
         # set new text
@@ -2320,7 +2341,8 @@ class ServerVBox(QVBoxLayout):
         self.label.setText("<big><b>%s@%s</b></big>" % (self.server.username, self.server.name))
         # let label padding keep top and bottom space - apparently not necessary on OSX
         if platform.system() != 'Darwin':
-            self.label.setStyleSheet('padding-top: {0}px; padding-bottom: {0}px;'.format(SPACE))
+            self.label.setStyleSheet('''padding-top: {0}px;
+                                        padding-bottom: {0}px;'''.format(SPACE))
 
 
 class CellWidget(QWidget):
@@ -2360,14 +2382,22 @@ class CellWidget(QWidget):
 
         self.label.setStyleSheet('padding: 5px;')
 
+        # default for most of cells - no icons
+        self.icon_labels = False
+
         # hosts and services might contain attribute icons
-        if column in (0, 1) and icons is not [False]:
+        if column in (0, 1) and icons is not ICONS_FALSE:
+
+            # if there are icons store them in list
+            self.icon_labels = []
+
             for icon in icons:
                 icon_label = QLabel(parent=self)
                 icon_label.setPixmap(icon.pixmap(self.label.fontMetrics().height(), self.label.fontMetrics().height()))
-                icon_label.setStyleSheet('padding-right: 5px;'
-                                         '%s' % (CSS_GRID_ICON[(conf.show_grid, column)]))
-                self.hbox.addWidget(icon_label)
+                icon_label.setStyleSheet(CSS_GRID_ICON[(conf.show_grid, column)])
+                self.icon_labels.append(icon_label)
+                # take last appended icon_label
+                self.hbox.addWidget(self.icon_labels[-1])
 
         # paint cell appropriately
         self.colorize(column)
@@ -2377,19 +2407,35 @@ class CellWidget(QWidget):
         """
             paint cell with color fitting state and grid option
         """
-        self.setStyleSheet('color: %s;'
-                           'background-color: %s;'
-                            '%s' % (self.color,
-                                    self.background,
-                                    CSS_GRID[(conf.show_grid, column)]))
+        self.setStyleSheet('''color: %s;
+                              background-color: %s;
+                              %s''' % (self.color,
+                                       self.background,
+                                       CSS_GRID[(conf.show_grid, column)]))
+
+        if self.icon_labels:
+            for icon_label in self.icon_labels:
+                icon_label.setStyleSheet(CSS_GRID_ICON[(conf.show_grid, column)])
 
 
-    def highlight(self):
-        self.setStyleSheet('color: %s;'
-                           'background-color: %s;'
-                           '%s' % (self.color,
-                                   'darkgrey',
-                                   CSS_GRID[conf.show_grid]))
+    def highlight(self, column):
+        """
+            highlight row when hovering over it
+        """
+        self.setStyleSheet('''color: %s;
+                              background-color: %s;
+                              border-style: hide;
+                              border-width: 1px;'''
+                              % ('black',
+                                 'white'))
+
+        if self.icon_labels:
+            for icon_label in self.icon_labels:
+                icon_label.setStyleSheet('''padding-right: 5px;
+                                            border-style: hide;
+                                            border-width: 1px;''')
+
+        ###                           CSS_GRID[conf.show_grid]))
 
 
     def enterEvent(self, eventt):
@@ -2870,7 +2916,7 @@ class TableWidget(QTableWidget):
     def highlight_row(self, row):
         for column in range(0, self.columnCount()):
             if self.cellWidget(row, column) != None:
-                self.cellWidget(row, column).highlight()
+                self.cellWidget(row, column).highlight(column)
 
         # store current highlighted row for context menu
         self.highlighted_row = row
@@ -2892,9 +2938,8 @@ class TableWidget(QTableWidget):
         """
         # tell thread to quit
         self.worker_thread.quit()
-        ###self.worker_thread.terminate()
         # wait until thread is really stopped
-        self.worker_thread.wait(1000)
+        self.worker_thread.wait(2000)
 
 
     class Worker(QObject):
@@ -3022,19 +3067,12 @@ class TableWidget(QTableWidget):
             for row, nagitem in enumerate(sorted(first_sort, key=methodcaller('compare_%s' % \
                                                     (sort_column)), reverse=reverse)):
 
-                # on Qt 5.5.0 there is a bug in OSX version which renders tooltips useless
-                # see https://bugreports.qt.io/browse/QTBUG-26669
-                # thus disable tooltips on MacOSX
-                if not (platform.system() == 'Darwin' and QT_VERSION_STR == '5.5.1'):
-                    # only if tooltips are wanted take status_information for the whole row
-                    if conf.show_tooltips:
-                        tooltip = '<div style=color:black;' \
-                                  '           white-space:pre><b>{0}: {1}</b></div>' \
-                                  '<div style=color:black>{2}</div>'.format(nagitem.host,
-                                                        nagitem.service,
-                                                        nagitem.status_information)
-                    else:
-                        tooltip = ''
+                # only if tooltips are wanted take status_information for the whole row
+                if conf.show_tooltips:
+                    tooltip = '''<div style=color:black;white-space:pre;margin:3px;><b>{0}: {1}</b></div>
+                                 <div style=color:black>{2}</div>'''.format(nagitem.host,
+                                                                            nagitem.service,
+                                                                            nagitem.status_information)
                 else:
                     tooltip = ''
 
@@ -3087,7 +3125,7 @@ class TableWidget(QTableWidget):
                                        self.server.events_history[hash] == True:
                                         icons.append(ICONS['new'])
                     else:
-                        icons = [False]
+                        icons = ICONS_FALSE
 
                     # store text and icons in cache
                     row_cache.append({ 'text': text, 'icons': icons})
@@ -4013,11 +4051,11 @@ class Dialog_Settings(Dialog):
         """
         # color buttons
         for color in [x for x in conf.__dict__ if x.startswith('color_')]:
-            self.ui.__dict__['input_button_%s' % (color)].setStyleSheet('background-color: %s;'
-                                                                        'border-width: 1px;'
-                                                                        'border-color: black;'
-                                                                        'border-style: solid;'
-                                                                         % conf.__dict__[color])
+            self.ui.__dict__['input_button_%s' % (color)].setStyleSheet('''background-color: %s;
+                                                                           border-width: 1px;
+                                                                           border-color: black;
+                                                                           border-style: solid;'''
+                                                                           % conf.__dict__[color])
         # example color labels
         for label in [x for x in self.ui.__dict__ if x.startswith('label_color_')]:
             status = label.split('label_color_')[1]
@@ -4035,11 +4073,11 @@ class Dialog_Settings(Dialog):
         for default_color in [x for x in conf.__dict__ if x.startswith('default_color_')]:
             # cut 'default_' off to get color
             color = default_color.split('default_')[1]
-            self.ui.__dict__['input_button_%s' % (color)].setStyleSheet('background-color: %s;'
-                                                                        'border-width: 1px;'
-                                                                        'border-color: black;'
-                                                                        'border-style: solid;'
-                                                                         % conf.__dict__[default_color])
+            self.ui.__dict__['input_button_%s' % (color)].setStyleSheet('''background-color: %s;
+                                                                           border-width: 1px;
+                                                                           border-color: black;
+                                                                           border-style: solid;'''
+                                                                           % conf.__dict__[default_color])
         # example color labels
         for label in [x for x in self.ui.__dict__ if x.startswith('label_color_')]:
             status = label.split('label_color_')[1]
@@ -4064,11 +4102,11 @@ class Dialog_Settings(Dialog):
         new_color = QColorDialog.getColor(QColor(color), parent=self.window)
         # if canceled the color is invalid
         if new_color.isValid():
-            self.ui.__dict__['input_button_color_%s' % (item)].setStyleSheet('background-color: %s;'
-                                                                             'border-width: 1px;'
-                                                                             'border-color: black;'
-                                                                             'border-style: solid;'
-                                                                             % new_color.name())
+            self.ui.__dict__['input_button_color_%s' % (item)].setStyleSheet('''background-color: %s;
+                                                                                border-width: 1px;
+                                                                                border-color: black;
+                                                                                border-style: solid;'''
+                                                                                % new_color.name())
             status = item.split('_')[0]
             # get color value from stylesheet to paint example
             text = self.ui.__dict__['input_button_color_%s_text' % (status)].styleSheet()
@@ -4076,8 +4114,9 @@ class Dialog_Settings(Dialog):
             background = self.ui.__dict__['input_button_color_%s_background' % (status)].styleSheet()
             background = background.split(':')[1].strip().split(';')[0]
             # set example color
-            self.ui.__dict__['label_color_%s' % (status)].setStyleSheet('color: %s; background: %s' %
-                                                                       (text, background))
+            self.ui.__dict__['label_color_%s' % (status)].setStyleSheet('''color: %s;
+                                                                           background: %s'''
+                                                                           % (text, background))
 
 
     @pyqtSlot()
@@ -4085,7 +4124,6 @@ class Dialog_Settings(Dialog):
         """
             use font dialog to choose a font
         """
-        #self.font = QFontDialog.getFont(QApplication.font(), parent=self.window)[0]
         self.font = QFontDialog.getFont(self.font, parent=self.window)[0]
         self.ui.label_font.setFont(self.font)
 
@@ -5093,14 +5131,14 @@ def exit():
     #statuswindow.worker_thread.wait()
 
     # bye bye
-    QApplication.instance().quit()
+    APP.instance().quit()
 
 
 # check for updates
 check_version = CheckVersion()
 
 # access to variuos desktop parameters
-desktop = QApplication.desktop()
+desktop = APP.desktop()
 
 # DBus initialization
 dbus_connection = DBus()
@@ -5120,4 +5158,3 @@ menu = MenuContext()
 
 # versatile mediaplayer
 mediaplayer = MediaPlayer()
-
