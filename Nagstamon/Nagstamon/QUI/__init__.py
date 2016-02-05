@@ -130,13 +130,44 @@ else:
 NUMBER_OF_DISPLAY_CHANGES = 0
 
 # static CSS part of tablewidget cell colorization
-# value selection depends on conf.show_grid
-CSS_GRID = {False: '',\
-            True: 'border-style: none none dotted dotted;'
-                  'border-width: 1px;'}
-CSS_GRID_ICON = {False: '',\
-            True: 'border-style: none none dotted none;'
-                  'border-width: 1px;'}
+# value selection depends on conf.show_grid and column
+# this way grid styles do not have to be evaluated freshly in every cell
+
+CSS_GRID_FALSE = ''
+CSS_GRID_TRUE = 'border-style: dotted none none dotted;'\
+                'border-width: 1px;'
+CSS_GRID_ICON_TRUE = 'border-style: dotted none none none;'\
+                     'border-width: 1px;'
+
+CSS_GRID = {False: CSS_GRID_FALSE,
+            True: CSS_GRID_TRUE,
+
+            (False, 0): CSS_GRID_FALSE,
+            (False, 1): CSS_GRID_FALSE,
+            (False, 2): CSS_GRID_FALSE,
+            (False, 3): CSS_GRID_FALSE,
+            (False, 4): CSS_GRID_FALSE,
+            (False, 5): CSS_GRID_FALSE,
+            (False, 6): CSS_GRID_FALSE,
+
+            (True, 0): 'border-style: dotted none none none;'
+                       'border-width: 1px;',
+            (True, 1): CSS_GRID_TRUE,
+            (True, 2): CSS_GRID_TRUE,
+            (True, 3): CSS_GRID_TRUE,
+            (True, 4): CSS_GRID_TRUE,
+            (True, 5): CSS_GRID_TRUE,
+            (True, 6): CSS_GRID_TRUE}
+
+CSS_GRID_ICON = {False: CSS_GRID_FALSE,
+                 True: CSS_GRID_ICON_TRUE,
+
+                 (False, 0): CSS_GRID_FALSE,
+                 (False, 1): CSS_GRID_FALSE,
+
+                 (True, 0): CSS_GRID_ICON_TRUE,
+                 (True, 1): CSS_GRID_ICON_TRUE}
+
 
 class HBoxLayout(QHBoxLayout):
     """
@@ -2335,26 +2366,30 @@ class CellWidget(QWidget):
                 icon_label = QLabel(parent=self)
                 icon_label.setPixmap(icon.pixmap(self.label.fontMetrics().height(), self.label.fontMetrics().height()))
                 icon_label.setStyleSheet('padding-right: 5px;'
-                                         '%s' % (CSS_GRID_ICON[conf.show_grid]))
+                                         '%s' % (CSS_GRID_ICON[(conf.show_grid, column)]))
                 self.hbox.addWidget(icon_label)
 
         # paint cell appropriately
-        self.colorize()
+        self.colorize(column)
 
 
-    def colorize(self):
+    def colorize(self, column):
         """
             paint cell with color fitting state and grid option
         """
         self.setStyleSheet('color: %s;'
                            'background-color: %s;'
-                            '%s' % (self.color, self.background, CSS_GRID[conf.show_grid]))
+                            '%s' % (self.color,
+                                    self.background,
+                                    CSS_GRID[(conf.show_grid, column)]))
 
 
     def highlight(self):
         self.setStyleSheet('color: %s;'
                            'background-color: %s;'
-                           '%s' % (self.color, 'darkgrey',  CSS_GRID[conf.show_grid]))
+                           '%s' % (self.color,
+                                   'darkgrey',
+                                   CSS_GRID[conf.show_grid]))
 
 
     def enterEvent(self, eventt):
@@ -2847,7 +2882,7 @@ class TableWidget(QTableWidget):
         """
         for column in range(0, self.columnCount()):
             if self.cellWidget(row, column) != None:
-                self.cellWidget(row, column).colorize()
+                self.cellWidget(row, column).colorize(column)
 
 
     @pyqtSlot()
