@@ -94,6 +94,21 @@ def get_status_count():
     return(state_count)
 
 
+def get_errors():
+    """
+        find out if any server has any error, used by statusbar error label
+    """
+
+    errors = False
+
+    for server in get_enabled_servers():
+        if server.has_error:
+            return True
+
+    # return default value
+    return False
+
+
 def create_server(server=None):
     # create Server from config
     if server.type not in SERVER_TYPES:

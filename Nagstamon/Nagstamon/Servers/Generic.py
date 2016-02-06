@@ -123,6 +123,7 @@ class GenericServer(object):
         self.status = ''
         self.status_description = ''
         self.status_code = 0
+        self.has_error = False
 
         # The events_* are recycled from GUI.py
         # history of events to track status changes for notifications

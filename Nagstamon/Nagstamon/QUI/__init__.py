@@ -50,7 +50,8 @@ from Nagstamon.Servers import (SERVER_TYPES,
                                create_server,
                                get_enabled_servers,
                                get_worst_status,
-                               get_status_count)
+                               get_status_count,
+                               get_errors)
 
 from Nagstamon.Helpers import (is_found_by_re,
                                debug_queue,
@@ -86,7 +87,7 @@ if not platform.system() in ['Darwin', 'Windows']:
 
 # global application instance
 APP = QApplication(sys.argv)
-APP.setDesktopSettingsAware(False)
+###APP.setDesktopSettingsAware(False)
 APP.setEffectEnabled(Qt.UI_AnimateTooltip)
 APP.setEffectEnabled(Qt.UI_FadeTooltip)
 
@@ -1012,8 +1013,8 @@ class StatusWindow(QWidget):
             server_vbox.table.worker.problems_vanished.connect(self.worker_notification.stop)
 
             # show error message in statusbar
-            server_vbox.table.worker.show_error.connect(self.statusbar.set_message)
-            server_vbox.table.worker.hide_error.connect(self.statusbar.reset_message)
+            server_vbox.table.worker.show_error.connect(self.statusbar.set_error)
+            server_vbox.table.worker.hide_error.connect(self.statusbar.reset_error)
 
             # show error icon in systray
             server_vbox.table.worker.show_error.connect(systrayicon.set_error)
@@ -1811,11 +1812,6 @@ class StatusBar(QWidget):
     labels_invert = pyqtSignal()
     labels_reset = pyqtSignal()
 
-    # flag about error label is show or not
-    ###message_shown = False
-
-    # count errors to know if error label has to be shown
-    error_count = 0
 
     def __init__(self, parent=None):
         QWidget.__init__(self, parent=parent)
@@ -1898,7 +1894,7 @@ class StatusBar(QWidget):
                 all_numbers += label.number
 
         ###if all_numbers == 0 and not self.message_shown:
-        if all_numbers == 0 and self.error_count == 0:
+        if all_numbers == 0 and not get_errors():
             self.color_labels['OK'].show()
             self.color_labels['OK'].adjustSize()
         else:
@@ -1963,24 +1959,20 @@ class StatusBar(QWidget):
 
 
     @pyqtSlot(str)
-    def set_message(self, message):
+    def set_error(self, message):
         """
             display error message if any error exists
         """
-        ###self.message_shown = True
-        self.error_count += 1
         self.label_message.setText(message)
         self.label_message.show()
 
 
     @pyqtSlot()
-    def reset_message(self):
+    def reset_error(self):
         """
             delete error message if there is no error
         """
-        ###self.message_shown = False
-        self.error_count -= 1
-        if self.error_count == 0:
+        if not get_errors():
             self.label_message.setText('')
             self.label_message.hide()
 
@@ -3011,6 +3003,10 @@ class TableWidget(QTableWidget):
                    self.server.status_code < 400 and\
                    not self.server.refresh_authentication:
                     self.change_label_status.emit('Connected', '')
+
+                    # reset server error flag, needed for error label in statusbar
+                    self.server.has_error = False
+
                     # tell statusbar there is no error
                     self.hide_error.emit()
                 else:
@@ -3025,6 +3021,9 @@ class TableWidget(QTableWidget):
                     else:
                         # kick out line breaks to avoid broken status window
                         self.change_label_status.emit(self.server.status_description.replace('\n', ''), '')
+
+                    # set server error flag, needed for error label in statusbar
+                    self.server.has_error = True
 
                     # tell statusbar there is some error to display
                     self.show_error.emit('ERROR')
