@@ -871,6 +871,9 @@ class StatusWindow(QWidget):
         # flag to mark if window is shown or nor
         self.is_shown = False
 
+        # store show_window timestamp to avoid flickering window in KDE5 with systray
+        self.is_shown_timestamp = time.time()
+
         # if status_ok is true no server_vboxes are needed
         self.status_ok = True
 
@@ -878,7 +881,7 @@ class StatusWindow(QWidget):
         self.timer = QTimer(self)
 
         # flag to avoid hiding window when a menu is shown
-        self.locked = False
+        ###self.locked = False
 
         # a thread + worker is necessary to do actions thread-safe in background
         # like debugging
@@ -1207,6 +1210,9 @@ class StatusWindow(QWidget):
 
                     self.show()
 
+                    # store timestamp to avoid flickering as in https://github.com/HenriWahl/Nagstamon/issues/184
+                    self.is_shown_timestamp = time.time()
+
                     # tell others like notification that statuswindow shows up now
                     self.showing.emit()
 
@@ -1228,24 +1234,27 @@ class StatusWindow(QWidget):
         if not conf.fullscreen:
             # only hide if shown and not locked or if not yet hidden if moving
             if self.is_shown == True or\
-               self.is_shown == True and self.moving == True:
-                if conf.statusbar_floating:
-                    self.statusbar.show()
-                    self.statusbar.adjustSize()
-                self.toparea.hide()
-                self.servers_scrollarea.hide()
-                self.setMinimumSize(1, 1)
-                self.adjustSize()
-                self.move(self.stored_x, self.stored_y)
+               self.is_shown == True and\
+               self.moving == True:
+                # only hide if shown at least a fraction of a second
+                if self.is_shown_timestamp + 0.1 < time.time():
+                    if conf.statusbar_floating:
+                        self.statusbar.show()
+                        self.statusbar.adjustSize()
+                    self.toparea.hide()
+                    self.servers_scrollarea.hide()
+                    self.setMinimumSize(1, 1)
+                    self.adjustSize()
+                    self.move(self.stored_x, self.stored_y)
 
-                # switch off
-                self.is_shown = False
+                    # switch off
+                    self.is_shown = False
 
-                # flag to reflect top-ness of window/statusbar
-                self.top = False
+                    # flag to reflect top-ness of window/statusbar
+                    self.top = False
 
-                # tell the world that window goes down
-                self.hiding.emit()
+                    # tell the world that window goes down
+                    self.hiding.emit()
 
 
     @pyqtSlot()
@@ -5009,7 +5018,7 @@ class DBus(QObject):
 
         if not platform.system() in ['Darwin', 'Windows']:
             if 'dbus' in sys.modules:
-                dbus_mainloop = DBusQtMainLoop(set_as_default=False)
+                dbus_mainloop = DBusQtMainLoop(set_as_default=True)
                 dbus_bus = SessionBus(dbus_mainloop)
                 dbus_object = dbus_bus.get_object('org.freedesktop.Notifications',
                                               '/org/freedesktop/Notifications')

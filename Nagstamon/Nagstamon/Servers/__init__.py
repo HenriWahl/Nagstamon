@@ -98,9 +98,6 @@ def get_errors():
     """
         find out if any server has any error, used by statusbar error label
     """
-
-    errors = False
-
     for server in get_enabled_servers():
         if server.has_error:
             return True
