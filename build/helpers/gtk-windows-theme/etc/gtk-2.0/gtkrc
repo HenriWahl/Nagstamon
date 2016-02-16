@@ -1,8 +1,0 @@
-gtk-theme-name = "MS-Windows"
-gtk-icon-theme-name = "Tango"
-gtk-fallback-icon-theme = "hicolor"
-gtk-alternative-button-order = 1
-gtk-alternative-sort-arrows = 1
-gtk-auto-mnemonics = 1
-gtk-show-input-method-menu = 0
-gtk-show-unicode-menu = 0

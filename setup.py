@@ -85,7 +85,7 @@ bdist_dmg_options = dict(volume_label = '{0} {1}'.format(NAME, VERSION),
                          applications_shortcut = False)
 
 executables = [
-    Executable('nagstamon-qt.py',
+    Executable('nagstamon.py',
                base=base,
                icon='Nagstamon/resources/nagstamon.ico')
 ]

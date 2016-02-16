@@ -1,8 +1,8 @@
-#!/usr/bin/env python
+#!/usr/bin/env python3
 # -*- coding: utf-8 -*-
 
 # Nagstamon - Nagios status monitor for your desktop
-# Copyright (C) 2008-2013 Henri Wahl <h.wahl@ifw-dresden.de> et al.
+# Copyright (C) 2008-2016 Henri Wahl <h.wahl@ifw-dresden.de> et al.
 #
 # This program is free software; you can redistribute it and/or modify
 # it under the terms of the GNU General Public License as published by
@@ -18,143 +18,79 @@
 # along with this program; if not, write to the Free Software
 # Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA  02110-1301, USA
 
-""" Experimental script for automated build
-"""
-
-from optparse import OptionParser
 import platform
-import os
+import os, os.path
 import sys
 import shutil
+import subprocess
+import zipfile
 
-if platform.system() == 'Windows':
-    try:
-        import win32api
-    except:
-        print
-        print "pyinstaller needs pywin32. Get it at http://sourceforge.net/projects/pywin32."
-        print
-        sys.exit()
+CURRENT_DIR = os.getcwd()
+sys.path.append('{0}{1}..{1}'.format(CURRENT_DIR, os.sep))
 
-INSTALLER_DIR = '../build/installer%s' % os.path.sep
-DEFAULT_LOCATION = os.path.join('..', 'Nagstamon')
-BUILD_HELPERS = 'helpers'
-REQUIRED_FILES = BUILD_HELPERS + os.sep + 'required_files.txt'
+from Nagstamon.Config import AppInfo
 
-# get version from central version file
-fversion = open('../VERSION')
-VERSION = fversion.readline().strip()
-fversion.close()
+VERSION = AppInfo.VERSION
+# InnoSetup does not like VersionInfoVersion with letters, only 0.0.0.0 schemed numbers
+if 'alpha' in VERSION.lower() or 'beta' in VERSION.lower():
+    VERSION_IS = VERSION.replace('alpha', '').replace('beta', '').replace('-', '.').replace('..', '.')
+    VERSION_IS = VERSION_IS.split('.')
+    version_segments = list()
+    for part in VERSION_IS:
+        if len(part) < 4:
+            version_segments.append(part)
+        else:
+            version_segments.append(part[0:4])
+            version_segments.append(part[4:])
+    VERSION_IS = '.'.join(version_segments)
+else:
+    VERSION_IS = VERSION
+ARCH = platform.architecture()[0][0:2]
+ARCH_OPTS = {'32': ('win32', 'win32', '', 'x86 x64'),
+             '64': ('win-amd64', 'amd64', '(X86)', 'x64')}
+PYTHON_VERSION = '{0}.{1}'.format(sys.version_info[0],
+                                  sys.version_info[1])
 
-def execute_script_lines(script_lines, opt_dict):
-    for line in script_lines:
-        command = line % opt_dict
-        print 'Running: %s' % command
-        os.system(command)
-
-def get_opt_dict(options):
-    opt_dict = vars(options)
-    opt_dict.update({ 'installer': INSTALLER_DIR, 'default_location': DEFAULT_LOCATION, 'version': VERSION })
-    return opt_dict
-
-def get_required_files(location, required_file_list):
-    all_files = []
-    for dir_path, dir_list, file_list in os.walk(location):
-        for file_name in required_file_list:
-            if file_name in file_list:
-                all_files.append(os.path.join(dir_path, file_name))
-    return all_files
-
-def get_all_files(location):
-    for dir_path, dir_list, file_list in os.walk(location):
-        for file_name in file_list:
-            yield os.path.join(dir_path, file_name)
+ISCC = r'{0}{1}Inno Setup 5{1}iscc.exe'.format(os.environ['PROGRAMFILES{0}'.format(ARCH_OPTS[ARCH][2])], os.sep)
 
 
 def winmain():
-    parser = OptionParser()
-    parser.add_option('-g', '--gtk', dest='gtk', help='GTK+ location', default=os.environ['ProgramFiles']+'\\Gtk+')
-    parser.add_option('-s', '--iscc', dest='iscc', help='ISCC executable file', default=os.environ['ProgramFiles']+'\\Inno Setup 5\\ISCC')
-    parser.add_option('-t', '--target', dest='target', help='Target application directory',
-                                                        default='.')
-    parser.add_option('-f', '--file', dest='file', help='Nagstamon exec script', default='')
-    parser.add_option('-i', '--iss', dest='iss', help='Inno setup installer file', default='nagstamon.iss')
-    parser.add_option('-p', '--pyinstaller', dest='pyinstaller', help='PyInstaller location', default='helpers\\pyinstaller-2.1')
-    parser.add_option('-o', '--omit-gtk', action='store_true', dest='omit_gtk', default=False,
-                                    help="Omits copying of required gtk files to application directory")
-    options, args = parser.parse_args()
+    DIR_BUILD_EXE = '{0}{1}exe.{2}-{3}'.format(CURRENT_DIR, os.sep, ARCH_OPTS[ARCH][0], PYTHON_VERSION)
+    DIR_BUILD_NAGSTAMON = '{0}{1}Nagstamon-{2}-win{3}'.format(CURRENT_DIR, os.sep, VERSION, ARCH)
+    FILE_ZIP = '{0}.zip'.format(DIR_BUILD_NAGSTAMON)
 
-    if not options.file:
-        options.file = '%s\\nagstamon.py' % options.target
+    # clean older binaries
+    for file in (DIR_BUILD_EXE, DIR_BUILD_NAGSTAMON, FILE_ZIP):
+        if os.path.exists(file):
+            try:
+                shutil.rmtree(file)
+            except:
+                os.remove(file)
 
-    opt_dict = get_opt_dict(options)
+    # go one directory up and run setup.py
+    os.chdir('{0}{1}..'.format(CURRENT_DIR, os.sep))
+    subprocess.call(['setup.py', 'build_exe'], shell=True)
+    os.rename(DIR_BUILD_EXE, DIR_BUILD_NAGSTAMON)
+    os.chdir(CURRENT_DIR)
 
-    opt_dict.update({ 'resources_dir': '..\\Nagstamon\\Nagstamon\\resources' })
-    opt_dict.update({ 'icon': opt_dict['resources_dir'] + '\\nagstamon.ico' })
-    opt_dict.update({ 'dist': 'dist\\nagstamon' })
-    # useless and disturbing DLLs - lousy workaround, pyinstaller 1.5 seems to do it (mostly) itself
-    opt_dict.update({ 'exclude_dlls':'USP10.DLL' })
-    # arguments for xcopying gtk windows theme stuff
-    opt_dict.update({ 'gtk-windows-theme':BUILD_HELPERS + os.sep + 'gtk-windows-theme' + os.sep + '*.*'})
+    # create .zip file
+    if os.path.exists(DIR_BUILD_NAGSTAMON):
+        zip_archive = zipfile.ZipFile(FILE_ZIP, mode='w', compression=zipfile.ZIP_DEFLATED)
+        zip_archive.write(os.path.basename(DIR_BUILD_NAGSTAMON))
+        for root, dirs, files in os.walk(os.path.basename(DIR_BUILD_NAGSTAMON)):
+            for file in files:
+                zip_archive.write('{0}{1}{2}'.format(root, os.sep, file ))
 
-    # Microsoft C runtime DLLs 2008 SP1 are needed on older systems 
-    if not os.path.exists('installer/windows/Microsoft.VC90.CRT.manifest') or\
-       not os.path.exists('installer/windows/msvcm90.dll') or\
-       not os.path.exists('installer/windows/msvcp90.dll') or\
-       not os.path.exists('installer/windows/msvcr90.dll'):
-        print "Please put Microsoft C runtime DLL 2008 SP1 files (Microsoft.VC90.CRT.manifest, msvcm90.dl, msvcp90.dll and  msvcr90.dll) into installer/windows."
-        sys.exit(1)
-
-    script_lines = [
-        '%(pyinstaller)s\pyinstaller.py --noconfirm nagstamon.spec',
-        'xcopy "%(resources_dir)s" dist\\nagstamon\\resources /y /e /i /h /EXCLUDE:helpers\excludelist.txt',
-        'xcopy "installer\\windows\\*.dll" dist\\nagstamon /y /i /h ',
-        'xcopy "installer\\windows\\*.manifest" dist\\nagstamon /y /i /h ',
-        'cd %(dist)s & del /q /f %(exclude_dlls)s & cd ..'
-    ]
-
-    execute_script_lines(script_lines, opt_dict)
-
-    if not options.omit_gtk:
-        dist_location = ['dist', 'nagstamon']
-        if os.path.isfile(REQUIRED_FILES):
-            required_file_list = [x.strip() for x in open(REQUIRED_FILES).readlines()]
-            for required_file in get_required_files(opt_dict['gtk'], required_file_list):
-                len_gtk_path = len(opt_dict['gtk'].split(os.path.sep))
-                dest_path = os.path.abspath(os.path.join(*dist_location + \
-                                                         required_file.split(os.path.sep)[len_gtk_path:]))
-                if not os.path.exists(dest_path):
-                    dir_name = os.path.dirname(dest_path)
-                    if not os.path.isdir(dir_name):
-                        os.makedirs(dir_name)
-                    shutil.copyfile(required_file, dest_path)
-
-        # copy gtk windows theme stuff to nagstamon directory
-        os.system('xcopy %(gtk-windows-theme)s dist\\nagstamon /y /e /i /h /EXCLUDE:helpers\excludelist.txt' % opt_dict)
-
-
-        if os.path.exists(os.path.join(*dist_location)):
-            iss_location = '%(target)s\\%(installer)s\\windows\\%(iss)s' % opt_dict
-            if os.path.isfile(iss_location):
-                iss_file = open(iss_location)
-                iss_temp_file = open('nagstamon.iss', 'w')
-                iconfile_entry = 'SetupIconFile'
-                for line in iss_file:
-                    if line.startswith(iconfile_entry):
-                       iss_temp_file.write('%s=%s\n' % (iconfile_entry,
-                                              os.path.abspath(os.path.join(*dist_location + ['resources', 'nagstamon.ico']))))
-                    else:
-                        iss_temp_file.write(line)
-                    if line.startswith('[Files]'):
-                        break
-                iss_file.close()
-                for file_name in get_all_files(os.path.join(*dist_location)):
-                    relative_location = os.path.dirname(file_name.split(dist_location[-1], 1)[-1]).rstrip('\\')
-                    iss_temp_file.write('Source: %s; DestDir: {app}%s\n' % (file_name, relative_location))
-                iss_temp_file.close()
-                execute_script_lines(['"%(iscc)s" nagstamon.iss'], opt_dict)
-            else:
-                print 'Missing "%s" file' % iss_location
+    # execute InnoSetup with many variables set by ISCC.EXE outside .iss file
+    subprocess.call([ISCC,
+                     r'/Dsource={0}'.format(DIR_BUILD_NAGSTAMON),
+                     r'/Dversion_is={0}'.format(VERSION_IS),
+                     r'/Dversion={0}'.format(VERSION),
+                     r'/Darch={0}'.format(ARCH),
+                     r'/Darchs_allowed={0}'.format(ARCH_OPTS[ARCH][3]),
+                     r'/Dresources={0}{1}resources'.format(DIR_BUILD_NAGSTAMON, os.sep),
+                     r'/O{0}'.format(CURRENT_DIR),
+                     r'{0}{1}windows{1}nagstamon.iss'.format(CURRENT_DIR, os.sep)], shell=True)
 
 
 def debmain():
@@ -168,17 +104,14 @@ def debmain():
         options.debian = '%s/debian' % options.debian
     options.debian = os.path.abspath(options.debian)
 
-    print options.debian
-    print options.target
-
     if not os.path.isfile('%s/rules' % (options.debian)):
-        print 'Missing required "rules" file in "%s" directory' % options.debian
+        print('Missing required "rules" file in "%s" directory' % options.debian)
         return
     execute_script_lines(['cd %(target)s; ln -s %(debian)s; chmod 755 %(debian)s/rules; fakeroot debian/rules build; \
 fakeroot debian/rules binary; fakeroot debian/rules clean; rm debian'],
                          get_opt_dict(options))
 
-    print "\nFind .deb output in ../.\n"
+    print("\nFind .deb output in ../.\n")
 
 
 # from https://github.com/mizunokazumi/Nagstamon - Thanks!
@@ -193,22 +126,18 @@ def rpmmain():
         options.redhat = '%s/redhat' % options.redhat
     options.redhat = os.path.abspath(options.redhat)
 
-    print options.redhat
-    print options.target
-
     if not os.path.isfile('%s/nagstamon.spec' % (options.redhat)):
-        print 'Missing required "nagstamon.spec" file in "%s" directory' % options.redhat
+        print('Missing required "nagstamon.spec" file in "%s" directory' % options.redhat)
         return
     execute_script_lines(['cd %(target)s; ln -s %(redhat)s; tar -czf redhat/Nagstamon-%(version)s.tar.gz .; fakeroot rpmbuild --define "_sourcedir %(redhat)s" -ba redhat/nagstamon.spec; rm -rf redhat'],
                          get_opt_dict(options))
 
-    print "\nFind .rpm output in $HOME/rpmbuild/RPMS/noarch/.\n"
+    print("\nFind .rpm output in $HOME/rpmbuild/RPMS/noarch/.\n")
 
 
 DISTS = {
     'debian': debmain,
     'Ubuntu': debmain,
-    'LinuxMint': debmain,
     'fedora': rpmmain
 }
 
@@ -220,4 +149,4 @@ if __name__ == '__main__':
         if dist in DISTS:
             DISTS[dist]()
         else:
-            print 'Your system is not supported for automated build yet'
+            print('Your system is not supported for automated build yet')
