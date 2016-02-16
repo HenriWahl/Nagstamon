@@ -231,8 +231,6 @@ class Config(object):
                         # check first if it is a bool value and convert string if it is
                         if i[1] in BOOLPOOL:
                             object.__setattr__(self, i[0], BOOLPOOL[i[1]])
-                        ##elif i[1].isdecimal():
-                        ##    object.__setattr__(self, i[0],int(i[1]))
                         # in case there are numbers intify them to avoid later conversions
                         # treat negative value specially as .isdecimal() will not detect it
                         elif i[1].isdecimal() or \
@@ -427,9 +425,9 @@ class Config(object):
 
     def SaveMultipleConfig(self, settingsdir, setting):
         """
-        saves conf files for settings like actions in extra directories
-        "multiple" means that multiple confs for actions or servers are loaded,
-        not just one like for e.g. sound file
+            saves conf files for settings like actions in extra directories
+            "multiple" means that multiple confs for actions or servers are loaded,
+            not just one like for e.g. sound file
         """
 
         # only import keyring lib if configured to do so - to avoid Windows crashes
