@@ -26,35 +26,39 @@ import subprocess
 import zipfile
 
 CURRENT_DIR = os.getcwd()
-sys.path.append('{0}{1}..{1}'.format(CURRENT_DIR, os.sep))
+NAGSTAMON_DIR = os.path.normpath('{0}{1}..{1}'.format(CURRENT_DIR, os.sep))
+sys.path.append(NAGSTAMON_DIR)
 
 from Nagstamon.Config import AppInfo
 
 VERSION = AppInfo.VERSION
-# InnoSetup does not like VersionInfoVersion with letters, only 0.0.0.0 schemed numbers
-if 'alpha' in VERSION.lower() or 'beta' in VERSION.lower():
-    VERSION_IS = VERSION.replace('alpha', '').replace('beta', '').replace('-', '.').replace('..', '.')
-    VERSION_IS = VERSION_IS.split('.')
-    version_segments = list()
-    for part in VERSION_IS:
-        if len(part) < 4:
-            version_segments.append(part)
-        else:
-            version_segments.append(part[0:4])
-            version_segments.append(part[4:])
-    VERSION_IS = '.'.join(version_segments)
-else:
-    VERSION_IS = VERSION
 ARCH = platform.architecture()[0][0:2]
-ARCH_OPTS = {'32': ('win32', 'win32', '', 'x86 x64'),
+ARCH_OPTS = {'32': ('win32', 'win32', '', 'x86'),
              '64': ('win-amd64', 'amd64', '(X86)', 'x64')}
 PYTHON_VERSION = '{0}.{1}'.format(sys.version_info[0],
                                   sys.version_info[1])
 
-ISCC = r'{0}{1}Inno Setup 5{1}iscc.exe'.format(os.environ['PROGRAMFILES{0}'.format(ARCH_OPTS[ARCH][2])], os.sep)
-
 
 def winmain():
+    """
+        execute steps necessary for compilation of Windows binaries and setup.exe
+    """
+    # InnoSetup does not like VersionInfoVersion with letters, only 0.0.0.0 schemed numbers
+    if 'alpha' in VERSION.lower() or 'beta' in VERSION.lower():
+        VERSION_IS = VERSION.replace('alpha', '').replace('beta', '').replace('-', '.').replace('..', '.')
+        VERSION_IS = VERSION_IS.split('.')
+        version_segments = list()
+        for part in VERSION_IS:
+            if len(part) < 4:
+                version_segments.append(part)
+            else:
+                version_segments.append(part[0:4])
+                version_segments.append(part[4:])
+        VERSION_IS = '.'.join(version_segments)
+    else:
+        VERSION_IS = VERSION
+
+    ISCC = r'{0}{1}Inno Setup 5{1}iscc.exe'.format(os.environ['PROGRAMFILES{0}'.format(ARCH_OPTS[ARCH][2])], os.sep)
     DIR_BUILD_EXE = '{0}{1}exe.{2}-{3}'.format(CURRENT_DIR, os.sep, ARCH_OPTS[ARCH][0], PYTHON_VERSION)
     DIR_BUILD_NAGSTAMON = '{0}{1}Nagstamon-{2}-win{3}'.format(CURRENT_DIR, os.sep, VERSION, ARCH)
     FILE_ZIP = '{0}.zip'.format(DIR_BUILD_NAGSTAMON)
@@ -93,6 +97,17 @@ def winmain():
                      r'{0}{1}windows{1}nagstamon.iss'.format(CURRENT_DIR, os.sep)], shell=True)
 
 
+def macmain():
+    """
+        execute steps necessary for compilation of MacOS X binaries and .dmg file
+    """
+    # go one directory up and run setup.py
+    os.chdir('{0}{1}..'.format(CURRENT_DIR, os.sep))
+    print('yoooo')
+    subprocess.call(['/sw/bin/python{0}'.format(PYTHON_VERSION), 'setup.py', 'bdist_dmg'])
+    
+
+
 def debmain():
     parser = OptionParser()
     parser.add_option('-t', '--target', dest='target', help='Target application directory', default=DEFAULT_LOCATION)
@@ -114,36 +129,29 @@ fakeroot debian/rules binary; fakeroot debian/rules clean; rm debian'],
     print("\nFind .deb output in ../.\n")
 
 
-# from https://github.com/mizunokazumi/Nagstamon - Thanks!
 def rpmmain():
-    parser = OptionParser()
-    parser.add_option('-t', '--target', dest='target', help='Target application directory', default=DEFAULT_LOCATION)
-    parser.add_option('-r', '--redhat', dest='redhat', help='"redhat" directory location', default='')
-    options, args = parser.parse_args()
-    if not options.redhat:
-        options.redhat = '%s/%sredhat' % (options.target, INSTALLER_DIR)
-    else:
-        options.redhat = '%s/redhat' % options.redhat
-    options.redhat = os.path.abspath(options.redhat)
+    """
+        create .rpm file via setup.py bdist_rpm - most settings are in setup.py
+    """
 
-    if not os.path.isfile('%s/nagstamon.spec' % (options.redhat)):
-        print('Missing required "nagstamon.spec" file in "%s" directory' % options.redhat)
-        return
-    execute_script_lines(['cd %(target)s; ln -s %(redhat)s; tar -czf redhat/Nagstamon-%(version)s.tar.gz .; fakeroot rpmbuild --define "_sourcedir %(redhat)s" -ba redhat/nagstamon.spec; rm -rf redhat'],
-                         get_opt_dict(options))
+    os.chdir(NAGSTAMON_DIR)
 
-    print("\nFind .rpm output in $HOME/rpmbuild/RPMS/noarch/.\n")
+    subprocess.call(['python3', 'setup.py', 'bdist_rpm'], shell=False)
 
 
 DISTS = {
     'debian': debmain,
     'Ubuntu': debmain,
+    'LinuxMint': debmain,
     'fedora': rpmmain
 }
+
 
 if __name__ == '__main__':
     if platform.system() == 'Windows':
         winmain()
+    elif platform.system() == 'Darwin':
+        macmain()
     else:
         dist = platform.dist()[0]
         if dist in DISTS:

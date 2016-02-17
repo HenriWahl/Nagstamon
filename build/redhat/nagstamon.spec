@@ -3,29 +3,28 @@
 
 Summary: Nagios status monitor for your desktop
 Name: nagstamon
-Version: 1.0.1
+Version: %{_version}
 Release: 1.nagstamon%{?dist}
 License: GPL
 Group: Applications/Utilities
 URL: https://nagstamon.ifw-dresden.de/
 
-Source: http://nagstamon.ifw-dresden.de/files-nagstamon/stable/Nagstamon-%{version}.tar.gz
+Source: https://nagstamon.ifw-dresden.de/files-nagstamon/stable/Nagstamon-%{version}.tar.gz
 Source1: nagstamon.desktop
 BuildRoot: %{_tmppath}/%{name}-%{version}-%{release}-root
 
 Buildarch: noarch
 BuildRequires: desktop-file-utils
 BuildRequires: Distutils
-Requires: gnome-icon-theme
-Requires: pygtk2
-Requires: python >= 2.7
-Requires: python-setuptools
-Requires: python-keyring
-Requires: python-SecretStorage
-Requires: python-crypto
-Requires: python-BeautifulSoup
-Requires: sox
-
+Requires: python3 >= 3.4
+Requires: python3-beautifulsoup4
+Requires: python3-crypto
+Requires: python3-qt5
+Requires: python3-requests
+Requires: python3-setuptools
+Requires: python3-SecretStorage
+Requires: qt5-qtsvg
+Requires: qt5-qtmultimedia
 
 %description
 Nagstamon is a Nagios status monitor for the desktop. It connects to multiple
@@ -41,7 +40,7 @@ sound. Hosts and services can be filtered by category and regular expressions.
 %setup -n Nagstamon
 
 #Remove embedded BeautifulSoup http://sourceforge.net/p/nagstamon/bugs/44/
-rm -rf Nagstamon/thirdparty/BeautifulSoup.py
+###rm -rf Nagstamon/thirdparty/BeautifulSoup.py
 
 %build
 cd ../

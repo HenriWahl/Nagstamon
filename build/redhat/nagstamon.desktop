@@ -5,6 +5,6 @@ Comment=Nagios status monitor
 Icon=/usr/share/nagstamon/Nagstamon/resources/nagstamon.svg
 Exec=nagstamon
 Terminal=false
-Categories=System;Monitor;GTK;
+Categories=System;Monitor;
 StartupNotify=true
 GenericName=Nagios status monitor for the desktop

@@ -24,6 +24,9 @@ import platform
 from Nagstamon.Config import AppInfo
 
 NAME = AppInfo.NAME
+# make name lowercase for Linux/Unix
+if platform.system() not in ['Windows', 'Darwin']:
+    NAME = NAME.lower()
 VERSION = AppInfo.VERSION
 
 # workaround to get directory of Qt5 plugins to add missing 'mediaservice' folder needed for audio on OSX and Windows
@@ -35,16 +38,27 @@ elif platform.system() == 'Darwin':
     # works of course only with Fink-based Qt5-installation
     QTPLUGINS = '/sw/lib/qt5-mac/plugins'
 
+if platform.system() == 'Windows':
+    base = 'Win32GUI'
+else:
+    base = None
+
 if platform.system() in ('Windows', 'Darwin'):
     from cx_Freeze import setup, Executable
     os_dependent_include_files = ['Nagstamon/resources/qt.conf',
                                   'Nagstamon/resources',
                                   '{0}/mediaservice'.format(QTPLUGINS)]
+
+    executables = [
+        Executable('nagstamon.py',
+                   base=base,
+                   icon='Nagstamon/resources/nagstamon.ico')
+    ]
+
 else:
     os_dependent_include_files = ['Nagstamon/resources']
+    executables = []
     
-if platform.system() == 'Windows':
-    base = 'Win32GUI' if sys.platform=='win32' else None
 
 CLASSIFIERS = [
     'Intended Audience :: System Administrators',
@@ -84,11 +98,17 @@ bdist_mac_options = dict(iconfile = 'Nagstamon/resources/nagstamon.icns',
 bdist_dmg_options = dict(volume_label = '{0} {1}'.format(NAME, VERSION),
                          applications_shortcut = False)
 
-executables = [
-    Executable('nagstamon.py',
-               base=base,
-               icon='Nagstamon/resources/nagstamon.ico')
-]
+bdist_rpm_options = dict(requires = 'python3 '
+                                    'python3-qt5 '
+                                    'python3-beautifulsoup4 '
+                                    'python3-requests '
+                                    'python3-qt5 '
+                                    'python3-SecretStorage '
+                                    'python3-crypto '
+                                    'qt5-qtsvg '
+                                    'qt5-qtmultimedia ',
+                          dist_dir = './build')
+
 
 setup(name = NAME,
       version = VERSION,
@@ -101,12 +121,23 @@ setup(name = NAME,
       url = 'https://nagstamon.ifw-dresden.de',
       download_url = 'https://nagstamon.ifw-dresden.de/files-nagstamon/stable/',
       scripts = ['nagstamon.py'],
-      packages = ['Nagstamon', 'Nagstamon.Server', 'Nagstamon.thirdparty'],
+      packages = ['Nagstamon',
+                  'Nagstamon.QUI',
+                  'Nagstamon.Servers',
+                  'Nagstamon.thirdparty',
+                  'Nagstamon.thirdparty.Xlib',
+                  'Nagstamon.thirdparty.Xlib.ext',
+                  'Nagstamon.thirdparty.Xlib.protocol',
+                  'Nagstamon.thirdparty.Xlib.support',
+                  'Nagstamon.thirdparty.Xlib.xobject'],
       package_dir = {'Nagstamon':'Nagstamon'},
       package_data = {'Nagstamon':['resources/*']},
-      data_files = [('%s/share/man/man1' % sys.prefix, ['Nagstamon/resources/nagstamon.1'])],
+      data_files = [('%s/share/man/man1' % sys.prefix, ['Nagstamon/resources/nagstamon.1.gz']),
+                    ('%s/share/pixmaps' % sys.prefix, ['Nagstamon/resources/nagstamon.svg']),
+                    ('%s/share/applications' % sys.prefix, ['Nagstamon/resources/nagstamon.desktop'])],
       options = dict(build_exe = build_exe_options,
                      bdist_mac = bdist_mac_options,
-                     bdist_dmg = bdist_dmg_options),
+                     bdist_dmg = bdist_dmg_options,
+                     bdist_rpm = bdist_rpm_options),
       executables = executables
 )
