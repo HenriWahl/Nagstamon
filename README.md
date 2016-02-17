@@ -1,7 +1,7 @@
 Nagstamon
 =========
 
-**Major development at the moment only happens in the 'qt' branch.**
+**This is the old GTK2-based 1.x branch. Development only happens in the Qt5-based master branch.**
 
 To make this work on Yosemite:
 * brew install gtk-mac-integration
