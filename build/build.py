@@ -103,12 +103,11 @@ def macmain():
     """
     # go one directory up and run setup.py
     os.chdir('{0}{1}..'.format(CURRENT_DIR, os.sep))
-    print('yoooo')
     subprocess.call(['/sw/bin/python{0}'.format(PYTHON_VERSION), 'setup.py', 'bdist_dmg'])
-    
 
 
 def debmain():
+    """
     parser = OptionParser()
     parser.add_option('-t', '--target', dest='target', help='Target application directory', default=DEFAULT_LOCATION)
     parser.add_option('-d', '--debian', dest='debian', help='"debian" directory location', default='')
@@ -127,6 +126,25 @@ fakeroot debian/rules binary; fakeroot debian/rules clean; rm debian'],
                          get_opt_dict(options))
 
     print("\nFind .deb output in ../.\n")
+    """
+
+    os.chdir(NAGSTAMON_DIR)
+
+    ###os.symlink('{0}{1}debian'.format(CURRENT_DIR, os.sep),
+    ###           '{0}{1}debian'.format(NAGSTAMON_DIR, os.sep))
+
+    shutil.copytree('{0}{1}debian{1}'.format(CURRENT_DIR, os.sep), '{0}{1}debian'.format(NAGSTAMON_DIR, os.sep))
+
+    os.chmod('{0}{1}debian{1}rules'.format(CURRENT_DIR, os.sep),0o755)
+
+    subprocess.call(['fakeroot', 'debian/rules', 'build'])
+
+    subprocess.call(['fakeroot', 'debian/rules', 'binary'])
+
+    ###subprocess.call(['fakeroot', 'debian/rules', 'clean'])
+
+    ###os.remove('{0}{1}debian'.format(NAGSTAMON_DIR, os.sep))
+
 
 
 def rpmmain():
@@ -136,6 +154,18 @@ def rpmmain():
 
     os.chdir(NAGSTAMON_DIR)
 
+    # masquerade .py file as .py-less
+    shutil.copyfile('nagstamon.py', 'nagstamon')
+    
+    # workaround for manpage gzipping bug in bdist_rpm
+    import gzip
+    man = open('Nagstamon/resources/nagstamon.1', 'rb')
+    mangz = gzip.open('Nagstamon/resources/nagstamon.1.gz', 'wb')
+    mangz.writelines(man)
+    mangz.close()
+    man.close()
+
+    # run setup.py for rpm creation
     subprocess.call(['python3', 'setup.py', 'bdist_rpm'], shell=False)
 
 

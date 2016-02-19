@@ -1,22 +1,22 @@
 Source: nagstamon
 Section: utils
-XS-Python-Version: >= 2.7
+X-Python3-Version: >= 3.4
 Priority: optional
 Maintainer: Python Applications Packaging Team <python-apps-team@lists.alioth.debian.org>
 Uploaders: Carl Chenet <chaica@ohmytux.com>
-Build-Depends: debhelper (>= 7.0.50~), python (>= 2.5), quilt (>= 0.46-7~)
+Build-Depends: debhelper (>= 9), python3 (>= 3.4), quilt (>= 0.63)
 Build-Depends-Indep: python-support
-Standards-Version: 3.8.4
+Standards-Version: 3.9.2
 Homepage: https://nagstamon.ifw-dresden.de
 Vcs-Git: git://github.com/HenriWahl/Nagstamon.git
 Vcs-Browser: https://codeload.github.com/HenriWahl/Nagstamon/zip/master
 
 Package: nagstamon
 Architecture: all
-Depends: ${python:Depends}, ${misc:Depends}, python-gtk2, python-pkg-resources, python-beautifulsoup, librsvg2-common, sox, python-appindicator
+Depends: ${python3:Depends}, ${misc:Depends}, python3-pkg-resources, python3-bs4, python3-pyqt5, python3-pyqt5.qtsvg, python3-pyqt5.qtmultimedia, libqt5multimedia5-plugins, python3-requests, python3-dbus.mainloop.pyqt5
 Description: Nagios status monitor which takes place in systray or on desktop
  Nagstamon is a Nagios status monitor which takes place in systray or 
  on desktop (GNOME, KDE) as floating statusbar to inform you in 
  realtime about the status of your Nagios and some of its derivatives monitored network. 
  It allows to connect to multiple Nagios, Icinga, Opsview, Centreon, Op5Monitor,
- Check_MK Multisite, Thruk and Zabbix servers. Events could be handled by instant access to failed hosts/services.
+ Check_MK Multisite, Thruk, Zabbix and Zenoss servers. Events could be handled by instant access to failed hosts/services.

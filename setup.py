@@ -20,6 +20,7 @@
 from distutils.core import setup
 import sys
 import platform
+import os.path
 
 from Nagstamon.Config import AppInfo
 
@@ -28,6 +29,8 @@ NAME = AppInfo.NAME
 if platform.system() not in ['Windows', 'Darwin']:
     NAME = NAME.lower()
 VERSION = AppInfo.VERSION
+
+NAGSTAMON_SCRIPT = 'nagstamon.py'
 
 # workaround to get directory of Qt5 plugins to add missing 'mediaservice' folder needed for audio on OSX and Windows
 import os.path
@@ -50,7 +53,7 @@ if platform.system() in ('Windows', 'Darwin'):
                                   '{0}/mediaservice'.format(QTPLUGINS)]
 
     executables = [
-        Executable('nagstamon.py',
+        Executable(NAGSTAMON_SCRIPT,
                    base=base,
                    icon='Nagstamon/resources/nagstamon.ico')
     ]
@@ -58,7 +61,8 @@ if platform.system() in ('Windows', 'Darwin'):
 else:
     os_dependent_include_files = ['Nagstamon/resources']
     executables = []
-    
+    if os.path.exists('nagstamon'):
+        NAGSTAMON_SCRIPT = 'nagstamon'
 
 CLASSIFIERS = [
     'Intended Audience :: System Administrators',
@@ -120,7 +124,7 @@ setup(name = NAME,
       author_email = 'h.wahl@ifw-dresden.de',
       url = 'https://nagstamon.ifw-dresden.de',
       download_url = 'https://nagstamon.ifw-dresden.de/files-nagstamon/stable/',
-      scripts = ['nagstamon.py'],
+      scripts = [NAGSTAMON_SCRIPT],
       packages = ['Nagstamon',
                   'Nagstamon.QUI',
                   'Nagstamon.Servers',
