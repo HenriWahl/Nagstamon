@@ -1209,6 +1209,8 @@ class StatusWindow(QWidget):
                         self.set_shown()
 
                     self.show()
+                    # makes the window manager switch to the desktop where this widget has appeared
+                    self.raise_()
 
                     # store timestamp to avoid flickering as in https://github.com/HenriWahl/Nagstamon/issues/184
                     self.is_shown_timestamp = time.time()
