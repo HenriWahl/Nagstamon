@@ -35,8 +35,6 @@ from PyQt5.QtCore import *
 from PyQt5.QtSvg import *
 from PyQt5.QtMultimedia import *
 
-import ewmh
-
 from operator import methodcaller
 from collections import OrderedDict
 from copy import deepcopy
@@ -1213,17 +1211,11 @@ class StatusWindow(QWidget):
                     self.show()
 
                     # Using the EWMH protocol to move the window to the active desktop.
-                    # Apparently PyQt does not allow to set the WM_NAME property, so
-                    # I've found no way to distinguish between multiple instances of
-                    # nagstamon... just moving all of them.
-                    # TODO: move only this instance; avoid using a dedicated library
-                    wm = ewmh.ewmh.EWMH()
-                    for win in wm.getClientList():
-                        wmclass = win.get_wm_class()
-                        if wmclass[1] == os.path.basename(sys.argv[0]):
-                            desk = wm.getCurrentDesktop()
-                            wm.setWmDesktop(win, desk)
-                    wm.display.flush()
+                    if not platform.system() in ('Darwin', 'Windows'):
+                        winid = self.winId().__int__()
+                        deskid = self.ewmh.getCurrentDesktop()
+                        self.ewmh.setWmDesktop(winid, deskid)
+                        self.ewmh.display.flush()
 
                     # makes the window manager switch to the desktop where this widget has appeared
                     self.raise_()
