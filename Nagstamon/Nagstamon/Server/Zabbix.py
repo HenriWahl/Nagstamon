@@ -245,7 +245,6 @@ class ZabbixServer(GenericServer):
                 else:
                     state = '%s=%s' % (service['items'][0]['key_'], service['items'][0]['lastvalue']) 
                 n = {
-                    'host': service['host'],
                     'service': service['description'],
                     'status': self.statemap.get(service['priority'], service['priority']),
                     # 1/1 attempt looks at least like there has been any attempt
