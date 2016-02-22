@@ -1210,6 +1210,16 @@ class StatusWindow(QWidget):
 
                     self.show()
 
+                    # Using the EWMH protocol to move the window to the active desktop.
+                    if not platform.system() in ('Darwin', 'Windows'):
+                        winid = self.winId().__int__()
+                        deskid = self.ewmh.getCurrentDesktop()
+                        self.ewmh.setWmDesktop(winid, deskid)
+                        self.ewmh.display.flush()
+
+                    # makes the window manager switch to the desktop where this widget has appeared
+                    self.raise_()
+
                     # store timestamp to avoid flickering as in https://github.com/HenriWahl/Nagstamon/issues/184
                     self.is_shown_timestamp = time.time()
 

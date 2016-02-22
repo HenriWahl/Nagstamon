@@ -21,6 +21,7 @@
 import os
 import platform
 import sys
+import argparse
 import configparser
 import base64
 import zlib
@@ -176,16 +177,21 @@ class Config(object):
         # would not find a config file
         self.unconfigured = True
 
+        # Parse the command line
+        parser = argparse.ArgumentParser(description='Nagios status monitor for your desktop')
+        parser.add_argument('cfgpath', nargs='?', help='Path for configuration folder')
+        args = parser.parse_args()
+
         # try to use a given config file - there must be one given
         # if sys.argv is larger than 1
-        if len(sys.argv) > 1:
+        if args.cfgpath:
             # MacOSX related -psn argument by launchd
-            if sys.argv[1].find('-psn') != -1:
+            if args.cfgpath.find('-psn') != -1:
                 # new configdir approach
                 self.configdir = os.path.expanduser('~') + os.sep + '.nagstamon'
             else:
                 # allow to give a config file
-                self.configdir = sys.argv[1]
+                self.configdir = args.cfgpath
 
         # otherwise if there exits a configdir in current working directory it should be used
         elif os.path.exists(os.getcwd() + os.sep + 'nagstamon.config'):
@@ -764,7 +770,6 @@ class Action(object):
 
         # add and/or all keywords to object
         for k in kwds: self.__dict__[k] = kwds[k]
-
 
 # Initialize configuration to be accessed globally
 conf = Config()
