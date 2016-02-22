@@ -245,7 +245,6 @@ class ZabbixServer(GenericServer):
                 else:
                     state = '%s=%s' % (service['items'][0]['key_'], service['items'][0]['lastvalue']) 
                 n = {
-                    'host': service['host'],
                     'service': service['description'],
                     'status': self.statemap.get(service['priority'], service['priority']),
                     # 1/1 attempt looks at least like there has been any attempt
@@ -260,6 +259,11 @@ class ZabbixServer(GenericServer):
                     'command': 'zabbix',
                     'triggerid': service['triggerid'],
                 }
+
+                if api_version >= '3.0':
+                    n['host'] = self.zapi.host.get({"output": ["host"], "filter": {}, "triggerids": service['triggerid']})[0]['host']
+                else:
+                    n['host'] = service['host']
 
                 nagitems["services"].append(n)
                 # after collection data in nagitems create objects of its informations
