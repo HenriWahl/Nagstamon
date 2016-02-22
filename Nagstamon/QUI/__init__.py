@@ -1,7 +1,7 @@
 # encoding: utf-8
 
 # Nagstamon - Nagios status monitor for your desktop
-# Copyright (C) 2008-2015 Henri Wahl <h.wahl@ifw-dresden.de> et al.
+# Copyright (C) 2008-2016 Henri Wahl <h.wahl@ifw-dresden.de> et al.
 #
 # This program is free software; you can redistribute it and/or modify
 # it under the terms of the GNU General Public License as published by
@@ -1211,6 +1211,8 @@ class StatusWindow(QWidget):
                     self.show()
 
                     # Using the EWMH protocol to move the window to the active desktop.
+                    # Seemed to be a problem on XFCE
+                    # https://github.com/HenriWahl/Nagstamon/pull/199
                     if not platform.system() in ('Darwin', 'Windows'):
                         winid = self.winId().__int__()
                         deskid = self.ewmh.getCurrentDesktop()
