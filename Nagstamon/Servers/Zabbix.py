@@ -222,6 +222,10 @@ class ZabbixServer(GenericServer):
                     'triggerid': service['triggerid'],
                 }
 
+                if api_version >= '3.0':
+                    n['host'] = self.zapi.host.get({"output": ["host"], "filter": {}, "triggerids": service['triggerid']})[0]['host']
+                else:
+                    n['host'] = service['host']
                 nagitems["services"].append(n)
                 # after collection data in nagitems create objects of its informations
                 # host objects contain service objects
