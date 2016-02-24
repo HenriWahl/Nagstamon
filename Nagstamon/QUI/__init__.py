@@ -67,6 +67,7 @@ from Nagstamon.QUI.dialog_acknowledge import Ui_dialog_acknowledge
 from Nagstamon.QUI.dialog_downtime import Ui_dialog_downtime
 from Nagstamon.QUI.dialog_submit import Ui_dialog_submit
 from Nagstamon.QUI.dialog_authentication import Ui_dialog_authentication
+from Nagstamon.QUI.dialog_servers import Ui_dialog_servers
 
 # only on X11/Linux thirdparty path should be added because it contains the Xlib module
 # needed to tell window manager via EWMH to keep Nagstamon window on all virtual desktops
@@ -846,6 +847,8 @@ class StatusWindow(QWidget):
         # start with priority 0 = lowest
         self.worker_notification_thread.start(0)
 
+        check_for_servers()
+
         # create vbox for each enabled server
         for server in servers.values():
             if server.enabled:
@@ -879,9 +882,6 @@ class StatusWindow(QWidget):
 
         # timer for waiting to set is_shown flag
         self.timer = QTimer(self)
-
-        # flag to avoid hiding window when a menu is shown
-        ###self.locked = False
 
         # a thread + worker is necessary to do actions thread-safe in background
         # like debugging
@@ -1522,10 +1522,10 @@ class StatusWindow(QWidget):
         """
         title = " ".join((AppInfo.NAME, msg_type))
         if msg_type == 'warning':
-            QMessageBox.warning(None, title, message)
+            return(QMessageBox.warning(statuswindow, title, message))
 
         elif msg_type == 'information':
-            QMessageBox.information(None, title, message)
+            return(QMessageBox.information(statuswindow, title, message))
 
 
     @pyqtSlot()
@@ -3422,6 +3422,10 @@ class Dialogs(object):
         self.authentication = Dialog_Authentication(Ui_dialog_authentication)
         self.authentication.initialize()
 
+        # dialog for asking about disabled or not configured servers
+        ###self.servers = Dialog_Server(Ui_dialog_servers)
+        ###self.servers.initialize()
+
         # file chooser Dialog
         self.file_chooser = QFileDialog()
 
@@ -3547,6 +3551,9 @@ class Dialog_Settings(Dialog):
     # signal to be fired if OK button was clicked and new settinga applied
     changed = pyqtSignal()
 
+    # send signal if check for new version is wanted
+    check_for_new_version = pyqtSignal(bool, QWidget)
+
     def __init__(self, dialog):
         Dialog.__init__(self, dialog)
         # define checkbox-to-widgets dependencies which apply at initialization
@@ -3586,6 +3593,9 @@ class Dialog_Settings(Dialog):
                             self.ui.input_checkbox_notification_custom_action : [self.ui.notification_custom_action_groupbox]
                             }
 
+        # set title to current version
+        self.window.setWindowTitle(' '.join((AppInfo.NAME, AppInfo.VERSION)))
+
         # connect server buttons to server dialog
         self.ui.button_new_server.clicked.connect(self.new_server)
         self.ui.button_edit_server.clicked.connect(self.edit_server)
@@ -3593,7 +3603,9 @@ class Dialog_Settings(Dialog):
         self.ui.button_delete_server.clicked.connect(self.delete_server)
 
         # connect check-for-updates button to update check
-        self.ui.button_check_for_new_version_now.clicked.connect(check_version.check)
+        #self.ui.button_check_for_new_version_now.clicked.connect(check_version.check)
+        self.ui.button_check_for_new_version_now.clicked.connect(self.button_check_for_new_version_clicked)
+        self.check_for_new_version.connect(check_version.check)
 
         # connect font chooser button to font choosing dialog
         self.ui.button_fontchooser.clicked.connect(self.font_chooser)
@@ -3815,18 +3827,14 @@ class Dialog_Settings(Dialog):
             # wait until all threads are stopped
             for server_vbox in statuswindow.servers_vbox.children():
                 server_vbox.table.worker_thread.wait(1000)
-                #server_vbox.table.worker_thread.wait()
 
             # wait until statuswindow notification worker has finished
             statuswindow.worker_notification_thread.wait(1000)
-            #statuswindow.worker_notification_thread.wait()
 
             # wait until statuswindow worker has finished
             statuswindow.worker_thread.wait(1000)
-            #statuswindow.worker_thread.wait()
 
             # kick out ol' statuswindow
-            #statuswindow.hide()
             statuswindow.destroy(True, True)
 
             # create new global one
@@ -4156,6 +4164,12 @@ class Dialog_Settings(Dialog):
         """
         self.ui.label_font.setFont(DEFAULT_FONT)
         self.font = DEFAULT_FONT
+
+
+    @pyqtSlot()
+    def button_check_for_new_version_clicked(self):
+        # at this point start_mode for version check is definitifely False
+        self.check_for_new_version.emit(False, self.window)
 
 
 class Dialog_Server(Dialog):
@@ -4875,6 +4889,14 @@ class Dialog_Authentication(Dialog):
         self.update.emit(self.server.name)
 
 
+class Dialog_Servers(QObject):
+    """
+        small dialog to ask about disabled ot not configured servers
+    """
+    def __init__(self, dialog):
+        Dialog.__init__(self, dialog)
+
+
 class MediaPlayer(QObject):
     """
         play media files for notification
@@ -4923,28 +4945,47 @@ class CheckVersion(QObject):
         checking for updates
     """
 
-    def check(self, start_mode=False):
-        # list of enabled servers which connections outside should be used to check
-        self.enabled_servers = get_enabled_servers()
+    is_checking = False
 
-        # set mode to be evaluated by worker
-        self.start_mode = start_mode
+    @pyqtSlot(bool, QWidget)
+    def check(self, start_mode=False, parent=None):
+        if self.is_checking == False:
+            # lock checking thread
+            self.is_checking = True
 
-        # thread for worker to avoid
-        self.worker_thread = QThread()
-        self.worker = self.Worker()
+            # list of enabled servers which connections outside should be used to check
+            self.enabled_servers = get_enabled_servers()
 
-        # if update check is ready it sends the message to GUI thread
-        self.worker.ready.connect(self.show_message)
+            # set mode to be evaluated by worker
+            self.start_mode = start_mode
 
-        # stop thread if worker has finished
-        self.worker.finished.connect(self.worker_thread.quit)
-        ###self.worker.finished.connect(self.worker_thread.terminate)
+            # store caller of dialog window
+            self.parent = parent
 
-        self.worker.moveToThread(self.worker_thread)
-        # run check when thread starts
-        self.worker_thread.started.connect(self.worker.check)
-        self.worker_thread.start(0)
+            # thread for worker to avoid
+            self.worker_thread = QThread()
+            self.worker = self.Worker()
+
+            # if update check is ready it sends the message to GUI thread
+            self.worker.ready.connect(self.show_message)
+
+            # stop thread if worker has finished
+            self.worker.finished.connect(self.worker_thread.quit)
+            # reset checking lock if finished
+            self.worker.finished.connect(self.reset_checking)
+
+            self.worker.moveToThread(self.worker_thread)
+            # run check when thread starts
+            self.worker_thread.started.connect(self.worker.check)
+            self.worker_thread.start(0)
+
+
+    @pyqtSlot()
+    def reset_checking(self):
+        """
+            reset checkinmg flag to avoid QThread crashes
+        """
+        self.is_checking = False
 
 
     @pyqtSlot(str)
@@ -4952,7 +4993,7 @@ class CheckVersion(QObject):
         """
             message dialog must be shown from GUI thread
         """
-        QMessageBox.information(None, 'Nagstamon version check',  message, QMessageBox.Ok)
+        QMessageBox.information(self.parent, 'Nagstamon version check',  message, QMessageBox.Ok)
 
 
     class Worker(QObject):
@@ -5117,7 +5158,6 @@ def get_screen_geometry(screen_number):
     return desktop.screenGeometry(0)
 
 
-
 @pyqtSlot()
 def exit():
     """
@@ -5155,10 +5195,25 @@ def exit():
     APP.instance().quit()
 
 
+def check_for_servers():
+    """
+        check if there are any servers configured and enabled
+    """
+
+
+    if len(get_enabled_servers()) == 0:
+        print('no server enabled!')
+        print(QMessageBox.warning(statuswindow, 'Warning', 'There is no server enabled.', QMessageBox.Ok, QMessageBox.Cancel))
+
+
+    if len(servers) == 0:
+        print('no server at all!')
+
+
 # check for updates
 check_version = CheckVersion()
 
-# access to variuos desktop parameters
+# access to various desktop parameters
 desktop = APP.desktop()
 
 # DBus initialization
@@ -5171,6 +5226,7 @@ dialogs = Dialogs()
 systrayicon = SystemTrayIcon()
 
 # combined statusbar/status window
+# set to none here due to race condition
 statuswindow = None
 statuswindow = StatusWindow()
 
