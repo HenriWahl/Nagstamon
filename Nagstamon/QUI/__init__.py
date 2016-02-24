@@ -67,7 +67,7 @@ from Nagstamon.QUI.dialog_acknowledge import Ui_dialog_acknowledge
 from Nagstamon.QUI.dialog_downtime import Ui_dialog_downtime
 from Nagstamon.QUI.dialog_submit import Ui_dialog_submit
 from Nagstamon.QUI.dialog_authentication import Ui_dialog_authentication
-from Nagstamon.QUI.dialog_servers import Ui_dialog_servers
+from Nagstamon.QUI.dialog_server_missing import Ui_dialog_server_missing
 
 # only on X11/Linux thirdparty path should be added because it contains the Xlib module
 # needed to tell window manager via EWMH to keep Nagstamon window on all virtual desktops
@@ -88,9 +88,6 @@ if not platform.system() in ['Darwin', 'Windows']:
 
 # global application instance
 APP = QApplication(sys.argv)
-###APP.setDesktopSettingsAware(False)
-APP.setEffectEnabled(Qt.UI_AnimateTooltip)
-APP.setEffectEnabled(Qt.UI_FadeTooltip)
 
 # fixed icons for hosts/services attributes
 ICONS = dict()
@@ -3423,8 +3420,8 @@ class Dialogs(object):
         self.authentication.initialize()
 
         # dialog for asking about disabled or not configured servers
-        ###self.servers = Dialog_Server(Ui_dialog_servers)
-        ###self.servers.initialize()
+        self.server_missing = Dialog_Server_missing(Ui_dialog_server_missing)
+        self.server_missing.initialize()
 
         # file chooser Dialog
         self.file_chooser = QFileDialog()
@@ -3452,8 +3449,9 @@ class Dialog(QObject):
         self.ui = dialog()
         self.ui.setupUi(self.window)
         # treat dialog content after pressing OK button
-        self.ui.button_box.accepted.connect(self.ok)
-        self.ui.button_box.rejected.connect(self.window.close)
+        if 'button_box' in dir(self.ui):
+            self.ui.button_box.accepted.connect(self.ok)
+            self.ui.button_box.rejected.connect(self.window.close)
 
         # QSignalMapper needed to connect all toggle-needing-checkboxes/radiobuttons to one .toggle()-method which
         # decides which sender to use as key in self.TOGGLE_DEPS
@@ -4889,7 +4887,7 @@ class Dialog_Authentication(Dialog):
         self.update.emit(self.server.name)
 
 
-class Dialog_Servers(QObject):
+class Dialog_Server_missing(Dialog):
     """
         small dialog to ask about disabled ot not configured servers
     """
