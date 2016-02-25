@@ -71,7 +71,7 @@ class CustomSortingColumn(Column):
 
 class StatusColumn(CustomSortingColumn):
     ATTR_NAME = 'status'
-    CHOICES = ['WARNING', 'UNKNOWN', 'CRITICAL', 'UNREACHABLE', 'DOWN']
+    CHOICES = ['WARNING', 'UNKNOWN', 'CRITICAL', 'UNREACHABLE', 'DOWN', 'INFORMATION', 'AVERAGE', 'HIGH']
 
 
 class HostColumn(Column):
