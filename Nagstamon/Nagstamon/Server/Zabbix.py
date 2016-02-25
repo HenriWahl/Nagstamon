@@ -212,7 +212,8 @@ class ZabbixServer(GenericServer):
                      'expandDescription': True,
                      'output': 'extend',
                      'select_items': 'extend',
-                     'expandData': True}
+                     'expandData': True,
+                     'selectHosts': 'extend'}
                 )
                 if type(this_trigger) is dict:
                     for triggerid in this_trigger.keys():
@@ -245,7 +246,7 @@ class ZabbixServer(GenericServer):
                 else:
                     state = '%s=%s' % (service['items'][0]['key_'], service['items'][0]['lastvalue']) 
                 n = {
-                    'host': service['host'],
+                    'host': service['hosts'][0]['host'],
                     'service': service['description'],
                     'status': self.statemap.get(service['priority'], service['priority']),
                     # 1/1 attempt looks at least like there has been any attempt
@@ -253,7 +254,7 @@ class ZabbixServer(GenericServer):
                     'duration': Actions.HumanReadableDurationFromTimestamp(service['lastchange']),
                     'status_information': state,
                     'passiveonly': 'no',
-                    'last_check': datetime.datetime.fromtimestamp(int(service['lastchange'])),
+                    'last_check': service['priority'],
                     'notifications': 'yes',
                     'flapping': 'no',
                     'site': '',
