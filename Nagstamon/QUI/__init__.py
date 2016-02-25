@@ -1210,7 +1210,7 @@ class StatusWindow(QWidget):
                     # Using the EWMH protocol to move the window to the active desktop.
                     # Seemed to be a problem on XFCE
                     # https://github.com/HenriWahl/Nagstamon/pull/199
-                    if not platform.system() in ('Darwin', 'Windows'):
+                    if not platform.system() in ('Darwin', 'Windows') and conf.icon_in_systray:
                         winid = self.winId().__int__()
                         deskid = self.ewmh.getCurrentDesktop()
                         self.ewmh.setWmDesktop(winid, deskid)
