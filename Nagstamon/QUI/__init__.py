@@ -1862,13 +1862,13 @@ class StatusBar(QWidget):
         self.hbox.addWidget(self.logo)
         self.hbox.addWidget(self.color_labels['OK'])
 
-        # add state labels
-        for state in COLORS:
-            self.hbox.addWidget(self.color_labels[state])
-
         # label for error messages
         self.hbox.addWidget(self.label_message)
         self.label_message.hide()
+
+        # add state labels
+        for state in COLORS:
+            self.hbox.addWidget(self.color_labels[state])
 
         # when there are new settings/colors refresh labels
         dialogs.settings.changed.connect(self.reset)
