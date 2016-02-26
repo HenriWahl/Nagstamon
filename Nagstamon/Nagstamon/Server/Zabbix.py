@@ -197,11 +197,11 @@ class ZabbixServer(GenericServer):
                                     if int(x['internal']) == 0]
 
                     zabbix_triggers = self.zapi.trigger.get(
-                        {'sortfield': 'lastchange', 'withUnacknowledgedEvents': True, 'groupids': hostgroup_ids,
+                        {'sortfield': 'lastchange', 'withLastEventUnacknowledged': 0, 'groupids': hostgroup_ids,
                          "monitored": True, "filter": {'value': 1}})
                 else:
                     zabbix_triggers = self.zapi.trigger.get(
-                        {'sortfield': 'lastchange', 'withUnacknowledgedEvents': True, "monitored": True,
+                        {'sortfield': 'lastchange', 'withLastEventUnacknowledged': 0, "monitored": True,
                          "filter": {'value': 1}})
                 triggers_list = []
 
@@ -213,7 +213,8 @@ class ZabbixServer(GenericServer):
                      'output': 'extend',
                      'select_items': 'extend',
                      'expandData': True,
-                     'selectHosts': 'extend'}
+                     'selectHosts': 'extend',
+                     'selectGroups': 'extend'}
                 )
                 if type(this_trigger) is dict:
                     for triggerid in this_trigger.keys():
@@ -250,7 +251,7 @@ class ZabbixServer(GenericServer):
                     'service': service['description'],
                     'status': self.statemap.get(service['priority'], service['priority']),
                     # 1/1 attempt looks at least like there has been any attempt
-                    'attempt': '1/1',
+                    'attempt': service['groups'][0]['name'] + ' /',
                     'duration': Actions.HumanReadableDurationFromTimestamp(service['lastchange']),
                     'status_information': state,
                     'passiveonly': 'no',
@@ -261,7 +262,7 @@ class ZabbixServer(GenericServer):
                     'command': 'zabbix',
                     'triggerid': service['triggerid'],
                 }
-
+                #print service
                 nagitems["services"].append(n)
                 # after collection data in nagitems create objects of its informations
                 # host objects contain service objects
@@ -384,15 +385,17 @@ class ZabbixServer(GenericServer):
             'host': host,
         }
         params.update(specific_params)
-
+        #print params
         if self.zapi is None:
             self._login()
         events = []
-        for e in self.zapi.event.get({'triggerids': params['triggerids'],
-                                      'hide_unknown': True,
+        for e in self.zapi.event.get({'objectids': params['triggerids'],
+                                      'acknowledged': False,
                                       'sortfield': 'clock',
-                                      'sortorder': 'desc'}):
+                                      'sortorder': 'DESC',
+                                      'limit': 1}):
             events.append(e['eventid'])
+            #print events
         self.zapi.event.acknowledge({'eventids': events, 'message': params['message']})
 
     def _set_downtime(self, host, service, author, comment, fixed, start_time, end_time, hours, minutes):

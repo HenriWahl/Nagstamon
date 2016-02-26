@@ -93,9 +93,9 @@ class GUI(object):
 
         # Meta
         self.name = "Nagstamon"
-        self.version = "1.0.1"
+        self.version = "1.0.3"
         self.website = "https://nagstamon.ifw-dresden.de/"
-        self.copyright = "©2008-2014 Henri Wahl et al.\nh.wahl@ifw-dresden.de"
+        self.copyright = "©2008-2016 Henri Wahl et al.\nh.wahl@ifw-dresden.de"
         self.comments = "Nagios status monitor for your desktop"
 
         # initialize overall status flag
@@ -152,6 +152,7 @@ class GUI(object):
             self.BitmapSuffix = ".svg"
 
         # set app icon for all app windows
+        
         gtk.window_set_default_icon_from_file(self.Resources + os.sep + "nagstamon" + self.BitmapSuffix)
 
         if platform.system() == "Darwin":
@@ -1323,7 +1324,7 @@ class GUI(object):
                             if ducuw[2] > 0 : trouble += ducuw[2] + " "
                             if ducuw[3] > 0 : trouble += ducuw[3] + " "
                             if ducuw[4] > 0 : trouble += ducuw[4]
-                            self.notify_bubble = pynotify.Notification ("Nagstamon", trouble, self.Resources + os.sep + "nagstamon" + self.BitmapSuffix)
+                            self.notify_bubble = pynotify.Notification ("Nagstamon", trouble, self.Resources + os.sep + "nagstamon" +self.BitmapSuffix)
                             # only offer button for popup window when floating statusbar is used
                             if str(self.conf.statusbar_floating) == "True":
                                 self.notify_bubble.add_action("action", "Open popup window", self.popwin.PopUp)

@@ -1,0 +1,40 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!-- Copyright 2014 Henri Wahl <h.wahl@ifw-dresden.de> -->
+<application>
+ <id type="desktop">nagstamon.desktop</id>
+ <metadata_license>GFDL-1.3</metadata_license>
+ <project_license>GPL-2.0+ and LGPL-2.1</project_license>
+ <name>Nagstamon</name>
+ <summary>Nagios status monitor for your desktop</summary>
+ <description>
+  <p>
+   Nagstamon is a Nagios status monitor which takes place in systray, on desktop as floating statusbar or fullscreen
+   to inform in realtime about the status of your Nagios and its derivatives monitored network. It allows to connect
+   to multiple monitoring servers.
+   Nagstamon supports the following server types:
+   <ul>
+   <li>Nagios</li>
+   <li>Icinga</li>
+   <li>Check_MK Multisite</li>
+   <li>Thruk</li>
+   <li>Op5Monitor</li>
+   <li>Centreon</li>
+   <li>Opsview</li>
+   <li>Experimental: Zabbix</li>
+   </ul>
+  </p>
+  <p>  
+   Events could be handled by instant access to failed hosts/services.
+   Nagstamon is very customizable by several types of event filters, notifications methods and actions.
+  </p>
+ </description>
+ <screenshots>
+  <screenshot type="default" width="624" height="351">https://nagstamon.ifw-dresden.de/files-nagstamon/appdata/nagstamon-appdata-01.png</screenshot>
+  <screenshot width="624" height="351">https://nagstamon.ifw-dresden.de/files-nagstamon/appdata/nagstamon-appdata-02.png</screenshot>
+  <screenshot width="624" height="351">https://nagstamon.ifw-dresden.de/files-nagstamon/appdata/nagstamon-appdata-03.png</screenshot>
+  <screenshot width="624" height="351">https://nagstamon.ifw-dresden.de/files-nagstamon/appdata/nagstamon-appdata-04.png</screenshot>
+  <screenshot width="624" height="351">https://nagstamon.ifw-dresden.de/files-nagstamon/appdata/nagstamon-appdata-05.png</screenshot>
+ </screenshots>
+ <url type="homepage">https://nagstamon.ifw-dresden.de</url>
+ <updatecontact>h.wahl@ifw-dresden.de</updatecontact>
+</application>

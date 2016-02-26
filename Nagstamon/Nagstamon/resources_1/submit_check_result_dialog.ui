@@ -1,0 +1,403 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<interface>
+  <requires lib="gtk+" version="2.20"/>
+  <!-- interface-naming-policy toplevel-contextual -->
+  <object class="GtkDialog" id="submit_check_result_dialog">
+    <property name="can_focus">False</property>
+    <property name="title" translatable="yes">Submit check result</property>
+    <property name="resizable">False</property>
+    <property name="modal">True</property>
+    <property name="window_position">center-always</property>
+    <property name="default_width">318</property>
+    <property name="default_height">260</property>
+    <property name="type_hint">normal</property>
+    <child internal-child="vbox">
+      <object class="GtkVBox" id="dialog1-vbox">
+        <property name="visible">True</property>
+        <property name="can_focus">False</property>
+        <child>
+          <object class="GtkTable" id="table_submit_check_result">
+            <property name="visible">True</property>
+            <property name="can_focus">False</property>
+            <property name="n_rows">14</property>
+            <property name="n_columns">2</property>
+            <child>
+              <placeholder/>
+            </child>
+            <child>
+              <placeholder/>
+            </child>
+            <child>
+              <placeholder/>
+            </child>
+            <child>
+              <placeholder/>
+            </child>
+            <child>
+              <placeholder/>
+            </child>
+            <child>
+              <placeholder/>
+            </child>
+            <child>
+              <placeholder/>
+            </child>
+            <child>
+              <placeholder/>
+            </child>
+            <child>
+              <placeholder/>
+            </child>
+            <child>
+              <object class="GtkLabel" id="label_check_result">
+                <property name="visible">True</property>
+                <property name="can_focus">False</property>
+                <property name="xalign">0</property>
+                <property name="label" translatable="yes">Check result:</property>
+              </object>
+              <packing>
+                <property name="top_attach">2</property>
+                <property name="bottom_attach">3</property>
+                <property name="x_padding">5</property>
+                <property name="y_padding">5</property>
+              </packing>
+            </child>
+            <child>
+              <object class="GtkRadioButton" id="input_radiobutton_result_ok">
+                <property name="label" translatable="yes">OK</property>
+                <property name="visible">True</property>
+                <property name="can_focus">True</property>
+                <property name="receives_default">False</property>
+                <property name="xalign">0</property>
+                <property name="active">True</property>
+                <property name="draw_indicator">True</property>
+              </object>
+              <packing>
+                <property name="left_attach">1</property>
+                <property name="right_attach">2</property>
+                <property name="top_attach">2</property>
+                <property name="bottom_attach">3</property>
+                <property name="x_padding">5</property>
+                <property name="y_padding">5</property>
+              </packing>
+            </child>
+            <child>
+              <object class="GtkRadioButton" id="input_radiobutton_result_warning">
+                <property name="label" translatable="yes">WARNING</property>
+                <property name="visible">True</property>
+                <property name="can_focus">True</property>
+                <property name="receives_default">False</property>
+                <property name="xalign">0</property>
+                <property name="draw_indicator">True</property>
+                <property name="group">input_radiobutton_result_ok</property>
+              </object>
+              <packing>
+                <property name="left_attach">1</property>
+                <property name="right_attach">2</property>
+                <property name="top_attach">4</property>
+                <property name="bottom_attach">5</property>
+                <property name="x_padding">5</property>
+                <property name="y_padding">5</property>
+              </packing>
+            </child>
+            <child>
+              <object class="GtkRadioButton" id="input_radiobutton_result_critical">
+                <property name="label" translatable="yes">CRITICAL</property>
+                <property name="visible">True</property>
+                <property name="can_focus">True</property>
+                <property name="receives_default">False</property>
+                <property name="xalign">0</property>
+                <property name="draw_indicator">True</property>
+                <property name="group">input_radiobutton_result_ok</property>
+              </object>
+              <packing>
+                <property name="left_attach">1</property>
+                <property name="right_attach">2</property>
+                <property name="top_attach">5</property>
+                <property name="bottom_attach">6</property>
+                <property name="x_padding">5</property>
+                <property name="y_padding">5</property>
+              </packing>
+            </child>
+            <child>
+              <object class="GtkRadioButton" id="input_radiobutton_result_unreachable">
+                <property name="label" translatable="yes">UNREACHABLE</property>
+                <property name="visible">True</property>
+                <property name="can_focus">True</property>
+                <property name="receives_default">False</property>
+                <property name="xalign">0</property>
+                <property name="draw_indicator">True</property>
+                <property name="group">input_radiobutton_result_ok</property>
+              </object>
+              <packing>
+                <property name="left_attach">1</property>
+                <property name="right_attach">2</property>
+                <property name="top_attach">6</property>
+                <property name="bottom_attach">7</property>
+                <property name="x_padding">5</property>
+                <property name="y_padding">5</property>
+              </packing>
+            </child>
+            <child>
+              <object class="GtkRadioButton" id="input_radiobutton_result_unknown">
+                <property name="label" translatable="yes">UNKNOWN</property>
+                <property name="visible">True</property>
+                <property name="can_focus">True</property>
+                <property name="receives_default">False</property>
+                <property name="xalign">0</property>
+                <property name="draw_indicator">True</property>
+                <property name="group">input_radiobutton_result_ok</property>
+              </object>
+              <packing>
+                <property name="left_attach">1</property>
+                <property name="right_attach">2</property>
+                <property name="top_attach">7</property>
+                <property name="bottom_attach">8</property>
+                <property name="x_padding">5</property>
+                <property name="y_padding">5</property>
+              </packing>
+            </child>
+            <child>
+              <object class="GtkRadioButton" id="input_radiobutton_result_down">
+                <property name="label" translatable="yes">DOWN</property>
+                <property name="visible">True</property>
+                <property name="can_focus">True</property>
+                <property name="receives_default">False</property>
+                <property name="xalign">0</property>
+                <property name="draw_indicator">True</property>
+                <property name="group">input_radiobutton_result_ok</property>
+              </object>
+              <packing>
+                <property name="left_attach">1</property>
+                <property name="right_attach">2</property>
+                <property name="top_attach">8</property>
+                <property name="bottom_attach">9</property>
+                <property name="x_padding">5</property>
+                <property name="y_padding">5</property>
+              </packing>
+            </child>
+            <child>
+              <object class="GtkLabel" id="label_check_output">
+                <property name="can_focus">False</property>
+                <property name="xalign">0</property>
+                <property name="ypad">3</property>
+                <property name="label" translatable="yes">Check output:</property>
+              </object>
+              <packing>
+                <property name="top_attach">10</property>
+                <property name="bottom_attach">11</property>
+                <property name="x_padding">5</property>
+                <property name="y_padding">5</property>
+              </packing>
+            </child>
+            <child>
+              <object class="GtkEntry" id="input_entry_check_output">
+                <property name="can_focus">True</property>
+                <property name="invisible_char">●</property>
+                <property name="text" translatable="yes">dummy check output</property>
+                <property name="primary_icon_activatable">False</property>
+                <property name="secondary_icon_activatable">False</property>
+                <property name="primary_icon_sensitive">True</property>
+                <property name="secondary_icon_sensitive">True</property>
+              </object>
+              <packing>
+                <property name="left_attach">1</property>
+                <property name="right_attach">2</property>
+                <property name="top_attach">10</property>
+                <property name="bottom_attach">11</property>
+                <property name="x_padding">5</property>
+                <property name="y_padding">5</property>
+              </packing>
+            </child>
+            <child>
+              <object class="GtkLabel" id="label_performance_data">
+                <property name="can_focus">False</property>
+                <property name="xalign">0</property>
+                <property name="ypad">3</property>
+                <property name="label" translatable="yes">Performance data:</property>
+              </object>
+              <packing>
+                <property name="top_attach">11</property>
+                <property name="bottom_attach">12</property>
+                <property name="x_padding">5</property>
+                <property name="y_padding">5</property>
+              </packing>
+            </child>
+            <child>
+              <object class="GtkRadioButton" id="input_radiobutton_result_up">
+                <property name="label" translatable="yes">UP</property>
+                <property name="visible">True</property>
+                <property name="can_focus">True</property>
+                <property name="receives_default">False</property>
+                <property name="xalign">0</property>
+                <property name="active">True</property>
+                <property name="draw_indicator">True</property>
+                <property name="group">input_radiobutton_result_ok</property>
+              </object>
+              <packing>
+                <property name="left_attach">1</property>
+                <property name="right_attach">2</property>
+                <property name="top_attach">3</property>
+                <property name="bottom_attach">4</property>
+                <property name="x_padding">5</property>
+                <property name="y_padding">5</property>
+              </packing>
+            </child>
+            <child>
+              <object class="GtkButton" id="button_change_defaults_submit_check_result">
+                <property name="label" translatable="yes">Change submit check result defaults...</property>
+                <property name="visible">True</property>
+                <property name="can_focus">True</property>
+                <property name="receives_default">True</property>
+                <signal name="clicked" handler="button_submit_check_result_settings_clicked" swapped="no"/>
+              </object>
+              <packing>
+                <property name="left_attach">1</property>
+                <property name="right_attach">2</property>
+                <property name="top_attach">13</property>
+                <property name="bottom_attach">14</property>
+                <property name="x_padding">5</property>
+                <property name="y_padding">5</property>
+              </packing>
+            </child>
+            <child>
+              <object class="GtkLabel" id="label_comment">
+                <property name="can_focus">False</property>
+                <property name="xalign">0</property>
+                <property name="label" translatable="yes">Comment:</property>
+              </object>
+              <packing>
+                <property name="top_attach">12</property>
+                <property name="bottom_attach">13</property>
+                <property name="x_padding">5</property>
+                <property name="y_padding">5</property>
+              </packing>
+            </child>
+            <child>
+              <object class="GtkEntry" id="input_entry_performance_data">
+                <property name="can_focus">True</property>
+                <property name="invisible_char">●</property>
+                <property name="primary_icon_activatable">False</property>
+                <property name="secondary_icon_activatable">False</property>
+                <property name="primary_icon_sensitive">True</property>
+                <property name="secondary_icon_sensitive">True</property>
+              </object>
+              <packing>
+                <property name="left_attach">1</property>
+                <property name="right_attach">2</property>
+                <property name="top_attach">11</property>
+                <property name="bottom_attach">12</property>
+                <property name="x_padding">5</property>
+                <property name="y_padding">5</property>
+              </packing>
+            </child>
+            <child>
+              <object class="GtkEntry" id="input_entry_comment">
+                <property name="can_focus">True</property>
+                <property name="invisible_char">●</property>
+                <property name="primary_icon_activatable">False</property>
+                <property name="secondary_icon_activatable">False</property>
+                <property name="primary_icon_sensitive">True</property>
+                <property name="secondary_icon_sensitive">True</property>
+              </object>
+              <packing>
+                <property name="left_attach">1</property>
+                <property name="right_attach">2</property>
+                <property name="top_attach">12</property>
+                <property name="bottom_attach">13</property>
+                <property name="x_padding">5</property>
+                <property name="y_padding">5</property>
+              </packing>
+            </child>
+            <child>
+              <object class="GtkLabel" id="input_label_description">
+                <property name="visible">True</property>
+                <property name="can_focus">False</property>
+                <property name="xalign">0</property>
+                <property name="label" translatable="yes">description - set by GUI.py</property>
+                <property name="wrap">True</property>
+              </object>
+              <packing>
+                <property name="right_attach">2</property>
+                <property name="top_attach">1</property>
+                <property name="bottom_attach">2</property>
+                <property name="x_padding">5</property>
+                <property name="y_padding">5</property>
+              </packing>
+            </child>
+            <child>
+              <object class="GtkLabel" id="input_label_host">
+                <property name="visible">True</property>
+                <property name="can_focus">False</property>
+                <property name="label" translatable="yes">hidden hostname</property>
+              </object>
+            </child>
+            <child>
+              <object class="GtkLabel" id="input_label_service">
+                <property name="visible">True</property>
+                <property name="can_focus">False</property>
+                <property name="label" translatable="yes">hidden service</property>
+              </object>
+              <packing>
+                <property name="left_attach">1</property>
+                <property name="right_attach">2</property>
+              </packing>
+            </child>
+          </object>
+          <packing>
+            <property name="expand">False</property>
+            <property name="fill">True</property>
+            <property name="position">0</property>
+          </packing>
+        </child>
+        <child internal-child="action_area">
+          <object class="GtkHButtonBox" id="dialog1-action_area">
+            <property name="visible">True</property>
+            <property name="can_focus">False</property>
+            <property name="layout_style">end</property>
+            <child>
+              <object class="GtkButton" id="button_ok">
+                <property name="label" translatable="yes">OK</property>
+                <property name="visible">True</property>
+                <property name="can_focus">True</property>
+                <property name="can_default">True</property>
+                <property name="has_default">True</property>
+                <property name="receives_default">True</property>
+                <signal name="clicked" handler="button_ok_clicked" swapped="no"/>
+              </object>
+              <packing>
+                <property name="expand">False</property>
+                <property name="fill">False</property>
+                <property name="position">0</property>
+              </packing>
+            </child>
+            <child>
+              <object class="GtkButton" id="button_cancel">
+                <property name="label" translatable="yes">Cancel</property>
+                <property name="visible">True</property>
+                <property name="can_focus">False</property>
+                <property name="receives_default">False</property>
+                <signal name="clicked" handler="button_cancel_clicked" swapped="no"/>
+              </object>
+              <packing>
+                <property name="expand">False</property>
+                <property name="fill">False</property>
+                <property name="position">1</property>
+              </packing>
+            </child>
+          </object>
+          <packing>
+            <property name="expand">False</property>
+            <property name="fill">True</property>
+            <property name="pack_type">end</property>
+            <property name="position">1</property>
+          </packing>
+        </child>
+      </object>
+    </child>
+    <action-widgets>
+      <action-widget response="0">button_ok</action-widget>
+      <action-widget response="0">button_cancel</action-widget>
+    </action-widgets>
+  </object>
+</interface>
