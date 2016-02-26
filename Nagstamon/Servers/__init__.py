@@ -165,17 +165,7 @@ for server in (CentreonServer, IcingaServer, MultisiteServer, NagiosServer,
 
 # create servers
 for server in conf.servers.values():
-    """
-    if ( server.use_autologin == "False" and server.save_password == "False" and server.enabled == "True" ) or ( server.enabled == "True" and server.use_autologin == "True" and server.autologin_key == "" ):
-        # the auth dialog will fill the server's username and password with the given values
-        if platform.system() == "Darwin":
-            # MacOSX gets instable with default theme "Clearlooks" so use custom one with theme "Murrine"
-            gtk.rc_parse_string('gtk-theme-name = "Murrine"')
-
-        GUI.AuthenticationDialog(server=server, Resources=Resources, conf=conf, debug_queue=debug_queue)
-    """
     created_server = create_server(server)
-
     if created_server is not None:
         servers[server.name] = created_server
         # for the next time no auth needed

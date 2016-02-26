@@ -18,10 +18,6 @@
 # along with this program; if not, write to the Free Software
 # Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA  02110-1301, USA
 
-from PyQt5.QtWidgets import *
-from PyQt5.QtGui import *
-from PyQt5.QtCore import *
-
 import sys
 import socket
 
@@ -29,12 +25,30 @@ import socket
 socket.setdefaulttimeout(30)
 
 try:
-    if __name__ == "__main__":
+    if __name__ == '__main__':
         # Initialize global configuration
-        from Nagstamon.Config import (conf, RESOURCES)
+        from Nagstamon.Config import (conf,
+                                      RESOURCES)
+        # get GUI
+        from Nagstamon.QUI import (APP,
+                                   statuswindow,
+                                   check_version,
+                                   check_servers,
+                                   dialogs)
+        # get server information
+        from Nagstamon.Servers import (servers,
+                                       get_enabled_servers)
 
-        from Nagstamon.QUI import (APP, statuswindow, check_version)
+        # ask for help if no servers are configured
+        #if len(servers) == 0:
+        #    dialogs.server_missing.show()
+        #    dialogs.server_missing.initialize('no_server')
+        #elif len(get_enabled_servers()) == 0:
+        #    dialogs.server_missing.show()
+        #    dialogs.server_missing.initialize('no_server_enabled')
+        check_servers()
 
+        # show and resize status window
         statuswindow.show()
         statuswindow.adjustSize()
 

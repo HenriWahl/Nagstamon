@@ -426,6 +426,7 @@ class MenuContext(MenuAtCursor):
 
         self.initialize()
 
+
     @pyqtSlot()
     def initialize(self):
         """
@@ -843,8 +844,6 @@ class StatusWindow(QWidget):
         self.worker_notification.moveToThread(self.worker_notification_thread)
         # start with priority 0 = lowest
         self.worker_notification_thread.start(0)
-
-        check_for_servers()
 
         # create vbox for each enabled server
         for server in servers.values():
@@ -2445,8 +2444,6 @@ class CellWidget(QWidget):
                                             border-style: hide;
                                             border-width: 1px;''')
 
-        ###                           CSS_GRID[conf.show_grid]))
-
 
     def enterEvent(self, eventt):
         if not self.parent().parent().action_menu.isVisible():
@@ -3422,6 +3419,10 @@ class Dialogs(object):
         # dialog for asking about disabled or not configured servers
         self.server_missing = Dialog_Server_missing(Ui_dialog_server_missing)
         self.server_missing.initialize()
+        # open server creation dialog
+        #self.server_missing.ui.button_create_server.clicked.connect(self.server.new)
+        self.server_missing.ui.button_create_server.clicked.connect(self.settings.show_new_server)
+        self.server_missing.ui.button_enable_server.clicked.connect(self.settings.show)
 
         # file chooser Dialog
         self.file_chooser = QFileDialog()
@@ -3451,7 +3452,7 @@ class Dialog(QObject):
         # treat dialog content after pressing OK button
         if 'button_box' in dir(self.ui):
             self.ui.button_box.accepted.connect(self.ok)
-            self.ui.button_box.rejected.connect(self.window.close)
+            self.ui.button_box.rejected.connect(self.cancel)
 
         # QSignalMapper needed to connect all toggle-needing-checkboxes/radiobuttons to one .toggle()-method which
         # decides which sender to use as key in self.TOGGLE_DEPS
@@ -3539,6 +3540,14 @@ class Dialog(QObject):
     def ok(self):
         # dummy OK treatment
         pass
+
+
+    @pyqtSlot()
+    def cancel(self):
+        """
+            as default closes dialog - might be refined, for example by settings dialog
+        """
+        self.window.close()
 
 
 class Dialog_Settings(Dialog):
@@ -3735,6 +3744,16 @@ class Dialog_Settings(Dialog):
         self.window.show()
 
 
+    @pyqtSlot()
+    def show_new_server(self):
+        """
+            opens settings an new server dialogs - used by dialogs.server_missing
+        """
+        self.show()
+        # emulate button click
+        self.ui.button_new_server.clicked.emit()
+
+
     def  ok(self):
         """
             what to do if OK was pressed
@@ -3843,6 +3862,21 @@ class Dialog_Settings(Dialog):
 
         # tell statuswindow to refresh due to new settings
         self.changed.emit()
+
+
+        print('sheckSEWRVERS')
+
+        # see if there are any servers created and enabled
+        check_servers()
+
+
+    @pyqtSlot()
+    def cancel(self):
+        """
+            check if there are any usable servers configured
+        """
+        self.window.close()
+        check_servers()
 
 
     @pyqtSlot()
@@ -4894,6 +4928,33 @@ class Dialog_Server_missing(Dialog):
     def __init__(self, dialog):
         Dialog.__init__(self, dialog)
 
+        # hide dialog when server is to be created or enabled
+        self.ui.button_create_server.clicked.connect(self.window.hide)
+        self.ui.button_enable_server.clicked.connect(self.window.hide)
+        # simply hide window if ignore button chosen
+        self.ui.button_ignore.clicked.connect(self.window.hide)
+        # byebye if exit button was pressed
+        self.ui.button_exit.clicked.connect(self.window.hide)
+        self.ui.button_exit.clicked.connect(exit)
+
+
+
+
+    def initialize(self, mode='no_server'):
+        """
+            use dialog for missing and not enabled servers, depending on mode
+        """
+        if mode == 'no_server':
+            self.ui.label_no_server_configured.show()
+            self.ui.label_no_server_enabled.hide()
+            self.ui.button_enable_server.hide()
+            self.ui.button_create_server.show()
+        else:
+            self.ui.label_no_server_configured.hide()
+            self.ui.label_no_server_enabled.show()
+            self.ui.button_enable_server.show()
+            self.ui.button_create_server.hide()
+
 
 class MediaPlayer(QObject):
     """
@@ -4957,8 +5018,11 @@ class CheckVersion(QObject):
             # set mode to be evaluated by worker
             self.start_mode = start_mode
 
-            # store caller of dialog window
-            self.parent = parent
+            # store caller of dialog window - not if at start because this will disturb EWMH
+            if start_mode == True:
+                self.parent = None
+            else:
+                self.parent = parent
 
             # thread for worker to avoid
             self.worker_thread = QThread()
@@ -5193,19 +5257,18 @@ def exit():
     APP.instance().quit()
 
 
-def check_for_servers():
+def check_servers():
     """
         check if there are any servers configured and enabled
     """
-
-
-    if len(get_enabled_servers()) == 0:
-        print('no server enabled!')
-        print(QMessageBox.warning(statuswindow, 'Warning', 'There is no server enabled.', QMessageBox.Ok, QMessageBox.Cancel))
-
-
+    # no server is configured
     if len(servers) == 0:
-        print('no server at all!')
+        dialogs.server_missing.show()
+        dialogs.server_missing.initialize('no_server')
+    # no server is enabled
+    elif len([x for x in conf.servers.values() if x.enabled == True]) == 0:
+        dialogs.server_missing.show()
+        dialogs.server_missing.initialize('no_server_enabled')
 
 
 # check for updates

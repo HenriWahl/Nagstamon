@@ -6,8 +6,8 @@
    <rect>
     <x>0</x>
     <y>0</y>
-    <width>618</width>
-    <height>142</height>
+    <width>813</width>
+    <height>263</height>
    </rect>
   </property>
   <property name="minimumSize">
@@ -26,7 +26,7 @@
    <item>
     <widget class="QLabel" name="label_no_server_configured">
      <property name="text">
-      <string>There are no configured servers yet. Do you want to create one?</string>
+      <string>&lt;html&gt;&lt;head/&gt;&lt;body&gt;&lt;p&gt;There are no configured servers yet.&lt;br/&gt;&lt;/p&gt;&lt;/body&gt;&lt;/html&gt;</string>
      </property>
      <property name="wordWrap">
       <bool>true</bool>
@@ -36,7 +36,7 @@
    <item>
     <widget class="QLabel" name="label_no_server_enabled">
      <property name="text">
-      <string>There are no servers enabled. Do you want to enable one?</string>
+      <string>&lt;html&gt;&lt;head/&gt;&lt;body&gt;&lt;p&gt;There are no servers enabled.&lt;br/&gt;&lt;/p&gt;&lt;/body&gt;&lt;/html&gt;</string>
      </property>
      <property name="wordWrap">
       <bool>true</bool>
@@ -48,7 +48,7 @@
      <item>
       <widget class="QPushButton" name="button_enable_server">
        <property name="text">
-        <string>Enable existing server</string>
+        <string>Enable server</string>
        </property>
       </widget>
      </item>

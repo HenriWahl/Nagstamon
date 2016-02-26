@@ -11,7 +11,7 @@ from PyQt5 import QtCore, QtGui, QtWidgets
 class Ui_dialog_server_missing(object):
     def setupUi(self, dialog_server_missing):
         dialog_server_missing.setObjectName("dialog_server_missing")
-        dialog_server_missing.resize(618, 142)
+        dialog_server_missing.resize(813, 263)
         dialog_server_missing.setMinimumSize(QtCore.QSize(350, 0))
         dialog_server_missing.setModal(True)
         self.verticalLayout = QtWidgets.QVBoxLayout(dialog_server_missing)
@@ -46,9 +46,9 @@ class Ui_dialog_server_missing(object):
     def retranslateUi(self, dialog_server_missing):
         _translate = QtCore.QCoreApplication.translate
         dialog_server_missing.setWindowTitle(_translate("dialog_server_missing", "Nagstamon"))
-        self.label_no_server_configured.setText(_translate("dialog_server_missing", "There are no configured servers yet. Do you want to create one?"))
-        self.label_no_server_enabled.setText(_translate("dialog_server_missing", "There are no servers enabled. Do you want to enable one?"))
-        self.button_enable_server.setText(_translate("dialog_server_missing", "Enable existing server"))
+        self.label_no_server_configured.setText(_translate("dialog_server_missing", "<html><head/><body><p>There are no configured servers yet.<br/></p></body></html>"))
+        self.label_no_server_enabled.setText(_translate("dialog_server_missing", "<html><head/><body><p>There are no servers enabled.<br/></p></body></html>"))
+        self.button_enable_server.setText(_translate("dialog_server_missing", "Enable server"))
         self.button_create_server.setText(_translate("dialog_server_missing", "Create new server"))
         self.button_ignore.setText(_translate("dialog_server_missing", "Ignore"))
         self.button_exit.setText(_translate("dialog_server_missing", "Exit"))
