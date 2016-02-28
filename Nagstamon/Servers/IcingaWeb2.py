@@ -24,10 +24,10 @@
 #
 # Status/TODOs:
 #
-# * The IcingaWeb2 REST API is not (fully) implemented yet, so currently this implementation is
-#   limited to "view only". Once https://dev.icinga.org/issues/9606 and/or https://dev.icinga.org/issues/7300
-#   get implemented, the action part (schedule downtime, acknowledge, etc.) can be implemented in
-#   this class.
+# * The IcingaWeb2 API is not implemented yet, so currently this implementation uses
+#   two HTTP requests per action. The first fetches the HTML, then the form data is extracted and
+#   then a second HTTP POST request is made which actually executed the action.
+#   Once IcingaWeb2 has an API, it's probably the better choice.
 
 
 from Nagstamon.Servers.Generic import GenericServer
@@ -55,9 +55,11 @@ class IcingaWeb2Server(GenericServer):
         object of Incinga server
     """
     TYPE = u'IcingaWeb2'
-    MENU_ACTIONS = ['Monitor']
+    MENU_ACTIONS = ['Monitor','Recheck','Acknowledge','Submit check result', 'Downtime']
     STATES_MAPPING = {"hosts" : {0 : "UP", 1 : "DOWN", 2 : "UNREACHABLE"},\
                      "services" : {0 : "OK", 1 : "WARNING",  2 : "CRITICAL", 3 : "UNKNOWN"}}
+    STATES_MAPPING_REV = {"hosts" : { "UP":0, "DOWN":1, "UNREACHABLE":2},\
+                     "services" : {"OK":0, "WARNING":1,  "CRITICAL":2, "UNKNOWN":3}}
     BROWSER_URLS = { "monitor": "$MONITOR-CGI$/dashboard",\
                     "hosts": "$MONITOR-CGI$/monitoring/list/hosts",\
                     "services": "$MONITOR-CGI$/monitoring/list/services",\
@@ -281,15 +283,162 @@ class IcingaWeb2Server(GenericServer):
 
 
 
-    def set_recheck(self, info_dict):
-        # Not implemented since there is no REST API call yet
-        # This empty implementation prevents an error when selecting "Recheck all" from the
-        # context menu. (The "Recheck all" menu element is always visible.)
-        None
-
 
     def _set_recheck(self, host, service):
-        # Not implemented since there is no REST API call yet
-        # This empty implementation prevents an error when selecting "Recheck all" from the
-        # context menu. (The "Recheck all" menu element is always visible.)
-        None
+        # First retrieve the info page for this host/service
+        if service=="":
+            url=self.monitor_cgi_url+"/monitoring/host/show?host="+host
+        else:
+            url=self.monitor_cgi_url+"/monitoring/service/show?host="+host+"&service="+service
+        result = self.FetchURL(url, giveback="raw")
+
+        if result.error != "":
+            return result
+        else:
+            pageraw = result.result
+
+        pagesoup = BeautifulSoup(pageraw)
+
+        # Extract the relevant form element values
+
+        formtag=pagesoup.find('form',{"name":"IcingaModuleMonitoringFormsCommandObjectCheckNowCommandForm"})
+        CSRFToken=formtag.findNext('input',{"name":"CSRFToken"})['value']
+        formUID=formtag.findNext('input',{"name":"formUID"})['value']
+        btn_submit=formtag.findNext('button',{"name":"btn_submit"})['value']
+
+        # Pass these values to the same URL as cgi_data
+        cgi_data={}
+        cgi_data['CSRFToken']=CSRFToken
+        cgi_data['formUID']=formUID
+        cgi_data['btn_submit']=btn_submit
+        result = self.FetchURL(url, giveback="raw",cgi_data=cgi_data)
+
+
+    def _set_acknowledge(self, host, service, author, comment, sticky, notify, persistent, all_services=[]):
+        # First retrieve the info page for this host/service
+        if service=="":
+            url=self.monitor_cgi_url+"/monitoring/service/acknowledge-problem?host="+host
+        else:
+            url=self.monitor_cgi_url+"/monitoring/service/acknowledge-problem?host="+host+"&service="+service
+
+        result = self.FetchURL(url, giveback="raw")
+
+        if result.error != "":
+            return result
+        else:
+            pageraw = result.result
+
+        pagesoup = BeautifulSoup(pageraw)
+
+        # Extract the relevant form element values
+
+        formtag=pagesoup.find('form',{"name":"IcingaModuleMonitoringFormsCommandObjectAcknowledgeProblemCommandForm"})
+        CSRFToken=formtag.findNext('input',{"name":"CSRFToken"})['value']
+        formUID=formtag.findNext('input',{"name":"formUID"})['value']
+        btn_submit=formtag.findNext('input',{"name":"btn_submit"})['value']
+
+        # Pass these values to the same URL as cgi_data
+        cgi_data={}
+        cgi_data['CSRFToken']=CSRFToken
+        cgi_data['formUID']=formUID
+        cgi_data['btn_submit']=btn_submit
+#
+        cgi_data['comment']=comment
+        cgi_data['persistent']=int(persistent)
+        cgi_data['sticky']=int(sticky)
+        cgi_data['notify']=int(notify)
+        cgi_data['comment']=comment
+
+        self.FetchURL(url, giveback="raw",cgi_data=cgi_data)
+
+        if len(all_services) > 0:
+            for s in all_services:
+                #cheap, recursive solution...
+                self._set_acknowledge(host, s, author, comment, sticky, notify, persistent, [])
+
+    def _set_submit_check_result(self, host, service, state, comment, check_output, performance_data):
+        # First retrieve the info page for this host/service
+        if service=="":
+            url=self.monitor_cgi_url+"/monitoring/host/process-check-result?host="+host
+            status=self.STATES_MAPPING_REV['hosts'][state.upper()]
+        else:
+            url=self.monitor_cgi_url+"/monitoring/service/process-check-result?host="+host+"&service="+service
+            status=self.STATES_MAPPING_REV['services'][state.upper()]
+
+        result = self.FetchURL(url, giveback="raw")
+
+        if result.error != "":
+            return result
+        else:
+            pageraw = result.result
+
+        pagesoup = BeautifulSoup(pageraw)
+
+        # Extract the relevant form element values
+
+        formtag=pagesoup.find('form',{"name":"IcingaModuleMonitoringFormsCommandObjectProcessCheckResultCommandForm"})
+        CSRFToken=formtag.findNext('input',{"name":"CSRFToken"})['value']
+        formUID=formtag.findNext('input',{"name":"formUID"})['value']
+        btn_submit=formtag.findNext('input',{"name":"btn_submit"})['value']
+
+        # Pass these values to the same URL as cgi_data
+        cgi_data={}
+        cgi_data['CSRFToken']=CSRFToken
+        cgi_data['formUID']=formUID
+        cgi_data['btn_submit']=btn_submit
+
+        cgi_data['status']=status
+        cgi_data['output']=check_output
+        cgi_data['perfdata']=performance_data
+
+        self.FetchURL(url, giveback="raw",cgi_data=cgi_data)
+
+    def _set_downtime(self, host, service, author, comment, fixed, start_time, end_time, hours, minutes):
+        # First retrieve the info page for this host/service
+        if service=="":
+            url=self.monitor_cgi_url+"/monitoring/host/schedule-downtime?host="+host
+        else:
+            url=self.monitor_cgi_url+"/monitoring/service/schedule-downtime?host="+host+"&service="+service
+
+        result = self.FetchURL(url, giveback="raw")
+
+        if result.error != "":
+            return result
+        else:
+            pageraw = result.result
+
+        pagesoup = BeautifulSoup(pageraw)
+
+        # Extract the relevant form element values
+
+        formtag=pagesoup.find('form',{"name":"IcingaModuleMonitoringFormsCommandObjectScheduleServiceDowntimeCommandForm"})
+        CSRFToken=formtag.findNext('input',{"name":"CSRFToken"})['value']
+        formUID=formtag.findNext('input',{"name":"formUID"})['value']
+        btn_submit=formtag.findNext('input',{"name":"btn_submit"})['value']
+
+        # Pass these values to the same URL as cgi_data
+        cgi_data={}
+        cgi_data['CSRFToken']=CSRFToken
+        cgi_data['formUID']=formUID
+        cgi_data['btn_submit']=btn_submit
+        cgi_data['comment']=comment
+        if fixed:
+           cgi_data['type']='fixed'
+        else:
+            cgi_data['type']='flexible'
+            cgi_data['hours']=hours
+            cgi_data['minutes']=minutes
+        #TODO: start_time and end_time format is unknown/free text
+        if start_time=='' or start_time=='n/a':
+            start=datetime.datetime.now().strftime("%Y-%m-%dT%H:%M:%S")
+        else:
+            start=start_time
+        if end_time=='' or end_time=='n/a':
+            end=(datetime.datetime.now() + datetime.timedelta(hours=hours, minutes=minutes)).strftime("%Y-%m-%dT%H:%M:%S")
+        else:
+            end=end_time
+        cgi_data['start']=start
+        cgi_data['end']=end
+
+
+        self.FetchURL(url, giveback="raw",cgi_data=cgi_data)
