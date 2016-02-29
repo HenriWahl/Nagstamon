@@ -2745,25 +2745,33 @@ class TableWidget(QTableWidget):
             action_edit_actions = QAction('Edit actions...', self)
             action_edit_actions.triggered.connect(self.action_edit_actions)
 
-            action_monitor = QAction('Monitor', self)
-            action_monitor.triggered.connect(self.action_monitor)
+            if 'Monitor' in self.server.MENU_ACTIONS:
+                action_monitor = QAction('Monitor', self)
+                action_monitor.triggered.connect(self.action_monitor)
 
-            action_recheck = QAction('Recheck', self)
-            action_recheck.triggered.connect(self.action_recheck)
+            if 'Recheck' in self.server.MENU_ACTIONS:
+                action_recheck = QAction('Recheck', self)
+                action_recheck.triggered.connect(self.action_recheck)
 
-            action_acknowledge = QAction('Acknowledge', self)
-            action_acknowledge.triggered.connect(self.action_acknowledge)
+            if 'Acknowledge' in self.server.MENU_ACTIONS:
+                action_acknowledge = QAction('Acknowledge', self)
+                action_acknowledge.triggered.connect(self.action_acknowledge)
 
-            action_downtime = QAction('Downtime', self)
-            action_downtime.triggered.connect(self.action_downtime)
+            if 'Downtime' in self.server.MENU_ACTIONS:
+                action_downtime = QAction('Downtime', self)
+                action_downtime.triggered.connect(self.action_downtime)
 
             # put actions into menu after separator
             self.action_menu.addAction(action_edit_actions)
             self.action_menu.addSeparator()
-            self.action_menu.addAction(action_monitor)
-            self.action_menu.addAction(action_recheck)
-            self.action_menu.addAction(action_acknowledge)
-            self.action_menu.addAction(action_downtime)
+            if 'Monitor' in self.server.MENU_ACTIONS:
+                self.action_menu.addAction(action_monitor)
+            if 'Recheck' in self.server.MENU_ACTIONS:
+                self.action_menu.addAction(action_recheck)
+            if 'Acknowledge' in self.server.MENU_ACTIONS:
+                self.action_menu.addAction(action_acknowledge)
+            if 'Downtime' in self.server.MENU_ACTIONS:
+                self.action_menu.addAction(action_downtime)
 
             # not all servers allow to submit fake check results
             if 'Submit check result' in self.server.MENU_ACTIONS:
