@@ -50,11 +50,11 @@ def strfdelta(tdelta, fmt):
     d["minutes"], d["seconds"] = divmod(rem, 60)
     return fmt.format(**d)
 
-class IcingaWeb2Server(GenericServer):
+class Icinga2Server(GenericServer):
     """
         object of Incinga server
     """
-    TYPE = u'IcingaWeb2'
+    TYPE = u'Icinga2'
     MENU_ACTIONS = ['Monitor','Recheck','Acknowledge','Submit check result', 'Downtime']
     STATES_MAPPING = {"hosts" : {0 : "UP", 1 : "DOWN", 2 : "UNREACHABLE"},\
                      "services" : {0 : "OK", 1 : "WARNING",  2 : "CRITICAL", 3 : "UNKNOWN"}}

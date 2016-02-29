@@ -26,7 +26,7 @@ from collections import OrderedDict
 from Nagstamon.Servers.Nagios import NagiosServer
 from Nagstamon.Servers.Centreon import CentreonServer
 from Nagstamon.Servers.Icinga import IcingaServer
-from Nagstamon.Servers.IcingaWeb2 import IcingaWeb2Server
+from Nagstamon.Servers.Icinga2 import Icinga2Server
 from Nagstamon.Servers.Multisite import MultisiteServer
 from Nagstamon.Servers.op5Monitor import Op5MonitorServer
 from Nagstamon.Servers.Opsview import OpsviewServer
@@ -159,7 +159,7 @@ def create_server(server=None):
 
 
 # moved registration process here because of circular dependencies
-for server in (CentreonServer, IcingaServer, IcingaWeb2Server, MultisiteServer, NagiosServer,
+for server in (CentreonServer, IcingaServer, Icinga2Server, MultisiteServer, NagiosServer,
                Op5MonitorServer, OpsviewServer, ThrukServer, ZabbixServer,
                LivestatusServer, ZenossServer):
     register_server(server)
