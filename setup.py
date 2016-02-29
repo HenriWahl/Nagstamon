@@ -1,3 +1,4 @@
+#!/usr/bin/env python3
 # encoding: utf-8
 
 # Nagstamon - Nagios status monitor for your desktop
@@ -17,7 +18,8 @@
 # along with this program; if not, write to the Free Software
 # Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA  02110-1301, USA
 
-from distutils.core import setup
+#from distutils.core import setup
+from setuptools import setup
 import sys
 import platform
 import os.path

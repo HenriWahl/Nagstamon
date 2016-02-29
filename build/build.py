@@ -107,31 +107,7 @@ def macmain():
 
 
 def debmain():
-    """
-    parser = OptionParser()
-    parser.add_option('-t', '--target', dest='target', help='Target application directory', default=DEFAULT_LOCATION)
-    parser.add_option('-d', '--debian', dest='debian', help='"debian" directory location', default='')
-    options, args = parser.parse_args()
-    if not options.debian:
-        options.debian = '%s/%sdebian' % (options.target, INSTALLER_DIR)
-    else:
-        options.debian = '%s/debian' % options.debian
-    options.debian = os.path.abspath(options.debian)
-
-    if not os.path.isfile('%s/rules' % (options.debian)):
-        print('Missing required "rules" file in "%s" directory' % options.debian)
-        return
-    execute_script_lines(['cd %(target)s; ln -s %(debian)s; chmod 755 %(debian)s/rules; fakeroot debian/rules build; \
-fakeroot debian/rules binary; fakeroot debian/rules clean; rm debian'],
-                         get_opt_dict(options))
-
-    print("\nFind .deb output in ../.\n")
-    """
-
     os.chdir(NAGSTAMON_DIR)
-
-    ###os.symlink('{0}{1}debian'.format(CURRENT_DIR, os.sep),
-    ###           '{0}{1}debian'.format(NAGSTAMON_DIR, os.sep))
 
     shutil.copytree('{0}{1}debian{1}'.format(CURRENT_DIR, os.sep), '{0}{1}debian'.format(NAGSTAMON_DIR, os.sep))
 
@@ -140,11 +116,6 @@ fakeroot debian/rules binary; fakeroot debian/rules clean; rm debian'],
     subprocess.call(['fakeroot', 'debian/rules', 'build'])
 
     subprocess.call(['fakeroot', 'debian/rules', 'binary'])
-
-    ###subprocess.call(['fakeroot', 'debian/rules', 'clean'])
-
-    ###os.remove('{0}{1}debian'.format(NAGSTAMON_DIR, os.sep))
-
 
 
 def rpmmain():
