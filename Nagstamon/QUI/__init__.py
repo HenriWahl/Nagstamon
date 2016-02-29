@@ -3681,7 +3681,6 @@ class Dialog_Settings(Dialog):
         self.toggle_toggles()
 
 
-    #def initialize(self, start_tab=0):
     def initialize(self):
         # apply configuration values
         # start with servers tab
@@ -3862,9 +3861,6 @@ class Dialog_Settings(Dialog):
 
         # tell statuswindow to refresh due to new settings
         self.changed.emit()
-
-
-        print('sheckSEWRVERS')
 
         # see if there are any servers created and enabled
         check_servers()
