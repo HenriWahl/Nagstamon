@@ -179,19 +179,20 @@ class Config(object):
 
         # Parse the command line
         parser = argparse.ArgumentParser(description='Nagios status monitor for your desktop')
-        parser.add_argument('cfgpath', nargs='?', help='Path for configuration folder')
-        args = parser.parse_args()
+        parser.add_argument('cfgpath', nargs='*', help='Path for configuration folder')
+        # necessary because otherwise setup.py goes crazy of argparse
+        args, unknown = parser.parse_known_args()
 
         # try to use a given config file - there must be one given
         # if sys.argv is larger than 1
         if args.cfgpath:
             # MacOSX related -psn argument by launchd
-            if args.cfgpath.find('-psn') != -1:
+            if '-psn' in args.cfgpath:
                 # new configdir approach
                 self.configdir = os.path.expanduser('~') + os.sep + '.nagstamon'
             else:
                 # allow to give a config file
-                self.configdir = args.cfgpath
+                self.configdir = args.cfgpath[0]
 
         # otherwise if there exits a configdir in current working directory it should be used
         elif os.path.exists(os.getcwd() + os.sep + 'nagstamon.config'):
