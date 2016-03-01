@@ -1193,9 +1193,9 @@ class GenericServer(object):
                     # most requests come without multipart/form-data
                     if multipart == False:
                         if cgi_data == None:
-                            response = self.session.get(url, timeout=10)
+                            response = self.session.get(url, timeout=30)
                         else:
-                            response = self.session.post(url, data=cgi_data, timeout=10)
+                            response = self.session.post(url, data=cgi_data, timeout=30)
                     else:
                         # Check_MK and Opsview need multipart/form-data encoding
                         # http://stackoverflow.com/questions/23120974/python-requests-post-multipart-form-data-without-filename-in-http-request#23131823
@@ -1220,9 +1220,9 @@ class GenericServer(object):
                     # most requests come without multipart/form-data
                     if multipart == False:
                         if cgi_data == None:
-                            response = temporary_session.get(url, timeout=10)
+                            response = temporary_session.get(url, timeout=30)
                         else:
-                            response = temporary_session.post(url, data=cgi_data, timeout=10)
+                            response = temporary_session.post(url, data=cgi_data, timeout=30)
                     else:
                         # Check_MK and Opsview nees multipart/form-data encoding
                         # http://stackoverflow.com/questions/23120974/python-requests-post-multipart-form-data-without-filename-in-http-request#23131823
@@ -1230,7 +1230,7 @@ class GenericServer(object):
                         for key in cgi_data:
                             form_data[key] = (None, cgi_data[key])
                         # get response with cgi_data encodes as files
-                        response = temporary_session.post(url, files=form_data)
+                        response = temporary_session.post(url, files=form_data, timeout=30)
 
                     # cleanup
                     del temporary_session

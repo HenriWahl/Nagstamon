@@ -29,6 +29,8 @@ CURRENT_DIR = os.getcwd()
 NAGSTAMON_DIR = os.path.normpath('{0}{1}..{1}'.format(CURRENT_DIR, os.sep))
 sys.path.append(NAGSTAMON_DIR)
 
+SCRIPTS_DIR = '{0}{1}scripts-{2}.{3}'.format(CURRENT_DIR, os.sep, sys.version_info.major, sys.version_info.minor)
+
 from Nagstamon.Config import AppInfo
 
 VERSION = AppInfo.VERSION
@@ -107,7 +109,14 @@ def macmain():
 
 
 def debmain():
+    shutil.rmtree(SCRIPTS_DIR, ignore_errors=True)
+    shutil.rmtree('{0}{1}.pybuild'.format(CURRENT_DIR, os.sep), ignore_errors=True)
+    shutil.rmtree('{0}{1}debian'.format(NAGSTAMON_DIR, os.sep), ignore_errors=True)
+
     os.chdir(NAGSTAMON_DIR)
+
+    # masquerade .py file as .py-less
+    shutil.copyfile('nagstamon.py', 'nagstamon')
 
     shutil.copytree('{0}{1}debian{1}'.format(CURRENT_DIR, os.sep), '{0}{1}debian'.format(NAGSTAMON_DIR, os.sep))
 
@@ -115,7 +124,12 @@ def debmain():
 
     subprocess.call(['fakeroot', 'debian/rules', 'build'])
 
+    #os.rename('{0}{1}nagstamon.py'.format(SCRIPTS_DIR, os.sep),
+    #          '{0}{1}nagstamon'.format(SCRIPTS_DIR, os.sep))
+
     subprocess.call(['fakeroot', 'debian/rules', 'binary'])
+
+    # do not clean because this will delete the whole 'build' directory - might be overhauled one day...
 
 
 def rpmmain():
