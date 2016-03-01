@@ -823,6 +823,9 @@ class StatusWindow(QWidget):
         systrayicon.show_popwin.connect(self.show_window_systrayicon)
         systrayicon.hide_popwin.connect(self.hide_window)
 
+        # hide status window if version check finished
+        check_version.version_info_retrieved.connect(self.hide_window)
+
         # worker and thread duo needed for notifications
         self.worker_notification_thread = QThread()
         self.worker_notification = self.Worker_Notification()
@@ -5010,6 +5013,9 @@ class CheckVersion(QObject):
 
     is_checking = False
 
+    version_info_retrieved = pyqtSignal()
+
+
     @pyqtSlot(bool, QWidget)
     def check(self, start_mode=False, parent=None):
         if self.is_checking == False:
@@ -5049,7 +5055,7 @@ class CheckVersion(QObject):
     @pyqtSlot()
     def reset_checking(self):
         """
-            reset checkinmg flag to avoid QThread crashes
+            reset checking flag to avoid QThread crashes
         """
         self.is_checking = False
 
@@ -5059,6 +5065,7 @@ class CheckVersion(QObject):
         """
             message dialog must be shown from GUI thread
         """
+        self.version_info_retrieved.emit()
         QMessageBox.information(self.parent, 'Nagstamon version check',  message, QMessageBox.Ok)
 
 
