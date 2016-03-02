@@ -324,10 +324,10 @@ class Icinga2Server(GenericServer):
 
     def _set_acknowledge(self, host, service, author, comment, sticky, notify, persistent, all_services=[]):
         # First retrieve the info page for this host/service
-        if service=='':
-            url=self.monitor_cgi_url+'/monitoring/service/acknowledge-problem?host='+host
+        if service == '':
+            url = self.monitor_cgi_url + '/monitoring/host/acknowledge-problem?host=' + host
         else:
-            url=self.monitor_cgi_url+'/monitoring/service/acknowledge-problem?host='+host+'&service='+service
+            url = self.monitor_cgi_url + '/monitoring/service/acknowledge-problem?host=' + host + '&service=' + service
 
         result = self.FetchURL(url, giveback='raw')
 
@@ -339,8 +339,8 @@ class Icinga2Server(GenericServer):
         pagesoup = BeautifulSoup(pageraw, 'html.parser')
 
         # Extract the relevant form element values
-
         formtag=pagesoup.find('form',{'name':'IcingaModuleMonitoringFormsCommandObjectAcknowledgeProblemCommandForm'})
+
         CSRFToken=formtag.findNext('input',{'name':'CSRFToken'})['value']
         formUID=formtag.findNext('input',{'name':'formUID'})['value']
         btn_submit=formtag.findNext('input',{'name':'btn_submit'})['value']
