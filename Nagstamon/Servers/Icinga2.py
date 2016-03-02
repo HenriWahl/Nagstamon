@@ -57,10 +57,10 @@ class Icinga2Server(GenericServer):
     """
     TYPE = u'Icinga2'
     MENU_ACTIONS = ['Monitor','Recheck','Acknowledge','Submit check result', 'Downtime']
-    STATES_MAPPING = {'hosts' : {0 : 'UP', 1 : 'DOWN', 2 : 'UNREACHABLE'},\
-                     'services' : {0 : 'OK', 1 : 'WARNING',  2 : 'CRITICAL', 3 : 'UNKNOWN'}}
-    STATES_MAPPING_REV = {'hosts' : { 'UP':0, 'DOWN':1, 'UNREACHABLE':2},\
-                     'services' : {'OK':0, 'WARNING':1,  'CRITICAL':2, 'UNKNOWN':3}}
+    STATES_MAPPING = {'hosts' : {'0' : 'UP', '1' : 'DOWN', '2' : 'UNREACHABLE'},\
+                     'services' : {'0' : 'OK', '1' : 'WARNING',  '2' : 'CRITICAL', '3' : 'UNKNOWN'}}
+    STATES_MAPPING_REV = {'hosts' : { 'UP': '0', 'DOWN': '1', 'UNREACHABLE': '2'},\
+                     'services' : {'OK': '0', 'WARNING': '1',  'CRITICAL': '2', 'UNKNOWN': '3'}}
     BROWSER_URLS = { 'monitor': '$MONITOR-CGI$/dashboard',\
                     'hosts': '$MONITOR-CGI$/monitoring/list/hosts',\
                     'services': '$MONITOR-CGI$/monitoring/list/services',\
@@ -180,14 +180,13 @@ class Icinga2Server(GenericServer):
                         host_name = h['host_display_name']
 
                     # host objects contain service objects
-                    ###if not self.new_hosts.has_key(host_name):
                     if not host_name in self.new_hosts:
                         self.new_hosts[host_name] = GenericHost()
                         self.new_hosts[host_name].name = host_name
                         self.new_hosts[host_name].server = self.name
                         self.new_hosts[host_name].status = self.STATES_MAPPING['hosts'][h['host_state']]
-                        self.new_hosts[host_name].last_check = datetime.datetime.utcfromtimestamp(h['host_last_check'])
-                        duration=datetime.datetime.now()-datetime.datetime.utcfromtimestamp(h['host_last_state_change'])
+                        self.new_hosts[host_name].last_check = datetime.datetime.utcfromtimestamp(int(h['host_last_check']))
+                        duration=datetime.datetime.now()-datetime.datetime.utcfromtimestamp(int(h['host_last_state_change']))
                         self.new_hosts[host_name].duration = strfdelta(duration, '{days}d {hours}h {minutes}m {seconds}s')
                         self.new_hosts[host_name].attempt = h['host_attempt']
                         self.new_hosts[host_name].status_information= h['host_output'].replace('\n', ' ').strip()
@@ -259,8 +258,8 @@ class Icinga2Server(GenericServer):
                         self.new_hosts[host_name].services[service_name].name = service_name
                         self.new_hosts[host_name].services[service_name].server = self.name
                         self.new_hosts[host_name].services[service_name].status = self.STATES_MAPPING['services'][s['service_state']]
-                        self.new_hosts[host_name].services[service_name].last_check = datetime.datetime.utcfromtimestamp(s['service_last_check'])
-                        duration=datetime.datetime.now()-datetime.datetime.utcfromtimestamp(s['service_last_state_change'])
+                        self.new_hosts[host_name].services[service_name].last_check = datetime.datetime.utcfromtimestamp(int(s['service_last_check']))
+                        duration=datetime.datetime.now()-datetime.datetime.utcfromtimestamp(int(s['service_last_state_change']))
                         self.new_hosts[host_name].services[service_name].duration = strfdelta(duration, '{days}d {hours}h {minutes}m {seconds}s')
                         self.new_hosts[host_name].services[service_name].attempt = s['service_attempt']
                         self.new_hosts[host_name].services[service_name].status_information = s['service_output'].replace('\n', ' ').strip()
