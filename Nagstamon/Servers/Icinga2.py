@@ -364,6 +364,7 @@ class Icinga2Server(GenericServer):
                 #cheap, recursive solution...
                 self._set_acknowledge(host, s, author, comment, sticky, notify, persistent, [])
 
+
     def _set_submit_check_result(self, host, service, state, comment, check_output, performance_data):
         # First retrieve the info page for this host/service
         if service=='':
@@ -401,6 +402,7 @@ class Icinga2Server(GenericServer):
 
         self.FetchURL(url, giveback='raw',cgi_data=cgi_data)
 
+
     def _set_downtime(self, host, service, author, comment, fixed, start_time, end_time, hours, minutes):
         # First retrieve the info page for this host/service
         if service=='':
@@ -418,6 +420,10 @@ class Icinga2Server(GenericServer):
         pagesoup = BeautifulSoup(pageraw, 'html.parser')
 
         # Extract the relevant form element values
+        if service=='':
+            formtag=pagesoup.find('form',{'name':'IcingaModuleMonitoringFormsCommandObjectScheduleHostDowntimeCommandForm'})
+        else:
+            formtag=pagesoup.find('form',{'name':'IcingaModuleMonitoringFormsCommandObjectScheduleServiceDowntimeCommandForm'})
 
         formtag=pagesoup.find('form',{'name':'IcingaModuleMonitoringFormsCommandObjectScheduleServiceDowntimeCommandForm'})
         CSRFToken=formtag.findNext('input',{'name':'CSRFToken'})['value']
@@ -428,25 +434,41 @@ class Icinga2Server(GenericServer):
         cgi_data={}
         cgi_data['CSRFToken']=CSRFToken
         cgi_data['formUID']=formUID
-        cgi_data['btn_submit']=btn_submit
-        cgi_data['comment']=comment
+        cgi_data['btn_submit'] = btn_submit
+        cgi_data['comment'] = comment
         if fixed:
-           cgi_data['type']='fixed'
+           cgi_data['type'] = 'fixed'
         else:
-            cgi_data['type']='flexible'
-            cgi_data['hours']=hours
-            cgi_data['minutes']=minutes
+            cgi_data['type'] = 'flexible'
+            cgi_data['hours'] = hours
+            cgi_data['minutes'] = minutes
         #TODO: start_time and end_time format is unknown/free text
-        if start_time=='' or start_time=='n/a':
-            start=datetime.datetime.now().strftime('%Y-%m-%dT%H:%M:%S')
+        if start_time == '' or start_time == 'n/a':
+            start = datetime.datetime.now().strftime('%Y-%m-%dT%H:%M:%S')
         else:
-            start=start_time
-        if end_time=='' or end_time=='n/a':
-            end=(datetime.datetime.now() + datetime.timedelta(hours=hours, minutes=minutes)).strftime('%Y-%m-%dT%H:%M:%S')
+            start = start_time
+        if end_time == '' or end_time == 'n/a':
+            end = (datetime.datetime.now() + datetime.timedelta(hours=hours, minutes=minutes)).strftime('%Y-%m-%dT%H:%M:%S')
         else:
-            end=end_time
-        cgi_data['start']=start
-        cgi_data['end']=end
+            end = end_time
 
+        cgi_data['start'] = start
+        cgi_data['end'] = end
 
         self.FetchURL(url, giveback='raw', cgi_data=cgi_data)
+
+
+    def get_start_end(self, host):
+        '''
+            for GUI to get actual downtime start and end from server - they may vary so it's better to get
+            directly from web interface
+        '''
+        try:
+            downtime = self.FetchURL(self.monitor_cgi_url + '/monitoring/host/schedule-downtime?host=' + host)
+            start = downtime.result.find('input', {'name': 'start'})['value']
+            end = downtime.result.find('input', {'name': 'end'})['value']
+            # give values back as tuple
+            return start, end
+        except:
+            self.Error(sys.exc_info())
+            return 'n/a', 'n/a'
