@@ -303,7 +303,7 @@ class Icinga2Server(GenericServer):
         else:
             pageraw = result.result
 
-        pagesoup = BeautifulSoup(pageraw)
+        pagesoup = BeautifulSoup(pageraw, 'html.parser')
 
         # Extract the relevant form element values
 
@@ -334,7 +334,7 @@ class Icinga2Server(GenericServer):
         else:
             pageraw = result.result
 
-        pagesoup = BeautifulSoup(pageraw)
+        pagesoup = BeautifulSoup(pageraw, 'html.parser')
 
         # Extract the relevant form element values
 
@@ -378,7 +378,7 @@ class Icinga2Server(GenericServer):
         else:
             pageraw = result.result
 
-        pagesoup = BeautifulSoup(pageraw)
+        pagesoup = BeautifulSoup(pageraw, 'html.parser')
 
         # Extract the relevant form element values
 
@@ -413,7 +413,7 @@ class Icinga2Server(GenericServer):
         else:
             pageraw = result.result
 
-        pagesoup = BeautifulSoup(pageraw)
+        pagesoup = BeautifulSoup(pageraw, 'html.parser')
 
         # Extract the relevant form element values
 

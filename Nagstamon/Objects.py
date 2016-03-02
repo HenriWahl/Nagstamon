@@ -55,39 +55,40 @@ class GenericObject(object):
 
 
     def is_passive_only(self):
-        return bool(self.passiveonly)
+        return bool(int(self.passiveonly))
 
 
     def is_flapping(self):
-        return bool(self.flapping)
+        return bool(int(self.flapping))
 
 
     def has_notifications_disabled(self):
-        return bool(self.notifications)
+        return bool(int(self.notifications))
 
 
     def is_acknowledged(self):
-        return bool(self.acknowledged)
+        return bool(int(self.acknowledged))
 
 
     def is_in_scheduled_downtime(self):
-        return bool(self.scheduled_downtime)
+        return bool(int(self.scheduled_downtime))
 
 
     def is_visible(self):
-        return bool(self.visible)
+        return bool(int(self.visible))
 
 
     def get_name(self):
         """
-        return stringified name
+            return stringified name
         """
         return str(self.name)
 
 
     def get_host_name(self):
-        """ Extracts host name from status item.
-        Presentation purpose.
+        """
+            Extracts host name from status item.
+            Presentation purpose.
         """
         return ''
 
@@ -101,7 +102,7 @@ class GenericObject(object):
 
     def get_hash(self):
         """
-        returns hash of event status information - different for host and service thus empty here
+            returns hash of event status information - different for host and service thus empty here
         """
         return ''
 
@@ -111,7 +112,7 @@ class GenericObject(object):
             yield str(self.__dict__[c])
 
 
-    # the following methods are used for sorted + methodcaller
+    # the following methods are used for sorted + methodcaller in QUI.py
     def compare_host(self):
         return self.host.lower()
 
