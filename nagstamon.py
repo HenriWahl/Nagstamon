@@ -52,6 +52,7 @@ def lock_cfg_folder(folder):
             if psutil.pid_exists(pid):
                 return False
 
+        pidFile.seek(0)
         pidFile.truncate()
         print(os.getpid(), file=pidFile)
 
