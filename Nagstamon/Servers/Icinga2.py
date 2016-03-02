@@ -45,9 +45,9 @@ from collections import OrderedDict
 
 
 def strfdelta(tdelta, fmt):
-    d = {"days": tdelta.days}
-    d["hours"], rem = divmod(tdelta.seconds, 3600)
-    d["minutes"], d["seconds"] = divmod(rem, 60)
+    d = {'days': tdelta.days}
+    d['hours'], rem = divmod(tdelta.seconds, 3600)
+    d['minutes'], d['seconds'] = divmod(rem, 60)
     return fmt.format(**d)
 
 
@@ -55,16 +55,17 @@ class Icinga2Server(GenericServer):
     """
         object of Incinga server
     """
-    TYPE = u'Icinga2'
+    TYPE = 'Icinga2'
     MENU_ACTIONS = ['Monitor','Recheck','Acknowledge','Submit check result', 'Downtime']
-    STATES_MAPPING = {'hosts' : {'0' : 'UP', '1' : 'DOWN', '2' : 'UNREACHABLE'},\
-                     'services' : {'0' : 'OK', '1' : 'WARNING',  '2' : 'CRITICAL', '3' : 'UNKNOWN'}}
-    STATES_MAPPING_REV = {'hosts' : { 'UP': '0', 'DOWN': '1', 'UNREACHABLE': '2'},\
-                     'services' : {'OK': '0', 'WARNING': '1',  'CRITICAL': '2', 'UNKNOWN': '3'}}
+    STATES_MAPPING = {'hosts' : {0 : 'UP', 1 : 'DOWN', 2 : 'UNREACHABLE'},\
+                     'services' : {0 : 'OK', 1 : 'WARNING',  2 : 'CRITICAL', 3 : 'UNKNOWN'}}
+    STATES_MAPPING_REV = {'hosts' : { 'UP': 0, 'DOWN': 1, 'UNREACHABLE': 2},\
+                     'services' : {'OK': 0, 'WARNING': 1,  'CRITICAL': 2, 'UNKNOWN': 3}}
     BROWSER_URLS = { 'monitor': '$MONITOR-CGI$/dashboard',\
                     'hosts': '$MONITOR-CGI$/monitoring/list/hosts',\
                     'services': '$MONITOR-CGI$/monitoring/list/services',\
                     'history': '$MONITOR-CGI$/monitoring/list/eventhistory?timestamp>=-7 days'}
+
 
     def init_config(self):
         """
@@ -144,6 +145,8 @@ class Icinga2Server(GenericServer):
         return Result()
 
 
+
+
     def _get_status_JSON(self):
         """
             Get status from Icinga Server - the JSON way
@@ -161,7 +164,7 @@ class Icinga2Server(GenericServer):
 
                 if error != '': return Result(result=jsonraw, error=error)
 
-                hosts = copy.deepcopy(json.loads(jsonraw))
+                hosts = json.loads(jsonraw)
 
                 for host in hosts:
                     # make dict of tuples for better reading
@@ -184,17 +187,17 @@ class Icinga2Server(GenericServer):
                         self.new_hosts[host_name] = GenericHost()
                         self.new_hosts[host_name].name = host_name
                         self.new_hosts[host_name].server = self.name
-                        self.new_hosts[host_name].status = self.STATES_MAPPING['hosts'][h['host_state']]
+                        self.new_hosts[host_name].status = self.STATES_MAPPING['hosts'][int(h['host_state'])]
                         self.new_hosts[host_name].last_check = datetime.datetime.utcfromtimestamp(int(h['host_last_check']))
                         duration=datetime.datetime.now()-datetime.datetime.utcfromtimestamp(int(h['host_last_state_change']))
                         self.new_hosts[host_name].duration = strfdelta(duration, '{days}d {hours}h {minutes}m {seconds}s')
                         self.new_hosts[host_name].attempt = h['host_attempt']
                         self.new_hosts[host_name].status_information= h['host_output'].replace('\n', ' ').strip()
-                        self.new_hosts[host_name].passiveonly = not(h['host_active_checks_enabled'])
-                        self.new_hosts[host_name].notifications_disabled = not(h['host_notifications_enabled'])
-                        self.new_hosts[host_name].flapping = h['host_is_flapping']
-                        self.new_hosts[host_name].acknowledged = h['host_acknowledged']
-                        self.new_hosts[host_name].scheduled_downtime = h['host_in_downtime']
+                        self.new_hosts[host_name].passiveonly = not(int(h['host_active_checks_enabled']))
+                        self.new_hosts[host_name].notifications_disabled = not(int(h['host_notifications_enabled']))
+                        self.new_hosts[host_name].flapping = int(h['host_is_flapping'])
+                        self.new_hosts[host_name].acknowledged = int(h['host_acknowledged'])
+                        self.new_hosts[host_name].scheduled_downtime = int(h['host_in_downtime'])
                         self.new_hosts[host_name].status_type = status_type
                     del h, host_name
         except:
@@ -257,18 +260,17 @@ class Icinga2Server(GenericServer):
                         self.new_hosts[host_name].services[service_name].host = host_name
                         self.new_hosts[host_name].services[service_name].name = service_name
                         self.new_hosts[host_name].services[service_name].server = self.name
-                        self.new_hosts[host_name].services[service_name].status = self.STATES_MAPPING['services'][s['service_state']]
+                        self.new_hosts[host_name].services[service_name].status = self.STATES_MAPPING['services'][int(s['service_state'])]
                         self.new_hosts[host_name].services[service_name].last_check = datetime.datetime.utcfromtimestamp(int(s['service_last_check']))
                         duration=datetime.datetime.now()-datetime.datetime.utcfromtimestamp(int(s['service_last_state_change']))
                         self.new_hosts[host_name].services[service_name].duration = strfdelta(duration, '{days}d {hours}h {minutes}m {seconds}s')
                         self.new_hosts[host_name].services[service_name].attempt = s['service_attempt']
                         self.new_hosts[host_name].services[service_name].status_information = s['service_output'].replace('\n', ' ').strip()
-                        self.new_hosts[host_name].services[service_name].passiveonly = not(s['service_active_checks_enabled'])
-                        self.new_hosts[host_name].services[service_name].notifications_disabled = not(s['service_notifications_enabled'])
-                        self.new_hosts[host_name].services[service_name].flapping = s['service_is_flapping']
-                        self.new_hosts[host_name].services[service_name].acknowledged = s['service_acknowledged']
-                        self.new_hosts[host_name].services[service_name].scheduled_downtime = s['service_in_downtime']
-
+                        self.new_hosts[host_name].services[service_name].passiveonly = not(int(s['service_active_checks_enabled']))
+                        self.new_hosts[host_name].services[service_name].notifications_disabled = not(int(s['service_notifications_enabled']))
+                        self.new_hosts[host_name].services[service_name].flapping = int(s['service_is_flapping'])
+                        self.new_hosts[host_name].services[service_name].acknowledged = int(s['service_acknowledged'])
+                        self.new_hosts[host_name].services[service_name].scheduled_downtime = int(s['service_in_downtime'])
                         self.new_hosts[host_name].services[service_name].status_type = status_type
                     del s, host_name, service_name
         except:
