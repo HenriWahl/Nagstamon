@@ -4243,8 +4243,8 @@ class Dialog_Server(Dialog):
                                  self.ui.input_checkbox_use_autologin : ['Centreon'],
                                  self.ui.input_lineedit_autologin_key : ['Centreon'],
                                  self.ui.label_autologin_key : ['Centreon'],
-                                 self.ui.input_checkbox_use_display_name_host : ['Icinga'],
-                                 self.ui.input_checkbox_use_display_name_service : ['Icinga']
+                                 self.ui.input_checkbox_use_display_name_host : ['Icinga', 'Icinga2'],
+                                 self.ui.input_checkbox_use_display_name_service : ['Icinga', 'Icinga2']
                                 }
 
         # fill default order fields combobox with monitor server types
