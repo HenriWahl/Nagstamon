@@ -18,17 +18,57 @@
 # along with this program; if not, write to the Free Software
 # Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA  02110-1301, USA
 
+import os
 import sys
+import psutil
 import socket
 
 # fix/patch for https://bugs.launchpad.net/ubuntu/+source/nagstamon/+bug/732544
 socket.setdefaulttimeout(30)
+
+def lock_cfg_folder(folder):
+    '''
+    Locks the config folder by writing a PID file into it
+    Returns True on success, False when lock failed
+    '''
+    pidFilePath = os.path.join(folder, 'nagstamon.pid')
+
+    # Open the file for rw or create a new one if missing
+    if os.path.exists(pidFilePath):
+        mode = 'r+t'
+    else:
+        mode = 'wt'
+
+    with open(pidFilePath, mode, newline=None) as pidFile:
+        pid = None
+        if mode.startswith('r'):
+            try:
+                pid = int(pidFile.readline().strip())
+            except ValueError:
+                pass
+
+        if pid is not None:
+            # Found a pid stored in the pid file, check if its still running
+            if psutil.pid_exists(pid):
+                return False
+
+        pidFile.truncate()
+        print(os.getpid(), file=pidFile)
+
+    return True
+
 
 try:
     if __name__ == '__main__':
         # Initialize global configuration
         from Nagstamon.Config import (conf,
                                       RESOURCES)
+
+        # Acquire the lock
+        if not lock_cfg_folder(conf.configdir):
+            print('An instance is already running this config ({})'.format(conf.configdir))
+            sys.exit(1)
+
         # get GUI
         from Nagstamon.QUI import (APP,
                                    statuswindow,
