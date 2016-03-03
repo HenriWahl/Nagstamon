@@ -332,6 +332,11 @@ class Config(object):
                 if 'autologin_key' in servers[server].__dict__.keys():
                     if len(servers[server].__dict__['autologin_key']) > 0:
                         servers[server].autologin_key  = self.DeObfuscate(servers[server].autologin_key)
+
+                # only needed for those who used Icinga2 before it became icingaWeb2
+                if servers[server].type == 'Icinga2':
+                    servers[server].type = 'IcingaWeb2'
+
         except:
             import traceback
             traceback.print_exc(file=sys.stdout)

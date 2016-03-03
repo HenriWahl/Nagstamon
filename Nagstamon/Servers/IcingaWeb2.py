@@ -51,11 +51,11 @@ def strfdelta(tdelta, fmt):
     return fmt.format(**d)
 
 
-class Icinga2Server(GenericServer):
+class IcingaWeb2Server(GenericServer):
     """
         object of Incinga server
     """
-    TYPE = 'Icinga2'
+    TYPE = 'IcingaWeb2'
     MENU_ACTIONS = ['Monitor','Recheck','Acknowledge','Submit check result', 'Downtime']
     STATES_MAPPING = {'hosts' : {0 : 'UP', 1 : 'DOWN', 2 : 'UNREACHABLE'},\
                      'services' : {0 : 'OK', 1 : 'WARNING',  2 : 'CRITICAL', 3 : 'UNKNOWN'}}
@@ -441,7 +441,6 @@ class Icinga2Server(GenericServer):
             cgi_data['type'] = 'flexible'
             cgi_data['hours'] = hours
             cgi_data['minutes'] = minutes
-        #TODO: start_time and end_time format is unknown/free text
         if start_time == '' or start_time == 'n/a':
             start = datetime.datetime.now().strftime('%Y-%m-%dT%H:%M:%S')
         else:
