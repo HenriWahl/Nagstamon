@@ -80,14 +80,15 @@ class GenericObject(object):
 
     def get_name(self):
         """
-        return stringified name
+            return stringified name
         """
         return str(self.name)
 
 
     def get_host_name(self):
-        """ Extracts host name from status item.
-        Presentation purpose.
+        """
+            Extracts host name from status item.
+            Presentation purpose.
         """
         return ''
 

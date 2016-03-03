@@ -807,6 +807,7 @@ class StatusWindow(QWidget):
         self.toparea.label_empty_space.mouse_pressed.connect(self.store_position)
 
         # buttons in toparea
+        self.toparea.button_filters.clicked.connect(dialogs.settings.show_filters)
         self.toparea.button_recheck_all.clicked.connect(self.recheck_all)
         self.toparea.button_refresh.clicked.connect(self.refresh)
         self.toparea.button_settings.clicked.connect(self.hide_window)
@@ -816,12 +817,18 @@ class StatusWindow(QWidget):
         # if monitor was selected in combobox its monitor window is opened
         self.toparea.combobox_servers.monitor_opened.connect(self.hide_window)
 
+        # hide if settings dialog pops up
+        dialogs.settings.show_dialog.connect(self.hide_window)
+
         # refresh all information after changed settings
         dialogs.settings.changed.connect(self.refresh)
 
         # show status popup when systray icon was clicked
         systrayicon.show_popwin.connect(self.show_window_systrayicon)
         systrayicon.hide_popwin.connect(self.hide_window)
+
+        # hide status window if version check finished
+        check_version.version_info_retrieved.connect(self.hide_window)
 
         # worker and thread duo needed for notifications
         self.worker_notification_thread = QThread()
@@ -3440,6 +3447,9 @@ class Dialog(QObject):
     """
         one single dialog
     """
+    # send signal e.g. to statuswindow if dialog pops up
+    show_dialog = pyqtSignal()
+
     # dummy toggle dependencies
     TOGGLE_DEPS = {}
     # auxiliary list of checkboxes which HIDE some other widgets if triggered - for example proxy OS settings
@@ -3482,6 +3492,9 @@ class Dialog(QObject):
         """
             simple how method, to be enriched
         """
+        # tell the world that dialog pops up
+        self.show_dialog.emit()
+
         # reset window if only needs smaller screen estate
         self.window.adjustSize()
         self.window.show()
@@ -3743,6 +3756,9 @@ class Dialog_Settings(Dialog):
 
 
     def show(self, tab=0):
+        # tell the world that dialog pops up
+        self.show_dialog.emit()
+
         # jump to actions tab in settings dialog
         self.ui.tabs.setCurrentIndex(tab)
 
@@ -3759,6 +3775,14 @@ class Dialog_Settings(Dialog):
         self.show()
         # emulate button click
         self.ui.button_new_server.clicked.emit()
+
+
+    @pyqtSlot()
+    def show_filters(self):
+        """
+            opens filters settings after clicking button_filters in toparea
+        """
+        self.show(tab=2)
 
 
     def  ok(self):
@@ -4240,8 +4264,8 @@ class Dialog_Server(Dialog):
                                  self.ui.input_checkbox_use_autologin : ['Centreon'],
                                  self.ui.input_lineedit_autologin_key : ['Centreon'],
                                  self.ui.label_autologin_key : ['Centreon'],
-                                 self.ui.input_checkbox_use_display_name_host : ['Icinga'],
-                                 self.ui.input_checkbox_use_display_name_service : ['Icinga']
+                                 self.ui.input_checkbox_use_display_name_host : ['Icinga', 'IcingaWeb2'],
+                                 self.ui.input_checkbox_use_display_name_service : ['Icinga', 'IcingaWeb2']
                                 }
 
         # fill default order fields combobox with monitor server types
@@ -5010,6 +5034,9 @@ class CheckVersion(QObject):
 
     is_checking = False
 
+    version_info_retrieved = pyqtSignal()
+
+
     @pyqtSlot(bool, QWidget)
     def check(self, start_mode=False, parent=None):
         if self.is_checking == False:
@@ -5049,7 +5076,7 @@ class CheckVersion(QObject):
     @pyqtSlot()
     def reset_checking(self):
         """
-            reset checkinmg flag to avoid QThread crashes
+            reset checking flag to avoid QThread crashes
         """
         self.is_checking = False
 
@@ -5059,6 +5086,7 @@ class CheckVersion(QObject):
         """
             message dialog must be shown from GUI thread
         """
+        self.version_info_retrieved.emit()
         QMessageBox.information(self.parent, 'Nagstamon version check',  message, QMessageBox.Ok)
 
 

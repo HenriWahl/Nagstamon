@@ -5,10 +5,10 @@ export DH_ALWAYS_EXCLUDE=LICENSE
 %:
 	dh $@ --with python3 --buildsystem=pybuild
 
-override_dh_link:
-	dh_link usr/share/nagstamon/nagstamon.py usr/bin/nagstamon
+#override_dh_link:
+#	dh_link usr/share/nagstamon/nagstamon.py usr/bin/nagstamon
 
-override_dh_auto_install:
-	dh_auto_install -- --install-lib=/usr/share/nagstamon \
-	--install-scripts=/usr/share/nagstamon \
+#override_dh_auto_install:
+#	dh_auto_install -- --install-lib=/usr/share/nagstamon \
+#	--install-scripts=/usr/share/nagstamon \
 
