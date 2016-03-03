@@ -21,6 +21,7 @@
 import os
 import sys
 import psutil
+import getpass
 import socket
 
 # fix/patch for https://bugs.launchpad.net/ubuntu/+source/nagstamon/+bug/732544
@@ -28,7 +29,8 @@ socket.setdefaulttimeout(30)
 
 def lock_cfg_folder(folder):
     '''
-    Locks the config folder by writing a PID file into it
+    Locks the config folder by writing a PID file into it.
+    The lock is relative to user name and system's boot time.
     Returns True on success, False when lock failed
     '''
     pidFilePath = os.path.join(folder, 'nagstamon.pid')
@@ -40,21 +42,30 @@ def lock_cfg_folder(folder):
         mode = 'wt'
 
     with open(pidFilePath, mode, newline=None) as pidFile:
+        curPid = os.getpid()
+        curBootTime = int(psutil.boot_time())
+        curUserName = getpass.getuser().replace('@','_').strip()
+
         pid = None
+        bootTime = None
+        userName = None
         if mode.startswith('r'):
             try:
-                pid = int(pidFile.readline().strip())
-            except ValueError:
+                procInfo = pidFile.readline().strip().split('@')
+                pid = int(procInfo[0])
+                bootTime = int(procInfo[1])
+                userName = procInfo[2].strip()
+            except( ValueError, IndexError ):
                 pass
 
-        if pid is not None:
+        if pid is not None and bootTime is not None and userName is not None:
             # Found a pid stored in the pid file, check if its still running
-            if psutil.pid_exists(pid):
+            if bootTime == curBootTime and userName == curUserName and psutil.pid_exists(pid):
                 return False
 
         pidFile.seek(0)
         pidFile.truncate()
-        print(os.getpid(), file=pidFile)
+        print("{}@{}@{}".format(curPid,curBootTime,curUserName), file=pidFile)
 
     return True
 
