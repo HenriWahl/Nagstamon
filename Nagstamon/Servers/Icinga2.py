@@ -31,17 +31,17 @@
 
 
 from Nagstamon.Servers.Generic import GenericServer
-import urllib.request, urllib.parse, urllib.error
+#import urllib.request, urllib.parse, urllib.error
 import sys
 import copy
 import json
 import datetime
-import webbrowser
+#import webbrowser
 from bs4 import BeautifulSoup
 from Nagstamon.Objects import (GenericHost, GenericService, Result)
-from Nagstamon.Helpers import not_empty
-from Nagstamon.Config import (conf, AppInfo)
-from collections import OrderedDict
+#from Nagstamon.Helpers import not_empty
+#from Nagstamon.Config import (conf, AppInfo)
+#from collections import OrderedDict
 
 
 def strfdelta(tdelta, fmt):
@@ -425,7 +425,6 @@ class Icinga2Server(GenericServer):
         else:
             formtag=pagesoup.find('form',{'name':'IcingaModuleMonitoringFormsCommandObjectScheduleServiceDowntimeCommandForm'})
 
-        formtag=pagesoup.find('form',{'name':'IcingaModuleMonitoringFormsCommandObjectScheduleServiceDowntimeCommandForm'})
         CSRFToken=formtag.findNext('input',{'name':'CSRFToken'})['value']
         formUID=formtag.findNext('input',{'name':'formUID'})['value']
         btn_submit=formtag.findNext('input',{'name':'btn_submit'})['value']
