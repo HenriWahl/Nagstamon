@@ -20,54 +20,12 @@
 
 import os
 import sys
-import psutil
-import getpass
+###import psutil
+###import getpass
 import socket
 
 # fix/patch for https://bugs.launchpad.net/ubuntu/+source/nagstamon/+bug/732544
 socket.setdefaulttimeout(30)
-
-def lock_cfg_folder(folder):
-    '''
-    Locks the config folder by writing a PID file into it.
-    The lock is relative to user name and system's boot time.
-    Returns True on success, False when lock failed
-    '''
-    pidFilePath = os.path.join(folder, 'nagstamon.pid')
-
-    # Open the file for rw or create a new one if missing
-    if os.path.exists(pidFilePath):
-        mode = 'r+t'
-    else:
-        mode = 'wt'
-
-    with open(pidFilePath, mode, newline=None) as pidFile:
-        curPid = os.getpid()
-        curBootTime = int(psutil.boot_time())
-        curUserName = getpass.getuser().replace('@','_').strip()
-
-        pid = None
-        bootTime = None
-        userName = None
-        if mode.startswith('r'):
-            try:
-                procInfo = pidFile.readline().strip().split('@')
-                pid = int(procInfo[0])
-                bootTime = int(procInfo[1])
-                userName = procInfo[2].strip()
-            except( ValueError, IndexError ):
-                pass
-
-        if pid is not None and bootTime is not None and userName is not None:
-            # Found a pid stored in the pid file, check if its still running
-            if bootTime == curBootTime and userName == curUserName and psutil.pid_exists(pid):
-                return False
-
-        pidFile.seek(0)
-        pidFile.truncate()
-        print("{}@{}@{}".format(curPid,curBootTime,curUserName), file=pidFile)
-
-    return True
 
 
 try:
@@ -76,8 +34,10 @@ try:
         from Nagstamon.Config import (conf,
                                       RESOURCES)
 
+        from Nagstamon.Helpers import lock_config_folder
+
         # Acquire the lock
-        if not lock_cfg_folder(conf.configdir):
+        if not lock_config_folder(conf.configdir):
             print('An instance is already running this config ({})'.format(conf.configdir))
             sys.exit(1)
 
@@ -92,12 +52,6 @@ try:
                                        get_enabled_servers)
 
         # ask for help if no servers are configured
-        #if len(servers) == 0:
-        #    dialogs.server_missing.show()
-        #    dialogs.server_missing.initialize('no_server')
-        #elif len(get_enabled_servers()) == 0:
-        #    dialogs.server_missing.show()
-        #    dialogs.server_missing.initialize('no_server_enabled')
         check_servers()
 
         # show and resize status window

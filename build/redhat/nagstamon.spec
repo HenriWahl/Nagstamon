@@ -21,6 +21,7 @@ Requires: python3-beautifulsoup4
 Requires: python3-crypto
 Requires: python3-qt5
 Requires: python3-requests
+Requires: python3-psutil
 Requires: python3-setuptools
 Requires: python3-SecretStorage
 Requires: qt5-qtsvg

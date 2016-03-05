@@ -22,7 +22,9 @@ import subprocess
 import re
 import sys
 import traceback
-
+import os
+import psutil
+import getpass
 
 # import md5 for centreon url autologin encoding
 from hashlib import md5
@@ -305,8 +307,52 @@ def MD5ify(string):
     return md5(string).hexdigest()
 
 
-def RunNotificationAction(action):
-    """
-        run action for notification
-    """
-    subprocess.Popen(action, shell=True)
+def lock_config_folder(folder):
+    '''
+        Locks the config folder by writing a PID file into it.
+        The lock is relative to user name and system's boot time.
+        Returns True on success, False when lock failed
+        
+        Return True too if there is any locking error - if no locking ins possible it might run as well
+        This is also the case if some setup uses the nagstamon.config directory which most probably
+        will be read-only
+    '''
+    pidFilePath = os.path.join(folder, 'nagstamon.pid')
+
+    try:
+        # Open the file for rw or create a new one if missing
+        if os.path.exists(pidFilePath):
+            mode = 'r+t'
+        else:
+            mode = 'wt'
+    
+        with open(pidFilePath, mode, newline=None) as pidFile:
+            curPid = os.getpid()
+            curBootTime = int(psutil.boot_time())
+            curUserName = getpass.getuser().replace('@', '_').strip()
+    
+            pid = None
+            bootTime = None
+            userName = None
+            if mode.startswith('r'):
+                try:
+                    procInfo = pidFile.readline().strip().split('@')
+                    pid = int(procInfo[0])
+                    bootTime = int(procInfo[1])
+                    userName = procInfo[2].strip()
+                except( ValueError, IndexError ):
+                    pass
+    
+            if pid is not None and bootTime is not None and userName is not None:
+                # Found a pid stored in the pid file, check if its still running
+                if bootTime == curBootTime and userName == curUserName and psutil.pid_exists(pid):
+                    return False
+    
+            pidFile.seek(0)
+            pidFile.truncate()
+            pidFile.write('{}@{}@{}'.format(curPid, curBootTime, curUserName))
+    except Exception as err:
+        print(err)
+        
+
+    return True
