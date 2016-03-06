@@ -5,3 +5,4 @@
 *.swp
 nagstamon.conf/
 .directory
+.metadata/

@@ -807,14 +807,26 @@ class GenericServer(object):
         else:
             return Result()
 
-        if status.error != '' or status.status_code > 400:
+        # some monitor server seem to have a problem with too short intervals
+        # and sometimes send a bad status line which would result in a misleading
+        # ERROR display - it seems safe to ignore theese errors
+        # see https://github.com/HenriWahl/Nagstamon/issues/207
+        if 'BadStatusLine' in self.status_description:
+            self.status_description = ''
+            self.isChecking = False
+            return Result(result=self.status,
+                          error=self.status_description,
+                          status_code=self.status_code)
+        
+        if (self.status_description != '' or
+            self.status_code > 400):
             # ask for password if authorization failed
-            if 'HTTP Error 401' in status.error or \
-               'HTTP Error 403' in status.error or \
-               'HTTP Error 500' in status.error or \
-               'bad session id' in status.error.lower() or \
-               'login failed' in status.error.lower() or \
-               status.status_code in self.STATUS_CODES_NO_AUTH:
+            if 'HTTP Error 401' in self.status_description or \
+               'HTTP Error 403' in self.status_description or \
+               'HTTP Error 500' in self.status_description or \
+               'bad session id' in self.status_description.lower() or \
+               'login failed' in self.status_description.lower() or \
+               self.status_code in self.STATUS_CODES_NO_AUTH:
                 if conf.servers[self.name].enabled == True:
                     # needed to get valid credentials
                     self.refresh_authentication = True
@@ -832,7 +844,7 @@ class GenericServer(object):
                               error=self.status_description,
                               status_code=self.status_code)
 
-        # no rew authentication needed
+        # no new authentication needed
         self.refresh_authentication = False
 
         # this part has been before in GUI.RefreshDisplay() - wrong place, here it needs to be reset

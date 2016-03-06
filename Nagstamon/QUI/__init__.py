@@ -3028,7 +3028,7 @@ class TableWidget(QTableWidget):
                 self.change_label_status.emit('Refreshing...', '')
                 # get status from server instance
                 status = self.server.GetStatus()
-
+                
                 # all is OK if no error info came back
                 if self.server.status_description == '' and\
                    self.server.status_code < 400 and\
