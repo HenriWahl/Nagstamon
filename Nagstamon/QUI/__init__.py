@@ -1003,7 +1003,7 @@ class StatusWindow(QWidget):
 
             # display authentication dialog if password is not known
             if not conf.servers[server.name].save_password:
-                dialogs.authentication.show_dialog(server.name)
+                dialogs.authentication.show_auth_dialog(server.name)
 
             # without parent there is some flickering when starting
             server_vbox = ServerVBox(server, parent=self)
@@ -1222,8 +1222,8 @@ class StatusWindow(QWidget):
                         self.ewmh.setWmDesktop(winid, deskid)
                         self.ewmh.display.flush()
 
-                    # makes the window manager switch to the desktop where this widget has appeared
-                    self.raise_()
+                        # makes the window manager switch to the desktop where this widget has appeared
+                        self.raise_()
 
                     # store timestamp to avoid flickering as in https://github.com/HenriWahl/Nagstamon/issues/184
                     self.is_shown_timestamp = time.time()
@@ -2236,7 +2236,7 @@ class ServerVBox(QVBoxLayout):
 
         # care about authentications
         self.button_authenticate.clicked.connect(self.authenticate_server)
-        self.authenticate.connect(dialogs.authentication.show_dialog)
+        self.authenticate.connect(dialogs.authentication.show_auth_dialog)
         dialogs.authentication.update.connect(self.update_label)
 
         self.addWidget(self.table, 1)
@@ -4910,7 +4910,7 @@ class Dialog_Authentication(Dialog):
 
 
     @pyqtSlot(str)
-    def show_dialog(self, server):
+    def show_auth_dialog(self, server):
         """
             initialize and show authentication dialog
         """
