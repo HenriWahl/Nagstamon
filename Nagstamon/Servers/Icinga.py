@@ -104,17 +104,17 @@ class IcingaServer(GenericServer):
                     if self.version < '1.7':
                         # http://www.nagios-wiki.de/nagios/tips/host-_und_serviceproperties_fuer_status.cgi?s=servicestatustypes
                         # services (unknown, warning or critical?) as dictionary, sorted by hard and soft state type
-                        self.cgiurl_services = {'hard': self.monitor_cgi_url + '/status.cgi?host=all&servicestatustypes=253&serviceprops=262144',\
+                        self.cgiurl_services = {'hard': self.monitor_cgi_url + '/status.cgi?host=all&servicestatustypes=253&serviceprops=262144', \
                                                 'soft': self.monitor_cgi_url + '/status.cgi?host=all&servicestatustypes=253&serviceprops=524288'}
                         # hosts (up or down or unreachable)
-                        self.cgiurl_hosts = {'hard': self.monitor_cgi_url + '/status.cgi?hostgroup=all&style=hostdetail&hoststatustypes=12&hostprops=262144',\
+                        self.cgiurl_hosts = {'hard': self.monitor_cgi_url + '/status.cgi?hostgroup=all&style=hostdetail&hoststatustypes=12&hostprops=262144', \
                                              'soft': self.monitor_cgi_url + '/status.cgi?hostgroup=all&style=hostdetail&hoststatustypes=12&hostprops=524288'}
                     else:
                         # services (unknown, warning or critical?)
-                        self.cgiurl_services = {'hard': self.monitor_cgi_url + '/status.cgi?style=servicedetail&servicestatustypes=253&serviceprops=262144',\
+                        self.cgiurl_services = {'hard': self.monitor_cgi_url + '/status.cgi?style=servicedetail&servicestatustypes=253&serviceprops=262144', \
                                                 'soft': self.monitor_cgi_url + '/status.cgi?style=servicedetail&servicestatustypes=253&serviceprops=524288'}
                         # hosts (up or down or unreachable)
-                        self.cgiurl_hosts = {'hard': self.monitor_cgi_url + '/status.cgi?style=hostdetail&hoststatustypes=12&hostprops=262144',\
+                        self.cgiurl_hosts = {'hard': self.monitor_cgi_url + '/status.cgi?style=hostdetail&hoststatustypes=12&hostprops=262144', \
                                              'soft': self.monitor_cgi_url + '/status.cgi?style=hostdetail&hoststatustypes=12&hostprops=524288'}
                     if self.json == True:
                         for status_type in 'hard', 'soft':
@@ -136,7 +136,7 @@ class IcingaServer(GenericServer):
             result, error = self.Error(sys.exc_info())
             return Result(result=result, error=error)
 
-        #dummy return in case all is OK
+        # dummy return in case all is OK
         return Result()
 
 
@@ -187,7 +187,7 @@ class IcingaServer(GenericServer):
                         self.new_hosts[host_name].last_check = h['last_check']
                         self.new_hosts[host_name].duration = h['duration']
                         self.new_hosts[host_name].attempt = h['attempts']
-                        self.new_hosts[host_name].status_information= h['status_information'].replace('\n', ' ').strip()
+                        self.new_hosts[host_name].status_information = h['status_information'].replace('\n', ' ').strip()
                         self.new_hosts[host_name].passiveonly = not(h['active_checks_enabled'])
                         self.new_hosts[host_name].notifications_disabled = not(h['notifications_enabled'])
                         self.new_hosts[host_name].flapping = h['is_flapping']
@@ -238,6 +238,9 @@ class IcingaServer(GenericServer):
                         self.new_hosts[host_name] = GenericHost()
                         self.new_hosts[host_name].name = host_name
                         self.new_hosts[host_name].status = 'UP'
+                        # extra Icinga properties to solve https://github.com/HenriWahl/Nagstamon/issues/192
+                        # acknowledge needs host_description and no display name
+                        self.new_hosts[host_name].real_name = s['host_name']
 
                     if self.use_display_name_host == False:
                         # legacy Icinga adjustments
@@ -280,7 +283,7 @@ class IcingaServer(GenericServer):
         # some cleanup
         del jsonraw, jsondict, error, hosts, services
 
-        #dummy return in case all is OK
+        # dummy return in case all is OK
         return Result()
 
 
@@ -291,7 +294,7 @@ class IcingaServer(GenericServer):
         # create Nagios items dictionary with to lists for services and hosts
         # every list will contain a dictionary for every failed service/host
         # this dictionary is only temporarily
-        ###global icons
+        # ##global icons
         nagitems = {'services':[], 'hosts':[]}
 
         # new_hosts dictionary
@@ -336,7 +339,7 @@ class IcingaServer(GenericServer):
                             try:
                                 n['host'] = str(tds[0].table.tr.td.table.tr.td.a.string)
                             except:
-                                n['host'] = str(nagitems[len(nagitems)-1]['host'])
+                                n['host'] = str(nagitems[len(nagitems) - 1]['host'])
                                 # status
                             n['status'] = str(tds[1].string)
                             # last_check
@@ -395,7 +398,7 @@ class IcingaServer(GenericServer):
                                 self.new_hosts[new_host].last_check = n['last_check']
                                 self.new_hosts[new_host].duration = n['duration']
                                 self.new_hosts[new_host].attempt = n['attempt']
-                                self.new_hosts[new_host].status_information= n['status_information'].replace('\n', ' ').strip()
+                                self.new_hosts[new_host].status_information = n['status_information'].replace('\n', ' ').strip()
                                 self.new_hosts[new_host].passiveonly = n['passiveonly']
                                 self.new_hosts[new_host].notifications_disabled = n['notifications_disabled']
                                 self.new_hosts[new_host].flapping = n['flapping']
@@ -460,7 +463,7 @@ class IcingaServer(GenericServer):
                             try:
                                 n['host'] = str(tds[0](text=not_empty)[0])
                             except:
-                                n['host'] = str(nagitems['services'][len(nagitems['services'])-1]['host'])
+                                n['host'] = str(nagitems['services'][len(nagitems['services']) - 1]['host'])
                                 # service
                             n['service'] = str(tds[1](text=not_empty)[0])
                             # status
@@ -498,10 +501,14 @@ class IcingaServer(GenericServer):
                             nagitems['services'].append(n)
                             # after collection data in nagitems create objects of its informations
                             # host objects contain service objects
-                            if not n['host'] in  self.new_hosts:
+                            if not n['host'] in self.new_hosts:
                                 self.new_hosts[n['host']] = GenericHost()
                                 self.new_hosts[n['host']].name = n['host']
                                 self.new_hosts[n['host']].status = 'UP'
+                                # extra Icinga properties to solve https://github.com/HenriWahl/Nagstamon/issues/192
+                                # acknowledge needs host_description and no display name
+                                self.new_hosts[n['host']].real_name = n['host']
+                                
                                 # trying to fix https://sourceforge.net/tracker/index.php?func=detail&aid=3299790&group_id=236865&atid=1101370
                                 # if host is not down but in downtime or any other flag this should be evaluated too
                                 # map status icons to status flags
@@ -552,7 +559,7 @@ class IcingaServer(GenericServer):
             # some cleanup
         del nagitems
 
-        #dummy return in case all is OK
+        # dummy return in case all is OK
         return Result()
 
 
@@ -577,13 +584,13 @@ class IcingaServer(GenericServer):
             # service @ host
             cmd_typ = '7'
         # ignore empty service in case of rechecking a host
-        cgi_data = urllib.parse.urlencode([('cmd_typ', cmd_typ),\
-                                     ('cmd_mod', '2'),\
-                                     ('host', host),\
-                                     ('service', service),\
-                                     ('start_time', self.start_time),\
-                                     ('force_check', 'on'),\
-                                     ('com_data', 'Recheck by %s' % self.username),\
+        cgi_data = urllib.parse.urlencode([('cmd_typ', cmd_typ), \
+                                     ('cmd_mod', '2'), \
+                                     ('host', host), \
+                                     ('service', service), \
+                                     ('start_time', self.start_time), \
+                                     ('force_check', 'on'), \
+                                     ('com_data', 'Recheck by %s' % self.username), \
                                      ('btnSubmit', 'Commit')])
         # execute POST request
         self.FetchURL(self.monitor_cgi_url + '/cmd.cgi', giveback='raw', cgi_data=cgi_data)
