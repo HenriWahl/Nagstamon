@@ -57,7 +57,8 @@ from Nagstamon.Helpers import (is_found_by_re,
                                debug_queue,
                                STATES,
                                STATES_SOUND,
-                               BOOLPOOL)
+                               BOOLPOOL,
+                               NON_LINUX)
 
 # dialogs
 from Nagstamon.QUI.settings_main import Ui_settings_main
@@ -72,13 +73,13 @@ from Nagstamon.QUI.dialog_server_missing import Ui_dialog_server_missing
 # only on X11/Linux thirdparty path should be added because it contains the Xlib module
 # needed to tell window manager via EWMH to keep Nagstamon window on all virtual desktops
 # TODO: test if X11 or Wayland is used
-if not platform.system() in ['Darwin', 'Windows']:
+if not platform.system() in NON_LINUX:
     # extract thirdparty path from resources path - make submodules accessible by thirdparty modules
     THIRDPARTY = os.sep.join(RESOURCES.split(os.sep)[0:-1] + ['thirdparty'])
     sys.path.insert(0, THIRDPARTY)
     from Nagstamon.thirdparty.ewmh import EWMH
 
-if not platform.system() in ['Darwin', 'Windows']:
+if not platform.system() in NON_LINUX:
     try:
         from dbus import (Interface,
                           SessionBus)
@@ -730,6 +731,7 @@ class StatusWindow(QWidget):
         # show tooltips even if popup window has no focus
         self.setAttribute(Qt.WA_AlwaysShowToolTips)
         
+        # show statusbar without being active, just floating
         self.setAttribute(Qt.WA_ShowWithoutActivating)
 
         if platform.system() == 'Darwin':
@@ -900,7 +902,7 @@ class StatusWindow(QWidget):
         self.worker_thread.start(0)
 
         # ewmh.py in thirdparty directory needed to keep floating statusbar on all desktops in Linux
-        if not platform.system() in ('Darwin', 'Windows'):
+        if not platform.system() in NON_LINUX:
             self.ewmh = EWMH()
 
         # finally show up
@@ -951,7 +953,7 @@ class StatusWindow(QWidget):
                 self.show()
 
             # X11/Linux needs some special treatment to get the statusbar floating on all virtual desktops
-            if not platform.system() in ('Darwin', 'Windows'):
+            if not platform.system() in NON_LINUX:
                 # get all windows...
                 winid = self.winId().__int__()
                 self.ewmh.setWmDesktop(winid, 0xffffffff)
@@ -1216,7 +1218,7 @@ class StatusWindow(QWidget):
                     # Using the EWMH protocol to move the window to the active desktop.
                     # Seemed to be a problem on XFCE
                     # https://github.com/HenriWahl/Nagstamon/pull/199
-                    if not platform.system() in ('Darwin', 'Windows') and conf.icon_in_systray:
+                    if not platform.system() in NON_LINUX and conf.icon_in_systray:
                         winid = self.winId().__int__()
                         deskid = self.ewmh.getCurrentDesktop()
                         self.ewmh.setWmDesktop(winid, deskid)
@@ -2368,6 +2370,11 @@ class CellWidget(QWidget):
 
     # send to tablewidget if cell clicked
     clicked = pyqtSignal()
+    
+    # signals to be sent to parent tablewidget for doing some painting
+    colorize_row = pyqtSignal(int)
+    highlight_row = pyqtSignal(int)
+
 
     def __init__(self, column=0, row=0, text='', color='black', background='white', icons='', tooltip='', parent=None):
         """
@@ -2394,7 +2401,8 @@ class CellWidget(QWidget):
         self.hbox.addWidget(self.label, 1)
         self.hbox.setSpacing(0)
 
-        self.setToolTip(tooltip)
+        #self.setToolTip(tooltip)
+        self.tooltip = tooltip
 
         self.label.setStyleSheet('padding: 5px;')
 
@@ -2417,6 +2425,9 @@ class CellWidget(QWidget):
 
         # paint cell appropriately
         self.colorize(column)
+        
+        self.colorize_row.connect(self.parent().colorize_row)
+        self.highlight_row.connect(self.parent().highlight_row)
 
 
     def colorize(self, column):
@@ -2450,23 +2461,36 @@ class CellWidget(QWidget):
                 icon_label.setStyleSheet('''padding-right: 5px;
                                             border-style: hide;
                                             border-width: 1px;''')
-
-
-    def enterEvent(self, eventt):
-        if not self.parent().parent().action_menu.isVisible():
-            self.parent().parent().highlight_row(self.row)
-
-
-    def leaveEvent(self, event):
-        # ##self.setToolTip('')
-        self.parent().parent().colorize_row(self.row)
-
-
-    def mouseReleaseEvent(self, event):
+       
+        
+    def event(self, event):
         """
-            send signal of clicked cell to table widget which cares further
+            ugly and parent-dependant CSS-mess in tooltips make own
+            event-handling necessary
         """
-        self.clicked.emit()
+        # highlight row when entering it
+        if event.type() == QEvent.Enter:
+            ###if not self.parent().action_menu.isVisible():   
+            self.highlight_row.emit(self.row)
+
+        # recolorize row when leaving it       
+        elif event.type() == QEvent.Leave:
+            self.colorize_row.emit(self.row)
+
+        # showing tooltip this way acoids ugly CSS-mess
+        elif event.type() == QEvent.ToolTip:
+            QToolTip.showText(event.globalPos(), self.tooltip)
+        
+        # send signal of clicked cell to table widget which cares further
+        elif event.type() == QEvent.MouseButtonRelease:
+            self.clicked.emit()
+
+        # ignore any other event, especially QWheelEvent, 
+        # which enables scrolling by mouse wheel            
+        else:
+            event.ignore()
+        
+        return(True)
 
 
 class TableWidget(QTableWidget):
@@ -2941,6 +2965,7 @@ class TableWidget(QTableWidget):
         return self.real_height
 
 
+    @pyqtSlot(int)
     def highlight_row(self, row):
         for column in range(0, self.columnCount()):
             if self.cellWidget(row, column) != None:
@@ -2950,6 +2975,7 @@ class TableWidget(QTableWidget):
         self.highlighted_row = row
 
 
+    @pyqtSlot(int)
     def colorize_row(self, row):
         """
             colorize whole row
@@ -3104,10 +3130,10 @@ class TableWidget(QTableWidget):
 
                 # only if tooltips are wanted take status_information for the whole row
                 if conf.show_tooltips:
-                    tooltip = '''<div style=color:black;white-space:pre;margin:3px;><b>{0}: {1}</b></div>
-                                 <div style=color:black>{2}</div>'''.format(nagitem.host,
-                                                                            nagitem.service,
-                                                                            nagitem.status_information)
+                    tooltip = '''<div style=white-space:pre;margin:3px;><b>{0}: {1}</b></div>
+                                 {2}'''.format(nagitem.host,
+                                               nagitem.service,
+                                               nagitem.status_information)
                 else:
                     tooltip = ''
 
@@ -3174,10 +3200,13 @@ class TableWidget(QTableWidget):
                                         row_cache[column]['icons'],
                                         tooltip)
 
-                del(row_cache)
-
                 # sleep some milliceconds to let the GUI thread do some work too
-                self.thread().msleep(5)
+                # still looking for a better solution, but for now let GUI some
+                # time to breathe between every updated row
+                self.thread().msleep(20)
+                #self.thread().yieldCurrentThread()
+
+                del(row_cache)
 
             # after running through
             self.table_ready.emit()
@@ -5183,7 +5212,7 @@ class DBus(QObject):
         # see https://developer.gnome.org/notification-spec/#icons-and-images
         self.hints = {'image-path': '%s%snagstamon.svg' % (RESOURCES, os.sep)}
 
-        if not platform.system() in ['Darwin', 'Windows']:
+        if not platform.system() in NON_LINUX:
             if 'dbus' in sys.modules:
                 dbus_mainloop = DBusQtMainLoop(set_as_default=True)
                 dbus_bus = SessionBus(dbus_mainloop)

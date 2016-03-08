@@ -29,7 +29,8 @@ import datetime
 from collections import OrderedDict
 
 from Nagstamon.Helpers import (debug_queue,
-                               BOOLPOOL)
+                               BOOLPOOL,
+                               NON_LINUX)
 
 class AppInfo(object):
     """
@@ -259,7 +260,7 @@ class Config(object):
                     self.use_system_keyring = False
                 else:
                     # a configured system seemed to be able to run and thus use system keyring
-                    if platform.system() in ["Windows", "Darwin"]:
+                    if platform.system() in NON_LINUX:
                         self.use_system_keyring = True
                     else:
                         self.use_system_keyring = self.KeyringAvailable()
@@ -410,7 +411,7 @@ class Config(object):
                     self.use_system_keyring = False
                 else:
                     # a configured system seemed to be able to run and thus use system keyring
-                    if platform.system() in ['Windows', 'Darwin']:
+                    if platform.system() in NON_LINUX:
                         self.use_system_keyring = True
                     else:
                         self.use_system_keyring = self.KeyringAvailable()
@@ -522,7 +523,7 @@ class Config(object):
         try:
             # Linux systems should use keyring only if it comes with the distro, otherwise chances are small
             # that keyring works at all
-            if not platform.system() in ["Windows", "Darwin"]:
+            if not platform.system() in NON_LINUX:
                 # keyring and secretstorage have to be importable
                 import keyring, secretstorage
                 if ("SecretService") in dir(keyring.backends) and not (keyring.get_keyring() is None):
