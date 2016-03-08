@@ -309,9 +309,9 @@ class IcingaWeb2Server(GenericServer):
     def _set_recheck(self, host, service):
         # First retrieve the info page for this host/service
         if service == '':
-            url = self.monitor_cgi_url + '/monitoring/host/show?host=' + host
+            url = self.monitor_cgi_url + '/monitoring/host/show?host=' + self.hosts[host].real_name
         else:
-            url = self.monitor_cgi_url + '/monitoring/service/show?host=' + host + '&service=' + service
+            url = self.monitor_cgi_url + '/monitoring/service/show?host=' + self.hosts[host].real_name + '&service=' + self.hosts[host].services[service].real_name
         result = self.FetchURL(url, giveback='raw')
 
         if result.error != '':
@@ -386,10 +386,10 @@ class IcingaWeb2Server(GenericServer):
     def _set_submit_check_result(self, host, service, state, comment, check_output, performance_data):
         # First retrieve the info page for this host/service
         if service == '':
-            url = self.monitor_cgi_url + '/monitoring/host/process-check-result?host=' + host
+            url = self.monitor_cgi_url + '/monitoring/host/process-check-result?host=' + self.hosts[host].real_name
             status = self.STATES_MAPPING_REV['hosts'][state.upper()]
         else:
-            url = self.monitor_cgi_url + '/monitoring/service/process-check-result?host=' + host + '&service=' + service
+            url = self.monitor_cgi_url + '/monitoring/service/process-check-result?host=' + self.hosts[host].real_name + '&service=' + self.hosts[host].services[service].real_name
             status = self.STATES_MAPPING_REV['services'][state.upper()]
 
         result = self.FetchURL(url, giveback='raw')
@@ -424,9 +424,9 @@ class IcingaWeb2Server(GenericServer):
     def _set_downtime(self, host, service, author, comment, fixed, start_time, end_time, hours, minutes):
         # First retrieve the info page for this host/service
         if service == '':
-            url = self.monitor_cgi_url + '/monitoring/host/schedule-downtime?host=' + host
+            url = self.monitor_cgi_url + '/monitoring/host/schedule-downtime?host=' + self.hosts[host].real_name
         else:
-            url = self.monitor_cgi_url + '/monitoring/service/schedule-downtime?host=' + host + '&service=' + service
+            url = self.monitor_cgi_url + '/monitoring/service/schedule-downtime?host=' + self.hosts[host].real_name + '&service=' + self.hosts[host].services[service].real_name
 
         result = self.FetchURL(url, giveback='raw')
 
@@ -454,7 +454,7 @@ class IcingaWeb2Server(GenericServer):
         cgi_data['btn_submit'] = btn_submit
         cgi_data['comment'] = comment
         if fixed:
-           cgi_data['type'] = 'fixed'
+            cgi_data['type'] = 'fixed'
         else:
             cgi_data['type'] = 'flexible'
             cgi_data['hours'] = hours
@@ -480,7 +480,7 @@ class IcingaWeb2Server(GenericServer):
             directly from web interface
         '''
         try:
-            downtime = self.FetchURL(self.monitor_cgi_url + '/monitoring/host/schedule-downtime?host=' + host)
+            downtime = self.FetchURL(self.monitor_cgi_url + '/monitoring/host/schedule-downtime?host=' + self.hosts[host].real_name)
             start = downtime.result.find('input', {'name': 'start'})['value']
             end = downtime.result.find('input', {'name': 'end'})['value']
             # give values back as tuple
