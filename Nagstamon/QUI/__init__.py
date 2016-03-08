@@ -193,7 +193,7 @@ class HBoxLayout(QHBoxLayout):
             self.setSpacing(0)
         else:
             self.setSpacing(spacing)
-        self.setContentsMargins(0, 0, 0, 0)     # no margin
+        self.setContentsMargins(0, 0, 0, 0)  # no margin
 
 
     def hide_items(self):
@@ -201,7 +201,7 @@ class HBoxLayout(QHBoxLayout):
             cruise through all child widgets and hide them
             self,count()-1 is needed because the last item is None
         """
-        for item in range(self.count()-1):
+        for item in range(self.count() - 1):
             self.itemAt(item).widget().hide()
 
 
@@ -210,7 +210,7 @@ class HBoxLayout(QHBoxLayout):
             cruise through all child widgets and show them
             self,count()-1 is needed because the last item is None
         """
-        for item in range(self.count()-1):
+        for item in range(self.count() - 1):
             self.itemAt(item).widget().show()
 
 
@@ -410,12 +410,12 @@ class MenuContext(MenuAtCursor):
         MenuAtCursor.__init__(self, parent=parent)
 
         # connect all relevant widgets which should show the context menu
-        for widget in systrayicon,\
-                      statuswindow.toparea.button_hamburger_menu,\
-                      statuswindow.toparea.logo,\
-                      statuswindow.toparea.label_version,\
-                      statuswindow.toparea.label_empty_space,\
-                      statuswindow.statusbar.logo,\
+        for widget in systrayicon, \
+                      statuswindow.toparea.button_hamburger_menu, \
+                      statuswindow.toparea.logo, \
+                      statuswindow.toparea.label_version, \
+                      statuswindow.toparea.label_empty_space, \
+                      statuswindow.statusbar.logo, \
                       statuswindow.statusbar.label_message:
             self.menu_ready.connect(widget.set_menu)
 
@@ -659,7 +659,7 @@ class _Draggable_Widget(QWidget):
                 statuswindow.relative_y = event.globalY() - statuswindow.y()
 
             statuswindow.moving = True
-            statuswindow.move(event.globalX()-statuswindow.relative_x, event.globalY()-statuswindow.relative_y)
+            statuswindow.move(event.globalX() - statuswindow.relative_x, event.globalY() - statuswindow.relative_y)
 
             # needed for OSX - otherwise statusbar stays blank while moving
             statuswindow.update()
@@ -739,16 +739,16 @@ class StatusWindow(QWidget):
         self.setWindowTitle(AppInfo.NAME)
         self.setWindowIcon(QIcon('%s%snagstamon.svg' % (RESOURCES, os.sep)))
 
-        self.vbox = QVBoxLayout(self)               # global VBox
-        self.vbox.setSpacing(0)                     # no spacing
-        self.vbox.setContentsMargins(0, 0, 0, 0)    # no margin
+        self.vbox = QVBoxLayout(self)  # global VBox
+        self.vbox.setSpacing(0)  # no spacing
+        self.vbox.setContentsMargins(0, 0, 0, 0)  # no margin
 
-        self.statusbar = StatusBar(parent=self)                # statusbar HBox
-        self.toparea = TopArea(parent=self)                    # toparea HBox
+        self.statusbar = StatusBar(parent=self)  # statusbar HBox
+        self.toparea = TopArea(parent=self)  # toparea HBox
         # no need to be seen first
         self.toparea.hide()
 
-        self.servers_scrollarea = QScrollArea(self)     # scrollable area for server vboxes
+        self.servers_scrollarea = QScrollArea(self)  # scrollable area for server vboxes
         # avoid horizontal scrollbars
         self.servers_scrollarea.setHorizontalScrollBarPolicy(Qt.ScrollBarAlwaysOff)
         self.servers_scrollarea_widget = QWidget(self.servers_scrollarea)  # necessary widget to contain vbox for servers
@@ -758,7 +758,7 @@ class StatusWindow(QWidget):
         self.vbox.addWidget(self.toparea)
         self.vbox.addWidget(self.servers_scrollarea)
 
-        self.servers_vbox = QVBoxLayout(self.servers_scrollarea)           # VBox full of servers
+        self.servers_vbox = QVBoxLayout(self.servers_scrollarea)  # VBox full of servers
         self.servers_vbox.setSpacing(0)
         self.servers_vbox.setContentsMargins(0, 0, 0, 0)
 
@@ -1065,7 +1065,7 @@ class StatusWindow(QWidget):
                 vboxes_dict[child.server.name] = child
 
         # freshly set servers_scrollarea_widget and its layout servers_vbox
-        servers_vbox_new = QVBoxLayout()           # VBox full of servers
+        servers_vbox_new = QVBoxLayout()  # VBox full of servers
         servers_vbox_new.setContentsMargins(0, 0, 0, 0)
         servers_vbox_new.setSpacing(0)
 
@@ -1144,15 +1144,15 @@ class StatusWindow(QWidget):
 
             y = 0
 
-            if icon_x > (available_width + available_x)/2:
+            if icon_x > (available_width + available_x) / 2:
                 x = available_x + available_width - self.statusbar.width()
             else:
-                x = available_x +  self.statusbar.width()
+                x = available_x + self.statusbar.width()
 
-            if icon_y > (available_height - available_y)/2:
+            if icon_y > (available_height - available_y) / 2:
                 y = available_height - available_y
 
-            self.move(x,y)
+            self.move(x, y)
 
             # under unfortunate circumstances statusbar might have the the moving flag true
             # fix it here because it makes no sense but my cause non-appearing statuswindow
@@ -1283,8 +1283,8 @@ class StatusWindow(QWidget):
             # when cursor is outside moved window correct the coordinates of statusbar/statuswindow
             if not statuswindow.geometry().contains(mouse_x, mouse_y):
                 rect = statuswindow.geometry()
-                corrected_x = int(mouse_x - rect.width()/2)
-                corrected_y = int(mouse_y - rect.height()/2)
+                corrected_x = int(mouse_x - rect.width() / 2)
+                corrected_y = int(mouse_y - rect.height() / 2)
                 # calculate new relative values
                 self.relative_x = mouse_x - corrected_x
                 self.relative_y = mouse_y - corrected_y
@@ -1323,12 +1323,12 @@ class StatusWindow(QWidget):
         # calculate top-ness only if window is closed
         if conf.statusbar_floating:
             if self.is_shown == False:
-                if self.y() < desktop.screenGeometry(self).height()/2 + available_y:
+                if self.y() < desktop.screenGeometry(self).height() / 2 + available_y:
                     self.top = True
                 else:
                     self.top = False
         elif conf.icon_in_systray:
-            if icon_y < desktop.screenGeometry(self).height()/2 + available_y:
+            if icon_y < desktop.screenGeometry(self).height() / 2 + available_y:
                 self.top = True
             else:
                 self.top = False
@@ -1351,7 +1351,7 @@ class StatusWindow(QWidget):
             else:
                 # when height is to large for current screen cut it
                 if self.y() + self.height() - real_height < available_y:
-                    height = desktop.screenGeometry().height() - available_y -\
+                    height = desktop.screenGeometry().height() - available_y - \
                              (desktop.screenGeometry().height() - (self.y() + self.height()))
                     y = available_y
                 else:
@@ -1478,7 +1478,7 @@ class StatusWindow(QWidget):
         """
         width = 0
         for server in self.servers_vbox.children():
-            ###if server.table.get_real_width() > width:
+            # ##if server.table.get_real_width() > width:
             if server.table.real_width > width:
                 width = server.table.get_real_width()
 
@@ -1713,25 +1713,25 @@ class StatusWindow(QWidget):
             # Custom event notification - valid vor ALL events, thus without status comparison
             if conf.notification_actions == True and conf.notification_custom_action == True:
                 # temporarily used to collect executed events
-                events_list= []
+                events_list = []
                 events_string = ''
 
                 # if no single notifications should be used (default) put all events into one string, separated by separator
                 if conf.notification_custom_action_single == False:
                     for server in get_enabled_servers():
                         # list comprehension only considers events which are new, ergo True
-                        events_list += [k for k,v in server.events_notification.items() if v == True]
+                        events_list += [k for k, v in server.events_notification.items() if v == True]
 
                     # create string for no-single-event-notification of events separated by separator
                     events_string = conf.notification_custom_action_separator.join(events_list)
 
                     # clear already notified events setting them to False
                     for server in get_enabled_servers():
-                        for event in [k for k,v in server.events_notification.items() if v == True]:
+                        for event in [k for k, v in server.events_notification.items() if v == True]:
                             server.events_notification[event] = False
                 else:
                     for server in get_enabled_servers():
-                        for event in [k for k,v in server.events_notification.items() if v == True]:
+                        for event in [k for k, v in server.events_notification.items() if v == True]:
                             custom_action_string = conf.notification_custom_action_string.replace('$EVENTS$', event)
                             # execute action
                             self.execute_action(server_name, custom_action_string)
@@ -1850,7 +1850,7 @@ class StatusBar(QWidget):
         self.color_labels['OK'] = StatusBarLabel('OK', parent=parent)
 
         for state in COLORS:
-            self.color_labels[state] =  StatusBarLabel(state, parent=parent)
+            self.color_labels[state] = StatusBarLabel(state, parent=parent)
             self.labels_invert.connect(self.color_labels[state].invert)
             self.labels_reset.connect(self.color_labels[state].reset)
 
@@ -1917,7 +1917,7 @@ class StatusBar(QWidget):
                 label.adjustSize()
                 all_numbers += label.number
 
-        ###if all_numbers == 0 and not self.message_shown:
+        # ##if all_numbers == 0 and not self.message_shown:
         if all_numbers == 0 and not get_errors():
             self.color_labels['OK'].show()
             self.color_labels['OK'].adjustSize()
@@ -2066,7 +2066,7 @@ class TopArea(QWidget):
 
     def __init__(self, parent=None):
         QWidget.__init__(self)
-        self.hbox = HBoxLayout(spacing=SPACE, parent=self)      # top HBox containing buttons
+        self.hbox = HBoxLayout(spacing=SPACE, parent=self)  # top HBox containing buttons
 
         # top button box
         self.logo = NagstamonLogo('%s%snagstamon_logo_toparea.svg' % (RESOURCES, os.sep), width=144, height=42, parent=self)
@@ -2458,7 +2458,7 @@ class CellWidget(QWidget):
 
 
     def leaveEvent(self, event):
-        ###self.setToolTip('')
+        # ##self.setToolTip('')
         self.parent().parent().colorize_row(self.row)
 
 
@@ -2688,10 +2688,15 @@ class TableWidget(QTableWidget):
             # add custom actions
             actions_list = list(conf.actions)
             actions_list.sort(key=str.lower)
+            
             for a in actions_list:
                 # shortcut for next lines
                 action = conf.actions[a]
-                if action.enabled == True and action.monitor_type in ['', self.server.TYPE]:
+             
+                # check if current monitor server type is in action
+                # second scheck for server type is legacy-compatible with older settions 
+                if action.enabled == True and (action.monitor_type in ['', self.server.TYPE] or
+                                               action.monitor_type not in SERVER_TYPES):
                     # menu item visibility flag
                     item_visible = False
                     # check if clicked line is a service or host
@@ -2726,8 +2731,8 @@ class TableWidget(QTableWidget):
                         # hosts should only care about host specific actions, no services
                         if action.filter_target_host == True:
                             if action.re_host_enabled == True:
-                                if is_found_by_re(self.miserable_host,\
-                                                       action.re_host_pattern,\
+                                if is_found_by_re(self.miserable_host, \
+                                                       action.re_host_pattern, \
                                                        action.re_host_reverse):
                                     item_visible = True
                             else:
@@ -2740,7 +2745,7 @@ class TableWidget(QTableWidget):
                 if item_visible == True:
                     # create action
                     action_menuentry = QAction(a, self)
-                    #add action
+                    # add action
                     self.action_menu.addAction(action_menuentry)
                     # action to signalmapper
                     self.signalmapper_action_menu.setMapping(action_menuentry, a)
@@ -3069,7 +3074,7 @@ class TableWidget(QTableWidget):
                 self.server.thread_counter = 0
 
                 # if failures have gone and nobody took notice switch notification off again
-                if len([k for k,v in self.server.events_history.items() if v == True]) == 0 and\
+                if len([k for k, v in self.server.events_history.items() if v == True]) == 0 and\
                         statuswindow and \
                         statuswindow.worker_notification.is_notifying == True and\
                         statuswindow.worker_notification.notifying_server == self.server.name:
@@ -3295,18 +3300,18 @@ class TableWidget(QTableWidget):
             """
             # first replace placeholder variables in string with actual values
             #
-            #Possible values for variables:
-            #$HOST$             - host as in monitor
-            #$SERVICE$          - service as in monitor
-            #$MONITOR$          - monitor address - not yet clear what exactly for
-            #$MONITOR-CGI$      - monitor CGI address - not yet clear what exactly for
-            #$ADDRESS$          - address of host, investigated by Server.GetHost()
-            #$STATUS-INFO$      - status information
-            #$USERNAME$         - username on monitor
-            #$PASSWORD$         - username's password on monitor - whatever for
-            #$COMMENT-ACK$      - default acknowledge comment
-            #$COMMENT-DOWN$     - default downtime comment
-            #$COMMENT-SUBMIT$   - default submit check result comment
+            # Possible values for variables:
+            # $HOST$             - host as in monitor
+            # $SERVICE$          - service as in monitor
+            # $MONITOR$          - monitor address - not yet clear what exactly for
+            # $MONITOR-CGI$      - monitor CGI address - not yet clear what exactly for
+            # $ADDRESS$          - address of host, investigated by Server.GetHost()
+            # $STATUS-INFO$      - status information
+            # $USERNAME$         - username on monitor
+            # $PASSWORD$         - username's password on monitor - whatever for
+            # $COMMENT-ACK$      - default acknowledge comment
+            # $COMMENT-DOWN$     - default downtime comment
+            # $COMMENT-SUBMIT$   - default submit check result comment
 
             try:
                 """
@@ -3435,7 +3440,7 @@ class Dialogs(object):
         self.server_missing = Dialog_Server_missing(Ui_dialog_server_missing)
         self.server_missing.initialize()
         # open server creation dialog
-        #self.server_missing.ui.button_create_server.clicked.connect(self.server.new)
+        # self.server_missing.ui.button_create_server.clicked.connect(self.server.new)
         self.server_missing.ui.button_create_server.clicked.connect(self.settings.show_new_server)
         self.server_missing.ui.button_enable_server.clicked.connect(self.settings.show)
 
@@ -3477,8 +3482,8 @@ class Dialog(QObject):
         self.signalmapper_toggles = QSignalMapper()
 
         # window position to be used to fix strange movement bug
-        ###self.x = 0
-        ###self.y = 0
+        # ##self.x = 0
+        # ##self.y = 0
 
 
     def initialize(self):
@@ -3631,7 +3636,7 @@ class Dialog_Settings(Dialog):
         self.ui.button_delete_server.clicked.connect(self.delete_server)
 
         # connect check-for-updates button to update check
-        #self.ui.button_check_for_new_version_now.clicked.connect(check_version.check)
+        # self.ui.button_check_for_new_version_now.clicked.connect(check_version.check)
         self.ui.button_check_for_new_version_now.clicked.connect(self.button_check_for_new_version_clicked)
         self.check_for_new_version.connect(check_version.check)
 
@@ -3796,10 +3801,10 @@ class Dialog_Settings(Dialog):
             statuswindow.store_position_to_conf()
 
         # store hash of all display settingas as display_mode to decide if statuswindow has to be recreated
-        display_mode = str(conf.statusbar_floating) +\
-                       str(conf.icon_in_systray) +\
-                       str(conf.appindicator) +\
-                       str(conf.fullscreen) +\
+        display_mode = str(conf.statusbar_floating) + \
+                       str(conf.icon_in_systray) + \
+                       str(conf.appindicator) + \
+                       str(conf.fullscreen) + \
                        str(conf.fullscreen_display)
 
         # do all stuff necessary after OK button was clicked
@@ -3854,10 +3859,10 @@ class Dialog_Settings(Dialog):
 
         # when display mode was changed its the easiest to destroy the old status window and create a new one
         # store display_mode to decide if statuswindow has to be recreated
-        if display_mode != str(conf.statusbar_floating) +\
-                           str(conf.icon_in_systray) +\
-                           str(conf.appindicator) +\
-                           str(conf.fullscreen) +\
+        if display_mode != str(conf.statusbar_floating) + \
+                           str(conf.icon_in_systray) + \
+                           str(conf.appindicator) + \
+                           str(conf.fullscreen) + \
                            str(conf.fullscreen_display):
 
             # increase number of display changes for silly Windows-hides-statusbar-after-display-mode-change problem
@@ -4069,7 +4074,7 @@ class Dialog_Settings(Dialog):
 
             # use 2 filters, sound files and all files
             file = dialogs.file_chooser.getOpenFileName(self.window,
-                                                       filter = 'Sound files (*.mp3 *.MP3 *.mp4 *.MP4 '
+                                                       filter='Sound files (*.mp3 *.MP3 *.mp4 *.MP4 '
                                                                              '*.wav *.WAV *.ogg *.OGG);;'
                                                                 'All files (*)')[0]
 
@@ -4148,7 +4153,7 @@ class Dialog_Settings(Dialog):
         # example color labels
         for label in [x for x in self.ui.__dict__ if x.startswith('label_color_')]:
             status = label.split('label_color_')[1]
-            self.ui.__dict__[label].setStyleSheet('color: %s; background: %s' %
+            self.ui.__dict__[label].setStyleSheet('color: %s; background: %s' % 
                                                   (conf.__dict__['color_%s_text' % (status)],
                                                   (conf.__dict__['color_%s_background' % (status)])))
 
@@ -4178,7 +4183,7 @@ class Dialog_Settings(Dialog):
             color_background = color_background.split(':')[1].strip().split(';')[0]
 
             # apply color values from stylesheet to label
-            self.ui.__dict__[label].setStyleSheet('color: %s; background: %s' %
+            self.ui.__dict__[label].setStyleSheet('color: %s; background: %s' % 
                                                   (color_text, color_background))
 
     @pyqtSlot(str)
@@ -4259,8 +4264,8 @@ class Dialog_Server(Dialog):
         # these widgets are shown or hidden depending on server type properties
         # the servers listed at each widget do need them
         self.VOLATILE_WIDGETS = {
-                                 self.ui.label_monitor_cgi_url : ['Nagios', 'Icinga', 'Opsview','Thruk'],
-                                 self.ui.input_lineedit_monitor_cgi_url : ['Nagios', 'Icinga', 'Opsview','Thruk'],
+                                 self.ui.label_monitor_cgi_url : ['Nagios', 'Icinga', 'Opsview', 'Thruk'],
+                                 self.ui.input_lineedit_monitor_cgi_url : ['Nagios', 'Icinga', 'Opsview', 'Thruk'],
                                  self.ui.input_checkbox_use_autologin : ['Centreon'],
                                  self.ui.input_lineedit_autologin_key : ['Centreon'],
                                  self.ui.label_autologin_key : ['Centreon'],
@@ -4393,7 +4398,7 @@ class Dialog_Server(Dialog):
            self.mode == 'edit' and self.server_conf != conf.servers[self.ui.input_lineedit_name.text()]):
             # cry if duplicate name exists
             QMessageBox.critical(self.window, 'Nagstamon',
-                                 'The monitor server name <b>%s</b> is already used.' %\
+                                 'The monitor server name <b>%s</b> is already used.' % \
                                  (self.ui.input_lineedit_name.text()),
                                  QMessageBox.Ok)
         else:
@@ -4411,7 +4416,7 @@ class Dialog_Server(Dialog):
                         self.server_conf.__dict__[setting] = self.ui.__dict__[widget].currentText()
                     elif widget.startswith('input_lineedit_'):
                         setting = widget.split('input_lineedit_')[1]
-                        self.server_conf.__dict__[setting] =  self.ui.__dict__[widget].text()
+                        self.server_conf.__dict__[setting] = self.ui.__dict__[widget].text()
 
             # URLs should not end with / - clean it
             self.server_conf.monitor_url = self.server_conf.monitor_url.rstrip('/')
@@ -4477,6 +4482,12 @@ class Dialog_Action(Dialog):
     """
         Dialog used to setup one single action
     """
+    
+    # mapping between action types and combobox content
+    ACTION_TYPES = { 'browser': 'Browser',
+                     'command': 'Command',
+                     'url': 'URL'}
+    
     def __init__(self, dialog):
         Dialog.__init__(self, dialog)
 
@@ -4494,7 +4505,7 @@ class Dialog_Action(Dialog):
                             }
 
         # fill action types into combobox
-        self.ui.input_combobox_type.addItems(["Browser", "Command", "URL"])
+        self.ui.input_combobox_type.addItems(sorted(self.ACTION_TYPES.values()))
 
         # fill default order fields combobox with monitor server types
         self.ui.input_combobox_monitor_type.addItem("All monitor servers")
@@ -4521,12 +4532,9 @@ class Dialog_Action(Dialog):
                     if widget.startswith('input_checkbox_'):
                         setting = widget.split('input_checkbox_')[1]
                         self.ui.__dict__[widget].setChecked(self.action_conf.__dict__[setting])
-                    if widget.startswith('input_radiobutton_'):
+                    elif widget.startswith('input_radiobutton_'):
                         setting = widget.split('input_radiobutton_')[1]
                         self.ui.__dict__[widget].setChecked(self.action_conf.__dict__[setting])
-                    elif widget.startswith('input_combobox_'):
-                        setting = widget.split('input_combobox_')[1]
-                        self.ui.__dict__[widget].setCurrentText(self.action_conf.__dict__[setting])
                     elif widget.startswith('input_lineedit_'):
                         setting = widget.split('input_lineedit_')[1]
                         self.ui.__dict__[widget].setText(self.action_conf.__dict__[setting])
@@ -4534,6 +4542,10 @@ class Dialog_Action(Dialog):
                         setting = widget.split('input_textedit_')[1]
                         self.ui.__dict__[widget].setText(self.action_conf.__dict__[setting])
 
+            # set comboboxes
+            self.ui.input_combobox_type.setCurrentText(self.ACTION_TYPES[self.action_conf.type.lower()])
+            self.ui.input_combobox_monitor_type.setCurrentText(self.action_conf.monitor_type)
+            
             # apply toggle-dependencies between checkboxes and certain widgets
             self.toggle_toggles()
 
@@ -4597,7 +4609,7 @@ class Dialog_Action(Dialog):
            self.mode == 'edit' and self.action_conf != conf.actions[self.ui.input_lineedit_name.text()]):
             # cry if duplicate name exists
             QMessageBox.critical(self.window, 'Nagstamon',
-                                 'The action name <b>%s</b> is already used.' %\
+                                 'The action name <b>%s</b> is already used.' % \
                                  (self.ui.input_lineedit_name.text()),
                                  QMessageBox.Ok)
         else:
@@ -4615,16 +4627,23 @@ class Dialog_Action(Dialog):
                         self.action_conf.__dict__[setting] = self.ui.__dict__[widget].currentText()
                     elif widget.startswith('input_lineedit_'):
                         setting = widget.split('input_lineedit_')[1]
-                        self.action_conf.__dict__[setting] =  self.ui.__dict__[widget].text()
+                        self.action_conf.__dict__[setting] = self.ui.__dict__[widget].text()
                     elif widget.startswith('input_textedit_'):
                         setting = widget.split('input_textedit_')[1]
-                        self.action_conf.__dict__[setting] =  self.ui.__dict__[widget].toPlainText()
+                        self.action_conf.__dict__[setting] = self.ui.__dict__[widget].toPlainText()
 
             # edited action will be deleted and recreated with new configuration
             if self.mode == 'edit':
                 # delete previous name
                 conf.actions.pop(self.previous_action_conf.name)
 
+            # Avoid wrong monitor type which blocks display of action
+            if not self.action_conf.monitor_type in SERVER_TYPES:
+                self.action_conf.monitor_type = ''
+                
+            # lower type to recognize action type on monitor
+            self.action_conf.type = self.action_conf.type.lower()
+                
             # add edited  or new/copied action
             conf.actions[self.action_conf.name] = self.action_conf
 
@@ -5087,7 +5106,7 @@ class CheckVersion(QObject):
             message dialog must be shown from GUI thread
         """
         self.version_info_retrieved.emit()
-        QMessageBox.information(self.parent, 'Nagstamon version check',  message, QMessageBox.Ok)
+        QMessageBox.information(self.parent, 'Nagstamon version check', message, QMessageBox.Ok)
 
 
     class Worker(QObject):
@@ -5230,7 +5249,7 @@ def get_screen(x, y):
         if (desktop.screenGeometry(screen).contains(x, y)):
             break
 
-    del(x,y)
+    del(x, y)
 
     # when 'screen' reached number_of_screens no screen was found, thus return None
     if screen == number_of_screens:
@@ -5275,15 +5294,15 @@ def exit():
     # wait until all threads are stopped
     for server_vbox in statuswindow.servers_vbox.children():
         server_vbox.table.worker_thread.wait(1000)
-        #server_vbox.table.worker_thread.wait()
+        # server_vbox.table.worker_thread.wait()
 
     # wait until statuswindow notification worker has finished
     statuswindow.worker_notification_thread.wait(1000)
-    #statuswindow.worker_notification_thread.wait()
+    # statuswindow.worker_notification_thread.wait()
 
     # wait until statuswindow worker has finished
     statuswindow.worker_thread.wait(1000)
-    #statuswindow.worker_thread.wait()
+    # statuswindow.worker_thread.wait()
 
     # bye bye
     APP.instance().quit()
