@@ -17,12 +17,14 @@
 # along with this program; if not, write to the Free Software
 # Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA  02110-1301, USA
 
-from Nagstamon.Servers.Generic import GenericServer
 import urllib.request, urllib.parse, urllib.error
 import sys
 import copy
 import json
 from bs4 import BeautifulSoup
+from collections import OrderedDict
+
+from Nagstamon.Servers.Generic import GenericServer
 from Nagstamon.Objects import (GenericHost, GenericService, Result)
 from Nagstamon.Helpers import not_empty
 
@@ -167,8 +169,10 @@ class IcingaServer(GenericServer):
                         # according to http://sourceforge.net/p/nagstamon/bugs/83/ it might
                         # better be host_name instead of host_display_name
                         # legacy Icinga adjustments
-                        if 'host_name' in h: host_name = h['host_name']
-                        elif 'host' in h: host_name = h['host']
+                        if 'host_name' in h:
+                            host_name = h['host_name']
+                        elif 'host' in h:
+                            host_name = h['host']
                     else:
                         # https://github.com/HenriWahl/Nagstamon/issues/46 on the other hand has
                         # problems with that so here we go with extra display_name option
@@ -189,7 +193,12 @@ class IcingaServer(GenericServer):
                         self.new_hosts[host_name].flapping = h['is_flapping']
                         self.new_hosts[host_name].acknowledged = h['has_been_acknowledged']
                         self.new_hosts[host_name].scheduled_downtime = h['in_scheduled_downtime']
-                        self.new_hosts[host_name].status_type = status_type
+                        self.new_hosts[host_name].status_type = status_type 
+
+                        # extra Icinga properties to solve https://github.com/HenriWahl/Nagstamon/issues/192
+                        # acknowledge needs host_description and no display name
+                        self.new_hosts[host_name].real_name = h['host_name']
+                            
                     del h, host_name
         except:
             # set checking flag back to False
@@ -254,9 +263,14 @@ class IcingaServer(GenericServer):
                         self.new_hosts[host_name].services[service_name].flapping = s['is_flapping']
                         self.new_hosts[host_name].services[service_name].acknowledged = s['has_been_acknowledged']
                         self.new_hosts[host_name].services[service_name].scheduled_downtime = s['in_scheduled_downtime']
-
                         self.new_hosts[host_name].services[service_name].status_type = status_type
+                        
+                        # extra Icinga properties to solve https://github.com/HenriWahl/Nagstamon/issues/192
+                        # acknowledge needs service_description and no display name
+                        self.new_hosts[host_name].services[service_name].real_name = s['service_description']
+                        
                     del s, host_name, service_name
+                    
         except:
             # set checking flag back to False
             self.isChecking = False
@@ -388,6 +402,12 @@ class IcingaServer(GenericServer):
                                 self.new_hosts[new_host].acknowledged = n['acknowledged']
                                 self.new_hosts[new_host].scheduled_downtime = n['scheduled_downtime']
                                 self.new_hosts[new_host].status_type = status_type
+
+                                # extra Icinga properties to solve https://github.com/HenriWahl/Nagstamon/issues/192
+                                # acknowledge needs host_name and no display name
+                                self.new_hosts[new_host].real_name = n['host']
+                                
+                            
                             # some cleanup
                             del tds, n
                     except:
@@ -509,6 +529,11 @@ class IcingaServer(GenericServer):
                                 self.new_hosts[n['host']].services[new_service].flapping = n['flapping']
                                 self.new_hosts[n['host']].services[new_service].acknowledged = n['acknowledged']
                                 self.new_hosts[n['host']].services[new_service].scheduled_downtime = n['scheduled_downtime']
+
+                                # extra Icinga properties to solve https://github.com/HenriWahl/Nagstamon/issues/192
+                                # acknowledge needs service_description and no display name
+                                self.new_hosts[n['host']].services[new_service].real_name = n['service_description']
+                                
                             # some cleanup
                             del tds, n
                     except:
@@ -562,3 +587,56 @@ class IcingaServer(GenericServer):
                                      ('btnSubmit', 'Commit')])
         # execute POST request
         self.FetchURL(self.monitor_cgi_url + '/cmd.cgi', giveback='raw', cgi_data=cgi_data)
+
+
+    def _set_acknowledge(self, host, service, author, comment, sticky, notify, persistent, all_services=[]):
+        '''
+            send acknowledge to monitor server
+            extra _method necessary due to https://github.com/HenriWahl/Nagstamon/issues/192
+        '''
+
+        url = self.monitor_cgi_url + '/cmd.cgi'
+
+        # the following flags apply to hosts and services
+        #
+        # according to sf.net bug #3304098 (https://sourceforge.net/tracker/?func=detail&atid=1101370&aid=3304098&group_id=236865)
+        # the send_notification-flag must not exist if it is set to 'off', otherwise
+        # the Nagios core interpretes it as set, regardless its real value
+        #
+        # for whatever silly reason Icinga depends on the correct order of submitted form items...
+        # see sf.net bug 3428844
+        #
+        # Thanks to Icinga ORDER OF ARGUMENTS IS IMPORTANT HERE!
+        #
+        cgi_data = OrderedDict()
+        if service == '':
+            cgi_data['cmd_typ'] = '33'
+        else:
+            cgi_data['cmd_typ'] = '34'
+        cgi_data['cmd_mod'] = '2'
+        # better to use host_name instead of display_name
+        cgi_data['host'] = self.hosts[host].real_name
+
+        if service != '':
+            # better to use service_description instead of display_name
+            # this is an extra Icinga property
+            cgi_data['service'] = self.hosts[host].services[service].real_name
+            
+        cgi_data['com_author'] = author
+        cgi_data['com_data'] = comment
+        cgi_data['btnSubmit'] = 'Commit'
+        if notify == True:
+            cgi_data['send_notification'] = 'on'
+        if persistent == True:
+            cgi_data['persistent'] = 'on'
+        if sticky == True:
+            cgi_data['sticky_ack'] = 'on'
+
+        self.FetchURL(url, giveback='raw', cgi_data=cgi_data)
+
+        # acknowledge all services on a host
+        if len(all_services) > 0:
+            for s in all_services:
+                cgi_data['cmd_typ'] = '34'
+                cgi_data['service'] = s
+                self.FetchURL(url, giveback='raw', cgi_data=cgi_data)
