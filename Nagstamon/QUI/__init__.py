@@ -3125,6 +3125,7 @@ class TableWidget(QTableWidget):
         def fill_rows(self, data, sort_column, reverse):
             # to keep GTK Treeview sort behaviour first by services
             first_sort = sorted(data, key=methodcaller('compare_host'))
+            
             for row, nagitem in enumerate(sorted(first_sort, key=methodcaller('compare_%s' % \
                                                     (sort_column)), reverse=reverse)):
 
@@ -3204,7 +3205,6 @@ class TableWidget(QTableWidget):
                 # still looking for a better solution, but for now let GUI some
                 # time to breathe between every updated row
                 self.thread().msleep(20)
-                #self.thread().yieldCurrentThread()
 
                 del(row_cache)
 
@@ -3499,8 +3499,12 @@ class Dialog(QObject):
     def __init__(self, dialog):
         QObject.__init__(self)
         self.window = QDialog()
+        # explicitly set window flags to avoid '?' button on Windows
+        self.window.setWindowFlags(Qt.WindowCloseButtonHint)
+
         self.ui = dialog()
         self.ui.setupUi(self.window)
+        
         # treat dialog content after pressing OK button
         if 'button_box' in dir(self.ui):
             self.ui.button_box.accepted.connect(self.ok)
