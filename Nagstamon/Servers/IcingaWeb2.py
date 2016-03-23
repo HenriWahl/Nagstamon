@@ -114,7 +114,7 @@ class IcingaWeb2Server(GenericServer):
         aboutsoup = BeautifulSoup(aboutraw, 'html.parser')
         div=aboutsoup.find('div', id='about')
         dd=div.findNext('dd')
-        self.version = dd.contents[0]
+        self.version = dd.contents[0].strip()
 
 
     def _get_status(self):
