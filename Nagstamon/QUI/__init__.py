@@ -1022,6 +1022,7 @@ class StatusWindow(QWidget):
 
             # show error message in statusbar
             server_vbox.table.worker.show_error.connect(self.statusbar.set_error)
+            server_vbox.table.worker.new_status.connect(self.raise_window_on_all_desktops)
             server_vbox.table.worker.hide_error.connect(self.statusbar.reset_error)
 
             # show error icon in systray
@@ -1566,6 +1567,20 @@ class StatusWindow(QWidget):
             if current_status_count[state] > 0:
                 message += '{0} {1} '.format(str(current_status_count[state]), state)
         dbus_connection.show(AppInfo.NAME, message)
+
+
+    @pyqtSlot()
+    def raise_window_on_all_desktops(self):
+        """
+            experimental workaround for floating-statusbar-only-on-one-virtual-desktop-after-a-while bug
+            see https://github.com/HenriWahl/Nagstamon/issues/217
+        """
+        # X11/Linux needs some special treatment to get the statusbar floating on all virtual desktops
+        if not platform.system() in NON_LINUX:
+            # get all windows...
+            winid = self.winId().__int__()
+            self.ewmh.setWmDesktop(winid, 0xffffffff)
+            self.ewmh.display.flush()
 
 
     class Worker(QObject):
