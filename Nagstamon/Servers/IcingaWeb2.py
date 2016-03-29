@@ -112,7 +112,9 @@ class IcingaWeb2Server(GenericServer):
             aboutraw = result.result
 
         aboutsoup = BeautifulSoup(aboutraw, 'html.parser')
-        self.version = aboutsoup.find('dt', text='Version').parent.findNext('dd').contents[0]
+        div=aboutsoup.find('div', id='about')
+        dd=div.findNext('dd')
+        self.version = dd.contents[0].strip()
 
 
     def _get_status(self):
@@ -499,13 +501,13 @@ class IcingaWeb2Server(GenericServer):
             url = '{0}/monitoring/list/hosts?host_problem=1&sort=host_severity#!{1}/monitoring/host/show?{2}'.format(self.monitor_url,
                                                                                                                      (urllib.parse.urlparse(self.monitor_url).path),
                                                                                                                      urllib.parse.urlencode(
-                                                                                                                        {'host': self.hosts[host].real_name}))
+                                                                                                                        {'host': self.hosts[host].real_name}).replace('+', ' '))
         else:
             url = '{0}/monitoring/list/services?service_problem=1&sort=service_severity&dir=desc#!{1}/monitoring/service/show?{2}'.format(self.monitor_url,
                                                                                                                                    (urllib.parse.urlparse(self.monitor_url).path),
                                                                                                                                     urllib.parse.urlencode(
                                                                                                                                         {'host': self.hosts[host].real_name,
-                                                                                                                                         'service': self.hosts[host].services[service].real_name}))       
+                                                                                                                                         'service': self.hosts[host].services[service].real_name}).replace('+', ' '))
         if conf.debug_mode:
             self.Debug(server=self.get_name(), host=host, service=service,
                        debug='Open host/service monitor web page {0}'.format(url))
