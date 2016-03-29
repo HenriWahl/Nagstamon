@@ -28,6 +28,7 @@ import sys
 import platform
 import time
 import random
+import copy
 
 from PyQt5.QtWidgets import *
 from PyQt5.QtGui import *
@@ -115,6 +116,15 @@ HEADERS = OrderedDict([('host', 'Host'), ('service', 'Service'),
                        ('status', 'Status'), ('last_check', 'Last Check'),
                        ('duration', 'Duration'), ('attempt', 'Attempt'),
                        ('status_information', 'Status Information')])
+
+# informations to be retrieved by fill_data_array() via get_columns()
+DATA_ARRAY_DATA = ('host',
+                   'service',
+                   'status',
+                   'last_check',
+                   'duration',
+                   'attempt',
+                   'status_information')
 
 # list of headers keywords for action context menu
 HEADERS_LIST = list(HEADERS)
@@ -938,7 +948,6 @@ class StatusWindow(QWidget):
                 else:
                     self.setWindowFlags(Qt.WindowStaysOnTopHint | Qt.FramelessWindowHint | Qt.Tool)
 
-                # necessary to be shown before Linux EWMH-mantra can be applied
                 self.show()
 
                 # statusbar and detail window should be frameless and stay on top
@@ -1002,7 +1011,6 @@ class StatusWindow(QWidget):
         """
         # create server vboxed from current running servers
         if server.enabled:
-
             # display authentication dialog if password is not known
             if not conf.servers[server.name].save_password:
                 dialogs.authentication.show_auth_dialog(server.name)
@@ -1015,40 +1023,41 @@ class StatusWindow(QWidget):
 
             # tell statusbar to summarize after table was refreshed
             server_vbox.table.worker.new_status.connect(self.statusbar.summarize_states)
+            server_vbox.table.worker.new_status.connect(self.raise_window_on_all_desktops)
             server_vbox.table.worker.new_status.connect(systrayicon.show_state)
 
             # if problems go themselves there is no need to notify user anymore
-            server_vbox.table.worker.problems_vanished.connect(self.worker_notification.stop)
+            # ##server_vbox.table.worker.problems_vanished.connect(self.worker_notification.stop)
 
             # show error message in statusbar
-            server_vbox.table.worker.show_error.connect(self.statusbar.set_error)
-            server_vbox.table.worker.hide_error.connect(self.statusbar.reset_error)
+            # ##server_vbox.table.worker.show_error.connect(self.statusbar.set_error)
+            # ##server_vbox.table.worker.hide_error.connect(self.statusbar.reset_error)
 
             # show error icon in systray
-            server_vbox.table.worker.show_error.connect(systrayicon.set_error)
-            server_vbox.table.worker.hide_error.connect(systrayicon.reset_error)
+            # ##server_vbox.table.worker.show_error.connect(systrayicon.set_error)
+            # ##server_vbox.table.worker.hide_error.connect(systrayicon.reset_error)
 
             # tell notification worker to do something AFTER the table was updated
-            server_vbox.table.status_changed.connect(self.worker_notification.start)
+            # ##server_vbox.table.status_changed.connect(self.worker_notification.start)
 
             # and to update status window
-            server_vbox.table.refreshed.connect(self.update_window)
+            # ##server_vbox.table.refreshed.connect(self.update_window)
 
             # hide statuswindow if authentication dialog is to be shown
             server_vbox.button_authenticate.clicked.connect(self.hide_window)
 
             # tell table it should remove freshness of formerly new items when window closes
             # because apparently the new events have been seen now
-            self.hiding.connect(server_vbox.table.worker.unfresh_event_history)
+            # ##self.hiding.connect(server_vbox.table.worker.unfresh_event_history)
 
             # stop notifcation if statuswindow pops up
             self.showing.connect(self.worker_notification.stop)
 
             # tell server worker to recheck all hosts and services
-            self.recheck.connect(server_vbox.table.worker.recheck_all)
+            # ##self.recheck.connect(server_vbox.table.worker.recheck_all)
 
             # refresh table after changed settings
-            dialogs.settings.changed.connect(server_vbox.table.refresh)
+            # ##dialogs.settings.changed.connect(server_vbox.table.refresh)
 
             return server_vbox
         else:
@@ -1480,7 +1489,6 @@ class StatusWindow(QWidget):
         """
         width = 0
         for server in self.servers_vbox.children():
-            # ##if server.table.get_real_width() > width:
             if server.table.real_width > width:
                 width = server.table.get_real_width()
 
@@ -1566,6 +1574,20 @@ class StatusWindow(QWidget):
             if current_status_count[state] > 0:
                 message += '{0} {1} '.format(str(current_status_count[state]), state)
         dbus_connection.show(AppInfo.NAME, message)
+
+
+    @pyqtSlot()
+    def raise_window_on_all_desktops(self):
+        """
+            experimental workaround for floating-statusbar-only-on-one-virtual-desktop-after-a-while bug
+            see https://github.com/HenriWahl/Nagstamon/issues/217
+        """
+        # X11/Linux needs some special treatment to get the statusbar floating on all virtual desktops
+        if not platform.system() in NON_LINUX:
+            # get all windows...
+            winid = self.winId().__int__()
+            self.ewmh.setWmDesktop(winid, 0xffffffff)
+            self.ewmh.display.flush()
 
 
     class Worker(QObject):
@@ -1933,7 +1955,7 @@ class StatusBar(QWidget):
         del hint
         # tell statuswindow its size might be adjusted
         self.resize.emit()
-
+  
 
     @pyqtSlot()
     def flash(self):
@@ -2223,18 +2245,19 @@ class ServerVBox(QVBoxLayout):
         sort_column = conf.default_sort_field.lower()
         order = conf.default_sort_order.lower()
 
-        self.table = TableWidget(0, len(HEADERS), sort_column, order, self.server, parent=parent)
+        # ##self.table = TableWidget(0, len(HEADERS), sort_column, order, self.server, parent=parent)
+        self.table = TreeView(0, len(HEADERS), sort_column, order, self.server, parent=parent)
 
         # delete vbox if thread quits
         self.table.worker_thread.finished.connect(self.delete)
 
         # connect worker to status label to reflect connectivity
-        self.table.worker.change_label_status.connect(self.label_status.change)
-        self.table.worker.restore_label_status.connect(self.label_status.restore)
+        # ##self.table.worker.change_label_status.connect(self.label_status.change)
+        # ##self.table.worker.restore_label_status.connect(self.label_status.restore)
 
         # connect reauthentication button to authentication state
-        self.table.worker.button_authenticate_show.connect(self.button_authenticate.show)
-        self.table.worker.button_authenticate_hide.connect(self.button_authenticate.hide)
+        # ##self.table.worker.button_authenticate_show.connect(self.button_authenticate.show)
+        # ##self.table.worker.button_authenticate_hide.connect(self.button_authenticate.hide)
 
         # care about authentications
         self.button_authenticate.clicked.connect(self.authenticate_server)
@@ -2296,7 +2319,7 @@ class ServerVBox(QVBoxLayout):
         # special table treatment
         self.table.hide()
         self.table.is_shown = False
-
+        
 
     @pyqtSlot()
     def hide_all(self):
@@ -2401,7 +2424,7 @@ class CellWidget(QWidget):
         self.hbox.addWidget(self.label, 1)
         self.hbox.setSpacing(0)
 
-        #self.setToolTip(tooltip)
+        # self.setToolTip(tooltip)
         self.tooltip = tooltip
 
         self.label.setStyleSheet('padding: 5px;')
@@ -2470,7 +2493,7 @@ class CellWidget(QWidget):
         """
         # highlight row when entering it
         if event.type() == QEvent.Enter:
-            ###if not self.parent().action_menu.isVisible():   
+            # ##if not self.parent().action_menu.isVisible():   
             self.highlight_row.emit(self.row)
 
         # recolorize row when leaving it       
@@ -2556,7 +2579,7 @@ class TableWidget(QTableWidget):
         self.real_width = 0
         self.real_height = 0
 
-        # store currentrly activated row
+        # store currently activated row
         self.highlighted_row = 0
 
         # action context menu
@@ -2920,11 +2943,11 @@ class TableWidget(QTableWidget):
         self.set_data(list(self.server.GetItemsGenerator()))
 
 
-    def real_size(self):
-        """
-            width, height
-        """
-        return self.get_real_width(), self.get_real_height()
+    # ##def real_size(self):
+    # ##    """
+    # ##        width, height
+    # ##    """
+    # ##    return self.get_real_width(), self.get_real_height()
 
 
     def get_real_width(self):
@@ -3430,6 +3453,697 @@ class TableWidget(QTableWidget):
             # set all flagged-as-fresh-events to un-fresh
             for event in self.server.events_history.keys():
                 self.server.events_history[event] = False
+
+
+# class Model(QStandardItemModel):
+class Model(QAbstractTableModel):
+    """
+        Model for storing status data to be presented in Treeview-table
+    """
+    
+    data_array_filled = pyqtSignal()
+    
+    # headers for columns
+    headers = list(HEADERS.values())
+    
+    # list of lists for storage of status data 
+    data_array = list()
+
+    # cache row and columnt count    
+    row_count = 0
+    column_count = len(headers)
+
+    # do not need to create everytime a new QVariant() object
+    dummy_return_qvariant = QVariant()
+    
+    # dummy QModelIndex for dataChanged signal
+    dummy_qmodelindex = QModelIndex()
+
+
+    def __init__(self, server, parent=None):     
+        QAbstractTableModel.__init__(self, parent=parent)
+        self.server = server
+
+
+    def rowCount(self, parent):
+        """
+            overridden method to get number of rows 
+        """
+        #return(len(self.data_array))
+        return(self.row_count)
+
+
+    def columnCount(self, parent):
+        """
+            overridden method to get number of columns 
+        """
+        #return(len(self.headers))
+        return(self.column_count)
+
+
+    def headerData(self, column, orientation, role):
+        """
+            overridden method to get headers of columns 
+        """
+        if role == Qt.DisplayRole:
+            return(self.headers[column])
+        
+        
+    ###@pyqtSlot()
+    @pyqtSlot(list)
+    def fill_data_array(self, data_array):
+        """
+            fill data_array for model
+        """
+               
+        # tell treeview that model is about to change - necessary because
+        # otherwise new number of rows would not be applied
+        self.beginResetModel()
+
+        # first empty the data storage
+        del(self.data_array[:])
+        
+        #self.data_array = copy.deepcopy(self.server.data_array)
+        self.data_array = data_array
+        
+        #for category in ('hosts', 'services'):
+        #    for state in self.server.nagitems_filtered[category].values():
+        #        for host in state:
+        #            self.data_array.append(list(host.get_columns(HEADERS)))
+
+        self.row_count = len(self.data_array)
+        #self.row_count = len(self.server.data)
+
+        self.data_array_filled.emit()
+        # ##self.dataChanged.emit(self.dummy_qmodelindex,
+        # ##                      self.dummy_qmodelindex)
+
+        # new model applied
+        self.endResetModel()
+
+
+    def data(self, index, role):
+        """
+            overridden method for data delivery for treeview
+        """
+        if role == Qt.DisplayRole:
+            return(self.data_array[index.row()][index.column()])
+            #return(self.server.data[index.row()][index.column()])
+
+
+class TreeView(QTreeView):
+    """
+        attempt to get a less resource-hungry table/tree
+    """
+    
+    # tell global window that it should be resized
+    ready_to_resize = pyqtSignal()
+    
+    def __init__(self, columncount, rowcount, sort_column, order, server, parent=None):
+        # QTreeView.__init__(self, columncount, rowcount,parent=parent)
+        QTreeView.__init__(self, parent=parent)
+
+        self.setFont(FONT)
+
+
+        self.server = server
+
+        # no vertical header needed
+        # ##self.verticalHeader().hide()
+
+        # no handling of selection by treeview
+        self.setSelectionBehavior(QAbstractItemView.SelectItems)
+        self.setSelectionMode(QAbstractItemView.NoSelection)
+        
+        # disable space at the left side
+        self.setIndentation(0)
+        
+        
+        self.setUniformRowHeights(True)
+
+        
+        # has to be necessarily false to keep sanity if calculating table height
+        # self.setShowGrid(False)
+        # no scrollbars at tables because they will be scrollable by the global vertical scrollbar
+        self.setHorizontalScrollBarPolicy(Qt.ScrollBarAlwaysOff)
+        self.setVerticalScrollBarPolicy(Qt.ScrollBarAlwaysOff)
+        self.setAutoScroll(False)
+        self.setSortingEnabled(True)
+
+        self.setSizePolicy(QSizePolicy.Ignored, QSizePolicy.Expanding)
+
+        # ##self.setHorizontalHeaderLabels(HEADERS.values())
+
+        # store width and height if they do not need to be recalculated
+        self.real_width = 0
+        self.real_height = 0
+              
+        self.header().setSectionResizeMode(QHeaderView.ResizeToContents)
+        self.header().setDefaultAlignment(Qt.AlignLeft)
+        self.header().setSortIndicatorShown(True)
+        # ##self.header().setSortIndicator(list(HEADERS).index(self.sort_column), SORT_ORDER[self.order])
+        # ##self.header().sortIndicatorChanged.connect(self.sort_columns)
+
+        self.treeview_model = Model(server=self.server, parent=self)
+                
+        # self.reset_model()
+        
+        self.setModel(self.treeview_model)
+        
+        # self.treeview_model.data_array_filled.connect(self.reset_model)
+        # self.treeview_model.data_array_filled.connect(self.update)
+        self.treeview_model.data_array_filled.connect(self.adjust_table)
+        
+
+        # a thread + worker is necessary to get new monitor server data in the background and
+        # to refresh the table cell by cell after new data is available
+        self.worker_thread = QThread()
+        self.worker = self.Worker(server=server)
+        self.worker.moveToThread(self.worker_thread)
+        
+        # if worker got new status data from monitor server get_status
+        # the treeview model has to be updated
+        #self.worker.new_status.connect(self.model().fill_data_array)
+        self.worker.data_array_filled.connect(self.model().fill_data_array)
+        
+        # get status if started
+        self.worker_thread.started.connect(self.worker.get_status)
+        # start with priority 0 = lowest
+        self.worker_thread.start()
+
+
+    def get_real_height(self):
+        """
+            calculate real table height as there is no method included
+        """
+        
+        # height summary starts with headers' height
+        # apparently height works better/without scrollbar if some pixels are added
+        
+
+        # self.real_height = self.horizontalHeader().sizeHint().height() + 2
+        # self.real_height = self.header().sizeHint().height() + 2
+        self.real_height = self.header().sizeHint().height() + 2
+
+        # maybe simply take nagtiems_filtered_count?
+        self.real_height += self.indexRowSizeHint(self.model().index(0, 0)) * self.model().rowCount(self)
+
+
+        return self.real_height
+    
+    
+    @pyqtSlot()
+    def adjust_table(self):
+        """
+            adjust table dimensions after filling it
+        """
+        # seems to be important for not getting somehow squeezed cells
+        # ##self.resizeColumnsToContents()
+        # ##self.resizeRowsToContents()
+        # ##self.horizontalHeader().setStretchLastSection(True)
+
+        # force table to its maximal height, calculated by .get_real_height()
+        self.setMinimumHeight(self.get_real_height())
+        self.setMaximumHeight(self.get_real_height())
+        self.setSizePolicy(QSizePolicy.Ignored, QSizePolicy.Maximum)
+
+        # after setting table whole window can be repainted
+        self.ready_to_resize.emit()
+
+
+    class Worker(QObject):
+        """
+            attempt to run a server status update thread - only needed by table so it is defined here inside table
+        """
+
+        # send signal if monitor server has new status data
+        new_status = pyqtSignal()
+
+        # send signal if next cell can be filled
+        next_cell = pyqtSignal(int, int, str, str, str, list, str)
+
+        # send signal if all cells are filled and table can be adjusted
+        table_ready = pyqtSignal()
+
+        # send signal if ready to stop
+        finish = pyqtSignal()
+
+        # send start and end of downtime
+        set_start_end = pyqtSignal(str, str)
+
+        # try to stop thread by evaluating this flag
+        running = True
+
+        # signal to be sent to slot "change" of ServerStatusLabel
+        change_label_status = pyqtSignal(str, str)
+
+        # signal to be sent to slot "restore" of ServerStatusLabel
+        restore_label_status = pyqtSignal()
+
+        # send notification a stop message if problems vanished without being noticed
+        problems_vanished = pyqtSignal()
+
+        # flag to keep recheck_all from being started more than once
+        rechecking_all = False
+
+        # signals to show/hide reauthentication
+        button_authenticate_show = pyqtSignal()
+        button_authenticate_hide = pyqtSignal()
+
+        # signals to control error message in statusbar
+        show_error = pyqtSignal(str)
+        hide_error = pyqtSignal()
+        
+        # send to treeview with new data_array
+        data_array_filled = pyqtSignal(list)
+        #data_array_filled = pyqtSignal()
+        
+
+        def __init__(self, parent=None, server=None):
+            QObject.__init__(self)
+            self.server = server
+            # needed for update interval
+            self.timer = QTimer(self)
+            self.server.init_config()
+
+
+        @pyqtSlot()
+        def get_status(self):
+            """
+                check every second if thread still has to run
+                if interval time is reached get status
+            """
+            
+            # if counter is at least update interval get status
+            if self.server.thread_counter >= conf.update_interval_seconds:
+               
+                
+                # reflect status retrieval attempt on server vbox label
+                self.change_label_status.emit('Refreshing...', '')
+                
+                # get status from server instance
+                status = self.server.GetStatus()
+                
+                # all is OK if no error info came back
+                if self.server.status_description == '' and\
+                   self.server.status_code < 400 and\
+                   not self.server.refresh_authentication:
+                    self.change_label_status.emit('Connected', '')
+
+                    # reset server error flag, needed for error label in statusbar
+                    self.server.has_error = False
+
+                    # tell statusbar there is no error
+                    self.hide_error.emit()
+                else:
+                    # try to display some more user friendly error description
+                    if status.error.startswith('requests.exceptions.ConnectTimeout'):
+                        self.change_label_status.emit('Connection timeout', '')
+                    elif status.error.startswith('requests.exceptions.ConnectionError'):
+                        self.change_label_status.emit('Connection error', '')
+                    elif self.server.status_code in self.server.STATUS_CODES_NO_AUTH or\
+                         self.server.refresh_authentication:
+                        self.change_label_status.emit('Authentication problem', 'critical')
+                    else:
+                        # kick out line breaks to avoid broken status window
+                        self.change_label_status.emit(self.server.status_description.replace('\n', ''), '')
+
+                    # set server error flag, needed for error label in statusbar
+                    self.server.has_error = True
+
+                    # tell statusbar there is some error to display
+                    self.show_error.emit('ERROR')
+
+                # depending on authentication state show reauthentication button
+                if self.server.refresh_authentication:
+                    self.button_authenticate_show.emit()
+                else:
+                    self.button_authenticate_hide.emit()
+
+                # reset counter for this thread
+                self.server.thread_counter = 0
+
+                # if failures have gone and nobody took notice switch notification off again
+                if len([k for k, v in self.server.events_history.items() if v == True]) == 0 and\
+                        statuswindow and \
+                        statuswindow.worker_notification.is_notifying == True and\
+                        statuswindow.worker_notification.notifying_server == self.server.name:
+                    # tell notification that unnoticed problems are gone
+                    self.problems_vanished.emit()
+
+
+                self.fill_data_array()
+
+                # tell news about new status available
+                self.new_status.emit()
+
+
+            # increase thread counter
+            self.server.thread_counter += 1
+
+            # if running flag is still set call myself after 1 second
+            if self.running == True:
+                self.timer.singleShot(1000, self.get_status)
+            else:
+                # tell tableview to finish worker_thread
+                self.finish.emit()
+
+
+        @pyqtSlot(list, str, bool)
+        def fill_rows(self, data, sort_column, reverse):
+            # to keep GTK Treeview sort behaviour first by services
+            first_sort = sorted(data, key=methodcaller('compare_host'))
+            
+            for row, nagitem in enumerate(sorted(first_sort, key=methodcaller('compare_%s' % \
+                                                    (sort_column)), reverse=reverse)):
+
+                # only if tooltips are wanted take status_information for the whole row
+                if conf.show_tooltips:
+                    tooltip = '''<div style=white-space:pre;margin:3px;><b>{0}: {1}</b></div>
+                                 {2}'''.format(nagitem.host,
+                                               nagitem.service,
+                                               nagitem.status_information)
+                else:
+                    tooltip = ''
+
+                # store icon calculations in row_cache to increase painting speed
+                row_cache = list()
+
+                # lists in rows list are columns
+                # create every cell per row
+                for column, text in enumerate(nagitem.get_columns(HEADERS)):
+                    # check for icons to be used in cell widget
+                    if column in (0, 1):
+                        # icons to be added
+                        icons = list()
+                        # hash for freshness comparison
+                        hash = nagitem.get_hash()
+                        # add host icons
+                        if nagitem.is_host() and column == 0:
+                            if nagitem.is_acknowledged():
+                                icons.append(ICONS['acknowledged'])
+                            if nagitem.is_flapping():
+                                icons.append(ICONS['flapping'])
+                            if nagitem.is_passive_only():
+                                icons.append(ICONS['passive'])
+                            if nagitem.is_in_scheduled_downtime():
+                                icons.append(ICONS['downtime'])
+                            if hash in self.server.events_history and\
+                                       self.server.events_history[hash] == True:
+                                        icons.append(ICONS['new'])
+                        # add host icons for service item - e.g. in case host is in downtime
+                        elif not nagitem.is_host() and column == 0:
+                            if self.server.hosts[nagitem.host].is_acknowledged():
+                                icons.append(ICONS['acknowledged'])
+                            if self.server.hosts[nagitem.host].is_flapping():
+                                icons.append(ICONS['flapping'])
+                            if self.server.hosts[nagitem.host].is_passive_only():
+                                icons.append(ICONS['passive'])
+                            if self.server.hosts[nagitem.host].is_in_scheduled_downtime():
+                                icons.append(ICONS['downtime'])
+                        # add service icons
+                        elif not nagitem.is_host() and column == 1:
+                            if nagitem.is_acknowledged():
+                                icons.append(ICONS['acknowledged'])
+                            if nagitem.is_flapping():
+                                icons.append(ICONS['flapping'])
+                            if nagitem.is_passive_only():
+                                icons.append(ICONS['passive'])
+                            if nagitem.is_in_scheduled_downtime():
+                                icons.append(ICONS['downtime'])
+                            if hash in self.server.events_history and\
+                                       self.server.events_history[hash] == True:
+                                        icons.append(ICONS['new'])
+                    else:
+                        icons = ICONS_FALSE
+
+                    # store text and icons in cache
+                    row_cache.append({ 'text': text, 'icons': icons})
+
+                # paint cells without extra icon calculation - done before
+                for column in range(len(row_cache)):
+                    # send signal to paint next cell
+                    self.next_cell.emit(row, column, row_cache[column]['text'],
+                                        conf.__dict__[COLORS[nagitem.status] + 'text'],
+                                        conf.__dict__[COLORS[nagitem.status] + 'background'],
+                                        row_cache[column]['icons'],
+                                        tooltip)
+
+                # sleep some milliceconds to let the GUI thread do some work too
+                # still looking for a better solution, but for now let GUI some
+                # time to breathe between every updated row
+                self.thread().msleep(20)
+
+                del(row_cache)
+
+            # after running through
+            self.table_ready.emit()
+            
+        
+        @pyqtSlot()
+        def fill_data_array(self):
+            """
+                let worker do the dirty job of filling the array
+            """
+            
+            # data_array to be evaluated in data() of model
+            # first 7 items per row come from current status information
+            
+            
+            data_array = list()
+            
+            ###del(self.server.data_array[:])
+
+            
+            for category in ('hosts', 'services'):
+                for state in self.server.nagitems_filtered[category].values():
+                    for item in state:
+                        data_array.append(list(item.get_columns(HEADERS)))
+                        ###self.server.data_array.append(list(host.get_columns(HEADERS)))
+                        
+            self.data_array_filled.emit(data_array)           
+            ###self.data_array_filled.emit()
+
+
+        @pyqtSlot(dict)
+        def acknowledge(self, info_dict):
+            """
+                slot waiting for 'acknowledge' signal from ok button from acknowledge dialog
+                all information about target server, host, service and flags is contained
+                in dictionary 'info_dict'
+            """
+            # because all monitors are connected to this slot we must check which one sent the signal,
+            # otherwise there are several calls and not only one as wanted
+            if self.server == info_dict['server']:
+                # pass dictionary to server's acknowledge machinery
+                self.server.set_acknowledge(info_dict)
+
+
+        @pyqtSlot(dict)
+        def downtime(self, info_dict):
+            """
+                slot waiting for 'downtime' signal from ok button from downtime dialog
+                all information about target server, host, service and flags is contained
+                in dictionary 'info_dict'
+            """
+            # because all monitors are connected to this slot we must check which one sent the signal,
+            # otherwise there are several calls and not only one as wanted
+            if self.server == info_dict['server']:
+                # pass dictionary to server's downtime machinery
+                self.server.set_downtime(info_dict)
+
+
+        @pyqtSlot(dict)
+        def submit(self, info_dict):
+            """
+                slot waiting for 'submit' signal from ok button from submit dialog
+                all information about target server, host, service and flags is contained
+                in dictionary 'info_dict'
+            """
+            # because all monitors are connected to this slot we must check which one sent the signal,
+            # otherwise there are several calls and not only one as wanted
+            if self.server == info_dict['server']:
+                # pass dictionary to server's downtime machinery
+                self.server.set_submit_check_result(info_dict)
+
+
+        @pyqtSlot(dict)
+        def recheck(self, info_dict):
+            """
+                Slot to start server recheck method, getting signal from TableWidget context menu
+            """
+            if conf.debug_mode:
+                # host
+                if info_dict['service'] == '':
+                    self.server.Debug(server=self.server.name, debug='Rechecking host {0}'.format(info_dict['host']))
+                else:
+                    self.server.Debug(server=self.server.name, debug='Rechecking service {0} on host {1}'.format(info_dict['service'], info_dict['host']))
+            # call server recheck method
+            self.server.set_recheck(info_dict)
+
+
+        @pyqtSlot()
+        def recheck_all(self):
+            """
+                call server.set_recheck for every single host/service
+            """
+            # only if no already rechecking
+            if self.rechecking_all == False:
+                # block rechecking
+                self.rechecking_all = True
+                # change label of server vbox
+                self.change_label_status.emit('Rechecking all...', '')
+                if conf.debug_mode:
+                    self.server.Debug(server=self.server.name, debug='Start rechecking all')
+                # special treatment for Check_MK Multisite because there is only one URL call necessary
+                if self.server.type != 'Check_MK Multisite':
+                    # make a copy to preserve hosts/service to recheck - just in case something changes meanwhile
+                    nagitems_filtered = deepcopy(self.server.nagitems_filtered)
+                    for status in nagitems_filtered['hosts'].items():
+                        for host in status[1]:
+                            if conf.debug_mode:
+                                self.server.Debug(server=self.server.name, debug='Rechecking host {0}'.format(host.name))
+                            # call server recheck method
+                            self.server.set_recheck({'host': host.name, 'service': ''})
+                    for status in nagitems_filtered['services'].items():
+                        for service in status[1]:
+                            if conf.debug_mode:
+                                self.server.Debug(server=self.server.name, debug='Rechecking service {0} on host {1}'.format(service.name, service.host))
+                            # call server recheck method
+                            self.server.set_recheck({'host': service.host, 'service': service.name})
+                    del(nagitems_filtered, status)
+                else:
+                    # Check_MK Multisite does it its own way
+                    self.server.recheck_all()
+                # release rechecking lock
+                self.rechecking = False
+                # restore server status label
+                self.restore_label_status.emit()
+            else:
+                if conf.debug_mode:
+                    self.server.Debug(server=self.server.name, debug='Already rechecking all')
+
+        @pyqtSlot(str, str)
+        def get_start_end(self, server_name, host):
+            """
+                Investigates start and end time of a downtime asynchronously
+            """
+            # because every server listens to this signal the name has to be filtered
+            if server_name == self.server.name:
+                start, end = self.server.get_start_end(host)
+                # send start/end time to slot
+                self.set_start_end.emit(start, end)
+
+
+        @pyqtSlot(dict, str)
+        def execute_action(self, action, info):
+            """
+                runs action, may it be custom or included like the Check_MK actions
+            """
+            # first replace placeholder variables in string with actual values
+            #
+            # Possible values for variables:
+            # $HOST$             - host as in monitor
+            # $SERVICE$          - service as in monitor
+            # $MONITOR$          - monitor address - not yet clear what exactly for
+            # $MONITOR-CGI$      - monitor CGI address - not yet clear what exactly for
+            # $ADDRESS$          - address of host, investigated by Server.GetHost()
+            # $STATUS-INFO$      - status information
+            # $USERNAME$         - username on monitor
+            # $PASSWORD$         - username's password on monitor - whatever for
+            # $COMMENT-ACK$      - default acknowledge comment
+            # $COMMENT-DOWN$     - default downtime comment
+            # $COMMENT-SUBMIT$   - default submit check result comment
+
+            try:
+                """
+
+                what?
+
+                # if run as custom action use given action definition from conf, otherwise use for URLs
+                if 'action' in action:
+                    string = action['string']
+                    action_type = self.action.type
+                else:
+                    string = self.string
+                    action_type = self.type
+                """
+                # used for POST request
+                if 'cgi_data' in action:
+                    cgi_data = action['cgi_data']
+                else:
+                    cgi_data = ''
+
+                # mapping of variables and values
+                mapping = { '$HOST$': info['host'],
+                            '$SERVICE$': info['service'],
+                            '$ADDRESS$': info['address'],
+                            '$MONITOR$': info['monitor'],
+                            '$MONITOR-CGI$': info['monitor-cgi'],
+                            '$STATUS-INFO$': info['status-info'],
+                            '$USERNAME$': info['username'],
+                            '$PASSWORD$': info['password'],
+                            '$COMMENT-ACK$': info['comment-ack'],
+                            '$COMMENT-DOWN$': info['comment-down'],
+                            '$COMMENT-SUBMIT$': info['comment-submit'],
+                            }
+
+                # take string form action
+                string = action['string']
+
+                # mapping mapping
+                for i in mapping:
+                    string = string.replace(i, mapping[i])
+
+                # see what action to take
+                if action['type'] == 'browser':
+                    # debug
+                    if conf.debug_mode == True:
+                        self.server.Debug(server=self.server.name, host=self.host, service=self.service, debug='ACTION: BROWSER ' + string)
+                    webbrowser.open(string)
+                elif action['type'] == 'command':
+                    # debug
+                    if conf.debug_mode == True:
+                        self.server.Debug(server=self.server.name, host=self.host, service=self.service, debug='ACTION: COMMAND ' + string)
+                    subprocess.Popen(string, shell=True)
+                elif action['type'] == 'url':
+                    # Check_MK uses transids - if this occurs in URL its very likely that a Check_MK-URL is called
+                    if '$TRANSID$' in string:
+                        transid = servers[info['server']]._get_transid(info['host'], info['service'])
+                        string = string.replace('$TRANSID$', transid).replace(' ', '+')
+                    else:
+                        # make string ready for URL
+                        string = self._URLify(string)
+                    # debug
+                    if conf.debug_mode == True:
+                        self.server.Debug(server=self.server.name, host=self.host, service=self.service, debug='ACTION: URL in background ' + string)
+                    servers[info['server']].FetchURL(string)
+                # used for example by Op5Monitor.py
+                elif action['type'] == 'url-post':
+                    # make string ready for URL
+                    string = self._URLify(string)
+                    # debug
+                    if conf.debug_mode == True:
+                        self.server.Debug(server=self.server.name, host=self.host, service=self.service, debug='ACTION: URL-POST in background ' + string)
+                    servers[info['server']].FetchURL(string, cgi_data=cgi_data, multipart=True)
+            except:
+                import traceback
+                traceback.print_exc(file=sys.stdout)
+
+        def _URLify(self, string):
+            """
+                return a string that fulfills requirements for URLs
+                exclude several chars
+            """
+            return urllib.parse.quote(string, ":/=?&@+")
+
+
+        @pyqtSlot()
+        def unfresh_event_history(self):
+            # set all flagged-as-fresh-events to un-fresh
+            for event in self.server.events_history.keys():
+                self.server.events_history[event] = False
+
 
 
 class Dialogs(object):
