@@ -111,6 +111,9 @@ COLOR_STATE_NAMES = {'DOWN': {True: 'DOWN', False: ''},
                      'UNKNOWN': { True: 'UNKNOWN', False: ''},
                      'WARNING': { True: 'WARNING', False: ''}}
 
+# QBrushes made of QColors for treeview model data() method
+QBRUSHES = dict()
+
 # headers for tablewidgets
 HEADERS = OrderedDict([('host', 'Host'), ('service', 'Service'),
                        ('status', 'Status'), ('last_check', 'Last Check'),
@@ -118,13 +121,16 @@ HEADERS = OrderedDict([('host', 'Host'), ('service', 'Service'),
                        ('status_information', 'Status Information')])
 
 # informations to be retrieved by fill_data_array() via get_columns()
-DATA_ARRAY_DATA = ('host',
+DATA_ARRAY_COLUMNS = ('host',
                    'service',
                    'status',
                    'last_check',
                    'duration',
                    'attempt',
-                   'status_information')
+                   'status_information',
+                   'acknowledged',
+                   'scheduled_downtime',
+                   'flapping')
 
 # list of headers keywords for action context menu
 HEADERS_LIST = list(HEADERS)
@@ -877,6 +883,9 @@ class StatusWindow(QWidget):
 
         # icons in ICONS
         _create_icons()
+
+        # create brushes for treeview
+        _create_brushes()
 
         # needed for moving the statuswindow
         self.moving = False
@@ -3549,6 +3558,13 @@ class Model(QAbstractTableModel):
         if role == Qt.DisplayRole:
             return(self.data_array[index.row()][index.column()])
             #return(self.server.data[index.row()][index.column()])
+        elif role == Qt.ForegroundRole:
+            return(self.data_array[index.row()][10])
+        elif role == Qt.BackgroundRole:
+            return(self.data_array[index.row()][11])
+        elif role == Qt.ToolTipRole:
+            return(self.data_array[index.row()][6])
+
 
 
 class TreeView(QTreeView):
@@ -3918,8 +3934,17 @@ class TreeView(QTreeView):
             for category in ('hosts', 'services'):
                 for state in self.server.nagitems_filtered[category].values():
                     for item in state:
-                        data_array.append(list(item.get_columns(HEADERS)))
+                        data_array.append(list(item.get_columns(DATA_ARRAY_COLUMNS)))
+                        # add text color from status
+                        #print(conf.__dict__[COLORS[item.status] + 'text'])
+                        ###data_array[-1].append(QBrush(QColor(conf.__dict__[COLORS[item.status] + 'text'])))
+                        data_array[-1].append(QBRUSHES[conf.__dict__[COLORS[item.status + 'text']])
+                        # add background color from status
+                        ###data_array[-1].append(QBrush(QColor(conf.__dict__[COLORS[item.status] + 'background'])))
+                        data_array[-1].append(QBRUSHES[conf.__dict__[COLORS[item.status + 'background']])
                         ###self.server.data_array.append(list(host.get_columns(HEADERS)))
+                        
+                        #print(data_array[-1])
                         
             self.data_array_filled.emit(data_array)           
             ###self.data_array_filled.emit()
@@ -4594,6 +4619,9 @@ class Dialog_Settings(Dialog):
         conf.font = self.font.toString()
         # update global font
         FONT = self.font
+        
+        # update brushes for treeview
+        _create_brushes()
 
         # store configuration
         conf.SaveConfig()
@@ -5979,6 +6007,17 @@ def _create_icons():
     for attr in ('acknowledged', 'downtime', 'flapping', 'new', 'passive'):
         icon = QIcon('%s%snagstamon_%s.svg' % (RESOURCES, os.sep, attr))
         ICONS[attr] = icon
+
+
+def _create_brushes():
+    """
+        fill static brushes with current colors for treeview
+    """
+    for state in STATES[1:]:
+        for role in ('text', 'background'):
+            QBRUSHES[COLORS[state] + role] = QColor(conf.__dict__[COLORS[state] + role])
+    
+    print(QBRUSHES)
 
 
 def get_screen(x, y):
