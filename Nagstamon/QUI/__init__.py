@@ -127,6 +127,9 @@ for i in range(2, 7):
 # QBrushes made of QColors for treeview model data() method
 QBRUSHES = dict()
 
+# dummy QVariant as empty return value for model data()
+DUMMY_QVARIANT = QVariant()
+
 # headers for tablewidgets
 HEADERS = OrderedDict([('host', 'Host'), ('service', 'Service'),
                        ('status', 'Status'), ('last_check', 'Last Check'),
@@ -3492,7 +3495,7 @@ class Delegate(QStyledItemDelegate):
             inspired by http://www.gulon.co.uk/2013/01/30/button-delegate-for-qtableviews/
         """
         
-        print(index.data(Qt.DecorationRole))
+        print(index.row(), index.data(Qt.DecorationRole))
         
         if not self.parent().indexWidget(index):
             
@@ -3623,10 +3626,13 @@ class Model(QAbstractTableModel):
         if role == Qt.DisplayRole:
             return(self.data_array[index.row()][index.column()])
             #return(self.server.data[index.row()][index.column()])
+
         elif role == Qt.ForegroundRole:
             return(self.data_array[index.row()][COLOR_INDEX['text'][index.column()]])
+
         elif role == Qt.BackgroundRole:
             return(self.data_array[index.row()][COLOR_INDEX['background'][index.column()]])
+
         elif role == Qt.ToolTipRole:
             # only if tooltips are wanted show them, combining host + service + status_info
             if conf.show_tooltips:
@@ -3635,7 +3641,13 @@ class Model(QAbstractTableModel):
                                            self.data_array[index.row()][1],
                                            self.data_array[index.row()][6]))
             else:
-                return('')
+                return(DUMMY_QVARIANT)
+
+        elif role == Qt.DecorationRole:
+            print(index.row(), self.data_array[index.row()][7],
+                               self.data_array[index.row()][8]),
+                               self.data_array[index.row()][9])
+            return(DUMMY_QVARIANT)
 
 
 class TreeView(QTreeView):
