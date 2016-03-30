@@ -118,11 +118,11 @@ COLOR_STATE_NAMES = {'DOWN': {True: 'DOWN', False: ''},
 # correlates with data set in fill_array_data() from treeview worker
 COLOR_INDEX = {'text': [], 'background': []}
 for i in range(2):
-    COLOR_INDEX['text'].append(12) 
-    COLOR_INDEX['background'].append(13) 
+    COLOR_INDEX['text'].append(11) 
+    COLOR_INDEX['background'].append(12) 
 for i in range(2, 7):
-    COLOR_INDEX['text'].append(10) 
-    COLOR_INDEX['background'].append(11) 
+    COLOR_INDEX['text'].append(9) 
+    COLOR_INDEX['background'].append(10) 
     
 # QBrushes made of QColors for treeview model data() method
 QBRUSHES = dict()
@@ -3495,8 +3495,6 @@ class Delegate(QStyledItemDelegate):
             inspired by http://www.gulon.co.uk/2013/01/30/button-delegate-for-qtableviews/
         """
         
-        print(index.row(), index.data(Qt.DecorationRole))
-        
         if not self.parent().indexWidget(index):
             
             widget = QWidget(parent=self.parent())
@@ -3643,12 +3641,6 @@ class Model(QAbstractTableModel):
             else:
                 return(DUMMY_QVARIANT)
 
-        elif role == Qt.DecorationRole:
-            print(index.row(), self.data_array[index.row()][7],
-                               self.data_array[index.row()][8]),
-                               self.data_array[index.row()][9])
-            return(DUMMY_QVARIANT)
-
 
 class TreeView(QTreeView):
     """
@@ -3675,6 +3667,7 @@ class TreeView(QTreeView):
         self.setSelectionMode(QAbstractItemView.NoSelection)
         
         # disable space at the left side
+        self.setRootIsDecorated(False)
         self.setIndentation(0)
         
         
@@ -4021,7 +4014,71 @@ class TreeView(QTreeView):
             for category in ('hosts', 'services'):
                 for state in self.server.nagitems_filtered[category].values():
                     for item in state:
-                        data_array.append(list(item.get_columns(DATA_ARRAY_COLUMNS)))
+                        data_array.append(list(item.get_columns(HEADERS)))
+                        
+                        # hash for freshness comparison
+                        hash = item.get_hash()
+                        
+                        # list for host icons
+                        ##data_array[-1].append(list)
+
+                        # list for service icons
+                        ###data_array[-1].append(list)
+                        
+                        # add host icons
+                        if item.is_host():
+                            # list for icons
+                            icons = list()
+                            if item.is_acknowledged():
+                                icons.append(ICONS['acknowledged'])
+                            if item.is_flapping():
+                                icons.append(ICONS['flapping'])
+                            if item.is_passive_only():
+                                icons.append(ICONS['passive'])
+                            if item.is_in_scheduled_downtime():
+                                icons.append(ICONS['downtime'])
+                            if hash in self.server.events_history and\
+                                       self.server.events_history[hash] == True:
+                                        icons.append(ICONS['new'])
+                            # add list for host icons
+                            data_array[-1].append(icons)
+                            # dummy list for non-used service icons
+                            data_array[-1].append(list())
+                        # add service icons
+                        elif not item.is_host():
+                            
+                            
+                             # add host icons for service item - e.g. in case host is in downtime
+                            # list for icons
+                            icons = list()
+                            if self.server.hosts[item.host].is_acknowledged():
+                                icons.append(ICONS['acknowledged'])
+                            if self.server.hosts[item.host].is_flapping():
+                                icons.append(ICONS['flapping'])
+                            if self.server.hosts[item.host].is_passive_only():
+                                icons.append(ICONS['passive'])
+                            if self.server.hosts[item.host].is_in_scheduled_downtime():
+                                icons.append(ICONS['downtime'])
+                            # add list for host icons
+                            data_array[-1].append(icons)
+                                    
+                            # list for service icons
+                            icons = list()
+                            if item.is_acknowledged():
+                                icons.append(ICONS['acknowledged'])
+                            if item.is_flapping():
+                                icons.append(ICONS['flapping'])
+                            if item.is_passive_only():
+                                icons.append(ICONS['passive'])
+                            if item.is_in_scheduled_downtime():
+                                icons.append(ICONS['downtime'])
+                            if hash in self.server.events_history and\
+                                       self.server.events_history[hash] == True:
+                                        icons.append(ICONS['new'])
+                            # add list for service icons
+                            data_array[-1].append(icons)
+                        
+                        
                         # add text color as QBrush from status
                         data_array[-1].append(QBRUSHES[COLORS[item.status] + 'text'])                       
                         # add background color as QBrush from status
@@ -4030,6 +4087,7 @@ class TreeView(QTreeView):
                         data_array[-1].append(conf.__dict__[COLORS[item.status] + 'text'])                       
                         # add background color as vaule for CSS from status
                         data_array[-1].append(conf.__dict__[COLORS[item.status] + 'background'])                       
+
             
             self.data_array_filled.emit(data_array)           
             ###self.data_array_filled.emit()
