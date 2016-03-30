@@ -3491,6 +3491,9 @@ class Delegate(QStyledItemDelegate):
         """
             inspired by http://www.gulon.co.uk/2013/01/30/button-delegate-for-qtableviews/
         """
+        
+        print(index.data(Qt.DecorationRole))
+        
         if not self.parent().indexWidget(index):
             
             widget = QWidget(parent=self.parent())
