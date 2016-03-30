@@ -3480,6 +3480,67 @@ class TableWidget(QTableWidget):
                 self.server.events_history[event] = False
 
 
+class DelegatedWidget(QWidget):
+    """
+        widget to be used in treeview delegated cells
+    """
+
+    # send to tablewidget if cell clicked
+    #clicked = pyqtSignal()
+    
+    # signals to be sent to parent tablewidget for doing some painting
+    #colorize_row = pyqtSignal(int)
+    #highlight_row = pyqtSignal(int)
+
+
+    def __init__(self, column=0, row=0, text='', color='black', background='white', icons='', tooltip='', parent=None):
+        """
+            one cell of a server's table
+        """
+        global FONT
+
+        QWidget.__init__(self, parent=parent)
+
+        self.column = column
+        self.row = row
+        self.text = text
+        self.color = color
+        self.background = background
+
+        self.hbox = QHBoxLayout(self)
+        self.setLayout(self.hbox)
+
+        # text field
+        self.label = QLabel(self.text, parent=self)
+        self.label.setFont(FONT)
+
+        self.hbox.setContentsMargins(0, 0, 0, 0)
+        self.hbox.addWidget(self.label, 1)
+        self.hbox.setSpacing(0)
+
+        # self.setToolTip(tooltip)
+        self.tooltip = tooltip
+
+        self.label.setStyleSheet('padding: 5px;')
+
+        # default for most of cells - no icons
+        self.icon_labels = False
+
+        # hosts and services might contain attribute icons
+        if column in (0, 1) and icons is not ICONS_FALSE:
+
+            # if there are icons store them in list
+            self.icon_labels = []
+
+            for icon in icons:
+                icon_label = QLabel(parent=self)
+                icon_label.setPixmap(icon.pixmap(self.label.fontMetrics().height(), self.label.fontMetrics().height()))
+                #icon_label.setStyleSheet(CSS_GRID_ICON[(conf.show_grid, column)])
+                self.icon_labels.append(icon_label)
+                # take last appended icon_label
+                self.hbox.addWidget(self.icon_labels[-1])
+
+
 class Delegate(QStyledItemDelegate):
     """
         Used for displaying decorated cells for hosts and services to reflect
@@ -4018,13 +4079,7 @@ class TreeView(QTreeView):
                         
                         # hash for freshness comparison
                         hash = item.get_hash()
-                        
-                        # list for host icons
-                        ##data_array[-1].append(list)
 
-                        # list for service icons
-                        ###data_array[-1].append(list)
-                        
                         # add host icons
                         if item.is_host():
                             # list for icons
@@ -4045,9 +4100,7 @@ class TreeView(QTreeView):
                             # dummy list for non-used service icons
                             data_array[-1].append(list())
                         # add service icons
-                        elif not item.is_host():
-                            
-                            
+                        elif not item.is_host():                            
                              # add host icons for service item - e.g. in case host is in downtime
                             # list for icons
                             icons = list()
@@ -4090,7 +4143,6 @@ class TreeView(QTreeView):
 
             
             self.data_array_filled.emit(data_array)           
-            ###self.data_array_filled.emit()
 
 
         @pyqtSlot(dict)
