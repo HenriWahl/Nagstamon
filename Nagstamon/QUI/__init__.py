@@ -3563,8 +3563,14 @@ class Model(QAbstractTableModel):
         elif role == Qt.BackgroundRole:
             return(self.data_array[index.row()][11])
         elif role == Qt.ToolTipRole:
-            return(self.data_array[index.row()][6])
-
+            # only if tooltips are wanted take status_information for the whole row
+            if conf.show_tooltips:
+                return('''<div style=white-space:pre;margin:3px;><b>{0}: {1}</b></div>
+                             {2}'''.format(self.data_array[index.row()][0],
+                                           self.data_array[index.row()][1],
+                                           self.data_array[index.row()][6]))
+            else:
+                return('')
 
 
 class TreeView(QTreeView):
@@ -3930,7 +3936,7 @@ class TreeView(QTreeView):
             
             ###del(self.server.data_array[:])
 
-            
+            # cruising the whole nagitems structure
             for category in ('hosts', 'services'):
                 for state in self.server.nagitems_filtered[category].values():
                     for item in state:
@@ -3938,10 +3944,10 @@ class TreeView(QTreeView):
                         # add text color from status
                         #print(conf.__dict__[COLORS[item.status] + 'text'])
                         ###data_array[-1].append(QBrush(QColor(conf.__dict__[COLORS[item.status] + 'text'])))
-                        data_array[-1].append(QBRUSHES[conf.__dict__[COLORS[item.status + 'text']])
+                        data_array[-1].append(QBRUSHES[COLORS[item.status] + 'text'])
                         # add background color from status
                         ###data_array[-1].append(QBrush(QColor(conf.__dict__[COLORS[item.status] + 'background'])))
-                        data_array[-1].append(QBRUSHES[conf.__dict__[COLORS[item.status + 'background']])
+                        data_array[-1].append(QBRUSHES[COLORS[item.status] + 'background'])
                         ###self.server.data_array.append(list(host.get_columns(HEADERS)))
                         
                         #print(data_array[-1])
@@ -6015,9 +6021,7 @@ def _create_brushes():
     """
     for state in STATES[1:]:
         for role in ('text', 'background'):
-            QBRUSHES[COLORS[state] + role] = QColor(conf.__dict__[COLORS[state] + role])
-    
-    print(QBRUSHES)
+            QBRUSHES[COLORS[state] + role] = QColor(conf.__dict__[COLORS[state] + role])   
 
 
 def get_screen(x, y):
