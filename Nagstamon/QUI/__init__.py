@@ -3480,7 +3480,7 @@ class TableWidget(QTableWidget):
                 self.server.events_history[event] = False
 
 
-class DelegatedWidget(QWidget):
+class DelegateWidget(QWidget):
     """
         widget to be used in treeview delegated cells
     """
@@ -3493,16 +3493,16 @@ class DelegatedWidget(QWidget):
     #highlight_row = pyqtSignal(int)
 
 
-    def __init__(self, column=0, row=0, text='', color='black', background='white', icons='', tooltip='', parent=None):
+    def __init__(self, text='', color='black', background='white', icons='', parent=None):
         """
-            one cell of a server's table
+            one host or service cell of a server's treeview table
         """
         global FONT
 
         QWidget.__init__(self, parent=parent)
 
-        self.column = column
-        self.row = row
+        ###self.column = column
+        ###self.row = row
         self.text = text
         self.color = color
         self.background = background
@@ -3518,28 +3518,23 @@ class DelegatedWidget(QWidget):
         self.hbox.addWidget(self.label, 1)
         self.hbox.setSpacing(0)
 
-        # self.setToolTip(tooltip)
-        self.tooltip = tooltip
-
         self.label.setStyleSheet('padding: 5px;')
 
-        # default for most of cells - no icons
-        self.icon_labels = False
+        self.label.setStyleSheet('''padding: 5px;
+                                    color: %s;
+                                    background-color: %s;
+                                    ''' % (self.color,
+                                             self.background))
 
-        # hosts and services might contain attribute icons
-        if column in (0, 1) and icons is not ICONS_FALSE:
 
-            # if there are icons store them in list
-            self.icon_labels = []
-
-            for icon in icons:
-                icon_label = QLabel(parent=self)
-                icon_label.setPixmap(icon.pixmap(self.label.fontMetrics().height(), self.label.fontMetrics().height()))
-                #icon_label.setStyleSheet(CSS_GRID_ICON[(conf.show_grid, column)])
-                self.icon_labels.append(icon_label)
-                # take last appended icon_label
-                self.hbox.addWidget(self.icon_labels[-1])
-
+        for icon in icons:
+            icon_label = QLabel(parent=self)
+            icon_label.setPixmap(icon.pixmap(self.label.fontMetrics().height(), self.label.fontMetrics().height()))
+            #icon_label.setStyleSheet(CSS_GRID_ICON[(conf.show_grid, column)])
+            self.icon_labels.append(icon_label)
+            # take last appended icon_label
+            self.hbox.addWidget(icon_label)
+            
 
 class Delegate(QStyledItemDelegate):
     """
@@ -3556,7 +3551,9 @@ class Delegate(QStyledItemDelegate):
             inspired by http://www.gulon.co.uk/2013/01/30/button-delegate-for-qtableviews/
         """
         
+        
         if not self.parent().indexWidget(index):
+                       
             
             widget = QWidget(parent=self.parent())
             layout = QHBoxLayout()
@@ -3575,7 +3572,7 @@ class Delegate(QStyledItemDelegate):
             label.setFont(FONT)
             
             layout.addWidget(label, 1)
-
+            
             """
             if not index.data(Qt.DecorationRole) == 'none':
                 for icon_name in index.data(Qt.DecorationRole):
@@ -3588,6 +3585,15 @@ class Delegate(QStyledItemDelegate):
                         
                         layout.addWidget(icon_label)
             """
+            """
+            widget = DelegateWidget(text=index.data(Qt.DisplayRole),
+                                    color=index.data(Qt.ForegroundRole),
+                                    background=index.data(Qt.BackgroundRole),
+                                    icons=[],
+                                    parent=self.parent())
+            """
+
+            
             self.parent().setIndexWidget(index, widget)
 
 
@@ -3759,6 +3765,11 @@ class TreeView(QTreeView):
 
         self.setItemDelegateForColumn(0, Delegate(self))
         self.setItemDelegateForColumn(1, Delegate(self))
+        #self.setItemDelegateForColumn(2, Delegate(self))
+        #self.setItemDelegateForColumn(3, Delegate(self))
+        #self.setItemDelegateForColumn(4, Delegate(self))
+        #self.setItemDelegateForColumn(5, Delegate(self))
+        #self.setItemDelegateForColumn(6, Delegate(self))
 
 
         self.treeview_model = Model(server=self.server, parent=self)
