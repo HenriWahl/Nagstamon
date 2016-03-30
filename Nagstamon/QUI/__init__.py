@@ -111,6 +111,19 @@ COLOR_STATE_NAMES = {'DOWN': {True: 'DOWN', False: ''},
                      'UNKNOWN': { True: 'UNKNOWN', False: ''},
                      'WARNING': { True: 'WARNING', False: ''}}
 
+# cache colors index - either color name or brush - to
+# speed up .data() and .paint()
+# first two columns are delegates that need color value for CSS
+# last five columns need QBrushes
+# correlates with data set in fill_array_data() from treeview worker
+COLOR_INDEX = {'text': [], 'background': []}
+for i in range(2):
+    COLOR_INDEX['text'].append(12) 
+    COLOR_INDEX['background'].append(13) 
+for i in range(2, 7):
+    COLOR_INDEX['text'].append(10) 
+    COLOR_INDEX['background'].append(11) 
+    
 # QBrushes made of QColors for treeview model data() method
 QBRUSHES = dict()
 
@@ -3464,6 +3477,55 @@ class TableWidget(QTableWidget):
                 self.server.events_history[event] = False
 
 
+class Delegate(QStyledItemDelegate):
+    """
+        Used for displaying decorated cells for hosts and services to reflect
+        their different states like flapping, acknowledged and in downtime
+    """
+    
+    def __init__(self, parent=None):
+        QStyledItemDelegate.__init__(self, parent)
+        
+        
+    def paint(self, painter, option, index):
+        """
+            inspired by http://www.gulon.co.uk/2013/01/30/button-delegate-for-qtableviews/
+        """
+        if not self.parent().indexWidget(index):
+            
+            widget = QWidget(parent=self.parent())
+            layout = QHBoxLayout()
+            
+            layout.setContentsMargins(0, 0, 0, 0)
+            layout.setSpacing(0)
+            
+            
+            widget.setLayout(layout)           
+                        
+            label = QLabel(index.data(Qt.DisplayRole), parent=widget)
+            label.setStyleSheet('''color: {0};
+                                   background-color: {1};'''.format(index.data(Qt.ForegroundRole),
+                                                                    index.data(Qt.BackgroundRole)))
+            
+            label.setFont(FONT)
+            
+            layout.addWidget(label, 1)
+
+            """
+            if not index.data(Qt.DecorationRole) == 'none':
+                for icon_name in index.data(Qt.DecorationRole):
+                    if not icon_name == 'none':
+                        icon = ICONS[icon_name]
+                        icon_label = QLabel(parent=widget)
+                        icon_label.setStyleSheet('background-color: {0};'.format(index.data(Qt.BackgroundRole)))
+
+                        icon_label.setPixmap(icon.pixmap(label.fontMetrics().height(), label.fontMetrics().height()))
+                        
+                        layout.addWidget(icon_label)
+            """
+            self.parent().setIndexWidget(index, widget)
+
+
 # class Model(QStandardItemModel):
 class Model(QAbstractTableModel):
     """
@@ -3559,11 +3621,11 @@ class Model(QAbstractTableModel):
             return(self.data_array[index.row()][index.column()])
             #return(self.server.data[index.row()][index.column()])
         elif role == Qt.ForegroundRole:
-            return(self.data_array[index.row()][10])
+            return(self.data_array[index.row()][COLOR_INDEX['text'][index.column()]])
         elif role == Qt.BackgroundRole:
-            return(self.data_array[index.row()][11])
+            return(self.data_array[index.row()][COLOR_INDEX['background'][index.column()]])
         elif role == Qt.ToolTipRole:
-            # only if tooltips are wanted take status_information for the whole row
+            # only if tooltips are wanted show them, combining host + service + status_info
             if conf.show_tooltips:
                 return('''<div style=white-space:pre;margin:3px;><b>{0}: {1}</b></div>
                              {2}'''.format(self.data_array[index.row()][0],
@@ -3625,6 +3687,10 @@ class TreeView(QTreeView):
         self.header().setSortIndicatorShown(True)
         # ##self.header().setSortIndicator(list(HEADERS).index(self.sort_column), SORT_ORDER[self.order])
         # ##self.header().sortIndicatorChanged.connect(self.sort_columns)
+
+        self.setItemDelegateForColumn(0, Delegate(self))
+        self.setItemDelegateForColumn(1, Delegate(self))
+
 
         self.treeview_model = Model(server=self.server, parent=self)
                 
@@ -3941,17 +4007,15 @@ class TreeView(QTreeView):
                 for state in self.server.nagitems_filtered[category].values():
                     for item in state:
                         data_array.append(list(item.get_columns(DATA_ARRAY_COLUMNS)))
-                        # add text color from status
-                        #print(conf.__dict__[COLORS[item.status] + 'text'])
-                        ###data_array[-1].append(QBrush(QColor(conf.__dict__[COLORS[item.status] + 'text'])))
-                        data_array[-1].append(QBRUSHES[COLORS[item.status] + 'text'])
-                        # add background color from status
-                        ###data_array[-1].append(QBrush(QColor(conf.__dict__[COLORS[item.status] + 'background'])))
+                        # add text color as QBrush from status
+                        data_array[-1].append(QBRUSHES[COLORS[item.status] + 'text'])                       
+                        # add background color as QBrush from status
                         data_array[-1].append(QBRUSHES[COLORS[item.status] + 'background'])
-                        ###self.server.data_array.append(list(host.get_columns(HEADERS)))
-                        
-                        #print(data_array[-1])
-                        
+                        # add text color as vaule for CSS from status
+                        data_array[-1].append(conf.__dict__[COLORS[item.status] + 'text'])                       
+                        # add background color as vaule for CSS from status
+                        data_array[-1].append(conf.__dict__[COLORS[item.status] + 'background'])                       
+            
             self.data_array_filled.emit(data_array)           
             ###self.data_array_filled.emit()
 
