@@ -935,6 +935,16 @@ class GenericServer(object):
                         self.nagitems_filtered['hosts']['UNREACHABLE'].append(host)
                         self.unreachable += 1
 
+                # Add host flags for status icons in treeview
+                if host.acknowledged:
+                    host.host_flags += 'A'
+                if host.scheduled_downtime:
+                    host.host_flags += 'D'
+                if host.flapping:
+                    host.host_flags += 'F'
+                if host.passiveonly:
+                    host.host_flags += 'P'
+
             for service in host.services.values():
                 # add service name for sorting
                 service.service = service.name
@@ -1069,6 +1079,26 @@ class GenericServer(object):
                         else:
                             self.nagitems_filtered['services']['UNKNOWN'].append(service)
                             self.unknown += 1
+                            
+                # Add service flags for status icons in treeview
+                if service.acknowledged:
+                    service.service_flags += 'A'
+                if service.scheduled_downtime:
+                    service.service_flags += 'D'
+                if service.flapping:
+                    service.service_flags += 'F'
+                if service.passiveonly:
+                    service.service_flags += 'P'
+                    
+                # Add host of service flags for status icons in treeview
+                if host.acknowledged:
+                    service.host_flags += 'A'
+                if host.scheduled_downtime:
+                    service.host_flags += 'D'
+                if host.flapping:
+                    service.host_flags += 'F'
+                if host.passiveonly:
+                    service.host_flags += 'P'
 
         # find out if there has been some status change to notify user
         # compare sorted lists of filtered nagios items
