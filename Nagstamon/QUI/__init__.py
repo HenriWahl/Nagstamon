@@ -92,10 +92,10 @@ if not platform.system() in NON_LINUX:
 APP = QApplication(sys.argv)
 
 # fixed icons for hosts/services attributes
-ICONS = dict()
+###ICONS = dict()
 
 # static empty list for cellwidgets without icons - not necessary to create a new list with every cellwidget
-ICONS_FALSE = [False]
+###ICONS_FALSE = [False]
 
 # fixed shortened and lowered color names for cells, also used by statusbar label snippets
 COLORS = OrderedDict([('DOWN', 'color_down_'),
@@ -116,7 +116,7 @@ COLOR_STATE_NAMES = {'DOWN': {True: 'DOWN', False: ''},
 # first two columns are delegates that need color value for CSS
 # last five columns need QBrushes
 # correlates with data set in fill_array_data() from treeview worker
-COLOR_INDEX = {'text': [], 'background': []}
+##COLOR_INDEX = {'text': [], 'background': []}
 # CSS colors
 #for i in range(2):
 #for i in range(0, 7):
@@ -124,12 +124,13 @@ COLOR_INDEX = {'text': [], 'background': []}
 #   COLOR_INDEX['background'].append(12)
 # QBrush colors 
 ###for i in range(2, 7):
-for i in range(0, 9):
-    COLOR_INDEX['text'].append(11) 
-    COLOR_INDEX['background'].append(12) 
+#for i in range(0, 9):
+#    COLOR_INDEX['text'].append(11) 
+#    COLOR_INDEX['background'].append(12) 
     
 # QBrushes made of QColors for treeview model data() method
-QBRUSHES = dict()
+# 2 flavours for alternating backgrounds
+QBRUSHES = {0: {}, 1: {}}
 
 # dummy QVariant as empty return value for model data()
 DUMMY_QVARIANT = QVariant()
@@ -175,8 +176,8 @@ else:
 # add nagstamon.ttf with icons to fonts
 fontdatabase = QFontDatabase()
 fontdatabase.addApplicationFont('{0}{1}nagstamon.ttf'.format(RESOURCES, os.sep))
-
-ICONS_FONT = QFont('Nagstamon', 17)
+# always stay in normal weight without any italic
+ICONS_FONT = QFont('Nagstamon', FONT.pointSize()+2, QFont.Normal, False)
 
 # completely silly but no other rescue for Windows-hides-statusbar-after-display-mode-change problem
 NUMBER_OF_DISPLAY_CHANGES = 0
@@ -537,6 +538,8 @@ class PushButton_Hamburger(QPushButton):
 
     def __init__(self):
         QPushButton.__init__(self)
+        #self.setFont(ICONS_FONT)
+        #self.setText('H')
 
 
     def mousePressEvent(self, event):
@@ -2149,6 +2152,12 @@ class TopArea(QWidget):
                                                     QPushButton:hover {background-color: white;
                                                                       border-radius: 4px;}
                                                     QPushButton::menu-indicator{image:url(none.jpg);}''')
+
+        ###self.button_hamburger_menu.setStyleSheet('''QPushButton {border-width: 0px;
+        ###                                                         border-style: none;
+        ###                                                         text-align: center;}
+        ###                                        ''')
+
         self.hamburger_menu = MenuAtCursor()
         action_exit = QAction("Exit", self)
         action_exit.triggered.connect(exit)
@@ -3635,9 +3644,6 @@ class TreeView(QTreeView):
         # QTreeView.__init__(self, columncount, rowcount,parent=parent)
         QTreeView.__init__(self, parent=parent)
 
-        self.setFont(FONT)
-
-
         self.server = server
 
         # no vertical header needed
@@ -3678,33 +3684,25 @@ class TreeView(QTreeView):
         # ##self.header().setSortIndicator(list(HEADERS).index(self.sort_column), SORT_ORDER[self.order])
         # ##self.header().sortIndicatorChanged.connect(self.sort_columns)
 
-        #self.setItemDelegateForColumn(0, DelegateWithIcons(self))
-        #self.setItemDelegateForColumn(1, DelegateWithIcons(self))
-        #self.setItemDelegateForColumn(2, Delegate(self))
-        #self.setItemDelegateForColumn(3, Delegate(self))
-        #self.setItemDelegateForColumn(4, Delegate(self))
-        #self.setItemDelegateForColumn(5, Delegate(self))
-        #self.setItemDelegateForColumn(6, Delegate(self))
         
         self.setStyleSheet('''QTreeView::item {margin: 5px;}
                               QTreeView::item:hover {margin: 0px;
                                                      background-color: grey;}
                               QTreeView::item:selected {margin: 0px;
-                                                               background-color: grey;}
+                                                        background-color: grey;}
                               QTreeView::item:selected:active {margin: 0px;
                                                                background-color: grey;}
                            ''')
 
+        # set application font
+        self.set_font()
+        # change font if it has been changed by settings
+        dialogs.settings.changed.connect(self.set_font)
+
         self.treeview_model = Model(server=self.server, parent=self)
-                
-        # self.reset_model()
-        
-        self.setModel(self.treeview_model)
-        
-       
+        self.setModel(self.treeview_model)       
         self.treeview_model.data_array_filled.connect(self.adjust_table)
         
-
         # a thread + worker is necessary to get new monitor server data in the background and
         # to refresh the table cell by cell after new data is available
         self.worker_thread = QThread()
@@ -3720,6 +3718,13 @@ class TreeView(QTreeView):
         self.worker_thread.started.connect(self.worker.get_status)
         # start with priority 0 = lowest
         self.worker_thread.start()
+
+    
+    def set_font(self):
+        """
+            change font if it has been changed by settings
+        """
+        self.setFont(FONT)
 
 
     def get_real_height(self):
@@ -3747,18 +3752,6 @@ class TreeView(QTreeView):
         """
             adjust table dimensions after filling it
         """  
-       
-        # self.header().setSectionResizeMode(QHeaderView.ResizeToContents)
-
-        # seems to be important for not getting somehow squeezed cells
-        # self.resizeColumnToContents(0)
-        # self.resizeColumnToContents(1)
-        # self.resizeColumnToContents(2)
-        # self.resizeColumnToContents(3)
-        # self.resizeColumnToContents(4)
-        # self.resizeColumnToContents(5)
-        # self.resizeColumnToContents(6)
-
         # force table to its maximal height, calculated by .get_real_height()
         self.setMinimumHeight(self.get_real_height())
         self.setMaximumHeight(self.get_real_height())
@@ -3767,15 +3760,6 @@ class TreeView(QTreeView):
         # after setting table whole window can be repainted
         self.ready_to_resize.emit()
 
-    """
-    def drawRowXXX(self, painter, option, index):
-
-        print(index.row(), index.column())
-
-        painter.setBackgroundMode(Qt.OpaqueMode)
-
-        QTreeView.drawRow(self, painter, option, index)
-    """
             
     class Worker(QObject):
         """
@@ -4020,9 +4004,8 @@ class TreeView(QTreeView):
             for category in ('hosts', 'services'):
                 for state in self.server.nagitems_filtered[category].values():
                     for item in state:
-                        data_array.append(list(item.get_columns(HEADERS)))
-                        
-                        
+                        data_array.append(list(item.get_columns(HEADERS)))                      
+
                         # hash for freshness comparison
                         hash = item.get_hash()
 
@@ -4038,9 +4021,9 @@ class TreeView(QTreeView):
                                 data_array[-1][3] += 'N'
                         
                         # add text color as QBrush from status
-                        data_array[-1].append(QBRUSHES[COLORS[item.status] + 'text'])                       
+                        data_array[-1].append(QBRUSHES[len(data_array) % 2][COLORS[item.status] + 'text'])                       
                         # add background color as QBrush from status
-                        data_array[-1].append(QBRUSHES[COLORS[item.status] + 'background'])
+                        data_array[-1].append(QBRUSHES[len(data_array) % 2][COLORS[item.status] + 'background'])
                         # add text color as vaule for CSS from status
                         data_array[-1].append(conf.__dict__[COLORS[item.status] + 'text'])                       
                         # add background color as vaule for CSS from status
@@ -4669,7 +4652,7 @@ class Dialog_Settings(Dialog):
         """
             what to do if OK was pressed
         """
-        global FONT, statuswindow, menu, NUMBER_OF_DISPLAY_CHANGES
+        global FONT, ICONS_FONT, statuswindow, menu, NUMBER_OF_DISPLAY_CHANGES
 
         # store position of statuswindow/statusbar only if statusbar is floating
         if conf.statusbar_floating:
@@ -4720,8 +4703,9 @@ class Dialog_Settings(Dialog):
 
         # apply font
         conf.font = self.font.toString()
-        # update global font
-        FONT = self.font
+        # update global font and icons font
+        FONT = self.font       
+        ICONS_FONT = QFont('Nagstamon', FONT.pointSize()+2, QFont.Normal, False)
         
         # update brushes for treeview
         _create_brushes()
@@ -6118,7 +6102,19 @@ def _create_brushes():
     """
     for state in STATES[1:]:
         for role in ('text', 'background'):
-            QBRUSHES[COLORS[state] + role] = QColor(conf.__dict__[COLORS[state] + role])   
+            QBRUSHES[0][COLORS[state] + role] = QColor(conf.__dict__[COLORS[state] + role])              
+            # if background is too dark to be litten split it into RGB values
+            # and increase them sepeartely
+            # light/darkness spans from 0 to 255 - 30 is just a guess
+            if QBRUSHES[0][COLORS[state] + role].lightness() < 30 and role == 'background':
+                r, g, b, a = (QBRUSHES[0][COLORS[state] + role].getRgb())
+                r += 20
+                g += 20
+                b += 20
+                QBRUSHES[1][COLORS[state] + role] = QColor(r, g, b).lighter(120) 
+            else:
+                # otherwise just make it a little bit darker
+                QBRUSHES[1][COLORS[state] + role] = QColor(conf.__dict__[COLORS[state] + role]).darker(120) 
 
 
 def get_screen(x, y):
