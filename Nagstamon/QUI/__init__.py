@@ -6106,16 +6106,19 @@ def _create_brushes():
             # if background is too dark to be litten split it into RGB values
             # and increase them sepeartely
             # light/darkness spans from 0 to 255 - 30 is just a guess
-            if QBRUSHES[0][COLORS[state] + role].lightness() < 30 and role == 'background':
-                r, g, b, a = (QBRUSHES[0][COLORS[state] + role].getRgb())
-                r += 20
-                g += 20
-                b += 20
-                QBRUSHES[1][COLORS[state] + role] = QColor(r, g, b).lighter(120) 
+            if role == 'background' and conf.show_grid:
+                if QBRUSHES[0][COLORS[state] + role].lightness() < 30:
+                    r, g, b, a = (QBRUSHES[0][COLORS[state] + role].getRgb())
+                    r += 20
+                    g += 20
+                    b += 20
+                    QBRUSHES[1][COLORS[state] + role] = QColor(r, g, b).lighter(120) 
+                else:
+                    # otherwise just make it a little bit darker
+                    QBRUSHES[1][COLORS[state] + role] = QColor(conf.__dict__[COLORS[state] + role]).darker(120) 
             else:
-                # otherwise just make it a little bit darker
-                QBRUSHES[1][COLORS[state] + role] = QColor(conf.__dict__[COLORS[state] + role]).darker(120) 
-
+                # only make background darker; text should stay as it is
+                QBRUSHES[1][COLORS[state] + role] = QBRUSHES[0][COLORS[state] + role]
 
 def get_screen(x, y):
     """
