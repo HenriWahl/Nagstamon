@@ -1066,21 +1066,21 @@ class StatusWindow(QWidget):
             server_vbox.table.worker.new_status.connect(systrayicon.show_state)
 
             # if problems go themselves there is no need to notify user anymore
-            # ##server_vbox.table.worker.problems_vanished.connect(self.worker_notification.stop)
+            server_vbox.table.worker.problems_vanished.connect(self.worker_notification.stop)
 
             # show error message in statusbar
-            # ##server_vbox.table.worker.show_error.connect(self.statusbar.set_error)
-            # ##server_vbox.table.worker.hide_error.connect(self.statusbar.reset_error)
+            server_vbox.table.worker.show_error.connect(self.statusbar.set_error)
+            server_vbox.table.worker.hide_error.connect(self.statusbar.reset_error)
 
             # show error icon in systray
-            # ##server_vbox.table.worker.show_error.connect(systrayicon.set_error)
-            # ##server_vbox.table.worker.hide_error.connect(systrayicon.reset_error)
+            server_vbox.table.worker.show_error.connect(systrayicon.set_error)
+            server_vbox.table.worker.hide_error.connect(systrayicon.reset_error)
 
             # tell notification worker to do something AFTER the table was updated
-            # ##server_vbox.table.status_changed.connect(self.worker_notification.start)
+            server_vbox.table.status_changed.connect(self.worker_notification.start)
 
             # and to update status window
-            # ##server_vbox.table.refreshed.connect(self.update_window)
+            server_vbox.table.refreshed.connect(self.update_window)
 
             # hide statuswindow if authentication dialog is to be shown
             server_vbox.button_authenticate.clicked.connect(self.hide_window)
@@ -1093,10 +1093,10 @@ class StatusWindow(QWidget):
             self.showing.connect(self.worker_notification.stop)
 
             # tell server worker to recheck all hosts and services
-            # ##self.recheck.connect(server_vbox.table.worker.recheck_all)
+            self.recheck.connect(server_vbox.table.worker.recheck_all)
 
             # refresh table after changed settings
-            # ##dialogs.settings.changed.connect(server_vbox.table.refresh)
+            dialogs.settings.changed.connect(server_vbox.table.refresh)
 
             return server_vbox
         else:
@@ -3640,6 +3640,20 @@ class TreeView(QTreeView):
     # tell global window that it should be resized
     ready_to_resize = pyqtSignal()
     
+    # sent by refresh() for statusbar
+    refreshed = pyqtSignal()
+
+    # tell worker to get status after a recheck has been solicited
+    recheck = pyqtSignal(dict)
+
+    # tell notification that status of server has changed
+    status_changed = pyqtSignal(str, str)
+
+    # action to be executed by worker
+    # 2 values: action and host/service info
+    request_action = pyqtSignal(dict, dict)
+
+
     def __init__(self, columncount, rowcount, sort_column, order, server, parent=None):
         # QTreeView.__init__(self, columncount, rowcount,parent=parent)
         QTreeView.__init__(self, parent=parent)
@@ -3698,11 +3712,20 @@ class TreeView(QTreeView):
         self.set_font()
         # change font if it has been changed by settings
         dialogs.settings.changed.connect(self.set_font)
+        
+        # action context menu
+        self.action_menu = MenuAtCursor(parent=self)
+        # flag to avoid popping up menus when clicking somehwere
+        self.action_menu.available = True
+        # signalmapper for getting triggered actions
+        self.signalmapper_action_menu = QSignalMapper()
+        # connect menu to responder
+        self.signalmapper_action_menu.mapped[str].connect(self.action_menu_custom_response)
 
         self.treeview_model = Model(server=self.server, parent=self)
         self.setModel(self.treeview_model)       
         self.treeview_model.data_array_filled.connect(self.adjust_table)
-        
+      
         # a thread + worker is necessary to get new monitor server data in the background and
         # to refresh the table cell by cell after new data is available
         self.worker_thread = QThread()
@@ -3714,10 +3737,35 @@ class TreeView(QTreeView):
         # self.worker.new_status.connect(self.model().fill_data_array)
         self.worker.data_array_filled.connect(self.model().fill_data_array)        
         
+        # if worker got new status data from monitor server get_status the table should be refreshed
+        self.worker.new_status.connect(self.refresh)
+        
         # get status if started
         self.worker_thread.started.connect(self.worker.get_status)
         # start with priority 0 = lowest
         self.worker_thread.start()
+
+        # connect signal for acknowledge
+        dialogs.acknowledge.acknowledge.connect(self.worker.acknowledge)
+
+        # connect signal to get start end time for downtime from worker
+        dialogs.downtime.get_start_end.connect(self.worker.get_start_end)
+        self.worker.set_start_end.connect(dialogs.downtime.set_start_end)
+
+        # connect signal for downtime
+        dialogs.downtime.downtime.connect(self.worker.downtime)
+
+        # connect signal for submit check result
+        dialogs.submit.submit.connect(self.worker.submit)
+
+        # connect signal for recheck action
+        self.recheck.connect(self.worker.recheck)
+
+        # execute action by worker
+        self.request_action.connect(self.worker.execute_action)
+
+        # display mode - all or only header to display error
+        self.is_shown = False
 
     
     def set_font(self):
@@ -3760,7 +3808,269 @@ class TreeView(QTreeView):
         # after setting table whole window can be repainted
         self.ready_to_resize.emit()
 
+
+    def mouseReleaseEvent(self, event):
+        print('CLICKED', event)
+        #for i in dir(event):
+        #    print(i)
+        print(event.x(), event.y())
+        print(self.model())
+        index = self.indexAt(QPoint(event.x(), event.y()))
+        print(index.row())
+        print(index.column())
+        print(index.data())
+        
+        self.cell_clicked(index)
+
+
+    @pyqtSlot()
+    def cell_clicked(self, index):
+        """
+            Windows reacts different to clicks into table cells than Linux and MacOSX
+            Therefore the .available flag is necessary
+        """
+        if self.action_menu.available or platform.system() != 'Windows':
+
+            # set flag for Windows
+            self.action_menu.available = False
+
+            # take data from model data_array           
+            self.miserable_host = self.model().data_array[index.row()][0]
+            self.miserable_service = self.model().data_array[index.row()][2]
+            self.miserable_status_info = self.model().data_array[index.row()][8]
+
+            # empty the menu
+            self.action_menu.clear()
+
+            # clear signal mappings
+            self.signalmapper_action_menu.removeMappings(self.signalmapper_action_menu)
+
+            # add custom actions
+            actions_list = list(conf.actions)
+            actions_list.sort(key=str.lower)
             
+            for a in actions_list:
+                # shortcut for next lines
+                action = conf.actions[a]
+             
+                # check if current monitor server type is in action
+                # second scheck for server type is legacy-compatible with older settions 
+                if action.enabled == True and (action.monitor_type in ['', self.server.TYPE] or
+                                               action.monitor_type not in SERVER_TYPES):
+                    # menu item visibility flag
+                    item_visible = False
+                    # check if clicked line is a service or host
+                    # if it is check if the action is targeted on hosts or services
+                    if self.miserable_service:
+                        if action.filter_target_service == True:
+                            # only check if there is some to check
+                            if action.re_host_enabled == True:
+                                if is_found_by_re(self.miserable_host,
+                                                       action.re_host_pattern,
+                                                       action.re_host_reverse):
+                                    item_visible = True
+                            # dito
+                            if action.re_service_enabled == True:
+                                if is_found_by_re(self.miserable_service,
+                                                       action.re_service_pattern,
+                                                       action.re_service_reverse):
+                                    item_visible = True
+                            # dito
+                            if action.re_status_information_enabled == True:
+                                if is_found_by_re(self.miserable_service,
+                                                       action.re_status_information_pattern,
+                                                       action.re_status_information_reverse):
+                                    item_visible = True
+
+                            # fallback if no regexp is selected
+                            if action.re_host_enabled == action.re_service_enabled == \
+                               action.re_status_information_enabled == False:
+                                item_visible = True
+
+                    else:
+                        # hosts should only care about host specific actions, no services
+                        if action.filter_target_host == True:
+                            if action.re_host_enabled == True:
+                                if is_found_by_re(self.miserable_host, \
+                                                       action.re_host_pattern, \
+                                                       action.re_host_reverse):
+                                    item_visible = True
+                            else:
+                                # a non specific action will be displayed per default
+                                item_visible = True
+                else:
+                    item_visible = False
+
+                # populate context menu with service actions
+                if item_visible == True:
+                    # create action
+                    action_menuentry = QAction(a, self)
+                    # add action
+                    self.action_menu.addAction(action_menuentry)
+                    # action to signalmapper
+                    self.signalmapper_action_menu.setMapping(action_menuentry, a)
+                    action_menuentry.triggered.connect(self.signalmapper_action_menu.map)
+
+                del action, item_visible
+
+            # create adn add default actions
+            action_edit_actions = QAction('Edit actions...', self)
+            action_edit_actions.triggered.connect(self.action_edit_actions)
+
+            if 'Monitor' in self.server.MENU_ACTIONS:
+                action_monitor = QAction('Monitor', self)
+                action_monitor.triggered.connect(self.action_monitor)
+
+            if 'Recheck' in self.server.MENU_ACTIONS:
+                action_recheck = QAction('Recheck', self)
+                action_recheck.triggered.connect(self.action_recheck)
+
+            if 'Acknowledge' in self.server.MENU_ACTIONS:
+                action_acknowledge = QAction('Acknowledge', self)
+                action_acknowledge.triggered.connect(self.action_acknowledge)
+
+            if 'Downtime' in self.server.MENU_ACTIONS:
+                action_downtime = QAction('Downtime', self)
+                action_downtime.triggered.connect(self.action_downtime)
+
+            # put actions into menu after separator
+            self.action_menu.addAction(action_edit_actions)
+            self.action_menu.addSeparator()
+            if 'Monitor' in self.server.MENU_ACTIONS:
+                self.action_menu.addAction(action_monitor)
+            if 'Recheck' in self.server.MENU_ACTIONS:
+                self.action_menu.addAction(action_recheck)
+            if 'Acknowledge' in self.server.MENU_ACTIONS:
+                self.action_menu.addAction(action_acknowledge)
+            if 'Downtime' in self.server.MENU_ACTIONS:
+                self.action_menu.addAction(action_downtime)
+
+            # not all servers allow to submit fake check results
+            if 'Submit check result' in self.server.MENU_ACTIONS:
+                action_submit = QAction('Submit check result', self)
+                action_submit.triggered.connect(self.action_submit)
+                self.action_menu.addAction(action_submit)
+
+            # show menu
+            self.action_menu.show_at_cursor()
+        else:
+            self.action_menu.available = True
+
+
+    @pyqtSlot(str)
+    def action_menu_custom_response(self, action):
+        # avoid blocked context menu
+        self.action_menu.available = True
+        # send dict with action info and dict with host/service info
+        self.request_action.emit(conf.actions[action].__dict__, {'server': self.server.get_name(),
+                                                                 'host': self.miserable_host,
+                                                                 'service': self.miserable_service,
+                                                                 'status-info': self.miserable_status_info,
+                                                                 'address': self.server.GetHost(self.miserable_host).result,
+                                                                 'monitor': self.server.monitor_url,
+                                                                 'monitor-cgi': self.server.monitor_cgi_url,
+                                                                 'username': self.server.username,
+                                                                 'password': self.server.password,
+                                                                 'comment-ack': conf.defaults_acknowledge_comment,
+                                                                 'comment-down': conf.defaults_downtime_comment,
+                                                                 'comment-submit': conf.defaults_submit_check_result_comment
+                                                                 })
+
+        # if action wants a closed status window it should be closed now
+        if conf.actions[action].close_popwin and not conf.fullscreen:
+            statuswindow.hide_window()
+
+
+    @pyqtSlot()
+    def action_response_decorator(method):
+        """
+            decorate repeatedly called stuff
+        """
+        def decoration_function(self):
+            # avoid blocked context menu
+            self.action_menu.available = True
+            # run decorated method
+            method(self)
+            # default actions need closed statuswindow to display own dialogs
+            if not conf.fullscreen:
+                statuswindow.hide_window()
+        return(decoration_function)
+
+
+    @action_response_decorator
+    def action_edit_actions(self):
+        # buttons in toparee
+        if not conf.fullscreen:
+            statuswindow.hide_window()
+        # open actions tab (#3) of settings dialog
+        dialogs.settings.show(tab=3)
+
+
+    @action_response_decorator
+    def action_monitor(self):
+        # open host/service monitor in browser
+        self.server.open_monitor(self.miserable_host, self.miserable_service)
+
+
+    @action_response_decorator
+    def action_recheck(self):
+        # send signal to worker recheck slot
+        self.recheck.emit({'host':    self.miserable_host,
+                           'service': self.miserable_service})
+
+
+    @action_response_decorator
+    def action_acknowledge(self):
+        # running worker method is left to OK button of dialog
+        dialogs.acknowledge.show()
+        dialogs.acknowledge.initialize(server=self.server,
+                                       host=self.miserable_host,
+                                       service=self.miserable_service)
+
+
+    @action_response_decorator
+    def action_downtime(self):
+        # running worker method is left to OK button of dialog
+        dialogs.downtime.show()
+        dialogs.downtime.initialize(server=self.server,
+                                    host=self.miserable_host,
+                                    service=self.miserable_service)
+
+
+    @action_response_decorator
+    def action_submit(self):
+        # running worker method is left to OK button of dialog
+        dialogs.submit.show()
+        dialogs.submit.initialize(server=self.server,
+                                    host=self.miserable_host,
+                                    service=self.miserable_service)
+
+
+    @pyqtSlot()
+    def refresh(self):
+        """
+            refresh status display
+        """
+        # do nothing if window is moving to avoid lagging movement
+        if not statuswindow.moving:
+            # get_status table cells with new data by thread
+            if len(self.model().data_array) > 0:
+                self.is_shown = True
+            else:
+                self.is_shown = False
+            # pre-calculate dimensions
+            self.real_height = self.get_real_height()
+            ###self.real_width = self.get_real_width()
+
+            # tell statusbar it should update
+            self.refreshed.emit()
+
+            # check if status changed and notification is necessary
+            # send signal because there are unseen events
+            if self.server.get_events_history_count() > 0:
+                self.status_changed.emit(self.server.name, self.server.worst_status_diff)
+
+
     class Worker(QObject):
         """
             attempt to run a server status update thread - only needed by table so it is defined here inside table

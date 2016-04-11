@@ -42,7 +42,7 @@
       </sizepolicy>
      </property>
      <property name="currentIndex">
-      <number>5</number>
+      <number>1</number>
      </property>
      <widget class="QWidget" name="tab_servers">
       <attribute name="title">
@@ -333,7 +333,7 @@
           <item row="6" column="0" colspan="2">
            <widget class="QCheckBox" name="input_checkbox_show_grid">
             <property name="text">
-             <string>Show grid in status details overview</string>
+             <string>Show color grid in status details overview</string>
             </property>
            </widget>
           </item>
@@ -1722,7 +1722,7 @@
   </connection>
  </connections>
  <buttongroups>
-  <buttongroup name="buttongroup_close_statusbar"/>
   <buttongroup name="buttongroup_popup_statuswindow"/>
+  <buttongroup name="buttongroup_close_statusbar"/>
  </buttongroups>
 </ui>
