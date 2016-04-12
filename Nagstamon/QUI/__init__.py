@@ -36,7 +36,7 @@ from PyQt5.QtCore import *
 from PyQt5.QtSvg import *
 from PyQt5.QtMultimedia import *
 
-from operator import methodcaller
+###from operator import methodcaller
 from collections import OrderedDict
 from copy import deepcopy
 
@@ -91,12 +91,6 @@ if not platform.system() in NON_LINUX:
 # global application instance
 APP = QApplication(sys.argv)
 
-# fixed icons for hosts/services attributes
-###ICONS = dict()
-
-# static empty list for cellwidgets without icons - not necessary to create a new list with every cellwidget
-###ICONS_FALSE = [False]
-
 # fixed shortened and lowered color names for cells, also used by statusbar label snippets
 COLORS = OrderedDict([('DOWN', 'color_down_'),
                       ('UNREACHABLE', 'color_unreachable_'),
@@ -111,54 +105,63 @@ COLOR_STATE_NAMES = {'DOWN': {True: 'DOWN', False: ''},
                      'UNKNOWN': { True: 'UNKNOWN', False: ''},
                      'WARNING': { True: 'WARNING', False: ''}}
 
-# cache colors index - either color name or brush - to
-# speed up .data() and .paint()
-# first two columns are delegates that need color value for CSS
-# last five columns need QBrushes
-# correlates with data set in fill_array_data() from treeview worker
-##COLOR_INDEX = {'text': [], 'background': []}
-# CSS colors
-#for i in range(2):
-#for i in range(0, 7):
-#   COLOR_INDEX['text'].append(11) 
-#   COLOR_INDEX['background'].append(12)
-# QBrush colors 
-###for i in range(2, 7):
-#for i in range(0, 9):
-#    COLOR_INDEX['text'].append(11) 
-#    COLOR_INDEX['background'].append(12) 
-    
 # QBrushes made of QColors for treeview model data() method
 # 2 flavours for alternating backgrounds
+# filled by _create_brushes()
 QBRUSHES = {0: {}, 1: {}}
 
 # dummy QVariant as empty return value for model data()
 DUMMY_QVARIANT = QVariant()
 
 # headers for tablewidgets
-HEADERS = OrderedDict([('host', 'Host'), ('host_flags', ''),
-                       ('service', 'Service'), ('service_flags', ''),
-                       ('status', 'Status'), ('last_check', 'Last Check'),
-                       ('duration', 'Duration'), ('attempt', 'Attempt'),
-                       ('status_information', 'Status Information')])
+HEADERS = OrderedDict([('host', {'header': 'Host',
+                                 'column': 0}),
+                       ('host_flags', {'header': '',
+                                       'column': 0}),
+                       ('service', {'header': 'Service',
+                                    'column': 2}),
+                       ('service_flags', {'header': '',
+                                          'column': 2}),
+                       ('status', {'header': 'Status',
+                                   'column': 4}),
+                       ('last_check', {'header': 'Last Check',
+                                       'column': 5}),
+                       ('duration', {'header': 'Duration',
+                                     'column': 6}),
+                       ('attempt', {'header': 'Attempt',
+                                    'column': 7}),
+                       ('status_information', {'header': 'Status Information',
+                                               'column': 8})])
 
-# informations to be retrieved by fill_data_array() via get_columns()
-DATA_ARRAY_COLUMNS = ('host',
-                   'service',
-                   'status',
-                   'last_check',
-                   'duration',
-                   'attempt',
-                   'status_information',
-                   'acknowledged',
-                   'scheduled_downtime',
-                   'flapping')
+HEADERS_HEADERS = list()
+for item in HEADERS.values():
+    HEADERS_HEADERS.append(item['header'])
+    
+print(len(HEADERS_HEADERS))
 
-# list of headers keywords for action context menu
-HEADERS_LIST = list(HEADERS)
+HEADERS_HEADERS_COLUMNS = dict()
+for item in HEADERS.values():
+    HEADERS_HEADERS_COLUMNS[item['header']] = item['column']
+    
+HEADERS_HEADERS_KEYS = dict()
+for item in HEADERS.keys():
+    HEADERS_HEADERS_KEYS[HEADERS[item]['header']] = item
+
+HEADERS_KEYS_COLUMNS = dict()
+for item in HEADERS.keys():
+    HEADERS_KEYS_COLUMNS[item] = HEADERS[item]['column']
+    
+HEADERS_KEYS_HEADERS = dict()
+for item in HEADERS.keys():
+    HEADERS_KEYS_HEADERS[item] = HEADERS[item]['header']
+
+print(HEADERS_HEADERS)
+print(HEADERS_HEADERS_COLUMNS)
+print(HEADERS_KEYS_COLUMNS)
 
 # sorting order for tablewidgets
-SORT_ORDER = {'descending': True, 'ascending': False, 0: True, 1: False}
+###SORT_ORDER = {'descending': True, 'ascending': False, 0: True, 1: False}
+SORT_ORDER = {'descending': 1, 'ascending': 0, 0: True, 1: False}
 
 # space used in LayoutBoxes
 SPACE = 10
@@ -2286,12 +2289,20 @@ class ServerVBox(QVBoxLayout):
         self.header.addWidget(self.label_status)
         self.header.addWidget(self.button_authenticate)
         self.header.addStretch()
-
-        sort_column = conf.default_sort_field.lower()
-        order = conf.default_sort_order.lower()
+        
+        # attempt to get header strings
+        try:
+            # when stored as simple lowercase keys
+            sort_column = HEADERS_KEYS_COLUMNS[conf.default_sort_field]
+        except:
+            # when as legacy stored as presetation string
+            sort_column = HEADERS_HEADERS_COLUMNS[conf.default_sort_field]
+        
+        # convert sort order to number as used in Qt.SortOrder  
+        sort_order = SORT_ORDER[conf.default_sort_order.lower()]
 
         # ##self.table = TableWidget(0, len(HEADERS), sort_column, order, self.server, parent=parent)
-        self.table = TreeView(0, len(HEADERS), sort_column, order, self.server, parent=parent)
+        self.table = TreeView(0, len(HEADERS), sort_column, sort_order, self.server, parent=parent)
 
         # delete vbox if thread quits
         self.table.worker_thread.finished.connect(self.delete)
@@ -3213,7 +3224,7 @@ class TableWidget(QTableWidget):
                 # lists in rows list are columns
                 # create every cell per row
                 for column, text in enumerate(nagitem.get_columns(HEADERS)):
-                    # check for icons to be used in cell widget
+                    # check for   to be used in cell widget
                     if column in (0, 1):
                         # icons to be added
                         icons = list()
@@ -3513,14 +3524,14 @@ class Model(QAbstractTableModel):
     data_array_filled = pyqtSignal()
     
     # headers for columns
-    headers = list(HEADERS.values())
+    #headers = list(HEADERS.values())
 
     # list of lists for storage of status data 
     data_array = list()
 
     # cache row and columnt count    
     row_count = 0
-    column_count = len(headers)
+    column_count = len(HEADERS_HEADERS)
 
     # do not need to create everytime a new QVariant() object
     dummy_return_qvariant = QVariant()
@@ -3555,7 +3566,7 @@ class Model(QAbstractTableModel):
             overridden method to get headers of columns 
         """
         if role == Qt.DisplayRole:
-            return(self.headers[column])
+            return(HEADERS_HEADERS[column])
         
         
     # ##@pyqtSlot()
@@ -3653,11 +3664,16 @@ class TreeView(QTreeView):
     # 2 values: action and host/service info
     request_action = pyqtSignal(dict, dict)
 
+    # tell worker it should sort columns after someone pressed the column header
+    sort_data_array_for_columns = pyqtSignal(int, int)
 
-    def __init__(self, columncount, rowcount, sort_column, order, server, parent=None):
+
+    def __init__(self, columncount, rowcount, sort_column, sort_order, server, parent=None):
         # QTreeView.__init__(self, columncount, rowcount,parent=parent)
         QTreeView.__init__(self, parent=parent)
 
+        self.sort_column = sort_column
+        self.sort_order = sort_order
         self.server = server
 
         # no vertical header needed
@@ -3683,6 +3699,9 @@ class TreeView(QTreeView):
         self.setAutoScroll(False)
         self.setSortingEnabled(True)
 
+        self.sortByColumn(0, Qt.AscendingOrder)
+
+
         self.setSizePolicy(QSizePolicy.Ignored, QSizePolicy.Expanding)
 
         # store width and height if they do not need to be recalculated
@@ -3695,10 +3714,16 @@ class TreeView(QTreeView):
         
         self.header().setDefaultAlignment(Qt.AlignLeft)
         self.header().setSortIndicatorShown(True)
-        # ##self.header().setSortIndicator(list(HEADERS).index(self.sort_column), SORT_ORDER[self.order])
-        # ##self.header().sortIndicatorChanged.connect(self.sort_columns)
-
         
+        try:
+            self.header().setSortIndicator(sort_column, SORT_ORDER[self.sort_order])
+        except:
+            self.header().setSortIndicator(sort_column, SORT_ORDER[self.sort_order])
+
+        # small method needed to tell worker which column and sort order to use
+        self.header().sortIndicatorChanged.connect(self.sort_columns)
+
+        # set overall margin and hover colors - to be refined
         self.setStyleSheet('''QTreeView::item {margin: 5px;}
                               QTreeView::item:hover {margin: 0px;
                                                      background-color: grey;}
@@ -3729,13 +3754,16 @@ class TreeView(QTreeView):
         # a thread + worker is necessary to get new monitor server data in the background and
         # to refresh the table cell by cell after new data is available
         self.worker_thread = QThread()
-        self.worker = self.Worker(server=server)
+        self.worker = self.Worker(server=server, sort_column=self.sort_column, sort_order=self.sort_order)
         self.worker.moveToThread(self.worker_thread)
         
         # if worker got new status data from monitor server get_status
         # the treeview model has to be updated
         # self.worker.new_status.connect(self.model().fill_data_array)
-        self.worker.data_array_filled.connect(self.model().fill_data_array)        
+        self.worker.data_array_filled.connect(self.model().fill_data_array)   
+        
+        # tell worker to sort data_array depending on sort_column and sort_order
+        self.sort_data_array_for_columns.connect(self.worker.sort_data_array)     
         
         # if worker got new status data from monitor server get_status the table should be refreshed
         self.worker.new_status.connect(self.refresh)
@@ -3810,23 +3838,17 @@ class TreeView(QTreeView):
 
 
     def mouseReleaseEvent(self, event):
-        print('CLICKED', event)
-        #for i in dir(event):
-        #    print(i)
-        print(event.x(), event.y())
-        print(self.model())
-        index = self.indexAt(QPoint(event.x(), event.y()))
-        print(index.row())
-        print(index.column())
-        print(index.data())
-        
+        """
+            forward clicked cell info from event
+        """
+        index = self.indexAt(QPoint(event.x(), event.y()))       
         self.cell_clicked(index)
 
 
     @pyqtSlot()
     def cell_clicked(self, index):
         """
-            Windows reacts different to clicks into table cells than Linux and MacOSX
+            Windows reacts differently to clicks into table cells than Linux and MacOSX
             Therefore the .available flag is necessary
         """
         if self.action_menu.available or platform.system() != 'Windows':
@@ -4071,6 +4093,16 @@ class TreeView(QTreeView):
                 self.status_changed.emit(self.server.name, self.server.worst_status_diff)
 
 
+    @pyqtSlot(int, int)
+    def sort_columns(self, sort_column, sort_order):
+        """
+            forward sorting task to worker
+        """        
+        # better int() the Qt.* values because they partly seem to be
+        # intransmissible
+        self.sort_data_array_for_columns.emit(int(sort_column), int(sort_order))
+
+
     class Worker(QObject):
         """
             attempt to run a server status update thread - only needed by table so it is defined here inside table
@@ -4119,12 +4151,15 @@ class TreeView(QTreeView):
         # data_array_filled = pyqtSignal()
         
 
-        def __init__(self, parent=None, server=None):
+        def __init__(self, parent=None, server=None, sort_column=0, sort_order=0):
             QObject.__init__(self)
             self.server = server
             # needed for update interval
             self.timer = QTimer(self)
             self.server.init_config()
+            
+            self.sort_column = sort_column
+            self.sort_order = sort_order
 
 
         @pyqtSlot()
@@ -4192,7 +4227,7 @@ class TreeView(QTreeView):
                     self.problems_vanished.emit()
 
 
-                self.fill_data_array()
+                self.fill_data_array(self.sort_column, self.sort_order)
 
                 # tell news about new status available
                 self.new_status.emit()
@@ -4300,21 +4335,21 @@ class TreeView(QTreeView):
             self.table_ready.emit()
             
         
-        @pyqtSlot()
-        def fill_data_array(self):
+        @pyqtSlot(int, int)
+        def fill_data_array(self, sort_column, sort_order):
             """
                 let worker do the dirty job of filling the array
             """
             
             # data_array to be evaluated in data() of model
             # first 9 items per row come from current status information
-            data_array = list()
+            self.data_array = list()
 
             # cruising the whole nagitems structure
             for category in ('hosts', 'services'):
                 for state in self.server.nagitems_filtered[category].values():
                     for item in state:
-                        data_array.append(list(item.get_columns(HEADERS)))                      
+                        self.data_array.append(list(item.get_columns(HEADERS)))                      
 
                         # hash for freshness comparison
                         hash = item.get_hash()
@@ -4323,23 +4358,38 @@ class TreeView(QTreeView):
                             if hash in self.server.events_history and\
                                        self.server.events_history[hash] == True:
                                 # second item in las data_array line is host flags
-                                data_array[-1][1] += 'N'
+                                self.data_array[-1][1] += 'N'
                         else:
                             if hash in self.server.events_history and\
                                        self.server.events_history[hash] == True:
-                                # foruth item in las data_array line is service flags
-                                data_array[-1][3] += 'N'
+                                # fourth item in las data_array line is service flags
+                                self.data_array[-1][3] += 'N'
                         
                         # add text color as QBrush from status
-                        data_array[-1].append(QBRUSHES[len(data_array) % 2][COLORS[item.status] + 'text'])                       
+                        self.data_array[-1].append(QBRUSHES[len(self.data_array) % 2][COLORS[item.status] + 'text'])                       
                         # add background color as QBrush from status
-                        data_array[-1].append(QBRUSHES[len(data_array) % 2][COLORS[item.status] + 'background'])
+                        self.data_array[-1].append(QBRUSHES[len(self.data_array) % 2][COLORS[item.status] + 'background'])
                         # add text color as vaule for CSS from status
-                        data_array[-1].append(conf.__dict__[COLORS[item.status] + 'text'])                       
+                        self.data_array[-1].append(conf.__dict__[COLORS[item.status] + 'text'])                       
                         # add background color as vaule for CSS from status
-                        data_array[-1].append(conf.__dict__[COLORS[item.status] + 'background'])                                         
+                        self.data_array[-1].append(conf.__dict__[COLORS[item.status] + 'background'])                                                               
             
-            self.data_array_filled.emit(data_array)           
+            self.sort_data_array(self.sort_column, self.sort_order)
+            
+            self.data_array_filled.emit(self.data_array)           
+
+
+        @pyqtSlot(int, int)
+        def sort_data_array(self, sort_column, sort_order):
+            # store current sort_column and sort_data for next sort actions
+            self.sort_column = sort_column
+            self.sort_order = sort_order
+            
+            # to keep GTK Treeview sort behaviour first by services
+            first_sort = sorted(self.data_array, key=lambda row: row[0], reverse=self.sort_order)
+            self.data_array = sorted(first_sort, key=lambda row: row[self.sort_column], reverse=self.sort_order)
+
+            del(first_sort)
 
 
         @pyqtSlot(dict)
@@ -4894,11 +4944,13 @@ class Dialog_Settings(Dialog):
 
         # fill default order fields combobox with headers names
         # kick out empty headers for hosts and services flags
-        sort_fields = list(HEADERS.values())
+        sort_fields = copy.copy(HEADERS_HEADERS)
+        # second item has index 1
         sort_fields.pop(1)
+        # now former fourth item has index 2
         sort_fields.pop(2)
         self.ui.input_combobox_default_sort_field.addItems(sort_fields)
-        self.ui.input_combobox_default_sort_field.setCurrentText(conf.default_sort_field)
+        self.ui.input_combobox_default_sort_field.setCurrentText(HEADERS_KEYS_HEADERS[conf.default_sort_field])
 
         # fill default sort order combobox
         self.ui.input_combobox_default_sort_order.addItems(['Ascending', 'Descending'])
@@ -5010,6 +5062,9 @@ class Dialog_Settings(Dialog):
         else:
             # set flag to tell debug loop it should stop please
             statuswindow.worker.debug_loop_looping = False
+
+        # convert sorting fields to simple keys - maybe one day translated
+        conf.default_sort_field = HEADERS_HEADERS_KEYS[conf.default_sort_field]
 
         # apply font
         conf.font = self.font.toString()
