@@ -197,6 +197,9 @@ class MultisiteServer(GenericServer):
         # Create URLs for the configured filters
         url_params = ''
 
+        if self.force_authuser:
+            url_params += "&force_authuser=1"
+
         url_params += '&is_host_acknowledged=-1&is_service_acknowledged=-1'
         url_params += '&is_host_notifications_enabled=-1&is_service_notifications_enabled=-1'
         url_params += '&is_host_active_checks_enabled=-1&is_service_active_checks_enabled=-1'
