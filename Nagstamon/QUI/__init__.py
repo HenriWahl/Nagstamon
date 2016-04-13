@@ -59,8 +59,8 @@ from Nagstamon.Helpers import (is_found_by_re,
                                STATES,
                                STATES_SOUND,
                                BOOLPOOL,
-                               NON_LINUX)
-
+                               NON_LINUX,
+                               SORT_COLUMNS)
 # dialogs
 from Nagstamon.QUI.settings_main import Ui_settings_main
 from Nagstamon.QUI.settings_server import Ui_settings_server
@@ -133,11 +133,11 @@ HEADERS = OrderedDict([('host', {'header': 'Host',
                        ('status_information', {'header': 'Status Information',
                                                'column': 8})])
 
+# various headers-key-columns variations needed in different parts
+
 HEADERS_HEADERS = list()
 for item in HEADERS.values():
-    HEADERS_HEADERS.append(item['header'])
-    
-print(len(HEADERS_HEADERS))
+    HEADERS_HEADERS.append(item['header'])  
 
 HEADERS_HEADERS_COLUMNS = dict()
 for item in HEADERS.values():
@@ -154,10 +154,6 @@ for item in HEADERS.keys():
 HEADERS_KEYS_HEADERS = dict()
 for item in HEADERS.keys():
     HEADERS_KEYS_HEADERS[item] = HEADERS[item]['header']
-
-print(HEADERS_HEADERS)
-print(HEADERS_HEADERS_COLUMNS)
-print(HEADERS_KEYS_COLUMNS)
 
 # sorting order for tablewidgets
 ###SORT_ORDER = {'descending': True, 'ascending': False, 0: True, 1: False}
@@ -1223,6 +1219,7 @@ class StatusWindow(QWidget):
         """
         # do not show up when being dragged around
         if not self.moving:
+            
             # check if really all is OK
             for vbox in self.servers_vbox.children():
                 if vbox.server.all_ok and\
@@ -3592,11 +3589,9 @@ class Model(QAbstractTableModel):
         #            self.data_array.append(list(host.get_columns(HEADERS)))
 
         self.row_count = len(self.data_array)
-        # self.row_count = len(self.server.data)
+
 
         self.data_array_filled.emit()
-        # ##self.dataChanged.emit(self.dummy_qmodelindex,
-        # ##                      self.dummy_qmodelindex)
 
         # new model applied
         self.endResetModel()
@@ -3665,7 +3660,7 @@ class TreeView(QTreeView):
     request_action = pyqtSignal(dict, dict)
 
     # tell worker it should sort columns after someone pressed the column header
-    sort_data_array_for_columns = pyqtSignal(int, int)
+    sort_data_array_for_columns = pyqtSignal(int, int, bool)
 
 
     def __init__(self, columncount, rowcount, sort_column, sort_order, server, parent=None):
@@ -3761,6 +3756,8 @@ class TreeView(QTreeView):
         # the treeview model has to be updated
         # self.worker.new_status.connect(self.model().fill_data_array)
         self.worker.data_array_filled.connect(self.model().fill_data_array)   
+        
+        self.worker.data_array_sorted.connect(self.model().fill_data_array)
         
         # tell worker to sort data_array depending on sort_column and sort_order
         self.sort_data_array_for_columns.connect(self.worker.sort_data_array)     
@@ -4100,7 +4097,11 @@ class TreeView(QTreeView):
         """        
         # better int() the Qt.* values because they partly seem to be
         # intransmissible
-        self.sort_data_array_for_columns.emit(int(sort_column), int(sort_order))
+        self.sort_data_array_for_columns.emit(int(sort_column), int(sort_order), True) 
+
+
+    ###def sort_columns_update(self):
+    ###    self.adjust_table()
 
 
     class Worker(QObject):
@@ -4148,7 +4149,8 @@ class TreeView(QTreeView):
         
         # send to treeview with new data_array
         data_array_filled = pyqtSignal(list)
-        # data_array_filled = pyqtSignal()
+        
+        data_array_sorted = pyqtSignal(list)
         
 
         def __init__(self, parent=None, server=None, sort_column=0, sort_order=0):
@@ -4226,12 +4228,11 @@ class TreeView(QTreeView):
                     # tell notification that unnoticed problems are gone
                     self.problems_vanished.emit()
 
-
+                # stuff data into array and sort it
                 self.fill_data_array(self.sort_column, self.sort_order)
 
                 # tell news about new status available
                 self.new_status.emit()
-
 
             # increase thread counter
             self.server.thread_counter += 1
@@ -4243,98 +4244,7 @@ class TreeView(QTreeView):
                 # tell tableview to finish worker_thread
                 self.finish.emit()
 
-
-        @pyqtSlot(list, str, bool)
-        def fill_rows(self, data, sort_column, reverse):
-            # to keep GTK Treeview sort behaviour first by services
-            first_sort = sorted(data, key=methodcaller('compare_host'))
-            
-            for row, nagitem in enumerate(sorted(first_sort, key=methodcaller('compare_%s' % \
-                                                    (sort_column)), reverse=reverse)):
-
-                # only if tooltips are wanted take status_information for the whole row
-                if conf.show_tooltips:
-                    tooltip = '''<div style=white-space:pre;margin:3px;><b>{0}: {1}</b></div>
-                                 {2}'''.format(nagitem.host,
-                                               nagitem.service,
-                                               nagitem.status_information)
-                else:
-                    tooltip = ''
-
-                # store icon calculations in row_cache to increase painting speed
-                row_cache = list()
-
-                # lists in rows list are columns
-                # create every cell per row
-                for column, text in enumerate(nagitem.get_columns(HEADERS)):
-                    # check for icons to be used in cell widget
-                    if column in (0, 1):
-                        # icons to be added
-                        icons = list()
-                        # hash for freshness comparison
-                        hash = nagitem.get_hash()
-                        # add host icons
-                        if nagitem.is_host() and column == 0:
-                            if nagitem.is_acknowledged():
-                                icons.append(ICONS['acknowledged'])
-                            if nagitem.is_flapping():
-                                icons.append(ICONS['flapping'])
-                            if nagitem.is_passive_only():
-                                icons.append(ICONS['passive'])
-                            if nagitem.is_in_scheduled_downtime():
-                                icons.append(ICONS['downtime'])
-                            if hash in self.server.events_history and\
-                                       self.server.events_history[hash] == True:
-                                        icons.append(ICONS['new'])
-                        # add host icons for service item - e.g. in case host is in downtime
-                        elif not nagitem.is_host() and column == 0:
-                            if self.server.hosts[nagitem.host].is_acknowledged():
-                                icons.append(ICONS['acknowledged'])
-                            if self.server.hosts[nagitem.host].is_flapping():
-                                icons.append(ICONS['flapping'])
-                            if self.server.hosts[nagitem.host].is_passive_only():
-                                icons.append(ICONS['passive'])
-                            if self.server.hosts[nagitem.host].is_in_scheduled_downtime():
-                                icons.append(ICONS['downtime'])
-                        # add service icons
-                        elif not nagitem.is_host() and column == 1:
-                            if nagitem.is_acknowledged():
-                                icons.append(ICONS['acknowledged'])
-                            if nagitem.is_flapping():
-                                icons.append(ICONS['flapping'])
-                            if nagitem.is_passive_only():
-                                icons.append(ICONS['passive'])
-                            if nagitem.is_in_scheduled_downtime():
-                                icons.append(ICONS['downtime'])
-                            if hash in self.server.events_history and\
-                                       self.server.events_history[hash] == True:
-                                        icons.append(ICONS['new'])
-                    else:
-                        icons = ICONS_FALSE
-
-                    # store text and icons in cache
-                    row_cache.append({ 'text': text, 'icons': icons})
-
-                # paint cells without extra icon calculation - done before
-                for column in range(len(row_cache)):
-                    # send signal to paint next cell
-                    self.next_cell.emit(row, column, row_cache[column]['text'],
-                                        conf.__dict__[COLORS[nagitem.status] + 'text'],
-                                        conf.__dict__[COLORS[nagitem.status] + 'background'],
-                                        row_cache[column]['icons'],
-                                        tooltip)
-
-                # sleep some milliceconds to let the GUI thread do some work too
-                # still looking for a better solution, but for now let GUI some
-                # time to breathe between every updated row
-                self.thread().msleep(20)
-
-                del(row_cache)
-
-            # after running through
-            self.table_ready.emit()
-            
-        
+       
         @pyqtSlot(int, int)
         def fill_data_array(self, sort_column, sort_order):
             """
@@ -4369,27 +4279,53 @@ class TreeView(QTreeView):
                         self.data_array[-1].append(QBRUSHES[len(self.data_array) % 2][COLORS[item.status] + 'text'])                       
                         # add background color as QBrush from status
                         self.data_array[-1].append(QBRUSHES[len(self.data_array) % 2][COLORS[item.status] + 'background'])
-                        # add text color as vaule for CSS from status
-                        self.data_array[-1].append(conf.__dict__[COLORS[item.status] + 'text'])                       
-                        # add background color as vaule for CSS from status
-                        self.data_array[-1].append(conf.__dict__[COLORS[item.status] + 'background'])                                                               
+                        # add text color as value for CSS from status
+                        ###self.data_array[-1].append(conf.__dict__[COLORS[item.status] + 'text'])                       
+                        # add background color as value for CSS from status
+                        ###self.data_array[-1].append(conf.__dict__[COLORS[item.status] + 'background'])                                                               
+                        # add text olor name for sorting data
+                        self.data_array[-1].append(COLORS[item.status] + 'text')                       
+                        # add background color name for sorting data 
+                        self.data_array[-1].append(COLORS[item.status] + 'background')                                                               
             
-            self.sort_data_array(self.sort_column, self.sort_order)
+            
+            self.sort_data_array(self.sort_column, self.sort_order, False)
             
             self.data_array_filled.emit(self.data_array)           
 
 
-        @pyqtSlot(int, int)
-        def sort_data_array(self, sort_column, sort_order):
+        @pyqtSlot(int, int, bool)
+        def sort_data_array(self, sort_column, sort_order, header_clicked= False):          
+            """
+                sort list of lists in data_array depending on sort criteria
+                used from fill_data_array() and when clicked on table headers
+            """
             # store current sort_column and sort_data for next sort actions
             self.sort_column = sort_column
             self.sort_order = sort_order
             
             # to keep GTK Treeview sort behaviour first by services
-            first_sort = sorted(self.data_array, key=lambda row: row[0], reverse=self.sort_order)
-            self.data_array = sorted(first_sort, key=lambda row: row[self.sort_column], reverse=self.sort_order)
+            first_sort = sorted(self.data_array, key=lambda row: row[2].lower(), reverse=self.sort_order)
+
+            # use SORT_COLUMNS from Helpers to sort column accordingly           
+            self.data_array = sorted(first_sort, key=lambda row: SORT_COLUMNS[self.sort_column](row[self.sort_column]), reverse=self.sort_order)
+
+            # fix alternating colors
+            for count, row in enumerate(self.data_array):
+                # change text color of sorted rows
+                row[9] = QBRUSHES[count % 2][row[11]]                       
+                # change background color of sorted rows
+                row[10] = QBRUSHES[count % 2][row[12]]
+
+            # if header was clicked tell model to use new data_array
+            if header_clicked:
+                self.data_array_sorted.emit(self.data_array)
+
 
             del(first_sort)
+
+
+
 
 
         @pyqtSlot(dict)
@@ -4950,7 +4886,10 @@ class Dialog_Settings(Dialog):
         # now former fourth item has index 2
         sort_fields.pop(2)
         self.ui.input_combobox_default_sort_field.addItems(sort_fields)
-        self.ui.input_combobox_default_sort_field.setCurrentText(HEADERS_KEYS_HEADERS[conf.default_sort_field])
+        try:
+            self.ui.input_combobox_default_sort_field.setCurrentText(HEADERS_KEYS_HEADERS[conf.default_sort_field])
+        except:
+            self.ui.input_combobox_default_sort_field.setCurrentText(conf.default_sort_field)
 
         # fill default sort order combobox
         self.ui.input_combobox_default_sort_order.addItems(['Ascending', 'Descending'])
@@ -6484,6 +6423,7 @@ def _create_brushes():
             else:
                 # only make background darker; text should stay as it is
                 QBRUSHES[1][COLORS[state] + role] = QBRUSHES[0][COLORS[state] + role]
+
 
 def get_screen(x, y):
     """
