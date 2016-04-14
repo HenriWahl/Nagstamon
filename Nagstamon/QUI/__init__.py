@@ -1076,6 +1076,7 @@ class StatusWindow(QWidget):
 
             # show error message in statusbar
             server_vbox.table.worker.show_error.connect(self.statusbar.set_error)
+            server_vbox.table.worker.new_status.connect(self.raise_window_on_all_desktops)
             server_vbox.table.worker.hide_error.connect(self.statusbar.reset_error)
 
             # show error icon in systray
