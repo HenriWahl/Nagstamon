@@ -749,7 +749,7 @@ class Ui_settings_main(object):
         self.verticalLayout.addWidget(self.button_box)
 
         self.retranslateUi(settings_main)
-        self.tabs.setCurrentIndex(5)
+        self.tabs.setCurrentIndex(1)
         self.button_box.accepted.connect(settings_main.accept)
         self.button_box.rejected.connect(settings_main.reject)
         QtCore.QMetaObject.connectSlotsByName(settings_main)
@@ -899,7 +899,7 @@ class Ui_settings_main(object):
         self.input_radiobutton_close_details_clicking.setText(_translate("settings_main", "Close when clicking statusbar"))
         self.input_checkbox_highlight_new_events.setText(_translate("settings_main", "Highlight new events in status details overview"))
         self.input_checkbox_show_tooltips.setText(_translate("settings_main", "Show tooltips in status details overview"))
-        self.input_checkbox_show_grid.setText(_translate("settings_main", "Show grid in status details overview"))
+        self.input_checkbox_show_grid.setText(_translate("settings_main", "Show color grid in status details overview"))
         self.label_default_sort_field.setText(_translate("settings_main", "Default sort field:"))
         self.label_default_sort_order.setText(_translate("settings_main", "Default sort order:"))
         self.groupbox_appearance.setTitle(_translate("settings_main", "Appearance:"))

@@ -356,6 +356,47 @@ def lock_config_folder(folder):
             pidFile.write('{}@{}@{}'.format(curPid, curBootTime, curUserName))
     except Exception as err:
         print(err)
-        
 
     return True
+
+
+# the following functions are used for sorted in sort_data_array()
+def compare_host(item):
+    return(item.lower())
+
+
+def compare_service(item):
+    return(item.lower())
+
+
+def compare_status(item):
+    return(STATES.index(item))
+
+
+def compare_last_check(item):
+    return(UnifiedMachineSortableDate(item))
+
+
+def compare_duration(item):
+    return(UnifiedMachineSortableDate(item))
+
+
+def compare_attempt(item):
+    return(item)
+
+
+def compare_status_information(item):
+    return(item.lower())
+
+
+# depending on column different functions have to be used
+# 0 + 1 are column "Hosts", 1 + 2 are column "Service" due to extra font flag pictograms
+SORT_COLUMNS = { 0: compare_host,
+         1: compare_host,
+         2: compare_service,
+         3: compare_service,
+         4: compare_status,
+         5: compare_last_check,
+         6: compare_duration,
+         7: compare_attempt,
+         8: compare_status_information }

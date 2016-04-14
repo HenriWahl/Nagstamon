@@ -44,6 +44,9 @@ class GenericObject(object):
         self.notifications_disabled = False
         self.flapping = False
         self.scheduled_downtime = False
+        # compress all flags like acknowledged and flapping into one string
+        self.host_flags = ''
+        self.service_flags = ''
         self.visible = True
         # Check_MK also has site info
         self.site = ''
@@ -94,20 +97,24 @@ class GenericObject(object):
 
 
     def get_service_name(self):
-        """ Extracts service name from status item.
-        Presentation purpose.
+        """
+            Extracts service name from status item.
+            Presentation purpose.
         """
         return ''
 
 
     def get_hash(self):
         """
-        returns hash of event status information - different for host and service thus empty here
+            returns hash of event status information - different for host and service thus empty here
         """
         return ''
 
 
     def get_columns(self, columns_wanted):
+        """
+            Yield host/service status information for treeview table columns
+        """
         for c in columns_wanted:
             yield str(self.__dict__[c])
 
@@ -158,7 +165,7 @@ class GenericHost(GenericObject):
 
     def is_host(self):
         """
-        decides where to put acknowledged/downtime pixbufs in Liststore for Treeview in Popwin
+            decides where to put acknowledged/downtime pixbufs in Liststore for Treeview in Popwin
         """
         return True
 
@@ -196,7 +203,7 @@ class GenericService(GenericObject):
 
     def get_hash(self):
         """
-        return hash for event history tracking
+            return hash for event history tracking
         """
         return " ".join((self.server, self.site, self.host, self.name, self.status))
 
