@@ -142,6 +142,8 @@ def create_server(server=None):
     # Icinga
     new_server.use_display_name_host = server.use_display_name_host
     new_server.use_display_name_service = server.use_display_name_service
+    # Check_MK Multisite
+    new_server.force_authuser = server.force_authuser
 
     # server's individual preparations for HTTP connections (for example cookie creation)
     # is done in GetStatus() method of monitor

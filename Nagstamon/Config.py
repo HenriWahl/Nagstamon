@@ -731,6 +731,11 @@ class Server(object):
         self.use_display_name_host = False
         self.use_display_name_service = False
 
+        # Check_MK Multisite
+        # Force Check_MK livestatus code to set AuthUser header for users who
+        # are permitted to see all objects.
+        self.force_authuser = False
+
 
 class Action(object):
     """

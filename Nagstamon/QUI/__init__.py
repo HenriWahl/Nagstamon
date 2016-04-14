@@ -4351,7 +4351,8 @@ class Dialog_Server(Dialog):
                                  self.ui.input_lineedit_autologin_key : ['Centreon'],
                                  self.ui.label_autologin_key : ['Centreon'],
                                  self.ui.input_checkbox_use_display_name_host : ['Icinga', 'IcingaWeb2'],
-                                 self.ui.input_checkbox_use_display_name_service : ['Icinga', 'IcingaWeb2']
+                                 self.ui.input_checkbox_use_display_name_service : ['Icinga', 'IcingaWeb2'],
+                                 self.ui.input_checkbox_force_authuser : ['Check_MK Multisite'],
                                 }
 
         # fill default order fields combobox with monitor server types

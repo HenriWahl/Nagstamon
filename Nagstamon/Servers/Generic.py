@@ -154,6 +154,8 @@ class GenericServer(object):
         # Icinga
         self.use_display_name_host = False
         self.use_display_name_service = False
+        # Check_MK Multisite
+        self.force_authuser = False
 
 
     def init_config(self):
