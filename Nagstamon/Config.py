@@ -37,7 +37,7 @@ class AppInfo(object):
         contains app information previously located in GUI.py
     """
     NAME = 'Nagstamon'
-    VERSION = '2.0-alpha-20160413'
+    VERSION = '2.0-alpha-20160414'
     WEBSITE = 'https://nagstamon.ifw-dresden.de'
     COPYRIGHT = '©2008-2016 Henri Wahl et al.\nh.wahl@ifw-dresden.de'
     COMMENTS = 'Nagios status monitor for your desktop'
@@ -143,7 +143,7 @@ class Config(object):
         self.color_unreachable_background = self.default_color_unreachable_background = '#8B0000'
         self.color_down_text = self.default_color_down_text = '#FFFFFF'
         self.color_down_background = self.default_color_down_background = '#000000'
-        self.color_error_text = self.default_color_error_text= '#000000'
+        self.color_error_text = self.default_color_error_text = '#000000'
         self.color_error_background = self.default_color_error_background = '#D3D3D3'
         self.statusbar_floating = True
         self.icon_in_systray = False
@@ -182,17 +182,17 @@ class Config(object):
         parser = argparse.ArgumentParser(description='Nagios status monitor for your desktop')
         parser.add_argument('cfgpath', nargs='?', help='Path for configuration folder')
         # might be not necessary anymore - to be tested
-        ###parser.add_argument('-psn', action='store_true',
-        ###    help='force ~/.nagstamon as config folder (used by launchd in MacOSX)')
+        # ##parser.add_argument('-psn', action='store_true',
+        # ##    help='force ~/.nagstamon as config folder (used by launchd in MacOSX)')
         # necessary because otherwise setup.py goes crazy of argparse
         args, unknown = parser.parse_known_args()
 
         # try to use a given config file - there must be one given
         # if sys.argv is larger than 1
-        ###if args.psn:
-        ###    # new configdir approach
-        ###    self.configdir = os.path.expanduser('~') + os.sep + '.nagstamon'
-        ###elif args.cfgpath:
+        # ##if args.psn:
+        # ##    # new configdir approach
+        # ##    self.configdir = os.path.expanduser('~') + os.sep + '.nagstamon'
+        # ##elif args.cfgpath:
         if args.cfgpath:
             # allow to give a config file
             self.configdir = args.cfgpath
@@ -245,7 +245,7 @@ class Config(object):
                         # treat negative value specially as .isdecimal() will not detect it
                         elif i[1].isdecimal() or \
                              (i[1].startswith('-') and i[1].split('-')[1].isdecimal()):
-                            object.__setattr__(self, i[0],int(i[1]))
+                            object.__setattr__(self, i[0], int(i[1]))
                         else:
                             object.__setattr__(self, i[0], i[1])
 
@@ -253,7 +253,7 @@ class Config(object):
             # and all the thousands 1.0 installations do not know it yet it will be more comfortable
             # for most of the Windows users if it is only defined as False after it was checked
             # from config file
-            #if not self.__dict__.has_key("use_system_keyring"):
+            # if not self.__dict__.has_key("use_system_keyring"):
             if not 'use_system_keyring' in self.__dict__.keys():
                 if self.unconfigured == True:
                     # an unconfigured system should start with no keyring to prevent crashes
@@ -334,7 +334,7 @@ class Config(object):
                 # do only deobfuscating if any autologin_key is set - will be only Centreon
                 if 'autologin_key' in servers[server].__dict__.keys():
                     if len(servers[server].__dict__['autologin_key']) > 0:
-                        servers[server].autologin_key  = self.DeObfuscate(servers[server].autologin_key)
+                        servers[server].autologin_key = self.DeObfuscate(servers[server].autologin_key)
 
                 # only needed for those who used Icinga2 before it became icingaWeb2
                 if servers[server].type == 'Icinga2':
@@ -457,7 +457,7 @@ class Config(object):
             for option in self.__dict__[settingsdir][s].__dict__:
                 # obfuscate certain entries in config file - special arrangement for servers
                 if settingsdir == 'servers':
-                    #if option == "username" or option == "password" or option == "proxy_username" or option == "proxy_password" or option == "autologin_key":
+                    # if option == "username" or option == "password" or option == "proxy_username" or option == "proxy_password" or option == "autologin_key":
                     if option in ['username', 'password', 'proxy_username', 'proxy_password', 'autologin_key']:
                         value = self.Obfuscate(self.__dict__[settingsdir][s].__dict__[option])
                         if option == 'password':
@@ -486,7 +486,7 @@ class Config(object):
                                     # provoke crash if password saving does not work - this is the case
                                     # on newer Ubuntu releases
                                     try:
-                                        keyring.set_password('Nagstamon', '@'.join(('proxy',\
+                                        keyring.set_password('Nagstamon', '@'.join(('proxy', \
                                                                                 self.__dict__[settingsdir][s].proxy_username,
                                                                                 self.__dict__[settingsdir][s].proxy_address)),
                                                                                 self.__dict__[settingsdir][s].proxy_password)
@@ -530,7 +530,7 @@ class Config(object):
                     return True
             else:
                 # safety first - if not yet available disable it
-                #if not self.__dict__.has_key("use_system_keyring"):
+                # if not self.__dict__.has_key("use_system_keyring"):
                 if not 'use_system_keyring' in self.__dict__.keys():
                     self.use_system_keyring = False
                 # only import keyring lib if configured to do so
@@ -667,10 +667,10 @@ class Config(object):
     def _LegacyAdjustments(self):
         # mere cosmetics but might be more clear for future additions - changing any "nagios"-setting to "monitor"
         for s in self.servers.values():
-            ###if s.__dict__.has_key("nagios_url"):
+            # ##if s.__dict__.has_key("nagios_url"):
             if 'nagios_url' in s.__dict__.keys():
                 s.monitor_url = s.nagios_url
-            ###if s.__dict__.has_key("nagios_cgi_url"):
+            # ##if s.__dict__.has_key("nagios_cgi_url"):
             if 'nagios_cgi_url' in s.__dict__.keys():
                 s.monitor_cgi_url = s.nagios_cgi_url
 
@@ -697,7 +697,7 @@ class Config(object):
         # to be returned
         number = 0
         for server in self.servers.values():
-            ###if str(server.enabled) == "True":
+            # ##if str(server.enabled) == "True":
             if server.enabled == True:
                 number += 1
         return number
@@ -808,10 +808,10 @@ except Exception as err:
     except:
         pass
 
-    #if we're still out of luck, maybe this was a user scheme install
+    # if we're still out of luck, maybe this was a user scheme install
     try:
         import site
-        site.getusersitepackages() #make sure USER_SITE is set
+        site.getusersitepackages()  # make sure USER_SITE is set
         paths_to_check.append(os.path.normcase(os.path.join(site.USER_SITE, "Nagstamon", "resources")))
     except:
         pass

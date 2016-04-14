@@ -36,7 +36,7 @@ from PyQt5.QtCore import *
 from PyQt5.QtSvg import *
 from PyQt5.QtMultimedia import *
 
-###from operator import methodcaller
+# ##from operator import methodcaller
 from collections import OrderedDict
 from copy import deepcopy
 
@@ -156,8 +156,18 @@ for item in HEADERS.keys():
     HEADERS_KEYS_HEADERS[item] = HEADERS[item]['header']
 
 # sorting order for tablewidgets
-###SORT_ORDER = {'descending': True, 'ascending': False, 0: True, 1: False}
 SORT_ORDER = {'descending': 1, 'ascending': 0, 0: True, 1: False}
+
+# bend columns 1 and 3 to 0 and 2 to avoid sorting the extra flag icons of hosts and services    
+SORT_COLUMNS_INDEX = { 0: 0,
+                       1: 0,
+                       2: 2,
+                       3: 2,
+                       4: 4,
+                       5: 5,
+                       6: 6,
+                       7: 7,
+                       8: 8 }
 
 # space used in LayoutBoxes
 SPACE = 10
@@ -176,7 +186,7 @@ else:
 fontdatabase = QFontDatabase()
 fontdatabase.addApplicationFont('{0}{1}nagstamon.ttf'.format(RESOURCES, os.sep))
 # always stay in normal weight without any italic
-ICONS_FONT = QFont('Nagstamon', FONT.pointSize()+2, QFont.Normal, False)
+ICONS_FONT = QFont('Nagstamon', FONT.pointSize() + 2, QFont.Normal, False)
 
 # completely silly but no other rescue for Windows-hides-statusbar-after-display-mode-change problem
 NUMBER_OF_DISPLAY_CHANGES = 0
@@ -537,8 +547,8 @@ class PushButton_Hamburger(QPushButton):
 
     def __init__(self):
         QPushButton.__init__(self)
-        #self.setFont(ICONS_FONT)
-        #self.setText('H')
+        # self.setFont(ICONS_FONT)
+        # self.setText('H')
 
 
     def mousePressEvent(self, event):
@@ -909,9 +919,6 @@ class StatusWindow(QWidget):
         self.servers_scrollarea_widget.setLayout(self.servers_vbox)
         self.servers_scrollarea.setWidget(self.servers_scrollarea_widget)
         self.servers_scrollarea.setWidgetResizable(True)
-
-        # icons in ICONS
-        ###_create_icons()
 
         # create brushes for treeview
         _create_brushes()
@@ -2153,10 +2160,10 @@ class TopArea(QWidget):
                                                                       border-radius: 4px;}
                                                     QPushButton::menu-indicator{image:url(none.jpg);}''')
 
-        ###self.button_hamburger_menu.setStyleSheet('''QPushButton {border-width: 0px;
-        ###                                                         border-style: none;
-        ###                                                         text-align: center;}
-        ###                                        ''')
+        # ##self.button_hamburger_menu.setStyleSheet('''QPushButton {border-width: 0px;
+        # ##                                                         border-style: none;
+        # ##                                                         text-align: center;}
+        # ##                                        ''')
 
         self.hamburger_menu = MenuAtCursor()
         action_exit = QAction("Exit", self)
@@ -2305,12 +2312,12 @@ class ServerVBox(QVBoxLayout):
         self.table.worker_thread.finished.connect(self.delete)
 
         # connect worker to status label to reflect connectivity
-        # ##self.table.worker.change_label_status.connect(self.label_status.change)
-        # ##self.table.worker.restore_label_status.connect(self.label_status.restore)
+        self.table.worker.change_label_status.connect(self.label_status.change)
+        self.table.worker.restore_label_status.connect(self.label_status.restore)
 
         # connect reauthentication button to authentication state
-        # ##self.table.worker.button_authenticate_show.connect(self.button_authenticate.show)
-        # ##self.table.worker.button_authenticate_hide.connect(self.button_authenticate.hide)
+        self.table.worker.button_authenticate_show.connect(self.button_authenticate.show)
+        self.table.worker.button_authenticate_hide.connect(self.button_authenticate.hide)
 
         # care about authentications
         self.button_authenticate.clicked.connect(self.authenticate_server)
@@ -2439,1079 +2446,6 @@ class ServerVBox(QVBoxLayout):
                                         padding-bottom: {0}px;'''.format(SPACE))
 
 
-class CellWidget(QWidget):
-    """
-        widget to be used as cells in tablewidgets
-    """
-
-    # send to tablewidget if cell clicked
-    clicked = pyqtSignal()
-    
-    # signals to be sent to parent tablewidget for doing some painting
-    colorize_row = pyqtSignal(int)
-    highlight_row = pyqtSignal(int)
-
-
-    def __init__(self, column=0, row=0, text='', color='black', background='white', icons='', tooltip='', parent=None):
-        """
-            one cell of a server's table
-        """
-        global FONT
-
-        QWidget.__init__(self, parent=parent)
-
-        self.column = column
-        self.row = row
-        self.text = text
-        self.color = color
-        self.background = background
-
-        self.hbox = QHBoxLayout(self)
-        self.setLayout(self.hbox)
-
-        # text field
-        self.label = QLabel(self.text, parent=self)
-        self.label.setFont(FONT)
-
-        self.hbox.setContentsMargins(0, 0, 0, 0)
-        self.hbox.addWidget(self.label, 1)
-        self.hbox.setSpacing(0)
-
-        # self.setToolTip(tooltip)
-        self.tooltip = tooltip
-
-        self.label.setStyleSheet('margin: 5px;')
-
-        # default for most of cells - no icons
-        self.icon_labels = False
-
-        # hosts and services might contain attribute icons
-        if column in (0, 1) and icons is not ICONS_FALSE:
-
-            # if there are icons store them in list
-            self.icon_labels = []
-
-            for icon in icons:
-                icon_label = QLabel(parent=self)
-                # icon_label.setPixmap(icon.pixmap(self.label.fontMetrics().height(), self.label.fontMetrics().height()))
-                # icon_label.setPixmap(icon.pixmap(FONT.pixelSize(), FONT.pixelSize()))
-                icon_label.setPixmap(icon)
-                icon_label.setStyleSheet(CSS_GRID_ICON[(conf.show_grid, column)])
-                self.icon_labels.append(icon_label)
-                # take last appended icon_label
-                self.hbox.addWidget(self.icon_labels[-1])
-
-        # paint cell appropriately
-        self.colorize(column)
-        
-        self.colorize_row.connect(self.parent().colorize_row)
-        self.highlight_row.connect(self.parent().highlight_row)
-
-
-    def colorize(self, column):
-        """
-            paint cell with color fitting state and grid option
-        """
-        self.setStyleSheet('''color: %s;
-                              background-color: %s;
-                              %s''' % (self.color,
-                                       self.background,
-                                       CSS_GRID[(conf.show_grid, column)]))
-
-        if self.icon_labels:
-            for icon_label in self.icon_labels:
-                icon_label.setStyleSheet(CSS_GRID_ICON[(conf.show_grid, column)])
-
-
-    def highlight(self, column):
-        """
-            highlight row when hovering over it
-        """
-        self.setStyleSheet('''color: %s;
-                              background-color: %s;
-                              border-style: hide;
-                              border-width: 1px;'''
-                              % ('black',
-                                 'white'))
-
-        if self.icon_labels:
-            for icon_label in self.icon_labels:
-                icon_label.setStyleSheet('''padding-right: 5px;
-                                            border-style: hide;
-                                            border-width: 1px;''')
-       
-        
-    def event(self, event):
-        """
-            ugly and parent-dependant CSS-mess in tooltips make own
-            event-handling necessary
-        """
-        # highlight row when entering it
-        if event.type() == QEvent.Enter:
-            # ##if not self.parent().action_menu.isVisible():   
-            self.highlight_row.emit(self.row)
-
-        # recolorize row when leaving it       
-        elif event.type() == QEvent.Leave:
-            self.colorize_row.emit(self.row)
-
-        # showing tooltip this way acoids ugly CSS-mess
-        elif event.type() == QEvent.ToolTip:
-            QToolTip.showText(event.globalPos(), self.tooltip)
-        
-        # send signal of clicked cell to table widget which cares further
-        elif event.type() == QEvent.MouseButtonRelease:
-            self.clicked.emit()
-
-        # ignore any other event, especially QWheelEvent, 
-        # which enables scrolling by mouse wheel            
-        else:
-            event.ignore()
-        
-        return(True)
-
-
-class TableWidget(QTableWidget):
-    """
-        Contains information for one monitor server as a table
-    """
-
-    # send new data to worker
-    new_data = pyqtSignal(list, str, bool)
-
-    # tell global window that it should be resized
-    ready_to_resize = pyqtSignal()
-
-    # sent by refresh() for statusbar
-    refreshed = pyqtSignal()
-
-    # tell worker to get status after a recheck has been solicited
-    recheck = pyqtSignal(dict)
-
-    # tell notification that status of server has changed
-    status_changed = pyqtSignal(str, str)
-
-    # action to be executed by worker
-    # 2 values: action and host/service info
-    request_action = pyqtSignal(dict, dict)
-
-
-    def __init__(self, columncount, rowcount, sort_column, order, server, parent=None):
-        """
-            set up a tableview for a server
-        """
-        QTableWidget.__init__(self, columncount, rowcount, parent=parent)
-
-        self.sort_column = sort_column
-        self.order = order
-        self.server = server
-
-        self.setFont(FONT)
-
-        self.setSelectionBehavior(QAbstractItemView.SelectRows)
-        self.setSelectionMode(QAbstractItemView.NoSelection)
-        # has to be necessarily false to keep sanity if calculating table height
-        self.setShowGrid(False)
-        # no scrollbars at tables because they will be scrollable by the global vertical scrollbar
-        self.setHorizontalScrollBarPolicy(Qt.ScrollBarAlwaysOff)
-        self.setVerticalScrollBarPolicy(Qt.ScrollBarAlwaysOff)
-        self.setAutoScroll(False)
-        self.setSortingEnabled(True)
-
-        self.setSizePolicy(QSizePolicy.Ignored, QSizePolicy.Expanding)
-
-        headers = list(HEADERS.values())
-
-        self.setHorizontalHeaderLabels(HEADERS.values())
-        self.horizontalHeader().setSectionResizeMode(QHeaderView.ResizeToContents)
-        self.horizontalHeader().setDefaultAlignment(Qt.AlignLeft)
-        self.horizontalHeader().setSortIndicatorShown(True)
-        self.horizontalHeader().setSortIndicator(list(HEADERS).index(self.sort_column), SORT_ORDER[self.order])
-        self.horizontalHeader().sortIndicatorChanged.connect(self.sort_columns)
-
-        # store width and height if they do not need to be recalculated
-        self.real_width = 0
-        self.real_height = 0
-
-        # store currently activated row
-        self.highlighted_row = 0
-
-        # action context menu
-        self.action_menu = MenuAtCursor(parent=self)
-        # flag to avoid popping up menus when clicking somehwere
-        self.action_menu.available = True
-        # signalmapper for getting triggered actions
-        self.signalmapper_action_menu = QSignalMapper()
-        # connect menu to responder
-        self.signalmapper_action_menu.mapped[str].connect(self.action_menu_custom_response)
-
-        # a thread + worker is necessary to get new monitor server data in the background and
-        # to refresh the table cell by cell after new data is available
-        self.worker_thread = QThread()
-        self.worker = self.Worker(server=server)
-        self.worker.moveToThread(self.worker_thread)
-
-        # if worker got new status data from monitor server get_status the table should be refreshed
-        self.worker.new_status.connect(self.refresh)
-        # if worker calculated next cell send it to GUI thread
-        self.worker.next_cell.connect(self.set_cell)
-        # when worker walked through all cells send a signal to table so it could get_status itself
-        self.worker.table_ready.connect(self.adjust_table)
-        # quit thread if worker has finished
-        self.worker.finish.connect(self.finish_worker_thread)
-        # get status if started
-        self.worker_thread.started.connect(self.worker.get_status)
-        # start with priority 0 = lowest
-        self.worker_thread.start(0)
-
-        # connect signal new_data to worker slot fill_rows
-        self.new_data.connect(self.worker.fill_rows)
-
-        # connect signal for acknowledge
-        dialogs.acknowledge.acknowledge.connect(self.worker.acknowledge)
-
-        # connect signal to get start end time for downtime from worker
-        dialogs.downtime.get_start_end.connect(self.worker.get_start_end)
-        self.worker.set_start_end.connect(dialogs.downtime.set_start_end)
-
-        # connect signal for downtime
-        dialogs.downtime.downtime.connect(self.worker.downtime)
-
-        # connect signal for submit check result
-        dialogs.submit.submit.connect(self.worker.submit)
-
-        # connect signal for recheck action
-        self.recheck.connect(self.worker.recheck)
-
-        # execute action by worker
-        self.request_action.connect(self.worker.execute_action)
-
-        # display mode - all or only header to display error
-        self.is_shown = False
-
-
-    @pyqtSlot()
-    def refresh(self):
-        """
-            refresh status display
-        """
-        # do nothing if window is moving to avoid lagging movement
-        if not statuswindow.moving:
-            # get_status table cells with new data by thread
-            data = list(self.server.GetItemsGenerator())
-            if len(data) > 0:
-                self.set_data(data)
-                # display table if there is something to display
-                self.is_shown = True
-            else:
-                self.is_shown = False
-            # pre-calculate dimensions
-            self.real_height = self.get_real_height()
-            self.real_width = self.get_real_width()
-
-            # tell statusbar it should update
-            self.refreshed.emit()
-
-            # check if status changed and notification is necessary
-            # send signal because there are unseen events
-            if self.server.get_events_history_count() > 0:
-                self.status_changed.emit(self.server.name, self.server.worst_status_diff)
-
-
-    @pyqtSlot(int, int, str, str, str, list, str)
-    def set_cell(self, row, column, text, color, background, icons, tooltip):
-        """
-            set data and widget for one cell
-        """
-        widget = CellWidget(text=text, color=color, background=background,
-                            row=row, column=column, icons=icons, tooltip=tooltip,
-                            parent=self)
-
-        # if cell got clicked evaluate that click
-        widget.clicked.connect(self.cell_clicked)
-
-        # fill cells with data
-        self.setCellWidget(row, column, widget)
-
-
-    def set_data(self, data=None):
-        """
-            fill table cells with data from filtered Nagios items
-        """
-        # maximum size needs no more than amount of data
-        self.setRowCount(self.server.nagitems_filtered_count)
-
-        # send signal to worker
-        self.new_data.emit(data, self.sort_column, SORT_ORDER[self.order])
-
-
-    @pyqtSlot()
-    def adjust_table(self):
-        """
-            adjust table dimensions after filling it
-        """
-        # seems to be important for not getting somehow squeezed cells
-        self.resizeColumnsToContents()
-        self.resizeRowsToContents()
-        self.horizontalHeader().setStretchLastSection(True)
-
-        # force table to its maximal height, calculated by .get_real_height()
-        self.setMinimumHeight(self.get_real_height())
-        self.setMaximumHeight(self.get_real_height())
-        self.setSizePolicy(QSizePolicy.Ignored, QSizePolicy.Maximum)
-
-        # after setting table whole window can be repainted
-        self.ready_to_resize.emit()
-
-
-    @pyqtSlot()
-    def cell_clicked(self):
-        """
-            Windows reacts different to clicks into table cells than Linux and MacOSX
-            Therefore the .available flag is necessary
-        """
-        if self.action_menu.available or platform.system() != 'Windows':
-
-            # set flag for Windows
-            self.action_menu.available = False
-
-            # simply use currently highlighted row as an index
-            self.miserable_host = self.cellWidget(self.highlighted_row, HEADERS_LIST.index('host')).text
-            self.miserable_service = self.cellWidget(self.highlighted_row, HEADERS_LIST.index('service')).text
-            self.miserable_status_info = self.cellWidget(self.highlighted_row, HEADERS_LIST.index('status_information')).text
-
-            # empty the menu
-            self.action_menu.clear()
-
-            # clear signal mappings
-            self.signalmapper_action_menu.removeMappings(self.signalmapper_action_menu)
-
-            # add custom actions
-            actions_list = list(conf.actions)
-            actions_list.sort(key=str.lower)
-            
-            for a in actions_list:
-                # shortcut for next lines
-                action = conf.actions[a]
-             
-                # check if current monitor server type is in action
-                # second scheck for server type is legacy-compatible with older settions 
-                if action.enabled == True and (action.monitor_type in ['', self.server.TYPE] or
-                                               action.monitor_type not in SERVER_TYPES):
-                    # menu item visibility flag
-                    item_visible = False
-                    # check if clicked line is a service or host
-                    # if it is check if the action is targeted on hosts or services
-                    if self.miserable_service:
-                        if action.filter_target_service == True:
-                            # only check if there is some to check
-                            if action.re_host_enabled == True:
-                                if is_found_by_re(self.miserable_host,
-                                                       action.re_host_pattern,
-                                                       action.re_host_reverse):
-                                    item_visible = True
-                            # dito
-                            if action.re_service_enabled == True:
-                                if is_found_by_re(self.miserable_service,
-                                                       action.re_service_pattern,
-                                                       action.re_service_reverse):
-                                    item_visible = True
-                            # dito
-                            if action.re_status_information_enabled == True:
-                                if is_found_by_re(self.miserable_service,
-                                                       action.re_status_information_pattern,
-                                                       action.re_status_information_reverse):
-                                    item_visible = True
-
-                            # fallback if no regexp is selected
-                            if action.re_host_enabled == action.re_service_enabled == \
-                               action.re_status_information_enabled == False:
-                                item_visible = True
-
-                    else:
-                        # hosts should only care about host specific actions, no services
-                        if action.filter_target_host == True:
-                            if action.re_host_enabled == True:
-                                if is_found_by_re(self.miserable_host, \
-                                                       action.re_host_pattern, \
-                                                       action.re_host_reverse):
-                                    item_visible = True
-                            else:
-                                # a non specific action will be displayed per default
-                                item_visible = True
-                else:
-                    item_visible = False
-
-                # populate context menu with service actions
-                if item_visible == True:
-                    # create action
-                    action_menuentry = QAction(a, self)
-                    # add action
-                    self.action_menu.addAction(action_menuentry)
-                    # action to signalmapper
-                    self.signalmapper_action_menu.setMapping(action_menuentry, a)
-                    action_menuentry.triggered.connect(self.signalmapper_action_menu.map)
-
-                del action, item_visible
-
-            # create adn add default actions
-            action_edit_actions = QAction('Edit actions...', self)
-            action_edit_actions.triggered.connect(self.action_edit_actions)
-
-            if 'Monitor' in self.server.MENU_ACTIONS:
-                action_monitor = QAction('Monitor', self)
-                action_monitor.triggered.connect(self.action_monitor)
-
-            if 'Recheck' in self.server.MENU_ACTIONS:
-                action_recheck = QAction('Recheck', self)
-                action_recheck.triggered.connect(self.action_recheck)
-
-            if 'Acknowledge' in self.server.MENU_ACTIONS:
-                action_acknowledge = QAction('Acknowledge', self)
-                action_acknowledge.triggered.connect(self.action_acknowledge)
-
-            if 'Downtime' in self.server.MENU_ACTIONS:
-                action_downtime = QAction('Downtime', self)
-                action_downtime.triggered.connect(self.action_downtime)
-
-            # put actions into menu after separator
-            self.action_menu.addAction(action_edit_actions)
-            self.action_menu.addSeparator()
-            if 'Monitor' in self.server.MENU_ACTIONS:
-                self.action_menu.addAction(action_monitor)
-            if 'Recheck' in self.server.MENU_ACTIONS:
-                self.action_menu.addAction(action_recheck)
-            if 'Acknowledge' in self.server.MENU_ACTIONS:
-                self.action_menu.addAction(action_acknowledge)
-            if 'Downtime' in self.server.MENU_ACTIONS:
-                self.action_menu.addAction(action_downtime)
-
-            # not all servers allow to submit fake check results
-            if 'Submit check result' in self.server.MENU_ACTIONS:
-                action_submit = QAction('Submit check result', self)
-                action_submit.triggered.connect(self.action_submit)
-                self.action_menu.addAction(action_submit)
-
-            # show menu
-            self.action_menu.show_at_cursor()
-        else:
-            self.action_menu.available = True
-
-
-    @pyqtSlot(str)
-    def action_menu_custom_response(self, action):
-        # avoid blocked context menu
-        self.action_menu.available = True
-        # send dict with action info and dict with host/service info
-        self.request_action.emit(conf.actions[action].__dict__, {'server': self.server.get_name(),
-                                                                 'host': self.miserable_host,
-                                                                 'service': self.miserable_service,
-                                                                 'status-info': self.miserable_status_info,
-                                                                 'address': self.server.GetHost(self.miserable_host).result,
-                                                                 'monitor': self.server.monitor_url,
-                                                                 'monitor-cgi': self.server.monitor_cgi_url,
-                                                                 'username': self.server.username,
-                                                                 'password': self.server.password,
-                                                                 'comment-ack': conf.defaults_acknowledge_comment,
-                                                                 'comment-down': conf.defaults_downtime_comment,
-                                                                 'comment-submit': conf.defaults_submit_check_result_comment
-                                                                 })
-
-        # if action wants a closed status window it should be closed now
-        if conf.actions[action].close_popwin and not conf.fullscreen:
-            statuswindow.hide_window()
-
-
-    @pyqtSlot()
-    def action_response_decorator(method):
-        """
-            decorate repeatedly called stuff
-        """
-        def decoration_function(self):
-            # avoid blocked context menu
-            self.action_menu.available = True
-            # run decorated method
-            method(self)
-            # default actions need closed statuswindow to display own dialogs
-            if not conf.fullscreen:
-                statuswindow.hide_window()
-        return(decoration_function)
-
-
-    @action_response_decorator
-    def action_edit_actions(self):
-        # buttons in toparee
-        if not conf.fullscreen:
-            statuswindow.hide_window()
-        # open actions tab (#3) of settings dialog
-        dialogs.settings.show(tab=3)
-
-
-    @action_response_decorator
-    def action_monitor(self):
-        # open host/service monitor in browser
-        self.server.open_monitor(self.miserable_host, self.miserable_service)
-
-
-    @action_response_decorator
-    def action_recheck(self):
-        # send signal to worker recheck slot
-        self.recheck.emit({'host':    self.miserable_host,
-                           'service': self.miserable_service})
-
-
-    @action_response_decorator
-    def action_acknowledge(self):
-        # running worker method is left to OK button of dialog
-        dialogs.acknowledge.show()
-        dialogs.acknowledge.initialize(server=self.server,
-                                       host=self.miserable_host,
-                                       service=self.miserable_service)
-
-
-    @action_response_decorator
-    def action_downtime(self):
-        # running worker method is left to OK button of dialog
-        dialogs.downtime.show()
-        dialogs.downtime.initialize(server=self.server,
-                                    host=self.miserable_host,
-                                    service=self.miserable_service)
-
-
-    @action_response_decorator
-    def action_submit(self):
-        # running worker method is left to OK button of dialog
-        dialogs.submit.show()
-        dialogs.submit.initialize(server=self.server,
-                                    host=self.miserable_host,
-                                    service=self.miserable_service)
-
-
-    @pyqtSlot(int, int)
-    def sort_columns(self, column, order):
-        """
-            set data according to sort criteria
-        """
-        self.sort_column = list(HEADERS.keys())[column]
-        self.order = SORT_ORDER[order]
-        self.set_data(list(self.server.GetItemsGenerator()))
-
-
-    # ##def real_size(self):
-    # ##    """
-    # ##        width, height
-    # ##    """
-    # ##    return self.get_real_width(), self.get_real_height()
-
-
-    def get_real_width(self):
-        """
-            calculate real table width as there is no method included
-        """
-        self.real_width = 0
-        for column in range(0, self.columnCount()):
-            # if there is no with yet at the start take some reasonable value
-            try:
-                self.real_width += self.cellWidget(0, column).width()
-            except:
-                self.real_width += 100
-        del(column)
-
-        return self.real_width
-
-
-    def get_real_height(self):
-        """
-            calculate real table height as there is no method included
-        """
-        if self.is_shown:
-            # height summary starts with headers' height
-            # apparently height works better/without scrollbar if some pixels are added
-            self.real_height = self.horizontalHeader().sizeHint().height() + 2
-            # it is necessary to ask every row directly because their heights differ :-(
-            row = 0
-            for row in range(0, self.rowCount()):
-                try:
-                    self.real_height += (self.cellWidget(row, 0).sizeHint().height())
-                except:
-                    self.real_height += 30
-            del(row)
-        else:
-            self.real_height = 0
-
-        return self.real_height
-
-
-    @pyqtSlot(int)
-    def highlight_row(self, row):
-        for column in range(0, self.columnCount()):
-            if self.cellWidget(row, column) != None:
-                self.cellWidget(row, column).highlight(column)
-
-        # store current highlighted row for context menu
-        self.highlighted_row = row
-
-
-    @pyqtSlot(int)
-    def colorize_row(self, row):
-        """
-            colorize whole row
-        """
-        for column in range(0, self.columnCount()):
-            if self.cellWidget(row, column) != None:
-                self.cellWidget(row, column).colorize(column)
-
-
-    @pyqtSlot()
-    def finish_worker_thread(self):
-        """
-            attempt to shutdown thread cleanly
-        """
-        # tell thread to quit
-        self.worker_thread.quit()
-        # wait until thread is really stopped
-        self.worker_thread.wait(2000)
-
-
-    class Worker(QObject):
-        """
-            attempt to run a server status update thread - only needed by table so it is defined here inside table
-        """
-
-        # send signal if monitor server has new status data
-        new_status = pyqtSignal()
-
-        # send signal if next cell can be filled
-        next_cell = pyqtSignal(int, int, str, str, str, list, str)
-
-        # send signal if all cells are filled and table can be adjusted
-        table_ready = pyqtSignal()
-
-        # send signal if ready to stop
-        finish = pyqtSignal()
-
-        # send start and end of downtime
-        set_start_end = pyqtSignal(str, str)
-
-        # try to stop thread by evaluating this flag
-        running = True
-
-        # signal to be sent to slot "change" of ServerStatusLabel
-        change_label_status = pyqtSignal(str, str)
-
-        # signal to be sent to slot "restore" of ServerStatusLabel
-        restore_label_status = pyqtSignal()
-
-        # send notification a stop message if problems vanished without being noticed
-        problems_vanished = pyqtSignal()
-
-        # flag to keep recheck_all from being started more than once
-        rechecking_all = False
-
-        # signals to show/hide reauthentication
-        button_authenticate_show = pyqtSignal()
-        button_authenticate_hide = pyqtSignal()
-
-        # signals to control error message in statusbar
-        show_error = pyqtSignal(str)
-        hide_error = pyqtSignal()
-
-        def __init__(self, parent=None, server=None):
-            QObject.__init__(self)
-            self.server = server
-            # needed for update interval
-            self.timer = QTimer(self)
-            self.server.init_config()
-
-
-        @pyqtSlot()
-        def get_status(self):
-            """
-                check every second if thread still has to run
-                if interval time is reached get status
-            """
-            # if counter is at least update interval get status
-            if self.server.thread_counter >= conf.update_interval_seconds:
-                # reflect status retrieval attempt on server vbox label
-                self.change_label_status.emit('Refreshing...', '')
-                # get status from server instance
-                status = self.server.GetStatus()
-                
-                # all is OK if no error info came back
-                if self.server.status_description == '' and\
-                   self.server.status_code < 400 and\
-                   not self.server.refresh_authentication:
-                    self.change_label_status.emit('Connected', '')
-
-                    # reset server error flag, needed for error label in statusbar
-                    self.server.has_error = False
-
-                    # tell statusbar there is no error
-                    self.hide_error.emit()
-                else:
-                    # try to display some more user friendly error description
-                    if status.error.startswith('requests.exceptions.ConnectTimeout'):
-                        self.change_label_status.emit('Connection timeout', '')
-                    elif status.error.startswith('requests.exceptions.ConnectionError'):
-                        self.change_label_status.emit('Connection error', '')
-                    elif self.server.status_code in self.server.STATUS_CODES_NO_AUTH or\
-                         self.server.refresh_authentication:
-                        self.change_label_status.emit('Authentication problem', 'critical')
-                    else:
-                        # kick out line breaks to avoid broken status window
-                        self.change_label_status.emit(self.server.status_description.replace('\n', ''), '')
-
-                    # set server error flag, needed for error label in statusbar
-                    self.server.has_error = True
-
-                    # tell statusbar there is some error to display
-                    self.show_error.emit('ERROR')
-
-                # depending on authentication state show reauthentication button
-                if self.server.refresh_authentication:
-                    self.button_authenticate_show.emit()
-                else:
-                    self.button_authenticate_hide.emit()
-
-                # reset counter for this thread
-                self.server.thread_counter = 0
-
-                # if failures have gone and nobody took notice switch notification off again
-                if len([k for k, v in self.server.events_history.items() if v == True]) == 0 and\
-                        statuswindow and \
-                        statuswindow.worker_notification.is_notifying == True and\
-                        statuswindow.worker_notification.notifying_server == self.server.name:
-                    # tell notification that unnoticed problems are gone
-                    self.problems_vanished.emit()
-
-                # tell news about new status available
-                self.new_status.emit()
-
-            # increase thread counter
-            self.server.thread_counter += 1
-
-            # if running flag is still set call myself after 1 second
-            if self.running == True:
-                self.timer.singleShot(1000, self.get_status)
-            else:
-                # tell tableview to finish worker_thread
-                self.finish.emit()
-
-
-        @pyqtSlot(list, str, bool)
-        def fill_rows(self, data, sort_column, reverse):
-            # to keep GTK Treeview sort behaviour first by services
-            first_sort = sorted(data, key=methodcaller('compare_host'))
-            
-            for row, nagitem in enumerate(sorted(first_sort, key=methodcaller('compare_%s' % \
-                                                    (sort_column)), reverse=reverse)):
-
-                # only if tooltips are wanted take status_information for the whole row
-                if conf.show_tooltips:
-                    tooltip = '''<div style=white-space:pre;margin:3px;><b>{0}: {1}</b></div>
-                                 {2}'''.format(nagitem.host,
-                                               nagitem.service,
-                                               nagitem.status_information)
-                else:
-                    tooltip = ''
-
-                # store icon calculations in row_cache to increase painting speed
-                row_cache = list()
-
-                # lists in rows list are columns
-                # create every cell per row
-                for column, text in enumerate(nagitem.get_columns(HEADERS)):
-                    # check for   to be used in cell widget
-                    if column in (0, 1):
-                        # icons to be added
-                        icons = list()
-                        # hash for freshness comparison
-                        hash = nagitem.get_hash()
-                        # add host icons
-                        if nagitem.is_host() and column == 0:
-                            if nagitem.is_acknowledged():
-                                icons.append(ICONS['acknowledged'])
-                            if nagitem.is_flapping():
-                                icons.append(ICONS['flapping'])
-                            if nagitem.is_passive_only():
-                                icons.append(ICONS['passive'])
-                            if nagitem.is_in_scheduled_downtime():
-                                icons.append(ICONS['downtime'])
-                            if hash in self.server.events_history and\
-                                       self.server.events_history[hash] == True:
-                                        icons.append(ICONS['new'])
-                        # add host icons for service item - e.g. in case host is in downtime
-                        elif not nagitem.is_host() and column == 0:
-                            if self.server.hosts[nagitem.host].is_acknowledged():
-                                icons.append(ICONS['acknowledged'])
-                            if self.server.hosts[nagitem.host].is_flapping():
-                                icons.append(ICONS['flapping'])
-                            if self.server.hosts[nagitem.host].is_passive_only():
-                                icons.append(ICONS['passive'])
-                            if self.server.hosts[nagitem.host].is_in_scheduled_downtime():
-                                icons.append(ICONS['downtime'])
-                        # add service icons
-                        elif not nagitem.is_host() and column == 1:
-                            if nagitem.is_acknowledged():
-                                icons.append(ICONS['acknowledged'])
-                            if nagitem.is_flapping():
-                                icons.append(ICONS['flapping'])
-                            if nagitem.is_passive_only():
-                                icons.append(ICONS['passive'])
-                            if nagitem.is_in_scheduled_downtime():
-                                icons.append(ICONS['downtime'])
-                            if hash in self.server.events_history and\
-                                       self.server.events_history[hash] == True:
-                                        icons.append(ICONS['new'])
-                    else:
-                        icons = ICONS_FALSE
-
-                    # store text and icons in cache
-                    row_cache.append({ 'text': text, 'icons': icons})
-
-                # paint cells without extra icon calculation - done before
-                for column in range(len(row_cache)):
-                    # send signal to paint next cell
-                    self.next_cell.emit(row, column, row_cache[column]['text'],
-                                        conf.__dict__[COLORS[nagitem.status] + 'text'],
-                                        conf.__dict__[COLORS[nagitem.status] + 'background'],
-                                        row_cache[column]['icons'],
-                                        tooltip)
-
-                # sleep some milliceconds to let the GUI thread do some work too
-                # still looking for a better solution, but for now let GUI some
-                # time to breathe between every updated row
-                self.thread().msleep(20)
-
-                del(row_cache)
-
-            # after running through
-            self.table_ready.emit()
-
-
-        @pyqtSlot(dict)
-        def acknowledge(self, info_dict):
-            """
-                slot waiting for 'acknowledge' signal from ok button from acknowledge dialog
-                all information about target server, host, service and flags is contained
-                in dictionary 'info_dict'
-            """
-            # because all monitors are connected to this slot we must check which one sent the signal,
-            # otherwise there are several calls and not only one as wanted
-            if self.server == info_dict['server']:
-                # pass dictionary to server's acknowledge machinery
-                self.server.set_acknowledge(info_dict)
-
-
-        @pyqtSlot(dict)
-        def downtime(self, info_dict):
-            """
-                slot waiting for 'downtime' signal from ok button from downtime dialog
-                all information about target server, host, service and flags is contained
-                in dictionary 'info_dict'
-            """
-            # because all monitors are connected to this slot we must check which one sent the signal,
-            # otherwise there are several calls and not only one as wanted
-            if self.server == info_dict['server']:
-                # pass dictionary to server's downtime machinery
-                self.server.set_downtime(info_dict)
-
-
-        @pyqtSlot(dict)
-        def submit(self, info_dict):
-            """
-                slot waiting for 'submit' signal from ok button from submit dialog
-                all information about target server, host, service and flags is contained
-                in dictionary 'info_dict'
-            """
-            # because all monitors are connected to this slot we must check which one sent the signal,
-            # otherwise there are several calls and not only one as wanted
-            if self.server == info_dict['server']:
-                # pass dictionary to server's downtime machinery
-                self.server.set_submit_check_result(info_dict)
-
-
-        @pyqtSlot(dict)
-        def recheck(self, info_dict):
-            """
-                Slot to start server recheck method, getting signal from TableWidget context menu
-            """
-            if conf.debug_mode:
-                # host
-                if info_dict['service'] == '':
-                    self.server.Debug(server=self.server.name, debug='Rechecking host {0}'.format(info_dict['host']))
-                else:
-                    self.server.Debug(server=self.server.name, debug='Rechecking service {0} on host {1}'.format(info_dict['service'], info_dict['host']))
-            # call server recheck method
-            self.server.set_recheck(info_dict)
-
-
-        @pyqtSlot()
-        def recheck_all(self):
-            """
-                call server.set_recheck for every single host/service
-            """
-            # only if no already rechecking
-            if self.rechecking_all == False:
-                # block rechecking
-                self.rechecking_all = True
-                # change label of server vbox
-                self.change_label_status.emit('Rechecking all...', '')
-                if conf.debug_mode:
-                    self.server.Debug(server=self.server.name, debug='Start rechecking all')
-                # special treatment for Check_MK Multisite because there is only one URL call necessary
-                if self.server.type != 'Check_MK Multisite':
-                    # make a copy to preserve hosts/service to recheck - just in case something changes meanwhile
-                    nagitems_filtered = deepcopy(self.server.nagitems_filtered)
-                    for status in nagitems_filtered['hosts'].items():
-                        for host in status[1]:
-                            if conf.debug_mode:
-                                self.server.Debug(server=self.server.name, debug='Rechecking host {0}'.format(host.name))
-                            # call server recheck method
-                            self.server.set_recheck({'host': host.name, 'service': ''})
-                    for status in nagitems_filtered['services'].items():
-                        for service in status[1]:
-                            if conf.debug_mode:
-                                self.server.Debug(server=self.server.name, debug='Rechecking service {0} on host {1}'.format(service.name, service.host))
-                            # call server recheck method
-                            self.server.set_recheck({'host': service.host, 'service': service.name})
-                    del(nagitems_filtered, status)
-                else:
-                    # Check_MK Multisite does it its own way
-                    self.server.recheck_all()
-                # release rechecking lock
-                self.rechecking = False
-                # restore server status label
-                self.restore_label_status.emit()
-            else:
-                if conf.debug_mode:
-                    self.server.Debug(server=self.server.name, debug='Already rechecking all')
-
-        @pyqtSlot(str, str)
-        def get_start_end(self, server_name, host):
-            """
-                Investigates start and end time of a downtime asynchronously
-            """
-            # because every server listens to this signal the name has to be filtered
-            if server_name == self.server.name:
-                start, end = self.server.get_start_end(host)
-                # send start/end time to slot
-                self.set_start_end.emit(start, end)
-
-
-        @pyqtSlot(dict, str)
-        def execute_action(self, action, info):
-            """
-                runs action, may it be custom or included like the Check_MK actions
-            """
-            # first replace placeholder variables in string with actual values
-            #
-            # Possible values for variables:
-            # $HOST$             - host as in monitor
-            # $SERVICE$          - service as in monitor
-            # $MONITOR$          - monitor address - not yet clear what exactly for
-            # $MONITOR-CGI$      - monitor CGI address - not yet clear what exactly for
-            # $ADDRESS$          - address of host, investigated by Server.GetHost()
-            # $STATUS-INFO$      - status information
-            # $USERNAME$         - username on monitor
-            # $PASSWORD$         - username's password on monitor - whatever for
-            # $COMMENT-ACK$      - default acknowledge comment
-            # $COMMENT-DOWN$     - default downtime comment
-            # $COMMENT-SUBMIT$   - default submit check result comment
-
-            try:
-                """
-
-                what?
-
-                # if run as custom action use given action definition from conf, otherwise use for URLs
-                if 'action' in action:
-                    string = action['string']
-                    action_type = self.action.type
-                else:
-                    string = self.string
-                    action_type = self.type
-                """
-                # used for POST request
-                if 'cgi_data' in action:
-                    cgi_data = action['cgi_data']
-                else:
-                    cgi_data = ''
-
-                # mapping of variables and values
-                mapping = { '$HOST$': info['host'],
-                            '$SERVICE$': info['service'],
-                            '$ADDRESS$': info['address'],
-                            '$MONITOR$': info['monitor'],
-                            '$MONITOR-CGI$': info['monitor-cgi'],
-                            '$STATUS-INFO$': info['status-info'],
-                            '$USERNAME$': info['username'],
-                            '$PASSWORD$': info['password'],
-                            '$COMMENT-ACK$': info['comment-ack'],
-                            '$COMMENT-DOWN$': info['comment-down'],
-                            '$COMMENT-SUBMIT$': info['comment-submit'],
-                            }
-
-                # take string form action
-                string = action['string']
-
-                # mapping mapping
-                for i in mapping:
-                    string = string.replace(i, mapping[i])
-
-                # see what action to take
-                if action['type'] == 'browser':
-                    # debug
-                    if conf.debug_mode == True:
-                        self.server.Debug(server=self.server.name, host=self.host, service=self.service, debug='ACTION: BROWSER ' + string)
-                    webbrowser.open(string)
-                elif action['type'] == 'command':
-                    # debug
-                    if conf.debug_mode == True:
-                        self.server.Debug(server=self.server.name, host=self.host, service=self.service, debug='ACTION: COMMAND ' + string)
-                    subprocess.Popen(string, shell=True)
-                elif action['type'] == 'url':
-                    # Check_MK uses transids - if this occurs in URL its very likely that a Check_MK-URL is called
-                    if '$TRANSID$' in string:
-                        transid = servers[info['server']]._get_transid(info['host'], info['service'])
-                        string = string.replace('$TRANSID$', transid).replace(' ', '+')
-                    else:
-                        # make string ready for URL
-                        string = self._URLify(string)
-                    # debug
-                    if conf.debug_mode == True:
-                        self.server.Debug(server=self.server.name, host=self.host, service=self.service, debug='ACTION: URL in background ' + string)
-                    servers[info['server']].FetchURL(string)
-                # used for example by Op5Monitor.py
-                elif action['type'] == 'url-post':
-                    # make string ready for URL
-                    string = self._URLify(string)
-                    # debug
-                    if conf.debug_mode == True:
-                        self.server.Debug(server=self.server.name, host=self.host, service=self.service, debug='ACTION: URL-POST in background ' + string)
-                    servers[info['server']].FetchURL(string, cgi_data=cgi_data, multipart=True)
-            except:
-                import traceback
-                traceback.print_exc(file=sys.stdout)
-
-        def _URLify(self, string):
-            """
-                return a string that fulfills requirements for URLs
-                exclude several chars
-            """
-            return urllib.parse.quote(string, ":/=?&@+")
-
-
-        @pyqtSlot()
-        def unfresh_event_history(self):
-            # set all flagged-as-fresh-events to un-fresh
-            for event in self.server.events_history.keys():
-                self.server.events_history[event] = False
-
-
-    
-
-
 # class Model(QStandardItemModel):
 class Model(QAbstractTableModel):
     """
@@ -3521,7 +2455,7 @@ class Model(QAbstractTableModel):
     data_array_filled = pyqtSignal()
     
     # headers for columns
-    #headers = list(HEADERS.values())
+    # headers = list(HEADERS.values())
 
     # list of lists for storage of status data 
     data_array = list()
@@ -3607,11 +2541,11 @@ class Model(QAbstractTableModel):
             # return(self.server.data[index.row()][index.column()])
 
         elif role == Qt.ForegroundRole:
-            #return(self.data_array[index.row()][COLOR_INDEX['text'][index.column()]])
+            # return(self.data_array[index.row()][COLOR_INDEX['text'][index.column()]])
             return(self.data_array[index.row()][9])
 
         elif role == Qt.BackgroundRole:
-            #return(self.data_array[index.row()][COLOR_INDEX['background'][index.column()]])
+            # return(self.data_array[index.row()][COLOR_INDEX['background'][index.column()]])
             return(self.data_array[index.row()][10])
 
         elif role == Qt.FontRole:
@@ -3671,9 +2605,6 @@ class TreeView(QTreeView):
         self.sort_order = sort_order
         self.server = server
 
-        # no vertical header needed
-        # ##self.verticalHeader().hide()
-
         # no handling of selection by treeview
         self.setSelectionBehavior(QAbstractItemView.SelectRows)
         self.setSelectionMode(QAbstractItemView.SingleSelection)
@@ -3681,13 +2612,9 @@ class TreeView(QTreeView):
         # disable space at the left side
         self.setRootIsDecorated(False)
         self.setIndentation(0)
-        
-        
+                
         self.setUniformRowHeights(True)
 
-        
-        # has to be necessarily false to keep sanity if calculating table height
-        # self.setShowGrid(False)
         # no scrollbars at tables because they will be scrollable by the global vertical scrollbar
         self.setHorizontalScrollBarPolicy(Qt.ScrollBarAlwaysOff)
         self.setVerticalScrollBarPolicy(Qt.ScrollBarAlwaysOff)
@@ -3696,7 +2623,6 @@ class TreeView(QTreeView):
 
         self.sortByColumn(0, Qt.AscendingOrder)
 
-
         self.setSizePolicy(QSizePolicy.Ignored, QSizePolicy.Expanding)
 
         # store width and height if they do not need to be recalculated
@@ -3704,8 +2630,6 @@ class TreeView(QTreeView):
         self.real_height = 0
               
         self.header().setSectionResizeMode(QHeaderView.ResizeToContents)
-        # self.header().setSectionResizeMode(QHeaderView.Fixed)
-        # self.header().setSectionResizeMode(QHeaderView.Stretch)
         
         self.header().setDefaultAlignment(Qt.AlignLeft)
         self.header().setSortIndicatorShown(True)
@@ -3754,9 +2678,9 @@ class TreeView(QTreeView):
         
         # if worker got new status data from monitor server get_status
         # the treeview model has to be updated
-        # self.worker.new_status.connect(self.model().fill_data_array)
         self.worker.data_array_filled.connect(self.model().fill_data_array)   
         
+        # fill array again if data has been sorted after a header column click
         self.worker.data_array_sorted.connect(self.model().fill_data_array)
         
         # tell worker to sort data_array depending on sort_column and sort_order
@@ -3793,6 +2717,7 @@ class TreeView(QTreeView):
         self.is_shown = False
 
     
+    @pyqtSlot()
     def set_font(self):
         """
             change font if it has been changed by settings
@@ -3805,17 +2730,16 @@ class TreeView(QTreeView):
             calculate real table height as there is no method included
         """
         
-        # height summary starts with headers' height
-        # apparently height works better/without scrollbar if some pixels are added
+        self.real_height = 0
         
-
-        # self.real_height = self.horizontalHeader().sizeHint().height() + 2
-        # self.real_height = self.header().sizeHint().height() + 2
-        self.real_height = self.header().sizeHint().height() + 2
-
-        # maybe simply take nagtiems_filtered_count?
-        self.real_height += self.indexRowSizeHint(self.model().index(0, 0)) * self.model().rowCount(self)
-
+        # only count if there is anything to display - there is no use of the headers only
+        if self.model().rowCount(self) > 0:
+            # height summary starts with headers' height
+            # apparently height works better/without scrollbar if some pixels are added
+            self.real_height = self.header().sizeHint().height() + 2
+    
+            # maybe simply take nagitems_filtered_count?
+            self.real_height += self.indexRowSizeHint(self.model().index(0, 0)) * self.model().rowCount(self)   
 
         return self.real_height
     
@@ -4079,7 +3003,6 @@ class TreeView(QTreeView):
                 self.is_shown = False
             # pre-calculate dimensions
             self.real_height = self.get_real_height()
-            ###self.real_width = self.get_real_width()
 
             # tell statusbar it should update
             self.refreshed.emit()
@@ -4098,10 +3021,6 @@ class TreeView(QTreeView):
         # better int() the Qt.* values because they partly seem to be
         # intransmissible
         self.sort_data_array_for_columns.emit(int(sort_column), int(sort_order), True) 
-
-
-    ###def sort_columns_update(self):
-    ###    self.adjust_table()
 
 
     class Worker(QObject):
@@ -4278,28 +3197,25 @@ class TreeView(QTreeView):
                         # add text color as QBrush from status
                         self.data_array[-1].append(QBRUSHES[len(self.data_array) % 2][COLORS[item.status] + 'text'])                       
                         # add background color as QBrush from status
-                        self.data_array[-1].append(QBRUSHES[len(self.data_array) % 2][COLORS[item.status] + 'background'])
-                        # add text color as value for CSS from status
-                        ###self.data_array[-1].append(conf.__dict__[COLORS[item.status] + 'text'])                       
-                        # add background color as value for CSS from status
-                        ###self.data_array[-1].append(conf.__dict__[COLORS[item.status] + 'background'])                                                               
-                        # add text olor name for sorting data
+                        self.data_array[-1].append(QBRUSHES[len(self.data_array) % 2][COLORS[item.status] + 'background'])                                                          
+                        # add text color name for sorting data
                         self.data_array[-1].append(COLORS[item.status] + 'text')                       
                         # add background color name for sorting data 
                         self.data_array[-1].append(COLORS[item.status] + 'background')                                                               
             
-            
+            # sort date befot it gets transmitted to treeviw model
             self.sort_data_array(self.sort_column, self.sort_order, False)
             
+            # give sorted data to model
             self.data_array_filled.emit(self.data_array)           
 
 
         @pyqtSlot(int, int, bool)
-        def sort_data_array(self, sort_column, sort_order, header_clicked= False):          
+        def sort_data_array(self, sort_column, sort_order, header_clicked=False):          
             """
                 sort list of lists in data_array depending on sort criteria
                 used from fill_data_array() and when clicked on table headers
-            """
+            """           
             # store current sort_column and sort_data for next sort actions
             self.sort_column = sort_column
             self.sort_order = sort_order
@@ -4307,8 +3223,10 @@ class TreeView(QTreeView):
             # to keep GTK Treeview sort behaviour first by services
             first_sort = sorted(self.data_array, key=lambda row: row[2].lower(), reverse=self.sort_order)
 
-            # use SORT_COLUMNS from Helpers to sort column accordingly           
-            self.data_array = sorted(first_sort, key=lambda row: SORT_COLUMNS[self.sort_column](row[self.sort_column]), reverse=self.sort_order)
+            # use SORT_COLUMNS from Helpers to sort column accordingly
+            self.data_array = sorted(first_sort,
+                                     key=lambda row: SORT_COLUMNS[SORT_COLUMNS_INDEX[self.sort_column]](row[self.sort_column]),
+                                     reverse=self.sort_order)
 
             # fix alternating colors
             for count, row in enumerate(self.data_array):
@@ -4321,11 +3239,7 @@ class TreeView(QTreeView):
             if header_clicked:
                 self.data_array_sorted.emit(self.data_array)
 
-
             del(first_sort)
-
-
-
 
 
         @pyqtSlot(dict)
@@ -5009,7 +3923,7 @@ class Dialog_Settings(Dialog):
         conf.font = self.font.toString()
         # update global font and icons font
         FONT = self.font       
-        ICONS_FONT = QFont('Nagstamon', FONT.pointSize()+2, QFont.Normal, False)
+        ICONS_FONT = QFont('Nagstamon', FONT.pointSize() + 2, QFont.Normal, False)
         
         # update brushes for treeview
         _create_brushes()
@@ -6391,7 +5305,7 @@ class DBus(QObject):
             self.open_statuswindow.emit()
 
 
-#def _create_icons():
+# def _create_icons():
 #    """
 #        fill global ICONS with pixmaps rendered from SVGs
 #    """
