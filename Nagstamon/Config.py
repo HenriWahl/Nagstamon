@@ -37,7 +37,7 @@ class AppInfo(object):
         contains app information previously located in GUI.py
     """
     NAME = 'Nagstamon'
-    VERSION = '2.0-alpha-20160414'
+    VERSION = '2.0-alpha-20160418'
     WEBSITE = 'https://nagstamon.ifw-dresden.de'
     COPYRIGHT = '©2008-2016 Henri Wahl et al.\nh.wahl@ifw-dresden.de'
     COMMENTS = 'Nagios status monitor for your desktop'
@@ -57,8 +57,9 @@ class Config(object):
         self.update_interval_seconds = 60
         self.short_display = False
         self.long_display = True
-        self.show_grid = True
         self.show_tooltips = True
+        self.show_grid = True        
+        self.grid_use_custom_intensity = False
         self.highlight_new_events = True
         self.default_sort_field = 'status'
         self.default_sort_order = 'descending'

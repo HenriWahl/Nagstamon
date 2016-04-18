@@ -42,7 +42,7 @@
       </sizepolicy>
      </property>
      <property name="currentIndex">
-      <number>1</number>
+      <number>5</number>
      </property>
      <widget class="QWidget" name="tab_servers">
       <attribute name="title">
@@ -316,28 +316,21 @@
             </item>
            </layout>
           </item>
-          <item row="7" column="0" colspan="2">
+          <item row="6" column="0" colspan="2">
            <widget class="QCheckBox" name="input_checkbox_highlight_new_events">
             <property name="text">
              <string>Highlight new events in status details overview</string>
             </property>
            </widget>
           </item>
-          <item row="8" column="0" colspan="2">
+          <item row="7" column="0" colspan="2">
            <widget class="QCheckBox" name="input_checkbox_show_tooltips">
             <property name="text">
              <string>Show tooltips in status details overview</string>
             </property>
            </widget>
           </item>
-          <item row="6" column="0" colspan="2">
-           <widget class="QCheckBox" name="input_checkbox_show_grid">
-            <property name="text">
-             <string>Show color grid in status details overview</string>
-            </property>
-           </widget>
-          </item>
-          <item row="9" column="0">
+          <item row="8" column="0">
            <layout class="QGridLayout" name="gridLayout_15">
             <item row="0" column="1">
              <widget class="QComboBox" name="input_combobox_default_sort_field"/>
@@ -1137,8 +1130,8 @@
          </property>
          <property name="sizeHint" stdset="0">
           <size>
-           <width>0</width>
-           <height>0</height>
+           <width>20</width>
+           <height>40</height>
           </size>
          </property>
         </spacer>
@@ -1149,24 +1142,6 @@
           <string>Set colors for text and background of status information:</string>
          </property>
         </widget>
-       </item>
-       <item row="10" column="0" colspan="3">
-        <layout class="QHBoxLayout" name="horizontalLayout_12">
-         <item>
-          <widget class="QPushButton" name="button_colors_reset">
-           <property name="text">
-            <string>Reset to previous</string>
-           </property>
-          </widget>
-         </item>
-         <item>
-          <widget class="QPushButton" name="button_colors_defaults">
-           <property name="text">
-            <string>Revert to default colors</string>
-           </property>
-          </widget>
-         </item>
-        </layout>
        </item>
        <item row="1" column="0" rowspan="8">
         <widget class="QGroupBox" name="states_groupbox">
@@ -1336,6 +1311,183 @@
            <widget class="QPushButton" name="input_button_color_error_background">
             <property name="text">
              <string/>
+            </property>
+           </widget>
+          </item>
+         </layout>
+        </widget>
+       </item>
+       <item row="10" column="1" colspan="2">
+        <layout class="QHBoxLayout" name="horizontalLayout_12">
+         <item>
+          <widget class="QPushButton" name="button_colors_reset">
+           <property name="text">
+            <string>Reset to previous colors</string>
+           </property>
+          </widget>
+         </item>
+         <item>
+          <widget class="QPushButton" name="button_colors_defaults">
+           <property name="text">
+            <string>Revert to default colors</string>
+           </property>
+          </widget>
+         </item>
+        </layout>
+       </item>
+       <item row="11" column="0" colspan="3">
+        <widget class="QGroupBox" name="groupBox_color_grid">
+         <property name="title">
+          <string>Colored grid</string>
+         </property>
+         <layout class="QGridLayout" name="gridLayout_18">
+          <item row="7" column="1">
+           <widget class="QLabel" name="label_intensity_critical_0">
+            <property name="text">
+             <string>CRITICAL</string>
+            </property>
+            <property name="alignment">
+             <set>Qt::AlignCenter</set>
+            </property>
+           </widget>
+          </item>
+          <item row="10" column="1">
+           <widget class="QLabel" name="label_intensity_unknown_1">
+            <property name="text">
+             <string>UNKNOWN</string>
+            </property>
+            <property name="alignment">
+             <set>Qt::AlignCenter</set>
+            </property>
+           </widget>
+          </item>
+          <item row="3" column="1">
+           <widget class="QLabel" name="label_intensity_ok_0">
+            <property name="text">
+             <string>OK</string>
+            </property>
+            <property name="alignment">
+             <set>Qt::AlignCenter</set>
+            </property>
+           </widget>
+          </item>
+          <item row="5" column="1">
+           <widget class="QLabel" name="label_intensity_warning_0">
+            <property name="text">
+             <string>WARNING</string>
+            </property>
+            <property name="alignment">
+             <set>Qt::AlignCenter</set>
+            </property>
+           </widget>
+          </item>
+          <item row="13" column="1">
+           <widget class="QLabel" name="label_intensity_down_0">
+            <property name="text">
+             <string>DOWN</string>
+            </property>
+            <property name="alignment">
+             <set>Qt::AlignCenter</set>
+            </property>
+           </widget>
+          </item>
+          <item row="14" column="1">
+           <widget class="QLabel" name="label_intensity_down_1">
+            <property name="text">
+             <string>DOWN</string>
+            </property>
+            <property name="alignment">
+             <set>Qt::AlignCenter</set>
+            </property>
+           </widget>
+          </item>
+          <item row="8" column="1">
+           <widget class="QLabel" name="label_intensity_critical_1">
+            <property name="text">
+             <string>CRITICAL</string>
+            </property>
+            <property name="alignment">
+             <set>Qt::AlignCenter</set>
+            </property>
+           </widget>
+          </item>
+          <item row="11" column="1">
+           <widget class="QLabel" name="label_intensity_unreachable_0">
+            <property name="text">
+             <string>UNREACHABLE</string>
+            </property>
+            <property name="alignment">
+             <set>Qt::AlignCenter</set>
+            </property>
+           </widget>
+          </item>
+          <item row="9" column="1">
+           <widget class="QLabel" name="label_intensity_unknown_0">
+            <property name="text">
+             <string>UNKNOWN</string>
+            </property>
+            <property name="alignment">
+             <set>Qt::AlignCenter</set>
+            </property>
+           </widget>
+          </item>
+          <item row="6" column="1">
+           <widget class="QLabel" name="label_intensity_warning_1">
+            <property name="text">
+             <string>WARNING</string>
+            </property>
+            <property name="alignment">
+             <set>Qt::AlignCenter</set>
+            </property>
+           </widget>
+          </item>
+          <item row="12" column="1">
+           <widget class="QLabel" name="label_intensity_unreachable_1">
+            <property name="text">
+             <string>UNREACHABLE</string>
+            </property>
+            <property name="alignment">
+             <set>Qt::AlignCenter</set>
+            </property>
+           </widget>
+          </item>
+          <item row="0" column="0">
+           <widget class="QCheckBox" name="input_checkbox_show_grid">
+            <property name="text">
+             <string>Use alternating colors for better readability</string>
+            </property>
+           </widget>
+          </item>
+          <item row="9" column="0">
+           <widget class="QSlider" name="input_slider_grid_alternation_intensity">
+            <property name="sizePolicy">
+             <sizepolicy hsizetype="Minimum" vsizetype="Fixed">
+              <horstretch>0</horstretch>
+              <verstretch>0</verstretch>
+             </sizepolicy>
+            </property>
+            <property name="orientation">
+             <enum>Qt::Horizontal</enum>
+            </property>
+           </widget>
+          </item>
+          <item row="2" column="0">
+           <widget class="QCheckBox" name="input_checkbox_grid_use_custom_intensity">
+            <property name="enabled">
+             <bool>true</bool>
+            </property>
+            <property name="text">
+             <string>Customize intensity of alternation</string>
+            </property>
+           </widget>
+          </item>
+          <item row="4" column="1">
+           <widget class="QLabel" name="label_intensity_ok_1">
+            <property name="text">
+             <string>OK</string>
+            </property>
+            <property name="alignment">
+             <set>Qt::AlignCenter</set>
             </property>
            </widget>
           </item>
@@ -1584,7 +1736,6 @@
   <tabstop>input_radiobutton_close_details_hover</tabstop>
   <tabstop>input_radiobutton_popup_details_clicking</tabstop>
   <tabstop>input_radiobutton_close_details_clicking</tabstop>
-  <tabstop>input_checkbox_show_grid</tabstop>
   <tabstop>input_checkbox_highlight_new_events</tabstop>
   <tabstop>input_checkbox_show_tooltips</tabstop>
   <tabstop>input_combobox_default_sort_field</tabstop>

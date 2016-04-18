@@ -651,6 +651,9 @@ class _Draggable_Widget(QWidget):
     mouse_pressed = pyqtSignal()
     mouse_released = pyqtSignal()
 
+    # keep state of right button pressed to avoid dragging and
+    # unwanted repositioning of statuswindow
+    right_mouse_button_pressed = False
 
     pyqtSlot(QMenu)
     def set_menu(self, menu):
@@ -672,11 +675,16 @@ class _Draggable_Widget(QWidget):
             1 - left button, move window
             2 - right button, popup menu
         """
-        if event.button() == 1:
+
+        if event.button() == Qt.LeftButton:
             self.mouse_pressed.emit()
-            # keep x and y relative to statusbar
+        if event.button() == Qt.RightButton:
+            self.right_mouse_button_pressed = True
+
+        # keep x and y relative to statusbar
         # if not set calculate relative position
-        if not statuswindow.relative_x and not statuswindow.relative_y:
+        if not statuswindow.relative_x and\
+           not statuswindow.relative_y:
             statuswindow.relative_x = event.globalX() - statuswindow.x()
             statuswindow.relative_y = event.globalY() - statuswindow.y()
 
@@ -685,7 +693,7 @@ class _Draggable_Widget(QWidget):
         """
             decide if moving or menu should be treated after mouse button was released
         """
-        if event.button() == 1:
+        if event.button() == Qt.LeftButton:
             # if popup window should be closed by clicking do it now
             if statuswindow.is_shown and\
                conf.close_details_clicking and\
@@ -699,7 +707,8 @@ class _Draggable_Widget(QWidget):
             statuswindow.relative_y = False
             statuswindow.moving = False
 
-        elif event.button() == 2:
+        if event.button() == Qt.RightButton:
+            self.right_mouse_button_pressed = False    
             self.menu.show_at_cursor()
 
 
@@ -707,7 +716,8 @@ class _Draggable_Widget(QWidget):
         """
             do the moving action
         """
-        if not conf.fullscreen:
+
+        if not conf.fullscreen and not self.right_mouse_button_pressed:
             # lock window as moving
             # if not set calculate relative position
             if not statuswindow.relative_x and not statuswindow.relative_y:
@@ -2568,7 +2578,7 @@ class Model(QAbstractTableModel):
                 return('''<div style=white-space:pre;margin:3px;><b>{0}: {1}</b></div>
                              {2}'''.format(self.data_array[index.row()][0],
                                            self.data_array[index.row()][1],
-                                           self.data_array[index.row()][6]))
+                                           self.data_array[index.row()][8]))
             else:
                 return(DUMMY_QVARIANT)
 
@@ -2689,6 +2699,9 @@ class TreeView(QTreeView):
         
         # if worker got new status data from monitor server get_status the table should be refreshed
         self.worker.new_status.connect(self.refresh)
+        
+        # quit thread if worker has finished
+        self.worker.finish.connect(self.finish_worker_thread)
         
         # get status if started
         self.worker_thread.started.connect(self.worker.get_status)
@@ -3024,6 +3037,17 @@ class TreeView(QTreeView):
         self.sort_data_array_for_columns.emit(int(sort_column), int(sort_order), True) 
 
 
+    @pyqtSlot()
+    def finish_worker_thread(self):
+        """
+            attempt to shutdown thread cleanly
+        """
+        # tell thread to quit
+        self.worker_thread.quit()
+        # wait until thread is really stopped
+        self.worker_thread.wait(2000)
+
+
     class Worker(QObject):
         """
             attempt to run a server status update thread - only needed by table so it is defined here inside table
@@ -3161,7 +3185,7 @@ class TreeView(QTreeView):
             if self.running == True:
                 self.timer.singleShot(1000, self.get_status)
             else:
-                # tell tableview to finish worker_thread
+                # tell treeview to finish worker_thread
                 self.finish.emit()
 
        
@@ -3461,7 +3485,6 @@ class TreeView(QTreeView):
             # set all flagged-as-fresh-events to un-fresh
             for event in self.server.events_history.keys():
                 self.server.events_history[event] = False
-
 
 
 class Dialogs(object):
@@ -3955,7 +3978,7 @@ class Dialog_Settings(Dialog):
             # hide window to avoid laggy GUI - better none than laggy
             statuswindow.hide()
 
-            # tell all tableview threads to stop
+            # tell all treeview threads to stop
             for server_vbox in statuswindow.servers_vbox.children():
                 server_vbox.table.worker.finish.emit()
             # wait until all threads are stopped
@@ -5230,14 +5253,18 @@ class CheckVersion(QObject):
             if latest_version != 'unavailable':
                 if latest_version == AppInfo.VERSION:
                     message = 'You are using the latest version <b>Nagstamon {0}</b>.'.format(AppInfo.VERSION)
-                else:
+                elif latest_version > AppInfo.VERSION:
                     message = 'The new version <b> Nagstamon {0}</b> is available.<p>' \
                               'Get it at <a href={1}>{1}</a>.'.format(latest_version, AppInfo.WEBSITE + '/nagstamon-20')
+                else:
+                    message = ''
 
-            # if run from startup do not cry if any error occured or nothing new is available
-            if check_version.start_mode == False or\
-               (check_version.start_mode == True and latest_version not in ('unavailable', AppInfo.VERSION)):
-                self.ready.emit(message)
+            # check if there is anything to tell
+            if message != '':
+                # if run from startup do not cry if any error occured or nothing new is available
+                if check_version.start_mode == False or\
+                   (check_version.start_mode == True and latest_version not in ('unavailable', AppInfo.VERSION)):
+                    self.ready.emit(message)
 
             # tell thread to finish
             self.finished.emit()
@@ -5395,7 +5422,7 @@ def exit():
     # save configuration
     conf.SaveConfig()
 
-    # tell all tableview threads to stop
+    # tell all treeview threads to stop
     for server_vbox in statuswindow.servers_vbox.children():
         server_vbox.table.worker.finish.emit()
     # wait until all threads are stopped
