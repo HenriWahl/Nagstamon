@@ -657,7 +657,7 @@ class Action(threading.Thread):
                         }
             # mapping mapping
             for i in mapping:
-                string = string.replace(i, mapping[i])
+                string = string.replace(i, urllib.quote_plus(mapping[i]))
 
             # see what action to take
             if action_type == "browser":
