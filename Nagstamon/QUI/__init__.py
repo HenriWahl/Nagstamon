@@ -2462,11 +2462,8 @@ class Model(QAbstractTableModel):
     """
         Model for storing status data to be presented in Treeview-table
     """
-    
+   
     data_array_filled = pyqtSignal()
-    
-    # headers for columns
-    # headers = list(HEADERS.values())
 
     # list of lists for storage of status data 
     data_array = list()
@@ -2480,6 +2477,10 @@ class Model(QAbstractTableModel):
     
     # dummy QModelIndex for dataChanged signal
     dummy_qmodelindex = QModelIndex()
+
+    # tell treeview if flags columns should be hidden or not
+    hosts_flags_column_needed = pyqtSignal(bool)
+    services_flags_column_needed = pyqtSignal(bool)
 
 
     def __init__(self, server, parent=None):     
@@ -2511,9 +2512,8 @@ class Model(QAbstractTableModel):
             return(HEADERS_HEADERS[column])
         
         
-    # ##@pyqtSlot()
-    @pyqtSlot(list)
-    def fill_data_array(self, data_array):
+    @pyqtSlot(list, dict)
+    def fill_data_array(self, data_array, info):
         """
             fill data_array for model
         """
@@ -2525,23 +2525,21 @@ class Model(QAbstractTableModel):
         # first empty the data storage
         del(self.data_array[:])
         
-        # self.data_array = copy.deepcopy(self.server.data_array)
+        # use delivered data array
         self.data_array = data_array
         
-        # for category in ('hosts', 'services'):
-        #    for state in self.server.nagitems_filtered[category].values():
-        #        for host in state:
-        #            self.data_array.append(list(host.get_columns(HEADERS)))
-
+        # cache row_count
         self.row_count = len(self.data_array)
-
+      
+        # tell treeview if flags columns are needed
+        self.hosts_flags_column_needed.emit(info['hosts_flags_column_needed'])
+        self.services_flags_column_needed.emit(info['services_flags_column_needed'])
 
         self.data_array_filled.emit()
 
         # new model applied
         self.endResetModel()
 
-        
 
     def data(self, index, role):
         """
@@ -2679,8 +2677,10 @@ class TreeView(QTreeView):
 
         self.treeview_model = Model(server=self.server, parent=self)
         self.setModel(self.treeview_model)       
-        self.treeview_model.data_array_filled.connect(self.adjust_table)
-      
+        self.model().data_array_filled.connect(self.adjust_table)
+        self.model().hosts_flags_column_needed.connect(self.show_hosts_flags_column)
+        self.model().services_flags_column_needed.connect(self.show_services_flags_column)
+        
         # a thread + worker is necessary to get new monitor server data in the background and
         # to refresh the table cell by cell after new data is available
         self.worker_thread = QThread()
@@ -2737,6 +2737,24 @@ class TreeView(QTreeView):
             change font if it has been changed by settings
         """
         self.setFont(FONT)
+
+
+    @pyqtSlot(bool)
+    def show_hosts_flags_column(self, value):
+        """
+            show hosts flags column if needed
+            'value' is True if there is a need so it has to be converted
+        """
+        self.setColumnHidden(1, not value)
+
+
+    @pyqtSlot(bool)
+    def show_services_flags_column(self, value):
+        """
+            show service flags column if needed
+            'value' is True if there is a need so it has to be converted
+        """
+        self.setColumnHidden(3, not value)
 
 
     def get_real_height(self):
@@ -3091,9 +3109,10 @@ class TreeView(QTreeView):
         show_error = pyqtSignal(str)
         hide_error = pyqtSignal()
         
-        # send to treeview with new data_array
-        data_array_filled = pyqtSignal(list)
+        # sent to treeview with new data_array
+        data_array_filled = pyqtSignal(list, dict)
         
+        # sendt to treeview if data has been sorted by click on column header
         data_array_sorted = pyqtSignal(list)
         
 
@@ -3199,6 +3218,10 @@ class TreeView(QTreeView):
             # first 9 items per row come from current status information
             self.data_array = list()
 
+            # dictionary containing extra info about data_array
+            self.info = {'hosts_flags_column_needed': False,
+                         'services_flags_column_needed': False,}
+            
             # cruising the whole nagitems structure
             for category in ('hosts', 'services'):
                 for state in self.server.nagitems_filtered[category].values():
@@ -3227,12 +3250,18 @@ class TreeView(QTreeView):
                         self.data_array[-1].append(COLORS[item.status] + 'text')                       
                         # add background color name for sorting data 
                         self.data_array[-1].append(COLORS[item.status] + 'background')                                                               
-            
+
+                        # check if hosts and services flags should be shown
+                        if self.data_array[-1][1] != '':
+                            self.info['hosts_flags_column_needed'] = True
+                        if self.data_array[-1][3] != '':
+                            self.info['services_flags_column_needed'] = True
+
             # sort date befot it gets transmitted to treeviw model
             self.sort_data_array(self.sort_column, self.sort_order, False)
             
             # give sorted data to model
-            self.data_array_filled.emit(self.data_array)           
+            self.data_array_filled.emit(self.data_array, self.info)           
 
 
         @pyqtSlot(int, int, bool)
