@@ -134,7 +134,6 @@ HEADERS = OrderedDict([('host', {'header': 'Host',
                                                'column': 8})])
 
 # various headers-key-columns variations needed in different parts
-
 HEADERS_HEADERS = list()
 for item in HEADERS.values():
     HEADERS_HEADERS.append(item['header'])  
@@ -2513,7 +2512,7 @@ class Model(QAbstractTableModel):
         
         
     @pyqtSlot(list, dict)
-    def fill_data_array(self, data_array, info):
+    def fill_data_array(self, data_array, info=None):
         """
             fill data_array for model
         """
@@ -2532,8 +2531,9 @@ class Model(QAbstractTableModel):
         self.row_count = len(self.data_array)
       
         # tell treeview if flags columns are needed
-        self.hosts_flags_column_needed.emit(info['hosts_flags_column_needed'])
-        self.services_flags_column_needed.emit(info['services_flags_column_needed'])
+        if info != None:
+            self.hosts_flags_column_needed.emit(info['hosts_flags_column_needed'])
+            self.services_flags_column_needed.emit(info['services_flags_column_needed'])
 
         self.data_array_filled.emit()
 
@@ -3220,7 +3220,7 @@ class TreeView(QTreeView):
 
             # dictionary containing extra info about data_array
             self.info = {'hosts_flags_column_needed': False,
-                         'services_flags_column_needed': False,}
+                         'services_flags_column_needed': False, }
             
             # cruising the whole nagitems structure
             for category in ('hosts', 'services'):
@@ -3738,9 +3738,23 @@ class Dialog_Settings(Dialog):
                             self.ui.input_checkbox_notification_action_critical : [self.ui.input_lineedit_notification_action_critical_string],
                             self.ui.input_checkbox_notification_action_down : [self.ui.input_lineedit_notification_action_down_string],
                             self.ui.input_checkbox_notification_action_ok : [self.ui.input_lineedit_notification_action_ok_string],
-
                             # single custom notification action
-                            self.ui.input_checkbox_notification_custom_action : [self.ui.notification_custom_action_groupbox]
+                            self.ui.input_checkbox_notification_custom_action : [self.ui.notification_custom_action_groupbox],
+                            # customized color alternation
+                            self.ui.input_checkbox_show_grid : [self.ui.input_checkbox_grid_use_custom_intensity],
+                            self.ui.input_checkbox_grid_use_custom_intensity : [
+                                                                self.ui.input_slider_grid_alternation_intensity,
+                                                                self.ui.label_intensity_warning_0,
+                                                                self.ui.label_intensity_warning_1,
+                                                                self.ui.label_intensity_critical_0,
+                                                                self.ui.label_intensity_critical_1,
+                                                                self.ui.label_intensity_down_0,
+                                                                self.ui.label_intensity_down_1,
+                                                                self.ui.label_intensity_unreachable_0,
+                                                                self.ui.label_intensity_unreachable_1,
+                                                                self.ui.label_intensity_unknown_0,
+                                                                self.ui.label_intensity_unknown_1
+                                                                ]
                             }
 
         # set title to current version
@@ -3819,6 +3833,9 @@ class Dialog_Settings(Dialog):
 
         # finally map signals with .sender() - [<type>] is important!
         self.signalmapper_colors.mapped[str].connect(self.color_chooser)
+        
+        # connect slider to alternating colors
+        self.ui.input_slider_grid_alternation_intensity.valueChanged.connect(self.change_color_alternation)
 
         # apply toggle-dependencies between checkboxes as certain widgets
         self.toggle_toggles()
@@ -3833,17 +3850,17 @@ class Dialog_Settings(Dialog):
                 if widget.startswith('input_checkbox_'):
                     if conf.__dict__[widget.split('input_checkbox_')[1]] == True:
                         self.ui.__dict__[widget].toggle()
-                if widget.startswith('input_radiobutton_'):
+                elif widget.startswith('input_radiobutton_'):
                     if conf.__dict__[widget.split('input_radiobutton_')[1]] == True:
                         self.ui.__dict__[widget].toggle()
-                if widget.startswith('input_lineedit_'):
+                elif widget.startswith('input_lineedit_'):
                     # older versions of Nagstamon have a bool value for custom_action_separator
                     # which leads to a crash here - thus str() to solve this
                     self.ui.__dict__[widget].setText(str(conf.__dict__[widget.split('input_lineedit_')[1]]))
-                if widget.startswith('input_spinbox_'):
+                elif widget.startswith('input_spinbox_'):
                     self.ui.__dict__[widget].setValue(int(conf.__dict__[widget.split('input_spinbox_')[1]]))
-
-        # just for fun: compare the next lines with the corresponding GTK madness... :-)
+                elif widget.startswith('input_slider_'):
+                    self.ui.__dict__[widget].setValue(int(conf.__dict__[widget.split('input_slider_')[1]]))
 
         # fill default order fields combobox with headers names
         # kick out empty headers for hosts and services flags
@@ -3853,6 +3870,7 @@ class Dialog_Settings(Dialog):
         # now former fourth item has index 2
         sort_fields.pop(2)
         self.ui.input_combobox_default_sort_field.addItems(sort_fields)
+        # catch exception which will occur when older settings are used which have real header names as values
         try:
             self.ui.input_combobox_default_sort_field.setCurrentText(HEADERS_KEYS_HEADERS[conf.default_sort_field])
         except:
@@ -3879,8 +3897,10 @@ class Dialog_Settings(Dialog):
         # select first item
         self.ui.list_actions.setCurrentRow(0)
 
-        # paint colors onto color selection buttons
+        # paint colors onto color selection buttons and alternation example
         self.paint_colors()
+        self.paint_color_alternation()
+        self.change_color_alternation(conf.grid_alternation_intensity)
 
         # important final size adjustment
         self.window.adjustSize()
@@ -3938,15 +3958,17 @@ class Dialog_Settings(Dialog):
         for widget in self.ui.__dict__.values():
             if widget.objectName().startswith('input_checkbox_'):
                 conf.__dict__[widget.objectName().split('input_checkbox_')[1]] = widget.isChecked()
-            if widget.objectName().startswith('input_radiobutton_'):
+            elif widget.objectName().startswith('input_radiobutton_'):
                 conf.__dict__[widget.objectName().split('input_radiobutton_')[1]] = widget.isChecked()
-            if widget.objectName().startswith("input_lineedit_"):
+            elif widget.objectName().startswith("input_lineedit_"):
                 conf.__dict__[widget.objectName().split('input_lineedit_')[1]] = widget.text()
-            if widget.objectName().startswith('input_spinbox_'):
+            elif widget.objectName().startswith('input_spinbox_'):
                 conf.__dict__[widget.objectName().split('input_spinbox_')[1]] = str(widget.value())
-            if widget.objectName().startswith('input_combobox_'):
+            elif widget.objectName().startswith('input_slider_'):
+                conf.__dict__[widget.objectName().split('input_slider_')[1]] = str(widget.value())
+            elif widget.objectName().startswith('input_combobox_'):
                 conf.__dict__[widget.objectName().split('input_combobox_')[1]] = widget.currentText()
-            if widget.objectName().startswith('input_button_color_'):
+            elif widget.objectName().startswith('input_button_color_'):
                 # get color value from color button stylesheet
                 color = self.ui.__dict__[widget.objectName()].styleSheet()
                 color = color.split(':')[1].strip().split(';')[0]
@@ -4289,7 +4311,7 @@ class Dialog_Settings(Dialog):
             self.ui.__dict__[label].setStyleSheet('color: %s; background: %s' % 
                                                   (conf.__dict__['color_%s_text' % (status)],
                                                   (conf.__dict__['color_%s_background' % (status)])))
-
+   
 
     @pyqtSlot()
     def colors_defaults(self):
@@ -4319,6 +4341,7 @@ class Dialog_Settings(Dialog):
             self.ui.__dict__[label].setStyleSheet('color: %s; background: %s' % 
                                                   (color_text, color_background))
 
+
     @pyqtSlot(str)
     def color_chooser(self, item):
         """
@@ -4341,11 +4364,78 @@ class Dialog_Settings(Dialog):
             background = self.ui.__dict__['input_button_color_%s_background' % (status)].styleSheet()
             background = background.split(':')[1].strip().split(';')[0]
             # set example color
-            self.ui.__dict__['label_color_%s' % (status)].setStyleSheet('''color: %s;
-                                                                           background: %s'''
-                                                                           % (text, background))
+            self.ui.__dict__['label_color_%s' % (status)].setStyleSheet('''color: {0};
+                                                                           background: {1}
+                                                                        '''.format(text, background))
+            # update alternation colors
+            self.paint_color_alternation()
+            self.change_color_alternation(self.ui.input_slider_grid_alternation_intensity.value())
 
 
+    def paint_color_alternation(self):
+        """
+            paint the intensity example color labels taking actual colors from color
+            chooser buttons
+            this labels have the color of alteration level 0 aka default
+        """
+        for state in COLORS:
+            # get text color from button CSS
+            text = self.ui.__dict__['input_button_color_{0}_text'\
+                                    .format(state.lower())]\
+                                    .styleSheet()\
+                                    .split(';\n')[0].split(': ')[1]
+            # get background color from button CSS
+            background = self.ui.__dict__['input_button_color_{0}_background'\
+                                          .format(state.lower())]\
+                                          .styleSheet()\
+                                          .split(';\n')[0].split(': ')[1]
+            # set CSS
+            self.ui.__dict__['label_intensity_{0}_0'.format(state.lower())]\
+                            .setStyleSheet('''color: {0};
+                                              background-color: {1};
+                                              padding-top: 3px;
+                                              padding-bottom: 3px;
+                                              '''.format(text, background))
+        
+
+    @pyqtSlot(int)
+    def change_color_alternation(self, value):
+        """
+            fill alteration level 1 labels with altered color
+            derived from level 0 labels aka default
+        """
+        for state in COLORS:       
+            # access both labels 
+            label_0 = self.ui.__dict__['label_intensity_{0}_0'.format(state.lower())]
+            label_1 = self.ui.__dict__['label_intensity_{0}_1'.format(state.lower())]          
+            
+            # get baxckground of level 0 label
+            background = label_0.palette().color(QPalette.Window)
+            r, g, b, a = background.getRgb()
+
+            # if label background is too dark lighten the color instead of darken it mor
+            if background.lightness() < 30:
+                if value > 5:
+                    r += 30
+                    g += 30
+                    b += 30 
+                r = round(r/100 * (100 + value))
+                g = round(g/100 * (100 + value))
+                b = round(b/100 * (100 + value))
+            else:
+                r = round(r/100 * (100 - value))
+                g = round(g/100 * (100 - value))
+                b = round(b/100 * (100 - value))               
+
+            # finally apply new background color
+            # easier with style sheets than with QPalette/QColor
+            label_1.setStyleSheet('''color: {0};
+                                     background-color: rgb({1}, {2}, {3});
+                                     padding-top: 3px;
+                                     padding-bottom: 3px;
+                                  '''.format(conf.__dict__['color_{0}_text'.format(state.lower())],
+                                             r, g, b))
+        
     @pyqtSlot()
     def font_chooser(self):
         """
@@ -4358,7 +4448,7 @@ class Dialog_Settings(Dialog):
     @pyqtSlot()
     def font_default(self):
         """
-            reset font to default font which was valod when Nagstamon was launched
+            reset font to default font which was valid when Nagstamon was launched
         """
         self.ui.label_font.setFont(DEFAULT_FONT)
         self.font = DEFAULT_FONT
@@ -5376,6 +5466,13 @@ def _create_brushes():
     """
         fill static brushes with current colors for treeview
     """
+    # if not customized usse default intensity
+    if conf.grid_use_custom_intensity:
+        intensity = 100 + conf.grid_alternation_intensity
+    else:
+        intensity = 125
+    
+    # every state has 2 labels in both alteration levels 0 and 1
     for state in STATES[1:]:
         for role in ('text', 'background'):
             QBRUSHES[0][COLORS[state] + role] = QColor(conf.__dict__[COLORS[state] + role])              
@@ -5385,13 +5482,14 @@ def _create_brushes():
             if role == 'background' and conf.show_grid:
                 if QBRUSHES[0][COLORS[state] + role].lightness() < 30:
                     r, g, b, a = (QBRUSHES[0][COLORS[state] + role].getRgb())
-                    r += 20
-                    g += 20
-                    b += 20
-                    QBRUSHES[1][COLORS[state] + role] = QColor(r, g, b).lighter(120) 
+                    r += 30
+                    g += 30
+                    b += 30                  
+                    QBRUSHES[1][COLORS[state] + role] = QColor(r, g, b).lighter(intensity) 
                 else:
                     # otherwise just make it a little bit darker
-                    QBRUSHES[1][COLORS[state] + role] = QColor(conf.__dict__[COLORS[state] + role]).darker(120) 
+                    QBRUSHES[1][COLORS[state] + role] = QColor(conf.__dict__[COLORS[state] +\
+                                                                             role]).darker(intensity) 
             else:
                 # only make background darker; text should stay as it is
                 QBRUSHES[1][COLORS[state] + role] = QBRUSHES[0][COLORS[state] + role]

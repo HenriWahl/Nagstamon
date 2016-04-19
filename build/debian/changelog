@@ -1,9 +1,8 @@
-nagstamon (2.0-alpha-20160415) unstable; urgency=low
-
+nagstamon (2.0-alpha-20160419
   * New upstream
    - ported to Qt5
 
- -- Henri Wahl <h.wahl@ifw-dresden.de>  Fri, 15 Apr 2016 12:00:00 +0200
+ -- Henri Wahl <h.wahl@ifw-dresden.de>  Tue, 19 Apr 2016 15:00:00 +0200
 
 nagstamon (1.0.1) stable; urgency=low
 
