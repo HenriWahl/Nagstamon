@@ -112,8 +112,8 @@ class IcingaWeb2Server(GenericServer):
             aboutraw = result.result
 
         aboutsoup = BeautifulSoup(aboutraw, 'html.parser')
-        div=aboutsoup.find('div', id='about')
-        dd=div.findNext('dd')
+        div = aboutsoup.find('div', id='about')
+        dd = div.findNext('dd')
         self.version = dd.contents[0].strip()
 
 
@@ -191,8 +191,10 @@ class IcingaWeb2Server(GenericServer):
                         self.new_hosts[host_name].name = host_name
                         self.new_hosts[host_name].server = self.name
                         self.new_hosts[host_name].status = self.STATES_MAPPING['hosts'][int(h['host_state'])]
-                        self.new_hosts[host_name].last_check = datetime.datetime.utcfromtimestamp(int(h['host_last_check']))
-                        duration = datetime.datetime.now() - datetime.datetime.utcfromtimestamp(int(h['host_last_state_change']))
+                        # self.new_hosts[host_name].last_check = datetime.datetime.utcfromtimestamp(int(h['host_last_check']))
+                        self.new_hosts[host_name].last_check = datetime.datetime.fromtimestamp(int(h['host_last_check']))
+                        # duration = datetime.datetime.now() - datetime.datetime.utcfromtimestamp(int(h['host_last_state_change']))
+                        duration = datetime.datetime.now() - datetime.datetime.fromtimestamp(int(h['host_last_state_change']))
                         self.new_hosts[host_name].duration = strfdelta(duration, '{days}d {hours}h {minutes}m {seconds}s')
                         self.new_hosts[host_name].attempt = h['host_attempt']
                         self.new_hosts[host_name].status_information = h['host_output'].replace('\n', ' ').strip()
@@ -272,8 +274,10 @@ class IcingaWeb2Server(GenericServer):
                         self.new_hosts[host_name].services[service_name].name = service_name
                         self.new_hosts[host_name].services[service_name].server = self.name
                         self.new_hosts[host_name].services[service_name].status = self.STATES_MAPPING['services'][int(s['service_state'])]
-                        self.new_hosts[host_name].services[service_name].last_check = datetime.datetime.utcfromtimestamp(int(s['service_last_check']))
-                        duration = datetime.datetime.now() - datetime.datetime.utcfromtimestamp(int(s['service_last_state_change']))
+                        # self.new_hosts[host_name].services[service_name].last_check = datetime.datetime.utcfromtimestamp(int(s['service_last_check']))
+                        self.new_hosts[host_name].services[service_name].last_check = datetime.datetime.fromtimestamp(int(s['service_last_check']))
+                        # duration = datetime.datetime.now() - datetime.datetime.utcfromtimestamp(int(s['service_last_state_change']))
+                        duration = datetime.datetime.now() - datetime.datetime.fromtimestamp(int(s['service_last_state_change']))
                         self.new_hosts[host_name].services[service_name].duration = strfdelta(duration, '{days}d {hours}h {minutes}m {seconds}s')
                         self.new_hosts[host_name].services[service_name].attempt = s['service_attempt']
                         self.new_hosts[host_name].services[service_name].status_information = s['service_output'].replace('\n', ' ').strip()
