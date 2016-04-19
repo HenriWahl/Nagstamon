@@ -1946,16 +1946,17 @@ class StatusBar(QWidget):
             self.labels_invert.connect(self.color_labels[state].invert)
             self.labels_reset.connect(self.color_labels[state].reset)
 
-        # derive logo dimensions from status label
-        self.logo = NagstamonLogo('%s%snagstamon_logo_bar.svg' % (RESOURCES, os.sep),
-                            self.color_labels['OK'].fontMetrics().height(),
-                            self.color_labels['OK'].fontMetrics().height(),
-                            parent=parent)
 
         # label for error message(s)
         self.label_message = StatusBarLabel('error', parent=parent)
         self.labels_invert.connect(self.label_message.invert)
         self.labels_reset.connect(self.label_message.reset)
+
+        # derive logo dimensions from status label
+        self.logo = NagstamonLogo('%s%snagstamon_logo_bar.svg' % (RESOURCES, os.sep),
+                            self.color_labels['OK'].fontMetrics().height(),
+                            self.color_labels['OK'].fontMetrics().height(),
+                            parent=parent)
 
         # add widgets
         self.hbox.addWidget(self.logo)
@@ -2066,6 +2067,11 @@ class StatusBar(QWidget):
                 height = label.fontMetrics().height()
 
         self.label_message.setFont(FONT)
+
+        # absolutely silly but no other cure in sight
+        # strange miscalculation of nagstamon logo on MacOSX
+        if platform.system() == 'Darwin' and 18 <= height <= 24:
+            height += 1
 
         # adjust logo size to fit to label size
         self.logo.adjust_size(height, height)
