@@ -60,7 +60,7 @@ class Config(object):
         self.show_tooltips = True
         self.show_grid = True        
         self.grid_use_custom_intensity = False
-        self.grid_alternation_intensity = 25
+        self.grid_alternation_intensity = 10
         self.highlight_new_events = True
         self.default_sort_field = 'status'
         self.default_sort_order = 'descending'

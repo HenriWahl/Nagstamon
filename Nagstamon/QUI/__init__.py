@@ -273,7 +273,7 @@ class SystemTrayIcon(QSystemTrayIcon):
         Qt5 shows an empty icon in GNOME3
     """
 
-    show_menu = pyqtSignal()
+    ###show_menu = pyqtSignal()
 
     show_popwin = pyqtSignal()
     hide_popwin = pyqtSignal()
@@ -297,6 +297,9 @@ class SystemTrayIcon(QSystemTrayIcon):
         # store icon for flashing
         self.current_icon = None
 
+        # no menu at first
+        self.menu = None
+
         # timer for singleshots for flashing
         self.timer = QTimer()
 
@@ -312,9 +315,13 @@ class SystemTrayIcon(QSystemTrayIcon):
         """
             create current menu for right clicks
         """
+        # store menu for future use, especially for MacOSX
+        self.menu = menu
+
         # MacOSX does not distinguish between left and right click so menu will go to upper menu bar
+        # update: apparently not, but own context menu will be shown when icon is clicked an all is OK = green
         if platform.system() != 'Darwin':
-            self.setContextMenu(menu)
+            self.setContextMenu(self.menu)
 
 
     @pyqtSlot()
@@ -364,8 +371,13 @@ class SystemTrayIcon(QSystemTrayIcon):
                 self.hide_popwin.emit()
             else:
                 self.show_popwin.emit()
-        elif event == QSystemTrayIcon.Context and platform.system() == 'Windows':
-            self.show_menu.emit()
+
+            # when green icon is displayed and no popwin is about to po up show at least menu in MacOX
+            if get_worst_status() == 'UP' and platform.system() == 'Darwin':
+                self.menu.show_at_cursor()
+
+        ###elif event == QSystemTrayIcon.Context and platform.system() == 'Windows':
+        ###    self.show_menu.emit()
 
 
     @pyqtSlot()
@@ -376,7 +388,7 @@ class SystemTrayIcon(QSystemTrayIcon):
         if self.error_shown == False:
             worst_status = get_worst_status()
             self.setIcon(self.icons[worst_status])
-            # set current icon for flshing
+            # set current icon for flashing
             self.current_icon = self.icons[worst_status]
             del(worst_status)
         else:
