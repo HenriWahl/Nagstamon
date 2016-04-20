@@ -2013,7 +2013,7 @@ class StatusBar(QWidget):
                 label.adjustSize()
                 all_numbers += label.number
 
-        if all_numbers == 0 and not get_errors() and not  self.label_message.isVisible():
+        if all_numbers == 0 and not get_errors() and not self.label_message.isVisible():
             self.color_labels['OK'].show()
             self.color_labels['OK'].adjustSize()
         else:
@@ -2595,7 +2595,7 @@ class Model(QAbstractTableModel):
             if conf.show_tooltips:
                 return('''<div style=white-space:pre;margin:3px;><b>{0}: {1}</b></div>
                              {2}'''.format(self.data_array[index.row()][0],
-                                           self.data_array[index.row()][1],
+                                           self.data_array[index.row()][2],
                                            self.data_array[index.row()][8]))
             else:
                 return(DUMMY_QVARIANT)

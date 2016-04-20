@@ -130,7 +130,7 @@ def create_server(server=None):
     new_server.proxy_password = server.proxy_password
 
     # if password is not to be saved ask for it at startup
-    if (server.enabled == "True" and server.save_password == "False" and server.use_autologin == "False"):
+    if (server.enabled == True and server.save_password == False and server.use_autologin == False):
         new_server.refresh_authentication = True
 
     # access to thread-safe debug queue
