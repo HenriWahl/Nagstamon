@@ -273,7 +273,7 @@ class SystemTrayIcon(QSystemTrayIcon):
         Qt5 shows an empty icon in GNOME3
     """
 
-    ###show_menu = pyqtSignal()
+    # ##show_menu = pyqtSignal()
 
     show_popwin = pyqtSignal()
     hide_popwin = pyqtSignal()
@@ -376,8 +376,8 @@ class SystemTrayIcon(QSystemTrayIcon):
             if get_worst_status() == 'UP' and platform.system() == 'Darwin':
                 self.menu.show_at_cursor()
 
-        ###elif event == QSystemTrayIcon.Context and platform.system() == 'Windows':
-        ###    self.show_menu.emit()
+        # ##elif event == QSystemTrayIcon.Context and platform.system() == 'Windows':
+        # ##    self.show_menu.emit()
 
 
     @pyqtSlot()
@@ -1083,6 +1083,9 @@ class StatusWindow(QWidget):
 
             # without parent there is some flickering when starting
             server_vbox = ServerVBox(server, parent=self)
+
+            # important to set correct server to worker, especially after server changes
+            server_vbox.table.worker.server = server
 
             # connect to global resize signal
             server_vbox.table.ready_to_resize.connect(self.adjust_size)
@@ -1958,15 +1961,15 @@ class StatusBar(QWidget):
                             self.color_labels['OK'].fontMetrics().height(),
                             parent=parent)
 
-        # add widgets
+        # add logo
         self.hbox.addWidget(self.logo)
-        self.hbox.addWidget(self.color_labels['OK'])
 
         # label for error messages
         self.hbox.addWidget(self.label_message)
         self.label_message.hide()
 
         # add state labels
+        self.hbox.addWidget(self.color_labels['OK'])
         for state in COLORS:
             self.hbox.addWidget(self.color_labels[state])
 
@@ -2010,8 +2013,7 @@ class StatusBar(QWidget):
                 label.adjustSize()
                 all_numbers += label.number
 
-        # ##if all_numbers == 0 and not self.message_shown:
-        if all_numbers == 0 and not get_errors():
+        if all_numbers == 0 and not get_errors() and not  self.label_message.isVisible():
             self.color_labels['OK'].show()
             self.color_labels['OK'].adjustSize()
         else:
@@ -2634,7 +2636,8 @@ class TreeView(QTreeView):
 
         # no handling of selection by treeview
         self.setSelectionBehavior(QAbstractItemView.SelectRows)
-        self.setSelectionMode(QAbstractItemView.SingleSelection)
+        #self.setSelectionMode(QAbstractItemView.SingleSelection)
+        self.setSelectionMode(QAbstractItemView.NoSelection)
         
         # disable space at the left side
         self.setRootIsDecorated(False)
@@ -2672,11 +2675,8 @@ class TreeView(QTreeView):
         # set overall margin and hover colors - to be refined
         self.setStyleSheet('''QTreeView::item {margin: 5px;}
                               QTreeView::item:hover {margin: 0px;
-                                                     background-color: grey;}
-                              QTreeView::item:selected {margin: 0px;
-                                                        background-color: grey;}
-                              QTreeView::item:selected:active {margin: 0px;
-                                                               background-color: grey;}
+                                                     color: white;
+                                                     background-color: dimgrey;}
                            ''')
 
         # set application font
@@ -3154,7 +3154,6 @@ class TreeView(QTreeView):
             
             # if counter is at least update interval get status
             if self.server.thread_counter >= conf.update_interval_seconds:
-               
                 
                 # reflect status retrieval attempt on server vbox label
                 self.change_label_status.emit('Refreshing...', '')
@@ -4437,13 +4436,13 @@ class Dialog_Settings(Dialog):
                     r += 30
                     g += 30
                     b += 30 
-                r = round(r/100 * (100 + value))
-                g = round(g/100 * (100 + value))
-                b = round(b/100 * (100 + value))
+                r = round(r / 100 * (100 + value))
+                g = round(g / 100 * (100 + value))
+                b = round(b / 100 * (100 + value))
             else:
-                r = round(r/100 * (100 - value))
-                g = round(g/100 * (100 - value))
-                b = round(b/100 * (100 - value))               
+                r = round(r / 100 * (100 - value))
+                g = round(g / 100 * (100 - value))
+                b = round(b / 100 * (100 - value))               
 
             # finally apply new background color
             # easier with style sheets than with QPalette/QColor
@@ -4694,6 +4693,7 @@ class Dialog_Server(Dialog):
             conf.servers[self.server_conf.name] = self.server_conf
 
             # add new server instance to global servers dict
+
             servers[self.server_conf.name] = create_server(self.server_conf)
 
             if self.server_conf.enabled == True:
@@ -5506,7 +5506,7 @@ def _create_brushes():
                     QBRUSHES[1][COLORS[state] + role] = QColor(r, g, b).lighter(intensity) 
                 else:
                     # otherwise just make it a little bit darker
-                    QBRUSHES[1][COLORS[state] + role] = QColor(conf.__dict__[COLORS[state] +\
+                    QBRUSHES[1][COLORS[state] + role] = QColor(conf.__dict__[COLORS[state] + \
                                                                              role]).darker(intensity) 
             else:
                 # only make background darker; text should stay as it is

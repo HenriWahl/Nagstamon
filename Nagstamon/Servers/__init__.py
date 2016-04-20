@@ -61,7 +61,7 @@ def register_server(server):
 def get_enabled_servers():
     """
         list of enabled servers which connections outside should be used to check
-    """
+    """    
     return([x for x in servers.values() if x.enabled == True])
 
 
@@ -102,6 +102,7 @@ def get_errors():
     for server in get_enabled_servers():
         if server.has_error:
             return True
+            break
 
     # return default value
     return False
@@ -119,7 +120,7 @@ def create_server(server=None):
     new_server.monitor_url = server.monitor_url
     new_server.monitor_cgi_url = server.monitor_cgi_url
     # add resources, needed for auth dialog
-    #new_server.Resources = resources
+    # new_server.Resources = resources
     new_server.username = server.username
     new_server.password = server.password
     new_server.use_proxy = server.use_proxy
@@ -129,11 +130,11 @@ def create_server(server=None):
     new_server.proxy_password = server.proxy_password
 
     # if password is not to be saved ask for it at startup
-    if (server.enabled == "True" and server.save_password == "False" and server.use_autologin == "False" ):
+    if (server.enabled == "True" and server.save_password == "False" and server.use_autologin == "False"):
         new_server.refresh_authentication = True
 
     # access to thread-safe debug queue
-    #new_server.debug_queue = debug_queue
+    # new_server.debug_queue = debug_queue
 
     # Special FX
     # Centreon
