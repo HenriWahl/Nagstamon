@@ -78,13 +78,11 @@ class CentreonServer(GenericServer):
 
 
     def init_HTTP(self):
-        '''
+        """
         initialize HTTP connection
-        '''
-        if self.HTTPheaders == {}:
-	    
+        """
+        if self.session == None:
             GenericServer.init_HTTP(self)
-
 
     def reset_HTTP(self):
         '''
@@ -265,7 +263,7 @@ class CentreonServer(GenericServer):
                 self.Debug(server=self.get_name(), debug = 'Could not detect host/service status version. Using Centreon_Broker')
         # some cleanup
         del result, error
-	
+
 
     def _get_host_id(self, host):
         '''
@@ -364,7 +362,7 @@ class CentreonServer(GenericServer):
         try:
             result = self.FetchURL(nagcgiurl_hosts, giveback='xml')
             xmlobj, error = result.result, result.error
-	   
+
             if error != '': return Result(result=copy.deepcopy(xmlobj), error=copy.deepcopy(error))
 
             # in case there are no children session id is invalid
@@ -459,7 +457,7 @@ class CentreonServer(GenericServer):
                 return Result(result=xmlobj_meta, error=copy.deepcopy(error_meta))
             # INSERT META-services xml at the end of the services xml
             try:
-                    xmlobj.append(xmlobj_meta.reponse )
+                    xmlobj.append(xmlobj_meta.reponse)
             except:
                     import traceback
                     traceback.print_exc(file=sys.stdout)
@@ -491,7 +489,7 @@ class CentreonServer(GenericServer):
                         # //----- META SERVICES -----
                         # if it is a meta-service, add the 'sdl' fild in parenthesis after the service name. ( used in _set_acknowledge() and _set_recheck() ) :
                         if self.new_hosts[str(l.hn.text)].services[str(l.sd.text)].host == '_Module_Meta':
-                            self.new_hosts[str(l.hn.text)].services[str(l.sd.text)].name = '{} ({})'.format( 
+                            self.new_hosts[str(l.hn.text)].services[str(l.sd.text)].name = '{} ({})'.format(
                                                                                                                     self.new_hosts[str(l.hn.text)].services[str(l.sd.text)].name,
                                                                                                                     l.rsd.text
                             )
@@ -658,25 +656,25 @@ class CentreonServer(GenericServer):
             elif service == '':
                 # ... it can only be a host, get the service associated to this host
                 url_service = self.monitor_cgi_url + '/include/monitoring/status/Services/' + self.XML_NDO + '/serviceXML.php?' + urllib.parse.urlencode({'num':0,\
-				     'limit':20,\
-				     'sort_type':'last_state_change',\
-				     'order':'ASC',\
-				     'p':'20215',\
+                     'limit':20,\
+                     'sort_type':'last_state_change',\
+                     'order':'ASC',\
+                     'p':'20215',\
                      'o':'svc_unhandled',\
-				     'search_host':host,\
-				     'sid':self.SID})
-        result = self.FetchURL(url_service, giveback='xml')
-        xmlobj, error = result.result, result.error
-		
-		for l in xmlobj.findAll('l'):
-		    try:
-			service = l.sd.text
-		    except:
-			result, error = self.Error(sys.exc_info())
-			return Result(result=result, error=error)
+                     'search_host':host,\
+                     'sid':self.SID})
+                result = self.FetchURL(url_service, giveback='xml')
+                xmlobj, error = result.result, result.error
 
-		# get the id of the host and the service
-		host_id, service_id = self._get_host_and_service_id(host, service)
+                for l in xmlobj.findAll('l'):
+                    try:
+                        service = l.sd.text
+                    except:
+                        result, error = self.Error(sys.exc_info())
+                        return Result(result=result, error=error)
+
+                # get the id of the host and the service
+                host_id, service_id = self._get_host_and_service_id(host, service)
                 # fill and encode CGI data
                 cgi_data = urllib.parse.urlencode({'cmd':'host_schedule_check', 'actiontype':1,\
                                              'host_id':host_id, 'service_id':service_id, 'sid':self.SID})
@@ -691,7 +689,7 @@ class CentreonServer(GenericServer):
                 cgi_data = urllib.parse.urlencode({'cmd':'service_schedule_check', 'actiontype':1,\
                                              'host_id':host_id, 'service_id':service_id, 'sid':self.SID})
 
-		
+
                 url = self.monitor_cgi_url + '/include/monitoring/objectDetails/xml/serviceSendCommand.php?' + cgi_data
                 del host_id, service_id
 
@@ -742,12 +740,11 @@ class CentreonServer(GenericServer):
                 # debug
                 if conf.debug_mode == True:
                     self.Debug(server=self.get_name(), host=host, service=service, debug=self.monitor_cgi_url + '/main.php?' + cgi_data)
-
-	    url = self.monitor_cgi_url + '/main.php?' + cgi_data
+                    url = self.monitor_cgi_url + '/main.php?' + cgi_data
 
             # running remote cgi command
             #raw = self.FetchURL(self.monitor_cgi_url + '/main.php?' + cgi_data, giveback='raw')
-	    raw = self.FetchURL(url, giveback='raw')
+            raw = self.FetchURL(url, giveback='raw')
             del raw
         except:
             self.Error(sys.exc_info())
@@ -765,7 +762,7 @@ class CentreonServer(GenericServer):
             if str(self.conf.debug_mode) == 'True':
                 self.Debug(server=self.get_name(), debug='Old SID: ' + self.SID + ' ' + str(self.Cookie))
 	    # close the connections to avoid the accumulation of sessions on Centreon
-	    url_disconnect = self.monitor_cgi_url + '/index.php?disconnect=1'
+            url_disconnect = self.monitor_cgi_url + '/index.php?disconnect=1'
             raw = self.FetchURL(url_disconnect, giveback='raw')
             del raw
 
