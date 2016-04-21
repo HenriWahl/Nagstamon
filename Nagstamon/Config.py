@@ -338,7 +338,7 @@ class Config(object):
                     if len(servers[server].__dict__['autologin_key']) > 0:
                         servers[server].autologin_key = self.DeObfuscate(servers[server].autologin_key)
 
-                # only needed for those who used Icinga2 before it became icingaWeb2
+                # only needed for those who used Icinga2 before it became IcingaWeb2
                 if servers[server].type == 'Icinga2':
                     servers[server].type = 'IcingaWeb2'
 
@@ -351,7 +351,7 @@ class Config(object):
 
     def LoadMultipleConfig(self, settingsdir, setting, configobj):
         """
-        load generic config into settings dict and return to central config
+            load generic config into settings dict and return to central config
         """
         # defaults as empty dict in case settings dir/files could not be found
         settings = OrderedDict()
@@ -669,10 +669,8 @@ class Config(object):
     def _LegacyAdjustments(self):
         # mere cosmetics but might be more clear for future additions - changing any "nagios"-setting to "monitor"
         for s in self.servers.values():
-            # ##if s.__dict__.has_key("nagios_url"):
             if 'nagios_url' in s.__dict__.keys():
                 s.monitor_url = s.nagios_url
-            # ##if s.__dict__.has_key("nagios_cgi_url"):
             if 'nagios_cgi_url' in s.__dict__.keys():
                 s.monitor_cgi_url = s.nagios_cgi_url
 
@@ -691,6 +689,12 @@ class Config(object):
                 self.icon_in_systray = True
             self.__dict__.pop('statusbar_systray')
 
+        # some legacy action settings might need a little fix
+        for action in self.actions.values():
+            if not action.type.lower() in ('browser', 'command', 'url'):
+                # set browser as default to make user notice something is wrong
+                action.type = 'browser'
+        
 
     def GetNumberOfEnabledMonitors(self):
         """

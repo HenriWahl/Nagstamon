@@ -1100,7 +1100,7 @@ class StatusWindow(QWidget):
 
             # show error message in statusbar
             server_vbox.table.worker.show_error.connect(self.statusbar.set_error)
-            server_vbox.table.worker.new_status.connect(self.raise_window_on_all_desktops)
+            ###server_vbox.table.worker.new_status.connect(self.raise_window_on_all_desktops)
             server_vbox.table.worker.hide_error.connect(self.statusbar.reset_error)
 
             # show error icon in systray
@@ -1303,7 +1303,6 @@ class StatusWindow(QWidget):
                         deskid = self.ewmh.getCurrentDesktop()
                         self.ewmh.setWmDesktop(winid, deskid)
                         self.ewmh.display.flush()
-
                         # makes the window manager switch to the desktop where this widget has appeared
                         self.raise_()
 
@@ -1652,12 +1651,12 @@ class StatusWindow(QWidget):
         """
             experimental workaround for floating-statusbar-only-on-one-virtual-desktop-after-a-while bug
             see https://github.com/HenriWahl/Nagstamon/issues/217
-        """
+        """        
         # X11/Linux needs some special treatment to get the statusbar floating on all virtual desktops
-        if not platform.system() in NON_LINUX:
+        if not platform.system() in NON_LINUX:           
             # get all windows...
             winid = self.winId().__int__()
-            self.ewmh.setWmDesktop(winid, 0xffffffff)
+            self.ewmh.setWmDesktop(winid, 0xffffffff)           
             self.ewmh.display.flush()
 
 
@@ -1784,7 +1783,8 @@ class StatusWindow(QWidget):
                     if worst_status_diff in STATES_SOUND:
                         if conf.notification_default_sound:
                             # default .wav sound files are in resources folder
-                            sound_file = '{0}{1}{2}.wav'.format(RESOURCES, os.sep, worst_status_diff.lower())
+                            #sound_file = '{0}{1}{2}.wav'.format(RESOURCES, os.sep, worst_status_diff.lower())
+                            sound_file = '{0}{1}{2}.ogg'.format(RESOURCES, os.sep, worst_status_diff.lower())
                         elif conf.notification_custom_sound:
                             sound_file = conf.__dict__['notification_custom_sound_{0}'.format(worst_status_diff.lower())]
 
@@ -3909,10 +3909,10 @@ class Dialog_Settings(Dialog):
         self.ui.list_servers.setCurrentRow(0)
 
         # fill actions listwidget with actions
-        for action in sorted(conf.actions, key=str.lower):
-            self.ui.list_actions.addItem(action)
+        self.fill_list(self.ui.list_actions, conf.actions)
+                       
         # select first item
-        self.ui.list_actions.setCurrentRow(0)
+        self.ui.list_actions.setCurrentRow(0)       
 
         # paint colors onto color selection buttons and alternation example
         self.paint_colors()
@@ -4889,7 +4889,7 @@ class Dialog_Action(Dialog):
             # add edited  or new/copied action
             conf.actions[self.action_conf.name] = self.action_conf
 
-            # refresh list of servers, give call the current server name to highlight it
+            # refresh list of actions, give call the current action name to highlight it
             dialogs.settings.refresh_list(list_widget=dialogs.settings.ui.list_actions,
                                           list_conf=conf.actions,
                                           current=self.action_conf.name)
