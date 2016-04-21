@@ -1783,8 +1783,7 @@ class StatusWindow(QWidget):
                     if worst_status_diff in STATES_SOUND:
                         if conf.notification_default_sound:
                             # default .wav sound files are in resources folder
-                            #sound_file = '{0}{1}{2}.wav'.format(RESOURCES, os.sep, worst_status_diff.lower())
-                            sound_file = '{0}{1}{2}.ogg'.format(RESOURCES, os.sep, worst_status_diff.lower())
+                            sound_file = '{0}{1}{2}.wav'.format(RESOURCES, os.sep, worst_status_diff.lower())
                         elif conf.notification_custom_sound:
                             sound_file = conf.__dict__['notification_custom_sound_{0}'.format(worst_status_diff.lower())]
 
@@ -4289,7 +4288,7 @@ class Dialog_Settings(Dialog):
 
             # tell mediaplayer to play file only if it exists
             if mediaplayer.set_media(file) == True:
-                mediaplayer.play.emit()
+                mediaplayer.play()
 
         return(decoration_function)
 
