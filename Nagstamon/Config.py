@@ -28,16 +28,29 @@ import zlib
 import datetime
 from collections import OrderedDict
 
-from Nagstamon.Helpers import (debug_queue,
-                               BOOLPOOL,
-                               NON_LINUX)
+#from Nagstamon.Helpers import (debug_queue,
+#                               BOOLPOOL,
+#                               NON_LINUX)
+
+global debug_queue
+
+# temporary dict for string-to-bool-conversion
+# the bool:bool relations are thought to make things easier in Dialog_Settings.ok()
+BOOLPOOL = {'False': False,
+            'True': True,
+            False: False,
+            True: True}
+
+# needed when OS-specific decisions have to be made, mostly Linux/non-Linux
+NON_LINUX = ('Darwin', 'Windows')
+
 
 class AppInfo(object):
     """
         contains app information previously located in GUI.py
     """
     NAME = 'Nagstamon'
-    VERSION = '2.0-alpha-20160420'
+    VERSION = '2.0-alpha-20160422'
     WEBSITE = 'https://nagstamon.ifw-dresden.de'
     COPYRIGHT = '©2008-2016 Henri Wahl et al.\nh.wahl@ifw-dresden.de'
     COMMENTS = 'Nagios status monitor for your desktop'
@@ -90,6 +103,9 @@ class Config(object):
         self.connect_by_host = True
         self.connect_by_dns = False
         self.connect_by_ip = False
+        self.use_default_browser = True
+        self.use_custom_browser = False
+        self.custom_browser = ''
         self.debug_mode = False
         self.debug_to_file = False
         self.debug_file = os.path.expanduser('~') + os.sep + "nagstamon.log"

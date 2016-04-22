@@ -29,7 +29,6 @@ except:
 import sys
 import socket
 import copy
-import webbrowser
 import datetime
 import traceback
 import platform
@@ -41,7 +40,7 @@ from Nagstamon.Helpers import (host_is_filtered_out_by_re,
                                StatusInformationIsFilteredOutByRE,
                                CriticalityIsFilteredOutByRE,
                                not_empty,
-                               debug_queue,
+                               webbrowser_open,
                                STATES)
 
 from Nagstamon.Objects import (GenericService,
@@ -51,6 +50,8 @@ from Nagstamon.Objects import (GenericService,
 from Nagstamon.Config import (conf, AppInfo)
 
 from collections import OrderedDict
+
+global debug_queue
 
 
 class GenericServer(object):
@@ -487,7 +488,7 @@ class GenericServer(object):
             self.Debug(server=self.get_name(), host=host, service=service,
                        debug='Open host/service monitor web page ' + self.monitor_cgi_url + '/extinfo.cgi?' + urllib.parse.urlencode(
                            {'type': typ, 'host': host, 'service': service}))
-        webbrowser.open(self.monitor_cgi_url + '/extinfo.cgi?' + urllib.parse.urlencode(
+        webbrowser_open(self.monitor_cgi_url + '/extinfo.cgi?' + urllib.parse.urlencode(
             {'type': typ, 'host': host, 'service': service}))
 
 
@@ -499,7 +500,7 @@ class GenericServer(object):
         if conf.debug_mode:
             self.Debug(server=self.get_name(),
                        debug='Open monitor web page ' + self.monitor_cgi_url)
-        webbrowser.open(self.monitor_url)
+        webbrowser_open(self.monitor_url)
 
 
     def _get_status(self):

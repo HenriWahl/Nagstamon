@@ -21,11 +21,10 @@ import sys
 import json
 import urllib
 import time
-import webbrowser
 
 from datetime import datetime
 
-#from Nagstamon.Helpers import
+from Nagstamon.Helpers import webbrowser_open
 from Nagstamon.Objects import (GenericHost, GenericService, Result)
 from Nagstamon.Servers.Generic import GenericServer
 
@@ -261,7 +260,7 @@ class Op5MonitorServer(GenericServer):
             url = "%s/monitor/index.php/extinfo/details?host=%s" % (self.monitor_url, host)
         else:
             url = "%s/monitor/index.php/extinfo/details?host=%s&service=%s" % (self.monitor_url, host, service)
-        webbrowser.open(url)
+        webbrowser_open(url)
 
 
     def get_start_end(self, host):

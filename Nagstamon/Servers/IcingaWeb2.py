@@ -36,13 +36,14 @@ import sys
 import copy
 import json
 import datetime
-import webbrowser
-from bs4 import BeautifulSoup
-from Nagstamon.Objects import (GenericHost, GenericService, Result)
-from Nagstamon.Config import (conf, AppInfo)
 
-# from Nagstamon.Helpers import not_empty
-# from collections import OrderedDict
+from bs4 import BeautifulSoup
+from Nagstamon.Objects import (GenericHost,
+                               GenericService,
+                               Result)
+from Nagstamon.Config import (conf,
+                              AppInfo)
+from Nagstamon.Helpers import webbrowser_open
 
 
 def strfdelta(tdelta, fmt):
@@ -515,4 +516,4 @@ class IcingaWeb2Server(GenericServer):
         if conf.debug_mode:
             self.Debug(server=self.get_name(), host=host, service=service,
                        debug='Open host/service monitor web page {0}'.format(url))
-        webbrowser.open(url)
+        webbrowser_open(url)

@@ -22,7 +22,6 @@
 import os
 import os.path
 import urllib.parse
-import webbrowser
 import subprocess
 import sys
 import platform
@@ -44,6 +43,8 @@ from Nagstamon.Config import (conf,
                               Server,
                               Action,
                               RESOURCES,
+                              BOOLPOOL,
+                              NON_LINUX,
                               AppInfo)
 
 from Nagstamon.Servers import (SERVER_TYPES,
@@ -55,12 +56,13 @@ from Nagstamon.Servers import (SERVER_TYPES,
                                get_errors)
 
 from Nagstamon.Helpers import (is_found_by_re,
-                               debug_queue,
+                               webbrowser_open,
                                STATES,
                                STATES_SOUND,
-                               BOOLPOOL,
-                               NON_LINUX,
                                SORT_COLUMNS)
+
+global debug_queue
+
 # dialogs
 from Nagstamon.QUI.settings_main import Ui_settings_main
 from Nagstamon.QUI.settings_server import Ui_settings_server
@@ -594,7 +596,7 @@ class PushButton_BrowserURL(QPushButton):
             self.server.Debug(server=self.server.get_name(), debug='Open {0} web page {1}'.format(self.url_type, url))
 
         # use Python method to open browser
-        webbrowser.open(url)
+        webbrowser_open(url)
 
         # hide statuswindow to get screen space for browser
         if not conf.fullscreen:
@@ -640,7 +642,7 @@ class ComboBox_Servers(QComboBox):
         """
         if self.currentText() in servers:
             # open webbrowser with server URL
-            webbrowser.open(servers[self.currentText()].monitor_url)
+            webbrowser_open(servers[self.currentText()].monitor_url)
 
             # hide window to make room for webbrowser
             self.monitor_opened.emit()
@@ -3487,7 +3489,7 @@ class TreeView(QTreeView):
                     # debug
                     if conf.debug_mode == True:
                         self.server.Debug(server=self.server.name, host=self.host, service=self.service, debug='ACTION: BROWSER ' + string)
-                    webbrowser.open(string)
+                    webbrowser_open(string)
                 elif action['type'] == 'command':
                     # debug
                     if conf.debug_mode == True:
@@ -3556,6 +3558,13 @@ class Dialogs(object):
         # downtime dialog for miserable item context menu
         self.downtime = Dialog_Downtime(Ui_dialog_downtime)
         self.downtime.initialize()
+        
+        # open defaults settings on button click
+        self.downtime.ui.button_change_defaults_downtime.clicked.connect(self.settings.show_defaults)
+        self.downtime.ui.button_change_defaults_downtime.clicked.connect(self.downtime.window.close)
+        self.acknowledge.ui.button_change_defaults_acknowledge.clicked.connect(self.settings.show_defaults)
+        self.acknowledge.ui.button_change_defaults_acknowledge.clicked.connect(self.acknowledge.window.close)
+
 
         # downtime dialog for miserable item context menu
         self.submit = Dialog_Submit(Ui_dialog_submit)
@@ -3569,7 +3578,6 @@ class Dialogs(object):
         self.server_missing = Dialog_Server_missing(Ui_dialog_server_missing)
         self.server_missing.initialize()
         # open server creation dialog
-        # self.server_missing.ui.button_create_server.clicked.connect(self.server.new)
         self.server_missing.ui.button_create_server.clicked.connect(self.settings.show_new_server)
         self.server_missing.ui.button_enable_server.clicked.connect(self.settings.show)
 
@@ -3770,7 +3778,10 @@ class Dialog_Settings(Dialog):
                                                                 self.ui.label_intensity_unreachable_1,
                                                                 self.ui.label_intensity_unknown_0,
                                                                 self.ui.label_intensity_unknown_1
-                                                                ]
+                                                                ],
+                            self.ui.input_radiobutton_use_custom_browser : [self.ui.groupbox_custom_browser,
+                                                                            self.ui.input_lineedit_custom_browser,
+                                                                            self.ui.button_choose_browser]
                             }
 
         # set title to current version
@@ -3812,6 +3823,8 @@ class Dialog_Settings(Dialog):
         self.ui.button_play_critical.clicked.connect(self.play_sound_file_critical)
         self.ui.button_play_down.clicked.connect(self.play_sound_file_down)
 
+
+
         # only show desktop notification on systems that support it
         if not dbus_connection.connected:
             self.ui.input_checkbox_notification_desktop.hide()
@@ -3831,6 +3844,13 @@ class Dialog_Settings(Dialog):
         self.ui.button_choose_down.setIcon(self.ui.button_play_warning.style().standardIcon(QStyle.SP_DirIcon))
         self.ui.button_play_down.setText('')
         self.ui.button_play_down.setIcon(self.ui.button_play_warning.style().standardIcon(QStyle.SP_MediaPlay))
+
+        # set browser file chooser icon and current custom browser path
+        self.ui.button_choose_browser.setText('')
+        self.ui.button_choose_browser.setIcon(self.ui.button_play_warning.style().standardIcon(QStyle.SP_DirIcon))
+        self.ui.input_lineedit_custom_browser.setText(conf.custom_browser)
+        # connect choose browser button with file dialog
+        self.ui.button_choose_browser.clicked.connect(self.choose_browser_executable)
 
         # QSignalMapper needed to connect all color buttons to color dialogs
         self.signalmapper_colors = QSignalMapper()
@@ -3950,6 +3970,14 @@ class Dialog_Settings(Dialog):
             opens filters settings after clicking button_filters in toparea
         """
         self.show(tab=2)
+
+
+    @pyqtSlot()
+    def show_defaults(self):
+        """
+            opens default settings after clicking button in acknowledge/downtime dialog
+        """
+        self.show(tab=6)
 
 
     def  ok(self):
@@ -4250,7 +4278,7 @@ class Dialog_Settings(Dialog):
                                                                 'All files (*)')[0]
 
             # only take filename if QFileDialog gave something useful back
-            if file != "":
+            if file != '':
                 widget.setText(file)
 
         return(decoration_function)
@@ -4472,8 +4500,35 @@ class Dialog_Settings(Dialog):
 
     @pyqtSlot()
     def button_check_for_new_version_clicked(self):
-        # at this point start_mode for version check is definitifely False
+        """
+            at this point start_mode for version check is definitively False
+        """
         self.check_for_new_version.emit(False, self.window)
+
+
+    @pyqtSlot()
+    def choose_browser_executable(self):
+        """
+            shopw dialog for selection of non-default browser
+        """
+        # present dialog with OS-specific sensible defaults
+        if platform.system() == 'Windows':
+            filter = 'Executables (*.exe *.EXE);; All files (*)'
+            directory = os.environ['ProgramFiles']
+        elif platform.system() == 'Darwin':
+            filter = ''
+            directory = '/Applications'
+        else:
+            filter = ''
+            directory = '/usr/bin'
+            
+        file = dialogs.file_chooser.getOpenFileName(self.window,
+                                                    directory=directory,
+                                                    filter=filter)[0]
+
+        # only take filename if QFileDialog gave something useful back
+        if file != '':
+            self.ui.input_lineedit_custom_browser.setText(file)
 
 
 class Dialog_Server(Dialog):
@@ -5008,7 +5063,18 @@ class Dialog_Downtime(Dialog):
         self.ui.input_spinbox_duration_minutes.setValue(int(conf.defaults_downtime_duration_minutes))
         self.ui.input_radiobutton_type_fixed.setChecked(conf.defaults_downtime_type_fixed)
         self.ui.input_radiobutton_type_flexible.setChecked(conf.defaults_downtime_type_flexible)
+        
+        # hide/show downtime settings according to typw
+        self.ui.input_radiobutton_type_fixed.clicked.connect(self.set_type_fixed)
+        self.ui.input_radiobutton_type_flexible.clicked.connect(self.set_type_flexible)
 
+        # show or hide widgets for time settings
+        if self.ui.input_radiobutton_type_fixed.isChecked():
+            self.set_type_fixed()
+        else:
+            self.set_type_flexible()
+
+        # empty times at start, will be filled by set_start_end
         self.ui.input_lineedit_start_time.setText('n/a')
         self.ui.input_lineedit_end_time.setText('n/a')
 
@@ -5051,6 +5117,40 @@ class Dialog_Downtime(Dialog):
         self.ui.input_lineedit_start_time.setText(start)
         self.ui.input_lineedit_end_time.setText(end)
 
+
+    pyqtSlot()
+    def set_type_fixed(self):
+        """
+            enable/disable appropriate widgets if type is "Fixed"
+        """
+        #self.ui.label_start_time.show()
+        #self.ui.label_end_time.show()
+        #self.ui.input_lineedit_start_time.show()
+        #self.ui.input_lineedit_end_time.show()
+        
+        self.ui.label_duration.hide()
+        self.ui.label_duration_hours.hide()
+        self.ui.label_duration_minutes.hide()
+        self.ui.input_spinbox_duration_hours.hide()
+        self.ui.input_spinbox_duration_minutes.hide()
+        
+
+    pyqtSlot()
+    def set_type_flexible(self):
+        """
+            enable/disable appropriate widgets if type is "Flexible"
+        """
+        #self.ui.label_start_time.hide()
+        #self.ui.label_end_time.hide()
+        #self.ui.input_lineedit_start_time.hide()
+        #self.ui.input_lineedit_end_time.hide()
+        
+        self.ui.label_duration.show()
+        self.ui.label_duration_hours.show()
+        self.ui.label_duration_minutes.show()
+        self.ui.input_spinbox_duration_hours.show()
+        self.ui.input_spinbox_duration_minutes.show()
+        
 
 class Dialog_Submit(Dialog):
     """

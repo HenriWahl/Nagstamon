@@ -20,8 +20,6 @@
 # for python2 and upcomping python3 compatiblity
 from __future__ import print_function, absolute_import, unicode_literals
 
-from Nagstamon.Helpers import UnifiedMachineSortableDate
-
 
 STATES = ['WARNING', 'UNKNOWN', 'CRITICAL', 'UNREACHABLE', 'DOWN']
 
@@ -117,35 +115,6 @@ class GenericObject(object):
         """
         for c in columns_wanted:
             yield str(self.__dict__[c])
-
-
-    # the following methods are used for sorted + methodcaller
-    def compare_host(self):
-        return self.host.lower()
-
-
-    def compare_service(self):
-        return self.service.lower()
-
-
-    def compare_status(self):
-        return STATES.index(self.status)
-
-
-    def compare_last_check(self):
-        return UnifiedMachineSortableDate(self.last_check)
-
-
-    def compare_duration(self):
-        return UnifiedMachineSortableDate(self.duration)
-
-
-    def compare_attempt(self):
-        return self.attempt
-
-
-    def compare_status_information(self):
-        return self.status_information
 
 
 class GenericHost(GenericObject):

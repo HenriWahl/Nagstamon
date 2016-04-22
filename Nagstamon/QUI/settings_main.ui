@@ -7,7 +7,7 @@
    <rect>
     <x>0</x>
     <y>0</y>
-    <width>727</width>
+    <width>601</width>
     <height>974</height>
    </rect>
   </property>
@@ -42,7 +42,7 @@
       </sizepolicy>
      </property>
      <property name="currentIndex">
-      <number>5</number>
+      <number>6</number>
      </property>
      <widget class="QWidget" name="tab_servers">
       <attribute name="title">
@@ -703,6 +703,25 @@
        <string>Actions</string>
       </attribute>
       <layout class="QGridLayout" name="gridLayout_6">
+       <item row="0" column="0">
+        <widget class="QListWidget" name="list_actions">
+         <property name="sizePolicy">
+          <sizepolicy hsizetype="MinimumExpanding" vsizetype="MinimumExpanding">
+           <horstretch>0</horstretch>
+           <verstretch>0</verstretch>
+          </sizepolicy>
+         </property>
+         <property name="minimumSize">
+          <size>
+           <width>0</width>
+           <height>400</height>
+          </size>
+         </property>
+         <property name="resizeMode">
+          <enum>QListView::Adjust</enum>
+         </property>
+        </widget>
+       </item>
        <item row="0" column="2">
         <layout class="QVBoxLayout" name="verticalLayout_4">
          <item>
@@ -778,26 +797,7 @@
          </layout>
         </widget>
        </item>
-       <item row="0" column="0">
-        <widget class="QListWidget" name="list_actions">
-         <property name="sizePolicy">
-          <sizepolicy hsizetype="MinimumExpanding" vsizetype="MinimumExpanding">
-           <horstretch>0</horstretch>
-           <verstretch>0</verstretch>
-          </sizepolicy>
-         </property>
-         <property name="minimumSize">
-          <size>
-           <width>0</width>
-           <height>400</height>
-          </size>
-         </property>
-         <property name="resizeMode">
-          <enum>QListView::Adjust</enum>
-         </property>
-        </widget>
-       </item>
-       <item row="2" column="0">
+       <item row="3" column="0">
         <spacer name="verticalSpacer_8">
          <property name="orientation">
           <enum>Qt::Vertical</enum>
@@ -809,6 +809,48 @@
           </size>
          </property>
         </spacer>
+       </item>
+       <item row="2" column="0">
+        <widget class="QGroupBox" name="groupbox_browser">
+         <property name="title">
+          <string>Browser:</string>
+         </property>
+         <layout class="QVBoxLayout" name="verticalLayout_14">
+          <item>
+           <widget class="QRadioButton" name="input_radiobutton_use_default_browser">
+            <property name="text">
+             <string>Use default browser</string>
+            </property>
+           </widget>
+          </item>
+          <item>
+           <widget class="QRadioButton" name="input_radiobutton_use_custom_browser">
+            <property name="text">
+             <string>Use alternative browser</string>
+            </property>
+           </widget>
+          </item>
+          <item>
+           <widget class="QGroupBox" name="groupbox_custom_browser">
+            <property name="title">
+             <string>Custom browser:</string>
+            </property>
+            <layout class="QGridLayout" name="gridLayout_19">
+             <item row="0" column="0">
+              <widget class="QLineEdit" name="input_lineedit_custom_browser"/>
+             </item>
+             <item row="0" column="1">
+              <widget class="QPushButton" name="button_choose_browser">
+               <property name="text">
+                <string>Choose browser...</string>
+               </property>
+              </widget>
+             </item>
+            </layout>
+           </widget>
+          </item>
+         </layout>
+        </widget>
        </item>
       </layout>
      </widget>
@@ -1146,7 +1188,7 @@
        <item row="1" column="0" rowspan="8">
         <widget class="QGroupBox" name="states_groupbox">
          <property name="title">
-          <string>Status</string>
+          <string>Status:</string>
          </property>
          <layout class="QVBoxLayout" name="verticalLayout_11">
           <item>
@@ -1204,7 +1246,7 @@
        <item row="1" column="1" rowspan="8">
         <widget class="QGroupBox" name="text_groupbox">
          <property name="title">
-          <string>Text</string>
+          <string>Text:</string>
          </property>
          <layout class="QVBoxLayout" name="verticalLayout_8">
           <item>
@@ -1262,7 +1304,7 @@
        <item row="1" column="2" rowspan="8">
         <widget class="QGroupBox" name="background_groupbox">
          <property name="title">
-          <string>Background</string>
+          <string>Background:</string>
          </property>
          <layout class="QVBoxLayout" name="verticalLayout_12">
           <item>
@@ -1338,7 +1380,7 @@
        <item row="11" column="0" colspan="3">
         <widget class="QGroupBox" name="groupBox_color_grid">
          <property name="title">
-          <string>Colored grid</string>
+          <string>Colored grid:</string>
          </property>
          <layout class="QGridLayout" name="gridLayout_18">
           <item row="0" column="0">
@@ -1579,7 +1621,70 @@
             </item>
            </layout>
           </item>
-          <item>
+         </layout>
+        </widget>
+       </item>
+       <item>
+        <widget class="QGroupBox" name="label_defaults_downtime">
+         <property name="title">
+          <string>Downtime:</string>
+         </property>
+         <layout class="QGridLayout" name="gridLayout_10">
+          <item row="3" column="0">
+           <widget class="QLabel" name="label_defaults_downtime_comment">
+            <property name="text">
+             <string>Comment:</string>
+            </property>
+           </widget>
+          </item>
+          <item row="1" column="0">
+           <widget class="QLabel" name="label_defaults_duration_comment">
+            <property name="text">
+             <string>Duration:</string>
+            </property>
+           </widget>
+          </item>
+          <item row="3" column="1">
+           <widget class="QLineEdit" name="input_lineedit_defaults_downtime_comment"/>
+          </item>
+          <item row="1" column="1">
+           <layout class="QHBoxLayout" name="horizontalLayout_8">
+            <item>
+             <widget class="QSpinBox" name="input_spinbox_defaults_downtime_duration_hours"/>
+            </item>
+            <item>
+             <widget class="QLabel" name="label_duration_hour">
+              <property name="text">
+               <string>hours</string>
+              </property>
+             </widget>
+            </item>
+            <item>
+             <widget class="QSpinBox" name="input_spinbox_defaults_downtime_duration_minutes"/>
+            </item>
+            <item>
+             <widget class="QLabel" name="label_duration_minutes">
+              <property name="text">
+               <string>minutes</string>
+              </property>
+             </widget>
+            </item>
+            <item>
+             <spacer name="horizontalSpacer_4">
+              <property name="orientation">
+               <enum>Qt::Horizontal</enum>
+              </property>
+              <property name="sizeHint" stdset="0">
+               <size>
+                <width>40</width>
+                <height>20</height>
+               </size>
+              </property>
+             </spacer>
+            </item>
+           </layout>
+          </item>
+          <item row="0" column="0" colspan="2">
            <layout class="QGridLayout" name="gridLayout_9">
             <item row="1" column="1">
              <widget class="QRadioButton" name="input_radiobutton_defaults_downtime_type_flexible">
@@ -1604,69 +1709,6 @@
             </item>
             <item row="0" column="2">
              <spacer name="horizontalSpacer_2">
-              <property name="orientation">
-               <enum>Qt::Horizontal</enum>
-              </property>
-              <property name="sizeHint" stdset="0">
-               <size>
-                <width>40</width>
-                <height>20</height>
-               </size>
-              </property>
-             </spacer>
-            </item>
-           </layout>
-          </item>
-         </layout>
-        </widget>
-       </item>
-       <item>
-        <widget class="QGroupBox" name="label_defaults_downtime">
-         <property name="title">
-          <string>Downtime:</string>
-         </property>
-         <layout class="QGridLayout" name="gridLayout_10">
-          <item row="2" column="0">
-           <widget class="QLabel" name="label_defaults_downtime_comment">
-            <property name="text">
-             <string>Comment:</string>
-            </property>
-           </widget>
-          </item>
-          <item row="0" column="0">
-           <widget class="QLabel" name="label_defaults_duration_comment">
-            <property name="text">
-             <string>Duration:</string>
-            </property>
-           </widget>
-          </item>
-          <item row="2" column="1">
-           <widget class="QLineEdit" name="input_lineedit_defaults_downtime_comment"/>
-          </item>
-          <item row="0" column="1">
-           <layout class="QHBoxLayout" name="horizontalLayout_8">
-            <item>
-             <widget class="QSpinBox" name="input_spinbox_defaults_downtime_duration_hours"/>
-            </item>
-            <item>
-             <widget class="QLabel" name="label_duration_hour">
-              <property name="text">
-               <string>hours</string>
-              </property>
-             </widget>
-            </item>
-            <item>
-             <widget class="QSpinBox" name="input_spinbox_defaults_downtime_duration_minutes"/>
-            </item>
-            <item>
-             <widget class="QLabel" name="label_duration_minutes">
-              <property name="text">
-               <string>minutes</string>
-              </property>
-             </widget>
-            </item>
-            <item>
-             <spacer name="horizontalSpacer_4">
               <property name="orientation">
                <enum>Qt::Horizontal</enum>
               </property>

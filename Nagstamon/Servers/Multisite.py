@@ -27,14 +27,15 @@
 
 import sys
 import urllib.request, urllib.parse, urllib.error
-import webbrowser
 import time
 import copy
 import html
 
-from Nagstamon.Objects import (GenericHost, GenericService, Result)
+from Nagstamon.Objects import (GenericHost,
+                               GenericService,
+                               Result)
 from Nagstamon.Servers.Generic import GenericServer
-
+from Nagstamon.Helpers import webbrowser_open
 from Nagstamon.Config import conf
 
 class MultisiteError(Exception):
@@ -372,7 +373,7 @@ class MultisiteServer(GenericServer):
 
         if conf.debug_mode == True:
             self.Debug(server=self.get_name(), host=host, service=service, debug='Open host/service monitor web page ' + url)
-        webbrowser.open(url)
+        webbrowser_open(url)
 
 
     def GetHost(self, host):

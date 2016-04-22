@@ -25,21 +25,28 @@ import traceback
 import os
 import psutil
 import getpass
+import webbrowser
 
 # import md5 for centreon url autologin encoding
 from hashlib import md5
 
+from Nagstamon.Config import (BOOLPOOL,
+                              NON_LINUX,
+                              conf)
+
+global debug_queue
+
 # experimenting with new debug queue
 # queue.Queue() needs threading module which might be not such a good idea to be used
 # because QThread is already in use
-debug_queue = list()
+###debug_queue = list()
 
 # temporary dict for string-to-bool-conversion
 # the bool:bool relations are thought to make things easier in Dialog_Settings.ok()
-BOOLPOOL = {'False': False,
-            'True': True,
-            False: False,
-            True: True}
+#BOOLPOOL = {'False': False,
+#            'True': True,
+#            False: False,
+#            True: True}
 
 # states needed for gravity comparison for notification and Generic.py
 STATES = ['UP', 'UNKNOWN', 'WARNING', 'CRITICAL', 'UNREACHABLE', 'DOWN']
@@ -48,7 +55,7 @@ STATES = ['UP', 'UNKNOWN', 'WARNING', 'CRITICAL', 'UNREACHABLE', 'DOWN']
 STATES_SOUND = ['WARNING', 'CRITICAL', 'DOWN']
 
 # needed when OS-specific decisions have to be made, mostly Linux/non-Linux
-NON_LINUX = ('Darwin', 'Windows')
+###NON_LINUX = ('Darwin', 'Windows')
 
 
 def not_empty(x):
@@ -360,7 +367,7 @@ def lock_config_folder(folder):
     return True
 
 
-# the following functions are used for sorted in sort_data_array()
+# the following functions are used for sorted() in sort_data_array()
 def compare_host(item):
     return(item.lower())
 
@@ -387,6 +394,17 @@ def compare_attempt(item):
 
 def compare_status_information(item):
     return(item.lower())
+
+
+def webbrowser_open(url):
+    """
+        decide if default or custom browser is used for various tasks
+        used by almost all 
+    """
+    if conf.use_default_browser:
+        webbrowser.open(url)
+    else:
+        webbrowser.get('{0} %s &'.format(conf.custom_browser)).open(url)
 
 
 # depending on column different functions have to be used
