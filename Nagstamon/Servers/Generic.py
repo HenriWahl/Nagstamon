@@ -1317,8 +1317,8 @@ class GenericServer(object):
 
     def GetHost(self, host):
         '''
-        find out ip or hostname of given host to access hosts/devices which do not appear in DNS but
-        have their ip saved in Nagios
+            find out ip or hostname of given host to access hosts/devices which do not appear in DNS but
+            have their ip saved in Nagios
         '''
 
         # the fasted method is taking hostname as used in monitor

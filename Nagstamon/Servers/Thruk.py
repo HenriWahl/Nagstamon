@@ -167,7 +167,6 @@ class ThrukServer(GenericServer):
 
                 for h in hosts:
                     if h["name"] not in self.new_hosts:
-                        ###new_host = h["name"]
                         self.new_hosts[h["name"]] = GenericHost()
                         self.new_hosts[h["name"]].name = h["name"]
                         self.new_hosts[h["name"]].server = self.name

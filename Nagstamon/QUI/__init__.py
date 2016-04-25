@@ -2694,6 +2694,21 @@ class TreeView(QTreeView):
         # connect menu to responder
         self.signalmapper_action_menu.mapped[str].connect(self.action_menu_custom_response)
 
+        # clipboard actions
+        self.clipboard_menu = QMenu('Copy to clipboard', self)
+
+        self.clipboard_action_host = QAction('Host', self)          
+        self.clipboard_action_host.triggered.connect(self.action_clipboard_action_host)  
+        self.clipboard_menu.addAction(self.clipboard_action_host)
+        
+        self.clipboard_action_statusinformation = QAction('Status information', self)
+        self.clipboard_action_statusinformation.triggered.connect(self.action_clipboard_action_statusinformation)
+        self.clipboard_menu.addAction(self.clipboard_action_statusinformation)
+        
+        self.clipboard_action_all = QAction('All information', self)
+        self.clipboard_action_all.triggered.connect(self.action_clipboard_action_all)
+        self.clipboard_menu.addAction(self.clipboard_action_all)
+
         self.treeview_model = Model(server=self.server, parent=self)
         self.setModel(self.treeview_model)       
         self.model().data_array_filled.connect(self.adjust_table)
@@ -2945,6 +2960,9 @@ class TreeView(QTreeView):
                 action_submit.triggered.connect(self.action_submit)
                 self.action_menu.addAction(action_submit)
 
+            # experimental clipboard submenu
+            self.action_menu.addMenu(self.clipboard_menu)
+
             # show menu
             self.action_menu.show_at_cursor()
         else:
@@ -3039,11 +3057,55 @@ class TreeView(QTreeView):
                                     host=self.miserable_host,
                                     service=self.miserable_service)
 
+    @pyqtSlot()
+    def action_clipboard_action_host(self):
+        """
+            copy host name to clipboard
+        """
+        clipboard.setText(self.miserable_host)
+
+
+    @pyqtSlot()
+    def action_clipboard_action_statusinformation(self):
+        """
+            copy status information to clipboard
+        """
+        ## empty service means this is a host
+        #if self.miserable_service== '':
+        #    text = self.server.hosts[self.miserable_host].status_information
+        #else:
+        #    text = self.server.hosts[self.miserable_host].services[self.miserable_service].status_information
+        #clipboard.setText(text)
+        clipboard.setText(self.miserable_status_info)
+
+
+    @pyqtSlot()
+    def action_clipboard_action_all(self):
+        """
+            
+        """
+        # item to access all properties of host/service object
+        # defaults to host
+        item = self.server.hosts[self.miserable_host]
+        text = 'Host: {0}\n'.format(self.miserable_host)
+        # if it is a service switch to service object
+        if self.miserable_service != '':
+            item = item.services[self.miserable_service]
+            text += 'Service {0}\n'.format(self.miserable_service)
+        # the other properties belong to both hosts and services
+        text += 'Status: {0}\n'.format(item.status)
+        text += 'Last check: {0}\n'.format(item.last_check)
+        text += 'Duration: {0}\n'.format(item.duration)
+        text += 'Attempt: {0}\n'.format(item.attempt)
+        text += 'Status information: {0}\n'.format(item.status_information)
+        
+        clipboard.setText(text)        
+    
 
     @pyqtSlot()
     def refresh(self):
         """
-            refresh status display
+            refresh status displayclipboard_action_host_service_statusinfo
         """
         # do nothing if window is moving to avoid lagging movement
         if not statuswindow.moving:
@@ -5705,6 +5767,9 @@ check_version = CheckVersion()
 
 # access to various desktop parameters
 desktop = APP.desktop()
+
+# access to clipboard
+clipboard = APP.clipboard()
 
 # DBus initialization
 dbus_connection = DBus()
