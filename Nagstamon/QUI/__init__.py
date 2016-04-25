@@ -61,8 +61,6 @@ from Nagstamon.Helpers import (is_found_by_re,
                                STATES_SOUND,
                                SORT_COLUMNS)
 
-global debug_queue
-
 # dialogs
 from Nagstamon.QUI.settings_main import Ui_settings_main
 from Nagstamon.QUI.settings_server import Ui_settings_server
@@ -89,6 +87,9 @@ if not platform.system() in NON_LINUX:
         from dbus.mainloop.pyqt5 import DBusQtMainLoop
     except:
         print('No DBus for desktop notification available.')
+
+# get debug queue from nagstamon.oy
+debug_queue = sys.modules['__main__'].debug_queue
 
 # global application instance
 APP = QApplication(sys.argv)
@@ -902,6 +903,7 @@ class StatusWindow(QWidget):
 
         # refresh all information after changed settings
         dialogs.settings.changed.connect(self.refresh)
+        dialogs.settings.changed.connect(self.toparea.combobox_servers.fill)
 
         # show status popup when systray icon was clicked
         systrayicon.show_popwin.connect(self.show_window_systrayicon)
@@ -1102,7 +1104,7 @@ class StatusWindow(QWidget):
 
             # show error message in statusbar
             server_vbox.table.worker.show_error.connect(self.statusbar.set_error)
-            ###server_vbox.table.worker.new_status.connect(self.raise_window_on_all_desktops)
+            # ##server_vbox.table.worker.new_status.connect(self.raise_window_on_all_desktops)
             server_vbox.table.worker.hide_error.connect(self.statusbar.reset_error)
 
             # show error icon in systray
@@ -2191,11 +2193,6 @@ class TopArea(QWidget):
                                                                       border-radius: 4px;}
                                                     QPushButton::menu-indicator{image:url(none.jpg);}''')
 
-        # ##self.button_hamburger_menu.setStyleSheet('''QPushButton {border-width: 0px;
-        # ##                                                         border-style: none;
-        # ##                                                         text-align: center;}
-        # ##                                        ''')
-
         self.hamburger_menu = MenuAtCursor()
         action_exit = QAction("Exit", self)
         action_exit.triggered.connect(exit)
@@ -2637,7 +2634,7 @@ class TreeView(QTreeView):
 
         # no handling of selection by treeview
         self.setSelectionBehavior(QAbstractItemView.SelectRows)
-        #self.setSelectionMode(QAbstractItemView.SingleSelection)
+        # self.setSelectionMode(QAbstractItemView.SingleSelection)
         self.setSelectionMode(QAbstractItemView.NoSelection)
         
         # disable space at the left side
@@ -3070,12 +3067,12 @@ class TreeView(QTreeView):
         """
             copy status information to clipboard
         """
-        ## empty service means this is a host
-        #if self.miserable_service== '':
+        # # empty service means this is a host
+        # if self.miserable_service== '':
         #    text = self.server.hosts[self.miserable_host].status_information
-        #else:
+        # else:
         #    text = self.server.hosts[self.miserable_host].services[self.miserable_service].status_information
-        #clipboard.setText(text)
+        # clipboard.setText(text)
         clipboard.setText(self.miserable_status_info)
 
 
@@ -5185,10 +5182,10 @@ class Dialog_Downtime(Dialog):
         """
             enable/disable appropriate widgets if type is "Fixed"
         """
-        #self.ui.label_start_time.show()
-        #self.ui.label_end_time.show()
-        #self.ui.input_lineedit_start_time.show()
-        #self.ui.input_lineedit_end_time.show()
+        # self.ui.label_start_time.show()
+        # self.ui.label_end_time.show()
+        # self.ui.input_lineedit_start_time.show()
+        # self.ui.input_lineedit_end_time.show()
         
         self.ui.label_duration.hide()
         self.ui.label_duration_hours.hide()
@@ -5202,10 +5199,10 @@ class Dialog_Downtime(Dialog):
         """
             enable/disable appropriate widgets if type is "Flexible"
         """
-        #self.ui.label_start_time.hide()
-        #self.ui.label_end_time.hide()
-        #self.ui.input_lineedit_start_time.hide()
-        #self.ui.input_lineedit_end_time.hide()
+        # self.ui.label_start_time.hide()
+        # self.ui.label_end_time.hide()
+        # self.ui.input_lineedit_start_time.hide()
+        # self.ui.input_lineedit_end_time.hide()
         
         self.ui.label_duration.show()
         self.ui.label_duration_hours.show()
