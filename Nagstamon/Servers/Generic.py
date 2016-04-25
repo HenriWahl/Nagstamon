@@ -873,8 +873,8 @@ class GenericServer(object):
                         self.Debug(server=self.get_name(), debug='Filter: ACKNOWLEDGED ' + str(host.name))
                     host.visible = False
 
-                if host.notifications_disabled == True and str(
-                        conf.filter_hosts_services_disabled_notifications) == 'True':
+                if host.notifications_disabled == True and\
+                        conf.filter_hosts_services_disabled_notifications == True:
                     if conf.debug_mode:
                         self.Debug(server=self.get_name(), debug='Filter: NOTIFICATIONS ' + str(host.name))
                     host.visible = False
@@ -912,10 +912,11 @@ class GenericServer(object):
                     host.visible = False
 
                 # The Criticality filter can be used only with centreon objects. Other objects don't have the criticality attribute.
-                if (str(self.type) == 'Centreon') and (CriticalityIsFilteredOutByRE(host.criticality, conf) == True):
-                    if conf.debug_mode:
-                        self.Debug(server=self.get_name(), debug='Filter: REGEXP Criticality ' + str(host.name))
-                    host.visible = False
+                if self.type == 'Centreon':
+                    if CriticalityIsFilteredOutByRE(host.criticality, conf):
+                        if conf.debug_mode:
+                            self.Debug(server=self.get_name(), debug='Filter: REGEXP Criticality ' + str(host.name))
+                        host.visible = False
 
                 # Finegrain for the specific state
                 if host.status == 'DOWN':
@@ -958,11 +959,12 @@ class GenericServer(object):
                                    debug='Filter: ACKNOWLEDGED ' + str(host.name) + ';' + str(service.name))
                     service.visible = False
 
-                if service.notifications_disabled == True and str(
-                        conf.filter_hosts_services_disabled_notifications) == 'True':
+                if service.notifications_disabled == True and\
+                        conf.filter_hosts_services_disabled_notifications == True:
                     if conf.debug_mode:
                         self.Debug(server=self.get_name(),
                                    debug='Filter: NOTIFICATIONS ' + str(host.name) + ';' + str(service.name))
+                    
                     service.visible = False
 
                 if service.passiveonly == True and conf.filter_hosts_services_disabled_checks == True:
@@ -1045,11 +1047,12 @@ class GenericServer(object):
                     service.visible = False
 
                 # The Criticality filter can be used only with centreon objects. Other objects don't have the criticality attribute.
-                if (str(self.type) == 'Centreon') and (CriticalityIsFilteredOutByRE(service.criticality, conf) == True):
-                    if conf.debug_mode:
-                        self.Debug(server=self.get_name(), debug='Filter: REGEXP Criticality %s;%s %s' % (
-                        (str(host.name), str(service.name), str(service.criticality))))
-                    service.visible = False
+                if self.type == 'Centreon':
+                    if CriticalityIsFilteredOutByRE(service.criticality, conf):
+                        if conf.debug_mode:
+                            self.Debug(server=self.get_name(), debug='Filter: REGEXP Criticality %s;%s %s' % (
+                            (str(host.name), str(service.name), str(service.criticality))))
+                        service.visible = False
 
                 # Finegrain for the specific state
                 if service.visible:

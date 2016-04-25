@@ -228,6 +228,7 @@ class MultisiteServer(GenericServer):
                     'attempt':            host['host_attempt'],
                     'site':               host['sitename_plain'],
                     'address':            host['host_address'],
+                    'notifications':      host['host_notifications_enabled'] == 'yes',
                 }
 
                 # host objects contain service objects
@@ -243,6 +244,8 @@ class MultisiteServer(GenericServer):
                     self.new_hosts[new_host].status_information= html.unescape(n['status_information'].replace('\n', ' '))
                     self.new_hosts[new_host].site = n['site']
                     self.new_hosts[new_host].address = n['address']
+                    self.new_hosts[new_host].notifications_disabled = not n['notifications']
+
                     # transisition to Check_MK 1.1.10p2
                     if 'host_in_downtime' in host:
                         if host['host_in_downtime'] == 'yes':
@@ -327,6 +330,8 @@ class MultisiteServer(GenericServer):
                     self.new_hosts[n['host']].services[new_service].site = n['site']
                     self.new_hosts[n['host']].services[new_service].address = n['address']
                     self.new_hosts[n['host']].services[new_service].command = n['command']
+                    self.new_hosts[n['host']].services[new_service].notifications_disabled = not n['notifications']
+
                     # transistion to Check_MK 1.1.10p2
                     if 'svc_in_downtime' in service:
                         if service['svc_in_downtime'] == 'yes':
