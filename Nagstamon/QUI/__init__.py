@@ -4789,6 +4789,8 @@ class Dialog_Server(Dialog):
                 # remove old server vbox from status window if still running
                 for vbox in statuswindow.servers_vbox.children():
                     if vbox.server.name == self.previous_server_conf.name:
+                        # disable server
+                        vbox.server.enabled = False
                         # stop thread by falsificate running flag
                         vbox.table.worker.running = False
                         vbox.table.worker.finish.emit()
