@@ -61,7 +61,7 @@ try:
         statuswindow.adjustSize()
 
         if conf.check_for_new_version == True:
-            check_version.check(start_mode = True, parent=statuswindow)
+            check_version.check(start_mode=True, parent=statuswindow)
 
         sys.exit(APP.exec_())
 
