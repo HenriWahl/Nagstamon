@@ -28,11 +28,13 @@ import zlib
 import datetime
 from collections import OrderedDict
 
-#from Nagstamon.Helpers import (debug_queue,
+# from Nagstamon.Helpers import (debug_queue,
 #                               BOOLPOOL,
 #                               NON_LINUX)
 
-global debug_queue
+# get debug queue from nagstamon.oy
+debug_queue = sys.modules['__main__'].debug_queue
+
 
 # temporary dict for string-to-bool-conversion
 # the bool:bool relations are thought to make things easier in Dialog_Settings.ok()

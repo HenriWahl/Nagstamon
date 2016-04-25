@@ -34,16 +34,17 @@ from Nagstamon.Config import (BOOLPOOL,
                               NON_LINUX,
                               conf)
 
-global debug_queue
+# get debug queue from nagstamon.oy
+debug_queue = sys.modules['__main__'].debug_queue
 
 # experimenting with new debug queue
 # queue.Queue() needs threading module which might be not such a good idea to be used
 # because QThread is already in use
-###debug_queue = list()
+# ##debug_queue = list()
 
 # temporary dict for string-to-bool-conversion
 # the bool:bool relations are thought to make things easier in Dialog_Settings.ok()
-#BOOLPOOL = {'False': False,
+# BOOLPOOL = {'False': False,
 #            'True': True,
 #            False: False,
 #            True: True}
@@ -55,7 +56,7 @@ STATES = ['UP', 'UNKNOWN', 'WARNING', 'CRITICAL', 'UNREACHABLE', 'DOWN']
 STATES_SOUND = ['WARNING', 'CRITICAL', 'DOWN']
 
 # needed when OS-specific decisions have to be made, mostly Linux/non-Linux
-###NON_LINUX = ('Darwin', 'Windows')
+# ##NON_LINUX = ('Darwin', 'Windows')
 
 
 def not_empty(x):
@@ -174,7 +175,7 @@ def HumanReadableDurationFromTimestamp(timestamp):
         h = int(td.seconds / 3600)
         m = int(td.seconds % 3600 / 60)
         s = int(td.seconds % 60)
-        return "%sd %sh %sm %ss" % (td.days, h, m ,s)
+        return "%sd %sh %sm %ss" % (td.days, h, m , s)
     except:
         import traceback
         traceback.print_exc(file=sys.stdout)
@@ -194,7 +195,7 @@ def MachineSortableDate(raw):
     # strip and replace necessary for Nagios duration values,
     # split components of duration into dictionary
     for c in raw.strip().replace("  ", " ").split(" "):
-        number, period = c[0:-1],c[-1]
+        number, period = c[0:-1], c[-1]
         d[period] = int(number)
         del number, period
     # convert collected duration data components into seconds for being comparable
@@ -302,7 +303,7 @@ def UnifiedMachineSortableDate(raw):
         # strip and replace necessary for Nagios duration values,
         # split components of duration into dictionary
         for c in raw.strip().replace("  ", " ").split(" "):
-            number, period = c[0:-1],c[-1]
+            number, period = c[0:-1], c[-1]
             d[period] = int(number)
             del number, period
 
@@ -350,7 +351,7 @@ def lock_config_folder(folder):
                     pid = int(procInfo[0])
                     bootTime = int(procInfo[1])
                     userName = procInfo[2].strip()
-                except( ValueError, IndexError ):
+                except(ValueError, IndexError):
                     pass
     
             if pid is not None and bootTime is not None and userName is not None:
