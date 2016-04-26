@@ -817,7 +817,7 @@ class GenericServer(object):
             return Result(result=self.status,
                           error=self.status_description,
                           status_code=self.status_code)
-        
+
         if (self.status_description != '' or
             self.status_code > 400):
             # ask for password if authorization failed
@@ -1005,13 +1005,16 @@ class GenericServer(object):
                                        debug='Filter: SOFT STATE ' + str(host.name) + ';' + str(service.name))
                         service.visible = False
                 else:
-                    # the old, actually wrong, behaviour
-                    real_attempt, max_attempt = service.attempt.split('/')
-                    if real_attempt != max_attempt and conf.filter_services_in_soft_state == True:
-                        if conf.debug_mode:
-                            self.Debug(server=self.get_name(),
-                                       debug='Filter: SOFT STATE ' + str(host.name) + ';' + str(service.name))
-                        service.visible = False
+                    if len(service.attempt) < 3:
+                        service.visible = True
+                    elif len(service.attempt) == 3:                    
+                        # the old, actually wrong, behaviour
+                        real_attempt, max_attempt = service.attempt.split('/')
+                        if real_attempt != max_attempt and conf.filter_services_in_soft_state == True:
+                            if conf.debug_mode:
+                                self.Debug(server=self.get_name(),
+                                           debug='Filter: SOFT STATE ' + str(host.name) + ';' + str(service.name))
+                            service.visible = False
 
                 if host_is_filtered_out_by_re(host.name, conf) == True:
                     if conf.debug_mode:

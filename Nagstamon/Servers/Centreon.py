@@ -24,9 +24,13 @@ import sys
 import re
 import copy
 
-from Nagstamon.Objects import *
+#from Nagstamon.Objects import *
+#from Nagstamon.Servers.Generic import GenericServer
+#from Nagstamon.Config import conf
+
 from Nagstamon.Servers.Generic import GenericServer
-from Nagstamon.Config import conf
+from Nagstamon.Objects import (GenericHost, GenericService, Result)
+from Nagstamon.Config import (conf, AppInfo)
 
 class CentreonServer(GenericServer):
     TYPE = 'Centreon'
@@ -245,7 +249,7 @@ class CentreonServer(GenericServer):
         cgi_data = {'p':201, 'sid':self.SID}
         ###result = self.FetchURL(self.monitor_cgi_url + "/main.php?" + cgi_data, cgi_data=urllib.parse.urlencode({"sid":self.SID}), giveback="raw")
         ###result = self.FetchURL(self.monitor_cgi_url + "/main.php?" + cgi_data, cgi_data={"sid":self.SID}, giveback="raw")
-        result = self.FetchURL(self.monitor_cgi_url + 'main.php', cgi_data=cgi_data, giveback='raw')
+        result = self.FetchURL(self.monitor_cgi_url + '/main.php', cgi_data=cgi_data, giveback='raw')
         raw, error = result.result, result.error
 
         if error == '':
@@ -621,7 +625,7 @@ class CentreonServer(GenericServer):
 
                     # debug
                     if conf.debug_mode == True:
-                        self.Debug(server=self.get_name(), host=host, service=s, debug=self.monitor_cgi_url + '/main.php?' + cgi_data)
+                        self.Debug(server=self.get_name(), host=host, service=s, debug=self.monitor_cgi_url + '/main.php?' + urllib.parse.urlencode(cgi_data))
 
                     # running remote cgi command with GET method, for some strange reason only working if
                     # giveback is 'raw'
