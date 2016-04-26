@@ -26,6 +26,9 @@ import os.path
 
 from Nagstamon.Config import AppInfo
 
+# dummy debug queue for compiling
+debug_queue = list()
+
 NAME = AppInfo.NAME
 # make name lowercase for Linux/Unix
 if platform.system() not in ['Windows', 'Darwin']:

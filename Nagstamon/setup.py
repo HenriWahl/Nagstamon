@@ -26,6 +26,7 @@ from Nagstamon.Config import AppInfo
 NAME = AppInfo.NAME
 VERSION = AppInfo.VERSION
 
+
 # workaround to get directory of Qt5 plugins to add missing 'mediaservice' folder needed for audio on OSX and Windows
 import os.path
 from PyQt5 import QtCore

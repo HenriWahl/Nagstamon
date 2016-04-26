@@ -88,7 +88,7 @@ if not platform.system() in NON_LINUX:
     except:
         print('No DBus for desktop notification available.')
 
-# get debug queue from nagstamon.oy
+# get debug queue from nagstamon.py
 debug_queue = sys.modules['__main__'].debug_queue
 
 # global application instance
@@ -2297,27 +2297,26 @@ class ServerVBox(QVBoxLayout):
 
         self.label = QLabel(parent=parent)
         self.update_label()
-        self.button_edit = QPushButton('Edit', parent=parent)
         self.button_monitor = PushButton_BrowserURL(text='Monitor', parent=parent, server=self.server, url_type='monitor')
         self.button_hosts = PushButton_BrowserURL(text='Hosts', parent=parent, server=self.server, url_type='hosts')
         self.button_services = PushButton_BrowserURL(text='Services', parent=parent, server=self.server, url_type='services')
         self.button_history = PushButton_BrowserURL(text='History', parent=parent, server=self.server, url_type='history')
+        self.button_edit = QPushButton('Edit', parent=parent)
         self.label_status = ServerStatusLabel(parent=parent)
         self.button_authenticate = QPushButton('Authenticate', parent=parent)
-
-        self.button_edit.clicked.connect(self.edit_server)
 
         self.button_monitor.clicked.connect(self.button_monitor.open_url)
         self.button_hosts.clicked.connect(self.button_hosts.open_url)
         self.button_services.clicked.connect(self.button_services.open_url)
         self.button_history.clicked.connect(self.button_history.open_url)
+        self.button_edit.clicked.connect(self.edit_server)
 
         self.header.addWidget(self.label)
-        self.header.addWidget(self.button_edit)
         self.header.addWidget(self.button_monitor)
         self.header.addWidget(self.button_hosts)
         self.header.addWidget(self.button_services)
         self.header.addWidget(self.button_history)
+        self.header.addWidget(self.button_edit)
         self.header.addWidget(self.label_status)
         self.header.addWidget(self.button_authenticate)
         self.header.addStretch()
@@ -3547,12 +3546,12 @@ class TreeView(QTreeView):
                 if action['type'] == 'browser':
                     # debug
                     if conf.debug_mode == True:
-                        self.server.Debug(server=self.server.name, host=self.host, service=self.service, debug='ACTION: BROWSER ' + string)
+                        self.server.Debug(server=self.server.name, host=info['host'], service=info['service'], debug='ACTION: BROWSER ' + string)
                     webbrowser_open(string)
                 elif action['type'] == 'command':
                     # debug
                     if conf.debug_mode == True:
-                        self.server.Debug(server=self.server.name, host=self.host, service=self.service, debug='ACTION: COMMAND ' + string)
+                        self.server.Debug(server=self.server.name, host=info['host'], service=info['service'], debug='ACTION: COMMAND ' + string)
                     subprocess.Popen(string, shell=True)
                 elif action['type'] == 'url':
                     # Check_MK uses transids - if this occurs in URL its very likely that a Check_MK-URL is called
@@ -3564,7 +3563,7 @@ class TreeView(QTreeView):
                         string = self._URLify(string)
                     # debug
                     if conf.debug_mode == True:
-                        self.server.Debug(server=self.server.name, host=self.host, service=self.service, debug='ACTION: URL in background ' + string)
+                        self.server.Debug(server=self.server.name, host=info['host'], service=info['service'], debug='ACTION: URL in background ' + string)
                     servers[info['server']].FetchURL(string)
                 # used for example by Op5Monitor.py
                 elif action['type'] == 'url-post':
@@ -3572,7 +3571,7 @@ class TreeView(QTreeView):
                     string = self._URLify(string)
                     # debug
                     if conf.debug_mode == True:
-                        self.server.Debug(server=self.server.name, host=self.host, service=self.service, debug='ACTION: URL-POST in background ' + string)
+                        self.server.Debug(server=self.server.name, host=info['host'], service=info['service'], debug='ACTION: URL-POST in background ' + string)
                     servers[info['server']].FetchURL(string, cgi_data=cgi_data, multipart=True)
             except:
                 import traceback

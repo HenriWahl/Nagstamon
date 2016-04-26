@@ -34,7 +34,7 @@ from Nagstamon.Config import (BOOLPOOL,
                               NON_LINUX,
                               conf)
 
-# get debug queue from nagstamon.oy
+# get debug queue from nagstamon.py
 debug_queue = sys.modules['__main__'].debug_queue
 
 # experimenting with new debug queue

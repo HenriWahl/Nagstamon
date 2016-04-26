@@ -32,8 +32,14 @@ from collections import OrderedDict
 #                               BOOLPOOL,
 #                               NON_LINUX)
 
-# get debug queue from nagstamon.oy
-debug_queue = sys.modules['__main__'].debug_queue
+print(sys.argv[0])
+
+# avoid build error because of debug_queue unknown to setup.py
+# if anybody knows a more elegant way (which surely exists) let me know
+# it had to work quickly!
+if not 'setup.py' in sys.argv[0] and not 'build.py' in sys.argv[0]:
+    # get debug queue from nagstamon.py
+    debug_queue = sys.modules['__main__'].debug_queue
 
 
 # temporary dict for string-to-bool-conversion
@@ -52,7 +58,7 @@ class AppInfo(object):
         contains app information previously located in GUI.py
     """
     NAME = 'Nagstamon'
-    VERSION = '2.0-alpha-20160425'
+    VERSION = '2.0-alpha-20160426'
     WEBSITE = 'https://nagstamon.ifw-dresden.de'
     COPYRIGHT = '©2008-2016 Henri Wahl et al.\nh.wahl@ifw-dresden.de'
     COMMENTS = 'Nagios status monitor for your desktop'
