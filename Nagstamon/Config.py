@@ -28,11 +28,6 @@ import zlib
 import datetime
 from collections import OrderedDict
 
-# from Nagstamon.Helpers import (debug_queue,
-#                               BOOLPOOL,
-#                               NON_LINUX)
-
-print(sys.argv[0])
 
 # avoid build error because of debug_queue unknown to setup.py
 # if anybody knows a more elegant way (which surely exists) let me know

@@ -302,7 +302,7 @@ class SystemTrayIcon(QSystemTrayIcon):
 
         # no menu at first
         self.menu = None
-
+        
         # timer for singleshots for flashing
         self.timer = QTimer()
 
@@ -320,7 +320,7 @@ class SystemTrayIcon(QSystemTrayIcon):
         """
         # store menu for future use, especially for MacOSX
         self.menu = menu
-
+        
         # MacOSX does not distinguish between left and right click so menu will go to upper menu bar
         # update: apparently not, but own context menu will be shown when icon is clicked an all is OK = green
         if platform.system() != 'Darwin':
@@ -351,7 +351,7 @@ class SystemTrayIcon(QSystemTrayIcon):
             svg_xml_stream = QXmlStreamReader(''.join(svg_state_xml))
             # create renderer for SVG and put SVG XML into renderer
             svg_renderer = QSvgRenderer(svg_xml_stream)
-            # pixmap to be painted on
+            # pixmap to be painted on - arbitrarily choosen 128x128 px
             svg_pixmap = QPixmap(128, 128)
             # initiate painter which paints onto paintdevice pixmap
             svg_painter = QPainter(svg_pixmap)
@@ -370,15 +370,15 @@ class SystemTrayIcon(QSystemTrayIcon):
         """
         # only react on left mouse click
         if event == (QSystemTrayIcon.Trigger or QSystemTrayIcon.DoubleClick):
-            if statuswindow.is_shown:
-                self.hide_popwin.emit()
-            else:
-                self.show_popwin.emit()
-
             # when green icon is displayed and no popwin is about to po up show at least menu in MacOX
             if get_worst_status() == 'UP' and platform.system() == 'Darwin':
                 self.menu.show_at_cursor()
-
+            else:
+                if statuswindow.is_shown:
+                    self.hide_popwin.emit()
+                else:
+                    self.show_popwin.emit()
+    
         # ##elif event == QSystemTrayIcon.Context and platform.system() == 'Windows':
         # ##    self.show_menu.emit()
 
@@ -478,8 +478,9 @@ class MenuContext(MenuAtCursor):
         MenuAtCursor.__init__(self, parent=parent)
 
         # connect all relevant widgets which should show the context menu
-        for widget in systrayicon, \
-                      statuswindow.toparea.button_hamburger_menu, \
+        ###for widget in systrayicon, \
+        ###              statuswindow.toparea.button_hamburger_menu, \
+        for widget in statuswindow.toparea.button_hamburger_menu, \
                       statuswindow.toparea.logo, \
                       statuswindow.toparea.label_version, \
                       statuswindow.toparea.label_empty_space, \
@@ -550,6 +551,43 @@ class MenuContext(MenuAtCursor):
 
         statuswindow.store_position_to_conf()
         conf.SaveConfig()
+
+
+class MenuContextSystrayicon(MenuContext):
+    """
+        Necessary for Ubuntu 16.04 new Qt5-Systray-AppIndicator meltdown
+        Maybe in general a good idea to offer status window popup here
+    """
+    
+    
+    def __init__(self, parent=None):
+        """
+            clone of normal MenuContext which serves well in all other places
+            but no need of signal/slots initialization
+        """
+        QMenu.__init__(self, parent=parent)
+        
+        # initialize as default + extra
+        self.initialize()
+        
+        self.menu_ready.connect(systrayicon.set_menu)
+        self.menu_ready.emit(self)
+
+        # change menu if there are changes in settings/servers
+        dialogs.settings.changed.connect(self.initialize)
+
+
+    def initialize(self):
+        """
+            initialize as herited + a popup menu entry mostly useful in Ubuntu Unity
+        """
+        MenuContext.initialize(self)
+        # makes even less sense on OSX
+        if platform.system() != 'Darwin':
+            self.action_status = QAction('Show status window', self)
+            self.action_status.triggered.connect(statuswindow.show_window)
+            self.insertAction(self.action_refresh, self.action_status)   
+            self.insertSeparator(self.action_refresh)   
 
 
 class PushButton_Hamburger(QPushButton):
@@ -5732,15 +5770,15 @@ def exit():
     # wait until all threads are stopped
     for server_vbox in statuswindow.servers_vbox.children():
         server_vbox.table.worker_thread.wait(1000)
-        # server_vbox.table.worker_thread.wait()
+        #server_vbox.table.worker_thread.wait()
 
     # wait until statuswindow notification worker has finished
     statuswindow.worker_notification_thread.wait(1000)
-    # statuswindow.worker_notification_thread.wait()
+    #statuswindow.worker_notification_thread.wait()
 
     # wait until statuswindow worker has finished
     statuswindow.worker_thread.wait(1000)
-    # statuswindow.worker_thread.wait()
+    #statuswindow.worker_thread.wait()
 
     # bye bye
     APP.instance().quit()
@@ -5778,13 +5816,15 @@ dialogs = Dialogs()
 # system tray icon
 systrayicon = SystemTrayIcon()
 
-# combined statusbar/status window
+# combined statusbar/status window 
 # set to none here due to race condition
 statuswindow = None
 statuswindow = StatusWindow()
 
-# context menu for systray and statuswindow
+# context menu for statuswindow etc.
 menu = MenuContext()
+# necessary extra menu due to Qt5-Unity-integration
+menu_systray = MenuContextSystrayicon()
 
 # versatile mediaplayer
 mediaplayer = MediaPlayer()
