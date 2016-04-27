@@ -273,10 +273,13 @@ class HBoxLayout(QHBoxLayout):
 class SystemTrayIcon(QSystemTrayIcon):
     """
         Icon in system tray, works at least in Windows and OSX
-        Qt5 shows an empty icon in GNOME3
+        Several Linux desktop environments have different problems
+        
+        For some dark, very dark reason systray menu does NOT work in
+        Windows if run on commandline as nagstamon.py - the binary .exe works
     """
 
-    # ##show_menu = pyqtSignal()
+    show_menu = pyqtSignal()
 
     show_popwin = pyqtSignal()
     hide_popwin = pyqtSignal()
@@ -368,8 +371,11 @@ class SystemTrayIcon(QSystemTrayIcon):
         """
             evaluate mouse click
         """
-        # only react on left mouse click
-        if event == (QSystemTrayIcon.Trigger or QSystemTrayIcon.DoubleClick):
+        # some obscure Windows problem again
+        if event == QSystemTrayIcon.Context and platform.system() == 'Windows':
+            self.show_menu.emit()
+        # only react on left mouse click           
+        elif event == (QSystemTrayIcon.Trigger or QSystemTrayIcon.DoubleClick):
             # when green icon is displayed and no popwin is about to po up show at least menu in MacOX
             if get_worst_status() == 'UP' and platform.system() == 'Darwin':
                 self.menu.show_at_cursor()
@@ -377,10 +383,7 @@ class SystemTrayIcon(QSystemTrayIcon):
                 if statuswindow.is_shown:
                     self.hide_popwin.emit()
                 else:
-                    self.show_popwin.emit()
-    
-        # ##elif event == QSystemTrayIcon.Context and platform.system() == 'Windows':
-        # ##    self.show_menu.emit()
+                    self.show_popwin.emit()  
 
 
     @pyqtSlot()
