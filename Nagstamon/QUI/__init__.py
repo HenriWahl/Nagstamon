@@ -1701,6 +1701,11 @@ class StatusWindow(QWidget):
             self.ewmh.setWmDesktop(winid, 0xffffffff)           
             self.ewmh.display.flush()
 
+        # apparently sometime the floating statusbsr vanishes in the background
+        # lets try here to keep it on top - only if not fullscreen
+        if not conf.fullscreen:
+            self.setWindowFlags(Qt.WindowStaysOnTopHint | Qt.FramelessWindowHint | Qt.Tool)
+
 
     class Worker(QObject):
         """
