@@ -50,9 +50,10 @@ class GenericObject(object):
         self.site = ''
         # server to be added to hash
         self.server = ''
-        # might help for sorting in Qt
+        # might help in Qt
         self.host = ''
         self.service = ''
+        self.dummy_column = ''
 
 
     def is_passive_only(self):

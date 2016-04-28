@@ -79,8 +79,8 @@ if not platform.system() in NON_LINUX:
     THIRDPARTY = os.sep.join(RESOURCES.split(os.sep)[0:-1] + ['thirdparty'])
     sys.path.insert(0, THIRDPARTY)
     from Nagstamon.thirdparty.ewmh import EWMH
-
-if not platform.system() in NON_LINUX:
+    
+    # DBus only interesting for Linux too
     try:
         from dbus import (Interface,
                           SessionBus)
@@ -134,7 +134,9 @@ HEADERS = OrderedDict([('host', {'header': 'Host',
                        ('attempt', {'header': 'Attempt',
                                     'column': 7}),
                        ('status_information', {'header': 'Status Information',
-                                               'column': 8})])
+                                               'column': 8}),
+                       ('dummy_column', {'header': '',
+                                         'column': 8})])
 
 # various headers-key-columns variations needed in different parts
 HEADERS_HEADERS = list()
@@ -169,7 +171,8 @@ SORT_COLUMNS_INDEX = { 0: 0,
                        5: 5,
                        6: 6,
                        7: 7,
-                       8: 8 }
+                       8: 8,
+                       9: 8 }
 
 # space used in LayoutBoxes
 SPACE = 10
@@ -481,8 +484,8 @@ class MenuContext(MenuAtCursor):
         MenuAtCursor.__init__(self, parent=parent)
 
         # connect all relevant widgets which should show the context menu
-        ###for widget in systrayicon, \
-        ###              statuswindow.toparea.button_hamburger_menu, \
+        # ##for widget in systrayicon, \
+        # ##              statuswindow.toparea.button_hamburger_menu, \
         for widget in statuswindow.toparea.button_hamburger_menu, \
                       statuswindow.toparea.logo, \
                       statuswindow.toparea.label_version, \
@@ -1551,8 +1554,8 @@ class StatusWindow(QWidget):
     def adjust_size(self):
         """
             resize window if shown and needed
-        """
-        if not conf.fullscreen:
+        """                     
+        if not conf.fullscreen:           
             self.adjusting_size_lock = True
             # fully displayed statuswindow
             if self.is_shown == True:
@@ -1575,7 +1578,9 @@ class StatusWindow(QWidget):
 
     @pyqtSlot()
     def store_position(self):
-        # store position for restoring it when hiding
+        """
+            store position for restoring it when hiding
+        """
         if not self.is_shown:
             self.stored_x = self.x()
             self.stored_y = self.y()
@@ -1604,8 +1609,10 @@ class StatusWindow(QWidget):
         """
         width = 0
         for server in self.servers_vbox.children():
-            if server.table.real_width > width:
+            if server.table.get_real_width() > width:
                 width = server.table.get_real_width()
+
+        print(width)
 
         return width
 
@@ -2378,8 +2385,7 @@ class ServerVBox(QVBoxLayout):
         # convert sort order to number as used in Qt.SortOrder  
         sort_order = SORT_ORDER[conf.default_sort_order.lower()]
 
-        # ##self.table = TableWidget(0, len(HEADERS), sort_column, order, self.server, parent=parent)
-        self.table = TreeView(0, len(HEADERS), sort_column, sort_order, self.server, parent=parent)
+        self.table = TreeView(len(HEADERS)+1 , 0, sort_column, sort_order, self.server, parent=parent)
 
         # delete vbox if thread quits
         self.table.worker_thread.finished.connect(self.delete)
@@ -2407,7 +2413,7 @@ class ServerVBox(QVBoxLayout):
         """
             return summarized real height of hbox items and table
         """
-        height = self.table.real_height
+        height = self.table.get_real_height()
         if self.label.isVisible() and self.button_monitor.isVisible():
             # compare item heights, decide to take the largest and add 2 time the MARGIN (top and bottom)
             if self.label.sizeHint().height() > self.button_monitor.sizeHint().height():
@@ -2562,7 +2568,6 @@ class Model(QAbstractTableModel):
         """
             overridden method to get number of columns 
         """
-        # return(len(self.headers))
         return(self.column_count)
 
 
@@ -2614,11 +2619,11 @@ class Model(QAbstractTableModel):
 
         elif role == Qt.ForegroundRole:
             # return(self.data_array[index.row()][COLOR_INDEX['text'][index.column()]])
-            return(self.data_array[index.row()][9])
+            return(self.data_array[index.row()][10])
 
         elif role == Qt.BackgroundRole:
             # return(self.data_array[index.row()][COLOR_INDEX['background'][index.column()]])
-            return(self.data_array[index.row()][10])
+            return(self.data_array[index.row()][11])
 
         elif role == Qt.FontRole:
             if index.column() == 1:
@@ -2670,7 +2675,6 @@ class TreeView(QTreeView):
 
 
     def __init__(self, columncount, rowcount, sort_column, sort_order, server, parent=None):
-        # QTreeView.__init__(self, columncount, rowcount,parent=parent)
         QTreeView.__init__(self, parent=parent)
 
         self.sort_column = sort_column
@@ -2679,7 +2683,6 @@ class TreeView(QTreeView):
 
         # no handling of selection by treeview
         self.setSelectionBehavior(QAbstractItemView.SelectRows)
-        # self.setSelectionMode(QAbstractItemView.SingleSelection)
         self.setSelectionMode(QAbstractItemView.NoSelection)
         
         # disable space at the left side
@@ -2698,12 +2701,7 @@ class TreeView(QTreeView):
 
         self.setSizePolicy(QSizePolicy.Ignored, QSizePolicy.Expanding)
 
-        # store width and height if they do not need to be recalculated
-        self.real_width = 0
-        self.real_height = 0
-              
-        self.header().setSectionResizeMode(QHeaderView.ResizeToContents)
-        
+        self.header().setSectionResizeMode(QHeaderView.ResizeToContents)       
         self.header().setDefaultAlignment(Qt.AlignLeft)
         self.header().setSortIndicatorShown(True)
         
@@ -2837,20 +2835,27 @@ class TreeView(QTreeView):
         """
             calculate real table height as there is no method included
         """
-        
-        self.real_height = 0
+        height = 0       
         
         # only count if there is anything to display - there is no use of the headers only
         if self.model().rowCount(self) > 0:
             # height summary starts with headers' height
             # apparently height works better/without scrollbar if some pixels are added
-            self.real_height = self.header().sizeHint().height() + 2
+            height = self.header().sizeHint().height() + 2
     
             # maybe simply take nagitems_filtered_count?
-            self.real_height += self.indexRowSizeHint(self.model().index(0, 0)) * self.model().rowCount(self)   
+            height += self.indexRowSizeHint(self.model().index(0, 0)) * self.model().rowCount(self)   
 
-        return self.real_height
+        return(height)
     
+    
+    def get_real_width(self):
+        width = 0
+        # avoid the last dummy column to be counted
+        for column in range(len(HEADERS)-1):
+            width += self.columnWidth(column)
+        return(width)
+     
     
     @pyqtSlot()
     def adjust_table(self):
@@ -3147,7 +3152,7 @@ class TreeView(QTreeView):
     @pyqtSlot()
     def refresh(self):
         """
-            refresh status displayclipboard_action_host_service_statusinfo
+            refresh status display
         """
         # do nothing if window is moving to avoid lagging movement
         if not statuswindow.moving:
@@ -3157,7 +3162,7 @@ class TreeView(QTreeView):
             else:
                 self.is_shown = False
             # pre-calculate dimensions
-            self.real_height = self.get_real_height()
+            height = self.get_real_height()
 
             # tell statusbar it should update
             self.refreshed.emit()
@@ -3379,6 +3384,8 @@ class TreeView(QTreeView):
                         if self.data_array[-1][3] != '':
                             self.info['services_flags_column_needed'] = True
 
+                        self.data_array[-1].append('X')
+
             # sort date befot it gets transmitted to treeviw model
             self.sort_data_array(self.sort_column, self.sort_order, False)
             
@@ -3407,9 +3414,9 @@ class TreeView(QTreeView):
             # fix alternating colors
             for count, row in enumerate(self.data_array):
                 # change text color of sorted rows
-                row[9] = QBRUSHES[count % 2][row[11]]                       
+                row[10] = QBRUSHES[count % 2][row[12]]                       
                 # change background color of sorted rows
-                row[10] = QBRUSHES[count % 2][row[12]]
+                row[11] = QBRUSHES[count % 2][row[13]]
 
             # if header was clicked tell model to use new data_array
             if header_clicked:
@@ -4002,7 +4009,7 @@ class Dialog_Settings(Dialog):
                 elif widget.startswith('input_slider_'):
                     self.ui.__dict__[widget].setValue(int(conf.__dict__[widget.split('input_slider_')[1]]))
 
-        # fill default order fields combobox with headers names
+        # fill default order fields combobox with s names
         # kick out empty headers for hosts and services flags
         sort_fields = copy.copy(HEADERS_HEADERS)
         # second item has index 1
@@ -4018,7 +4025,8 @@ class Dialog_Settings(Dialog):
 
         # fill default sort order combobox
         self.ui.input_combobox_default_sort_order.addItems(['Ascending', 'Descending'])
-        self.ui.input_combobox_default_sort_order.setCurrentText(conf.default_sort_order)
+        # .title() to get upper first letter
+        self.ui.input_combobox_default_sort_order.setCurrentText(conf.default_sort_order.title())
 
         # fill combobox with screens for fullscreen
         for display in range(desktop.screenCount()):
@@ -5778,15 +5786,15 @@ def exit():
     # wait until all threads are stopped
     for server_vbox in statuswindow.servers_vbox.children():
         server_vbox.table.worker_thread.wait(1000)
-        #server_vbox.table.worker_thread.wait()
+        # server_vbox.table.worker_thread.wait()
 
     # wait until statuswindow notification worker has finished
     statuswindow.worker_notification_thread.wait(1000)
-    #statuswindow.worker_notification_thread.wait()
+    # statuswindow.worker_notification_thread.wait()
 
     # wait until statuswindow worker has finished
     statuswindow.worker_thread.wait(1000)
-    #statuswindow.worker_thread.wait()
+    # statuswindow.worker_thread.wait()
 
     # bye bye
     APP.instance().quit()
