@@ -1427,6 +1427,7 @@ class StatusWindow(QWidget):
         """
         if conf.statusbar_floating:
             screen_or_widget = self
+
         elif conf.icon_in_systray:
 
             # where is the pointer which clicked onto systray icon
@@ -1456,19 +1457,40 @@ class StatusWindow(QWidget):
                     self.top = True
                 else:
                     self.top = False
+                
         elif conf.icon_in_systray:
             if icon_y < desktop.screenGeometry(self).height() / 2 + available_y:
                 self.top = True
             else:
                 self.top = False
-
+            
+            x = icon_x
+            
         # get height from tablewidgets
         real_height = self.get_real_height()
 
         # width simply will be the current screen maximal width - less hassle!
-        width = available_width
+        
+        if self.get_real_width() > available_width:
+            width = available_width
+            x = available_x
+        else:
+            width = self.get_real_width()
+        
+            #x = (self.x() + int(self.width()/2)) - int(width/2)
+            
+            if conf.statusbar_floating and not self.is_shown:
+                # center status window approximately under cursor
+                x = self.x() - int(width/2)
+            else:
+                x = self.x()
 
-        if conf.statusbar_floating:
+            if x < available_x:
+                x = available_x
+            if x + width > available_x + available_width:
+                x = available_x + available_width - width
+
+        if conf.statusbar_floating:            
             # when statusbar resides in uppermost part of current screen extend from top to bottom
             if self.top == True:
                 y = self.y()
@@ -1476,6 +1498,7 @@ class StatusWindow(QWidget):
                     height = real_height
                 else:
                     height = available_height - self.y() + available_y
+                    
             # when statusbar hangs around in lowermost part of current screen extend from bottom to top
             else:
                 # when height is to large for current screen cut it
@@ -1486,6 +1509,10 @@ class StatusWindow(QWidget):
                 else:
                     height = real_height
                     y = self.y() + self.height() - height
+
+            
+
+
 
         elif conf.icon_in_systray:
             # when systrayicon resides in uppermost part of current screen extend from top to bottom
@@ -1509,7 +1536,8 @@ class StatusWindow(QWidget):
                     height = real_height
                     y = available_height - real_height
 
-        return width, height, available_x, y
+        #return width, height, available_x, y
+        return width, height, x, y
 
 
     def resize_window(self, width, height, x, y):
@@ -1611,9 +1639,6 @@ class StatusWindow(QWidget):
         for server in self.servers_vbox.children():
             if server.table.get_real_width() > width:
                 width = server.table.get_real_width()
-
-        print(width)
-
         return width
 
 

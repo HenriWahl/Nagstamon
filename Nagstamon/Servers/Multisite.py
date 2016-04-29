@@ -227,8 +227,7 @@ class MultisiteServer(GenericServer):
                     'status_information': html.unescape(host['host_plugin_output'].replace('\n', ' ')),
                     'attempt':            host['host_attempt'],
                     'site':               host['sitename_plain'],
-                    'address':            host['host_address'],
-                    'notifications':      host['host_notifications_enabled'] == 'yes',
+                    'address':            host['host_address']
                 }
 
                 # host objects contain service objects
@@ -244,7 +243,6 @@ class MultisiteServer(GenericServer):
                     self.new_hosts[new_host].status_information= html.unescape(n['status_information'].replace('\n', ' '))
                     self.new_hosts[new_host].site = n['site']
                     self.new_hosts[new_host].address = n['address']
-                    self.new_hosts[new_host].notifications_disabled = not n['notifications']
 
                     # transisition to Check_MK 1.1.10p2
                     if 'host_in_downtime' in host:
@@ -253,6 +251,9 @@ class MultisiteServer(GenericServer):
                     if 'host_acknowledged' in host:
                         if host['host_acknowledged'] == 'yes':
                             self.new_hosts[new_host].acknowledged = True
+                    if 'host_notifications_enabled' in host:
+                        if host['host_notifications_enabled'] == 'no':
+                            self.new_hosts[new_host].notifications_disabled = True
 
                     # hard/soft state for later filter evaluation
                     real_attempt, max_attempt = self.new_hosts[new_host].attempt.split('/')
@@ -299,7 +300,6 @@ class MultisiteServer(GenericServer):
                     'status_information': html.unescape(service['svc_plugin_output'].replace('\n', ' ')),
                     # Check_MK passive services can be re-scheduled by using the Check_MK service
                     'passiveonly':        service['svc_is_active'] == 'no' and not service['svc_check_command'].startswith('check_mk'),
-                    'notifications':      service['svc_notifications_enabled'] == 'yes',
                     'flapping':           service['svc_flapping'] == 'yes',
                     'site':               service['sitename_plain'],
                     'address':            service['host_address'],
@@ -330,7 +330,6 @@ class MultisiteServer(GenericServer):
                     self.new_hosts[n['host']].services[new_service].site = n['site']
                     self.new_hosts[n['host']].services[new_service].address = n['address']
                     self.new_hosts[n['host']].services[new_service].command = n['command']
-                    self.new_hosts[n['host']].services[new_service].notifications_disabled = not n['notifications']
 
                     # transistion to Check_MK 1.1.10p2
                     if 'svc_in_downtime' in service:
@@ -342,6 +341,9 @@ class MultisiteServer(GenericServer):
                     if 'svc_flapping' in service:
                         if service['svc_flapping'] == 'yes':
                             self.new_hosts[n['host']].services[new_service].flapping = True
+                    if 'svc_notifications_enabled' in service:
+                        if service['svc_notifications_enabled'] == 'no':
+                            self.new_hosts[n['host']].services[new_service].notifications_disabled = True
 
                     # hard/soft state for later filter evaluation
                     real_attempt, max_attempt = self.new_hosts[n['host']].services[new_service].attempt.split('/')
