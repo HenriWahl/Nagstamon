@@ -1117,6 +1117,7 @@ class StatusWindow(QWidget):
         # store position for showing/hiding statuswindow
         self.stored_x = self.x()
         self.stored_y = self.y()
+        self.stored_width = self.width()
 
 
     def create_ServerVBox(self, server):
@@ -1479,11 +1480,14 @@ class StatusWindow(QWidget):
         
             #x = (self.x() + int(self.width()/2)) - int(width/2)
             
-            if conf.statusbar_floating and not self.is_shown:
-                # center status window approximately under cursor
-                x = self.x() - int(width/2)
-            else:
-                x = self.x()
+            ###if conf.statusbar_floating and not self.is_shown:
+            ###    # center status window approximately under cursor
+            ###    x = self.x() - int(width/2)
+            ###else:
+            ###    x = self.x()
+            
+            # always take the stored position and with of the statusbar
+            x = self.stored_x - int(width/2) + int(self.stored_width/2)
 
             if x < available_x:
                 x = available_x
@@ -1508,11 +1512,7 @@ class StatusWindow(QWidget):
                     y = available_y
                 else:
                     height = real_height
-                    y = self.y() + self.height() - height
-
-            
-
-
+                    y = self.y() + self.height() - height          
 
         elif conf.icon_in_systray:
             # when systrayicon resides in uppermost part of current screen extend from top to bottom
@@ -1549,6 +1549,7 @@ class StatusWindow(QWidget):
         if self.is_shown == False:
             self.stored_x = self.x()
             self.stored_y = self.y()
+            self.stored_width = self.width()
 
         if platform.system() == 'Windows':
             # absolutely strange, but no other solution available
@@ -1612,6 +1613,8 @@ class StatusWindow(QWidget):
         if not self.is_shown:
             self.stored_x = self.x()
             self.stored_y = self.y()
+            self.stored_width = self.width()
+
 
 
     def leaveEvent(self, event):
