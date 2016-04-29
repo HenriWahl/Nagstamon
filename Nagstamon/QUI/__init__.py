@@ -1115,7 +1115,7 @@ class StatusWindow(QWidget):
                 self.showMaximized()
 
         # store position for showing/hiding statuswindow
-        self.stored_x = self.x()
+        self.stored_x = self.x()               
         self.stored_y = self.y()
         self.stored_width = self.width()
 
@@ -1458,13 +1458,17 @@ class StatusWindow(QWidget):
                     self.top = True
                 else:
                     self.top = False
-                
+                    
+            # always take the stored position of the statusbar
+            x = self.stored_x
+
         elif conf.icon_in_systray:
             if icon_y < desktop.screenGeometry(self).height() / 2 + available_y:
                 self.top = True
             else:
                 self.top = False
             
+            # take systray icon position as reference
             x = icon_x
             
         # get height from tablewidgets
@@ -1478,17 +1482,13 @@ class StatusWindow(QWidget):
         else:
             width = self.get_real_width()
         
-            #x = (self.x() + int(self.width()/2)) - int(width/2)
-            
-            ###if conf.statusbar_floating and not self.is_shown:
-            ###    # center status window approximately under cursor
-            ###    x = self.x() - int(width/2)
-            ###else:
-            ###    x = self.x()
-            
-            # always take the stored position and with of the statusbar
-            x = self.stored_x - int(width/2) + int(self.stored_width/2)
+            if width < self.toparea.sizeHint().width():
+                width = self.toparea.sizeHint().width()
 
+            # always take the stored width of the statusbar into account
+            x = x - int(width/2) + int(self.stored_width/2)
+        
+            # check left and right limits of x
             if x < available_x:
                 x = available_x
             if x + width > available_x + available_width:
@@ -1536,7 +1536,6 @@ class StatusWindow(QWidget):
                     height = real_height
                     y = available_height - real_height
 
-        #return width, height, available_x, y
         return width, height, x, y
 
 
@@ -1640,8 +1639,13 @@ class StatusWindow(QWidget):
         """
         width = 0
         for server in self.servers_vbox.children():
+            # if table is wider than window adjust with to table
             if server.table.get_real_width() > width:
                 width = server.table.get_real_width()
+
+            # if header in ser vbox is wider than width adjust the latter
+            if server.header.sizeHint().width() > width:
+                width = server.header.sizeHint().width()
         return width
 
 
