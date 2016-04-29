@@ -23,6 +23,8 @@ import socket
 import sys
 import re
 import copy
+import time
+import datetime
 
 #from Nagstamon.Objects import *
 #from Nagstamon.Servers.Generic import GenericServer
@@ -308,23 +310,29 @@ class CentreonServer(GenericServer):
         parse a ton of html to get a host and a service id...
         '''
         ###cgi_data = urllib.parse.urlencode({"p":"20218",\
-        cgi_data = {'p': '20218',
-                    'host_name': host,
-                    'service_description': service,
-                    'o': 'as',
-                    'sid': self.SID}
+
+        #cgi_data = {'p': '20218',
+        #            'host_name': host,
+        #            'service_description': service,
+        #            'o': 'as',
+        #            'sid': self.SID}
+        cgi_data = {'p':'20201',\
+                    'host_name':host,\
+                    'service_description':service,\
+                    'o':'svcd'}
 
         # might look strange to have cgi_data 2 times, the first it is the 'real' in URL and the second is the cgi_data parameter
         # from urllib to get the session id POSTed
         result = self.FetchURL(self.monitor_cgi_url + '/main.php', cgi_data=cgi_data, giveback='raw')
+        #result = self.FetchURL(self.monitor_cgi_url + '/main.php?'+ cgi_data, cgi_data=urllib.urlencode({'sid':self.SID}), giveback='raw')
         raw, error = result.result, result.error
 
         # ids to give back, should contain two items, a host and a service id
-        ids = []
+        #ids = []
 
         if error == '':
-            host_id = raw.partition('var host_id = '')[2].partition(''')[0]
-            svc_id = raw.partition('var svc_id = '')[2].partition(''')[0]
+            host_id = raw.partition("var host_id = '")[2].partition("'")[0]
+            svc_id = raw.partition("var svc_id = '")[2].partition("'")[0]
             del raw
         else:
             if conf.debug_mode == True:
@@ -343,6 +351,7 @@ class CentreonServer(GenericServer):
                 return '',''
         except:
             return '',''
+
 
     def _get_status(self):
         '''
@@ -709,20 +718,30 @@ class CentreonServer(GenericServer):
         gets actual host and service ids and apply them to downtime cgi
         '''
         try:
+
+            # start and end time
+            start = start_time.split( )[1]
+            end = end_time.split( )[1]
+            # start and end date
+            start_date = start_time.split( )[0]
+            end_date = end_time.split( )[0]
+
             if service == '':
                 # host
                 host_id = self._get_host_id(host)
-                cgi_data = urllib.parse.urlencode({'p':'20106',\
-                                             'host_or_hg[host_or_hg]':'1',\
-                                             'host_id':host_id,\
-                                             'persistant':int(fixed),\
-                                             'duration_scale':'m',\
-                                             'start':start_time,\
-                                             'end':end_time,\
-                                             'with_service[with_services]':'0',\
-                                             'comment':comment,\
-                                             'submitA':'Save',\
-                                             'o':'ah', 'sid':self.SID})
+
+                cgi_data = {'p':'20106',\
+                            'host_or_hg[host_or_hg]':'1',\
+                            'host_id':host_id,\
+                            'persistant':int(fixed),\
+                            'duration_scale':'m',\
+                            'start':start_time,\
+                            'end':end_time,\
+                            'with_service[with_services]':'0',\
+                            'comment':comment,\
+                            'submitA':'Save',\
+                            'o':'ah', 'sid':self.SID}
+
                 # debug
                 if conf.debug_mode == True:
                     self.Debug(server=self.get_name(), host=host, debug=self.monitor_cgi_url + '/main.php?' + cgi_data)
@@ -730,19 +749,35 @@ class CentreonServer(GenericServer):
             else:
                 # service
                 host_id, service_id = self._get_host_and_service_id(host, service)
-                cgi_data = urllib.parse.urlencode({'p':'20218',\
-					     'host_id':host_id,\
-					     'service_id':service_id,\
-					     'duration_scale':'m',\
-					     'start':start_time,\
-					     'end':end_time,\
-					     'start_time':hours, 'end_time':hours,\
-					     'comment':'hdhg',\
-					     'submitA':'Save',\
-					     'persistant':int(fixed),\
-                                             'o':'as', 'sid':self.SID})
+                cgi_data = {'p': '20218',
+                            'host_id': host_id,
+                            'service_id': service_id,
+                            'submitA': 'Save',
+                            'persistant': int(fixed),
+                            'duration_scale':'m',
+                            'start': start_date,
+                            'start_time': start,
+                            'end': end_date,
+                            'end_time': end,
+                            'comment': comment,
+                            'o': 'as'}
+
+                #cgi_data = urllib.parse.urlencode({'p':'20218',\
+				#	     'host_id':host_id,\
+				#	     'service_id':service_id,\
+				#	     'duration_scale':'m',\
+				#	     'start':start_time,\
+				#	     'end':end_time,\
+				#	     'start_time':hours, 'end_time':hours,\
+				#	     'comment':comment,\
+				#	     'submitA':'Save',\
+				#	     'persistant':int(fixed),\
+                #                             'o':'as', 'sid':self.SID})
+
+
                 # debug
                 if conf.debug_mode == True:
+                    print("if")
                     self.Debug(server=self.get_name(), host=host, service=service, debug=self.monitor_cgi_url + '/main.php?' + cgi_data)
                     url = self.monitor_cgi_url + '/main.php?' + cgi_data
 
@@ -751,6 +786,7 @@ class CentreonServer(GenericServer):
             raw = self.FetchURL(url, giveback='raw')
             del raw
         except:
+            print("except")
             self.Error(sys.exc_info())
 
 
