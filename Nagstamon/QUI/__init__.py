@@ -28,6 +28,7 @@ import platform
 import time
 import random
 import copy
+import base64
 
 from PyQt5.QtWidgets import *
 from PyQt5.QtGui import *
@@ -35,7 +36,6 @@ from PyQt5.QtCore import *
 from PyQt5.QtSvg import *
 from PyQt5.QtMultimedia import *
 
-# ##from operator import methodcaller
 from collections import OrderedDict
 from copy import deepcopy
 
@@ -359,6 +359,8 @@ class SystemTrayIcon(QSystemTrayIcon):
             svg_renderer = QSvgRenderer(svg_xml_stream)
             # pixmap to be painted on - arbitrarily choosen 128x128 px
             svg_pixmap = QPixmap(128, 128)
+            # fill transparent backgound
+            svg_pixmap.fill(Qt.transparent)
             # initiate painter which paints onto paintdevice pixmap
             svg_painter = QPainter(svg_pixmap)
             # render svg to pixmap
@@ -1993,6 +1995,7 @@ class NagstamonLogo(QSvgWidget, _Draggable_Widget):
 
     def __init__(self, file, width=None, height=None, parent=None):
         QSvgWidget.__init__(self, parent=parent)
+        # either filepath or QByteArray for toparea logo
         self.load(file)
         self.setSizePolicy(QSizePolicy.Fixed, QSizePolicy.Fixed)
         # size needed for small Nagstamon logo in statusbar
@@ -2256,8 +2259,13 @@ class TopArea(QWidget):
         QWidget.__init__(self)
         self.hbox = HBoxLayout(spacing=SPACE, parent=self)  # top HBox containing buttons
 
+
+        self.icons = dict()
+        self.create_icons()
+
         # top button box
-        self.logo = NagstamonLogo('%s%snagstamon_logo_toparea.svg' % (RESOURCES, os.sep), width=144, height=42, parent=self)
+        #self.logo = NagstamonLogo('%s%snagstamon_logo_toparea.svg' % (RESOURCES, os.sep), width=144, height=42, parent=self)
+        self.logo = NagstamonLogo(self.icons['nagstamon_logo_toparea'], width=144, height=42, parent=self)
         self.label_version = Draggable_Label(text=AppInfo.VERSION, parent=self)
         self.label_empty_space = Draggable_Label(text='', parent=self)
         self.label_empty_space.setSizePolicy(QSizePolicy.Expanding, QSizePolicy.Ignored)
@@ -2271,11 +2279,10 @@ class TopArea(QWidget):
         self.combobox_servers.fill()
 
         self.button_hamburger_menu = PushButton_Hamburger()
-        self.button_hamburger_menu.setIcon(QIcon('%s%smenu.svg' % (RESOURCES, os.sep)))
+        #self.button_hamburger_menu.setIcon(QIcon('%s%smenu.svg' % (RESOURCES, os.sep)))
+        self.button_hamburger_menu.setIcon(self.icons['menu'])
         self.button_hamburger_menu.setStyleSheet('''QPushButton {border-width: 0px;
                                                                  border-style: none;}
-                                                    QPushButton:hover {background-color: white;
-                                                                      border-radius: 4px;}
                                                     QPushButton::menu-indicator{image:url(none.jpg);}''')
 
         self.hamburger_menu = MenuAtCursor()
@@ -2286,12 +2293,11 @@ class TopArea(QWidget):
         self.button_hamburger_menu.setMenu(self.hamburger_menu)
 
         self.button_close = QPushButton()
-        self.button_close.setIcon(QIcon('%s%sclose.svg' % (RESOURCES, os.sep)))
+        #self.button_close.setIcon(QIcon('%s%sclose.svg' % (RESOURCES, os.sep)))
+        self.button_close.setIcon(self.icons['close'])
         self.button_close.setStyleSheet('''QPushButton {border-width: 0px;
                                                         border-style: none;
-                                                        margin-right: 5px;}
-                                           QPushButton:hover {background-color: red;
-                                                              border-radius: 4px;}''')
+                                                        margin-right: 5px;}''')
 
         self.hbox.addWidget(self.logo)
         self.hbox.addWidget(self.label_version)
@@ -2310,6 +2316,56 @@ class TopArea(QWidget):
     def enterEvent(self, event):
         # unlock statuswindow if pointer touches statusbar
         self.mouse_entered.emit()
+
+
+    @pyqtSlot()
+    def create_icons(self):
+        """
+            create icons from template, applying colors
+        """
+        
+        # get rgb values of current foreground color to be used for SVG icons (menu)
+        r, g, b, a = APP.palette().color(QPalette.Foreground).getRgb()
+               
+        for icon in 'nagstamon_logo_toparea', 'close', 'menu':       
+            # get template from file
+            svg_template_file = open('{0}{1}{2}_template.svg'.format(RESOURCES, os.sep, icon))
+            svg_template_xml = svg_template_file.readlines()
+
+            # current SVG XML for state icon, derived from svg_template_cml
+            svg_icon_xml = list()
+
+            # replace dummy text and background colors with configured ones
+            for line in svg_template_xml:
+                line = line.replace('fill:#ff00ff', 'fill:#{0:x}{1:x}{2:x}'.format(r, g, b) )
+                svg_icon_xml.append(line)
+
+            # create XML stream of SVG
+            svg_xml_stream = QXmlStreamReader(''.join(svg_icon_xml))
+
+            # create renderer for SVG and put SVG XML into renderer
+            svg_renderer = QSvgRenderer(svg_xml_stream)
+            # pixmap to be painted on - arbitrarily choosen 128x128 px
+            svg_pixmap = QPixmap(128, 128)
+            # fill transparent backgound
+            svg_pixmap.fill(Qt.transparent)
+            # initiate painter which paints onto paintdevice pixmap
+            svg_painter = QPainter(svg_pixmap)
+            # render svg to pixmap
+            svg_renderer.render(svg_painter)
+            # close painting
+            svg_painter.end()
+            
+            # two ways...
+            if icon == 'nagstamon_logo_toparea':
+                # first get a base64 version of the SVG                
+                svg_base64 = base64.b64encode(bytes(''.join(svg_icon_xml), 'utf8'))
+                # create a QByteArray for NagstamonLogo aka QSvgWidget
+                svg_bytes = QByteArray.fromBase64(svg_base64)
+                self.icons[icon] = svg_bytes
+            else:
+                # put pixmap into icon
+                self.icons[icon] = QIcon(svg_pixmap)
 
 
 class ServerStatusLabel(Draggable_Label):
