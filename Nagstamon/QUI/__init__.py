@@ -4652,8 +4652,14 @@ class Dialog_Settings(Dialog):
             # access both labels 
             label_0 = self.ui.__dict__['label_intensity_{0}_0'.format(state.lower())]
             label_1 = self.ui.__dict__['label_intensity_{0}_1'.format(state.lower())]          
-            
-            # get baxckground of level 0 label
+
+            # get text color from text color chooser button
+            text = self.ui.__dict__['input_button_color_{0}_text'\
+                                    .format(state.lower())]\
+                                    .styleSheet()\
+                                    .split(';\n')[0].split(': ')[1]
+
+            # get background of level 0 label
             background = label_0.palette().color(QPalette.Window)
             r, g, b, a = background.getRgb()
 
@@ -4677,8 +4683,7 @@ class Dialog_Settings(Dialog):
                                      background-color: rgb({1}, {2}, {3});
                                      padding-top: 3px;
                                      padding-bottom: 3px;
-                                  '''.format(conf.__dict__['color_{0}_text'.format(state.lower())],
-                                             r, g, b))
+                                  '''.format(text, r, g, b))
         
     @pyqtSlot()
     def font_chooser(self):
