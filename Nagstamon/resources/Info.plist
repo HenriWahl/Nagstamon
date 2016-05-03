@@ -5,12 +5,14 @@
 	<key>CFBundleDevelopmentRegion</key>
 	<string>English</string>
 	<key>CFBundleExecutable</key>
-	<string>nagstamon-qt</string>
+	<string>nagstamon</string>
 	<key>CFBundleIconFile</key>
 	<string>icon.icns</string>
 	<key>CFBundleDisplayName</key>
 	<string>Nagstamon</string>
-    <key>NSHighResolutionCapable</key>
-    <true/>
+	<key>CFBundleIdentifier</key>
+	<string></string>
+	<key>NSHighResolutionCapable</key>
+	<true/>
 </dict>
 </plist>

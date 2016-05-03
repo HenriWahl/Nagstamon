@@ -1115,7 +1115,7 @@ class StatusWindow(QWidget):
                 self.showMaximized()
 
         # store position for showing/hiding statuswindow
-        self.stored_x = self.x()               
+        self.stored_x = self.x()
         self.stored_y = self.y()
         self.stored_width = self.width()
 
@@ -4893,17 +4893,19 @@ class Dialog_Server(Dialog):
             conf.servers[self.server_conf.name] = self.server_conf
 
             # add new server instance to global servers dict
-
             servers[self.server_conf.name] = create_server(self.server_conf)
-
             if self.server_conf.enabled == True:
+                servers[self.server_conf.name].enabled = True
                 # create vbox
                 statuswindow.servers_vbox.addLayout(statuswindow.create_ServerVBox(servers[self.server_conf.name]))
                 # renew list of server vboxes in status window
                 statuswindow.sort_ServerVBoxes()
 
             # reorder servers in dict to reflect changes
-            servers = OrderedDict(sorted(servers.items()))
+            servers_freshly_sorted = sorted(servers.items())
+            servers.clear()
+            servers.update(servers_freshly_sorted)
+            del(servers_freshly_sorted)
 
             # some monitor servers do not need cgi-url - reuse self.VOLATILE_WIDGETS to find out which one
             if not self.server_conf.type in self.VOLATILE_WIDGETS[self.ui.input_lineedit_monitor_cgi_url]:
@@ -4913,7 +4915,6 @@ class Dialog_Server(Dialog):
             dialogs.settings.refresh_list(list_widget=dialogs.settings.ui.list_servers,
                                           list_conf=conf.servers,
                                           current=self.server_conf.name)
-
             self.window.close()
 
             # store server settings

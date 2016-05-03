@@ -61,7 +61,7 @@ def register_server(server):
 def get_enabled_servers():
     """
         list of enabled servers which connections outside should be used to check
-    """    
+    """
     return([x for x in servers.values() if x.enabled == True])
 
 
