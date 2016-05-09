@@ -4047,6 +4047,10 @@ class Dialog_Settings(Dialog):
         self.ui.button_colors_defaults.clicked.connect(self.paint_color_alternation)
         self.ui.button_colors_defaults.clicked.connect(self.change_color_alternation_by_value)
 
+        # paint alternating colors when example is wanted for customized intensity
+        self.ui.input_checkbox_grid_use_custom_intensity.clicked.connect(self.paint_color_alternation)
+        self.ui.input_checkbox_grid_use_custom_intensity.clicked.connect(self.change_color_alternation_by_value)
+
         # finally map signals with .sender() - [<type>] is important!
         self.signalmapper_colors.mapped[str].connect(self.color_chooser)
         
@@ -5787,7 +5791,7 @@ def _create_brushes():
     if conf.grid_use_custom_intensity:
         intensity = 100 + conf.grid_alternation_intensity
     else:
-        intensity = 125
+        intensity = 115
     
     # every state has 2 labels in both alteration levels 0 and 1
     for state in STATES[1:]:
