@@ -196,9 +196,14 @@ ICONS_FONT = QFont('Nagstamon', FONT.pointSize() + 2, QFont.Normal, False)
 # completely silly but no other rescue for Windows-hides-statusbar-after-display-mode-change problem
 NUMBER_OF_DISPLAY_CHANGES = 0
 
-# Flags for statusbar
-WINDOW_FLAGS = Qt.WindowStaysOnTopHint | Qt.FramelessWindowHint | Qt.ToolTip
-#WINDOW_FLAGS = Qt.WindowStaysOnTopHint | Qt.FramelessWindowHint | Qt.Tool
+# Flags for statusbar - experiment with Qt.ToolTip for Windows because 
+# statusbar permanently seems to vanish at some users desktops
+# see https://github.com/HenriWahl/Nagstamon/issues/222
+#WINDOW_FLAGS = Qt.WindowStaysOnTopHint | Qt.FramelessWindowHint | Qt.ToolTip
+if platform.system() == 'Windows':
+    WINDOW_FLAGS = Qt.FramelessWindowHint | Qt.ToolTip
+else:
+    WINDOW_FLAGS = Qt.WindowStaysOnTopHint | Qt.FramelessWindowHint | Qt.Tool
 
 # set style for tooltips globally - to sad not all properties can be set here
 APP.setStyleSheet('''QToolTip { margin: 3px;
@@ -1018,6 +1023,7 @@ class StatusWindow(QWidget):
                 available_y = desktop.availableGeometry(self).y()
                 self.move(available_x, available_y)
 
+            """
             # feels like kindergarten but every OS needs another order of setting flags...
             if platform.system() == 'Windows':
                 # workaround for Windows-hides-statusbar-after-display-mode-change problem
@@ -1039,7 +1045,15 @@ class StatusWindow(QWidget):
 
                 # necessary to be shown before Linux EWMH-mantra can be applied
                 self.show()
+            """
+            
+            # statusbar and detail window should be frameless and stay on top
+            # tool flag helps to be invisible in taskbar
+            self.setWindowFlags(WINDOW_FLAGS)
 
+            # necessary to be shown before Linux EWMH-mantra can be applied
+            self.show()
+            
             # X11/Linux needs some special treatment to get the statusbar floating on all virtual desktops
             if not platform.system() in NON_LINUX:
                 # get all windows...
@@ -1583,7 +1597,7 @@ class StatusWindow(QWidget):
 
     def leaveEvent(self, event):
         """
-            check if popup has to be hidden depending ou mouse position
+            check if popup has to be hidden depending on mouse position
         """
         # check first if popup has to be shown by hovering or clicking
         if conf.close_details_hover and not conf.fullscreen:
@@ -3102,7 +3116,7 @@ class TreeView(QTreeView):
             # run decorated method
             method(self)
             # default actions need closed statuswindow to display own dialogs
-            if not conf.fullscreen:
+            if not conf.fullscreen and not method.__name__ == 'action_recheck':
                 statuswindow.hide_window()
         return(decoration_function)
 
@@ -3124,10 +3138,11 @@ class TreeView(QTreeView):
 
     @action_response_decorator
     def action_recheck(self):
+        
         # send signal to worker recheck slot
         self.recheck.emit({'host':    self.miserable_host,
                            'service': self.miserable_service})
-
+     
 
     @action_response_decorator
     def action_acknowledge(self):
@@ -3391,7 +3406,7 @@ class TreeView(QTreeView):
             """
                 let worker do the dirty job of filling the array
             """
-            
+                        
             # data_array to be evaluated in data() of model
             # first 9 items per row come from current status information
             self.data_array = list()
@@ -3537,7 +3552,7 @@ class TreeView(QTreeView):
         def recheck_all(self):
             """
                 call server.set_recheck for every single host/service
-            """
+            """           
             # only if no already rechecking
             if self.rechecking_all == False:
                 # block rechecking
@@ -3567,12 +3582,13 @@ class TreeView(QTreeView):
                     # Check_MK Multisite does it its own way
                     self.server.recheck_all()
                 # release rechecking lock
-                self.rechecking = False
+                self.rechecking_all = False
                 # restore server status label
                 self.restore_label_status.emit()
             else:
                 if conf.debug_mode:
                     self.server.Debug(server=self.server.name, debug='Already rechecking all')
+
 
         @pyqtSlot(str, str)
         def get_start_end(self, server_name, host):
@@ -5561,7 +5577,7 @@ class MediaPlayer(QObject):
             return True
         else:
             # cry and tell no file was found
-            self.send_message.emit('warning', 'File <b>\'{0}\'</b> does not exist.'.format(file))
+            self.send_message.emit('warning', 'Sound file <b>\'{0}\'</b> not found for playback.'.format(file))
             return False
 
 
