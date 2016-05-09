@@ -196,46 +196,9 @@ ICONS_FONT = QFont('Nagstamon', FONT.pointSize() + 2, QFont.Normal, False)
 # completely silly but no other rescue for Windows-hides-statusbar-after-display-mode-change problem
 NUMBER_OF_DISPLAY_CHANGES = 0
 
-# static CSS part of tablewidget cell colorization
-# value selection depends on conf.show_grid and column
-# this way grid styles do not have to be evaluated freshly in every cell
-
-CSS_GRID_FALSE = ''
-CSS_GRID_TRUE = '''border-style: dotted hide hide dotted;
-                   border-width: 1px;'''
-CSS_GRID_ICON_TRUE = '''padding-right: 5px;
-                        border-style: dotted hide hide hide;
-                        border-width: 1px;'''
-
-CSS_GRID = {False: CSS_GRID_FALSE,
-            True: CSS_GRID_TRUE,
-
-            (False, 0): CSS_GRID_FALSE,
-            (False, 1): CSS_GRID_FALSE,
-            (False, 2): CSS_GRID_FALSE,
-            (False, 3): CSS_GRID_FALSE,
-            (False, 4): CSS_GRID_FALSE,
-            (False, 5): CSS_GRID_FALSE,
-            (False, 6): CSS_GRID_FALSE,
-
-            (True, 0): '''border-style: dotted hide hide hide;
-                          border-width: 1px;''',
-            (True, 1): CSS_GRID_TRUE,
-            (True, 2): CSS_GRID_TRUE,
-            (True, 3): CSS_GRID_TRUE,
-            (True, 4): CSS_GRID_TRUE,
-            (True, 5): CSS_GRID_TRUE,
-            (True, 6): CSS_GRID_TRUE}
-
-CSS_GRID_ICON = {False: CSS_GRID_FALSE,
-                 True: CSS_GRID_ICON_TRUE,
-
-                 (False, 0): CSS_GRID_FALSE,
-                 (False, 1): CSS_GRID_FALSE,
-
-                 (True, 0): CSS_GRID_ICON_TRUE,
-                 (True, 1): CSS_GRID_ICON_TRUE}
-
+# Flags for statusbar
+WINDOW_FLAGS = Qt.WindowStaysOnTopHint | Qt.FramelessWindowHint | Qt.ToolTip
+#WINDOW_FLAGS = Qt.WindowStaysOnTopHint | Qt.FramelessWindowHint | Qt.Tool
 
 # set style for tooltips globally - to sad not all properties can be set here
 APP.setStyleSheet('''QToolTip { margin: 3px;
@@ -1062,17 +1025,17 @@ class StatusWindow(QWidget):
                     # first set window flags to avoid frame/frameless flickering
                     self.setWindowFlags(Qt.FramelessWindowHint | Qt.Tool)
                 else:
-                    self.setWindowFlags(Qt.WindowStaysOnTopHint | Qt.FramelessWindowHint | Qt.Tool)
+                    self.setWindowFlags(WINDOW_FLAGS)
 
                 self.show()
 
                 # statusbar and detail window should be frameless and stay on top
                 # tool flag helps to be invisible in taskbar
-                self.setWindowFlags(Qt.WindowStaysOnTopHint | Qt.FramelessWindowHint | Qt.Tool)
+                self.setWindowFlags(WINDOW_FLAGS)
             else:
                 # statusbar and detail window should be frameless and stay on top
                 # tool flag helps to be invisible in taskbar
-                self.setWindowFlags(Qt.WindowStaysOnTopHint | Qt.FramelessWindowHint | Qt.Tool)
+                self.setWindowFlags(WINDOW_FLAGS)
 
                 # necessary to be shown before Linux EWMH-mantra can be applied
                 self.show()
@@ -1087,7 +1050,7 @@ class StatusWindow(QWidget):
         elif conf.icon_in_systray:
             # statusbar and detail window should be frameless and stay on top
             # tool flag helps to be invisible in taskbar
-            self.setWindowFlags(Qt.WindowStaysOnTopHint | Qt.FramelessWindowHint | Qt.Tool)
+            self.setWindowFlags(WINDOW_FLAGS)
 
             # yeah! systray!
             systrayicon.show()
@@ -1488,7 +1451,7 @@ class StatusWindow(QWidget):
                 width = self.toparea.sizeHint().width()
 
             # always take the stored width of the statusbar into account
-            x = x - int(width/2) + int(self.stored_width/2)
+            x = x - int(width / 2) + int(self.stored_width / 2)
         
             # check left and right limits of x
             if x < available_x:
@@ -1748,7 +1711,7 @@ class StatusWindow(QWidget):
         # apparently sometime the floating statusbsr vanishes in the background
         # lets try here to keep it on top - only if not fullscreen
         if not conf.fullscreen:
-            self.setWindowFlags(Qt.WindowStaysOnTopHint | Qt.FramelessWindowHint | Qt.Tool)
+            self.setWindowFlags(WINDOW_FLAGS)
 
 
     class Worker(QObject):
@@ -2264,7 +2227,7 @@ class TopArea(QWidget):
         self.create_icons()
 
         # top button box
-        #self.logo = NagstamonLogo('%s%snagstamon_logo_toparea.svg' % (RESOURCES, os.sep), width=144, height=42, parent=self)
+        # self.logo = NagstamonLogo('%s%snagstamon_logo_toparea.svg' % (RESOURCES, os.sep), width=144, height=42, parent=self)
         self.logo = NagstamonLogo(self.icons['nagstamon_logo_toparea'], width=144, height=42, parent=self)
         self.label_version = Draggable_Label(text=AppInfo.VERSION, parent=self)
         self.label_empty_space = Draggable_Label(text='', parent=self)
@@ -2279,7 +2242,7 @@ class TopArea(QWidget):
         self.combobox_servers.fill()
 
         self.button_hamburger_menu = PushButton_Hamburger()
-        #self.button_hamburger_menu.setIcon(QIcon('%s%smenu.svg' % (RESOURCES, os.sep)))
+        # self.button_hamburger_menu.setIcon(QIcon('%s%smenu.svg' % (RESOURCES, os.sep)))
         self.button_hamburger_menu.setIcon(self.icons['menu'])
         self.button_hamburger_menu.setStyleSheet('''QPushButton {border-width: 0px;
                                                                  border-style: none;}
@@ -2293,7 +2256,7 @@ class TopArea(QWidget):
         self.button_hamburger_menu.setMenu(self.hamburger_menu)
 
         self.button_close = QPushButton()
-        #self.button_close.setIcon(QIcon('%s%sclose.svg' % (RESOURCES, os.sep)))
+        # self.button_close.setIcon(QIcon('%s%sclose.svg' % (RESOURCES, os.sep)))
         self.button_close.setIcon(self.icons['close'])
         self.button_close.setStyleSheet('''QPushButton {border-width: 0px;
                                                         border-style: none;
@@ -2337,7 +2300,7 @@ class TopArea(QWidget):
 
             # replace dummy text and background colors with configured ones
             for line in svg_template_xml:
-                line = line.replace('fill:#ff00ff', 'fill:#{0:x}{1:x}{2:x}'.format(r, g, b) )
+                line = line.replace('fill:#ff00ff', 'fill:#{0:x}{1:x}{2:x}'.format(r, g, b))
                 svg_icon_xml.append(line)
 
             # create XML stream of SVG
@@ -2473,7 +2436,7 @@ class ServerVBox(QVBoxLayout):
         # convert sort order to number as used in Qt.SortOrder  
         sort_order = SORT_ORDER[conf.default_sort_order.lower()]
 
-        self.table = TreeView(len(HEADERS)+1 , 0, sort_column, sort_order, self.server, parent=parent)
+        self.table = TreeView(len(HEADERS) + 1 , 0, sort_column, sort_order, self.server, parent=parent)
 
         # delete vbox if thread quits
         self.table.worker_thread.finished.connect(self.delete)
@@ -2606,7 +2569,7 @@ class ServerVBox(QVBoxLayout):
 
     @pyqtSlot()
     def update_label(self):
-        self.label.setText("<big><b>%s@%s</b></big>" % (self.server.username, self.server.name))
+        self.label.setText('<big><b>&nbsp;{0}@{1}</b></big>'.format(self.server.username, self.server.name))
         # let label padding keep top and bottom space - apparently not necessary on OSX
         if platform.system() != 'Darwin':
             self.label.setStyleSheet('''padding-top: {0}px;
@@ -2940,7 +2903,7 @@ class TreeView(QTreeView):
     def get_real_width(self):
         width = 0
         # avoid the last dummy column to be counted
-        for column in range(len(HEADERS)-1):
+        for column in range(len(HEADERS) - 1):
             width += self.columnWidth(column)
         return(width)
      
@@ -4022,8 +3985,6 @@ class Dialog_Settings(Dialog):
         self.ui.button_play_critical.clicked.connect(self.play_sound_file_critical)
         self.ui.button_play_down.clicked.connect(self.play_sound_file_down)
 
-
-
         # only show desktop notification on systems that support it
         if not dbus_connection.connected:
             self.ui.input_checkbox_notification_desktop.hide()
@@ -4064,7 +4025,11 @@ class Dialog_Settings(Dialog):
 
         # connect reset and defaults buttons
         self.ui.button_colors_reset.clicked.connect(self.paint_colors)
+        self.ui.button_colors_reset.clicked.connect(self.paint_color_alternation)
+        self.ui.button_colors_reset.clicked.connect(self.change_color_alternation_by_value)
         self.ui.button_colors_defaults.clicked.connect(self.colors_defaults)
+        self.ui.button_colors_defaults.clicked.connect(self.paint_color_alternation)
+        self.ui.button_colors_defaults.clicked.connect(self.change_color_alternation_by_value)
 
         # finally map signals with .sender() - [<type>] is important!
         self.signalmapper_colors.mapped[str].connect(self.color_chooser)
@@ -4645,46 +4610,57 @@ class Dialog_Settings(Dialog):
     @pyqtSlot(int)
     def change_color_alternation(self, value):
         """
-            fill alteration level 1 labels with altered color
+            fill alternation level 1 labels with altered color
             derived from level 0 labels aka default
         """
-        for state in COLORS:       
-            # access both labels 
-            label_0 = self.ui.__dict__['label_intensity_{0}_0'.format(state.lower())]
-            label_1 = self.ui.__dict__['label_intensity_{0}_1'.format(state.lower())]          
+        for state in COLORS:   
+            try:    
+                # access both labels 
+                label_0 = self.ui.__dict__['label_intensity_{0}_0'.format(state.lower())]
+                label_1 = self.ui.__dict__['label_intensity_{0}_1'.format(state.lower())]          
+    
+                # get text color from text color chooser button
+                text = self.ui.__dict__['input_button_color_{0}_text'\
+                                        .format(state.lower())]\
+                                        .styleSheet()\
+                                        .split(';\n')[0].split(': ')[1]
+    
+                # get background of level 0 label
+                background = label_0.palette().color(QPalette.Window)
+                r, g, b, a = background.getRgb()
+    
+                # if label background is too dark lighten the color instead of darken it mor
+                if background.lightness() < 30:
+                    if value > 5:
+                        r += 30
+                        g += 30
+                        b += 30 
+                    r = round(r / 100 * (100 + value))
+                    g = round(g / 100 * (100 + value))
+                    b = round(b / 100 * (100 + value))
+                else:
+                    r = round(r / 100 * (100 - value))
+                    g = round(g / 100 * (100 - value))
+                    b = round(b / 100 * (100 - value))               
+    
+                # finally apply new background color
+                # easier with style sheets than with QPalette/QColor
+                label_1.setStyleSheet('''color: {0};
+                                         background-color: rgb({1}, {2}, {3});
+                                         padding-top: 3px;
+                                         padding-bottom: 3px;
+                                      '''.format(text, r, g, b))
+            except:
+                pass
+            
+    @pyqtSlot()
+    def change_color_alternation_by_value(self):
+        """
+            to be fired up when colors are reset
+        """
+        self.change_color_alternation(self.ui.input_slider_grid_alternation_intensity.value())
 
-            # get text color from text color chooser button
-            text = self.ui.__dict__['input_button_color_{0}_text'\
-                                    .format(state.lower())]\
-                                    .styleSheet()\
-                                    .split(';\n')[0].split(': ')[1]
 
-            # get background of level 0 label
-            background = label_0.palette().color(QPalette.Window)
-            r, g, b, a = background.getRgb()
-
-            # if label background is too dark lighten the color instead of darken it mor
-            if background.lightness() < 30:
-                if value > 5:
-                    r += 30
-                    g += 30
-                    b += 30 
-                r = round(r / 100 * (100 + value))
-                g = round(g / 100 * (100 + value))
-                b = round(b / 100 * (100 + value))
-            else:
-                r = round(r / 100 * (100 - value))
-                g = round(g / 100 * (100 - value))
-                b = round(b / 100 * (100 - value))               
-
-            # finally apply new background color
-            # easier with style sheets than with QPalette/QColor
-            label_1.setStyleSheet('''color: {0};
-                                     background-color: rgb({1}, {2}, {3});
-                                     padding-top: 3px;
-                                     padding-bottom: 3px;
-                                  '''.format(text, r, g, b))
-        
     @pyqtSlot()
     def font_chooser(self):
         """

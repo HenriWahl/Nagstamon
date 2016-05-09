@@ -34,20 +34,10 @@ from Nagstamon.Config import (BOOLPOOL,
                               NON_LINUX,
                               conf)
 
-# get debug queue from nagstamon.py
-debug_queue = sys.modules['__main__'].debug_queue
-
-# experimenting with new debug queue
 # queue.Queue() needs threading module which might be not such a good idea to be used
 # because QThread is already in use
-# ##debug_queue = list()
-
-# temporary dict for string-to-bool-conversion
-# the bool:bool relations are thought to make things easier in Dialog_Settings.ok()
-# BOOLPOOL = {'False': False,
-#            'True': True,
-#            False: False,
-#            True: True}
+# get debug queue from nagstamon.py
+debug_queue = sys.modules['__main__'].debug_queue
 
 # states needed for gravity comparison for notification and Generic.py
 STATES = ['UP', 'UNKNOWN', 'WARNING', 'CRITICAL', 'UNREACHABLE', 'DOWN']
