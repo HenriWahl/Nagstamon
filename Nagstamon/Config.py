@@ -546,7 +546,8 @@ class Config(object):
             # that keyring works at all
             if not platform.system() in NON_LINUX:
                 # keyring and secretstorage have to be importable
-                import keyring, secretstorage
+                import Nagstamon.thirdparty.keyring as keyring
+                import secretstorage
                 if ("SecretService") in dir(keyring.backends) and not (keyring.get_keyring() is None):
                     return True
             else:
@@ -559,7 +560,7 @@ class Config(object):
                 if self.use_system_keyring == True:
                     # hint for packaging: nagstamon.spec always have to match module path
                     # keyring has to be bound to object to be used later
-                    import keyring
+                    import Nagstamon.thirdparty.keyring as keyring
                     return  not (keyring.get_keyring() is None)
                 else:
                     return False

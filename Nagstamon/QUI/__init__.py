@@ -5603,7 +5603,9 @@ class CheckVersion(QObject):
 
     @pyqtSlot(bool, QWidget)
     def check(self, start_mode=False, parent=None):
+        
         if self.is_checking == False:
+            
             # lock checking thread
             self.is_checking = True
 
@@ -5649,7 +5651,7 @@ class CheckVersion(QObject):
     def show_message(self, message):
         """
             message dialog must be shown from GUI thread
-        """
+        """       
         self.version_info_retrieved.emit()
         QMessageBox.information(self.parent, 'Nagstamon version check', message, QMessageBox.Ok)
 
