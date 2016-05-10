@@ -3309,6 +3309,11 @@ class TreeView(QTreeView):
         # sendt to treeview if data has been sorted by click on column header
         data_array_sorted = pyqtSignal(list)
         
+        # keep track of last sorting column and order to pre-sort by it
+        # start with sorting by host
+        last_sort_column = 0
+        last_sort_order = 0
+
 
         def __init__(self, parent=None, server=None, sort_column=0, sort_order=0):
             QObject.__init__(self)
@@ -3469,8 +3474,10 @@ class TreeView(QTreeView):
             self.sort_column = sort_column
             self.sort_order = sort_order
             
-            # to keep GTK Treeview sort behaviour first by services
-            first_sort = sorted(self.data_array, key=lambda row: row[2].lower(), reverse=self.sort_order)
+            print(self.server.name, self.sort_column, self.last_sort_column, header_clicked)
+            
+            # to keep GTK Treeview sort behaviour first by hosts
+            first_sort = sorted(self.data_array, key=lambda row: row[self.last_sort_column].lower(), reverse=self.last_sort_order)
 
             # use SORT_COLUMNS from Helpers to sort column accordingly
             self.data_array = sorted(first_sort,
@@ -3490,6 +3497,13 @@ class TreeView(QTreeView):
 
             del(first_sort)
 
+            # store last sorting column for next sorting only if header was clicked
+            if header_clicked:
+                print('header clicked.')
+                if self.last_sort_column != self.sort_column:
+                    self.last_sort_column = self.sort_column
+                self.last_sort_order = self.sort_order
+            
 
         @pyqtSlot(dict)
         def acknowledge(self, info_dict):
