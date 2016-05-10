@@ -199,7 +199,7 @@ NUMBER_OF_DISPLAY_CHANGES = 0
 # Flags for statusbar - experiment with Qt.ToolTip for Windows because 
 # statusbar permanently seems to vanish at some users desktops
 # see https://github.com/HenriWahl/Nagstamon/issues/222
-#WINDOW_FLAGS = Qt.WindowStaysOnTopHint | Qt.FramelessWindowHint | Qt.ToolTip
+# WINDOW_FLAGS = Qt.WindowStaysOnTopHint | Qt.FramelessWindowHint | Qt.ToolTip
 if platform.system() == 'Windows':
     WINDOW_FLAGS = Qt.FramelessWindowHint | Qt.ToolTip
 else:
@@ -2345,7 +2345,7 @@ class TopArea(QWidget):
                 self.icons[icon] = QIcon(svg_pixmap)
 
 
-class ServerStatusLabel(Draggable_Label):
+class ServerStatusLabel(QLabel):
     """
         label for ServerVBox to show server connection state
         extra class to apply simple slots for changing text or color

@@ -705,6 +705,8 @@ class GenericServer(object):
                             if len(tds[6](text=not_empty)) == 0:
                                 n['status_information'] = ''
                             else:
+                                print(tds[6].string)
+
                                 ###n['status_information'] = str(tds[6](text=not_empty)[0]).encode('utf-8')
                                 n['status_information'] = str(tds[6](text=not_empty)[0])
                             # status flags
