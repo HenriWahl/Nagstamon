@@ -3311,7 +3311,8 @@ class TreeView(QTreeView):
         
         # keep track of last sorting column and order to pre-sort by it
         # start with sorting by host
-        last_sort_column = 0
+        last_sort_column_cached = 0
+        last_sort_column_real = 0
         last_sort_order = 0
 
 
@@ -3473,11 +3474,9 @@ class TreeView(QTreeView):
             # store current sort_column and sort_data for next sort actions
             self.sort_column = sort_column
             self.sort_order = sort_order
-            
-            print(self.server.name, self.sort_column, self.last_sort_column, header_clicked)
-            
+
             # to keep GTK Treeview sort behaviour first by hosts
-            first_sort = sorted(self.data_array, key=lambda row: row[self.last_sort_column].lower(), reverse=self.last_sort_order)
+            first_sort = sorted(self.data_array, key=lambda row: row[self.last_sort_column_real].lower(), reverse=self.last_sort_order)
 
             # use SORT_COLUMNS from Helpers to sort column accordingly
             self.data_array = sorted(first_sort,
@@ -3499,11 +3498,14 @@ class TreeView(QTreeView):
 
             # store last sorting column for next sorting only if header was clicked
             if header_clicked:
-                print('header clicked.')
-                if self.last_sort_column != self.sort_column:
-                    self.last_sort_column = self.sort_column
-                self.last_sort_order = self.sort_order
-            
+                # last sorting column needs to be cached to avoid losing it
+                # effective last column is self.last_sort_column_real
+                if self.last_sort_column_cached != self.sort_column:
+                    self.last_sort_column_real = self.last_sort_column_cached
+                    self.last_sort_order = self.sort_order             
+                
+                self.last_sort_column_cached = self.sort_column
+                      
 
         @pyqtSlot(dict)
         def acknowledge(self, info_dict):
