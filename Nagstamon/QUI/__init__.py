@@ -59,7 +59,7 @@ from Nagstamon.Helpers import (is_found_by_re,
                                webbrowser_open,
                                STATES,
                                STATES_SOUND,
-                               SORT_COLUMNS)
+                               SORT_COLUMNS_FUNCTIONS)
 
 # dialogs
 from Nagstamon.QUI.settings_main import Ui_settings_main
@@ -3474,7 +3474,7 @@ class TreeView(QTreeView):
 
             # use SORT_COLUMNS from Helpers to sort column accordingly
             self.data_array = sorted(first_sort,
-                                     key=lambda row: SORT_COLUMNS[SORT_COLUMNS_INDEX[self.sort_column]](row[self.sort_column]),
+                                     key=lambda row: SORT_COLUMNS_FUNCTIONS[self.sort_column](row[SORT_COLUMNS_INDEX[self.sort_column]]),
                                      reverse=self.sort_order)
 
             # fix alternating colors

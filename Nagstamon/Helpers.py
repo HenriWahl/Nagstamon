@@ -400,7 +400,7 @@ def webbrowser_open(url):
 
 # depending on column different functions have to be used
 # 0 + 1 are column "Hosts", 1 + 2 are column "Service" due to extra font flag pictograms
-SORT_COLUMNS = { 0: compare_host,
+SORT_COLUMNS_FUNCTIONS = { 0: compare_host,
          1: compare_host,
          2: compare_service,
          3: compare_service,
