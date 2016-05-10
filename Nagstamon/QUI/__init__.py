@@ -2601,7 +2601,7 @@ class Model(QAbstractTableModel):
     # list of lists for storage of status data 
     data_array = list()
 
-    # cache row and columnt count    
+    # cache row and column count    
     row_count = 0
     column_count = len(HEADERS_HEADERS)
 
@@ -4101,10 +4101,9 @@ class Dialog_Settings(Dialog):
         # fill default order fields combobox with s names
         # kick out empty headers for hosts and services flags
         sort_fields = copy.copy(HEADERS_HEADERS)
-        # second item has index 1
-        sort_fields.pop(1)
-        # now former fourth item has index 2
-        sort_fields.pop(2)
+        while '' in sort_fields:
+            sort_fields.remove('')
+
         self.ui.input_combobox_default_sort_field.addItems(sort_fields)
         # catch exception which will occur when older settings are used which have real header names as values
         try:
