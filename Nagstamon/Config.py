@@ -327,7 +327,7 @@ class Config(object):
                     servers[server].password = ""
                 elif self.keyring_available and self.use_system_keyring:
                     # necessary to import on-the-fly due to possible Windows crashes
-                    import keyring
+                    import Nagstamon.thirdparty.keyring as keyring
                     password = keyring.get_password('Nagstamon', '@'.join((servers[server].username,
                                                                            servers[server].monitor_url))) or ""
                     if password == "":
@@ -340,7 +340,7 @@ class Config(object):
                 # proxy password
                 if self.keyring_available and self.use_system_keyring:
                     # necessary to import on-the-fly due to possible Windows crashes
-                    import keyring
+                    import Nagstamon.thirdparty.keyring as keyring
                     proxy_password = keyring.get_password('Nagstamon', '@'.join(('proxy',
                                                                                  servers[server].proxy_username,
                                                                                  servers[server].proxy_address))) or ""
@@ -487,7 +487,7 @@ class Config(object):
                             elif self.keyring_available and self.use_system_keyring:
                                 if self.__dict__[settingsdir][s].password != '':
                                     # necessary to import on-the-fly due to possible Windows crashes
-                                    import keyring
+                                    import Nagstamon.thirdparty.keyring as keyring
                                     # provoke crash if password saving does not work - this is the case
                                     # on newer Ubuntu releases
                                     try:
@@ -502,7 +502,7 @@ class Config(object):
                         if option == 'proxy_password':
                             if self.keyring_available and self.use_system_keyring:
                                 # necessary to import on-the-fly due to possible Windows crashes
-                                import keyring
+                                import Nagstamon.thirdparty.keyring as keyring
                                 if self.__dict__[settingsdir][s].proxy_password != '':
                                     # provoke crash if password saving does not work - this is the case
                                     # on newer Ubuntu releases
