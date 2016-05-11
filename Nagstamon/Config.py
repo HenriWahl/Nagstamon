@@ -28,7 +28,6 @@ import zlib
 import datetime
 from collections import OrderedDict
 
-
 # avoid build error because of debug_queue unknown to setup.py
 # if anybody knows a more elegant way (which surely exists) let me know
 # it had to work quickly!
@@ -53,7 +52,7 @@ class AppInfo(object):
         contains app information previously located in GUI.py
     """
     NAME = 'Nagstamon'
-    VERSION = '2.0-beta-20160510'
+    VERSION = '2.0-beta-20160511'
     WEBSITE = 'https://nagstamon.ifw-dresden.de'
     COPYRIGHT = '©2008-2016 Henri Wahl et al.\nh.wahl@ifw-dresden.de'
     COMMENTS = 'Nagios status monitor for your desktop'
@@ -444,6 +443,9 @@ class Config(object):
                         self.use_system_keyring = self.KeyringAvailable()
 
             # save actions dict
+            self.SaveMultipleConfig('servers', 'server')
+
+            # save actions dict
             self.SaveMultipleConfig('actions', 'action')
 
             # open, save and close config file
@@ -484,7 +486,6 @@ class Config(object):
             for option in self.__dict__[settingsdir][s].__dict__:
                 # obfuscate certain entries in config file - special arrangement for servers
                 if settingsdir == 'servers':
-                    # if option == "username" or option == "password" or option == "proxy_username" or option == "proxy_password" or option == "autologin_key":
                     if option in ['username', 'password', 'proxy_username', 'proxy_password', 'autologin_key']:
                         value = self.Obfuscate(self.__dict__[settingsdir][s].__dict__[option])
                         if option == 'password':
@@ -556,15 +557,8 @@ class Config(object):
         try:
             # Linux systems should use keyring only if it comes with the distro, otherwise chances are small
             # that keyring works at all
-            if not platform.system() in NON_LINUX:
-                # keyring and secretstorage have to be importable
-                import Nagstamon.thirdparty.keyring as keyring 
-                import secretstorage
-                if ("SecretService") in dir(keyring.backends) and not (keyring.get_keyring() is None):
-                    return True
-            else:
+            if platform.system() in NON_LINUX:
                 # safety first - if not yet available disable it
-                # if not self.__dict__.has_key("use_system_keyring"):
                 if not 'use_system_keyring' in self.__dict__.keys():
                     self.use_system_keyring = False
                 # only import keyring lib if configured to do so
@@ -576,6 +570,12 @@ class Config(object):
                     return  not (keyring.get_keyring() is None)
                 else:
                     return False
+            else:
+                # keyring and secretstorage have to be importable
+                import Nagstamon.thirdparty.keyring as keyring
+                import secretstorage
+                if ("SecretService") in dir(keyring.backends) and not (keyring.get_keyring() is None):
+                    return True
         except:
             import traceback
             traceback.print_exc(file=sys.stdout)
