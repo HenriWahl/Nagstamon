@@ -172,10 +172,10 @@ class GenericServer(object):
         # hoststatus
         # hoststatustypes = 12
         # servicestatus
-        #servicestatustypes = 253
+        # servicestatustypes = 253
         # serviceprops & hostprops both have the same values for the same states so I
         # group them together
-        #hostserviceprops = 0
+        # hostserviceprops = 0
 
         # services (unknown, warning or critical?) as dictionary, sorted by hard and soft state type
         self.cgiurl_services = {
@@ -325,7 +325,7 @@ class GenericServer(object):
                               all_services)
 
         # resfresh immediately according to https://github.com/HenriWahl/Nagstamon/issues/86
-        ###self.thread.doRefresh = True
+        # ##self.thread.doRefresh = True
 
 
     def _set_acknowledge(self, host, service, author, comment, sticky, notify, persistent, all_services=[]):
@@ -577,8 +577,8 @@ class GenericServer(object):
                                 if len(tds[4](text=not_empty)) == 0:
                                     n['status_information'] = ''
                                 else:
-                                    ###n['status_information'] = str(tds[4].string).encode('utf-8').replace('\n',
-                                    ###                                                                     ' ').strip()
+                                    # ##n['status_information'] = str(tds[4].string).encode('utf-8').replace('\n',
+                                    # ##                                                                     ' ').strip()
                                     n['status_information'] = str(tds[4].string).replace('\n', ' ').strip()
                                 # attempts are not shown in case of hosts so it defaults to 'n/a'
                                 n['attempt'] = 'n/a'
@@ -591,7 +591,7 @@ class GenericServer(object):
                                 if len(tds[5](text=not_empty)) == 0:
                                     n['status_information'] = ''
                                 else:
-                                    ###n['status_information'] = str(tds[5].string).encode('utf-8').replace('\n',
+                                    # ##n['status_information'] = str(tds[5].string).encode('utf-8').replace('\n',
                                     n['status_information'] = str(tds[5].string).replace('\n',
                                                                                                          ' ').strip()
                             # status flags
@@ -623,7 +623,7 @@ class GenericServer(object):
                                 self.new_hosts[new_host].last_check = n['last_check']
                                 self.new_hosts[new_host].duration = n['duration']
                                 self.new_hosts[new_host].attempt = n['attempt']
-                                ###self.new_hosts[new_host].status_information = n['status_information'].encode('utf-8')
+                                # ##self.new_hosts[new_host].status_information = n['status_information'].encode('utf-8')
                                 self.new_hosts[new_host].status_information = n['status_information']
                                 self.new_hosts[new_host].passiveonly = n['passiveonly']
                                 self.new_hosts[new_host].notifications_disabled = n['notifications_disabled']
@@ -705,9 +705,6 @@ class GenericServer(object):
                             if len(tds[6](text=not_empty)) == 0:
                                 n['status_information'] = ''
                             else:
-                                print(tds[6].string)
-
-                                ###n['status_information'] = str(tds[6](text=not_empty)[0]).encode('utf-8')
                                 n['status_information'] = str(tds[6](text=not_empty)[0])
                             # status flags
                             n['passiveonly'] = False
@@ -753,8 +750,8 @@ class GenericServer(object):
                                 self.new_hosts[n['host']].services[new_service].last_check = n['last_check']
                                 self.new_hosts[n['host']].services[new_service].duration = n['duration']
                                 self.new_hosts[n['host']].services[new_service].attempt = n['attempt']
-                                ###self.new_hosts[n['host']].services[new_service].status_information = n[
-                                ###    'status_information'].encode('utf-8')
+                                # ##self.new_hosts[n['host']].services[new_service].status_information = n[
+                                # ##    'status_information'].encode('utf-8')
                                 self.new_hosts[n['host']].services[new_service].status_information = n[
                                     'status_information']
                                 self.new_hosts[n['host']].services[new_service].passiveonly = n['passiveonly']

@@ -201,7 +201,7 @@ NUMBER_OF_DISPLAY_CHANGES = 0
 # see https://github.com/HenriWahl/Nagstamon/issues/222
 # WINDOW_FLAGS = Qt.WindowStaysOnTopHint | Qt.FramelessWindowHint | Qt.ToolTip
 if platform.system() == 'Windows':
-    WINDOW_FLAGS = Qt.FramelessWindowHint | Qt.ToolTip
+    WINDOW_FLAGS = Qt.WindowStaysOnTopHint | Qt.FramelessWindowHint | Qt.ToolTip
 else:
     WINDOW_FLAGS = Qt.WindowStaysOnTopHint | Qt.FramelessWindowHint | Qt.Tool
 
@@ -1826,109 +1826,110 @@ class StatusWindow(QWidget):
             """
                 start notification
             """
-            # only if not notifying yet or the current state is worse than the prior AND
-            # only when the current state is configured to be honking about
-            if (STATES.index(worst_status_diff) > STATES.index(self.worst_notification_status) or\
-               self.is_notifying == False) and\
-               conf.__dict__['notify_if_{0}'.format(worst_status_diff.lower())] == True:
-                # keep last worst state worth a notification for comparison 3 lines above
-                self.worst_notification_status = worst_status_diff
-
-                # set flag to avoid innecessary notification
-                self.is_notifying = True
-                if self.notifying_server == '':
-                    self.notifying_server = server_name
-
-                # flashing statusbar
-                if conf.notification_flashing:
-                    self.start_flash.emit()
-
-                # Play default sounds via mediaplayer
-                if conf.notification_sound:
-                    sound_file = ''
-                    # at the moment there are only sounds for down, critical and warning
-                    # only honk if notifications are wanted for this state
-                    if worst_status_diff in STATES_SOUND:
-                        if conf.notification_default_sound:
-                            # default .wav sound files are in resources folder
-                            sound_file = '{0}{1}{2}.wav'.format(RESOURCES, os.sep, worst_status_diff.lower())
-                        elif conf.notification_custom_sound:
-                            sound_file = conf.__dict__['notification_custom_sound_{0}'.format(worst_status_diff.lower())]
-
-                        # once loaded file will be played by every server, even if it is
-                        # not the self.notifying_server that loaded it
-                        self.load_sound.emit(sound_file)
-
-                        # only one enabled server should access the mediaplayer
-                        if self.notifying_server == server_name:
-                            self.play_sound.emit()
-
-                # Notification actions
-                if conf.notification_actions:
-                    if conf.notification_action_warning == True and worst_status_diff == 'WARNING':
-                        self.execute_action(server_name, conf.notification_action_warning_string)
-                    if conf.notification_action_critical == True and worst_status_diff == 'CRITICAL':
-                        self.execute_action(server_name, conf.notification_action_critical_string)
-                    if conf.notification_action_down == True and worst_status_diff == 'DOWN':
-                        self.execute_action(server_name, conf.notification_action_down_string)
-
-            # Custom event notification - valid vor ALL events, thus without status comparison
-            if conf.notification_actions == True and conf.notification_custom_action == True:
-                # temporarily used to collect executed events
-                events_list = []
-                events_string = ''
-
-                # if no single notifications should be used (default) put all events into one string, separated by separator
-                if conf.notification_custom_action_single == False:
-                    for server in get_enabled_servers():
-                        # list comprehension only considers events which are new, ergo True
-                        events_list += [k for k, v in server.events_notification.items() if v == True]
-
-                    # create string for no-single-event-notification of events separated by separator
-                    events_string = conf.notification_custom_action_separator.join(events_list)
-
-                    # clear already notified events setting them to False
-                    for server in get_enabled_servers():
-                        for event in [k for k, v in server.events_notification.items() if v == True]:
-                            server.events_notification[event] = False
+            if conf.notification:
+                # only if not notifying yet or the current state is worse than the prior AND
+                # only when the current state is configured to be honking about
+                if (STATES.index(worst_status_diff) > STATES.index(self.worst_notification_status) or\
+                   self.is_notifying == False) and\
+                   conf.__dict__['notify_if_{0}'.format(worst_status_diff.lower())] == True:
+                    # keep last worst state worth a notification for comparison 3 lines above
+                    self.worst_notification_status = worst_status_diff
+    
+                    # set flag to avoid innecessary notification
+                    self.is_notifying = True
+                    if self.notifying_server == '':
+                        self.notifying_server = server_name
+    
+                    # flashing statusbar
+                    if conf.notification_flashing:
+                        self.start_flash.emit()
+    
+                    # Play default sounds via mediaplayer
+                    if conf.notification_sound:
+                        sound_file = ''
+                        # at the moment there are only sounds for down, critical and warning
+                        # only honk if notifications are wanted for this state
+                        if worst_status_diff in STATES_SOUND:
+                            if conf.notification_default_sound:
+                                # default .wav sound files are in resources folder
+                                sound_file = '{0}{1}{2}.wav'.format(RESOURCES, os.sep, worst_status_diff.lower())
+                            elif conf.notification_custom_sound:
+                                sound_file = conf.__dict__['notification_custom_sound_{0}'.format(worst_status_diff.lower())]
+    
+                            # once loaded file will be played by every server, even if it is
+                            # not the self.notifying_server that loaded it
+                            self.load_sound.emit(sound_file)
+    
+                            # only one enabled server should access the mediaplayer
+                            if self.notifying_server == server_name:
+                                self.play_sound.emit()
+    
+                    # Notification actions
+                    if conf.notification_actions:
+                        if conf.notification_action_warning == True and worst_status_diff == 'WARNING':
+                            self.execute_action(server_name, conf.notification_action_warning_string)
+                        if conf.notification_action_critical == True and worst_status_diff == 'CRITICAL':
+                            self.execute_action(server_name, conf.notification_action_critical_string)
+                        if conf.notification_action_down == True and worst_status_diff == 'DOWN':
+                            self.execute_action(server_name, conf.notification_action_down_string)
+    
+                # Custom event notification - valid vor ALL events, thus without status comparison
+                if conf.notification_actions == True and conf.notification_custom_action == True:
+                    # temporarily used to collect executed events
+                    events_list = []
+                    events_string = ''
+    
+                    # if no single notifications should be used (default) put all events into one string, separated by separator
+                    if conf.notification_custom_action_single == False:
+                        for server in get_enabled_servers():
+                            # list comprehension only considers events which are new, ergo True
+                            events_list += [k for k, v in server.events_notification.items() if v == True]
+    
+                        # create string for no-single-event-notification of events separated by separator
+                        events_string = conf.notification_custom_action_separator.join(events_list)
+    
+                        # clear already notified events setting them to False
+                        for server in get_enabled_servers():
+                            for event in [k for k, v in server.events_notification.items() if v == True]:
+                                server.events_notification[event] = False
+                    else:
+                        for server in get_enabled_servers():
+                            for event in [k for k, v in server.events_notification.items() if v == True]:
+                                custom_action_string = conf.notification_custom_action_string.replace('$EVENTS$', event)
+                                # execute action
+                                self.execute_action(server_name, custom_action_string)
+                                # clear already notified events setting them to False
+                                server.events_notification[event] = False
+    
+                    # if events got filled display them now
+                    if events_string != '':
+                        # in case a single action per event has to be executed
+                        custom_action_string = conf.notification_custom_action_string.replace('$EVENT$', '$EVENTS$')
+                        # insert real event(s)
+                        custom_action_string = custom_action_string.replace('$EVENTS$', events_string)
+                        # execute action
+                        self.execute_action(server_name, custom_action_string)
                 else:
-                    for server in get_enabled_servers():
-                        for event in [k for k, v in server.events_notification.items() if v == True]:
-                            custom_action_string = conf.notification_custom_action_string.replace('$EVENTS$', event)
-                            # execute action
-                            self.execute_action(server_name, custom_action_string)
-                            # clear already notified events setting them to False
-                            server.events_notification[event] = False
-
-                # if events got filled display them now
-                if events_string != '':
-                    # in case a single action per event has to be executed
-                    custom_action_string = conf.notification_custom_action_string.replace('$EVENT$', '$EVENTS$')
-                    # insert real event(s)
-                    custom_action_string = custom_action_string.replace('$EVENTS$', events_string)
-                    # execute action
-                    self.execute_action(server_name, custom_action_string)
-            else:
-                # set all events to False to ignore them in the future
-                for event in servers[server_name].events_notification:
-                    servers[server_name].events_notification[event] = False
-
-            # repeated sound
-            # only let one enabled server play sound to avoid a larger cacophony
-            if self.is_notifying and\
-               conf.notification_sound_repeat and\
-               self.notifying_server == server_name:
-                self.play_sound.emit()
-
-            # desktop notification
-            if conf.notification_desktop:
-                # get status count from servers
-                current_status_count = get_status_count()
-                if current_status_count != self.status_count:
-                    self.desktop_notification.emit(current_status_count)
-                # store status count for next comparison
-                self.status_count = current_status_count
-                del(current_status_count)
+                    # set all events to False to ignore them in the future
+                    for event in servers[server_name].events_notification:
+                        servers[server_name].events_notification[event] = False
+    
+                # repeated sound
+                # only let one enabled server play sound to avoid a larger cacophony
+                if self.is_notifying and\
+                   conf.notification_sound_repeat and\
+                   self.notifying_server == server_name:
+                    self.play_sound.emit()
+    
+                # desktop notification
+                if conf.notification_desktop:
+                    # get status count from servers
+                    current_status_count = get_status_count()
+                    if current_status_count != self.status_count:
+                        self.desktop_notification.emit(current_status_count)
+                    # store status count for next comparison
+                    self.status_count = current_status_count
+                    del(current_status_count)
 
 
         @pyqtSlot()
