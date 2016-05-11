@@ -1128,7 +1128,6 @@ class StatusWindow(QWidget):
 
             # show error message in statusbar
             server_vbox.table.worker.show_error.connect(self.statusbar.set_error)
-            # ##server_vbox.table.worker.new_status.connect(self.raise_window_on_all_desktops)
             server_vbox.table.worker.hide_error.connect(self.statusbar.reset_error)
 
             # show error icon in systray
@@ -1726,6 +1725,14 @@ class StatusWindow(QWidget):
         # lets try here to keep it on top - only if not fullscreen
         if not conf.fullscreen:
             self.setWindowFlags(WINDOW_FLAGS)
+
+        # attempt to fix statusbuar-is-hiding-occasionally-on-Windows bug
+        # https://github.com/HenriWahl/Nagstamon/issues/222
+        if platform.system() == 'Windows':
+            # only if statusbar and only if menu is not shown right now
+            if conf.statusbar_floating and not menu.isVisible():
+                self.window().raise_()
+                self.window().show()
 
 
     class Worker(QObject):
