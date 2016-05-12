@@ -1757,6 +1757,10 @@ class StatusWindow(QWidget):
         if not conf.fullscreen and not platform.system == 'Windows':
             self.setWindowFlags(WINDOW_FLAGS)
 
+        if platform.system() == 'Windows':
+            self.raise_()
+            print('l')
+
 
     class Worker(QObject):
         """
