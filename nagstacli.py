@@ -64,20 +64,9 @@ def createEndTime(info_dict):
     return info_dict
 
 def executeCli():
-    from Nagstamon.Config import (conf,
-                          Server,
-                          Action,
-                          RESOURCES,
-                          AppInfo
-                          )
+    from Nagstamon.Config import (conf)
     
-    from Nagstamon.Servers import (SERVER_TYPES,
-                           servers,
-                           create_server,
-                           get_enabled_servers,
-                           get_worst_status,
-                           get_status_count,
-                           get_errors)    
+    from Nagstamon.Servers import (create_server)    
       
     # Initialize global configuration
                                 

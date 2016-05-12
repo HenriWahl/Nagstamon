@@ -202,14 +202,14 @@ class Config(object):
         self.cli_args = {} 
         
         # Parse the command line
-        parser = argparse.ArgumentParser(description='Nagios status monitor for your desktop')
+        parser = argparse.ArgumentParser(description='Nagstamon for your CLI')
         # might be not necessary anymore - to be tested
         # ##parser.add_argument('-psn', action='store_true',
         # ##    help='force ~/.nagstamon as config folder (used by launchd in MacOSX)')
         # necessary because otherwise setup.py goes crazy of argparse
         
         # separate NagstaCLI from 
-        if len(sys.argv) > 2:                        
+        if len(sys.argv) > 2 or sys.argv[1] in ['--help', '-h']:                        
             parser.add_argument('--servername', type=str, help="name of the (Nagios)server. Look in nagstamon config")
             parser.add_argument('--hostname', type=str)    
             parser.add_argument('--comment', type=str, default="")
@@ -218,10 +218,10 @@ class Config(object):
             parser.add_argument('--start_time', type=str, help="start time for downtime")
             parser.add_argument('--hours', type=int, help="amount of hours for downtime")
             parser.add_argument('--minutes', type=int, help="amount of minutes for downtime")
-            parser.add_argument('--cfgpath', type=str, help="Path for configuration folder")
+            parser.add_argument('--config', type=str, help="Path for configuration folder")
             parser.add_argument('--output', type=str, choices=['y', 'n'], default="y",help="lists given parameter (for debugging)")
         else:
-            parser.add_argument('cfgpath', nargs='?', help='Path for configuration folder')            
+            parser.add_argument('config', nargs='?', help='Path for configuration folder')            
         
         self.cli_args, unknown = parser.parse_known_args()
 
@@ -231,9 +231,9 @@ class Config(object):
         # ##    # new configdir approach
         # ##    self.configdir = os.path.expanduser('~') + os.sep + '.nagstamon'
         # ##elif args.cfgpath:
-        if len(sys.argv) < 3 and self.cli_args.cfgpath:
+        if len(sys.argv) < 3 and self.cli_args.config:
             # allow to give a config file
-            self.configdir = self.cli_args.cfgpath
+            self.configdir = self.cli_args.config
 
         # otherwise if there exits a configdir in current working directory it should be used
         elif os.path.exists(os.getcwd() + os.sep + 'nagstamon.config'):
