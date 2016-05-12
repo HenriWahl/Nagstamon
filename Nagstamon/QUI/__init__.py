@@ -201,7 +201,11 @@ NUMBER_OF_DISPLAY_CHANGES = 0
 # see https://github.com/HenriWahl/Nagstamon/issues/222
 # WINDOW_FLAGS = Qt.WindowStaysOnTopHint | Qt.FramelessWindowHint | Qt.ToolTip
 if platform.system() == 'Windows':
-    WINDOW_FLAGS = Qt.WindowStaysOnTopHint | Qt.FramelessWindowHint | Qt.ToolTip
+    # WINDOW_FLAGS = Qt.WindowStaysOnTopHint | Qt.FramelessWindowHint | Qt.ToolTip
+    WINDOW_FLAGS = Qt.WindowStaysOnTopHint | Qt.FramelessWindowHint | Qt.Tool
+    # WINDOW_FLAGS = Qt.FramelessWindowHint | Qt.Tool
+    # WINDOW_FLAGS = Qt.FramelessWindowHint | Qt.ToolTip
+    #WINDOW_FLAGS = Qt.FramelessWindowHint | Qt.WindowStaysOnTopHint | Qt.Tool |  Qt.BypassWindowManagerHint
 else:
     WINDOW_FLAGS = Qt.WindowStaysOnTopHint | Qt.FramelessWindowHint | Qt.Tool
 
@@ -813,7 +817,8 @@ class StatusWindow(QWidget):
         """
             Status window combined from status bar and popup window
         """
-        QWidget.__init__(self)
+        # attempt with desktop as parent for window Qt.Tool
+        QWidget.__init__(self, parent=APP.desktop())
 
         # immediately hide to avoid flicker on Windows and OSX
         self.hide()
@@ -1046,20 +1051,46 @@ class StatusWindow(QWidget):
                 # necessary to be shown before Linux EWMH-mantra can be applied
                 self.show()
             """
-            
-            # statusbar and detail window should be frameless and stay on top
-            # tool flag helps to be invisible in taskbar
-            self.setWindowFlags(WINDOW_FLAGS)
 
-            # necessary to be shown before Linux EWMH-mantra can be applied
-            self.show()
-            
-            # X11/Linux needs some special treatment to get the statusbar floating on all virtual desktops
-            if not platform.system() in NON_LINUX:
-                # get all windows...
-                winid = self.winId().__int__()
-                self.ewmh.setWmDesktop(winid, 0xffffffff)
-                self.ewmh.display.flush()
+            # proud winner of the-dirty-workaround-of-the-year-award
+            # stay on top flag seems to have a problem on Windows if some other window
+            # gets in a race condition race the focus or is topmost instead of Nagstamon
+            # so the floating statusbar moves silently into a quiet corner of the desktop
+            # and raises itself serveral times to be the topmost to make the flags stick
+            if platform.system() == 'Windows':
+                self.move(-32768,-32768)
+                # just a guess - 10 times seem to be enough
+                for counter in range(10):
+                    self.setWindowFlags(Qt.FramelessWindowHint)
+                    self.show()
+                    self.setWindowFlags(WINDOW_FLAGS)
+                    self.hide()
+                    self.show()
+                    self.raise_()
+            else:
+                # statusbar and detail window should be frameless and stay on top
+                # tool flag helps to be invisible in taskbar
+                self.setWindowFlags(WINDOW_FLAGS)
+
+                # necessary to be shown before Linux EWMH-mantra can be applied
+                self.show()
+
+                # X11/Linux needs some special treatment to get the statusbar floating on all virtual desktops
+                if not platform.system() in NON_LINUX:
+                    # get all windows...
+                    winid = self.winId().__int__()
+                    self.ewmh.setWmDesktop(winid, 0xffffffff)
+                    self.ewmh.display.flush()
+
+            # show statusbar/statuswindow on last saved position
+            # when coordinates are inside known screens
+            if get_screen(conf.position_x, conf.position_y) != None:
+                self.move(conf.position_x, conf.position_y)
+            else:
+                # get available desktop specs
+                available_x = desktop.availableGeometry(self).x()
+                available_y = desktop.availableGeometry(self).y()
+                self.move(available_x, available_y)
 
         elif conf.icon_in_systray:
             # statusbar and detail window should be frameless and stay on top
@@ -1723,16 +1754,8 @@ class StatusWindow(QWidget):
 
         # apparently sometime the floating statusbsr vanishes in the background
         # lets try here to keep it on top - only if not fullscreen
-        if not conf.fullscreen:
+        if not conf.fullscreen and not platform.system == 'Windows':
             self.setWindowFlags(WINDOW_FLAGS)
-
-        # attempt to fix statusbuar-is-hiding-occasionally-on-Windows bug
-        # https://github.com/HenriWahl/Nagstamon/issues/222
-        if platform.system() == 'Windows':
-            # only if statusbar and only if menu is not shown right now
-            if conf.statusbar_floating and not menu.isVisible():
-                self.window().raise_()
-                self.window().show()
 
 
     class Worker(QObject):
