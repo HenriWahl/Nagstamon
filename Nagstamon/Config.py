@@ -209,7 +209,7 @@ class Config(object):
         # necessary because otherwise setup.py goes crazy of argparse
         
         # separate NagstaCLI from 
-        if len(sys.argv) > 2 or sys.argv[1] in ['--help', '-h']:                        
+        if len(sys.argv) > 2 or (len(sys.argv) > 1 and sys.argv[1] in ['--help', '-h']):                        
             parser.add_argument('--servername', type=str, help="name of the (Nagios)server. Look in nagstamon config")
             parser.add_argument('--hostname', type=str)    
             parser.add_argument('--comment', type=str, default="")
