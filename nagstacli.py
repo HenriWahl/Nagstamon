@@ -101,7 +101,7 @@ def executeCli():
     info_dict['start_time'] = checkDefaultValue(conf.cli_args.start_time, default_start_time)
     info_dict['end_time'] = default_end_time
     
-    info_dict['hours'] = checkDefaultValue(conf.cli_args.hours, conf.defaults_downtime_duration_hours)
+    info_dict['hours'] = checkDefaultValue(conf.cli_args.hours, 0)
     info_dict['minutes'] = checkDefaultValue(conf.cli_args.minutes, conf.defaults_downtime_duration_minutes)
     info_dict['view_name'] = "host"
     
