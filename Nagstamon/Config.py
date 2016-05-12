@@ -198,14 +198,32 @@ class Config(object):
         # would not find a config file
         self.unconfigured = True
 
+        #adding cli args variable
+        self.cli_args = {} 
+        
         # Parse the command line
         parser = argparse.ArgumentParser(description='Nagios status monitor for your desktop')
-        parser.add_argument('cfgpath', nargs='?', help='Path for configuration folder')
         # might be not necessary anymore - to be tested
         # ##parser.add_argument('-psn', action='store_true',
         # ##    help='force ~/.nagstamon as config folder (used by launchd in MacOSX)')
         # necessary because otherwise setup.py goes crazy of argparse
-        args, unknown = parser.parse_known_args()
+        
+        # separate NagstaCLI from 
+        if len(sys.argv) > 2:                        
+            parser.add_argument('--servername', type=str, help="name of the (Nagios)server. Look in nagstamon config")
+            parser.add_argument('--hostname', type=str)    
+            parser.add_argument('--comment', type=str, default="")
+            parser.add_argument('--service', type=str, default="", help="specify service, if needed. Mostly the whole host goes to downstate")
+            parser.add_argument('--fixed', type=str, choices=['y', 'n'], default="y", help="fixed=n means wait for service/host to go down, then start the downtime")
+            parser.add_argument('--start_time', type=str, help="start time for downtime")
+            parser.add_argument('--hours', type=int, help="amount of hours for downtime")
+            parser.add_argument('--minutes', type=int, help="amount of minutes for downtime")
+            parser.add_argument('--cfgpath', type=str, help="Path for configuration folder")
+            parser.add_argument('--output', type=str, choices=['y', 'n'], default="y",help="lists given parameter (for debugging)")
+        else:
+            parser.add_argument('cfgpath', nargs='?', help='Path for configuration folder')            
+        
+        self.cli_args, unknown = parser.parse_known_args()
 
         # try to use a given config file - there must be one given
         # if sys.argv is larger than 1
@@ -213,9 +231,9 @@ class Config(object):
         # ##    # new configdir approach
         # ##    self.configdir = os.path.expanduser('~') + os.sep + '.nagstamon'
         # ##elif args.cfgpath:
-        if args.cfgpath:
+        if len(sys.argv) < 3 and self.cli_args.cfgpath:
             # allow to give a config file
-            self.configdir = args.cfgpath
+            self.configdir = self.cli_args.cfgpath
 
         # otherwise if there exits a configdir in current working directory it should be used
         elif os.path.exists(os.getcwd() + os.sep + 'nagstamon.config'):
@@ -424,7 +442,7 @@ class Config(object):
             # general section for Nagstamon
             config.add_section('Nagstamon')
             for option in self.__dict__:
-                if not option in ['servers', 'actions', 'configfile', 'configdir']:
+                if not option in ['servers', 'actions', 'configfile', 'configdir', 'cli_args']:
                     config.set('Nagstamon', option, str(self.__dict__[option]))
 
             # because the switch from Nagstamon 1.0 to 1.0.1 brings the use_system_keyring property
