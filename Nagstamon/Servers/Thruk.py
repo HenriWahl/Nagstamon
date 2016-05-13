@@ -176,7 +176,7 @@ class ThrukServer(GenericServer):
                         self.new_hosts[h["name"]].attempt = "%s/%s" % (h["current_attempt"], h["max_check_attempts"])
                         self.new_hosts[h["name"]].status_information= h["plugin_output"].replace("\n", " ").strip()
                         self.new_hosts[h["name"]].passiveonly = not(bool(int(h["active_checks_enabled"])))
-                        self.new_hosts[h["name"]].notifications_disabled = bool(int(h["is_flapping"]))
+                        self.new_hosts[h["name"]].notifications_disabled = not(bool(int(h["notifications_enabled"])))
                         self.new_hosts[h["name"]].flapping = bool(int(h["is_flapping"]))
                         self.new_hosts[h["name"]].acknowledged = bool(int(h["acknowledged"]))
                         self.new_hosts[h["name"]].scheduled_downtime = bool(int(h["scheduled_downtime_depth"]))
@@ -229,7 +229,7 @@ class ThrukServer(GenericServer):
                         self.new_hosts[s["host_name"]].services[s["description"]].status_information = s["plugin_output"].replace("\n", " ").strip()
                         self.new_hosts[s["host_name"]].services[s["description"]].passiveonly = not(bool(int(s["active_checks_enabled"])))
                         self.new_hosts[s["host_name"]].services[s["description"]].notifications_disabled = not(bool(int(s["notifications_enabled"])))
-                        self.new_hosts[s["host_name"]].services[s["description"]].flapping = bool(int(s["is_flapping"]))
+                        self.new_hosts[s["host_name"]].services[s["description"]].flapping =  not(bool(int(h["notifications_enabled"])))
                         self.new_hosts[s["host_name"]].services[s["description"]].acknowledged = bool(int(s["acknowledged"]))
                         self.new_hosts[s["host_name"]].services[s["description"]].scheduled_downtime = bool(int(s["scheduled_downtime_depth"]))
                         self.new_hosts[s["host_name"]].services[s["description"]].status_type = {0: "soft", 1: "hard"}[s["state_type"]]
