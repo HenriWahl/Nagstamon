@@ -1060,7 +1060,7 @@ class StatusWindow(QWidget):
             if platform.system() == 'Windows':
                 self.move(-32768,-32768)
                 # just a guess - 10 times seem to be enough
-                for counter in range(10):
+                for counter in range(100):
                     self.setWindowFlags(Qt.FramelessWindowHint)
                     self.show()
                     self.setWindowFlags(WINDOW_FLAGS)
@@ -1757,9 +1757,9 @@ class StatusWindow(QWidget):
         if not conf.fullscreen and not platform.system == 'Windows':
             self.setWindowFlags(WINDOW_FLAGS)
 
+        # again and again try to keept that statuswindow on top!
         if platform.system() == 'Windows':
             self.raise_()
-            print('l')
 
 
     class Worker(QObject):
@@ -4996,6 +4996,10 @@ class Dialog_Server(Dialog):
                 if self.previous_server_conf.name in servers.keys():
                     servers.pop(self.previous_server_conf.name)
 
+            # some monitor servers do not need cgi-url - reuse self.VOLATILE_WIDGETS to find out which one
+            if not self.server_conf.type in self.VOLATILE_WIDGETS[self.ui.input_lineedit_monitor_cgi_url]:
+                self.server_conf.monitor_cgi_url = self.server_conf.monitor_url
+
             # add new server configuration in every case
             conf.servers[self.server_conf.name] = self.server_conf
 
@@ -5014,9 +5018,9 @@ class Dialog_Server(Dialog):
             servers.update(servers_freshly_sorted)
             del(servers_freshly_sorted)
 
-            # some monitor servers do not need cgi-url - reuse self.VOLATILE_WIDGETS to find out which one
-            if not self.server_conf.type in self.VOLATILE_WIDGETS[self.ui.input_lineedit_monitor_cgi_url]:
-                self.server_conf.monitor_cgi_url = self.server_conf.monitor_url
+
+
+
 
             # refresh list of servers, give call the current server name to highlight it
             dialogs.settings.refresh_list(list_widget=dialogs.settings.ui.list_servers,
