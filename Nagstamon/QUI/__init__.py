@@ -5018,10 +5018,6 @@ class Dialog_Server(Dialog):
             servers.update(servers_freshly_sorted)
             del(servers_freshly_sorted)
 
-
-
-
-
             # refresh list of servers, give call the current server name to highlight it
             dialogs.settings.refresh_list(list_widget=dialogs.settings.ui.list_servers,
                                           list_conf=conf.servers,
