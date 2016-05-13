@@ -4415,9 +4415,10 @@ class Dialog_Settings(Dialog):
             self.refresh_list(list_widget=self.ui.list_servers,
                               list_conf=conf.servers,
                               current=self.ui.list_servers.item(row).text())
-
             del(row, count)
 
+        # delete server config file from disk
+        conf.delete_file('servers', 'server_{0}'.format(server.name))
         del(server)
 
 
@@ -4493,6 +4494,8 @@ class Dialog_Settings(Dialog):
 
             del(row, count)
 
+        # delete action config file from disk
+        conf.delete_file('actions', 'action_{0}'.format(action.name))
         del(action)
 
 
@@ -4852,6 +4855,9 @@ class Dialog_Server(Dialog):
                 self.server_conf has to be set by decorated method
             """
 
+            # previous server conf only useful when editing - defaults to None
+            self.previous_server_conf = None
+
             # call decorated method
             method(self, **kwargs)
 
@@ -5024,6 +5030,11 @@ class Dialog_Server(Dialog):
                                           current=self.server_conf.name)
             self.window.close()
 
+            # delete old server .conf file to reflect name changes
+            # new one will be written soon
+            if self.previous_server_conf != None:
+                conf.delete_file('servers', 'server_{0}'.format(self.previous_server_conf.name))
+
             # store server settings
             conf.SaveMultipleConfig('servers', 'server')
 
@@ -5073,6 +5084,10 @@ class Dialog_Action(Dialog):
             """
                 self.server_conf has to be set by decorated method
             """
+
+            # previous action conf only useful when editing - defaults to None
+            self.previous_action_conf = None
+
             # call decorated method
             method(self)
 
@@ -5201,6 +5216,11 @@ class Dialog_Action(Dialog):
             dialogs.settings.refresh_list(list_widget=dialogs.settings.ui.list_actions,
                                           list_conf=conf.actions,
                                           current=self.action_conf.name)
+
+            # delete old action .conf file to reflect name changes
+            # new one will be written soon
+            if self.previous_action_conf != None:
+                conf.delete_file('actions', 'action_{0}'.format(self.previous_action_conf.name))
 
             # store server settings
             conf.SaveMultipleConfig("actions", "action")

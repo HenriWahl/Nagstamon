@@ -561,11 +561,11 @@ class Config(object):
             config.write(f)
             f.close()
 
-        # clean up old deleted/renamed config files
-        if os.path.exists(self.configdir + os.sep + settingsdir):
-            for f in os.listdir(self.configdir + os.sep + settingsdir):
-                if not f.split(setting + "_")[1].split(".conf")[0] in self.__dict__[settingsdir]:
-                    os.unlink(self.configdir + os.sep + settingsdir + os.sep + f)
+        #### clean up old deleted/renamed config files
+        ###if os.path.exists(self.configdir + os.sep + settingsdir):
+        ###    for f in os.listdir(self.configdir + os.sep + settingsdir):
+        ###        if not f.split(setting + "_")[1].split(".conf")[0] in self.__dict__[settingsdir]:
+        ###            os.unlink(self.configdir + os.sep + settingsdir + os.sep + f)
 
 
     def KeyringAvailable(self):
@@ -748,7 +748,7 @@ class Config(object):
 
     def GetNumberOfEnabledMonitors(self):
         """
-        returns the number of enabled monitors - in case all are disabled there is no need to display the popwin
+            returns the number of enabled monitors - in case all are disabled there is no need to display the popwin
         """
         # to be returned
         number = 0
@@ -757,6 +757,20 @@ class Config(object):
             if server.enabled == True:
                 number += 1
         return number
+
+
+    def delete_file(self, settings_dir, settings_file):
+        """
+            delete specified .conf file if setting is deleted in GUI
+        """
+        # clean up old deleted/renamed config file
+        file = os.path.abspath('{1}{0}{2}{0}{3}.conf'.format(os.sep, self.configdir, settings_dir, settings_file))
+        if os.path.exists(file) and (os.path.isfile(file) or os.path.islink(file)):
+            try:
+                os.unlink(file)
+            except:
+                import traceback
+                traceback.print_exc(file=sys.stdout)
 
 
 class Server(object):
