@@ -21,7 +21,8 @@
 import os
 import sys
 import socket
-import nagstacli
+# not necessary here
+#import nagstacli
 
 # fix/patch for https://bugs.launchpad.net/ubuntu/+source/nagstamon/+bug/732544
 socket.setdefaulttimeout(30)
