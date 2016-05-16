@@ -203,6 +203,13 @@
      </property>
     </widget>
    </item>
+   <item row="23" column="0" colspan="2">
+    <widget class="QCheckBox" name="input_checkbox_force_authuser">
+     <property name="text">
+      <string>Only show permitted hosts for "see all" users (1.4.0i1 or newer)</string>
+     </property>
+    </widget>
+   </item>
    <item row="0" column="0" colspan="3">
     <widget class="QCheckBox" name="input_checkbox_enabled">
      <property name="text">

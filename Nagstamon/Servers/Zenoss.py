@@ -19,7 +19,6 @@
 
 import sys
 import urllib
-import webbrowser
 import base64
 import time
 import copy
@@ -31,7 +30,6 @@ from Nagstamon.Config import conf
 from Nagstamon.Objects import (GenericHost, GenericService, Result)
 from Nagstamon.Servers.Generic import GenericServer
 from Nagstamon.thirdparty.zenoss_api import ZenossAPI
-
 
 class ZenossServer(GenericServer):
     

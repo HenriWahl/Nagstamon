@@ -24,6 +24,7 @@ import sys
 import shutil
 import subprocess
 import zipfile
+import glob
 
 CURRENT_DIR = os.getcwd()
 NAGSTAMON_DIR = os.path.normpath('{0}{1}..{1}'.format(CURRENT_DIR, os.sep))
@@ -124,13 +125,12 @@ def debmain():
 
     subprocess.call(['fakeroot', 'debian/rules', 'build'])
 
-    #os.rename('{0}{1}nagstamon.py'.format(SCRIPTS_DIR, os.sep),
-    #          '{0}{1}nagstamon'.format(SCRIPTS_DIR, os.sep))
-
     subprocess.call(['fakeroot', 'debian/rules', 'binary'])
 
-    # do not clean because this will delete the whole 'build' directory - might be overhauled one day...
-
+    # copy .deb file to current directory
+    for deb in glob.iglob('../nagstamon*.deb'):
+        shutil.move(deb, CURRENT_DIR)
+   
 
 def rpmmain():
     """
