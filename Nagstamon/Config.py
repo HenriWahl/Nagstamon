@@ -28,16 +28,31 @@ import zlib
 import datetime
 from collections import OrderedDict
 
-from Nagstamon.Helpers import (debug_queue,
-                               BOOLPOOL,
-                               NON_LINUX)
+# avoid build error because of debug_queue unknown to setup.py
+# if anybody knows a more elegant way (which surely exists) let me know
+# it had to work quickly!
+if not 'setup.py' in sys.argv[0] and not 'build.py' in sys.argv[0]:
+    # get debug queue from nagstamon.py
+    debug_queue = sys.modules['__main__'].debug_queue
+
+
+# temporary dict for string-to-bool-conversion
+# the bool:bool relations are thought to make things easier in Dialog_Settings.ok()
+BOOLPOOL = {'False': False,
+            'True': True,
+            False: False,
+            True: True}
+
+# needed when OS-specific decisions have to be made, mostly Linux/non-Linux
+NON_LINUX = ('Darwin', 'Windows')
+
 
 class AppInfo(object):
     """
         contains app information previously located in GUI.py
     """
     NAME = 'Nagstamon'
-    VERSION = '2.0-alpha-20160329'
+    VERSION = '2.0-beta-20160513'
     WEBSITE = 'https://nagstamon.ifw-dresden.de'
     COPYRIGHT = '©2008-2016 Henri Wahl et al.\nh.wahl@ifw-dresden.de'
     COMMENTS = 'Nagios status monitor for your desktop'
@@ -57,8 +72,10 @@ class Config(object):
         self.update_interval_seconds = 60
         self.short_display = False
         self.long_display = True
-        self.show_grid = True
         self.show_tooltips = True
+        self.show_grid = True        
+        self.grid_use_custom_intensity = False
+        self.grid_alternation_intensity = 10
         self.highlight_new_events = True
         self.default_sort_field = 'status'
         self.default_sort_order = 'descending'
@@ -88,6 +105,9 @@ class Config(object):
         self.connect_by_host = True
         self.connect_by_dns = False
         self.connect_by_ip = False
+        self.use_default_browser = True
+        self.use_custom_browser = False
+        self.custom_browser = ''
         self.debug_mode = False
         self.debug_to_file = False
         self.debug_file = os.path.expanduser('~') + os.sep + "nagstamon.log"
@@ -143,7 +163,7 @@ class Config(object):
         self.color_unreachable_background = self.default_color_unreachable_background = '#8B0000'
         self.color_down_text = self.default_color_down_text = '#FFFFFF'
         self.color_down_background = self.default_color_down_background = '#000000'
-        self.color_error_text = self.default_color_error_text= '#000000'
+        self.color_error_text = self.default_color_error_text = '#000000'
         self.color_error_background = self.default_color_error_background = '#D3D3D3'
         self.statusbar_floating = True
         self.icon_in_systray = False
@@ -178,24 +198,42 @@ class Config(object):
         # would not find a config file
         self.unconfigured = True
 
+        #adding cli args variable
+        self.cli_args = {} 
+        
         # Parse the command line
-        parser = argparse.ArgumentParser(description='Nagios status monitor for your desktop')
-        parser.add_argument('cfgpath', nargs='?', help='Path for configuration folder')
+        parser = argparse.ArgumentParser(description='Nagstamon for your CLI')
         # might be not necessary anymore - to be tested
-        ###parser.add_argument('-psn', action='store_true',
-        ###    help='force ~/.nagstamon as config folder (used by launchd in MacOSX)')
+        # ##parser.add_argument('-psn', action='store_true',
+        # ##    help='force ~/.nagstamon as config folder (used by launchd in MacOSX)')
         # necessary because otherwise setup.py goes crazy of argparse
-        args, unknown = parser.parse_known_args()
+        
+        # separate NagstaCLI from 
+        if len(sys.argv) > 2 or (len(sys.argv) > 1 and sys.argv[1] in ['--help', '-h']):                        
+            parser.add_argument('--servername', type=str, help="name of the (Nagios)server. Look in nagstamon config")
+            parser.add_argument('--hostname', type=str)    
+            parser.add_argument('--comment', type=str, default="")
+            parser.add_argument('--service', type=str, default="", help="specify service, if needed. Mostly the whole host goes to downstate")
+            parser.add_argument('--fixed', type=str, choices=['y', 'n'], default="y", help="fixed=n means wait for service/host to go down, then start the downtime")
+            parser.add_argument('--start_time', type=str, help="start time for downtime")
+            parser.add_argument('--hours', type=int, help="amount of hours for downtime")
+            parser.add_argument('--minutes', type=int, help="amount of minutes for downtime")
+            parser.add_argument('--config', type=str, help="Path for configuration folder")
+            parser.add_argument('--output', type=str, choices=['y', 'n'], default="y",help="lists given parameter (for debugging)")
+        else:
+            parser.add_argument('config', nargs='?', help='Path for configuration folder')            
+        
+        self.cli_args, unknown = parser.parse_known_args()
 
         # try to use a given config file - there must be one given
         # if sys.argv is larger than 1
-        ###if args.psn:
-        ###    # new configdir approach
-        ###    self.configdir = os.path.expanduser('~') + os.sep + '.nagstamon'
-        ###elif args.cfgpath:
-        if args.cfgpath:
+        # ##if args.psn:
+        # ##    # new configdir approach
+        # ##    self.configdir = os.path.expanduser('~') + os.sep + '.nagstamon'
+        # ##elif args.cfgpath:
+        if len(sys.argv) < 3 and self.cli_args.config:
             # allow to give a config file
-            self.configdir = args.cfgpath
+            self.configdir = self.cli_args.config
 
         # otherwise if there exits a configdir in current working directory it should be used
         elif os.path.exists(os.getcwd() + os.sep + 'nagstamon.config'):
@@ -245,7 +283,7 @@ class Config(object):
                         # treat negative value specially as .isdecimal() will not detect it
                         elif i[1].isdecimal() or \
                              (i[1].startswith('-') and i[1].split('-')[1].isdecimal()):
-                            object.__setattr__(self, i[0],int(i[1]))
+                            object.__setattr__(self, i[0], int(i[1]))
                         else:
                             object.__setattr__(self, i[0], i[1])
 
@@ -253,7 +291,7 @@ class Config(object):
             # and all the thousands 1.0 installations do not know it yet it will be more comfortable
             # for most of the Windows users if it is only defined as False after it was checked
             # from config file
-            #if not self.__dict__.has_key("use_system_keyring"):
+            # if not self.__dict__.has_key("use_system_keyring"):
             if not 'use_system_keyring' in self.__dict__.keys():
                 if self.unconfigured == True:
                     # an unconfigured system should start with no keyring to prevent crashes
@@ -306,7 +344,10 @@ class Config(object):
                     servers[server].password = ""
                 elif self.keyring_available and self.use_system_keyring:
                     # necessary to import on-the-fly due to possible Windows crashes
-                    import keyring
+                    if platform.system() in NON_LINUX:
+                        import keyring
+                    else:
+                        import Nagstamon.thirdparty.keyring as keyring
                     password = keyring.get_password('Nagstamon', '@'.join((servers[server].username,
                                                                            servers[server].monitor_url))) or ""
                     if password == "":
@@ -319,7 +360,10 @@ class Config(object):
                 # proxy password
                 if self.keyring_available and self.use_system_keyring:
                     # necessary to import on-the-fly due to possible Windows crashes
-                    import keyring
+                    if platform.system() in NON_LINUX:
+                        import keyring
+                    else:
+                        import Nagstamon.thirdparty.keyring as keyring
                     proxy_password = keyring.get_password('Nagstamon', '@'.join(('proxy',
                                                                                  servers[server].proxy_username,
                                                                                  servers[server].proxy_address))) or ""
@@ -334,9 +378,9 @@ class Config(object):
                 # do only deobfuscating if any autologin_key is set - will be only Centreon
                 if 'autologin_key' in servers[server].__dict__.keys():
                     if len(servers[server].__dict__['autologin_key']) > 0:
-                        servers[server].autologin_key  = self.DeObfuscate(servers[server].autologin_key)
+                        servers[server].autologin_key = self.DeObfuscate(servers[server].autologin_key)
 
-                # only needed for those who used Icinga2 before it became icingaWeb2
+                # only needed for those who used Icinga2 before it became IcingaWeb2
                 if servers[server].type == 'Icinga2':
                     servers[server].type = 'IcingaWeb2'
 
@@ -349,7 +393,7 @@ class Config(object):
 
     def LoadMultipleConfig(self, settingsdir, setting, configobj):
         """
-        load generic config into settings dict and return to central config
+            load generic config into settings dict and return to central config
         """
         # defaults as empty dict in case settings dir/files could not be found
         settings = OrderedDict()
@@ -398,7 +442,7 @@ class Config(object):
             # general section for Nagstamon
             config.add_section('Nagstamon')
             for option in self.__dict__:
-                if not option in ['servers', 'actions', 'configfile', 'configdir']:
+                if not option in ['servers', 'actions', 'configfile', 'configdir', 'cli_args']:
                     config.set('Nagstamon', option, str(self.__dict__[option]))
 
             # because the switch from Nagstamon 1.0 to 1.0.1 brings the use_system_keyring property
@@ -415,6 +459,9 @@ class Config(object):
                         self.use_system_keyring = True
                     else:
                         self.use_system_keyring = self.KeyringAvailable()
+
+            # save actions dict
+            self.SaveMultipleConfig('servers', 'server')
 
             # save actions dict
             self.SaveMultipleConfig('actions', 'action')
@@ -457,7 +504,6 @@ class Config(object):
             for option in self.__dict__[settingsdir][s].__dict__:
                 # obfuscate certain entries in config file - special arrangement for servers
                 if settingsdir == 'servers':
-                    #if option == "username" or option == "password" or option == "proxy_username" or option == "proxy_password" or option == "autologin_key":
                     if option in ['username', 'password', 'proxy_username', 'proxy_password', 'autologin_key']:
                         value = self.Obfuscate(self.__dict__[settingsdir][s].__dict__[option])
                         if option == 'password':
@@ -466,7 +512,10 @@ class Config(object):
                             elif self.keyring_available and self.use_system_keyring:
                                 if self.__dict__[settingsdir][s].password != '':
                                     # necessary to import on-the-fly due to possible Windows crashes
-                                    import keyring
+                                    if platform.system() in NON_LINUX:
+                                        import keyring
+                                    else:
+                                        import Nagstamon.thirdparty.keyring as keyring
                                     # provoke crash if password saving does not work - this is the case
                                     # on newer Ubuntu releases
                                     try:
@@ -481,12 +530,15 @@ class Config(object):
                         if option == 'proxy_password':
                             if self.keyring_available and self.use_system_keyring:
                                 # necessary to import on-the-fly due to possible Windows crashes
-                                import keyring
+                                if platform.system() in NON_LINUX:
+                                    import keyring
+                                else:
+                                    import Nagstamon.thirdparty.keyring as keyring
                                 if self.__dict__[settingsdir][s].proxy_password != '':
                                     # provoke crash if password saving does not work - this is the case
                                     # on newer Ubuntu releases
                                     try:
-                                        keyring.set_password('Nagstamon', '@'.join(('proxy',\
+                                        keyring.set_password('Nagstamon', '@'.join(('proxy', \
                                                                                 self.__dict__[settingsdir][s].proxy_username,
                                                                                 self.__dict__[settingsdir][s].proxy_address)),
                                                                                 self.__dict__[settingsdir][s].proxy_password)
@@ -509,11 +561,11 @@ class Config(object):
             config.write(f)
             f.close()
 
-        # clean up old deleted/renamed config files
-        if os.path.exists(self.configdir + os.sep + settingsdir):
-            for f in os.listdir(self.configdir + os.sep + settingsdir):
-                if not f.split(setting + "_")[1].split(".conf")[0] in self.__dict__[settingsdir]:
-                    os.unlink(self.configdir + os.sep + settingsdir + os.sep + f)
+        #### clean up old deleted/renamed config files
+        ###if os.path.exists(self.configdir + os.sep + settingsdir):
+        ###    for f in os.listdir(self.configdir + os.sep + settingsdir):
+        ###        if not f.split(setting + "_")[1].split(".conf")[0] in self.__dict__[settingsdir]:
+        ###            os.unlink(self.configdir + os.sep + settingsdir + os.sep + f)
 
 
     def KeyringAvailable(self):
@@ -523,14 +575,8 @@ class Config(object):
         try:
             # Linux systems should use keyring only if it comes with the distro, otherwise chances are small
             # that keyring works at all
-            if not platform.system() in NON_LINUX:
-                # keyring and secretstorage have to be importable
-                import keyring, secretstorage
-                if ("SecretService") in dir(keyring.backends) and not (keyring.get_keyring() is None):
-                    return True
-            else:
+            if platform.system() in NON_LINUX:
                 # safety first - if not yet available disable it
-                #if not self.__dict__.has_key("use_system_keyring"):
                 if not 'use_system_keyring' in self.__dict__.keys():
                     self.use_system_keyring = False
                 # only import keyring lib if configured to do so
@@ -542,6 +588,12 @@ class Config(object):
                     return  not (keyring.get_keyring() is None)
                 else:
                     return False
+            else:
+                # keyring and secretstorage have to be importable
+                import Nagstamon.thirdparty.keyring as keyring
+                import secretstorage
+                if ("SecretService") in dir(keyring.backends) and not (keyring.get_keyring() is None):
+                    return True
         except:
             import traceback
             traceback.print_exc(file=sys.stdout)
@@ -667,10 +719,8 @@ class Config(object):
     def _LegacyAdjustments(self):
         # mere cosmetics but might be more clear for future additions - changing any "nagios"-setting to "monitor"
         for s in self.servers.values():
-            ###if s.__dict__.has_key("nagios_url"):
             if 'nagios_url' in s.__dict__.keys():
                 s.monitor_url = s.nagios_url
-            ###if s.__dict__.has_key("nagios_cgi_url"):
             if 'nagios_cgi_url' in s.__dict__.keys():
                 s.monitor_cgi_url = s.nagios_cgi_url
 
@@ -689,18 +739,38 @@ class Config(object):
                 self.icon_in_systray = True
             self.__dict__.pop('statusbar_systray')
 
+        # some legacy action settings might need a little fix
+        for action in self.actions.values():
+            if not action.type.lower() in ('browser', 'command', 'url'):
+                # set browser as default to make user notice something is wrong
+                action.type = 'browser'
+        
 
     def GetNumberOfEnabledMonitors(self):
         """
-        returns the number of enabled monitors - in case all are disabled there is no need to display the popwin
+            returns the number of enabled monitors - in case all are disabled there is no need to display the popwin
         """
         # to be returned
         number = 0
         for server in self.servers.values():
-            ###if str(server.enabled) == "True":
+            # ##if str(server.enabled) == "True":
             if server.enabled == True:
                 number += 1
         return number
+
+
+    def delete_file(self, settings_dir, settings_file):
+        """
+            delete specified .conf file if setting is deleted in GUI
+        """
+        # clean up old deleted/renamed config file
+        file = os.path.abspath('{1}{0}{2}{0}{3}.conf'.format(os.sep, self.configdir, settings_dir, settings_file))
+        if os.path.exists(file) and (os.path.isfile(file) or os.path.islink(file)):
+            try:
+                os.unlink(file)
+            except:
+                import traceback
+                traceback.print_exc(file=sys.stdout)
 
 
 class Server(object):
@@ -730,6 +800,11 @@ class Server(object):
         # Icinga "host_display_name" instead of "host"
         self.use_display_name_host = False
         self.use_display_name_service = False
+
+        # Check_MK Multisite
+        # Force Check_MK livestatus code to set AuthUser header for users who
+        # are permitted to see all objects.
+        self.force_authuser = False
 
 
 class Action(object):
@@ -808,10 +883,10 @@ except Exception as err:
     except:
         pass
 
-    #if we're still out of luck, maybe this was a user scheme install
+    # if we're still out of luck, maybe this was a user scheme install
     try:
         import site
-        site.getusersitepackages() #make sure USER_SITE is set
+        site.getusersitepackages()  # make sure USER_SITE is set
         paths_to_check.append(os.path.normcase(os.path.join(site.USER_SITE, "Nagstamon", "resources")))
     except:
         pass

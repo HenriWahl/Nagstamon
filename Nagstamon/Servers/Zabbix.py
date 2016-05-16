@@ -4,14 +4,17 @@
 
 import sys
 import urllib.request, urllib.parse, urllib.error
-import webbrowser
 import time
 
-from Nagstamon.Helpers import HumanReadableDurationFromTimestamp
+from Nagstamon.Helpers import (HumanReadableDurationFromTimestamp,
+                               webbrowser_open)
 from Nagstamon.Config import conf
-from Nagstamon.Objects import (GenericHost, GenericService, Result)
+from Nagstamon.Objects import (GenericHost,
+                               GenericService,
+                               Result)
 from Nagstamon.Servers.Generic import GenericServer
-from Nagstamon.thirdparty.zabbix_api import ZabbixAPI, ZabbixAPIException
+from Nagstamon.thirdparty.zabbix_api import (ZabbixAPI,
+                                             ZabbixAPIException)
 
 
 class ZabbixError(Exception):
@@ -276,7 +279,7 @@ class ZabbixServer(GenericServer):
 
 
     def _open_browser(self, url):
-        webbrowser.open(url)
+        webbrowser_open(url)
 
         if conf.debug_mode == True:
             self.Debug(server=self.get_name(), debug="Open web page " + url)
@@ -305,7 +308,7 @@ class ZabbixServer(GenericServer):
         if conf.debug_mode == True:
             self.Debug(server=self.get_name(), host=host, service=service,
                        debug="Open host/service monitor web page " + url)
-        webbrowser.open(url)
+        webbrowser_open(url)
 
 
     def GetHost(self, host):

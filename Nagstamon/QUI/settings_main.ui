@@ -7,7 +7,7 @@
    <rect>
     <x>0</x>
     <y>0</y>
-    <width>727</width>
+    <width>601</width>
     <height>974</height>
    </rect>
   </property>
@@ -42,7 +42,7 @@
       </sizepolicy>
      </property>
      <property name="currentIndex">
-      <number>5</number>
+      <number>6</number>
      </property>
      <widget class="QWidget" name="tab_servers">
       <attribute name="title">
@@ -316,28 +316,21 @@
             </item>
            </layout>
           </item>
-          <item row="7" column="0" colspan="2">
+          <item row="6" column="0" colspan="2">
            <widget class="QCheckBox" name="input_checkbox_highlight_new_events">
             <property name="text">
              <string>Highlight new events in status details overview</string>
             </property>
            </widget>
           </item>
-          <item row="8" column="0" colspan="2">
+          <item row="7" column="0" colspan="2">
            <widget class="QCheckBox" name="input_checkbox_show_tooltips">
             <property name="text">
              <string>Show tooltips in status details overview</string>
             </property>
            </widget>
           </item>
-          <item row="6" column="0" colspan="2">
-           <widget class="QCheckBox" name="input_checkbox_show_grid">
-            <property name="text">
-             <string>Show grid in status details overview</string>
-            </property>
-           </widget>
-          </item>
-          <item row="9" column="0">
+          <item row="8" column="0">
            <layout class="QGridLayout" name="gridLayout_15">
             <item row="0" column="1">
              <widget class="QComboBox" name="input_combobox_default_sort_field"/>
@@ -710,6 +703,25 @@
        <string>Actions</string>
       </attribute>
       <layout class="QGridLayout" name="gridLayout_6">
+       <item row="0" column="0">
+        <widget class="QListWidget" name="list_actions">
+         <property name="sizePolicy">
+          <sizepolicy hsizetype="MinimumExpanding" vsizetype="MinimumExpanding">
+           <horstretch>0</horstretch>
+           <verstretch>0</verstretch>
+          </sizepolicy>
+         </property>
+         <property name="minimumSize">
+          <size>
+           <width>0</width>
+           <height>400</height>
+          </size>
+         </property>
+         <property name="resizeMode">
+          <enum>QListView::Adjust</enum>
+         </property>
+        </widget>
+       </item>
        <item row="0" column="2">
         <layout class="QVBoxLayout" name="verticalLayout_4">
          <item>
@@ -785,26 +797,7 @@
          </layout>
         </widget>
        </item>
-       <item row="0" column="0">
-        <widget class="QListWidget" name="list_actions">
-         <property name="sizePolicy">
-          <sizepolicy hsizetype="MinimumExpanding" vsizetype="MinimumExpanding">
-           <horstretch>0</horstretch>
-           <verstretch>0</verstretch>
-          </sizepolicy>
-         </property>
-         <property name="minimumSize">
-          <size>
-           <width>0</width>
-           <height>400</height>
-          </size>
-         </property>
-         <property name="resizeMode">
-          <enum>QListView::Adjust</enum>
-         </property>
-        </widget>
-       </item>
-       <item row="2" column="0">
+       <item row="3" column="0">
         <spacer name="verticalSpacer_8">
          <property name="orientation">
           <enum>Qt::Vertical</enum>
@@ -816,6 +809,48 @@
           </size>
          </property>
         </spacer>
+       </item>
+       <item row="2" column="0">
+        <widget class="QGroupBox" name="groupbox_browser">
+         <property name="title">
+          <string>Browser:</string>
+         </property>
+         <layout class="QVBoxLayout" name="verticalLayout_14">
+          <item>
+           <widget class="QRadioButton" name="input_radiobutton_use_default_browser">
+            <property name="text">
+             <string>Use default browser</string>
+            </property>
+           </widget>
+          </item>
+          <item>
+           <widget class="QRadioButton" name="input_radiobutton_use_custom_browser">
+            <property name="text">
+             <string>Use alternative browser</string>
+            </property>
+           </widget>
+          </item>
+          <item>
+           <widget class="QGroupBox" name="groupbox_custom_browser">
+            <property name="title">
+             <string>Custom browser:</string>
+            </property>
+            <layout class="QGridLayout" name="gridLayout_19">
+             <item row="0" column="0">
+              <widget class="QLineEdit" name="input_lineedit_custom_browser"/>
+             </item>
+             <item row="0" column="1">
+              <widget class="QPushButton" name="button_choose_browser">
+               <property name="text">
+                <string>Choose browser...</string>
+               </property>
+              </widget>
+             </item>
+            </layout>
+           </widget>
+          </item>
+         </layout>
+        </widget>
        </item>
       </layout>
      </widget>
@@ -1137,8 +1172,8 @@
          </property>
          <property name="sizeHint" stdset="0">
           <size>
-           <width>0</width>
-           <height>0</height>
+           <width>20</width>
+           <height>40</height>
           </size>
          </property>
         </spacer>
@@ -1150,28 +1185,10 @@
          </property>
         </widget>
        </item>
-       <item row="10" column="0" colspan="3">
-        <layout class="QHBoxLayout" name="horizontalLayout_12">
-         <item>
-          <widget class="QPushButton" name="button_colors_reset">
-           <property name="text">
-            <string>Reset to previous</string>
-           </property>
-          </widget>
-         </item>
-         <item>
-          <widget class="QPushButton" name="button_colors_defaults">
-           <property name="text">
-            <string>Revert to default colors</string>
-           </property>
-          </widget>
-         </item>
-        </layout>
-       </item>
        <item row="1" column="0" rowspan="8">
         <widget class="QGroupBox" name="states_groupbox">
          <property name="title">
-          <string>Status</string>
+          <string>Status:</string>
          </property>
          <layout class="QVBoxLayout" name="verticalLayout_11">
           <item>
@@ -1229,7 +1246,7 @@
        <item row="1" column="1" rowspan="8">
         <widget class="QGroupBox" name="text_groupbox">
          <property name="title">
-          <string>Text</string>
+          <string>Text:</string>
          </property>
          <layout class="QVBoxLayout" name="verticalLayout_8">
           <item>
@@ -1287,7 +1304,7 @@
        <item row="1" column="2" rowspan="8">
         <widget class="QGroupBox" name="background_groupbox">
          <property name="title">
-          <string>Background</string>
+          <string>Background:</string>
          </property>
          <layout class="QVBoxLayout" name="verticalLayout_12">
           <item>
@@ -1338,6 +1355,206 @@
              <string/>
             </property>
            </widget>
+          </item>
+         </layout>
+        </widget>
+       </item>
+       <item row="10" column="1" colspan="2">
+        <layout class="QHBoxLayout" name="horizontalLayout_12">
+         <item>
+          <widget class="QPushButton" name="button_colors_reset">
+           <property name="text">
+            <string>Reset to previous colors</string>
+           </property>
+          </widget>
+         </item>
+         <item>
+          <widget class="QPushButton" name="button_colors_defaults">
+           <property name="text">
+            <string>Revert to default colors</string>
+           </property>
+          </widget>
+         </item>
+        </layout>
+       </item>
+       <item row="11" column="0" colspan="3">
+        <widget class="QGroupBox" name="groupBox_color_grid">
+         <property name="title">
+          <string>Colored grid:</string>
+         </property>
+         <layout class="QGridLayout" name="gridLayout_18">
+          <item row="0" column="0">
+           <widget class="QCheckBox" name="input_checkbox_show_grid">
+            <property name="text">
+             <string>Use alternating colors for better readability</string>
+            </property>
+           </widget>
+          </item>
+          <item row="1" column="0">
+           <widget class="QCheckBox" name="input_checkbox_grid_use_custom_intensity">
+            <property name="enabled">
+             <bool>true</bool>
+            </property>
+            <property name="text">
+             <string>Customize intensity of alternation</string>
+            </property>
+           </widget>
+          </item>
+          <item row="2" column="0">
+           <widget class="QSlider" name="input_slider_grid_alternation_intensity">
+            <property name="sizePolicy">
+             <sizepolicy hsizetype="Minimum" vsizetype="Fixed">
+              <horstretch>0</horstretch>
+              <verstretch>0</verstretch>
+             </sizepolicy>
+            </property>
+            <property name="maximum">
+             <number>50</number>
+            </property>
+            <property name="orientation">
+             <enum>Qt::Horizontal</enum>
+            </property>
+           </widget>
+          </item>
+          <item row="2" column="1">
+           <layout class="QVBoxLayout" name="vbox_alternation_intensity_labels">
+            <property name="spacing">
+             <number>0</number>
+            </property>
+            <item>
+             <widget class="QLabel" name="label_intensity_warning_0">
+              <property name="autoFillBackground">
+               <bool>true</bool>
+              </property>
+              <property name="text">
+               <string> WARNING</string>
+              </property>
+              <property name="alignment">
+               <set>Qt::AlignLeading|Qt::AlignLeft|Qt::AlignVCenter</set>
+              </property>
+              <property name="margin">
+               <number>0</number>
+              </property>
+             </widget>
+            </item>
+            <item>
+             <widget class="QLabel" name="label_intensity_warning_1">
+              <property name="autoFillBackground">
+               <bool>true</bool>
+              </property>
+              <property name="text">
+               <string> WARNING</string>
+              </property>
+              <property name="alignment">
+               <set>Qt::AlignLeading|Qt::AlignLeft|Qt::AlignVCenter</set>
+              </property>
+             </widget>
+            </item>
+            <item>
+             <widget class="QLabel" name="label_intensity_critical_0">
+              <property name="autoFillBackground">
+               <bool>true</bool>
+              </property>
+              <property name="text">
+               <string> CRITICAL</string>
+              </property>
+              <property name="alignment">
+               <set>Qt::AlignLeading|Qt::AlignLeft|Qt::AlignVCenter</set>
+              </property>
+             </widget>
+            </item>
+            <item>
+             <widget class="QLabel" name="label_intensity_critical_1">
+              <property name="autoFillBackground">
+               <bool>true</bool>
+              </property>
+              <property name="text">
+               <string> CRITICAL</string>
+              </property>
+              <property name="alignment">
+               <set>Qt::AlignLeading|Qt::AlignLeft|Qt::AlignVCenter</set>
+              </property>
+             </widget>
+            </item>
+            <item>
+             <widget class="QLabel" name="label_intensity_unknown_0">
+              <property name="autoFillBackground">
+               <bool>true</bool>
+              </property>
+              <property name="text">
+               <string> UNKNOWN</string>
+              </property>
+              <property name="alignment">
+               <set>Qt::AlignLeading|Qt::AlignLeft|Qt::AlignVCenter</set>
+              </property>
+             </widget>
+            </item>
+            <item>
+             <widget class="QLabel" name="label_intensity_unknown_1">
+              <property name="autoFillBackground">
+               <bool>true</bool>
+              </property>
+              <property name="text">
+               <string> UNKNOWN</string>
+              </property>
+              <property name="alignment">
+               <set>Qt::AlignLeading|Qt::AlignLeft|Qt::AlignVCenter</set>
+              </property>
+             </widget>
+            </item>
+            <item>
+             <widget class="QLabel" name="label_intensity_unreachable_0">
+              <property name="autoFillBackground">
+               <bool>true</bool>
+              </property>
+              <property name="text">
+               <string> UNREACHABLE</string>
+              </property>
+              <property name="alignment">
+               <set>Qt::AlignLeading|Qt::AlignLeft|Qt::AlignVCenter</set>
+              </property>
+             </widget>
+            </item>
+            <item>
+             <widget class="QLabel" name="label_intensity_unreachable_1">
+              <property name="autoFillBackground">
+               <bool>true</bool>
+              </property>
+              <property name="text">
+               <string> UNREACHABLE</string>
+              </property>
+              <property name="alignment">
+               <set>Qt::AlignLeading|Qt::AlignLeft|Qt::AlignVCenter</set>
+              </property>
+             </widget>
+            </item>
+            <item>
+             <widget class="QLabel" name="label_intensity_down_0">
+              <property name="autoFillBackground">
+               <bool>true</bool>
+              </property>
+              <property name="text">
+               <string> DOWN</string>
+              </property>
+              <property name="alignment">
+               <set>Qt::AlignLeading|Qt::AlignLeft|Qt::AlignVCenter</set>
+              </property>
+             </widget>
+            </item>
+            <item>
+             <widget class="QLabel" name="label_intensity_down_1">
+              <property name="autoFillBackground">
+               <bool>true</bool>
+              </property>
+              <property name="text">
+               <string> DOWN</string>
+              </property>
+              <property name="alignment">
+               <set>Qt::AlignLeading|Qt::AlignLeft|Qt::AlignVCenter</set>
+              </property>
+             </widget>
+            </item>
+           </layout>
           </item>
          </layout>
         </widget>
@@ -1404,7 +1621,70 @@
             </item>
            </layout>
           </item>
-          <item>
+         </layout>
+        </widget>
+       </item>
+       <item>
+        <widget class="QGroupBox" name="label_defaults_downtime">
+         <property name="title">
+          <string>Downtime:</string>
+         </property>
+         <layout class="QGridLayout" name="gridLayout_10">
+          <item row="3" column="0">
+           <widget class="QLabel" name="label_defaults_downtime_comment">
+            <property name="text">
+             <string>Comment:</string>
+            </property>
+           </widget>
+          </item>
+          <item row="1" column="0">
+           <widget class="QLabel" name="label_defaults_duration_comment">
+            <property name="text">
+             <string>Duration:</string>
+            </property>
+           </widget>
+          </item>
+          <item row="3" column="1">
+           <widget class="QLineEdit" name="input_lineedit_defaults_downtime_comment"/>
+          </item>
+          <item row="1" column="1">
+           <layout class="QHBoxLayout" name="horizontalLayout_8">
+            <item>
+             <widget class="QSpinBox" name="input_spinbox_defaults_downtime_duration_hours"/>
+            </item>
+            <item>
+             <widget class="QLabel" name="label_duration_hour">
+              <property name="text">
+               <string>hours</string>
+              </property>
+             </widget>
+            </item>
+            <item>
+             <widget class="QSpinBox" name="input_spinbox_defaults_downtime_duration_minutes"/>
+            </item>
+            <item>
+             <widget class="QLabel" name="label_duration_minutes">
+              <property name="text">
+               <string>minutes</string>
+              </property>
+             </widget>
+            </item>
+            <item>
+             <spacer name="horizontalSpacer_4">
+              <property name="orientation">
+               <enum>Qt::Horizontal</enum>
+              </property>
+              <property name="sizeHint" stdset="0">
+               <size>
+                <width>40</width>
+                <height>20</height>
+               </size>
+              </property>
+             </spacer>
+            </item>
+           </layout>
+          </item>
+          <item row="0" column="0" colspan="2">
            <layout class="QGridLayout" name="gridLayout_9">
             <item row="1" column="1">
              <widget class="QRadioButton" name="input_radiobutton_defaults_downtime_type_flexible">
@@ -1429,69 +1709,6 @@
             </item>
             <item row="0" column="2">
              <spacer name="horizontalSpacer_2">
-              <property name="orientation">
-               <enum>Qt::Horizontal</enum>
-              </property>
-              <property name="sizeHint" stdset="0">
-               <size>
-                <width>40</width>
-                <height>20</height>
-               </size>
-              </property>
-             </spacer>
-            </item>
-           </layout>
-          </item>
-         </layout>
-        </widget>
-       </item>
-       <item>
-        <widget class="QGroupBox" name="label_defaults_downtime">
-         <property name="title">
-          <string>Downtime:</string>
-         </property>
-         <layout class="QGridLayout" name="gridLayout_10">
-          <item row="2" column="0">
-           <widget class="QLabel" name="label_defaults_downtime_comment">
-            <property name="text">
-             <string>Comment:</string>
-            </property>
-           </widget>
-          </item>
-          <item row="0" column="0">
-           <widget class="QLabel" name="label_defaults_duration_comment">
-            <property name="text">
-             <string>Duration:</string>
-            </property>
-           </widget>
-          </item>
-          <item row="2" column="1">
-           <widget class="QLineEdit" name="input_lineedit_defaults_downtime_comment"/>
-          </item>
-          <item row="0" column="1">
-           <layout class="QHBoxLayout" name="horizontalLayout_8">
-            <item>
-             <widget class="QSpinBox" name="input_spinbox_defaults_downtime_duration_hours"/>
-            </item>
-            <item>
-             <widget class="QLabel" name="label_duration_hour">
-              <property name="text">
-               <string>hours</string>
-              </property>
-             </widget>
-            </item>
-            <item>
-             <widget class="QSpinBox" name="input_spinbox_defaults_downtime_duration_minutes"/>
-            </item>
-            <item>
-             <widget class="QLabel" name="label_duration_minutes">
-              <property name="text">
-               <string>minutes</string>
-              </property>
-             </widget>
-            </item>
-            <item>
-             <spacer name="horizontalSpacer_4">
               <property name="orientation">
                <enum>Qt::Horizontal</enum>
               </property>
@@ -1584,7 +1801,6 @@
   <tabstop>input_radiobutton_close_details_hover</tabstop>
   <tabstop>input_radiobutton_popup_details_clicking</tabstop>
   <tabstop>input_radiobutton_close_details_clicking</tabstop>
-  <tabstop>input_checkbox_show_grid</tabstop>
   <tabstop>input_checkbox_highlight_new_events</tabstop>
   <tabstop>input_checkbox_show_tooltips</tabstop>
   <tabstop>input_combobox_default_sort_field</tabstop>
@@ -1722,7 +1938,7 @@
   </connection>
  </connections>
  <buttongroups>
-  <buttongroup name="buttongroup_close_statusbar"/>
   <buttongroup name="buttongroup_popup_statuswindow"/>
+  <buttongroup name="buttongroup_close_statusbar"/>
  </buttongroups>
 </ui>

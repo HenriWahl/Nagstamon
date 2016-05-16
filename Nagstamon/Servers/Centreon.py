@@ -17,8 +17,7 @@
 # along with this program; if not, write to the Free Software
 # Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA  02110-1301, USA
 
-import urllib.request, urllib.parse, urllib.error, urllib.request, urllib.error, urllib.parse
-import webbrowser
+import urllib.request, urllib.parse, urllib.error
 import socket
 import sys
 import re
@@ -27,6 +26,7 @@ import copy
 from Nagstamon.Objects import *
 from Nagstamon.Servers.Generic import GenericServer
 from Nagstamon.Config import conf
+from Nagstamon.Helpers import webbrowser_open
 
 
 class CentreonServer(GenericServer):
@@ -97,19 +97,19 @@ class CentreonServer(GenericServer):
         if self.use_autologin == True:
             auth = '&autologin=1&useralias=' + self.username + '&token=' + self.autologin_key
             if host == '_Module_Meta':
-                webbrowser.open(self.monitor_cgi_url + '/index.php?' + urllib.parse.urlencode({'p':20206,'o':'meta'}) + auth )
+                webbrowser_open(self.monitor_cgi_url + '/index.php?' + urllib.parse.urlencode({'p':20206,'o':'meta'}) + auth )
             elif service == '':
-                webbrowser.open(self.monitor_cgi_url + '/index.php?' + urllib.parse.urlencode({'p':201,'o':'hd', 'host_name':host}) + auth )
+                webbrowser_open(self.monitor_cgi_url + '/index.php?' + urllib.parse.urlencode({'p':201,'o':'hd', 'host_name':host}) + auth )
             else:
-                webbrowser.open(self.monitor_cgi_url + '/index.php?' + urllib.parse.urlencode({'p':202, 'o':'svcd',  'host_name':host, 'service_description':service}) + auth )
+                webbrowser_open(self.monitor_cgi_url + '/index.php?' + urllib.parse.urlencode({'p':202, 'o':'svcd',  'host_name':host, 'service_description':service}) + auth )
         else:
             if host == '_Module_Meta':
-                webbrowser.open(self.monitor_cgi_url + '/main.php?' + urllib.parse.urlencode({'p':20206,'o':'meta'}))
+                webbrowser_open(self.monitor_cgi_url + '/main.php?' + urllib.parse.urlencode({'p':20206,'o':'meta'}))
             # must be a host if service is empty...
             elif service == '':
-                webbrowser.open(self.monitor_cgi_url + '/main.php?' + urllib.parse.urlencode({'p':201,'o':'hd', 'host_name':host}))
+                webbrowser_open(self.monitor_cgi_url + '/main.php?' + urllib.parse.urlencode({'p':201,'o':'hd', 'host_name':host}))
             else:
-                webbrowser.open(self.monitor_cgi_url + '/main.php?' + urllib.parse.urlencode({'p':202, 'o':'svcd',  'host_name':host, 'service_description':service}))
+                webbrowser_open(self.monitor_cgi_url + '/main.php?' + urllib.parse.urlencode({'p':202, 'o':'svcd',  'host_name':host, 'service_description':service}))
 
 
     def get_start_end(self, host):

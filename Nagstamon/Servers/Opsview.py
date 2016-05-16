@@ -19,13 +19,13 @@
 
 import sys
 import urllib.request, urllib.parse, urllib.error
-import webbrowser
 import copy
 
 #from Nagstamon import Helpers
 from Nagstamon.Objects import (GenericHost, GenericService, Result)
 from Nagstamon.Servers.Generic import GenericServer
-from Nagstamon.Helpers import HumanReadableDurationFromSeconds
+from Nagstamon.Helpers import (HumanReadableDurationFromSeconds,
+                               webbrowser_open)
 
 
 class OpsviewService(GenericService):
@@ -229,5 +229,5 @@ class OpsviewServer(GenericServer):
 
 
     def open_monitor(self, host, service):
-        webbrowser.open('%s/status/service?host=%s' % (self.monitor_url, host))
+        webbrowser_open('%s/status/service?host=%s' % (self.monitor_url, host))
 

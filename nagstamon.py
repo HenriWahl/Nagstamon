@@ -20,9 +20,9 @@
 
 import os
 import sys
-###import psutil
-###import getpass
 import socket
+# not necessary here
+#import nagstacli
 
 # fix/patch for https://bugs.launchpad.net/ubuntu/+source/nagstamon/+bug/732544
 socket.setdefaulttimeout(30)
@@ -30,12 +30,21 @@ socket.setdefaulttimeout(30)
 
 try:
     if __name__ == '__main__':
+        # queue.Queue() needs threading module which might be not such a good idea to be used
+        # because QThread is already in use
+        debug_queue = list()       
+        
         # Initialize global configuration
         from Nagstamon.Config import (conf,
                                       RESOURCES)
 
         from Nagstamon.Helpers import lock_config_folder
 
+       #if there are more args, than the config folder,  nagstaCLI is been executed
+        if len(sys.argv) > 2:
+            nagstacli.executeCli()
+            sys.exit(1)
+            
         # Acquire the lock
         if not lock_config_folder(conf.configdir):
             print('An instance is already running this config ({})'.format(conf.configdir))
@@ -59,7 +68,7 @@ try:
         statuswindow.adjustSize()
 
         if conf.check_for_new_version == True:
-            check_version.check(start_mode = True, parent=statuswindow)
+            check_version.check(start_mode=True, parent=statuswindow)
 
         sys.exit(APP.exec_())
 

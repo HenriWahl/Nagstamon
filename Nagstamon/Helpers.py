@@ -25,21 +25,19 @@ import traceback
 import os
 import psutil
 import getpass
+import webbrowser
 
 # import md5 for centreon url autologin encoding
 from hashlib import md5
 
-# experimenting with new debug queue
+from Nagstamon.Config import (BOOLPOOL,
+                              NON_LINUX,
+                              conf)
+
 # queue.Queue() needs threading module which might be not such a good idea to be used
 # because QThread is already in use
-debug_queue = list()
-
-# temporary dict for string-to-bool-conversion
-# the bool:bool relations are thought to make things easier in Dialog_Settings.ok()
-BOOLPOOL = {'False': False,
-            'True': True,
-            False: False,
-            True: True}
+# get debug queue from nagstamon.py
+debug_queue = sys.modules['__main__'].debug_queue
 
 # states needed for gravity comparison for notification and Generic.py
 STATES = ['UP', 'UNKNOWN', 'WARNING', 'CRITICAL', 'UNREACHABLE', 'DOWN']
@@ -48,7 +46,7 @@ STATES = ['UP', 'UNKNOWN', 'WARNING', 'CRITICAL', 'UNREACHABLE', 'DOWN']
 STATES_SOUND = ['WARNING', 'CRITICAL', 'DOWN']
 
 # needed when OS-specific decisions have to be made, mostly Linux/non-Linux
-NON_LINUX = ('Darwin', 'Windows')
+# ##NON_LINUX = ('Darwin', 'Windows')
 
 
 def not_empty(x):
@@ -167,7 +165,7 @@ def HumanReadableDurationFromTimestamp(timestamp):
         h = int(td.seconds / 3600)
         m = int(td.seconds % 3600 / 60)
         s = int(td.seconds % 60)
-        return "%sd %sh %sm %ss" % (td.days, h, m ,s)
+        return "%sd %sh %sm %ss" % (td.days, h, m , s)
     except:
         import traceback
         traceback.print_exc(file=sys.stdout)
@@ -187,7 +185,7 @@ def MachineSortableDate(raw):
     # strip and replace necessary for Nagios duration values,
     # split components of duration into dictionary
     for c in raw.strip().replace("  ", " ").split(" "):
-        number, period = c[0:-1],c[-1]
+        number, period = c[0:-1], c[-1]
         d[period] = int(number)
         del number, period
     # convert collected duration data components into seconds for being comparable
@@ -295,7 +293,7 @@ def UnifiedMachineSortableDate(raw):
         # strip and replace necessary for Nagios duration values,
         # split components of duration into dictionary
         for c in raw.strip().replace("  ", " ").split(" "):
-            number, period = c[0:-1],c[-1]
+            number, period = c[0:-1], c[-1]
             d[period] = int(number)
             del number, period
 
@@ -343,7 +341,7 @@ def lock_config_folder(folder):
                     pid = int(procInfo[0])
                     bootTime = int(procInfo[1])
                     userName = procInfo[2].strip()
-                except( ValueError, IndexError ):
+                except(ValueError, IndexError):
                     pass
     
             if pid is not None and bootTime is not None and userName is not None:
@@ -356,6 +354,58 @@ def lock_config_folder(folder):
             pidFile.write('{}@{}@{}'.format(curPid, curBootTime, curUserName))
     except Exception as err:
         print(err)
-        
 
     return True
+
+
+# the following functions are used for sorted() in sort_data_array()
+def compare_host(item):
+    return(item.lower())
+
+
+def compare_service(item):
+    return(item.lower())
+
+
+def compare_status(item):
+    return(STATES.index(item))
+
+
+def compare_last_check(item):
+    return(UnifiedMachineSortableDate(item))
+
+
+def compare_duration(item):
+    return(UnifiedMachineSortableDate(item))
+
+
+def compare_attempt(item):
+    return(item)
+
+
+def compare_status_information(item):
+    return(item.lower())
+
+
+def webbrowser_open(url):
+    """
+        decide if default or custom browser is used for various tasks
+        used by almost all 
+    """
+    if conf.use_default_browser:
+        webbrowser.open(url)
+    else:
+        webbrowser.get('{0} %s &'.format(conf.custom_browser)).open(url)
+
+
+# depending on column different functions have to be used
+# 0 + 1 are column "Hosts", 1 + 2 are column "Service" due to extra font flag pictograms
+SORT_COLUMNS_FUNCTIONS = { 0: compare_host,
+         1: compare_host,
+         2: compare_service,
+         3: compare_service,
+         4: compare_status,
+         5: compare_last_check,
+         6: compare_duration,
+         7: compare_attempt,
+         8: compare_status_information }

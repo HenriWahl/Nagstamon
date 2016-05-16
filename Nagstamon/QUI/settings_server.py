@@ -111,6 +111,9 @@ class Ui_settings_server(object):
         self.input_checkbox_use_display_name_service = QtWidgets.QCheckBox(settings_server)
         self.input_checkbox_use_display_name_service.setObjectName("input_checkbox_use_display_name_service")
         self.gridLayout.addWidget(self.input_checkbox_use_display_name_service, 22, 0, 1, 2)
+        self.input_checkbox_force_authuser = QtWidgets.QCheckBox(settings_server)
+        self.input_checkbox_force_authuser.setObjectName("input_checkbox_force_authuser")
+        self.gridLayout.addWidget(self.input_checkbox_force_authuser, 23, 0, 1, 2)
         self.input_checkbox_enabled = QtWidgets.QCheckBox(settings_server)
         self.input_checkbox_enabled.setObjectName("input_checkbox_enabled")
         self.gridLayout.addWidget(self.input_checkbox_enabled, 0, 0, 1, 3)
@@ -186,6 +189,7 @@ class Ui_settings_server(object):
         settings_server.setTabOrder(self.input_lineedit_proxy_password, self.input_checkbox_use_proxy_from_os)
         settings_server.setTabOrder(self.input_checkbox_use_proxy_from_os, self.input_checkbox_use_display_name_host)
         settings_server.setTabOrder(self.input_checkbox_use_display_name_host, self.input_checkbox_use_display_name_service)
+        settings_server.setTabOrder(self.input_checkbox_force_authuser, self.input_checkbox_force_authuser)
 
     def retranslateUi(self, settings_server):
         _translate = QtCore.QCoreApplication.translate
@@ -205,6 +209,8 @@ class Ui_settings_server(object):
         self.label_autologin_key.setText(_translate("settings_server", "Autologin Key:"))
         self.label_monitor_url.setText(_translate("settings_server", "Monitor URL:"))
         self.input_checkbox_use_display_name_service.setText(_translate("settings_server", "Use display name as service name"))
+        self.input_checkbox_force_authuser.setText(_translate("settings_server",
+                                                   "Only show permitted hosts for \"see all\" users (1.4.0i1 or newer)"))
         self.input_checkbox_enabled.setText(_translate("settings_server", "Enabled"))
         self.label_password.setText(_translate("settings_server", "Password:"))
         self.input_lineedit_username.setText(_translate("settings_server", "username"))
