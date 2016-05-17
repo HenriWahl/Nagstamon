@@ -205,13 +205,14 @@ if platform.system() == 'Windows':
     WINDOW_FLAGS = Qt.WindowStaysOnTopHint | Qt.FramelessWindowHint | Qt.Tool
     # WINDOW_FLAGS = Qt.FramelessWindowHint | Qt.Tool
     # WINDOW_FLAGS = Qt.FramelessWindowHint | Qt.ToolTip
-    #WINDOW_FLAGS = Qt.FramelessWindowHint | Qt.WindowStaysOnTopHint | Qt.Tool |  Qt.BypassWindowManagerHint
+    # WINDOW_FLAGS = Qt.FramelessWindowHint | Qt.WindowStaysOnTopHint | Qt.Tool |  Qt.BypassWindowManagerHint
 else:
     WINDOW_FLAGS = Qt.WindowStaysOnTopHint | Qt.FramelessWindowHint | Qt.Tool
 
 # set style for tooltips globally - to sad not all properties can be set here
 APP.setStyleSheet('''QToolTip { margin: 3px;
                                 }''')
+
 
 class HBoxLayout(QHBoxLayout):
     """
@@ -350,17 +351,19 @@ class SystemTrayIcon(QSystemTrayIcon):
         """
         # some obscure Windows problem again
         if event == QSystemTrayIcon.Context and platform.system() == 'Windows':
-            self.show_menu.emit()
+                self.show_menu.emit()
         # only react on left mouse click           
         elif event == (QSystemTrayIcon.Trigger or QSystemTrayIcon.DoubleClick):
-            # when green icon is displayed and no popwin is about to po up show at least menu in MacOX
-            if get_worst_status() == 'UP' and platform.system() == 'Darwin':
-                self.menu.show_at_cursor()
+            # when green icon is displayed and no popwin is about to po up show at least menu
+            if get_worst_status() == 'UP':
+                    self.menu.show_at_cursor()
             else:
+                # show status window if there is something to tell
                 if statuswindow.is_shown:
                     self.hide_popwin.emit()
                 else:
                     self.show_popwin.emit()  
+
 
 
     @pyqtSlot()
@@ -1058,7 +1061,7 @@ class StatusWindow(QWidget):
             # so the floating statusbar moves silently into a quiet corner of the desktop
             # and raises itself serveral times to be the topmost to make the flags stick
             if platform.system() == 'Windows':
-                self.move(-32768,-32768)
+                self.move(-32768, -32768)
                 # just a guess - 10 times seem to be enough
                 for counter in range(100):
                     self.setWindowFlags(Qt.FramelessWindowHint)
@@ -3897,7 +3900,8 @@ class Dialog(QObject):
                     widget.hide()
 
 
-    @pyqtSlot(QWidget, bool)
+    # ## @pyqtSlot(QWidget, bool)
+    @pyqtSlot(str, bool)
     def toggle(self, checkbox, inverted=False):
         """
             change state of depending widgets, slot for signals from checkboxes in UI
