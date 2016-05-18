@@ -32,6 +32,7 @@ from Nagstamon.Helpers import webbrowser_open
 
 class CentreonServer(GenericServer):
     TYPE = 'Centreon'
+    
     # centreon generic web interface uses a sid which is needed to ask for news
     SID = None
 
@@ -41,20 +42,9 @@ class CentreonServer(GenericServer):
                     'services': '$MONITOR$/main.php?p=20202&o=svcpb',\
                     'history': '$MONITOR$/main.php?p=203'}
 
-    # A Monitor CGI URL is not necessary so hide it in settings
-    # Password is broken so disable it
-#    DISABLED_CONTROLS = ['label_monitor_cgi_url',
-#                         'input_entry_monitor_cgi_url',
-#                         'input_checkbutton_use_display_name_host',
-#                         'input_checkbutton_use_display_name_service',
-#                         'label_password',
-#                         'input_entry_password',
-#                         'input_checkbutton_save_password']
-
-    # newer Centreon versions (2.3+?) have different URL paths with a '/ndo' fragment
-    # will be checked by _get_ndo_url() but default is /xml/ndo/
-    # new in Centreon 2.4 seems to be a /xml/broker/ URL so this will be tried first
-    XML_NDO = 'xml/broker'
+    # Centreon have different URL paths for XML
+    # will be checked by _get_xml_url() but default is xml/broker
+    XML_PATH = 'xml/broker'
 
     # HARD/SOFT state mapping
     HARD_SOFT = {'(H)': 'hard', '(S)': 'soft'}
@@ -66,15 +56,11 @@ class CentreonServer(GenericServer):
                     'INCONNU': 'UNKNOWN',
                     'ALERTE': 'WARNING'}
 
+    # Entries for monitor default actions in context menu
+    MENU_ACTIONS = ['Monitor', 'Recheck', 'Acknowledge', 'Downtime']
 
-    def __init__(self, **kwds):
-        # add all keywords to object, every mode searchs inside for its favorite arguments/keywords
-        for k in kwds: self.__dict__[k] = kwds[k]
-
-        GenericServer.__init__(self, **kwds)
-
-        # Entries for monitor default actions in context menu
-        self.MENU_ACTIONS = ['Monitor', 'Recheck', 'Acknowledge', 'Downtime']
+    # Needed to detect each Centreon's version
+    centreon_version = None
 
 
     def init_HTTP(self):
@@ -84,13 +70,39 @@ class CentreonServer(GenericServer):
         if self.session == None:
             GenericServer.init_HTTP(self)
 
+        if self.centreon_version == None:
+            result_versioncheck = self.FetchURL(self.monitor_cgi_url + '/index.php', giveback='raw')
+            raw_versioncheck, error_versioncheck = result_versioncheck.result, result_versioncheck.error
+            if error_versioncheck == '':
+                if re.search('2\.2\.[0-9]', raw_versioncheck):
+                    self.centreon_version = 2.2
+                    if conf.debug_mode == True:
+                        self.Debug(server=self.get_name(), debug = 'Centreon version detected : 2.2')
+                elif re.search('2\.[3-6]\.[0-9]', raw_versioncheck):
+                    self.centreon_version = 2.3456
+                    if conf.debug_mode == True:
+                        self.Debug(server=self.get_name(), debug = 'Centreon version detected : 2.[3-6]')
+                elif re.search('2\.7\.[0-9]', raw_versioncheck):
+                    # Centreon 2.7 only support C. Broker
+                    self.centreon_version = 2.7
+                    if conf.debug_mode == True:
+                        self.Debug(server=self.get_name(), debug = 'Centreon version detected : 2.7')
+                else:
+                    # unsupported version or unable do determine
+                    self.centreon_version = 2.7
+                    if conf.debug_mode == True:
+                        self.Debug(server=self.get_name(), debug = 'Centreon version unknown : supposed to be >= 2.7')
+            else:
+                if conf.debug_mode == True:
+                    self.Debug(server=self.get_name(), debug = 'Error getting the home page : ' + error_versioncheck)
+            del result_versioncheck, raw_versioncheck, error_versioncheck
+
+
     def reset_HTTP(self):
         '''
         Centreon needs deletion of SID
         '''
-        ###self.HTTPheaders = {}
         self.SID = None
-        ###self.SIDcount = 0
         self._get_sid()
 
 
@@ -118,6 +130,50 @@ class CentreonServer(GenericServer):
                 webbrowser_open(self.monitor_cgi_url + '/main.php?' + urllib.parse.urlencode({'p':201,'o':'hd', 'host_name':host}))
             else:
                 webbrowser_open(self.monitor_cgi_url + '/main.php?' + urllib.parse.urlencode({'p':202, 'o':'svcd',  'host_name':host, 'service_description':service}))
+
+
+    def _get_sid(self):
+        '''
+        gets a shiny new SID for XML HTTP requests to Centreon cutting it out via .partition() from raw HTML
+        additionally get php session cookie
+        '''
+        # BROWSER_URLS using autologin
+        if str(self.use_autologin) == 'True':
+            auth = '&autologin=1&useralias=' + self.username + '&token=' + self.autologin_key
+            self.BROWSER_URLS= { 'monitor': '$MONITOR$/index.php?p=1' + auth,\
+                            'hosts': '$MONITOR$/index.php?p=20103&o=hpb' + auth,\
+                            'services': '$MONITOR$/index.php?p=20202&o=svcpb' + auth,\
+                            'history': '$MONITOR$/index.php?p=203' + auth}
+        try:
+            if self.use_autologin == True:
+              raw = self.FetchURL(self.monitor_cgi_url + '/index.php?p=101&autologin=1&useralias=' + self.username + '&token=' + self.autologin_key, giveback='raw')
+              if conf.debug_mode == True:
+                  self.Debug(server=self.get_name(), debug = 'Autologin : ' + self.username + ' : ' + self.autologin_key)
+            else:
+                login = self.FetchURL(self.monitor_cgi_url + '/index.php')
+                if login.error == '' and login.status_code == 200:
+                    form = login.result.find('form')
+                    form_inputs = {}
+                    # Need to catch the centreon_token for login to work
+                    for form_input in ('centreon_token', 'submitLogin'):
+                        form_inputs[form_input] = form.find('input', {'name': form_input})['value']
+                    form_inputs['useralias'] = self.username
+                    form_inputs['password'] = self.password
+                    # fire up login button with all needed data
+                    raw = self.FetchURL(self.monitor_cgi_url + '/index.php', cgi_data=form_inputs)
+                if conf.debug_mode == True:
+                    self.Debug(server=self.get_name(), debug = 'Password login : ' + self.username + ' : ' + self.password)
+            del raw
+            sid = self.session.cookies['PHPSESSID']
+            if conf.debug_mode == True:
+                self.Debug(server=self.get_name(), debug = 'SID : ' + sid)
+            return Result(result=sid)
+
+        except:
+            import traceback
+            traceback.print_exc(file=sys.stdout)
+            result, error = self.Error(sys.exc_info())
+            return Result(result=result, error=error)
 
 
     def get_start_end(self, host):
@@ -168,7 +224,7 @@ class CentreonServer(GenericServer):
                     'p': 20102,
                     'time': 0}
 
-        result = self.FetchURL(self.monitor_cgi_url + '/include/monitoring/status/Hosts/' + self.XML_NDO + '/hostXML.php',
+        result = self.FetchURL(self.monitor_cgi_url + '/include/monitoring/status/Hosts/' + self.XML_PATH + '/hostXML.php',
                                cgi_data = cgi_data, giveback='xml')
         xmlobj = result.result
 
@@ -202,76 +258,40 @@ class CentreonServer(GenericServer):
         return Result(result=address)
 
 
-    def _get_sid(self):
-        '''
-        gets a shiny new SID for XML HTTP requests to Centreon cutting it out via .partition() from raw HTML
-        additionally get php session cookie
-        '''
-        # BROWSER_URLS using autologin
-        if str(self.use_autologin) == 'True':
-            auth = '&autologin=1&useralias=' + self.username + '&token=' + self.autologin_key
-            self.BROWSER_URLS= { 'monitor': '$MONITOR$/index.php?p=1' + auth,\
-                            'hosts': '$MONITOR$/index.php?p=20103&o=hpb' + auth,\
-                            'services': '$MONITOR$/index.php?p=20202&o=svcpb' + auth,\
-                            'history': '$MONITOR$/index.php?p=203' + auth}
-        try:
-            if self.use_autologin == True:
-              raw = self.FetchURL(self.monitor_cgi_url + '/index.php?p=101&autologin=1&useralias=' + self.username + '&token=' + self.autologin_key, giveback='raw')
-              if conf.debug_mode == True:
-                  self.Debug(server=self.get_name(), debug = 'Autologin : ' + self.username + ' : ' + self.autologin_key)
-            else:
-                login = self.FetchURL(self.monitor_cgi_url + '/index.php')
-                if login.error == '' and login.status_code == 200:
-                    form = login.result.find('form')
-                    form_inputs = {}
-                    # Need to catch the centreon_token for login to work
-                    for form_input in ('centreon_token', 'submitLogin'):
-                        form_inputs[form_input] = form.find('input', {'name': form_input})['value']
-                    form_inputs['useralias'] = self.username
-                    form_inputs['password'] = self.password
-                    # fire up login button with all needed data
-                    raw = self.FetchURL(self.monitor_cgi_url + '/index.php', cgi_data=form_inputs)
-                if conf.debug_mode == True:
-                    self.Debug(server=self.get_name(), debug = 'Password login : ' + self.username + ' : ' + self.password)
-            del raw
-            sid = self.session.cookies['PHPSESSID']
-            if conf.debug_mode == True:
-                self.Debug(server=self.get_name(), debug = 'SID : ' + sid)
-            return Result(result=sid)
-
-        except:
-            import traceback
-            traceback.print_exc(file=sys.stdout)
-            result, error = self.Error(sys.exc_info())
-            return Result(result=result, error=error)
-
-
-    def _get_ndo_url(self):
+    def _get_xml_url(self):
         '''
         Find out where this instance of Centreon is publishing the status XMLs
-	    Centreon + ndo            - /include/monitoring/status/Hosts/xml/hostXML.php
-	    Centreon + broker 2.3/2.4 - /include/monitoring/status/Hosts/xml/{ndo,broker}/hostXML.php according to configuration
+	    Centreon 2.6 + ndo/c.broker - /include/monitoring/status/Hosts/xml/{ndo,broker}/hostXML.php according to configuration
+        Centreon 2.7 + c.broker - /include/monitoring/status/Hosts/xml/hostXML.php
 	    regexping HTML for Javascript
         '''
-        cgi_data = {'p':201, 'sid':self.SID}
-        result = self.FetchURL(self.monitor_cgi_url + '/main.php', cgi_data=cgi_data, giveback='raw')
-        raw, error = result.result, result.error
-
-        if error == '':
-            if   re.search('var _addrXML.*xml\/host', raw):
-              self.XML_NDO = 'xml'
-            elif re.search('var _addrXML.*xml\/ndo\/host', raw):
-              self.XML_NDO = 'xml/ndo'
-            elif re.search('var _addrXML.*xml\/broker\/host', raw):
-              self.XML_NDO = 'xml/broker'
+        if self.centreon_version == 2.2:
+            self.XML_PATH = 'xml'
+        elif self.centreon_version == 2.3456:
+            # 2.6 support NDO and C. Broker, we must check which one is used
+            cgi_data = {'p':201, 'sid':self.SID}
+            result = self.FetchURL(self.monitor_cgi_url + '/main.php', cgi_data=cgi_data, giveback='raw')
+            raw, error = result.result, result.error
+            if error == '':
+                if re.search('var _addrXML.*xml\/ndo\/host', raw):
+                  self.XML_PATH = 'xml/ndo'
+                  if conf.debug_mode == True:
+                      self.Debug(server=self.get_name(), debug = 'Detected broker : NDO')
+                elif re.search('var _addrXML.*xml\/broker\/host', raw):
+                    self.XML_PATH = 'xml/broker'
+                    if conf.debug_mode == True:
+                        self.Debug(server=self.get_name(), debug = 'Detected broker : C. Broker')
+                else:
+                    if conf.debug_mode == True:
+                        self.Debug(server=self.get_name(), debug = 'Could not detect the broker for Centeron 2.[3-6]. Using Centreon Broker')
+                    self.XML_PATH = 'xml/broker'
+                del raw
             else:
-              self.XML_NDO = 'xml/broker'
-            del raw
-        else:
-            if conf.debug_mode == True:
-                self.Debug(server=self.get_name(), debug = 'Could not detect host/service status version. Using Centreon_Broker')
-        # some cleanup
-        del result, error
+                if conf.debug_mode == True:
+                    self.Debug(server=self.get_name(), debug = 'Unable to fetch the main page to detect the broker : ' + error)
+            del result, error
+        elif self.centreon_version == 2.7:
+            self.XML_PATH = 'xml'
 
 
     def _get_host_id(self, host):
@@ -350,13 +370,13 @@ class CentreonServer(GenericServer):
         if self.SID == None or self.SID == '':
             self.SID = self._get_sid().result
             # those ndo urls would not be changing too often so this check migth be done here
-            self._get_ndo_url()
+            self._get_xml_url()
 
         # services (unknown, warning or critical?)
-        nagcgiurl_services = self.monitor_cgi_url + '/include/monitoring/status/Services/' + self.XML_NDO + '/serviceXML.php?' + urllib.parse.urlencode({'num':0, 'limit':999, 'o':'svcpb', 'sort_type':'status', 'sid':self.SID})
+        nagcgiurl_services = self.monitor_cgi_url + '/include/monitoring/status/Services/' + self.XML_PATH + '/serviceXML.php?' + urllib.parse.urlencode({'num':0, 'limit':999, 'o':'svcpb', 'sort_type':'status', 'sid':self.SID})
 
         # hosts (up or down or unreachable)
-        nagcgiurl_hosts = self.monitor_cgi_url + '/include/monitoring/status/Hosts/' + self.XML_NDO + '/hostXML.php?' + urllib.parse.urlencode({'num':0, 'limit':999, 'o':'hpb', 'sort_type':'status', 'sid':self.SID})
+        nagcgiurl_hosts = self.monitor_cgi_url + '/include/monitoring/status/Hosts/' + self.XML_PATH + '/hostXML.php?' + urllib.parse.urlencode({'num':0, 'limit':999, 'o':'hpb', 'sort_type':'status', 'sid':self.SID})
 
         # hosts - mostly the down ones
         # unfortunately the hosts status page has a different structure so
@@ -450,7 +470,10 @@ class CentreonServer(GenericServer):
                 if error != '': return Result(result='ERROR', error=copy.deepcopy(error))
 
             # define meta-services xml URL
-            nagcgiurl_meta_services = self.monitor_cgi_url + '/include/monitoring/status/Meta/' + self.XML_NDO + '/metaServiceXML.php?' + urllib.parse.urlencode({'num':0, 'limit':999, 'o':'meta', 'sort_type':'status', 'sid':self.SID})
+            if self.centreon_version == 2.7:
+                nagcgiurl_meta_services = self.monitor_cgi_url + '/include/monitoring/status/Meta/' + self.XML_PATH + '/broker/metaServiceXML.php?' + urllib.parse.urlencode({'num':0, 'limit':999, 'o':'meta', 'sort_type':'status', 'sid':self.SID})
+            else:
+                nagcgiurl_meta_services = self.monitor_cgi_url + '/include/monitoring/status/Meta/' + self.XML_PATH + '/metaServiceXML.php?' + urllib.parse.urlencode({'num':0, 'limit':999, 'o':'meta', 'sort_type':'status', 'sid':self.SID})
 
             # retrive meta-services xml STATUS
             result_meta = self.FetchURL(nagcgiurl_meta_services, giveback='xml')
@@ -499,7 +522,7 @@ class CentreonServer(GenericServer):
                             self.new_hosts[str(l.hn.text)].services[str(l.sd.text)].status]
                         if self.new_hosts[str(l.hn.text)].services[str(l.sd.text)].host == '_Module_Meta':
                             self.new_hosts[str(l.hn.text)].services[str(l.sd.text)].attempt = str(l.ca.text)
-                        else :
+                        else:
                             self.new_hosts[str(l.hn.text)].services[str(l.sd.text)].attempt, \
                             self.new_hosts[str(l.hn.text)].services[str(l.sd.text)].status_type = str(l.ca.text).split(' ')
                             self.new_hosts[str(l.hn.text)].services[str(l.sd.text)].status_type =\
@@ -633,7 +656,7 @@ class CentreonServer(GenericServer):
 
             elif service == '':
                 # ... it can only be a host, get the service associated to this host
-                url_service = self.monitor_cgi_url + '/include/monitoring/status/Services/' + self.XML_NDO + '/serviceXML.php?' + urllib.parse.urlencode({'num':0,\
+                url_service = self.monitor_cgi_url + '/include/monitoring/status/Services/' + self.XML_PATH + '/serviceXML.php?' + urllib.parse.urlencode({'num':0,\
                      'limit':20,\
                      'sort_type':'last_state_change',\
                      'order':'ASC',\
@@ -745,7 +768,7 @@ class CentreonServer(GenericServer):
         if self.SIDcount >= 3600:
             if str(self.conf.debug_mode) == 'True':
                 self.Debug(server=self.get_name(), debug='Old SID: ' + self.SID + ' ' + str(self.Cookie))
-	    # close the connections to avoid the accumulation of sessions on Centreon
+            # close the connections to avoid the accumulation of sessions on Centreon
             url_disconnect = self.monitor_cgi_url + '/index.php?disconnect=1'
             raw = self.FetchURL(url_disconnect, giveback='raw')
             del raw
