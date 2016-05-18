@@ -344,16 +344,17 @@ class SystemTrayIcon(QSystemTrayIcon):
             self.icons[state] = QIcon(svg_pixmap)
 
 
-    @pyqtSlot(QEvent)
-    def icon_clicked(self, event):
+    ###@pyqtSlot(QEvent)
+    @pyqtSlot(QSystemTrayIcon.ActivationReason)
+    def icon_clicked(self, reason):
         """
             evaluate mouse click
         """
         # some obscure Windows problem again
-        if event == QSystemTrayIcon.Context and platform.system() == 'Windows':
+        if reason == QSystemTrayIcon.Context and platform.system() == 'Windows':
                 self.show_menu.emit()
         # only react on left mouse click           
-        elif event == (QSystemTrayIcon.Trigger or QSystemTrayIcon.DoubleClick):
+        elif reason == (QSystemTrayIcon.Trigger or QSystemTrayIcon.DoubleClick):
             # when green icon is displayed and no popwin is about to po up show at least menu
             if get_worst_status() == 'UP':
                     self.menu.show_at_cursor()
@@ -2682,7 +2683,8 @@ class Model(QAbstractTableModel):
             return(HEADERS_HEADERS[column])
         
         
-    @pyqtSlot(list, dict)
+    ###@pyqtSlot(list, dict)
+    @pyqtSlot(list)
     def fill_data_array(self, data_array, info=None):
         """
             fill data_array for model
@@ -3277,7 +3279,7 @@ class TreeView(QTreeView):
                 self.status_changed.emit(self.server.name, self.server.worst_status_diff)
 
 
-    @pyqtSlot(int, int)
+    @pyqtSlot(int, Qt.SortOrder)
     def sort_columns(self, sort_column, sort_order):
         """
             forward sorting task to worker
@@ -3656,7 +3658,7 @@ class TreeView(QTreeView):
                 self.set_start_end.emit(start, end)
 
 
-        @pyqtSlot(dict, str)
+        @pyqtSlot(dict, dict)
         def execute_action(self, action, info):
             """
                 runs action, may it be custom or included like the Check_MK actions
@@ -3901,8 +3903,10 @@ class Dialog(QObject):
 
 
     # ## @pyqtSlot(QWidget, bool)
-    @pyqtSlot(str, bool)
-    def toggle(self, checkbox, inverted=False):
+    ###@pyqtSlot(str, bool)
+    @pyqtSlot(str)
+    ###def toggle(self, checkbox, inverted=False):
+    def toggle(self, checkbox):
         """
             change state of depending widgets, slot for signals from checkboxes in UI
         """
