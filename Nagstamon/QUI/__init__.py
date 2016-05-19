@@ -2683,9 +2683,9 @@ class Model(QAbstractTableModel):
             return(HEADERS_HEADERS[column])
         
         
-    ###@pyqtSlot(list, dict)
-    @pyqtSlot(list)
-    def fill_data_array(self, data_array, info=None):
+    @pyqtSlot(list, dict)
+    #@pyqtSlot(list)
+    def fill_data_array(self, data_array, info):
         """
             fill data_array for model
         """
@@ -2704,9 +2704,8 @@ class Model(QAbstractTableModel):
         self.row_count = len(self.data_array)
       
         # tell treeview if flags columns are needed
-        if info != None:
-            self.hosts_flags_column_needed.emit(info['hosts_flags_column_needed'])
-            self.services_flags_column_needed.emit(info['services_flags_column_needed'])
+        self.hosts_flags_column_needed.emit(info['hosts_flags_column_needed'])
+        self.services_flags_column_needed.emit(info['services_flags_column_needed'])
 
         self.data_array_filled.emit()
 
