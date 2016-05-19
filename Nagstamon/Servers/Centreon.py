@@ -425,7 +425,7 @@ class CentreonServer(GenericServer):
             # in case there are no children session id is invalid
             if xmlobj == '<response>bad session id</response>' or str(xmlobj) == 'Bad Session ID':
                 del xmlobj
-                if str(self.conf.debug_mode) == 'True':
+                if conf.debug_mode == True:
                     self.Debug(server=self.get_name(), debug='Bad session ID, retrieving new one...')
 
                 # try again...
