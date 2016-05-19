@@ -45,9 +45,6 @@ STATES = ['UP', 'UNKNOWN', 'WARNING', 'CRITICAL', 'UNREACHABLE', 'DOWN']
 # sound at the moment is only available for these states
 STATES_SOUND = ['WARNING', 'CRITICAL', 'DOWN']
 
-# needed when OS-specific decisions have to be made, mostly Linux/non-Linux
-# ##NON_LINUX = ('Darwin', 'Windows')
-
 
 def not_empty(x):
     '''
@@ -408,4 +405,5 @@ SORT_COLUMNS_FUNCTIONS = { 0: compare_host,
          5: compare_last_check,
          6: compare_duration,
          7: compare_attempt,
-         8: compare_status_information }
+         8: compare_status_information,
+         9: compare_status_information }
