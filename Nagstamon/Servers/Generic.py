@@ -47,12 +47,14 @@ from Nagstamon.Objects import (GenericService,
                                GenericHost,
                                Result)
 
-from Nagstamon.Config import (conf, AppInfo)
+from Nagstamon.Config import (conf,
+                              AppInfo,
+                              debug_queue)
 
 from collections import OrderedDict
 
 # get debug queue from nagstamon.py
-debug_queue = sys.modules['__main__'].debug_queue
+###debug_queue = sys.modules['__main__'].debug_queue
 
 
 class GenericServer(object):

@@ -31,10 +31,15 @@ from collections import OrderedDict
 # avoid build error because of debug_queue unknown to setup.py
 # if anybody knows a more elegant way (which surely exists) let me know
 # it had to work quickly!
-if not 'setup.py' in sys.argv[0] and not 'build.py' in sys.argv[0]:
-    # get debug queue from nagstamon.py
-    debug_queue = sys.modules['__main__'].debug_queue
+###if not 'setup.py' in sys.argv[0] and not 'build.py' in sys.argv[0]:
+###    # get debug queue from nagstamon.py
+###    debug_queue = sys.modules['__main__'].debug_queue
 
+# queue.Queue() needs threading module which might be not such a good idea to be used
+# because QThread is already in use
+# maybe not the most logical place here to be defined but at least all
+# modules access Config.py so it can be distributed from here
+debug_queue = list() 
 
 # temporary dict for string-to-bool-conversion
 # the bool:bool relations are thought to make things easier in Dialog_Settings.ok()
@@ -52,7 +57,7 @@ class AppInfo(object):
         contains app information previously located in GUI.py
     """
     NAME = 'Nagstamon'
-    VERSION = '2.0-beta-20160519'
+    VERSION = '2.0-beta-20160520'
     WEBSITE = 'https://nagstamon.ifw-dresden.de'
     COPYRIGHT = '©2008-2016 Henri Wahl et al.\nh.wahl@ifw-dresden.de'
     COMMENTS = 'Nagios status monitor for your desktop'

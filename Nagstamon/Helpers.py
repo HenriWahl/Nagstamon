@@ -32,12 +32,13 @@ from hashlib import md5
 
 from Nagstamon.Config import (BOOLPOOL,
                               NON_LINUX,
-                              conf)
+                              conf,
+                              debug_queue)
 
 # queue.Queue() needs threading module which might be not such a good idea to be used
 # because QThread is already in use
 # get debug queue from nagstamon.py
-debug_queue = sys.modules['__main__'].debug_queue
+###debug_queue = sys.modules['__main__'].debug_queue
 
 # states needed for gravity comparison for notification and Generic.py
 STATES = ['UP', 'UNKNOWN', 'WARNING', 'CRITICAL', 'UNREACHABLE', 'DOWN']

@@ -21,8 +21,6 @@
 import os
 import sys
 import socket
-# not necessary here
-#import nagstacli
 
 # fix/patch for https://bugs.launchpad.net/ubuntu/+source/nagstamon/+bug/732544
 socket.setdefaulttimeout(30)
@@ -32,11 +30,12 @@ try:
     if __name__ == '__main__':
         # queue.Queue() needs threading module which might be not such a good idea to be used
         # because QThread is already in use
-        debug_queue = list()       
+        ###debug_queue = list()       
         
         # Initialize global configuration
         from Nagstamon.Config import (conf,
-                                      RESOURCES)
+                                      RESOURCES,
+                                      debug_queue)
 
         from Nagstamon.Helpers import lock_config_folder
 

@@ -45,7 +45,8 @@ from Nagstamon.Config import (conf,
                               RESOURCES,
                               BOOLPOOL,
                               NON_LINUX,
-                              AppInfo)
+                              AppInfo,
+                              debug_queue)
 
 from Nagstamon.Servers import (SERVER_TYPES,
                                servers,
@@ -89,7 +90,7 @@ if not platform.system() in NON_LINUX:
         print('No DBus for desktop notification available.')
 
 # get debug queue from nagstamon.py
-debug_queue = sys.modules['__main__'].debug_queue
+###debug_queue = sys.modules['__main__'].debug_queue
 
 # global application instance
 APP = QApplication(sys.argv)
@@ -1362,12 +1363,16 @@ class StatusWindow(QWidget):
                     # Seemed to be a problem on XFCE
                     # https://github.com/HenriWahl/Nagstamon/pull/199
                     if not platform.system() in NON_LINUX and conf.icon_in_systray:
-                        winid = self.winId().__int__()
-                        deskid = self.ewmh.getCurrentDesktop()
-                        self.ewmh.setWmDesktop(winid, deskid)
-                        self.ewmh.display.flush()
-                        # makes the window manager switch to the desktop where this widget has appeared
-                        self.raise_()
+                        try:
+                            winid = self.winId().__int__()
+                            deskid = self.ewmh.getCurrentDesktop()
+                            self.ewmh.setWmDesktop(winid, deskid)
+                            self.ewmh.display.flush()
+                            # makes the window manager switch to the desktop where this widget has appeared
+                            self.raise_()
+                        except:
+                            # workaround for https://github.com/HenriWahl/Nagstamon/issues/246#issuecomment-220478066
+                            pass
 
                     # store timestamp to avoid flickering as in https://github.com/HenriWahl/Nagstamon/issues/184
                     self.is_shown_timestamp = time.time()
