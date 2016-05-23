@@ -5541,9 +5541,10 @@ class Dialog_Authentication(Dialog):
                 self.ui.input_lineedit_autologin_key.show()
                 self.ui.input_lineedit_autologin_key.show()
                 self.ui.label_autologin_key.show()
-                
-                self.ui.input_checkbox_use_autologin.checked.connect(self.toggle_autologin)
-
+                # enable switching autologin key and password
+                self.ui.input_checkbox_use_autologin.clicked.connect(self.toggle_autologin)
+                # initialize autologin
+                self.toggle_autologin()
             else:
                 self.ui.input_checkbox_use_autologin.hide()
                 self.ui.input_lineedit_autologin_key.hide()
@@ -5584,9 +5585,16 @@ class Dialog_Authentication(Dialog):
             conf.servers[self.server.name].username = self.server.username
             conf.servers[self.server.name].password = self.server.password
             conf.servers[self.server.name].save_password = self.ui.input_checkbox_save_password.isChecked()
-
             # store server settings
             conf.SaveMultipleConfig('servers', 'server')
+
+        # Centreon
+        if self.server.type == 'Centreon':
+            if self.ui.input_checkbox_use_autologin:
+                conf.servers[self.server.name].use_autologin = self.ui.input_checkbox_use_autologin.isChecked()
+                conf.servers[self.server.name].autologin_key = self.ui.input_lineedit_autologin_key.text()
+                # store server settings
+                conf.SaveMultipleConfig('servers', 'server')
 
         # reset server connection
         self.server.reset_HTTP()
@@ -5600,8 +5608,25 @@ class Dialog_Authentication(Dialog):
 
     @pyqtSlot()
     def toggle_autologin(self):
-       print(self.ui.input_checkbox_use_autologin.isChecked())
-       
+       if self.ui.input_checkbox_use_autologin.isChecked():
+           self.ui.label_username.hide()
+           self.ui.label_password.hide()
+           self.ui.input_lineedit_username.hide()
+           self.ui.input_lineedit_password.hide()
+           self.ui.input_checkbox_save_password.hide()
+
+           self.ui.label_autologin_key.show()
+           self.ui.input_lineedit_autologin_key.show()      
+       else:
+           self.ui.label_username.show()
+           self.ui.label_password.show()
+           self.ui.input_lineedit_username.show()
+           self.ui.input_lineedit_password.show()
+           self.ui.input_checkbox_save_password.show()
+
+           self.ui.label_autologin_key.hide()
+           self.ui.input_lineedit_autologin_key.hide()
+
 
 class Dialog_Server_missing(Dialog):
     """
