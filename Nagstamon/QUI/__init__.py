@@ -1143,7 +1143,8 @@ class StatusWindow(QWidget):
         # create server vboxed from current running servers
         if server.enabled:
             # display authentication dialog if password is not known
-            if not conf.servers[server.name].save_password:
+            if not conf.servers[server.name].save_password and\
+               not conf.servers[server.name].use_autologin:
                 dialogs.authentication.show_auth_dialog(server.name)
 
             # without parent there is some flickering when starting
@@ -3907,10 +3908,7 @@ class Dialog(QObject):
                     widget.hide()
 
 
-    # ## @pyqtSlot(QWidget, bool)
-    ###@pyqtSlot(str, bool)
     @pyqtSlot(str)
-    ###def toggle(self, checkbox, inverted=False):
     def toggle(self, checkbox):
         """
             change state of depending widgets, slot for signals from checkboxes in UI
@@ -5541,7 +5539,11 @@ class Dialog_Authentication(Dialog):
             if self.server.type == 'Centreon':
                 self.ui.input_checkbox_use_autologin.show()
                 self.ui.input_lineedit_autologin_key.show()
+                self.ui.input_lineedit_autologin_key.show()
                 self.ui.label_autologin_key.show()
+                
+                self.ui.input_checkbox_use_autologin.checked.connect(self.toggle_autologin)
+
             else:
                 self.ui.input_checkbox_use_autologin.hide()
                 self.ui.input_lineedit_autologin_key.hide()
@@ -5595,6 +5597,11 @@ class Dialog_Authentication(Dialog):
         # update server_vbox label
         self.update.emit(self.server.name)
 
+
+    @pyqtSlot()
+    def toggle_autologin(self):
+       print(self.ui.input_checkbox_use_autologin.isChecked())
+       
 
 class Dialog_Server_missing(Dialog):
     """
