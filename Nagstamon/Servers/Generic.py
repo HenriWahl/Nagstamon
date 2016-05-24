@@ -561,18 +561,14 @@ class GenericServer(object):
                             tds = tr('td', recursive=False)
                             # host
                             try:
-                                ###n['host'] = str(tds[0].table.tr.td.table.tr.td.a.string)
                                 n['host'] = str(tds[0].table.tr.td.table.tr.td.a.text)
                             except:
                                 n['host'] = str(nagitems[len(nagitems) - 1]['host'])
                             # status
-                            ###n['status'] = str(tds[1].string)
                             n['status'] = str(tds[1].text)
                             # last_check
-                            ###n['last_check'] = str(tds[2].string)
                             n['last_check'] = str(tds[2].text)
                             # duration
-                            ###n['duration'] = str(tds[3].string)
                             n['duration'] = str(tds[3].text)
                             # division between Nagios and Icinga in real life... where
                             # Nagios has only 5 columns there are 7 in Icinga 1.3...
@@ -583,9 +579,6 @@ class GenericServer(object):
                                 if len(tds[4](text=not_empty)) == 0:
                                     n['status_information'] = ''
                                 else:
-                                    # ##n['status_information'] = str(tds[4].string).encode('utf-8').replace('\n',
-                                    # ##                                                                     ' ').strip()
-                                    ###n['status_information'] = str(tds[4].string).replace('\n', ' ').strip()
                                     n['status_information'] = str(tds[4].text).replace('\n', ' ').strip()
                                 # attempts are not shown in case of hosts so it defaults to 'n/a'
                                 n['attempt'] = 'n/a'
@@ -593,14 +586,11 @@ class GenericServer(object):
                                 # attempts are shown for hosts
                                 # to fix http://sourceforge.net/tracker/?func=detail&atid=1101370&aid=3280961&group_id=236865 .attempt needs
                                 # to be stripped
-                                ###n['attempt'] = str(tds[4].string).strip()
                                 n['attempt'] = str(tds[4].text).strip()
                                 # status_information
                                 if len(tds[5](text=not_empty)) == 0:
                                     n['status_information'] = ''
                                 else:
-                                    # ##n['status_information'] = str(tds[5].string).encode('utf-8').replace('\n',
-                                    ###n['status_information'] = str(tds[5].string).replace('\n',' ').strip()
                                     n['status_information'] = str(tds[5].text).replace('\n',' ').strip()
                             # status flags
                             n['passiveonly'] = False
@@ -713,7 +703,7 @@ class GenericServer(object):
                             if len(tds[6](text=not_empty)) == 0:
                                 n['status_information'] = ''
                             else:
-                                n['status_information'] = str(tds[6](text=not_empty)[0])
+                                n['status_information'] = str(tds[6].text).replace('\n',  '').strip()
                             # status flags
                             n['passiveonly'] = False
                             n['notifications_disabled'] = False
@@ -758,10 +748,7 @@ class GenericServer(object):
                                 self.new_hosts[n['host']].services[new_service].last_check = n['last_check']
                                 self.new_hosts[n['host']].services[new_service].duration = n['duration']
                                 self.new_hosts[n['host']].services[new_service].attempt = n['attempt']
-                                # ##self.new_hosts[n['host']].services[new_service].status_information = n[
-                                # ##    'status_information'].encode('utf-8')
-                                self.new_hosts[n['host']].services[new_service].status_information = n[
-                                    'status_information']
+                                self.new_hosts[n['host']].services[new_service].status_information = n['status_information']
                                 self.new_hosts[n['host']].services[new_service].passiveonly = n['passiveonly']
                                 self.new_hosts[n['host']].services[new_service].notifications_disabled = n[
                                     'notifications_disabled']
