@@ -3504,7 +3504,7 @@ class TreeView(QTreeView):
 
                         self.data_array[-1].append('X')
 
-            # sort date befot it gets transmitted to treeviw model
+            # sort data before it gets transmitted to treeview model
             self.sort_data_array(self.sort_column, self.sort_order, False)
 
             # give sorted data to model
