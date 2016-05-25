@@ -1,4 +1,5 @@
 # encoding: utf-8
+from PyQt5.Qt import QPushButton
 
 # Nagstamon - Nagios status monitor for your desktop
 # Copyright (C) 2008-2016 Henri Wahl <h.wahl@ifw-dresden.de> et al.
@@ -90,7 +91,7 @@ if not platform.system() in NON_LINUX:
         print('No DBus for desktop notification available.')
 
 # get debug queue from nagstamon.py
-###debug_queue = sys.modules['__main__'].debug_queue
+# ##debug_queue = sys.modules['__main__'].debug_queue
 
 # global application instance
 APP = QApplication(sys.argv)
@@ -201,14 +202,14 @@ NUMBER_OF_DISPLAY_CHANGES = 0
 # statusbar permanently seems to vanish at some users desktops
 # see https://github.com/HenriWahl/Nagstamon/issues/222
 # WINDOW_FLAGS = Qt.WindowStaysOnTopHint | Qt.FramelessWindowHint | Qt.ToolTip
-###if platform.system() == 'Windows':
-###    # WINDOW_FLAGS = Qt.WindowStaysOnTopHint | Qt.FramelessWindowHint | Qt.ToolTip
-###    WINDOW_FLAGS = Qt.WindowStaysOnTopHint | Qt.FramelessWindowHint | Qt.Tool
-###    # WINDOW_FLAGS = Qt.FramelessWindowHint | Qt.Tool
-###    # WINDOW_FLAGS = Qt.FramelessWindowHint | Qt.ToolTip
-###    # WINDOW_FLAGS = Qt.FramelessWindowHint | Qt.WindowStaysOnTopHint | Qt.Tool |  Qt.BypassWindowManagerHint
-###else:
-###    WINDOW_FLAGS = Qt.WindowStaysOnTopHint | Qt.FramelessWindowHint | Qt.Tool
+# ##if platform.system() == 'Windows':
+# ##    # WINDOW_FLAGS = Qt.WindowStaysOnTopHint | Qt.FramelessWindowHint | Qt.ToolTip
+# ##    WINDOW_FLAGS = Qt.WindowStaysOnTopHint | Qt.FramelessWindowHint | Qt.Tool
+# ##    # WINDOW_FLAGS = Qt.FramelessWindowHint | Qt.Tool
+# ##    # WINDOW_FLAGS = Qt.FramelessWindowHint | Qt.ToolTip
+# ##    # WINDOW_FLAGS = Qt.FramelessWindowHint | Qt.WindowStaysOnTopHint | Qt.Tool |  Qt.BypassWindowManagerHint
+# ##else:
+# ##    WINDOW_FLAGS = Qt.WindowStaysOnTopHint | Qt.FramelessWindowHint | Qt.Tool
 WINDOW_FLAGS = Qt.WindowStaysOnTopHint | Qt.FramelessWindowHint | Qt.Tool
 
 # set style for tooltips globally - to sad not all properties can be set here
@@ -346,7 +347,7 @@ class SystemTrayIcon(QSystemTrayIcon):
             self.icons[state] = QIcon(svg_pixmap)
 
 
-    ###@pyqtSlot(QEvent)
+    # ##@pyqtSlot(QEvent)
     @pyqtSlot(QSystemTrayIcon.ActivationReason)
     def icon_clicked(self, reason):
         """
@@ -576,7 +577,38 @@ class MenuContextSystrayicon(MenuContext):
             self.insertSeparator(self.action_refresh)
 
 
-class PushButton_Hamburger(QPushButton):
+class FlatButton(QToolButton):
+    """
+        QToolButton acting as push button
+    """
+    def __init__(self, text='', parent=None, server=None, url_type=''):
+        QToolButton.__init__(self, parent=parent)
+        self.setAutoRaise(True)
+        self.setStyleSheet('''padding: 5px;''')
+        self.setText(text)
+
+# OSX does not support flat QToolButtons so keep the neat default ones
+if platform.system() == 'Darwin':
+    Button = QPushButton
+    CSS_CLOSE_BUTTON = '''QPushButton {border-width: 0px;
+                                       border-style: none;
+                                       margin-right: 5px;}
+                          QPushButton:hover {background-color: white;
+                                             border-radius: 4px;}'''
+    CSS_HAMBURGER_MENU = '''QPushButton {border-width: 0px;
+                                         border-style: none;}
+                            QPushButton::menu-indicator{image:url(none.jpg)};
+                            QPushButton:hover {background-color: white;
+                                               border-radius: 4px;}'''
+else:
+    Button = FlatButton
+    CSS_CLOSE_BUTTON = '''padding: 1px;
+                          margin-right: 5px;'''
+    CSS_HAMBURGER_MENU = '''FlatButton::menu-indicator{image:url(none.jpg);}'''
+
+# class PushButton_Hamburger(QPushButton):
+#class PushButton_Hamburger(FlatButton):
+class PushButton_Hamburger(Button):
     """
         Pushbutton with menu for hamburger
     """
@@ -584,26 +616,28 @@ class PushButton_Hamburger(QPushButton):
     pressed = pyqtSignal()
 
     def __init__(self):
-        QPushButton.__init__(self)
-        # self.setFont(ICONS_FONT)
-        # self.setText('H')
+        # ##QPushButton.__init__(self)
+        Button.__init__(self)
+        self.setStyleSheet(CSS_HAMBURGER_MENU)
 
 
     def mousePressEvent(self, event):
         self.pressed.emit()
         self.showMenu()
 
-    pyqtSlot(QMenu)
+
+    @pyqtSlot(QMenu)
     def set_menu(self, menu):
         self.setMenu(menu)
 
 
-class PushButton_BrowserURL(QPushButton):
+# ##class PushButton_BrowserURL(QPushButton):
+class PushButton_BrowserURL(Button):
     """
         QPushButton for ServerVBox which opens certain URL if clicked
     """
     def __init__(self, text='', parent=None, server=None, url_type=''):
-        QPushButton.__init__(self, text, parent=parent)
+        Button.__init__(self, text, parent=parent)
         self.server = server
         self.url_type = url_type
 
@@ -981,7 +1015,7 @@ class StatusWindow(QWidget):
         # helper values for QTimer.singleShot move attempt
         self.move_to_x = self.move_to_y = 0
 
-        # flag to mark if window is shown or nor
+        # flag to mark if window is shown or not
         self.is_shown = False
 
         # store show_window timestamp to avoid flickering window in KDE5 with systray
@@ -2287,16 +2321,19 @@ class TopArea(QWidget):
         self.create_icons()
 
         # top button box
-        # self.logo = NagstamonLogo('%s%snagstamon_logo_toparea.svg' % (RESOURCES, os.sep), width=144, height=42, parent=self)
-        self.logo = NagstamonLogo(self.icons['nagstamon_logo_toparea'], width=144, height=42, parent=self)
+        self.logo = NagstamonLogo(self.icons['nagstamon_logo_toparea'], width=150, height=42, parent=self)
         self.label_version = Draggable_Label(text=AppInfo.VERSION, parent=self)
         self.label_empty_space = Draggable_Label(text='', parent=self)
         self.label_empty_space.setSizePolicy(QSizePolicy.Expanding, QSizePolicy.Ignored)
         self.combobox_servers = ComboBox_Servers(parent=self)
-        self.button_filters = QPushButton("Filters", parent=self)
-        self.button_recheck_all = QPushButton("Recheck all", parent=self)
-        self.button_refresh = QPushButton("Refresh", parent=self)
-        self.button_settings = QPushButton("Settings", parent=self)
+        # ##self.button_filters = QPushButton("Filters", parent=self)
+        self.button_filters = Button("Filters", parent=self)
+        # ##self.button_recheck_all = QPushButton("Recheck all", parent=self)
+        self.button_recheck_all = Button("Recheck all", parent=self)
+        # ##self.button_refresh = QPushButton("Refresh", parent=self)
+        self.button_refresh = Button("Refresh", parent=self)
+        # ##self.button_settings = QPushButton("Settings", parent=self)
+        self.button_settings = Button("Settings", parent=self)
 
         # fill default order fields combobox with server names
         self.combobox_servers.fill()
@@ -2304,9 +2341,7 @@ class TopArea(QWidget):
         self.button_hamburger_menu = PushButton_Hamburger()
         # self.button_hamburger_menu.setIcon(QIcon('%s%smenu.svg' % (RESOURCES, os.sep)))
         self.button_hamburger_menu.setIcon(self.icons['menu'])
-        self.button_hamburger_menu.setStyleSheet('''QPushButton {border-width: 0px;
-                                                                 border-style: none;}
-                                                    QPushButton::menu-indicator{image:url(none.jpg);}''')
+        # ##self.button_hamburger_menu.setStyleSheet('''FlatButton::menu-indicator{image:url(none.jpg);}''')
 
         self.hamburger_menu = MenuAtCursor()
         action_exit = QAction("Exit", self)
@@ -2315,13 +2350,18 @@ class TopArea(QWidget):
 
         self.button_hamburger_menu.setMenu(self.hamburger_menu)
 
-        self.button_close = QPushButton()
+        # ##self.button_close = QPushButton()
+        self.button_close = Button()
         # self.button_close.setIcon(QIcon('%s%sclose.svg' % (RESOURCES, os.sep)))
         self.button_close.setIcon(self.icons['close'])
-        self.button_close.setStyleSheet('''QPushButton {border-width: 0px;
-                                                        border-style: none;
-                                                        margin-right: 5px;}''')
-
+        self.button_close.setStyleSheet(CSS_CLOSE_BUTTON)
+        # if platform.system() == 'Darwin':
+        #     self.button_close.setStyleSheet('''border-width: 0px;
+        #                                        border-style: none;
+        #                                        margin-right: 5px;''')
+        # else:
+        #     self.button_close.setStyleSheet('''padding: 1px;
+        #                                        margin-right: 5px;''')
         self.hbox.addWidget(self.logo)
         self.hbox.addWidget(self.label_version)
         self.hbox.addWidget(self.label_empty_space)
@@ -2413,7 +2453,7 @@ class ServerStatusLabel(QLabel):
         # set stylesheet depending on submitted style
         if style == 'critical':
             self.setStyleSheet('''color: red;
-                                 font-weight: bold;''')
+                                  font-weight: bold;''')
         elif style == '':
             self.setStyleSheet('')
         # set new text
@@ -2465,9 +2505,13 @@ class ServerVBox(QVBoxLayout):
         self.button_hosts = PushButton_BrowserURL(text='Hosts', parent=parent, server=self.server, url_type='hosts')
         self.button_services = PushButton_BrowserURL(text='Services', parent=parent, server=self.server, url_type='services')
         self.button_history = PushButton_BrowserURL(text='History', parent=parent, server=self.server, url_type='history')
-        self.button_edit = QPushButton('Edit', parent=parent)
+        # ##self.button_edit = QPushButton('Edit', parent=parent)
+        self.button_edit = Button('Edit', parent=parent)
+        self.label_separator = QLabel(parent=parent)
+        self.label_separator.setFrameShadow(QFrame.Sunken)
+        self.label_separator.setFrameShape(QFrame.VLine)
         self.label_status = ServerStatusLabel(parent=parent)
-        self.button_authenticate = QPushButton('Authenticate', parent=parent)
+        self.button_authenticate = Button('Authenticate', parent=parent)
 
         self.button_monitor.clicked.connect(self.button_monitor.open_url)
         self.button_hosts.clicked.connect(self.button_hosts.open_url)
@@ -2481,6 +2525,7 @@ class ServerVBox(QVBoxLayout):
         self.header.addWidget(self.button_services)
         self.header.addWidget(self.button_history)
         self.header.addWidget(self.button_edit)
+        self.header.addWidget(self.label_separator)
         self.header.addWidget(self.label_status)
         self.header.addWidget(self.button_authenticate)
         self.header.addStretch()
@@ -2565,6 +2610,7 @@ class ServerVBox(QVBoxLayout):
         self.button_services.show()
         self.button_history.show()
         self.label_status.show()
+        self.label_separator.show()
 
         # special table treatment
         self.table.hide()
@@ -2583,6 +2629,7 @@ class ServerVBox(QVBoxLayout):
         self.button_services.hide()
         self.button_history.hide()
         self.label_status.hide()
+        self.label_separator.hide()
         self.button_authenticate.hide()
 
         # special table treatment
@@ -2601,7 +2648,8 @@ class ServerVBox(QVBoxLayout):
                        self.button_hosts,
                        self.button_services,
                        self.button_history,
-                       self.label_status):
+                       self.label_status,
+                       self.label_separator):
             widget.hide()
             widget.deleteLater()
         self.removeItem(self.header)
@@ -2691,7 +2739,7 @@ class Model(QAbstractTableModel):
 
 
     @pyqtSlot(list, dict)
-    #@pyqtSlot(list)
+    # @pyqtSlot(list)
     def fill_data_array(self, data_array, info):
         """
             fill data_array for model
@@ -3538,7 +3586,7 @@ class TreeView(QTreeView):
 
             # if header was clicked tell model to use new data_array
             if header_clicked:
-                self.data_array_sorted.emit(self.data_array)
+                self.data_array_sorted.emit(self.data_array, self.info)
 
             del(first_sort)
 
@@ -4601,7 +4649,7 @@ class Dialog_Settings(Dialog):
         # example color labels
         for label in [x for x in self.ui.__dict__ if x.startswith('label_color_')]:
             status = label.split('label_color_')[1]
-            self.ui.__dict__[label].setStyleSheet('color: %s; background: %s' %
+            self.ui.__dict__[label].setStyleSheet('color: %s; background: %s' % 
                                                   (conf.__dict__['color_%s_text' % (status)],
                                                   (conf.__dict__['color_%s_background' % (status)])))
 
@@ -4631,7 +4679,7 @@ class Dialog_Settings(Dialog):
             color_background = color_background.split(':')[1].strip().split(';')[0]
 
             # apply color values from stylesheet to label
-            self.ui.__dict__[label].setStyleSheet('color: %s; background: %s' %
+            self.ui.__dict__[label].setStyleSheet('color: %s; background: %s' % 
                                                   (color_text, color_background))
 
 
@@ -6020,6 +6068,10 @@ def check_servers():
         dialogs.server_missing.show()
         dialogs.server_missing.initialize('no_server_enabled')
 
+#if platform.system() == 'Darwin':
+#    Button = QPushButton
+#else:
+#    Button = FlatButton
 
 # check for updates
 check_version = CheckVersion()
