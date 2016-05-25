@@ -6,7 +6,7 @@
    <rect>
     <x>0</x>
     <y>0</y>
-    <width>1400</width>
+    <width>350</width>
     <height>226</height>
    </rect>
   </property>
@@ -30,17 +30,10 @@
      </property>
     </widget>
    </item>
-   <item row="4" column="0">
+   <item row="6" column="0">
     <widget class="QLabel" name="label_autologin_key">
      <property name="text">
       <string>Autologin key:</string>
-     </property>
-    </widget>
-   </item>
-   <item row="3" column="1">
-    <widget class="QCheckBox" name="input_checkbox_use_autologin">
-     <property name="text">
-      <string>Use autologin</string>
      </property>
     </widget>
    </item>
@@ -51,7 +44,7 @@
      </property>
     </widget>
    </item>
-   <item row="4" column="1">
+   <item row="6" column="1">
     <widget class="QLineEdit" name="input_lineedit_autologin_key"/>
    </item>
    <item row="0" column="1">
@@ -80,14 +73,7 @@
      </property>
     </widget>
    </item>
-   <item row="2" column="1">
-    <widget class="QCheckBox" name="input_checkbox_save_password">
-     <property name="text">
-      <string>Save password</string>
-     </property>
-    </widget>
-   </item>
-   <item row="5" column="0" colspan="2">
+   <item row="7" column="0" colspan="2">
     <layout class="QHBoxLayout" name="horizontalLayout">
      <item>
       <widget class="QDialogButtonBox" name="button_box">
@@ -100,6 +86,20 @@
       </widget>
      </item>
     </layout>
+   </item>
+   <item row="4" column="0" colspan="2">
+    <widget class="QCheckBox" name="input_checkbox_use_autologin">
+     <property name="text">
+      <string>Use autologin</string>
+     </property>
+    </widget>
+   </item>
+   <item row="3" column="0" colspan="2">
+    <widget class="QCheckBox" name="input_checkbox_save_password">
+     <property name="text">
+      <string>Save password</string>
+     </property>
+    </widget>
    </item>
   </layout>
  </widget>

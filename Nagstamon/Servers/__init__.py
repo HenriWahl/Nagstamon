@@ -133,9 +133,6 @@ def create_server(server=None):
     if (server.enabled == True and server.save_password == False and server.use_autologin == False):
         new_server.refresh_authentication = True
 
-    # access to thread-safe debug queue
-    # new_server.debug_queue = debug_queue
-
     # Special FX
     # Centreon
     new_server.use_autologin = server.use_autologin
