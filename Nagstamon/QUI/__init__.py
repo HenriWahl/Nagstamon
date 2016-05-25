@@ -584,7 +584,7 @@ class FlatButton(QToolButton):
     def __init__(self, text='', parent=None, server=None, url_type=''):
         QToolButton.__init__(self, parent=parent)
         self.setAutoRaise(True)
-        self.setStyleSheet('''padding: 5px;''')
+        self.setStyleSheet('''padding: 3px;''')
         self.setText(text)
 
 
@@ -603,8 +603,7 @@ if platform.system() == 'Darwin':
                                                border-radius: 4px;}'''
 else:
     Button = FlatButton
-    CSS_CLOSE_BUTTON = '''padding: 1px;
-                          margin-right: 5px;'''
+    CSS_CLOSE_BUTTON = '''margin-right: 5px;'''
     CSS_HAMBURGER_MENU = '''FlatButton::menu-indicator{image:url(none.jpg);}'''
 
 
@@ -2507,11 +2506,12 @@ class ServerVBox(QVBoxLayout):
         self.button_hosts = PushButton_BrowserURL(text='Hosts', parent=parent, server=self.server, url_type='hosts')
         self.button_services = PushButton_BrowserURL(text='Services', parent=parent, server=self.server, url_type='services')
         self.button_history = PushButton_BrowserURL(text='History', parent=parent, server=self.server, url_type='history')
-        # ##self.button_edit = QPushButton('Edit', parent=parent)
         self.button_edit = Button('Edit', parent=parent)
         self.label_separator = QLabel(parent=parent)
         self.label_separator.setFrameShadow(QFrame.Sunken)
         self.label_separator.setFrameShape(QFrame.VLine)
+        self.label_separator.setStyleSheet('''margin-top: 5px;
+                                              margin-bottom: 5px;''')
         self.label_status = ServerStatusLabel(parent=parent)
         self.button_authenticate = Button('Authenticate', parent=parent)
 
@@ -2593,6 +2593,7 @@ class ServerVBox(QVBoxLayout):
         self.button_services.show()
         self.button_history.show()
         self.label_status.show()
+        self.label_separator.show()
         self.button_authenticate.hide()
 
         # special table treatment
