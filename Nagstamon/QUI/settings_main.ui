@@ -42,7 +42,7 @@
       </sizepolicy>
      </property>
      <property name="currentIndex">
-      <number>6</number>
+      <number>0</number>
      </property>
      <widget class="QWidget" name="tab_servers">
       <attribute name="title">
@@ -139,7 +139,11 @@
           </widget>
          </item>
          <item>
-          <widget class="QSpinBox" name="input_spinbox_update_interval_seconds"/>
+          <widget class="QSpinBox" name="input_spinbox_update_interval_seconds">
+           <property name="maximum">
+            <number>999</number>
+           </property>
+          </widget>
          </item>
          <item>
           <spacer name="horizontalSpacer">
@@ -1938,7 +1942,7 @@
   </connection>
  </connections>
  <buttongroups>
-  <buttongroup name="buttongroup_popup_statuswindow"/>
   <buttongroup name="buttongroup_close_statusbar"/>
+  <buttongroup name="buttongroup_popup_statuswindow"/>
  </buttongroups>
 </ui>

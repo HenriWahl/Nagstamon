@@ -75,6 +75,7 @@ class Ui_settings_main(object):
         self.label_update_interval_seconds.setObjectName("label_update_interval_seconds")
         self.horizontalLayout.addWidget(self.label_update_interval_seconds)
         self.input_spinbox_update_interval_seconds = QtWidgets.QSpinBox(self.tab_servers)
+        self.input_spinbox_update_interval_seconds.setMaximum(999)
         self.input_spinbox_update_interval_seconds.setObjectName("input_spinbox_update_interval_seconds")
         self.horizontalLayout.addWidget(self.input_spinbox_update_interval_seconds)
         spacerItem1 = QtWidgets.QSpacerItem(40, 20, QtWidgets.QSizePolicy.Expanding, QtWidgets.QSizePolicy.Minimum)
@@ -844,7 +845,7 @@ class Ui_settings_main(object):
         self.verticalLayout.addWidget(self.button_box)
 
         self.retranslateUi(settings_main)
-        self.tabs.setCurrentIndex(6)
+        self.tabs.setCurrentIndex(0)
         self.button_box.accepted.connect(settings_main.accept)
         self.button_box.rejected.connect(settings_main.reject)
         QtCore.QMetaObject.connectSlotsByName(settings_main)
