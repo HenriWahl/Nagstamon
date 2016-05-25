@@ -78,10 +78,19 @@ class CentreonServer(GenericServer):
                                     'hosts': '$MONITOR$/main.php?p=20103&o=hpb',\
                                     'services': '$MONITOR$/main.php?p=20202&o=svcpb',\
                                     'history': '$MONITOR$/main.php?p=203'}
-                elif re.search('2\.[3-6]\.[0-9]', raw_versioncheck):
+                elif re.search('2\.[3-6]\.[0-5]', raw_versioncheck):
                     self.centreon_version = 2.3456
                     if conf.debug_mode == True:
-                        self.Debug(server=self.get_name(), debug = 'Centreon version detected : 2.[3-6]')
+                        self.Debug(server=self.get_name(), debug = 'Centreon version detected : 2.6.5 <=> 2.3')
+                    # URLs for browser shortlinks/buttons on popup window
+                    self.BROWSER_URLS= { 'monitor': '$MONITOR$/main.php?p=1',\
+                                    'hosts': '$MONITOR$/main.php?p=20103&o=hpb',\
+                                    'services': '$MONITOR$/main.php?p=20202&o=svcpb',\
+                                    'history': '$MONITOR$/main.php?p=203'}
+                elif re.search('2\.6\.[6-9]', raw_versioncheck):
+                    self.centreon_version = 2.66
+                    if conf.debug_mode == True:
+                        self.Debug(server=self.get_name(), debug = 'Centreon version detected : 2.6.6')
                     # URLs for browser shortlinks/buttons on popup window
                     self.BROWSER_URLS= { 'monitor': '$MONITOR$/main.php?p=1',\
                                     'hosts': '$MONITOR$/main.php?p=20103&o=hpb',\
@@ -173,16 +182,20 @@ class CentreonServer(GenericServer):
             else:
                 login = self.FetchURL(self.monitor_cgi_url + '/index.php')
                 if login.error == '' and login.status_code == 200:
-                    form = login.result.find('form')
-                    form_inputs = {}
-                    # Need to catch the centreon_token for login to work
-                    for form_input in ('centreon_token', 'submitLogin'):
-                        form_inputs[form_input] = form.find('input', {'name': form_input})['value']
-                    self.centreon_token = form_inputs['centreon_token']
-                    form_inputs['useralias'] = self.username
-                    form_inputs['password'] = self.password
-                    # fire up login button with all needed data
-                    raw = self.FetchURL(self.monitor_cgi_url + '/index.php', cgi_data=form_inputs)
+                    if self.centreon_version == 2.7 or self.centreon_version == 2.66:
+                        form = login.result.find('form')
+                        form_inputs = {}
+                        # Need to catch the centreon_token for login to work
+                        for form_input in ('centreon_token', 'submitLogin'):
+                            form_inputs[form_input] = form.find('input', {'name': form_input})['value']
+                        self.centreon_token = form_inputs['centreon_token']
+                        form_inputs['useralias'] = self.username
+                        form_inputs['password'] = self.password
+                        # fire up login button with all needed data
+                        raw = self.FetchURL(self.monitor_cgi_url + '/index.php', cgi_data=form_inputs)
+                    elif self.centreon_version == 2.3456:
+                        login_data = {"useralias" : self.username, "password" : self.password, "submit" : "Login"}
+                        raw = self.FetchURL(self.monitor_cgi_url + "/index.php",cgi_data=login_data, giveback="raw")
                 if conf.debug_mode == True:
                     self.Debug(server=self.get_name(), debug = 'Password login : ' + self.username + ' : ' + self.password)
             del raw
@@ -205,7 +218,7 @@ class CentreonServer(GenericServer):
         try:
             cgi_data = {'o':'ah',\
                         'host_name':host}
-            if self.centreon_version == 2.2 or self.centreon_version == 2.3456:
+            if self.centreon_version < 2.7:
                 cgi_data['p'] = '20106'
             elif self.centreon_version == 2.7:
                 cgi_data['p'] = '210'
@@ -297,7 +310,7 @@ class CentreonServer(GenericServer):
         '''
         if self.centreon_version == 2.2:
             self.XML_PATH = 'xml'
-        elif self.centreon_version == 2.3456:
+        elif self.centreon_version == 2.3456 or self.centreon_version == 2.66:
             # 2.6 support NDO and C. Broker, we must check which one is used
             cgi_data = {'p':201, 'sid':self.SID}
             result = self.FetchURL(self.monitor_cgi_url + '/main.php', cgi_data=cgi_data, giveback='raw')
@@ -400,7 +413,7 @@ class CentreonServer(GenericServer):
         # get sid in case this has not yet been done
         if self.SID == None or self.SID == '':
             self.SID = self._get_sid().result
-            # those ndo urls would not be changing too often so this check migth be done here
+            # those broker urls would not be changing too often so this check migth be done here
             self._get_xml_url()
 
         # services (unknown, warning or critical?)
@@ -422,8 +435,8 @@ class CentreonServer(GenericServer):
 
             if error != '': return Result(result=copy.deepcopy(xmlobj), error=copy.deepcopy(error))
 
-            # in case there are no children session id is invalid
-            if xmlobj == '<response>bad session id</response>' or str(xmlobj) == 'Bad Session ID':
+            # in case there are no children session ID is expired
+            if xmlobj == '<response>bad session id</response>' or str(xmlobj) == 'Bad Session ID'  or xmlobj == '':
                 del xmlobj
                 if conf.debug_mode == True:
                     self.Debug(server=self.get_name(), debug='Bad session ID, retrieving new one...')
@@ -435,7 +448,9 @@ class CentreonServer(GenericServer):
                 if error != '': return Result(result=copy.deepcopy(xmlobj), error=copy.deepcopy(error))
 
                 # a second time a bad session id should raise an error
-                if xmlobj == '<response>bad session id</response>' or str(xmlobj) == 'Bad Session ID':
+                if xmlobj == '<response>bad session id</response>' or str(xmlobj) == 'Bad Session ID' or xmlobj == '':
+                    if conf.debug_mode == True:
+                        self.Debug(server=self.get_name(), debug='Even after renewing session ID, unable to get the XML')
                     return Result(result='ERROR', error=str(xmlobj))
 
             for l in xmlobj.findAll('l'):
@@ -614,7 +629,7 @@ class CentreonServer(GenericServer):
                             'sticky': int(sticky),
                             'ackhostservice': '0',
                             'en': '1'}
-                if self.centreon_version == 2.2 or self.centreon_version == 2.3456:
+                if self.centreon_version < 2.7:
                     cgi_data['p'] = '20105'
                     cgi_data['o'] = 'hpb'
                 elif self.centreon_version == 2.7:
@@ -652,7 +667,7 @@ class CentreonServer(GenericServer):
                                 'sticky': int(sticky),
                                 'o': 'svcd',
                                 'en': '1'}
-                    if self.centreon_version == 2.2 or self.centreon_version == 2.3456:
+                    if self.centreon_version < 2.7:
                         cgi_data['p'] = '20215'
                     elif self.centreon_version == 2.7:
                         cgi_data['p'] = '20201'
@@ -809,15 +824,14 @@ class CentreonServer(GenericServer):
         # renewing the SID once an hour might be enough
         # maybe this is unnecessary now that we authenticate via login/password, no md5
         if self.SIDcount >= 3600:
-            if str(self.conf.debug_mode) == 'True':
+            if conf.debug_mode == 'True':
                 self.Debug(server=self.get_name(), debug='Old SID: ' + self.SID + ' ' + str(self.Cookie))
             # close the connections to avoid the accumulation of sessions on Centreon
             url_disconnect = self.monitor_cgi_url + '/index.php?disconnect=1'
             raw = self.FetchURL(url_disconnect, giveback='raw')
             del raw
-
             self.SID = self._get_sid().result
-            if str(self.conf.debug_mode) == 'True':
+            if conf.debug_mode == 'True':
                 self.Debug(server=self.get_name(), debug='New SID: ' + self.SID + ' ' + str(self.Cookie))
             self.SIDcount = 0
         else:
