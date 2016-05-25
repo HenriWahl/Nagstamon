@@ -75,6 +75,7 @@ class Ui_settings_main(object):
         self.label_update_interval_seconds.setObjectName("label_update_interval_seconds")
         self.horizontalLayout.addWidget(self.label_update_interval_seconds)
         self.input_spinbox_update_interval_seconds = QtWidgets.QSpinBox(self.tab_servers)
+        self.input_spinbox_update_interval_seconds.setMaximum(999)
         self.input_spinbox_update_interval_seconds.setObjectName("input_spinbox_update_interval_seconds")
         self.horizontalLayout.addWidget(self.input_spinbox_update_interval_seconds)
         spacerItem1 = QtWidgets.QSpacerItem(40, 20, QtWidgets.QSizePolicy.Expanding, QtWidgets.QSizePolicy.Minimum)

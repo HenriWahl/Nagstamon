@@ -587,6 +587,7 @@ class FlatButton(QToolButton):
         self.setStyleSheet('''padding: 5px;''')
         self.setText(text)
 
+
 # OSX does not support flat QToolButtons so keep the neat default ones
 if platform.system() == 'Darwin':
     Button = QPushButton
@@ -605,6 +606,7 @@ else:
     CSS_CLOSE_BUTTON = '''padding: 1px;
                           margin-right: 5px;'''
     CSS_HAMBURGER_MENU = '''FlatButton::menu-indicator{image:url(none.jpg);}'''
+
 
 # class PushButton_Hamburger(QPushButton):
 #class PushButton_Hamburger(FlatButton):

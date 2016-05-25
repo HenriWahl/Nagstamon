@@ -139,7 +139,11 @@
           </widget>
          </item>
          <item>
-          <widget class="QSpinBox" name="input_spinbox_update_interval_seconds"/>
+          <widget class="QSpinBox" name="input_spinbox_update_interval_seconds">
+           <property name="maximum">
+            <number>999</number>
+           </property>
+          </widget>
          </item>
          <item>
           <spacer name="horizontalSpacer">
