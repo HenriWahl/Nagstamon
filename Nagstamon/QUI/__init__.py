@@ -4888,6 +4888,8 @@ class Dialog_Server(Dialog):
         self.ui.input_combobox_type.addItems(sorted(SERVER_TYPES.keys(), key=str.lower))
         # default to Nagios as it is the mostly used monitor server
         self.ui.input_combobox_type.setCurrentText('Nagios')
+        # fill authentication combobox
+        self.ui.input_combobox_authentication.addItems(['Basic', 'Digest'])
 
         # detect change of server type which leads to certain options shown or hidden
         self.ui.input_combobox_type.activated.connect(self.server_type_changed)
@@ -4938,6 +4940,9 @@ class Dialog_Server(Dialog):
                     elif widget.startswith('input_lineedit_'):
                         setting = widget.split('input_lineedit_')[1]
                         self.ui.__dict__[widget].setText(self.server_conf.__dict__[setting])
+
+            # set current authentication type by using capitalized first letter via .title()
+            self.ui.input_combobox_authentication.setCurrentText(self.server_conf.authentication.title())
 
             # initially hide not needed widgets
             self.server_type_changed()
@@ -5043,6 +5048,9 @@ class Dialog_Server(Dialog):
                         self.server_conf.__dict__[item] = BOOLPOOL[self.server_conf.__dict__[item]]
                     elif self.server_conf.__dict__[item].isdecimal():
                         self.server_conf.__dict__[item] = int(self.server_conf.__dict__[item])
+
+            # store lowered authentication type
+            self.server_conf.authentication = self.server_conf.authentication.lower()
 
             # edited servers will be deleted and recreated with new configuration
             if self.mode == 'edit':

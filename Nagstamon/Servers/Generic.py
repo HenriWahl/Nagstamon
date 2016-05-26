@@ -107,6 +107,7 @@ class GenericServer(object):
         self.proxy_address = ''
         self.proxy_username = ''
         self.proxy_password = ''
+        self.auth_type = ''
         self.hosts = dict()
         self.new_hosts = dict()
         self.isChecking = False
@@ -198,8 +199,13 @@ class GenericServer(object):
             self.session = requests.Session()
             self.session.headers['User-Agent'] = self.USER_AGENT
 
-            # basic authentication
-            self.session.auth = (self.username, self.password)
+            # support for different authentication types
+            if self.authentication == 'basic':
+                # basic authentication
+               #self.session.auth = (self.username, self.password)
+                self.session.auth = requests.auth.HTTPBasicAuth(self.username, self.password)
+            elif self.authentication == 'digest':
+                self.session.auth = requests.auth.HTTPDigestAuth(self.username, self.password)
 
             # default to not check TLS validity
             self.session.verify = False
