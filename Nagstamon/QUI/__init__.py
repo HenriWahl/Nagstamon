@@ -72,6 +72,7 @@ from Nagstamon.QUI.dialog_downtime import Ui_dialog_downtime
 from Nagstamon.QUI.dialog_submit import Ui_dialog_submit
 from Nagstamon.QUI.dialog_authentication import Ui_dialog_authentication
 from Nagstamon.QUI.dialog_server_missing import Ui_dialog_server_missing
+from Nagstamon.QUI.dialog_about import Ui_dialog_about
 
 # only on X11/Linux thirdparty path should be added because it contains the Xlib module
 # needed to tell window manager via EWMH to keep Nagstamon window on all virtual desktops
@@ -523,6 +524,11 @@ class MenuContext(MenuAtCursor):
             self.action_save_position.triggered.connect(self.save_position)
             self.addAction(self.action_save_position)
 
+
+        self.action_about = QAction('About...', self)
+        self.action_about.triggered.connect(statuswindow.hide_window)
+        self.action_about.triggered.connect(dialogs.about.show)
+        self.addAction(self.action_about)
         self.action_exit = QAction('Exit', self)
         self.action_exit.triggered.connect(exit)
         self.addAction(self.action_exit)
@@ -2510,8 +2516,10 @@ class ServerVBox(QVBoxLayout):
         self.label_separator = QLabel(parent=parent)
         self.label_separator.setFrameShadow(QFrame.Sunken)
         self.label_separator.setFrameShape(QFrame.VLine)
-        self.label_separator.setStyleSheet('''margin-top: 5px;
-                                              margin-bottom: 5px;''')
+        # OSX does not like these extra margns
+        if platform.system() != 'Darwin':
+            self.label_separator.setStyleSheet('''margin-top: 5px;
+                                                  margin-bottom: 5px;''')
         self.label_status = ServerStatusLabel(parent=parent)
         self.button_authenticate = Button('Authenticate', parent=parent)
 
@@ -3871,6 +3879,9 @@ class Dialogs(object):
         # open server creation dialog
         self.server_missing.ui.button_create_server.clicked.connect(self.settings.show_new_server)
         self.server_missing.ui.button_enable_server.clicked.connect(self.settings.show)
+
+        # about dialog
+        self.about = Dialog_About(Ui_dialog_about)
 
         # file chooser Dialog
         self.file_chooser = QFileDialog()
@@ -5704,8 +5715,6 @@ class Dialog_Server_missing(Dialog):
         self.ui.button_exit.clicked.connect(exit)
 
 
-
-
     def initialize(self, mode='no_server'):
         """
             use dialog for missing and not enabled servers, depending on mode
@@ -5720,6 +5729,37 @@ class Dialog_Server_missing(Dialog):
             self.ui.label_no_server_enabled.show()
             self.ui.button_enable_server.show()
             self.ui.button_create_server.hide()
+
+
+class Dialog_About(Dialog):
+    """
+        About information dialog
+    """
+    def __init__(self, dialog):
+        Dialog.__init__(self, dialog)
+        # first add the logo on top - no idea how to achive in Qt Designer
+        logo = QSvgWidget('{0}{1}nagstamon.svg'.format(RESOURCES, os.sep))
+        logo.setFixedSize(100, 100)
+        self.ui.vbox_about.insertWidget(1, logo, 0 , Qt.AlignHCenter)  
+        # update version information
+        self.ui.label_nagstamon.setText('<h1>{0} {1}</h1>'.format(AppInfo.NAME, AppInfo.VERSION))
+        self.ui.label_nagstamon_long.setText('<h2>Nagios¹ status monitor for your desktop</2>')
+        self.ui.label_copyright.setText(AppInfo.COPYRIGHT)
+        self.ui.label_website.setText('<a href={0}>{0}</a>'.format(AppInfo.WEBSITE))
+        self.ui.label_website.setOpenExternalLinks(True)
+        self.ui.label_footnote.setText('<small>¹ plus Check_MK, Op5, Icinga, Centreon and more</small>')
+
+        # fill in license information
+        license_file = open('{0}{1}LICENSE'.format(RESOURCES, os.sep))
+        license = license_file.read()
+        license_file.close()
+        self.ui.textedit_license.setPlainText(license)
+        self.ui.textedit_license.setReadOnly(True)
+        
+        self.ui.tabs.setCurrentIndex(0)
+        
+    def show(self):
+        self.window.exec()
 
 
 class MediaPlayer(QObject):
