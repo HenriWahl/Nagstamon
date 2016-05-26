@@ -11,7 +11,9 @@ from PyQt5 import QtCore, QtGui, QtWidgets
 class Ui_dialog_about(object):
     def setupUi(self, dialog_about):
         dialog_about.setObjectName("dialog_about")
-        dialog_about.resize(400, 300)
+        dialog_about.resize(500, 300)
+        dialog_about.setSizeGripEnabled(True)
+        dialog_about.setModal(True)
         self.gridLayout = QtWidgets.QGridLayout(dialog_about)
         self.gridLayout.setObjectName("gridLayout")
         self.tabs = QtWidgets.QTabWidget(dialog_about)
@@ -50,7 +52,7 @@ class Ui_dialog_about(object):
         self.tab_credits.setObjectName("tab_credits")
         self.verticalLayout = QtWidgets.QVBoxLayout(self.tab_credits)
         self.verticalLayout.setObjectName("verticalLayout")
-        self.textedit_credits = QtWidgets.QTextEdit(self.tab_credits)
+        self.textedit_credits = QtWidgets.QTextBrowser(self.tab_credits)
         self.textedit_credits.setObjectName("textedit_credits")
         self.verticalLayout.addWidget(self.textedit_credits)
         self.tabs.addTab(self.tab_credits, "")
@@ -70,7 +72,7 @@ class Ui_dialog_about(object):
         self.gridLayout.addWidget(self.buttonBox, 1, 0, 1, 1)
 
         self.retranslateUi(dialog_about)
-        self.tabs.setCurrentIndex(2)
+        self.tabs.setCurrentIndex(0)
         self.buttonBox.accepted.connect(dialog_about.accept)
         self.buttonBox.rejected.connect(dialog_about.reject)
         QtCore.QMetaObject.connectSlotsByName(dialog_about)

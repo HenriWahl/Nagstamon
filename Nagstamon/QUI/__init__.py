@@ -5756,6 +5756,14 @@ class Dialog_About(Dialog):
         self.ui.textedit_license.setPlainText(license)
         self.ui.textedit_license.setReadOnly(True)
         
+        # fill in credits information
+        credits_file = open('{0}{1}CREDITS'.format(RESOURCES, os.sep))
+        credits = credits_file.read()
+        credits_file.close()
+        self.ui.textedit_credits.setText(credits)
+        self.ui.textedit_credits.setOpenExternalLinks(True)
+        self.ui.textedit_credits.setReadOnly(True)
+        
         self.ui.tabs.setCurrentIndex(0)
         
     def show(self):
