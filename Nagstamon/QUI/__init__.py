@@ -524,6 +524,7 @@ class MenuContext(MenuAtCursor):
             self.action_save_position.triggered.connect(self.save_position)
             self.addAction(self.action_save_position)
 
+        self.addSeparator()
 
         self.action_about = QAction('About...', self)
         self.action_about.triggered.connect(statuswindow.hide_window)
@@ -5757,7 +5758,7 @@ class Dialog_About(Dialog):
         self.ui.textedit_license.setReadOnly(True)
         
         # fill in credits information
-        credits_file = open('{0}{1}CREDITS'.format(RESOURCES, os.sep))
+        credits_file = open('{0}{1}CREDITS'.format(RESOURCES, os.sep), encoding='utf-8')
         credits = credits_file.read()
         credits_file.close()
         self.ui.textedit_credits.setText(credits)
