@@ -57,7 +57,7 @@ class AppInfo(object):
         contains app information previously located in GUI.py
     """
     NAME = 'Nagstamon'
-    VERSION = '2.0-beta-20160526'
+    VERSION = '2.0-beta-20160527'
     WEBSITE = 'https://nagstamon.ifw-dresden.de'
     COPYRIGHT = '©2008-2016 Henri Wahl et al.'
     COMMENTS = 'Nagios status monitor for your desktop'
@@ -172,7 +172,7 @@ class Config(object):
         self.color_error_background = self.default_color_error_background = '#D3D3D3'
         self.statusbar_floating = True
         self.icon_in_systray = False
-        self.appindicator = False
+        ###self.appindicator = False
         self.fullscreen = False
         self.fullscreen_display = 0
         self.font = ''

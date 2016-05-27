@@ -4300,9 +4300,14 @@ class Dialog_Settings(Dialog):
             statuswindow.store_position_to_conf()
 
         # store hash of all display settingas as display_mode to decide if statuswindow has to be recreated
+        #display_mode = str(conf.statusbar_floating) + \
+        #               str(conf.icon_in_systray) + \
+        #               str(conf.appindicator) + \
+        #               str(conf.fullscreen) + \
+        #               str(conf.fullscreen_display)
+
         display_mode = str(conf.statusbar_floating) + \
                        str(conf.icon_in_systray) + \
-                       str(conf.appindicator) + \
                        str(conf.fullscreen) + \
                        str(conf.fullscreen_display)
 
@@ -4367,9 +4372,13 @@ class Dialog_Settings(Dialog):
 
         # when display mode was changed its the easiest to destroy the old status window and create a new one
         # store display_mode to decide if statuswindow has to be recreated
+        ###if display_mode != str(conf.statusbar_floating) + \
+        ###                   str(conf.icon_in_systray) + \
+        ###                   str(conf.appindicator) + \
+        ###                   str(conf.fullscreen) + \
+        ###                   str(conf.fullscreen_display):
         if display_mode != str(conf.statusbar_floating) + \
                            str(conf.icon_in_systray) + \
-                           str(conf.appindicator) + \
                            str(conf.fullscreen) + \
                            str(conf.fullscreen_display):
 
