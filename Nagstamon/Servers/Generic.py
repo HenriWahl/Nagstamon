@@ -529,8 +529,9 @@ class GenericServer(object):
         # hosts must be analyzed separately
         try:
             for status_type in 'hard', 'soft':
-                result = self.FetchURL(self.cgiurl_hosts[status_type])
+                result = self.FetchURL(self.cgiurl_hosts[status_type])               
                 htobj, error, status_code = result.result, result.error, result.status_code
+                
                 if error != '' or status_code > 400:
                     return Result(result=copy.deepcopy(htobj),
                                               error=copy.deepcopy(error),
@@ -654,6 +655,7 @@ class GenericServer(object):
             for status_type in 'hard', 'soft':
                 result = self.FetchURL(self.cgiurl_services[status_type])
                 htobj, error, status_code = result.result, result.error, result.status_code
+
                 if error != '' or status_code > 400:
                     return Result(result=copy.deepcopy(htobj),
                                   error=copy.deepcopy(error),
@@ -822,8 +824,9 @@ class GenericServer(object):
                           error=self.status_description,
                           status_code=self.status_code)
 
-        if (self.status_description != '' or
-            self.status_code > 400):
+        if (self.status == 'ERROR' or
+            self.status_description != '' or
+            self.status_code >= 400):
             # ask for password if authorization failed
             if 'HTTP Error 401' in self.status_description or \
                'HTTP Error 403' in self.status_description or \
@@ -1256,8 +1259,7 @@ class GenericServer(object):
                             form_data[key] = (None, cgi_data[key])
 
                         # get response with cgi_data encodes as files
-                        response = self.session.post(url, files=form_data)
-
+                        response = self.session.post(url, files=form_data)                   
                 else:
                     # send request without authentication data
                     temporary_session = requests.Session()
@@ -1289,15 +1291,14 @@ class GenericServer(object):
 
             except Exception as err:
                 traceback.print_exc(file=sys.stdout)
-
-                del url, cgi_data
                 result, error = self.Error(sys.exc_info())
                 return Result(result=result, error=error, status_code=-1)
 
             # give back pure HTML or XML in case giveback is 'raw'
             if giveback == 'raw':
                 # .text gives content in unicode
-                return Result(result=response.text, status_code=response.status_code)
+                return Result(result=response.text,
+                              status_code=response.status_code)
 
             # objectified HTML
             if giveback == 'obj':
@@ -1307,7 +1308,8 @@ class GenericServer(object):
             # objectified generic XML, valid at least for Opsview and Centreon
             elif giveback == 'xml':
                 xmlobj = BeautifulSoup(response.text, 'html.parser')
-                return Result(result=xmlobj, status_code=response.status_code)
+                return Result(result=xmlobj,
+                              status_code=response.status_code)
 
         except:
             traceback.print_exc(file=sys.stdout)
@@ -1316,6 +1318,7 @@ class GenericServer(object):
             return Result(result=result, error=error, status_code=response.status_code)
 
         result, error = self.Error(sys.exc_info())
+
         return Result(result=result, error=error, status_code=response.status_code)
 
 

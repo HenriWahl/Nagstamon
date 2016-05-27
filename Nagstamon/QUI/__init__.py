@@ -2522,7 +2522,7 @@ class ServerVBox(QVBoxLayout):
             self.label_separator.setStyleSheet('''margin-top: 5px;
                                                   margin-bottom: 5px;''')
         self.label_status = ServerStatusLabel(parent=parent)
-        self.button_authenticate = Button('Authenticate', parent=parent)
+        self.button_authenticate = QPushButton('Authenticate', parent=parent)
 
         self.button_monitor.clicked.connect(self.button_monitor.open_url)
         self.button_hosts.clicked.connect(self.button_hosts.open_url)
@@ -3462,7 +3462,9 @@ class TreeView(QTreeView):
                     self.hide_error.emit()
                 else:
                     # try to display some more user friendly error description
-                    if status.error.startswith('requests.exceptions.ConnectTimeout'):
+                    if self.server.status_code == 404:
+                        self.change_label_status.emit('Monitor URL not valid', '')
+                    elif status.error.startswith('requests.exceptions.ConnectTimeout'):
                         self.change_label_status.emit('Connection timeout', '')
                     elif status.error.startswith('requests.exceptions.ConnectionError'):
                         self.change_label_status.emit('Connection error', '')
@@ -3946,7 +3948,8 @@ class Dialog(QObject):
 
         # reset window if only needs smaller screen estate
         self.window.adjustSize()
-        self.window.show()
+        ###self.window.show()
+        self.window.exec()
 
 
     def toggle_visibility(self, checkbox, widgets=[]):
@@ -5615,6 +5618,7 @@ class Dialog_Authentication(Dialog):
             setup dialog fitting to server
         """
         if self.server != None:
+            
             self.window.setWindowTitle('Authenticate {0}'.format(self.server.name))
             if self.server.type == 'Centreon':
                 self.ui.input_checkbox_use_autologin.show()
@@ -5623,8 +5627,10 @@ class Dialog_Authentication(Dialog):
                 self.ui.label_autologin_key.show()
                 # enable switching autologin key and password
                 self.ui.input_checkbox_use_autologin.clicked.connect(self.toggle_autologin)
+                self.ui.input_checkbox_use_autologin.setChecked(self.server.use_autologin)
+                self.ui.input_lineedit_autologin_key.setText(self.server.autologin_key)
                 # initialize autologin
-                self.toggle_autologin()
+                self.toggle_autologin()          
             else:
                 self.ui.input_checkbox_use_autologin.hide()
                 self.ui.input_lineedit_autologin_key.hide()
@@ -5634,9 +5640,6 @@ class Dialog_Authentication(Dialog):
             self.ui.input_lineedit_username.setText(self.server.username)
             self.ui.input_lineedit_password.setText(self.server.password)
             self.ui.input_checkbox_save_password.setChecked(conf.servers[self.server.name].save_password)
-            # Centreon specific
-            self.ui.input_checkbox_use_autologin.setChecked(self.server.use_autologin)
-            self.ui.input_lineedit_autologin_key.setText(self.server.autologin_key)
 
 
     @pyqtSlot(str)
@@ -5646,7 +5649,7 @@ class Dialog_Authentication(Dialog):
         """
         self.server = servers[server]
         self.initialize()
-        self.show()
+        self.window.exec()
 
 
     def ok(self):
@@ -5688,24 +5691,27 @@ class Dialog_Authentication(Dialog):
 
     @pyqtSlot()
     def toggle_autologin(self):
-       if self.ui.input_checkbox_use_autologin.isChecked():
-           self.ui.label_username.hide()
-           self.ui.label_password.hide()
-           self.ui.input_lineedit_username.hide()
-           self.ui.input_lineedit_password.hide()
-           self.ui.input_checkbox_save_password.hide()
+        """
+            toolge autologin option for Centreon
+        """
+        if self.ui.input_checkbox_use_autologin.isChecked():
+            self.ui.label_username.hide()
+            self.ui.label_password.hide()
+            self.ui.input_lineedit_username.hide()
+            self.ui.input_lineedit_password.hide()
+            self.ui.input_checkbox_save_password.hide()
 
-           self.ui.label_autologin_key.show()
-           self.ui.input_lineedit_autologin_key.show()      
-       else:
-           self.ui.label_username.show()
-           self.ui.label_password.show()
-           self.ui.input_lineedit_username.show()
-           self.ui.input_lineedit_password.show()
-           self.ui.input_checkbox_save_password.show()
+            self.ui.label_autologin_key.show()
+            self.ui.input_lineedit_autologin_key.show()      
+        else:
+            self.ui.label_username.show()
+            self.ui.label_password.show()
+            self.ui.input_lineedit_username.show()
+            self.ui.input_lineedit_password.show()
+            self.ui.input_checkbox_save_password.show()
 
-           self.ui.label_autologin_key.hide()
-           self.ui.input_lineedit_autologin_key.hide()
+            self.ui.label_autologin_key.hide()
+            self.ui.input_lineedit_autologin_key.hide()
 
 
 class Dialog_Server_missing(Dialog):

@@ -304,9 +304,9 @@ class CentreonServer(GenericServer):
     def _get_xml_url(self):
         '''
         Find out where this instance of Centreon is publishing the status XMLs
-	    Centreon 2.6 + ndo/c.broker - /include/monitoring/status/Hosts/xml/{ndo,broker}/hostXML.php according to configuration
+        Centreon 2.6 + ndo/c.broker - /include/monitoring/status/Hosts/xml/{ndo,broker}/hostXML.php according to configuration
         Centreon 2.7 + c.broker - /include/monitoring/status/Hosts/xml/hostXML.php
-	    regexping HTML for Javascript
+        regexping HTML for Javascript
         '''
         if self.centreon_version == 2.2:
             self.XML_PATH = 'xml'
@@ -431,12 +431,15 @@ class CentreonServer(GenericServer):
         # hosts must be analyzed separately
         try:
             result = self.FetchURL(nagcgiurl_hosts, giveback='xml')
-            xmlobj, error = result.result, result.error
+            xmlobj, error, status_code = result.result, result.error, result.status_code
 
-            if error != '': return Result(result=copy.deepcopy(xmlobj), error=copy.deepcopy(error))
+            if error != '' or status_code > 400:
+                 return Result(result=copy.deepcopy(xmlobj),
+                               error=copy.deepcopy(error),
+                               status_code=status_code)
 
             # in case there are no children session ID is expired
-            if xmlobj == '<response>bad session id</response>' or str(xmlobj) == 'Bad Session ID'  or xmlobj == '':
+            if xmlobj.text.lower() == 'bad session id':
                 del xmlobj
                 if conf.debug_mode == True:
                     self.Debug(server=self.get_name(), debug='Bad session ID, retrieving new one...')
@@ -444,20 +447,23 @@ class CentreonServer(GenericServer):
                 # try again...
                 self.SID = self._get_sid().result
                 result = self.FetchURL(nagcgiurl_hosts, giveback='xml')
-                xmlobj, error = result.result, result.error
-                if error != '': return Result(result=copy.deepcopy(xmlobj), error=copy.deepcopy(error))
+                xmlobj, error, status_code = result.result, result.error, result.status_code
+                if error != '' or status_code > 400:
+                    return Result(result=copy.deepcopy(xmlobj),
+                                  error=copy.deepcopy(error),
+                                  status_code=status_code)
 
                 # a second time a bad session id should raise an error
-                if xmlobj == '<response>bad session id</response>' or str(xmlobj) == 'Bad Session ID' or xmlobj == '':
+                if xmlobj.text.lower() == 'bad session id':
                     if conf.debug_mode == True:
                         self.Debug(server=self.get_name(), debug='Even after renewing session ID, unable to get the XML')
-                    return Result(result='ERROR', error=str(xmlobj))
+                    return Result(result='ERROR',
+                                  error='Bad session ID',
+                                  status_code=status_code)
 
             for l in xmlobj.findAll('l'):
                 try:
                     # host objects contain service objects
-# AttributeError: 'dict' object has no attribute 'has_key'
-#                    if not self.new_hosts.has_key(str(l.hn.text)):
                     if not l.hn.text in self.new_hosts:
                         self.new_hosts[str(l.hn.text)] = GenericHost()
                         self.new_hosts[str(l.hn.text)].name =  str(l.hn.text)
@@ -504,20 +510,31 @@ class CentreonServer(GenericServer):
         # services
         try:
             result = self.FetchURL(nagcgiurl_services, giveback='xml')
-            xmlobj, error = result.result, result.error
+            xmlobj, error, status_code = result.result, result.error, result.status_code
 
-            if error != '': return Result(result=xmlobj, error=copy.deepcopy(error))
+            if error != ''or status_code > 400:
+                return Result(result=xmlobj,
+                              error=copy.deepcopy(error),
+                              status_code=status_code)
 
             # in case there are no children session id is invalid
-            if xmlobj == '<response>bad session id</response>' or xmlobj == 'Bad Session ID':
+            if xmlobj.text.lower() == 'bad session id':
                 # debug
                 if conf.debug_mode == True:
                     self.Debug(server=self.get_name(), debug='Bad session ID, retrieving new one...')
                 # try again...
                 self.SID = self._get_sid().result
                 result = self.FetchURL(nagcgiurl_services, giveback='xml')
-                xmlobj, error = result.result, result.error
-                if error != '': return Result(result='ERROR', error=copy.deepcopy(error))
+                xmlobj, error, status_code = result.result, result.error, result.status_code
+                if error != '' or status_code > 400:
+                    return Result(result=copy.deepcopy(xmlobj),
+                                  error=copy.deepcopy(error),
+                                  status_code=status_code)
+                # a second time a bad session id should raise an error
+                if xmlobj.text.lower() == 'bad session id':
+                    return Result(result='ERROR',
+                                  error='Bad session ID',
+                                  status_code=status_code)
 
             # define meta-services xml URL
             if self.centreon_version == 2.7:
@@ -527,10 +544,21 @@ class CentreonServer(GenericServer):
 
             # retrive meta-services xml STATUS
             result_meta = self.FetchURL(nagcgiurl_meta_services, giveback='xml')
-            xmlobj_meta, error_meta = result_meta.result, result_meta.error
+            xmlobj_meta, error_meta, status_code_meta = result_meta.result, result_meta.error, result_meta.status_code
+            if error_meta != '' or status_code_meta > 400:
+                return Result(result=xmlobj_meta,
+                              error=copy.deepcopy(error_meta),
+                              status_code=status_code_meta)
 
-            if error_meta != '':
-                return Result(result=xmlobj_meta, error=copy.deepcopy(error_meta))
+            # a second time a bad session id should raise an error
+            if xmlobj_meta.text.lower() == 'bad session id':
+                if conf.debug_mode == True:
+                    self.Debug(server=self.get_name(), debug='Even after renewing session ID, unable to get the XML')
+               
+                return Result(result='ERROR',
+                              error='Bad session ID',
+                              status_code=status_code_meta)
+            
             # INSERT META-services xml at the end of the services xml
             try:
                     xmlobj.append(xmlobj_meta.reponse)

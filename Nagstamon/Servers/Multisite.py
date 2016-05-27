@@ -130,10 +130,12 @@ class MultisiteServer(GenericServer):
 
     def _get_url(self, url):
         result = self.FetchURL(url, 'raw')
-        content, error = result.result, result.error
+        content, error, status_code = result.result, result.error, result.status_code
 
-        if error != '':
-            raise MultisiteError(True, Result(result = content, error = error))
+        if error != '' or status_code >= 400:
+            raise MultisiteError(True, Result(result=content, 
+                                              error=error,
+                                              status_code=status_code))
 
         if content.startswith('WARNING:'):
             c = content.split('\n')
@@ -141,12 +143,18 @@ class MultisiteServer(GenericServer):
             # Print non ERRORS to the log in debug mode
             self.Debug(server=self.get_name(), debug=c[0])
 
-            raise MultisiteError(False, Result(result = '\n'.join(c[1:]),
-                                               content = eval('\n'.join(c[1:])),
-                                               error = c[0]))
+            #raise MultisiteError(False, Result(result = '\n'.join(c[1:]),
+            #                                   content = eval('\n'.join(c[1:])),
+            #
+            # the content argumment does not make sense here, right?                                   error = c[0]))
+            raise MultisiteError(False, Result(result='\n'.join(c[1:]),
+                                               error=c[0],
+                                               status_code=status_code))
+            
         elif content.startswith('ERROR:'):
-            raise MultisiteError(True, Result(result = content,
-                                               error = content))
+            raise MultisiteError(True, Result(result=content,
+                                              error=content,
+                                              status_code=status_code))
 
         # in case of auth problem enable GUI auth part in popup
         if self.CookieAuth == True and len(self.session.cookies) == 0:
@@ -215,7 +223,9 @@ class MultisiteServer(GenericServer):
                     return e.result
 
             if response == '':
-                return Result(result='', error='Login failed')
+                return Result(result='',
+                              error='Login failed',
+                              status_code=401)
 
             for row in response[1:]:
                 host= dict(list(zip(copy.deepcopy(response[0]), copy.deepcopy(row))))
