@@ -4263,7 +4263,8 @@ class Dialog_Settings(Dialog):
 
         # reset window if only needs smaller screen estate
         self.window.adjustSize()
-        self.window.show()
+        #self.window.show()
+        self.window.exec()
 
 
     @pyqtSlot()
@@ -4977,7 +4978,8 @@ class Dialog_Server(Dialog):
             # important final size adjustment
             self.window.adjustSize()
 
-            self.window.show()
+            #self.window.show()
+            self.window.exec()
 
         # give back decorated function
         return(decoration_function)
@@ -5211,7 +5213,8 @@ class Dialog_Action(Dialog):
             # important final size adjustment
             self.window.adjustSize()
 
-            self.window.show()
+            #self.window.show()
+            self.window.exec()
 
         # give back decorated function
         return(decoration_function)
