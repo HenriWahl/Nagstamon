@@ -72,6 +72,7 @@ from Nagstamon.QUI.dialog_downtime import Ui_dialog_downtime
 from Nagstamon.QUI.dialog_submit import Ui_dialog_submit
 from Nagstamon.QUI.dialog_authentication import Ui_dialog_authentication
 from Nagstamon.QUI.dialog_server_missing import Ui_dialog_server_missing
+from Nagstamon.QUI.dialog_about import Ui_dialog_about
 
 # only on X11/Linux thirdparty path should be added because it contains the Xlib module
 # needed to tell window manager via EWMH to keep Nagstamon window on all virtual desktops
@@ -523,6 +524,12 @@ class MenuContext(MenuAtCursor):
             self.action_save_position.triggered.connect(self.save_position)
             self.addAction(self.action_save_position)
 
+        self.addSeparator()
+
+        self.action_about = QAction('About...', self)
+        self.action_about.triggered.connect(statuswindow.hide_window)
+        self.action_about.triggered.connect(dialogs.about.show)
+        self.addAction(self.action_about)
         self.action_exit = QAction('Exit', self)
         self.action_exit.triggered.connect(exit)
         self.addAction(self.action_exit)
@@ -584,7 +591,7 @@ class FlatButton(QToolButton):
     def __init__(self, text='', parent=None, server=None, url_type=''):
         QToolButton.__init__(self, parent=parent)
         self.setAutoRaise(True)
-        self.setStyleSheet('''padding: 5px;''')
+        self.setStyleSheet('''padding: 3px;''')
         self.setText(text)
 
 
@@ -603,8 +610,7 @@ if platform.system() == 'Darwin':
                                                border-radius: 4px;}'''
 else:
     Button = FlatButton
-    CSS_CLOSE_BUTTON = '''padding: 1px;
-                          margin-right: 5px;'''
+    CSS_CLOSE_BUTTON = '''margin-right: 5px;'''
     CSS_HAMBURGER_MENU = '''FlatButton::menu-indicator{image:url(none.jpg);}'''
 
 
@@ -2507,11 +2513,14 @@ class ServerVBox(QVBoxLayout):
         self.button_hosts = PushButton_BrowserURL(text='Hosts', parent=parent, server=self.server, url_type='hosts')
         self.button_services = PushButton_BrowserURL(text='Services', parent=parent, server=self.server, url_type='services')
         self.button_history = PushButton_BrowserURL(text='History', parent=parent, server=self.server, url_type='history')
-        # ##self.button_edit = QPushButton('Edit', parent=parent)
         self.button_edit = Button('Edit', parent=parent)
         self.label_separator = QLabel(parent=parent)
         self.label_separator.setFrameShadow(QFrame.Sunken)
         self.label_separator.setFrameShape(QFrame.VLine)
+        # OSX does not like these extra margns
+        if platform.system() != 'Darwin':
+            self.label_separator.setStyleSheet('''margin-top: 5px;
+                                                  margin-bottom: 5px;''')
         self.label_status = ServerStatusLabel(parent=parent)
         self.button_authenticate = Button('Authenticate', parent=parent)
 
@@ -2593,6 +2602,7 @@ class ServerVBox(QVBoxLayout):
         self.button_services.show()
         self.button_history.show()
         self.label_status.show()
+        self.label_separator.show()
         self.button_authenticate.hide()
 
         # special table treatment
@@ -3871,6 +3881,9 @@ class Dialogs(object):
         self.server_missing.ui.button_create_server.clicked.connect(self.settings.show_new_server)
         self.server_missing.ui.button_enable_server.clicked.connect(self.settings.show)
 
+        # about dialog
+        self.about = Dialog_About(Ui_dialog_about)
+
         # file chooser Dialog
         self.file_chooser = QFileDialog()
 
@@ -4287,9 +4300,14 @@ class Dialog_Settings(Dialog):
             statuswindow.store_position_to_conf()
 
         # store hash of all display settingas as display_mode to decide if statuswindow has to be recreated
+        #display_mode = str(conf.statusbar_floating) + \
+        #               str(conf.icon_in_systray) + \
+        #               str(conf.appindicator) + \
+        #               str(conf.fullscreen) + \
+        #               str(conf.fullscreen_display)
+
         display_mode = str(conf.statusbar_floating) + \
                        str(conf.icon_in_systray) + \
-                       str(conf.appindicator) + \
                        str(conf.fullscreen) + \
                        str(conf.fullscreen_display)
 
@@ -4354,9 +4372,13 @@ class Dialog_Settings(Dialog):
 
         # when display mode was changed its the easiest to destroy the old status window and create a new one
         # store display_mode to decide if statuswindow has to be recreated
+        ###if display_mode != str(conf.statusbar_floating) + \
+        ###                   str(conf.icon_in_systray) + \
+        ###                   str(conf.appindicator) + \
+        ###                   str(conf.fullscreen) + \
+        ###                   str(conf.fullscreen_display):
         if display_mode != str(conf.statusbar_floating) + \
                            str(conf.icon_in_systray) + \
-                           str(conf.appindicator) + \
                            str(conf.fullscreen) + \
                            str(conf.fullscreen_display):
 
@@ -4887,6 +4909,8 @@ class Dialog_Server(Dialog):
         self.ui.input_combobox_type.addItems(sorted(SERVER_TYPES.keys(), key=str.lower))
         # default to Nagios as it is the mostly used monitor server
         self.ui.input_combobox_type.setCurrentText('Nagios')
+        # fill authentication combobox
+        self.ui.input_combobox_authentication.addItems(['Basic', 'Digest'])
 
         # detect change of server type which leads to certain options shown or hidden
         self.ui.input_combobox_type.activated.connect(self.server_type_changed)
@@ -4937,6 +4961,9 @@ class Dialog_Server(Dialog):
                     elif widget.startswith('input_lineedit_'):
                         setting = widget.split('input_lineedit_')[1]
                         self.ui.__dict__[widget].setText(self.server_conf.__dict__[setting])
+
+            # set current authentication type by using capitalized first letter via .title()
+            self.ui.input_combobox_authentication.setCurrentText(self.server_conf.authentication.title())
 
             # initially hide not needed widgets
             self.server_type_changed()
@@ -5042,6 +5069,9 @@ class Dialog_Server(Dialog):
                         self.server_conf.__dict__[item] = BOOLPOOL[self.server_conf.__dict__[item]]
                     elif self.server_conf.__dict__[item].isdecimal():
                         self.server_conf.__dict__[item] = int(self.server_conf.__dict__[item])
+
+            # store lowered authentication type
+            self.server_conf.authentication = self.server_conf.authentication.lower()
 
             # edited servers will be deleted and recreated with new configuration
             if self.mode == 'edit':
@@ -5695,8 +5725,6 @@ class Dialog_Server_missing(Dialog):
         self.ui.button_exit.clicked.connect(exit)
 
 
-
-
     def initialize(self, mode='no_server'):
         """
             use dialog for missing and not enabled servers, depending on mode
@@ -5711,6 +5739,45 @@ class Dialog_Server_missing(Dialog):
             self.ui.label_no_server_enabled.show()
             self.ui.button_enable_server.show()
             self.ui.button_create_server.hide()
+
+
+class Dialog_About(Dialog):
+    """
+        About information dialog
+    """
+    def __init__(self, dialog):
+        Dialog.__init__(self, dialog)
+        # first add the logo on top - no idea how to achive in Qt Designer
+        logo = QSvgWidget('{0}{1}nagstamon.svg'.format(RESOURCES, os.sep))
+        logo.setFixedSize(100, 100)
+        self.ui.vbox_about.insertWidget(1, logo, 0 , Qt.AlignHCenter)  
+        # update version information
+        self.ui.label_nagstamon.setText('<h1>{0} {1}</h1>'.format(AppInfo.NAME, AppInfo.VERSION))
+        self.ui.label_nagstamon_long.setText('<h2>Nagios¹ status monitor for your desktop</2>')
+        self.ui.label_copyright.setText(AppInfo.COPYRIGHT)
+        self.ui.label_website.setText('<a href={0}>{0}</a>'.format(AppInfo.WEBSITE))
+        self.ui.label_website.setOpenExternalLinks(True)
+        self.ui.label_footnote.setText('<small>¹ plus Check_MK, Op5, Icinga, Centreon and more</small>')
+
+        # fill in license information
+        license_file = open('{0}{1}LICENSE'.format(RESOURCES, os.sep))
+        license = license_file.read()
+        license_file.close()
+        self.ui.textedit_license.setPlainText(license)
+        self.ui.textedit_license.setReadOnly(True)
+        
+        # fill in credits information
+        credits_file = open('{0}{1}CREDITS'.format(RESOURCES, os.sep), encoding='utf-8')
+        credits = credits_file.read()
+        credits_file.close()
+        self.ui.textedit_credits.setText(credits)
+        self.ui.textedit_credits.setOpenExternalLinks(True)
+        self.ui.textedit_credits.setReadOnly(True)
+        
+        self.ui.tabs.setCurrentIndex(0)
+        
+    def show(self):
+        self.window.exec()
 
 
 class MediaPlayer(QObject):
