@@ -31,9 +31,9 @@ from collections import OrderedDict
 # avoid build error because of debug_queue unknown to setup.py
 # if anybody knows a more elegant way (which surely exists) let me know
 # it had to work quickly!
-###if not 'setup.py' in sys.argv[0] and not 'build.py' in sys.argv[0]:
-###    # get debug queue from nagstamon.py
-###    debug_queue = sys.modules['__main__'].debug_queue
+# ##if not 'setup.py' in sys.argv[0] and not 'build.py' in sys.argv[0]:
+# ##    # get debug queue from nagstamon.py
+# ##    debug_queue = sys.modules['__main__'].debug_queue
 
 # queue.Queue() needs threading module which might be not such a good idea to be used
 # because QThread is already in use
@@ -57,7 +57,7 @@ class AppInfo(object):
         contains app information previously located in GUI.py
     """
     NAME = 'Nagstamon'
-    VERSION = '2.0-beta-20160527'
+    VERSION = '2.0-beta-20160530'
     WEBSITE = 'https://nagstamon.ifw-dresden.de'
     COPYRIGHT = '©2008-2016 Henri Wahl et al.'
     COMMENTS = 'Nagios status monitor for your desktop'
@@ -172,7 +172,7 @@ class Config(object):
         self.color_error_background = self.default_color_error_background = '#D3D3D3'
         self.statusbar_floating = True
         self.icon_in_systray = False
-        ###self.appindicator = False
+        # ##self.appindicator = False
         self.fullscreen = False
         self.fullscreen_display = 0
         self.font = ''
@@ -203,7 +203,7 @@ class Config(object):
         # would not find a config file
         self.unconfigured = True
 
-        #adding cli args variable
+        # adding cli args variable
         self.cli_args = {} 
         
         # Parse the command line
@@ -224,7 +224,7 @@ class Config(object):
             parser.add_argument('--hours', type=int, help="amount of hours for downtime")
             parser.add_argument('--minutes', type=int, help="amount of minutes for downtime")
             parser.add_argument('--config', type=str, help="Path for configuration folder")
-            parser.add_argument('--output', type=str, choices=['y', 'n'], default="y",help="lists given parameter (for debugging)")
+            parser.add_argument('--output', type=str, choices=['y', 'n'], default="y", help="lists given parameter (for debugging)")
         else:
             parser.add_argument('config', nargs='?', help='Path for configuration folder')            
         
@@ -567,10 +567,10 @@ class Config(object):
             f.close()
 
         #### clean up old deleted/renamed config files
-        ###if os.path.exists(self.configdir + os.sep + settingsdir):
-        ###    for f in os.listdir(self.configdir + os.sep + settingsdir):
-        ###        if not f.split(setting + "_")[1].split(".conf")[0] in self.__dict__[settingsdir]:
-        ###            os.unlink(self.configdir + os.sep + settingsdir + os.sep + f)
+        # ##if os.path.exists(self.configdir + os.sep + settingsdir):
+        # ##    for f in os.listdir(self.configdir + os.sep + settingsdir):
+        # ##        if not f.split(setting + "_")[1].split(".conf")[0] in self.__dict__[settingsdir]:
+        # ##            os.unlink(self.configdir + os.sep + settingsdir + os.sep + f)
 
 
     def KeyringAvailable(self):

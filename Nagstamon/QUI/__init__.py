@@ -1,6 +1,4 @@
 # encoding: utf-8
-from PyQt5.Qt import QPushButton
-
 # Nagstamon - Nagios status monitor for your desktop
 # Copyright (C) 2008-2016 Henri Wahl <h.wahl@ifw-dresden.de> et al.
 #
@@ -615,7 +613,7 @@ else:
 
 
 # class PushButton_Hamburger(QPushButton):
-#class PushButton_Hamburger(FlatButton):
+# class PushButton_Hamburger(FlatButton):
 class PushButton_Hamburger(Button):
     """
         Pushbutton with menu for hamburger
@@ -1624,9 +1622,9 @@ class StatusWindow(QWidget):
         else:
             self.move(x, y)
 
-        # always stretch over whole screen width - thus x = screen_x, the leftmost pixel
         self.setMaximumSize(width, height)
         self.setMinimumSize(width, height)
+        
         self.adjustSize()
 
         return True
@@ -1649,7 +1647,7 @@ class StatusWindow(QWidget):
             self.adjusting_size_lock = True
             # fully displayed statuswindow
             if self.is_shown == True:
-                width, height, x, y = self.calculate_size()
+                width, height, x, y = self.calculate_size()               
             else:
                 # statusbar only
                 hint = self.sizeHint()
@@ -1657,12 +1655,13 @@ class StatusWindow(QWidget):
                 width = hint.width()
                 height = hint.height()
                 x = self.x()
-
                 y = self.y()
                 self.setMaximumSize(hint)
                 self.setMinimumSize(hint)
-                del(hint)
+                del(hint)                         
+                
             self.resize_window(width, height, x, y)
+            
             del(width, height, x, y)
 
 
@@ -3948,8 +3947,7 @@ class Dialog(QObject):
 
         # reset window if only needs smaller screen estate
         self.window.adjustSize()
-        ###self.window.show()
-        self.window.exec()
+        self.window.show()
 
 
     def toggle_visibility(self, checkbox, widgets=[]):
@@ -4263,7 +4261,7 @@ class Dialog_Settings(Dialog):
 
         # reset window if only needs smaller screen estate
         self.window.adjustSize()
-        #self.window.show()
+        # self.window.show()
         self.window.exec()
 
 
@@ -4304,7 +4302,7 @@ class Dialog_Settings(Dialog):
             statuswindow.store_position_to_conf()
 
         # store hash of all display settingas as display_mode to decide if statuswindow has to be recreated
-        #display_mode = str(conf.statusbar_floating) + \
+        # display_mode = str(conf.statusbar_floating) + \
         #               str(conf.icon_in_systray) + \
         #               str(conf.appindicator) + \
         #               str(conf.fullscreen) + \
@@ -4376,11 +4374,11 @@ class Dialog_Settings(Dialog):
 
         # when display mode was changed its the easiest to destroy the old status window and create a new one
         # store display_mode to decide if statuswindow has to be recreated
-        ###if display_mode != str(conf.statusbar_floating) + \
-        ###                   str(conf.icon_in_systray) + \
-        ###                   str(conf.appindicator) + \
-        ###                   str(conf.fullscreen) + \
-        ###                   str(conf.fullscreen_display):
+        # ##if display_mode != str(conf.statusbar_floating) + \
+        # ##                   str(conf.icon_in_systray) + \
+        # ##                   str(conf.appindicator) + \
+        # ##                   str(conf.fullscreen) + \
+        # ##                   str(conf.fullscreen_display):
         if display_mode != str(conf.statusbar_floating) + \
                            str(conf.icon_in_systray) + \
                            str(conf.fullscreen) + \
@@ -4978,7 +4976,7 @@ class Dialog_Server(Dialog):
             # important final size adjustment
             self.window.adjustSize()
 
-            #self.window.show()
+            # self.window.show()
             self.window.exec()
 
         # give back decorated function
@@ -5213,7 +5211,7 @@ class Dialog_Action(Dialog):
             # important final size adjustment
             self.window.adjustSize()
 
-            #self.window.show()
+            # self.window.show()
             self.window.exec()
 
         # give back decorated function
@@ -6146,9 +6144,9 @@ def check_servers():
         dialogs.server_missing.show()
         dialogs.server_missing.initialize('no_server_enabled')
 
-#if platform.system() == 'Darwin':
+# if platform.system() == 'Darwin':
 #    Button = QPushButton
-#else:
+# else:
 #    Button = FlatButton
 
 # check for updates
