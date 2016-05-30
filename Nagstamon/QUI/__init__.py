@@ -1,6 +1,4 @@
 # encoding: utf-8
-from PyQt5.Qt import QPushButton
-
 # Nagstamon - Nagios status monitor for your desktop
 # Copyright (C) 2008-2016 Henri Wahl <h.wahl@ifw-dresden.de> et al.
 #
@@ -268,6 +266,8 @@ class SystemTrayIcon(QSystemTrayIcon):
     error_shown = False
 
     def __init__(self):
+        debug_queue.append('DEBUG: Initing SystemTrayIcon')
+
         QSystemTrayIcon.__init__(self)
 
         # icons are in dictionary
@@ -279,6 +279,8 @@ class SystemTrayIcon(QSystemTrayIcon):
         self.icons['UP'] = self.icons['OK']
         # default icon is OK
         self.setIcon(self.icons['OK'])
+
+        debug_queue.append('DEBUG: SystemTrayIcon initial icon: {}'.format(self.currentIconName()))
 
         # store icon for flashing
         self.current_icon = None
@@ -294,6 +296,17 @@ class SystemTrayIcon(QSystemTrayIcon):
 
         # treat clicks
         self.activated.connect(self.icon_clicked)
+
+
+    def currentIconName(self):
+        """
+            internal function useful for debugging, returns the name of the
+            current icon
+        """
+        curIcon = self.icon()
+        if curIcon is None:
+            return '<none>'
+        return str(curIcon)
 
 
     @pyqtSlot(QMenu)
@@ -346,6 +359,8 @@ class SystemTrayIcon(QSystemTrayIcon):
             svg_painter.end()
             # put pixmap into icon
             self.icons[state] = QIcon(svg_pixmap)
+
+            debug_queue.append('DEBUG: SystemTrayIcon created icon {} for state "{}"'.format(self.icons[state], state))
 
 
     # ##@pyqtSlot(QEvent)
@@ -615,7 +630,7 @@ else:
 
 
 # class PushButton_Hamburger(QPushButton):
-#class PushButton_Hamburger(FlatButton):
+# class PushButton_Hamburger(FlatButton):
 class PushButton_Hamburger(Button):
     """
         Pushbutton with menu for hamburger
@@ -1624,9 +1639,9 @@ class StatusWindow(QWidget):
         else:
             self.move(x, y)
 
-        # always stretch over whole screen width - thus x = screen_x, the leftmost pixel
         self.setMaximumSize(width, height)
         self.setMinimumSize(width, height)
+        
         self.adjustSize()
 
         return True
@@ -1649,7 +1664,7 @@ class StatusWindow(QWidget):
             self.adjusting_size_lock = True
             # fully displayed statuswindow
             if self.is_shown == True:
-                width, height, x, y = self.calculate_size()
+                width, height, x, y = self.calculate_size()               
             else:
                 # statusbar only
                 hint = self.sizeHint()
@@ -1657,12 +1672,13 @@ class StatusWindow(QWidget):
                 width = hint.width()
                 height = hint.height()
                 x = self.x()
-
                 y = self.y()
                 self.setMaximumSize(hint)
                 self.setMinimumSize(hint)
-                del(hint)
+                del(hint)                         
+                
             self.resize_window(width, height, x, y)
+            
             del(width, height, x, y)
 
 
@@ -2522,7 +2538,7 @@ class ServerVBox(QVBoxLayout):
             self.label_separator.setStyleSheet('''margin-top: 5px;
                                                   margin-bottom: 5px;''')
         self.label_status = ServerStatusLabel(parent=parent)
-        self.button_authenticate = Button('Authenticate', parent=parent)
+        self.button_authenticate = QPushButton('Authenticate', parent=parent)
 
         self.button_monitor.clicked.connect(self.button_monitor.open_url)
         self.button_hosts.clicked.connect(self.button_hosts.open_url)
@@ -3462,7 +3478,9 @@ class TreeView(QTreeView):
                     self.hide_error.emit()
                 else:
                     # try to display some more user friendly error description
-                    if status.error.startswith('requests.exceptions.ConnectTimeout'):
+                    if self.server.status_code == 404:
+                        self.change_label_status.emit('Monitor URL not valid', '')
+                    elif status.error.startswith('requests.exceptions.ConnectTimeout'):
                         self.change_label_status.emit('Connection timeout', '')
                     elif status.error.startswith('requests.exceptions.ConnectionError'):
                         self.change_label_status.emit('Connection error', '')
@@ -4260,7 +4278,8 @@ class Dialog_Settings(Dialog):
 
         # reset window if only needs smaller screen estate
         self.window.adjustSize()
-        self.window.show()
+        # self.window.show()
+        self.window.exec()
 
 
     @pyqtSlot()
@@ -4300,7 +4319,7 @@ class Dialog_Settings(Dialog):
             statuswindow.store_position_to_conf()
 
         # store hash of all display settingas as display_mode to decide if statuswindow has to be recreated
-        #display_mode = str(conf.statusbar_floating) + \
+        # display_mode = str(conf.statusbar_floating) + \
         #               str(conf.icon_in_systray) + \
         #               str(conf.appindicator) + \
         #               str(conf.fullscreen) + \
@@ -4372,11 +4391,11 @@ class Dialog_Settings(Dialog):
 
         # when display mode was changed its the easiest to destroy the old status window and create a new one
         # store display_mode to decide if statuswindow has to be recreated
-        ###if display_mode != str(conf.statusbar_floating) + \
-        ###                   str(conf.icon_in_systray) + \
-        ###                   str(conf.appindicator) + \
-        ###                   str(conf.fullscreen) + \
-        ###                   str(conf.fullscreen_display):
+        # ##if display_mode != str(conf.statusbar_floating) + \
+        # ##                   str(conf.icon_in_systray) + \
+        # ##                   str(conf.appindicator) + \
+        # ##                   str(conf.fullscreen) + \
+        # ##                   str(conf.fullscreen_display):
         if display_mode != str(conf.statusbar_floating) + \
                            str(conf.icon_in_systray) + \
                            str(conf.fullscreen) + \
@@ -4974,7 +4993,8 @@ class Dialog_Server(Dialog):
             # important final size adjustment
             self.window.adjustSize()
 
-            self.window.show()
+            # self.window.show()
+            self.window.exec()
 
         # give back decorated function
         return(decoration_function)
@@ -5208,7 +5228,8 @@ class Dialog_Action(Dialog):
             # important final size adjustment
             self.window.adjustSize()
 
-            self.window.show()
+            # self.window.show()
+            self.window.exec()
 
         # give back decorated function
         return(decoration_function)
@@ -5615,6 +5636,7 @@ class Dialog_Authentication(Dialog):
             setup dialog fitting to server
         """
         if self.server != None:
+            
             self.window.setWindowTitle('Authenticate {0}'.format(self.server.name))
             if self.server.type == 'Centreon':
                 self.ui.input_checkbox_use_autologin.show()
@@ -5623,8 +5645,10 @@ class Dialog_Authentication(Dialog):
                 self.ui.label_autologin_key.show()
                 # enable switching autologin key and password
                 self.ui.input_checkbox_use_autologin.clicked.connect(self.toggle_autologin)
+                self.ui.input_checkbox_use_autologin.setChecked(self.server.use_autologin)
+                self.ui.input_lineedit_autologin_key.setText(self.server.autologin_key)
                 # initialize autologin
-                self.toggle_autologin()
+                self.toggle_autologin()          
             else:
                 self.ui.input_checkbox_use_autologin.hide()
                 self.ui.input_lineedit_autologin_key.hide()
@@ -5634,9 +5658,6 @@ class Dialog_Authentication(Dialog):
             self.ui.input_lineedit_username.setText(self.server.username)
             self.ui.input_lineedit_password.setText(self.server.password)
             self.ui.input_checkbox_save_password.setChecked(conf.servers[self.server.name].save_password)
-            # Centreon specific
-            self.ui.input_checkbox_use_autologin.setChecked(self.server.use_autologin)
-            self.ui.input_lineedit_autologin_key.setText(self.server.autologin_key)
 
 
     @pyqtSlot(str)
@@ -5646,7 +5667,7 @@ class Dialog_Authentication(Dialog):
         """
         self.server = servers[server]
         self.initialize()
-        self.show()
+        self.window.exec()
 
 
     def ok(self):
@@ -5688,24 +5709,27 @@ class Dialog_Authentication(Dialog):
 
     @pyqtSlot()
     def toggle_autologin(self):
-       if self.ui.input_checkbox_use_autologin.isChecked():
-           self.ui.label_username.hide()
-           self.ui.label_password.hide()
-           self.ui.input_lineedit_username.hide()
-           self.ui.input_lineedit_password.hide()
-           self.ui.input_checkbox_save_password.hide()
+        """
+            toolge autologin option for Centreon
+        """
+        if self.ui.input_checkbox_use_autologin.isChecked():
+            self.ui.label_username.hide()
+            self.ui.label_password.hide()
+            self.ui.input_lineedit_username.hide()
+            self.ui.input_lineedit_password.hide()
+            self.ui.input_checkbox_save_password.hide()
 
-           self.ui.label_autologin_key.show()
-           self.ui.input_lineedit_autologin_key.show()      
-       else:
-           self.ui.label_username.show()
-           self.ui.label_password.show()
-           self.ui.input_lineedit_username.show()
-           self.ui.input_lineedit_password.show()
-           self.ui.input_checkbox_save_password.show()
+            self.ui.label_autologin_key.show()
+            self.ui.input_lineedit_autologin_key.show()      
+        else:
+            self.ui.label_username.show()
+            self.ui.label_password.show()
+            self.ui.input_lineedit_username.show()
+            self.ui.input_lineedit_password.show()
+            self.ui.input_checkbox_save_password.show()
 
-           self.ui.label_autologin_key.hide()
-           self.ui.input_lineedit_autologin_key.hide()
+            self.ui.label_autologin_key.hide()
+            self.ui.input_lineedit_autologin_key.hide()
 
 
 class Dialog_Server_missing(Dialog):
@@ -6137,9 +6161,9 @@ def check_servers():
         dialogs.server_missing.show()
         dialogs.server_missing.initialize('no_server_enabled')
 
-#if platform.system() == 'Darwin':
+# if platform.system() == 'Darwin':
 #    Button = QPushButton
-#else:
+# else:
 #    Button = FlatButton
 
 # check for updates

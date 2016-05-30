@@ -1,6 +1,7 @@
 #!/usr/bin/make -f
 
-export DH_ALWAYS_EXCLUDE=LICENSE
+# otherwise LICENSE file is missing for about dialog
+#export DH_ALWAYS_EXCLUDE=LICENSE
 
 %:
 	dh $@ --with python3 --buildsystem=pybuild

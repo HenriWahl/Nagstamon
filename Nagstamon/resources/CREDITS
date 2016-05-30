@@ -1,0 +1,56 @@
+Some lines of code are written by Henri Wahl <a href=https://github.com/HenriWahl>@HenriWahl</a>.<p>
+
+Thanks a lot for contributions, patches, hints, packaging,
+testing and ideas go at least to:<p>
+ 
+Andreas Ericsson <a href=https://github.com/ageric>@ageric</a>,<br>
+Antoine Jacoutot,<br>
+Anton Löfgren <a href=https://github.com/catharsis>@catharsis</a>,<br>
+<a href=https://github.com/arkadiyvleonov>@arkadiyvleonov</a>,<br>
+Arnaud Gomes <a href=https://github.com/nono-gdv>@nono-gdv</a>,<br>
+<a href=https://github.com/benoiteolas>@benoiteolas</a>,<br>
+Benoît Soenen,<br>
+Carl Chenet,<br>
+Carl Helmertz <a href=https://github.com/chelmertz>@chelmertz</a>,<br>
+Christoph Handel <a href=https://github.com/fragfutter>@fragfutter</a>,<br>
+<a href=https://github.com/cventastic>@cventastic</a>,<br>
+Davide Cecchetto <a href=https://github.com/dcec>@dcec</a>,<br>
+Duncan Ferguson <a href=https://github.com/duncs>@duncs</a>,<br>
+Emile Heitor,<br>
+Erinn Looney-Triggs <a href=https://github.com/erinn>@erinn</a>,<br>
+<a href=https://github.com/foscarini>@foscarini</a>,<br>
+Gabriele Tozzi <a href=https://github.com/gtozzi>@gtozzi</a>,<br>
+<a href=https://github.com/janhenkins>@janhenkins</a>,<br>
+John Conroy,<br>
+Lars Michelsen <a href=https://github.com/LarsMichelsen>@LarsMichelsen</a>,<br>
+M. Cigdem Cebe,<br>
+Maik Lüdeke <a href=https://github.com/MaikL>@MaikL</a>,<br>
+Martin Campbell <a href=https://github.com/martin-css>@martin-css</a>,<br>
+Mattias Ryrlén <a href=https://github.com/mattiasr>@mattiasr</a>,<br>
+Michał Rzeszut,<br>
+<a href=https://github.com/minibbjd>@minibbjd</a>,<br>
+Nikita Klimov,<br>
+Patrick Cernko,<br>
+Pawel Połewicz,<br>
+Robin Sonefors,<br>
+<a href=https://github.com/RymRabehi>@RymRabehi</a>,<br>
+Salvatore LaMendola <a href=https://github.com/vt0r>@vt0r</a>,<br>
+Sandro Tosi,<br>
+Sven Nierlein <a href=https://github.com/sni>@sni</a>,<br>
+Thomas Gelf <a href=https://github.com/Thomas-Gelf>@Thomas-Gelf</a>,<br>
+Tobias Scheerbaum</a>,<br>
+Vladimir Lazarenko <a href=https://github.com/favoretti>@favoretti</a>,<br>
+Wouter Schoot,<br>
+Yannick Charton<p>
+
+...and all the bug reporters at <a href=https://github.com/HenriWahl/Nagstamon/issues>GitHub</a>!<br>
+<p>
+
+Also thanks to the great thirdparty modules used by Nagstamon:<p>
+
+BeautifulSoup: <a href=https://www.crummy.com/software/BeautifulSoup>https://www.crummy.com/software/BeautifulSoup/</a><br>
+Requests: <a href=http://www.python-requests.org>http://www.python-requests.org</a><br>
+Keyring: <h href=https://github.com/jaraco/keyring>https://github.com/jaraco/keyring</a><br>
+emwh.py: <a href=https://github.com/parkouss/pyewmh>https://github.com/parkouss/pyewmh</a>
+
+
