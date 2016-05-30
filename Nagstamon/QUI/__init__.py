@@ -266,6 +266,8 @@ class SystemTrayIcon(QSystemTrayIcon):
     error_shown = False
 
     def __init__(self):
+        debug_queue.append('DEBUG: Initing SystemTrayIcon')
+
         QSystemTrayIcon.__init__(self)
 
         # icons are in dictionary
@@ -277,6 +279,8 @@ class SystemTrayIcon(QSystemTrayIcon):
         self.icons['UP'] = self.icons['OK']
         # default icon is OK
         self.setIcon(self.icons['OK'])
+
+        debug_queue.append('DEBUG: SystemTrayIcon initial icon: {}'.format(self.currentIconName()))
 
         # store icon for flashing
         self.current_icon = None
@@ -292,6 +296,17 @@ class SystemTrayIcon(QSystemTrayIcon):
 
         # treat clicks
         self.activated.connect(self.icon_clicked)
+
+
+    def currentIconName(self):
+        """
+            internal function useful for debugging, returns the name of the
+            current icon
+        """
+        curIcon = self.icon()
+        if curIcon is None:
+            return '<none>'
+        return str(curIcon)
 
 
     @pyqtSlot(QMenu)
@@ -344,6 +359,8 @@ class SystemTrayIcon(QSystemTrayIcon):
             svg_painter.end()
             # put pixmap into icon
             self.icons[state] = QIcon(svg_pixmap)
+
+            debug_queue.append('DEBUG: SystemTrayIcon created icon {} for state "{}"'.format(self.icons[state], state))
 
 
     # ##@pyqtSlot(QEvent)
