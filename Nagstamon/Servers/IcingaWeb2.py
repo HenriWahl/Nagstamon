@@ -36,13 +36,14 @@ import sys
 import copy
 import json
 import datetime
-import webbrowser
-from bs4 import BeautifulSoup
-from Nagstamon.Objects import (GenericHost, GenericService, Result)
-from Nagstamon.Config import (conf, AppInfo)
 
-# from Nagstamon.Helpers import not_empty
-# from collections import OrderedDict
+from bs4 import BeautifulSoup
+from Nagstamon.Objects import (GenericHost,
+                               GenericService,
+                               Result)
+from Nagstamon.Config import (conf,
+                              AppInfo)
+from Nagstamon.Helpers import webbrowser_open
 
 
 def strfdelta(tdelta, fmt):
@@ -100,44 +101,20 @@ class IcingaWeb2Server(GenericServer):
                 self.FetchURL('{0}/authentication/login'.format(self.monitor_url), cgi_data=form_inputs)
 
 
-    def get_server_version(self):
-        """
-            Try to get Icinga version
-        """
-        result = self.FetchURL('%s/about' % (self.monitor_cgi_url), giveback='raw')
-
-        if result.error != '':
-            return result
-        else:
-            aboutraw = result.result
-
-        aboutsoup = BeautifulSoup(aboutraw, 'html.parser')
-        div=aboutsoup.find('div', id='about')
-        dd=div.findNext('dd')
-        self.version = dd.contents[0].strip()
-
-
     def _get_status(self):
         """
             Get status from Icinga Server, prefer JSON if possible
         """
         try:
-            if self.version == '':
-                # we need to get the server version
-                result = self.get_server_version()
-            if self.version != '':
-                # define CGI URLs for hosts and services
-                if self.cgiurl_hosts == self.cgiurl_services == None:
-                    # services (unknown, warning or critical?)
-                    self.cgiurl_services = {'hard': self.monitor_cgi_url + '/monitoring/list/services?service_state>0&service_state<=3&service_state_type=1&addColumns=service_last_check&format=json', \
-                                            'soft': self.monitor_cgi_url + '/monitoring/list/services?service_state>0&service_state<=3&service_state_type=0&addColumns=service_last_check&format=json'}
-                    # hosts (up or down or unreachable)
-                    self.cgiurl_hosts = {'hard': self.monitor_cgi_url + '/monitoring/list/hosts?host_state>0&host_state<=2&host_state_type=1&addColumns=host_last_check&format=json', \
-                                         'soft': self.monitor_cgi_url + '/monitoring/list/hosts?host_state>0&host_state<=2&host_state_type=0&addColumns=host_last_check&format=json'}
-                self._get_status_JSON()
-            else:
-                # error result in case version still was ''
-                return result
+            # define CGI URLs for hosts and services
+            if self.cgiurl_hosts == self.cgiurl_services == None:
+                # services (unknown, warning or critical?)
+                self.cgiurl_services = {'hard': self.monitor_cgi_url + '/monitoring/list/services?service_state>0&service_state<=3&service_state_type=1&addColumns=service_last_check&format=json', \
+                                        'soft': self.monitor_cgi_url + '/monitoring/list/services?service_state>0&service_state<=3&service_state_type=0&addColumns=service_last_check&format=json'}
+                # hosts (up or down or unreachable)
+                self.cgiurl_hosts = {'hard': self.monitor_cgi_url + '/monitoring/list/hosts?host_state>0&host_state<=2&host_state_type=1&addColumns=host_last_check&format=json', \
+                                     'soft': self.monitor_cgi_url + '/monitoring/list/hosts?host_state>0&host_state<=2&host_state_type=0&addColumns=host_last_check&format=json'}
+            self._get_status_JSON()
         except:
             # set checking flag back to False
             self.isChecking = False
@@ -146,8 +123,6 @@ class IcingaWeb2Server(GenericServer):
 
         # dummy return in case all is OK
         return Result()
-
-
 
 
     def _get_status_JSON(self):
@@ -191,8 +166,10 @@ class IcingaWeb2Server(GenericServer):
                         self.new_hosts[host_name].name = host_name
                         self.new_hosts[host_name].server = self.name
                         self.new_hosts[host_name].status = self.STATES_MAPPING['hosts'][int(h['host_state'])]
-                        self.new_hosts[host_name].last_check = datetime.datetime.utcfromtimestamp(int(h['host_last_check']))
-                        duration = datetime.datetime.now() - datetime.datetime.utcfromtimestamp(int(h['host_last_state_change']))
+                        # self.new_hosts[host_name].last_check = datetime.datetime.utcfromtimestamp(int(h['host_last_check']))
+                        self.new_hosts[host_name].last_check = datetime.datetime.fromtimestamp(int(h['host_last_check']))
+                        # duration = datetime.datetime.now() - datetime.datetime.utcfromtimestamp(int(h['host_last_state_change']))
+                        duration = datetime.datetime.now() - datetime.datetime.fromtimestamp(int(h['host_last_state_change']))
                         self.new_hosts[host_name].duration = strfdelta(duration, '{days}d {hours}h {minutes}m {seconds}s')
                         self.new_hosts[host_name].attempt = h['host_attempt']
                         self.new_hosts[host_name].status_information = h['host_output'].replace('\n', ' ').strip()
@@ -209,8 +186,6 @@ class IcingaWeb2Server(GenericServer):
                         
                     del h, host_name
         except:
-
-
             import traceback
             traceback.print_exc(file=sys.stdout)
 
@@ -272,8 +247,10 @@ class IcingaWeb2Server(GenericServer):
                         self.new_hosts[host_name].services[service_name].name = service_name
                         self.new_hosts[host_name].services[service_name].server = self.name
                         self.new_hosts[host_name].services[service_name].status = self.STATES_MAPPING['services'][int(s['service_state'])]
-                        self.new_hosts[host_name].services[service_name].last_check = datetime.datetime.utcfromtimestamp(int(s['service_last_check']))
-                        duration = datetime.datetime.now() - datetime.datetime.utcfromtimestamp(int(s['service_last_state_change']))
+                        # self.new_hosts[host_name].services[service_name].last_check = datetime.datetime.utcfromtimestamp(int(s['service_last_check']))
+                        self.new_hosts[host_name].services[service_name].last_check = datetime.datetime.fromtimestamp(int(s['service_last_check']))
+                        # duration = datetime.datetime.now() - datetime.datetime.utcfromtimestamp(int(s['service_last_state_change']))
+                        duration = datetime.datetime.now() - datetime.datetime.fromtimestamp(int(s['service_last_state_change']))
                         self.new_hosts[host_name].services[service_name].duration = strfdelta(duration, '{days}d {hours}h {minutes}m {seconds}s')
                         self.new_hosts[host_name].services[service_name].attempt = s['service_attempt']
                         self.new_hosts[host_name].services[service_name].status_information = s['service_output'].replace('\n', ' ').strip()
@@ -511,4 +488,4 @@ class IcingaWeb2Server(GenericServer):
         if conf.debug_mode:
             self.Debug(server=self.get_name(), host=host, service=service,
                        debug='Open host/service monitor web page {0}'.format(url))
-        webbrowser.open(url)
+        webbrowser_open(url)

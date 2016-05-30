@@ -27,14 +27,15 @@
 
 import sys
 import urllib.request, urllib.parse, urllib.error
-import webbrowser
 import time
 import copy
 import html
 
-from Nagstamon.Objects import (GenericHost, GenericService, Result)
+from Nagstamon.Objects import (GenericHost,
+                               GenericService,
+                               Result)
 from Nagstamon.Servers.Generic import GenericServer
-
+from Nagstamon.Helpers import webbrowser_open
 from Nagstamon.Config import conf
 
 class MultisiteError(Exception):
@@ -129,10 +130,12 @@ class MultisiteServer(GenericServer):
 
     def _get_url(self, url):
         result = self.FetchURL(url, 'raw')
-        content, error = result.result, result.error
+        content, error, status_code = result.result, result.error, result.status_code
 
-        if error != '':
-            raise MultisiteError(True, Result(result = content, error = error))
+        if error != '' or status_code >= 400:
+            raise MultisiteError(True, Result(result=content, 
+                                              error=error,
+                                              status_code=status_code))
 
         if content.startswith('WARNING:'):
             c = content.split('\n')
@@ -140,12 +143,18 @@ class MultisiteServer(GenericServer):
             # Print non ERRORS to the log in debug mode
             self.Debug(server=self.get_name(), debug=c[0])
 
-            raise MultisiteError(False, Result(result = '\n'.join(c[1:]),
-                                               content = eval('\n'.join(c[1:])),
-                                               error = c[0]))
+            #raise MultisiteError(False, Result(result = '\n'.join(c[1:]),
+            #                                   content = eval('\n'.join(c[1:])),
+            #
+            # the content argumment does not make sense here, right?                                   error = c[0]))
+            raise MultisiteError(False, Result(result='\n'.join(c[1:]),
+                                               error=c[0],
+                                               status_code=status_code))
+            
         elif content.startswith('ERROR:'):
-            raise MultisiteError(True, Result(result = content,
-                                               error = content))
+            raise MultisiteError(True, Result(result=content,
+                                              error=content,
+                                              status_code=status_code))
 
         # in case of auth problem enable GUI auth part in popup
         if self.CookieAuth == True and len(self.session.cookies) == 0:
@@ -197,6 +206,9 @@ class MultisiteServer(GenericServer):
         # Create URLs for the configured filters
         url_params = ''
 
+        if self.force_authuser:
+            url_params += "&force_authuser=1"
+
         url_params += '&is_host_acknowledged=-1&is_service_acknowledged=-1'
         url_params += '&is_host_notifications_enabled=-1&is_service_notifications_enabled=-1'
         url_params += '&is_host_active_checks_enabled=-1&is_service_active_checks_enabled=-1'
@@ -211,7 +223,9 @@ class MultisiteServer(GenericServer):
                     return e.result
 
             if response == '':
-                return Result(result='', error='Login failed')
+                return Result(result='',
+                              error='Login failed',
+                              status_code=401)
 
             for row in response[1:]:
                 host= dict(list(zip(copy.deepcopy(response[0]), copy.deepcopy(row))))
@@ -223,7 +237,7 @@ class MultisiteServer(GenericServer):
                     'status_information': html.unescape(host['host_plugin_output'].replace('\n', ' ')),
                     'attempt':            host['host_attempt'],
                     'site':               host['sitename_plain'],
-                    'address':            host['host_address'],
+                    'address':            host['host_address']
                 }
 
                 # host objects contain service objects
@@ -239,6 +253,7 @@ class MultisiteServer(GenericServer):
                     self.new_hosts[new_host].status_information= html.unescape(n['status_information'].replace('\n', ' '))
                     self.new_hosts[new_host].site = n['site']
                     self.new_hosts[new_host].address = n['address']
+
                     # transisition to Check_MK 1.1.10p2
                     if 'host_in_downtime' in host:
                         if host['host_in_downtime'] == 'yes':
@@ -246,6 +261,9 @@ class MultisiteServer(GenericServer):
                     if 'host_acknowledged' in host:
                         if host['host_acknowledged'] == 'yes':
                             self.new_hosts[new_host].acknowledged = True
+                    if 'host_notifications_enabled' in host:
+                        if host['host_notifications_enabled'] == 'no':
+                            self.new_hosts[new_host].notifications_disabled = True
 
                     # hard/soft state for later filter evaluation
                     real_attempt, max_attempt = self.new_hosts[new_host].attempt.split('/')
@@ -292,7 +310,6 @@ class MultisiteServer(GenericServer):
                     'status_information': html.unescape(service['svc_plugin_output'].replace('\n', ' ')),
                     # Check_MK passive services can be re-scheduled by using the Check_MK service
                     'passiveonly':        service['svc_is_active'] == 'no' and not service['svc_check_command'].startswith('check_mk'),
-                    'notifications':      service['svc_notifications_enabled'] == 'yes',
                     'flapping':           service['svc_flapping'] == 'yes',
                     'site':               service['sitename_plain'],
                     'address':            service['host_address'],
@@ -323,6 +340,7 @@ class MultisiteServer(GenericServer):
                     self.new_hosts[n['host']].services[new_service].site = n['site']
                     self.new_hosts[n['host']].services[new_service].address = n['address']
                     self.new_hosts[n['host']].services[new_service].command = n['command']
+
                     # transistion to Check_MK 1.1.10p2
                     if 'svc_in_downtime' in service:
                         if service['svc_in_downtime'] == 'yes':
@@ -333,6 +351,9 @@ class MultisiteServer(GenericServer):
                     if 'svc_flapping' in service:
                         if service['svc_flapping'] == 'yes':
                             self.new_hosts[n['host']].services[new_service].flapping = True
+                    if 'svc_notifications_enabled' in service:
+                        if service['svc_notifications_enabled'] == 'no':
+                            self.new_hosts[n['host']].services[new_service].notifications_disabled = True
 
                     # hard/soft state for later filter evaluation
                     real_attempt, max_attempt = self.new_hosts[n['host']].services[new_service].attempt.split('/')
@@ -369,7 +390,7 @@ class MultisiteServer(GenericServer):
 
         if conf.debug_mode == True:
             self.Debug(server=self.get_name(), host=host, service=service, debug='Open host/service monitor web page ' + url)
-        webbrowser.open(url)
+        webbrowser_open(url)
 
 
     def GetHost(self, host):

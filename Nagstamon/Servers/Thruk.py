@@ -22,9 +22,7 @@ from Nagstamon.Servers.Generic import GenericServer
 import sys
 import json
 import datetime
-####import urllib.request, urllib.parse, urllib.error
 import copy
-
 
 from Nagstamon.Helpers import HumanReadableDurationFromTimestamp
 from Nagstamon.Objects import (GenericHost, GenericService, Result)
@@ -39,11 +37,11 @@ class ThrukServer(GenericServer):
     # dictionary to translate status bitmaps on webinterface into status flags
     # this are defaults from Nagios
     # "disabled.gif" is in Nagios for hosts the same as "passiveonly.gif" for services
-    STATUS_MAPPING = { "ack.gif" : "acknowledged",\
-                       "passiveonly.gif" : "passiveonly",\
-                       "disabled.gif" : "passiveonly",\
-                       "ndisabled.gif" : "notifications_disabled",\
-                       "downtime.gif" : "scheduled_downtime",\
+    STATUS_MAPPING = { "ack.gif" : "acknowledged", \
+                       "passiveonly.gif" : "passiveonly", \
+                       "disabled.gif" : "passiveonly", \
+                       "ndisabled.gif" : "notifications_disabled", \
+                       "downtime.gif" : "scheduled_downtime", \
                        "flapping.gif" : "flapping"}
 
     # Entries for monitor default actions in context menu
@@ -53,13 +51,13 @@ class ThrukServer(GenericServer):
     SUBMIT_CHECK_RESULT_ARGS = ["check_output", "performance_data"]
 
     # URLs for browser shortlinks/buttons on popup window
-    BROWSER_URLS = { "monitor": "$MONITOR$",\
-                    "hosts": "$MONITOR-CGI$/status.cgi?hostgroup=all&style=hostdetail&hoststatustypes=12&page=1&entries=all",\
-                    "services": "$MONITOR-CGI$/status.cgi?dfl_s0_value_sel=5&dfl_s0_servicestatustypes=29&dfl_s0_op=%3D&style=detail&dfl_s0_type=host&dfl_s0_serviceprops=0&dfl_s0_servicestatustype=4&dfl_s0_servicestatustype=8&dfl_s0_servicestatustype=16&dfl_s0_servicestatustype=1&hidetop=&dfl_s0_hoststatustypes=15&dfl_s0_val_pre=&hidesearch=2&dfl_s0_value=all&dfl_s0_hostprops=0&nav=&page=1&entries=all",\
+    BROWSER_URLS = { "monitor": "$MONITOR$", \
+                    "hosts": "$MONITOR-CGI$/status.cgi?hostgroup=all&style=hostdetail&hoststatustypes=12&page=1&entries=all", \
+                    "services": "$MONITOR-CGI$/status.cgi?dfl_s0_value_sel=5&dfl_s0_servicestatustypes=29&dfl_s0_op=%3D&style=detail&dfl_s0_type=host&dfl_s0_serviceprops=0&dfl_s0_servicestatustype=4&dfl_s0_servicestatustype=8&dfl_s0_servicestatustype=16&dfl_s0_servicestatustype=1&hidetop=&dfl_s0_hoststatustypes=15&dfl_s0_val_pre=&hidesearch=2&dfl_s0_value=all&dfl_s0_hostprops=0&nav=&page=1&entries=all", \
                     "history": "$MONITOR-CGI$/history.cgi?host=all&page=1&entries=all"}
 
-    STATES_MAPPING = {"hosts" : {0 : "OK", 1 : "DOWN", 2 : "UNREACHABLE"},\
-                      "services" : {0 : "OK", 1 : "WARNING",  2 : "CRITICAL", 3 : "UNKNOWN"}}
+    STATES_MAPPING = {"hosts" : {0 : "OK", 1 : "DOWN", 2 : "UNREACHABLE"}, \
+                      "services" : {0 : "OK", 1 : "WARNING", 2 : "CRITICAL", 3 : "UNKNOWN"}}
 
 
     def __init__(self, **kwds):
@@ -134,7 +132,7 @@ class ThrukServer(GenericServer):
         """
             use pure session instead of FetchURL to get Thruk session
         """
-        self.session.post(self.monitor_cgi_url+'/login.cgi?',
+        self.session.post(self.monitor_cgi_url + '/login.cgi?',
                           data={'login': self.get_username(),
                                 'password': self.get_password(),
                                 'submit': 'Login',
@@ -169,7 +167,6 @@ class ThrukServer(GenericServer):
 
                 for h in hosts:
                     if h["name"] not in self.new_hosts:
-                        ###new_host = h["name"]
                         self.new_hosts[h["name"]] = GenericHost()
                         self.new_hosts[h["name"]].name = h["name"]
                         self.new_hosts[h["name"]].server = self.name
@@ -177,13 +174,13 @@ class ThrukServer(GenericServer):
                         self.new_hosts[h["name"]].last_check = datetime.datetime.fromtimestamp(int(h["last_check"])).isoformat(" ")
                         self.new_hosts[h["name"]].duration = HumanReadableDurationFromTimestamp(h["last_state_change"])
                         self.new_hosts[h["name"]].attempt = "%s/%s" % (h["current_attempt"], h["max_check_attempts"])
-                        self.new_hosts[h["name"]].status_information= h["plugin_output"].replace("\n", " ").strip()
+                        self.new_hosts[h["name"]].status_information = h["plugin_output"].replace("\n", " ").strip()
                         self.new_hosts[h["name"]].passiveonly = not(bool(int(h["active_checks_enabled"])))
-                        self.new_hosts[h["name"]].notifications_disabled = bool(int(h["is_flapping"]))
+                        self.new_hosts[h["name"]].notifications_disabled = not(bool(int(h["notifications_enabled"])))
                         self.new_hosts[h["name"]].flapping = bool(int(h["is_flapping"]))
                         self.new_hosts[h["name"]].acknowledged = bool(int(h["acknowledged"]))
                         self.new_hosts[h["name"]].scheduled_downtime = bool(int(h["scheduled_downtime_depth"]))
-                        self.new_hosts[h["name"]].status_type =  {0: "soft", 1: "hard"}[h["state_type"]]
+                        self.new_hosts[h["name"]].status_type = {0: "soft", 1: "hard"}[h["state_type"]]
                     del h
         except:
             import traceback
@@ -220,7 +217,7 @@ class ThrukServer(GenericServer):
 
                     # if a service does not exist create its object
                     if s["description"] not in self.new_hosts[s["host_name"]].services:
-                        ###new_service = s["description"]
+                        # ##new_service = s["description"]
                         self.new_hosts[s["host_name"]].services[s["description"]] = GenericService()
                         self.new_hosts[s["host_name"]].services[s["description"]].host = s["host_name"]
                         self.new_hosts[s["host_name"]].services[s["description"]].name = s["description"]
@@ -232,7 +229,7 @@ class ThrukServer(GenericServer):
                         self.new_hosts[s["host_name"]].services[s["description"]].status_information = s["plugin_output"].replace("\n", " ").strip()
                         self.new_hosts[s["host_name"]].services[s["description"]].passiveonly = not(bool(int(s["active_checks_enabled"])))
                         self.new_hosts[s["host_name"]].services[s["description"]].notifications_disabled = not(bool(int(s["notifications_enabled"])))
-                        self.new_hosts[s["host_name"]].services[s["description"]].flapping = bool(int(s["is_flapping"]))
+                        self.new_hosts[s["host_name"]].services[s["description"]].flapping = not(bool(int(s["notifications_enabled"])))
                         self.new_hosts[s["host_name"]].services[s["description"]].acknowledged = bool(int(s["acknowledged"]))
                         self.new_hosts[s["host_name"]].services[s["description"]].scheduled_downtime = bool(int(s["scheduled_downtime_depth"]))
                         self.new_hosts[s["host_name"]].services[s["description"]].status_type = {0: "soft", 1: "hard"}[s["state_type"]]
@@ -245,6 +242,6 @@ class ThrukServer(GenericServer):
             result, error = self.Error(sys.exc_info())
             return Result(result=result, error=error)
 
-        #dummy return in case all is OK
+        # dummy return in case all is OK
         return Result()
 

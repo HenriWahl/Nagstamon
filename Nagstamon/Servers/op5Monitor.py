@@ -21,11 +21,10 @@ import sys
 import json
 import urllib
 import time
-import webbrowser
 
 from datetime import datetime
 
-#from Nagstamon.Helpers import
+from Nagstamon.Helpers import webbrowser_open
 from Nagstamon.Objects import (GenericHost, GenericService, Result)
 from Nagstamon.Servers.Generic import GenericServer
 
@@ -93,6 +92,7 @@ class Op5MonitorServer(GenericServer):
     api_svc_col.append('host.name')
     api_svc_col.append('host.state')
     api_svc_col.append('host.active_checks_enabled')
+    api_svc_col.append('host.scheduled_downtime_depth')
     api_svc_col.append('is_flapping')
     api_svc_col.append('last_check')
     api_svc_col.append('last_state_change')
@@ -211,7 +211,7 @@ class Op5MonitorServer(GenericServer):
                     n["flapping"] = api['is_flapping']
                     n["notifications_disabled"] = 0 if api['notifications_enabled'] else 1
                     n["passiveonly"] = 0 if api['active_checks_enabled'] else 1
-                    n["scheduled_downtime"] = 1 if api['scheduled_downtime_depth'] else 0
+                    n["scheduled_downtime"] = 1 if api['scheduled_downtime_depth'] or api['host']['scheduled_downtime_depth'] else 0
                     n['attempt'] = "%s/%s" % (str(api['current_attempt']), str(api['max_check_attempts']))
                     n['duration'] = human_duration(api['last_state_change'])
                     n['last_check'] = datetime.fromtimestamp(int(api['last_check'])).strftime('%Y-%m-%d %H:%M:%S')
@@ -261,7 +261,7 @@ class Op5MonitorServer(GenericServer):
             url = "%s/monitor/index.php/extinfo/details?host=%s" % (self.monitor_url, host)
         else:
             url = "%s/monitor/index.php/extinfo/details?host=%s&service=%s" % (self.monitor_url, host, service)
-        webbrowser.open(url)
+        webbrowser_open(url)
 
 
     def get_start_end(self, host):

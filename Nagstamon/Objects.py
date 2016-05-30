@@ -20,8 +20,6 @@
 # for python2 and upcomping python3 compatiblity
 from __future__ import print_function, absolute_import, unicode_literals
 
-from Nagstamon.Helpers import UnifiedMachineSortableDate
-
 
 STATES = ['WARNING', 'UNKNOWN', 'CRITICAL', 'UNREACHABLE', 'DOWN']
 
@@ -44,14 +42,18 @@ class GenericObject(object):
         self.notifications_disabled = False
         self.flapping = False
         self.scheduled_downtime = False
+        # compress all flags like acknowledged and flapping into one string
+        self.host_flags = ''
+        self.service_flags = ''
         self.visible = True
         # Check_MK also has site info
         self.site = ''
         # server to be added to hash
         self.server = ''
-        # might help for sorting in Qt
+        # might help in Qt
         self.host = ''
         self.service = ''
+        self.dummy_column = ''
 
 
     def is_passive_only(self):
@@ -94,51 +96,26 @@ class GenericObject(object):
 
 
     def get_service_name(self):
-        """ Extracts service name from status item.
-        Presentation purpose.
+        """
+            Extracts service name from status item.
+            Presentation purpose.
         """
         return ''
 
 
     def get_hash(self):
         """
-        returns hash of event status information - different for host and service thus empty here
+            returns hash of event status information - different for host and service thus empty here
         """
         return ''
 
 
     def get_columns(self, columns_wanted):
+        """
+            Yield host/service status information for treeview table columns
+        """
         for c in columns_wanted:
             yield str(self.__dict__[c])
-
-
-    # the following methods are used for sorted + methodcaller
-    def compare_host(self):
-        return self.host.lower()
-
-
-    def compare_service(self):
-        return self.service.lower()
-
-
-    def compare_status(self):
-        return STATES.index(self.status)
-
-
-    def compare_last_check(self):
-        return UnifiedMachineSortableDate(self.last_check)
-
-
-    def compare_duration(self):
-        return UnifiedMachineSortableDate(self.duration)
-
-
-    def compare_attempt(self):
-        return self.attempt
-
-
-    def compare_status_information(self):
-        return self.status_information
 
 
 class GenericHost(GenericObject):
@@ -158,7 +135,7 @@ class GenericHost(GenericObject):
 
     def is_host(self):
         """
-        decides where to put acknowledged/downtime pixbufs in Liststore for Treeview in Popwin
+            decides where to put acknowledged/downtime pixbufs in Liststore for Treeview in Popwin
         """
         return True
 
@@ -196,7 +173,7 @@ class GenericService(GenericObject):
 
     def get_hash(self):
         """
-        return hash for event history tracking
+            return hash for event history tracking
         """
         return " ".join((self.server, self.site, self.host, self.name, self.status))
 
