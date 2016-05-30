@@ -3943,6 +3943,9 @@ class Dialog(QObject):
         # decides which sender to use as key in self.TOGGLE_DEPS
         self.signalmapper_toggles = QSignalMapper()
 
+        # try to get and keep focus
+        self.window.setWindowModality(Qt.ApplicationModal)
+
         # window position to be used to fix strange movement bug
         # ##self.x = 0
         # ##self.y = 0
