@@ -28,7 +28,10 @@ import json
 from datetime import datetime, timedelta
 from ast import literal_eval
 
-from Nagstamon.Objects import (GenericHost, GenericService, Result)
+from Nagstamon.Config import conf
+from Nagstamon.Objects import (GenericHost,
+                               GenericService,
+                               Result)
 from Nagstamon.Servers.Generic import GenericServer
 from Nagstamon.Helpers import (HumanReadableDurationFromSeconds,
                                webbrowser_open)
@@ -51,10 +54,10 @@ class OpsviewServer(GenericServer):
     SUBMIT_CHECK_RESULT_ARGS = ["comment"]
 
     # URLs for browser shortlinks/buttons on popup window
-    BROWSER_URLS= { "monitor": "$MONITOR$/monitoring",\
-                    "hosts": "$MONITOR$/monitoring/#!/allproblems",\
-                    "services": "$MONITOR$/monitoring/#!/allproblems",\
-                    "history": "$MONITOR$/monitoring/#!/events"}
+    BROWSER_URLS= {'monitor': '$MONITOR$/monitoring',
+                   'hosts': '$MONITOR$/monitoring/#!/allproblems',
+                   'services': '$MONITOR$/monitoring/#!/allproblems',
+                   'history': '$MONITOR$/monitoring/#!/events'}
 
 
     def init_HTTP(self):
@@ -63,42 +66,39 @@ class OpsviewServer(GenericServer):
         """
         GenericServer.init_HTTP(self)
 
+        # prepare for JSON
+        self.session.headers.update({'Accept': 'application/json',
+                                     'Content-Type': 'application/json'})
+
         # get cookie to access Opsview web interface to access Opsviews Nagios part
         if len(self.session.cookies) == 0:
 
-            if self.conf.debug_mode:
+            if conf.debug_mode:
                 self.Debug(server=self.get_name(), debug="Fetching Login token")
 
-            # put all necessary data into url string
-            logindata = urllib.parse.urlencode({"username":self.get_username(),\
-                                                "password":self.get_password(),})
+            logindata = json.dumps({'username': self.get_username(),
+                                   'password': self.get_password()})
 
             # the following is necessary for Opsview servers
             # get cookie from login page via url retrieving as with other urls
             try:
                 # login and get cookie
-                #urlcontent = self.urlopener.open(self.monitor_url + "/rest/login", logindata)
-                urlcontent = self.FetchURL(self.monitor_url + "/rest/login",
-					   giveback='raw',
-					   cgi_data=logindata).result
+                resp = literal_eval(self.FetchURL(self.monitor_url + "/rest/login",
+                                    giveback='raw',
+                                    cgi_data=logindata).result)
 
-                resp = literal_eval(urlcontent.read().decode("utf8", errors="ignore"))
-
-                if self.conf.debug_mode:
+                if conf.debug_mode:
                     self.Debug(server=self.get_name(), debug="Login Token: " + resp.get('token') )
 
-                self.session.headers.update({"Accept":"application/json",
-					     "Content-Type":"application/json",
-					     "X-Opsview-Username":self.get_username(),
-					     "X-Opsview-Token":resp.get('token')})
-
-                urlcontent.close()
+                self.session.headers.update({'X-Opsview-Username': self.get_username(),
+                                             'X-Opsview-Token':resp.get('token')})
             except:
                 self.Error(sys.exc_info())
 
+
     def init_config(self):
         """
-	    dummy init_config, called at thread start, not really needed here, just omit extra properties
+	        dummy init_config, called at thread start, not really needed here, just omit extra properties
         """
         pass
 
@@ -129,14 +129,14 @@ class OpsviewServer(GenericServer):
             data["svc.hostname"]=str(host)
             data["svc.servicename"]=str(service)
 
-        cgi_data = urllib.urlencode(data)
+        cgi_data = urllib.parse.urlencode(data)
 
         self.Debug(server=self.get_name(), debug="Downtime url: " + url)
         self.FetchURL(url + cgi_data, giveback="raw", cgi_data=({ }))
 
     def _set_submit_check_result(self, host, service, state, comment, check_output, performance_data):
         """
-        worker for submitting check result
+            worker for submitting check result
         """
         url = self.monitor_url + "/rest/status?"
 
@@ -151,7 +151,7 @@ class OpsviewServer(GenericServer):
             data["svc.hostname"]=str(host)
             data["svc.servicename"]=str(service)
 
-        cgi_data = urllib.urlencode(data)
+        cgi_data = urllib.parse.urlencode(data)
 
         self.Debug(server=self.get_name(), debug="Submit result url: " + url)
         self.FetchURL(url + cgi_data, giveback="raw", cgi_data=({ }))
@@ -159,7 +159,7 @@ class OpsviewServer(GenericServer):
 
     def _set_acknowledge(self, host, service, author, comment, sticky, notify, persistent, all_services=[]):
         """
-        Sumit acknowledgement for host or service
+            Sumit acknowledgement for host or service
         """
         url = self.monitor_url + "/rest/acknowledge?"
 
@@ -172,7 +172,7 @@ class OpsviewServer(GenericServer):
         if service != "":
             data["servicecheck"]=str(service)
 
-        cgi_data = urllib.urlencode(data)
+        cgi_data = urllib.parse.urlencode(data)
 
         self.Debug(server=self.get_name(), debug="ACK url: " + url)
         self.FetchURL(url + cgi_data, giveback="raw", cgi_data=({ }))
@@ -180,7 +180,7 @@ class OpsviewServer(GenericServer):
 
     def _set_recheck(self, host, service):
         """
-        Sumit recheck request for host or service
+            Sumit recheck request for host or service
         """
         url = self.monitor_url + "/rest/recheck?"
 
@@ -190,7 +190,7 @@ class OpsviewServer(GenericServer):
         if service != "":
             data["servicecheck"]=str(service)
 
-        cgi_data = urllib.urlencode(data)
+        cgi_data = urllib.parse.urlencode(data)
 
         self.Debug(server=self.get_name(), debug="Recheck url: " + url)
         self.FetchURL(url + cgi_data, giveback="raw", cgi_data=({ }))
@@ -198,7 +198,7 @@ class OpsviewServer(GenericServer):
 
     def _get_status(self):
         """
-	    Get status from Opsview Server
+	        Get status from Opsview Server
         """
         # following XXXX to get ALL services in ALL states except OK
         # because we filter them out later
@@ -207,7 +207,7 @@ class OpsviewServer(GenericServer):
             result = self.FetchURL(self.monitor_url + "/rest/status/service?state=1&state=2&state=3", giveback="raw")
             data = json.loads(result.result)
 
-            if self.conf.debug_mode:
+            if conf.debug_mode:
                 self.Debug(server=self.get_name(), debug="Fetched JSON: " + pprint.pformat(data))
 
             for host in data["list"]:
@@ -223,7 +223,7 @@ class OpsviewServer(GenericServer):
                 self.new_hosts[host["name"]].status_information = host["output"].replace("\n", " ")
 
                 # if host is in downtime add it to known maintained hosts
-                if host["downtime"] == "2":
+                if host['downtime'] != "0":
                     self.new_hosts[host["name"]].scheduled_downtime = True
                 #if host.has_key("acknowledged"):
                 if 'acknowledged' in host:
@@ -243,10 +243,10 @@ class OpsviewServer(GenericServer):
                     self.new_hosts[host["name"]].services[service["name"]].status = service["state"].upper()
                     self.new_hosts[host["name"]].services[service["name"]].status_type = service["state_type"]
                     self.new_hosts[host["name"]].services[service["name"]].last_check = datetime.fromtimestamp(int(service["last_check"])).strftime("%Y-%m-%d %H:%M:%S %z")
-                    self.new_hosts[host["name"]].services[service["name"]].duration = Actions.HumanReadableDurationFromSeconds(service["state_duration"])
+                    self.new_hosts[host["name"]].services[service["name"]].duration = HumanReadableDurationFromSeconds(service["state_duration"])
                     self.new_hosts[host["name"]].services[service["name"]].attempt = service["current_check_attempt"]+ "/" + service["max_check_attempts"]
                     self.new_hosts[host["name"]].services[service["name"]].status_information= service["output"].replace("\n", " ")
-                    if service["downtime"] == "2":
+                    if service['downtime'] != '0':
                         self.new_hosts[host["name"]].services[service["name"]].scheduled_downtime = True
                     #if service.has_key("acknowledged"):
                     if 'acknowledged' in service:
@@ -254,7 +254,6 @@ class OpsviewServer(GenericServer):
                     #f service.has_key("flapping"):
                     if 'flapping' in service:
                         self.new_hosts[host["name"]].services[service["name"]].flapping = True
-
                     # extra opsview id for service, needed for submitting check results
                     self.new_hosts[host["name"]].services[service["name"]].service_object_id = service["service_object_id"]
 
