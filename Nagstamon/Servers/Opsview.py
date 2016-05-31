@@ -134,6 +134,7 @@ class OpsviewServer(GenericServer):
         self.Debug(server=self.get_name(), debug="Downtime url: " + url)
         self.FetchURL(url + cgi_data, giveback="raw", cgi_data=({ }))
 
+
     def _set_submit_check_result(self, host, service, state, comment, check_output, performance_data):
         """
             worker for submitting check result
@@ -205,7 +206,12 @@ class OpsviewServer(GenericServer):
         # the REST API gets all host and service info in one call
         try:
             result = self.FetchURL(self.monitor_url + "/rest/status/service?state=1&state=2&state=3", giveback="raw")
-            data = json.loads(result.result)
+            data, error, status_code = json.loads(result.result), result.error, result.status_code
+
+            if error != '' or status_code > 400:
+                return Result(result=copy.deepcopy(xmlobj),
+                              error=copy.deepcopy(error),
+                              status_code=status_code)
 
             if conf.debug_mode:
                 self.Debug(server=self.get_name(), debug="Fetched JSON: " + pprint.pformat(data))
