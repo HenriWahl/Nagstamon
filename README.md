@@ -3,7 +3,7 @@ Nagstamon
 
 **Nagstamon is being ported from GTK 2 to Qt 5 and from Python 2 to Python 3. The result will be Nagstamon 2.0.**
 
-**First alpha releases are now available at https://nagstamon.ifw-dresden.de/download**
+**First BETA releases are now available at https://nagstamon.ifw-dresden.de/download**
 
 **Information about needed Python modules is available at https://nagstamon.ifw-dresden.de/nagstamon-20/**
 
