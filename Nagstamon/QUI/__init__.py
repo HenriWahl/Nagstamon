@@ -111,7 +111,7 @@ COLOR_STATE_NAMES = {'DOWN': {True: 'DOWN', False: ''},
 
 # QBrushes made of QColors for treeview model data() method
 # 2 flavours for alternating backgrounds
-# filled by _create_brushes()
+# filled by create_brushes()
 QBRUSHES = {0: {}, 1: {}}
 
 # dummy QVariant as empty return value for model data()
@@ -1028,7 +1028,7 @@ class StatusWindow(QWidget):
         self.servers_scrollarea.setWidgetResizable(True)
 
         # create brushes for treeview
-        _create_brushes()
+        create_brushes()
 
         # needed for moving the statuswindow
         self.moving = False
@@ -1660,26 +1660,28 @@ class StatusWindow(QWidget):
         """
             resize window if shown and needed
         """
-        if not conf.fullscreen:
-            self.adjusting_size_lock = True
-            # fully displayed statuswindow
-            if self.is_shown == True:
-                width, height, x, y = self.calculate_size()               
-            else:
-                # statusbar only
-                hint = self.sizeHint()
-                # on MacOSX and Windows statusbar will not shrink automatically, so this workaround hopefully helps
-                width = hint.width()
-                height = hint.height()
-                x = self.x()
-                y = self.y()
-                self.setMaximumSize(hint)
-                self.setMinimumSize(hint)
-                del(hint)                         
-                
-            self.resize_window(width, height, x, y)
-            
-            del(width, height, x, y)
+        # avoid race condition when waiting for password dialog
+        if 'is_shown' in self.__dict__:
+            if not conf.fullscreen:
+                self.adjusting_size_lock = True
+                # fully displayed statuswindow
+                if self.is_shown == True:
+                    width, height, x, y = self.calculate_size()
+                else:
+                    # statusbar only
+                    hint = self.sizeHint()
+                    # on MacOSX and Windows statusbar will not shrink automatically, so this workaround hopefully helps
+                    width = hint.width()
+                    height = hint.height()
+                    x = self.x()
+                    y = self.y()
+                    self.setMaximumSize(hint)
+                    self.setMinimumSize(hint)
+                    del(hint)
+
+                self.resize_window(width, height, x, y)
+
+                del(width, height, x, y)
 
 
     @pyqtSlot()
@@ -3334,6 +3336,7 @@ class TreeView(QTreeView):
         text += 'Attempt: {0}\n'.format(item.attempt)
         text += 'Status information: {0}\n'.format(item.status_information)
 
+        # copy text to clipboard
         clipboard.setText(text)
 
 
@@ -3342,23 +3345,25 @@ class TreeView(QTreeView):
         """
             refresh status display
         """
-        # do nothing if window is moving to avoid lagging movement
-        if not statuswindow.moving:
-            # get_status table cells with new data by thread
-            if len(self.model().data_array) > 0:
-                self.is_shown = True
-            else:
-                self.is_shown = False
-            # pre-calculate dimensions
-            height = self.get_real_height()
+        # avoid race condition when waiting for password dialog
+        if not statuswindow == None:
+            # do nothing if window is moving to avoid lagging movement
+            if not statuswindow.moving:
+                # get_status table cells with new data by thread
+                if len(self.model().data_array) > 0:
+                    self.is_shown = True
+                else:
+                    self.is_shown = False
+                # pre-calculate dimensions
+                height = self.get_real_height()
 
-            # tell statusbar it should update
-            self.refreshed.emit()
+                # tell statusbar it should update
+                self.refreshed.emit()
 
-            # check if status changed and notification is necessary
-            # send signal because there are unseen events
-            if self.server.get_events_history_count() > 0:
-                self.status_changed.emit(self.server.name, self.server.worst_status_diff)
+                # check if status changed and notification is necessary
+                # send signal because there are unseen events
+                if self.server.get_events_history_count() > 0:
+                    self.status_changed.emit(self.server.name, self.server.worst_status_diff)
 
 
     @pyqtSlot(int, Qt.SortOrder)
@@ -3545,42 +3550,43 @@ class TreeView(QTreeView):
             self.info = {'hosts_flags_column_needed': False,
                          'services_flags_column_needed': False, }
 
-            # cruising the whole nagitems structure
-            for category in ('hosts', 'services'):
-                for state in self.server.nagitems_filtered[category].values():
-                    for item in state:
-                        self.data_array.append(list(item.get_columns(HEADERS)))
+            # avoid race condition when waiting for password dialog
+            if len(QBRUSHES[0]) > 0:
+                # cruising the whole nagitems structure
+                for category in ('hosts', 'services'):
+                    for state in self.server.nagitems_filtered[category].values():
+                        for item in state:
+                            self.data_array.append(list(item.get_columns(HEADERS)))
 
-                        # hash for freshness comparison
-                        hash = item.get_hash()
+                            # hash for freshness comparison
+                            hash = item.get_hash()
 
-                        if item.is_host():
-                            if hash in self.server.events_history and\
-                                       self.server.events_history[hash] == True:
-                                # second item in las data_array line is host flags
-                                self.data_array[-1][1] += 'N'
-                        else:
-                            if hash in self.server.events_history and\
-                                       self.server.events_history[hash] == True:
-                                # fourth item in las data_array line is service flags
-                                self.data_array[-1][3] += 'N'
+                            if item.is_host():
+                                if hash in self.server.events_history and\
+                                           self.server.events_history[hash] == True:
+                                    # second item in las data_array line is host flags
+                                    self.data_array[-1][1] += 'N'
+                            else:
+                                if hash in self.server.events_history and\
+                                           self.server.events_history[hash] == True:
+                                    # fourth item in las data_array line is service flags
+                                    self.data_array[-1][3] += 'N'
+                            # add text color as QBrush from status
+                            self.data_array[-1].append(QBRUSHES[len(self.data_array) % 2][COLORS[item.status] + 'text'])
+                            # add background color as QBrush from status
+                            self.data_array[-1].append(QBRUSHES[len(self.data_array) % 2][COLORS[item.status] + 'background'])
+                            # add text color name for sorting data
+                            self.data_array[-1].append(COLORS[item.status] + 'text')
+                            # add background color name for sorting data
+                            self.data_array[-1].append(COLORS[item.status] + 'background')
 
-                        # add text color as QBrush from status
-                        self.data_array[-1].append(QBRUSHES[len(self.data_array) % 2][COLORS[item.status] + 'text'])
-                        # add background color as QBrush from status
-                        self.data_array[-1].append(QBRUSHES[len(self.data_array) % 2][COLORS[item.status] + 'background'])
-                        # add text color name for sorting data
-                        self.data_array[-1].append(COLORS[item.status] + 'text')
-                        # add background color name for sorting data
-                        self.data_array[-1].append(COLORS[item.status] + 'background')
+                            # check if hosts and services flags should be shown
+                            if self.data_array[-1][1] != '':
+                                self.info['hosts_flags_column_needed'] = True
+                            if self.data_array[-1][3] != '':
+                                self.info['services_flags_column_needed'] = True
 
-                        # check if hosts and services flags should be shown
-                        if self.data_array[-1][1] != '':
-                            self.info['hosts_flags_column_needed'] = True
-                        if self.data_array[-1][3] != '':
-                            self.info['services_flags_column_needed'] = True
-
-                        self.data_array[-1].append('X')
+                            self.data_array[-1].append('X')
 
             # sort data before it gets transmitted to treeview model
             self.sort_data_array(self.sort_column, self.sort_order, False)
@@ -4381,7 +4387,7 @@ class Dialog_Settings(Dialog):
         ICONS_FONT = QFont('Nagstamon', FONT.pointSize() + 2, QFont.Normal, False)
 
         # update brushes for treeview
-        _create_brushes()
+        create_brushes()
 
         # store configuration
         conf.SaveConfig()
@@ -6034,17 +6040,7 @@ class DBus(QObject):
         if action == 'open' + self.random_id:
             self.open_statuswindow.emit()
 
-
-# def _create_icons():
-#    """
-#        fill global ICONS with pixmaps rendered from SVGs
-#    """
-#    for attr in ('acknowledged', 'downtime', 'flapping', 'new', 'passive'):
-#        icon = QIcon('%s%snagstamon_%s.svg' % (RESOURCES, os.sep, attr)).pixmap(FONT.pointSize(), FONT.pointSize())
-#        ICONS[attr] = icon
-
-
-def _create_brushes():
+def create_brushes():
     """
         fill static brushes with current colors for treeview
     """
