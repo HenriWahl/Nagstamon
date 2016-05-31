@@ -433,10 +433,11 @@ class CentreonServer(GenericServer):
             result = self.FetchURL(nagcgiurl_hosts, giveback='xml')
             xmlobj, error, status_code = result.result, result.error, result.status_code
 
-            if error != '' or status_code > 400:
-                 return Result(result=copy.deepcopy(xmlobj),
-                               error=copy.deepcopy(error),
-                               status_code=status_code)
+            # check if any error occured
+            errors_occured = self.check_for_error(xmlobj, error, status_code)
+            # if there are errors return them
+            if errors_occured != False:
+                return(errors_occured)    
 
             # in case there are no children session ID is expired
             if xmlobj.text.lower() == 'bad session id':
@@ -512,10 +513,11 @@ class CentreonServer(GenericServer):
             result = self.FetchURL(nagcgiurl_services, giveback='xml')
             xmlobj, error, status_code = result.result, result.error, result.status_code
 
-            if error != ''or status_code > 400:
-                return Result(result=xmlobj,
-                              error=copy.deepcopy(error),
-                              status_code=status_code)
+            # check if any error occured
+            errors_occured = self.check_for_error(xmlobj, error, status_code)
+            # if there are errors return them
+            if errors_occured != False:
+                return(errors_occured)    
 
             # in case there are no children session id is invalid
             if xmlobj.text.lower() == 'bad session id':

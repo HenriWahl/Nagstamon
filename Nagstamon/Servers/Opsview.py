@@ -208,11 +208,12 @@ class OpsviewServer(GenericServer):
             result = self.FetchURL(self.monitor_url + "/rest/status/service?state=1&state=2&state=3", giveback="raw")
             data, error, status_code = json.loads(result.result), result.error, result.status_code
 
-            if error != '' or status_code > 400:
-                return Result(result=copy.deepcopy(xmlobj),
-                              error=copy.deepcopy(error),
-                              status_code=status_code)
-
+            # check if any error occured
+            errors_occured = self.check_for_error(data, error, status_code)
+            # if there are errors return them
+            if errors_occured != False:
+                return(errors_occured)    
+                
             if conf.debug_mode:
                 self.Debug(server=self.get_name(), debug="Fetched JSON: " + pprint.pformat(data))
 

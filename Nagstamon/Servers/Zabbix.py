@@ -107,39 +107,39 @@ class ZabbixServer(GenericServer):
                 result, error = self.Error(sys.exc_info())
                 return Result(result=result, error=error)
 
-                for host in hosts:
-                    # if host is disabled on server safely ignore it
-                    if host['available'] != '0':          
-                        n = {
-                            'host': host['host'],
-                            ###'status': self.statemap.get(host['available'], host['available']),
-                            'status': self.statemap.get(host['status'], host['status']),
-                            'last_check': 'n/a',
-                            'duration': HumanReadableDurationFromTimestamp(host['errors_from']),
-                            'status_information': host['error'],
-                            'attempt': '1/1',
-                            'site': '',
-                            'address': host['host'],
-                        }
-                        
-                        # Zabbix shows OK hosts too - kick 'em!
-                        if not n['status'] == 'OK':
-        
-                            # add dictionary full of information about this host item to nagitems
-                            nagitems["hosts"].append(n)
-                            # after collection data in nagitems create objects from its informations
-                            # host objects contain service objects
-                            if n["host"] not in self.new_hosts:
-                                new_host = n["host"]
-                                self.new_hosts[new_host] = GenericHost()
-                                self.new_hosts[new_host].name = n["host"]
-                                self.new_hosts[new_host].status = n["status"]
-                                self.new_hosts[new_host].last_check = n["last_check"]
-                                self.new_hosts[new_host].duration = n["duration"]
-                                self.new_hosts[new_host].attempt = n["attempt"]
-                                self.new_hosts[new_host].status_information = n["status_information"]
-                                self.new_hosts[new_host].site = n["site"]
-                                self.new_hosts[new_host].address = n["address"]
+            for host in hosts:
+                # if host is disabled on server safely ignore it
+                if host['available'] != '0':          
+                    n = {
+                        'host': host['host'],
+                        ###'status': self.statemap.get(host['available'], host['available']),
+                        'status': self.statemap.get(host['status'], host['status']),
+                        'last_check': 'n/a',
+                        'duration': HumanReadableDurationFromTimestamp(host['errors_from']),
+                        'status_information': host['error'],
+                        'attempt': '1/1',
+                        'site': '',
+                        'address': host['host'],
+                    }
+                    
+                    # Zabbix shows OK hosts too - kick 'em!
+                    if not n['status'] == 'OK':
+    
+                        # add dictionary full of information about this host item to nagitems
+                        nagitems["hosts"].append(n)
+                        # after collection data in nagitems create objects from its informations
+                        # host objects contain service objects
+                        if n["host"] not in self.new_hosts:
+                            new_host = n["host"]
+                            self.new_hosts[new_host] = GenericHost()
+                            self.new_hosts[new_host].name = n["host"]
+                            self.new_hosts[new_host].status = n["status"]
+                            self.new_hosts[new_host].last_check = n["last_check"]
+                            self.new_hosts[new_host].duration = n["duration"]
+                            self.new_hosts[new_host].attempt = n["attempt"]
+                            self.new_hosts[new_host].status_information = n["status_information"]
+                            self.new_hosts[new_host].site = n["site"]
+                            self.new_hosts[new_host].address = n["address"]
         except ZabbixError:
             self.isChecking = False
             result, error = self.Error(sys.exc_info())

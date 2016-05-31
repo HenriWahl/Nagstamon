@@ -149,7 +149,16 @@ class Op5MonitorServer(GenericServer):
 
             # Fetch Host info
             result = self.FetchURL(self.monitor_url + self.api_count + self.api_default_host_query, giveback="raw")
-            data = json.loads(result.result)
+            data, error, status_code = json.loads(result.result),\
+                                       result.error,\
+                                       result.status_code
+          
+            # check if any error occured
+            errors_occured = self.check_for_error(data, error, status_code)
+            # if there are errors return them
+            if errors_occured != False:
+                return(errors_occured)    
+                           
             if data['count']:
                 count = data['count']
                 result = self.FetchURL(self.monitor_url + self.api_query + self.api_default_host_query + '&limit=' + str(count), giveback="raw")
@@ -189,7 +198,16 @@ class Op5MonitorServer(GenericServer):
 
             # Fetch services info
             result = self.FetchURL(self.monitor_url + self.api_count + self.api_default_svc_query, giveback="raw")
-            data = json.loads(result.result)
+            data, error, status_code = json.loads(result.result),\
+                                       result.error,\
+                                       result.status_code
+                        
+            # check if any error occured
+            errors_occured = self.check_for_error(data, error, status_code)
+            # if there are errors return them
+            if errors_occured != False:
+                return(errors_occured)    
+
             if data['count']:
                 count = data['count']
                 result = self.FetchURL(self.monitor_url + self.api_query + self.api_default_svc_query + '&limit=' + str(count), giveback="raw")
@@ -243,8 +261,6 @@ class Op5MonitorServer(GenericServer):
                     nagitems['services'].append(n)
                 return Result()
         except:
-            ###import traceback
-            ###traceback.print_exc(file=sys.stdout)
 
             self.isChecking = False
             # store status_code for returning result to tell GUI to reauthenticate
