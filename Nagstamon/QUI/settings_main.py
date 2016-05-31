@@ -12,7 +12,7 @@ class Ui_settings_main(object):
     def setupUi(self, settings_main):
         settings_main.setObjectName("settings_main")
         settings_main.resize(601, 974)
-        sizePolicy = QtWidgets.QSizePolicy(QtWidgets.QSizePolicy.MinimumExpanding, QtWidgets.QSizePolicy.MinimumExpanding)
+        sizePolicy = QtWidgets.QSizePolicy(QtWidgets.QSizePolicy.Minimum, QtWidgets.QSizePolicy.Minimum)
         sizePolicy.setHorizontalStretch(0)
         sizePolicy.setVerticalStretch(0)
         sizePolicy.setHeightForWidth(settings_main.sizePolicy().hasHeightForWidth())
@@ -93,7 +93,7 @@ class Ui_settings_main(object):
         self.horizontalLayout_4.addWidget(self.button_check_for_new_version_now)
         self.gridLayout.addLayout(self.horizontalLayout_4, 4, 1, 1, 3)
         self.list_servers = QtWidgets.QListWidget(self.tab_servers)
-        self.list_servers.setMinimumSize(QtCore.QSize(0, 300))
+        self.list_servers.setMinimumSize(QtCore.QSize(0, 200))
         self.list_servers.setMaximumSize(QtCore.QSize(16777215, 16777215))
         self.list_servers.setResizeMode(QtWidgets.QListView.Adjust)
         self.list_servers.setObjectName("list_servers")
@@ -341,7 +341,7 @@ class Ui_settings_main(object):
         sizePolicy.setVerticalStretch(0)
         sizePolicy.setHeightForWidth(self.list_actions.sizePolicy().hasHeightForWidth())
         self.list_actions.setSizePolicy(sizePolicy)
-        self.list_actions.setMinimumSize(QtCore.QSize(0, 400))
+        self.list_actions.setMinimumSize(QtCore.QSize(0, 200))
         self.list_actions.setResizeMode(QtWidgets.QListView.Adjust)
         self.list_actions.setObjectName("list_actions")
         self.gridLayout_6.addWidget(self.list_actions, 0, 0, 1, 1)
@@ -845,7 +845,7 @@ class Ui_settings_main(object):
         self.verticalLayout.addWidget(self.button_box)
 
         self.retranslateUi(settings_main)
-        self.tabs.setCurrentIndex(0)
+        self.tabs.setCurrentIndex(3)
         self.button_box.accepted.connect(settings_main.accept)
         self.button_box.rejected.connect(settings_main.reject)
         QtCore.QMetaObject.connectSlotsByName(settings_main)
@@ -972,7 +972,7 @@ class Ui_settings_main(object):
 
     def retranslateUi(self, settings_main):
         _translate = QtCore.QCoreApplication.translate
-        settings_main.setWindowTitle(_translate("settings_main", "Nagstamon 2.0-alpha settings"))
+        settings_main.setWindowTitle(_translate("settings_main", "Nagstamon 2.0 settings"))
         self.input_checkbox_debug_mode.setText(_translate("settings_main", "Debug mode"))
         self.input_checkbox_debug_to_file.setText(_translate("settings_main", "Debug to file:"))
         self.button_new_server.setText(_translate("settings_main", "New server..."))

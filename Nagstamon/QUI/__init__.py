@@ -4007,6 +4007,9 @@ class Dialog(QObject):
         self.toggle_visibility(self.ui.__dict__[checkbox],
                                self.TOGGLE_DEPS[self.ui.__dict__[checkbox]])
 
+        # adjust dialog window size after UI changes
+        self.window.adjustSize()
+
 
     def toggle_toggles(self):
         # apply toggle-dependencies between checkboxes as certain widgets
@@ -4287,7 +4290,6 @@ class Dialog_Settings(Dialog):
 
         # reset window if only needs smaller screen estate
         self.window.adjustSize()
-        # self.window.show()
         self.window.exec()
 
 
@@ -5676,6 +5678,7 @@ class Dialog_Authentication(Dialog):
         """
         self.server = servers[server]
         self.initialize()
+        self.window.adjustSize()
         self.window.exec()
 
 
@@ -5739,6 +5742,9 @@ class Dialog_Authentication(Dialog):
 
             self.ui.label_autologin_key.hide()
             self.ui.input_lineedit_autologin_key.hide()
+
+        # adjust dialog window size after UI changes
+        self.window.adjustSize()
 
 
 class Dialog_Server_missing(Dialog):

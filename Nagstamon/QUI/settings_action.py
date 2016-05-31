@@ -2,7 +2,7 @@
 
 # Form implementation generated from reading ui file 'settings_action.ui'
 #
-# Created by: PyQt5 UI code generator 5.4.1
+# Created by: PyQt5 UI code generator 5.5.1
 #
 # WARNING! All changes made in this file will be lost!
 
@@ -12,7 +12,7 @@ class Ui_settings_action(object):
     def setupUi(self, settings_action):
         settings_action.setObjectName("settings_action")
         settings_action.resize(555, 849)
-        sizePolicy = QtWidgets.QSizePolicy(QtWidgets.QSizePolicy.Minimum, QtWidgets.QSizePolicy.Preferred)
+        sizePolicy = QtWidgets.QSizePolicy(QtWidgets.QSizePolicy.Minimum, QtWidgets.QSizePolicy.Minimum)
         sizePolicy.setHorizontalStretch(0)
         sizePolicy.setVerticalStretch(0)
         sizePolicy.setHeightForWidth(settings_action.sizePolicy().hasHeightForWidth())
@@ -143,7 +143,7 @@ class Ui_settings_action(object):
         sizePolicy.setHeightForWidth(self.input_textedit_string.sizePolicy().hasHeightForWidth())
         self.input_textedit_string.setSizePolicy(sizePolicy)
         self.input_textedit_string.setObjectName("input_textedit_string")
-        self.gridLayout.addWidget(self.input_textedit_string, 7, 0, 3, 6)
+        self.gridLayout.addWidget(self.input_textedit_string, 6, 1, 1, 5)
 
         self.retranslateUi(settings_action)
         self.button_box.accepted.connect(settings_action.accept)
@@ -153,8 +153,7 @@ class Ui_settings_action(object):
         settings_action.setTabOrder(self.input_combobox_type, self.input_combobox_monitor_type)
         settings_action.setTabOrder(self.input_combobox_monitor_type, self.input_lineedit_name)
         settings_action.setTabOrder(self.input_lineedit_name, self.input_lineedit_description)
-        settings_action.setTabOrder(self.input_lineedit_description, self.input_textedit_string)
-        settings_action.setTabOrder(self.input_textedit_string, self.input_checkbox_filter_target_host)
+        settings_action.setTabOrder(self.input_lineedit_description, self.input_checkbox_filter_target_host)
         settings_action.setTabOrder(self.input_checkbox_filter_target_host, self.input_checkbox_filter_target_service)
         settings_action.setTabOrder(self.input_checkbox_filter_target_service, self.input_checkbox_re_host_enabled)
         settings_action.setTabOrder(self.input_checkbox_re_host_enabled, self.input_lineedit_re_host_pattern)

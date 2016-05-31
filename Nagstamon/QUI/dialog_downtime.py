@@ -12,6 +12,11 @@ class Ui_dialog_downtime(object):
     def setupUi(self, dialog_downtime):
         dialog_downtime.setObjectName("dialog_downtime")
         dialog_downtime.resize(409, 294)
+        sizePolicy = QtWidgets.QSizePolicy(QtWidgets.QSizePolicy.Minimum, QtWidgets.QSizePolicy.Minimum)
+        sizePolicy.setHorizontalStretch(0)
+        sizePolicy.setVerticalStretch(0)
+        sizePolicy.setHeightForWidth(dialog_downtime.sizePolicy().hasHeightForWidth())
+        dialog_downtime.setSizePolicy(sizePolicy)
         dialog_downtime.setSizeGripEnabled(True)
         dialog_downtime.setModal(True)
         self.gridLayout = QtWidgets.QGridLayout(dialog_downtime)
