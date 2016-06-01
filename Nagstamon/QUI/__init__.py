@@ -189,8 +189,9 @@ else:
     FONT = DEFAULT_FONT
 
 # add nagstamon.ttf with icons to fonts
-fontdatabase = QFontDatabase()
-fontdatabase.addApplicationFont('{0}{1}nagstamon.ttf'.format(RESOURCES, os.sep))
+FONTDATABASE = QFontDatabase()
+FONTDATABASE.addApplicationFont('{0}{1}nagstamon.ttf'.format(RESOURCES, os.sep))
+
 # always stay in normal weight without any italic
 ICONS_FONT = QFont('Nagstamon', FONT.pointSize() + 2, QFont.Normal, False)
 
@@ -210,6 +211,9 @@ NUMBER_OF_DISPLAY_CHANGES = 0
 # ##else:
 # ##    WINDOW_FLAGS = Qt.WindowStaysOnTopHint | Qt.FramelessWindowHint | Qt.Tool
 WINDOW_FLAGS = Qt.WindowStaysOnTopHint | Qt.FramelessWindowHint | Qt.Tool
+
+# icon for dialogs
+ICON = QIcon('{0}{1}nagstamon.ico'.format(RESOURCES, os.sep))
 
 # set style for tooltips globally - to sad not all properties can be set here
 APP.setStyleSheet('''QToolTip { margin: 3px;
@@ -3974,11 +3978,14 @@ class Dialog(QObject):
     def __init__(self, dialog):
         QObject.__init__(self)
         self.window = QDialog()
-        # explicitly set window flags to avoid '?' button on Windows
-        self.window.setWindowFlags(Qt.WindowCloseButtonHint)
 
         self.ui = dialog()
         self.ui.setupUi(self.window)
+
+        # explicitly set window flags to avoid '?' button on Windows
+        self.window.setWindowFlags(Qt.WindowCloseButtonHint)
+
+        self.window.setWindowIcon(ICON)
 
         # treat dialog content after pressing OK button
         if 'button_box' in dir(self.ui):
