@@ -53,9 +53,6 @@ from Nagstamon.Config import (conf,
 
 from collections import OrderedDict
 
-# get debug queue from nagstamon.py
-###debug_queue = sys.modules['__main__'].debug_queue
-
 
 class GenericServer(object):
     '''
@@ -129,6 +126,7 @@ class GenericServer(object):
         self.status_description = ''
         self.status_code = 0
         self.has_error = False
+        self.timeout = 10
 
         # The events_* are recycled from GUI.py
         # history of events to track status changes for notifications
@@ -1262,9 +1260,11 @@ class GenericServer(object):
                     # most requests come without multipart/form-data
                     if multipart == False:
                         if cgi_data == None:
-                            response = self.session.get(url, timeout=30)
+                            #response = self.session.get(url, timeout=30)
+                            response = self.session.get(url, timeout=self.timeout)
                         else:
-                            response = self.session.post(url, data=cgi_data, timeout=30)
+                            #response = self.session.post(url, data=cgi_data, timeout=30)
+                            response = self.session.post(url, data=cgi_data, timeout=self.timeout)
                     else:
                         # Check_MK and Opsview need multipart/form-data encoding
                         # http://stackoverflow.com/questions/23120974/python-requests-post-multipart-form-data-without-filename-in-http-request#23131823
@@ -1273,7 +1273,7 @@ class GenericServer(object):
                             form_data[key] = (None, cgi_data[key])
 
                         # get response with cgi_data encodes as files
-                        response = self.session.post(url, files=form_data)                   
+                        response = self.session.post(url, files=form_data, timeout=self.timeout)                   
                 else:
                     # send request without authentication data
                     temporary_session = requests.Session()
@@ -1288,9 +1288,11 @@ class GenericServer(object):
                     # most requests come without multipart/form-data
                     if multipart == False:
                         if cgi_data == None:
-                            response = temporary_session.get(url, timeout=30)
+                            #response = temporary_session.get(url, timeout=30)
+                            response = temporary_session.get(url, timeout=self.timeout)
                         else:
-                            response = temporary_session.post(url, data=cgi_data, timeout=30)
+                            #response = temporary_session.post(url, data=cgi_data, timeout=30)
+                            response = temporary_session.post(url, data=cgi_data, timeout=self.timeout)
                     else:
                         # Check_MK and Opsview nees multipart/form-data encoding
                         # http://stackoverflow.com/questions/23120974/python-requests-post-multipart-form-data-without-filename-in-http-request#23131823
@@ -1298,7 +1300,8 @@ class GenericServer(object):
                         for key in cgi_data:
                             form_data[key] = (None, cgi_data[key])
                         # get response with cgi_data encodes as files
-                        response = temporary_session.post(url, files=form_data, timeout=30)
+                        #response = temporary_session.post(url, files=form_data, timeout=30)
+                        response = temporary_session.post(url, files=form_data, timeout=self.timeout)
 
                     # cleanup
                     del temporary_session

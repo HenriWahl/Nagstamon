@@ -3489,6 +3489,8 @@ class TreeView(QTreeView):
                         self.change_label_status.emit('Connection timeout', '')
                     elif status.error.startswith('requests.exceptions.ConnectionError'):
                         self.change_label_status.emit('Connection error', '')
+                    elif status.error.startswith('requests.exceptions.ReadTimeout'):
+                        self.change_label_status.emit('Connection timeout', '')
                     elif self.server.status_code in self.server.STATUS_CODES_NO_AUTH or\
                          self.server.refresh_authentication:
                         self.change_label_status.emit('Authentication problem', 'critical')
@@ -4941,7 +4943,7 @@ class Dialog_Server(Dialog):
         self.ui.input_combobox_type.setCurrentText('Nagios')
         # fill authentication combobox
         self.ui.input_combobox_authentication.addItems(['Basic', 'Digest'])
-
+        
         # detect change of server type which leads to certain options shown or hidden
         self.ui.input_combobox_type.activated.connect(self.server_type_changed)
 
@@ -4969,7 +4971,6 @@ class Dialog_Server(Dialog):
             """
                 self.server_conf has to be set by decorated method
             """
-
             # previous server conf only useful when editing - defaults to None
             self.previous_server_conf = None
 
@@ -4982,7 +4983,7 @@ class Dialog_Server(Dialog):
                     if widget.startswith('input_checkbox_'):
                         setting = widget.split('input_checkbox_')[1]
                         self.ui.__dict__[widget].setChecked(self.server_conf.__dict__[setting])
-                    if widget.startswith('input_radiobutton_'):
+                    elif widget.startswith('input_radiobutton_'):
                         setting = widget.split('input_radiobutton_')[1]
                         self.ui.__dict__[widget].setChecked(self.server_conf.__dict__[setting])
                     elif widget.startswith('input_combobox_'):
@@ -4991,6 +4992,9 @@ class Dialog_Server(Dialog):
                     elif widget.startswith('input_lineedit_'):
                         setting = widget.split('input_lineedit_')[1]
                         self.ui.__dict__[widget].setText(self.server_conf.__dict__[setting])
+                    elif widget.startswith('input_spinbox_'):
+                        setting = widget.split('input_spinbox_')[1]
+                        self.ui.__dict__[widget].setValue(self.server_conf.__dict__[setting])
 
             # set current authentication type by using capitalized first letter via .title()
             self.ui.input_combobox_authentication.setCurrentText(self.server_conf.authentication.title())
@@ -5079,7 +5083,7 @@ class Dialog_Server(Dialog):
                     if widget.startswith('input_checkbox_'):
                         setting = widget.split('input_checkbox_')[1]
                         self.server_conf.__dict__[setting] = self.ui.__dict__[widget].isChecked()
-                    if widget.startswith('input_radiobutton_'):
+                    elif widget.startswith('input_radiobutton_'):
                         setting = widget.split('input_radiobutton_')[1]
                         self.server_conf.__dict__[setting] = self.ui.__dict__[widget].isChecked()
                     elif widget.startswith('input_combobox_'):
@@ -5088,6 +5092,11 @@ class Dialog_Server(Dialog):
                     elif widget.startswith('input_lineedit_'):
                         setting = widget.split('input_lineedit_')[1]
                         self.server_conf.__dict__[setting] = self.ui.__dict__[widget].text()
+                    elif widget.startswith('input_spinbox_'):
+                        print('SPNBOX')
+                        setting = widget.split('input_spinbox_')[1]
+                        self.server_conf.__dict__[setting] = self.ui.__dict__[widget].value()
+
 
             # URLs should not end with / - clean it
             self.server_conf.monitor_url = self.server_conf.monitor_url.rstrip('/')

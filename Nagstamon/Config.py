@@ -57,7 +57,7 @@ class AppInfo(object):
         contains app information previously located in GUI.py
     """
     NAME = 'Nagstamon'
-    VERSION = '2.0-beta-20160531'
+    VERSION = '2.0-beta-20160601'
     WEBSITE = 'https://nagstamon.ifw-dresden.de'
     COPYRIGHT = '©2008-2016 Henri Wahl et al.'
     COMMENTS = 'Nagios status monitor for your desktop'
@@ -798,6 +798,7 @@ class Server(object):
         self.proxy_password = 'proxypassword'
         # defaults to 'basic', another possible value at the moment is 'digest'
         self.authentication = 'basic'
+        self.timeout = 10
 
         # special FX
         # Centreon autologin

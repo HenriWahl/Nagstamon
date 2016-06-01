@@ -127,6 +127,7 @@ def create_server(server=None):
     new_server.proxy_username = server.proxy_username
     new_server.proxy_password = server.proxy_password
     new_server.authentication = server.authentication
+    new_server.timeout = server.timeout
 
     # if password is not to be saved ask for it at startup
     if (server.enabled == True and server.save_password == False and server.use_autologin == False):
