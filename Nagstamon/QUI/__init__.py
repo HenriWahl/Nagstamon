@@ -3176,7 +3176,7 @@ class TreeView(QTreeView):
 
             if 'Downtime' in self.server.MENU_ACTIONS:
                 action_downtime = QAction('Downtime', self)
-                action_downtime.triggered.connect(self.action_downtime)
+                action_downtime.triggered.connect(self.action_downtime)              
 
             # put actions into menu after separator
             self.action_menu.addAction(action_edit_actions)
@@ -3189,6 +3189,13 @@ class TreeView(QTreeView):
                 self.action_menu.addAction(action_acknowledge)
             if 'Downtime' in self.server.MENU_ACTIONS:
                 self.action_menu.addAction(action_downtime)
+
+            # special menu entry for Check_MK for archiving events
+            if self.server.type == 'Check_MK Multisite':
+                if self.miserable_service == 'Events':
+                    action_archive_event = QAction('Archive event', self)
+                    action_archive_event.triggered.connect(self.action_archive_event)              
+                    self.action_menu.addAction(action_archive_event)
 
             # not all servers allow to submit fake check results
             if 'Submit check result' in self.server.MENU_ACTIONS:
@@ -3240,7 +3247,9 @@ class TreeView(QTreeView):
             # run decorated method
             method(self)
             # default actions need closed statuswindow to display own dialogs
-            if not conf.fullscreen and not method.__name__ == 'action_recheck':
+            if not conf.fullscreen and\
+                not method.__name__ == 'action_recheck' and\
+                not method.__name__ == 'action_archive_event':
                 statuswindow.hide_window()
         return(decoration_function)
 
@@ -3284,6 +3293,29 @@ class TreeView(QTreeView):
         dialogs.downtime.initialize(server=self.server,
                                     host=self.miserable_host,
                                     service=self.miserable_service)
+
+
+    @action_response_decorator
+    def action_archive_event(self):
+        """
+            archive events in CHeck_MK Event Console
+        """
+        string = '$MONITOR$/view.py?_transid=$TRANSID$&_do_actions=yes&_do_confirm=Yes!&output_format=python&view_name=ec_events_of_monhost&host=$HOST$&_mkeventd_comment=archived&_mkeventd_acknowledge=on&_mkeventd_state=2&_delete_event=Archive Event&event_first_from=&event_first_until=&event_last_from=&event_last_until='
+
+        # Check_MK uses transids - if this occurs in URL its very likely that a Check_MK-URL is called
+        transid = self.server._get_transid(self.miserable_host, 'Events')
+        string = string.replace('$MONITOR$', self.server.monitor_url)
+        string = string.replace('$TRANSID$', transid)
+        string = string.replace('$HOST$', self.miserable_host)
+        string = string.replace(' ', '+')
+        self.server.FetchURL(string)
+
+        # debug
+        if conf.debug_mode == True:
+            self.server.Debug(server=self.server.name, host=info['host'], service=info['service'], debug='Archive event ' + string)
+
+        # trigger recheck to get rid of event as soon as possible        
+        self.recheck.emit({'host': self.miserable_host, 'service': 'Events'})
 
 
     @action_response_decorator
@@ -3692,6 +3724,7 @@ class TreeView(QTreeView):
                     self.server.Debug(server=self.server.name, debug='Rechecking host {0}'.format(info_dict['host']))
                 else:
                     self.server.Debug(server=self.server.name, debug='Rechecking service {0} on host {1}'.format(info_dict['service'], info_dict['host']))
+
             # call server recheck method
             self.server.set_recheck(info_dict)
 
@@ -3841,6 +3874,11 @@ class TreeView(QTreeView):
                     if conf.debug_mode == True:
                         self.server.Debug(server=self.server.name, host=info['host'], service=info['service'], debug='ACTION: URL-POST in background ' + string)
                     servers[info['server']].FetchURL(string, cgi_data=cgi_data, multipart=True)
+
+                if action['refresh']:
+                    self.recheck(info_dict)
+            
+            
             except:
                 import traceback
                 traceback.print_exc(file=sys.stdout)
@@ -5093,7 +5131,6 @@ class Dialog_Server(Dialog):
                         setting = widget.split('input_lineedit_')[1]
                         self.server_conf.__dict__[setting] = self.ui.__dict__[widget].text()
                     elif widget.startswith('input_spinbox_'):
-                        print('SPNBOX')
                         setting = widget.split('input_spinbox_')[1]
                         self.server_conf.__dict__[setting] = self.ui.__dict__[widget].value()
 

@@ -42,7 +42,7 @@
       </sizepolicy>
      </property>
      <property name="currentIndex">
-      <number>3</number>
+      <number>0</number>
      </property>
      <widget class="QWidget" name="tab_servers">
       <attribute name="title">
@@ -134,7 +134,7 @@
          <item>
           <widget class="QLabel" name="label_update_interval_seconds">
            <property name="text">
-            <string>Update interval in seconds:</string>
+            <string>Update interval:</string>
            </property>
           </widget>
          </item>
@@ -142,6 +142,13 @@
           <widget class="QSpinBox" name="input_spinbox_update_interval_seconds">
            <property name="maximum">
             <number>999</number>
+           </property>
+          </widget>
+         </item>
+         <item>
+          <widget class="QLabel" name="label_interval_seconds">
+           <property name="text">
+            <string>seconds</string>
            </property>
           </widget>
          </item>
@@ -1942,7 +1949,7 @@
   </connection>
  </connections>
  <buttongroups>
-  <buttongroup name="buttongroup_close_statusbar"/>
   <buttongroup name="buttongroup_popup_statuswindow"/>
+  <buttongroup name="buttongroup_close_statusbar"/>
  </buttongroups>
 </ui>
