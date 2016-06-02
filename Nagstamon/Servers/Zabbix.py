@@ -226,7 +226,7 @@ class ZabbixServer(GenericServer):
                 else:
                     state = '%s=%s' % (service['items'][0]['key_'], service['items'][0]['lastvalue']) 
                 n = {
-                    'service': service['description'],
+                    'service': self.nagiosify_service(service['description']),
                     'status': self.statemap.get(service['priority'], service['priority']),
                     # 1/1 attempt looks at least like there has been any attempt
                     'attempt': '1/1',
@@ -259,7 +259,7 @@ class ZabbixServer(GenericServer):
                         self.new_hosts[n["host"]].site = n["site"]
                         self.new_hosts[n["host"]].address = n["host"]
                         # if a service does not exist create its object
-                    if n["service"] not in  self.new_hosts[n["host"]].services:
+                    if n["service"] not in self.new_hosts[n["host"]].services:
                         # workaround for non-existing (or not found) host status flag
                         if n["service"] == "Host is down %s" % (n["host"]):
                             self.new_hosts[n["host"]].status = "DOWN"
@@ -269,11 +269,6 @@ class ZabbixServer(GenericServer):
                             new_service = n["service"]
                             self.new_hosts[n["host"]].services[new_service] = GenericService()
                             self.new_hosts[n["host"]].services[new_service].host = n["host"]
-    
-                            # next dirty workaround to get Zabbix events to look Nagios-esque
-                            if (" on " or " is ") in n["service"]:
-                                for separator in [" on ", " is "]:
-                                    n["service"] = n["service"].split(separator)[0]
                             self.new_hosts[n["host"]].services[new_service].name = n["service"]
                             self.new_hosts[n["host"]].services[new_service].status = n["status"]
                             self.new_hosts[n["host"]].services[new_service].last_check = n["last_check"]
@@ -314,7 +309,7 @@ class ZabbixServer(GenericServer):
 
     def open_monitor(self, host, service=""):
         """
-        open monitor from treeview context menu
+            open monitor from treeview context menu
         """
 
         if service == "":
@@ -332,8 +327,8 @@ class ZabbixServer(GenericServer):
 
     def GetHost(self, host):
         """
-        find out ip or hostname of given host to access hosts/devices which do not appear in DNS but
-        have their ip saved in Nagios
+            find out ip or hostname of given host to access hosts/devices which do not appear in DNS but
+            have their ip saved in Nagios
         """
 
         # the fasted method is taking hostname as used in monitor
@@ -403,3 +398,13 @@ class ZabbixServer(GenericServer):
         # acknowledge all services on a host when told to do so
         for s in all_services:
             self._action(self.hosts[host].site, host, s, p)
+
+
+    def nagiosify_service(self, service):
+        """
+            next dirty workaround to get Zabbix events to look Nagios-esque
+        """
+        if (" on " or " is ") in service:
+            for separator in [" on ", " is "]:
+                service = service.split(separator)[0]
+        return(service)

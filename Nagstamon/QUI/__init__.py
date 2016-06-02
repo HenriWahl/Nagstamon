@@ -3985,6 +3985,7 @@ class Dialog(QObject):
         # explicitly set window flags to avoid '?' button on Windows
         self.window.setWindowFlags(Qt.WindowCloseButtonHint)
 
+        # set small titlebar icon
         self.window.setWindowIcon(ICON)
 
         # treat dialog content after pressing OK button
