@@ -1,58 +1,51 @@
-%define python_sitelib %(%{__python} -c 'from distutils import sysconfig; print sysconfig.get_python_lib()')
-%define python_sitearch %(%{__python} -c 'from distutils import sysconfig; print sysconfig.get_python_lib(1)')
+%global gitdate 20160602
+%global commit 7139844d1a8109ba45f03601293ab70050b7dc94
+%global shortcommit %(c=%{commit}; echo ${c:0:7})
 
-Summary: Nagios status monitor for your desktop
-Name: nagstamon
-Version: %{_version}
-Release: 1.nagstamon%{?dist}
-License: GPL
-Group: Applications/Utilities
-URL: https://nagstamon.ifw-dresden.de/
+Name:     nagstamon
+Version:  2.0
+Release:  0.1%{?dist}
+Summary:  Nagios status monitor for desktop
 
-Source: https://nagstamon.ifw-dresden.de/files-nagstamon/stable/Nagstamon-%{version}.tar.gz
-Source1: nagstamon.desktop
-BuildRoot: %{_tmppath}/%{name}-%{version}-%{release}-root
+License:  GPLv2+
+URL:      https://nagstamon.ifw-dresden.de
+Source0:  https://github.com/MedicMomcilo/Nagstamon/archive/%{commit}/nagstamon-%{commit}.tar.gz
 
-Buildarch: noarch
+BuildArch:     noarch
+BuildRequires: python3-devel
+BuildRequires: python3-qt5-devel
 BuildRequires: desktop-file-utils
-BuildRequires: Distutils
-Requires: python3 >= 3.4
-Requires: python3-beautifulsoup4
-Requires: python3-crypto
-Requires: python3-qt5
-Requires: python3-requests
-Requires: python3-psutil
-Requires: python3-setuptools
-Requires: python3-SecretStorage
-Requires: qt5-qtsvg
-Requires: qt5-qtmultimedia
+Requires:      python3
+Requires:      python3-qt5
+Requires:      python3-beautifulsoup4
+Requires:      python3-requests
+Requires:      python3-qt5
+Requires:      python3-SecretStorage
+Requires:      python3-crypto
+Requires:      python3-psutil
+Requires:      qt5-qtsvg
+Requires:      qt5-qtmultimedia
 
 %description
-Nagstamon is a Nagios status monitor for the desktop. It connects to multiple
-Nagios, Icinga, Opsview, Centreon, Op5 Monitor/Ninja and Check_MK Multisite
-monitoring servers and resides in systray or as a floating statusbar at the
-desktop showing a brief summary of critical, warning, unknown, unreachable and
-down hosts and services and pops up a detailed status overview when moving the
-mouse pointer over it. Connecting to displayed hosts and services is easily
-established by context menu via SSH, RDP and VNC. Users can be notified by
-sound. Hosts and services can be filtered by category and regular expressions.
+Nagstamon is a Nagios status monitor which takes place in system tray
+or on desktop (GNOME, KDE, Windows) as floating status bar to inform
+you in real-time about the status of your Nagios and derivatives
+monitored network. It allows to connect to multiple Nagios, Icinga,
+Opsview, Op5Monitor, Check_MK/Multisite, Centreon and Thruk servers.
 
 %prep
-%setup -n Nagstamon
-
-#Remove embedded BeautifulSoup http://sourceforge.net/p/nagstamon/bugs/44/
-###rm -rf Nagstamon/thirdparty/BeautifulSoup.py
+%setup -qn Nagstamon-%{commit}
 
 %build
-cd ../
-%{__python} setup.py build
+%{__python3} setup.py build
 
 %install
-cd ../
-%{__rm} -rf %{buildroot}
-%{__python} setup.py install --skip-build --root="%{buildroot}" --prefix="%{_prefix}"
+%{__python3} setup.py install --single-version-externally-managed -O1 --root=%{buildroot}
 
-%{__chmod} +x %{buildroot}%{python_sitelib}/Nagstamon/Server/Multisite.py
+#Fix 'non-executable-script' error
+chmod +x %{buildroot}%{python3_sitelib}/Nagstamon/Servers/Multisite.py
+chmod +x %{buildroot}%{python3_sitelib}/Nagstamon/thirdparty/keyring/cli.py
+chmod +x %{buildroot}%{python3_sitelib}/Nagstamon/Config.py
 
 #Provide directory to install icon for desktop file
 mkdir -p %{buildroot}%{_datadir}/pixmaps
@@ -66,71 +59,21 @@ chmod -x %{buildroot}%{_datadir}/pixmaps/%{name}.svg
 #Remove the file extension for convenience
 mv %{buildroot}%{_bindir}/%{name}.py %{buildroot}%{_bindir}/%{name}
 
-# install the desktop file
 desktop-file-install --dir %{buildroot}/%{_datadir}/applications\
                      --delete-original\
                      --set-icon=%{name}.svg\
-                     %{buildroot}%{python_sitelib}/Nagstamon/resources/%{name}.desktop
-
-# fix for stupid strip issue
-#%{__chmod} -R u+w %{buildroot}/*
-
-%clean
-%{__rm} -rf %{buildroot}
+                     %{buildroot}%{python3_sitelib}/Nagstamon/resources/%{name}.desktop
 
 %files
-%defattr(-, root, root, 0755)
-#%doc COPYRIGHT ChangeLog LICENSE
-%doc %{_mandir}/man?/*
-%{_bindir}/%{name}
-%{_datadir}/pixmaps/*
+%doc ChangeLog
+%license COPYRIGHT LICENSE
+%{_datadir}/pixmaps/%{name}.svg
 %{_datadir}/applications/%{name}.desktop
-%{python_sitelib}/Nagstamon
-%{python_sitelib}/nagstamon-*-py*.egg-info
+%{python3_sitelib}/Nagstamon/
+%{_bindir}/%{name}
+%{_mandir}/man1/%{name}.1*
+%{python3_sitelib}/%{name}*.egg-info
 
 %changelog
-* Mon Sep 22 2014 Henri Wahl <h.wahl@ifw-dresden.de> - 1.0.1
-- added option to disable system keyring storage to prevent crashes
-- fixed too narrow fullscreen display
-- reverted default sorting order to "Descending"
-- fixed vanishing Nagstamon submenu in Ubuntu Appindicator
-
-* Tue Jul 28 2014 Henri Wahl <h.wahl@ifw-dresden.de> - 1.0
-- added custom event notification with custom commands
-- added highlighting of new events
-- added storage of passwords in OS keyring
-- added optional tooltip for full status information
-- added support for applying custom actions to specific monitor only
-- added copy buttons for servers and actions dialogs
-- added stopping notification if event already vanished
-- added support for Op5Monitor 6.3 instead of Ninja
-- added experimental Zabbix support
-- added automatic refreshing after acknowledging
-- added permanent hamburger menu
-- unified layout of dialogs
-- various Check_MK improvements
-- fixed old regression not-staying-on-top-bug
-- fixed Check_MK-Recheck-DOS-bug
-- fixed pop window size calculation on multiple screens
-- fixed following popup window on multiple screens
-- fixed hiding dialogs in MacOSX
-- fixed ugly statusbar font in MacOSX
-- fixed use of changed colors
-- fixed non-ascending default sort order
-- fixed Opsview downtime dialog
-- fixed sometimes not working context menu
-- fixed some GUI glitches
-- fixed password saving bug
-- fixed Centreon language inconsistencies
-- fixed regression Umlaut bug
-
-* Tue Jul 08 2014 Henri Wahl <h.wahl@ifw-dresden.de> - 1.0rc2
-- Release candidate 2
-
-* Thu Jun 26 2014 Henri Wahl <h.wahl@ifw-dresden.de> - 1.0rc1
-- Release candidate 1.
-- mixed in some lines from https://apps.fedoraproject.org/packages/nagstamon/sources/spec/
-
-* Sun Mar 03 2014 Vorontsov Igor <mizunokazumi@mail.ru> - 0.9.12-1.mizu
-- Initial package.
-
+* Thu Jun 02 2016 Momcilo Medic <fedorauser@fedoraproject.org> 2.0-0.1
+- Initial .spec file
