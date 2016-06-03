@@ -111,7 +111,7 @@ COLOR_STATE_NAMES = {'DOWN': {True: 'DOWN', False: ''},
 
 # QBrushes made of QColors for treeview model data() method
 # 2 flavours for alternating backgrounds
-# filled by _create_brushes()
+# filled by create_brushes()
 QBRUSHES = {0: {}, 1: {}}
 
 # dummy QVariant as empty return value for model data()
@@ -189,8 +189,9 @@ else:
     FONT = DEFAULT_FONT
 
 # add nagstamon.ttf with icons to fonts
-fontdatabase = QFontDatabase()
-fontdatabase.addApplicationFont('{0}{1}nagstamon.ttf'.format(RESOURCES, os.sep))
+FONTDATABASE = QFontDatabase()
+FONTDATABASE.addApplicationFont('{0}{1}nagstamon.ttf'.format(RESOURCES, os.sep))
+
 # always stay in normal weight without any italic
 ICONS_FONT = QFont('Nagstamon', FONT.pointSize() + 2, QFont.Normal, False)
 
@@ -210,6 +211,9 @@ NUMBER_OF_DISPLAY_CHANGES = 0
 # ##else:
 # ##    WINDOW_FLAGS = Qt.WindowStaysOnTopHint | Qt.FramelessWindowHint | Qt.Tool
 WINDOW_FLAGS = Qt.WindowStaysOnTopHint | Qt.FramelessWindowHint | Qt.Tool
+
+# icon for dialogs
+ICON = QIcon('{0}{1}nagstamon.ico'.format(RESOURCES, os.sep))
 
 # set style for tooltips globally - to sad not all properties can be set here
 APP.setStyleSheet('''QToolTip { margin: 3px;
@@ -1028,7 +1032,7 @@ class StatusWindow(QWidget):
         self.servers_scrollarea.setWidgetResizable(True)
 
         # create brushes for treeview
-        _create_brushes()
+        create_brushes()
 
         # needed for moving the statuswindow
         self.moving = False
@@ -1660,26 +1664,28 @@ class StatusWindow(QWidget):
         """
             resize window if shown and needed
         """
-        if not conf.fullscreen:
-            self.adjusting_size_lock = True
-            # fully displayed statuswindow
-            if self.is_shown == True:
-                width, height, x, y = self.calculate_size()               
-            else:
-                # statusbar only
-                hint = self.sizeHint()
-                # on MacOSX and Windows statusbar will not shrink automatically, so this workaround hopefully helps
-                width = hint.width()
-                height = hint.height()
-                x = self.x()
-                y = self.y()
-                self.setMaximumSize(hint)
-                self.setMinimumSize(hint)
-                del(hint)                         
-                
-            self.resize_window(width, height, x, y)
-            
-            del(width, height, x, y)
+        # avoid race condition when waiting for password dialog
+        if 'is_shown' in self.__dict__:
+            if not conf.fullscreen:
+                self.adjusting_size_lock = True
+                # fully displayed statuswindow
+                if self.is_shown == True:
+                    width, height, x, y = self.calculate_size()
+                else:
+                    # statusbar only
+                    hint = self.sizeHint()
+                    # on MacOSX and Windows statusbar will not shrink automatically, so this workaround hopefully helps
+                    width = hint.width()
+                    height = hint.height()
+                    x = self.x()
+                    y = self.y()
+                    self.setMaximumSize(hint)
+                    self.setMinimumSize(hint)
+                    del(hint)
+
+                self.resize_window(width, height, x, y)
+
+                del(width, height, x, y)
 
 
     @pyqtSlot()
@@ -3174,7 +3180,7 @@ class TreeView(QTreeView):
 
             if 'Downtime' in self.server.MENU_ACTIONS:
                 action_downtime = QAction('Downtime', self)
-                action_downtime.triggered.connect(self.action_downtime)
+                action_downtime.triggered.connect(self.action_downtime)              
 
             # put actions into menu after separator
             self.action_menu.addAction(action_edit_actions)
@@ -3187,6 +3193,13 @@ class TreeView(QTreeView):
                 self.action_menu.addAction(action_acknowledge)
             if 'Downtime' in self.server.MENU_ACTIONS:
                 self.action_menu.addAction(action_downtime)
+
+            # special menu entry for Check_MK for archiving events
+            if self.server.type == 'Check_MK Multisite':
+                if self.miserable_service == 'Events':
+                    action_archive_event = QAction('Archive event', self)
+                    action_archive_event.triggered.connect(self.action_archive_event)              
+                    self.action_menu.addAction(action_archive_event)
 
             # not all servers allow to submit fake check results
             if 'Submit check result' in self.server.MENU_ACTIONS:
@@ -3238,7 +3251,9 @@ class TreeView(QTreeView):
             # run decorated method
             method(self)
             # default actions need closed statuswindow to display own dialogs
-            if not conf.fullscreen and not method.__name__ == 'action_recheck':
+            if not conf.fullscreen and\
+                not method.__name__ == 'action_recheck' and\
+                not method.__name__ == 'action_archive_event':
                 statuswindow.hide_window()
         return(decoration_function)
 
@@ -3282,6 +3297,29 @@ class TreeView(QTreeView):
         dialogs.downtime.initialize(server=self.server,
                                     host=self.miserable_host,
                                     service=self.miserable_service)
+
+
+    @action_response_decorator
+    def action_archive_event(self):
+        """
+            archive events in CHeck_MK Event Console
+        """
+        string = '$MONITOR$/view.py?_transid=$TRANSID$&_do_actions=yes&_do_confirm=Yes!&output_format=python&view_name=ec_events_of_monhost&host=$HOST$&_mkeventd_comment=archived&_mkeventd_acknowledge=on&_mkeventd_state=2&_delete_event=Archive Event&event_first_from=&event_first_until=&event_last_from=&event_last_until='
+
+        # Check_MK uses transids - if this occurs in URL its very likely that a Check_MK-URL is called
+        transid = self.server._get_transid(self.miserable_host, 'Events')
+        string = string.replace('$MONITOR$', self.server.monitor_url)
+        string = string.replace('$TRANSID$', transid)
+        string = string.replace('$HOST$', self.miserable_host)
+        string = string.replace(' ', '+')
+        self.server.FetchURL(string)
+
+        # debug
+        if conf.debug_mode == True:
+            self.server.Debug(server=self.server.name, host=info['host'], service=info['service'], debug='Archive event ' + string)
+
+        # trigger recheck to get rid of event as soon as possible        
+        self.recheck.emit({'host': self.miserable_host, 'service': 'Events'})
 
 
     @action_response_decorator
@@ -3334,6 +3372,7 @@ class TreeView(QTreeView):
         text += 'Attempt: {0}\n'.format(item.attempt)
         text += 'Status information: {0}\n'.format(item.status_information)
 
+        # copy text to clipboard
         clipboard.setText(text)
 
 
@@ -3342,23 +3381,25 @@ class TreeView(QTreeView):
         """
             refresh status display
         """
-        # do nothing if window is moving to avoid lagging movement
-        if not statuswindow.moving:
-            # get_status table cells with new data by thread
-            if len(self.model().data_array) > 0:
-                self.is_shown = True
-            else:
-                self.is_shown = False
-            # pre-calculate dimensions
-            height = self.get_real_height()
+        # avoid race condition when waiting for password dialog
+        if not statuswindow == None:
+            # do nothing if window is moving to avoid lagging movement
+            if not statuswindow.moving:
+                # get_status table cells with new data by thread
+                if len(self.model().data_array) > 0:
+                    self.is_shown = True
+                else:
+                    self.is_shown = False
+                # pre-calculate dimensions
+                height = self.get_real_height()
 
-            # tell statusbar it should update
-            self.refreshed.emit()
+                # tell statusbar it should update
+                self.refreshed.emit()
 
-            # check if status changed and notification is necessary
-            # send signal because there are unseen events
-            if self.server.get_events_history_count() > 0:
-                self.status_changed.emit(self.server.name, self.server.worst_status_diff)
+                # check if status changed and notification is necessary
+                # send signal because there are unseen events
+                if self.server.get_events_history_count() > 0:
+                    self.status_changed.emit(self.server.name, self.server.worst_status_diff)
 
 
     @pyqtSlot(int, Qt.SortOrder)
@@ -3484,6 +3525,8 @@ class TreeView(QTreeView):
                         self.change_label_status.emit('Connection timeout', '')
                     elif status.error.startswith('requests.exceptions.ConnectionError'):
                         self.change_label_status.emit('Connection error', '')
+                    elif status.error.startswith('requests.exceptions.ReadTimeout'):
+                        self.change_label_status.emit('Connection timeout', '')
                     elif self.server.status_code in self.server.STATUS_CODES_NO_AUTH or\
                          self.server.refresh_authentication:
                         self.change_label_status.emit('Authentication problem', 'critical')
@@ -3545,42 +3588,43 @@ class TreeView(QTreeView):
             self.info = {'hosts_flags_column_needed': False,
                          'services_flags_column_needed': False, }
 
-            # cruising the whole nagitems structure
-            for category in ('hosts', 'services'):
-                for state in self.server.nagitems_filtered[category].values():
-                    for item in state:
-                        self.data_array.append(list(item.get_columns(HEADERS)))
+            # avoid race condition when waiting for password dialog
+            if len(QBRUSHES[0]) > 0:
+                # cruising the whole nagitems structure
+                for category in ('hosts', 'services'):
+                    for state in self.server.nagitems_filtered[category].values():
+                        for item in state:
+                            self.data_array.append(list(item.get_columns(HEADERS)))
 
-                        # hash for freshness comparison
-                        hash = item.get_hash()
+                            # hash for freshness comparison
+                            hash = item.get_hash()
 
-                        if item.is_host():
-                            if hash in self.server.events_history and\
-                                       self.server.events_history[hash] == True:
-                                # second item in las data_array line is host flags
-                                self.data_array[-1][1] += 'N'
-                        else:
-                            if hash in self.server.events_history and\
-                                       self.server.events_history[hash] == True:
-                                # fourth item in las data_array line is service flags
-                                self.data_array[-1][3] += 'N'
+                            if item.is_host():
+                                if hash in self.server.events_history and\
+                                           self.server.events_history[hash] == True:
+                                    # second item in las data_array line is host flags
+                                    self.data_array[-1][1] += 'N'
+                            else:
+                                if hash in self.server.events_history and\
+                                           self.server.events_history[hash] == True:
+                                    # fourth item in las data_array line is service flags
+                                    self.data_array[-1][3] += 'N'
+                            # add text color as QBrush from status
+                            self.data_array[-1].append(QBRUSHES[len(self.data_array) % 2][COLORS[item.status] + 'text'])
+                            # add background color as QBrush from status
+                            self.data_array[-1].append(QBRUSHES[len(self.data_array) % 2][COLORS[item.status] + 'background'])
+                            # add text color name for sorting data
+                            self.data_array[-1].append(COLORS[item.status] + 'text')
+                            # add background color name for sorting data
+                            self.data_array[-1].append(COLORS[item.status] + 'background')
 
-                        # add text color as QBrush from status
-                        self.data_array[-1].append(QBRUSHES[len(self.data_array) % 2][COLORS[item.status] + 'text'])
-                        # add background color as QBrush from status
-                        self.data_array[-1].append(QBRUSHES[len(self.data_array) % 2][COLORS[item.status] + 'background'])
-                        # add text color name for sorting data
-                        self.data_array[-1].append(COLORS[item.status] + 'text')
-                        # add background color name for sorting data
-                        self.data_array[-1].append(COLORS[item.status] + 'background')
+                            # check if hosts and services flags should be shown
+                            if self.data_array[-1][1] != '':
+                                self.info['hosts_flags_column_needed'] = True
+                            if self.data_array[-1][3] != '':
+                                self.info['services_flags_column_needed'] = True
 
-                        # check if hosts and services flags should be shown
-                        if self.data_array[-1][1] != '':
-                            self.info['hosts_flags_column_needed'] = True
-                        if self.data_array[-1][3] != '':
-                            self.info['services_flags_column_needed'] = True
-
-                        self.data_array[-1].append('X')
+                            self.data_array[-1].append('X')
 
             # sort data before it gets transmitted to treeview model
             self.sort_data_array(self.sort_column, self.sort_order, False)
@@ -3684,6 +3728,7 @@ class TreeView(QTreeView):
                     self.server.Debug(server=self.server.name, debug='Rechecking host {0}'.format(info_dict['host']))
                 else:
                     self.server.Debug(server=self.server.name, debug='Rechecking service {0} on host {1}'.format(info_dict['service'], info_dict['host']))
+
             # call server recheck method
             self.server.set_recheck(info_dict)
 
@@ -3833,6 +3878,11 @@ class TreeView(QTreeView):
                     if conf.debug_mode == True:
                         self.server.Debug(server=self.server.name, host=info['host'], service=info['service'], debug='ACTION: URL-POST in background ' + string)
                     servers[info['server']].FetchURL(string, cgi_data=cgi_data, multipart=True)
+
+                if action['refresh']:
+                    self.recheck(info_dict)
+            
+            
             except:
                 import traceback
                 traceback.print_exc(file=sys.stdout)
@@ -3928,11 +3978,15 @@ class Dialog(QObject):
     def __init__(self, dialog):
         QObject.__init__(self)
         self.window = QDialog()
-        # explicitly set window flags to avoid '?' button on Windows
-        self.window.setWindowFlags(Qt.WindowCloseButtonHint)
 
         self.ui = dialog()
         self.ui.setupUi(self.window)
+
+        # explicitly set window flags to avoid '?' button on Windows
+        self.window.setWindowFlags(Qt.WindowCloseButtonHint)
+
+        # set small titlebar icon
+        self.window.setWindowIcon(ICON)
 
         # treat dialog content after pressing OK button
         if 'button_box' in dir(self.ui):
@@ -3942,6 +3996,9 @@ class Dialog(QObject):
         # QSignalMapper needed to connect all toggle-needing-checkboxes/radiobuttons to one .toggle()-method which
         # decides which sender to use as key in self.TOGGLE_DEPS
         self.signalmapper_toggles = QSignalMapper()
+
+        # try to get and keep focus
+        self.window.setWindowModality(Qt.ApplicationModal)
 
         # window position to be used to fix strange movement bug
         # ##self.x = 0
@@ -3997,6 +4054,9 @@ class Dialog(QObject):
         # Due to older Qt5 in Ubuntu 14.04 signalmapper has to use strings
         self.toggle_visibility(self.ui.__dict__[checkbox],
                                self.TOGGLE_DEPS[self.ui.__dict__[checkbox]])
+
+        # adjust dialog window size after UI changes
+        self.window.adjustSize()
 
 
     def toggle_toggles(self):
@@ -4278,7 +4338,6 @@ class Dialog_Settings(Dialog):
 
         # reset window if only needs smaller screen estate
         self.window.adjustSize()
-        # self.window.show()
         self.window.exec()
 
 
@@ -4378,7 +4437,7 @@ class Dialog_Settings(Dialog):
         ICONS_FONT = QFont('Nagstamon', FONT.pointSize() + 2, QFont.Normal, False)
 
         # update brushes for treeview
-        _create_brushes()
+        create_brushes()
 
         # store configuration
         conf.SaveConfig()
@@ -4914,8 +4973,8 @@ class Dialog_Server(Dialog):
         # these widgets are shown or hidden depending on server type properties
         # the servers listed at each widget do need them
         self.VOLATILE_WIDGETS = {
-                                 self.ui.label_monitor_cgi_url : ['Nagios', 'Icinga', 'Opsview', 'Thruk'],
-                                 self.ui.input_lineedit_monitor_cgi_url : ['Nagios', 'Icinga', 'Opsview', 'Thruk'],
+                                 self.ui.label_monitor_cgi_url : ['Nagios', 'Icinga', 'Thruk'],
+                                 self.ui.input_lineedit_monitor_cgi_url : ['Nagios', 'Icinga', 'Thruk'],
                                  self.ui.input_checkbox_use_autologin : ['Centreon'],
                                  self.ui.input_lineedit_autologin_key : ['Centreon'],
                                  self.ui.label_autologin_key : ['Centreon'],
@@ -4930,7 +4989,7 @@ class Dialog_Server(Dialog):
         self.ui.input_combobox_type.setCurrentText('Nagios')
         # fill authentication combobox
         self.ui.input_combobox_authentication.addItems(['Basic', 'Digest'])
-
+        
         # detect change of server type which leads to certain options shown or hidden
         self.ui.input_combobox_type.activated.connect(self.server_type_changed)
 
@@ -4958,7 +5017,6 @@ class Dialog_Server(Dialog):
             """
                 self.server_conf has to be set by decorated method
             """
-
             # previous server conf only useful when editing - defaults to None
             self.previous_server_conf = None
 
@@ -4971,7 +5029,7 @@ class Dialog_Server(Dialog):
                     if widget.startswith('input_checkbox_'):
                         setting = widget.split('input_checkbox_')[1]
                         self.ui.__dict__[widget].setChecked(self.server_conf.__dict__[setting])
-                    if widget.startswith('input_radiobutton_'):
+                    elif widget.startswith('input_radiobutton_'):
                         setting = widget.split('input_radiobutton_')[1]
                         self.ui.__dict__[widget].setChecked(self.server_conf.__dict__[setting])
                     elif widget.startswith('input_combobox_'):
@@ -4980,6 +5038,9 @@ class Dialog_Server(Dialog):
                     elif widget.startswith('input_lineedit_'):
                         setting = widget.split('input_lineedit_')[1]
                         self.ui.__dict__[widget].setText(self.server_conf.__dict__[setting])
+                    elif widget.startswith('input_spinbox_'):
+                        setting = widget.split('input_spinbox_')[1]
+                        self.ui.__dict__[widget].setValue(self.server_conf.__dict__[setting])
 
             # set current authentication type by using capitalized first letter via .title()
             self.ui.input_combobox_authentication.setCurrentText(self.server_conf.authentication.title())
@@ -5068,7 +5129,7 @@ class Dialog_Server(Dialog):
                     if widget.startswith('input_checkbox_'):
                         setting = widget.split('input_checkbox_')[1]
                         self.server_conf.__dict__[setting] = self.ui.__dict__[widget].isChecked()
-                    if widget.startswith('input_radiobutton_'):
+                    elif widget.startswith('input_radiobutton_'):
                         setting = widget.split('input_radiobutton_')[1]
                         self.server_conf.__dict__[setting] = self.ui.__dict__[widget].isChecked()
                     elif widget.startswith('input_combobox_'):
@@ -5077,6 +5138,10 @@ class Dialog_Server(Dialog):
                     elif widget.startswith('input_lineedit_'):
                         setting = widget.split('input_lineedit_')[1]
                         self.server_conf.__dict__[setting] = self.ui.__dict__[widget].text()
+                    elif widget.startswith('input_spinbox_'):
+                        setting = widget.split('input_spinbox_')[1]
+                        self.server_conf.__dict__[setting] = self.ui.__dict__[widget].value()
+
 
             # URLs should not end with / - clean it
             self.server_conf.monitor_url = self.server_conf.monitor_url.rstrip('/')
@@ -5667,6 +5732,7 @@ class Dialog_Authentication(Dialog):
         """
         self.server = servers[server]
         self.initialize()
+        self.window.adjustSize()
         self.window.exec()
 
 
@@ -5730,6 +5796,9 @@ class Dialog_Authentication(Dialog):
 
             self.ui.label_autologin_key.hide()
             self.ui.input_lineedit_autologin_key.hide()
+
+        # adjust dialog window size after UI changes
+        self.window.adjustSize()
 
 
 class Dialog_Server_missing(Dialog):
@@ -6031,17 +6100,7 @@ class DBus(QObject):
         if action == 'open' + self.random_id:
             self.open_statuswindow.emit()
 
-
-# def _create_icons():
-#    """
-#        fill global ICONS with pixmaps rendered from SVGs
-#    """
-#    for attr in ('acknowledged', 'downtime', 'flapping', 'new', 'passive'):
-#        icon = QIcon('%s%snagstamon_%s.svg' % (RESOURCES, os.sep, attr)).pixmap(FONT.pointSize(), FONT.pointSize())
-#        ICONS[attr] = icon
-
-
-def _create_brushes():
+def create_brushes():
     """
         fill static brushes with current colors for treeview
     """

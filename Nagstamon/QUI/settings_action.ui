@@ -11,7 +11,7 @@
    </rect>
   </property>
   <property name="sizePolicy">
-   <sizepolicy hsizetype="Minimum" vsizetype="Preferred">
+   <sizepolicy hsizetype="Minimum" vsizetype="Minimum">
     <horstretch>0</horstretch>
     <verstretch>0</verstretch>
    </sizepolicy>
@@ -23,6 +23,13 @@
    <bool>true</bool>
   </property>
   <layout class="QGridLayout" name="gridLayout">
+   <item row="31" column="0" colspan="6">
+    <widget class="QRadioButton" name="input_radiobutton_close_popwin">
+     <property name="text">
+      <string>Close status popup window after action</string>
+     </property>
+    </widget>
+   </item>
    <item row="3" column="0">
     <widget class="QLabel" name="label_monitor_type">
      <property name="sizePolicy">
@@ -33,45 +40,6 @@
      </property>
      <property name="text">
       <string>Monitor type:</string>
-     </property>
-    </widget>
-   </item>
-   <item row="5" column="0">
-    <widget class="QLabel" name="label_description">
-     <property name="sizePolicy">
-      <sizepolicy hsizetype="Minimum" vsizetype="Preferred">
-       <horstretch>0</horstretch>
-       <verstretch>0</verstretch>
-      </sizepolicy>
-     </property>
-     <property name="text">
-      <string>Description:</string>
-     </property>
-    </widget>
-   </item>
-   <item row="1" column="0">
-    <widget class="QLabel" name="label_action_type">
-     <property name="sizePolicy">
-      <sizepolicy hsizetype="Minimum" vsizetype="Preferred">
-       <horstretch>0</horstretch>
-       <verstretch>0</verstretch>
-      </sizepolicy>
-     </property>
-     <property name="text">
-      <string>Action type:</string>
-     </property>
-    </widget>
-   </item>
-   <item row="4" column="0">
-    <widget class="QLabel" name="label_name">
-     <property name="sizePolicy">
-      <sizepolicy hsizetype="Minimum" vsizetype="Preferred">
-       <horstretch>0</horstretch>
-       <verstretch>0</verstretch>
-      </sizepolicy>
-     </property>
-     <property name="text">
-      <string>Name:</string>
      </property>
     </widget>
    </item>
@@ -88,6 +56,26 @@
      </property>
     </widget>
    </item>
+   <item row="22" column="5">
+    <widget class="QCheckBox" name="input_checkbox_re_host_reverse">
+     <property name="text">
+      <string>reverse</string>
+     </property>
+    </widget>
+   </item>
+   <item row="1" column="0">
+    <widget class="QLabel" name="label_action_type">
+     <property name="sizePolicy">
+      <sizepolicy hsizetype="Minimum" vsizetype="Preferred">
+       <horstretch>0</horstretch>
+       <verstretch>0</verstretch>
+      </sizepolicy>
+     </property>
+     <property name="text">
+      <string>Action type:</string>
+     </property>
+    </widget>
+   </item>
    <item row="23" column="0" colspan="3">
     <widget class="QCheckBox" name="input_checkbox_re_service_enabled">
      <property name="text">
@@ -95,46 +83,28 @@
      </property>
     </widget>
    </item>
-   <item row="31" column="0" colspan="6">
-    <widget class="QRadioButton" name="input_radiobutton_close_popwin">
-     <property name="text">
-      <string>Close status popup window after action</string>
-     </property>
-    </widget>
-   </item>
-   <item row="32" column="0" colspan="6">
-    <widget class="QRadioButton" name="input_radiobutton_leave_popwin_open">
-     <property name="text">
-      <string>Leave status popup window open after action</string>
-     </property>
-    </widget>
-   </item>
-   <item row="25" column="0" colspan="3">
-    <widget class="QCheckBox" name="input_checkbox_re_status_information_enabled">
-     <property name="text">
-      <string>Regular expressions for status informations</string>
-     </property>
-    </widget>
-   </item>
-   <item row="21" column="0" colspan="4">
-    <widget class="QCheckBox" name="input_checkbox_re_host_enabled">
-     <property name="text">
-      <string>Regular expressions for hosts</string>
-     </property>
-    </widget>
-   </item>
-   <item row="26" column="0" colspan="5">
-    <widget class="QLineEdit" name="input_lineedit_re_status_information_pattern"/>
-   </item>
-   <item row="22" column="0" colspan="5">
-    <widget class="QLineEdit" name="input_lineedit_re_host_pattern"/>
-   </item>
-   <item row="22" column="5">
-    <widget class="QCheckBox" name="input_checkbox_re_host_reverse">
+   <item row="26" column="5">
+    <widget class="QCheckBox" name="input_checkbox_re_status_information_reverse">
      <property name="text">
       <string>reverse</string>
      </property>
     </widget>
+   </item>
+   <item row="4" column="0">
+    <widget class="QLabel" name="label_name">
+     <property name="sizePolicy">
+      <sizepolicy hsizetype="Minimum" vsizetype="Preferred">
+       <horstretch>0</horstretch>
+       <verstretch>0</verstretch>
+      </sizepolicy>
+     </property>
+     <property name="text">
+      <string>Name:</string>
+     </property>
+    </widget>
+   </item>
+   <item row="24" column="0" colspan="5">
+    <widget class="QLineEdit" name="input_lineedit_re_service_pattern"/>
    </item>
    <item row="24" column="5">
     <widget class="QCheckBox" name="input_checkbox_re_service_reverse">
@@ -143,13 +113,94 @@
      </property>
     </widget>
    </item>
-   <item row="24" column="0" colspan="5">
-    <widget class="QLineEdit" name="input_lineedit_re_service_pattern"/>
-   </item>
-   <item row="26" column="5">
-    <widget class="QCheckBox" name="input_checkbox_re_status_information_reverse">
+   <item row="29" column="0" colspan="4">
+    <widget class="QLabel" name="label_status_popup">
      <property name="text">
-      <string>reverse</string>
+      <string>Status popup window:</string>
+     </property>
+    </widget>
+   </item>
+   <item row="0" column="0" colspan="5">
+    <widget class="QCheckBox" name="input_checkbox_enabled">
+     <property name="text">
+      <string>Enabled</string>
+     </property>
+    </widget>
+   </item>
+   <item row="5" column="1" colspan="5">
+    <widget class="QLineEdit" name="input_lineedit_description"/>
+   </item>
+   <item row="34" column="0" colspan="6">
+    <widget class="QDialogButtonBox" name="button_box">
+     <property name="orientation">
+      <enum>Qt::Horizontal</enum>
+     </property>
+     <property name="standardButtons">
+      <set>QDialogButtonBox::Cancel|QDialogButtonBox::Ok</set>
+     </property>
+    </widget>
+   </item>
+   <item row="26" column="0" colspan="5">
+    <widget class="QLineEdit" name="input_lineedit_re_status_information_pattern"/>
+   </item>
+   <item row="25" column="0" colspan="3">
+    <widget class="QCheckBox" name="input_checkbox_re_status_information_enabled">
+     <property name="text">
+      <string>Regular expressions for status informations</string>
+     </property>
+    </widget>
+   </item>
+   <item row="6" column="1" colspan="5">
+    <widget class="QTextEdit" name="input_textedit_string">
+     <property name="sizePolicy">
+      <sizepolicy hsizetype="MinimumExpanding" vsizetype="MinimumExpanding">
+       <horstretch>0</horstretch>
+       <verstretch>0</verstretch>
+      </sizepolicy>
+     </property>
+     <property name="toolTip">
+      <string>Available variables for action strings:
+
+$HOST$ - host as in monitor
+$SERVICE$ - service as in monitor
+$MONITOR$ - monitor address
+$MONITOR-CGI$ - monitor CGI address
+$ADDRESS$ - address of host, delivered from connection method
+$USERNAME$ - username on monitor
+$STATUS-INFO$ - status information for host or service
+$PASSWORD$ - username's password on monitor
+$COMMENT-ACK$ - default acknowledge comment
+$COMMENT-DOWN$ - default downtime comment
+$COMMENT-SUBMIT$ - default submit check result comment
+
+$TRANSID$ - only useful for Check_MK as _transid=$TRANSID$</string>
+     </property>
+    </widget>
+   </item>
+   <item row="13" column="1">
+    <widget class="QCheckBox" name="input_checkbox_filter_target_host">
+     <property name="text">
+      <string>Host</string>
+     </property>
+    </widget>
+   </item>
+   <item row="5" column="0">
+    <widget class="QLabel" name="label_description">
+     <property name="sizePolicy">
+      <sizepolicy hsizetype="Minimum" vsizetype="Preferred">
+       <horstretch>0</horstretch>
+       <verstretch>0</verstretch>
+      </sizepolicy>
+     </property>
+     <property name="text">
+      <string>Description:</string>
+     </property>
+    </widget>
+   </item>
+   <item row="32" column="0" colspan="6">
+    <widget class="QRadioButton" name="input_radiobutton_leave_popwin_open">
+     <property name="text">
+      <string>Leave status popup window open after action</string>
      </property>
     </widget>
    </item>
@@ -182,29 +233,8 @@
      </property>
     </widget>
    </item>
-   <item row="29" column="0" colspan="4">
-    <widget class="QLabel" name="label_status_popup">
-     <property name="text">
-      <string>Status popup window:</string>
-     </property>
-    </widget>
-   </item>
-   <item row="0" column="0" colspan="5">
-    <widget class="QCheckBox" name="input_checkbox_enabled">
-     <property name="text">
-      <string>Enabled</string>
-     </property>
-    </widget>
-   </item>
-   <item row="33" column="0" colspan="6">
-    <widget class="QDialogButtonBox" name="button_box">
-     <property name="orientation">
-      <enum>Qt::Horizontal</enum>
-     </property>
-     <property name="standardButtons">
-      <set>QDialogButtonBox::Cancel|QDialogButtonBox::Ok</set>
-     </property>
-    </widget>
+   <item row="4" column="1" colspan="5">
+    <widget class="QLineEdit" name="input_lineedit_name"/>
    </item>
    <item row="14" column="1">
     <widget class="QCheckBox" name="input_checkbox_filter_target_service">
@@ -212,12 +242,6 @@
       <string>Service</string>
      </property>
     </widget>
-   </item>
-   <item row="5" column="1" colspan="5">
-    <widget class="QLineEdit" name="input_lineedit_description"/>
-   </item>
-   <item row="4" column="1" colspan="5">
-    <widget class="QLineEdit" name="input_lineedit_name"/>
    </item>
    <item row="3" column="1" colspan="2">
     <widget class="QComboBox" name="input_combobox_monitor_type"/>
@@ -239,37 +263,20 @@ Request given URL string in the background, for example to acknowledge a service
      </property>
     </widget>
    </item>
-   <item row="13" column="1">
-    <widget class="QCheckBox" name="input_checkbox_filter_target_host">
+   <item row="22" column="0" colspan="5">
+    <widget class="QLineEdit" name="input_lineedit_re_host_pattern"/>
+   </item>
+   <item row="21" column="0" colspan="4">
+    <widget class="QCheckBox" name="input_checkbox_re_host_enabled">
      <property name="text">
-      <string>Host</string>
+      <string>Regular expressions for hosts</string>
      </property>
     </widget>
    </item>
-   <item row="6" column="1" colspan="5">
-    <widget class="QTextEdit" name="input_textedit_string">
-     <property name="sizePolicy">
-      <sizepolicy hsizetype="MinimumExpanding" vsizetype="MinimumExpanding">
-       <horstretch>0</horstretch>
-       <verstretch>0</verstretch>
-      </sizepolicy>
-     </property>
-     <property name="toolTip">
-      <string>Available variables for action strings:
-
-$HOST$ - host as in monitor
-$SERVICE$ - service as in monitor
-$MONITOR$ - monitor address
-$MONITOR-CGI$ - monitor CGI address
-$ADDRESS$ - address of host, delivered from connection method
-$USERNAME$ - username on monitor
-$STATUS-INFO$ - status information for host or service
-$PASSWORD$ - username's password on monitor
-$COMMENT-ACK$ - default acknowledge comment
-$COMMENT-DOWN$ - default downtime comment
-$COMMENT-SUBMIT$ - default submit check result comment
-
-$TRANSID$ - only useful for Check_MK as _transid=$TRANSID$</string>
+   <item row="33" column="0">
+    <widget class="QCheckBox" name="input_checkbox_recheck">
+     <property name="text">
+      <string>Recheck after action to force result</string>
      </property>
     </widget>
    </item>

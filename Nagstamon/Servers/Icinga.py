@@ -123,9 +123,9 @@ class IcingaServer(GenericServer):
 
                 # get status depending on JSONablility
                 if self.json == True:
-                    self._get_status_JSON()
+                    return(self._get_status_JSON())
                 else:
-                    self._get_status_HTML()
+                    return(self._get_status_HTML())
             else:
                 # error result in case version still was ''
                 return result
@@ -153,10 +153,16 @@ class IcingaServer(GenericServer):
             for status_type in 'hard', 'soft':
                 result = self.FetchURL(self.cgiurl_hosts[status_type], giveback='raw')
                 # purify JSON result of unnecessary control sequence \n
-                jsonraw, error = copy.deepcopy(result.result.replace('\n', '')), copy.deepcopy(result.error)
+                jsonraw, error, status_code = copy.deepcopy(result.result.replace('\n', '')),\
+                                              copy.deepcopy(result.error),\
+                                              result.status_code
 
-                if error != '': return Result(result=jsonraw, error=error)
-
+                # check if any error occured
+                errors_occured = self.check_for_error(jsonraw, error, status_code)
+                # if there are errors return them
+                if errors_occured != False:
+                    return(errors_occured)    
+                
                 jsondict = json.loads(jsonraw)
                 hosts = copy.deepcopy(jsondict['status']['host_status'])
 
@@ -211,9 +217,15 @@ class IcingaServer(GenericServer):
             for status_type in 'hard', 'soft':
                 result = self.FetchURL(self.cgiurl_services[status_type], giveback='raw')
                 # purify JSON result of unnecessary control sequence \n
-                jsonraw, error = copy.deepcopy(result.result.replace('\n', '')), copy.deepcopy(result.error)
+                jsonraw, error, status_code = copy.deepcopy(result.result.replace('\n', '')),\
+                                              copy.deepcopy(result.error),\
+                                              result.status_code
 
-                if error != '': return Result(result=jsonraw, error=error)
+                # check if any error occured
+                errors_occured = self.check_for_error(jsonraw, error, status_code)
+                # if there are errors return them
+                if errors_occured != False:
+                    return(errors_occured)    
 
                 jsondict = json.loads(jsonraw)
                 services = copy.deepcopy(jsondict['status']['service_status'])
@@ -306,9 +318,15 @@ class IcingaServer(GenericServer):
         try:
             for status_type in 'hard', 'soft':
                 result = self.FetchURL(self.cgiurl_hosts[status_type])
-                htobj, error = result.result, result.error
+                htobj, error, status_code = result.result,\
+                                            result.error,\
+                                            result.status_code
 
-                if error != '': return Result(result=htobj, error=error)
+                # check if any error occured
+                errors_occured = self.check_for_error(htobj, error, status_code)
+                # if there are errors return them
+                if errors_occured != False:
+                    return(errors_occured)    
 
                 # put a copy of a part of htobj into table to be able to delete htobj
                 table = htobj('table', {'class': 'status'})[0]
@@ -409,7 +427,6 @@ class IcingaServer(GenericServer):
                                 # extra Icinga properties to solve https://github.com/HenriWahl/Nagstamon/issues/192
                                 # acknowledge needs host_name and no display name
                                 self.new_hosts[new_host].real_name = n['host']
-                                
                             
                             # some cleanup
                             del tds, n
@@ -430,9 +447,16 @@ class IcingaServer(GenericServer):
         try:
             for status_type in 'hard', 'soft':
                 result = self.FetchURL(self.cgiurl_services[status_type])
-                htobj, error = result.result, result.error
-                if error != '': return Result(result=htobj, error=error)
-
+                htobj, error, status_code = result.result,\
+                                            result.error,\
+                                            result.status_code
+                                            
+                # check if any error occured
+                errors_occured = self.check_for_error(htobj, error, status_code)
+                # if there are errors return them
+                if errors_occured != False:
+                    return(errors_occured)    
+                
                 table = htobj('table', {'class': 'status'})[0]
 
                 # some Icinga versions have a <tbody> tag in cgi output HTML which

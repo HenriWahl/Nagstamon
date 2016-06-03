@@ -11,7 +11,12 @@ from PyQt5 import QtCore, QtGui, QtWidgets
 class Ui_dialog_submit(object):
     def setupUi(self, dialog_submit):
         dialog_submit.setObjectName("dialog_submit")
-        dialog_submit.resize(473, 443)
+        dialog_submit.resize(473, 449)
+        sizePolicy = QtWidgets.QSizePolicy(QtWidgets.QSizePolicy.Minimum, QtWidgets.QSizePolicy.Minimum)
+        sizePolicy.setHorizontalStretch(0)
+        sizePolicy.setVerticalStretch(0)
+        sizePolicy.setHeightForWidth(dialog_submit.sizePolicy().hasHeightForWidth())
+        dialog_submit.setSizePolicy(sizePolicy)
         dialog_submit.setMaximumSize(QtCore.QSize(16777215, 16777215))
         dialog_submit.setSizeGripEnabled(True)
         dialog_submit.setModal(True)

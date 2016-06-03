@@ -12,6 +12,11 @@ class Ui_dialog_about(object):
     def setupUi(self, dialog_about):
         dialog_about.setObjectName("dialog_about")
         dialog_about.resize(500, 300)
+        sizePolicy = QtWidgets.QSizePolicy(QtWidgets.QSizePolicy.Minimum, QtWidgets.QSizePolicy.Minimum)
+        sizePolicy.setHorizontalStretch(0)
+        sizePolicy.setVerticalStretch(0)
+        sizePolicy.setHeightForWidth(dialog_about.sizePolicy().hasHeightForWidth())
+        dialog_about.setSizePolicy(sizePolicy)
         dialog_about.setSizeGripEnabled(True)
         dialog_about.setModal(True)
         self.gridLayout = QtWidgets.QGridLayout(dialog_about)

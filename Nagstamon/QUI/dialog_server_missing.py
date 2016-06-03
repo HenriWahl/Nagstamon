@@ -12,6 +12,11 @@ class Ui_dialog_server_missing(object):
     def setupUi(self, dialog_server_missing):
         dialog_server_missing.setObjectName("dialog_server_missing")
         dialog_server_missing.resize(813, 263)
+        sizePolicy = QtWidgets.QSizePolicy(QtWidgets.QSizePolicy.Minimum, QtWidgets.QSizePolicy.Minimum)
+        sizePolicy.setHorizontalStretch(0)
+        sizePolicy.setVerticalStretch(0)
+        sizePolicy.setHeightForWidth(dialog_server_missing.sizePolicy().hasHeightForWidth())
+        dialog_server_missing.setSizePolicy(sizePolicy)
         dialog_server_missing.setMinimumSize(QtCore.QSize(350, 0))
         dialog_server_missing.setModal(True)
         self.verticalLayout = QtWidgets.QVBoxLayout(dialog_server_missing)

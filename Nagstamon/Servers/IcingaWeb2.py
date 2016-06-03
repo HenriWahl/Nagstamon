@@ -114,7 +114,8 @@ class IcingaWeb2Server(GenericServer):
                 # hosts (up or down or unreachable)
                 self.cgiurl_hosts = {'hard': self.monitor_cgi_url + '/monitoring/list/hosts?host_state>0&host_state<=2&host_state_type=1&addColumns=host_last_check&format=json', \
                                      'soft': self.monitor_cgi_url + '/monitoring/list/hosts?host_state>0&host_state<=2&host_state_type=0&addColumns=host_last_check&format=json'}
-            self._get_status_JSON()
+            # give back JSON parsing result
+            return(self._get_status_JSON())
         except:
             # set checking flag back to False
             self.isChecking = False
@@ -136,11 +137,19 @@ class IcingaWeb2Server(GenericServer):
         # now using JSON output from Icinga
         try:
             for status_type in 'hard', 'soft':
-                result = self.FetchURL(self.cgiurl_hosts[status_type], giveback='raw')
+                result = self.FetchURL(self.cgiurl_hosts[status_type], giveback='raw')               
                 # purify JSON result of unnecessary control sequence \n
-                jsonraw, error = copy.deepcopy(result.result.replace('\n', '')), copy.deepcopy(result.error)
+                jsonraw, error, status_code = copy.deepcopy(result.result.replace('\n', '')),\
+                                              copy.deepcopy(result.error),\
+                                              result.status_code
 
-                if error != '': return Result(result=jsonraw, error=error)
+                #if error != '' or status_code >= 400:
+                #    return Result(result=jsonraw,
+                #                  error=error,
+                #                  status_code=status_code)
+
+                # check if any error occured
+                self.check_for_error(jsonraw, error, status_code)
 
                 hosts = json.loads(jsonraw)
 
@@ -199,13 +208,19 @@ class IcingaWeb2Server(GenericServer):
             for status_type in 'hard', 'soft':
                 result = self.FetchURL(self.cgiurl_services[status_type], giveback='raw')
                 # purify JSON result of unnecessary control sequence \n
-                jsonraw, error = copy.deepcopy(result.result.replace('\n', '')), copy.deepcopy(result.error)
+                jsonraw, error, status_code = copy.deepcopy(result.result.replace('\n', '')),\
+                                              copy.deepcopy(result.error),\
+                                              result.status_code
 
-                if error != '': return Result(result=jsonraw, error=error)
-
+                #if error != '' or status_code >= 400:
+                #    return Result(result=jsonraw,
+                #                  error=error,
+                #                  status_code=status_code)
+                
+                # check if any error occured
+                self.check_for_error(jsonraw, error, status_code)
 
                 services = copy.deepcopy(json.loads(jsonraw))
-
 
                 for service in services:
                     # make dict of tuples for better reading

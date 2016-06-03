@@ -53,9 +53,6 @@ from Nagstamon.Config import (conf,
 
 from collections import OrderedDict
 
-# get debug queue from nagstamon.py
-###debug_queue = sys.modules['__main__'].debug_queue
-
 
 class GenericServer(object):
     '''
@@ -129,6 +126,7 @@ class GenericServer(object):
         self.status_description = ''
         self.status_code = 0
         self.has_error = False
+        self.timeout = 10
 
         # The events_* are recycled from GUI.py
         # history of events to track status changes for notifications
@@ -532,10 +530,16 @@ class GenericServer(object):
                 result = self.FetchURL(self.cgiurl_hosts[status_type])               
                 htobj, error, status_code = result.result, result.error, result.status_code
                 
-                if error != '' or status_code > 400:
-                    return Result(result=copy.deepcopy(htobj),
-                                              error=copy.deepcopy(error),
-                                              status_code=copy.deepcopy(status_code))
+                #if error != '' or status_code > 400:
+                #    return Result(result=copy.deepcopy(htobj),
+                #                              error=copy.deepcopy(error),
+                #                              status_code=copy.deepcopy(status_code))
+
+                # check if any error occured
+                errors_occured = self.check_for_error(htobj, error, status_code)
+                # if there are errors return them
+                if errors_occured != False:
+                    return(errors_occured)
 
                 # put a copy of a part of htobj into table to be able to delete htobj
                 # too mnuch copy.deepcopy()s here give recursion crashs
@@ -656,10 +660,16 @@ class GenericServer(object):
                 result = self.FetchURL(self.cgiurl_services[status_type])
                 htobj, error, status_code = result.result, result.error, result.status_code
 
-                if error != '' or status_code > 400:
-                    return Result(result=copy.deepcopy(htobj),
-                                  error=copy.deepcopy(error),
-                                  status_code=code.deepcopy(status_code))
+                #if error != '' or status_code > 400:
+                #    return Result(result=copy.deepcopy(htobj),
+                #                  error=copy.deepcopy(error),
+                #                  status_code=code.deepcopy(status_code))
+
+                # check if any error occured
+                errors_occured = self.check_for_error(htobj, error, status_code)
+                # if there are errors return them
+                if errors_occured != False:
+                    return(errors_occured)
 
                 # too much copy.deepcopy()s here give recursion crashs
                 table = htobj('table', {'class': 'status'})[0]
@@ -806,6 +816,7 @@ class GenericServer(object):
 
         # get all trouble hosts/services from server specific _get_status()
         status = self._get_status()
+
         if status != None:
             self.status = status.result
             self.status_description = status.error
@@ -815,7 +826,7 @@ class GenericServer(object):
 
         # some monitor server seem to have a problem with too short intervals
         # and sometimes send a bad status line which would result in a misleading
-        # ERROR display - it seems safe to ignore theese errors
+        # ERROR display - it seems safe to ignore these errors
         # see https://github.com/HenriWahl/Nagstamon/issues/207
         if 'BadStatusLine' in self.status_description:
             self.status_description = ''
@@ -827,6 +838,7 @@ class GenericServer(object):
         if (self.status == 'ERROR' or
             self.status_description != '' or
             self.status_code >= 400):
+
             # ask for password if authorization failed
             if 'HTTP Error 401' in self.status_description or \
                'HTTP Error 403' in self.status_description or \
@@ -1248,9 +1260,11 @@ class GenericServer(object):
                     # most requests come without multipart/form-data
                     if multipart == False:
                         if cgi_data == None:
-                            response = self.session.get(url, timeout=30)
+                            #response = self.session.get(url, timeout=30)
+                            response = self.session.get(url, timeout=self.timeout)
                         else:
-                            response = self.session.post(url, data=cgi_data, timeout=30)
+                            #response = self.session.post(url, data=cgi_data, timeout=30)
+                            response = self.session.post(url, data=cgi_data, timeout=self.timeout)
                     else:
                         # Check_MK and Opsview need multipart/form-data encoding
                         # http://stackoverflow.com/questions/23120974/python-requests-post-multipart-form-data-without-filename-in-http-request#23131823
@@ -1259,7 +1273,7 @@ class GenericServer(object):
                             form_data[key] = (None, cgi_data[key])
 
                         # get response with cgi_data encodes as files
-                        response = self.session.post(url, files=form_data)                   
+                        response = self.session.post(url, files=form_data, timeout=self.timeout)                   
                 else:
                     # send request without authentication data
                     temporary_session = requests.Session()
@@ -1274,9 +1288,11 @@ class GenericServer(object):
                     # most requests come without multipart/form-data
                     if multipart == False:
                         if cgi_data == None:
-                            response = temporary_session.get(url, timeout=30)
+                            #response = temporary_session.get(url, timeout=30)
+                            response = temporary_session.get(url, timeout=self.timeout)
                         else:
-                            response = temporary_session.post(url, data=cgi_data, timeout=30)
+                            #response = temporary_session.post(url, data=cgi_data, timeout=30)
+                            response = temporary_session.post(url, data=cgi_data, timeout=self.timeout)
                     else:
                         # Check_MK and Opsview nees multipart/form-data encoding
                         # http://stackoverflow.com/questions/23120974/python-requests-post-multipart-form-data-without-filename-in-http-request#23131823
@@ -1284,12 +1300,13 @@ class GenericServer(object):
                         for key in cgi_data:
                             form_data[key] = (None, cgi_data[key])
                         # get response with cgi_data encodes as files
-                        response = temporary_session.post(url, files=form_data, timeout=30)
+                        #response = temporary_session.post(url, files=form_data, timeout=30)
+                        response = temporary_session.post(url, files=form_data, timeout=self.timeout)
 
                     # cleanup
                     del temporary_session
 
-            except Exception as err:
+            except Exception as err:               
                 traceback.print_exc(file=sys.stdout)
                 result, error = self.Error(sys.exc_info())
                 return Result(result=result, error=error, status_code=-1)
@@ -1443,3 +1460,16 @@ class GenericServer(object):
             return number of unseen events - those which are set True as unseen
         """
         return(len(list((e for e in self.events_history if self.events_history[e] == True))))
+
+    
+    def check_for_error(self, result, error, status_code):
+        """
+            check if any error occured - if so, return error
+        """
+        if error != '' or status_code > 400:
+            return(Result(result=copy.deepcopy(result),
+                          error=copy.deepcopy(error),
+                          status_code=copy.deepcopy(status_code)))
+        else:
+            return(False)
+

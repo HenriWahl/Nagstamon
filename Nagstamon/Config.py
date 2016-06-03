@@ -57,7 +57,7 @@ class AppInfo(object):
         contains app information previously located in GUI.py
     """
     NAME = 'Nagstamon'
-    VERSION = '2.0-beta-20160530'
+    VERSION = '2.0-beta-20160601'
     WEBSITE = 'https://nagstamon.ifw-dresden.de'
     COPYRIGHT = '©2008-2016 Henri Wahl et al.'
     COMMENTS = 'Nagios status monitor for your desktop'
@@ -798,6 +798,7 @@ class Server(object):
         self.proxy_password = 'proxypassword'
         # defaults to 'basic', another possible value at the moment is 'digest'
         self.authentication = 'basic'
+        self.timeout = 10
 
         # special FX
         # Centreon autologin
@@ -852,6 +853,8 @@ class Action(object):
         # close powin or not, depends on personal preference
         self.close_popwin = True
         self.leave_popwin_open = False
+        # do an immediate recheck after action was applied
+        self.recheck = False
 
         # special FX
         # Centreon criticality and autologin
@@ -861,6 +864,7 @@ class Action(object):
 
         # add and/or all keywords to object
         for k in kwds: self.__dict__[k] = kwds[k]
+
 
 # Initialize configuration to be accessed globally
 conf = Config()

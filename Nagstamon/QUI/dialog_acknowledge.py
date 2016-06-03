@@ -12,6 +12,11 @@ class Ui_dialog_acknowledge(object):
     def setupUi(self, dialog_acknowledge):
         dialog_acknowledge.setObjectName("dialog_acknowledge")
         dialog_acknowledge.resize(465, 274)
+        sizePolicy = QtWidgets.QSizePolicy(QtWidgets.QSizePolicy.Minimum, QtWidgets.QSizePolicy.Minimum)
+        sizePolicy.setHorizontalStretch(0)
+        sizePolicy.setVerticalStretch(0)
+        sizePolicy.setHeightForWidth(dialog_acknowledge.sizePolicy().hasHeightForWidth())
+        dialog_acknowledge.setSizePolicy(sizePolicy)
         dialog_acknowledge.setSizeGripEnabled(True)
         dialog_acknowledge.setModal(True)
         self.gridLayout = QtWidgets.QGridLayout(dialog_acknowledge)
