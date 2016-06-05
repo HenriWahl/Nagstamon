@@ -4,12 +4,12 @@
 
 Name:     nagstamon
 Version:  2.0
-Release:  0.1%{?dist}
+Release:  0.1.%{gitdate}git%{shortcommit}%{?dist}
 Summary:  Nagios status monitor for desktop
 
 License:  GPLv2+
 URL:      https://nagstamon.ifw-dresden.de
-Source0:  https://github.com/MedicMomcilo/Nagstamon/archive/%{commit}/nagstamon-%{commit}.tar.gz
+Source0:  https://github.com/HenriWahl/Nagstamon/archive/%{commit}/nagstamon-%{commit}.tar.gz
 
 BuildArch:     noarch
 BuildRequires: python3-devel
@@ -75,5 +75,5 @@ desktop-file-install --dir %{buildroot}/%{_datadir}/applications\
 %{python3_sitelib}/%{name}*.egg-info
 
 %changelog
-* Thu Jun 02 2016 Momcilo Medic <fedorauser@fedoraproject.org> 2.0-0.1
+* Sun Jun 05 2016 Momcilo Medic <fedorauser@fedoraproject.org> 2.0-0.1.20160602git7139844
 - Initial .spec file
