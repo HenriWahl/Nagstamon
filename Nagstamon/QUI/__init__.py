@@ -3819,7 +3819,8 @@ class TreeView(QTreeView):
                 else:
                     string = self.string
                     action_type = self.type
-                """
+                """               
+                
                 # used for POST request
                 if 'cgi_data' in action:
                     cgi_data = action['cgi_data']
@@ -3879,7 +3880,7 @@ class TreeView(QTreeView):
                         self.server.Debug(server=self.server.name, host=info['host'], service=info['service'], debug='ACTION: URL-POST in background ' + string)
                     servers[info['server']].FetchURL(string, cgi_data=cgi_data, multipart=True)
 
-                if action['refresh']:
+                if action['recheck']:
                     self.recheck(info_dict)
             
             

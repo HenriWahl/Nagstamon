@@ -2,7 +2,7 @@
 Type=Application
 Name=Nagstamon
 Comment=Nagios status monitor 
-Icon=/usr/share/pixmaps/nagstamon.svg
+Icon=nagstamon
 Exec=nagstamon
 Terminal=false
 Categories=System;Monitor;
