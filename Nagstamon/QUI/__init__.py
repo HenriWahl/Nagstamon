@@ -3364,7 +3364,7 @@ class TreeView(QTreeView):
         # if it is a service switch to service object
         if self.miserable_service != '':
             item = item.services[self.miserable_service]
-            text += 'Service {0}\n'.format(self.miserable_service)
+            text += 'Service: {0}\n'.format(self.miserable_service)
         # the other properties belong to both hosts and services
         text += 'Status: {0}\n'.format(item.status)
         text += 'Last check: {0}\n'.format(item.last_check)
