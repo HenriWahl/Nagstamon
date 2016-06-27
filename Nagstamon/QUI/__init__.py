@@ -816,23 +816,25 @@ class _Draggable_Widget(QWidget):
             do the moving action
         """
 
-        if not conf.fullscreen and not self.right_mouse_button_pressed:
-            # lock window as moving
-            # if not set calculate relative position
-            if not statuswindow.relative_x and not statuswindow.relative_y:
-                statuswindow.relative_x = event.globalX() - statuswindow.x()
-                statuswindow.relative_y = event.globalY() - statuswindow.y()
-
-            statuswindow.moving = True
-            statuswindow.move(event.globalX() - statuswindow.relative_x, event.globalY() - statuswindow.relative_y)
-
+        # if window should close when being clicked it might be problematic if it
+        # will be moved unintendedly so try to filter this events out by waiting 0.5 seconds
+        if not(conf.close_details_clicking and\
+               statuswindow.is_shown and\
+               statuswindow.is_shown_timestamp + 0.5 < time.time()):
+            if not conf.fullscreen and not self.right_mouse_button_pressed:
+                # lock window as moving
+                # if not set calculate relative position
+                if not statuswindow.relative_x and not statuswindow.relative_y:
+                    statuswindow.relative_x = event.globalX() - statuswindow.x()
+                    statuswindow.relative_y = event.globalY() - statuswindow.y()
+    
+                statuswindow.moving = True
+                statuswindow.move(event.globalX() - statuswindow.relative_x, event.globalY() - statuswindow.relative_y)
+    
             # needed for OSX - otherwise statusbar stays blank while moving
             statuswindow.update()
-
-        # needed for OSX - otherwise statusbar stays blank while moving
-        statuswindow.update()
-
-        self.window_moved.emit()
+    
+            self.window_moved.emit()
 
 
     def enterEvent(self, event):
@@ -1486,7 +1488,7 @@ class StatusWindow(QWidget):
     @pyqtSlot()
     def correct_moving_position(self):
         """
-            correct position if moving and cursor startet outside statusbar
+            correct position if moving and cursor started outside statusbar
         """
         if self.moving:
             mouse_x = QCursor.pos().x()
