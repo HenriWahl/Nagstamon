@@ -1044,6 +1044,10 @@ class StatusWindow(QWidget):
         # helper values for QTimer.singleShot move attempt
         self.move_to_x = self.move_to_y = 0
 
+        # stored x y values for systemtray icon
+        self.icon_x = 0
+        self.icon_y = 0
+
         # flag to mark if window is shown or not
         self.is_shown = False
 
@@ -1481,6 +1485,10 @@ class StatusWindow(QWidget):
                     # flag to reflect top-ness of window/statusbar
                     self.top = False
 
+                    # reset icon x y
+                    self.icon_x = 0
+                    self.icon_y = 0
+
                     # tell the world that window goes down
                     self.hiding.emit()
 
@@ -1509,22 +1517,32 @@ class StatusWindow(QWidget):
         """
             get size of popup window
         """
+
+        # screen number or widget object needed for desktop.availableGeometry
         if conf.statusbar_floating:
             screen_or_widget = self
-
         elif conf.icon_in_systray:
-
             # where is the pointer which clicked onto systray icon
             icon_x = systrayicon.geometry().x()
             icon_y = systrayicon.geometry().y()
 
             # strangely enough on KDE the systray icon geometry gives back 0, 0 as coordinates
-            if icon_x == 0:
-                icon_x = QCursor.pos().x()
-            if icon_y == 0:
-                icon_y = QCursor.pos().y()
+            # also at Ubuntu Unity 16.04
+            if icon_x == 0 and self.icon_x == 0:
+                self.icon_x = QCursor.pos().x()
+            elif self.icon_x == 0:
+                self.icon_x = QCursor.pos().x()
+            elif icon_x != 0:
+                self.icon_x = icon_x
 
-            screen_or_widget = get_screen(icon_x, icon_y)
+            if icon_y == 0 and self.icon_y == 0:
+                self.icon_y = QCursor.pos().y()
+            elif self.icon_y == 0:
+                self.icon_y = QCursor.pos().y()
+            elif icon_y != 0:
+                self.icon_y = icon_y
+
+            screen_or_widget = get_screen(self.icon_x, self.icon_y)
 
         available_width = desktop.availableGeometry(screen_or_widget).width()
         available_height = desktop.availableGeometry(screen_or_widget).height()
@@ -1546,13 +1564,13 @@ class StatusWindow(QWidget):
             x = self.stored_x
 
         elif conf.icon_in_systray:
-            if icon_y < desktop.screenGeometry(self).height() / 2 + available_y:
+            if self.icon_y < desktop.screenGeometry(self).height() / 2 + available_y:
                 self.top = True
             else:
                 self.top = False
 
             # take systray icon position as reference
-            x = icon_x
+            x = self.icon_x
 
         # get height from tablewidgets
         real_height = self.get_real_height()
@@ -1684,7 +1702,6 @@ class StatusWindow(QWidget):
                     self.setMaximumSize(hint)
                     self.setMinimumSize(hint)
                     del(hint)
-
                 self.resize_window(width, height, x, y)
 
                 del(width, height, x, y)
