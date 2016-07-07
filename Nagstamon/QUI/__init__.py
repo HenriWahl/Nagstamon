@@ -4974,14 +4974,15 @@ class Dialog_Server(Dialog):
         self.TOGGLE_DEPS = {
                             self.ui.input_checkbox_use_autologin : [self.ui.label_autologin_key,
                                                                     self.ui.input_lineedit_autologin_key],
-                            self.ui.input_checkbox_use_proxy : [self.ui.proxy_groupbox],
+                            self.ui.input_checkbox_use_proxy : [self.ui.groupbox_proxy],
 
                             self.ui.input_checkbox_use_proxy_from_os : [self.ui.label_proxy_address,
                                                                         self.ui.input_lineedit_proxy_address,
                                                                         self.ui.label_proxy_username,
                                                                         self.ui.input_lineedit_proxy_username,
                                                                         self.ui.label_proxy_password,
-                                                                        self.ui.input_lineedit_proxy_password]
+                                                                        self.ui.input_lineedit_proxy_password],
+                            self.ui.input_checkbox_show_options: [self.ui.groupbox_options]
                             }
 
         self.TOGGLE_DEPS_INVERTED = [self.ui.input_checkbox_use_proxy_from_os]
