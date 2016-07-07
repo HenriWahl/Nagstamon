@@ -16,24 +16,28 @@
 # along with this program; if not, write to the Free Software
 # Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA  02110-1301, USA
 
-"""Module QUI"""
-
-import os
-import os.path
-import urllib.parse
-import subprocess
 import sys
-import platform
-import time
-import random
-import copy
-import base64
 
+
+"""Module QUI"""
 from PyQt5.QtWidgets import *
 from PyQt5.QtGui import *
 from PyQt5.QtCore import *
 from PyQt5.QtSvg import *
 from PyQt5.QtMultimedia import *
+
+# global application instance
+APP = QApplication(sys.argv)
+
+import os
+import os.path
+import urllib.parse
+import subprocess
+import platform
+import time
+import random
+import copy
+import base64
 
 from collections import OrderedDict
 from copy import deepcopy
@@ -88,12 +92,6 @@ if not platform.system() in NON_LINUX:
         from dbus.mainloop.pyqt5 import DBusQtMainLoop
     except:
         print('No DBus for desktop notification available.')
-
-# get debug queue from nagstamon.py
-# ##debug_queue = sys.modules['__main__'].debug_queue
-
-# global application instance
-APP = QApplication(sys.argv)
 
 # fixed shortened and lowered color names for cells, also used by statusbar label snippets
 COLORS = OrderedDict([('DOWN', 'color_down_'),
@@ -270,7 +268,7 @@ class SystemTrayIcon(QSystemTrayIcon):
     error_shown = False
 
     def __init__(self):
-        debug_queue.append('DEBUG: Initing SystemTrayIcon')
+        debug_queue.append('DEBUG: Initializing SystemTrayIcon')
 
         QSystemTrayIcon.__init__(self)
 
@@ -1284,7 +1282,6 @@ class StatusWindow(QWidget):
 
         # sort server vboxes
         for vbox in sorted(vboxes_dict):
-            vboxes_dict[vbox].setParent(None)
             vboxes_dict[vbox].setParent(None)
             servers_vbox_new.addLayout(vboxes_dict[vbox])
 
@@ -2364,7 +2361,6 @@ class TopArea(QWidget):
     def __init__(self, parent=None):
         QWidget.__init__(self)
         self.hbox = HBoxLayout(spacing=SPACE, parent=self)  # top HBox containing buttons
-
 
         self.icons = dict()
         self.create_icons()
@@ -6081,9 +6077,10 @@ class DBus(QObject):
 
         if not platform.system() in NON_LINUX:
             if 'dbus' in sys.modules:
-                dbus_mainloop = DBusQtMainLoop(set_as_default=True)
-                dbus_bus = SessionBus(dbus_mainloop)
-                dbus_object = dbus_bus.get_object('org.freedesktop.Notifications',
+                import dbus
+                dbus_mainloop = DBusQtMainLoop(set_as_default=True)               
+                dbus_sessionbus = SessionBus(dbus_mainloop)
+                dbus_object = dbus_sessionbus.get_object('org.freedesktop.Notifications',
                                               '/org/freedesktop/Notifications')
                 self.dbus_interface = Interface(dbus_object,
                                                 dbus_interface='org.freedesktop.Notifications')
@@ -6091,7 +6088,6 @@ class DBus(QObject):
                 self.dbus_interface.connect_to_signal('ActionInvoked', self.action_callback)
 
                 self.connected = True
-
         else:
             self.connected = False
 
@@ -6194,7 +6190,7 @@ def get_screen_geometry(screen_number):
 def exit():
     """
         stop all child threads before quitting instance
-    """
+    """   
     # store position of statuswindow/statusbar
     statuswindow.store_position_to_conf()
 
@@ -6210,18 +6206,14 @@ def exit():
     # tell all treeview threads to stop
     for server_vbox in statuswindow.servers_vbox.children():
         server_vbox.table.worker.finish.emit()
-    # wait until all threads are stopped
-    for server_vbox in statuswindow.servers_vbox.children():
-        server_vbox.table.worker_thread.wait(1000)
-        # server_vbox.table.worker_thread.wait()
 
-    # wait until statuswindow notification worker has finished
-    statuswindow.worker_notification_thread.wait(1000)
-    # statuswindow.worker_notification_thread.wait()
-
-    # wait until statuswindow worker has finished
-    statuswindow.worker_thread.wait(1000)
-    # statuswindow.worker_thread.wait()
+    # delete all windows
+    for dialog in dialogs.__dict__.values():
+        try:
+            dialog.window().destroy()
+        except:
+            dialog.window.destroy()
+    statuswindow.destroy()  
 
     # bye bye
     APP.instance().quit()
