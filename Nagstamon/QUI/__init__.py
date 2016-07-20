@@ -16,24 +16,28 @@
 # along with this program; if not, write to the Free Software
 # Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA  02110-1301, USA
 
-"""Module QUI"""
-
-import os
-import os.path
-import urllib.parse
-import subprocess
 import sys
-import platform
-import time
-import random
-import copy
-import base64
 
+
+"""Module QUI"""
 from PyQt5.QtWidgets import *
 from PyQt5.QtGui import *
 from PyQt5.QtCore import *
 from PyQt5.QtSvg import *
 from PyQt5.QtMultimedia import *
+
+# global application instance
+APP = QApplication(sys.argv)
+
+import os
+import os.path
+import urllib.parse
+import subprocess
+import platform
+import time
+import random
+import copy
+import base64
 
 from collections import OrderedDict
 from copy import deepcopy
@@ -88,12 +92,6 @@ if not platform.system() in NON_LINUX:
         from dbus.mainloop.pyqt5 import DBusQtMainLoop
     except:
         print('No DBus for desktop notification available.')
-
-# get debug queue from nagstamon.py
-# ##debug_queue = sys.modules['__main__'].debug_queue
-
-# global application instance
-APP = QApplication(sys.argv)
 
 # fixed shortened and lowered color names for cells, also used by statusbar label snippets
 COLORS = OrderedDict([('DOWN', 'color_down_'),
@@ -270,7 +268,7 @@ class SystemTrayIcon(QSystemTrayIcon):
     error_shown = False
 
     def __init__(self):
-        debug_queue.append('DEBUG: Initing SystemTrayIcon')
+        debug_queue.append('DEBUG: Initializing SystemTrayIcon')
 
         QSystemTrayIcon.__init__(self)
 
@@ -816,23 +814,25 @@ class _Draggable_Widget(QWidget):
             do the moving action
         """
 
-        if not conf.fullscreen and not self.right_mouse_button_pressed:
-            # lock window as moving
-            # if not set calculate relative position
-            if not statuswindow.relative_x and not statuswindow.relative_y:
-                statuswindow.relative_x = event.globalX() - statuswindow.x()
-                statuswindow.relative_y = event.globalY() - statuswindow.y()
-
-            statuswindow.moving = True
-            statuswindow.move(event.globalX() - statuswindow.relative_x, event.globalY() - statuswindow.relative_y)
-
+        # if window should close when being clicked it might be problematic if it
+        # will be moved unintendedly so try to filter this events out by waiting 0.5 seconds
+        if not(conf.close_details_clicking and\
+               statuswindow.is_shown and\
+               statuswindow.is_shown_timestamp + 0.5 < time.time()):
+            if not conf.fullscreen and not self.right_mouse_button_pressed:
+                # lock window as moving
+                # if not set calculate relative position
+                if not statuswindow.relative_x and not statuswindow.relative_y:
+                    statuswindow.relative_x = event.globalX() - statuswindow.x()
+                    statuswindow.relative_y = event.globalY() - statuswindow.y()
+    
+                statuswindow.moving = True
+                statuswindow.move(event.globalX() - statuswindow.relative_x, event.globalY() - statuswindow.relative_y)
+    
             # needed for OSX - otherwise statusbar stays blank while moving
             statuswindow.update()
-
-        # needed for OSX - otherwise statusbar stays blank while moving
-        statuswindow.update()
-
-        self.window_moved.emit()
+    
+            self.window_moved.emit()
 
 
     def enterEvent(self, event):
@@ -1041,6 +1041,10 @@ class StatusWindow(QWidget):
 
         # helper values for QTimer.singleShot move attempt
         self.move_to_x = self.move_to_y = 0
+
+        # stored x y values for systemtray icon
+        self.icon_x = 0
+        self.icon_y = 0
 
         # flag to mark if window is shown or not
         self.is_shown = False
@@ -1279,7 +1283,6 @@ class StatusWindow(QWidget):
         # sort server vboxes
         for vbox in sorted(vboxes_dict):
             vboxes_dict[vbox].setParent(None)
-            vboxes_dict[vbox].setParent(None)
             servers_vbox_new.addLayout(vboxes_dict[vbox])
 
         # add expanding stretching item at the end for fullscreen beauty
@@ -1479,6 +1482,10 @@ class StatusWindow(QWidget):
                     # flag to reflect top-ness of window/statusbar
                     self.top = False
 
+                    # reset icon x y
+                    self.icon_x = 0
+                    self.icon_y = 0
+
                     # tell the world that window goes down
                     self.hiding.emit()
 
@@ -1486,7 +1493,7 @@ class StatusWindow(QWidget):
     @pyqtSlot()
     def correct_moving_position(self):
         """
-            correct position if moving and cursor startet outside statusbar
+            correct position if moving and cursor started outside statusbar
         """
         if self.moving:
             mouse_x = QCursor.pos().x()
@@ -1507,22 +1514,32 @@ class StatusWindow(QWidget):
         """
             get size of popup window
         """
+
+        # screen number or widget object needed for desktop.availableGeometry
         if conf.statusbar_floating:
             screen_or_widget = self
-
         elif conf.icon_in_systray:
-
             # where is the pointer which clicked onto systray icon
             icon_x = systrayicon.geometry().x()
             icon_y = systrayicon.geometry().y()
 
             # strangely enough on KDE the systray icon geometry gives back 0, 0 as coordinates
-            if icon_x == 0:
-                icon_x = QCursor.pos().x()
-            if icon_y == 0:
-                icon_y = QCursor.pos().y()
+            # also at Ubuntu Unity 16.04
+            if icon_x == 0 and self.icon_x == 0:
+                self.icon_x = QCursor.pos().x()
+            elif self.icon_x == 0:
+                self.icon_x = QCursor.pos().x()
+            elif icon_x != 0:
+                self.icon_x = icon_x
 
-            screen_or_widget = get_screen(icon_x, icon_y)
+            if icon_y == 0 and self.icon_y == 0:
+                self.icon_y = QCursor.pos().y()
+            elif self.icon_y == 0:
+                self.icon_y = QCursor.pos().y()
+            elif icon_y != 0:
+                self.icon_y = icon_y
+
+            screen_or_widget = get_screen(self.icon_x, self.icon_y)
 
         available_width = desktop.availableGeometry(screen_or_widget).width()
         available_height = desktop.availableGeometry(screen_or_widget).height()
@@ -1544,13 +1561,13 @@ class StatusWindow(QWidget):
             x = self.stored_x
 
         elif conf.icon_in_systray:
-            if icon_y < desktop.screenGeometry(self).height() / 2 + available_y:
+            if self.icon_y < desktop.screenGeometry(self).height() / 2 + available_y:
                 self.top = True
             else:
                 self.top = False
 
             # take systray icon position as reference
-            x = icon_x
+            x = self.icon_x
 
         # get height from tablewidgets
         real_height = self.get_real_height()
@@ -1682,7 +1699,6 @@ class StatusWindow(QWidget):
                     self.setMaximumSize(hint)
                     self.setMinimumSize(hint)
                     del(hint)
-
                 self.resize_window(width, height, x, y)
 
                 del(width, height, x, y)
@@ -2345,7 +2361,6 @@ class TopArea(QWidget):
     def __init__(self, parent=None):
         QWidget.__init__(self)
         self.hbox = HBoxLayout(spacing=SPACE, parent=self)  # top HBox containing buttons
-
 
         self.icons = dict()
         self.create_icons()
@@ -3364,7 +3379,7 @@ class TreeView(QTreeView):
         # if it is a service switch to service object
         if self.miserable_service != '':
             item = item.services[self.miserable_service]
-            text += 'Service {0}\n'.format(self.miserable_service)
+            text += 'Service: {0}\n'.format(self.miserable_service)
         # the other properties belong to both hosts and services
         text += 'Status: {0}\n'.format(item.status)
         text += 'Last check: {0}\n'.format(item.last_check)
@@ -4959,14 +4974,15 @@ class Dialog_Server(Dialog):
         self.TOGGLE_DEPS = {
                             self.ui.input_checkbox_use_autologin : [self.ui.label_autologin_key,
                                                                     self.ui.input_lineedit_autologin_key],
-                            self.ui.input_checkbox_use_proxy : [self.ui.proxy_groupbox],
+                            self.ui.input_checkbox_use_proxy : [self.ui.groupbox_proxy],
 
                             self.ui.input_checkbox_use_proxy_from_os : [self.ui.label_proxy_address,
                                                                         self.ui.input_lineedit_proxy_address,
                                                                         self.ui.label_proxy_username,
                                                                         self.ui.input_lineedit_proxy_username,
                                                                         self.ui.label_proxy_password,
-                                                                        self.ui.input_lineedit_proxy_password]
+                                                                        self.ui.input_lineedit_proxy_password],
+                            self.ui.input_checkbox_show_options: [self.ui.groupbox_options]
                             }
 
         self.TOGGLE_DEPS_INVERTED = [self.ui.input_checkbox_use_proxy_from_os]
@@ -6062,9 +6078,10 @@ class DBus(QObject):
 
         if not platform.system() in NON_LINUX:
             if 'dbus' in sys.modules:
-                dbus_mainloop = DBusQtMainLoop(set_as_default=True)
-                dbus_bus = SessionBus(dbus_mainloop)
-                dbus_object = dbus_bus.get_object('org.freedesktop.Notifications',
+                import dbus
+                dbus_mainloop = DBusQtMainLoop(set_as_default=True)               
+                dbus_sessionbus = SessionBus(dbus_mainloop)
+                dbus_object = dbus_sessionbus.get_object('org.freedesktop.Notifications',
                                               '/org/freedesktop/Notifications')
                 self.dbus_interface = Interface(dbus_object,
                                                 dbus_interface='org.freedesktop.Notifications')
@@ -6072,7 +6089,6 @@ class DBus(QObject):
                 self.dbus_interface.connect_to_signal('ActionInvoked', self.action_callback)
 
                 self.connected = True
-
         else:
             self.connected = False
 
@@ -6175,7 +6191,7 @@ def get_screen_geometry(screen_number):
 def exit():
     """
         stop all child threads before quitting instance
-    """
+    """   
     # store position of statuswindow/statusbar
     statuswindow.store_position_to_conf()
 
@@ -6191,18 +6207,14 @@ def exit():
     # tell all treeview threads to stop
     for server_vbox in statuswindow.servers_vbox.children():
         server_vbox.table.worker.finish.emit()
-    # wait until all threads are stopped
-    for server_vbox in statuswindow.servers_vbox.children():
-        server_vbox.table.worker_thread.wait(1000)
-        # server_vbox.table.worker_thread.wait()
 
-    # wait until statuswindow notification worker has finished
-    statuswindow.worker_notification_thread.wait(1000)
-    # statuswindow.worker_notification_thread.wait()
-
-    # wait until statuswindow worker has finished
-    statuswindow.worker_thread.wait(1000)
-    # statuswindow.worker_thread.wait()
+    # delete all windows
+    for dialog in dialogs.__dict__.values():
+        try:
+            dialog.window().destroy()
+        except:
+            dialog.window.destroy()
+    statuswindow.destroy()  
 
     # bye bye
     APP.instance().quit()

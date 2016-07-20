@@ -68,8 +68,13 @@ try:
 
         if conf.check_for_new_version == True:
             check_version.check(start_mode=True, parent=statuswindow)
-
-        sys.exit(APP.exec_())
+        
+        try:
+            APP.exec_()
+            del(APP)
+            sys.exit(0)
+        except:
+            sys.exit(0)
 
 
 except Exception as err:
