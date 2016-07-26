@@ -1209,7 +1209,8 @@ class StatusWindow(QWidget):
         if server.enabled:
             # display authentication dialog if password is not known
             if not conf.servers[server.name].save_password and\
-               not conf.servers[server.name].use_autologin:
+               not conf.servers[server.name].use_autologin and\
+               conf.servers[server.name].password == '':
                 dialogs.authentication.show_auth_dialog(server.name)
 
             # without parent there is some flickering when starting
@@ -3511,7 +3512,6 @@ class TreeView(QTreeView):
                 check every second if thread still has to run
                 if interval time is reached get status
             """
-
             # if counter is at least update interval get status
             if self.server.thread_counter >= conf.update_interval_seconds:
 
@@ -3584,6 +3584,7 @@ class TreeView(QTreeView):
             # if running flag is still set call myself after 1 second
             if self.running == True:
                 self.timer.singleShot(1000, self.get_status)
+                pass
             else:
                 # tell treeview to finish worker_thread
                 self.finish.emit()
@@ -4360,9 +4361,9 @@ class Dialog_Settings(Dialog):
     @pyqtSlot()
     def show_new_server(self):
         """
-            opens settings an new server dialogs - used by dialogs.server_missing
+            opens settings and new server dialogs - used by dialogs.server_missing
         """
-        self.show()
+        #self.show()
         # emulate button click
         self.ui.button_new_server.clicked.emit()
 
