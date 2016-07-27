@@ -86,19 +86,20 @@ class IcingaWeb2Server(GenericServer):
         if not 'Referer' in self.session.headers:
             self.session.headers['Referer'] = self.monitor_cgi_url + '/icingaweb2/monitoring'
 
-        if len(self.session.cookies) == 0:
-            # get login page, thus automatically a cookie
-            login = self.FetchURL('{0}/authentication/login'.format(self.monitor_url))
-            if login.error == '' and login.status_code == 200:
-                form = login.result.find('form')
-                form_inputs = {}
-                for form_input in ('redirect', 'formUID', 'CSRFToken', 'btn_submit'):
-                    form_inputs[form_input] = form.find('input', {'name': form_input})['value']
-                form_inputs['username'] = self.username
-                form_inputs['password'] = self.password
-
-                # fire up login button with all needed data
-                self.FetchURL('{0}/authentication/login'.format(self.monitor_url), cgi_data=form_inputs)
+        if not self.no_cookie_auth:
+            if len(self.session.cookies) == 0:
+                # get login page, thus automatically a cookie
+                login = self.FetchURL('{0}/authentication/login'.format(self.monitor_url))
+                if login.error == '' and login.status_code == 200:
+                    form = login.result.find('form')
+                    form_inputs = {}
+                    for form_input in ('redirect', 'formUID', 'CSRFToken', 'btn_submit'):
+                        form_inputs[form_input] = form.find('input', {'name': form_input})['value']
+                    form_inputs['username'] = self.username
+                    form_inputs['password'] = self.password
+    
+                    # fire up login button with all needed data
+                    self.FetchURL('{0}/authentication/login'.format(self.monitor_url), cgi_data=form_inputs)
 
 
     def _get_status(self):

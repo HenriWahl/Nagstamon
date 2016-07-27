@@ -810,6 +810,9 @@ class Server(object):
         # Icinga "host_display_name" instead of "host"
         self.use_display_name_host = False
         self.use_display_name_service = False
+        
+        # IcingaWeb2 might authenticate without cookies too - default is WITH cookies
+        self.no_cookie_auth = True
 
         # Check_MK Multisite
         # Force Check_MK livestatus code to set AuthUser header for users who
