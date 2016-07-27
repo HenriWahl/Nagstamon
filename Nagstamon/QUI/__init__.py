@@ -2505,23 +2505,20 @@ class ServerStatusLabel(QLabel):
 
         # set stylesheet depending on submitted style
         if style in COLOR_STATUS_LABEL:
-            ###self.setStyleSheet('''color: red;
-            ###                      background: green;
-            ###                      margin-top: 10px;
-            ###                      margin-bottom: 10px;
-            ###                      border-radius: 5px;
-            ###                      font-weight: bold;''')
-            self.setStyleSheet('''background: {0};
-                                  margin-top: 8px;
-                                  margin-bottom: 8px;
-                                  padding-left: 3px;
-                                  padding-right: 3px;
-                                  border-radius: 6px;
-                                  '''.format(COLOR_STATUS_LABEL[style]))
+            if platform.system() == 'Darwin':
+                self.setStyleSheet('''background: {0};
+                                      border-radius: 3px;
+                                      '''.format(COLOR_STATUS_LABEL[style]))
+            else:
+                self.setStyleSheet('''background: {0};
+                                      margin-top: 8px;
+                                      margin-bottom: 8px;
+                                      border-radius: 6px;
+                                      '''.format(COLOR_STATUS_LABEL[style]))
         elif style == '':
             self.setStyleSheet('')
-        # set new text
-        self.setText(text)
+        # set new text with some space
+        self.setText(' {0} '.format(text))
 
 
     @pyqtSlot()
@@ -2710,8 +2707,7 @@ class ServerVBox(QVBoxLayout):
                        self.button_hosts,
                        self.button_services,
                        self.button_history,
-                       self.label_status,
-                       self.stretcher):
+                       self.label_status):
             widget.hide()
             widget.deleteLater()
         self.removeItem(self.header)
@@ -3538,7 +3534,7 @@ class TreeView(QTreeView):
                    self.server.status_code < 400 and\
                    not self.server.refresh_authentication:
                     # show last update time
-                    self.change_label_status.emit('Last update {0}'.format(datetime.datetime.now().strftime('%x %X'))\
+                    self.change_label_status.emit('Last updated at {0}'.format(datetime.datetime.now().strftime('%X'))\
                                                   , '')
 
                     # reset server error flag, needed for error label in statusbar
