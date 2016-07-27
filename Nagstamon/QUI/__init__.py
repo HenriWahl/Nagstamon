@@ -38,6 +38,7 @@ import time
 import random
 import copy
 import base64
+import datetime
 
 from collections import OrderedDict
 from copy import deepcopy
@@ -2569,13 +2570,9 @@ class ServerVBox(QVBoxLayout):
         self.button_services = PushButton_BrowserURL(text='Services', parent=parent, server=self.server, url_type='services')
         self.button_history = PushButton_BrowserURL(text='History', parent=parent, server=self.server, url_type='history')
         self.button_edit = Button('Edit', parent=parent)
-        self.label_separator = QLabel(parent=parent)
-        self.label_separator.setFrameShadow(QFrame.Sunken)
-        self.label_separator.setFrameShape(QFrame.VLine)
-        # OSX does not like these extra margns
-        if platform.system() != 'Darwin':
-            self.label_separator.setStyleSheet('''margin-top: 5px;
-                                                  margin-bottom: 5px;''')
+       
+        self.stretcher = QSpacerItem(0,0, QSizePolicy.MinimumExpanding, QSizePolicy.Maximum)
+
         self.label_status = ServerStatusLabel(parent=parent)
         self.button_authenticate = QPushButton('Authenticate', parent=parent)
 
@@ -2591,10 +2588,11 @@ class ServerVBox(QVBoxLayout):
         self.header.addWidget(self.button_services)
         self.header.addWidget(self.button_history)
         self.header.addWidget(self.button_edit)
-        self.header.addWidget(self.label_separator)
+
+        self.header.addItem(self.stretcher)
+        
         self.header.addWidget(self.label_status)
         self.header.addWidget(self.button_authenticate)
-        self.header.addStretch()
 
         # attempt to get header strings
         try:
@@ -2657,7 +2655,6 @@ class ServerVBox(QVBoxLayout):
         self.button_services.show()
         self.button_history.show()
         self.label_status.show()
-        self.label_separator.show()
         self.button_authenticate.hide()
 
         # special table treatment
@@ -2677,7 +2674,6 @@ class ServerVBox(QVBoxLayout):
         self.button_services.show()
         self.button_history.show()
         self.label_status.show()
-        self.label_separator.show()
 
         # special table treatment
         self.table.hide()
@@ -2696,7 +2692,6 @@ class ServerVBox(QVBoxLayout):
         self.button_services.hide()
         self.button_history.hide()
         self.label_status.hide()
-        self.label_separator.hide()
         self.button_authenticate.hide()
 
         # special table treatment
@@ -2716,7 +2711,7 @@ class ServerVBox(QVBoxLayout):
                        self.button_services,
                        self.button_history,
                        self.label_status,
-                       self.label_separator):
+                       self.stretcher):
             widget.hide()
             widget.deleteLater()
         self.removeItem(self.header)
@@ -3542,7 +3537,9 @@ class TreeView(QTreeView):
                 if self.server.status_description == '' and\
                    self.server.status_code < 400 and\
                    not self.server.refresh_authentication:
-                    self.change_label_status.emit('Connected', '')
+                    # show last update time
+                    self.change_label_status.emit('Last update {0}'.format(datetime.datetime.now().strftime('%x %X'))\
+                                                  , '')
 
                     # reset server error flag, needed for error label in statusbar
                     self.server.has_error = False
