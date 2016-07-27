@@ -2,13 +2,13 @@ Some lines of code are written by Henri Wahl <a href=https://github.com/HenriWah
 
 Thanks a lot for contributions, patches, hints, packaging,
 testing and ideas go at least to:<p>
- 
+
 Andreas Ericsson <a href=https://github.com/ageric>@ageric</a>,<br>
 Antoine Jacoutot,<br>
 Anton Löfgren <a href=https://github.com/catharsis>@catharsis</a>,<br>
-<a href=https://github.com/arkadiyvleonov>@arkadiyvleonov</a>,<br>
+Arkadiy <a href=https://github.com/arkadiyvleonov>@arkadiyvleonov</a>,<br>
 Arnaud Gomes <a href=https://github.com/nono-gdv>@nono-gdv</a>,<br>
-<a href=https://github.com/benoiteolas>@benoiteolas</a>,<br>
+Benoit Poulet <a href=https://github.com/BenoitPoulet>@BenoitPoulet</a>,<br>
 Benoît Soenen,<br>
 Carl Chenet,<br>
 Carl Helmertz <a href=https://github.com/chelmertz>@chelmertz</a>,<br>
@@ -34,7 +34,7 @@ Nikita Klimov,<br>
 Patrick Cernko,<br>
 Pawel Połewicz,<br>
 Robin Sonefors,<br>
-<a href=https://github.com/RymRabehi>@RymRabehi</a>,<br>
+Rym Rabehi <a href=https://github.com/RymRabehi>@RymRabehi</a>,<br>
 Salvatore LaMendola <a href=https://github.com/vt0r>@vt0r</a>,<br>
 Sandro Tosi,<br>
 Sven Nierlein <a href=https://github.com/sni>@sni</a>,<br>
@@ -53,5 +53,3 @@ BeautifulSoup: <a href=https://www.crummy.com/software/BeautifulSoup>https://www
 Requests: <a href=http://www.python-requests.org>http://www.python-requests.org</a><br>
 Keyring: <h href=https://github.com/jaraco/keyring>https://github.com/jaraco/keyring</a><br>
 emwh.py: <a href=https://github.com/parkouss/pyewmh>https://github.com/parkouss/pyewmh</a>
-
-
