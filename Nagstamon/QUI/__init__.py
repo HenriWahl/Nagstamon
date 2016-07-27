@@ -107,6 +107,11 @@ COLOR_STATE_NAMES = {'DOWN': {True: 'DOWN', False: ''},
                      'UNKNOWN': { True: 'UNKNOWN', False: ''},
                      'WARNING': { True: 'WARNING', False: ''}}
 
+# colors for server status label in ServerVBox
+COLOR_STATUS_LABEL =  {'critical': 'lightsalmon',
+                       'error': 'orange',
+                       'unknown': 'gray'}
+
 # QBrushes made of QColors for treeview model data() method
 # 2 flavours for alternating backgrounds
 # filled by create_brushes()
@@ -2486,6 +2491,7 @@ class ServerStatusLabel(QLabel):
     # storage for label text if it needs to be restored
     text_old = ''
 
+
     def __init__(self, parent=None):
         QLabel.__init__(self, parent=parent)
 
@@ -2497,9 +2503,20 @@ class ServerStatusLabel(QLabel):
         self.stylesheet_old = self.styleSheet()
 
         # set stylesheet depending on submitted style
-        if style == 'critical':
-            self.setStyleSheet('''color: red;
-                                  font-weight: bold;''')
+        if style in COLOR_STATUS_LABEL:
+            ###self.setStyleSheet('''color: red;
+            ###                      background: green;
+            ###                      margin-top: 10px;
+            ###                      margin-bottom: 10px;
+            ###                      border-radius: 5px;
+            ###                      font-weight: bold;''')
+            self.setStyleSheet('''background: {0};
+                                  margin-top: 8px;
+                                  margin-bottom: 8px;
+                                  padding-left: 3px;
+                                  padding-right: 3px;
+                                  border-radius: 6px;
+                                  '''.format(COLOR_STATUS_LABEL[style]))
         elif style == '':
             self.setStyleSheet('')
         # set new text
@@ -3535,19 +3552,19 @@ class TreeView(QTreeView):
                 else:
                     # try to display some more user friendly error description
                     if self.server.status_code == 404:
-                        self.change_label_status.emit('Monitor URL not valid', '')
+                        self.change_label_status.emit('Monitor URL not valid', 'critical')
                     elif status.error.startswith('requests.exceptions.ConnectTimeout'):
-                        self.change_label_status.emit('Connection timeout', '')
+                        self.change_label_status.emit('Connection timeout', 'error')
                     elif status.error.startswith('requests.exceptions.ConnectionError'):
-                        self.change_label_status.emit('Connection error', '')
+                        self.change_label_status.emit('Connection error', 'error')
                     elif status.error.startswith('requests.exceptions.ReadTimeout'):
-                        self.change_label_status.emit('Connection timeout', '')
+                        self.change_label_status.emit('Connection timeout', 'error')
                     elif self.server.status_code in self.server.STATUS_CODES_NO_AUTH or\
                          self.server.refresh_authentication:
                         self.change_label_status.emit('Authentication problem', 'critical')
                     else:
                         # kick out line breaks to avoid broken status window
-                        self.change_label_status.emit(self.server.status_description.replace('\n', ''), '')
+                        self.change_label_status.emit(self.server.status_description.replace('\n', ''), 'unknown')
 
                     # set server error flag, needed for error label in statusbar
                     self.server.has_error = True
