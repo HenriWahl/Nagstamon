@@ -57,7 +57,7 @@ class AppInfo(object):
         contains app information previously located in GUI.py
     """
     NAME = 'Nagstamon'
-    VERSION = '2.0-beta-20160727'
+    VERSION = '2.0-beta-20160728'
     WEBSITE = 'https://nagstamon.ifw-dresden.de'
     COPYRIGHT = '©2008-2016 Henri Wahl et al.'
     COMMENTS = 'Nagios status monitor for your desktop'
@@ -812,7 +812,7 @@ class Server(object):
         self.use_display_name_service = False
         
         # IcingaWeb2 might authenticate without cookies too - default is WITH cookies
-        self.no_cookie_auth = True
+        self.no_cookie_auth = False
 
         # Check_MK Multisite
         # Force Check_MK livestatus code to set AuthUser header for users who
