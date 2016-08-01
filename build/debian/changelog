@@ -1,4 +1,4 @@
-nagstamon (2.0-beta-20160727) unstable; urgency=low
+nagstamon (2.0-beta-20160801) unstable; urgency=low
   * New upstream
    - ported to Qt5
 
