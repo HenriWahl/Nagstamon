@@ -38,6 +38,7 @@ import time
 import random
 import copy
 import base64
+import datetime
 
 from collections import OrderedDict
 from copy import deepcopy
@@ -106,6 +107,11 @@ COLOR_STATE_NAMES = {'DOWN': {True: 'DOWN', False: ''},
                      'CRITICAL': { True: 'CRITICAL', False: ''},
                      'UNKNOWN': { True: 'UNKNOWN', False: ''},
                      'WARNING': { True: 'WARNING', False: ''}}
+
+# colors for server status label in ServerVBox
+COLOR_STATUS_LABEL =  {'critical': 'lightsalmon',
+                       'error': 'orange',
+                       'unknown': 'gray'}
 
 # QBrushes made of QColors for treeview model data() method
 # 2 flavours for alternating backgrounds
@@ -2486,6 +2492,7 @@ class ServerStatusLabel(QLabel):
     # storage for label text if it needs to be restored
     text_old = ''
 
+
     def __init__(self, parent=None):
         QLabel.__init__(self, parent=parent)
 
@@ -2497,13 +2504,21 @@ class ServerStatusLabel(QLabel):
         self.stylesheet_old = self.styleSheet()
 
         # set stylesheet depending on submitted style
-        if style == 'critical':
-            self.setStyleSheet('''color: red;
-                                  font-weight: bold;''')
+        if style in COLOR_STATUS_LABEL:
+            if platform.system() == 'Darwin':
+                self.setStyleSheet('''background: {0};
+                                      border-radius: 3px;
+                                      '''.format(COLOR_STATUS_LABEL[style]))
+            else:
+                self.setStyleSheet('''background: {0};
+                                      margin-top: 8px;
+                                      margin-bottom: 8px;
+                                      border-radius: 6px;
+                                      '''.format(COLOR_STATUS_LABEL[style]))
         elif style == '':
             self.setStyleSheet('')
-        # set new text
-        self.setText(text)
+        # set new text with some space
+        self.setText(' {0} '.format(text))
 
 
     @pyqtSlot()
@@ -2552,13 +2567,9 @@ class ServerVBox(QVBoxLayout):
         self.button_services = PushButton_BrowserURL(text='Services', parent=parent, server=self.server, url_type='services')
         self.button_history = PushButton_BrowserURL(text='History', parent=parent, server=self.server, url_type='history')
         self.button_edit = Button('Edit', parent=parent)
-        self.label_separator = QLabel(parent=parent)
-        self.label_separator.setFrameShadow(QFrame.Sunken)
-        self.label_separator.setFrameShape(QFrame.VLine)
-        # OSX does not like these extra margns
-        if platform.system() != 'Darwin':
-            self.label_separator.setStyleSheet('''margin-top: 5px;
-                                                  margin-bottom: 5px;''')
+       
+        self.stretcher = QSpacerItem(0,0, QSizePolicy.MinimumExpanding, QSizePolicy.Maximum)
+
         self.label_status = ServerStatusLabel(parent=parent)
         self.button_authenticate = QPushButton('Authenticate', parent=parent)
 
@@ -2574,10 +2585,11 @@ class ServerVBox(QVBoxLayout):
         self.header.addWidget(self.button_services)
         self.header.addWidget(self.button_history)
         self.header.addWidget(self.button_edit)
-        self.header.addWidget(self.label_separator)
+
+        self.header.addItem(self.stretcher)
+        
         self.header.addWidget(self.label_status)
         self.header.addWidget(self.button_authenticate)
-        self.header.addStretch()
 
         # attempt to get header strings
         try:
@@ -2640,7 +2652,6 @@ class ServerVBox(QVBoxLayout):
         self.button_services.show()
         self.button_history.show()
         self.label_status.show()
-        self.label_separator.show()
         self.button_authenticate.hide()
 
         # special table treatment
@@ -2660,7 +2671,6 @@ class ServerVBox(QVBoxLayout):
         self.button_services.show()
         self.button_history.show()
         self.label_status.show()
-        self.label_separator.show()
 
         # special table treatment
         self.table.hide()
@@ -2679,7 +2689,6 @@ class ServerVBox(QVBoxLayout):
         self.button_services.hide()
         self.button_history.hide()
         self.label_status.hide()
-        self.label_separator.hide()
         self.button_authenticate.hide()
 
         # special table treatment
@@ -2698,8 +2707,7 @@ class ServerVBox(QVBoxLayout):
                        self.button_hosts,
                        self.button_services,
                        self.button_history,
-                       self.label_status,
-                       self.label_separator):
+                       self.label_status):
             widget.hide()
             widget.deleteLater()
         self.removeItem(self.header)
@@ -3525,7 +3533,9 @@ class TreeView(QTreeView):
                 if self.server.status_description == '' and\
                    self.server.status_code < 400 and\
                    not self.server.refresh_authentication:
-                    self.change_label_status.emit('Connected', '')
+                    # show last update time
+                    self.change_label_status.emit('Last updated at {0}'.format(datetime.datetime.now().strftime('%X'))\
+                                                  , '')
 
                     # reset server error flag, needed for error label in statusbar
                     self.server.has_error = False
@@ -3535,19 +3545,19 @@ class TreeView(QTreeView):
                 else:
                     # try to display some more user friendly error description
                     if self.server.status_code == 404:
-                        self.change_label_status.emit('Monitor URL not valid', '')
+                        self.change_label_status.emit('Monitor URL not valid', 'critical')
                     elif status.error.startswith('requests.exceptions.ConnectTimeout'):
-                        self.change_label_status.emit('Connection timeout', '')
+                        self.change_label_status.emit('Connection timeout', 'error')
                     elif status.error.startswith('requests.exceptions.ConnectionError'):
-                        self.change_label_status.emit('Connection error', '')
+                        self.change_label_status.emit('Connection error', 'error')
                     elif status.error.startswith('requests.exceptions.ReadTimeout'):
-                        self.change_label_status.emit('Connection timeout', '')
+                        self.change_label_status.emit('Connection timeout', 'error')
                     elif self.server.status_code in self.server.STATUS_CODES_NO_AUTH or\
                          self.server.refresh_authentication:
                         self.change_label_status.emit('Authentication problem', 'critical')
                     else:
                         # kick out line breaks to avoid broken status window
-                        self.change_label_status.emit(self.server.status_description.replace('\n', ''), '')
+                        self.change_label_status.emit(self.server.status_description.replace('\n', ''), 'unknown')
 
                     # set server error flag, needed for error label in statusbar
                     self.server.has_error = True

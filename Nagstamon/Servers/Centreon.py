@@ -198,7 +198,6 @@ class CentreonServer(GenericServer):
                         raw = self.FetchURL(self.monitor_cgi_url + "/index.php",cgi_data=login_data, giveback="raw")
                 if conf.debug_mode == True:
                     self.Debug(server=self.get_name(), debug = 'Password login : ' + self.username + ' : ' + self.password)
-            del raw
             sid = self.session.cookies['PHPSESSID']
             if conf.debug_mode == True:
                 self.Debug(server=self.get_name(), debug = 'SID : ' + sid)

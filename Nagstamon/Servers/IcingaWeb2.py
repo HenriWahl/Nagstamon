@@ -86,6 +86,7 @@ class IcingaWeb2Server(GenericServer):
         if not 'Referer' in self.session.headers:
             self.session.headers['Referer'] = self.monitor_cgi_url + '/icingaweb2/monitoring'
 
+        # normally cookie out will be used
         if not self.no_cookie_auth:
             if len(self.session.cookies) == 0:
                 # get login page, thus automatically a cookie
