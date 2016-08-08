@@ -2,7 +2,7 @@
 
 # Form implementation generated from reading ui file 'settings_main.ui'
 #
-# Created by: PyQt5 UI code generator 5.5.1
+# Created by: PyQt5 UI code generator 5.6
 #
 # WARNING! All changes made in this file will be lost!
 
@@ -11,7 +11,7 @@ from PyQt5 import QtCore, QtGui, QtWidgets
 class Ui_settings_main(object):
     def setupUi(self, settings_main):
         settings_main.setObjectName("settings_main")
-        settings_main.resize(601, 974)
+        settings_main.resize(606, 974)
         sizePolicy = QtWidgets.QSizePolicy(QtWidgets.QSizePolicy.Minimum, QtWidgets.QSizePolicy.Minimum)
         sizePolicy.setHorizontalStretch(0)
         sizePolicy.setVerticalStretch(0)
@@ -32,6 +32,7 @@ class Ui_settings_main(object):
         self.tab_servers = QtWidgets.QWidget()
         self.tab_servers.setObjectName("tab_servers")
         self.gridLayout = QtWidgets.QGridLayout(self.tab_servers)
+        self.gridLayout.setContentsMargins(0, 0, 0, 0)
         self.gridLayout.setObjectName("gridLayout")
         self.horizontalLayout_2 = QtWidgets.QHBoxLayout()
         self.horizontalLayout_2.setObjectName("horizontalLayout_2")
@@ -107,6 +108,7 @@ class Ui_settings_main(object):
         self.tab_display = QtWidgets.QWidget()
         self.tab_display.setObjectName("tab_display")
         self.gridLayout_2 = QtWidgets.QGridLayout(self.tab_display)
+        self.gridLayout_2.setContentsMargins(0, 0, 0, 0)
         self.gridLayout_2.setObjectName("gridLayout_2")
         self.groupbox_display_size = QtWidgets.QGroupBox(self.tab_display)
         self.groupbox_display_size.setObjectName("groupbox_display_size")
@@ -228,6 +230,7 @@ class Ui_settings_main(object):
         self.tab_filters = QtWidgets.QWidget()
         self.tab_filters.setObjectName("tab_filters")
         self.gridLayout_4 = QtWidgets.QGridLayout(self.tab_filters)
+        self.gridLayout_4.setContentsMargins(0, 0, 0, 0)
         self.gridLayout_4.setObjectName("gridLayout_4")
         self.horizontalLayout_9 = QtWidgets.QHBoxLayout()
         self.horizontalLayout_9.setObjectName("horizontalLayout_9")
@@ -337,6 +340,7 @@ class Ui_settings_main(object):
         self.tab_actions = QtWidgets.QWidget()
         self.tab_actions.setObjectName("tab_actions")
         self.gridLayout_6 = QtWidgets.QGridLayout(self.tab_actions)
+        self.gridLayout_6.setContentsMargins(0, 0, 0, 0)
         self.gridLayout_6.setObjectName("gridLayout_6")
         self.list_actions = QtWidgets.QListWidget(self.tab_actions)
         sizePolicy = QtWidgets.QSizePolicy(QtWidgets.QSizePolicy.MinimumExpanding, QtWidgets.QSizePolicy.MinimumExpanding)
@@ -407,6 +411,7 @@ class Ui_settings_main(object):
         self.tab_notifications = QtWidgets.QWidget()
         self.tab_notifications.setObjectName("tab_notifications")
         self.verticalLayout_6 = QtWidgets.QVBoxLayout(self.tab_notifications)
+        self.verticalLayout_6.setContentsMargins(0, 0, 0, 0)
         self.verticalLayout_6.setObjectName("verticalLayout_6")
         self.input_checkbox_notification = QtWidgets.QCheckBox(self.tab_notifications)
         self.input_checkbox_notification.setObjectName("input_checkbox_notification")
@@ -559,6 +564,7 @@ class Ui_settings_main(object):
         self.tab_colors = QtWidgets.QWidget()
         self.tab_colors.setObjectName("tab_colors")
         self.gridLayout_12 = QtWidgets.QGridLayout(self.tab_colors)
+        self.gridLayout_12.setContentsMargins(0, 0, 0, 0)
         self.gridLayout_12.setObjectName("gridLayout_12")
         spacerItem10 = QtWidgets.QSpacerItem(20, 40, QtWidgets.QSizePolicy.Minimum, QtWidgets.QSizePolicy.Expanding)
         self.gridLayout_12.addItem(spacerItem10, 12, 1, 1, 1)
@@ -746,6 +752,7 @@ class Ui_settings_main(object):
         self.tab_defaults = QtWidgets.QWidget()
         self.tab_defaults.setObjectName("tab_defaults")
         self.verticalLayout_9 = QtWidgets.QVBoxLayout(self.tab_defaults)
+        self.verticalLayout_9.setContentsMargins(0, 0, 0, 0)
         self.verticalLayout_9.setObjectName("verticalLayout_9")
         self.label_defaults = QtWidgets.QLabel(self.tab_defaults)
         self.label_defaults.setObjectName("label_defaults")
@@ -848,7 +855,7 @@ class Ui_settings_main(object):
         self.verticalLayout.addWidget(self.button_box)
 
         self.retranslateUi(settings_main)
-        self.tabs.setCurrentIndex(0)
+        self.tabs.setCurrentIndex(3)
         self.button_box.accepted.connect(settings_main.accept)
         self.button_box.rejected.connect(settings_main.reject)
         QtCore.QMetaObject.connectSlotsByName(settings_main)
@@ -1041,9 +1048,9 @@ class Ui_settings_main(object):
         self.button_copy_action.setText(_translate("settings_main", "Copy action..."))
         self.button_delete_action.setText(_translate("settings_main", "Delete action"))
         self.groupbox_connection_method.setTitle(_translate("settings_main", "Connection method:"))
-        self.input_radiobutton_connect_by_host.setText(_translate("settings_main", "Hostname"))
-        self.input_radiobutton_connect_by_dns.setText(_translate("settings_main", "DNS name"))
-        self.input_radiobutton_connect_by_ip.setText(_translate("settings_main", "IP"))
+        self.input_radiobutton_connect_by_host.setText(_translate("settings_main", "Hostname provided by monitor"))
+        self.input_radiobutton_connect_by_dns.setText(_translate("settings_main", "DNS name by looking up IP address"))
+        self.input_radiobutton_connect_by_ip.setText(_translate("settings_main", "IP resolved by hostname"))
         self.groupbox_browser.setTitle(_translate("settings_main", "Browser:"))
         self.input_radiobutton_use_default_browser.setText(_translate("settings_main", "Use default browser"))
         self.input_radiobutton_use_custom_browser.setText(_translate("settings_main", "Use alternative browser"))
