@@ -3670,7 +3670,9 @@ class TreeView(QTreeView):
             self.sort_order = sort_order
 
             # to keep GTK Treeview sort behaviour first by hosts
-            first_sort = sorted(self.data_array, key=lambda row: row[self.last_sort_column_real].lower(), reverse=self.last_sort_order)
+            first_sort = sorted(self.data_array,
+                                key=lambda row: SORT_COLUMNS_FUNCTIONS[self.last_sort_column_real](row[SORT_COLUMNS_INDEX[self.last_sort_column_real]]),
+                                reverse=self.last_sort_order)
 
             # use SORT_COLUMNS from Helpers to sort column accordingly
             self.data_array = sorted(first_sort,

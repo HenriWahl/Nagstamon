@@ -399,12 +399,12 @@ def webbrowser_open(url):
 # depending on column different functions have to be used
 # 0 + 1 are column "Hosts", 1 + 2 are column "Service" due to extra font flag pictograms
 SORT_COLUMNS_FUNCTIONS = { 0: compare_host,
-         1: compare_host,
-         2: compare_service,
-         3: compare_service,
-         4: compare_status,
-         5: compare_last_check,
-         6: compare_duration,
-         7: compare_attempt,
-         8: compare_status_information,
-         9: compare_status_information }
+                           1: compare_host,
+                           2: compare_service,
+                           3: compare_service,
+                           4: compare_status,
+                           5: compare_last_check,
+                           6: compare_duration,
+                           7: compare_attempt,
+                           8: compare_status_information,
+                           9: compare_status_information }
