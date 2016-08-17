@@ -1105,30 +1105,6 @@ class StatusWindow(QWidget):
                 available_y = desktop.availableGeometry(self).y()
                 self.move(available_x, available_y)
 
-            """
-            # feels like kindergarten but every OS needs another order of setting flags...
-            if platform.system() == 'Windows':
-                # workaround for Windows-hides-statusbar-after-display-mode-change problem
-                if NUMBER_OF_DISPLAY_CHANGES == 0:
-                    # first set window flags to avoid frame/frameless flickering
-                    self.setWindowFlags(Qt.FramelessWindowHint | Qt.Tool)
-                else:
-                    self.setWindowFlags(WINDOW_FLAGS)
-
-                self.show()
-
-                # statusbar and detail window should be frameless and stay on top
-                # tool flag helps to be invisible in taskbar
-                self.setWindowFlags(WINDOW_FLAGS)
-            else:
-                # statusbar and detail window should be frameless and stay on top
-                # tool flag helps to be invisible in taskbar
-                self.setWindowFlags(WINDOW_FLAGS)
-
-                # necessary to be shown before Linux EWMH-mantra can be applied
-                self.show()
-            """
-
             # proud winner of the-dirty-workaround-of-the-year-award
             # stay on top flag seems to have a problem on Windows if some other window
             # gets in a race condition race the focus or is topmost instead of Nagstamon
@@ -1168,6 +1144,9 @@ class StatusWindow(QWidget):
                 available_x = desktop.availableGeometry(self).x()
                 available_y = desktop.availableGeometry(self).y()
                 self.move(available_x, available_y)
+            
+            # need a close button
+            self.toparea.button_close.show()
 
         elif conf.icon_in_systray:
             # statusbar and detail window should be frameless and stay on top
@@ -1176,6 +1155,9 @@ class StatusWindow(QWidget):
 
             # yeah! systray!
             systrayicon.show()
+
+            # need a close button
+            self.toparea.button_close.show()
 
             # no need for window and its parts
             self.statusbar.hide()
@@ -1200,6 +1182,9 @@ class StatusWindow(QWidget):
             else:
                 self.show()
                 self.showMaximized()
+                
+            # no need for close button
+            self.toparea.button_close.hide()
 
         # store position for showing/hiding statuswindow
         self.stored_x = self.x()
@@ -2390,30 +2375,20 @@ class TopArea(QWidget):
         # fill default order fields combobox with server names
         self.combobox_servers.fill()
 
+        # hambuger menu
         self.button_hamburger_menu = PushButton_Hamburger()
-        # self.button_hamburger_menu.setIcon(QIcon('%s%smenu.svg' % (RESOURCES, os.sep)))
         self.button_hamburger_menu.setIcon(self.icons['menu'])
-        # ##self.button_hamburger_menu.setStyleSheet('''FlatButton::menu-indicator{image:url(none.jpg);}''')
-
         self.hamburger_menu = MenuAtCursor()
         action_exit = QAction("Exit", self)
         action_exit.triggered.connect(exit)
         self.hamburger_menu.addAction(action_exit)
-
         self.button_hamburger_menu.setMenu(self.hamburger_menu)
 
-        # ##self.button_close = QPushButton()
+        # X
         self.button_close = Button()
-        # self.button_close.setIcon(QIcon('%s%sclose.svg' % (RESOURCES, os.sep)))
         self.button_close.setIcon(self.icons['close'])
         self.button_close.setStyleSheet(CSS_CLOSE_BUTTON)
-        # if platform.system() == 'Darwin':
-        #     self.button_close.setStyleSheet('''border-width: 0px;
-        #                                        border-style: none;
-        #                                        margin-right: 5px;''')
-        # else:
-        #     self.button_close.setStyleSheet('''padding: 1px;
-        #                                        margin-right: 5px;''')
+
         self.hbox.addWidget(self.logo)
         self.hbox.addWidget(self.label_version)
         self.hbox.addWidget(self.label_empty_space)
@@ -3670,7 +3645,9 @@ class TreeView(QTreeView):
             self.sort_order = sort_order
 
             # to keep GTK Treeview sort behaviour first by hosts
-            first_sort = sorted(self.data_array, key=lambda row: row[self.last_sort_column_real].lower(), reverse=self.last_sort_order)
+            first_sort = sorted(self.data_array,
+                                key=lambda row: SORT_COLUMNS_FUNCTIONS[self.last_sort_column_real](row[SORT_COLUMNS_INDEX[self.last_sort_column_real]]),
+                                reverse=self.last_sort_order)
 
             # use SORT_COLUMNS from Helpers to sort column accordingly
             self.data_array = sorted(first_sort,
@@ -4404,13 +4381,7 @@ class Dialog_Settings(Dialog):
         if conf.statusbar_floating:
             statuswindow.store_position_to_conf()
 
-        # store hash of all display settingas as display_mode to decide if statuswindow has to be recreated
-        # display_mode = str(conf.statusbar_floating) + \
-        #               str(conf.icon_in_systray) + \
-        #               str(conf.appindicator) + \
-        #               str(conf.fullscreen) + \
-        #               str(conf.fullscreen_display)
-
+        # store hash of all display settings as display_mode to decide if statuswindow has to be recreated
         display_mode = str(conf.statusbar_floating) + \
                        str(conf.icon_in_systray) + \
                        str(conf.fullscreen) + \
@@ -4477,11 +4448,6 @@ class Dialog_Settings(Dialog):
 
         # when display mode was changed its the easiest to destroy the old status window and create a new one
         # store display_mode to decide if statuswindow has to be recreated
-        # ##if display_mode != str(conf.statusbar_floating) + \
-        # ##                   str(conf.icon_in_systray) + \
-        # ##                   str(conf.appindicator) + \
-        # ##                   str(conf.fullscreen) + \
-        # ##                   str(conf.fullscreen_display):
         if display_mode != str(conf.statusbar_floating) + \
                            str(conf.icon_in_systray) + \
                            str(conf.fullscreen) + \

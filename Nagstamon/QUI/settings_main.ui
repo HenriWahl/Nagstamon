@@ -7,7 +7,7 @@
    <rect>
     <x>0</x>
     <y>0</y>
-    <width>601</width>
+    <width>606</width>
     <height>974</height>
    </rect>
   </property>
@@ -42,7 +42,7 @@
       </sizepolicy>
      </property>
      <property name="currentIndex">
-      <number>0</number>
+      <number>3</number>
      </property>
      <widget class="QWidget" name="tab_servers">
       <attribute name="title">
@@ -787,21 +787,21 @@
           <item>
            <widget class="QRadioButton" name="input_radiobutton_connect_by_host">
             <property name="text">
-             <string>Hostname</string>
+             <string>Hostname provided by monitor</string>
             </property>
            </widget>
           </item>
           <item>
            <widget class="QRadioButton" name="input_radiobutton_connect_by_dns">
             <property name="text">
-             <string>DNS name</string>
+             <string>DNS name by looking up IP address</string>
             </property>
            </widget>
           </item>
           <item>
            <widget class="QRadioButton" name="input_radiobutton_connect_by_ip">
             <property name="text">
-             <string>IP</string>
+             <string>IP resolved by hostname</string>
             </property>
            </widget>
           </item>
