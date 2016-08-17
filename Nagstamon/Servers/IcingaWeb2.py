@@ -76,8 +76,6 @@ class IcingaWeb2Server(GenericServer):
         # dummy default empty cgi urls - get filled later when server version is known
         self.cgiurl_services = None
         self.cgiurl_hosts = None
-        self.use_display_name_host = False
-        self.use_display_name_service = False
 
 
     def init_HTTP(self):
