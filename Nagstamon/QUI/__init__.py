@@ -884,6 +884,10 @@ class StatusWindow(QWidget):
 
     # signal to be sent to all server workers to recheck all
     recheck = pyqtSignal()
+    
+    # signal to be sent to all treeview workers to clear server event history
+    # after 'Refresh'-button has been pressed
+    clear_event_history = pyqtSignal()
 
 
     def __init__(self):
@@ -1250,6 +1254,9 @@ class StatusWindow(QWidget):
 
             # refresh table after changed settings
             dialogs.settings.changed.connect(server_vbox.table.refresh)
+
+            # listen if statuswindow cries for event history clearance
+            self.clear_event_history.connect(server_vbox.table.worker.unfresh_event_history)
 
             return server_vbox
         else:
@@ -1707,7 +1714,6 @@ class StatusWindow(QWidget):
             self.stored_width = self.width()
 
 
-
     def leaveEvent(self, event):
         """
             check if popup has to be hidden depending on mouse position
@@ -1800,6 +1806,9 @@ class StatusWindow(QWidget):
         """
             tell all enabled servers to refresh their information
         """
+        # unfresh event history of servers
+        self.clear_event_history.emit()
+
         for server in get_enabled_servers():
             if conf.debug_mode:
                 server.Debug(server=server.name, debug='Refreshing all hosts and services')
@@ -1807,7 +1816,7 @@ class StatusWindow(QWidget):
             # manipulate server thread counter so get_status loop will refresh when next looking
             # at thread counter
             server.thread_counter = conf.update_interval_seconds
-
+            
 
     @pyqtSlot(dict)
     def desktop_notification(self, current_status_count):
@@ -2363,13 +2372,9 @@ class TopArea(QWidget):
         self.label_empty_space = Draggable_Label(text='', parent=self)
         self.label_empty_space.setSizePolicy(QSizePolicy.Expanding, QSizePolicy.Ignored)
         self.combobox_servers = ComboBox_Servers(parent=self)
-        # ##self.button_filters = QPushButton("Filters", parent=self)
         self.button_filters = Button("Filters", parent=self)
-        # ##self.button_recheck_all = QPushButton("Recheck all", parent=self)
         self.button_recheck_all = Button("Recheck all", parent=self)
-        # ##self.button_refresh = QPushButton("Refresh", parent=self)
         self.button_refresh = Button("Refresh", parent=self)
-        # ##self.button_settings = QPushButton("Settings", parent=self)
         self.button_settings = Button("Settings", parent=self)
 
         # fill default order fields combobox with server names
@@ -2968,7 +2973,7 @@ class TreeView(QTreeView):
 
         # quit thread if worker has finished
         self.worker.finish.connect(self.finish_worker_thread)
-
+        
         # get status if started
         self.worker_thread.started.connect(self.worker.get_status)
         # start with priority 0 = lowest
