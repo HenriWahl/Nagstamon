@@ -1400,7 +1400,7 @@ class StatusWindow(QWidget):
                     self.toparea.show()
                     self.servers_scrollarea.show()
 
-                for vbox in self.servers_vbox.children():
+                for vbox in self.servers_vbox.children():                       
                     if not vbox.server.all_ok:
                         vbox.show_all()
                     # show at least server vbox header to notify about connection or other errors
@@ -1408,6 +1408,12 @@ class StatusWindow(QWidget):
                         vbox.show_only_header()
                     elif vbox.server.all_ok and vbox.server.status == '':
                         vbox.hide_all()
+                        
+                    # depending on authentication state show reauthentication button
+                    if vbox.server.refresh_authentication:
+                        vbox.button_authenticate.show()
+                    else:
+                        vbox.button_authenticate.hide()                   
 
                 if not conf.fullscreen:
                     # theory...
@@ -2626,11 +2632,11 @@ class ServerVBox(QVBoxLayout):
             show all items in server vbox except the table - not needed if empty
         """
         self.label.show()
-        self.button_edit.show()
         self.button_monitor.show()
         self.button_hosts.show()
         self.button_services.show()
         self.button_history.show()
+        self.button_edit.show()
         self.label_status.show()
         self.button_authenticate.hide()
 
@@ -2645,12 +2651,13 @@ class ServerVBox(QVBoxLayout):
             show all items in server vbox except the table - not needed if empty
         """
         self.label.show()
-        self.button_edit.show()
         self.button_monitor.show()
         self.button_hosts.show()
         self.button_services.show()
         self.button_history.show()
+        self.button_edit.show()
         self.label_status.show()
+        self.button_authenticate.hide()
 
         # special table treatment
         self.table.hide()
@@ -2663,11 +2670,11 @@ class ServerVBox(QVBoxLayout):
             hide all items in server vbox
         """
         self.label.hide()
-        self.button_edit.hide()
         self.button_monitor.hide()
         self.button_hosts.hide()
         self.button_services.hide()
         self.button_history.hide()
+        self.button_edit.hide()
         self.label_status.hide()
         self.button_authenticate.hide()
 
@@ -2682,12 +2689,13 @@ class ServerVBox(QVBoxLayout):
             delete VBox and its children
         """
         for widget in (self.label,
-                       self.button_edit,
                        self.button_monitor,
                        self.button_hosts,
                        self.button_services,
                        self.button_history,
-                       self.label_status):
+                       self.button_edit,
+                       self.label_status,
+                       self.button_authenticate):
             widget.hide()
             widget.deleteLater()
         self.removeItem(self.header)
@@ -3545,12 +3553,6 @@ class TreeView(QTreeView):
                     # tell statusbar there is some error to display
                     self.show_error.emit('ERROR')
 
-                # depending on authentication state show reauthentication button
-                if self.server.refresh_authentication:
-                    self.button_authenticate_show.emit()
-                else:
-                    self.button_authenticate_hide.emit()
-
                 # reset counter for this thread
                 self.server.thread_counter = 0
 
@@ -3564,6 +3566,12 @@ class TreeView(QTreeView):
 
                 # stuff data into array and sort it
                 self.fill_data_array(self.sort_column, self.sort_order)
+
+                # depending on authentication state show reauthentication button
+                if self.server.refresh_authentication:
+                    self.button_authenticate_show.emit()
+                else:
+                    self.button_authenticate_hide.emit()
 
                 # tell news about new status available
                 self.new_status.emit()
