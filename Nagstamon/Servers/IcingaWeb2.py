@@ -108,31 +108,15 @@ class IcingaWeb2Server(GenericServer):
         """
             Get status from Icinga Server - only JSON
         """
-        try:
-            # define CGI URLs for hosts and services
-            if self.cgiurl_hosts == self.cgiurl_services == None:
-                # services (unknown, warning or critical?)
-                self.cgiurl_services = {'hard': self.monitor_cgi_url + '/monitoring/list/services?service_state>0&service_state<=3&service_state_type=1&addColumns=service_last_check&format=json', \
-                                        'soft': self.monitor_cgi_url + '/monitoring/list/services?service_state>0&service_state<=3&service_state_type=0&addColumns=service_last_check&format=json'}
-                # hosts (up or down or unreachable)
-                self.cgiurl_hosts = {'hard': self.monitor_cgi_url + '/monitoring/list/hosts?host_state>0&host_state<=2&host_state_type=1&addColumns=host_last_check&format=json', \
-                                     'soft': self.monitor_cgi_url + '/monitoring/list/hosts?host_state>0&host_state<=2&host_state_type=0&addColumns=host_last_check&format=json'}
-            # give back JSON parsing result
-            return(self._get_status_JSON())
-        except:
-            # set checking flag back to False
-            self.isChecking = False
-            result, error = self.Error(sys.exc_info())
-            return Result(result=result, error=error)
+        # define CGI URLs for hosts and services
+        if self.cgiurl_hosts == self.cgiurl_services == None:
+            # services (unknown, warning or critical?)
+            self.cgiurl_services = {'hard': self.monitor_cgi_url + '/monitoring/list/services?service_state>0&service_state<=3&service_state_type=1&addColumns=service_last_check&format=json', \
+                                    'soft': self.monitor_cgi_url + '/monitoring/list/services?service_state>0&service_state<=3&service_state_type=0&addColumns=service_last_check&format=json'}
+            # hosts (up or down or unreachable)
+            self.cgiurl_hosts = {'hard': self.monitor_cgi_url + '/monitoring/list/hosts?host_state>0&host_state<=2&host_state_type=1&addColumns=host_last_check&format=json', \
+                                 'soft': self.monitor_cgi_url + '/monitoring/list/hosts?host_state>0&host_state<=2&host_state_type=0&addColumns=host_last_check&format=json'}
 
-        # dummy return in case all is OK
-        return Result()
-
-
-    def _get_status_JSON(self):
-        """
-            Get status from Icinga Server - the JSON way
-        """
         # new_hosts dictionary
         self.new_hosts = dict()
 
