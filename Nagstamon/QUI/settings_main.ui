@@ -42,7 +42,7 @@
       </sizepolicy>
      </property>
      <property name="currentIndex">
-      <number>5</number>
+      <number>4</number>
      </property>
      <widget class="QWidget" name="tab_servers">
       <attribute name="title">
@@ -352,16 +352,16 @@
            <number>5</number>
           </property>
           <property name="leftMargin">
-           <number>5</number>
+           <number>10</number>
           </property>
           <property name="topMargin">
-           <number>5</number>
+           <number>10</number>
           </property>
           <property name="rightMargin">
-           <number>5</number>
+           <number>10</number>
           </property>
           <property name="bottomMargin">
-           <number>5</number>
+           <number>10</number>
           </property>
           <item>
            <layout class="QGridLayout" name="gridLayout_14">
@@ -419,16 +419,16 @@
          </property>
          <layout class="QGridLayout" name="gridLayout_3">
           <property name="leftMargin">
-           <number>5</number>
+           <number>10</number>
           </property>
           <property name="topMargin">
-           <number>5</number>
+           <number>10</number>
           </property>
           <property name="rightMargin">
-           <number>5</number>
+           <number>10</number>
           </property>
           <property name="bottomMargin">
-           <number>5</number>
+           <number>10</number>
           </property>
           <property name="spacing">
            <number>5</number>
@@ -555,16 +555,16 @@
          </property>
          <layout class="QGridLayout" name="gridLayout_17">
           <property name="leftMargin">
-           <number>5</number>
+           <number>10</number>
           </property>
           <property name="topMargin">
-           <number>5</number>
+           <number>10</number>
           </property>
           <property name="rightMargin">
-           <number>5</number>
+           <number>10</number>
           </property>
           <property name="bottomMargin">
-           <number>5</number>
+           <number>10</number>
           </property>
           <property name="spacing">
            <number>5</number>
@@ -664,16 +664,16 @@
            <number>5</number>
           </property>
           <property name="leftMargin">
-           <number>5</number>
+           <number>10</number>
           </property>
           <property name="topMargin">
-           <number>5</number>
+           <number>10</number>
           </property>
           <property name="rightMargin">
-           <number>5</number>
+           <number>10</number>
           </property>
           <property name="bottomMargin">
-           <number>5</number>
+           <number>10</number>
           </property>
           <item>
            <layout class="QVBoxLayout" name="verticalLayout_13">
@@ -848,18 +848,21 @@
          </property>
          <layout class="QGridLayout" name="gridLayout_5">
           <property name="leftMargin">
-           <number>5</number>
+           <number>10</number>
           </property>
           <property name="topMargin">
-           <number>5</number>
+           <number>10</number>
           </property>
           <property name="rightMargin">
-           <number>5</number>
+           <number>10</number>
           </property>
           <property name="bottomMargin">
-           <number>5</number>
+           <number>10</number>
           </property>
-          <property name="spacing">
+          <property name="horizontalSpacing">
+           <number>10</number>
+          </property>
+          <property name="verticalSpacing">
            <number>5</number>
           </property>
           <item row="6" column="0">
@@ -1160,16 +1163,16 @@
            <number>5</number>
           </property>
           <property name="leftMargin">
-           <number>5</number>
+           <number>10</number>
           </property>
           <property name="topMargin">
-           <number>5</number>
+           <number>10</number>
           </property>
           <property name="rightMargin">
-           <number>5</number>
+           <number>10</number>
           </property>
           <property name="bottomMargin">
-           <number>5</number>
+           <number>10</number>
           </property>
           <item>
            <widget class="QRadioButton" name="input_radiobutton_connect_by_host">
@@ -1218,16 +1221,16 @@
            <number>5</number>
           </property>
           <property name="leftMargin">
-           <number>5</number>
+           <number>10</number>
           </property>
           <property name="topMargin">
-           <number>5</number>
+           <number>10</number>
           </property>
           <property name="rightMargin">
-           <number>5</number>
+           <number>10</number>
           </property>
           <property name="bottomMargin">
-           <number>5</number>
+           <number>10</number>
           </property>
           <item>
            <widget class="QRadioButton" name="input_radiobutton_use_default_browser">
@@ -1250,16 +1253,16 @@
             </property>
             <layout class="QGridLayout" name="gridLayout_19">
              <property name="leftMargin">
-              <number>5</number>
+              <number>10</number>
              </property>
              <property name="topMargin">
-              <number>5</number>
+              <number>10</number>
              </property>
              <property name="rightMargin">
-              <number>5</number>
+              <number>10</number>
              </property>
              <property name="bottomMargin">
-              <number>5</number>
+              <number>10</number>
              </property>
              <property name="spacing">
               <number>5</number>
@@ -1319,16 +1322,16 @@
            <number>5</number>
           </property>
           <property name="leftMargin">
-           <number>5</number>
+           <number>10</number>
           </property>
           <property name="topMargin">
-           <number>5</number>
+           <number>10</number>
           </property>
           <property name="rightMargin">
-           <number>5</number>
+           <number>10</number>
           </property>
           <property name="bottomMargin">
-           <number>5</number>
+           <number>10</number>
           </property>
           <item>
            <layout class="QHBoxLayout" name="horizontalLayout_notifications">
@@ -1336,16 +1339,16 @@
              <number>5</number>
             </property>
             <property name="leftMargin">
-             <number>5</number>
+             <number>0</number>
             </property>
             <property name="topMargin">
-             <number>5</number>
+             <number>0</number>
             </property>
             <property name="rightMargin">
-             <number>5</number>
+             <number>0</number>
             </property>
             <property name="bottomMargin">
-             <number>5</number>
+             <number>0</number>
             </property>
             <item>
              <widget class="QCheckBox" name="input_checkbox_notify_if_warning">
@@ -1412,16 +1415,16 @@
             </property>
             <layout class="QGridLayout" name="gridLayout_16">
              <property name="leftMargin">
-              <number>5</number>
+              <number>10</number>
              </property>
              <property name="topMargin">
-              <number>5</number>
+              <number>10</number>
              </property>
              <property name="rightMargin">
-              <number>5</number>
+              <number>10</number>
              </property>
              <property name="bottomMargin">
-              <number>5</number>
+              <number>10</number>
              </property>
              <property name="spacing">
               <number>5</number>
@@ -1433,16 +1436,16 @@
                </property>
                <layout class="QGridLayout" name="gridLayout_8">
                 <property name="leftMargin">
-                 <number>5</number>
+                 <number>10</number>
                 </property>
                 <property name="topMargin">
-                 <number>5</number>
+                 <number>10</number>
                 </property>
                 <property name="rightMargin">
-                 <number>5</number>
+                 <number>10</number>
                 </property>
                 <property name="bottomMargin">
-                 <number>5</number>
+                 <number>10</number>
                 </property>
                 <property name="spacing">
                  <number>5</number>
@@ -1560,16 +1563,16 @@
             </property>
             <layout class="QGridLayout" name="gridLayout_11">
              <property name="leftMargin">
-              <number>5</number>
+              <number>10</number>
              </property>
              <property name="topMargin">
-              <number>5</number>
+              <number>10</number>
              </property>
              <property name="rightMargin">
-              <number>5</number>
+              <number>10</number>
              </property>
              <property name="bottomMargin">
-              <number>5</number>
+              <number>10</number>
              </property>
              <property name="spacing">
               <number>5</number>
@@ -1622,16 +1625,16 @@
                </property>
                <layout class="QGridLayout" name="gridLayout_7">
                 <property name="leftMargin">
-                 <number>5</number>
+                 <number>10</number>
                 </property>
                 <property name="topMargin">
-                 <number>5</number>
+                 <number>10</number>
                 </property>
                 <property name="rightMargin">
-                 <number>5</number>
+                 <number>10</number>
                 </property>
                 <property name="bottomMargin">
-                 <number>5</number>
+                 <number>10</number>
                 </property>
                 <property name="spacing">
                  <number>5</number>
@@ -1743,13 +1746,13 @@
            <number>5</number>
           </property>
           <property name="leftMargin">
-           <number>5</number>
+           <number>10</number>
           </property>
           <property name="topMargin">
-           <number>5</number>
+           <number>10</number>
           </property>
           <property name="rightMargin">
-           <number>5</number>
+           <number>10</number>
           </property>
           <property name="bottomMargin">
            <number>5</number>
@@ -1816,13 +1819,13 @@
            <number>5</number>
           </property>
           <property name="leftMargin">
-           <number>5</number>
+           <number>10</number>
           </property>
           <property name="topMargin">
-           <number>5</number>
+           <number>10</number>
           </property>
           <property name="rightMargin">
-           <number>5</number>
+           <number>10</number>
           </property>
           <property name="bottomMargin">
            <number>5</number>
@@ -1889,16 +1892,16 @@
            <number>5</number>
           </property>
           <property name="leftMargin">
-           <number>5</number>
+           <number>10</number>
           </property>
           <property name="topMargin">
            <number>5</number>
           </property>
           <property name="rightMargin">
-           <number>5</number>
+           <number>10</number>
           </property>
           <property name="bottomMargin">
-           <number>5</number>
+           <number>10</number>
           </property>
           <item>
            <widget class="QPushButton" name="input_button_color_ok_background">
@@ -1992,16 +1995,16 @@
          </property>
          <layout class="QGridLayout" name="gridLayout_18">
           <property name="leftMargin">
-           <number>5</number>
+           <number>10</number>
           </property>
           <property name="topMargin">
-           <number>5</number>
+           <number>10</number>
           </property>
           <property name="rightMargin">
-           <number>5</number>
+           <number>10</number>
           </property>
           <property name="bottomMargin">
-           <number>5</number>
+           <number>10</number>
           </property>
           <property name="spacing">
            <number>5</number>
@@ -2232,14 +2235,17 @@
           <property name="spacing">
            <number>5</number>
           </property>
+          <property name="leftMargin">
+           <number>10</number>
+          </property>
           <property name="topMargin">
-           <number>5</number>
+           <number>10</number>
           </property>
           <property name="rightMargin">
-           <number>5</number>
+           <number>10</number>
           </property>
           <property name="bottomMargin">
-           <number>5</number>
+           <number>10</number>
           </property>
           <item>
            <widget class="QCheckBox" name="input_checkbox_defaults_acknowledge_sticky">
@@ -2304,14 +2310,17 @@
           <string>Downtime:</string>
          </property>
          <layout class="QGridLayout" name="gridLayout_10">
+          <property name="leftMargin">
+           <number>10</number>
+          </property>
           <property name="topMargin">
-           <number>5</number>
+           <number>10</number>
           </property>
           <property name="rightMargin">
-           <number>5</number>
+           <number>10</number>
           </property>
           <property name="bottomMargin">
-           <number>5</number>
+           <number>10</number>
           </property>
           <property name="spacing">
            <number>5</number>
@@ -2445,16 +2454,16 @@
            <number>5</number>
           </property>
           <property name="leftMargin">
-           <number>5</number>
+           <number>10</number>
           </property>
           <property name="topMargin">
-           <number>5</number>
+           <number>10</number>
           </property>
           <property name="rightMargin">
-           <number>5</number>
+           <number>10</number>
           </property>
           <property name="bottomMargin">
-           <number>5</number>
+           <number>10</number>
           </property>
           <item>
            <widget class="QLabel" name="label_defaults_submit_check_result_comment">
