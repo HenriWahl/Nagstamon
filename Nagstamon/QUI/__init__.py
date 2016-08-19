@@ -489,8 +489,6 @@ class MenuContext(MenuAtCursor):
         MenuAtCursor.__init__(self, parent=parent)
 
         # connect all relevant widgets which should show the context menu
-        # ##for widget in systrayicon, \
-        # ##              statuswindow.toparea.button_hamburger_menu, \
         for widget in statuswindow.toparea.button_hamburger_menu, \
                       statuswindow.toparea.logo, \
                       statuswindow.toparea.label_version, \
@@ -4053,7 +4051,7 @@ class Dialog(QObject):
             else:
                 for widget in widgets:
                     widget.show()
-        # normal case - clock on checkbox activates more options
+        # normal case - click on checkbox activates more options
         else:
             if checkbox.isChecked():
                 for widget in widgets:
