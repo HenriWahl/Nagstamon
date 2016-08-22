@@ -1853,8 +1853,14 @@ class StatusWindow(QWidget):
         if not conf.fullscreen and not platform.system == 'Windows':
             self.setWindowFlags(WINDOW_FLAGS)
 
-        # again and again try to keept that statuswindow on top!
-        if platform.system() == 'Windows':
+        # again and again try to keep that statuswindow on top!
+        if platform.system() == 'Windows' and not conf.fullscreen:
+            # find out if no context menu is shown and thus would be
+            # overlapped by statuswindow
+            for vbox in self.servers_vbox.children():
+                # jump out here if any action_menu is shown
+                if not vbox.table.action_menu.available:
+                    return
             self.raise_()
 
 
@@ -3431,6 +3437,7 @@ class TreeView(QTreeView):
         self.worker_thread.quit()
         # wait until thread is really stopped
         self.worker_thread.wait(2000)
+        
 
 
     class Worker(QObject):

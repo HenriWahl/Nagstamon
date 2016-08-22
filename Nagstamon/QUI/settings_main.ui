@@ -42,7 +42,7 @@
       </sizepolicy>
      </property>
      <property name="currentIndex">
-      <number>0</number>
+      <number>4</number>
      </property>
      <widget class="QWidget" name="tab_servers">
       <attribute name="title">
@@ -109,7 +109,7 @@
           <number>5</number>
          </property>
          <property name="leftMargin">
-          <number>5</number>
+          <number>0</number>
          </property>
          <property name="topMargin">
           <number>5</number>
@@ -383,14 +383,14 @@
             <item row="0" column="1">
              <widget class="QRadioButton" name="input_radiobutton_short_display">
               <property name="text">
-               <string>Short  (&quot;1 4&quot;)</string>
+               <string>Short  [ 1 | 4 ]</string>
               </property>
              </widget>
             </item>
             <item row="0" column="0">
              <widget class="QRadioButton" name="input_radiobutton_long_display">
               <property name="text">
-               <string>Long  (&quot;1 WARNING 4 CRITICAL&quot;)</string>
+               <string>Long  [ 1 WARNING | 4 CRITICAL ]</string>
               </property>
              </widget>
             </item>
@@ -575,16 +575,16 @@
              <number>5</number>
             </property>
             <property name="leftMargin">
-             <number>5</number>
+             <number>0</number>
             </property>
             <property name="topMargin">
-             <number>5</number>
+             <number>0</number>
             </property>
             <property name="rightMargin">
-             <number>5</number>
+             <number>0</number>
             </property>
             <property name="bottomMargin">
-             <number>5</number>
+             <number>0</number>
             </property>
             <item>
              <widget class="QRadioButton" name="input_radiobutton_fullscreen">
@@ -602,13 +602,13 @@
                <number>5</number>
               </property>
               <property name="topMargin">
-               <number>5</number>
+               <number>0</number>
               </property>
               <property name="rightMargin">
                <number>5</number>
               </property>
               <property name="bottomMargin">
-               <number>5</number>
+               <number>0</number>
               </property>
               <item>
                <widget class="QLabel" name="label_fullscreen_display">
@@ -1099,7 +1099,7 @@
           <number>5</number>
          </property>
          <property name="leftMargin">
-          <number>5</number>
+          <number>0</number>
          </property>
          <property name="topMargin">
           <number>5</number>
