@@ -42,7 +42,7 @@
       </sizepolicy>
      </property>
      <property name="currentIndex">
-      <number>4</number>
+      <number>0</number>
      </property>
      <widget class="QWidget" name="tab_servers">
       <attribute name="title">
@@ -79,7 +79,7 @@
           <number>5</number>
          </property>
          <property name="bottomMargin">
-          <number>5</number>
+          <number>0</number>
          </property>
          <item>
           <widget class="QCheckBox" name="input_checkbox_debug_mode">
@@ -115,7 +115,7 @@
           <number>5</number>
          </property>
          <property name="rightMargin">
-          <number>5</number>
+          <number>0</number>
          </property>
          <property name="bottomMargin">
           <number>5</number>
@@ -257,7 +257,7 @@
           <number>5</number>
          </property>
          <property name="bottomMargin">
-          <number>5</number>
+          <number>0</number>
          </property>
          <item>
           <widget class="QCheckBox" name="input_checkbox_check_for_new_version">
@@ -1105,7 +1105,7 @@
           <number>5</number>
          </property>
          <property name="rightMargin">
-          <number>5</number>
+          <number>0</number>
          </property>
          <property name="bottomMargin">
           <number>5</number>
