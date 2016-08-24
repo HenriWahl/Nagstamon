@@ -1075,7 +1075,8 @@ class StatusWindow(QWidget):
         if conf.debug_mode:
             self.worker_thread.started.connect(self.worker.debug_loop)
         # start debug loop by signal
-        self.worker.start_debug_loop.connect(self.worker.debug_loop)
+        ###self.worker.start_debug_loop.connect(self.worker.debug_loop)
+        dialogs.settings.start_debug_loop.connect(self.worker.debug_loop)
         # start with priority 0 = lowest
         self.worker_thread.start(0)
 
@@ -1870,7 +1871,7 @@ class StatusWindow(QWidget):
         """
 
         # used by DialogSettings.ok() to tell debug loop it should start
-        start_debug_loop = pyqtSignal()
+        ####start_debug_loop = pyqtSignal()
 
         def __init__(self):
             QObject.__init__(self)
@@ -1900,7 +1901,7 @@ class StatusWindow(QWidget):
             """
             if conf.debug_mode:
                 self.debug_loop_looping = True
-
+                
                 # as long thread is supposed to run
                 while self.running and self.debug_loop_looping:
                     # only log something if there is something to tell
@@ -1908,7 +1909,7 @@ class StatusWindow(QWidget):
                         # always get oldest item of queue list - FIFO
                         debug_line = (debug_queue.pop(0))
                         # output to console
-                        print(debug_line)
+                        print(debug_line)                       
                         if conf.debug_to_file:
                             # if there is no file handle available get it
                             if self.debug_file == None:
@@ -4130,6 +4131,9 @@ class Dialog_Settings(Dialog):
 
     # send signal if check for new version is wanted
     check_for_new_version = pyqtSignal(bool, QWidget)
+    
+    # used to tell debug loop it should start
+    start_debug_loop = pyqtSignal()
 
     def __init__(self, dialog):
         Dialog.__init__(self, dialog)
@@ -4438,7 +4442,7 @@ class Dialog_Settings(Dialog):
         if conf.debug_mode:
             # only start debugging loop if it not already loops
             if statuswindow.worker.debug_loop_looping == False:
-                statuswindow.worker.start_debug_loop.emit()
+                self.start_debug_loop.emit()
         else:
             # set flag to tell debug loop it should stop please
             statuswindow.worker.debug_loop_looping = False
@@ -4459,7 +4463,7 @@ class Dialog_Settings(Dialog):
         conf.SaveConfig()
 
         # stop statuswindow worker
-        statuswindow.worker.running = False
+        ###statuswindow.worker.running = False
 
         # save configuration
         conf.SaveConfig()
@@ -4475,7 +4479,7 @@ class Dialog_Settings(Dialog):
             NUMBER_OF_DISPLAY_CHANGES += 1
 
             # stop statuswindow worker
-            statuswindow.worker.running = False
+            ###statuswindow.worker.running = False
 
             # hide window to avoid laggy GUI - better none than laggy
             statuswindow.hide()
