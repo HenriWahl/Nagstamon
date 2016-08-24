@@ -7,7 +7,7 @@
     <x>0</x>
     <y>0</y>
     <width>659</width>
-    <height>824</height>
+    <height>855</height>
    </rect>
   </property>
   <property name="sizePolicy">
@@ -23,6 +23,24 @@
    <bool>true</bool>
   </property>
   <layout class="QGridLayout" name="gridLayout">
+   <property name="leftMargin">
+    <number>10</number>
+   </property>
+   <property name="topMargin">
+    <number>10</number>
+   </property>
+   <property name="rightMargin">
+    <number>10</number>
+   </property>
+   <property name="bottomMargin">
+    <number>10</number>
+   </property>
+   <property name="horizontalSpacing">
+    <number>5</number>
+   </property>
+   <property name="verticalSpacing">
+    <number>2</number>
+   </property>
    <item row="8" column="0">
     <widget class="QLabel" name="label_password">
      <property name="sizePolicy">
@@ -99,6 +117,21 @@
       <string>Proxy:</string>
      </property>
      <layout class="QGridLayout" name="gridLayout_2">
+      <property name="leftMargin">
+       <number>10</number>
+      </property>
+      <property name="topMargin">
+       <number>10</number>
+      </property>
+      <property name="rightMargin">
+       <number>10</number>
+      </property>
+      <property name="bottomMargin">
+       <number>10</number>
+      </property>
+      <property name="spacing">
+       <number>5</number>
+      </property>
       <item row="3" column="0">
        <widget class="QLabel" name="label_proxy_password">
         <property name="sizePolicy">
@@ -281,11 +314,32 @@
       <string>Options:</string>
      </property>
      <layout class="QGridLayout" name="gridLayout_3">
+      <property name="leftMargin">
+       <number>10</number>
+      </property>
+      <property name="topMargin">
+       <number>10</number>
+      </property>
+      <property name="rightMargin">
+       <number>10</number>
+      </property>
+      <property name="bottomMargin">
+       <number>10</number>
+      </property>
+      <property name="horizontalSpacing">
+       <number>10</number>
+      </property>
+      <property name="verticalSpacing">
+       <number>5</number>
+      </property>
       <item row="1" column="1">
        <widget class="QComboBox" name="input_combobox_authentication"/>
       </item>
       <item row="2" column="1">
        <layout class="QHBoxLayout" name="horizontalLayout_timeout_seconds">
+        <property name="spacing">
+         <number>5</number>
+        </property>
         <item>
          <widget class="QSpinBox" name="input_spinbox_timeout"/>
         </item>

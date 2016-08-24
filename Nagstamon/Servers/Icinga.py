@@ -33,7 +33,7 @@ class IcingaServer(GenericServer):
     """
         object of Incinga server
     """
-    TYPE = u'Icinga'
+    TYPE = 'Icinga'
     # flag to handle JSON or HTML correctly - checked by get_server_version()
     json = None
 

@@ -530,11 +530,6 @@ class GenericServer(object):
                 result = self.FetchURL(self.cgiurl_hosts[status_type])               
                 htobj, error, status_code = result.result, result.error, result.status_code
                 
-                #if error != '' or status_code > 400:
-                #    return Result(result=copy.deepcopy(htobj),
-                #                              error=copy.deepcopy(error),
-                #                              status_code=copy.deepcopy(status_code))
-
                 # check if any error occured
                 errors_occured = self.check_for_error(htobj, error, status_code)
                 # if there are errors return them
@@ -659,11 +654,6 @@ class GenericServer(object):
             for status_type in 'hard', 'soft':
                 result = self.FetchURL(self.cgiurl_services[status_type])
                 htobj, error, status_code = result.result, result.error, result.status_code
-
-                #if error != '' or status_code > 400:
-                #    return Result(result=copy.deepcopy(htobj),
-                #                  error=copy.deepcopy(error),
-                #                  status_code=code.deepcopy(status_code))
 
                 # check if any error occured
                 errors_occured = self.check_for_error(htobj, error, status_code)

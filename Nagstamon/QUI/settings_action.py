@@ -2,7 +2,7 @@
 
 # Form implementation generated from reading ui file 'settings_action.ui'
 #
-# Created by: PyQt5 UI code generator 5.5.1
+# Created by: PyQt5 UI code generator 5.6
 #
 # WARNING! All changes made in this file will be lost!
 
@@ -50,9 +50,6 @@ class Ui_settings_action(object):
         self.label_action_type.setSizePolicy(sizePolicy)
         self.label_action_type.setObjectName("label_action_type")
         self.gridLayout.addWidget(self.label_action_type, 1, 0, 1, 1)
-        self.input_checkbox_re_service_enabled = QtWidgets.QCheckBox(settings_action)
-        self.input_checkbox_re_service_enabled.setObjectName("input_checkbox_re_service_enabled")
-        self.gridLayout.addWidget(self.input_checkbox_re_service_enabled, 23, 0, 1, 3)
         self.input_checkbox_re_status_information_reverse = QtWidgets.QCheckBox(settings_action)
         self.input_checkbox_re_status_information_reverse.setObjectName("input_checkbox_re_status_information_reverse")
         self.gridLayout.addWidget(self.input_checkbox_re_status_information_reverse, 26, 5, 1, 1)
@@ -70,12 +67,6 @@ class Ui_settings_action(object):
         self.input_checkbox_re_service_reverse = QtWidgets.QCheckBox(settings_action)
         self.input_checkbox_re_service_reverse.setObjectName("input_checkbox_re_service_reverse")
         self.gridLayout.addWidget(self.input_checkbox_re_service_reverse, 24, 5, 1, 1)
-        self.label_status_popup = QtWidgets.QLabel(settings_action)
-        self.label_status_popup.setObjectName("label_status_popup")
-        self.gridLayout.addWidget(self.label_status_popup, 29, 0, 1, 4)
-        self.input_checkbox_enabled = QtWidgets.QCheckBox(settings_action)
-        self.input_checkbox_enabled.setObjectName("input_checkbox_enabled")
-        self.gridLayout.addWidget(self.input_checkbox_enabled, 0, 0, 1, 5)
         self.input_lineedit_description = QtWidgets.QLineEdit(settings_action)
         self.input_lineedit_description.setObjectName("input_lineedit_description")
         self.gridLayout.addWidget(self.input_lineedit_description, 5, 1, 1, 5)
@@ -87,9 +78,6 @@ class Ui_settings_action(object):
         self.input_lineedit_re_status_information_pattern = QtWidgets.QLineEdit(settings_action)
         self.input_lineedit_re_status_information_pattern.setObjectName("input_lineedit_re_status_information_pattern")
         self.gridLayout.addWidget(self.input_lineedit_re_status_information_pattern, 26, 0, 1, 5)
-        self.input_checkbox_re_status_information_enabled = QtWidgets.QCheckBox(settings_action)
-        self.input_checkbox_re_status_information_enabled.setObjectName("input_checkbox_re_status_information_enabled")
-        self.gridLayout.addWidget(self.input_checkbox_re_status_information_enabled, 25, 0, 1, 3)
         self.input_textedit_string = QtWidgets.QTextEdit(settings_action)
         sizePolicy = QtWidgets.QSizePolicy(QtWidgets.QSizePolicy.MinimumExpanding, QtWidgets.QSizePolicy.MinimumExpanding)
         sizePolicy.setHorizontalStretch(0)
@@ -112,11 +100,6 @@ class Ui_settings_action(object):
         self.input_radiobutton_leave_popwin_open = QtWidgets.QRadioButton(settings_action)
         self.input_radiobutton_leave_popwin_open.setObjectName("input_radiobutton_leave_popwin_open")
         self.gridLayout.addWidget(self.input_radiobutton_leave_popwin_open, 32, 0, 1, 6)
-        self.label_python_re = QtWidgets.QLabel(settings_action)
-        self.label_python_re.setOpenExternalLinks(True)
-        self.label_python_re.setTextInteractionFlags(QtCore.Qt.TextBrowserInteraction)
-        self.label_python_re.setObjectName("label_python_re")
-        self.gridLayout.addWidget(self.label_python_re, 27, 0, 1, 4)
         self.label_string = QtWidgets.QLabel(settings_action)
         sizePolicy = QtWidgets.QSizePolicy(QtWidgets.QSizePolicy.Minimum, QtWidgets.QSizePolicy.Preferred)
         sizePolicy.setHorizontalStretch(0)
@@ -143,10 +126,27 @@ class Ui_settings_action(object):
         self.gridLayout.addWidget(self.input_lineedit_re_host_pattern, 22, 0, 1, 5)
         self.input_checkbox_re_host_enabled = QtWidgets.QCheckBox(settings_action)
         self.input_checkbox_re_host_enabled.setObjectName("input_checkbox_re_host_enabled")
-        self.gridLayout.addWidget(self.input_checkbox_re_host_enabled, 21, 0, 1, 4)
+        self.gridLayout.addWidget(self.input_checkbox_re_host_enabled, 21, 0, 1, 6)
+        self.input_checkbox_re_service_enabled = QtWidgets.QCheckBox(settings_action)
+        self.input_checkbox_re_service_enabled.setObjectName("input_checkbox_re_service_enabled")
+        self.gridLayout.addWidget(self.input_checkbox_re_service_enabled, 23, 0, 1, 6)
+        self.input_checkbox_re_status_information_enabled = QtWidgets.QCheckBox(settings_action)
+        self.input_checkbox_re_status_information_enabled.setObjectName("input_checkbox_re_status_information_enabled")
+        self.gridLayout.addWidget(self.input_checkbox_re_status_information_enabled, 25, 0, 1, 6)
+        self.label_python_re = QtWidgets.QLabel(settings_action)
+        self.label_python_re.setOpenExternalLinks(True)
+        self.label_python_re.setTextInteractionFlags(QtCore.Qt.TextBrowserInteraction)
+        self.label_python_re.setObjectName("label_python_re")
+        self.gridLayout.addWidget(self.label_python_re, 27, 0, 1, 6)
+        self.label_status_popup = QtWidgets.QLabel(settings_action)
+        self.label_status_popup.setObjectName("label_status_popup")
+        self.gridLayout.addWidget(self.label_status_popup, 29, 0, 1, 6)
         self.input_checkbox_recheck = QtWidgets.QCheckBox(settings_action)
         self.input_checkbox_recheck.setObjectName("input_checkbox_recheck")
-        self.gridLayout.addWidget(self.input_checkbox_recheck, 33, 0, 1, 1)
+        self.gridLayout.addWidget(self.input_checkbox_recheck, 33, 0, 1, 6)
+        self.input_checkbox_enabled = QtWidgets.QCheckBox(settings_action)
+        self.input_checkbox_enabled.setObjectName("input_checkbox_enabled")
+        self.gridLayout.addWidget(self.input_checkbox_enabled, 0, 0, 1, 6)
 
         self.retranslateUi(settings_action)
         self.button_box.accepted.connect(settings_action.accept)
@@ -178,13 +178,9 @@ class Ui_settings_action(object):
         self.label_target.setText(_translate("settings_action", "Target:"))
         self.input_checkbox_re_host_reverse.setText(_translate("settings_action", "reverse"))
         self.label_action_type.setText(_translate("settings_action", "Action type:"))
-        self.input_checkbox_re_service_enabled.setText(_translate("settings_action", "Regular expressions for services"))
         self.input_checkbox_re_status_information_reverse.setText(_translate("settings_action", "reverse"))
         self.label_name.setText(_translate("settings_action", "Name:"))
         self.input_checkbox_re_service_reverse.setText(_translate("settings_action", "reverse"))
-        self.label_status_popup.setText(_translate("settings_action", "Status popup window:"))
-        self.input_checkbox_enabled.setText(_translate("settings_action", "Enabled"))
-        self.input_checkbox_re_status_information_enabled.setText(_translate("settings_action", "Regular expressions for status informations"))
         self.input_textedit_string.setToolTip(_translate("settings_action", "Available variables for action strings:\n"
 "\n"
 "$HOST$ - host as in monitor\n"
@@ -203,7 +199,6 @@ class Ui_settings_action(object):
         self.input_checkbox_filter_target_host.setText(_translate("settings_action", "Host"))
         self.label_description.setText(_translate("settings_action", "Description:"))
         self.input_radiobutton_leave_popwin_open.setText(_translate("settings_action", "Leave status popup window open after action"))
-        self.label_python_re.setText(_translate("settings_action", "<a href=http://docs.python.org/howto/regex.html>See Python Regular Expressions HOWTO for filtering details.</a>"))
         self.label_string.setText(_translate("settings_action", "String:"))
         self.input_checkbox_filter_target_service.setText(_translate("settings_action", "Service"))
         self.input_combobox_type.setToolTip(_translate("settings_action", "Available action types:\n"
@@ -218,5 +213,10 @@ class Ui_settings_action(object):
 "Request given URL string in the background, for example to acknowledge a service with one click.\n"
 ""))
         self.input_checkbox_re_host_enabled.setText(_translate("settings_action", "Regular expressions for hosts"))
+        self.input_checkbox_re_service_enabled.setText(_translate("settings_action", "Regular expressions for services"))
+        self.input_checkbox_re_status_information_enabled.setText(_translate("settings_action", "Regular expressions for status informations"))
+        self.label_python_re.setText(_translate("settings_action", "<a href=http://docs.python.org/howto/regex.html>See Python Regular Expressions HOWTO for filtering details.</a>"))
+        self.label_status_popup.setText(_translate("settings_action", "Status popup window:"))
         self.input_checkbox_recheck.setText(_translate("settings_action", "Recheck after action to force result"))
+        self.input_checkbox_enabled.setText(_translate("settings_action", "Enabled"))
 

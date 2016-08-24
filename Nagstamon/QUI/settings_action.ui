@@ -76,13 +76,6 @@
      </property>
     </widget>
    </item>
-   <item row="23" column="0" colspan="3">
-    <widget class="QCheckBox" name="input_checkbox_re_service_enabled">
-     <property name="text">
-      <string>Regular expressions for services</string>
-     </property>
-    </widget>
-   </item>
    <item row="26" column="5">
     <widget class="QCheckBox" name="input_checkbox_re_status_information_reverse">
      <property name="text">
@@ -113,20 +106,6 @@
      </property>
     </widget>
    </item>
-   <item row="29" column="0" colspan="4">
-    <widget class="QLabel" name="label_status_popup">
-     <property name="text">
-      <string>Status popup window:</string>
-     </property>
-    </widget>
-   </item>
-   <item row="0" column="0" colspan="5">
-    <widget class="QCheckBox" name="input_checkbox_enabled">
-     <property name="text">
-      <string>Enabled</string>
-     </property>
-    </widget>
-   </item>
    <item row="5" column="1" colspan="5">
     <widget class="QLineEdit" name="input_lineedit_description"/>
    </item>
@@ -142,13 +121,6 @@
    </item>
    <item row="26" column="0" colspan="5">
     <widget class="QLineEdit" name="input_lineedit_re_status_information_pattern"/>
-   </item>
-   <item row="25" column="0" colspan="3">
-    <widget class="QCheckBox" name="input_checkbox_re_status_information_enabled">
-     <property name="text">
-      <string>Regular expressions for status informations</string>
-     </property>
-    </widget>
    </item>
    <item row="6" column="1" colspan="5">
     <widget class="QTextEdit" name="input_textedit_string">
@@ -204,19 +176,6 @@ $TRANSID$ - only useful for Check_MK as _transid=$TRANSID$</string>
      </property>
     </widget>
    </item>
-   <item row="27" column="0" colspan="4">
-    <widget class="QLabel" name="label_python_re">
-     <property name="text">
-      <string>&lt;a href=http://docs.python.org/howto/regex.html&gt;See Python Regular Expressions HOWTO for filtering details.&lt;/a&gt;</string>
-     </property>
-     <property name="openExternalLinks">
-      <bool>true</bool>
-     </property>
-     <property name="textInteractionFlags">
-      <set>Qt::TextBrowserInteraction</set>
-     </property>
-    </widget>
-   </item>
    <item row="6" column="0">
     <widget class="QLabel" name="label_string">
      <property name="sizePolicy">
@@ -266,17 +225,58 @@ Request given URL string in the background, for example to acknowledge a service
    <item row="22" column="0" colspan="5">
     <widget class="QLineEdit" name="input_lineedit_re_host_pattern"/>
    </item>
-   <item row="21" column="0" colspan="4">
+   <item row="21" column="0" colspan="6">
     <widget class="QCheckBox" name="input_checkbox_re_host_enabled">
      <property name="text">
       <string>Regular expressions for hosts</string>
      </property>
     </widget>
    </item>
-   <item row="33" column="0">
+   <item row="23" column="0" colspan="6">
+    <widget class="QCheckBox" name="input_checkbox_re_service_enabled">
+     <property name="text">
+      <string>Regular expressions for services</string>
+     </property>
+    </widget>
+   </item>
+   <item row="25" column="0" colspan="6">
+    <widget class="QCheckBox" name="input_checkbox_re_status_information_enabled">
+     <property name="text">
+      <string>Regular expressions for status informations</string>
+     </property>
+    </widget>
+   </item>
+   <item row="27" column="0" colspan="6">
+    <widget class="QLabel" name="label_python_re">
+     <property name="text">
+      <string>&lt;a href=http://docs.python.org/howto/regex.html&gt;See Python Regular Expressions HOWTO for filtering details.&lt;/a&gt;</string>
+     </property>
+     <property name="openExternalLinks">
+      <bool>true</bool>
+     </property>
+     <property name="textInteractionFlags">
+      <set>Qt::TextBrowserInteraction</set>
+     </property>
+    </widget>
+   </item>
+   <item row="29" column="0" colspan="6">
+    <widget class="QLabel" name="label_status_popup">
+     <property name="text">
+      <string>Status popup window:</string>
+     </property>
+    </widget>
+   </item>
+   <item row="33" column="0" colspan="6">
     <widget class="QCheckBox" name="input_checkbox_recheck">
      <property name="text">
       <string>Recheck after action to force result</string>
+     </property>
+    </widget>
+   </item>
+   <item row="0" column="0" colspan="6">
+    <widget class="QCheckBox" name="input_checkbox_enabled">
+     <property name="text">
+      <string>Enabled</string>
      </property>
     </widget>
    </item>

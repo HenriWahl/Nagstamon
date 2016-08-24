@@ -489,8 +489,6 @@ class MenuContext(MenuAtCursor):
         MenuAtCursor.__init__(self, parent=parent)
 
         # connect all relevant widgets which should show the context menu
-        # ##for widget in systrayicon, \
-        # ##              statuswindow.toparea.button_hamburger_menu, \
         for widget in statuswindow.toparea.button_hamburger_menu, \
                       statuswindow.toparea.logo, \
                       statuswindow.toparea.label_version, \
@@ -884,6 +882,10 @@ class StatusWindow(QWidget):
 
     # signal to be sent to all server workers to recheck all
     recheck = pyqtSignal()
+    
+    # signal to be sent to all treeview workers to clear server event history
+    # after 'Refresh'-button has been pressed
+    clear_event_history = pyqtSignal()
 
 
     def __init__(self):
@@ -1073,7 +1075,8 @@ class StatusWindow(QWidget):
         if conf.debug_mode:
             self.worker_thread.started.connect(self.worker.debug_loop)
         # start debug loop by signal
-        self.worker.start_debug_loop.connect(self.worker.debug_loop)
+        ###self.worker.start_debug_loop.connect(self.worker.debug_loop)
+        dialogs.settings.start_debug_loop.connect(self.worker.debug_loop)
         # start with priority 0 = lowest
         self.worker_thread.start(0)
 
@@ -1251,6 +1254,9 @@ class StatusWindow(QWidget):
             # refresh table after changed settings
             dialogs.settings.changed.connect(server_vbox.table.refresh)
 
+            # listen if statuswindow cries for event history clearance
+            self.clear_event_history.connect(server_vbox.table.worker.unfresh_event_history)
+
             return server_vbox
         else:
             return None
@@ -1393,7 +1399,7 @@ class StatusWindow(QWidget):
                     self.toparea.show()
                     self.servers_scrollarea.show()
 
-                for vbox in self.servers_vbox.children():
+                for vbox in self.servers_vbox.children():                       
                     if not vbox.server.all_ok:
                         vbox.show_all()
                     # show at least server vbox header to notify about connection or other errors
@@ -1401,6 +1407,12 @@ class StatusWindow(QWidget):
                         vbox.show_only_header()
                     elif vbox.server.all_ok and vbox.server.status == '':
                         vbox.hide_all()
+                        
+                    # depending on authentication state show reauthentication button
+                    if vbox.server.refresh_authentication:
+                        vbox.button_authenticate.show()
+                    else:
+                        vbox.button_authenticate.hide()                   
 
                 if not conf.fullscreen:
                     # theory...
@@ -1707,7 +1719,6 @@ class StatusWindow(QWidget):
             self.stored_width = self.width()
 
 
-
     def leaveEvent(self, event):
         """
             check if popup has to be hidden depending on mouse position
@@ -1800,6 +1811,9 @@ class StatusWindow(QWidget):
         """
             tell all enabled servers to refresh their information
         """
+        # unfresh event history of servers
+        self.clear_event_history.emit()
+
         for server in get_enabled_servers():
             if conf.debug_mode:
                 server.Debug(server=server.name, debug='Refreshing all hosts and services')
@@ -1807,7 +1821,7 @@ class StatusWindow(QWidget):
             # manipulate server thread counter so get_status loop will refresh when next looking
             # at thread counter
             server.thread_counter = conf.update_interval_seconds
-
+            
 
     @pyqtSlot(dict)
     def desktop_notification(self, current_status_count):
@@ -1840,8 +1854,14 @@ class StatusWindow(QWidget):
         if not conf.fullscreen and not platform.system == 'Windows':
             self.setWindowFlags(WINDOW_FLAGS)
 
-        # again and again try to keept that statuswindow on top!
-        if platform.system() == 'Windows':
+        # again and again try to keep that statuswindow on top!
+        if platform.system() == 'Windows' and not conf.fullscreen:
+            # find out if no context menu is shown and thus would be
+            # overlapped by statuswindow
+            for vbox in self.servers_vbox.children():
+                # jump out here if any action_menu is shown
+                if not vbox.table.action_menu.available:
+                    return
             self.raise_()
 
 
@@ -1851,7 +1871,7 @@ class StatusWindow(QWidget):
         """
 
         # used by DialogSettings.ok() to tell debug loop it should start
-        start_debug_loop = pyqtSignal()
+        ####start_debug_loop = pyqtSignal()
 
         def __init__(self):
             QObject.__init__(self)
@@ -1881,7 +1901,7 @@ class StatusWindow(QWidget):
             """
             if conf.debug_mode:
                 self.debug_loop_looping = True
-
+                
                 # as long thread is supposed to run
                 while self.running and self.debug_loop_looping:
                     # only log something if there is something to tell
@@ -1889,7 +1909,7 @@ class StatusWindow(QWidget):
                         # always get oldest item of queue list - FIFO
                         debug_line = (debug_queue.pop(0))
                         # output to console
-                        print(debug_line)
+                        print(debug_line)                       
                         if conf.debug_to_file:
                             # if there is no file handle available get it
                             if self.debug_file == None:
@@ -2363,13 +2383,9 @@ class TopArea(QWidget):
         self.label_empty_space = Draggable_Label(text='', parent=self)
         self.label_empty_space.setSizePolicy(QSizePolicy.Expanding, QSizePolicy.Ignored)
         self.combobox_servers = ComboBox_Servers(parent=self)
-        # ##self.button_filters = QPushButton("Filters", parent=self)
         self.button_filters = Button("Filters", parent=self)
-        # ##self.button_recheck_all = QPushButton("Recheck all", parent=self)
         self.button_recheck_all = Button("Recheck all", parent=self)
-        # ##self.button_refresh = QPushButton("Refresh", parent=self)
         self.button_refresh = Button("Refresh", parent=self)
-        # ##self.button_settings = QPushButton("Settings", parent=self)
         self.button_settings = Button("Settings", parent=self)
 
         # fill default order fields combobox with server names
@@ -2621,11 +2637,11 @@ class ServerVBox(QVBoxLayout):
             show all items in server vbox except the table - not needed if empty
         """
         self.label.show()
-        self.button_edit.show()
         self.button_monitor.show()
         self.button_hosts.show()
         self.button_services.show()
         self.button_history.show()
+        self.button_edit.show()
         self.label_status.show()
         self.button_authenticate.hide()
 
@@ -2640,12 +2656,13 @@ class ServerVBox(QVBoxLayout):
             show all items in server vbox except the table - not needed if empty
         """
         self.label.show()
-        self.button_edit.show()
         self.button_monitor.show()
         self.button_hosts.show()
         self.button_services.show()
         self.button_history.show()
+        self.button_edit.show()
         self.label_status.show()
+        self.button_authenticate.hide()
 
         # special table treatment
         self.table.hide()
@@ -2658,11 +2675,11 @@ class ServerVBox(QVBoxLayout):
             hide all items in server vbox
         """
         self.label.hide()
-        self.button_edit.hide()
         self.button_monitor.hide()
         self.button_hosts.hide()
         self.button_services.hide()
         self.button_history.hide()
+        self.button_edit.hide()
         self.label_status.hide()
         self.button_authenticate.hide()
 
@@ -2677,12 +2694,13 @@ class ServerVBox(QVBoxLayout):
             delete VBox and its children
         """
         for widget in (self.label,
-                       self.button_edit,
                        self.button_monitor,
                        self.button_hosts,
                        self.button_services,
                        self.button_history,
-                       self.label_status):
+                       self.button_edit,
+                       self.label_status,
+                       self.button_authenticate):
             widget.hide()
             widget.deleteLater()
         self.removeItem(self.header)
@@ -2968,7 +2986,7 @@ class TreeView(QTreeView):
 
         # quit thread if worker has finished
         self.worker.finish.connect(self.finish_worker_thread)
-
+        
         # get status if started
         self.worker_thread.started.connect(self.worker.get_status)
         # start with priority 0 = lowest
@@ -3420,6 +3438,7 @@ class TreeView(QTreeView):
         self.worker_thread.quit()
         # wait until thread is really stopped
         self.worker_thread.wait(2000)
+        
 
 
     class Worker(QObject):
@@ -3540,12 +3559,6 @@ class TreeView(QTreeView):
                     # tell statusbar there is some error to display
                     self.show_error.emit('ERROR')
 
-                # depending on authentication state show reauthentication button
-                if self.server.refresh_authentication:
-                    self.button_authenticate_show.emit()
-                else:
-                    self.button_authenticate_hide.emit()
-
                 # reset counter for this thread
                 self.server.thread_counter = 0
 
@@ -3559,6 +3572,12 @@ class TreeView(QTreeView):
 
                 # stuff data into array and sort it
                 self.fill_data_array(self.sort_column, self.sort_order)
+
+                # depending on authentication state show reauthentication button
+                if self.server.refresh_authentication:
+                    self.button_authenticate_show.emit()
+                else:
+                    self.button_authenticate_hide.emit()
 
                 # tell news about new status available
                 self.new_status.emit()
@@ -4040,7 +4059,7 @@ class Dialog(QObject):
             else:
                 for widget in widgets:
                     widget.show()
-        # normal case - clock on checkbox activates more options
+        # normal case - click on checkbox activates more options
         else:
             if checkbox.isChecked():
                 for widget in widgets:
@@ -4112,6 +4131,9 @@ class Dialog_Settings(Dialog):
 
     # send signal if check for new version is wanted
     check_for_new_version = pyqtSignal(bool, QWidget)
+    
+    # used to tell debug loop it should start
+    start_debug_loop = pyqtSignal()
 
     def __init__(self, dialog):
         Dialog.__init__(self, dialog)
@@ -4420,7 +4442,7 @@ class Dialog_Settings(Dialog):
         if conf.debug_mode:
             # only start debugging loop if it not already loops
             if statuswindow.worker.debug_loop_looping == False:
-                statuswindow.worker.start_debug_loop.emit()
+                self.start_debug_loop.emit()
         else:
             # set flag to tell debug loop it should stop please
             statuswindow.worker.debug_loop_looping = False
@@ -4441,7 +4463,7 @@ class Dialog_Settings(Dialog):
         conf.SaveConfig()
 
         # stop statuswindow worker
-        statuswindow.worker.running = False
+        ###statuswindow.worker.running = False
 
         # save configuration
         conf.SaveConfig()
@@ -4457,7 +4479,7 @@ class Dialog_Settings(Dialog):
             NUMBER_OF_DISPLAY_CHANGES += 1
 
             # stop statuswindow worker
-            statuswindow.worker.running = False
+            ###statuswindow.worker.running = False
 
             # hide window to avoid laggy GUI - better none than laggy
             statuswindow.hide()
