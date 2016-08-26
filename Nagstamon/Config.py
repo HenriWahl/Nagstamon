@@ -57,7 +57,7 @@ class AppInfo(object):
         contains app information previously located in GUI.py
     """
     NAME = 'Nagstamon'
-    VERSION = '2.0-beta-20160825'
+    VERSION = '2.0-beta-20160826'
     WEBSITE = 'https://nagstamon.ifw-dresden.de'
     COPYRIGHT = '©2008-2016 Henri Wahl et al.'
     COMMENTS = 'Nagios status monitor for your desktop'
@@ -651,7 +651,7 @@ class Config(object):
         """
         if platform.system() == "Windows":
             defaultactions = { "RDP": Action(name="RDP", description="Connect via RDP.",
-                                    type="command", string="C:\windows\system32\mstsc.exe $ADDRESS$"),
+                                    type="command", string="C:\windows\system32\mstsc.exe /v:$ADDRESS$"),
                                "VNC": Action(name="VNC", description="Connect via VNC.",
                                     type="command", string="C:\Program Files\TightVNC\vncviewer.exe $ADDRESS$"),
                                "Telnet": Action(name="Telnet", description="Connect via Telnet.",
