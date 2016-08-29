@@ -3095,6 +3095,7 @@ class TreeView(QTreeView):
             Windows reacts differently to clicks into table cells than Linux and MacOSX
             Therefore the .available flag is necessary
         """
+
         if self.action_menu.available or platform.system() != 'Windows':
 
             # set flag for Windows

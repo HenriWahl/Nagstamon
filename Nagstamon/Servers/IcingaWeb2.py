@@ -180,7 +180,7 @@ class IcingaWeb2Server(GenericServer):
                         self.new_hosts[host_name].status = self.STATES_MAPPING['hosts'][int(h['host_state'])]
                         self.new_hosts[host_name].last_check = datetime.datetime.fromtimestamp(int(h['host_last_check']))
                         self.new_hosts[host_name].attempt = h['host_attempt']
-                        self.new_hosts[host_name].status_information = h['host_output'].replace('\n', ' ').strip()
+                        self.new_hosts[host_name].status_information = BeautifulSoup(h['host_output'].replace('\n', ' ').strip(), 'html.parser').text
                         self.new_hosts[host_name].passiveonly = not(int(h['host_active_checks_enabled']))
                         self.new_hosts[host_name].notifications_disabled = not(int(h['host_notifications_enabled']))
                         self.new_hosts[host_name].flapping = int(h['host_is_flapping'])
@@ -267,7 +267,7 @@ class IcingaWeb2Server(GenericServer):
                         self.new_hosts[host_name].services[service_name].status = self.STATES_MAPPING['services'][int(s['service_state'])]
                         self.new_hosts[host_name].services[service_name].last_check = datetime.datetime.fromtimestamp(int(s['service_last_check']))                      
                         self.new_hosts[host_name].services[service_name].attempt = s['service_attempt']
-                        self.new_hosts[host_name].services[service_name].status_information = s['service_output'].replace('\n', ' ').strip()
+                        self.new_hosts[host_name].services[service_name].status_information = BeautifulSoup(s['service_output'].replace('\n', ' ').strip(), 'html.parser').text
                         self.new_hosts[host_name].services[service_name].passiveonly = not(int(s['service_active_checks_enabled']))
                         self.new_hosts[host_name].services[service_name].notifications_disabled = not(int(s['service_notifications_enabled']))
                         self.new_hosts[host_name].services[service_name].flapping = int(s['service_is_flapping'])
