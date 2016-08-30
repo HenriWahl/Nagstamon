@@ -714,7 +714,7 @@ class Config(object):
         defaultactions["Check_MK Edit host in WATO"] = Action(name="Check_MK Edit host in WATO", enabled=False,
                                                      monitor_type="Check_MK Multisite",
                                                      description="Edit host in WATO.",
-                                                     string="$MONITOR$/index.py?start_url=%2Fmonitor%2Fcheck_mk%2Fwato.py%3Fmode%3Dedithost%26host%3D$HOST$")
+                                                     string="$MONITOR$index.py?start_url=%2Fmonitor%2Fcheck_mk%2Fwato.py%3Fhost%3D$HOST$%26mode%3Dedit_host")
         defaultactions["Email"] = Action(name="Email", enabled=False, description="Send email to someone.", type="browser",
                                                     string="mailto:servicedesk@my.org?subject=Monitor alert: $HOST$ - $SERVICE$ - $STATUS-INFO$&body=Please help!.%0d%0aBest regards from Nagstamon")
 
