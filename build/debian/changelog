@@ -1,4 +1,4 @@
-nagstamon (2.0-rc1) unstable; urgency=low
+nagstamon (2.0) stable; urgency=low
   * New upstream
    - Based on Qt 5 it now comes with a better integrated look-and-feel – especially remarkable on MacOS
    - Partly simplified design

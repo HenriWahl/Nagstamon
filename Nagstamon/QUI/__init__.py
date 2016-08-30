@@ -5996,7 +5996,10 @@ class CheckVersion(QObject):
             message dialog must be shown from GUI thread
         """
         self.version_info_retrieved.emit()
-        QMessageBox.information(self.parent, 'Nagstamon version check', message, QMessageBox.Ok)
+        QMessageBox.information(self.parent,
+                                'Nagstamon version check',
+                                message,
+                                QMessageBox.Ok)
 
 
     class Worker(QObject):
