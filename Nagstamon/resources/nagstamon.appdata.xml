@@ -1,5 +1,5 @@
 <?xml version="1.0" encoding="UTF-8"?>
-<!-- Copyright 2014 Henri Wahl <h.wahl@ifw-dresden.de> -->
+<!-- Copyright 2016 Henri Wahl <h.wahl@ifw-dresden.de> -->
 <application>
  <id type="desktop">nagstamon.desktop</id>
  <metadata_license>GFDL-1.3</metadata_license>
@@ -21,6 +21,8 @@
    <li>Centreon</li>
    <li>Opsview</li>
    <li>Experimental: Zabbix</li>
+   <li>Experimental: Zenoss</li>
+   <li>Experimental: Livestatus</li>
    </ul>
   </p>
   <p>  
