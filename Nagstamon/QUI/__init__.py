@@ -898,6 +898,10 @@ class StatusWindow(QWidget):
         # immediately hide to avoid flicker on Windows and OSX
         self.hide()
 
+        # ewmh.py in thirdparty directory needed to keep floating statusbar on all desktops in Linux
+        if not platform.system() in NON_LINUX:
+            self.ewmh = EWMH()
+
         # avoid quitting when using Qt.Tool flag and closing settings dialog
         APP.setQuitOnLastWindowClosed(False)
 
@@ -1079,10 +1083,6 @@ class StatusWindow(QWidget):
         dialogs.settings.start_debug_loop.connect(self.worker.debug_loop)
         # start with priority 0 = lowest
         self.worker_thread.start(0)
-
-        # ewmh.py in thirdparty directory needed to keep floating statusbar on all desktops in Linux
-        if not platform.system() in NON_LINUX:
-            self.ewmh = EWMH()
 
         # finally show up
         self.set_mode()
