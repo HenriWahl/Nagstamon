@@ -91,8 +91,11 @@ if not platform.system() in NON_LINUX:
         from dbus import (Interface,
                           SessionBus)
         from dbus.mainloop.pyqt5 import DBusQtMainLoop
+        # flag to check later if DBus is available
+        DBUS_AVAILABLE = True
     except:
         print('No DBus for desktop notification available.')
+        DBUS_AVAILABLE = True
 
 # fixed shortened and lowered color names for cells, also used by statusbar label snippets
 COLORS = OrderedDict([('DOWN', 'color_down_'),
@@ -1428,7 +1431,7 @@ class StatusWindow(QWidget):
                     # Using the EWMH protocol to move the window to the active desktop.
                     # Seemed to be a problem on XFCE
                     # https://github.com/HenriWahl/Nagstamon/pull/199
-                    if not platform.system() in NON_LINUX and conf.icon_in_systray:
+                    if not platform.system() in NON_LINUX and conf.icon_in_systray:                      
                         try:
                             winid = self.winId().__int__()
                             deskid = self.ewmh.getCurrentDesktop()
@@ -2029,6 +2032,11 @@ class StatusWindow(QWidget):
                     else:
                         for server in get_enabled_servers():
                             for event in [k for k, v in server.events_notification.items() if v == True]:
+                                
+                                
+                                print(event)
+                                
+                                
                                 custom_action_string = conf.notification_custom_action_string.replace('$EVENTS$', event)
                                 # execute action
                                 self.execute_action(server_name, custom_action_string)
@@ -3902,7 +3910,6 @@ class TreeView(QTreeView):
 
                 if action['recheck']:
                     self.recheck(info_dict)
-            
             
             except:
                 import traceback
@@ -6090,7 +6097,7 @@ class DBus(QObject):
         # see https://developer.gnome.org/notification-spec/#icons-and-images
         self.hints = {'image-path': '%s%snagstamon.svg' % (RESOURCES, os.sep)}
 
-        if not platform.system() in NON_LINUX:
+        if not platform.system() in NON_LINUX and DBUS_AVAILABLE:
             if 'dbus' in sys.modules:
                 import dbus
                 dbus_mainloop = DBusQtMainLoop(set_as_default=True)               
