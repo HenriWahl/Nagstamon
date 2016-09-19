@@ -49,6 +49,10 @@ try:
             print('An instance is already running this config ({})'.format(conf.configdir))
             sys.exit(1)
 
+        # remove QT_QPA_PLATFORMTHEME env variable to fix problem in GNOME
+        if platform.system() == "Linux":
+            os.environ.pop('QT_QPA_PLATFORMTHEME')
+
         # get GUI
         from Nagstamon.QUI import (APP,
                                    statuswindow,
