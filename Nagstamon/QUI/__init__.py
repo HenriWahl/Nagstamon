@@ -95,7 +95,7 @@ if not platform.system() in NON_LINUX:
         DBUS_AVAILABLE = True
     except:
         print('No DBus for desktop notification available.')
-        DBUS_AVAILABLE = True
+        DBUS_AVAILABLE = False
 
 # fixed shortened and lowered color names for cells, also used by statusbar label snippets
 COLORS = OrderedDict([('DOWN', 'color_down_'),
