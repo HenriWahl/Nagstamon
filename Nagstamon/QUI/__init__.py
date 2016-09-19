@@ -1853,10 +1853,6 @@ class StatusWindow(QWidget):
         # lets try here to keep it on top - only if not fullscreen
         if not conf.fullscreen and not platform.system == 'Windows':
             self.setWindowFlags(WINDOW_FLAGS)
-
-        for dialog in dialogs.__dict__:
-            print(dialog, isinstance(dialog, QDialog))
-            print(dialog, dialogs.__dict__[dialog].window.window().isVisible())
                            
         # again and again try to keep that statuswindow on top!
         if platform.system() == 'Windows' and not conf.fullscreen:
