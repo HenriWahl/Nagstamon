@@ -47,8 +47,8 @@ def winmain():
         execute steps necessary for compilation of Windows binaries and setup.exe
     """
     # InnoSetup does not like VersionInfoVersion with letters, only 0.0.0.0 schemed numbers
-    if 'alpha' in VERSION.lower() or 'beta' in VERSION.lower():
-        VERSION_IS = VERSION.replace('alpha', '').replace('beta', '').replace('-', '.').replace('..', '.')
+    if 'alpha' in VERSION.lower() or 'beta' in VERSION.lower() or 'rc' in VERSION.lower():
+        VERSION_IS = VERSION.replace('alpha', '').replace('beta', '').replace('rc', '').replace('-', '.').replace('..', '.')
         VERSION_IS = VERSION_IS.split('.')
         version_segments = list()
         for part in VERSION_IS:

@@ -57,11 +57,11 @@ class AppInfo(object):
         contains app information previously located in GUI.py
     """
     NAME = 'Nagstamon'
-    VERSION = '2.0-beta-20160822'
+    VERSION = '2.0'
     WEBSITE = 'https://nagstamon.ifw-dresden.de'
     COPYRIGHT = '©2008-2016 Henri Wahl et al.'
     COMMENTS = 'Nagios status monitor for your desktop'
-    VERSION_URL = WEBSITE + '/version/unstable'
+    VERSION_URL = WEBSITE + '/version/stable'
 
 
 class Config(object):
@@ -651,7 +651,7 @@ class Config(object):
         """
         if platform.system() == "Windows":
             defaultactions = { "RDP": Action(name="RDP", description="Connect via RDP.",
-                                    type="command", string="C:\windows\system32\mstsc.exe $ADDRESS$"),
+                                    type="command", string="C:\windows\system32\mstsc.exe /v:$ADDRESS$"),
                                "VNC": Action(name="VNC", description="Connect via VNC.",
                                     type="command", string="C:\Program Files\TightVNC\vncviewer.exe $ADDRESS$"),
                                "Telnet": Action(name="Telnet", description="Connect via Telnet.",
@@ -714,7 +714,7 @@ class Config(object):
         defaultactions["Check_MK Edit host in WATO"] = Action(name="Check_MK Edit host in WATO", enabled=False,
                                                      monitor_type="Check_MK Multisite",
                                                      description="Edit host in WATO.",
-                                                     string="$MONITOR$/index.py?start_url=%2Fmonitor%2Fcheck_mk%2Fwato.py%3Fmode%3Dedithost%26host%3D$HOST$")
+                                                     string="$MONITOR$index.py?start_url=%2Fmonitor%2Fcheck_mk%2Fwato.py%3Fhost%3D$HOST$%26mode%3Dedit_host")
         defaultactions["Email"] = Action(name="Email", enabled=False, description="Send email to someone.", type="browser",
                                                     string="mailto:servicedesk@my.org?subject=Monitor alert: $HOST$ - $SERVICE$ - $STATUS-INFO$&body=Please help!.%0d%0aBest regards from Nagstamon")
 

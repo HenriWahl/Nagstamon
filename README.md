@@ -1,26 +1,26 @@
 Nagstamon
 =========
 
-**Nagstamon is being ported from GTK 2 to Qt 5 and from Python 2 to Python 3. The result will be Nagstamon 2.0.**
+Nagstamon is a status monitor for the desktop. It connects to multiple Nagios, Icinga, Opsview, Centreon, Op5 Monitor/Ninja, Check_MK Multisite and Thruk monitoring servers. Experimental support is provided for Zabbix, Zenoss and Livestatus monitors. It resides in systray, as a floating statusbar or fullscreen at the desktop showing a brief summary of critical, warning, unknown, unreachable and down hosts and services. It pops up a detailed status overview when being touched by the mouse pointer. Connections to displayed hosts and services are easily established by context menu via SSH, RDP, VNC or any self defined actions. Users can be notified by sound. Hosts and services can be filtered by category and regular expressions.
 
-**First BETA releases are now available at https://nagstamon.ifw-dresden.de/download**
-
-**Information about needed Python modules is available at https://nagstamon.ifw-dresden.de/nagstamon-20/**
-
-Nagstamon is a Nagios status monitor for the desktop. It connects to multiple Nagios, Icinga, Opsview, Centreon, Op5 Monitor/Ninja, Check_MK Multisite and Thruk monitoring servers and resides in systray or as a floating statusbar at the desktop showing a brief summary of critical, warning, unknown, unreachable and down hosts and services and pops up a detailed status overview when moving the mouse pointer over it. Connecting to displayed hosts and services is easily established by context menu via SSH, RDP and VNC or any self defined actions. Users can be notified by sound. Hosts and services can be filtered by category and regular expressions.
-
-It is inspired by Nagios Checker for Firefox - just without an open Firefox window all the time to monitor the network.
+It is inspired by Nagios Checker for Firefox – just without an open Firefox window all the time to monitor the network.
 
 Nagstamon is released under the GPLv2 and free to use and modify.
 
-Nagstamon is written in Python so it is highly portable. It has been tested successfully on Ubuntu 8.04 - 14.04, Debian 6.0 - 7.0, Fedora 8 - 20, OpenSUSE 11.x, Windows 2000 + XP + XP 64bit + Vista + Windows 7 + 8 + 2008 + 2012, OpenSolaris 2009.06, NetBSD, OpenBSD, FreeBSD and MacOS X.
+Nagstamon is written in Python 3 and uses the Qt 5 GUI toolkit which makes it very portable. It has been tested successfully on latest Ubuntu, Debian, Windows, NetBSD, OpenBSD, FreeBSD and MacOS X.
 It works with GNOME, KDE, Windows and MacOS X desktop.
 
-Successfully tested monitor versions include:
+Successfully tested monitors include:
 
-Nagios 1.x, 2.x and 3.x, Icinga 1.2+, Opsview 3.5+, Centreon 2.1.x, Op5 Monitor 6.3+, Check_MK/Multisite 1.1.10+ and Thruk 1.5.0+.
-
-Experimental Zabbix 2.2+ support is included since Nagstamon 1.0.
-
+ - Nagios 1.x, 2.x, 3.x and 4.x
+ - Icinga 1.2+ and 2.3+
+ - Opsview 5+
+ - Centreon 2.3+
+ - Op5 Monitor 7+
+ - Check_MK/Multisite 1.1.10+
+ - Thruk 1.5.0+
+ - Livestatus – experimental
+ - Zabbix 2.2+ – experimental
+ - Zenoss – experimental
 
 See https://nagstamon.ifw-dresden.de for further information.

@@ -109,7 +109,7 @@ COLOR_STATE_NAMES = {'DOWN': {True: 'DOWN', False: ''},
                      'WARNING': { True: 'WARNING', False: ''}}
 
 # colors for server status label in ServerVBox
-COLOR_STATUS_LABEL =  {'critical': 'lightsalmon',
+COLOR_STATUS_LABEL = {'critical': 'lightsalmon',
                        'error': 'orange',
                        'unknown': 'gray'}
 
@@ -898,6 +898,10 @@ class StatusWindow(QWidget):
         # immediately hide to avoid flicker on Windows and OSX
         self.hide()
 
+        # ewmh.py in thirdparty directory needed to keep floating statusbar on all desktops in Linux
+        if not platform.system() in NON_LINUX:
+            self.ewmh = EWMH()
+
         # avoid quitting when using Qt.Tool flag and closing settings dialog
         APP.setQuitOnLastWindowClosed(False)
 
@@ -1075,14 +1079,10 @@ class StatusWindow(QWidget):
         if conf.debug_mode:
             self.worker_thread.started.connect(self.worker.debug_loop)
         # start debug loop by signal
-        ###self.worker.start_debug_loop.connect(self.worker.debug_loop)
+        # ##self.worker.start_debug_loop.connect(self.worker.debug_loop)
         dialogs.settings.start_debug_loop.connect(self.worker.debug_loop)
         # start with priority 0 = lowest
         self.worker_thread.start(0)
-
-        # ewmh.py in thirdparty directory needed to keep floating statusbar on all desktops in Linux
-        if not platform.system() in NON_LINUX:
-            self.ewmh = EWMH()
 
         # finally show up
         self.set_mode()
@@ -2559,7 +2559,7 @@ class ServerVBox(QVBoxLayout):
         self.button_history = PushButton_BrowserURL(text='History', parent=parent, server=self.server, url_type='history')
         self.button_edit = Button('Edit', parent=parent)
        
-        self.stretcher = QSpacerItem(0,0, QSizePolicy.MinimumExpanding, QSizePolicy.Maximum)
+        self.stretcher = QSpacerItem(0, 0, QSizePolicy.MinimumExpanding, QSizePolicy.Maximum)
 
         self.label_status = ServerStatusLabel(parent=parent)
         self.button_authenticate = QPushButton('Authenticate', parent=parent)
@@ -3095,6 +3095,7 @@ class TreeView(QTreeView):
             Windows reacts differently to clicks into table cells than Linux and MacOSX
             Therefore the .available flag is necessary
         """
+
         if self.action_menu.available or platform.system() != 'Windows':
 
             # set flag for Windows
@@ -4372,7 +4373,7 @@ class Dialog_Settings(Dialog):
         """
             opens settings and new server dialogs - used by dialogs.server_missing
         """
-        #self.show()
+        # self.show()
         # emulate button click
         self.ui.button_new_server.clicked.emit()
 
@@ -4463,7 +4464,7 @@ class Dialog_Settings(Dialog):
         conf.SaveConfig()
 
         # stop statuswindow worker
-        ###statuswindow.worker.running = False
+        # ##statuswindow.worker.running = False
 
         # save configuration
         conf.SaveConfig()
@@ -4479,7 +4480,7 @@ class Dialog_Settings(Dialog):
             NUMBER_OF_DISPLAY_CHANGES += 1
 
             # stop statuswindow worker
-            ###statuswindow.worker.running = False
+            # ##statuswindow.worker.running = False
 
             # hide window to avoid laggy GUI - better none than laggy
             statuswindow.hide()
@@ -5995,7 +5996,10 @@ class CheckVersion(QObject):
             message dialog must be shown from GUI thread
         """
         self.version_info_retrieved.emit()
-        QMessageBox.information(self.parent, 'Nagstamon version check', message, QMessageBox.Ok)
+        QMessageBox.information(self.parent,
+                                'Nagstamon version check',
+                                message,
+                                QMessageBox.Ok)
 
 
     class Worker(QObject):
@@ -6039,7 +6043,7 @@ class CheckVersion(QObject):
                     message = 'You are using the latest version <b>Nagstamon {0}</b>.'.format(AppInfo.VERSION)
                 elif latest_version > AppInfo.VERSION:
                     message = 'The new version <b> Nagstamon {0}</b> is available.<p>' \
-                              'Get it at <a href={1}>{1}</a>.'.format(latest_version, AppInfo.WEBSITE + '/nagstamon-20')
+                              'Get it at <a href={1}>{1}</a>.'.format(latest_version, AppInfo.WEBSITE + '/download')
                 else:
                     message = ''
 
