@@ -18,6 +18,8 @@
 # along with this program; if not, write to the Free Software
 # Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA  02110-1301, USA
 
+# NOTES:
+# Currently experimental version, only viewing and acknowledging works at present.
 
 import os
 
@@ -34,19 +36,13 @@ import urllib
 import re
 from collections import deque
 
-default_log_handler = logging.StreamHandler(sys.stdout)
-__logger = logging.getLogger("zabbix_api")
-__logger.addHandler(default_log_handler)
-__logger.log(10, "Starting logging")
 
 try:
     # Separate module or Python <2.6
     import simplejson as json
-    __logger.log(15, "Using simplejson library")
 except ImportError:
     # Python >=2.6
     import json
-    __logger.log(15, "Using native json library")
 
 
 ZENOSS_INSTANCE = ''
@@ -77,6 +73,9 @@ class ZenossAPI(object):
         if debug: self.urlOpener.add_handler(urllib.request.HTTPHandler(debuglevel=1))
         self.reqCount = 1
 
+        self._login() #login to the zenoss system
+
+    def _login(self):
         # Construct POST parameters and submit login.
         loginParams = urllib.parse.urlencode(dict(
             __ac_name=self.ZENOSS_USERNAME,
@@ -84,6 +83,7 @@ class ZenossAPI(object):
             submitted='true',
             came_from=self.ZENOSS_INSTANCE + '/zport/dmd')).encode('ascii')
         self.urlOpener.open(self.ZENOSS_INSTANCE + '/zport/acl_users/cookieAuthHelper/login', loginParams)
+
 
     def set_config_data(self, Server):
         if True:
@@ -112,16 +112,35 @@ class ZenossAPI(object):
             method=method,
             action=router)]).encode('ascii')
 
-        #print(reqData)
         # Increment the request count ('tid'). More important if sending multiple
         # calls in a single request
         self.reqCount += 1
 
         # Submit the request and convert the returned JSON to objects
-        #self.urlOpener.open(self.ZENOSS_INSTANCE + '/zport/acl_users/cookieAuthHelper/login', loginParams)
-        res = self.urlOpener.open(req, reqData).read().decode('utf-8')
-        return json.loads(res)
+        try:
+            response = self.urlOpener.open(req, reqData)
+        except:
+            self._login()
+            return {'result': {'events': []}} #return an empty object
+        
+        if response.code != 200:
+            raise ZenossAPIException("HTTP ERROR %s: %s" % (response.status, response.reason))
 
+        try:
+            jsondata = response.read()
+        except:
+            raise ZenossAPIException("Couldn't read response data")
+        
+        if len(jsondata) == 0:
+            raise ZenossAPIException("Received zero json data")
+
+        try:
+            jsonobj = json.loads(jsondata.decode('utf-8'))
+        except ValueError as msg: 
+            self._login()
+            return {'result': {'events': []}} #return an 'empty' json object on failure
+        
+        return jsonobj
 
     '''
     The API
@@ -154,3 +173,7 @@ class ZenossAPI(object):
         data = dict(limit=100)
         data['evids'] = [evids]
         return self._router_request('EventsRouter', 'close', [data])['result']
+
+class ZenossAPIException(Exception):
+    """ generic zenoss api exception """
+    pass
