@@ -658,11 +658,11 @@ class IcingaServer(GenericServer):
         cgi_data['com_data'] = comment
         cgi_data['btnSubmit'] = 'Commit'
         if notify == True:
-            cgi_data['send_notification'] = 'on'
+            cgi_data['send_notification'] = '1'
         if persistent == True:
             cgi_data['persistent'] = 'on'
         if sticky == True:
-            cgi_data['sticky_ack'] = 'on'
+            cgi_data['sticky_ack'] = '1'
 
         self.FetchURL(url, giveback='raw', cgi_data=cgi_data)
 

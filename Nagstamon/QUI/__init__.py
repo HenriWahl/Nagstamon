@@ -1842,6 +1842,7 @@ class StatusWindow(QWidget):
             experimental workaround for floating-statusbar-only-on-one-virtual-desktop-after-a-while bug
             see https://github.com/HenriWahl/Nagstamon/issues/217
         """
+        
         # X11/Linux needs some special treatment to get the statusbar floating on all virtual desktops
         if not platform.system() in NON_LINUX:
             # get all windows...
