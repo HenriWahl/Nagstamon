@@ -1,3 +1,9 @@
+nagstamon (2.0.0.99-20161007) unstable; urgency=low
+  * New upstream
+   - Bugfixes
+
+ -- Henri Wahl <h.wahl@ifw-dresden.de>  Fri, 07 Oct 2016 14:00:00 +0200
+ 
 nagstamon (2.0) stable; urgency=low
   * New upstream
    - Based on Qt 5 it now comes with a better integrated look-and-feel – especially remarkable on MacOS
