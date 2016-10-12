@@ -142,7 +142,6 @@ class Op5MonitorServer(GenericServer):
             api_default_host_query+='&format=json'
 
             api_default_host_query = api_default_host_query.replace(" ", "%20")
-            print (self.monitor_url + self.api_count + api_default_host_query)
             result = self.FetchURL(self.monitor_url + self.api_count + api_default_host_query, giveback="raw")
             data, error, status_code = json.loads(result.result),\
                                        result.error,\
@@ -220,7 +219,7 @@ class Op5MonitorServer(GenericServer):
                 api_default_svc_query+='&format=json'
 
                 api_default_svc_query = api_default_svc_query.replace(" ", "%20")
-                result = self.FetchURL(self.monitor_url + self.api_query + self.api_default_svc_query + '&limit=' + str(count), giveback="raw")
+                result = self.FetchURL(self.monitor_url + self.api_query + api_default_svc_query + '&limit=' + str(count), giveback="raw")
                 data = json.loads(result.result)
                 for api in data:
                     n = dict()
