@@ -26,7 +26,6 @@ import platform
 # fix/patch for https://bugs.launchpad.net/ubuntu/+source/nagstamon/+bug/732544
 socket.setdefaulttimeout(30)
 
-
 try:
     if __name__ == '__main__':
         # queue.Queue() needs threading module which might be not such a good idea to be used

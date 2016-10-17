@@ -93,6 +93,7 @@ if not platform.system() in NON_LINUX:
         from dbus.mainloop.pyqt5 import DBusQtMainLoop
         # flag to check later if DBus is available
         DBUS_AVAILABLE = True
+        
     except:
         print('No DBus for desktop notification available.')
         DBUS_AVAILABLE = False
@@ -6089,6 +6090,11 @@ class DBus(QObject):
 
     def __init__(self):
         QObject.__init__(self)
+
+        # get DBUS availability - still possible it does not work due to missing
+        # .sevice file on certain distributions
+        global DBUS_AVAILABLE
+        
         self.id = 0
         self.actions = [('open' + self.random_id), 'Open status window']
         self.timeout = 0
@@ -6100,17 +6106,26 @@ class DBus(QObject):
 
         if not platform.system() in NON_LINUX and DBUS_AVAILABLE:
             if 'dbus' in sys.modules:
-                import dbus
-                dbus_mainloop = DBusQtMainLoop(set_as_default=True)               
-                dbus_sessionbus = SessionBus(dbus_mainloop)
-                dbus_object = dbus_sessionbus.get_object('org.freedesktop.Notifications',
-                                              '/org/freedesktop/Notifications')
-                self.dbus_interface = Interface(dbus_object,
-                                                dbus_interface='org.freedesktop.Notifications')
-                # connect button to action
-                self.dbus_interface.connect_to_signal('ActionInvoked', self.action_callback)
+                # try/except needed because of partly occuring problems with DBUS
+                # see https://github.com/HenriWahl/Nagstamon/issues/320
+                try:
+                    import dbus
+                    dbus_mainloop = DBusQtMainLoop(set_as_default=True)               
+                    dbus_sessionbus = SessionBus(dbus_mainloop)
+                    dbus_object = dbus_sessionbus.get_object('org.freedesktop.Notifications',
+                                                  '/org/freedesktop/Notifications')
 
-                self.connected = True
+                    self.dbus_interface = Interface(dbus_object,
+                                                    dbus_interface='org.freedesktop.Notifications')
+                    # connect button to action
+                    self.dbus_interface.connect_to_signal('ActionInvoked', self.action_callback)
+                    self.connected = True
+
+                except:
+                    import traceback
+                    traceback.print_exc(file=sys.stdout)
+                    DBUS_AVAILABLE = False
+                    self.connected = False    
         else:
             self.connected = False
 
