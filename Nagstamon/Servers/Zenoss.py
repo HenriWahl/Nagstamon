@@ -40,8 +40,10 @@ class ZenossServer(GenericServer):
                 1: 'UNKNOWN',
                 2: 'UNKNOWN',
                 3: 'WARNING',
-                4: 'CRITICAL',
+                4: 'WARNING',
                 5: 'CRITICAL'}
+
+    MENU_ACTIONS = ['Monitor', 'Acknowledge']
 
     def __init__(self, **kwds):
         GenericServer.__init__(self, **kwds)
@@ -50,18 +52,25 @@ class ZenossServer(GenericServer):
         self.urls = {}
         self.statemap = {}
 
-        self.MENU_ACTIONS = ["Recheck", "Acknowledge", "Downtime"]
-
         self.server = Server()
-        self.server.server_url, self.server.server_port = conf.servers[self.get_name()].monitor_url.split(':')
+        if ":" in conf.servers[self.get_name()].monitor_url:
+            self.server.server_url, self.server.server_port = conf.servers[self.get_name()].monitor_url.split(':')
+        else:
+            self.server.server_url = conf.servers[self.get_name()].monitor_url
+            self.server.server_port = 8080 #the default is 8080
+
         self.server.username = conf.servers[self.get_name()].username
         self.server.password = conf.servers[self.get_name()].password
         
         # Entries for monitor default actions in context menu
-        self.MENU_ACTIONS = ["Recheck", "Acknowledge", "Downtime"]
+        self.MENU_ACTIONS = ["Acknowledge"]
     
     def _zlogin(self):
-        self.zapi = ZenossAPI(Server=self.server)
+        try:
+            self.zapi = ZenossAPI(Server=self.server)
+        except Exception:
+            result, error = self.Error(sys.exc_info())
+            return Result(result=result, error=error)
     
     def _get_status(self):
         nagitems = {"services":[], "hosts":[]}
@@ -69,55 +78,64 @@ class ZenossServer(GenericServer):
         self.new_hosts = dict()
 
         try:
-            hosts = self._get_all_events()['events']
-            for host in hosts:
-                n = dict()
-                n['host'] = host['device']['text']
-                n['service'] = host['eventClass']['text']
+            hosts = self._get_all_events()
+            
+            if 'events' in hosts:
+                hosts = hosts['events']
 
-                n['status'] = self.SEVERITY_MAP.get(host['severity'])
-                n['last_check'] = host['lastTime']
-                
-                n['duration'] = self._calc_duration(host['firstTime'], host['lastTime'])
-                
-                n["status_information"] = host['message']
-                n["attempt"] = str(host['count'])+"/1"# TODO:
+                for host in hosts:
+                    n = dict()
+                    n['evid'] = host['evid']
+                    n['host'] = host['device']['text']
+                    n['service'] = host['eventClass']['text']
 
-                n["passiveonly"] = False
-                n["notifications_disabled"] = False
-                n["flapping"] = False
-                n["acknowledged"] = False
-                n["scheduled_downtime"] = False
+                    n['status'] = self.SEVERITY_MAP.get(host['severity'])
+                    n['last_check'] = host['lastTime']
+                
+                    duration = self._calc_duration(host['firstTime'], host['lastTime'])
+                    if (duration == None):
+                        continue #Zenoss needs a length to cause an error
+                    n['duration'] = duration
+
+                    n["status_information"] = host['message']
+                    n["attempt"] = str(host['count'])+"/1" # needs a / with a number on either side to work
+
+                    n["passiveonly"] = False
+                    n["notifications_disabled"] = False
+                    n["flapping"] = False
+                    n["acknowledged"] = (host['eventState'] == 'Acknowledged')
+                    n["scheduled_downtime"] = False
               
-                nagitems["hosts"].append(n)
+                    nagitems["hosts"].append(n)
 
-                new_host = n["host"]
-                if not new_host in self.new_hosts:
-                    self.new_hosts[new_host] = GenericHost()
-                    self.new_hosts[new_host].name = new_host
+                    new_host = n["host"]
+                    if not new_host in self.new_hosts:
+                        self.new_hosts[new_host] = GenericHost()
+                        self.new_hosts[new_host].name = new_host
                     
-                    
-                if not new_host in self.new_hosts[new_host].services:
+                    if not new_host in self.new_hosts[new_host].services:
                         
-                    new_service = new_host
-                    self.new_hosts[new_host].services[new_service] = GenericService()
-                    self.new_hosts[new_host].services[new_service].host = new_host
-                    self.new_hosts[new_host].services[new_service].name = n["service"]
+                        new_service = new_host
+                        self.new_hosts[new_host].services[new_service] = GenericService()
+                        
+                        self.new_hosts[new_host].services[new_service].host = new_host
+                        self.new_hosts[new_host].services[new_service].evid = n['evid']
+                        self.new_hosts[new_host].services[new_service].name = n["service"]
                     
-                    self.new_hosts[new_host].services[new_service].server = self.name
-                    self.new_hosts[new_host].services[new_service].status = n["status"]
-                    self.new_hosts[new_host].services[new_service].last_check = n["last_check"]
+                        self.new_hosts[new_host].services[new_service].server = self.name
+                        self.new_hosts[new_host].services[new_service].status = n["status"]
+                        self.new_hosts[new_host].services[new_service].last_check = n["last_check"]
                     
-                    self.new_hosts[new_host].services[new_service].duration = n["duration"]
-                    self.new_hosts[new_host].services[new_service].status_information= n["status_information"].encode("utf-8")
-                    self.new_hosts[new_host].services[new_service].attempt = n["attempt"]
+                        self.new_hosts[new_host].services[new_service].duration = n["duration"]
+                        self.new_hosts[new_host].services[new_service].status_information= n["status_information"].encode("utf-8")
+                        self.new_hosts[new_host].services[new_service].attempt = n["attempt"]
 
-                    self.new_hosts[new_host].services[new_service].passiveonly = n["passiveonly"]
-                    self.new_hosts[new_host].services[new_service].notifications_disabled = n["notifications_disabled"]
-                    self.new_hosts[new_host].services[new_service].flapping = n["flapping"]
-                    self.new_hosts[new_host].services[new_service].acknowledged = n["acknowledged"]
-                    self.new_hosts[new_host].services[new_service].scheduled_downtime = n["scheduled_downtime"]
-                del n
+                        self.new_hosts[new_host].services[new_service].passiveonly = n["passiveonly"]
+                        self.new_hosts[new_host].services[new_service].notifications_disabled = n["notifications_disabled"]
+                        self.new_hosts[new_host].services[new_service].flapping = n["flapping"]
+                        self.new_hosts[new_host].services[new_service].acknowledged = n["acknowledged"]
+                        self.new_hosts[new_host].services[new_service].scheduled_downtime = n["scheduled_downtime"]
+                    del n
                 
         except:
             self.isChecking = False
@@ -128,8 +146,20 @@ class ZenossServer(GenericServer):
         
         del nagitems
         return Result(error="")
-
     
+    def get_username(self):
+        return str(self.server.username)
+    def get_password(self):
+        return str(self.server.password)
+    
+    def set_acknowledge(self, info_dict):
+        if info_dict['host'] in self.hosts:
+            evid = self.hosts[info_dict['host']].services[info_dict['host']].evid
+            self.zapi.set_event_ack(evid)
+
+    def _open_browser(self, url):
+        webbrowser.open(self.monitor_url)
+
     def _get_all_events(self):
         if self.zapi is None:
             self._zlogin()
@@ -143,14 +173,30 @@ class ZenossServer(GenericServer):
         end = datetime.strptime(endStr, '%Y-%m-%d %H:%M:%S')
         
         sec = (int)((end - start).total_seconds())
+        
         days, rem = divmod(sec, 60*60*24)
         hours, rem = divmod(rem, 60*60)
         mins, sec = divmod(rem, 60)
+        if (days == 0 and hours == 0 and mins == 0 and sec == 0):
+            return None
         return '%sd %sh %sm %ss' % (days,hours,mins,sec)
-        
+    
+    #Note these methods are invalid for the zenoss api that this uses
+    def set_recheck(self, info_dict):
+        pass
+
+    def set_downtime(self, host, service, author, comment, fixed, start_time, end_time, hours, minutes):
+        pass
+
+    def set_submit_check_result(self, info_dict):
+        pass
+       
+    def get_start_end(self, host):
+        pass
+
 
 class Server(object):
-    #server object for configuration reasons
+    #server object for api configuration connections
 
     def __init__(self):
         self.server_url = ""
