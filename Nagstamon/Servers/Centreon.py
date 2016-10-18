@@ -151,11 +151,18 @@ class CentreonServer(GenericServer):
         else:
             auth = ''
 
-        # Centreon < 2.8
-        if host == '_Module_Meta':
+        #  Meta - Centreon < 2.7
+        if host == '_Module_Meta' and self.centreon_version < 2.7:
             webbrowser_open(self.urls_centreon['index'] + '?' + urllib.parse.urlencode({'p':20206,'o':'meta'}) + auth )
-        elif host == 'Meta':
-            webbrowser_open(self.urls_centreon['index'] + '?' + urllib.parse.urlencode({'p':20201,'o':'svcd','host_name':'_Module_Meta',}) + auth )
+        #  Meta - Centreon 2.7
+        elif host == '_Module_Meta' and self.centreon_version == 2.7:
+            webbrowser_open(self.urls_centreon['main'] + '?' + urllib.parse.urlencode({'p':20206,'o':'meta'}) + auth )
+        #  Meta - Centreon 2.8
+        elif host == '_Module_Meta' and self.centreon_version == 2.8:
+            m =  re.search(r'^.+ \((?P<rsd>.+)\)$', service)
+            if m:
+                service = m.group('rsd')
+                webbrowser_open(self.urls_centreon['main'] + '?' + urllib.parse.urlencode({'p':20201,'o':'svcd','host_name':'_Module_Meta','service_description':service}) + auth )
         # must be a host if service is empty
         elif service == '':
             if self.centreon_version == 2.7 or self.centreon_version == 2.8:
@@ -407,13 +414,18 @@ class CentreonServer(GenericServer):
         '''
         get host_id via parsing raw html
         '''
-        cgi_data = {'p': 201, 'o': 'hd', 'host_name': host, 'sid': self.SID}
+        if self.centreon_version < 2.7:
+            cgi_data = {'p': 20102, 'o': 'hd', 'host_name': host, 'sid': self.SID}
+        else:
+            cgi_data = {'p': 20202, 'o': 'hd', 'host_name': host, 'sid': self.SID}
 
-        result = self.FetchURL(self.urls_centreon['main'] , cgi_data=cgi_data, giveback='raw')
+        url = self.urls_centreon['main'] + '?' + urllib.parse.urlencode(cgi_data)
+
+        result = self.FetchURL(url, giveback='raw')
         raw, error = result.result, result.error
 
         if error == '':
-            host_id = raw.partition('var host_id = '')[2].partition(''')[0]
+            host_id = raw.partition("var host_id = '")[2].partition("'")[0]
             del raw
         else:
             if conf.debug_mode == True:
@@ -455,7 +467,7 @@ class CentreonServer(GenericServer):
                 self.Debug(server=self.get_name(), host=host, service=service, debug='- Get host/svc ID : ' + host_id + '/' + svc_id)
         else:
             if conf.debug_mode == True:
-                self.Debug(server=self.get_name(), host=host, service=service, debug='IDs could not be retrieved.')
+                self.Debug(server=self.get_name(), host=host, service=service, debug='- IDs could not be retrieved.')
 
         # some cleanup
         del result, error
@@ -464,7 +476,7 @@ class CentreonServer(GenericServer):
         try:
             if int(host_id) and int(svc_id):
                 if conf.debug_mode == True:
-                    self.Debug(server=self.get_name(), host=host, service=service, debug='Host ID is ' + host_id + ' ' + svc_id)
+                    self.Debug(server=self.get_name(), host=host, service=service, debug='- Host & Service ID are valid (int)')
                 return host_id,svc_id
             else:
                 return '',''
@@ -479,8 +491,6 @@ class CentreonServer(GenericServer):
         # get sid in case this has not yet been done
         if self.SID == None or self.SID == '':
             self.SID = self._get_sid().result
-            # those broker urls would not be changing too often so this check migth be done here
-            #self._get_xml_path()
 
         # services (unknown, warning or critical?)
         if self.centreon_version == 2.7 or self.centreon_version == 2.8:
@@ -609,6 +619,7 @@ class CentreonServer(GenericServer):
                                   error='Bad session ID',
                                   status_code=status_code)
 
+            # In Centreon 2.8, Meta are merge with regular services
             if self.centreon_version < 2.8:
                 # define meta-services xml URL
                 if self.centreon_version == 2.7:
@@ -662,35 +673,48 @@ class CentreonServer(GenericServer):
                         self.new_hosts[str(l.hn.text)].services[str(l.sd.text)].server = self.name
                         self.new_hosts[str(l.hn.text)].services[str(l.sd.text)].status = str(l.cs.text)
 
-                        # if it is a meta-service, add the 'sdl' field in parenthesis after the service name. (used in _set_acknowledge() and _set_recheck()) :
                         if self.new_hosts[str(l.hn.text)].services[str(l.sd.text)].host == '_Module_Meta':
-                            self.new_hosts[str(l.hn.text)].services[str(l.sd.text)].name = '{} ({})'.format(
-                                                                                                                    self.new_hosts[str(l.hn.text)].services[str(l.sd.text)].name,
-                                                                                                                    l.rsd.text
-                            )
-                        # disgusting workaround for https://github.com/HenriWahl/Nagstamon/issues/91
-                        if self.new_hosts[str(l.hn.text)].services[str(l.sd.text)].status in self.TRANSLATIONS:
-                            self.new_hosts[str(l.hn.text)].services[str(l.sd.text)].status = self.TRANSLATIONS[\
-                            self.new_hosts[str(l.hn.text)].services[str(l.sd.text)].status]
-                        if self.new_hosts[str(l.hn.text)].services[str(l.sd.text)].host == '_Module_Meta':
-                            self.new_hosts[str(l.hn.text)].services[str(l.sd.text)].attempt = str(l.ca.text)
+                            # ajusting service name for Meta services
+                            if self.centreon_version < 2.8:
+                                self.new_hosts[str(l.hn.text)].services[str(l.sd.text)].name = '{} ({})'.format(str(l.sd.text), l.rsd.text)
+                                self.new_hosts[str(l.hn.text)].services[str(l.sd.text)].attempt = str(l.ca.text)
+                            else:
+                                self.new_hosts[str(l.hn.text)].services[str(l.sd.text)].name = '{} ({})'.format(str(l.sdn.text), l.sdl.text)
+                                self.new_hosts[str(l.hn.text)].services[str(l.sd.text)].attempt, \
+                                self.new_hosts[str(l.hn.text)].services[str(l.sd.text)].status_type = str(l.ca.text).split(' ')
                         else:
                             self.new_hosts[str(l.hn.text)].services[str(l.sd.text)].attempt, \
                             self.new_hosts[str(l.hn.text)].services[str(l.sd.text)].status_type = str(l.ca.text).split(' ')
+
+                        # disgusting workaround for https://github.com/HenriWahl/Nagstamon/issues/91
+                        # pretty sure it's only 2.5, but we don't have special code for 2.5
+                        if self.centreon_version < 2.66:
+                            if self.new_hosts[str(l.hn.text)].services[str(l.sd.text)].status in self.TRANSLATIONS:
+                                self.new_hosts[str(l.hn.text)].services[str(l.sd.text)].status = self.TRANSLATIONS[\
+                                self.new_hosts[str(l.hn.text)].services[str(l.sd.text)].status]
+
+                        if not (self.centreon_version < 2.8 and self.new_hosts[str(l.hn.text)].services[str(l.sd.text)].host == '_Module_Meta'):
                             self.new_hosts[str(l.hn.text)].services[str(l.sd.text)].status_type =\
                             self.HARD_SOFT[self.new_hosts[str(l.hn.text)].services[str(l.sd.text)].status_type]
-                            self.new_hosts[str(l.hn.text)].services[str(l.sd.text)].last_check = str(l.lc.text)
-                            self.new_hosts[str(l.hn.text)].services[str(l.sd.text)].duration = str(l.d.text)
-                            self.new_hosts[str(l.hn.text)].services[str(l.sd.text)].status_information = str(l.po.text).replace('\n', ' ').strip()
+
+                        if conf.debug_mode == True:
+                            self.Debug(server=self.get_name(), debug='Service status type : ' + self.new_hosts[str(l.hn.text)].services[str(l.sd.text)].name + '/' + self.new_hosts[str(l.hn.text)].services[str(l.sd.text)].status_type)
+                        self.new_hosts[str(l.hn.text)].services[str(l.sd.text)].last_check = str(l.lc.text)
+                        self.new_hosts[str(l.hn.text)].services[str(l.sd.text)].duration = str(l.d.text)
+                        self.new_hosts[str(l.hn.text)].services[str(l.sd.text)].status_information = str(l.po.text).replace('\n', ' ').strip()
+
                         if l.find('cih') != None:
                             self.new_hosts[str(l.hn.text)].services[str(l.sd.text)].criticality = str(l.cih.text)
                         else:
                             self.new_hosts[str(l.hn.text)].services[str(l.sd.text)].criticality = ''
-                            self.new_hosts[str(l.hn.text)].services[str(l.sd.text)].acknowledged = bool(int(str(l.pa.text)))
-                        if self.new_hosts[str(l.hn.text)].services[str(l.sd.text)].host != '_Module_Meta':
+
+                        self.new_hosts[str(l.hn.text)].services[str(l.sd.text)].acknowledged = bool(int(str(l.pa.text)))
+                        self.new_hosts[str(l.hn.text)].services[str(l.sd.text)].notifications_disabled = not bool(int(str(l.ne.text)))
+
+                        # for features not available in centreon < 2.8 and meta services
+                        if not (self.centreon_version < 2.8 and self.new_hosts[str(l.hn.text)].services[str(l.sd.text)].host == '_Module_Meta'):
                             self.new_hosts[str(l.hn.text)].services[str(l.sd.text)].scheduled_downtime = bool(int(str(l.dtm.text)))
                             self.new_hosts[str(l.hn.text)].services[str(l.sd.text)].flapping = bool(int(str(l.find('is').text)))
-                            self.new_hosts[str(l.hn.text)].services[str(l.sd.text)].notifications_disabled = not bool(int(str(l.ne.text)))
                             self.new_hosts[str(l.hn.text)].services[str(l.sd.text)].passiveonly = not bool(int(str(l.ac.text)))
 
                 except:
@@ -739,10 +763,6 @@ class CentreonServer(GenericServer):
                     cgi_data['o'] = 'hpb'
                     cgi_data['centreon_token'] = self.centreon_token
 
-                # debug - redondant avec le FetchURL qui donne les données
-                # if conf.debug_mode == True:
-                #     self.Debug(server=self.get_name(), host=host, debug=self.urls_centreon['main'] + '?' +  urllib.parse.urlencode(cgi_data))
-
                 # running remote cgi command, also possible with GET method
                 raw = self.FetchURL(self.urls_centreon['main'], cgi_data=cgi_data, giveback='raw')
                 del raw
@@ -776,20 +796,23 @@ class CentreonServer(GenericServer):
                         cgi_data['p'] = '20201'
                         cgi_data['centreon_token'] = self.centreon_token
 
-                    # in case of a meta-service, extract the 'sdl' field from the service name :
+                    # in case of a meta-service, extract the 'rsd' field from the service name :
                     if host == '_Module_Meta':
                         m =  re.search(r'^.+ \((?P<rsd>.+)\)$', s)
                         if m:
                             rsd = m.group('rsd')
-                            cgi_data = {'p': '20206',
-                                        'o': 'meta',
-                                        'cmd': '70',
-                                        'select[' + host + ';' + rsd + ']': '1',
-                                        'limit': '0'}
+                            if self.centreon_version < 2.8:
+                                cgi_data = {'p': '20206',
+                                            'o': 'meta',
+                                            'cmd': '70',
+                                            'select[' + host + ';' + rsd + ']': '1',
+                                            'limit': '0'}
+                            elif self.centreon_version == 2.8:
+                                cgi_data['service_description'] = rsd
 
                     # debug - redondant avec le FetchURL qui donne les données
-                    # if conf.debug_mode == True:
-                    #     self.Debug(server=self.get_name(), host=host, service=s, debug=self.urls_centreon['main'] + '?' + urllib.parse.urlencode(cgi_data))
+                    if conf.debug_mode == True:
+                        self.Debug(server=self.get_name(), host=host, service=s, debug=self.urls_centreon['main'] + '?' + urllib.parse.urlencode(cgi_data))
 
                     # running remote cgi command with GET method, for some strange reason only working if
                     # giveback is 'raw'
@@ -805,43 +828,26 @@ class CentreonServer(GenericServer):
         '''
         try:
         # decision about host or service - they have different URLs
+            #  Meta
             if host == '_Module_Meta':
+                if conf.debug_mode == True:
+                    self.Debug(server=self.get_name(), debug='Recheck on a Meta service, more work to be done')
                 m =  re.search(r'^.+ \((?P<rsd>.+)\)$', service)
                 if m:
                     rsd = m.group('rsd')
-                    cgi_data = urllib.parse.urlencode({'p': '20206',
-                                'o': 'meta',
-                                'cmd': '3',
-                                'select[' + host + ';' + rsd + ']': '1',
-                                'limit':'0'})
-                    url = self.urls_centreon['main'] + cgi_data
+                    if self.centreon_version < 2.8:
+                        url = self.urls_centreon['main'] + '?' + urllib.parse.urlencode({'p': '20206','o': 'meta','cmd': '3','select[' + host + ';' + rsd + ']': '1','limit':'0'})
+                    else:
+                        url = self.urls_centreon['main'] + '?' + urllib.parse.urlencode({'p': '202','o': 'svc','cmd': '3','select[' + host + ';' + rsd + ']': '1','limit':'1','centreon_token':self.centreon_token})
 
             elif service == '':
-                # ... it can only be a host, get the service associated to this host
-                url_service = self.urls_centreon['xml_services'] + '?' + urllib.parse.urlencode({'num':0,\
-                     'limit':20,\
-                     'sort_type':'last_state_change',\
-                     'order':'ASC',\
-                     'p':'20215',\
-                     'o':'svc_unhandled',\
-                     'search_host':host,\
-                     'sid':self.SID})
-                result = self.FetchURL(url_service, giveback='xml')
-                xmlobj, error = result.result, result.error
+                # ... it can only be a host, so check all his services and there is a command for that
+                host_id = self._get_host_id(host)
 
-                for l in xmlobj.findAll('l'):
-                    try:
-                        service = l.sd.text
-                    except:
-                        result, error = self.Error(sys.exc_info())
-                        return Result(result=result, error=error)
-
-                # get the id of the host and the service
-                host_id, service_id = self._get_host_and_service_id(host, service)
-                # fill and encode CGI data
-                cgi_data = urllib.parse.urlencode({'cmd':'host_schedule_check', 'actiontype':1,\
-                                             'host_id':host_id, 'service_id':service_id, 'sid':self.SID})
-                url = self.urls_centreon['xml_hostSendCommand'] + '?' + cgi_data
+                if self.centreon_version < 2.7:
+                    url = self.urls_centreon['xml_hostSendCommand'] + '?' + urllib.parse.urlencode({'cmd':'host_schedule_check', 'actiontype':1,'host_id':host_id,'sid':self.SID})
+                else:
+                    url = self.urls_centreon['xml_hostSendCommand'] + '?' + urllib.parse.urlencode({'cmd':'host_schedule_check', 'actiontype':1,'host_id':host_id})
                 del host_id
 
             else:
@@ -895,6 +901,14 @@ class CentreonServer(GenericServer):
 
             else:
                 # It is a service downtime
+
+                # Centreon 2.8 only, in case of a meta-service, extract the 'rsd' field from the service name :
+                if host == '_Module_Meta' and self.centreon_version == 2.8:
+                    m =  re.search(r'^.+ \((?P<rsd>.+)\)$', service)
+                    if m:
+                        rsd = m.group('rsd')
+                        service = rsd
+
                 cgi_data = {'cmd':74,\
                             'duration':duration,\
                             'duration_scale':'m',\
@@ -939,5 +953,3 @@ class CentreonServer(GenericServer):
             self.SIDcount = 0
         else:
             self.SIDcount += 1
-
-0
