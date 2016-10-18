@@ -91,8 +91,11 @@ if not platform.system() in NON_LINUX:
         from dbus import (Interface,
                           SessionBus)
         from dbus.mainloop.pyqt5 import DBusQtMainLoop
+        # flag to check later if DBus is available
+        DBUS_AVAILABLE = True
     except:
         print('No DBus for desktop notification available.')
+        DBUS_AVAILABLE = False
 
 # fixed shortened and lowered color names for cells, also used by statusbar label snippets
 COLORS = OrderedDict([('DOWN', 'color_down_'),
@@ -371,7 +374,6 @@ class SystemTrayIcon(QSystemTrayIcon):
             debug_queue.append('DEBUG: SystemTrayIcon created icon {} for state "{}"'.format(self.icons[state], state))
 
 
-    # ##@pyqtSlot(QEvent)
     @pyqtSlot(QSystemTrayIcon.ActivationReason)
     def icon_clicked(self, reason):
         """
@@ -380,10 +382,10 @@ class SystemTrayIcon(QSystemTrayIcon):
         # some obscure Windows problem again
         if reason == QSystemTrayIcon.Context and platform.system() == 'Windows':
                 self.show_menu.emit()
-        # only react on left mouse click
+        # only react on left mouse click on OSX
         elif reason == (QSystemTrayIcon.Trigger or QSystemTrayIcon.DoubleClick):
             # when green icon is displayed and no popwin is about to po up show at least menu
-            if get_worst_status() == 'UP':
+            if get_worst_status() == 'UP' and platform.system() == 'Darwin':
                     self.menu.show_at_cursor()
             else:
                 # show status window if there is something to tell
@@ -391,7 +393,6 @@ class SystemTrayIcon(QSystemTrayIcon):
                     self.hide_popwin.emit()
                 else:
                     self.show_popwin.emit()
-
 
 
     @pyqtSlot()
@@ -573,8 +574,7 @@ class MenuContextSystrayicon(MenuContext):
         Necessary for Ubuntu 16.04 new Qt5-Systray-AppIndicator meltdown
         Maybe in general a good idea to offer status window popup here
     """
-
-
+ 
     def __init__(self, parent=None):
         """
             clone of normal MenuContext which serves well in all other places
@@ -590,8 +590,8 @@ class MenuContextSystrayicon(MenuContext):
 
         # change menu if there are changes in settings/servers
         dialogs.settings.changed.connect(self.initialize)
-
-
+ 
+ 
     def initialize(self):
         """
             initialize as herited + a popup menu entry mostly useful in Ubuntu Unity
@@ -1431,7 +1431,7 @@ class StatusWindow(QWidget):
                     # Using the EWMH protocol to move the window to the active desktop.
                     # Seemed to be a problem on XFCE
                     # https://github.com/HenriWahl/Nagstamon/pull/199
-                    if not platform.system() in NON_LINUX and conf.icon_in_systray:
+                    if not platform.system() in NON_LINUX and conf.icon_in_systray:                      
                         try:
                             winid = self.winId().__int__()
                             deskid = self.ewmh.getCurrentDesktop()
@@ -1853,7 +1853,7 @@ class StatusWindow(QWidget):
         # lets try here to keep it on top - only if not fullscreen
         if not conf.fullscreen and not platform.system == 'Windows':
             self.setWindowFlags(WINDOW_FLAGS)
-
+                           
         # again and again try to keep that statuswindow on top!
         if platform.system() == 'Windows' and not conf.fullscreen:
             # find out if no context menu is shown and thus would be
@@ -2032,6 +2032,11 @@ class StatusWindow(QWidget):
                     else:
                         for server in get_enabled_servers():
                             for event in [k for k, v in server.events_notification.items() if v == True]:
+                                
+                                
+                                print(event)
+                                
+                                
                                 custom_action_string = conf.notification_custom_action_string.replace('$EVENTS$', event)
                                 # execute action
                                 self.execute_action(server_name, custom_action_string)
@@ -3905,7 +3910,6 @@ class TreeView(QTreeView):
 
                 if action['recheck']:
                     self.recheck(info_dict)
-            
             
             except:
                 import traceback
@@ -5996,10 +6000,23 @@ class CheckVersion(QObject):
             message dialog must be shown from GUI thread
         """
         self.version_info_retrieved.emit()
-        QMessageBox.information(self.parent,
-                                'Nagstamon version check',
-                                message,
-                                QMessageBox.Ok)
+
+        #QMessageBox.information(self.parent,
+        #                        'Nagstamon version check',
+        #                        message,
+        #                        QMessageBox.Ok)
+        
+        # attempt to solve https://github.com/HenriWahl/Nagstamon/issues/303
+        # no luck
+        messagebox = QMessageBox(QMessageBox.Information,\
+                                 'Nagstamon version check',\
+                                 message,\
+                                 QMessageBox.Ok,\
+                                 self.parent,\
+                                 Qt.Dialog | Qt.MSWindowsFixedSizeDialogHint)
+        messagebox.setAttribute(Qt.WA_DeleteOnClose)
+        messagebox.setWindowModality(Qt.NonModal)
+        messagebox.exec()
 
 
     class Worker(QObject):
@@ -6041,8 +6058,8 @@ class CheckVersion(QObject):
             if latest_version != 'unavailable':
                 if latest_version == AppInfo.VERSION:
                     message = 'You are using the latest version <b>Nagstamon {0}</b>.'.format(AppInfo.VERSION)
-                elif latest_version > AppInfo.VERSION:
-                    message = 'The new version <b> Nagstamon {0}</b> is available.<p>' \
+                elif latest_version != AppInfo.VERSION:
+                    message = 'The new version <b>Nagstamon {0}</b> is available.<p>' \
                               'Get it at <a href={1}>{1}</a>.'.format(latest_version, AppInfo.WEBSITE + '/download')
                 else:
                     message = ''
@@ -6080,7 +6097,7 @@ class DBus(QObject):
         # see https://developer.gnome.org/notification-spec/#icons-and-images
         self.hints = {'image-path': '%s%snagstamon.svg' % (RESOURCES, os.sep)}
 
-        if not platform.system() in NON_LINUX:
+        if not platform.system() in NON_LINUX and DBUS_AVAILABLE:
             if 'dbus' in sys.modules:
                 import dbus
                 dbus_mainloop = DBusQtMainLoop(set_as_default=True)               
