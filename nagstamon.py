@@ -18,7 +18,7 @@
 # along with this program; if not, write to the Free Software
 # Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA  02110-1301, USA
 
-import os
+# import os  # never used
 import sys
 import socket
 
@@ -30,20 +30,21 @@ try:
     if __name__ == '__main__':
         # queue.Queue() needs threading module which might be not such a good idea to be used
         # because QThread is already in use
-        ###debug_queue = list()       
-        
+        # ##debug_queue = list()
+
         # Initialize global configuration
         from Nagstamon.Config import (conf,
-                                      RESOURCES,
-                                      debug_queue)
+                RESOURCES,
+                debug_queue)
 
         from Nagstamon.Helpers import lock_config_folder
 
-       #if there are more args, than the config folder,  nagstaCLI is been executed
+        # if there are more args, than the config folder,  nagstaCLI is been executed
         if len(sys.argv) > 2:
+            import nagstacli
             nagstacli.executeCli()
             sys.exit(1)
-            
+
         # Acquire the lock
         if not lock_config_folder(conf.configdir):
             print('An instance is already running this config ({})'.format(conf.configdir))
@@ -66,14 +67,14 @@ try:
         statuswindow.show()
         statuswindow.adjustSize()
 
-        if conf.check_for_new_version == True:
+        if conf.check_for_new_version is True:
             check_version.check(start_mode=True, parent=statuswindow)
-        
+
         try:
             APP.exec_()
             del(APP)
             sys.exit(0)
-        except:
+        except Exception:
             sys.exit(0)
 
 
