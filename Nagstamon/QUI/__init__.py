@@ -1834,7 +1834,13 @@ class StatusWindow(QWidget):
         for state in ['DOWN', 'UNREACHABLE', 'CRITICAL', 'WARNING', 'UNKNOWN']:
             if current_status_count[state] > 0:
                 message += '{0} {1} '.format(str(current_status_count[state]), state)
-        dbus_connection.show(AppInfo.NAME, message)
+        # due to mysterious DBus-Crashes
+        # see https://github.com/HenriWahl/Nagstamon/issues/320
+        try:
+            dbus_connection.show(AppInfo.NAME, message)
+        except:
+            import traceback
+            traceback.print_exc(file=sys.stdout)
 
 
     @pyqtSlot()
@@ -6113,8 +6119,7 @@ class DBus(QObject):
                     dbus_mainloop = DBusQtMainLoop(set_as_default=True)               
                     dbus_sessionbus = SessionBus(dbus_mainloop)
                     dbus_object = dbus_sessionbus.get_object('org.freedesktop.Notifications',
-                                                  '/org/freedesktop/Notifications')
-
+                                                      '/org/freedesktop/Notifications')
                     self.dbus_interface = Interface(dbus_object,
                                                     dbus_interface='org.freedesktop.Notifications')
                     # connect button to action
@@ -6124,7 +6129,6 @@ class DBus(QObject):
                 except:
                     import traceback
                     traceback.print_exc(file=sys.stdout)
-                    DBUS_AVAILABLE = False
                     self.connected = False    
         else:
             self.connected = False
