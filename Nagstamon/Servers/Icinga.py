@@ -23,6 +23,7 @@ import copy
 import json
 from bs4 import BeautifulSoup
 from collections import OrderedDict
+from distutils.version import LooseVersion
 
 from Nagstamon.Servers.Generic import GenericServer
 from Nagstamon.Objects import (GenericHost, GenericService, Result)
@@ -101,7 +102,7 @@ class IcingaServer(GenericServer):
             if self.version != '':
                 # define CGI URLs for hosts and services depending on JSON-capable server version
                 if self.cgiurl_hosts == self.cgiurl_services == None:
-                    if self.version < '1.7':
+                    if LooseVersion(self.version) < LooseVersion('1.7'):
                         # http://www.nagios-wiki.de/nagios/tips/host-_und_serviceproperties_fuer_status.cgi?s=servicestatustypes
                         # services (unknown, warning or critical?) as dictionary, sorted by hard and soft state type
                         self.cgiurl_services = {'hard': self.monitor_cgi_url + '/status.cgi?host=all&servicestatustypes=253&serviceprops=262144', \
@@ -657,11 +658,11 @@ class IcingaServer(GenericServer):
         cgi_data['com_data'] = comment
         cgi_data['btnSubmit'] = 'Commit'
         if notify == True:
-            cgi_data['send_notification'] = 'on'
+            cgi_data['send_notification'] = '1'
         if persistent == True:
             cgi_data['persistent'] = 'on'
         if sticky == True:
-            cgi_data['sticky_ack'] = 'on'
+            cgi_data['sticky_ack'] = '1'
 
         self.FetchURL(url, giveback='raw', cgi_data=cgi_data)
 
@@ -671,3 +672,6 @@ class IcingaServer(GenericServer):
                 cgi_data['cmd_typ'] = '34'
                 cgi_data['service'] = s
                 self.FetchURL(url, giveback='raw', cgi_data=cgi_data)
+
+0
+

@@ -51,5 +51,5 @@ Also thanks to the great thirdparty modules used by Nagstamon:<p>
 
 BeautifulSoup: <a href=https://www.crummy.com/software/BeautifulSoup>https://www.crummy.com/software/BeautifulSoup/</a><br>
 Requests: <a href=http://www.python-requests.org>http://www.python-requests.org</a><br>
-Keyring: <h href=https://github.com/jaraco/keyring>https://github.com/jaraco/keyring</a><br>
+Keyring: <a href=https://github.com/jaraco/keyring>https://github.com/jaraco/keyring</a><br>
 emwh.py: <a href=https://github.com/parkouss/pyewmh>https://github.com/parkouss/pyewmh</a>
