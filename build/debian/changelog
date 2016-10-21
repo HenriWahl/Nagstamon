@@ -1,4 +1,10 @@
-nagstamon (2.0.1) unstable; urgency=low
+nagstamon (2.1) unstable; urgency=low
+  * New upstream
+   - Development 'master' branch
+   
+ -- Henri Wahl <h.wahl@ifw-dresden.de>  Fri, 21 Oct 2016 08:00:00 +0200
+
+nagstamon (2.0.1) stable; urgency=low
   * New upstream
    - Major Centreon bug making it useless
    - Icinga version check fix
@@ -6,7 +12,6 @@ nagstamon (2.0.1) unstable; urgency=low
    - EWMH initialization change
    - Systrayicon left mouse click without context menu
    - DBus crash workaround
-
 
  -- Henri Wahl <h.wahl@ifw-dresden.de>  Thu, 20 Oct 2016 08:00:00 +0200
  
