@@ -21,10 +21,10 @@
 # import os  # never used
 import sys
 import socket
+import platform
 
 # fix/patch for https://bugs.launchpad.net/ubuntu/+source/nagstamon/+bug/732544
 socket.setdefaulttimeout(30)
-
 
 try:
     if __name__ == '__main__':
@@ -39,7 +39,11 @@ try:
 
         from Nagstamon.Helpers import lock_config_folder
 
+<<<<<<< HEAD
         # if there are more args, than the config folder,  nagstaCLI is been executed
+=======
+        #if there are more args, than the config folder,  nagstaCLI is been executed
+>>>>>>> upstream/master
         if len(sys.argv) > 2:
             import nagstacli
             nagstacli.executeCli()
@@ -49,6 +53,13 @@ try:
         if not lock_config_folder(conf.configdir):
             print('An instance is already running this config ({})'.format(conf.configdir))
             sys.exit(1)
+
+        # remove QT_QPA_PLATFORMTHEME env variable to fix ugly theme in GNOME
+        if platform.system() == 'Linux':
+            try:
+                os.environ.pop('QT_QPA_PLATFORMTHEME')
+            except:
+                pass
 
         # get GUI
         from Nagstamon.QUI import (APP,

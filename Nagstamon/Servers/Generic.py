@@ -818,7 +818,10 @@ class GenericServer(object):
         # and sometimes send a bad status line which would result in a misleading
         # ERROR display - it seems safe to ignore these errors
         # see https://github.com/HenriWahl/Nagstamon/issues/207
-        if 'BadStatusLine' in self.status_description:
+        # Update: Another strange error to ignore is ConnectionResetError
+        # see https://github.com/HenriWahl/Nagstamon/issues/295       
+        if 'BadStatusLine' in self.status_description or\
+           'ConnectionResetError' in self.status_description:
             self.status_description = ''
             self.isChecking = False
             return Result(result=self.status,

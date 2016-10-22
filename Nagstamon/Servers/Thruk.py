@@ -72,8 +72,12 @@ class ThrukServer(GenericServer):
             brute force reset by GenericServer disturbs logging in into Thruk
         """
         # only reset session if Thruks 2 cookies are there
-        if len(self.session.cookies) > 1:
-            self.session = None
+        try:
+            # only reset session if Thruks 2 cookies are there
+            if len(self.session.cookies) > 1:
+                self.session = None
+        except:
+            self.Error(sys.exc_info())
 
 
     def init_HTTP(self):
