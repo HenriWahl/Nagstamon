@@ -18,7 +18,7 @@
 # along with this program; if not, write to the Free Software
 # Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA  02110-1301, USA
 
-# import os  # never used
+import os
 import sys
 import socket
 import platform
@@ -39,13 +39,9 @@ try:
 
         from Nagstamon.Helpers import lock_config_folder
 
-<<<<<<< HEAD
         # if there are more args, than the config folder,  nagstaCLI is been executed
-=======
-        #if there are more args, than the config folder,  nagstaCLI is been executed
->>>>>>> upstream/master
         if len(sys.argv) > 2:
-            import nagstacli
+            import nagstacli  # fix crash if more than 2 args are passed - mprenditore
             nagstacli.executeCli()
             sys.exit(1)
 
@@ -58,7 +54,7 @@ try:
         if platform.system() == 'Linux':
             try:
                 os.environ.pop('QT_QPA_PLATFORMTHEME')
-            except:
+            except Exception:
                 pass
 
         # get GUI
