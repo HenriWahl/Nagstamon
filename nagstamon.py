@@ -33,9 +33,10 @@ try:
         # ##debug_queue = list()
 
         # Initialize global configuration
-        from Nagstamon.Config import (conf,
-                RESOURCES,
-                debug_queue)
+        # from Nagstamon.Config import (conf,
+                # RESOURCES,
+                # debug_queue)
+        from Nagstamon.Config import conf
 
         from Nagstamon.Helpers import lock_config_folder
 
@@ -58,14 +59,18 @@ try:
                 pass
 
         # get GUI
+        # from Nagstamon.QUI import (APP,
+                # statuswindow,
+                # check_version,
+                # check_servers,
+                # dialogs)
         from Nagstamon.QUI import (APP,
-                                   statuswindow,
-                                   check_version,
-                                   check_servers,
-                                   dialogs)
+                statuswindow,
+                check_version,
+                check_servers)
         # get server information
-        from Nagstamon.Servers import (servers,
-                                       get_enabled_servers)
+        # from Nagstamon.Servers import (servers,
+                # get_enabled_servers)
 
         # ask for help if no servers are configured
         check_servers()
