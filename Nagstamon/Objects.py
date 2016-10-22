@@ -23,7 +23,9 @@ from __future__ import print_function, absolute_import, unicode_literals
 
 STATES = ['WARNING', 'UNKNOWN', 'CRITICAL', 'UNREACHABLE', 'DOWN']
 
+
 class GenericObject(object):
+
     """
     template for hosts and services
     """
@@ -55,37 +57,29 @@ class GenericObject(object):
         self.service = ''
         self.dummy_column = ''
 
-
     def is_passive_only(self):
         return bool(self.passiveonly)
-
 
     def is_flapping(self):
         return bool(self.flapping)
 
-
     def has_notifications_disabled(self):
         return bool(self.notifications)
-
 
     def is_acknowledged(self):
         return bool(self.acknowledged)
 
-
     def is_in_scheduled_downtime(self):
         return bool(self.scheduled_downtime)
 
-
     def is_visible(self):
         return bool(self.visible)
-
 
     def get_name(self):
         """
             return stringified name
         """
         return str(self.name)
-
 
     def get_host_name(self):
         """
@@ -94,7 +88,6 @@ class GenericObject(object):
         """
         return ''
 
-
     def get_service_name(self):
         """
             Extracts service name from status item.
@@ -102,13 +95,11 @@ class GenericObject(object):
         """
         return ''
 
-
     def get_hash(self):
         """
             returns hash of event status information - different for host and service thus empty here
         """
         return ''
-
 
     def get_columns(self, columns_wanted):
         """
@@ -119,6 +110,7 @@ class GenericObject(object):
 
 
 class GenericHost(GenericObject):
+
     """
         one host which is monitored by a Nagios server, gets populated with services
     """
@@ -128,17 +120,14 @@ class GenericHost(GenericObject):
         # take all the faulty services on host
         self.services = dict()
 
-
     def get_host_name(self):
         return str(self.name)
-
 
     def is_host(self):
         """
             decides where to put acknowledged/downtime pixbufs in Liststore for Treeview in Popwin
         """
         return True
-
 
     def get_hash(self):
         """
@@ -148,6 +137,7 @@ class GenericHost(GenericObject):
 
 
 class GenericService(GenericObject):
+
     """
         one service which runs on a host
     """
@@ -155,21 +145,17 @@ class GenericService(GenericObject):
     def __init__(self):
         GenericObject.__init__(self)
 
-
     def get_host_name(self):
         return str(self.host)
 
-
     def get_service_name(self):
         return str(self.name)
-
 
     def is_host(self):
         """
             decides where to put acknowledged/downtime pixbufs in Liststore for Treeview in Popwin
         """
         return False
-
 
     def get_hash(self):
         """
@@ -179,6 +165,7 @@ class GenericService(GenericObject):
 
 
 class Result(object):
+
     """
     multi purpose result object, used in Servers.Generic.FetchURL()
     """
