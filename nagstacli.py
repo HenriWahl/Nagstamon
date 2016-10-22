@@ -68,8 +68,9 @@ def createEndTime(info_dict):
 
 
 def executeCli():
-    from Nagstamon.Config import (conf,
-                                  debug_queue)
+    # from Nagstamon.Config import (conf,
+            # debug_queue)
+    from Nagstamon.Config import conf
 
     from Nagstamon.Servers import (create_server)
 
