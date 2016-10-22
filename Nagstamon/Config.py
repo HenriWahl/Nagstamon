@@ -39,7 +39,7 @@ from collections import OrderedDict
 # because QThread is already in use
 # maybe not the most logical place here to be defined but at least all
 # modules access Config.py so it can be distributed from here
-debug_queue = list() 
+debug_queue = list()
 
 # temporary dict for string-to-bool-conversion
 # the bool:bool relations are thought to make things easier in Dialog_Settings.ok()
@@ -53,6 +53,7 @@ NON_LINUX = ('Darwin', 'Windows')
 
 
 class AppInfo(object):
+
     """
         contains app information previously located in GUI.py
     """
@@ -65,9 +66,11 @@ class AppInfo(object):
 
 
 class Config(object):
+
     """
         The place for central configuration.
     """
+
     def __init__(self):
         """
             read config file and set the appropriate attributes
@@ -78,7 +81,7 @@ class Config(object):
         self.short_display = False
         self.long_display = True
         self.show_tooltips = True
-        self.show_grid = True        
+        self.show_grid = True
         self.grid_use_custom_intensity = False
         self.grid_alternation_intensity = 10
         self.highlight_new_events = True
@@ -204,19 +207,19 @@ class Config(object):
         self.unconfigured = True
 
         # adding cli args variable
-        self.cli_args = {} 
-        
+        self.cli_args = {}
+
         # Parse the command line
         parser = argparse.ArgumentParser(description='Nagstamon for your CLI')
         # might be not necessary anymore - to be tested
         # ##parser.add_argument('-psn', action='store_true',
         # ##    help='force ~/.nagstamon as config folder (used by launchd in MacOSX)')
         # necessary because otherwise setup.py goes crazy of argparse
-        
-        # separate NagstaCLI from 
-        if len(sys.argv) > 2 or (len(sys.argv) > 1 and sys.argv[1] in ['--help', '-h']):                        
+
+        # separate NagstaCLI from
+        if len(sys.argv) > 2 or (len(sys.argv) > 1 and sys.argv[1] in ['--help', '-h']):
             parser.add_argument('--servername', type=str, help="name of the (Nagios)server. Look in nagstamon config")
-            parser.add_argument('--hostname', type=str)    
+            parser.add_argument('--hostname', type=str)
             parser.add_argument('--comment', type=str, default="")
             parser.add_argument('--service', type=str, default="", help="specify service, if needed. Mostly the whole host goes to downstate")
             parser.add_argument('--fixed', type=str, choices=['y', 'n'], default="y", help="fixed=n means wait for service/host to go down, then start the downtime")
@@ -226,8 +229,8 @@ class Config(object):
             parser.add_argument('--config', type=str, help="Path for configuration folder")
             parser.add_argument('--output', type=str, choices=['y', 'n'], default="y", help="lists given parameter (for debugging)")
         else:
-            parser.add_argument('config', nargs='?', help='Path for configuration folder')            
-        
+            parser.add_argument('config', nargs='?', help='Path for configuration folder')
+
         self.cli_args, unknown = parser.parse_known_args()
 
         # try to use a given config file - there must be one given
@@ -287,7 +290,7 @@ class Config(object):
                         # in case there are numbers intify them to avoid later conversions
                         # treat negative value specially as .isdecimal() will not detect it
                         elif i[1].isdecimal() or \
-                             (i[1].startswith('-') and i[1].split('-')[1].isdecimal()):
+                                (i[1].startswith('-') and i[1].split('-')[1].isdecimal()):
                             object.__setattr__(self, i[0], int(i[1]))
                         else:
                             object.__setattr__(self, i[0], i[1])
@@ -297,8 +300,8 @@ class Config(object):
             # for most of the Windows users if it is only defined as False after it was checked
             # from config file
             # if not self.__dict__.has_key("use_system_keyring"):
-            if not 'use_system_keyring' in self.__dict__.keys():
-                if self.unconfigured == True:
+            if 'use_system_keyring' not in self.__dict__.keys():
+                if self.unconfigured is True:
                     # an unconfigured system should start with no keyring to prevent crashes
                     self.use_system_keyring = False
                 else:
@@ -321,12 +324,11 @@ class Config(object):
             self.unconfigured = False
 
         # Load actions if Nagstamon is not unconfigured, otherwise load defaults
-        if self.unconfigured == True:
+        if self.unconfigured is True:
             self.actions = self._DefaultActions()
 
         # do some conversion stuff needed because of config changes and code cleanup
         self._LegacyAdjustments()
-
 
     def _LoadServersMultipleConfig(self):
         """
@@ -389,12 +391,11 @@ class Config(object):
                 if servers[server].type == 'Icinga2':
                     servers[server].type = 'IcingaWeb2'
 
-        except:
+        except Exception:
             import traceback
             traceback.print_exc(file=sys.stdout)
 
         return servers
-
 
     def LoadMultipleConfig(self, settingsdir, setting, configobj):
         """
@@ -422,17 +423,16 @@ class Config(object):
                             # in case there are numbers intify them to avoid later conversions
                             # treat negative value specially as .isdecimal() will not detect it
                             elif i[1].isdecimal() or \
-                                 (i[1].startswith('-') and i[1].split('-')[1].isdecimal()):
+                                    (i[1].startswith('-') and i[1].split('-')[1].isdecimal()):
                                 value = int(i[1])
                             else:
                                 value = i[1]
                             settings[name].__setattr__(i[0], value)
-        except:
+        except Exception:
             import traceback
             traceback.print_exc(file=sys.stdout)
 
         return settings
-
 
     def SaveConfig(self):
         """
@@ -447,15 +447,15 @@ class Config(object):
             # general section for Nagstamon
             config.add_section('Nagstamon')
             for option in self.__dict__:
-                if not option in ['servers', 'actions', 'configfile', 'configdir', 'cli_args']:
+                if option not in ['servers', 'actions', 'configfile', 'configdir', 'cli_args']:
                     config.set('Nagstamon', option, str(self.__dict__[option]))
 
             # because the switch from Nagstamon 1.0 to 1.0.1 brings the use_system_keyring property
             # and all the thousands 1.0 installations do not know it yet it will be more comfortable
             # for most of the Windows users if it is only defined as False after it was checked
             # from config file
-            if not 'use_system_keyring' in self.__dict__.keys():
-                if self.unconfigured == True:
+            if 'use_system_keyring' not in self.__dict__.keys():
+                if self.unconfigured is True:
                     # an unconfigured system should start with no keyring to prevent crashes
                     self.use_system_keyring = False
                 else:
@@ -479,7 +479,7 @@ class Config(object):
             # debug
             if self.debug_mode:
                 debug_queue.append('DEBUG: {0} Saving configuration to file {1}'.format(str(datetime.datetime.now()),
-                                                                                            self.configfile))
+                    self.configfile))
         except Exception as err:
             import traceback
             traceback.print_exc(file=sys.stdout)
@@ -488,7 +488,6 @@ class Config(object):
                 debug_queue.append('ERROR: {0} {1} while saving configuration to file {2}'.format(str(datetime.datetime.now()),
                                                                                                   err,
                                                                                                   self.configfile))
-
 
     def SaveMultipleConfig(self, settingsdir, setting):
         """
@@ -499,7 +498,7 @@ class Config(object):
 
         # only import keyring lib if configured to do so - to avoid Windows crashes
         # like https://github.com/HenriWahl/Nagstamon/issues/97
-        if self.use_system_keyring == True:
+        if self.use_system_keyring is True:
             self.keyring_available = self.KeyringAvailable()
 
         # one section for each setting
@@ -512,7 +511,7 @@ class Config(object):
                     if option in ['username', 'password', 'proxy_username', 'proxy_password', 'autologin_key']:
                         value = self.Obfuscate(self.__dict__[settingsdir][s].__dict__[option])
                         if option == 'password':
-                            if self.__dict__[settingsdir][s].save_password == False:
+                            if self.__dict__[settingsdir][s].save_password is False:
                                 value = ''
                             elif self.keyring_available and self.use_system_keyring:
                                 if self.__dict__[settingsdir][s].password != '':
@@ -525,9 +524,9 @@ class Config(object):
                                     # on newer Ubuntu releases
                                     try:
                                         keyring.set_password('Nagstamon', '@'.join((self.__dict__[settingsdir][s].username,
-                                                                                self.__dict__[settingsdir][s].monitor_url)),
-                                                                                self.__dict__[settingsdir][s].password)
-                                    except:
+                                            self.__dict__[settingsdir][s].monitor_url)),
+                                            self.__dict__[settingsdir][s].password)
+                                    except Exception:
                                         import traceback
                                         traceback.print_exc(file=sys.stdout)
                                         sys.exit(1)
@@ -543,11 +542,11 @@ class Config(object):
                                     # provoke crash if password saving does not work - this is the case
                                     # on newer Ubuntu releases
                                     try:
-                                        keyring.set_password('Nagstamon', '@'.join(('proxy', \
-                                                                                self.__dict__[settingsdir][s].proxy_username,
-                                                                                self.__dict__[settingsdir][s].proxy_address)),
-                                                                                self.__dict__[settingsdir][s].proxy_password)
-                                    except:
+                                        keyring.set_password('Nagstamon', '@'.join(('proxy',
+                                            self.__dict__[settingsdir][s].proxy_username,
+                                            self.__dict__[settingsdir][s].proxy_address)),
+                                            self.__dict__[settingsdir][s].proxy_password)
+                                    except Exception:
                                         import traceback
                                         traceback.print_exc(file=sys.stdout)
                                         sys.exit(1)
@@ -566,12 +565,11 @@ class Config(object):
             config.write(f)
             f.close()
 
-        #### clean up old deleted/renamed config files
+        # ### clean up old deleted/renamed config files
         # ##if os.path.exists(self.configdir + os.sep + settingsdir):
         # ##    for f in os.listdir(self.configdir + os.sep + settingsdir):
         # ##        if not f.split(setting + "_")[1].split(".conf")[0] in self.__dict__[settingsdir]:
         # ##            os.unlink(self.configdir + os.sep + settingsdir + os.sep + f)
-
 
     def KeyringAvailable(self):
         """
@@ -582,28 +580,27 @@ class Config(object):
             # that keyring works at all
             if platform.system() in NON_LINUX:
                 # safety first - if not yet available disable it
-                if not 'use_system_keyring' in self.__dict__.keys():
+                if 'use_system_keyring' not in self.__dict__.keys():
                     self.use_system_keyring = False
                 # only import keyring lib if configured to do so
                 # necessary to avoid Windows crashes like https://github.com/HenriWahl/Nagstamon/issues/97
-                if self.use_system_keyring == True:
+                if self.use_system_keyring is True:
                     # hint for packaging: nagstamon.spec always have to match module path
                     # keyring has to be bound to object to be used later
                     import keyring
-                    return  not (keyring.get_keyring() is None)
+                    return not (keyring.get_keyring() is None)
                 else:
                     return False
             else:
                 # keyring and secretstorage have to be importable
                 import Nagstamon.thirdparty.keyring as keyring
-                import secretstorage
+                # import secretstorage  # never used
                 if ("SecretService") in dir(keyring.backends) and not (keyring.get_keyring() is None):
                     return True
-        except:
+        except Exception:
             import traceback
             traceback.print_exc(file=sys.stdout)
             return False
-
 
     def Obfuscate(self, string, count=5):
         """
@@ -624,7 +621,6 @@ class Config(object):
         string = base64.b64encode(string).decode()
         return string
 
-
     def DeObfuscate(self, string, count=5):
         """
             Deobfucate previously obfuscated string
@@ -644,82 +640,77 @@ class Config(object):
 
         return string
 
-
     def _DefaultActions(self):
         """
         create some default actions like SSH and so on
         """
         if platform.system() == "Windows":
-            defaultactions = { "RDP": Action(name="RDP", description="Connect via RDP.",
-                                    type="command", string="C:\windows\system32\mstsc.exe /v:$ADDRESS$"),
-                               "VNC": Action(name="VNC", description="Connect via VNC.",
-                                    type="command", string="C:\Program Files\TightVNC\vncviewer.exe $ADDRESS$"),
-                               "Telnet": Action(name="Telnet", description="Connect via Telnet.",
-                                    type="command", string="C:\Windows\System32\Telnet.exe root@$ADDRESS$"),
-                               "SSH": Action(name="SSH", description="Connect via SSH.",
-                                    type="command", string="C:\Program Files\PuTTY\putty.exe -l root $ADDRESS$")
-                               }
+            defaultactions = {"RDP": Action(name="RDP", description="Connect via RDP.",
+                type="command", string="C:\windows\system32\mstsc.exe /v:$ADDRESS$"),
+                "VNC": Action(name="VNC", description="Connect via VNC.",
+                    type="command", string="C:\Program Files\TightVNC\vncviewer.exe $ADDRESS$"),
+                "Telnet": Action(name="Telnet", description="Connect via Telnet.",
+                    type="command", string="C:\Windows\System32\Telnet.exe root@$ADDRESS$"),
+                "SSH": Action(name="SSH", description="Connect via SSH.",
+                    type="command", string="C:\Program Files\PuTTY\putty.exe -l root $ADDRESS$")}
         elif platform.system() == "Darwin":
-            defaultactions = { "RDP": Action(name="RDP", description="Connect via RDP.",
-                                    type="command", string="open rdp://$ADDRESS$"),
-                               "VNC": Action(name="VNC", description="Connect via VNC.",
-                                    type="command", string="open vnc://$ADDRESS$"),
-                               "SSH": Action(name="SSH", description="Connect via SSH.",
-                                    type="command", string="open ssh://root@$ADDRESS$"),
-                               "Telnet": Action(name="Telnet", description="Connect via Telnet.",
-                                    type="command", string="open telnet://root@$ADDRESS$")
-                               }
+            defaultactions = {"RDP": Action(name="RDP", description="Connect via RDP.",
+                type="command", string="open rdp://$ADDRESS$"),
+                "VNC": Action(name="VNC", description="Connect via VNC.",
+                    type="command", string="open vnc://$ADDRESS$"),
+                "SSH": Action(name="SSH", description="Connect via SSH.",
+                    type="command", string="open ssh://root@$ADDRESS$"),
+                "Telnet": Action(name="Telnet", description="Connect via Telnet.",
+                    type="command", string="open telnet://root@$ADDRESS$")}
         else:
             # the Linux settings
-            defaultactions = { "RDP": Action(name="RDP", description="Connect via RDP.",
-                                    type="command", string="/usr/bin/rdesktop -g 1024x768 $ADDRESS$"),
-                               "VNC": Action(name="VNC", description="Connect via VNC.",
-                                    type="command", string="/usr/bin/vncviewer $ADDRESS$"),
-                               "SSH": Action(name="SSH", description="Connect via SSH.",
-                                    type="command", string="/usr/bin/gnome-terminal -x ssh root@$ADDRESS$"),
-                               "Telnet": Action(name="Telnet", description="Connect via Telnet.",
-                                    type="command", string="/usr/bin/gnome-terminal -x telnet root@$ADDRESS$"),
-                               "Update-Linux": Action(name="Update-Linux", description="Run remote update script.",
-                                    type="command", string="/usr/bin/terminator -x ssh root@$HOST$ update.sh",
-                                    enabled=False)
-                               }
-        # OS agnostic actions as examples
+            defaultactions = {"RDP": Action(name="RDP", description="Connect via RDP.",
+                type="command", string="/usr/bin/rdesktop -g 1024x768 $ADDRESS$"),
+                "VNC": Action(name="VNC", description="Connect via VNC.",
+                    type="command", string="/usr/bin/vncviewer $ADDRESS$"),
+                "SSH": Action(name="SSH", description="Connect via SSH.",
+                    type="command", string="/usr/bin/gnome-terminal -x ssh root@$ADDRESS$"),
+                "Telnet": Action(name="Telnet", description="Connect via Telnet.",
+                    type="command", string="/usr/bin/gnome-terminal -x telnet root@$ADDRESS$"),
+                "Update-Linux": Action(name="Update-Linux", description="Run remote update script.",
+                    type="command", string="/usr/bin/terminator -x ssh root@$HOST$ update.sh",
+                    enabled=False)}
+                # OS agnostic actions as examples
         defaultactions["Nagios-1-Click-Acknowledge-Host"] = Action(name="Nagios-1-Click-Acknowledge-Host", type="url",
-                                                    description="Acknowledges a host with one click.",
-                                                    filter_target_service=False, enabled=False,
-                                                    string="$MONITOR-CGI$/cmd.cgi?cmd_typ=33&cmd_mod=2&host=$HOST$\
-                                                    &com_author=$USERNAME$&com_data=acknowledged&btnSubmit=Commit")
+                description="Acknowledges a host with one click.",
+                filter_target_service=False, enabled=False,
+                string="$MONITOR-CGI$/cmd.cgi?cmd_typ=33&cmd_mod=2&host=$HOST$\
+                        &com_author=$USERNAME$&com_data=acknowledged&btnSubmit=Commit")
         defaultactions["Nagios-1-Click-Acknowledge-Service"] = Action(name="Nagios-1-Click-Acknowledge-Service", type="url",
-                                                    description="Acknowledges a service with one click.",
-                                                    filter_target_host=False, enabled=False,
-                                                    string="$MONITOR-CGI$/cmd.cgi?cmd_typ=34&cmd_mod=2&host=$HOST$\
-                                                    &service=$SERVICE$&com_author=$USERNAME$&com_data=acknowledged&btnSubmit=Commit")
+                description="Acknowledges a service with one click.",
+                filter_target_host=False, enabled=False,
+                string="$MONITOR-CGI$/cmd.cgi?cmd_typ=34&cmd_mod=2&host=$HOST$\
+                        &service=$SERVICE$&com_author=$USERNAME$&com_data=acknowledged&btnSubmit=Commit")
         defaultactions["Opsview-Graph-Service"] = Action(name="Opsview-Graph-Service", type="browser",
-                        description="Show graph in browser.", filter_target_host=False,
-                                                    string="$MONITOR$/graph?service=$SERVICE$&host=$HOST$", enabled=False)
+                description="Show graph in browser.", filter_target_host=False,
+                string="$MONITOR$/graph?service=$SERVICE$&host=$HOST$", enabled=False)
         defaultactions["Opsview-History-Host"] = Action(name="Opsview-Host-Service", type="browser",
-                                                    description="Show host in browser.", filter_target_host=True,
-                                                    string="$MONITOR$/event?host=$HOST$", enabled=False)
+                description="Show host in browser.", filter_target_host=True,
+                string="$MONITOR$/event?host=$HOST$", enabled=False)
         defaultactions["Opsview-History-Service"] = Action(name="Opsview-History-Service", type="browser",
-                                                    description="Show history in browser.", filter_target_host=True,
-                                                    string="$MONITOR$/event?host=$HOST$&service=$SERVICE$", enabled=False)
+                description="Show history in browser.", filter_target_host=True,
+                string="$MONITOR$/event?host=$HOST$&service=$SERVICE$", enabled=False)
         defaultactions["Check_MK-1-Click-Acknowledge-Host"] = Action(name="Check_MK-1-Click-Acknowledge-Host", type="url",
-                                                    description="Acknowledges a host with one click.",
-                                                    filter_target_service=False, enabled=False,
-                                                    string="$MONITOR$/view.py?_transid=$TRANSID$&_do_actions=yes&_do_confirm=Yes!&output_format=python&view_name=hoststatus&host=$HOST$&_ack_comment=$COMMENT-ACK$&_acknowledge=Acknowledge")
+                description="Acknowledges a host with one click.",
+                filter_target_service=False, enabled=False,
+                string="$MONITOR$/view.py?_transid=$TRANSID$&_do_actions=yes&_do_confirm=Yes!&output_format=python&view_name=hoststatus&host=$HOST$&_ack_comment=$COMMENT-ACK$&_acknowledge=Acknowledge")
         defaultactions["Check_MK-1-Click-Acknowledge-Service"] = Action(name="Check_MK-1-Click-Acknowledge-Service", type="url",
-                                                    description="Acknowledges a host with one click.",
-                                                    filter_target_host=False, enabled=False,
-                                                    string="$MONITOR$/view.py?_transid=$TRANSID$&_do_actions=yes&_do_confirm=Yes!&output_format=python&view_name=service&host=$HOST$&_ack_comment=$COMMENT-ACK$&_acknowledge=Acknowledge&service=$SERVICE$")
+                description="Acknowledges a host with one click.",
+                filter_target_host=False, enabled=False,
+                string="$MONITOR$/view.py?_transid=$TRANSID$&_do_actions=yes&_do_confirm=Yes!&output_format=python&view_name=service&host=$HOST$&_ack_comment=$COMMENT-ACK$&_acknowledge=Acknowledge&service=$SERVICE$")
         defaultactions["Check_MK Edit host in WATO"] = Action(name="Check_MK Edit host in WATO", enabled=False,
-                                                     monitor_type="Check_MK Multisite",
-                                                     description="Edit host in WATO.",
-                                                     string="$MONITOR$index.py?start_url=%2Fmonitor%2Fcheck_mk%2Fwato.py%3Fhost%3D$HOST$%26mode%3Dedit_host")
+                monitor_type="Check_MK Multisite",
+                description="Edit host in WATO.",
+                string="$MONITOR$index.py?start_url=%2Fmonitor%2Fcheck_mk%2Fwato.py%3Fhost%3D$HOST$%26mode%3Dedit_host")
         defaultactions["Email"] = Action(name="Email", enabled=False, description="Send email to someone.", type="browser",
-                                                    string="mailto:servicedesk@my.org?subject=Monitor alert: $HOST$ - $SERVICE$ - $STATUS-INFO$&body=Please help!.%0d%0aBest regards from Nagstamon")
+                string="mailto:servicedesk@my.org?subject=Monitor alert: $HOST$ - $SERVICE$ - $STATUS-INFO$&body=Please help!.%0d%0aBest regards from Nagstamon")
 
         return defaultactions
-
 
     def _LegacyAdjustments(self):
         # mere cosmetics but might be more clear for future additions - changing any "nagios"-setting to "monitor"
@@ -740,7 +731,7 @@ class Config(object):
 
         # remove support for GNOME2-trayicon-egg-stuff
         if 'statusbar_systray' in self.__dict__.keys():
-            if self.statusbar_systray == True:
+            if self.statusbar_systray is True:
                 self.icon_in_systray = True
             self.__dict__.pop('statusbar_systray')
 
@@ -749,7 +740,6 @@ class Config(object):
             if not action.type.lower() in ('browser', 'command', 'url'):
                 # set browser as default to make user notice something is wrong
                 action.type = 'browser'
-        
 
     def GetNumberOfEnabledMonitors(self):
         """
@@ -759,10 +749,9 @@ class Config(object):
         number = 0
         for server in self.servers.values():
             # ##if str(server.enabled) == "True":
-            if server.enabled == True:
+            if server.enabled is True:
                 number += 1
         return number
-
 
     def delete_file(self, settings_dir, settings_file):
         """
@@ -773,15 +762,17 @@ class Config(object):
         if os.path.exists(file) and (os.path.isfile(file) or os.path.islink(file)):
             try:
                 os.unlink(file)
-            except:
+            except Exception:
                 import traceback
                 traceback.print_exc(file=sys.stdout)
 
 
 class Server(object):
+
     """
     one Server realized as object for config info
     """
+
     def __init__(self):
         self.enabled = True
         self.type = 'Nagios'
@@ -810,7 +801,7 @@ class Server(object):
         # Icinga "host_display_name" instead of "host"
         self.use_display_name_host = False
         self.use_display_name_service = False
-        
+
         # IcingaWeb2 might authenticate without cookies too - default is WITH cookies
         self.no_cookie_auth = False
 
@@ -821,6 +812,7 @@ class Server(object):
 
 
 class Action(object):
+
     """
     class for custom actions, which whill be thrown into one config dictionary like the servers
     """
@@ -868,7 +860,8 @@ class Action(object):
         self.re_criticality_reverse = False
 
         # add and/or all keywords to object
-        for k in kwds: self.__dict__[k] = kwds[k]
+        for k in kwds:
+            self.__dict__[k] = kwds[k]
 
 
 # Initialize configuration to be accessed globally
@@ -896,7 +889,7 @@ except Exception as err:
         # libs dir (site-packages) for the current Python
         from distutils.sysconfig import get_python_lib
         paths_to_check.append(os.path.normcase(os.path.join(get_python_lib(), "Nagstamon", "resources")))
-    except:
+    except Exception:
         pass
 
     # if we're still out of luck, maybe this was a user scheme install
@@ -904,7 +897,7 @@ except Exception as err:
         import site
         site.getusersitepackages()  # make sure USER_SITE is set
         paths_to_check.append(os.path.normcase(os.path.join(site.USER_SITE, "Nagstamon", "resources")))
-    except:
+    except Exception:
         pass
 
     # add directory nagstamon.py where nagstamon.py resides for cases like 0install without installed pkg-resources
