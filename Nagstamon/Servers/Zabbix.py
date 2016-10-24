@@ -335,36 +335,36 @@ class ZabbixServer(GenericServer):
                        debug="Open host/service monitor web page " + url)
         webbrowser_open(url)
 
-    def GetHost(self, host):
-        """
-            find out ip or hostname of given host to access hosts/devices which do not appear in DNS but
-            have their ip saved in Nagios
-        """
+    # def GetHost(self, host):
+        # """
+            # find out ip or hostname of given host to access hosts/devices which do not appear in DNS but
+            # have their ip saved in Nagios
+        # """
 
-        # the fasted method is taking hostname as used in monitor
-        if conf.connect_by_host is True:
-            return Result(result=host)
+        # # the fasted method is taking hostname as used in monitor
+        # if conf.connect_by_host is True:
+            # return Result(result=host)
 
-        ip = ""
+        # ip = ""
 
-        try:
-            if host in self.hosts:
-                ip = self.hosts[host].address
-            if conf.debug_mode is True:
-                self.Debug(server=self.get_name(), host=host, debug="IP of %s:" % host + " " + ip)
+        # try:
+            # if host in self.hosts:
+                # ip = self.hosts[host].address
+            # if conf.debug_mode is True:
+                # self.Debug(server=self.get_name(), host=host, debug="IP of %s:" % host + " " + ip)
 
-            if conf.connect_by_dns is True:
-                try:
-                    address = socket.gethostbyaddr(ip)[0]
-                except socket.herror:
-                    address = ip
-            else:
-                address = ip
-        except ZabbixError:
-            result, error = self.Error(sys.exc_info())
-            return Result(result=result, error=error)
+            # if conf.connect_by_dns is True:
+                # try:
+                    # address = socket.gethostbyaddr(ip)[0]
+                # except socket.herror:
+                    # address = ip
+            # else:
+                # address = ip
+        # except ZabbixError:
+            # result, error = self.Error(sys.exc_info())
+            # return Result(result=result, error=error)
 
-        return Result(result=address)
+        # return Result(result=address)
 
     def _set_recheck(self, host, service):
         pass
