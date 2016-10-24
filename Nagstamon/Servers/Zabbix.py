@@ -7,7 +7,7 @@ import urllib.request
 import urllib.parse
 import urllib.error
 import time
-import socket
+# import socket  # never used
 
 from Nagstamon.Helpers import (HumanReadableDurationFromTimestamp,
                                webbrowser_open)
@@ -383,9 +383,14 @@ class ZabbixServer(GenericServer):
             self._login()
         events = []
         for e in self.zapi.event.get({'triggerids': params['triggerids'],
+                                      # from zabbix 2.2 should be used "objectids" that instead of "triggerids"
+                                      'objectids': params['triggerids'],
                                       'hide_unknown': True,
                                       'sortfield': 'clock',
-                                      'sortorder': 'desc'}):
+                                      'sortorder': 'DESC'}):
+            # stop at first event in "OK" status
+            if e['value'] == '0':
+                break
             events.append(e['eventid'])
         self.zapi.event.acknowledge({'eventids': events, 'message': params['message']})
 
