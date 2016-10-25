@@ -335,6 +335,13 @@
       <item row="1" column="1">
        <widget class="QComboBox" name="input_combobox_authentication"/>
       </item>
+      <item row="4" column="1" colspan="2">
+       <widget class="QLineEdit" name="input_lineedit_autologin_key">
+        <property name="text">
+         <string/>
+        </property>
+       </widget>
+      </item>
       <item row="2" column="1">
        <layout class="QHBoxLayout" name="horizontalLayout_timeout_seconds">
         <property name="spacing">
@@ -352,15 +359,8 @@
         </item>
        </layout>
       </item>
-      <item row="4" column="1" colspan="2">
-       <widget class="QLineEdit" name="input_lineedit_autologin_key">
-        <property name="text">
-         <string/>
-        </property>
-       </widget>
-      </item>
-      <item row="4" column="0">
-       <widget class="QLabel" name="label_autologin_key">
+      <item row="5" column="0">
+       <widget class="QLabel" name="label_host_filter">
         <property name="sizePolicy">
          <sizepolicy hsizetype="Minimum" vsizetype="Preferred">
           <horstretch>0</horstretch>
@@ -368,21 +368,14 @@
          </sizepolicy>
         </property>
         <property name="text">
-         <string>Autologin Key:</string>
+         <string>Host filter:</string>
         </property>
        </widget>
       </item>
-      <item row="1" column="0">
-       <widget class="QLabel" name="label_auth_type">
+      <item row="5" column="1" colspan="2">
+       <widget class="QLineEdit" name="input_lineedit_host_filter">
         <property name="text">
-         <string>Authentication:</string>
-        </property>
-       </widget>
-      </item>
-      <item row="6" column="0" colspan="3">
-       <widget class="QCheckBox" name="input_checkbox_use_display_name_host">
-        <property name="text">
-         <string>Use display name as host name</string>
+         <string/>
         </property>
        </widget>
       </item>
@@ -399,17 +392,51 @@
         </property>
        </spacer>
       </item>
-      <item row="8" column="0" colspan="3">
-       <widget class="QCheckBox" name="input_checkbox_force_authuser">
-        <property name="text">
-         <string>Only show permitted hosts for &quot;see all&quot; users (1.4.0i1 or newer)</string>
-        </property>
-       </widget>
-      </item>
       <item row="2" column="0">
        <widget class="QLabel" name="label_timeout">
         <property name="text">
          <string>Timeout:</string>
+        </property>
+       </widget>
+      </item>
+      <item row="3" column="0" colspan="3">
+       <widget class="QCheckBox" name="input_checkbox_use_autologin">
+        <property name="text">
+         <string>Use autologin</string>
+        </property>
+       </widget>
+      </item>
+      <item row="1" column="0">
+       <widget class="QLabel" name="label_auth_type">
+        <property name="text">
+         <string>Authentication:</string>
+        </property>
+       </widget>
+      </item>
+      <item row="9" column="0" colspan="3">
+       <widget class="QCheckBox" name="input_checkbox_use_display_name_service">
+        <property name="text">
+         <string>Use display name as service name</string>
+        </property>
+       </widget>
+      </item>
+      <item row="7" column="0" colspan="3">
+       <widget class="QCheckBox" name="input_checkbox_no_cookie_auth">
+        <property name="text">
+         <string>Do not use cookie authentication</string>
+        </property>
+       </widget>
+      </item>
+      <item row="4" column="0">
+       <widget class="QLabel" name="label_autologin_key">
+        <property name="sizePolicy">
+         <sizepolicy hsizetype="Minimum" vsizetype="Preferred">
+          <horstretch>0</horstretch>
+          <verstretch>0</verstretch>
+         </sizepolicy>
+        </property>
+        <property name="text">
+         <string>Autologin Key:</string>
         </property>
        </widget>
       </item>
@@ -426,24 +453,37 @@
         </property>
        </spacer>
       </item>
-      <item row="7" column="0" colspan="3">
-       <widget class="QCheckBox" name="input_checkbox_use_display_name_service">
+      <item row="8" column="0" colspan="3">
+       <widget class="QCheckBox" name="input_checkbox_use_display_name_host">
         <property name="text">
-         <string>Use display name as service name</string>
+         <string>Use display name as host name</string>
         </property>
        </widget>
       </item>
-      <item row="3" column="0" colspan="3">
-       <widget class="QCheckBox" name="input_checkbox_use_autologin">
+      <item row="10" column="0" colspan="3">
+       <widget class="QCheckBox" name="input_checkbox_force_authuser">
         <property name="text">
-         <string>Use autologin</string>
+         <string>Only show permitted hosts for &quot;see all&quot; users (1.4.0i1 or newer)</string>
         </property>
        </widget>
       </item>
-      <item row="5" column="0" colspan="3">
-       <widget class="QCheckBox" name="input_checkbox_no_cookie_auth">
+      <item row="6" column="0">
+       <widget class="QLabel" name="label_service_filter">
+        <property name="sizePolicy">
+         <sizepolicy hsizetype="Minimum" vsizetype="Preferred">
+          <horstretch>0</horstretch>
+          <verstretch>0</verstretch>
+         </sizepolicy>
+        </property>
         <property name="text">
-         <string>Do not use cookie authentication</string>
+         <string>Service filter:</string>
+        </property>
+       </widget>
+      </item>
+      <item row="6" column="1" colspan="2">
+       <widget class="QLineEdit" name="input_lineedit_service_filter">
+        <property name="text">
+         <string/>
         </property>
        </widget>
       </item>
