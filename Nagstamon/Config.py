@@ -826,6 +826,9 @@ class Server(object):
         # are permitted to see all objects.
         self.force_authuser = False
 
+        # OP5 api filters
+        self.host_filter = 'state !=0'
+        self.service_filter = 'state !=0 or host.state != 0'
 
 class Action(object):
     """

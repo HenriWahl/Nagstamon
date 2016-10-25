@@ -5011,6 +5011,10 @@ class Dialog_Server(Dialog):
                                  self.ui.input_checkbox_use_display_name_host : ['Icinga', 'IcingaWeb2'],
                                  self.ui.input_checkbox_use_display_name_service : ['Icinga', 'IcingaWeb2'],
                                  self.ui.input_checkbox_force_authuser : ['Check_MK Multisite'],
+                                 self.ui.input_lineedit_host_filter : ['op5Monitor'],
+                                 self.ui.input_lineedit_service_filter : ['op5Monitor'],
+                                 self.ui.label_service_filter : ['op5Monitor'],
+                                 self.ui.label_host_filter : ['op5Monitor'],
                                 }
 
         # fill default order fields combobox with monitor server types
@@ -5748,6 +5752,17 @@ class Dialog_Authentication(Dialog):
                 self.ui.input_checkbox_use_autologin.hide()
                 self.ui.input_lineedit_autologin_key.hide()
                 self.ui.label_autologin_key.hide()
+
+            if self.server.type == 'op5Monitor':
+                self.ui.input_lineedit_host_filter.show()
+                self.ui.input_lineedit_service_filter.show()
+                self.ui.label_service_filter.show()
+                self.ui.label_host_filter.show()
+            else:
+                self.ui.input_lineedit_host_filter.hide()
+                self.ui.input_lineedit_service_filter.hide()
+                self.ui.label_service_filter.hide()
+                self.ui.label_host_filter.hide()
 
             # set existing values
             self.ui.input_lineedit_username.setText(self.server.username)
