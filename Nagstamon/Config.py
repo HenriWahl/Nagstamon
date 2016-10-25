@@ -58,7 +58,7 @@ class AppInfo(object):
         contains app information previously located in GUI.py
     """
     NAME = 'Nagstamon'
-    VERSION = '2.1-20161021'
+    VERSION = '2.1-20161025'
     WEBSITE = 'https://nagstamon.ifw-dresden.de'
     COPYRIGHT = '©2008-2016 Henri Wahl et al.'
     COMMENTS = 'Nagios status monitor for your desktop'
@@ -601,7 +601,9 @@ class Config(object):
             else:
                 # keyring and secretstorage have to be importable
                 import Nagstamon.thirdparty.keyring as keyring
-                # import secretstorage  # never used
+                # import secretstorage module as dependency of keyring -
+                # if not available keyring won't work
+                import secretstorage 
                 if ("SecretService") in dir(keyring.backends) and not (keyring.get_keyring() is None):
                     return True
         except Exception:
