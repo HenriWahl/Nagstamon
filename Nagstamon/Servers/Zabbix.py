@@ -174,8 +174,8 @@ class ZabbixServer(GenericServer):
                     if int(x['internal']) == 0]
 
                 zabbix_triggers = self.zapi.trigger.get(
-                    {'sortfield': 'lastchange', 'withLastEventUnacknowledged': True, 'groupids': hostgroup_ids,
-                     "monitored": True, "filter": {'value': 1}})
+                    {'sortfield': 'lastchange', 'skipDependent': True, 'withLastEventUnacknowledged': True, 'groupids': hostgroup_ids,
+                     'monitored': True, 'filter': {'value': 1}})
 
                 triggers_list = []
 
