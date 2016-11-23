@@ -333,7 +333,7 @@ class GenericServer(object):
                               info_dict['persistent'],
                               all_services)
 
-        # resfresh immediately according to https://github.com/HenriWahl/Nagstamon/issues/86
+        # refresh immediately according to https://github.com/HenriWahl/Nagstamon/issues/86
         # ##self.thread.doRefresh = True
 
 

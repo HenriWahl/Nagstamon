@@ -2040,11 +2040,6 @@ class StatusWindow(QWidget):
                     else:
                         for server in get_enabled_servers():
                             for event in [k for k, v in server.events_notification.items() if v == True]:
-                                
-                                
-                                print(event)
-                                
-                                
                                 custom_action_string = conf.notification_custom_action_string.replace('$EVENTS$', event)
                                 # execute action
                                 self.execute_action(server_name, custom_action_string)
@@ -3314,7 +3309,6 @@ class TreeView(QTreeView):
 
     @action_response_decorator
     def action_recheck(self):
-
         # send signal to worker recheck slot
         self.recheck.emit({'host':    self.miserable_host,
                            'service': self.miserable_service})
@@ -3341,24 +3335,29 @@ class TreeView(QTreeView):
     @action_response_decorator
     def action_archive_event(self):
         """
-            archive events in CHeck_MK Event Console
+            archive events in Check_MK Event Console
         """
-        string = '$MONITOR$/view.py?_transid=$TRANSID$&_do_actions=yes&_do_confirm=Yes!&output_format=python&view_name=ec_events_of_monhost&host=$HOST$&_mkeventd_comment=archived&_mkeventd_acknowledge=on&_mkeventd_state=2&_delete_event=Archive Event&event_first_from=&event_first_until=&event_last_from=&event_last_until='
-
-        # Check_MK uses transids - if this occurs in URL its very likely that a Check_MK-URL is called
-        transid = self.server._get_transid(self.miserable_host, 'Events')
-        string = string.replace('$MONITOR$', self.server.monitor_url)
-        string = string.replace('$TRANSID$', transid)
-        string = string.replace('$HOST$', self.miserable_host)
-        string = string.replace(' ', '+')
-        self.server.FetchURL(string)
-
-        # debug
-        if conf.debug_mode == True:
-            self.server.Debug(server=self.server.name, host=info['host'], service=info['service'], debug='Archive event ' + string)
-
-        # trigger recheck to get rid of event as soon as possible        
-        self.recheck.emit({'host': self.miserable_host, 'service': 'Events'})
+        
+        # fill action and info dict for thread-safe action request
+        action = { 'string': '$MONITOR$/view.py?_transid=$TRANSID$&_do_actions=yes&_do_confirm=Yes!&output_format=python&view_name=ec_events_of_monhost&host=$HOST$&_mkeventd_comment=archived&_mkeventd_acknowledge=on&_mkeventd_state=2&_delete_event=Archive Event&event_first_from=&event_first_until=&event_last_from=&event_last_until=',
+                   'type': 'url',
+                   'recheck': True }
+        
+        info = { 'server': self.server.get_name(),
+                 'host': self.miserable_host,
+                 'service': self.miserable_service,
+                 'status-info': self.miserable_status_info,
+                 'address': self.server.GetHost(self.miserable_host).result,
+                 'monitor': self.server.monitor_url,
+                 'monitor-cgi': self.server.monitor_cgi_url,
+                 'username': self.server.username,
+                 'password': self.server.password,
+                 'comment-ack': conf.defaults_acknowledge_comment,
+                 'comment-down': conf.defaults_downtime_comment,
+                 'comment-submit': conf.defaults_submit_check_result_comment }
+        
+        # tell worker to do the action
+        self.request_action.emit(action, info)
 
 
     @action_response_decorator
@@ -3382,12 +3381,6 @@ class TreeView(QTreeView):
         """
             copy status information to clipboard
         """
-        # # empty service means this is a host
-        # if self.miserable_service== '':
-        #    text = self.server.hosts[self.miserable_host].status_information
-        # else:
-        #    text = self.server.hosts[self.miserable_host].services[self.miserable_service].status_information
-        # clipboard.setText(text)
         clipboard.setText(self.miserable_status_info)
 
 
@@ -3461,7 +3454,6 @@ class TreeView(QTreeView):
         # wait until thread is really stopped
         self.worker_thread.wait(2000)
         
-
 
     class Worker(QObject):
         """
@@ -3851,20 +3843,7 @@ class TreeView(QTreeView):
             # $COMMENT-DOWN$     - default downtime comment
             # $COMMENT-SUBMIT$   - default submit check result comment
 
-            try:
-                """
-
-                what?
-
-                # if run as custom action use given action definition from conf, otherwise use for URLs
-                if 'action' in action:
-                    string = action['string']
-                    action_type = self.action.type
-                else:
-                    string = self.string
-                    action_type = self.type
-                """               
-                
+            try:        
                 # used for POST request
                 if 'cgi_data' in action:
                     cgi_data = action['cgi_data']
@@ -3925,7 +3904,7 @@ class TreeView(QTreeView):
                     servers[info['server']].FetchURL(string, cgi_data=cgi_data, multipart=True)
 
                 if action['recheck']:
-                    self.recheck(info_dict)
+                    self.recheck(info)
             
             except:
                 import traceback
