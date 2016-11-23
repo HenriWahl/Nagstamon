@@ -2521,9 +2521,17 @@ class ServerStatusLabel(QLabel):
                                       '''.format(COLOR_STATUS_LABEL[style]))
         elif style == '':
             self.setStyleSheet('')
-        # set new text with some space
-        self.setText(' {0} '.format(text))
-
+        
+        # in case of unknown errors try to avoid freaking out status window with too
+        # big status label
+        if style != 'unknown':
+            # set new text with some space
+            self.setText(' {0} '.format(text))
+            self.setToolTip('')
+        else:
+            # set new text to first word of tect, delegate full text to tooltip
+            self.setText(text.split(' ')[0])
+            self.setToolTip(text)
 
     @pyqtSlot()
     def reset(self):
