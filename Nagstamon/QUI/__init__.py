@@ -5740,17 +5740,6 @@ class Dialog_Authentication(Dialog):
                 self.ui.input_lineedit_autologin_key.hide()
                 self.ui.label_autologin_key.hide()
 
-            if self.server.type == 'op5Monitor':
-                self.ui.input_lineedit_host_filter.show()
-                self.ui.input_lineedit_service_filter.show()
-                self.ui.label_service_filter.show()
-                self.ui.label_host_filter.show()
-            else:
-                self.ui.input_lineedit_host_filter.hide()
-                self.ui.input_lineedit_service_filter.hide()
-                self.ui.label_service_filter.hide()
-                self.ui.label_host_filter.hide()
-
             # set existing values
             self.ui.input_lineedit_username.setText(self.server.username)
             self.ui.input_lineedit_password.setText(self.server.password)

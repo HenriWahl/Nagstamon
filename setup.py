@@ -108,6 +108,7 @@ bdist_rpm_options = dict(requires='python3 '
         'python3-qt5 '
         'python3-SecretStorage '
         'python3-crypto '
+        'python3-cryptography '
         'python3-psutil '
         'qt5-qtsvg '
         'qt5-qtmultimedia ',
