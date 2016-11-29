@@ -18,6 +18,7 @@
 # Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA  02110-1301, USA
 
 import requests
+import requests_kerberos
 # disable annoying InsecureRequestWarning warnings
 try:
     requests.packages.urllib3.disable_warnings()
@@ -207,6 +208,8 @@ class GenericServer(object):
                 self.session.auth = requests.auth.HTTPBasicAuth(self.username, self.password)
             elif self.authentication == 'digest':
                 self.session.auth = requests.auth.HTTPDigestAuth(self.username, self.password)
+            elif self.authentication == 'kerberos':
+                self.session.auth = requests_kerberos.HTTPKerberosAuth()
 
             # default to not check TLS validity
             self.session.verify = False
