@@ -6006,15 +6006,22 @@ class CheckVersion(QObject):
         #                        QMessageBox.Ok)
         
         # attempt to solve https://github.com/HenriWahl/Nagstamon/issues/303
-        # no luck
+         # might be working this time     
+        if statuswindow.is_shown:
+            parent = statuswindow
+        else:
+            parent = self.parent
+        
         messagebox = QMessageBox(QMessageBox.Information,\
                                  'Nagstamon version check',\
                                  message,\
                                  QMessageBox.Ok,\
-                                 self.parent,\
+                                 parent,
                                  Qt.Dialog | Qt.MSWindowsFixedSizeDialogHint)
         messagebox.setAttribute(Qt.WA_DeleteOnClose)
         messagebox.setWindowModality(Qt.NonModal)
+        
+        
         messagebox.exec()
 
 
