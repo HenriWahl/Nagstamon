@@ -5009,7 +5009,7 @@ class Dialog_Server(Dialog):
         # default to Nagios as it is the mostly used monitor server
         self.ui.input_combobox_type.setCurrentText('Nagios')
         # fill authentication combobox
-        self.ui.input_combobox_authentication.addItems(['Basic', 'Digest'])
+        self.ui.input_combobox_authentication.addItems(['Basic', 'Digest', 'Kerberos'])
         
         # detect change of server type which leads to certain options shown or hidden
         self.ui.input_combobox_type.activated.connect(self.server_type_changed)
