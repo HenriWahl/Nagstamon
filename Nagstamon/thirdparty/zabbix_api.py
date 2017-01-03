@@ -1,24 +1,24 @@
 # This is a port of the ruby zabbix api found here:
 # http://trac.red-tux.net/browser/ruby/api/zbx_api.rb
 #
-#LGPL 2.1   http://www.gnu.org/licenses/old-licenses/lgpl-2.1.html
-#Zabbix API Python Library.
-#Original Ruby Library is Copyright (C) 2009 Andrew Nelson nelsonab(at)red-tux(dot)net
-#Python Library is Copyright (C) 2009 Brett Lentz brett.lentz(at)gmail(dot)com
+# LGPL 2.1   http://www.gnu.org/licenses/old-licenses/lgpl-2.1.html
+# Zabbix API Python Library.
+# Original Ruby Library is Copyright (C) 2009 Andrew Nelson nelsonab(at)red-tux(dot)net
+# Python Library is Copyright (C) 2009 Brett Lentz brett.lentz(at)gmail(dot)com
 #
-#This library is free software; you can redistribute it and/or
-#modify it under the terms of the GNU Lesser General Public
-#License as published by the Free Software Foundation; either
-#version 2.1 of the License, or (at your option) any later version.
+# This library is free software; you can redistribute it and/or
+# modify it under the terms of the GNU Lesser General Public
+# License as published by the Free Software Foundation; either
+# version 2.1 of the License, or (at your option) any later version.
 #
-#This library is distributed in the hope that it will be useful,
-#but WITHOUT ANY WARRANTY; without even the implied warranty of
-#MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the GNU
-#Lesser General Public License for more details.
+# This library is distributed in the hope that it will be useful,
+# but WITHOUT ANY WARRANTY; without even the implied warranty of
+# MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the GNU
+# Lesser General Public License for more details.
 #
-#You should have received a copy of the GNU Lesser General Public
-#License along with this library; if not, write to the Free Software
-#Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA  02110-1301  USA
+# You should have received a copy of the GNU Lesser General Public
+# License along with this library; if not, write to the Free Software
+# Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA  02110-1301  USA
 
 
 # NOTES:
@@ -64,6 +64,7 @@ except ImportError:
 
 def checkauth(fn):
     """ Decorator to check authentication of the decorated method """
+
     def ret(self, *args):
         self.__checkauth__()
         return fn(self, args)
@@ -72,14 +73,15 @@ def checkauth(fn):
 
 def dojson(fn):
     def wrapper(self, method, opts):
-        self.logger.log(logging.DEBUG, \
-                "Going to do_request for %s with opts %s" \
+        self.logger.log(logging.DEBUG,
+                "Going to do_request for %s with opts %s"
                 % (repr(fn), repr(opts)))
         return self.do_request(self.json_obj(method, opts))['result']
     return wrapper
 
 
 class ZabbixAPIException(Exception):
+
     """ generic zabbix api exception
     code list:
          -32602 - Invalid params (eg already exists)
@@ -93,6 +95,7 @@ class Already_Exists(ZabbixAPIException):
 
 
 class InvalidProtoError(ZabbixAPIException):
+
     """ Recived an invalid proto """
     pass
 
@@ -137,7 +140,7 @@ class ZabbixAPI(object):
         self.server = server
         self.url = server + '/api_jsonrpc.php'
         self.proto = self.server.split("://")[0]
-        #self.proto=proto
+        # self.proto=proto
         self.httpuser = user
         self.httppasswd = passwd
         self.timeout = timeout
@@ -175,8 +178,9 @@ class ZabbixAPI(object):
                'params': params,
                'auth': self.auth,
                'id': self.id
-              }
-        if not auth: del obj['auth']
+               }
+        if not auth:
+            del obj['auth']
 
         self.debug(logging.DEBUG, "json_obj: " + str(obj))
 
@@ -198,7 +202,7 @@ class ZabbixAPI(object):
 
         # don't print the raw password.
         hashed_pw_string = "md5(" + hashlib.md5(l_password.encode('utf-8')).hexdigest() + ")"
-        self.debug(logging.DEBUG, "Trying to login with %s:%s" % \
+        self.debug(logging.DEBUG, "Trying to login with %s:%s" %
                 (repr(l_user), repr(hashed_pw_string)))
         obj = self.json_obj('user.login', {'user': l_user, 'password': l_password}, auth=False)
         result = self.do_request(obj)
@@ -231,7 +235,7 @@ class ZabbixAPI(object):
         request = urllib2.Request(url=self.url, data=json_obj.encode('utf-8'), headers=headers)
         if self.proto == "https":
             if HAS_SSLCONTEXT and not self.validate_certs:
-                https_handler = urllib2.HTTPSHandler(debuglevel=0,context=_create_unverified_context())
+                https_handler = urllib2.HTTPSHandler(debuglevel=0, context=_create_unverified_context())
             else:
                 https_handler = urllib2.HTTPSHandler(debuglevel=0)
             opener = urllib2.build_opener(https_handler)
@@ -303,6 +307,7 @@ class ZabbixAPI(object):
 
 
 class ZabbixAPISubClass(ZabbixAPI):
+
     """ wrapper class to ensure all calls go through the parent object """
     parent = None
     data = None

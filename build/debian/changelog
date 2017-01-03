@@ -1,8 +1,8 @@
-nagstamon (2.1) unstable; urgency=low
+nagstamon (2.1-20161129) unstable; urgency=low
   * New upstream
    - Development 'master' branch
    
- -- Henri Wahl <h.wahl@ifw-dresden.de>  Fri, 21 Oct 2016 08:00:00 +0200
+ -- Henri Wahl <h.wahl@ifw-dresden.de>  Wed, 02 Nov 2016 08:00:00 +0200
 
 nagstamon (2.0.1) stable; urgency=low
   * New upstream
