@@ -26,8 +26,6 @@ from PyQt5.QtCore import *
 from PyQt5.QtSvg import *
 from PyQt5.QtMultimedia import *
 
-# from PyQt5.QtWidgets import QtGui, QtCore, QtSvg, QtMultimedia
-
 # global application instance
 APP = QApplication(sys.argv)
 
