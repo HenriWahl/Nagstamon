@@ -192,22 +192,31 @@ class ZabbixServer(GenericServer):
                 if type(this_trigger) is dict:
                     for triggerid in list(this_trigger.keys()):
                         services.append(this_trigger[triggerid])
+                        # get Application name for the trigger
                         this_item = self.zapi.item.get(
                             {'itemids': [this_trigger[triggerid]['items'][0]['itemid']],
                              'selectApplications': 'extend'}
                         )
-                        last_app = len(this_item[0]['applications']) - 1
-                        this_trigger[triggerid]['application'] = this_item[0]['applications'][last_app]['name']
+                        # last_app = 0  # use it to get the first application name
+                        last_app = len(this_item[0]['applications']) - 1  # use it to get the last application name
+                        if last_app > -1:
+                            this_trigger[triggerid]['application'] = this_item[0]['applications'][last_app]['name']
+                        else:
+                            this_trigger[triggerid]['application'] = "NO APP"
                 elif type(this_trigger) is list:
                     for trigger in this_trigger:
                         services.append(trigger)
+                        # get Application name for the trigger
                         this_item = self.zapi.item.get(
                             {'itemids': trigger['items'][0]['itemid'],
                              'selectApplications': 'extend'}
                         )
                         # last_app = 0  # use it to get the first application name
                         last_app = len(this_item[0]['applications']) - 1  # use it to get the last application name
-                        trigger['application'] = this_item[0]['applications'][last_app]['name']
+                        if last_app > -1:
+                            trigger['application'] = this_item[0]['applications'][last_app]['name']
+                        else:
+                            trigger['application'] = "NO APP"
 
             except ZabbixAPIException:
                 # FIXME Is there a cleaner way to handle this? I just borrowed
