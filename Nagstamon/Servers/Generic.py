@@ -1072,7 +1072,7 @@ class GenericServer(object):
 
                 # Finegrain for the specific state
                 if service.visible:
-                    if service.status == 'DISATER':
+                    if service.status == 'DISASTER':
                         if conf.filter_all_disaster_services is True:
                             if conf.debug_mode:
                                 self.Debug(server=self.get_name(),

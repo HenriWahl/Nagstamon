@@ -1801,7 +1801,7 @@ class StatusWindow(QWidget):
         """
         # compile message from status counts
         message = ''
-        for state in ['DOWN', 'UNREACHABLE', 'DISATER', 'CRITICAL', 'HIGH', 'AVERAGE', 'WARNING', 'INFORMATION', 'UNKNOWN']:
+        for state in ['DOWN', 'UNREACHABLE', 'DISASTER', 'CRITICAL', 'HIGH', 'AVERAGE', 'WARNING', 'INFORMATION', 'UNKNOWN']:
             if current_status_count[state] > 0:
                 message += '{0} {1} '.format(str(current_status_count[state]), state)
         # due to mysterious DBus-Crashes
