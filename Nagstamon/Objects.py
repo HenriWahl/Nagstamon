@@ -21,7 +21,7 @@
 from __future__ import print_function, absolute_import, unicode_literals
 
 
-STATES = ['WARNING', 'UNKNOWN', 'CRITICAL', 'UNREACHABLE', 'DOWN']
+STATES = ['WARNING', 'UNKNOWN', 'CRITICAL', 'UNREACHABLE', 'DOWN', 'INFORMATION', 'AVERAGE', 'HIGH', 'DISASATER']
 
 
 class GenericObject(object):

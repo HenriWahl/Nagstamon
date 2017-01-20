@@ -98,8 +98,12 @@ class Config(object):
         self.filter_all_unreachable_hosts = False
         self.filter_all_flapping_hosts = False
         self.filter_all_unknown_services = False
+        self.filter_all_information_services = False
         self.filter_all_warning_services = False
+        self.filter_all_average_services = False
+        self.filter_all_high_services = False
         self.filter_all_critical_services = False
+        self.filter_all_disaster_services = False
         self.filter_all_flapping_services = False
         self.filter_acknowledged_hosts_services = False
         self.filter_hosts_services_disabled_notifications = False
@@ -151,8 +155,12 @@ class Config(object):
         self.notification_custom_action_separator = ''
         self.notification_custom_action_single = False
         self.notify_if_up = False
+        self.notify_if_information = False
         self.notify_if_warning = True
+        self.notify_if_average = False
+        self.notify_if_high = False
         self.notify_if_critical = True
+        self.notify_if_disaster = False
         self.notify_if_unknown = True
         self.notify_if_unreachable = True
         self.notify_if_down = True
@@ -168,12 +176,20 @@ class Config(object):
         self.re_status_information_reverse = False
         self.color_ok_text = self.default_color_ok_text = '#FFFFFF'
         self.color_ok_background = self.default_color_ok_background = '#006400'
+        self.color_information_text = self.default_color_information_text = "#000000"
+        self.color_information_background = self.default_color_information_background = "#7499FF"
         self.color_warning_text = self.default_color_warning_text = "#000000"
         self.color_warning_background = self.default_color_warning_background = '#FFFF00'
-        self.color_critical_text = self.default_color_critical_text = '#FFFFFF'
-        self.color_critical_background = self.default_color_critical_background = '#FF0000'
+        self.color_average_text = self.default_color_average_text = "#000000"
+        self.color_average_background = self.default_color_average_background = "#FFA059"
+        self.color_high_text = self.default_color_high_text = "#000000"
+        self.color_high_background = self.default_color_high_background = "#E97659"
         self.color_unknown_text = self.default_color_unknown_text = '#000000'
         self.color_unknown_background = self.default_color_unknown_background = '#FFA500'
+        self.color_critical_text = self.default_color_critical_text = '#FFFFFF'
+        self.color_critical_background = self.default_color_critical_background = '#FF0000'
+        self.color_disaster_text = self.default_color_disaster_text = "#FFFFFF"
+        self.color_disaster_background = self.default_color_disaster_background = "#660000"
         self.color_unreachable_text = self.default_color_unreachable_text = '#FFFFFF'
         self.color_unreachable_background = self.default_color_unreachable_background = '#8B0000'
         self.color_down_text = self.default_color_down_text = '#FFFFFF'
@@ -603,7 +619,7 @@ class Config(object):
                 import Nagstamon.thirdparty.keyring as keyring
                 # import secretstorage module as dependency of keyring -
                 # if not available keyring won't work
-                import secretstorage 
+                import secretstorage
                 if ("SecretService") in dir(keyring.backends) and not (keyring.get_keyring() is None):
                     return True
         except Exception:
@@ -822,6 +838,7 @@ class Server(object):
         # OP5 api filters
         self.host_filter = 'state !=0'
         self.service_filter = 'state !=0 or host.state != 0'
+
 
 class Action(object):
 

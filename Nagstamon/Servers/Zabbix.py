@@ -48,11 +48,11 @@ class ZabbixServer(GenericServer):
             'UNKN': 'UNKNOWN',
             'PEND': 'PENDING',
             '0': 'OK',
-            '1': 'UNKNOWN',
+            '1': 'INFORMATION',
             '2': 'WARNING',
-            '5': 'CRITICAL',
-            '3': 'WARNING',
-            '4': 'CRITICAL'}
+            '3': 'AVERAGE',
+            '4': 'HIGH',
+            '5': 'DISASTER'}
 
         # Entries for monitor default actions in context menu
         self.MENU_ACTIONS = ["Recheck", "Acknowledge", "Downtime"]
@@ -113,6 +113,7 @@ class ZabbixServer(GenericServer):
 
             for host in hosts:
                 # if host is disabled on server safely ignore it
+                # self.Debug(server=self.get_name(), debug="HOST STATUS: " + host['status'])
                 if host['available'] != '0':
                     n = {
                         'host': host['host'],
@@ -187,7 +188,8 @@ class ZabbixServer(GenericServer):
                      'output': 'extend',
                      'select_items': 'extend',  # thats for zabbix api 1.8
                      'selectItems': 'extend',  # thats for zabbix api 2.0+
-                     'expandData': True}
+                     'expandData': True,
+                     'selectHosts': 'extend'}
                 )
                 if type(this_trigger) is dict:
                     for triggerid in list(this_trigger.keys()):
@@ -239,6 +241,7 @@ class ZabbixServer(GenericServer):
                 # UPDATE Zabbix api 3.0 doesn't but I didn't tried with older
                 #        so I left it
                 status = self.statemap.get(service['priority'], service['priority'])
+                self.Debug(server=self.get_name(), debug="SERVICE (" + service['application'] + ") STATUS: **" + status + "** PRIORITY: #" + service['priority'])
                 if not status == 'OK':
                     if not service['description'].endswith('...'):
                         state = service['description']
@@ -267,9 +270,9 @@ class ZabbixServer(GenericServer):
                         'command': 'zabbix',
                         'triggerid': service['triggerid'],
                     }
-
+                    self.Debug(server=self.get_name(), debug="n: " + str(n))
                     if api_version >= '3.0':
-                        n['host'] = self.zapi.host.get({"output": ["host"], "filter": {}, "triggerids": service['triggerid']})[0]['host']
+                        n['host'] = service['hosts'][0]['host']
                     else:
                         n['host'] = service['host']
 
@@ -283,13 +286,16 @@ class ZabbixServer(GenericServer):
                         self.new_hosts[n["host"]].site = n["site"]
                         self.new_hosts[n["host"]].address = n["host"]
                         # if a service does not exist create its object
+                        self.Debug(server=self.get_name(), debug="newhost[" + n['host'] + "]")
                     if n["service"] not in self.new_hosts[n["host"]].services:
                         # workaround for non-existing (or not found) host status flag
                         if n["service"] == "Host is down %s" % (n["host"]):
                             self.new_hosts[n["host"]].status = "DOWN"
                             # also take duration from "service" aka trigger
                             self.new_hosts[n["host"]].duration = n["duration"]
+                            self.Debug(server=self.get_name(), debug="newhost_hostdown[" + self.new_hosts[n['host']].get_host_name() + "] **" + self.new_hosts[n['host']].get_hash() + "**")
                         else:
+                            self.Debug(server=self.get_name(), debug="CREATING NEW SERVICE FOR " + n['service'])
                             new_service = n["service"]
                             self.new_hosts[n["host"]].services[new_service] = GenericService()
                             self.new_hosts[n["host"]].services[new_service].host = n["host"]
@@ -305,6 +311,7 @@ class ZabbixServer(GenericServer):
                             self.new_hosts[n["host"]].services[new_service].address = n["host"]
                             self.new_hosts[n["host"]].services[new_service].command = n["command"]
                             self.new_hosts[n["host"]].services[new_service].triggerid = n["triggerid"]
+                            self.Debug(server=self.get_name(), debug="newhost_newservice[" + self.new_hosts[n['host']].get_host_name() + "] **" + self.new_hosts[n['host']].services[new_service].get_hash() + "**")
 
         except (ZabbixError, ZabbixAPIException):
             # set checking flag back to False
@@ -392,9 +399,10 @@ class ZabbixServer(GenericServer):
             self._login()
         events = []
         for e in self.zapi.event.get({'triggerids': params['triggerids'],
-                                      # from zabbix 2.2 should be used "objectids" that instead of "triggerids"
+                                      # from zabbix 2.2 should be used "objectids" instead of "triggerids"
                                       'objectids': params['triggerids'],
-                                      'hide_unknown': True,
+                                      'hide_unknown': True,  # zabbix 1.8
+                                      'acknowledged': False,
                                       'sortfield': 'clock',
                                       'sortorder': 'DESC'}):
             # stop at first event in "OK" status

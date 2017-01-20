@@ -101,16 +101,24 @@ if not platform.system() in NON_LINUX:
 # fixed shortened and lowered color names for cells, also used by statusbar label snippets
 COLORS = OrderedDict([('DOWN', 'color_down_'),
                       ('UNREACHABLE', 'color_unreachable_'),
+                      ('DISASTER', 'color_disaster_'),
                       ('CRITICAL', 'color_critical_'),
                       ('UNKNOWN', 'color_unknown_'),
-                      ('WARNING', 'color_warning_')])
+                      ('HIGH', 'color_high_'),
+                      ('AVERAGE', 'color_average_'),
+                      ('WARNING', 'color_warning_'),
+                      ('INFORMATION', 'color_information_')])
 
 # states to be used in statusbar if long version is used
 COLOR_STATE_NAMES = {'DOWN': {True: 'DOWN', False: ''},
                      'UNREACHABLE': {True: 'UNREACHABLE', False: ''},
+                     'DISASTER': {True: 'DISASTER', False: ''},
                      'CRITICAL': {True: 'CRITICAL', False: ''},
+                     'HIGH': {True: 'HIGH', False: ''},
+                     'AVERAGE': {True: 'AVERAGE', False: ''},
                      'UNKNOWN': {True: 'UNKNOWN', False: ''},
-                     'WARNING': {True: 'WARNING', False: ''}}
+                     'WARNING': {True: 'WARNING', False: ''},
+                     'INFORMATION': {True: 'INFORMATION', False: ''}}
 
 # colors for server status label in ServerVBox
 COLOR_STATUS_LABEL = {'critical': 'lightsalmon',
@@ -343,7 +351,7 @@ class SystemTrayIcon(QSystemTrayIcon):
         svg_template_xml = svg_template_file.readlines()
 
         # create icons for all states
-        for state in ['OK', 'UNKNOWN', 'WARNING', 'CRITICAL', 'UNREACHABLE', 'DOWN', 'ERROR']:
+        for state in ['OK', 'INFORMATION', 'UNKNOWN', 'WARNING', 'AVERAGE', 'HIGH', 'CRITICAL', 'DISASTER', 'UNREACHABLE', 'DOWN', 'ERROR']:
             # current SVG XML for state icon, derived from svg_template_cml
             svg_state_xml = list()
 
@@ -1793,7 +1801,7 @@ class StatusWindow(QWidget):
         """
         # compile message from status counts
         message = ''
-        for state in ['DOWN', 'UNREACHABLE', 'CRITICAL', 'WARNING', 'UNKNOWN']:
+        for state in ['DOWN', 'UNREACHABLE', 'DISATER', 'CRITICAL', 'HIGH', 'AVERAGE', 'WARNING', 'INFORMATION', 'UNKNOWN']:
             if current_status_count[state] > 0:
                 message += '{0} {1} '.format(str(current_status_count[state]), state)
         # due to mysterious DBus-Crashes
@@ -1967,6 +1975,8 @@ class StatusWindow(QWidget):
 
                     # Notification actions
                     if conf.notification_actions:
+                        if conf.notification_action_warning is True and worst_status_diff == 'WARNING':
+                            self.execute_action(server_name, conf.notification_action_warning_string)
                         if conf.notification_action_warning is True and worst_status_diff == 'WARNING':
                             self.execute_action(server_name, conf.notification_action_warning_string)
                         if conf.notification_action_critical is True and worst_status_diff == 'CRITICAL':
@@ -4066,10 +4076,18 @@ class Dialog_Settings(Dialog):
             self.ui.input_checkbox_show_grid: [self.ui.input_checkbox_grid_use_custom_intensity],
             self.ui.input_checkbox_grid_use_custom_intensity: [
                 self.ui.input_slider_grid_alternation_intensity,
+                self.ui.label_intensity_information_0,
+                self.ui.label_intensity_information_1,
                 self.ui.label_intensity_warning_0,
                 self.ui.label_intensity_warning_1,
+                self.ui.label_intensity_average_0,
+                self.ui.label_intensity_average_1,
+                self.ui.label_intensity_high_0,
+                self.ui.label_intensity_high_1,
                 self.ui.label_intensity_critical_0,
                 self.ui.label_intensity_critical_1,
+                self.ui.label_intensity_disaster_0,
+                self.ui.label_intensity_disaster_1,
                 self.ui.label_intensity_down_0,
                 self.ui.label_intensity_down_1,
                 self.ui.label_intensity_unreachable_0,
