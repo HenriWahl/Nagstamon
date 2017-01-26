@@ -90,6 +90,13 @@
        </widget>
       </item>
       <item>
+       <widget class="QRadioButton" name="input_radiobutton_result_information">
+        <property name="text">
+         <string>INFORMATION</string>
+        </property>
+       </widget>
+      </item>
+      <item>
        <widget class="QRadioButton" name="input_radiobutton_result_warning">
         <property name="text">
          <string>WARNING</string>
@@ -97,9 +104,30 @@
        </widget>
       </item>
       <item>
+       <widget class="QRadioButton" name="input_radiobutton_result_average">
+        <property name="text">
+         <string>AVERAGE</string>
+        </property>
+       </widget>
+      </item>
+      <item>
+       <widget class="QRadioButton" name="input_radiobutton_result_high">
+        <property name="text">
+         <string>HIGH</string>
+        </property>
+       </widget>
+      </item>
+      <item>
        <widget class="QRadioButton" name="input_radiobutton_result_critical">
         <property name="text">
          <string>CRITICAL</string>
+        </property>
+       </widget>
+      </item>
+      <item>
+       <widget class="QRadioButton" name="input_radiobutton_result_disaster">
+        <property name="text">
+         <string>DISASTER</string>
         </property>
        </widget>
       </item>

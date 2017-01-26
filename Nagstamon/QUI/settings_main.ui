@@ -865,17 +865,10 @@
           <property name="verticalSpacing">
            <number>5</number>
           </property>
-          <item row="6" column="0">
-           <widget class="QCheckBox" name="input_checkbox_filter_all_flapping_services">
+          <item row="0" column="0">
+           <widget class="QCheckBox" name="input_checkbox_filter_all_down_hosts">
             <property name="text">
-             <string>All flapping services</string>
-            </property>
-           </widget>
-          </item>
-          <item row="10" column="1">
-           <widget class="QCheckBox" name="input_checkbox_filter_services_in_soft_state">
-            <property name="text">
-             <string>Services in soft state</string>
+             <string>All down hosts</string>
             </property>
            </widget>
           </item>
@@ -886,17 +879,66 @@
             </property>
            </widget>
           </item>
-          <item row="5" column="1">
-           <widget class="QCheckBox" name="input_checkbox_filter_services_on_down_hosts">
+          <item row="2" column="0">
+           <widget class="QCheckBox" name="input_checkbox_filter_all_flapping_hosts">
             <property name="text">
-             <string>Services on down hosts</string>
+             <string>All flapping hosts</string>
             </property>
            </widget>
           </item>
-          <item row="8" column="1">
-           <widget class="QCheckBox" name="input_checkbox_filter_services_on_unreachable_hosts">
+          <item row="3" column="0">
+           <widget class="QCheckBox" name="input_checkbox_filter_all_disaster_services">
             <property name="text">
-             <string>Services on unreachable hosts</string>
+             <string>All disaster services</string>
+            </property>
+           </widget>
+          </item>
+          <item row="4" column="0">
+           <widget class="QCheckBox" name="input_checkbox_filter_all_critical_services">
+            <property name="text">
+             <string>All critical services</string>
+            </property>
+           </widget>
+          </item>
+          <item row="5" column="0">
+           <widget class="QCheckBox" name="input_checkbox_filter_all_unknown_services">
+            <property name="text">
+             <string>All unknown services</string>
+            </property>
+           </widget>
+          </item>
+          <item row="6" column="0">
+           <widget class="qcheckbox" name="input_checkbox_filter_all_high_services">
+            <property name="text">
+             <string>all high services</string>
+            </property>
+           </widget>
+          </item>
+          <item row="7" column="0">
+           <widget class="qcheckbox" name="input_checkbox_filter_all_average_services">
+            <property name="text">
+             <string>all average services</string>
+            </property>
+           </widget>
+          </item>
+          <item row="8" column="0">
+           <widget class="QCheckBox" name="input_checkbox_filter_all_warning_services">
+            <property name="text">
+             <string>All warning services</string>
+            </property>
+           </widget>
+          </item>
+          <item row="9" column="0">
+           <widget class="QCheckBox" name="input_checkbox_filter_all_information_services">
+            <property name="text">
+             <string>All information services</string>
+            </property>
+           </widget>
+          </item>
+          <item row="10" column="0">
+           <widget class="QCheckBox" name="input_checkbox_filter_all_flapping_services">
+            <property name="text">
+             <string>All flapping services</string>
             </property>
            </widget>
           </item>
@@ -914,20 +956,6 @@
             </property>
            </widget>
           </item>
-          <item row="9" column="1">
-           <widget class="QCheckBox" name="input_checkbox_filter_hosts_in_soft_state">
-            <property name="text">
-             <string>Hosts in soft state</string>
-            </property>
-           </widget>
-          </item>
-          <item row="3" column="0">
-           <widget class="QCheckBox" name="input_checkbox_filter_all_critical_services">
-            <property name="text">
-             <string>All critical services</string>
-            </property>
-           </widget>
-          </item>
           <item row="2" column="1">
            <widget class="QCheckBox" name="input_checkbox_filter_hosts_services_disabled_checks">
             <property name="text">
@@ -935,17 +963,10 @@
             </property>
            </widget>
           </item>
-          <item row="2" column="0">
-           <widget class="QCheckBox" name="input_checkbox_filter_all_flapping_hosts">
+          <item row="3" column="1">
+           <widget class="QCheckBox" name="input_checkbox_filter_hosts_services_maintenance">
             <property name="text">
-             <string>All flapping hosts</string>
-            </property>
-           </widget>
-          </item>
-          <item row="6" column="1">
-           <widget class="QCheckBox" name="input_checkbox_filter_services_on_hosts_in_maintenance">
-            <property name="text">
-             <string>Services on hosts in maintenance</string>
+             <string>Hosts and services down for maintenance</string>
             </property>
            </widget>
           </item>
@@ -956,31 +977,38 @@
             </property>
            </widget>
           </item>
-          <item row="4" column="0">
-           <widget class="QCheckBox" name="input_checkbox_filter_all_unknown_services">
+          <item row="5" column="1">
+           <widget class="QCheckBox" name="input_checkbox_filter_services_on_down_hosts">
             <property name="text">
-             <string>All unknown services</string>
+             <string>Services on down hosts</string>
             </property>
            </widget>
           </item>
-          <item row="5" column="0">
-           <widget class="QCheckBox" name="input_checkbox_filter_all_warning_services">
+          <item row="6" column="1">
+           <widget class="QCheckBox" name="input_checkbox_filter_services_on_hosts_in_maintenance">
             <property name="text">
-             <string>All warning services</string>
+             <string>Services on hosts in maintenance</string>
             </property>
            </widget>
           </item>
-          <item row="0" column="0">
-           <widget class="QCheckBox" name="input_checkbox_filter_all_down_hosts">
+          <item row="8" column="1">
+           <widget class="QCheckBox" name="input_checkbox_filter_services_on_unreachable_hosts">
             <property name="text">
-             <string>All down hosts</string>
+             <string>Services on unreachable hosts</string>
             </property>
            </widget>
           </item>
-          <item row="3" column="1">
-           <widget class="QCheckBox" name="input_checkbox_filter_hosts_services_maintenance">
+          <item row="9" column="1">
+           <widget class="QCheckBox" name="input_checkbox_filter_hosts_in_soft_state">
             <property name="text">
-             <string>Hosts and services down for maintenance</string>
+             <string>Hosts in soft state</string>
+            </property>
+           </widget>
+          </item>
+          <item row="10" column="1">
+           <widget class="QCheckBox" name="input_checkbox_filter_services_in_soft_state">
+            <property name="text">
+             <string>Services in soft state</string>
             </property>
            </widget>
           </item>
@@ -1351,6 +1379,13 @@
              <number>0</number>
             </property>
             <item>
+             <widget class="QCheckBox" name="input_checkbox_notify_if_information">
+              <property name="text">
+               <string>INFORMATION</string>
+              </property>
+             </widget>
+            </item>
+            <item>
              <widget class="QCheckBox" name="input_checkbox_notify_if_warning">
               <property name="text">
                <string>WARNING</string>
@@ -1358,9 +1393,30 @@
              </widget>
             </item>
             <item>
+             <widget class="QCheckBox" name="input_checkbox_notify_if_average">
+              <property name="text">
+               <string>AVERAGE</string>
+              </property>
+             </widget>
+            </item>
+            <item>
+             <widget class="QCheckBox" name="input_checkbox_notify_if_high">
+              <property name="text">
+               <string>HIGH</string>
+              </property>
+             </widget>
+            </item>
+            <item>
              <widget class="QCheckBox" name="input_checkbox_notify_if_critical">
               <property name="text">
                <string>CRITICAL</string>
+              </property>
+             </widget>
+            </item>
+            <item>
+             <widget class="QCheckBox" name="input_checkbox_notify_if_disaster">
+              <property name="text">
+               <string>DISASTER</string>
               </property>
              </widget>
             </item>
@@ -1765,6 +1821,13 @@
            </widget>
           </item>
           <item>
+           <widget class="QLabel" name="label_color_information">
+            <property name="text">
+             <string> INFORMATIOn </string>
+            </property>
+           </widget>
+          </item>
+          <item>
            <widget class="QLabel" name="label_color_warning">
             <property name="text">
              <string> WARNING </string>
@@ -1772,9 +1835,30 @@
            </widget>
           </item>
           <item>
+           <widget class="QLabel" name="label_color_average">
+            <property name="text">
+             <string> AVERAGE </string>
+            </property>
+           </widget>
+          </item>
+          <item>
+           <widget class="QLabel" name="label_color_high">
+            <property name="text">
+             <string> HIGH </string>
+            </property>
+           </widget>
+          </item>
+          <item>
            <widget class="QLabel" name="label_color_critical">
             <property name="text">
              <string> CRITICAL </string>
+            </property>
+           </widget>
+          </item>
+          <item>
+           <widget class="QLabel" name="label_color_disaster">
+            <property name="text">
+             <string> DISASTER </string>
             </property>
            </widget>
           </item>
@@ -1838,6 +1922,13 @@
            </widget>
           </item>
           <item>
+           <widget class="QPushButton" name="input_button_color_information_text">
+            <property name="text">
+             <string/>
+            </property>
+           </widget>
+          </item>
+          <item>
            <widget class="QPushButton" name="input_button_color_warning_text">
             <property name="text">
              <string/>
@@ -1845,7 +1936,28 @@
            </widget>
           </item>
           <item>
+           <widget class="QPushButton" name="input_button_color_average_text">
+            <property name="text">
+             <string/>
+            </property>
+           </widget>
+          </item>
+          <item>
+           <widget class="QPushButton" name="input_button_color_high_text">
+            <property name="text">
+             <string/>
+            </property>
+           </widget>
+          </item>
+          <item>
            <widget class="QPushButton" name="input_button_color_critical_text">
+            <property name="text">
+             <string/>
+            </property>
+           </widget>
+          </item>
+          <item>
+           <widget class="QPushButton" name="input_button_color_disaster_text">
             <property name="text">
              <string/>
             </property>
@@ -1911,6 +2023,13 @@
            </widget>
           </item>
           <item>
+           <widget class="QPushButton" name="input_button_color_information_background">
+            <property name="text">
+             <string/>
+            </property>
+           </widget>
+          </item>
+          <item>
            <widget class="QPushButton" name="input_button_color_warning_background">
             <property name="text">
              <string/>
@@ -1918,7 +2037,28 @@
            </widget>
           </item>
           <item>
+           <widget class="QPushButton" name="input_button_color_average_background">
+            <property name="text">
+             <string/>
+            </property>
+           </widget>
+          </item>
+          <item>
+           <widget class="QPushButton" name="input_button_color_high_background">
+            <property name="text">
+             <string/>
+            </property>
+           </widget>
+          </item>
+          <item>
            <widget class="QPushButton" name="input_button_color_critical_background">
+            <property name="text">
+             <string/>
+            </property>
+           </widget>
+          </item>
+          <item>
+           <widget class="QPushButton" name="input_button_color_disaster_background">
             <property name="text">
              <string/>
             </property>
@@ -2060,6 +2200,35 @@
              <number>5</number>
             </property>
             <item>
+             <widget class="QLabel" name="label_intensity_information_0">
+              <property name="autoFillBackground">
+               <bool>true</bool>
+              </property>
+              <property name="text">
+               <string> INFORMATION</string>
+              </property>
+              <property name="alignment">
+               <set>Qt::AlignLeading|Qt::AlignLeft|Qt::AlignVCenter</set>
+              </property>
+              <property name="margin">
+               <number>0</number>
+              </property>
+             </widget>
+            </item>
+            <item>
+             <widget class="QLabel" name="label_intensity_information_1">
+              <property name="autoFillBackground">
+               <bool>true</bool>
+              </property>
+              <property name="text">
+               <string> INFORMATION</string>
+              </property>
+              <property name="alignment">
+               <set>Qt::AlignLeading|Qt::AlignLeft|Qt::AlignVCenter</set>
+              </property>
+             </widget>
+            </item>
+            <item>
              <widget class="QLabel" name="label_intensity_warning_0">
               <property name="autoFillBackground">
                <bool>true</bool>
@@ -2089,6 +2258,64 @@
              </widget>
             </item>
             <item>
+             <widget class="QLabel" name="label_intensity_average_0">
+              <property name="autoFillBackground">
+               <bool>true</bool>
+              </property>
+              <property name="text">
+               <string> AVERAGE</string>
+              </property>
+              <property name="alignment">
+               <set>Qt::AlignLeading|Qt::AlignLeft|Qt::AlignVCenter</set>
+              </property>
+              <property name="margin">
+               <number>0</number>
+              </property>
+             </widget>
+            </item>
+            <item>
+             <widget class="QLabel" name="label_intensity_average_1">
+              <property name="autoFillBackground">
+               <bool>true</bool>
+              </property>
+              <property name="text">
+               <string> AVERAGE</string>
+              </property>
+              <property name="alignment">
+               <set>Qt::AlignLeading|Qt::AlignLeft|Qt::AlignVCenter</set>
+              </property>
+             </widget>
+            </item>
+            <item>
+             <widget class="QLabel" name="label_intensity_high_0">
+              <property name="autoFillBackground">
+               <bool>true</bool>
+              </property>
+              <property name="text">
+               <string> HIGH</string>
+              </property>
+              <property name="alignment">
+               <set>Qt::AlignLeading|Qt::AlignLeft|Qt::AlignVCenter</set>
+              </property>
+              <property name="margin">
+               <number>0</number>
+              </property>
+             </widget>
+            </item>
+            <item>
+             <widget class="QLabel" name="label_intensity_high_1">
+              <property name="autoFillBackground">
+               <bool>true</bool>
+              </property>
+              <property name="text">
+               <string> HIGH</string>
+              </property>
+              <property name="alignment">
+               <set>Qt::AlignLeading|Qt::AlignLeft|Qt::AlignVCenter</set>
+              </property>
+             </widget>
+            </item>
+            <item>
              <widget class="QLabel" name="label_intensity_critical_0">
               <property name="autoFillBackground">
                <bool>true</bool>
@@ -2108,6 +2335,32 @@
               </property>
               <property name="text">
                <string> CRITICAL</string>
+              </property>
+              <property name="alignment">
+               <set>Qt::AlignLeading|Qt::AlignLeft|Qt::AlignVCenter</set>
+              </property>
+             </widget>
+            </item>
+            <item>
+             <widget class="QLabel" name="label_intensity_disaster_0">
+              <property name="autoFillBackground">
+               <bool>true</bool>
+              </property>
+              <property name="text">
+               <string> DISASTER</string>
+              </property>
+              <property name="alignment">
+               <set>Qt::AlignLeading|Qt::AlignLeft|Qt::AlignVCenter</set>
+              </property>
+             </widget>
+            </item>
+            <item>
+             <widget class="QLabel" name="label_intensity_disaster_1">
+              <property name="autoFillBackground">
+               <bool>true</bool>
+              </property>
+              <property name="text">
+               <string> DISASTER</string>
               </property>
               <property name="alignment">
                <set>Qt::AlignLeading|Qt::AlignLeft|Qt::AlignVCenter</set>
@@ -2542,9 +2795,13 @@
   <tabstop>input_checkbox_filter_all_down_hosts</tabstop>
   <tabstop>input_checkbox_filter_all_unreachable_hosts</tabstop>
   <tabstop>input_checkbox_filter_all_flapping_hosts</tabstop>
+  <tabstop>input_checkbox_filter_all_disaster_services</tabstop>
   <tabstop>input_checkbox_filter_all_critical_services</tabstop>
   <tabstop>input_checkbox_filter_all_unknown_services</tabstop>
+  <tabstop>input_checkbox_filter_all_high_services</tabstop>
+  <tabstop>input_checkbox_filter_all_average_services</tabstop>
   <tabstop>input_checkbox_filter_all_warning_services</tabstop>
+  <tabstop>input_checkbox_filter_all_information_services</tabstop>
   <tabstop>input_checkbox_filter_all_flapping_services</tabstop>
   <tabstop>input_checkbox_filter_acknowledged_hosts_services</tabstop>
   <tabstop>input_checkbox_filter_hosts_services_disabled_notifications</tabstop>
@@ -2574,8 +2831,12 @@
   <tabstop>input_radiobutton_connect_by_dns</tabstop>
   <tabstop>input_radiobutton_connect_by_ip</tabstop>
   <tabstop>input_checkbox_notification</tabstop>
+  <tabstop>input_checkbox_notify_if_information</tabstop>
   <tabstop>input_checkbox_notify_if_warning</tabstop>
+  <tabstop>input_checkbox_notify_if_average</tabstop>
+  <tabstop>input_checkbox_notify_if_high</tabstop>
   <tabstop>input_checkbox_notify_if_critical</tabstop>
+  <tabstop>input_checkbox_notify_if_disaster</tabstop>
   <tabstop>input_checkbox_notify_if_unknown</tabstop>
   <tabstop>input_checkbox_notify_if_unreachable</tabstop>
   <tabstop>input_checkbox_notify_if_down</tabstop>
@@ -2609,10 +2870,18 @@
   <tabstop>input_checkbox_notification_custom_action_single</tabstop>
   <tabstop>input_button_color_ok_text</tabstop>
   <tabstop>input_button_color_ok_background</tabstop>
+  <tabstop>input_button_color_information_text</tabstop>
+  <tabstop>input_button_color_information_background</tabstop>
   <tabstop>input_button_color_warning_text</tabstop>
   <tabstop>input_button_color_warning_background</tabstop>
+  <tabstop>input_button_color_average_text</tabstop>
+  <tabstop>input_button_color_average_background</tabstop>
+  <tabstop>input_button_color_high_text</tabstop>
+  <tabstop>input_button_color_high_background</tabstop>
   <tabstop>input_button_color_critical_text</tabstop>
   <tabstop>input_button_color_critical_background</tabstop>
+  <tabstop>input_button_color_disaster_text</tabstop>
+  <tabstop>input_button_color_disaster_background</tabstop>
   <tabstop>input_button_color_unknown_text</tabstop>
   <tabstop>input_button_color_unknown_background</tabstop>
   <tabstop>input_button_color_unreachable_text</tabstop>
