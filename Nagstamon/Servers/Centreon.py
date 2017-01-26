@@ -687,11 +687,12 @@ class CentreonServer(GenericServer):
                             self.new_hosts[str(l.hn.text)].services[str(l.sd.text)].status_type = str(l.ca.text).split(' ')
 
                         # disgusting workaround for https://github.com/HenriWahl/Nagstamon/issues/91
-                        # pretty sure it's only 2.5, but we don't have special code for 2.5
-                        if self.centreon_version < 2.66:
-                            if self.new_hosts[str(l.hn.text)].services[str(l.sd.text)].status in self.TRANSLATIONS:
-                                self.new_hosts[str(l.hn.text)].services[str(l.sd.text)].status = self.TRANSLATIONS[\
-                                self.new_hosts[str(l.hn.text)].services[str(l.sd.text)].status]
+                        # Still needed in Centreon 2.8 at least : https://github.com/HenriWahl/Nagstamon/issues/344
+                        # Need enhancement, we can do service state matching with this field <sc>service_unknown</sc>
+                        #if self.centreon_version < 2.66:
+                        if self.new_hosts[str(l.hn.text)].services[str(l.sd.text)].status in self.TRANSLATIONS:
+                            self.new_hosts[str(l.hn.text)].services[str(l.sd.text)].status = self.TRANSLATIONS[\
+                            self.new_hosts[str(l.hn.text)].services[str(l.sd.text)].status]
 
                         if not (self.centreon_version < 2.8 and self.new_hosts[str(l.hn.text)].services[str(l.sd.text)].host == '_Module_Meta'):
                             self.new_hosts[str(l.hn.text)].services[str(l.sd.text)].status_type =\
