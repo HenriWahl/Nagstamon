@@ -116,9 +116,9 @@ COLOR_STATE_NAMES = {'DOWN': {True: 'DOWN', False: ''},
                      'CRITICAL': {True: 'CRITICAL', False: ''},
                      'HIGH': {True: 'HIGH', False: ''},
                      'AVERAGE': {True: 'AVERAGE', False: ''},
-                     'UNKNOWN': {True: 'UNKNOWN', False: ''},
                      'WARNING': {True: 'WARNING', False: ''},
-                     'INFORMATION': {True: 'INFORMATION', False: ''}}
+                     'INFORMATION': {True: 'INFORMATION', False: ''},
+                     'UNKNOWN': {True: 'UNKNOWN', False: ''}}
 
 # colors for server status label in ServerVBox
 COLOR_STATUS_LABEL = {'critical': 'lightsalmon',
@@ -1975,8 +1975,6 @@ class StatusWindow(QWidget):
 
                     # Notification actions
                     if conf.notification_actions:
-                        if conf.notification_action_warning is True and worst_status_diff == 'WARNING':
-                            self.execute_action(server_name, conf.notification_action_warning_string)
                         if conf.notification_action_warning is True and worst_status_diff == 'WARNING':
                             self.execute_action(server_name, conf.notification_action_warning_string)
                         if conf.notification_action_critical is True and worst_status_diff == 'CRITICAL':

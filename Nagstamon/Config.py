@@ -155,12 +155,12 @@ class Config(object):
         self.notification_custom_action_separator = ''
         self.notification_custom_action_single = False
         self.notify_if_up = False
-        self.notify_if_information = False
+        self.notify_if_information = True
         self.notify_if_warning = True
-        self.notify_if_average = False
-        self.notify_if_high = False
+        self.notify_if_average = True
+        self.notify_if_high = True
         self.notify_if_critical = True
-        self.notify_if_disaster = False
+        self.notify_if_disaster = True
         self.notify_if_unknown = True
         self.notify_if_unreachable = True
         self.notify_if_down = True
