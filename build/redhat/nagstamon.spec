@@ -19,6 +19,7 @@ Requires:      python3
 Requires:      python3-qt5
 Requires:      python3-beautifulsoup4
 Requires:      python3-requests
+Requires:      python3-requests-kerberos
 Requires:      python3-qt5
 Requires:      python3-SecretStorage
 Requires:      python3-crypto

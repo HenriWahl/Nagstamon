@@ -57,7 +57,7 @@ try:
                 os.environ.pop('QT_QPA_PLATFORMTHEME')
             except Exception:
                 pass
-
+       
         # get GUI
         # from Nagstamon.QUI import (APP,
                 # statuswindow,
