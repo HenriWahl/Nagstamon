@@ -256,10 +256,10 @@ class ZabbixAPI(object):
         except socket.timeout as e:
             raise APITimeout("HTTP read timeout",)
         except urllib2.URLError as e:
-            if "Connection timed out" in e.message:
-                raise APITimeout("HTTP read timeout",)
+            if hasattr(e, 'message'):
+                raise ZabbixAPIException(e.message)
             else:
-                raise e
+                raise ZabbixAPIException("Unknown error")
         self.debug(logging.INFO, "Response Code: " + str(response.code))
 
         # NOTE: Getting a 412 response code means the headers are not in the
