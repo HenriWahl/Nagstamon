@@ -17,7 +17,9 @@ from Nagstamon.Objects import (GenericHost,
                                Result)
 from Nagstamon.Servers.Generic import GenericServer
 from Nagstamon.thirdparty.zabbix_api import (ZabbixAPI,
-                                             ZabbixAPIException)
+                                             ZabbixAPIException,
+                                             APITimeout,
+                                             Already_Exists)
 
 
 class ZabbixError(Exception):
@@ -105,7 +107,7 @@ class ZabbixServer(GenericServer):
             try:
                 hosts = self.zapi.host.get(
                     {"output": ["host", "ip", "status", "available", "error", "errors_from"], "filter": {}})
-            except (ZabbixError, ZabbixAPIException):
+            except (ZabbixError, ZabbixAPIException, APITimeout, Already_Exists):
                 # set checking flag back to False
                 self.isChecking = False
                 result, error = self.Error(sys.exc_info())
