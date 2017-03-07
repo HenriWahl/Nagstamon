@@ -39,7 +39,7 @@ NAGSTAMON_SCRIPT = 'nagstamon.py'
 # workaround to get directory of Qt5 plugins to add missing 'mediaservice' folder needed for audio on OSX and Windows
 from PyQt5 import QtCore
 if platform.system() == 'Windows':
-    QTPLUGINS = os.path.join(os.path.dirname(QtCore.__file__), 'plugins')
+    QTPLUGINS = os.path.join(os.path.dirname(QtCore.__file__), 'Qt', 'plugins')
 elif platform.system() == 'Darwin':
     # works of course only with Fink-based Qt5-installation
     QTPLUGINS = '/sw/lib/qt5-mac/plugins'
