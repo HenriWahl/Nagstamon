@@ -25,6 +25,7 @@ import shutil
 import subprocess
 import zipfile
 import glob
+import time
 
 CURRENT_DIR = os.getcwd()
 NAGSTAMON_DIR = os.path.normpath('{0}{1}..{1}'.format(CURRENT_DIR, os.sep))
@@ -62,7 +63,7 @@ def winmain():
         VERSION_IS = VERSION
 
     print('VERSION_IS:', VERSION_IS)
-    
+
     ISCC = r'{0}{1}Inno Setup 5{1}iscc.exe'.format(os.environ['PROGRAMFILES{0}'.format(ARCH_OPTS[ARCH][2])], os.sep)
     DIR_BUILD_EXE = '{0}{1}exe.{2}-{3}'.format(CURRENT_DIR, os.sep, ARCH_OPTS[ARCH][0], PYTHON_VERSION)
     DIR_BUILD_NAGSTAMON = '{0}{1}Nagstamon-{2}-win{3}'.format(CURRENT_DIR, os.sep, VERSION, ARCH)
@@ -80,6 +81,62 @@ def winmain():
     os.chdir('{0}{1}..'.format(CURRENT_DIR, os.sep))
     subprocess.call(['setup.py', 'build_exe'], shell=True)
     os.rename(DIR_BUILD_EXE, DIR_BUILD_NAGSTAMON)
+
+    # The following is a workaround for a behaviour of Python 3.6 + cx_freeze 5.0.1
+    # where ALL reachable files are copied into build directory thus blowing it
+    # to 170 MB instead of 60
+    #
+    # The dirty workaround consists of starting nagstamon.exe and use the
+    # file-locking of Windows to delete everything unnecessary but keep the
+    # locked and needed files
+    #
+    # If someone has a better fix let me know.
+
+    # run nagstamon.exe and wait some seconds to give GUI time to come up
+    subprocess.Popen('{0}/nagstamon.exe'.format(DIR_BUILD_NAGSTAMON))
+    time.sleep(5)
+
+    # go to Nagstamon build directory and start the deleting
+    os.chdir(DIR_BUILD_NAGSTAMON)
+
+    for directory in ['imageformats',\
+                      'mediaservice',\
+                      'platforms',\
+                      'PyQt5/uic',\
+                      'PyQt5/Qt/qml/',\
+                      'PyQt5/Qt/resources/',\
+                      'PyQt5/Qt/translations/',\
+                      ]:
+        try:
+            shutil.rmtree('./{0}'.format(directory))
+        except Exception as err:
+            print(err)
+
+    os.chdir('{0}/PyQt5'.format(DIR_BUILD_NAGSTAMON))
+
+    for pyd_file in glob.iglob('*.pyd'):
+        try:
+            os.remove(pyd_file)
+        except Exception as err:
+            print(err)
+
+    os.chdir('{0}/PyQt5/Qt/bin'.format(DIR_BUILD_NAGSTAMON))
+
+    for pyd_file in glob.iglob('*'):
+        try:
+            os.remove(pyd_file)
+        except Exception as err:
+            print(err)
+
+    os.chdir('{0}/PyQt5/Qt/plugins'.format(DIR_BUILD_NAGSTAMON))
+
+    for pyd_file in glob.iglob('*'):
+        try:
+            shutil.rmtree(pyd_file)
+        except Exception as err:
+            print(err)
+
+    # after cleaning start zipping and setup.exe-building - go back to original directory
     os.chdir(CURRENT_DIR)
 
     # create .zip file
@@ -132,7 +189,7 @@ def debmain():
     # copy .deb file to current directory
     for deb in glob.iglob('../nagstamon*.deb'):
         shutil.move(deb, CURRENT_DIR)
-   
+
 
 def rpmmain():
     """
@@ -143,7 +200,7 @@ def rpmmain():
 
     # masquerade .py file as .py-less
     shutil.copyfile('nagstamon.py', 'nagstamon')
-    
+
     # workaround for manpage gzipping bug in bdist_rpm
     import gzip
     man = open('Nagstamon/resources/nagstamon.1', 'rb')
