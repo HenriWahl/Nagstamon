@@ -60,7 +60,7 @@ class AppInfo(object):
     NAME = 'Nagstamon'
     VERSION = '2.1-20170315'
     WEBSITE = 'https://nagstamon.ifw-dresden.de'
-    COPYRIGHT = '©2008-2016 Henri Wahl et al.'
+    COPYRIGHT = '©2008-2017 Henri Wahl et al.'
     COMMENTS = 'Nagios status monitor for your desktop'
     # version URL depends on version string
     if 'alpha' in VERSION.lower() or\
