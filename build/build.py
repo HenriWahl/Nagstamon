@@ -163,9 +163,38 @@ def macmain():
     """
         execute steps necessary for compilation of MacOS X binaries and .dmg file
     """
-    # go one directory up and run setup.py
+    # go one directory up and run pyinstaller
     os.chdir('{0}{1}..'.format(CURRENT_DIR, os.sep))
-    subprocess.call(['/sw/bin/python{0}'.format(PYTHON_VERSION), 'setup.py', 'bdist_dmg'])
+
+    # create one-file .app bundle by pyinstaller
+    subprocess.call(['/sw/bin/pyinstaller',
+                     '--noconfirm',
+                     '--add-data=Nagstamon/resources:Nagstamon/resources',
+                     '--icon=Nagstamon/resources/nagstamon.icns',
+                     '--name=Nagstamon',
+                     '--osx-bundle-identifier=de.ifw-dresden.nagstamon',
+                     '--windowed',
+                     '--onefile',
+                     'nagstamon.py'])
+
+    # go back to build directory
+    os.chdir(CURRENT_DIR)
+    
+    # create staging DMG folder for later compressing of DMG
+    shutil.rmtree('Nagstamon {0} Staging DMG'.format(VERSION), ignore_errors=True)
+    
+    # copy app bundle folder
+    shutil.move('../dist/Nagstamon.app', 'Nagstamon {0} Staging DMG/Nagstamon.app'.format(VERSION))
+    
+    # cleanup before new images get created
+    for dmg_file in glob.iglob('*.dmg'):
+        os.unlink(dmg_file)
+        
+    # create DMG
+    subprocess.call(['hdiutil create -srcfolder "Nagstamon {0} Staging DMG" -volname "Nagstamon {0}" -fs HFS+ -format UDRW -size 100M "Nagstamon {0} uncompressed.dmg"'.format(VERSION)], shell=True)
+
+    # Compress DMG
+    subprocess.call(['hdiutil convert "Nagstamon {0} uncompressed".dmg -format UDZO -imagekey zlib-level=9 -o "Nagstamon {0}.dmg"'.format(VERSION)], shell=True)
 
 
 def debmain():
