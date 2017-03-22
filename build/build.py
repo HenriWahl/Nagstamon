@@ -79,7 +79,7 @@ def winmain():
 
     # go one directory up and run setup.py
     os.chdir('{0}{1}..'.format(CURRENT_DIR, os.sep))
-    subprocess.call(['setup.py', 'build_exe'], shell=True)
+    subprocess.call([sys.executable, 'setup.py', 'build_exe'], shell=True)
     os.rename(DIR_BUILD_EXE, DIR_BUILD_NAGSTAMON)
 
     # The following is a workaround for a behaviour of Python 3.6 + cx_freeze 5.0.1
