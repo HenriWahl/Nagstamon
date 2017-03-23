@@ -5878,8 +5878,8 @@ class CheckVersion(QObject):
                                  Qt.Dialog | Qt.MSWindowsFixedSizeDialogHint)
         messagebox.setAttribute(Qt.WA_DeleteOnClose)
         messagebox.setWindowModality(Qt.NonModal)
+        messagebox.exec()
 
-        # messagebox.exec()
 
     class Worker(QObject):
 
