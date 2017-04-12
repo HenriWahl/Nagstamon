@@ -933,6 +933,7 @@ class CentreonServer(GenericServer):
         except:
             self.Error(sys.exc_info())
 
+    # This Hook seems to not be called anymore from main loop
     def Hook(self):
         '''
         in case count is down get a new SID, just in case
