@@ -199,6 +199,7 @@ class Config(object):
         self.statusbar_floating = True
         self.icon_in_systray = False
         # ##self.appindicator = False
+        self.windowed = False
         self.fullscreen = False
         self.fullscreen_display = 0
         self.font = ''

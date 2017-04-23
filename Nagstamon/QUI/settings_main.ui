@@ -569,7 +569,7 @@
           <property name="spacing">
            <number>5</number>
           </property>
-          <item row="2" column="0">
+          <item row="3" column="0">
            <layout class="QHBoxLayout" name="horizontalLayout_16">
             <property name="spacing">
              <number>5</number>
@@ -648,6 +648,13 @@
            <widget class="QRadioButton" name="input_radiobutton_statusbar_floating">
             <property name="text">
              <string>Floating statusbar</string>
+            </property>
+           </widget>
+          </item>
+          <item row="2" column="0">
+           <widget class="QRadioButton" name="input_radiobutton_windowed">
+            <property name="text">
+             <string>Windowed mode</string>
             </property>
            </widget>
           </item>
@@ -908,14 +915,14 @@
            </widget>
           </item>
           <item row="6" column="0">
-           <widget class="qcheckbox" name="input_checkbox_filter_all_high_services">
+           <widget class="QCheckBox" name="input_checkbox_filter_all_high_services">
             <property name="text">
              <string>all high services</string>
             </property>
            </widget>
           </item>
           <item row="7" column="0">
-           <widget class="qcheckbox" name="input_checkbox_filter_all_average_services">
+           <widget class="QCheckBox" name="input_checkbox_filter_all_average_services">
             <property name="text">
              <string>all average services</string>
             </property>
