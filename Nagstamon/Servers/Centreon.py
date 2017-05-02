@@ -17,18 +17,21 @@
 # along with this program; if not, write to the Free Software
 # Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA  02110-1301, USA
 
-import urllib.request, urllib.parse, urllib.error
+import urllib.request
+import urllib.parse
+import urllib.error
 import socket
 import sys
 import re
 import copy
-import time
-import datetime
+# import time
+# import datetime
 
 from Nagstamon.Objects import *
 from Nagstamon.Servers.Generic import GenericServer
 from Nagstamon.Config import conf
 from Nagstamon.Helpers import webbrowser_open
+
 
 class CentreonServer(GenericServer):
     TYPE = 'Centreon'
@@ -36,14 +39,10 @@ class CentreonServer(GenericServer):
     # centreon generic web interface uses a sid which is needed to ask for news
     SID = None
 
-    # Centreon have different URL paths for XML
-    # will be checked by _get_xml_url() but default is xml/broker
-    XML_PATH = 'xml/broker'
-
     # HARD/SOFT state mapping
     HARD_SOFT = {'(H)': 'hard', '(S)': 'soft'}
 
-    # apparently necessesary because of non-english states as in https://github.com/HenriWahl/Nagstamon/issues/91
+    # apparently necessesary because of non-english states as in https://github.com/HenriWahl/Nagstamon/issues/91 (Centeron 2.5)
     TRANSLATIONS = {'INDISPONIBLE': 'DOWN',
                     'INJOIGNABLE': 'UNREACHABLE',
                     'CRITIQUE': 'CRITICAL',
@@ -57,78 +56,8 @@ class CentreonServer(GenericServer):
     centreon_version = None
     # Token that centreon use to protect the system
     centreon_token = None
-
-    def init_HTTP(self):
-        """
-        initialize HTTP connection
-        """
-        if self.session == None:
-            GenericServer.init_HTTP(self)
-
-        if self.centreon_version == None:
-            result_versioncheck = self.FetchURL(self.monitor_cgi_url + '/index.php', giveback='raw')
-            raw_versioncheck, error_versioncheck = result_versioncheck.result, result_versioncheck.error
-            if error_versioncheck == '':
-                if re.search('2\.2\.[0-9]', raw_versioncheck):
-                    self.centreon_version = 2.2
-                    if conf.debug_mode == True:
-                        self.Debug(server=self.get_name(), debug='Centreon version detected : 2.2')
-                    # URLs for browser shortlinks/buttons on popup window
-                    self.BROWSER_URLS= { 'monitor': '$MONITOR$/main.php?p=1',\
-                                    'hosts': '$MONITOR$/main.php?p=20103&o=hpb',\
-                                    'services': '$MONITOR$/main.php?p=20202&o=svcpb',\
-                                    'history': '$MONITOR$/main.php?p=203'}
-                elif re.search('2\.[3-6]\.[0-5]', raw_versioncheck):
-                    self.centreon_version = 2.3456
-                    if conf.debug_mode == True:
-                        self.Debug(server=self.get_name(), debug='Centreon version detected : 2.6.5 <=> 2.3')
-                    # URLs for browser shortlinks/buttons on popup window
-                    self.BROWSER_URLS= { 'monitor': '$MONITOR$/main.php?p=1',\
-                                    'hosts': '$MONITOR$/main.php?p=20103&o=hpb',\
-                                    'services': '$MONITOR$/main.php?p=20202&o=svcpb',\
-                                    'history': '$MONITOR$/main.php?p=203'}
-                elif re.search('2\.6\.[6-9]', raw_versioncheck):
-                    self.centreon_version = 2.66
-                    if conf.debug_mode == True:
-                        self.Debug(server=self.get_name(), debug='Centreon version detected : 2.6.6')
-                    # URLs for browser shortlinks/buttons on popup window
-                    self.BROWSER_URLS= { 'monitor': '$MONITOR$/main.php?p=1',\
-                                    'hosts': '$MONITOR$/main.php?p=20103&o=hpb',\
-                                    'services': '$MONITOR$/main.php?p=20202&o=svcpb',\
-                                    'history': '$MONITOR$/main.php?p=203'}
-                elif re.search('2\.7\.[0-9]', raw_versioncheck):
-                    # Centreon 2.7 only support C. Broker
-                    self.centreon_version = 2.7
-                    if conf.debug_mode == True:
-                        self.Debug(server=self.get_name(), debug='Centreon version detected : 2.7')
-                    # URLs for browser shortlinks/buttons on popup window
-                    self.BROWSER_URLS= { 'monitor': '$MONITOR$/main.php?',\
-                                    'hosts': '$MONITOR$/main.php?p=20202&o=hpb',\
-                                    'services': '$MONITOR$/main.php?p=20201&o=svcpb',\
-                                    'history': '$MONITOR$/main.php?p=203'}
-                else:
-                    # unsupported version or unable do determine
-                    self.centreon_version = 2.7
-                    if conf.debug_mode == True:
-                        self.Debug(server=self.get_name(), debug='Centreon version unknown : supposed to be >= 2.7')
-                    # URLs for browser shortlinks/buttons on popup window
-                    self.BROWSER_URLS= { 'monitor': '$MONITOR$/main.php?',\
-                                    'hosts': '$MONITOR$/main.php?p=20202&o=hpb',\
-                                    'services': '$MONITOR$/main.php?p=20201&o=svcpb',\
-                                    'history': '$MONITOR$/main.php?p=203'}
-            else:
-                if conf.debug_mode == True:
-                    self.Debug(server=self.get_name(), debug='Error getting the home page : ' + error_versioncheck)
-            del result_versioncheck, raw_versioncheck, error_versioncheck
-
-
-    def reset_HTTP(self):
-        '''
-        Centreon needs deletion of SID
-        '''
-        self.SID = None
-        self._get_sid()
-
+    # To only detect broker once
+    first_login = True
 
     def init_config(self):
         '''
@@ -136,30 +65,116 @@ class CentreonServer(GenericServer):
         '''
         pass
 
+    def init_HTTP(self):
+        """
+        initialize HTTP connection
+        """
+        if self.session is None:
+            GenericServer.init_HTTP(self)
+
+        if self.centreon_version is None:
+            result_versioncheck = self.FetchURL(self.monitor_cgi_url + '/index.php', giveback='raw')
+            raw_versioncheck, error_versioncheck = result_versioncheck.result, result_versioncheck.error
+            if error_versioncheck == '':
+                if re.search('2\.2\.[0-9]', raw_versioncheck):
+                    self.centreon_version = 2.2
+                    if conf.debug_mode is True:
+                        self.Debug(server=self.get_name(), debug='Centreon version detected : 2.2')
+                    # URLs for browser shortlinks/buttons on popup window
+                    self.BROWSER_URLS = {'monitor': '$MONITOR$/main.php?p=1',
+                                    'hosts': '$MONITOR$/main.php?p=20103&o=hpb',
+                                    'services': '$MONITOR$/main.php?p=20202&o=svcpb',
+                                    'history': '$MONITOR$/main.php?p=203'}
+                elif re.search('2\.[3-6]\.[0-5]', raw_versioncheck):
+                    self.centreon_version = 2.3456
+                    if conf.debug_mode is True:
+                        self.Debug(server=self.get_name(), debug='Centreon version detected : 2.6.5 <=> 2.3')
+                    # URLs for browser shortlinks/buttons on popup window
+                    self.BROWSER_URLS = {'monitor': '$MONITOR$/main.php?p=1',
+                                    'hosts': '$MONITOR$/main.php?p=20103&o=hpb',
+                                    'services': '$MONITOR$/main.php?p=20202&o=svcpb',
+                                    'history': '$MONITOR$/main.php?p=203'}
+                elif re.search('2\.6\.[6-9]', raw_versioncheck):
+                    self.centreon_version = 2.66
+                    if conf.debug_mode is True:
+                        self.Debug(server=self.get_name(), debug='Centreon version detected : 2.6.6')
+                    # URLs for browser shortlinks/buttons on popup window
+                    self.BROWSER_URLS = {'monitor': '$MONITOR$/main.php?p=1',
+                                    'hosts': '$MONITOR$/main.php?p=20103&o=hpb',
+                                    'services': '$MONITOR$/main.php?p=20202&o=svcpb',
+                                    'history': '$MONITOR$/main.php?p=203'}
+                elif re.search('2\.7\.[0-9]', raw_versioncheck):
+                    # Centreon 2.7 only support C. Broker
+                    self.centreon_version = 2.7
+                    if conf.debug_mode is True:
+                        self.Debug(server=self.get_name(), debug='Centreon version detected : 2.7')
+                    # URLs for browser shortlinks/buttons on popup window
+                    self.BROWSER_URLS = {'monitor': '$MONITOR$/main.php?',
+                                    'hosts': '$MONITOR$/main.php?p=20202&o=hpb',
+                                    'services': '$MONITOR$/main.php?p=20201&o=svcpb',
+                                    'history': '$MONITOR$/main.php?p=203'}
+                elif re.search('2\.8\.[0-9]', raw_versioncheck):
+                    # Centreon 2.8 only support C. Broker
+                    self.centreon_version = 2.8
+                    if conf.debug_mode is True:
+                        self.Debug(server=self.get_name(), debug='Centreon version detected : 2.8')
+                    # URLs for browser shortlinks/buttons on popup window
+                    self.BROWSER_URLS = {'monitor': '$MONITOR$/main.php?',
+                                    'hosts': '$MONITOR$/main.php?p=20202',
+                                    'services': '$MONITOR$/main.php?p=20201',
+                                    'history': '$MONITOR$/main.php?p=203'}
+                else:
+                    # unsupported version or unable do determine
+                    self.centreon_version = 2.8
+                    if conf.debug_mode is True:
+                        self.Debug(server=self.get_name(), debug='Centreon version unknown : supposed to be >= 2.8')
+                    # URLs for browser shortlinks/buttons on popup window
+                    self.BROWSER_URLS = {'monitor': '$MONITOR$/main.php?',
+                                    'hosts': '$MONITOR$/main.php?p=20202&o=hpb',
+                                    'services': '$MONITOR$/main.php?p=20201&o=svcpb',
+                                    'history': '$MONITOR$/main.php?p=203'}
+            else:
+                if conf.debug_mode is True:
+                    self.Debug(server=self.get_name(), debug='Error getting the home page : ' + error_versioncheck)
+            del result_versioncheck, raw_versioncheck, error_versioncheck
+
+    def reset_HTTP(self):
+        '''
+        Centreon needs deletion of SID
+        '''
+        self.SID = None
+        self.SID = self._get_sid().result
 
     def open_monitor(self, host, service=''):
-        if self.use_autologin == True:
+        if self.use_autologin is True:
             auth = '&autologin=1&useralias=' + self.username + '&token=' + self.autologin_key
-            if host == '_Module_Meta':
-                webbrowser_open(self.monitor_cgi_url + '/index.php?' + urllib.parse.urlencode({'p':20206,'o':'meta'}) + auth )
-            elif service == '':
-                if self.centreon_version == 2.7:
-                    webbrowser_open(self.monitor_cgi_url + '/main.php?' + urllib.parse.urlencode({'p':20202,'o':'hd', 'host_name':host}) + auth )
-                else:
-                    webbrowser_open(self.monitor_cgi_url + '/index.php?' + urllib.parse.urlencode({'p':201,'o':'hd', 'host_name':host}) + auth )
-            else:
-                webbrowser_open(self.monitor_cgi_url + '/index.php?' + urllib.parse.urlencode({'p':202, 'o':'svcd',  'host_name':host, 'service_description':service}) + auth )
         else:
-            if host == '_Module_Meta':
-                webbrowser_open(self.monitor_cgi_url + '/main.php?' + urllib.parse.urlencode({'p':20206,'o':'meta'}))
-            # must be a host if service is empty...
-            elif service == '':
-                if self.centreon_version == 2.7:
-                    webbrowser_open(self.monitor_cgi_url + '/main.php?' + urllib.parse.urlencode({'p':20202,'o':'hd', 'host_name':host}))
-                else:
-                    webbrowser_open(self.monitor_cgi_url + '/index.php?' + urllib.parse.urlencode({'p':201,'o':'hd', 'host_name':host}))
+            auth = ''
+
+        #  Meta - Centreon < 2.7
+        if host == '_Module_Meta' and self.centreon_version < 2.7:
+            webbrowser_open(self.urls_centreon['index'] + '?' + urllib.parse.urlencode({'p': 20206, 'o': 'meta'}) + auth )
+        #  Meta - Centreon 2.7
+        elif host == '_Module_Meta' and self.centreon_version == 2.7:
+            webbrowser_open(self.urls_centreon['main'] + '?' + urllib.parse.urlencode({'p':20206, 'o':'meta'}) + auth )
+        #  Meta - Centreon 2.8
+        elif host == '_Module_Meta' and self.centreon_version == 2.8:
+            m =  re.search(r'^.+ \((?P<rsd>.+)\)$', service)
+            if m:
+                service = m.group('rsd')
+                webbrowser_open(self.urls_centreon['main'] + '?' + urllib.parse.urlencode({'p':20201,'o':'svcd','host_name':'_Module_Meta','service_description':service}) + auth )
+        # must be a host if service is empty
+        elif service == '':
+            if self.centreon_version == 2.7 or self.centreon_version == 2.8:
+                webbrowser_open(self.urls_centreon['main'] + '?' + urllib.parse.urlencode({'p':20202,'o':'hd', 'host_name':host}) + auth )
             else:
-                webbrowser_open(self.monitor_cgi_url + '/main.php?' + urllib.parse.urlencode({'p':202, 'o':'svcd',  'host_name':host, 'service_description':service}))
+                webbrowser_open(self.urls_centreon['main'] + '?' + urllib.parse.urlencode({'p':201,'o':'hd', 'host_name':host}) + auth )
+        # so it's a service
+        else:
+            if self.centreon_version == 2.7 or self.centreon_version == 2.8:
+                webbrowser_open(self.urls_centreon['main'] + '?' + urllib.parse.urlencode({'p':20201,'o':'svcd', 'host_name':host, 'service_description':service}) + auth )
+            else:
+                webbrowser_open(self.urls_centreon['main'] + '?' + urllib.parse.urlencode({'p':202, 'o':'svcd',  'host_name':host, 'service_description':service}) + auth )
 
 
     def _get_sid(self):
@@ -167,22 +182,23 @@ class CentreonServer(GenericServer):
         gets a shiny new SID for XML HTTP requests to Centreon cutting it out via .partition() from raw HTML
         additionally get php session cookie
         '''
-        # BROWSER_URLS using autologin
-        if str(self.use_autologin) == 'True':
-            auth = '&autologin=1&useralias=' + self.username + '&token=' + self.autologin_key
-            self.BROWSER_URLS= { 'monitor': self.BROWSER_URLS['monitor'] + auth,\
-                            'hosts': self.BROWSER_URLS['hosts'] + auth,\
-                            'services': self.BROWSER_URLS['services'] + auth,\
-                            'history': self.BROWSER_URLS['history'] + auth}
         try:
+            # Aulogin with key, BROWSER_URLS needs the key
             if self.use_autologin == True:
-              raw = self.FetchURL(self.monitor_cgi_url + '/index.php?p=101&autologin=1&useralias=' + self.username + '&token=' + self.autologin_key, giveback='raw')
-              if conf.debug_mode == True:
-                  self.Debug(server=self.get_name(), debug='Autologin : ' + self.username + ' : ' + self.autologin_key)
+                auth = '&autologin=1&useralias=' + self.username + '&token=' + self.autologin_key
+                self.BROWSER_URLS= { 'monitor': self.BROWSER_URLS['monitor'] + auth,\
+                                    'hosts': self.BROWSER_URLS['hosts'] + auth,\
+                                    'services': self.BROWSER_URLS['services'] + auth,\
+                                    'history': self.BROWSER_URLS['history'] + auth}
+                raw = self.FetchURL(self.monitor_cgi_url + '/index.php?p=101&autologin=1&useralias=' + self.username + '&token=' + self.autologin_key, giveback='raw')
+                if conf.debug_mode == True:
+                    self.Debug(server=self.get_name(), debug='Autologin : ' + self.username + ' : ' + self.autologin_key)
+            # Password auth
             else:
                 login = self.FetchURL(self.monitor_cgi_url + '/index.php')
                 if login.error == '' and login.status_code == 200:
-                    if self.centreon_version == 2.7 or self.centreon_version == 2.66:
+                    # Centreon > 2.6.6 implement a token
+                    if  self.centreon_version == 2.8 or self.centreon_version == 2.7 or self.centreon_version == 2.66:
                         form = login.result.find('form')
                         form_inputs = {}
                         # Need to catch the centreon_token for login to work
@@ -201,6 +217,11 @@ class CentreonServer(GenericServer):
             sid = self.session.cookies['PHPSESSID']
             if conf.debug_mode == True:
                 self.Debug(server=self.get_name(), debug='SID : ' + sid)
+            # those broker urls would not be changing too often so this check migth be done here
+            if self.first_login:
+                self._get_xml_path(sid)
+                self._define_url()
+                self.first_login = False
             return Result(result=sid)
 
         except:
@@ -221,7 +242,10 @@ class CentreonServer(GenericServer):
                 cgi_data['p'] = '20106'
             elif self.centreon_version == 2.7:
                 cgi_data['p'] = '210'
-            result = self.FetchURL(self.monitor_cgi_url + '/main.php?', cgi_data = cgi_data, giveback='obj')
+            elif self.centreon_version == 2.8:
+                cgi_data['o'] = 'a'
+                cgi_data['p'] = '210'
+            result = self.FetchURL(self.urls_centreon['main'], cgi_data = cgi_data, giveback='obj')
 
             html, error = result.result, result.error
             if error == '':
@@ -261,11 +285,7 @@ class CentreonServer(GenericServer):
                     'p': 20102,
                     'time': 0}
 
-        # define hosts xml URL, because of inconsistant url
-        if self.centreon_version == 2.7:
-            centreon_hosts = self.monitor_cgi_url + '/include/monitoring/status/Hosts/' + self.XML_PATH + '/broker/hostXML.php?' + urllib.parse.urlencode(cgi_data)
-        else:
-            centreon_hosts = self.monitor_cgi_url + '/include/monitoring/status/Hosts/' + self.XML_PATH + '/hostXML.php?' + urllib.parse.urlencode(cgi_data)
+        centreon_hosts = self.urls_centreon['xml_hosts'] + '?' + urllib.parse.urlencode(cgi_data)
 
         result = self.FetchURL(centreon_hosts, giveback='xml')
         xmlobj, error, status_code = result.result, result.error, result.status_code
@@ -305,18 +325,20 @@ class CentreonServer(GenericServer):
         return Result(result=address)
 
 
-    def _get_xml_url(self):
+    def _get_xml_path(self,sid):
         '''
         Find out where this instance of Centreon is publishing the status XMLs
         Centreon 2.6 + ndo/c.broker - /include/monitoring/status/Hosts/xml/{ndo,broker}/hostXML.php according to configuration
         Centreon 2.7 + c.broker - /include/monitoring/status/Hosts/xml/hostXML.php
+        Centreon 2.8 + c.broker - /include/monitoring/status/Hosts/xml/hostXML.php
         regexping HTML for Javascript
         '''
         if self.centreon_version == 2.2:
             self.XML_PATH = 'xml'
         elif self.centreon_version == 2.3456 or self.centreon_version == 2.66:
             # 2.6 support NDO and C. Broker, we must check which one is used
-            cgi_data = {'p':201, 'sid':self.SID}
+            # cgi_data = {'p':201, 'sid':self.SID}
+            cgi_data = {'p':201, 'sid':sid}
             result = self.FetchURL(self.monitor_cgi_url + '/main.php', cgi_data=cgi_data, giveback='raw')
             raw, error = result.result, result.error
             if error == '':
@@ -337,21 +359,73 @@ class CentreonServer(GenericServer):
                 if conf.debug_mode == True:
                     self.Debug(server=self.get_name(), debug='Unable to fetch the main page to detect the broker : ' + error)
             del result, error
-        elif self.centreon_version == 2.7:
+        elif self.centreon_version == 2.7 or self.centreon_version == 2.8:
             self.XML_PATH = 'xml'
+            if conf.debug_mode == True:
+                self.Debug(server=self.get_name(), debug='Only Centreon Broker is supported in Centeon >= 2.7 so: XML_PATH='+ self.XML_PATH)
+
+
+    def _define_url(self):
+        urls_centreon_2_2 = {
+            'main': self.monitor_cgi_url + '/main.php',
+            'index': self.monitor_cgi_url + '/index.php',
+            'xml_services': self.monitor_cgi_url + '/include/monitoring/status/Services/' + self.XML_PATH + '/serviceXML.php',
+            'xml_hosts': self.monitor_cgi_url + '/include/monitoring/status/Hosts/' + self.XML_PATH + '/hostXML.php',
+            'xml_meta': self.monitor_cgi_url + '/include/monitoring/status/Meta/' + self.XML_PATH + '/metaServiceXML.php',
+            'xml_hostSendCommand': self.monitor_cgi_url + '/include/monitoring/objectDetails/xml/hostSendCommand.php',
+            'xml_serviceSendCommand': self.monitor_cgi_url + '/include/monitoring/objectDetails/xml/serviceSendCommand.php',
+            'external_cmd_cmdPopup': self.monitor_cgi_url + '/include/monitoring/external_cmd/cmdPopup.php'
+        }
+
+        # inconsistant url in Centreon 2.7
+        urls_centreon_2_7 = {
+            'main': self.monitor_cgi_url + '/main.php',
+            'index': self.monitor_cgi_url + '/index.php',
+            'xml_services': self.monitor_cgi_url + '/include/monitoring/status/Services/' + self.XML_PATH + '/serviceXML.php',
+            'xml_hosts': self.monitor_cgi_url + '/include/monitoring/status/Hosts/' + self.XML_PATH + '/broker/hostXML.php',
+            'xml_meta': self.monitor_cgi_url + '/include/monitoring/status/Meta/' + self.XML_PATH + '/broker/metaServiceXML.php',
+            'xml_hostSendCommand': self.monitor_cgi_url + '/include/monitoring/objectDetails/xml/hostSendCommand.php',
+            'xml_serviceSendCommand': self.monitor_cgi_url + '/include/monitoring/objectDetails/xml/serviceSendCommand.php',
+            'external_cmd_cmdPopup': self.monitor_cgi_url + '/include/monitoring/external_cmd/cmdPopup.php'
+        }
+
+        urls_centreon_2_8 = {
+            'main': self.monitor_cgi_url + '/main.php',
+            'index': self.monitor_cgi_url + '/index.php',
+            'xml_services': self.monitor_cgi_url + '/include/monitoring/status/Services/' + self.XML_PATH + '/serviceXML.php',
+            'xml_hosts': self.monitor_cgi_url + '/include/monitoring/status/Hosts/' + self.XML_PATH + '/hostXML.php',
+            'xml_hostSendCommand': self.monitor_cgi_url + '/include/monitoring/objectDetails/xml/hostSendCommand.php',
+            'xml_serviceSendCommand': self.monitor_cgi_url + '/include/monitoring/objectDetails/xml/serviceSendCommand.php',
+            'external_cmd_cmdPopup': self.monitor_cgi_url + '/include/monitoring/external_cmd/cmdPopup.php'
+        }
+
+        if self.centreon_version < 2.7:
+            self.urls_centreon = urls_centreon_2_2
+        elif self.centreon_version == 2.7:
+            self.urls_centreon = urls_centreon_2_7
+        elif self.centreon_version == 2.8:
+            self.urls_centreon = urls_centreon_2_8
+        # print IP in debug mode
+        if conf.debug_mode == True:
+            self.Debug(server=self.get_name(), debug='URLs defined for Centreon %s' % (self.centreon_version))
 
 
     def _get_host_id(self, host):
         '''
         get host_id via parsing raw html
         '''
-        cgi_data = {'p': 201, 'o': 'hd', 'host_name': host, 'sid': self.SID}
+        if self.centreon_version < 2.7:
+            cgi_data = {'p': 20102, 'o': 'hd', 'host_name': host, 'sid': self.SID}
+        else:
+            cgi_data = {'p': 20202, 'o': 'hd', 'host_name': host, 'sid': self.SID}
 
-        result = self.FetchURL(self.monitor_cgi_url + '/main.php' , cgi_data=cgi_data, giveback='raw')
+        url = self.urls_centreon['main'] + '?' + urllib.parse.urlencode(cgi_data)
+
+        result = self.FetchURL(url, giveback='raw')
         raw, error = result.result, result.error
 
         if error == '':
-            host_id = raw.partition('var host_id = '')[2].partition(''')[0]
+            host_id = raw.partition("var host_id = '")[2].partition("'")[0]
             del raw
         else:
             if conf.debug_mode == True:
@@ -382,7 +456,7 @@ class CentreonServer(GenericServer):
                     'o':'svcd'}
 
         # This request must be done in a GET, so just encode the parameters and fetch
-        result = self.FetchURL(self.monitor_cgi_url + "/main.php?" + urllib.parse.urlencode(cgi_data), giveback="raw")
+        result = self.FetchURL(self.urls_centreon['main'] + '?' + urllib.parse.urlencode(cgi_data), giveback="raw")
         raw, error = result.result, result.error
 
         if error == '':
@@ -393,7 +467,7 @@ class CentreonServer(GenericServer):
                 self.Debug(server=self.get_name(), host=host, service=service, debug='- Get host/svc ID : ' + host_id + '/' + svc_id)
         else:
             if conf.debug_mode == True:
-                self.Debug(server=self.get_name(), host=host, service=service, debug='IDs could not be retrieved.')
+                self.Debug(server=self.get_name(), host=host, service=service, debug='- IDs could not be retrieved.')
 
         # some cleanup
         del result, error
@@ -402,7 +476,7 @@ class CentreonServer(GenericServer):
         try:
             if int(host_id) and int(svc_id):
                 if conf.debug_mode == True:
-                    self.Debug(server=self.get_name(), host=host, service=service, debug='Host ID is ' + host_id + ' ' + svc_id)
+                    self.Debug(server=self.get_name(), host=host, service=service, debug='- Host & Service ID are valid (int)')
                 return host_id,svc_id
             else:
                 return '',''
@@ -417,21 +491,21 @@ class CentreonServer(GenericServer):
         # get sid in case this has not yet been done
         if self.SID == None or self.SID == '':
             self.SID = self._get_sid().result
-            # those broker urls would not be changing too often so this check migth be done here
-            self._get_xml_url()
 
         # services (unknown, warning or critical?)
-        if self.centreon_version == 2.7:
-            nagcgiurl_services = self.monitor_cgi_url + '/include/monitoring/status/Services/' + self.XML_PATH + '/serviceXML.php?' + urllib.parse.urlencode({'num':0, 'limit':999, 'o':'svcpb', 'p':20201, 'nc':0, 'criticality':0, 'statusService':'svcpb', 'sSetOrderInMemory':1, 'sid':self.SID})
+        if self.centreon_version == 2.7 or self.centreon_version == 2.8:
+            nagcgiurl_services = self.urls_centreon['xml_services'] + '?' + urllib.parse.urlencode({'num':0, 'limit':999, 'o':'svcpb', 'p':20201, 'nc':0, 'criticality':0, 'statusService':'svcpb', 'sSetOrderInMemory':1, 'sid':self.SID})
         else:
-            nagcgiurl_services = self.monitor_cgi_url + '/include/monitoring/status/Services/' + self.XML_PATH + '/serviceXML.php?' + urllib.parse.urlencode({'num':0, 'limit':999, 'o':'svcpb', 'sort_type':'status', 'sid':self.SID})
+            nagcgiurl_services = self.urls_centreon['xml_services'] + '?' + urllib.parse.urlencode({'num':0, 'limit':999, 'o':'svcpb', 'sort_type':'status', 'sid':self.SID})
 
         # hosts (up or down or unreachable)
         # define hosts xml URL, because of inconsistant url
         if self.centreon_version == 2.7:
-            nagcgiurl_hosts = self.monitor_cgi_url + '/include/monitoring/status/Hosts/' + self.XML_PATH + '/broker/hostXML.php?' + urllib.parse.urlencode({'num':0, 'limit':999, 'o':'hpb', 'p':20202, 'criticality':0, 'statusHost':'hpb', 'sSetOrderInMemory':1, 'sid':self.SID})
+            nagcgiurl_hosts = self.urls_centreon['xml_hosts'] + '?' + urllib.parse.urlencode({'num':0, 'limit':999, 'o':'hpb', 'p':20202, 'criticality':0, 'statusHost':'hpb', 'sSetOrderInMemory':1, 'sid':self.SID})
+        elif self.centreon_version == 2.8:
+            nagcgiurl_hosts = self.urls_centreon['xml_hosts'] + '?' + urllib.parse.urlencode({'num':0, 'limit':999, 'o':'hpb', 'p':20202, 'criticality':0, 'statusHost':'hpb', 'sSetOrderInMemory':1, 'sid':self.SID})
         else:
-            nagcgiurl_hosts = self.monitor_cgi_url + '/include/monitoring/status/Hosts/' + self.XML_PATH + '/hostXML.php?' + urllib.parse.urlencode({'num':0, 'limit':999, 'o':'hpb', 'sort_type':'status', 'sid':self.SID})
+            nagcgiurl_hosts = self.urls_centreon['xml_hosts'] + '?' + urllib.parse.urlencode({'num':0, 'limit':999, 'o':'hpb', 'sort_type':'status', 'sid':self.SID})
 
         # hosts - mostly the down ones
         # unfortunately the hosts status page has a different structure so
@@ -545,41 +619,43 @@ class CentreonServer(GenericServer):
                                   error='Bad session ID',
                                   status_code=status_code)
 
-            # define meta-services xml URL
-            if self.centreon_version == 2.7:
-                nagcgiurl_meta_services = self.monitor_cgi_url + '/include/monitoring/status/Meta/' + self.XML_PATH + '/broker/metaServiceXML.php?' + urllib.parse.urlencode({'num':0, 'limit':999, 'o':'meta', 'sort_type':'status', 'sid':self.SID})
-            else:
-                nagcgiurl_meta_services = self.monitor_cgi_url + '/include/monitoring/status/Meta/' + self.XML_PATH + '/metaServiceXML.php?' + urllib.parse.urlencode({'num':0, 'limit':999, 'o':'meta', 'sort_type':'status', 'sid':self.SID})
+            # In Centreon 2.8, Meta are merge with regular services
+            if self.centreon_version < 2.8:
+                # define meta-services xml URL
+                if self.centreon_version == 2.7:
+                    nagcgiurl_meta_services = self.urls_centreon['xml_meta'] + '?' + urllib.parse.urlencode({'num':0, 'limit':999, 'o':'meta', 'sort_type':'status', 'sid':self.SID})
+                else:
+                    nagcgiurl_meta_services = self.urls_centreon['xml_meta'] + '?' + urllib.parse.urlencode({'num':0, 'limit':999, 'o':'meta', 'sort_type':'status', 'sid':self.SID})
 
-            # retrive meta-services xml STATUS
-            result_meta = self.FetchURL(nagcgiurl_meta_services, giveback='xml')
-            xmlobj_meta, error_meta, status_code_meta = result_meta.result, result_meta.error, result_meta.status_code
-            if error_meta != '' or status_code_meta > 400:
-                return Result(result=xmlobj_meta,
-                              error=copy.deepcopy(error_meta),
-                              status_code=status_code_meta)
+                # retrive meta-services xml STATUS
+                result_meta = self.FetchURL(nagcgiurl_meta_services, giveback='xml')
+                xmlobj_meta, error_meta, status_code_meta = result_meta.result, result_meta.error, result_meta.status_code
+                if error_meta != '' or status_code_meta > 400:
+                    return Result(result=xmlobj_meta,
+                                  error=copy.deepcopy(error_meta),
+                                  status_code=status_code_meta)
 
-            # a second time a bad session id should raise an error
-            if xmlobj_meta.text.lower() == 'bad session id':
-                if conf.debug_mode == True:
-                    self.Debug(server=self.get_name(), debug='Even after renewing session ID, unable to get the XML')
+                # a second time a bad session id should raise an error
+                if xmlobj_meta.text.lower() == 'bad session id':
+                    if conf.debug_mode == True:
+                        self.Debug(server=self.get_name(), debug='Even after renewing session ID, unable to get the XML')
 
-                return Result(result='ERROR',
-                              error='Bad session ID',
-                              status_code=status_code_meta)
+                    return Result(result='ERROR',
+                                  error='Bad session ID',
+                                  status_code=status_code_meta)
 
-            # INSERT META-services xml at the end of the services xml
-            try:
-                    xmlobj.append(xmlobj_meta.reponse)
-            except:
-                    import traceback
-                    traceback.print_exc(file=sys.stdout)
-                    # set checking flag back to False
-                    self.isChecking = False
-                    result, error = self.Error(sys.exc_info())
-                    return Result(result=result, error=error)
-            # do some cleanup
-            del xmlobj_meta
+                # INSERT META-services xml at the end of the services xml
+                try:
+                        xmlobj.append(xmlobj_meta.reponse)
+                except:
+                        import traceback
+                        traceback.print_exc(file=sys.stdout)
+                        # set checking flag back to False
+                        self.isChecking = False
+                        result, error = self.Error(sys.exc_info())
+                        return Result(result=result, error=error)
+                # do some cleanup
+                del xmlobj_meta
 
             for l in xmlobj.findAll('l'):
                 try:
@@ -597,35 +673,49 @@ class CentreonServer(GenericServer):
                         self.new_hosts[str(l.hn.text)].services[str(l.sd.text)].server = self.name
                         self.new_hosts[str(l.hn.text)].services[str(l.sd.text)].status = str(l.cs.text)
 
-                        # if it is a meta-service, add the 'sdl' field in parenthesis after the service name. (used in _set_acknowledge() and _set_recheck()) :
                         if self.new_hosts[str(l.hn.text)].services[str(l.sd.text)].host == '_Module_Meta':
-                            self.new_hosts[str(l.hn.text)].services[str(l.sd.text)].name = '{} ({})'.format(
-                                                                                                                    self.new_hosts[str(l.hn.text)].services[str(l.sd.text)].name,
-                                                                                                                    l.rsd.text
-                            )
-                        # disgusting workaround for https://github.com/HenriWahl/Nagstamon/issues/91
-                        if self.new_hosts[str(l.hn.text)].services[str(l.sd.text)].status in self.TRANSLATIONS:
-                            self.new_hosts[str(l.hn.text)].services[str(l.sd.text)].status = self.TRANSLATIONS[\
-                            self.new_hosts[str(l.hn.text)].services[str(l.sd.text)].status]
-                        if self.new_hosts[str(l.hn.text)].services[str(l.sd.text)].host == '_Module_Meta':
-                            self.new_hosts[str(l.hn.text)].services[str(l.sd.text)].attempt = str(l.ca.text)
+                            # ajusting service name for Meta services
+                            if self.centreon_version < 2.8:
+                                self.new_hosts[str(l.hn.text)].services[str(l.sd.text)].name = '{} ({})'.format(str(l.sd.text), l.rsd.text)
+                                self.new_hosts[str(l.hn.text)].services[str(l.sd.text)].attempt = str(l.ca.text)
+                            else:
+                                self.new_hosts[str(l.hn.text)].services[str(l.sd.text)].name = '{} ({})'.format(str(l.sdn.text), l.sdl.text)
+                                self.new_hosts[str(l.hn.text)].services[str(l.sd.text)].attempt, \
+                                self.new_hosts[str(l.hn.text)].services[str(l.sd.text)].status_type = str(l.ca.text).split(' ')
                         else:
                             self.new_hosts[str(l.hn.text)].services[str(l.sd.text)].attempt, \
                             self.new_hosts[str(l.hn.text)].services[str(l.sd.text)].status_type = str(l.ca.text).split(' ')
+
+                        # disgusting workaround for https://github.com/HenriWahl/Nagstamon/issues/91
+                        # Still needed in Centreon 2.8 at least : https://github.com/HenriWahl/Nagstamon/issues/344
+                        # Need enhancement, we can do service state matching with this field <sc>service_unknown</sc>
+                        #if self.centreon_version < 2.66:
+                        if self.new_hosts[str(l.hn.text)].services[str(l.sd.text)].status in self.TRANSLATIONS:
+                            self.new_hosts[str(l.hn.text)].services[str(l.sd.text)].status = self.TRANSLATIONS[\
+                            self.new_hosts[str(l.hn.text)].services[str(l.sd.text)].status]
+
+                        if not (self.centreon_version < 2.8 and self.new_hosts[str(l.hn.text)].services[str(l.sd.text)].host == '_Module_Meta'):
                             self.new_hosts[str(l.hn.text)].services[str(l.sd.text)].status_type =\
                             self.HARD_SOFT[self.new_hosts[str(l.hn.text)].services[str(l.sd.text)].status_type]
-                            self.new_hosts[str(l.hn.text)].services[str(l.sd.text)].last_check = str(l.lc.text)
-                            self.new_hosts[str(l.hn.text)].services[str(l.sd.text)].duration = str(l.d.text)
-                            self.new_hosts[str(l.hn.text)].services[str(l.sd.text)].status_information = str(l.po.text).replace('\n', ' ').strip()
+
+                        if conf.debug_mode == True:
+                            self.Debug(server=self.get_name(), debug='Service status type : ' + self.new_hosts[str(l.hn.text)].services[str(l.sd.text)].name + '/' + self.new_hosts[str(l.hn.text)].services[str(l.sd.text)].status_type)
+                        self.new_hosts[str(l.hn.text)].services[str(l.sd.text)].last_check = str(l.lc.text)
+                        self.new_hosts[str(l.hn.text)].services[str(l.sd.text)].duration = str(l.d.text)
+                        self.new_hosts[str(l.hn.text)].services[str(l.sd.text)].status_information = str(l.po.text).replace('\n', ' ').strip()
+
                         if l.find('cih') != None:
                             self.new_hosts[str(l.hn.text)].services[str(l.sd.text)].criticality = str(l.cih.text)
                         else:
                             self.new_hosts[str(l.hn.text)].services[str(l.sd.text)].criticality = ''
-                            self.new_hosts[str(l.hn.text)].services[str(l.sd.text)].acknowledged = bool(int(str(l.pa.text)))
-                        if self.new_hosts[str(l.hn.text)].services[str(l.sd.text)].host != '_Module_Meta':
+
+                        self.new_hosts[str(l.hn.text)].services[str(l.sd.text)].acknowledged = bool(int(str(l.pa.text)))
+                        self.new_hosts[str(l.hn.text)].services[str(l.sd.text)].notifications_disabled = not bool(int(str(l.ne.text)))
+
+                        # for features not available in centreon < 2.8 and meta services
+                        if not (self.centreon_version < 2.8 and self.new_hosts[str(l.hn.text)].services[str(l.sd.text)].host == '_Module_Meta'):
                             self.new_hosts[str(l.hn.text)].services[str(l.sd.text)].scheduled_downtime = bool(int(str(l.dtm.text)))
                             self.new_hosts[str(l.hn.text)].services[str(l.sd.text)].flapping = bool(int(str(l.find('is').text)))
-                            self.new_hosts[str(l.hn.text)].services[str(l.sd.text)].notifications_disabled = not bool(int(str(l.ne.text)))
                             self.new_hosts[str(l.hn.text)].services[str(l.sd.text)].passiveonly = not bool(int(str(l.ac.text)))
 
                 except:
@@ -669,16 +759,13 @@ class CentreonServer(GenericServer):
                 if self.centreon_version < 2.7:
                     cgi_data['p'] = '20105'
                     cgi_data['o'] = 'hpb'
-                elif self.centreon_version == 2.7:
+                elif self.centreon_version == 2.7 or self.centreon_version == 2.8:
                     cgi_data['p'] = '20202'
                     cgi_data['o'] = 'hpb'
-
-                # debug
-                if conf.debug_mode == True:
-                    self.Debug(server=self.get_name(), host=host, debug=self.monitor_cgi_url + '/main.php?'+ urllib.parse.urlencode(cgi_data))
+                    cgi_data['centreon_token'] = self.centreon_token
 
                 # running remote cgi command, also possible with GET method
-                raw = self.FetchURL(self.monitor_cgi_url + '/main.php', cgi_data=cgi_data, giveback='raw')
+                raw = self.FetchURL(self.urls_centreon['main'], cgi_data=cgi_data, giveback='raw')
                 del raw
 
             # if host is acknowledged and all services should be to or if a service is acknowledged
@@ -706,27 +793,31 @@ class CentreonServer(GenericServer):
                                 'en': '1'}
                     if self.centreon_version < 2.7:
                         cgi_data['p'] = '20215'
-                    elif self.centreon_version == 2.7:
+                    elif self.centreon_version == 2.7 or self.centreon_version == 2.8:
                         cgi_data['p'] = '20201'
+                        cgi_data['centreon_token'] = self.centreon_token
 
-                    # in case of a meta-service, extract the 'sdl' fild from the service name :
+                    # in case of a meta-service, extract the 'rsd' field from the service name :
                     if host == '_Module_Meta':
                         m =  re.search(r'^.+ \((?P<rsd>.+)\)$', s)
                         if m:
                             rsd = m.group('rsd')
-                            cgi_data = {'p': '20206',
-                                        'o': 'meta',
-                                        'cmd': '70',
-                                        'select[' + host + ';' + rsd + ']': '1',
-                                        'limit': '0'}
+                            if self.centreon_version < 2.8:
+                                cgi_data = {'p': '20206',
+                                            'o': 'meta',
+                                            'cmd': '70',
+                                            'select[' + host + ';' + rsd + ']': '1',
+                                            'limit': '0'}
+                            elif self.centreon_version == 2.8:
+                                cgi_data['service_description'] = rsd
 
-                    # debug
+                    # debug - redondant avec le FetchURL qui donne les données
                     if conf.debug_mode == True:
-                        self.Debug(server=self.get_name(), host=host, service=s, debug=self.monitor_cgi_url + '/main.php?' + urllib.parse.urlencode(cgi_data))
+                        self.Debug(server=self.get_name(), host=host, service=s, debug=self.urls_centreon['main'] + '?' + urllib.parse.urlencode(cgi_data))
 
                     # running remote cgi command with GET method, for some strange reason only working if
                     # giveback is 'raw'
-                    raw = self.FetchURL(self.monitor_cgi_url + '/main.php', cgi_data=cgi_data, giveback='raw')
+                    raw = self.FetchURL(self.urls_centreon['main'], cgi_data=cgi_data, giveback='raw')
                     del raw
         except:
             self.Error(sys.exc_info())
@@ -738,43 +829,26 @@ class CentreonServer(GenericServer):
         '''
         try:
         # decision about host or service - they have different URLs
+            #  Meta
             if host == '_Module_Meta':
+                if conf.debug_mode == True:
+                    self.Debug(server=self.get_name(), debug='Recheck on a Meta service, more work to be done')
                 m =  re.search(r'^.+ \((?P<rsd>.+)\)$', service)
                 if m:
                     rsd = m.group('rsd')
-                    cgi_data = urllib.parse.urlencode({'p': '20206',
-                                'o': 'meta',
-                                'cmd': '3',
-                                'select[' + host + ';' + rsd + ']': '1',
-                                'limit':'0'})
-                    url = self.monitor_cgi_url + '/main.php' + cgi_data
+                    if self.centreon_version < 2.8:
+                        url = self.urls_centreon['main'] + '?' + urllib.parse.urlencode({'p': '20206','o': 'meta','cmd': '3','select[' + host + ';' + rsd + ']': '1','limit':'0'})
+                    else:
+                        url = self.urls_centreon['main'] + '?' + urllib.parse.urlencode({'p': '202','o': 'svc','cmd': '3','select[' + host + ';' + rsd + ']': '1','limit':'1','centreon_token':self.centreon_token})
 
             elif service == '':
-                # ... it can only be a host, get the service associated to this host
-                url_service = self.monitor_cgi_url + '/include/monitoring/status/Services/' + self.XML_PATH + '/serviceXML.php?' + urllib.parse.urlencode({'num':0,\
-                     'limit':20,\
-                     'sort_type':'last_state_change',\
-                     'order':'ASC',\
-                     'p':'20215',\
-                     'o':'svc_unhandled',\
-                     'search_host':host,\
-                     'sid':self.SID})
-                result = self.FetchURL(url_service, giveback='xml')
-                xmlobj, error = result.result, result.error
+                # ... it can only be a host, so check all his services and there is a command for that
+                host_id = self._get_host_id(host)
 
-                for l in xmlobj.findAll('l'):
-                    try:
-                        service = l.sd.text
-                    except:
-                        result, error = self.Error(sys.exc_info())
-                        return Result(result=result, error=error)
-
-                # get the id of the host and the service
-                host_id, service_id = self._get_host_and_service_id(host, service)
-                # fill and encode CGI data
-                cgi_data = urllib.parse.urlencode({'cmd':'host_schedule_check', 'actiontype':1,\
-                                             'host_id':host_id, 'service_id':service_id, 'sid':self.SID})
-                url = self.monitor_cgi_url + '/include/monitoring/objectDetails/xml/hostSendCommand.php?' + cgi_data
+                if self.centreon_version < 2.7:
+                    url = self.urls_centreon['xml_hostSendCommand'] + '?' + urllib.parse.urlencode({'cmd':'host_schedule_check', 'actiontype':1,'host_id':host_id,'sid':self.SID})
+                else:
+                    url = self.urls_centreon['xml_hostSendCommand'] + '?' + urllib.parse.urlencode({'cmd':'host_schedule_check', 'actiontype':1,'host_id':host_id})
                 del host_id
 
             else:
@@ -785,8 +859,7 @@ class CentreonServer(GenericServer):
                 cgi_data = urllib.parse.urlencode({'cmd':'service_schedule_check', 'actiontype':1,\
                                              'host_id':host_id, 'service_id':service_id, 'sid':self.SID})
 
-
-                url = self.monitor_cgi_url + '/include/monitoring/objectDetails/xml/serviceSendCommand.php?' + cgi_data
+                url = self.urls_centreon['xml_serviceSendCommand'] + '?' + cgi_data
                 del host_id, service_id
 
             # execute POST request
@@ -825,10 +898,18 @@ class CentreonServer(GenericServer):
 
                 # debug
                 if conf.debug_mode == True:
-                    self.Debug(server=self.get_name(), host=host, debug=self.monitor_cgi_url +  '/include/monitoring/external_cmd/cmdPopup.php?' + urllib.parse.urlencode(cgi_data))
+                    self.Debug(server=self.get_name(), host=host, debug=self.urls_centreon['external_cmd_cmdPopup'] + '?' + urllib.parse.urlencode(cgi_data))
 
             else:
                 # It is a service downtime
+
+                # Centreon 2.8 only, in case of a meta-service, extract the 'rsd' field from the service name :
+                if host == '_Module_Meta' and self.centreon_version == 2.8:
+                    m =  re.search(r'^.+ \((?P<rsd>.+)\)$', service)
+                    if m:
+                        rsd = m.group('rsd')
+                        service = rsd
+
                 cgi_data = {'cmd':74,\
                             'duration':duration,\
                             'duration_scale':'m',\
@@ -843,10 +924,10 @@ class CentreonServer(GenericServer):
 
                 # debug
                 if conf.debug_mode == True:
-                    self.Debug(server=self.get_name(), host=host, service=service, debug=self.monitor_cgi_url +  '/include/monitoring/external_cmd/cmdPopup.php?' + urllib.parse.urlencode(cgi_data))
+                    self.Debug(server=self.get_name(), host=host, service=service, debug=self.urls_centreon['external_cmd_cmdPopup'] + '?' + urllib.parse.urlencode(cgi_data))
 
             # This request must be done in a GET, so just encode the parameters and fetch
-            raw = self.FetchURL(self.monitor_cgi_url + "/include/monitoring/external_cmd/cmdPopup.php?" + urllib.parse.urlencode(cgi_data), giveback="raw")
+            raw = self.FetchURL(self.urls_centreon['external_cmd_cmdPopup'] + '?' + urllib.parse.urlencode(cgi_data), giveback="raw")
             del raw
 
         except:
@@ -864,7 +945,7 @@ class CentreonServer(GenericServer):
             if conf.debug_mode == 'True':
                 self.Debug(server=self.get_name(), debug='Old SID: ' + self.SID + ' ' + str(self.Cookie))
             # close the connections to avoid the accumulation of sessions on Centreon
-            url_disconnect = self.monitor_cgi_url + '/index.php?disconnect=1'
+            url_disconnect = self.urls_centreon['index'] + '?disconnect=1'
             raw = self.FetchURL(url_disconnect, giveback='raw')
             del raw
             self.SID = self._get_sid().result
@@ -873,6 +954,3 @@ class CentreonServer(GenericServer):
             self.SIDcount = 0
         else:
             self.SIDcount += 1
-
-0
-

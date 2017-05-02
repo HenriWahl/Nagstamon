@@ -11,7 +11,7 @@
 	<key>CFBundleDisplayName</key>
 	<string>Nagstamon</string>
 	<key>CFBundleIdentifier</key>
-	<string></string>
+	<string>de.ifw-dresden.nagstamon</string>
 	<key>NSHighResolutionCapable</key>
 	<true/>
 </dict>

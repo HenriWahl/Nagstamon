@@ -1,3 +1,9 @@
+nagstamon (2.1-20170323) unstable; urgency=low
+  * New upstream
+   - Development 'master' branch
+   
+ -- Henri Wahl <h.wahl@ifw-dresden.de>  Tue, 14 Mar 2017 08:00:00 +0200
+
 nagstamon (2.0.1) stable; urgency=low
   * New upstream
    - Major Centreon bug making it useless

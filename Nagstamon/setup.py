@@ -17,7 +17,7 @@
 # along with this program; if not, write to the Free Software
 # Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA  02110-1301, USA
 
-from distutils.core import setup
+# from distutils.core import setup
 import sys
 import platform
 
@@ -42,10 +42,11 @@ if platform.system() in ('Windows', 'Darwin'):
                                   'Nagstamon/resources',
                                   '{0}/mediaservice'.format(QTPLUGINS)]
 else:
+    from distutils.core import setup
     os_dependent_include_files = ['Nagstamon/resources']
-    
+
 if platform.system() == 'Windows':
-    base = 'Win32GUI' if sys.platform=='win32' else None
+    base = 'Win32GUI' if sys.platform == 'win32' else None
 
 CLASSIFIERS = [
     'Intended Audience :: System Administrators',
@@ -65,25 +66,25 @@ CLASSIFIERS = [
 
 # Dependencies are automatically detected, but it might need
 # fine tuning.
-build_exe_options = dict(packages = ['PyQt5.QtNetwork',
-                                     'keyring.backends.file',
-                                     'keyring.backends.Gnome',
-                                     'keyring.backends.Google',
-                                     'keyring.backends.kwallet',
-                                     'keyring.backends.multi',
-                                     'keyring.backends.OS_X',
-                                     'keyring.backends.pyfs',
-                                     'keyring.backends.SecretService',
-                                     'keyring.backends.Windows'],
-                        include_files = os_dependent_include_files,
-                        include_msvcr = True,
-                        excludes = [])
+build_exe_options = dict(packages=['PyQt5.QtNetwork',
+    'keyring.backends.file',
+    'keyring.backends.Gnome',
+    'keyring.backends.Google',
+    'keyring.backends.kwallet',
+    'keyring.backends.multi',
+    'keyring.backends.OS_X',
+    'keyring.backends.pyfs',
+    'keyring.backends.SecretService',
+    'keyring.backends.Windows'],
+    include_files=os_dependent_include_files,
+    include_msvcr=True,
+    excludes=[])
 
-bdist_mac_options = dict(iconfile = 'Nagstamon/resources/nagstamon.icns',
-                         custom_info_plist = 'Nagstamon/resources/Info.plist')
+bdist_mac_options = dict(iconfile='Nagstamon/resources/nagstamon.icns',
+        custom_info_plist='Nagstamon/resources/Info.plist')
 
-bdist_dmg_options = dict(volume_label = '{0} {1}'.format(NAME, VERSION),
-                         applications_shortcut = False)
+bdist_dmg_options = dict(volume_label='{0} {1}'.format(NAME, VERSION),
+        applications_shortcut=False)
 
 executables = [
     Executable('nagstamon-qt.py',
@@ -91,23 +92,23 @@ executables = [
                icon='Nagstamon/resources/nagstamon.ico')
 ]
 
-setup(name = NAME,
-      version = VERSION,
-      license = 'GNU GPL v2',
-      description = 'Nagios status monitor for desktop',
-      long_description = 'Nagstamon is a Nagios status monitor which takes place in systray or on desktop (GNOME, KDE, Windows) as floating statusbar to inform you in realtime about the status of your Nagios and derivatives monitored network. It allows to connect to multiple Nagios, Icinga, Opsview, Op5Monitor, Check_MK/Multisite, Centreon and Thruk servers.',
-      classifiers = CLASSIFIERS,
-      author = 'Henri Wahl',
-      author_email = 'h.wahl@ifw-dresden.de',
-      url = 'https://nagstamon.ifw-dresden.de',
-      download_url = 'https://nagstamon.ifw-dresden.de/files-nagstamon/stable/',
-      scripts = ['nagstamon.py'],
-      packages = ['Nagstamon', 'Nagstamon.Server', 'Nagstamon.thirdparty'],
-      package_dir = {'Nagstamon':'Nagstamon'},
-      package_data = {'Nagstamon':['resources/*']},
-      data_files = [('%s/share/man/man1' % sys.prefix, ['Nagstamon/resources/nagstamon.1'])],
-      options = dict(build_exe = build_exe_options,
-                     bdist_mac = bdist_mac_options,
-                     bdist_dmg = bdist_dmg_options),
-      executables = executables
-)
+setup(name=NAME,
+      version=VERSION,
+      license='GNU GPL v2',
+      description='Nagios status monitor for desktop',
+      long_description='Nagstamon is a Nagios status monitor which takes place in systray or on desktop (GNOME, KDE, Windows) as floating statusbar to inform you in realtime about the status of your Nagios and derivatives monitored network. It allows to connect to multiple Nagios, Icinga, Opsview, Op5Monitor, Check_MK/Multisite, Centreon and Thruk servers.',
+      classifiers=CLASSIFIERS,
+      author='Henri Wahl',
+      author_email='h.wahl@ifw-dresden.de',
+      url='https://nagstamon.ifw-dresden.de',
+      download_url='https://nagstamon.ifw-dresden.de/download',
+      scripts=['nagstamon.py'],
+      packages=['Nagstamon', 'Nagstamon.Server', 'Nagstamon.thirdparty'],
+      package_dir={'Nagstamon': 'Nagstamon'},
+      package_data={'Nagstamon': ['resources/*']},
+      data_files=[('%s/share/man/man1' % sys.prefix, ['Nagstamon/resources/nagstamon.1'])],
+      options=dict(build_exe=build_exe_options,
+          bdist_mac=bdist_mac_options,
+          bdist_dmg=bdist_dmg_options),
+      executables=executables
+      )

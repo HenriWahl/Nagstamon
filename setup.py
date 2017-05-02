@@ -19,7 +19,6 @@
 # Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA  02110-1301, USA
 
 # from distutils.core import setup
-from setuptools import setup
 import sys
 import platform
 import os.path
@@ -38,10 +37,9 @@ VERSION = AppInfo.VERSION
 NAGSTAMON_SCRIPT = 'nagstamon.py'
 
 # workaround to get directory of Qt5 plugins to add missing 'mediaservice' folder needed for audio on OSX and Windows
-import os.path
 from PyQt5 import QtCore
 if platform.system() == 'Windows':
-    QTPLUGINS = os.path.join(os.path.dirname(QtCore.__file__), 'plugins')
+    QTPLUGINS = os.path.join(os.path.dirname(QtCore.__file__), 'Qt', 'plugins')
 elif platform.system() == 'Darwin':
     # works of course only with Fink-based Qt5-installation
     QTPLUGINS = '/sw/lib/qt5-mac/plugins'
@@ -64,6 +62,7 @@ if platform.system() in ('Windows', 'Darwin'):
     ]
 
 else:
+    from setuptools import setup
     os_dependent_include_files = ['Nagstamon/resources']
     executables = []
     if os.path.exists('nagstamon'):
@@ -88,10 +87,10 @@ CLASSIFIERS = [
 # Dependencies are automatically detected, but it might need
 # fine tuning.
 build_exe_options = dict(packages=['PyQt5.QtNetwork',
-                                     'keyring.backends.kwallet',
-                                     'keyring.backends.OS_X',
-                                     'keyring.backends.SecretService',
-                                     'keyring.backends.Windows'],
+    'keyring.backends.kwallet',
+    'keyring.backends.OS_X',
+    'keyring.backends.SecretService',
+    'keyring.backends.Windows'],
                         include_files=os_dependent_include_files,
                         include_msvcr=True,
                         excludes=[])
@@ -103,16 +102,18 @@ bdist_dmg_options = dict(volume_label='{0} {1}'.format(NAME, VERSION),
                          applications_shortcut=False)
 
 bdist_rpm_options = dict(requires='python3 '
-                                    'python3-qt5 '
-                                    'python3-beautifulsoup4 '
-                                    'python3-requests '
-                                    'python3-qt5 '
-                                    'python3-SecretStorage '
-                                    'python3-crypto '
-                                    'python3-psutil '
-                                    'qt5-qtsvg '
-                                    'qt5-qtmultimedia ',
-                          dist_dir='./build')
+        'python3-qt5 '
+        'python3-beautifulsoup4 '
+        'python3-requests '
+        'python3-requests-kerberos '
+        'python3-qt5 '
+        'python3-SecretStorage '
+        'python3-crypto '
+        'python3-cryptography '
+        'python3-psutil '
+        'qt5-qtsvg '
+        'qt5-qtmultimedia ',
+        dist_dir='./build')
 
 
 setup(name=NAME,
@@ -127,25 +128,25 @@ setup(name=NAME,
       download_url='https://nagstamon.ifw-dresden.de/files-nagstamon/stable/',
       scripts=[NAGSTAMON_SCRIPT],
       packages=['Nagstamon',
-                  'Nagstamon.QUI',
-                  'Nagstamon.Servers',
-                  'Nagstamon.thirdparty',
-                  'Nagstamon.thirdparty.Xlib',
-                  'Nagstamon.thirdparty.Xlib.ext',
-                  'Nagstamon.thirdparty.Xlib.protocol',
-                  'Nagstamon.thirdparty.Xlib.support',
-                  'Nagstamon.thirdparty.Xlib.xobject',
-                  'Nagstamon.thirdparty.keyring',
-                  'Nagstamon.thirdparty.keyring.backends',
-                  'Nagstamon.thirdparty.keyring.util'],
-      package_dir={'Nagstamon':'Nagstamon'},
-      package_data={'Nagstamon':['resources/*']},
+          'Nagstamon.QUI',
+          'Nagstamon.Servers',
+          'Nagstamon.thirdparty',
+          'Nagstamon.thirdparty.Xlib',
+          'Nagstamon.thirdparty.Xlib.ext',
+          'Nagstamon.thirdparty.Xlib.protocol',
+          'Nagstamon.thirdparty.Xlib.support',
+          'Nagstamon.thirdparty.Xlib.xobject',
+          'Nagstamon.thirdparty.keyring',
+          'Nagstamon.thirdparty.keyring.backends',
+          'Nagstamon.thirdparty.keyring.util'],
+      package_dir={'Nagstamon': 'Nagstamon'},
+      package_data={'Nagstamon': ['resources/*']},
       data_files=[('%s/share/man/man1' % sys.prefix, ['Nagstamon/resources/nagstamon.1.gz']),
-                    ('%s/share/pixmaps' % sys.prefix, ['Nagstamon/resources/nagstamon.svg']),
-                    ('%s/share/applications' % sys.prefix, ['Nagstamon/resources/nagstamon.desktop'])],
+          ('%s/share/pixmaps' % sys.prefix, ['Nagstamon/resources/nagstamon.svg']),
+          ('%s/share/applications' % sys.prefix, ['Nagstamon/resources/nagstamon.desktop'])],
       options=dict(build_exe=build_exe_options,
-                     bdist_mac=bdist_mac_options,
-                     bdist_dmg=bdist_dmg_options,
-                     bdist_rpm=bdist_rpm_options),
+          bdist_mac=bdist_mac_options,
+          bdist_dmg=bdist_dmg_options,
+          bdist_rpm=bdist_rpm_options),
       executables=executables
-)
+      )
