@@ -157,7 +157,7 @@ class Monitos3Server(GenericServer):
         filtering and merging new_hosts to hosts
         is left to nagstamon
         """
-        log.info('in def _get_status')
+        log.debug('in def _get_status')
         self.new_hosts = dict()
         filters = []
         filters.append('Filter: state != 0')  # ignore OK state
@@ -171,8 +171,8 @@ class Monitos3Server(GenericServer):
             # from icinga2
             # self.new_hosts[host_name].real_name = h['host_name']
             # 2017_06_02
-            log.info("monitos_host %s with svid %s, alias %s, dn %s, addr %s is %s", host.name, host.svid, host.alias, host.display_name, host.address, host.status)
-            # log.info("host %s is %s", host.name, host.status)
+            log.info("monitos3_host %s with svid %s, alias %s, dn %s, addr %s is %s", host.name, host.svid, host.alias, host.display_name, host.address, host.status)
+            # log.debug("host %s is %s", host.name, host.status)
         # services
         data = self.get("services", raw=filters)
         for s in self.table(data):
@@ -189,7 +189,7 @@ class Monitos3Server(GenericServer):
             service = self._create_service(s)
             service.host = host.name
             host.services[service.name] = service
-            log.info("monitos_svc host %s with svid %s, svc %s, svid %s is %s", host.name, host.svid, service.name, service.svid, service.status)
+            log.info("monitos3_svc host %s with svid %s, svc %s, svid %s is %s", host.name, host.svid, service.name, service.svid, service.status)
         return Result()
 
     def _update_object(self, obj, data):
@@ -224,9 +224,9 @@ class Monitos3Server(GenericServer):
         result.show_name = data['custom_variables']['_HOST_NAME']
         # 2017_06_02
         log.debug('data for obj %s is: %s', result.name, data)
-        log.info("host name is %s", result.name)
-        log.info("host custom_variables are %s", result.custom_variables)
-        log.info("host address is %s", result.address)
+        log.debug("monitos3 host name is %s", result.name)
+        log.debug("monitos3 host custom_variables are %s", result.custom_variables)
+        log.debug("monitos3 host address is %s", result.address)
         host_states = {0: 'UP', 1: 'DOWN', 2: 'UNKNOWN'}
         result.status = host_states[data['state']]
         return result
@@ -243,25 +243,41 @@ class Monitos3Server(GenericServer):
         return result
 
     def set_recheck(self, info_dict):
-        """schedule a forced recheck of a service or host"""
-        service = info_dict['service']
         host = info_dict['host']
+        log.info('host is: %s', host)
+        host_svid = self.hosts[host].svid
+        log.info('host_svid is: %s', host_svid)
+        service = info_dict['service']
+        svc_svid = self.hosts[host].services[service].svid
+        log.info('svc_svid is: %s', svc_svid)
         if service:
+            log.info('service is: %s', service)
             if self.hosts[host].services[service].is_passive_only():
                 return
-            cmd = ['SCHEDULE_FORCED_SVC_CHECK', host, service, 'TIMESTAMP']
+            cmd = ['SCHEDULE_FORCED_SVC_CHECK', host_svid, svc_svid, 'TIMESTAMP']
+            log.info('cmd is: %s', cmd )
         else:
-            cmd = ['SCHEDULE_FORCED_HOST_CHECK', host, 'TIMESTAMP']
+            cmd = ['SCHEDULE_FORCED_HOST_CHECK', host_svid, 'TIMESTAMP']
+            log.info('cmd is: %s', cmd )
         self.command(';'.join(cmd))
+        # log.debug('recheck cmd is: %s', self.command )
 
     def set_acknowledge(self, info_dict):
         """acknowledge a service or host"""
+        log.info('called def set_acknowledge')
+        log.info('info_dict is: %s', info_dict )
         host = info_dict['host']
+        log.info('host is: %s', host)
+        host_svid = self.hosts[host].svid
+        log.info('host_svid is: %s', host_svid)
+
         service = info_dict['service']
+        svc_svid = self.hosts[host].services[service].svid
+        log.info('svc_svid is: %s', svc_svid)
         if service:
-            cmd = ['ACKNOWLEDGE_SVC_PROBLEM', host, service]
+            cmd = ['ACKNOWLEDGE_SVC_PROBLEM', host_svid, svc_svid]
         else:
-            cmd = ['ACKNOWLEDGE_HOST_PROBLEM', host]
+            cmd = ['ACKNOWLEDGE_HOST_PROBLEM', host_svid]
         cmd.extend([
             '2' if info_dict['sticky'] else '1',
             '1' if info_dict['notify'] else '0',
@@ -269,6 +285,7 @@ class Monitos3Server(GenericServer):
             info_dict['author'],
             info_dict['comment'],
         ])
+        log.info('ack cmd is: %s', ';'.join(cmd) )
         self.command(';'.join(cmd))
 
     def set_downtime(self, info_dict):
@@ -282,11 +299,20 @@ class Monitos3Server(GenericServer):
         return 'n/a', 'n/a'
 
     def open_monitor(self, host, service=''):
-        log.info('open_monitor not implemented')
+        log.info('open_monitor not implemented. host is %s', host)
         # TODO figure out how to add more config options like socket and weburl
+        # line 77
 
     def open_monitor_webpage(self):
-        log.info('open_monitor_webpage not implemented')
+        '''
+            open monitor from systray/toparea context menu
+        '''
+        log.info('trying to implement def open_monitor_webpage')
+        log.info('address is: %s', self.address)
+        # self.address = ('http://localhost')
+        monitos3_url = 'http://172.16.10.102'
+        log.info('monitos3_url is: %s', monitos3_url )
+        webbrowser_open( monitos3_url )
 
     # TODO
     # config dialog fields
