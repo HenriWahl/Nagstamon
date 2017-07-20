@@ -239,8 +239,10 @@ class IcingaServer(GenericServer):
                         # according to http://sourceforge.net/p/nagstamon/bugs/83/ it might
                         # better be host_name instead of host_display_name
                         # legacy Icinga adjustments
-                        if 'host_name' in s: host_name = s['host_name']
-                        elif 'host' in s: host_name = s['host']
+                        if 'host_name' in s:
+                            host_name = s['host_name']
+                        elif 'host' in s:
+                            host_name = s['host']
                     else:
                         # https://github.com/HenriWahl/Nagstamon/issues/46 on the other hand has
                         # problems with that so here we go with extra display_name option
@@ -253,7 +255,10 @@ class IcingaServer(GenericServer):
                         self.new_hosts[host_name].status = 'UP'
                         # extra Icinga properties to solve https://github.com/HenriWahl/Nagstamon/issues/192
                         # acknowledge needs host_description and no display name
-                        self.new_hosts[host_name].real_name = s['host_name']
+                        if 'host_name' in s:
+                            self.new_hosts[host_name].real_name = s['host_name']
+                        elif 'host' in s:
+                            self.new_hosts[host_name].real_name = s['host']
 
                     if self.use_display_name_host == False:
                         # legacy Icinga adjustments
