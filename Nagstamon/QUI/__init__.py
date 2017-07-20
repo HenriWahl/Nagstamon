@@ -1457,7 +1457,7 @@ class StatusWindow(QWidget):
                self.is_shown is True and\
                self.moving is True:
                 # only hide if shown at least a fraction of a second
-                if self.is_shown_timestamp + 0.1 < time.time():
+                if self.is_shown_timestamp + 0.5 < time.time():
                     if conf.statusbar_floating:
                         self.statusbar.show()
                         self.statusbar.adjustSize()
