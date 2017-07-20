@@ -632,7 +632,8 @@ class Config(object):
             Obfuscate a given string to store passwords etc.
         """
 
-        string = string.encode()
+        # make a string of string in case it is an integer as a numbers-only password
+        string = str(string).encode()
 
         for i in range(count):
             string = base64.b64encode(string).decode()
