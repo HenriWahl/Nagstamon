@@ -186,9 +186,9 @@ class IcingaWeb2Server(GenericServer):
                         self.new_hosts[host_name].status_information = BeautifulSoup(h['host_output'].replace('\n', ' ').strip(), 'html.parser').text
                         self.new_hosts[host_name].passiveonly = not(int(h['host_active_checks_enabled']))
                         self.new_hosts[host_name].notifications_disabled = not(int(h['host_notifications_enabled']))
-                        self.new_hosts[host_name].flapping = int(h['host_is_flapping'])
-                        self.new_hosts[host_name].acknowledged = int(h['host_acknowledged'])
-                        self.new_hosts[host_name].scheduled_downtime = int(h['host_in_downtime'])
+                        self.new_hosts[host_name].flapping = bool(int(h['host_is_flapping']))
+                        self.new_hosts[host_name].acknowledged = bool(int(h['host_acknowledged']))
+                        self.new_hosts[host_name].scheduled_downtime = bool(int(h['host_in_downtime']))
                         self.new_hosts[host_name].status_type = status_type
                         
                         # extra Icinga properties to solve https://github.com/HenriWahl/Nagstamon/issues/192
@@ -273,9 +273,9 @@ class IcingaWeb2Server(GenericServer):
                         self.new_hosts[host_name].services[service_name].status_information = BeautifulSoup(s['service_output'].replace('\n', ' ').strip(), 'html.parser').text
                         self.new_hosts[host_name].services[service_name].passiveonly = not(int(s['service_active_checks_enabled']))
                         self.new_hosts[host_name].services[service_name].notifications_disabled = not(int(s['service_notifications_enabled']))
-                        self.new_hosts[host_name].services[service_name].flapping = int(s['service_is_flapping'])
-                        self.new_hosts[host_name].services[service_name].acknowledged = int(s['service_acknowledged'])
-                        self.new_hosts[host_name].services[service_name].scheduled_downtime = int(s['service_in_downtime'])
+                        self.new_hosts[host_name].services[service_name].flapping = bool(int(s['service_is_flapping']))
+                        self.new_hosts[host_name].services[service_name].acknowledged = bool(int(s['service_acknowledged']))
+                        self.new_hosts[host_name].services[service_name].scheduled_downtime = bool(int(s['service_in_downtime']))
                         self.new_hosts[host_name].services[service_name].status_type = status_type
                         
                         # extra Icinga properties to solve https://github.com/HenriWahl/Nagstamon/issues/192
