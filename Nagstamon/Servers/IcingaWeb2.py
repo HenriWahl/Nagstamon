@@ -244,7 +244,6 @@ class IcingaWeb2Server(GenericServer):
                         host_name = s['host_display_name']
 
                     # host objects contain service objects
-                    # ##if not self.new_hosts.has_key(host_name):
                     if not host_name in self.new_hosts:
                         self.new_hosts[host_name] = GenericHost()
                         self.new_hosts[host_name].name = host_name
@@ -253,13 +252,15 @@ class IcingaWeb2Server(GenericServer):
                         # acknowledge needs host_description and no display name
                         self.new_hosts[host_name].real_name = s['host_name']
 
-                    if self.use_display_name_host == False:
-                        # legacy Icinga adjustments
-                        if 'service_description' in s: service_name = s['service_description']
-                        elif 'description' in s: service_name = s['description']
-                        elif 'service' in s: service_name = s['service']
-                    else:
-                        service_name = s['service_display_name']
+                    #if self.use_display_name_host == False:
+                    #    # legacy Icinga adjustments
+                    #    if 'service_description' in s: service_name = s['service_description']
+                    #    elif 'description' in s: service_name = s['description']
+                    #    elif 'service' in s: service_name = s['service']
+                    #else:
+                    #    service_name = s['service_display_name']
+                    # regarding to https://github.com/HenriWahl/Nagstamon/issues/400 Icinga2 needs no legacy adjustments
+                    service_name = s['service_display_name']
 
                     # if a service does not exist create its object
                     if not service_name in self.new_hosts[host_name].services:
