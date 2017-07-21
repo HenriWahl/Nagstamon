@@ -288,7 +288,8 @@ class IcingaServer(GenericServer):
                         
                         # extra Icinga properties to solve https://github.com/HenriWahl/Nagstamon/issues/192
                         # acknowledge needs service_description and no display name
-                        self.new_hosts[host_name].services[service_name].real_name = s['service_description']
+                        self.new_hosts[host_name].services[service_name].real_name = s.get('service_description',
+                                                                                           s.get('service_display_name'))
                         
                     del s, host_name, service_name
                     
