@@ -76,7 +76,13 @@ class IcingaWeb2Server(GenericServer):
         # dummy default empty cgi urls - get filled later when server version is known
         self.cgiurl_services = None
         self.cgiurl_hosts = None
-
+        
+        # https://github.com/HenriWahl/Nagstamon/issues/400
+        # The displayed name for host and service is the Icinga2 "internal" name and not the display_name from host/service configuration
+        # This name is stored in host/service dict under key 'name' but is also used as dict key for dict containing all hosts/services
+        # The "internal" name must still be used to query IcingaWeb2 and is in dict under key 'real_name' since https://github.com/HenriWahl/Nagstamon/issues/192
+        self.use_display_name_host = True
+        self.use_display_name_service = True
 
     def init_HTTP(self):
         """
