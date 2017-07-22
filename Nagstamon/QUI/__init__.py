@@ -77,10 +77,13 @@ from Nagstamon.QUI.dialog_authentication import Ui_dialog_authentication
 from Nagstamon.QUI.dialog_server_missing import Ui_dialog_server_missing
 from Nagstamon.QUI.dialog_about import Ui_dialog_about
 
+# instead of calling platform.system() every now and then just do it once here
+OS = platform.system()
+
 # only on X11/Linux thirdparty path should be added because it contains the Xlib module
 # needed to tell window manager via EWMH to keep Nagstamon window on all virtual desktops
 # TODO: test if X11 or Wayland is used
-if not platform.system() in NON_LINUX:
+if not OS in NON_LINUX:
     # extract thirdparty path from resources path - make submodules accessible by thirdparty modules
     THIRDPARTY = os.sep.join(RESOURCES.split(os.sep)[0:-1] + ['thirdparty'])
     sys.path.insert(0, THIRDPARTY)
@@ -218,7 +221,7 @@ NUMBER_OF_DISPLAY_CHANGES = 0
 # statusbar permanently seems to vanish at some users desktops
 # see https://github.com/HenriWahl/Nagstamon/issues/222
 # WINDOW_FLAGS = Qt.WindowStaysOnTopHint | Qt.FramelessWindowHint | Qt.ToolTip
-# ##if platform.system() == 'Windows':
+# ##if OS == 'Windows':
 # ##    # WINDOW_FLAGS = Qt.WindowStaysOnTopHint | Qt.FramelessWindowHint | Qt.ToolTip
 # ##    WINDOW_FLAGS = Qt.WindowStaysOnTopHint | Qt.FramelessWindowHint | Qt.Tool
 # ##    # WINDOW_FLAGS = Qt.FramelessWindowHint | Qt.Tool
@@ -338,7 +341,7 @@ class SystemTrayIcon(QSystemTrayIcon):
 
         # MacOSX does not distinguish between left and right click so menu will go to upper menu bar
         # update: apparently not, but own context menu will be shown when icon is clicked an all is OK = green
-        if platform.system() != 'Darwin':
+        if OS != 'Darwin':
             self.setContextMenu(self.menu)
 
     @pyqtSlot()
@@ -386,12 +389,12 @@ class SystemTrayIcon(QSystemTrayIcon):
             evaluate mouse click
         """
         # some obscure Windows problem again
-        if reason == QSystemTrayIcon.Context and platform.system() == 'Windows':
+        if reason == QSystemTrayIcon.Context and OS == 'Windows':
                 self.show_menu.emit()
         # only react on left mouse click on OSX
         elif reason == (QSystemTrayIcon.Trigger or QSystemTrayIcon.DoubleClick):
             # when green icon is displayed and no popwin is about to po up show at least menu
-            if get_worst_status() == 'UP' and platform.system() == 'Darwin':
+            if get_worst_status() == 'UP' and OS == 'Darwin':
                     self.menu.show_at_cursor()
             else:
                 # show status window if there is something to tell
@@ -598,7 +601,7 @@ class MenuContextSystrayicon(MenuContext):
         """
         MenuContext.initialize(self)
         # makes even less sense on OSX
-        if platform.system() != 'Darwin':
+        if OS != 'Darwin':
             self.action_status = QAction('Show status window', self)
             self.action_status.triggered.connect(statuswindow.show_window)
             self.insertAction(self.action_refresh, self.action_status)
@@ -619,7 +622,7 @@ class FlatButton(QToolButton):
 
 
 # OSX does not support flat QToolButtons so keep the neat default ones
-if platform.system() == 'Darwin':
+if OS == 'Darwin':
     Button = QPushButton
     CSS_CLOSE_BUTTON = '''QPushButton {border-width: 0px;
                                        border-style: none;
@@ -896,7 +899,7 @@ class StatusWindow(QWidget):
         self.hide()
 
         # ewmh.py in thirdparty directory needed to keep floating statusbar on all desktops in Linux
-        if not platform.system() in NON_LINUX:
+        if not OS in NON_LINUX:
             self.ewmh = EWMH()
 
         # avoid quitting when using Qt.Tool flag and closing settings dialog
@@ -908,7 +911,7 @@ class StatusWindow(QWidget):
         # show statusbar without being active, just floating
         self.setAttribute(Qt.WA_ShowWithoutActivating)
 
-        if platform.system() == 'Darwin':
+        if OS == 'Darwin':
             # avoid hiding window if it has no focus - necessary on OSX if using flag Qt.Tool
             self.setAttribute(Qt.WA_MacAlwaysShowToolWindow)
 
@@ -939,7 +942,7 @@ class StatusWindow(QWidget):
         self.servers_vbox.setContentsMargins(0, 0, 0, 0)
 
         # test with OSX top menubar
-        if platform.system() == 'Darwin':
+        if OS == 'Darwin':
             self.menubar = QMenuBar()
             action_exit = QAction('exit', self.menubar)
             action_settings = QAction('settings', self.menubar)
@@ -1109,7 +1112,7 @@ class StatusWindow(QWidget):
             # gets in a race condition race the focus or is topmost instead of Nagstamon
             # so the floating statusbar moves silently into a quiet corner of the desktop
             # and raises itself serveral times to be the topmost to make the flags stick
-            if platform.system() == 'Windows':
+            if OS == 'Windows':
                 self.move(-32768, -32768)
                 # just a guess - 10 times seem to be enough
                 for counter in range(100):
@@ -1128,7 +1131,7 @@ class StatusWindow(QWidget):
                 self.show()
 
                 # X11/Linux needs some special treatment to get the statusbar floating on all virtual desktops
-                if not platform.system() in NON_LINUX:
+                if not OS in NON_LINUX:
                     # get all windows...
                     winid = self.winId().__int__()
                     self.ewmh.setWmDesktop(winid, 0xffffffff)
@@ -1176,7 +1179,7 @@ class StatusWindow(QWidget):
 
             self.show_window()
             # fullscreen mode is rather buggy on everything other than OSX so just use a maximized window
-            if platform.system() == 'Darwin':
+            if OS == 'Darwin':
                 self.showFullScreen()
             else:
                 self.show()
@@ -1409,7 +1412,7 @@ class StatusWindow(QWidget):
                     # ...and practice
                     self.resize_window(width, height, x, y)
                     # switch on
-                    if platform.system() == 'Darwin':
+                    if OS == 'Darwin':
                         # delayed because of flickering window in OSX
                         self.timer.singleShot(200, self.set_shown)
                     else:
@@ -1420,7 +1423,7 @@ class StatusWindow(QWidget):
                     # Using the EWMH protocol to move the window to the active desktop.
                     # Seemed to be a problem on XFCE
                     # https://github.com/HenriWahl/Nagstamon/pull/199
-                    if not platform.system() in NON_LINUX and conf.icon_in_systray:
+                    if not OS in NON_LINUX and conf.icon_in_systray:
                         try:
                             winid = self.winId().__int__()
                             deskid = self.ewmh.getCurrentDesktop()
@@ -1635,7 +1638,7 @@ class StatusWindow(QWidget):
             self.stored_y = self.y()
             self.stored_width = self.width()
 
-        if platform.system() == 'Windows':
+        if OS == 'Windows':
             # absolutely strange, but no other solution available
             # - Only on Windows the statusbar is moving FIRST before resizing - no matter which
             #   order was used
@@ -1820,7 +1823,7 @@ class StatusWindow(QWidget):
         """
 
         # X11/Linux needs some special treatment to get the statusbar floating on all virtual desktops
-        if not platform.system() in NON_LINUX:
+        if not OS in NON_LINUX:
             # get all windows...
             winid = self.winId().__int__()
             self.ewmh.setWmDesktop(winid, 0xffffffff)
@@ -1832,7 +1835,7 @@ class StatusWindow(QWidget):
             self.setWindowFlags(WINDOW_FLAGS)
 
         # again and again try to keep that statuswindow on top!
-        if platform.system() == 'Windows' and not conf.fullscreen:
+        if OS == 'Windows' and not conf.fullscreen:
             # find out if no context menu is shown and thus would be
             # overlapped by statuswindow
             for vbox in self.servers_vbox.children():
@@ -2245,7 +2248,7 @@ class StatusBar(QWidget):
 
         # absolutely silly but no other cure in sight
         # strange miscalculation of nagstamon logo on MacOSX
-        if platform.system() == 'Darwin' and 18 <= height <= 24:
+        if OS == 'Darwin' and 18 <= height <= 24:
             height += 1
 
         # adjust logo size to fit to label size
@@ -2458,7 +2461,7 @@ class ServerStatusLabel(QLabel):
 
         # set stylesheet depending on submitted style
         if style in COLOR_STATUS_LABEL:
-            if platform.system() == 'Darwin':
+            if OS == 'Darwin':
                 self.setStyleSheet('''background: {0};
                                       border-radius: 3px;
                                       '''.format(COLOR_STATUS_LABEL[style]))
@@ -2594,9 +2597,9 @@ class ServerVBox(QVBoxLayout):
         if self.label.isVisible() and self.button_monitor.isVisible():
             # compare item heights, decide to take the largest and add 2 time the MARGIN (top and bottom)
             if self.label.sizeHint().height() > self.button_monitor.sizeHint().height():
-                height += self.label.sizeHint().height()
+                height += self.label.sizeHint().height() + 2
             else:
-                height += self.button_monitor.sizeHint().height()
+                height += self.button_monitor.sizeHint().height() + 2
         return height
 
     @pyqtSlot()
@@ -2692,7 +2695,7 @@ class ServerVBox(QVBoxLayout):
     def update_label(self):
         self.label.setText('<big><b>&nbsp;{0}@{1}</b></big>'.format(self.server.username, self.server.name))
         # let label padding keep top and bottom space - apparently not necessary on OSX
-        if platform.system() != 'Darwin':
+        if OS != 'Darwin':
             self.label.setStyleSheet('''padding-top: {0}px;
                                         padding-bottom: {0}px;'''.format(SPACE))
 
@@ -3051,7 +3054,7 @@ class TreeView(QTreeView):
             Therefore the .available flag is necessary
         """
 
-        if self.action_menu.available or platform.system() != 'Windows':
+        if self.action_menu.available or OS != 'Windows':
 
             # set flag for Windows
             self.action_menu.available = False
@@ -4824,10 +4827,10 @@ class Dialog_Settings(Dialog):
             shopw dialog for selection of non-default browser
         """
         # present dialog with OS-specific sensible defaults
-        if platform.system() == 'Windows':
+        if OS == 'Windows':
             filter = 'Executables (*.exe *.EXE);; All files (*)'
             directory = os.environ['ProgramFiles']
-        elif platform.system() == 'Darwin':
+        elif OS == 'Darwin':
             filter = ''
             directory = '/Applications'
         else:
@@ -5971,7 +5974,7 @@ class DBus(QObject):
         # see https://developer.gnome.org/notification-spec/#icons-and-images
         self.hints = {'image-path': '%s%snagstamon.svg' % (RESOURCES, os.sep)}
 
-        if not platform.system() in NON_LINUX and DBUS_AVAILABLE:
+        if not OS in NON_LINUX and DBUS_AVAILABLE:
             if 'dbus' in sys.modules:
                 # try/except needed because of partly occuring problems with DBUS
                 # see https://github.com/HenriWahl/Nagstamon/issues/320
@@ -6134,7 +6137,7 @@ def check_servers():
         dialogs.server_missing.show()
         dialogs.server_missing.initialize('no_server_enabled')
 
-# if platform.system() == 'Darwin':
+# if OS == 'Darwin':
 #    Button = QPushButton
 # else:
 #    Button = FlatButton
