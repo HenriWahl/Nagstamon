@@ -1418,6 +1418,8 @@ class StatusWindow(QWidget):
                     else:
                         self.set_shown()
 
+                    self.adjust_dummy_columns()
+
                     self.show()
 
                     # Using the EWMH protocol to move the window to the active desktop.
@@ -1676,6 +1678,7 @@ class StatusWindow(QWidget):
                 # fully displayed statuswindow
                 if self.is_shown is True:
                     width, height, x, y = self.calculate_size()
+                    self.adjust_dummy_columns()
                 else:
                     # statusbar only
                     hint = self.sizeHint()
@@ -1690,6 +1693,29 @@ class StatusWindow(QWidget):
                 self.resize_window(width, height, x, y)
 
                 del(width, height, x, y)
+
+    @pyqtSlot()
+    def adjust_dummy_columns(self):
+        """
+            calculate widest width of all server tables to hide dummy column at the widest one
+        """
+        max_width = 0
+        max_width_table = None
+        for server in self.servers_vbox.children():
+            # if table is wider than current max_width take its width as max_width
+            if server.table.get_real_width() > max_width:
+                max_width = server.table.get_real_width()
+                max_width_table = server.table
+
+        # widest table does not need the dummy column #9
+        for server in self.servers_vbox.children():
+            if max_width_table == server.table:
+                server.table.setColumnHidden(9, True)
+            else:
+                server.table.setColumnHidden(9, False)
+
+        del(max_width, max_width_table, server)
+        return True
 
     @pyqtSlot()
     def store_position(self):
@@ -1727,7 +1753,7 @@ class StatusWindow(QWidget):
             if server.table.get_real_width() > width:
                 width = server.table.get_real_width()
 
-            # if header in ser vbox is wider than width adjust the latter
+            # if header in server vbox is wider than width adjust the latter
             if server.header.sizeHint().width() > width:
                 width = server.header.sizeHint().width()
         return width
@@ -2973,9 +2999,6 @@ class TreeView(QTreeView):
 
         # display mode - all or only header to display error
         self.is_shown = False
-
-        #self.setColumnHidden(9, True)
-
 
     @pyqtSlot()
     def set_font(self):
