@@ -3038,6 +3038,12 @@ class TreeView(QTreeView):
         index = self.indexAt(QPoint(event.x(), event.y()))
         self.cell_clicked(index)
 
+    def wheelEvent(self, event):
+        """
+            avoid scrollable single treeview in Linux and GNOME3 by simply do nothing when getting a wheel event
+        """
+        event.ignore()
+
     @pyqtSlot()
     def cell_clicked(self, index):
         """
