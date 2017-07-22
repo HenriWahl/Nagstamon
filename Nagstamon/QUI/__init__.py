@@ -2974,6 +2974,9 @@ class TreeView(QTreeView):
         # display mode - all or only header to display error
         self.is_shown = False
 
+        #self.setColumnHidden(9, True)
+
+
     @pyqtSlot()
     def set_font(self):
         """
