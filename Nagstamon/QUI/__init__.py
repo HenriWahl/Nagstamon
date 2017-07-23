@@ -1537,8 +1537,12 @@ class StatusWindow(QWidget):
 
             screen_or_widget = get_screen(self.icon_x, self.icon_y)
 
+        # only consider offset if it is configured
+        if conf.systray_offset_use:
+            available_height = desktop.availableGeometry(screen_or_widget).height() - conf.systray_offset
+        else:
+            available_height = desktop.availableGeometry(screen_or_widget).height()
         available_width = desktop.availableGeometry(screen_or_widget).width()
-        available_height = desktop.availableGeometry(screen_or_widget).height()
         available_x = desktop.availableGeometry(screen_or_widget).x()
         available_y = desktop.availableGeometry(screen_or_widget).y()
         del(screen_or_widget)
@@ -1561,9 +1565,12 @@ class StatusWindow(QWidget):
                 self.top = True
             else:
                 self.top = False
-
             # take systray icon position as reference
-            x = self.icon_x
+            # assuming that a left oriented systray as in GNOME3 will need x = 0
+            if self.icon_x < desktop.screenGeometry(self).width() / 2 + available_x:
+                x = 0
+            else:
+                x = self.icon_x
 
         # get height from tablewidgets
         real_height = self.get_real_height()
@@ -4085,6 +4092,9 @@ class Dialog_Settings(Dialog):
             # regular expressions for filtering status information
             self.ui.input_checkbox_re_status_information_enabled: [self.ui.input_lineedit_re_status_information_pattern,
                 self.ui.input_checkbox_re_status_information_reverse],
+            # offset for statuswindow when using systray
+            self.ui.input_radiobutton_icon_in_systray: [self.ui.input_checkbox_systray_offset_use],
+            self.ui.input_checkbox_systray_offset_use: [self.ui.input_spinbox_systray_offset],
             # display to use in fullscreen mode
             self.ui.input_radiobutton_fullscreen: [self.ui.label_fullscreen_display,
                 self.ui.input_combobox_fullscreen_display],

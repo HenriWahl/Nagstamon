@@ -42,7 +42,7 @@
       </sizepolicy>
      </property>
      <property name="currentIndex">
-      <number>2</number>
+      <number>1</number>
      </property>
      <widget class="QWidget" name="tab_servers">
       <attribute name="title">
@@ -399,7 +399,7 @@
          </layout>
         </widget>
        </item>
-       <item row="10" column="0">
+       <item row="11" column="0">
         <spacer name="verticalSpacer_4">
          <property name="orientation">
           <enum>Qt::Vertical</enum>
@@ -412,7 +412,7 @@
          </property>
         </spacer>
        </item>
-       <item row="9" column="0">
+       <item row="10" column="0">
         <widget class="QGroupBox" name="groupbox_detailed_summary_popup">
          <property name="title">
           <string>Statusbar details popup:</string>
@@ -569,56 +569,33 @@
           <property name="spacing">
            <number>5</number>
           </property>
-          <item row="2" column="0">
-           <layout class="QHBoxLayout" name="horizontalLayout_16">
-            <property name="spacing">
-             <number>5</number>
+          <item row="0" column="0">
+           <widget class="QRadioButton" name="input_radiobutton_statusbar_floating">
+            <property name="text">
+             <string>Floating statusbar</string>
             </property>
-            <property name="leftMargin">
-             <number>0</number>
-            </property>
-            <property name="topMargin">
-             <number>0</number>
-            </property>
-            <property name="rightMargin">
-             <number>0</number>
-            </property>
-            <property name="bottomMargin">
-             <number>0</number>
-            </property>
+           </widget>
+          </item>
+          <item row="1" column="0">
+           <layout class="QHBoxLayout" name="horizontalLayout_7">
             <item>
-             <widget class="QRadioButton" name="input_radiobutton_fullscreen">
+             <widget class="QRadioButton" name="input_radiobutton_icon_in_systray">
               <property name="text">
-               <string>Fullscreen</string>
+               <string>Icon in systray</string>
               </property>
              </widget>
             </item>
             <item>
-             <layout class="QHBoxLayout" name="horizontalLayout_17">
-              <property name="spacing">
-               <number>5</number>
-              </property>
-              <property name="leftMargin">
-               <number>5</number>
-              </property>
-              <property name="topMargin">
-               <number>0</number>
-              </property>
-              <property name="rightMargin">
-               <number>5</number>
-              </property>
-              <property name="bottomMargin">
-               <number>0</number>
-              </property>
+             <layout class="QHBoxLayout" name="horizontalLayout_16">
               <item>
-               <widget class="QLabel" name="label_fullscreen_display">
+               <widget class="QCheckBox" name="input_checkbox_systray_offset_use">
                 <property name="text">
-                 <string>Display to use:</string>
+                 <string>Use offset</string>
                 </property>
                </widget>
               </item>
               <item>
-               <widget class="QComboBox" name="input_combobox_fullscreen_display"/>
+               <widget class="QSpinBox" name="input_spinbox_systray_offset"/>
               </item>
               <item>
                <spacer name="horizontalSpacer_6">
@@ -637,24 +614,44 @@
             </item>
            </layout>
           </item>
-          <item row="1" column="0">
-           <widget class="QRadioButton" name="input_radiobutton_icon_in_systray">
-            <property name="text">
-             <string>Icon in systray</string>
-            </property>
-           </widget>
-          </item>
-          <item row="0" column="0">
-           <widget class="QRadioButton" name="input_radiobutton_statusbar_floating">
-            <property name="text">
-             <string>Floating statusbar</string>
-            </property>
-           </widget>
+          <item row="5" column="0">
+           <layout class="QHBoxLayout" name="horizontalLayout_17">
+            <item>
+             <widget class="QRadioButton" name="input_radiobutton_fullscreen">
+              <property name="text">
+               <string>Fullscreen</string>
+              </property>
+             </widget>
+            </item>
+            <item>
+             <widget class="QLabel" name="label_fullscreen_display">
+              <property name="text">
+               <string>Display to use:</string>
+              </property>
+             </widget>
+            </item>
+            <item>
+             <widget class="QComboBox" name="input_combobox_fullscreen_display"/>
+            </item>
+            <item>
+             <spacer name="horizontalSpacer_8">
+              <property name="orientation">
+               <enum>Qt::Horizontal</enum>
+              </property>
+              <property name="sizeHint" stdset="0">
+               <size>
+                <width>40</width>
+                <height>20</height>
+               </size>
+              </property>
+             </spacer>
+            </item>
+           </layout>
           </item>
          </layout>
         </widget>
        </item>
-       <item row="3" column="0">
+       <item row="4" column="0">
         <widget class="QGroupBox" name="groupbox_font">
          <property name="title">
           <string>Font:</string>
@@ -2812,8 +2809,6 @@
   <tabstop>input_radiobutton_long_display</tabstop>
   <tabstop>input_radiobutton_short_display</tabstop>
   <tabstop>input_radiobutton_statusbar_floating</tabstop>
-  <tabstop>input_radiobutton_fullscreen</tabstop>
-  <tabstop>input_combobox_fullscreen_display</tabstop>
   <tabstop>input_radiobutton_popup_details_hover</tabstop>
   <tabstop>input_radiobutton_close_details_hover</tabstop>
   <tabstop>input_radiobutton_popup_details_clicking</tabstop>
@@ -2918,7 +2913,6 @@
   <tabstop>input_spinbox_defaults_downtime_duration_minutes</tabstop>
   <tabstop>input_lineedit_defaults_downtime_comment</tabstop>
   <tabstop>input_lineedit_defaults_submit_check_result_comment</tabstop>
-  <tabstop>input_radiobutton_icon_in_systray</tabstop>
  </tabstops>
  <resources/>
  <connections>
