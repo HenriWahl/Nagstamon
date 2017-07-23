@@ -65,8 +65,9 @@ def winmain():
     print('VERSION_IS:', VERSION_IS)
 
     ISCC = r'{0}{1}Inno Setup 5{1}iscc.exe'.format(os.environ['PROGRAMFILES{0}'.format(ARCH_OPTS[ARCH][2])], os.sep)
-    DIR_BUILD_EXE = '{0}{1}exe.{2}-{3}'.format(CURRENT_DIR, os.sep, ARCH_OPTS[ARCH][0], PYTHON_VERSION)
-    DIR_BUILD_NAGSTAMON = '{0}{1}Nagstamon-{2}-win{3}'.format(CURRENT_DIR, os.sep, VERSION, ARCH)
+    ###DIR_BUILD_EXE = '{0}{1}exe.{2}-{3}'.format(CURRENT_DIR, os.sep, ARCH_OPTS[ARCH][0], PYTHON_VERSION)
+    DIR_BUILD_EXE = '{0}{1}dist{1}Nagstamon'.format(CURRENT_DIR, os.sep, ARCH_OPTS[ARCH][0], PYTHON_VERSION)
+    DIR_BUILD_NAGSTAMON = '{0}{1}dist{1}Nagstamon-{2}-win{3}'.format(CURRENT_DIR, os.sep, VERSION, ARCH)
     FILE_ZIP = '{0}.zip'.format(DIR_BUILD_NAGSTAMON)
 
     # clean older binaries
@@ -78,69 +79,30 @@ def winmain():
                 os.remove(file)
 
     # go one directory up and run setup.py
-    os.chdir('{0}{1}..'.format(CURRENT_DIR, os.sep))
-    subprocess.call([sys.executable, 'setup.py', 'build_exe'], shell=True)
+    #os.chdir('{0}{1}..'.format(CURRENT_DIR, os.sep))
+    #subprocess.call([sys.executable, 'setup.py', 'build_exe'], shell=True)
+
+    # now with pyinstaller - dev version is able to run with Python 3.6
+    # c:\Python36\Scripts\pyinstaller - -noconfirm - -add - data = Nagstamon / resources; resources - -icon = Nagstamon\resources\nagstamon.ico - -windowed - -name = Nagstamon - -hidden -import PyQt5.uic.plugins nagstamon.py
+    #subprocess.call([sys.executable, 'setup.py', 'build_exe'], shell=True)
+    subprocess.call(['{0}\\Scripts\\pyinstaller'.format(sys.base_prefix),
+                     '--noconfirm',
+                     '--add-data=..\\Nagstamon/resources;resources',
+                     '--icon=..\\Nagstamon\\resources\\nagstamon.ico',
+                     '--windowed',
+                     '--name=Nagstamon',
+                     '--hidden-import=PyQt5.uic.plugins',
+                     '..\\nagstamon.py'], shell=True)
+
+    # rename output
     os.rename(DIR_BUILD_EXE, DIR_BUILD_NAGSTAMON)
-
-    # The following is a workaround for a behaviour of Python 3.6 + cx_freeze 5.0.1
-    # where ALL reachable files are copied into build directory thus blowing it
-    # to 170 MB instead of 60
-    #
-    # The dirty workaround consists of starting nagstamon.exe and use the
-    # file-locking of Windows to delete everything unnecessary but keep the
-    # locked and needed files
-    #
-    # If someone has a better fix let me know.
-
-    # run nagstamon.exe and wait some seconds to give GUI time to come up
-    subprocess.Popen('{0}/nagstamon.exe'.format(DIR_BUILD_NAGSTAMON))
-    time.sleep(5)
-
-    # go to Nagstamon build directory and start the deleting
-    os.chdir(DIR_BUILD_NAGSTAMON)
-
-    for directory in ['imageformats',\
-                      'mediaservice',\
-                      'platforms',\
-                      'PyQt5/uic',\
-                      'PyQt5/Qt/qml/',\
-                      'PyQt5/Qt/resources/',\
-                      'PyQt5/Qt/translations/',\
-                      ]:
-        try:
-            shutil.rmtree('./{0}'.format(directory))
-        except Exception as err:
-            print(err)
-
-    os.chdir('{0}/PyQt5'.format(DIR_BUILD_NAGSTAMON))
-
-    for pyd_file in glob.iglob('*.pyd'):
-        try:
-            os.remove(pyd_file)
-        except Exception as err:
-            print(err)
-
-    os.chdir('{0}/PyQt5/Qt/bin'.format(DIR_BUILD_NAGSTAMON))
-
-    for pyd_file in glob.iglob('*'):
-        try:
-            os.remove(pyd_file)
-        except Exception as err:
-            print(err)
-
-    os.chdir('{0}/PyQt5/Qt/plugins'.format(DIR_BUILD_NAGSTAMON))
-
-    for pyd_file in glob.iglob('*'):
-        try:
-            shutil.rmtree(pyd_file)
-        except Exception as err:
-            print(err)
 
     # after cleaning start zipping and setup.exe-building - go back to original directory
     os.chdir(CURRENT_DIR)
 
     # create .zip file
-    if os.path.exists(DIR_BUILD_NAGSTAMON):
+    if os.path.exists('{0}{1}dist'.format(CURRENT_DIR, os.sep)):
+        os.chdir('{0}{1}dist'.format(CURRENT_DIR, os.sep))
         zip_archive = zipfile.ZipFile(FILE_ZIP, mode='w', compression=zipfile.ZIP_DEFLATED)
         zip_archive.write(os.path.basename(DIR_BUILD_NAGSTAMON))
         for root, dirs, files in os.walk(os.path.basename(DIR_BUILD_NAGSTAMON)):
@@ -155,7 +117,7 @@ def winmain():
                      r'/Darch={0}'.format(ARCH),
                      r'/Darchs_allowed={0}'.format(ARCH_OPTS[ARCH][3]),
                      r'/Dresources={0}{1}resources'.format(DIR_BUILD_NAGSTAMON, os.sep),
-                     r'/O{0}'.format(CURRENT_DIR),
+                     r'/O{0}{1}dist'.format(CURRENT_DIR, os.sep),
                      r'{0}{1}windows{1}nagstamon.iss'.format(CURRENT_DIR, os.sep)], shell=True)
 
 
