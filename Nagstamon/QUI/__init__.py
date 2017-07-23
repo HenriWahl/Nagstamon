@@ -48,6 +48,7 @@ from Nagstamon.Config import (conf,
                               Action,
                               RESOURCES,
                               BOOLPOOL,
+                              CONFIG_STRINGS,
                               NON_LINUX,
                               AppInfo,
                               debug_queue)
@@ -1418,6 +1419,7 @@ class StatusWindow(QWidget):
                     else:
                         self.set_shown()
 
+                    # avoid horizontally scrollable tables
                     self.adjust_dummy_columns()
 
                     self.show()
@@ -4403,10 +4405,12 @@ class Dialog_Settings(Dialog):
         # convert some strings to integers and bools
         for item in conf.__dict__:
             if type(conf.__dict__[item]) == str:
-                if conf.__dict__[item] in BOOLPOOL:
-                    conf.__dict__[item] = BOOLPOOL[conf.__dict__[item]]
-                elif conf.__dict__[item].isdecimal():
-                    conf.__dict__[item] = int(conf.__dict__[item])
+                # when item is not one of those which always have to be strings then it might be OK to convert it
+                if not item in CONFIG_STRINGS:
+                    if conf.__dict__[item] in BOOLPOOL:
+                        conf.__dict__[item] = BOOLPOOL[conf.__dict__[item]]
+                    elif conf.__dict__[item].isdecimal():
+                        conf.__dict__[item] = int(conf.__dict__[item])
 
         # start debug loop if debugging is enabled
         if conf.debug_mode:
@@ -5132,10 +5136,12 @@ class Dialog_Server(Dialog):
             # convert some strings to integers and bools
             for item in self.server_conf.__dict__:
                 if type(self.server_conf.__dict__[item]) == str:
-                    if self.server_conf.__dict__[item] in BOOLPOOL:
-                        self.server_conf.__dict__[item] = BOOLPOOL[self.server_conf.__dict__[item]]
-                    elif self.server_conf.__dict__[item].isdecimal():
-                        self.server_conf.__dict__[item] = int(self.server_conf.__dict__[item])
+                    # when item is not one of those which always have to be strings then it might be OK to convert it
+                    if not item in CONFIG_STRINGS:
+                        if self.server_conf.__dict__[item] in BOOLPOOL:
+                            self.server_conf.__dict__[item] = BOOLPOOL[self.server_conf.__dict__[item]]
+                        elif self.server_conf.__dict__[item].isdecimal():
+                            self.server_conf.__dict__[item] = int(self.server_conf.__dict__[item])
 
             # store lowered authentication type
             self.server_conf.authentication = self.server_conf.authentication.lower()

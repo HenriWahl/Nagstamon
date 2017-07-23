@@ -48,6 +48,37 @@ BOOLPOOL = {'False': False,
             False: False,
             True: True}
 
+# config settings which should always be strings, never converted to integer or bool
+CONFIG_STRINGS = ['custom_browser',
+                  'debug_file',
+                  'notification_custom_sound_warning',
+                  'notification_custom_sound_critical',
+                  'notification_custom_sound_down',
+                  'notification_action_warning_string',
+                  'notification_action_critical_string',
+                  'notification_action_down_string',
+                  'notification_action_ok_string',
+                  'notification_custom_action_string',
+                  'notification_custom_action_separator',
+                  're_host_pattern',
+                  're_service_pattern',
+                  're_status_information_pattern',
+                  're_criticality_pattern',
+                  'font',
+                  'defaults_acknowledge_comment',
+                  'defaults_submit_check_result_comment',
+                  'defaults_downtime_comment',
+                  'name',
+                  'monitor_url',
+                  'monitor_cgi_url',
+                  'username',
+                  'password',
+                  'proxy_address',
+                  'proxy_username',
+                  'proxy_password',
+                  'autologin_key'
+                  ]
+
 # needed when OS-specific decisions have to be made, mostly Linux/non-Linux
 NON_LINUX = ('Darwin', 'Windows')
 
@@ -198,7 +229,6 @@ class Config(object):
         self.color_error_background = self.default_color_error_background = '#D3D3D3'
         self.statusbar_floating = True
         self.icon_in_systray = False
-        # ##self.appindicator = False
         self.fullscreen = False
         self.fullscreen_display = 0
         self.font = ''
@@ -234,10 +264,6 @@ class Config(object):
 
         # Parse the command line
         parser = argparse.ArgumentParser(description='Nagstamon for your CLI')
-        # might be not necessary anymore - to be tested
-        # ##parser.add_argument('-psn', action='store_true',
-        # ##    help='force ~/.nagstamon as config folder (used by launchd in MacOSX)')
-        # necessary because otherwise setup.py goes crazy of argparse
 
         # separate NagstaCLI from
         if len(sys.argv) > 2 or (len(sys.argv) > 1 and sys.argv[1] in ['--help', '-h']):
@@ -257,11 +283,6 @@ class Config(object):
         self.cli_args, unknown = parser.parse_known_args()
 
         # try to use a given config file - there must be one given
-        # if sys.argv is larger than 1
-        # ##if args.psn:
-        # ##    # new configdir approach
-        # ##    self.configdir = os.path.expanduser('~') + os.sep + '.nagstamon'
-        # ##elif args.cfgpath:
         if len(sys.argv) < 3 and self.cli_args.config:
             # allow to give a config file
             self.configdir = self.cli_args.config
@@ -632,8 +653,7 @@ class Config(object):
             Obfuscate a given string to store passwords etc.
         """
 
-        # make a string of string in case it is an integer as a numbers-only password
-        string = str(string).encode()
+        string = string.encode()
 
         for i in range(count):
             string = base64.b64encode(string).decode()
