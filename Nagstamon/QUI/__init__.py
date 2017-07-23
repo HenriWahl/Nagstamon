@@ -1714,7 +1714,7 @@ class StatusWindow(QWidget):
             else:
                 server.table.setColumnHidden(9, False)
 
-        del(max_width, max_width_table, server)
+        del(max_width, max_width_table)
         return True
 
     @pyqtSlot()
