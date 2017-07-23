@@ -69,24 +69,6 @@ class ZabbixServer(GenericServer):
             result, error = self.Error(sys.exc_info())
             return Result(result=result, error=error)
 
-    """
-    def init_HTTP(self):
-
-        # not necessary to be initialized wit hevery HTTP request
-        self.statemap = {
-            'UNREACH': 'UNREACHABLE',
-            'CRIT': 'CRITICAL',
-            'WARN': 'WARNING',
-            'UNKN': 'UNKNOWN',
-            'PEND': 'PENDING',
-            '0': 'OK',
-            '1': 'UNKNOWN',
-            '2': 'WARNING',
-            '5': 'CRITICAL',
-            '3': 'WARNING',
-            '4': 'CRITICAL'}
-        GenericServer.init_HTTP(self)
-    """
 
     def _get_status(self):
         """

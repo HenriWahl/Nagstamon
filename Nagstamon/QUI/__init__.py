@@ -4229,6 +4229,37 @@ class Dialog_Settings(Dialog):
         # apply toggle-dependencies between checkboxes as certain widgets
         self.toggle_toggles()
 
+        # workaround to avoid gigantic settings dialog
+        # list of Zabbix-related widgets, only to be shown if there is a Zabbix monitor server configured
+        self.ZABBIX_WIDGETS = [self.ui.input_checkbox_filter_all_average_services,
+                               self.ui.input_checkbox_filter_all_disaster_services,
+                               self.ui.input_checkbox_filter_all_high_services,
+                               self.ui.input_checkbox_filter_all_information_services,
+                               self.ui.input_checkbox_notify_if_average,
+                               self.ui.input_checkbox_notify_if_disaster,
+                               self.ui.input_checkbox_notify_if_high,
+                               self.ui.input_checkbox_notify_if_information,
+                               self.ui.label_color_average,
+                               self.ui.label_color_disaster,
+                               self.ui.label_color_high,
+                               self.ui.label_color_information,
+                               self.ui.input_button_color_average_text,
+                               self.ui.input_button_color_average_background,
+                               self.ui.input_button_color_disaster_text,
+                               self.ui.input_button_color_disaster_background,
+                               self.ui.input_button_color_high_text,
+                               self.ui.input_button_color_high_background,
+                               self.ui.input_button_color_information_text,
+                               self.ui.input_button_color_information_background,
+                               self.ui.label_intensity_average_0,
+                               self.ui.label_intensity_average_1,
+                               self.ui.label_intensity_disaster_0,
+                               self.ui.label_intensity_disaster_1,
+                               self.ui.label_intensity_high_0,
+                               self.ui.label_intensity_high_1,
+                               self.ui.label_intensity_information_0,
+                               self.ui.label_intensity_information_1]
+
     def initialize(self):
         # apply configuration values
         # start with servers tab
@@ -4297,8 +4328,10 @@ class Dialog_Settings(Dialog):
         # tell the world that dialog pops up
         self.show_dialog.emit()
 
-        # jump to actions tab in settings dialog
+        # jump to requested tab in settings dialog
         self.ui.tabs.setCurrentIndex(tab)
+
+        self.toggle_zabbix_widgets()
 
         # reset window if only needs smaller screen estate
         self.window.adjustSize()
@@ -4309,7 +4342,6 @@ class Dialog_Settings(Dialog):
         """
             opens settings and new server dialogs - used by dialogs.server_missing
         """
-        # self.show()
         # emulate button click
         self.ui.button_new_server.clicked.emit()
 
@@ -4870,6 +4902,14 @@ class Dialog_Settings(Dialog):
         # only take filename if QFileDialog gave something useful back
         if file != '':
             self.ui.input_lineedit_custom_browser.setText(file)
+
+    @pyqtSlot()
+    def toggle_zabbix_widgets(self):
+        print("ZABBY")
+        print(servers)
+        for server in servers.values():
+            print(dir(server))
+            print(server.enabled)
 
 
 class Dialog_Server(Dialog):

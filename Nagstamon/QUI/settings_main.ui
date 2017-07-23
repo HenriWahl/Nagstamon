@@ -7,7 +7,7 @@
    <rect>
     <x>0</x>
     <y>0</y>
-    <width>619</width>
+    <width>620</width>
     <height>1109</height>
    </rect>
   </property>
@@ -42,7 +42,7 @@
       </sizepolicy>
      </property>
      <property name="currentIndex">
-      <number>5</number>
+      <number>2</number>
      </property>
      <widget class="QWidget" name="tab_servers">
       <attribute name="title">
@@ -908,16 +908,16 @@
            </widget>
           </item>
           <item row="6" column="0">
-           <widget class="qcheckbox" name="input_checkbox_filter_all_high_services" native="true">
-            <property name="text" stdset="0">
-             <string>all high services</string>
+           <widget class="QCheckBox" name="input_checkbox_filter_all_high_services">
+            <property name="text">
+             <string>All high services</string>
             </property>
            </widget>
           </item>
           <item row="7" column="0">
-           <widget class="qcheckbox" name="input_checkbox_filter_all_average_services" native="true">
-            <property name="text" stdset="0">
-             <string>all average services</string>
+           <widget class="QCheckBox" name="input_checkbox_filter_all_average_services">
+            <property name="text">
+             <string>All average services</string>
             </property>
            </widget>
           </item>
@@ -2796,13 +2796,6 @@
    </item>
   </layout>
  </widget>
- <customwidgets>
-  <customwidget>
-   <class>qcheckbox</class>
-   <extends>QWidget</extends>
-   <header>qcheckbox.h</header>
-  </customwidget>
- </customwidgets>
  <tabstops>
   <tabstop>list_servers</tabstop>
   <tabstop>button_new_server</tabstop>
@@ -2974,7 +2967,7 @@
   </connection>
  </connections>
  <buttongroups>
-  <buttongroup name="buttongroup_close_statusbar"/>
   <buttongroup name="buttongroup_popup_statuswindow"/>
+  <buttongroup name="buttongroup_close_statusbar"/>
  </buttongroups>
 </ui>
