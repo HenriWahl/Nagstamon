@@ -3964,10 +3964,6 @@ class Dialog(QObject):
         # try to get and keep focus
         self.window.setWindowModality(Qt.ApplicationModal)
 
-        # window position to be used to fix strange movement bug
-        # ##self.x = 0
-        # ##self.y = 0
-
     def initialize(self):
         """
             dummy initialize method
@@ -4219,6 +4215,7 @@ class Dialog_Settings(Dialog):
         # paint alternating colors when example is wanted for customized intensity
         self.ui.input_checkbox_grid_use_custom_intensity.clicked.connect(self.paint_color_alternation)
         self.ui.input_checkbox_grid_use_custom_intensity.clicked.connect(self.change_color_alternation_by_value)
+        self.ui.input_checkbox_grid_use_custom_intensity.clicked.connect(self.toggle_zabbix_widgets)
 
         # finally map signals with .sender() - [<type>] is important!
         self.signalmapper_colors.mapped[str].connect(self.color_chooser)
@@ -4280,7 +4277,11 @@ class Dialog_Settings(Dialog):
                     self.ui.__dict__[widget].setValue(int(conf.__dict__[widget.split('input_spinbox_')[1]]))
                 elif widget.startswith('input_slider_'):
                     self.ui.__dict__[widget].setValue(int(conf.__dict__[widget.split('input_slider_')[1]]))
-
+            # bruteforce size smallification, lazy try/except variant
+            try:
+                self.ui.__dict__[widget].adjustSize()
+            except:
+                pass
         # fill default order fields combobox with s names
         # kick out empty headers for hosts and services flags
         sort_fields = copy.copy(HEADERS_HEADERS)
@@ -4325,13 +4326,16 @@ class Dialog_Settings(Dialog):
         self.window.adjustSize()
 
     def show(self, tab=0):
+        # fix size if no extra Zabbix widgets are shown
+        self.toggle_zabbix_widgets()
+
         # tell the world that dialog pops up
         self.show_dialog.emit()
 
         # jump to requested tab in settings dialog
         self.ui.tabs.setCurrentIndex(tab)
 
-        self.toggle_zabbix_widgets()
+        self.window.resize(10,10)
 
         # reset window if only needs smaller screen estate
         self.window.adjustSize()
@@ -4810,7 +4814,11 @@ class Dialog_Settings(Dialog):
             derived from level 0 labels aka default
         """
         for state in COLORS:
-            try:
+            # only evaluate colors if there is any stylesheet
+            if len(self.ui.__dict__['input_button_color_{0}_text'
+                        .format(state.lower())]\
+                        .styleSheet()) > 0:
+
                 # access both labels
                 label_0 = self.ui.__dict__['label_intensity_{0}_0'.format(state.lower())]
                 label_1 = self.ui.__dict__['label_intensity_{0}_1'.format(state.lower())]
@@ -4818,8 +4826,8 @@ class Dialog_Settings(Dialog):
                 # get text color from text color chooser button
                 text = self.ui.__dict__['input_button_color_{0}_text'
                             .format(state.lower())]\
-                    .styleSheet()\
-                    .split(';\n')[0].split(': ')[1]
+                            .styleSheet()\
+                            .split(';\n')[0].split(': ')[1]
 
                 # get background of level 0 label
                 background = label_0.palette().color(QPalette.Window)
@@ -4846,8 +4854,6 @@ class Dialog_Settings(Dialog):
                                          padding-top: 3px;
                                          padding-bottom: 3px;
                                       '''.format(text, r, g, b))
-            except Exception:
-                pass
 
     @pyqtSlot()
     def change_color_alternation_by_value(self):
@@ -4905,11 +4911,21 @@ class Dialog_Settings(Dialog):
 
     @pyqtSlot()
     def toggle_zabbix_widgets(self):
-        print("ZABBY")
-        print(servers)
+        """
+            Depending on the existence of an enabled Zabbix monitor the Zabbix widgets are shown or hidden
+        """
+        use_zabbix_widgets = False
         for server in servers.values():
-            print(dir(server))
-            print(server.enabled)
+            if server.enabled:
+                if server.type == 'Zabbix':
+                    use_zabbix_widgets = True
+                    break
+        if use_zabbix_widgets:
+            for widget in self.ZABBIX_WIDGETS:
+                widget.show()
+        else:
+            for widget in self.ZABBIX_WIDGETS:
+                widget.hide()
 
 
 class Dialog_Server(Dialog):

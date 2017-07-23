@@ -8,7 +8,7 @@
     <x>0</x>
     <y>0</y>
     <width>620</width>
-    <height>1109</height>
+    <height>1031</height>
    </rect>
   </property>
   <property name="sizePolicy">
@@ -886,59 +886,10 @@
             </property>
            </widget>
           </item>
-          <item row="3" column="0">
-           <widget class="QCheckBox" name="input_checkbox_filter_all_disaster_services">
-            <property name="text">
-             <string>All disaster services</string>
-            </property>
-           </widget>
-          </item>
           <item row="4" column="0">
            <widget class="QCheckBox" name="input_checkbox_filter_all_critical_services">
             <property name="text">
              <string>All critical services</string>
-            </property>
-           </widget>
-          </item>
-          <item row="5" column="0">
-           <widget class="QCheckBox" name="input_checkbox_filter_all_unknown_services">
-            <property name="text">
-             <string>All unknown services</string>
-            </property>
-           </widget>
-          </item>
-          <item row="6" column="0">
-           <widget class="QCheckBox" name="input_checkbox_filter_all_high_services">
-            <property name="text">
-             <string>All high services</string>
-            </property>
-           </widget>
-          </item>
-          <item row="7" column="0">
-           <widget class="QCheckBox" name="input_checkbox_filter_all_average_services">
-            <property name="text">
-             <string>All average services</string>
-            </property>
-           </widget>
-          </item>
-          <item row="8" column="0">
-           <widget class="QCheckBox" name="input_checkbox_filter_all_warning_services">
-            <property name="text">
-             <string>All warning services</string>
-            </property>
-           </widget>
-          </item>
-          <item row="9" column="0">
-           <widget class="QCheckBox" name="input_checkbox_filter_all_information_services">
-            <property name="text">
-             <string>All information services</string>
-            </property>
-           </widget>
-          </item>
-          <item row="10" column="0">
-           <widget class="QCheckBox" name="input_checkbox_filter_all_flapping_services">
-            <property name="text">
-             <string>All flapping services</string>
             </property>
            </widget>
           </item>
@@ -984,6 +935,55 @@
             </property>
            </widget>
           </item>
+          <item row="13" column="0">
+           <widget class="QCheckBox" name="input_checkbox_filter_all_high_services">
+            <property name="text">
+             <string>All high services</string>
+            </property>
+           </widget>
+          </item>
+          <item row="11" column="0">
+           <widget class="QCheckBox" name="input_checkbox_filter_all_disaster_services">
+            <property name="text">
+             <string>All disaster services</string>
+            </property>
+           </widget>
+          </item>
+          <item row="5" column="0">
+           <widget class="QCheckBox" name="input_checkbox_filter_all_flapping_services">
+            <property name="text">
+             <string>All flapping services</string>
+            </property>
+           </widget>
+          </item>
+          <item row="6" column="0">
+           <widget class="QCheckBox" name="input_checkbox_filter_all_unknown_services">
+            <property name="text">
+             <string>All unknown services</string>
+            </property>
+           </widget>
+          </item>
+          <item row="7" column="0">
+           <widget class="QCheckBox" name="input_checkbox_filter_all_warning_services">
+            <property name="text">
+             <string>All warning services</string>
+            </property>
+           </widget>
+          </item>
+          <item row="9" column="0">
+           <widget class="QCheckBox" name="input_checkbox_filter_all_information_services">
+            <property name="text">
+             <string>All information services</string>
+            </property>
+           </widget>
+          </item>
+          <item row="10" column="0">
+           <widget class="QCheckBox" name="input_checkbox_filter_all_average_services">
+            <property name="text">
+             <string>All average services</string>
+            </property>
+           </widget>
+          </item>
           <item row="6" column="1">
            <widget class="QCheckBox" name="input_checkbox_filter_services_on_hosts_in_maintenance">
             <property name="text">
@@ -991,7 +991,7 @@
             </property>
            </widget>
           </item>
-          <item row="8" column="1">
+          <item row="7" column="1">
            <widget class="QCheckBox" name="input_checkbox_filter_services_on_unreachable_hosts">
             <property name="text">
              <string>Services on unreachable hosts</string>
@@ -2825,24 +2825,13 @@
   <tabstop>input_checkbox_filter_all_down_hosts</tabstop>
   <tabstop>input_checkbox_filter_all_unreachable_hosts</tabstop>
   <tabstop>input_checkbox_filter_all_flapping_hosts</tabstop>
-  <tabstop>input_checkbox_filter_all_disaster_services</tabstop>
   <tabstop>input_checkbox_filter_all_critical_services</tabstop>
-  <tabstop>input_checkbox_filter_all_unknown_services</tabstop>
-  <tabstop>input_checkbox_filter_all_high_services</tabstop>
-  <tabstop>input_checkbox_filter_all_average_services</tabstop>
-  <tabstop>input_checkbox_filter_all_warning_services</tabstop>
-  <tabstop>input_checkbox_filter_all_information_services</tabstop>
-  <tabstop>input_checkbox_filter_all_flapping_services</tabstop>
   <tabstop>input_checkbox_filter_acknowledged_hosts_services</tabstop>
   <tabstop>input_checkbox_filter_hosts_services_disabled_notifications</tabstop>
   <tabstop>input_checkbox_filter_hosts_services_disabled_checks</tabstop>
   <tabstop>input_checkbox_filter_hosts_services_maintenance</tabstop>
   <tabstop>input_checkbox_filter_services_on_acknowledged_hosts</tabstop>
   <tabstop>input_checkbox_filter_services_on_down_hosts</tabstop>
-  <tabstop>input_checkbox_filter_services_on_hosts_in_maintenance</tabstop>
-  <tabstop>input_checkbox_filter_services_on_unreachable_hosts</tabstop>
-  <tabstop>input_checkbox_filter_hosts_in_soft_state</tabstop>
-  <tabstop>input_checkbox_filter_services_in_soft_state</tabstop>
   <tabstop>input_checkbox_re_host_enabled</tabstop>
   <tabstop>input_lineedit_re_host_pattern</tabstop>
   <tabstop>input_checkbox_re_host_reverse</tabstop>
