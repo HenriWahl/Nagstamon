@@ -7,8 +7,8 @@
    <rect>
     <x>0</x>
     <y>0</y>
-    <width>650</width>
-    <height>972</height>
+    <width>619</width>
+    <height>1109</height>
    </rect>
   </property>
   <property name="sizePolicy">
@@ -42,7 +42,7 @@
       </sizepolicy>
      </property>
      <property name="currentIndex">
-      <number>4</number>
+      <number>5</number>
      </property>
      <widget class="QWidget" name="tab_servers">
       <attribute name="title">
@@ -908,15 +908,15 @@
            </widget>
           </item>
           <item row="6" column="0">
-           <widget class="qcheckbox" name="input_checkbox_filter_all_high_services">
-            <property name="text">
+           <widget class="qcheckbox" name="input_checkbox_filter_all_high_services" native="true">
+            <property name="text" stdset="0">
              <string>all high services</string>
             </property>
            </widget>
           </item>
           <item row="7" column="0">
-           <widget class="qcheckbox" name="input_checkbox_filter_all_average_services">
-            <property name="text">
+           <widget class="qcheckbox" name="input_checkbox_filter_all_average_services" native="true">
+            <property name="text" stdset="0">
              <string>all average services</string>
             </property>
            </widget>
@@ -1379,13 +1379,6 @@
              <number>0</number>
             </property>
             <item>
-             <widget class="QCheckBox" name="input_checkbox_notify_if_information">
-              <property name="text">
-               <string>INFORMATION</string>
-              </property>
-             </widget>
-            </item>
-            <item>
              <widget class="QCheckBox" name="input_checkbox_notify_if_warning">
               <property name="text">
                <string>WARNING</string>
@@ -1393,30 +1386,9 @@
              </widget>
             </item>
             <item>
-             <widget class="QCheckBox" name="input_checkbox_notify_if_average">
-              <property name="text">
-               <string>AVERAGE</string>
-              </property>
-             </widget>
-            </item>
-            <item>
-             <widget class="QCheckBox" name="input_checkbox_notify_if_high">
-              <property name="text">
-               <string>HIGH</string>
-              </property>
-             </widget>
-            </item>
-            <item>
              <widget class="QCheckBox" name="input_checkbox_notify_if_critical">
               <property name="text">
                <string>CRITICAL</string>
-              </property>
-             </widget>
-            </item>
-            <item>
-             <widget class="QCheckBox" name="input_checkbox_notify_if_disaster">
-              <property name="text">
-               <string>DISASTER</string>
               </property>
              </widget>
             </item>
@@ -1440,6 +1412,64 @@
                <string>DOWN</string>
               </property>
              </widget>
+            </item>
+            <item>
+             <spacer name="horizontalSpacer_7">
+              <property name="orientation">
+               <enum>Qt::Horizontal</enum>
+              </property>
+              <property name="sizeHint" stdset="0">
+               <size>
+                <width>40</width>
+                <height>20</height>
+               </size>
+              </property>
+             </spacer>
+            </item>
+           </layout>
+          </item>
+          <item>
+           <layout class="QHBoxLayout" name="horizontalLayout_notifications_zabbix">
+            <item>
+             <widget class="QCheckBox" name="input_checkbox_notify_if_information">
+              <property name="text">
+               <string>INFORMATION</string>
+              </property>
+             </widget>
+            </item>
+            <item>
+             <widget class="QCheckBox" name="input_checkbox_notify_if_disaster">
+              <property name="text">
+               <string>DISASTER</string>
+              </property>
+             </widget>
+            </item>
+            <item>
+             <widget class="QCheckBox" name="input_checkbox_notify_if_average">
+              <property name="text">
+               <string>AVERAGE</string>
+              </property>
+             </widget>
+            </item>
+            <item>
+             <widget class="QCheckBox" name="input_checkbox_notify_if_high">
+              <property name="text">
+               <string>HIGH</string>
+              </property>
+             </widget>
+            </item>
+            <item>
+             <spacer name="horizontalSpacer_5">
+              <property name="orientation">
+               <enum>Qt::Horizontal</enum>
+              </property>
+              <property name="sizeHint" stdset="0">
+               <size>
+                <width>40</width>
+                <height>20</height>
+               </size>
+              </property>
+             </spacer>
             </item>
            </layout>
           </item>
@@ -1823,7 +1853,7 @@
           <item>
            <widget class="QLabel" name="label_color_information">
             <property name="text">
-             <string> INFORMATIOn </string>
+             <string> INFORMATION</string>
             </property>
            </widget>
           </item>
@@ -2766,6 +2796,13 @@
    </item>
   </layout>
  </widget>
+ <customwidgets>
+  <customwidget>
+   <class>qcheckbox</class>
+   <extends>QWidget</extends>
+   <header>qcheckbox.h</header>
+  </customwidget>
+ </customwidgets>
  <tabstops>
   <tabstop>list_servers</tabstop>
   <tabstop>button_new_server</tabstop>
@@ -2831,12 +2868,8 @@
   <tabstop>input_radiobutton_connect_by_dns</tabstop>
   <tabstop>input_radiobutton_connect_by_ip</tabstop>
   <tabstop>input_checkbox_notification</tabstop>
-  <tabstop>input_checkbox_notify_if_information</tabstop>
   <tabstop>input_checkbox_notify_if_warning</tabstop>
-  <tabstop>input_checkbox_notify_if_average</tabstop>
-  <tabstop>input_checkbox_notify_if_high</tabstop>
   <tabstop>input_checkbox_notify_if_critical</tabstop>
-  <tabstop>input_checkbox_notify_if_disaster</tabstop>
   <tabstop>input_checkbox_notify_if_unknown</tabstop>
   <tabstop>input_checkbox_notify_if_unreachable</tabstop>
   <tabstop>input_checkbox_notify_if_down</tabstop>
