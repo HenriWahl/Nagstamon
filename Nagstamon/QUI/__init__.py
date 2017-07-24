@@ -798,10 +798,10 @@ class _Draggable_Widget(QWidget):
         if event.button() == Qt.LeftButton:
             # if popup window should be closed by clicking do it now
             if statuswindow.is_shown and\
-               conf.close_details_clicking and\
                not conf.fullscreen:
+                statuswindow.is_hiding_by_click_on_toparea_timestamp = time.time()
                 statuswindow.hide_window()
-            elif statuswindow.is_shown is False:
+            elif not statuswindow.is_shown:
                 self.mouse_released.emit()
 
             # reset all helper values
@@ -840,9 +840,11 @@ class _Draggable_Widget(QWidget):
 
     def enterEvent(self, event):
         """
-            tell the world that mouse entered the widget - interesting for hover popup
+            tell the world that mouse entered the widget - interesting for hover popup and only if toparea hasn't been
+            clickend a moment ago
         """
-        if statuswindow.is_shown is False:
+        if statuswindow.is_shown is False and\
+           statuswindow.is_hiding_by_click_on_toparea_timestamp + 0.1 < time.time():
             self.mouse_entered.emit()
 
 
@@ -1062,6 +1064,9 @@ class StatusWindow(QWidget):
 
         # store show_window timestamp to avoid flickering window in KDE5 with systray
         self.is_shown_timestamp = time.time()
+
+        # store timestamp to avoid reappearing window shortly after clicking onto toparea
+        self.is_hiding_by_click_on_toparea_timestamp = time.time()
 
         # if status_ok is true no server_vboxes are needed
         self.status_ok = True
