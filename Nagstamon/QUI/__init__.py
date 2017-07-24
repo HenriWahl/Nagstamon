@@ -1574,7 +1574,7 @@ class StatusWindow(QWidget):
                 self.top = False
             # take systray icon position as reference
             # assuming that a left oriented systray as in GNOME3 will need x = 0
-            if self.icon_x < desktop.screenGeometry(self).width() / 2 + available_x:
+            if self.icon_x < desktop.screenGeometry(self).width() / 2 + available_x or OS not in NON_LINUX:
                 x = 0
             else:
                 x = self.icon_x
