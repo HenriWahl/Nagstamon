@@ -480,10 +480,6 @@ class MenuAtCursor(QMenu):
         # get cursor coordinates and decrease them to show menu under mouse pointer
         x = QCursor.pos().x() - 10
         y = QCursor.pos().y() - 10
-        #WINDOW_FLAGS = Qt.WindowStaysOnTopHint | Qt.FramelessWindowHint | Qt.Tool
-        #WINDOW_FLAGS = Qt.WindowStaysOnTopHint
-        #WINDOW_FLAGS = Qt.FramelessWindowHint | Qt.ToolTip
-        #self.setWindowFlags(WINDOW_FLAGS)
         self.exec_(QPoint(x, y))  # noqa
         del(x, y)
 
@@ -503,6 +499,7 @@ class MenuContext(MenuAtCursor):
         for widget in [statuswindow.toparea.button_hamburger_menu,
                        statuswindow.toparea.label_version,
                        statuswindow.toparea.label_empty_space,
+                       statuswindow.toparea.logo,
                        statuswindow.statusbar.logo,
                        statuswindow.statusbar.label_message]:
             self.menu_ready.connect(widget.set_menu)
@@ -644,8 +641,6 @@ else:
     CSS_HAMBURGER_MENU = '''FlatButton::menu-indicator{image:url(none.jpg);}'''
 
 
-# class PushButton_Hamburger(QPushButton):
-# class PushButton_Hamburger(FlatButton):
 class PushButton_Hamburger(Button):
 
     """
@@ -766,8 +761,8 @@ class _Draggable_Widget(QWidget):
     # Maybe due to the later mixin usage, but somehow the pyqtSlot decorator is ignored here when used by NagstamonLogo
     # and Draggable_Label
     #@pyqtSlot(QMenu)
-    #def set_menu(self, menu):
-    #    self.menu = menu
+    def set_menu(self, menu):
+        self.menu = menu
 
     def save_position(self):
         """
@@ -816,6 +811,9 @@ class _Draggable_Widget(QWidget):
 
         if event.button() == Qt.RightButton:
             self.right_mouse_button_pressed = False
+
+            print(self)
+
             self.menu.show_at_cursor()
 
     def mouseMoveEvent(self, event):
@@ -868,10 +866,6 @@ class Draggable_Label(QLabel, _Draggable_Widget):
 
     def __init__(self, text='', parent=None):
         QLabel.__init__(self, text, parent=parent)
-
-    @pyqtSlot(QMenu)
-    def set_menu(self, menu):
-        self.menu = menu
 
 
 class StatusWindow(QWidget):
@@ -2140,10 +2134,6 @@ class NagstamonLogo(QSvgWidget, _Draggable_Widget):
         if width is not None and height is not None:
             self.setMinimumSize(width, height)
             self.setMaximumSize(width, height)
-
-    @pyqtSlot(QMenu)
-    def set_menu(self, menu):
-        self.menu = menu
 
 
 class StatusBar(QWidget):
