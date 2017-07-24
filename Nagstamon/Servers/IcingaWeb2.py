@@ -268,6 +268,7 @@ class IcingaWeb2Server(GenericServer):
                     # regarding to https://github.com/HenriWahl/Nagstamon/issues/400 Icinga2 needs no legacy adjustments
                     service_name = s['service_display_name']
 
+
                     # if a service does not exist create its object
                     if not service_name in self.new_hosts[host_name].services:
                         self.new_hosts[host_name].services[service_name] = GenericService()

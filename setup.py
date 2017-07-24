@@ -33,8 +33,9 @@ NAME = AppInfo.NAME
 OS = platform.system()
 # make name lowercase for Linux/Unix
 if OS not in ['Windows', 'Darwin']:
+    DIST, DIST_VERSION, DIST_NAME = platform.dist()
     NAME = NAME.lower()
-VERSION = AppInfo.VERSION
+VERSION = AppInfo.VERSION.replace('-', '.') + '.' + DIST + DIST_VERSION
 
 NAGSTAMON_SCRIPT = 'nagstamon.py'
 
