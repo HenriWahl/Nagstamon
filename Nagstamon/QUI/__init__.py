@@ -811,9 +811,6 @@ class _Draggable_Widget(QWidget):
 
         if event.button() == Qt.RightButton:
             self.right_mouse_button_pressed = False
-
-            print(self)
-
             self.menu.show_at_cursor()
 
     def mouseMoveEvent(self, event):
@@ -1537,8 +1534,6 @@ class StatusWindow(QWidget):
                 self.icon_y = icon_y
 
             screen_or_widget = get_screen(self.icon_x, self.icon_y)
-
-            print(self.icon_x, self.icon_y)
 
         # only consider offset if it is configured
         if conf.systray_offset_use:
