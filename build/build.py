@@ -65,7 +65,6 @@ def winmain():
     print('VERSION_IS:', VERSION_IS)
 
     ISCC = r'{0}{1}Inno Setup 5{1}iscc.exe'.format(os.environ['PROGRAMFILES{0}'.format(ARCH_OPTS[ARCH][2])], os.sep)
-    ###DIR_BUILD_EXE = '{0}{1}exe.{2}-{3}'.format(CURRENT_DIR, os.sep, ARCH_OPTS[ARCH][0], PYTHON_VERSION)
     DIR_BUILD_EXE = '{0}{1}dist{1}Nagstamon'.format(CURRENT_DIR, os.sep, ARCH_OPTS[ARCH][0], PYTHON_VERSION)
     DIR_BUILD_NAGSTAMON = '{0}{1}dist{1}Nagstamon-{2}-win{3}'.format(CURRENT_DIR, os.sep, VERSION, ARCH)
     FILE_ZIP = '{0}.zip'.format(DIR_BUILD_NAGSTAMON)
@@ -78,13 +77,7 @@ def winmain():
             except:
                 os.remove(file)
 
-    # go one directory up and run setup.py
-    #os.chdir('{0}{1}..'.format(CURRENT_DIR, os.sep))
-    #subprocess.call([sys.executable, 'setup.py', 'build_exe'], shell=True)
-
     # now with pyinstaller - dev version is able to run with Python 3.6
-    # c:\Python36\Scripts\pyinstaller - -noconfirm - -add - data = Nagstamon / resources; resources - -icon = Nagstamon\resources\nagstamon.ico - -windowed - -name = Nagstamon - -hidden -import PyQt5.uic.plugins nagstamon.py
-    #subprocess.call([sys.executable, 'setup.py', 'build_exe'], shell=True)
     subprocess.call(['{0}\\Scripts\\pyinstaller'.format(sys.base_prefix),
                      '--noconfirm',
                      '--add-data=..\\Nagstamon/resources;resources',
@@ -205,6 +198,7 @@ def rpmmain():
 
     # run setup.py for rpm creation
     subprocess.call(['python3', 'setup.py', 'bdist_rpm'], shell=False)
+
 
 
 DISTS = {
