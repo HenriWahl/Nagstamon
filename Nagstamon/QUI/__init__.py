@@ -1538,6 +1538,8 @@ class StatusWindow(QWidget):
 
             screen_or_widget = get_screen(self.icon_x, self.icon_y)
 
+            print(self.icon_x, self.icon_y)
+
         # only consider offset if it is configured
         if conf.systray_offset_use:
             available_height = desktop.availableGeometry(screen_or_widget).height() - conf.systray_offset
@@ -1568,7 +1570,7 @@ class StatusWindow(QWidget):
                 self.top = False
             # take systray icon position as reference
             # assuming that a left oriented systray as in GNOME3 will need x = 0
-            if self.icon_x < desktop.screenGeometry(self).width() / 2 + available_x:
+            if self.icon_x < desktop.screenGeometry(self).width() / 2 + available_x and OS not in NON_LINUX:
                 x = 0
             else:
                 x = self.icon_x
@@ -1577,7 +1579,6 @@ class StatusWindow(QWidget):
         real_height = self.get_real_height()
 
         # width simply will be the current screen maximal width - less hassle!
-
         if self.get_real_width() > available_width:
             width = available_width
             x = available_x
@@ -1634,8 +1635,12 @@ class StatusWindow(QWidget):
                     height = available_height
                     y = available_y
                 else:
-                    height = real_height
-                    y = available_height - real_height
+                    if available_height < real_height:
+                        y = available_y
+                        height = available_height
+                    else:
+                        y = available_height - real_height
+                        height = real_height
 
         return width, height, x, y
 
@@ -1664,10 +1669,10 @@ class StatusWindow(QWidget):
 
         self.setMaximumSize(width, height)
         self.setMinimumSize(width, height)
-
         self.adjustSize()
 
         return True
+
 
     @pyqtSlot()
     def move_timer(self):
