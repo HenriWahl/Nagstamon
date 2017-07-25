@@ -1339,7 +1339,7 @@ class StatusWindow(QWidget):
                 icon_y = QCursor.pos().y()
 
             # move into direction of systray - where the cursor hangs around too
-            self.move(icon_x, icon_y)
+            ###self.move(icon_x, icon_y)
 
             # get available desktop specs
             available_width = desktop.availableGeometry(self).width()
@@ -1360,7 +1360,7 @@ class StatusWindow(QWidget):
             self.move(x, y)
 
             # under unfortunate circumstances statusbar might have the the moving flag true
-            # fix it here because it makes no sense but my cause non-appearing statuswindow
+            # fix it here because it makes no sense but might cause non-appearing statuswindow
             self.moving = False
 
             self.show_window()
@@ -4159,6 +4159,11 @@ class Dialog_Settings(Dialog):
         self.ui.button_check_for_new_version_now.clicked.connect(self.button_check_for_new_version_clicked)
         self.check_for_new_version.connect(check_version.check)
 
+        # avoid offset spinbox if offest is not enabled
+        self.ui.input_radiobutton_fullscreen.clicked.connect(self.toggle_systray_icon_offset)
+        self.ui.input_radiobutton_icon_in_systray.clicked.connect(self.toggle_systray_icon_offset)
+        self.ui.input_radiobutton_statusbar_floating.clicked.connect(self.toggle_systray_icon_offset)
+
         # connect font chooser button to font choosing dialog
         self.ui.button_fontchooser.clicked.connect(self.font_chooser)
         # connect revert-to-default-font button
@@ -4344,7 +4349,7 @@ class Dialog_Settings(Dialog):
         self.window.adjustSize()
 
     def show(self, tab=0):
-        # fix size if no extra Zabbix widgets are shown
+        # hide them and thus be able to fix size if no extra Zabbix widgets are shown
         self.toggle_zabbix_widgets()
 
         # tell the world that dialog pops up
@@ -4352,8 +4357,6 @@ class Dialog_Settings(Dialog):
 
         # jump to requested tab in settings dialog
         self.ui.tabs.setCurrentIndex(tab)
-
-        self.window.resize(10,10)
 
         # reset window if only needs smaller screen estate
         self.window.adjustSize()
@@ -4946,6 +4949,19 @@ class Dialog_Settings(Dialog):
         else:
             for widget in self.ZABBIX_WIDGETS:
                 widget.hide()
+
+    @pyqtSlot()
+    def toggle_systray_icon_offset(self):
+        """
+            Only show offset spinbox when offset is enabled
+        """
+        if self.ui.input_checkbox_systray_offset_use.isVisible():
+            if self.ui.input_checkbox_systray_offset_use.isChecked():
+                self.ui.input_spinbox_systray_offset.show()
+            else:
+                self.ui.input_spinbox_systray_offset.hide()
+        else:
+            self.ui.input_spinbox_systray_offset.hide()
 
 
 class Dialog_Server(Dialog):
