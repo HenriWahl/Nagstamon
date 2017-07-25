@@ -17,16 +17,6 @@
 # along with this program; if not, write to the Free Software
 # Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA  02110-1301, USA
 
-import requests
-import requests_kerberos
-# disable annoying InsecureRequestWarning warnings
-try:
-    requests.packages.urllib3.disable_warnings(requests.packages.urllib3.exceptions.InsecureRequestWarning)
-except:
-    # older requests version might not have the packages submodule
-    # for example the one in Ubuntu 14.04
-    pass
-
 import sys
 import socket
 import copy
@@ -53,6 +43,18 @@ from Nagstamon.Config import (conf,
                               debug_queue)
 
 from collections import OrderedDict
+
+import requests
+import requests_kerberos
+
+# disable annoying SubjectAltNameWarning warnings
+try:
+    from requests.packages.urllib3.exceptions import SubjectAltNameWarning
+    requests.packages.urllib3.disable_warnings(SubjectAltNameWarning)
+except:
+    # older requests version might not have the packages submodule
+    # for example the one in Ubuntu 14.04
+    pass
 
 
 class GenericServer(object):
