@@ -1206,7 +1206,8 @@ class StatusWindow(QWidget):
             # display authentication dialog if password is not known
             if not conf.servers[server.name].save_password and\
                not conf.servers[server.name].use_autologin and\
-               conf.servers[server.name].password == '':
+               conf.servers[server.name].password == '' and\
+               not conf.authentication == 'kerberos':
                 dialogs.authentication.show_auth_dialog(server.name)
 
             # without parent there is some flickering when starting
@@ -5007,6 +5008,14 @@ class Dialog_Server(Dialog):
             self.ui.label_service_filter: ['op5Monitor'],
             self.ui.label_host_filter: ['op5Monitor']}
 
+        # to be used when selecting authentication method Kerberos
+        self.AUTHENTICATION_WIDGETS = [
+            self.ui.label_username,
+            self.ui.input_lineedit_username,
+            self.ui.label_password,
+            self.ui.input_lineedit_password,
+            self.ui.input_checkbox_save_password]
+
         # fill default order fields combobox with monitor server types
         self.ui.input_combobox_type.addItems(sorted(SERVER_TYPES.keys(), key=str.lower))
         # default to Nagios as it is the mostly used monitor server
@@ -5015,13 +5024,16 @@ class Dialog_Server(Dialog):
         self.ui.input_combobox_authentication.addItems(['Basic', 'Digest', 'Kerberos'])
 
         # detect change of server type which leads to certain options shown or hidden
-        self.ui.input_combobox_type.activated.connect(self.server_type_changed)
+        self.ui.input_combobox_type.activated.connect(self.toggle_type)
+
+        # when authentication is changed to Kerberos then disable username/password as the are now useless
+        self.ui.input_combobox_authentication.activated.connect(self.toggle_authentication)
 
         # mode needed for evaluate dialog after ok button pressed - defaults to 'new'
         self.mode = 'new'
 
     @pyqtSlot(int)
-    def server_type_changed(self, server_type_index=0):
+    def toggle_type(self, server_type_index=0):
         # server_type_index is not needed - we get the server type from .currentText()
         # check if server type is listed in volatile widgets to decide if it has to be shown or hidden
         for widget, server_types in self.VOLATILE_WIDGETS.items():
@@ -5029,6 +5041,22 @@ class Dialog_Server(Dialog):
                 widget.show()
             else:
                 widget.hide()
+
+    @pyqtSlot()
+    def toggle_authentication(self):
+        """
+            when authentication is changed to Kerberos then disable username/password as the are now useless
+        """
+        if self.ui.input_combobox_authentication.currentText() == 'Kerberos':
+           for widget in self.AUTHENTICATION_WIDGETS:
+               widget.hide()
+        else:
+            for widget in self.AUTHENTICATION_WIDGETS:
+                widget.show()
+
+        # after hiding authentication widgets dialog might shrink
+        self.window.adjustSize()
+
 
     def dialog_decoration(method):
         """
@@ -5069,7 +5097,10 @@ class Dialog_Server(Dialog):
             self.ui.input_combobox_authentication.setCurrentText(self.server_conf.authentication.title())
 
             # initially hide not needed widgets
-            self.server_type_changed()
+            self.toggle_type()
+
+            # disable unneeded authentication widgets if Kerberos is used
+            self.toggle_authentication()
 
             # apply toggle-dependencies between checkboxes and certain widgets
             self.toggle_toggles()

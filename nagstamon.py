@@ -59,18 +59,10 @@ try:
                 pass
        
         # get GUI
-        # from Nagstamon.QUI import (APP,
-                # statuswindow,
-                # check_version,
-                # check_servers,
-                # dialogs)
         from Nagstamon.QUI import (APP,
                 statuswindow,
                 check_version,
                 check_servers)
-        # get server information
-        # from Nagstamon.Servers import (servers,
-                # get_enabled_servers)
 
         # ask for help if no servers are configured
         check_servers()
