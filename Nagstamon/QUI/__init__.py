@@ -4020,6 +4020,7 @@ class Dialog(QObject):
                 for widget in widgets:
                     widget.hide()
 
+
     @pyqtSlot(str)
     def toggle(self, checkbox):
         """

@@ -1380,11 +1380,11 @@ class GenericServer(object):
 
                     # default to check TLS validity for temporary sessions
                     if self.ignore_cert:
-                        self.temporary_session.verify = False
+                        temporary_session.verify = False
                     elif self.custom_cert_use:
-                        self.temporary_session.verify = self.custom_cert_ca_file
+                        temporary_session.verify = self.custom_cert_ca_file
                     else:
-                        self.temporary_session.verify = True
+                        temporary_session.verify = True
 
                     # most requests come without multipart/form-data
                     if multipart is False:
