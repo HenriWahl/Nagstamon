@@ -220,7 +220,8 @@ class GenericServer(object):
                 self.session.auth = requests_kerberos.HTTPKerberosAuth()
 
             # default to not check TLS validity
-            self.session.verify = False
+            ###self.session.verify = False
+            self.session.verify = True
 
             # add proxy information
             self.proxify(self.session)

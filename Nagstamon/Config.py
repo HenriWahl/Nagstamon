@@ -26,6 +26,7 @@ import configparser
 import base64
 import zlib
 import datetime
+import keyring
 from collections import OrderedDict
 
 # avoid build error because of debug_queue unknown to setup.py
@@ -247,7 +248,7 @@ class Config(object):
         self.defaults_downtime_type_flexible = False
         # internal flag to determine if keyring is available at all - defaults to False
         # use_system_keyring is checked and defined some lines later after config file was read
-        self.keyring_available = False
+        ###self.keyring_available = False
         # setting for keyring usage
         self.use_system_keyring = False
 
@@ -345,7 +346,6 @@ class Config(object):
             # and all the thousands 1.0 installations do not know it yet it will be more comfortable
             # for most of the Windows users if it is only defined as False after it was checked
             # from config file
-            # if not self.__dict__.has_key("use_system_keyring"):
             if 'use_system_keyring' not in self.__dict__.keys():
                 if self.unconfigured is True:
                     # an unconfigured system should start with no keyring to prevent crashes
@@ -396,11 +396,6 @@ class Config(object):
                 if servers[server].save_password == 'False':
                     servers[server].password = ""
                 elif self.keyring_available and self.use_system_keyring:
-                    # necessary to import on-the-fly due to possible Windows crashes
-                    if platform.system() in NON_LINUX:
-                        import keyring
-                    else:
-                        import Nagstamon.thirdparty.keyring as keyring
                     password = keyring.get_password('Nagstamon', '@'.join((servers[server].username,
                                                                            servers[server].monitor_url))) or ""
                     if password == "":
@@ -412,11 +407,6 @@ class Config(object):
                     servers[server].password = self.DeObfuscate(servers[server].password)
                 # proxy password
                 if self.keyring_available and self.use_system_keyring:
-                    # necessary to import on-the-fly due to possible Windows crashes
-                    if platform.system() in NON_LINUX:
-                        import keyring
-                    else:
-                        import Nagstamon.thirdparty.keyring as keyring
                     proxy_password = keyring.get_password('Nagstamon', '@'.join(('proxy',
                                                                                  servers[server].proxy_username,
                                                                                  servers[server].proxy_address))) or ""
@@ -561,11 +551,6 @@ class Config(object):
                                 value = ''
                             elif self.keyring_available and self.use_system_keyring:
                                 if self.__dict__[settingsdir][s].password != '':
-                                    # necessary to import on-the-fly due to possible Windows crashes
-                                    if platform.system() in NON_LINUX:
-                                        import keyring
-                                    else:
-                                        import Nagstamon.thirdparty.keyring as keyring
                                     # provoke crash if password saving does not work - this is the case
                                     # on newer Ubuntu releases
                                     try:
@@ -579,11 +564,6 @@ class Config(object):
                                 value = ''
                         if option == 'proxy_password':
                             if self.keyring_available and self.use_system_keyring:
-                                # necessary to import on-the-fly due to possible Windows crashes
-                                if platform.system() in NON_LINUX:
-                                    import keyring
-                                else:
-                                    import Nagstamon.thirdparty.keyring as keyring
                                 if self.__dict__[settingsdir][s].proxy_password != '':
                                     # provoke crash if password saving does not work - this is the case
                                     # on newer Ubuntu releases
@@ -639,7 +619,7 @@ class Config(object):
                     return False
             else:
                 # keyring and secretstorage have to be importable
-                import Nagstamon.thirdparty.keyring as keyring
+                import keyring
                 # import secretstorage module as dependency of keyring -
                 # if not available keyring won't work
                 import secretstorage
