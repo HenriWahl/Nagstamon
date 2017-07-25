@@ -21,8 +21,8 @@ import requests
 import requests_kerberos
 # disable annoying InsecureRequestWarning warnings
 try:
-    requests.packages.urllib3.disable_warnings()
-except Exception:
+    requests.packages.urllib3.disable_warnings(requests.packages.urllib3.exceptions.InsecureRequestWarning)
+except:
     # older requests version might not have the packages submodule
     # for example the one in Ubuntu 14.04
     pass

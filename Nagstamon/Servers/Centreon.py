@@ -63,7 +63,8 @@ class CentreonServer(GenericServer):
         '''
         dummy init_config, called at thread start, not really needed here, just omit extra properties
         '''
-        pass
+        # set URLs here already
+        self._define_url()
 
     def init_HTTP(self):
         """
@@ -220,7 +221,6 @@ class CentreonServer(GenericServer):
             # those broker urls would not be changing too often so this check migth be done here
             if self.first_login:
                 self._get_xml_path(sid)
-                self._define_url()
                 self.first_login = False
             return Result(result=sid)
 
