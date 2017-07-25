@@ -4355,6 +4355,12 @@ class Dialog_Settings(Dialog):
         # hide them and thus be able to fix size if no extra Zabbix widgets are shown
         self.toggle_zabbix_widgets()
 
+        # small workaround for timestamp trick to avoid flickering
+        # if the 'Settings' button was clicked too fast the timestamp difference
+        # is too short and the statuswindow will keep open
+        # modifying the timestamp could help
+        statuswindow.is_shown_timestamp -= 1
+
         # tell the world that dialog pops up
         self.show_dialog.emit()
 
