@@ -77,7 +77,8 @@ CONFIG_STRINGS = ['custom_browser',
                   'proxy_address',
                   'proxy_username',
                   'proxy_password',
-                  'autologin_key'
+                  'autologin_key',
+                  'custom_cert_ca_file'
                   ]
 
 # needed when OS-specific decisions have to be made, mostly Linux/non-Linux
@@ -798,7 +799,7 @@ class Config(object):
 class Server(object):
 
     """
-    one Server realized as object for config info
+        one Server realized as object for config info
     """
 
     def __init__(self):
@@ -815,11 +816,16 @@ class Server(object):
         self.proxy_address = 'http://proxyserver:port/'
         self.proxy_username = 'proxyusername'
         self.proxy_password = 'proxypassword'
-        # defaults to 'basic', another possible value at the moment is 'digest'
+        # defaults to 'basic', other possible values are 'digest' and 'kerberos'
         self.authentication = 'basic'
         self.timeout = 10
         # just GUI-wise deciding if more options are shown in server dialog
         self.show_options = False
+
+        # SSL/TLS certificate verification
+        self.ignore_cert = False
+        self.custom_cert_use = False
+        self.custom_cert_ca_file = ''
 
         # special FX
         # Centreon autologin

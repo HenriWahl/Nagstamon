@@ -140,6 +140,11 @@ def create_server(server=None):
     new_server.authentication = server.authentication
     new_server.timeout = server.timeout
 
+    # SSL/TLS
+    new_server.ignore_cert = server.ignore_cert
+    new_server.custom_cert_use = server.custom_cert_use
+    new_server.custom_cert_ca_file = server.custom_cert_ca_file
+
     # if password is not to be saved ask for it at startup
     if (server.enabled is True and server.save_password is False and
             server.use_autologin is False):

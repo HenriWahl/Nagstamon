@@ -3526,6 +3526,8 @@ class TreeView(QTreeView):
                         self.change_label_status.emit('Connection error', 'error')
                     elif status.error.startswith('requests.exceptions.ReadTimeout'):
                         self.change_label_status.emit('Connection timeout', 'error')
+                    elif status.error.startswith('requests.exceptions.SSLError'):
+                        self.change_label_status.emit('SSL/TLS problem', 'critical')
                     elif self.server.status_code in self.server.STATUS_CODES_NO_AUTH or\
                             self.server.refresh_authentication:
                         self.change_label_status.emit('Authentication problem', 'critical')
@@ -4912,7 +4914,7 @@ class Dialog_Settings(Dialog):
     @pyqtSlot()
     def choose_browser_executable(self):
         """
-            shopw dialog for selection of non-default browser
+            show dialog for selection of non-default browser
         """
         # present dialog with OS-specific sensible defaults
         if OS == 'Windows':
@@ -4987,7 +4989,10 @@ class Dialog_Server(Dialog):
                 self.ui.input_lineedit_proxy_username,
                 self.ui.label_proxy_password,
                 self.ui.input_lineedit_proxy_password],
-            self.ui.input_checkbox_show_options: [self.ui.groupbox_options]}
+            self.ui.input_checkbox_show_options: [self.ui.groupbox_options],
+            self.ui.input_checkbox_custom_cert_use: [self.ui.label_custom_ca_file,
+                                                     self.ui.input_lineedit_custom_cert_ca_file,
+                                                     self.ui.button_choose_custom_cert_ca_file]}
 
         self.TOGGLE_DEPS_INVERTED = [self.ui.input_checkbox_use_proxy_from_os]
 
@@ -5020,6 +5025,13 @@ class Dialog_Server(Dialog):
         self.ui.input_combobox_type.addItems(sorted(SERVER_TYPES.keys(), key=str.lower))
         # default to Nagios as it is the mostly used monitor server
         self.ui.input_combobox_type.setCurrentText('Nagios')
+
+        # set folder and play symbols to choose and play buttons
+        self.ui.button_choose_custom_cert_ca_file.setText('')
+        self.ui.button_choose_custom_cert_ca_file.setIcon(self.ui.button_choose_custom_cert_ca_file.style().standardIcon(QStyle.SP_DirIcon))
+        # connect choose custom cert CA file button with file dialog
+        self.ui.button_choose_custom_cert_ca_file.clicked.connect(self.choose_custom_cert_ca_file)
+
         # fill authentication combobox
         self.ui.input_combobox_authentication.addItems(['Basic', 'Digest', 'Kerberos'])
 
@@ -5264,6 +5276,21 @@ class Dialog_Server(Dialog):
 
             # store server settings
             conf.SaveMultipleConfig('servers', 'server')
+
+
+    @pyqtSlot()
+    def choose_custom_cert_ca_file(self):
+        """
+            show dialog for selection of non-default browser
+        """
+        filter = 'All files (*)'
+        file = dialogs.file_chooser.getOpenFileName(self.window,
+                                                    directory=os.path.expanduser('~'),
+                                                    filter=filter)[0]
+
+        # only take filename if QFileDialog gave something useful back
+        if file != '':
+            self.ui.input_lineedit_custom_cert_ca_file.setText(file)
 
 
 class Dialog_Action(Dialog):

@@ -219,9 +219,13 @@ class GenericServer(object):
             elif self.authentication == 'kerberos':
                 self.session.auth = requests_kerberos.HTTPKerberosAuth()
 
-            # default to not check TLS validity
-            ###self.session.verify = False
-            self.session.verify = True
+            # default to check TLS validity
+            if self.ignore_cert:
+                self.session.verify = False
+            elif self.custom_cert_use:
+                self.session.verify = self.custom_cert_ca_file
+            else:
+                self.session.verify = True
 
             # add proxy information
             self.proxify(self.session)
@@ -1372,16 +1376,19 @@ class GenericServer(object):
                     # add proxy information if necessary
                     self.proxify(temporary_session)
 
-                    # default to not check TLS validity for temporary sessions
-                    temporary_session.verify = False
+                    # default to check TLS validity for temporary sessions
+                    if self.ignore_cert:
+                        self.temporary_session.verify = False
+                    elif self.custom_cert_use:
+                        self.temporary_session.verify = self.custom_cert_ca_file
+                    else:
+                        self.temporary_session.verify = True
 
                     # most requests come without multipart/form-data
                     if multipart is False:
                         if cgi_data is None:
-                            # response = temporary_session.get(url, timeout=30)
                             response = temporary_session.get(url, timeout=self.timeout)
                         else:
-                            # response = temporary_session.post(url, data=cgi_data, timeout=30)
                             response = temporary_session.post(url, data=cgi_data, timeout=self.timeout)
                     else:
                         # Check_MK and Opsview nees multipart/form-data encoding
@@ -1390,7 +1397,6 @@ class GenericServer(object):
                         for key in cgi_data:
                             form_data[key] = (None, cgi_data[key])
                         # get response with cgi_data encodes as files
-                        # response = temporary_session.post(url, files=form_data, timeout=30)
                         response = temporary_session.post(url, files=form_data, timeout=self.timeout)
 
                     # cleanup
