@@ -29,7 +29,8 @@ from Nagstamon.Servers.Generic import GenericServer
 from Nagstamon.Config import conf
 
 import logging
-logging.basicConfig(filename='nagstamon.log',level=logging.INFO)
+logging.basicConfig( level=logging.INFO )
+# logging.basicConfig(filename='nagstamon.log',level=logging.INFO)
 log = logging.getLogger('Monitos3')
 
 import re
@@ -69,8 +70,19 @@ class Monitos3Server(GenericServer):
     """A server running Monitos3 with the MK Livestatus NEB. Tested with Monitos3.7.17"""
 
     TYPE = 'Monitos3'
+    MENU_ACTIONS = ['Monitor', 'Recheck', 'Acknowledge', 'Submit check result', 'Downtime']
+    # STATES_MAPPING = {'hosts' : {0 : 'UP', 1 : 'DOWN', 2 : 'UNREACHABLE'}, \
+    #                 'services' : {0 : 'OK', 1 : 'WARNING', 2 : 'CRITICAL', 3 : 'UNKNOWN'}}
+    # STATES_MAPPING_REV = {'hosts' : { 'UP': 0, 'DOWN': 1, 'UNREACHABLE': 2}, \
+    #                 'services' : {'OK': 0, 'WARNING': 1, 'CRITICAL': 2, 'UNKNOWN': 3}}
+    BROWSER_URLS = { 'monitor': '$MONITOR$/dashboard', \
+                    'hosts': '$MONITOR$/monitoring/list/hosts', \
+                    'services': '$MONITOR$/monitoring/list/services', \
+                    'history': '$MONITOR$/monitoring/list/eventhistory?timestamp>=-7 days'}
+
 
     def init_config(self):
+        log.info( time.strftime('%a %H:%M:%S') )
         log.info(self.monitor_url)
         # we abuse the monitor_url for the connection information
         self.address = ('localhost', 6558)
@@ -177,8 +189,13 @@ class Monitos3Server(GenericServer):
         data = self.get("services", raw=filters)
         for s in self.table(data):
             # service are attached to host objects
-            if s['host_name'] in self.new_hosts:
-                host = self.new_hosts[s['host_name']]
+            """
+            2017_07_12_22_29_43
+            """
+            if s['custom_variables']['_HOST_NAME'] in self.new_hosts:
+            # if s['host_name'] in self.new_hosts:
+                host = self.new_hosts[s['custom_variables']['_HOST_NAME']]
+                log.info("In new_hosts services host %s with svid %s, svc %s, svid %s is %s", host.name, host.svid, service.name, service.svid, service.status)
             else:
                 # need to create the host
                 # icinga2 adds all host information to the server
@@ -186,10 +203,12 @@ class Monitos3Server(GenericServer):
                 xdata = service_to_host(s)  # any field starting with HOST_
                 host = self._create_host(xdata)
                 self.new_hosts[host.name] = host
+                log.info("In else services host %s with svid %s", host.name, host.svid )
             service = self._create_service(s)
             service.host = host.name
             host.services[service.name] = service
-            log.info("monitos3_svc host %s with svid %s, svc %s, svid %s is %s", host.name, host.svid, service.name, service.svid, service.status)
+            log.debug("All services: host %s with svid %s, svc %s, svid %s is %s", host.name, host.svid, service.name, service.svid, service.status)
+            log.debug("monitos3_svcs host.services are: %s", service )
         return Result()
 
     def _update_object(self, obj, data):
@@ -227,8 +246,14 @@ class Monitos3Server(GenericServer):
         log.debug("monitos3 host name is %s", result.name)
         log.debug("monitos3 host custom_variables are %s", result.custom_variables)
         log.debug("monitos3 host address is %s", result.address)
-        host_states = {0: 'UP', 1: 'DOWN', 2: 'UNKNOWN'}
-        result.status = host_states[data['state']]
+        # TODO: fix other host states
+        host_states = { 0: 'UP', 1: 'DOWN', 2: 'UNREACHABLE' }
+        # host_states = { 0: 'UP', 1: 'DOWN', 2: 'UNREACHABLE', 3: 'OTHER' }
+        host_state_list = [ 0, 1, 2 ]
+        if data['state'] in host_state_list:
+            result.status = host_states[data['state']]
+        else:
+            result.status = 'OTHER'
         return result
 
     def _create_service(self, data):
@@ -239,7 +264,11 @@ class Monitos3Server(GenericServer):
         result.custom_variables = data['custom_variables']
         # result.name = data['display_name']
         service_states = {0: 'OK', 1: 'WARNING', 2: 'CRITICAL', 3: 'UNKNOWN'}
-        result.status = service_states[data['state']]
+        service_state_list = [ 0, 1, 2, 3 ]
+        if data['state'] in service_state_list:
+            result.status = service_states[data['state']]
+        else:
+            result.status = 'OTHER'
         return result
 
     def set_recheck(self, info_dict):
@@ -248,9 +277,9 @@ class Monitos3Server(GenericServer):
         host_svid = self.hosts[host].svid
         log.info('host_svid is: %s', host_svid)
         service = info_dict['service']
-        svc_svid = self.hosts[host].services[service].svid
-        log.info('svc_svid is: %s', svc_svid)
         if service:
+            svc_svid = self.hosts[host].services[service].svid
+            log.info('svc_svid is: %s', svc_svid)
             log.info('service is: %s', service)
             if self.hosts[host].services[service].is_passive_only():
                 return
@@ -263,18 +292,21 @@ class Monitos3Server(GenericServer):
         # log.debug('recheck cmd is: %s', self.command )
 
     def set_acknowledge(self, info_dict):
-        """acknowledge a service or host"""
+        """
+        acknowledge a service or host
+        {'author': 'username', 'all_services': ['PING', 'DUMMY'], 'host': 'fritz', 'service': '', 'server': <Nagstamon.Servers.Monitos3.Monitos3Server object at 0x000001FDF0781CC0>,
+        'acknowledge_all_services': True, 'sticky': True, 'notify': True, 'comment': 'acknowledged', 'persistent': True}
+        """
         log.info('called def set_acknowledge')
         log.info('info_dict is: %s', info_dict )
         host = info_dict['host']
         log.info('host is: %s', host)
         host_svid = self.hosts[host].svid
         log.info('host_svid is: %s', host_svid)
-
         service = info_dict['service']
-        svc_svid = self.hosts[host].services[service].svid
-        log.info('svc_svid is: %s', svc_svid)
         if service:
+            svc_svid = self.hosts[host].services[service].svid
+            log.info('svc_svid is: %s', svc_svid)
             cmd = ['ACKNOWLEDGE_SVC_PROBLEM', host_svid, svc_svid]
         else:
             cmd = ['ACKNOWLEDGE_HOST_PROBLEM', host_svid]
@@ -292,7 +324,34 @@ class Monitos3Server(GenericServer):
         log.info('set_downtime not implemented')
 
     def set_submit_check_result(self, info_dict):
-        log.info('set_submit_check_result not implemented')
+        # INFO:Monitos3:info_dict is: {
+        # 'host': 'BPMon', 'performance_data': 'ggggg', 'service': 'BP_test cw', 'state': 'critical',
+        # 'comment': 'check result submitted', 'server': <Nagstamon.Servers.Monitos3.Monitos3Server object at 0x0000021555881CC0>,
+        # 'check_output': 'tesstestus'}
+        log.debug( json.dumps( str( info_dict ), sort_keys=True, indent=4) )
+        host = info_dict['host']
+        log.debug('host is: %s', host)
+        host_svid = self.hosts[host].svid
+        log.debug('host_svid is: %s', host_svid)
+        plugin_output = info_dict['check_output']
+        service = info_dict['service']
+        if service:
+            # PROCESS_SERVICE_CHECK_RESULT;<host_name>;<service_description>;<return_code>;<plugin_output>
+            log.debug('service is: %s', service)
+            svc_svid = self.hosts[host].services[service].svid
+            log.debug('svc_svid is: %s', svc_svid)
+            rev_service_states = { 'ok': 0, 'warning': 1, 'critical': 2, 'unknown': 3}
+            return_code = rev_service_states[ info_dict[ 'state' ] ]
+            cmd = ['PROCESS_SERVICE_CHECK_RESULT', host_svid, svc_svid, str( return_code ), plugin_output]
+            log.debug('cmd is: %s', cmd )
+        else:
+            # PROCESS_HOST_CHECK_RESULT;<host_name>;<status_code>;<plugin_output>
+            log.debug('host is: %s', host)
+            rev_host_states = { 'up': 0, 'down': 1, 'unreachable': 2, 'unknown': 3 }
+            return_code = rev_host_states[ info_dict[ 'state' ] ]
+            cmd = ['PROCESS_HOST_CHECK_RESULT', host_svid, str( return_code ), plugin_output]
+            log.debug('cmd is: %s', cmd )
+        self.command(';'.join(cmd))
 
     def get_start_end(self, host):
         log.info('get_start_end not implemented')
