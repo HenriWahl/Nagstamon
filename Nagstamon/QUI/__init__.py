@@ -1207,7 +1207,7 @@ class StatusWindow(QWidget):
             if not conf.servers[server.name].save_password and\
                not conf.servers[server.name].use_autologin and\
                conf.servers[server.name].password == '' and\
-               not conf.authentication == 'kerberos':
+               not conf.servers[server.name].authentication == 'kerberos':
                 dialogs.authentication.show_auth_dialog(server.name)
 
             # without parent there is some flickering when starting
