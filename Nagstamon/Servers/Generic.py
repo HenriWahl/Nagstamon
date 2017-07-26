@@ -303,27 +303,30 @@ class GenericServer(object):
             if self.hosts[host].services[service].is_passive_only():
                 # Do not check passive only checks
                 return
-        # get start time from Nagios as HTML to use same timezone setting like the locally installed Nagios
-        result = self.FetchURL(
-            self.monitor_cgi_url + '/cmd.cgi?' + urllib.parse.urlencode({'cmd_typ': '96', 'host': host}))
-        self.start_time = dict(result.result.find(attrs={'name': 'start_time'}).attrs)['value']
-        # decision about host or service - they have different URLs
-        if service == '':
-            # host
-            cmd_typ = '96'
-        else:
-            # service @ host
-            cmd_typ = '7'
-        # ignore empty service in case of rechecking a host
-        cgi_data = urllib.parse.urlencode([('cmd_typ', cmd_typ),
-                                           ('cmd_mod', '2'),
-                                           ('host', host),
-                                           ('service', service),
-                                           ('start_time', self.start_time),
-                                           ('force_check', 'on'),
-                                           ('btnSubmit', 'Commit')])
-        # execute POST request
-        self.FetchURL(self.monitor_cgi_url + '/cmd.cgi', giveback='raw', cgi_data=cgi_data)
+        try:
+            # get start time from Nagios as HTML to use same timezone setting like the locally installed Nagios
+            result = self.FetchURL(
+                self.monitor_cgi_url + '/cmd.cgi?' + urllib.parse.urlencode({'cmd_typ': '96', 'host': host}))
+            self.start_time = dict(result.result.find(attrs={'name': 'start_time'}).attrs)['value']
+            # decision about host or service - they have different URLs
+            if service == '':
+                # host
+                cmd_typ = '96'
+            else:
+                # service @ host
+                cmd_typ = '7'
+            # ignore empty service in case of rechecking a host
+            cgi_data = urllib.parse.urlencode([('cmd_typ', cmd_typ),
+                                               ('cmd_mod', '2'),
+                                               ('host', host),
+                                               ('service', service),
+                                               ('start_time', self.start_time),
+                                               ('force_check', 'on'),
+                                               ('btnSubmit', 'Commit')])
+            # execute POST request
+            self.FetchURL(self.monitor_cgi_url + '/cmd.cgi', giveback='raw', cgi_data=cgi_data)
+        except:
+            traceback.print_exc(file=sys.stdout)
 
     def set_acknowledge(self, info_dict):
         '''
@@ -342,8 +345,6 @@ class GenericServer(object):
                               info_dict['persistent'],
                               all_services)
 
-        # refresh immediately according to https://github.com/HenriWahl/Nagstamon/issues/86
-        # ##self.thread.doRefresh = True
 
     def _set_acknowledge(self, host, service, author, comment, sticky, notify, persistent, all_services=[]):
         '''
