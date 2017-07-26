@@ -42,7 +42,7 @@
       </sizepolicy>
      </property>
      <property name="currentIndex">
-      <number>4</number>
+      <number>1</number>
      </property>
      <widget class="QWidget" name="tab_servers">
       <attribute name="title">
@@ -569,60 +569,8 @@
           <property name="spacing">
            <number>5</number>
           </property>
-          <item row="0" column="0">
-           <widget class="QRadioButton" name="input_radiobutton_statusbar_floating">
-            <property name="text">
-             <string>Floating statusbar</string>
-            </property>
-           </widget>
-          </item>
-          <item row="1" column="0">
-           <layout class="QHBoxLayout" name="horizontalLayout_7">
-            <item>
-             <widget class="QRadioButton" name="input_radiobutton_icon_in_systray">
-              <property name="text">
-               <string>Icon in systray</string>
-              </property>
-             </widget>
-            </item>
-            <item>
-             <layout class="QHBoxLayout" name="horizontalLayout_16">
-              <item>
-               <widget class="QCheckBox" name="input_checkbox_systray_offset_use">
-                <property name="text">
-                 <string>Use offset</string>
-                </property>
-               </widget>
-              </item>
-              <item>
-               <widget class="QSpinBox" name="input_spinbox_systray_offset"/>
-              </item>
-              <item>
-               <spacer name="horizontalSpacer_6">
-                <property name="orientation">
-                 <enum>Qt::Horizontal</enum>
-                </property>
-                <property name="sizeHint" stdset="0">
-                 <size>
-                  <width>40</width>
-                  <height>20</height>
-                 </size>
-                </property>
-               </spacer>
-              </item>
-             </layout>
-            </item>
-           </layout>
-          </item>
-          <item row="5" column="0">
-           <layout class="QHBoxLayout" name="horizontalLayout_17">
-            <item>
-             <widget class="QRadioButton" name="input_radiobutton_fullscreen">
-              <property name="text">
-               <string>Fullscreen</string>
-              </property>
-             </widget>
-            </item>
+          <item row="7" column="0">
+           <layout class="QHBoxLayout" name="horizontalLayout_16">
             <item>
              <widget class="QLabel" name="label_fullscreen_display">
               <property name="text">
@@ -635,6 +583,61 @@
             </item>
             <item>
              <spacer name="horizontalSpacer_8">
+              <property name="orientation">
+               <enum>Qt::Horizontal</enum>
+              </property>
+              <property name="sizeHint" stdset="0">
+               <size>
+                <width>40</width>
+                <height>20</height>
+               </size>
+              </property>
+             </spacer>
+            </item>
+           </layout>
+          </item>
+          <item row="0" column="0">
+           <widget class="QRadioButton" name="input_radiobutton_statusbar_floating">
+            <property name="text">
+             <string>Floating statusbar</string>
+            </property>
+           </widget>
+          </item>
+          <item row="1" column="0">
+           <widget class="QRadioButton" name="input_radiobutton_icon_in_systray">
+            <property name="text">
+             <string>Icon in systray</string>
+            </property>
+           </widget>
+          </item>
+          <item row="4" column="0">
+           <widget class="QRadioButton" name="input_radiobutton_fullscreen">
+            <property name="text">
+             <string>Fullscreen</string>
+            </property>
+           </widget>
+          </item>
+          <item row="5" column="0">
+           <widget class="QCheckBox" name="input_checkbox_systray_offset_use">
+            <property name="text">
+             <string>Use offset to correct position problems</string>
+            </property>
+           </widget>
+          </item>
+          <item row="6" column="0">
+           <layout class="QHBoxLayout" name="horizontalLayout_15">
+            <item>
+             <widget class="QLabel" name="label_offset_statuswindow">
+              <property name="text">
+               <string>Offset to use for statuswindow:</string>
+              </property>
+             </widget>
+            </item>
+            <item>
+             <widget class="QSpinBox" name="input_spinbox_systray_offset"/>
+            </item>
+            <item>
+             <spacer name="horizontalSpacer_9">
               <property name="orientation">
                <enum>Qt::Horizontal</enum>
               </property>

@@ -234,7 +234,7 @@ class Config(object):
         self.fullscreen = False
         self.fullscreen_display = 0
         self.systray_offset_use = False
-        self.systray_offset = 10
+        self.systray_offset = 37
         self.font = ''
         self.defaults_acknowledge_sticky = False
         self.defaults_acknowledge_send_notification = False

@@ -1542,7 +1542,7 @@ class StatusWindow(QWidget):
             screen_or_widget = get_screen(self.icon_x, self.icon_y)
 
         # only consider offset if it is configured
-        if conf.systray_offset_use:
+        if conf.systray_offset_use and conf.icon_in_systray:
             available_height = desktop.availableGeometry(screen_or_widget).height() - conf.systray_offset
         else:
             available_height = desktop.availableGeometry(screen_or_widget).height()
@@ -1634,7 +1634,8 @@ class StatusWindow(QWidget):
                     # simply take the available max height if there is no more screen real estate
                     # possible because systrayicon resides aside from available space, in fact cutting it
                     height = available_height
-                    y = available_y
+                    ###y = available_y
+                    y = available_height - height
                 else:
                     if available_height < real_height:
                         y = available_y
@@ -4104,7 +4105,8 @@ class Dialog_Settings(Dialog):
                 self.ui.input_checkbox_re_status_information_reverse],
             # offset for statuswindow when using systray
             self.ui.input_radiobutton_icon_in_systray: [self.ui.input_checkbox_systray_offset_use],
-            self.ui.input_checkbox_systray_offset_use: [self.ui.input_spinbox_systray_offset],
+            self.ui.input_checkbox_systray_offset_use: [self.ui.input_spinbox_systray_offset,
+                                                        self.ui.label_offset_statuswindow],
             # display to use in fullscreen mode
             self.ui.input_radiobutton_fullscreen: [self.ui.label_fullscreen_display,
                 self.ui.input_combobox_fullscreen_display],
@@ -4968,10 +4970,13 @@ class Dialog_Settings(Dialog):
         if self.ui.input_checkbox_systray_offset_use.isVisible():
             if self.ui.input_checkbox_systray_offset_use.isChecked():
                 self.ui.input_spinbox_systray_offset.show()
+                self.ui.label_offset_statuswindow.show()
             else:
                 self.ui.input_spinbox_systray_offset.hide()
+                self.ui.label_offset_statuswindow.hide()
         else:
             self.ui.input_spinbox_systray_offset.hide()
+            self.ui.label_offset_statuswindow.hide()
 
 
 class Dialog_Server(Dialog):
