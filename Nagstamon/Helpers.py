@@ -181,8 +181,10 @@ def MachineSortableDate(raw):
     if raw is None:
         raw = '0s'
 
-    # Check_MK style
-    if ('-' in raw and ':' in raw) or ('sec' in raw or 'min' in raw or 'hrs' in raw or 'days' in raw):
+    # Check_MK style - added new variants in 1.4.x, based on abbreviations with spaces :-(
+    if ('-' in raw and ':' in raw) or\
+            ('sec' in raw or 'min' in raw or 'hrs' in raw or 'days' in raw or\
+             ' s' in raw or ' m' in raw ):
         # check_mk has different formats - if duration takes too long it changes its scheme
         if '-' in raw and ':' in raw:
             datepart, timepart = raw.split(' ')
@@ -196,16 +198,16 @@ def MachineSortableDate(raw):
             del datepart, timepart, Y, M, D, h, m, s
         else:
             # recalculate a timedelta of the given value
-            if 'sec' in raw:
+            if 'sec' in raw or ' s' in raw:
                 d['s'] = raw.split(' ')[0]
                 delta = datetime.datetime.now() - datetime.timedelta(seconds=int(d['s']))
-            elif 'min' in raw:
+            elif 'min' in raw or ' m' in raw:
                 d['m'] = raw.split(' ')[0]
                 delta = datetime.datetime.now() - datetime.timedelta(minutes=int(d['m']))
-            elif 'hrs' in raw:
+            elif 'hrs' in raw or ' h' in raw:
                 d['h'] = raw.split(' ')[0]
                 delta = datetime.datetime.now() - datetime.timedelta(hours=int(d['h']))
-            elif 'days' in raw:
+            elif 'days' in raw or ' d' in raw:
                 d['d'] = raw.split(' ')[0]
                 delta = datetime.datetime.now() - datetime.timedelta(days=int(d['d']))
             else:

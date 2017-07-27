@@ -5813,7 +5813,8 @@ class Dialog_Authentication(Dialog):
         self.server = servers[server]
         self.initialize()
         # workaround instead of sent signal
-        statuswindow.hide_window()
+        if not statuswindow == None:
+            statuswindow.hide_window()
         self.window.adjustSize()
         self.window.exec_()
 
