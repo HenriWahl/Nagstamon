@@ -169,139 +169,66 @@ def HumanReadableDurationFromTimestamp(timestamp):
         traceback.print_exc(file=sys.stdout)
 
 
-def MachineSortableDate(raw):
-    """
-    Monitors gratefully show duration even in weeks and months which confuse the
-    sorting of popup window sorting - this functions wants to fix that
-    """
-    # dictionary for duration date string components
-    d = {"M": 0, "w": 0, "d": 0, "h": 0, "m": 0, "s": 0}
-
-    # if for some reason the value is empty/none make it compatible: 0s
-    if raw is None:
-        raw = "0s"
-
-    # strip and replace necessary for Nagios duration values,
-    # split components of duration into dictionary
-    for c in raw.strip().replace("  ", " ").split(" "):
-        number, period = c[0:-1], c[-1]
-        d[period] = int(number)
-        del number, period
-    # convert collected duration data components into seconds for being comparable
-    return 16934400 * d["M"] + 604800 * d["w"] + 86400 * d["d"] + 3600 * d["h"] + 60 * d["m"] + d["s"]
-
-
-def MachineSortableDateMultisite(raw):
-    """
-    Multisite dates/times are so different to the others so it has to be handled separately
-    """
-
-    # dictionary for duration date string components
-    d = {"M": 0, "d": 0, "h": 0, "m": 0, "s": 0}
-
-    # if for some reason the value is empty/none make it compatible: 0 sec
-    if raw is None:
-        raw = "0 sec"
-
-    # check_mk has different formats - if duration takes too long it changes its scheme
-    if "-" in raw and ":" in raw:
-        datepart, timepart = raw.split(" ")
-        # need to convert years into months for later comparison
-        Y, M, D = datepart.split("-")
-        d["M"] = int(Y) * 12 + int(M)
-        d["d"] = int(D)
-        # time does not need to be changed
-        h, m, s = timepart.split(":")
-        d["h"], d["m"], d["s"] = int(h), int(m), int(s)
-        del datepart, timepart, Y, M, D, h, m, s
-    else:
-        # recalculate a timedelta of the given value
-        if "sec" in raw:
-            d["s"] = raw.split(" ")[0]
-            delta = datetime.datetime.now() - datetime.timedelta(seconds=int(d["s"]))
-        elif "min" in raw:
-            d["m"] = raw.split(" ")[0]
-            delta = datetime.datetime.now() - datetime.timedelta(minutes=int(d["m"]))
-        elif "hrs" in raw:
-            d["h"] = raw.split(" ")[0]
-            delta = datetime.datetime.now() - datetime.timedelta(hours=int(d["h"]))
-        elif "days" in raw:
-            d["d"] = raw.split(" ")[0]
-            delta = datetime.datetime.now() - datetime.timedelta(days=int(d["d"]))
-        else:
-            delta = datetime.datetime.now()
-
-        Y, M, d["d"], d["h"], d["m"], d["s"] = delta.strftime("%Y %m %d %H %M %S").split(" ")
-        # need to convert years into months for later comparison
-        d["M"] = int(Y) * 12 + int(M)
-
-    # int-ify d
-    for i in d:
-        d[i] = int(d[i])
-
-    # convert collected duration data components into seconds for being comparable
-    return 16934400 * d["M"] + 86400 * d["d"] + 3600 * d["h"] + 60 * d["m"] + d["s"]
-
-
 # unified machine readable date might go back to module Actions
-def UnifiedMachineSortableDate(raw):
+def MachineSortableDate(raw):
     """
     Try to compute machine readable date for all types of monitor servers
     """
     # dictionary for duration date string components
-    d = {"M": 0, "w": 0, "d": 0, "h": 0, "m": 0, "s": 0}
+    d = {'M': 0, 'w': 0, 'd': 0, 'h': 0, 'm': 0, 's': 0}
 
     # if for some reason the value is empty/none make it compatible: 0s
     if raw is None:
-        raw = "0s"
+        raw = '0s'
 
     # Check_MK style
-    if ("-" in raw and ":" in raw) or ("sec" in raw or "min" in raw or "hrs" in raw or "days" in raw):
+    if ('-' in raw and ':' in raw) or ('sec' in raw or 'min' in raw or 'hrs' in raw or 'days' in raw):
         # check_mk has different formats - if duration takes too long it changes its scheme
-        if "-" in raw and ":" in raw:
-            datepart, timepart = raw.split(" ")
+        if '-' in raw and ':' in raw:
+            datepart, timepart = raw.split(' ')
             # need to convert years into months for later comparison
-            Y, M, D = datepart.split("-")
-            d["M"] = int(Y) * 12 + int(M)
-            d["d"] = int(D)
+            Y, M, D = datepart.split('-')
+            d['M'] = int(Y) * 12 + int(M)
+            d['d'] = int(D)
             # time does not need to be changed
-            h, m, s = timepart.split(":")
-            d["h"], d["m"], d["s"] = int(h), int(m), int(s)
+            h, m, s = timepart.split(':')
+            d['h'], d['m'], d['s'] = int(h), int(m), int(s)
             del datepart, timepart, Y, M, D, h, m, s
         else:
             # recalculate a timedelta of the given value
-            if "sec" in raw:
-                d["s"] = raw.split(" ")[0]
-                delta = datetime.datetime.now() - datetime.timedelta(seconds=int(d["s"]))
-            elif "min" in raw:
-                d["m"] = raw.split(" ")[0]
-                delta = datetime.datetime.now() - datetime.timedelta(minutes=int(d["m"]))
-            elif "hrs" in raw:
-                d["h"] = raw.split(" ")[0]
-                delta = datetime.datetime.now() - datetime.timedelta(hours=int(d["h"]))
-            elif "days" in raw:
-                d["d"] = raw.split(" ")[0]
-                delta = datetime.datetime.now() - datetime.timedelta(days=int(d["d"]))
+            if 'sec' in raw:
+                d['s'] = raw.split(' ')[0]
+                delta = datetime.datetime.now() - datetime.timedelta(seconds=int(d['s']))
+            elif 'min' in raw:
+                d['m'] = raw.split(' ')[0]
+                delta = datetime.datetime.now() - datetime.timedelta(minutes=int(d['m']))
+            elif 'hrs' in raw:
+                d['h'] = raw.split(' ')[0]
+                delta = datetime.datetime.now() - datetime.timedelta(hours=int(d['h']))
+            elif 'days' in raw:
+                d['d'] = raw.split(' ')[0]
+                delta = datetime.datetime.now() - datetime.timedelta(days=int(d['d']))
             else:
                 delta = datetime.datetime.now()
 
-            Y, M, d["d"], d["h"], d["m"], d["s"] = delta.strftime("%Y %m %d %H %M %S").split(" ")
+            Y, M, d['d'], d['h'], d['m'], d['s'] = delta.strftime('%Y %m %d %H %M %S').split(' ')
             # need to convert years into months for later comparison
-            d["M"] = int(Y) * 12 + int(M)
+            d['M'] = int(Y) * 12 + int(M)
 
         # int-ify d
         for i in d:
-            d[i] = int(d[i])
+            # workaround to make values negative to fix Check_MK's different order
+            d[i] = -int(d[i])
     else:
         # strip and replace necessary for Nagios duration values,
         # split components of duration into dictionary
-        for c in raw.strip().replace("  ", " ").split(" "):
+        for c in raw.strip().replace('  ', ' ').split(' '):
             number, period = c[0:-1], c[-1]
             d[period] = int(number)
             del number, period
 
     # convert collected duration data components into seconds for being comparable
-    return 16934400 * d["M"] + 604800 * d["w"] + 86400 * d["d"] + 3600 * d["h"] + 60 * d["m"] + d["s"]
+    return(16934400 * d['M'] + 604800 * d['w'] + 86400 * d['d'] + 3600 * d['h'] + 60 * d['m'] + d['s'])
 
 
 def MD5ify(string):
@@ -375,11 +302,11 @@ def compare_status(item):
 
 
 def compare_last_check(item):
-    return(UnifiedMachineSortableDate(item))
+    return(MachineSortableDate(item))
 
 
 def compare_duration(item):
-    return(UnifiedMachineSortableDate(item))
+    return(MachineSortableDate(item))
 
 
 def compare_attempt(item):

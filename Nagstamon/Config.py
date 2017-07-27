@@ -91,7 +91,7 @@ class AppInfo(object):
         contains app information previously located in GUI.py
     """
     NAME = 'Nagstamon'
-    VERSION = '2.1-20170726'
+    VERSION = '2.1-20170727'
     WEBSITE = 'https://nagstamon.ifw-dresden.de'
     COPYRIGHT = '©2008-2017 Henri Wahl et al.'
     COMMENTS = 'Nagios status monitor for your desktop'
@@ -234,7 +234,7 @@ class Config(object):
         self.fullscreen = False
         self.fullscreen_display = 0
         self.systray_offset_use = False
-        self.systray_offset = 37
+        self.systray_offset = 10
         self.font = ''
         self.defaults_acknowledge_sticky = False
         self.defaults_acknowledge_send_notification = False
@@ -249,7 +249,7 @@ class Config(object):
         self.defaults_downtime_type_flexible = False
         # internal flag to determine if keyring is available at all - defaults to False
         # use_system_keyring is checked and defined some lines later after config file was read
-        ###self.keyring_available = False
+        self.keyring_available = False
         # setting for keyring usage
         self.use_system_keyring = False
 
