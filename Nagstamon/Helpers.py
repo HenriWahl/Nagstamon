@@ -199,7 +199,7 @@ def MachineSortableDate(raw):
         else:
             # recalculate a timedelta of the given value
             if 'sec' in raw or ' s' in raw:
-                d['s'] = raw.split(' ')[0]
+                d['s'] = raw.split(' ')[0].split('.')[0]
                 delta = datetime.datetime.now() - datetime.timedelta(seconds=int(d['s']))
             elif 'min' in raw or ' m' in raw:
                 d['m'] = raw.split(' ')[0]
