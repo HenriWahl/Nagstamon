@@ -26,6 +26,7 @@ import configparser
 import base64
 import zlib
 import datetime
+import keyring
 from collections import OrderedDict
 
 # avoid build error because of debug_queue unknown to setup.py
@@ -76,7 +77,8 @@ CONFIG_STRINGS = ['custom_browser',
                   'proxy_address',
                   'proxy_username',
                   'proxy_password',
-                  'autologin_key'
+                  'autologin_key',
+                  'custom_cert_ca_file'
                   ]
 
 # needed when OS-specific decisions have to be made, mostly Linux/non-Linux
@@ -89,7 +91,7 @@ class AppInfo(object):
         contains app information previously located in GUI.py
     """
     NAME = 'Nagstamon'
-    VERSION = '2.1-20170724'
+    VERSION = '2.1-20170726'
     WEBSITE = 'https://nagstamon.ifw-dresden.de'
     COPYRIGHT = '©2008-2017 Henri Wahl et al.'
     COMMENTS = 'Nagios status monitor for your desktop'
@@ -232,7 +234,7 @@ class Config(object):
         self.fullscreen = False
         self.fullscreen_display = 0
         self.systray_offset_use = False
-        self.systray_offset = 10
+        self.systray_offset = 37
         self.font = ''
         self.defaults_acknowledge_sticky = False
         self.defaults_acknowledge_send_notification = False
@@ -247,7 +249,7 @@ class Config(object):
         self.defaults_downtime_type_flexible = False
         # internal flag to determine if keyring is available at all - defaults to False
         # use_system_keyring is checked and defined some lines later after config file was read
-        self.keyring_available = False
+        ###self.keyring_available = False
         # setting for keyring usage
         self.use_system_keyring = False
 
@@ -345,7 +347,6 @@ class Config(object):
             # and all the thousands 1.0 installations do not know it yet it will be more comfortable
             # for most of the Windows users if it is only defined as False after it was checked
             # from config file
-            # if not self.__dict__.has_key("use_system_keyring"):
             if 'use_system_keyring' not in self.__dict__.keys():
                 if self.unconfigured is True:
                     # an unconfigured system should start with no keyring to prevent crashes
@@ -396,11 +397,6 @@ class Config(object):
                 if servers[server].save_password == 'False':
                     servers[server].password = ""
                 elif self.keyring_available and self.use_system_keyring:
-                    # necessary to import on-the-fly due to possible Windows crashes
-                    if platform.system() in NON_LINUX:
-                        import keyring
-                    else:
-                        import Nagstamon.thirdparty.keyring as keyring
                     password = keyring.get_password('Nagstamon', '@'.join((servers[server].username,
                                                                            servers[server].monitor_url))) or ""
                     if password == "":
@@ -412,11 +408,6 @@ class Config(object):
                     servers[server].password = self.DeObfuscate(servers[server].password)
                 # proxy password
                 if self.keyring_available and self.use_system_keyring:
-                    # necessary to import on-the-fly due to possible Windows crashes
-                    if platform.system() in NON_LINUX:
-                        import keyring
-                    else:
-                        import Nagstamon.thirdparty.keyring as keyring
                     proxy_password = keyring.get_password('Nagstamon', '@'.join(('proxy',
                                                                                  servers[server].proxy_username,
                                                                                  servers[server].proxy_address))) or ""
@@ -561,11 +552,6 @@ class Config(object):
                                 value = ''
                             elif self.keyring_available and self.use_system_keyring:
                                 if self.__dict__[settingsdir][s].password != '':
-                                    # necessary to import on-the-fly due to possible Windows crashes
-                                    if platform.system() in NON_LINUX:
-                                        import keyring
-                                    else:
-                                        import Nagstamon.thirdparty.keyring as keyring
                                     # provoke crash if password saving does not work - this is the case
                                     # on newer Ubuntu releases
                                     try:
@@ -579,11 +565,6 @@ class Config(object):
                                 value = ''
                         if option == 'proxy_password':
                             if self.keyring_available and self.use_system_keyring:
-                                # necessary to import on-the-fly due to possible Windows crashes
-                                if platform.system() in NON_LINUX:
-                                    import keyring
-                                else:
-                                    import Nagstamon.thirdparty.keyring as keyring
                                 if self.__dict__[settingsdir][s].proxy_password != '':
                                     # provoke crash if password saving does not work - this is the case
                                     # on newer Ubuntu releases
@@ -639,7 +620,7 @@ class Config(object):
                     return False
             else:
                 # keyring and secretstorage have to be importable
-                import Nagstamon.thirdparty.keyring as keyring
+                import keyring
                 # import secretstorage module as dependency of keyring -
                 # if not available keyring won't work
                 import secretstorage
@@ -818,7 +799,7 @@ class Config(object):
 class Server(object):
 
     """
-    one Server realized as object for config info
+        one Server realized as object for config info
     """
 
     def __init__(self):
@@ -835,11 +816,16 @@ class Server(object):
         self.proxy_address = 'http://proxyserver:port/'
         self.proxy_username = 'proxyusername'
         self.proxy_password = 'proxypassword'
-        # defaults to 'basic', another possible value at the moment is 'digest'
+        # defaults to 'basic', other possible values are 'digest' and 'kerberos'
         self.authentication = 'basic'
         self.timeout = 10
         # just GUI-wise deciding if more options are shown in server dialog
         self.show_options = False
+
+        # SSL/TLS certificate verification
+        self.ignore_cert = False
+        self.custom_cert_use = False
+        self.custom_cert_ca_file = ''
 
         # special FX
         # Centreon autologin

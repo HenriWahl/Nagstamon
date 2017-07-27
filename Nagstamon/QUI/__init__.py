@@ -1206,7 +1206,8 @@ class StatusWindow(QWidget):
             # display authentication dialog if password is not known
             if not conf.servers[server.name].save_password and\
                not conf.servers[server.name].use_autologin and\
-               conf.servers[server.name].password == '':
+               conf.servers[server.name].password == '' and\
+               not conf.servers[server.name].authentication == 'kerberos':
                 dialogs.authentication.show_auth_dialog(server.name)
 
             # without parent there is some flickering when starting
@@ -1339,7 +1340,7 @@ class StatusWindow(QWidget):
                 icon_y = QCursor.pos().y()
 
             # move into direction of systray - where the cursor hangs around too
-            self.move(icon_x, icon_y)
+            ###self.move(icon_x, icon_y)
 
             # get available desktop specs
             available_width = desktop.availableGeometry(self).width()
@@ -1360,7 +1361,7 @@ class StatusWindow(QWidget):
             self.move(x, y)
 
             # under unfortunate circumstances statusbar might have the the moving flag true
-            # fix it here because it makes no sense but my cause non-appearing statuswindow
+            # fix it here because it makes no sense but might cause non-appearing statuswindow
             self.moving = False
 
             self.show_window()
@@ -1541,7 +1542,7 @@ class StatusWindow(QWidget):
             screen_or_widget = get_screen(self.icon_x, self.icon_y)
 
         # only consider offset if it is configured
-        if conf.systray_offset_use:
+        if conf.systray_offset_use and conf.icon_in_systray:
             available_height = desktop.availableGeometry(screen_or_widget).height() - conf.systray_offset
         else:
             available_height = desktop.availableGeometry(screen_or_widget).height()
@@ -1633,7 +1634,8 @@ class StatusWindow(QWidget):
                     # simply take the available max height if there is no more screen real estate
                     # possible because systrayicon resides aside from available space, in fact cutting it
                     height = available_height
-                    y = available_y
+                    ###y = available_y
+                    y = available_height - height
                 else:
                     if available_height < real_height:
                         y = available_y
@@ -3525,6 +3527,8 @@ class TreeView(QTreeView):
                         self.change_label_status.emit('Connection error', 'error')
                     elif status.error.startswith('requests.exceptions.ReadTimeout'):
                         self.change_label_status.emit('Connection timeout', 'error')
+                    elif status.error.startswith('requests.exceptions.SSLError'):
+                        self.change_label_status.emit('SSL/TLS problem', 'critical')
                     elif self.server.status_code in self.server.STATUS_CODES_NO_AUTH or\
                             self.server.refresh_authentication:
                         self.change_label_status.emit('Authentication problem', 'critical')
@@ -4017,6 +4021,7 @@ class Dialog(QObject):
                 for widget in widgets:
                     widget.hide()
 
+
     @pyqtSlot(str)
     def toggle(self, checkbox):
         """
@@ -4100,7 +4105,8 @@ class Dialog_Settings(Dialog):
                 self.ui.input_checkbox_re_status_information_reverse],
             # offset for statuswindow when using systray
             self.ui.input_radiobutton_icon_in_systray: [self.ui.input_checkbox_systray_offset_use],
-            self.ui.input_checkbox_systray_offset_use: [self.ui.input_spinbox_systray_offset],
+            self.ui.input_checkbox_systray_offset_use: [self.ui.input_spinbox_systray_offset,
+                                                        self.ui.label_offset_statuswindow],
             # display to use in fullscreen mode
             self.ui.input_radiobutton_fullscreen: [self.ui.label_fullscreen_display,
                 self.ui.input_combobox_fullscreen_display],
@@ -4158,6 +4164,11 @@ class Dialog_Settings(Dialog):
         # self.ui.button_check_for_new_version_now.clicked.connect(check_version.check)
         self.ui.button_check_for_new_version_now.clicked.connect(self.button_check_for_new_version_clicked)
         self.check_for_new_version.connect(check_version.check)
+
+        # avoid offset spinbox if offest is not enabled
+        self.ui.input_radiobutton_fullscreen.clicked.connect(self.toggle_systray_icon_offset)
+        self.ui.input_radiobutton_icon_in_systray.clicked.connect(self.toggle_systray_icon_offset)
+        self.ui.input_radiobutton_statusbar_floating.clicked.connect(self.toggle_systray_icon_offset)
 
         # connect font chooser button to font choosing dialog
         self.ui.button_fontchooser.clicked.connect(self.font_chooser)
@@ -4344,16 +4355,20 @@ class Dialog_Settings(Dialog):
         self.window.adjustSize()
 
     def show(self, tab=0):
-        # fix size if no extra Zabbix widgets are shown
+        # hide them and thus be able to fix size if no extra Zabbix widgets are shown
         self.toggle_zabbix_widgets()
+
+        # small workaround for timestamp trick to avoid flickering
+        # if the 'Settings' button was clicked too fast the timestamp difference
+        # is too short and the statuswindow will keep open
+        # modifying the timestamp could help
+        statuswindow.is_shown_timestamp -= 1
 
         # tell the world that dialog pops up
         self.show_dialog.emit()
 
         # jump to requested tab in settings dialog
         self.ui.tabs.setCurrentIndex(tab)
-
-        self.window.resize(10,10)
 
         # reset window if only needs smaller screen estate
         self.window.adjustSize()
@@ -4908,7 +4923,7 @@ class Dialog_Settings(Dialog):
     @pyqtSlot()
     def choose_browser_executable(self):
         """
-            shopw dialog for selection of non-default browser
+            show dialog for selection of non-default browser
         """
         # present dialog with OS-specific sensible defaults
         if OS == 'Windows':
@@ -4947,6 +4962,22 @@ class Dialog_Settings(Dialog):
             for widget in self.ZABBIX_WIDGETS:
                 widget.hide()
 
+    @pyqtSlot()
+    def toggle_systray_icon_offset(self):
+        """
+            Only show offset spinbox when offset is enabled
+        """
+        if self.ui.input_checkbox_systray_offset_use.isVisible():
+            if self.ui.input_checkbox_systray_offset_use.isChecked():
+                self.ui.input_spinbox_systray_offset.show()
+                self.ui.label_offset_statuswindow.show()
+            else:
+                self.ui.input_spinbox_systray_offset.hide()
+                self.ui.label_offset_statuswindow.hide()
+        else:
+            self.ui.input_spinbox_systray_offset.hide()
+            self.ui.label_offset_statuswindow.hide()
+
 
 class Dialog_Server(Dialog):
 
@@ -4970,7 +5001,10 @@ class Dialog_Server(Dialog):
                 self.ui.input_lineedit_proxy_username,
                 self.ui.label_proxy_password,
                 self.ui.input_lineedit_proxy_password],
-            self.ui.input_checkbox_show_options: [self.ui.groupbox_options]}
+            self.ui.input_checkbox_show_options: [self.ui.groupbox_options],
+            self.ui.input_checkbox_custom_cert_use: [self.ui.label_custom_ca_file,
+                                                     self.ui.input_lineedit_custom_cert_ca_file,
+                                                     self.ui.button_choose_custom_cert_ca_file]}
 
         self.TOGGLE_DEPS_INVERTED = [self.ui.input_checkbox_use_proxy_from_os]
 
@@ -4991,21 +5025,39 @@ class Dialog_Server(Dialog):
             self.ui.label_service_filter: ['op5Monitor'],
             self.ui.label_host_filter: ['op5Monitor']}
 
+        # to be used when selecting authentication method Kerberos
+        self.AUTHENTICATION_WIDGETS = [
+            self.ui.label_username,
+            self.ui.input_lineedit_username,
+            self.ui.label_password,
+            self.ui.input_lineedit_password,
+            self.ui.input_checkbox_save_password]
+
         # fill default order fields combobox with monitor server types
         self.ui.input_combobox_type.addItems(sorted(SERVER_TYPES.keys(), key=str.lower))
         # default to Nagios as it is the mostly used monitor server
         self.ui.input_combobox_type.setCurrentText('Nagios')
+
+        # set folder and play symbols to choose and play buttons
+        self.ui.button_choose_custom_cert_ca_file.setText('')
+        self.ui.button_choose_custom_cert_ca_file.setIcon(self.ui.button_choose_custom_cert_ca_file.style().standardIcon(QStyle.SP_DirIcon))
+        # connect choose custom cert CA file button with file dialog
+        self.ui.button_choose_custom_cert_ca_file.clicked.connect(self.choose_custom_cert_ca_file)
+
         # fill authentication combobox
         self.ui.input_combobox_authentication.addItems(['Basic', 'Digest', 'Kerberos'])
 
         # detect change of server type which leads to certain options shown or hidden
-        self.ui.input_combobox_type.activated.connect(self.server_type_changed)
+        self.ui.input_combobox_type.activated.connect(self.toggle_type)
+
+        # when authentication is changed to Kerberos then disable username/password as the are now useless
+        self.ui.input_combobox_authentication.activated.connect(self.toggle_authentication)
 
         # mode needed for evaluate dialog after ok button pressed - defaults to 'new'
         self.mode = 'new'
 
     @pyqtSlot(int)
-    def server_type_changed(self, server_type_index=0):
+    def toggle_type(self, server_type_index=0):
         # server_type_index is not needed - we get the server type from .currentText()
         # check if server type is listed in volatile widgets to decide if it has to be shown or hidden
         for widget, server_types in self.VOLATILE_WIDGETS.items():
@@ -5013,6 +5065,22 @@ class Dialog_Server(Dialog):
                 widget.show()
             else:
                 widget.hide()
+
+    @pyqtSlot()
+    def toggle_authentication(self):
+        """
+            when authentication is changed to Kerberos then disable username/password as the are now useless
+        """
+        if self.ui.input_combobox_authentication.currentText() == 'Kerberos':
+           for widget in self.AUTHENTICATION_WIDGETS:
+               widget.hide()
+        else:
+            for widget in self.AUTHENTICATION_WIDGETS:
+                widget.show()
+
+        # after hiding authentication widgets dialog might shrink
+        self.window.adjustSize()
+
 
     def dialog_decoration(method):
         """
@@ -5053,7 +5121,10 @@ class Dialog_Server(Dialog):
             self.ui.input_combobox_authentication.setCurrentText(self.server_conf.authentication.title())
 
             # initially hide not needed widgets
-            self.server_type_changed()
+            self.toggle_type()
+
+            # disable unneeded authentication widgets if Kerberos is used
+            self.toggle_authentication()
 
             # apply toggle-dependencies between checkboxes and certain widgets
             self.toggle_toggles()
@@ -5217,6 +5288,21 @@ class Dialog_Server(Dialog):
 
             # store server settings
             conf.SaveMultipleConfig('servers', 'server')
+
+
+    @pyqtSlot()
+    def choose_custom_cert_ca_file(self):
+        """
+            show dialog for selection of non-default browser
+        """
+        filter = 'All files (*)'
+        file = dialogs.file_chooser.getOpenFileName(self.window,
+                                                    directory=os.path.expanduser('~'),
+                                                    filter=filter)[0]
+
+        # only take filename if QFileDialog gave something useful back
+        if file != '':
+            self.ui.input_lineedit_custom_cert_ca_file.setText(file)
 
 
 class Dialog_Action(Dialog):
