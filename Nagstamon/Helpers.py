@@ -184,7 +184,7 @@ def MachineSortableDate(raw):
     # Check_MK style - added new variants in 1.4.x, based on abbreviations with spaces :-(
     if ('-' in raw and ':' in raw) or\
             ('sec' in raw or 'min' in raw or 'hrs' in raw or 'days' in raw or\
-             ' s' in raw or ' m' in raw ):
+             ' s' in raw or ' m' in raw or ' h' in raw or ' d' in raw):
         # check_mk has different formats - if duration takes too long it changes its scheme
         if '-' in raw and ':' in raw:
             datepart, timepart = raw.split(' ')
@@ -199,7 +199,7 @@ def MachineSortableDate(raw):
         else:
             # recalculate a timedelta of the given value
             if 'sec' in raw or ' s' in raw:
-                d['s'] = raw.split(' ')[0]
+                d['s'] = raw.split(' ')[0].split('.')[0]
                 delta = datetime.datetime.now() - datetime.timedelta(seconds=int(d['s']))
             elif 'min' in raw or ' m' in raw:
                 d['m'] = raw.split(' ')[0]

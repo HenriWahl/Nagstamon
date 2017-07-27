@@ -39,6 +39,7 @@ import random
 import copy
 import base64
 import datetime
+import traceback
 
 from collections import OrderedDict
 from copy import deepcopy
@@ -443,10 +444,13 @@ class SystemTrayIcon(QSystemTrayIcon):
         """
         # only if currently a notification is necessary
         if statuswindow.worker_notification.is_notifying:
-            # set curent status icon
-            self.setIcon(self.current_icon)
-            # even later call itself to invert colors as flash
-            self.timer.singleShot(500, self.flash)
+            try:
+                # set curent status icon
+                self.setIcon(self.current_icon)
+                # even later call itself to invert colors as flash
+                self.timer.singleShot(500, self.flash)
+            except:
+                traceback.print_exc(file=sys.stdout)
         else:
             if self.current_icon is not None:
                 self.setIcon(self.current_icon)
@@ -865,6 +869,15 @@ class Draggable_Label(QLabel, _Draggable_Widget):
 
     def __init__(self, text='', parent=None):
         QLabel.__init__(self, text, parent=parent)
+
+
+
+    def leaveEvent(self, event):
+        """
+            check if popup has to be hidden depending on mouse position
+        """
+
+        print(datetime.datetime.now(), 'LEAVE draggable widget')
 
 
 class StatusWindow(QWidget):
@@ -1744,10 +1757,13 @@ class StatusWindow(QWidget):
             self.stored_y = self.y()
             self.stored_width = self.width()
 
-    def leaveEvent(self, event):
+    def leaveEventXXX(self, event):
         """
             check if popup has to be hidden depending on mouse position
         """
+
+        print('LEAVE statuswindow')
+
         # check first if popup has to be shown by hovering or clicking
         if conf.close_details_hover and not conf.fullscreen:
             # only hide window if cursor is outside of it
@@ -1758,7 +1774,26 @@ class StatusWindow(QWidget):
                mouse_y <= self.y() or mouse_y >= self.y() + self.height():
                 self.hide_window()
 
+            print(mouse_x, self.x(), self.width())
+            print(mouse_y, self.y(), self.height())
+            print()
+
             del(mouse_x, mouse_y)
+
+    def eventXXXXXXX(self, event):
+        '''
+            necessary for Fedora 25+ using Wayland and Nagstamon as Xorg application
+            if Nagstamon is surrounded by Wayland applications there are no leave events
+        '''
+        print(event)
+        if type(event) == QHelpEvent:
+            print(event, event.x(), event.y(), self.x(), self.y(), self.width(), self.height())
+            if event.x() <= 10 or event.x() >= self.width() - 10:
+                self.hide_window()
+            #elif event.y() <= 10 or event.y() >= self.height() - 10:
+            elif event.y() >= self.height() - 10:
+                self.hide_window()
+        return(False)
 
     def get_real_width(self):
         """
@@ -1855,7 +1890,6 @@ class StatusWindow(QWidget):
         try:
             dbus_connection.show(AppInfo.NAME, message)
         except Exception:
-            import traceback
             traceback.print_exc(file=sys.stdout)
 
     @pyqtSlot()
@@ -3424,6 +3458,36 @@ class TreeView(QTreeView):
         # wait until thread is really stopped
         self.worker_thread.wait(2000)
 
+
+    def leaveEvent(self, event):
+        """
+            check if popup has to be hidden depending on mouse position
+        """
+
+        print(datetime.datetime.now(), 'LEAVE treeview', QCursor.pos().x(), QCursor.pos().y())
+        print(event, self, QCursor.pos().x(), QCursor.pos().y(), statuswindow.x(), statuswindow.y(), statuswindow.x() + statuswindow.width(), statuswindow.y() + statuswindow.height())
+        if QCursor.pos().x() <= statuswindow.x() + 100 or QCursor.pos().x() >= statuswindow.x() + statuswindow.width() - 100:
+            statuswindow.hide_window()
+        elif QCursor.pos().y() <= statuswindow.y() +100 or QCursor.pos().y() >= statuswindow.y() + statuswindow.height() - 100:
+            statuswindow.hide_window()
+
+
+    def eventXXXX(self, event):
+        """
+            check if popup has to be hidden depending on mouse position
+        """
+        print(event)
+        if 'x' in dir(event) or 'y' in dir(event):
+            #print(datetime.datetime.now(), 'EVENT treeview', QCursor.pos().x(), QCursor.pos().y())
+            #print(event, self, QCursor.pos().x(), QCursor.pos().y(), statuswindow.x(), statuswindow.y(), statuswindow.x() + statuswindow.width(), statuswindow.y() + statuswindow.height())
+            #if QCursor.pos().x() <= statuswindow.x() + 100 or QCursor.pos().x() >= statuswindow.x() + statuswindow.width() - 100:
+            #    statuswindow.hide_window()
+            #elif QCursor.pos().y() <= statuswindow.y() +100 or QCursor.pos().y() >= statuswindow.y() + statuswindow.height() - 100:
+            #    statuswindow.hide_window()
+            print('----->', event)
+        return(False)
+
+
     class Worker(QObject):
 
         """
@@ -3867,7 +3931,6 @@ class TreeView(QTreeView):
                     self.recheck(info)
 
             except Exception:
-                import traceback
                 traceback.print_exc(file=sys.stdout)
 
         def _URLify(self, string):
@@ -6184,7 +6247,6 @@ class DBus(QObject):
                     self.connected = True
 
                 except Exception:
-                    import traceback
                     traceback.print_exc(file=sys.stdout)
                     self.connected = False
         else:
