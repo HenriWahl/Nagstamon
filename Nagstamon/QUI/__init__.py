@@ -871,15 +871,6 @@ class Draggable_Label(QLabel, _Draggable_Widget):
         QLabel.__init__(self, text, parent=parent)
 
 
-
-    def leaveEvent(self, event):
-        """
-            check if popup has to be hidden depending on mouse position
-        """
-
-        print(datetime.datetime.now(), 'LEAVE draggable widget')
-
-
 class StatusWindow(QWidget):
 
     """
