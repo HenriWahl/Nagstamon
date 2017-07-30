@@ -52,8 +52,8 @@ try:
             sys.exit(1)
 
         # remove QT_QPA_PLATFORMTHEME env variable to fix ugly theme in GNOME
-        if platform.system() == 'Linux' and 'QT_QPA_PLATFORMTHEME' in os.environ:
-            os.environ.pop('QT_QPA_PLATFORMTHEME')
+        #if platform.system() == 'Linux' and 'QT_QPA_PLATFORMTHEME' in os.environ:
+        #    os.environ.pop('QT_QPA_PLATFORMTHEME')
 
 
         # get GUI
