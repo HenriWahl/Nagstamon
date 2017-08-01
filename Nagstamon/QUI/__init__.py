@@ -2616,9 +2616,11 @@ class ServerVBox(QVBoxLayout):
         #self.stretcher = QSpacerItem(0, 0, QSizePolicy.MinimumExpanding, QSizePolicy.Maximum)
         # use label instead of spacer to be clickable
         self.label_stretcher = ClosingLabel('', parent=parent)
-        self.label_stretcher.setSizePolicy(QSizePolicy.MinimumExpanding, QSizePolicy.Fixed)
+        self.label_stretcher.setSizePolicy(QSizePolicy.MinimumExpanding, QSizePolicy.Expanding)
 
         self.label_status = ServerStatusLabel(parent=parent)
+        self.label_status.setSizePolicy(QSizePolicy.Fixed, QSizePolicy.Expanding)
+
         self.button_authenticate = QPushButton('Authenticate', parent=parent)
 
         self.button_monitor.clicked.connect(self.button_monitor.open_url)
@@ -3124,7 +3126,6 @@ class TreeView(QTreeView):
         """
             forward clicked cell info from event
         """
-        #
         if conf.close_details_clicking_somewhere and event.button() == Qt.LeftButton:
             statuswindow.hide_window()
         else:
