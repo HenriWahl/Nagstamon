@@ -202,7 +202,7 @@ def MachineSortableDate(raw):
                 d['s'] = raw.split(' ')[0].split('.')[0]
                 delta = datetime.datetime.now() - datetime.timedelta(seconds=int(d['s']))
             elif 'min' in raw or ' m' in raw:
-                d['m'] = raw.split(' ')[0]
+                d['m'] = raw.split(' ')[0].split('.')[0]
                 delta = datetime.datetime.now() - datetime.timedelta(minutes=int(d['m']))
             elif 'hrs' in raw or ' h' in raw:
                 d['h'] = raw.split(' ')[0]

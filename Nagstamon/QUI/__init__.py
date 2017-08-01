@@ -744,7 +744,7 @@ class ComboBox_Servers(QComboBox):
         self.setCurrentIndex(0)
 
 
-class _Draggable_Widget(QWidget):
+class DraggableWidget(QWidget):
     """
         Used to give various toparea and statusbar widgets draggability
     """
@@ -763,7 +763,7 @@ class _Draggable_Widget(QWidget):
     right_mouse_button_pressed = False
 
     # Maybe due to the later mixin usage, but somehow the pyqtSlot decorator is ignored here when used by NagstamonLogo
-    # and Draggable_Label
+    # and DraggableLabel
     #@pyqtSlot(QMenu)
     def set_menu(self, menu):
         self.menu = menu
@@ -852,7 +852,7 @@ class _Draggable_Widget(QWidget):
             self.mouse_entered.emit()
 
 
-class Draggable_Label(QLabel, _Draggable_Widget):
+class DraggableLabel(QLabel, DraggableWidget):
 
     """
        label with dragging capabilities used by toparea
@@ -869,6 +869,27 @@ class Draggable_Label(QLabel, _Draggable_Widget):
 
     def __init__(self, text='', parent=None):
         QLabel.__init__(self, text, parent=parent)
+
+
+class ClosingLabel(QLabel):
+    """
+        modified QLabel which might close the statuswindow if leftclicked
+    """
+
+    def __init__(self, text='', parent=None):
+        QLabel.__init__(self, text, parent=parent)
+
+
+    def mouseReleaseEvent(self, event):
+        """
+            left click and configured close-if-clicking-somewhere makes statuswindow close
+        """
+        if event.button() == Qt.LeftButton and conf.close_details_clicking_somewhere:
+            # if popup window should be closed by clicking do it now
+            if statuswindow.is_shown and\
+               not conf.fullscreen:
+                statuswindow.is_hiding_by_click_on_toparea_timestamp = time.time()
+                statuswindow.hide_window()
 
 
 class StatusWindow(QWidget):
@@ -922,6 +943,11 @@ class StatusWindow(QWidget):
 
         self.setWindowTitle(AppInfo.NAME)
         self.setWindowIcon(QIcon('%s%snagstamon.svg' % (RESOURCES, os.sep)))
+
+        #self.setMouseTracking(True)
+
+        #self.setContentsMargins(10, 10, 10, 10)  # no margin
+
 
         self.vbox = QVBoxLayout(self)  # global VBox
         self.vbox.setSpacing(0)  # no spacing
@@ -1958,6 +1984,7 @@ class StatusWindow(QWidget):
         # tell statusbar labels to flash
         start_flash = pyqtSignal()
         stop_flash = pyqtSignal()
+
         # tell mediaplayer to load and play sound file
         load_sound = pyqtSignal(str)
         play_sound = pyqtSignal()
@@ -2116,7 +2143,7 @@ class StatusWindow(QWidget):
             subprocess.Popen(custom_action_string, shell=True)
 
 
-class NagstamonLogo(QSvgWidget, _Draggable_Widget):
+class NagstamonLogo(QSvgWidget, DraggableWidget):
 
     """
         SVG based logo, used for statusbar and toparea logos
@@ -2322,7 +2349,7 @@ class StatusBar(QWidget):
             self.label_message.hide()
 
 
-class StatusBarLabel(Draggable_Label):
+class StatusBarLabel(DraggableLabel):
 
     """
         one piece of the status bar labels for one state
@@ -2339,7 +2366,7 @@ class StatusBarLabel(Draggable_Label):
     mouse_released = pyqtSignal()
 
     def __init__(self, state, parent=None):
-        Draggable_Label.__init__(self, parent=parent)
+        DraggableLabel.__init__(self, parent=parent)
         self.setStyleSheet('''padding-left: 1px;
                               padding-right: 1px;
                               color: %s; background-color: %s;'''
@@ -2394,8 +2421,8 @@ class TopArea(QWidget):
 
         # top button box
         self.logo = NagstamonLogo(self.icons['nagstamon_logo_toparea'], width=150, height=42, parent=self)
-        self.label_version = Draggable_Label(text=AppInfo.VERSION, parent=self)
-        self.label_empty_space = Draggable_Label(text='', parent=self)
+        self.label_version = DraggableLabel(text=AppInfo.VERSION, parent=self)
+        self.label_empty_space = DraggableLabel(text='', parent=self)
         self.label_empty_space.setSizePolicy(QSizePolicy.Expanding, QSizePolicy.Ignored)
         self.combobox_servers = ComboBox_Servers(parent=self)
         self.button_filters = Button("Filters", parent=self)
@@ -2487,7 +2514,7 @@ class TopArea(QWidget):
                 self.icons[icon] = QIcon(svg_pixmap)
 
 
-class ServerStatusLabel(QLabel):
+class ServerStatusLabel(ClosingLabel):
 
     """
         label for ServerVBox to show server connection state
@@ -2571,7 +2598,8 @@ class ServerVBox(QVBoxLayout):
         # top and bottom should be kept by padding
         self.header.setContentsMargins(0, 0, SPACE, 0)
 
-        self.label = QLabel(parent=parent)
+        #self.label = QLabel(parent=parent)
+        self.label = ClosingLabel(parent=parent)
         self.update_label()
         self.button_monitor = PushButton_BrowserURL(text='Monitor', parent=parent, server=self.server, url_type='monitor')
         self.button_hosts = PushButton_BrowserURL(text='Hosts', parent=parent, server=self.server, url_type='hosts')
@@ -2579,7 +2607,10 @@ class ServerVBox(QVBoxLayout):
         self.button_history = PushButton_BrowserURL(text='History', parent=parent, server=self.server, url_type='history')
         self.button_edit = Button('Edit', parent=parent)
 
-        self.stretcher = QSpacerItem(0, 0, QSizePolicy.MinimumExpanding, QSizePolicy.Maximum)
+        #self.stretcher = QSpacerItem(0, 0, QSizePolicy.MinimumExpanding, QSizePolicy.Maximum)
+        # use label instead of spacer to be clickable
+        self.stretcher = ClosingLabel('', parent=parent)
+        self.stretcher.setSizePolicy(QSizePolicy.MinimumExpanding, QSizePolicy.Fixed)
 
         self.label_status = ServerStatusLabel(parent=parent)
         self.button_authenticate = QPushButton('Authenticate', parent=parent)
@@ -2597,7 +2628,8 @@ class ServerVBox(QVBoxLayout):
         self.header.addWidget(self.button_history)
         self.header.addWidget(self.button_edit)
 
-        self.header.addItem(self.stretcher)
+        #self.header.addItem(self.stretcher)
+        self.header.addWidget(self.stretcher)
 
         self.header.addWidget(self.label_status)
         self.header.addWidget(self.button_authenticate)
@@ -3085,8 +3117,11 @@ class TreeView(QTreeView):
         """
             forward clicked cell info from event
         """
-        index = self.indexAt(QPoint(event.x(), event.y()))
-        self.cell_clicked(index)
+        if conf.close_details_clicking_somewhere and event.button() == Qt.LeftButton:
+            statuswindow.hide_window()
+        else:
+            index = self.indexAt(QPoint(event.x(), event.y()))
+            self.cell_clicked(index)
 
     def wheelEvent(self, event):
         """
