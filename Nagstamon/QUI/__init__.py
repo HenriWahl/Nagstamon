@@ -803,7 +803,7 @@ class DraggableWidget(QWidget):
             # if popup window should be closed by clicking do it now
             if statuswindow.is_shown and\
                not conf.fullscreen:
-                statuswindow.is_hiding_by_click_on_toparea_timestamp = time.time()
+                statuswindow.is_hiding_timestamp = time.time()
                 statuswindow.hide_window()
             elif not statuswindow.is_shown:
                 self.mouse_released.emit()
@@ -848,7 +848,7 @@ class DraggableWidget(QWidget):
             clickend a moment ago
         """
         if statuswindow.is_shown is False and\
-           statuswindow.is_hiding_by_click_on_toparea_timestamp + 0.1 < time.time():
+           statuswindow.is_hiding_timestamp + 0.2 < time.time():
             self.mouse_entered.emit()
 
 
@@ -888,7 +888,7 @@ class ClosingLabel(QLabel):
             # if popup window should be closed by clicking do it now
             if statuswindow.is_shown and\
                not conf.fullscreen:
-                statuswindow.is_hiding_by_click_on_toparea_timestamp = time.time()
+                statuswindow.is_hiding_timestamp = time.time()
                 statuswindow.hide_window()
 
 
@@ -1096,7 +1096,7 @@ class StatusWindow(QWidget):
         self.is_shown_timestamp = time.time()
 
         # store timestamp to avoid reappearing window shortly after clicking onto toparea
-        self.is_hiding_by_click_on_toparea_timestamp = time.time()
+        self.is_hiding_timestamp = time.time()
 
         # if status_ok is true no server_vboxes are needed
         self.status_ok = True
@@ -1487,6 +1487,7 @@ class StatusWindow(QWidget):
         if self.is_shown or conf.fullscreen:
             self.show_window()
 
+
     @pyqtSlot()
     def hide_window(self):
         """
@@ -1498,7 +1499,9 @@ class StatusWindow(QWidget):
                self.is_shown is True and\
                self.moving is True:
                 # only hide if shown at least a fraction of a second
-                if self.is_shown_timestamp + 0.5 < time.time():
+                # or has not been hidden a too short time ago
+                if self.is_shown_timestamp + 0.5 < time.time() or \
+                   self.is_hiding_timestamp + 0.2 < time.time():
                     if conf.statusbar_floating:
                         self.statusbar.show()
                         self.statusbar.adjustSize()
@@ -1520,6 +1523,9 @@ class StatusWindow(QWidget):
 
                     # tell the world that window goes down
                     self.hiding.emit()
+
+                    # store time of hiding
+                    self.is_hiding_timestamp = time.time()
 
     @pyqtSlot()
     def correct_moving_position(self):
@@ -2609,8 +2615,8 @@ class ServerVBox(QVBoxLayout):
 
         #self.stretcher = QSpacerItem(0, 0, QSizePolicy.MinimumExpanding, QSizePolicy.Maximum)
         # use label instead of spacer to be clickable
-        self.stretcher = ClosingLabel('', parent=parent)
-        self.stretcher.setSizePolicy(QSizePolicy.MinimumExpanding, QSizePolicy.Fixed)
+        self.label_stretcher = ClosingLabel('', parent=parent)
+        self.label_stretcher.setSizePolicy(QSizePolicy.MinimumExpanding, QSizePolicy.Fixed)
 
         self.label_status = ServerStatusLabel(parent=parent)
         self.button_authenticate = QPushButton('Authenticate', parent=parent)
@@ -2629,7 +2635,7 @@ class ServerVBox(QVBoxLayout):
         self.header.addWidget(self.button_edit)
 
         #self.header.addItem(self.stretcher)
-        self.header.addWidget(self.stretcher)
+        self.header.addWidget(self.label_stretcher)
 
         self.header.addWidget(self.label_status)
         self.header.addWidget(self.button_authenticate)
@@ -2729,6 +2735,7 @@ class ServerVBox(QVBoxLayout):
         self.button_history.hide()
         self.button_edit.hide()
         self.label_status.hide()
+        self.label_stretcher.hide()
         self.button_authenticate.hide()
 
         # special table treatment
@@ -3117,6 +3124,7 @@ class TreeView(QTreeView):
         """
             forward clicked cell info from event
         """
+        #
         if conf.close_details_clicking_somewhere and event.button() == Qt.LeftButton:
             statuswindow.hide_window()
         else:
