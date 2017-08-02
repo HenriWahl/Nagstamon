@@ -1394,6 +1394,9 @@ class StatusWindow(QWidget):
             # fix it here because it makes no sense but might cause non-appearing statuswindow
             self.moving = False
 
+            # already show here because was closed before in hide_window()
+            self.show()
+
             self.show_window()
         else:
             self.hide_window()
@@ -1473,6 +1476,13 @@ class StatusWindow(QWidget):
                             # workaround for https://github.com/HenriWahl/Nagstamon/issues/246#issuecomment-220478066
                             pass
 
+                    # recalculate size again to avoid silly scrollbar since using self.close()
+                    #if conf.icon_in_systray:
+                    # theory...
+                    #width, height, x, y = self.calculate_size()
+                    # ...and practice
+                    #self.resize_window(width, height, x, y)
+
                     # store timestamp to avoid flickering as in https://github.com/HenriWahl/Nagstamon/issues/184
                     self.is_shown_timestamp = time.time()
 
@@ -1521,11 +1531,15 @@ class StatusWindow(QWidget):
                     self.icon_x = 0
                     self.icon_y = 0
 
+                    if conf.icon_in_systray:
+                        self.close()
+
                     # tell the world that window goes down
                     self.hiding.emit()
 
                     # store time of hiding
                     self.is_hiding_timestamp = time.time()
+
 
     @pyqtSlot()
     def correct_moving_position(self):
@@ -2701,6 +2715,7 @@ class ServerVBox(QVBoxLayout):
         self.button_history.show()
         self.button_edit.show()
         self.label_status.show()
+        self.label_stretcher.show()
         self.button_authenticate.hide()
 
         # special table treatment
@@ -2719,6 +2734,7 @@ class ServerVBox(QVBoxLayout):
         self.button_history.show()
         self.button_edit.show()
         self.label_status.show()
+        self.label_stretcher.show()
         self.button_authenticate.hide()
 
         # special table treatment
@@ -2756,6 +2772,7 @@ class ServerVBox(QVBoxLayout):
                        self.button_history,
                        self.button_edit,
                        self.label_status,
+                       self.label_stretcher,
                        self.button_authenticate):
             widget.hide()
             widget.deleteLater()
