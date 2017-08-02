@@ -89,6 +89,10 @@ if not OS in NON_LINUX:
     # extract thirdparty path from resources path - make submodules accessible by thirdparty modules
     THIRDPARTY = os.sep.join(RESOURCES.split(os.sep)[0:-1] + ['thirdparty'])
     sys.path.insert(0, THIRDPARTY)
+
+    # Xlib for EWMH needs the file ~/.Xauthority and crashes if it does not exist
+    open(os.path.expanduser('~') + os.sep + '.Xauthority', 'a').close()
+
     from Nagstamon.thirdparty.ewmh import EWMH
 
     # DBus only interesting for Linux too
@@ -1476,13 +1480,6 @@ class StatusWindow(QWidget):
                             # workaround for https://github.com/HenriWahl/Nagstamon/issues/246#issuecomment-220478066
                             pass
 
-                    # recalculate size again to avoid silly scrollbar since using self.close()
-                    #if conf.icon_in_systray:
-                    # theory...
-                    #width, height, x, y = self.calculate_size()
-                    # ...and practice
-                    #self.resize_window(width, height, x, y)
-
                     # store timestamp to avoid flickering as in https://github.com/HenriWahl/Nagstamon/issues/184
                     self.is_shown_timestamp = time.time()
 
@@ -1534,8 +1531,6 @@ class StatusWindow(QWidget):
                     # reset icon x y
                     self.icon_x = 0
                     self.icon_y = 0
-
-
 
                     # tell the world that window goes down
                     self.hiding.emit()

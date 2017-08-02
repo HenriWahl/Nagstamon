@@ -230,8 +230,9 @@ class Config(object):
         self.color_down_background = self.default_color_down_background = '#000000'
         self.color_error_text = self.default_color_error_text = '#000000'
         self.color_error_background = self.default_color_error_background = '#D3D3D3'
-        self.statusbar_floating = True
-        self.icon_in_systray = False
+        self.statusbar_floating = False
+        # might be a better default
+        self.icon_in_systray = True
         self.fullscreen = False
         self.fullscreen_display = 0
         self.systray_offset_use = False
