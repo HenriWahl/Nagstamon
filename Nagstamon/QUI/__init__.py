@@ -1519,6 +1519,10 @@ class StatusWindow(QWidget):
                     self.servers_scrollarea.hide()
                     self.setMinimumSize(1, 1)
                     self.adjustSize()
+
+                    if conf.icon_in_systray:
+                        self.close()
+
                     self.move(self.stored_x, self.stored_y)
 
                     # switch off
@@ -1531,8 +1535,7 @@ class StatusWindow(QWidget):
                     self.icon_x = 0
                     self.icon_y = 0
 
-                    if conf.icon_in_systray:
-                        self.close()
+
 
                     # tell the world that window goes down
                     self.hiding.emit()
