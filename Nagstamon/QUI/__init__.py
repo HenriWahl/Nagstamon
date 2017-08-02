@@ -39,6 +39,7 @@ import random
 import copy
 import base64
 import datetime
+import traceback
 
 from collections import OrderedDict
 from copy import deepcopy
@@ -443,10 +444,13 @@ class SystemTrayIcon(QSystemTrayIcon):
         """
         # only if currently a notification is necessary
         if statuswindow.worker_notification.is_notifying:
-            # set curent status icon
-            self.setIcon(self.current_icon)
-            # even later call itself to invert colors as flash
-            self.timer.singleShot(500, self.flash)
+            try:
+                # set curent status icon
+                self.setIcon(self.current_icon)
+                # even later call itself to invert colors as flash
+                self.timer.singleShot(500, self.flash)
+            except:
+                traceback.print_exc(file=sys.stdout)
         else:
             if self.current_icon is not None:
                 self.setIcon(self.current_icon)
@@ -740,7 +744,7 @@ class ComboBox_Servers(QComboBox):
         self.setCurrentIndex(0)
 
 
-class _Draggable_Widget(QWidget):
+class DraggableWidget(QWidget):
     """
         Used to give various toparea and statusbar widgets draggability
     """
@@ -759,7 +763,7 @@ class _Draggable_Widget(QWidget):
     right_mouse_button_pressed = False
 
     # Maybe due to the later mixin usage, but somehow the pyqtSlot decorator is ignored here when used by NagstamonLogo
-    # and Draggable_Label
+    # and DraggableLabel
     #@pyqtSlot(QMenu)
     def set_menu(self, menu):
         self.menu = menu
@@ -799,7 +803,7 @@ class _Draggable_Widget(QWidget):
             # if popup window should be closed by clicking do it now
             if statuswindow.is_shown and\
                not conf.fullscreen:
-                statuswindow.is_hiding_by_click_on_toparea_timestamp = time.time()
+                statuswindow.is_hiding_timestamp = time.time()
                 statuswindow.hide_window()
             elif not statuswindow.is_shown:
                 self.mouse_released.emit()
@@ -844,11 +848,11 @@ class _Draggable_Widget(QWidget):
             clickend a moment ago
         """
         if statuswindow.is_shown is False and\
-           statuswindow.is_hiding_by_click_on_toparea_timestamp + 0.1 < time.time():
+           statuswindow.is_hiding_timestamp + 0.2 < time.time():
             self.mouse_entered.emit()
 
 
-class Draggable_Label(QLabel, _Draggable_Widget):
+class DraggableLabel(QLabel, DraggableWidget):
 
     """
        label with dragging capabilities used by toparea
@@ -865,6 +869,27 @@ class Draggable_Label(QLabel, _Draggable_Widget):
 
     def __init__(self, text='', parent=None):
         QLabel.__init__(self, text, parent=parent)
+
+
+class ClosingLabel(QLabel):
+    """
+        modified QLabel which might close the statuswindow if leftclicked
+    """
+
+    def __init__(self, text='', parent=None):
+        QLabel.__init__(self, text, parent=parent)
+
+
+    def mouseReleaseEvent(self, event):
+        """
+            left click and configured close-if-clicking-somewhere makes statuswindow close
+        """
+        if event.button() == Qt.LeftButton and conf.close_details_clicking_somewhere:
+            # if popup window should be closed by clicking do it now
+            if statuswindow.is_shown and\
+               not conf.fullscreen:
+                statuswindow.is_hiding_timestamp = time.time()
+                statuswindow.hide_window()
 
 
 class StatusWindow(QWidget):
@@ -918,6 +943,11 @@ class StatusWindow(QWidget):
 
         self.setWindowTitle(AppInfo.NAME)
         self.setWindowIcon(QIcon('%s%snagstamon.svg' % (RESOURCES, os.sep)))
+
+        #self.setMouseTracking(True)
+
+        #self.setContentsMargins(10, 10, 10, 10)  # no margin
+
 
         self.vbox = QVBoxLayout(self)  # global VBox
         self.vbox.setSpacing(0)  # no spacing
@@ -1066,7 +1096,7 @@ class StatusWindow(QWidget):
         self.is_shown_timestamp = time.time()
 
         # store timestamp to avoid reappearing window shortly after clicking onto toparea
-        self.is_hiding_by_click_on_toparea_timestamp = time.time()
+        self.is_hiding_timestamp = time.time()
 
         # if status_ok is true no server_vboxes are needed
         self.status_ok = True
@@ -1364,6 +1394,9 @@ class StatusWindow(QWidget):
             # fix it here because it makes no sense but might cause non-appearing statuswindow
             self.moving = False
 
+            # already show here because was closed before in hide_window()
+            self.show()
+
             self.show_window()
         else:
             self.hide_window()
@@ -1443,6 +1476,13 @@ class StatusWindow(QWidget):
                             # workaround for https://github.com/HenriWahl/Nagstamon/issues/246#issuecomment-220478066
                             pass
 
+                    # recalculate size again to avoid silly scrollbar since using self.close()
+                    #if conf.icon_in_systray:
+                    # theory...
+                    #width, height, x, y = self.calculate_size()
+                    # ...and practice
+                    #self.resize_window(width, height, x, y)
+
                     # store timestamp to avoid flickering as in https://github.com/HenriWahl/Nagstamon/issues/184
                     self.is_shown_timestamp = time.time()
 
@@ -1457,6 +1497,7 @@ class StatusWindow(QWidget):
         if self.is_shown or conf.fullscreen:
             self.show_window()
 
+
     @pyqtSlot()
     def hide_window(self):
         """
@@ -1468,7 +1509,9 @@ class StatusWindow(QWidget):
                self.is_shown is True and\
                self.moving is True:
                 # only hide if shown at least a fraction of a second
-                if self.is_shown_timestamp + 0.5 < time.time():
+                # or has not been hidden a too short time ago
+                if self.is_shown_timestamp + 0.5 < time.time() or \
+                   self.is_hiding_timestamp + 0.2 < time.time():
                     if conf.statusbar_floating:
                         self.statusbar.show()
                         self.statusbar.adjustSize()
@@ -1476,6 +1519,10 @@ class StatusWindow(QWidget):
                     self.servers_scrollarea.hide()
                     self.setMinimumSize(1, 1)
                     self.adjustSize()
+
+                    if conf.icon_in_systray:
+                        self.close()
+
                     self.move(self.stored_x, self.stored_y)
 
                     # switch off
@@ -1488,8 +1535,14 @@ class StatusWindow(QWidget):
                     self.icon_x = 0
                     self.icon_y = 0
 
+
+
                     # tell the world that window goes down
                     self.hiding.emit()
+
+                    # store time of hiding
+                    self.is_hiding_timestamp = time.time()
+
 
     @pyqtSlot()
     def correct_moving_position(self):
@@ -1748,6 +1801,7 @@ class StatusWindow(QWidget):
         """
             check if popup has to be hidden depending on mouse position
         """
+
         # check first if popup has to be shown by hovering or clicking
         if conf.close_details_hover and not conf.fullscreen:
             # only hide window if cursor is outside of it
@@ -1855,7 +1909,6 @@ class StatusWindow(QWidget):
         try:
             dbus_connection.show(AppInfo.NAME, message)
         except Exception:
-            import traceback
             traceback.print_exc(file=sys.stdout)
 
     @pyqtSlot()
@@ -1954,6 +2007,7 @@ class StatusWindow(QWidget):
         # tell statusbar labels to flash
         start_flash = pyqtSignal()
         stop_flash = pyqtSignal()
+
         # tell mediaplayer to load and play sound file
         load_sound = pyqtSignal(str)
         play_sound = pyqtSignal()
@@ -2112,7 +2166,7 @@ class StatusWindow(QWidget):
             subprocess.Popen(custom_action_string, shell=True)
 
 
-class NagstamonLogo(QSvgWidget, _Draggable_Widget):
+class NagstamonLogo(QSvgWidget, DraggableWidget):
 
     """
         SVG based logo, used for statusbar and toparea logos
@@ -2318,7 +2372,7 @@ class StatusBar(QWidget):
             self.label_message.hide()
 
 
-class StatusBarLabel(Draggable_Label):
+class StatusBarLabel(DraggableLabel):
 
     """
         one piece of the status bar labels for one state
@@ -2335,7 +2389,7 @@ class StatusBarLabel(Draggable_Label):
     mouse_released = pyqtSignal()
 
     def __init__(self, state, parent=None):
-        Draggable_Label.__init__(self, parent=parent)
+        DraggableLabel.__init__(self, parent=parent)
         self.setStyleSheet('''padding-left: 1px;
                               padding-right: 1px;
                               color: %s; background-color: %s;'''
@@ -2390,8 +2444,8 @@ class TopArea(QWidget):
 
         # top button box
         self.logo = NagstamonLogo(self.icons['nagstamon_logo_toparea'], width=150, height=42, parent=self)
-        self.label_version = Draggable_Label(text=AppInfo.VERSION, parent=self)
-        self.label_empty_space = Draggable_Label(text='', parent=self)
+        self.label_version = DraggableLabel(text=AppInfo.VERSION, parent=self)
+        self.label_empty_space = DraggableLabel(text='', parent=self)
         self.label_empty_space.setSizePolicy(QSizePolicy.Expanding, QSizePolicy.Ignored)
         self.combobox_servers = ComboBox_Servers(parent=self)
         self.button_filters = Button("Filters", parent=self)
@@ -2483,7 +2537,7 @@ class TopArea(QWidget):
                 self.icons[icon] = QIcon(svg_pixmap)
 
 
-class ServerStatusLabel(QLabel):
+class ServerStatusLabel(ClosingLabel):
 
     """
         label for ServerVBox to show server connection state
@@ -2567,7 +2621,8 @@ class ServerVBox(QVBoxLayout):
         # top and bottom should be kept by padding
         self.header.setContentsMargins(0, 0, SPACE, 0)
 
-        self.label = QLabel(parent=parent)
+        #self.label = QLabel(parent=parent)
+        self.label = ClosingLabel(parent=parent)
         self.update_label()
         self.button_monitor = PushButton_BrowserURL(text='Monitor', parent=parent, server=self.server, url_type='monitor')
         self.button_hosts = PushButton_BrowserURL(text='Hosts', parent=parent, server=self.server, url_type='hosts')
@@ -2575,9 +2630,14 @@ class ServerVBox(QVBoxLayout):
         self.button_history = PushButton_BrowserURL(text='History', parent=parent, server=self.server, url_type='history')
         self.button_edit = Button('Edit', parent=parent)
 
-        self.stretcher = QSpacerItem(0, 0, QSizePolicy.MinimumExpanding, QSizePolicy.Maximum)
+        #self.stretcher = QSpacerItem(0, 0, QSizePolicy.MinimumExpanding, QSizePolicy.Maximum)
+        # use label instead of spacer to be clickable
+        self.label_stretcher = ClosingLabel('', parent=parent)
+        self.label_stretcher.setSizePolicy(QSizePolicy.MinimumExpanding, QSizePolicy.Expanding)
 
         self.label_status = ServerStatusLabel(parent=parent)
+        self.label_status.setSizePolicy(QSizePolicy.Fixed, QSizePolicy.Expanding)
+
         self.button_authenticate = QPushButton('Authenticate', parent=parent)
 
         self.button_monitor.clicked.connect(self.button_monitor.open_url)
@@ -2593,7 +2653,8 @@ class ServerVBox(QVBoxLayout):
         self.header.addWidget(self.button_history)
         self.header.addWidget(self.button_edit)
 
-        self.header.addItem(self.stretcher)
+        #self.header.addItem(self.stretcher)
+        self.header.addWidget(self.label_stretcher)
 
         self.header.addWidget(self.label_status)
         self.header.addWidget(self.button_authenticate)
@@ -2657,6 +2718,7 @@ class ServerVBox(QVBoxLayout):
         self.button_history.show()
         self.button_edit.show()
         self.label_status.show()
+        self.label_stretcher.show()
         self.button_authenticate.hide()
 
         # special table treatment
@@ -2675,6 +2737,7 @@ class ServerVBox(QVBoxLayout):
         self.button_history.show()
         self.button_edit.show()
         self.label_status.show()
+        self.label_stretcher.show()
         self.button_authenticate.hide()
 
         # special table treatment
@@ -2693,6 +2756,7 @@ class ServerVBox(QVBoxLayout):
         self.button_history.hide()
         self.button_edit.hide()
         self.label_status.hide()
+        self.label_stretcher.hide()
         self.button_authenticate.hide()
 
         # special table treatment
@@ -2711,6 +2775,7 @@ class ServerVBox(QVBoxLayout):
                        self.button_history,
                        self.button_edit,
                        self.label_status,
+                       self.label_stretcher,
                        self.button_authenticate):
             widget.hide()
             widget.deleteLater()
@@ -3081,8 +3146,11 @@ class TreeView(QTreeView):
         """
             forward clicked cell info from event
         """
-        index = self.indexAt(QPoint(event.x(), event.y()))
-        self.cell_clicked(index)
+        if conf.close_details_clicking_somewhere and event.button() == Qt.LeftButton:
+            statuswindow.hide_window()
+        else:
+            index = self.indexAt(QPoint(event.x(), event.y()))
+            self.cell_clicked(index)
 
     def wheelEvent(self, event):
         """
@@ -3423,6 +3491,7 @@ class TreeView(QTreeView):
         self.worker_thread.quit()
         # wait until thread is really stopped
         self.worker_thread.wait(2000)
+
 
     class Worker(QObject):
 
@@ -3867,7 +3936,6 @@ class TreeView(QTreeView):
                     self.recheck(info)
 
             except Exception:
-                import traceback
                 traceback.print_exc(file=sys.stdout)
 
         def _URLify(self, string):
@@ -5812,6 +5880,9 @@ class Dialog_Authentication(Dialog):
         """
         self.server = servers[server]
         self.initialize()
+        # workaround instead of sent signal
+        if not statuswindow == None:
+            statuswindow.hide_window()
         self.window.adjustSize()
         self.window.exec_()
 
@@ -6181,7 +6252,6 @@ class DBus(QObject):
                     self.connected = True
 
                 except Exception:
-                    import traceback
                     traceback.print_exc(file=sys.stdout)
                     self.connected = False
         else:

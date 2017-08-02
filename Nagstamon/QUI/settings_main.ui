@@ -8,7 +8,7 @@
     <x>0</x>
     <y>0</y>
     <width>620</width>
-    <height>1031</height>
+    <height>1069</height>
    </rect>
   </property>
   <property name="sizePolicy">
@@ -450,6 +450,16 @@
             <property name="spacing">
              <number>5</number>
             </property>
+            <item row="1" column="1">
+             <widget class="QRadioButton" name="input_radiobutton_close_details_clicking">
+              <property name="text">
+               <string>Close when clicking statusbar</string>
+              </property>
+              <attribute name="buttonGroup">
+               <string notr="true">buttongroup_close_statusbar</string>
+              </attribute>
+             </widget>
+            </item>
             <item row="1" column="0">
              <widget class="QRadioButton" name="input_radiobutton_popup_details_clicking">
               <property name="text">
@@ -480,10 +490,10 @@
               </attribute>
              </widget>
             </item>
-            <item row="1" column="1">
-             <widget class="QRadioButton" name="input_radiobutton_close_details_clicking">
+            <item row="2" column="1">
+             <widget class="QRadioButton" name="input_radiobutton_close_details_clicking_somewhere">
               <property name="text">
-               <string>Close when clicking statusbar</string>
+               <string>Close when clicking somewhere</string>
               </property>
               <attribute name="buttonGroup">
                <string notr="true">buttongroup_close_statusbar</string>
@@ -2812,10 +2822,18 @@
   <tabstop>input_radiobutton_long_display</tabstop>
   <tabstop>input_radiobutton_short_display</tabstop>
   <tabstop>input_radiobutton_statusbar_floating</tabstop>
+  <tabstop>input_radiobutton_icon_in_systray</tabstop>
+  <tabstop>input_radiobutton_fullscreen</tabstop>
+  <tabstop>input_checkbox_systray_offset_use</tabstop>
+  <tabstop>input_spinbox_systray_offset</tabstop>
+  <tabstop>input_combobox_fullscreen_display</tabstop>
+  <tabstop>button_fontchooser</tabstop>
+  <tabstop>button_default_font</tabstop>
   <tabstop>input_radiobutton_popup_details_hover</tabstop>
-  <tabstop>input_radiobutton_close_details_hover</tabstop>
   <tabstop>input_radiobutton_popup_details_clicking</tabstop>
+  <tabstop>input_radiobutton_close_details_hover</tabstop>
   <tabstop>input_radiobutton_close_details_clicking</tabstop>
+  <tabstop>input_radiobutton_close_details_clicking_somewhere</tabstop>
   <tabstop>input_checkbox_highlight_new_events</tabstop>
   <tabstop>input_checkbox_show_tooltips</tabstop>
   <tabstop>input_combobox_default_sort_field</tabstop>
@@ -2847,6 +2865,10 @@
   <tabstop>input_radiobutton_connect_by_host</tabstop>
   <tabstop>input_radiobutton_connect_by_dns</tabstop>
   <tabstop>input_radiobutton_connect_by_ip</tabstop>
+  <tabstop>input_radiobutton_use_default_browser</tabstop>
+  <tabstop>input_radiobutton_use_custom_browser</tabstop>
+  <tabstop>input_lineedit_custom_browser</tabstop>
+  <tabstop>button_choose_browser</tabstop>
   <tabstop>input_checkbox_notification</tabstop>
   <tabstop>input_checkbox_notify_if_warning</tabstop>
   <tabstop>input_checkbox_notify_if_critical</tabstop>
@@ -2916,6 +2938,25 @@
   <tabstop>input_spinbox_defaults_downtime_duration_minutes</tabstop>
   <tabstop>input_lineedit_defaults_downtime_comment</tabstop>
   <tabstop>input_lineedit_defaults_submit_check_result_comment</tabstop>
+  <tabstop>tabs</tabstop>
+  <tabstop>input_checkbox_filter_all_high_services</tabstop>
+  <tabstop>input_checkbox_filter_all_disaster_services</tabstop>
+  <tabstop>input_checkbox_filter_all_flapping_services</tabstop>
+  <tabstop>input_checkbox_filter_all_unknown_services</tabstop>
+  <tabstop>input_checkbox_filter_all_warning_services</tabstop>
+  <tabstop>input_checkbox_filter_all_information_services</tabstop>
+  <tabstop>input_checkbox_filter_all_average_services</tabstop>
+  <tabstop>input_checkbox_filter_services_on_hosts_in_maintenance</tabstop>
+  <tabstop>input_checkbox_filter_services_on_unreachable_hosts</tabstop>
+  <tabstop>input_checkbox_filter_hosts_in_soft_state</tabstop>
+  <tabstop>input_checkbox_filter_services_in_soft_state</tabstop>
+  <tabstop>input_checkbox_notify_if_information</tabstop>
+  <tabstop>input_checkbox_notify_if_disaster</tabstop>
+  <tabstop>input_checkbox_notify_if_average</tabstop>
+  <tabstop>input_checkbox_notify_if_high</tabstop>
+  <tabstop>input_checkbox_show_grid</tabstop>
+  <tabstop>input_checkbox_grid_use_custom_intensity</tabstop>
+  <tabstop>input_slider_grid_alternation_intensity</tabstop>
  </tabstops>
  <resources/>
  <connections>

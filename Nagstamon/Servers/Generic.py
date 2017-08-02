@@ -1434,7 +1434,6 @@ class GenericServer(object):
             return Result(result=result, error=error, status_code=response.status_code)
 
         result, error = self.Error(sys.exc_info())
-
         return Result(result=result, error=error, status_code=response.status_code)
 
     def GetHost(self, host):

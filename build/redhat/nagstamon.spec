@@ -25,6 +25,7 @@ Requires:      python3-SecretStorage
 Requires:      python3-crypto
 Requires:      python3-cryptography
 Requires:      python3-psutil
+Requires:      python3-keyring
 Requires:      qt5-qtsvg
 Requires:      qt5-qtmultimedia
 
