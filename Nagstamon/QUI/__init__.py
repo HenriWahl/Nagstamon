@@ -91,7 +91,8 @@ if not OS in NON_LINUX:
     sys.path.insert(0, THIRDPARTY)
 
     # Xlib for EWMH needs the file ~/.Xauthority and crashes if it does not exist
-    open(os.path.expanduser('~') + os.sep + '.Xauthority', 'a').close()
+    if not os.path.exists(os.path.expanduser('~') + os.sep + '.Xauthority'):
+        open(os.path.expanduser('~') + os.sep + '.Xauthority', 'a').close()
 
     from Nagstamon.thirdparty.ewmh import EWMH
 
