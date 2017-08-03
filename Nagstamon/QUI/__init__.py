@@ -160,9 +160,9 @@ HEADERS = OrderedDict([('host', {'header': 'Host',
                        ('attempt', {'header': 'Attempt',
                                     'column': 7}),
                        ('status_information', {'header': 'Status Information',
-                                               'column': 8}),
-                       ('dummy_column', {'header': '',
-                                         'column': 8})])
+                                               'column': 8}),])
+                       #('dummy_column', {'header': '',
+                       #                  'column': 8})])
 
 # various headers-key-columns variations needed in different parts
 HEADERS_HEADERS = list()
@@ -197,8 +197,8 @@ SORT_COLUMNS_INDEX = {0: 0,
                       5: 5,
                       6: 6,
                       7: 7,
-                      8: 8,
-                      9: 8}
+                      8: 8,}
+                      ###9: 8}
 
 # space used in LayoutBoxes
 SPACE = 10
@@ -1775,9 +1775,11 @@ class StatusWindow(QWidget):
         # widest table does not need the dummy column #9
         for server in self.servers_vbox.children():
             if max_width_table == server.table:
-                server.table.setColumnHidden(9, True)
+                ###server.table.setColumnHidden(9, True)
+                server.table.header().setStretchLastSection(False)
             else:
-                server.table.setColumnHidden(9, False)
+                #server.table.setColumnHidden(9, False)
+                server.table.header().setStretchLastSection(True)
 
         del(max_width, max_width_table)
         return True
@@ -2892,11 +2894,13 @@ class Model(QAbstractTableModel):
 
         elif role == Qt.ForegroundRole:
             # return(self.data_array[index.row()][COLOR_INDEX['text'][index.column()]])
-            return(self.data_array[index.row()][10])
+            ###return(self.data_array[index.row()][10])
+            return(self.data_array[index.row()][9])
 
         elif role == Qt.BackgroundRole:
             # return(self.data_array[index.row()][COLOR_INDEX['background'][index.column()]])
-            return(self.data_array[index.row()][11])
+            ###return(self.data_array[index.row()][11])
+            return(self.data_array[index.row()][10])
 
         elif role == Qt.FontRole:
             if index.column() == 1:
@@ -2975,6 +2979,7 @@ class TreeView(QTreeView):
         self.setSizePolicy(QSizePolicy.Ignored, QSizePolicy.Expanding)
 
         self.header().setSectionResizeMode(QHeaderView.ResizeToContents)
+        self.header().setStretchLastSection(False)
         self.header().setDefaultAlignment(Qt.AlignLeft)
         self.header().setSortIndicatorShown(True)
 
@@ -3120,7 +3125,8 @@ class TreeView(QTreeView):
     def get_real_width(self):
         width = 0
         # avoid the last dummy column to be counted
-        for column in range(len(HEADERS) - 1):
+        #for column in range(len(HEADERS) - 1):
+        for column in range(len(HEADERS)):
             width += self.columnWidth(column)
         return(width)
 
@@ -3691,7 +3697,7 @@ class TreeView(QTreeView):
                             if self.data_array[-1][3] != '':
                                 self.info['services_flags_column_needed'] = True
 
-                            self.data_array[-1].append('X')
+                            ###self.data_array[-1].append('X')
 
             # sort data before it gets transmitted to treeview model
             self.sort_data_array(self.sort_column, self.sort_order, False)
@@ -3722,9 +3728,9 @@ class TreeView(QTreeView):
             # fix alternating colors
             for count, row in enumerate(self.data_array):
                 # change text color of sorted rows
-                row[10] = QBRUSHES[count % 2][row[12]]
+                row[9] = QBRUSHES[count % 2][row[11]]
                 # change background color of sorted rows
-                row[11] = QBRUSHES[count % 2][row[13]]
+                row[10] = QBRUSHES[count % 2][row[12]]
 
             # if header was clicked tell model to use new data_array
             if header_clicked:
