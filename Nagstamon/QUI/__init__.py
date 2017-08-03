@@ -1486,6 +1486,9 @@ class StatusWindow(QWidget):
 
                     # tell others like notification that statuswindow shows up now
                     self.showing.emit()
+            else:
+                for vbox in self.servers_vbox.children():
+                    vbox.hide_all()
 
     @pyqtSlot()
     def update_window(self):
@@ -1759,6 +1762,8 @@ class StatusWindow(QWidget):
                 self.resize_window(width, height, x, y)
 
                 del(width, height, x, y)
+            else:
+                self.adjust_dummy_columns()
 
     @pyqtSlot()
     def adjust_dummy_columns(self):
@@ -1777,7 +1782,11 @@ class StatusWindow(QWidget):
         for server in self.servers_vbox.children():
             if max_width_table == server.table:
                 ###server.table.setColumnHidden(9, True)
-                server.table.header().setStretchLastSection(False)
+                # chances are that on fullscreen everything is stretched
+                if conf.fullscreen:
+                    server.table.header().setStretchLastSection(True)
+                else:
+                    server.table.header().setStretchLastSection(False)
             else:
                 #server.table.setColumnHidden(9, False)
                 server.table.header().setStretchLastSection(True)
