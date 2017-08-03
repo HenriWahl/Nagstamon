@@ -1487,8 +1487,12 @@ class StatusWindow(QWidget):
                     # tell others like notification that statuswindow shows up now
                     self.showing.emit()
             else:
-                for vbox in self.servers_vbox.children():
-                    vbox.hide_all()
+                # hide vboxes in fullscreen and whole window in any other case
+                if conf.fullscreen:
+                    for vbox in self.servers_vbox.children():
+                        vbox.hide_all()
+                else:
+                    self.hide_window()
 
     @pyqtSlot()
     def update_window(self):
