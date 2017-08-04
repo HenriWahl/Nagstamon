@@ -1519,7 +1519,7 @@ class StatusWindow(QWidget):
                    self.is_hiding_timestamp + 0.2 < time.time():
                     if conf.statusbar_floating:
                         self.statusbar.show()
-                        self.statusbar.adjustSize()
+                        #self.statusbar.adjustSize()
                     self.toparea.hide()
                     self.servers_scrollarea.hide()
                     self.setMinimumSize(1, 1)
@@ -1528,7 +1528,7 @@ class StatusWindow(QWidget):
                     if conf.icon_in_systray:
                         self.close()
 
-                    self.move(self.stored_x, self.stored_y)
+                    ###self.move(self.stored_x, self.stored_y)
 
                     # switch off
                     self.is_shown = False
@@ -1545,6 +1545,8 @@ class StatusWindow(QWidget):
 
                     # store time of hiding
                     self.is_hiding_timestamp = time.time()
+
+                    self.move(self.stored_x, self.stored_y)
 
 
     @pyqtSlot()
