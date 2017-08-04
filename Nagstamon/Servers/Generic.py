@@ -17,16 +17,6 @@
 # along with this program; if not, write to the Free Software
 # Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA  02110-1301, USA
 
-import requests
-import requests_kerberos
-# disable annoying InsecureRequestWarning warnings
-try:
-    requests.packages.urllib3.disable_warnings()
-except Exception:
-    # older requests version might not have the packages submodule
-    # for example the one in Ubuntu 14.04
-    pass
-
 import sys
 import socket
 import copy
@@ -53,6 +43,18 @@ from Nagstamon.Config import (conf,
                               debug_queue)
 
 from collections import OrderedDict
+
+import requests
+import requests_kerberos
+
+# disable annoying SubjectAltNameWarning warnings
+try:
+    from requests.packages.urllib3.exceptions import SubjectAltNameWarning
+    requests.packages.urllib3.disable_warnings(SubjectAltNameWarning)
+except:
+    # older requests version might not have the packages submodule
+    # for example the one in Ubuntu 14.04
+    pass
 
 
 class GenericServer(object):
@@ -219,8 +221,13 @@ class GenericServer(object):
             elif self.authentication == 'kerberos':
                 self.session.auth = requests_kerberos.HTTPKerberosAuth()
 
-            # default to not check TLS validity
-            self.session.verify = False
+            # default to check TLS validity
+            if self.ignore_cert:
+                self.session.verify = False
+            elif self.custom_cert_use:
+                self.session.verify = self.custom_cert_ca_file
+            else:
+                self.session.verify = True
 
             # add proxy information
             self.proxify(self.session)
@@ -296,27 +303,30 @@ class GenericServer(object):
             if self.hosts[host].services[service].is_passive_only():
                 # Do not check passive only checks
                 return
-        # get start time from Nagios as HTML to use same timezone setting like the locally installed Nagios
-        result = self.FetchURL(
-            self.monitor_cgi_url + '/cmd.cgi?' + urllib.parse.urlencode({'cmd_typ': '96', 'host': host}))
-        self.start_time = dict(result.result.find(attrs={'name': 'start_time'}).attrs)['value']
-        # decision about host or service - they have different URLs
-        if service == '':
-            # host
-            cmd_typ = '96'
-        else:
-            # service @ host
-            cmd_typ = '7'
-        # ignore empty service in case of rechecking a host
-        cgi_data = urllib.parse.urlencode([('cmd_typ', cmd_typ),
-                                           ('cmd_mod', '2'),
-                                           ('host', host),
-                                           ('service', service),
-                                           ('start_time', self.start_time),
-                                           ('force_check', 'on'),
-                                           ('btnSubmit', 'Commit')])
-        # execute POST request
-        self.FetchURL(self.monitor_cgi_url + '/cmd.cgi', giveback='raw', cgi_data=cgi_data)
+        try:
+            # get start time from Nagios as HTML to use same timezone setting like the locally installed Nagios
+            result = self.FetchURL(
+                self.monitor_cgi_url + '/cmd.cgi?' + urllib.parse.urlencode({'cmd_typ': '96', 'host': host}))
+            self.start_time = dict(result.result.find(attrs={'name': 'start_time'}).attrs)['value']
+            # decision about host or service - they have different URLs
+            if service == '':
+                # host
+                cmd_typ = '96'
+            else:
+                # service @ host
+                cmd_typ = '7'
+            # ignore empty service in case of rechecking a host
+            cgi_data = urllib.parse.urlencode([('cmd_typ', cmd_typ),
+                                               ('cmd_mod', '2'),
+                                               ('host', host),
+                                               ('service', service),
+                                               ('start_time', self.start_time),
+                                               ('force_check', 'on'),
+                                               ('btnSubmit', 'Commit')])
+            # execute POST request
+            self.FetchURL(self.monitor_cgi_url + '/cmd.cgi', giveback='raw', cgi_data=cgi_data)
+        except:
+            traceback.print_exc(file=sys.stdout)
 
     def set_acknowledge(self, info_dict):
         '''
@@ -335,8 +345,6 @@ class GenericServer(object):
                               info_dict['persistent'],
                               all_services)
 
-        # refresh immediately according to https://github.com/HenriWahl/Nagstamon/issues/86
-        # ##self.thread.doRefresh = True
 
     def _set_acknowledge(self, host, service, author, comment, sticky, notify, persistent, all_services=[]):
         '''
@@ -1371,16 +1379,19 @@ class GenericServer(object):
                     # add proxy information if necessary
                     self.proxify(temporary_session)
 
-                    # default to not check TLS validity for temporary sessions
-                    temporary_session.verify = False
+                    # default to check TLS validity for temporary sessions
+                    if self.ignore_cert:
+                        temporary_session.verify = False
+                    elif self.custom_cert_use:
+                        temporary_session.verify = self.custom_cert_ca_file
+                    else:
+                        temporary_session.verify = True
 
                     # most requests come without multipart/form-data
                     if multipart is False:
                         if cgi_data is None:
-                            # response = temporary_session.get(url, timeout=30)
                             response = temporary_session.get(url, timeout=self.timeout)
                         else:
-                            # response = temporary_session.post(url, data=cgi_data, timeout=30)
                             response = temporary_session.post(url, data=cgi_data, timeout=self.timeout)
                     else:
                         # Check_MK and Opsview nees multipart/form-data encoding
@@ -1389,7 +1400,6 @@ class GenericServer(object):
                         for key in cgi_data:
                             form_data[key] = (None, cgi_data[key])
                         # get response with cgi_data encodes as files
-                        # response = temporary_session.post(url, files=form_data, timeout=30)
                         response = temporary_session.post(url, files=form_data, timeout=self.timeout)
 
                     # cleanup
@@ -1424,7 +1434,6 @@ class GenericServer(object):
             return Result(result=result, error=error, status_code=response.status_code)
 
         result, error = self.Error(sys.exc_info())
-
         return Result(result=result, error=error, status_code=response.status_code)
 
     def GetHost(self, host):

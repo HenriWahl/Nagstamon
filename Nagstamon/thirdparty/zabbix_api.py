@@ -235,7 +235,11 @@ class ZabbixAPI(object):
         request = urllib2.Request(url=self.url, data=json_obj.encode('utf-8'), headers=headers)
         if self.proto == "https":
             if HAS_SSLCONTEXT and not self.validate_certs:
-                https_handler = urllib2.HTTPSHandler(debuglevel=0, context=_create_unverified_context())
+                ssl._create_default_https_context = ssl._create_unverified_context
+                ctx = ssl.create_default_context()
+                ctx.check_hostname = False
+                ctx.verify_mode = ssl.CERT_NONE
+                https_handler = urllib2.HTTPSHandler(debuglevel=0, context=ctx)
             else:
                 https_handler = urllib2.HTTPSHandler(debuglevel=0)
             opener = urllib2.build_opener(https_handler)

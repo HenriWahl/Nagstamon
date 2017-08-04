@@ -37,6 +37,7 @@ from Nagstamon.Servers.Thruk import ThrukServer
 from Nagstamon.Servers.Zabbix import ZabbixServer
 from Nagstamon.Servers.Livestatus import LivestatusServer
 from Nagstamon.Servers.Zenoss import ZenossServer
+from Nagstamon.Servers.Monitos3 import Monitos3Server
 
 from Nagstamon.Config import conf
 
@@ -140,6 +141,11 @@ def create_server(server=None):
     new_server.authentication = server.authentication
     new_server.timeout = server.timeout
 
+    # SSL/TLS
+    new_server.ignore_cert = server.ignore_cert
+    new_server.custom_cert_use = server.custom_cert_use
+    new_server.custom_cert_ca_file = server.custom_cert_ca_file
+
     # if password is not to be saved ask for it at startup
     if (server.enabled is True and server.save_password is False and
             server.use_autologin is False):
@@ -179,7 +185,7 @@ def create_server(server=None):
 # moved registration process here because of circular dependencies
 for server in (CentreonServer, IcingaServer, IcingaWeb2Server, MultisiteServer, NagiosServer,
                Op5MonitorServer, OpsviewServer, ThrukServer, ZabbixServer,
-               LivestatusServer, ZenossServer):
+               LivestatusServer, ZenossServer, Monitos3Server):
     register_server(server)
 
 # create servers

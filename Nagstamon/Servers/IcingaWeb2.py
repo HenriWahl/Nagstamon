@@ -76,7 +76,13 @@ class IcingaWeb2Server(GenericServer):
         # dummy default empty cgi urls - get filled later when server version is known
         self.cgiurl_services = None
         self.cgiurl_hosts = None
-
+        
+        # https://github.com/HenriWahl/Nagstamon/issues/400
+        # The displayed name for host and service is the Icinga2 "internal" name and not the display_name from host/service configuration
+        # This name is stored in host/service dict under key 'name' but is also used as dict key for dict containing all hosts/services
+        # The "internal" name must still be used to query IcingaWeb2 and is in dict under key 'real_name' since https://github.com/HenriWahl/Nagstamon/issues/192
+        self.use_display_name_host = True
+        self.use_display_name_service = True
 
     def init_HTTP(self):
         """
@@ -96,7 +102,10 @@ class IcingaWeb2Server(GenericServer):
                     form = login.result.find('form')
                     form_inputs = {}
                     for form_input in ('redirect', 'formUID', 'CSRFToken', 'btn_submit'):
-                        form_inputs[form_input] = form.find('input', {'name': form_input})['value']
+                        if not form.find('input', {'name': form_input}) is None:
+                            form_inputs[form_input] = form.find('input', {'name': form_input})['value']
+                        else:
+                            form_inputs[form_input] = ''
                     form_inputs['username'] = self.username
                     form_inputs['password'] = self.password
     
@@ -183,9 +192,9 @@ class IcingaWeb2Server(GenericServer):
                         self.new_hosts[host_name].status_information = BeautifulSoup(h['host_output'].replace('\n', ' ').strip(), 'html.parser').text
                         self.new_hosts[host_name].passiveonly = not(int(h['host_active_checks_enabled']))
                         self.new_hosts[host_name].notifications_disabled = not(int(h['host_notifications_enabled']))
-                        self.new_hosts[host_name].flapping = int(h['host_is_flapping'])
-                        self.new_hosts[host_name].acknowledged = int(h['host_acknowledged'])
-                        self.new_hosts[host_name].scheduled_downtime = int(h['host_in_downtime'])
+                        self.new_hosts[host_name].flapping = bool(int(h['host_is_flapping']))
+                        self.new_hosts[host_name].acknowledged = bool(int(h['host_acknowledged']))
+                        self.new_hosts[host_name].scheduled_downtime = bool(int(h['host_in_downtime']))
                         self.new_hosts[host_name].status_type = status_type
                         
                         # extra Icinga properties to solve https://github.com/HenriWahl/Nagstamon/issues/192
@@ -241,7 +250,6 @@ class IcingaWeb2Server(GenericServer):
                         host_name = s['host_display_name']
 
                     # host objects contain service objects
-                    # ##if not self.new_hosts.has_key(host_name):
                     if not host_name in self.new_hosts:
                         self.new_hosts[host_name] = GenericHost()
                         self.new_hosts[host_name].name = host_name
@@ -250,13 +258,16 @@ class IcingaWeb2Server(GenericServer):
                         # acknowledge needs host_description and no display name
                         self.new_hosts[host_name].real_name = s['host_name']
 
-                    if self.use_display_name_host == False:
-                        # legacy Icinga adjustments
-                        if 'service_description' in s: service_name = s['service_description']
-                        elif 'description' in s: service_name = s['description']
-                        elif 'service' in s: service_name = s['service']
-                    else:
-                        service_name = s['service_display_name']
+                    #if self.use_display_name_host == False:
+                    #    # legacy Icinga adjustments
+                    #    if 'service_description' in s: service_name = s['service_description']
+                    #    elif 'description' in s: service_name = s['description']
+                    #    elif 'service' in s: service_name = s['service']
+                    #else:
+                    #    service_name = s['service_display_name']
+                    # regarding to https://github.com/HenriWahl/Nagstamon/issues/400 Icinga2 needs no legacy adjustments
+                    service_name = s['service_display_name']
+
 
                     # if a service does not exist create its object
                     if not service_name in self.new_hosts[host_name].services:
@@ -270,9 +281,9 @@ class IcingaWeb2Server(GenericServer):
                         self.new_hosts[host_name].services[service_name].status_information = BeautifulSoup(s['service_output'].replace('\n', ' ').strip(), 'html.parser').text
                         self.new_hosts[host_name].services[service_name].passiveonly = not(int(s['service_active_checks_enabled']))
                         self.new_hosts[host_name].services[service_name].notifications_disabled = not(int(s['service_notifications_enabled']))
-                        self.new_hosts[host_name].services[service_name].flapping = int(s['service_is_flapping'])
-                        self.new_hosts[host_name].services[service_name].acknowledged = int(s['service_acknowledged'])
-                        self.new_hosts[host_name].services[service_name].scheduled_downtime = int(s['service_in_downtime'])
+                        self.new_hosts[host_name].services[service_name].flapping = bool(int(s['service_is_flapping']))
+                        self.new_hosts[host_name].services[service_name].acknowledged = bool(int(s['service_acknowledged']))
+                        self.new_hosts[host_name].services[service_name].scheduled_downtime = bool(int(s['service_in_downtime']))
                         self.new_hosts[host_name].services[service_name].status_type = status_type
                         
                         # extra Icinga properties to solve https://github.com/HenriWahl/Nagstamon/issues/192

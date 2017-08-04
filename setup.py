@@ -29,27 +29,30 @@ from Nagstamon.Config import AppInfo
 debug_queue = list()
 
 NAME = AppInfo.NAME
+
+OS = platform.system()
 # make name lowercase for Linux/Unix
-if platform.system() not in ['Windows', 'Darwin']:
+if OS not in ['Windows', 'Darwin']:
+    DIST, DIST_VERSION, DIST_NAME = platform.dist()
     NAME = NAME.lower()
-VERSION = AppInfo.VERSION
+VERSION = AppInfo.VERSION.replace('-', '.') + '.' + DIST + DIST_VERSION
 
 NAGSTAMON_SCRIPT = 'nagstamon.py'
 
 # workaround to get directory of Qt5 plugins to add missing 'mediaservice' folder needed for audio on OSX and Windows
 from PyQt5 import QtCore
-if platform.system() == 'Windows':
+if OS == 'Windows':
     QTPLUGINS = os.path.join(os.path.dirname(QtCore.__file__), 'Qt', 'plugins')
-elif platform.system() == 'Darwin':
+elif OS == 'Darwin':
     # works of course only with Fink-based Qt5-installation
     QTPLUGINS = '/sw/lib/qt5-mac/plugins'
 
-if platform.system() == 'Windows':
+if OS == 'Windows':
     base = 'Win32GUI'
 else:
     base = None
 
-if platform.system() in ('Windows', 'Darwin'):
+if OS in ('Windows', 'Darwin'):
     from cx_Freeze import setup, Executable
     os_dependent_include_files = ['Nagstamon/resources/qt.conf',
                                   'Nagstamon/resources',
@@ -68,32 +71,30 @@ else:
     if os.path.exists('nagstamon'):
         NAGSTAMON_SCRIPT = 'nagstamon'
 
-CLASSIFIERS = [
-    'Intended Audience :: System Administrators',
-    'Development Status :: 5 - Production/Stable',
-    'Environment :: Win32 (MS Windows)',
-    'Environment :: X11 Applications',
-    'Environment :: MacOS X',
-    'License :: OSI Approved :: GNU General Public License (GPL)',
-    'Operating System :: Microsoft :: Windows',
-    'Operating System :: POSIX :: Linux',
-    'Operating System :: POSIX',
-    'Natural Language :: English',
-    'Programming Language :: Python',
-    'Topic :: System :: Monitoring',
-    'Topic :: System :: Networking :: Monitoring'
-]
+CLASSIFIERS = ['Intended Audience :: System Administrators',
+               'Development Status :: 5 - Production/Stable',
+               'Environment :: Win32 (MS Windows)',
+               'Environment :: X11 Applications',
+               'Environment :: MacOS X',
+               'License :: OSI Approved :: GNU General Public License (GPL)',
+               'Operating System :: Microsoft :: Windows',
+               'Operating System :: POSIX :: Linux',
+               'Operating System :: POSIX',
+               'Natural Language :: English',
+               'Programming Language :: Python',
+               'Topic :: System :: Monitoring',
+               'Topic :: System :: Networking :: Monitoring']
 
 # Dependencies are automatically detected, but it might need
 # fine tuning.
 build_exe_options = dict(packages=['PyQt5.QtNetwork',
-    'keyring.backends.kwallet',
-    'keyring.backends.OS_X',
-    'keyring.backends.SecretService',
-    'keyring.backends.Windows'],
-                        include_files=os_dependent_include_files,
-                        include_msvcr=True,
-                        excludes=[])
+                                   'keyring.backends.kwallet',
+                                   'keyring.backends.OS_X',
+                                   'keyring.backends.SecretService',
+                                   'keyring.backends.Windows'],
+                         include_files=os_dependent_include_files,
+                         include_msvcr=True,
+                         excludes=[])
 
 bdist_mac_options = dict(iconfile='Nagstamon/resources/nagstamon.icns',
                          custom_info_plist='Nagstamon/resources/Info.plist')
@@ -115,7 +116,6 @@ bdist_rpm_options = dict(requires='python3 '
         'qt5-qtmultimedia ',
         dist_dir='./build')
 
-
 setup(name=NAME,
       version=VERSION,
       license='GNU GPL v2',
@@ -128,17 +128,14 @@ setup(name=NAME,
       download_url='https://nagstamon.ifw-dresden.de/files-nagstamon/stable/',
       scripts=[NAGSTAMON_SCRIPT],
       packages=['Nagstamon',
-          'Nagstamon.QUI',
-          'Nagstamon.Servers',
-          'Nagstamon.thirdparty',
-          'Nagstamon.thirdparty.Xlib',
-          'Nagstamon.thirdparty.Xlib.ext',
-          'Nagstamon.thirdparty.Xlib.protocol',
-          'Nagstamon.thirdparty.Xlib.support',
-          'Nagstamon.thirdparty.Xlib.xobject',
-          'Nagstamon.thirdparty.keyring',
-          'Nagstamon.thirdparty.keyring.backends',
-          'Nagstamon.thirdparty.keyring.util'],
+                'Nagstamon.QUI',
+                'Nagstamon.Servers',
+                'Nagstamon.thirdparty',
+                'Nagstamon.thirdparty.Xlib',
+                'Nagstamon.thirdparty.Xlib.ext',
+                'Nagstamon.thirdparty.Xlib.protocol',
+                'Nagstamon.thirdparty.Xlib.support',
+                'Nagstamon.thirdparty.Xlib.xobject'],
       package_dir={'Nagstamon': 'Nagstamon'},
       package_data={'Nagstamon': ['resources/*']},
       data_files=[('%s/share/man/man1' % sys.prefix, ['Nagstamon/resources/nagstamon.1.gz']),

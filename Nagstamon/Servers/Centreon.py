@@ -24,8 +24,6 @@ import socket
 import sys
 import re
 import copy
-# import time
-# import datetime
 
 from Nagstamon.Objects import *
 from Nagstamon.Servers.Generic import GenericServer
@@ -63,7 +61,9 @@ class CentreonServer(GenericServer):
         '''
         dummy init_config, called at thread start, not really needed here, just omit extra properties
         '''
-        pass
+        # set URLs here already
+        self.init_HTTP()
+        self._define_url()
 
     def init_HTTP(self):
         """
@@ -136,6 +136,11 @@ class CentreonServer(GenericServer):
             else:
                 if conf.debug_mode is True:
                     self.Debug(server=self.get_name(), debug='Error getting the home page : ' + error_versioncheck)
+
+            if self.first_login:
+                self.SID = self._get_sid().result
+                self.first_login = False
+
             del result_versioncheck, raw_versioncheck, error_versioncheck
 
     def reset_HTTP(self):
@@ -220,7 +225,6 @@ class CentreonServer(GenericServer):
             # those broker urls would not be changing too often so this check migth be done here
             if self.first_login:
                 self._get_xml_path(sid)
-                self._define_url()
                 self.first_login = False
             return Result(result=sid)
 

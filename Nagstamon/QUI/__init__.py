@@ -39,6 +39,7 @@ import random
 import copy
 import base64
 import datetime
+import traceback
 
 from collections import OrderedDict
 from copy import deepcopy
@@ -48,6 +49,7 @@ from Nagstamon.Config import (conf,
                               Action,
                               RESOURCES,
                               BOOLPOOL,
+                              CONFIG_STRINGS,
                               NON_LINUX,
                               AppInfo,
                               debug_queue)
@@ -77,13 +79,21 @@ from Nagstamon.QUI.dialog_authentication import Ui_dialog_authentication
 from Nagstamon.QUI.dialog_server_missing import Ui_dialog_server_missing
 from Nagstamon.QUI.dialog_about import Ui_dialog_about
 
+# instead of calling platform.system() every now and then just do it once here
+OS = platform.system()
+
 # only on X11/Linux thirdparty path should be added because it contains the Xlib module
 # needed to tell window manager via EWMH to keep Nagstamon window on all virtual desktops
 # TODO: test if X11 or Wayland is used
-if not platform.system() in NON_LINUX:
+if not OS in NON_LINUX:
     # extract thirdparty path from resources path - make submodules accessible by thirdparty modules
     THIRDPARTY = os.sep.join(RESOURCES.split(os.sep)[0:-1] + ['thirdparty'])
     sys.path.insert(0, THIRDPARTY)
+
+    # Xlib for EWMH needs the file ~/.Xauthority and crashes if it does not exist
+    if not os.path.exists(os.path.expanduser('~') + os.sep + '.Xauthority'):
+        open(os.path.expanduser('~') + os.sep + '.Xauthority', 'a').close()
+
     from Nagstamon.thirdparty.ewmh import EWMH
 
     # DBus only interesting for Linux too
@@ -151,9 +161,9 @@ HEADERS = OrderedDict([('host', {'header': 'Host',
                        ('attempt', {'header': 'Attempt',
                                     'column': 7}),
                        ('status_information', {'header': 'Status Information',
-                                               'column': 8}),
-                       ('dummy_column', {'header': '',
-                                         'column': 8})])
+                                               'column': 8}),])
+                       #('dummy_column', {'header': '',
+                       #                  'column': 8})])
 
 # various headers-key-columns variations needed in different parts
 HEADERS_HEADERS = list()
@@ -188,8 +198,8 @@ SORT_COLUMNS_INDEX = {0: 0,
                       5: 5,
                       6: 6,
                       7: 7,
-                      8: 8,
-                      9: 8}
+                      8: 8,}
+                      ###9: 8}
 
 # space used in LayoutBoxes
 SPACE = 10
@@ -218,7 +228,7 @@ NUMBER_OF_DISPLAY_CHANGES = 0
 # statusbar permanently seems to vanish at some users desktops
 # see https://github.com/HenriWahl/Nagstamon/issues/222
 # WINDOW_FLAGS = Qt.WindowStaysOnTopHint | Qt.FramelessWindowHint | Qt.ToolTip
-# ##if platform.system() == 'Windows':
+# ##if OS == 'Windows':
 # ##    # WINDOW_FLAGS = Qt.WindowStaysOnTopHint | Qt.FramelessWindowHint | Qt.ToolTip
 # ##    WINDOW_FLAGS = Qt.WindowStaysOnTopHint | Qt.FramelessWindowHint | Qt.Tool
 # ##    # WINDOW_FLAGS = Qt.FramelessWindowHint | Qt.Tool
@@ -338,7 +348,7 @@ class SystemTrayIcon(QSystemTrayIcon):
 
         # MacOSX does not distinguish between left and right click so menu will go to upper menu bar
         # update: apparently not, but own context menu will be shown when icon is clicked an all is OK = green
-        if platform.system() != 'Darwin':
+        if OS != 'Darwin':
             self.setContextMenu(self.menu)
 
     @pyqtSlot()
@@ -386,12 +396,12 @@ class SystemTrayIcon(QSystemTrayIcon):
             evaluate mouse click
         """
         # some obscure Windows problem again
-        if reason == QSystemTrayIcon.Context and platform.system() == 'Windows':
+        if reason == QSystemTrayIcon.Context and OS == 'Windows':
                 self.show_menu.emit()
         # only react on left mouse click on OSX
         elif reason == (QSystemTrayIcon.Trigger or QSystemTrayIcon.DoubleClick):
             # when green icon is displayed and no popwin is about to po up show at least menu
-            if get_worst_status() == 'UP' and platform.system() == 'Darwin':
+            if get_worst_status() == 'UP' and OS == 'Darwin':
                     self.menu.show_at_cursor()
             else:
                 # show status window if there is something to tell
@@ -439,10 +449,13 @@ class SystemTrayIcon(QSystemTrayIcon):
         """
         # only if currently a notification is necessary
         if statuswindow.worker_notification.is_notifying:
-            # set curent status icon
-            self.setIcon(self.current_icon)
-            # even later call itself to invert colors as flash
-            self.timer.singleShot(500, self.flash)
+            try:
+                # set curent status icon
+                self.setIcon(self.current_icon)
+                # even later call itself to invert colors as flash
+                self.timer.singleShot(500, self.flash)
+            except:
+                traceback.print_exc(file=sys.stdout)
         else:
             if self.current_icon is not None:
                 self.setIcon(self.current_icon)
@@ -492,13 +505,13 @@ class MenuContext(MenuAtCursor):
         MenuAtCursor.__init__(self, parent=parent)
 
         # connect all relevant widgets which should show the context menu
-        for widget in statuswindow.toparea.button_hamburger_menu, \
-                statuswindow.toparea.logo, \
-                statuswindow.toparea.label_version, \
-                statuswindow.toparea.label_empty_space, \
-                statuswindow.statusbar.logo, \
-                statuswindow.statusbar.label_message:
-                    self.menu_ready.connect(widget.set_menu)
+        for widget in [statuswindow.toparea.button_hamburger_menu,
+                       statuswindow.toparea.label_version,
+                       statuswindow.toparea.label_empty_space,
+                       statuswindow.toparea.logo,
+                       statuswindow.statusbar.logo,
+                       statuswindow.statusbar.label_message]:
+            self.menu_ready.connect(widget.set_menu)
 
         for color_label in statuswindow.statusbar.color_labels.values():
             self.menu_ready.connect(color_label.set_menu)
@@ -598,7 +611,7 @@ class MenuContextSystrayicon(MenuContext):
         """
         MenuContext.initialize(self)
         # makes even less sense on OSX
-        if platform.system() != 'Darwin':
+        if OS != 'Darwin':
             self.action_status = QAction('Show status window', self)
             self.action_status.triggered.connect(statuswindow.show_window)
             self.insertAction(self.action_refresh, self.action_status)
@@ -619,7 +632,7 @@ class FlatButton(QToolButton):
 
 
 # OSX does not support flat QToolButtons so keep the neat default ones
-if platform.system() == 'Darwin':
+if OS == 'Darwin':
     Button = QPushButton
     CSS_CLOSE_BUTTON = '''QPushButton {border-width: 0px;
                                        border-style: none;
@@ -637,8 +650,6 @@ else:
     CSS_HAMBURGER_MENU = '''FlatButton::menu-indicator{image:url(none.jpg);}'''
 
 
-# class PushButton_Hamburger(QPushButton):
-# class PushButton_Hamburger(FlatButton):
 class PushButton_Hamburger(Button):
 
     """
@@ -738,8 +749,7 @@ class ComboBox_Servers(QComboBox):
         self.setCurrentIndex(0)
 
 
-class _Draggable_Widget(QWidget):
-
+class DraggableWidget(QWidget):
     """
         Used to give various toparea and statusbar widgets draggability
     """
@@ -757,8 +767,9 @@ class _Draggable_Widget(QWidget):
     # unwanted repositioning of statuswindow
     right_mouse_button_pressed = False
 
-    pyqtSlot(QMenu)
-
+    # Maybe due to the later mixin usage, but somehow the pyqtSlot decorator is ignored here when used by NagstamonLogo
+    # and DraggableLabel
+    #@pyqtSlot(QMenu)
     def set_menu(self, menu):
         self.menu = menu
 
@@ -798,8 +809,9 @@ class _Draggable_Widget(QWidget):
             if statuswindow.is_shown and\
                conf.close_details_clicking and\
                not conf.fullscreen and not conf.windowed:
+                statuswindow.is_hiding_timestamp = time.time()
                 statuswindow.hide_window()
-            elif statuswindow.is_shown is False:
+            elif not statuswindow.is_shown:
                 self.mouse_released.emit()
 
             # reset all helper values
@@ -838,13 +850,15 @@ class _Draggable_Widget(QWidget):
 
     def enterEvent(self, event):
         """
-            tell the world that mouse entered the widget - interesting for hover popup
+            tell the world that mouse entered the widget - interesting for hover popup and only if toparea hasn't been
+            clickend a moment ago
         """
-        if statuswindow.is_shown is False:
+        if statuswindow.is_shown is False and\
+           statuswindow.is_hiding_timestamp + 0.2 < time.time():
             self.mouse_entered.emit()
 
 
-class Draggable_Label(QLabel, _Draggable_Widget):
+class DraggableLabel(QLabel, DraggableWidget):
 
     """
        label with dragging capabilities used by toparea
@@ -861,6 +875,27 @@ class Draggable_Label(QLabel, _Draggable_Widget):
 
     def __init__(self, text='', parent=None):
         QLabel.__init__(self, text, parent=parent)
+
+
+class ClosingLabel(QLabel):
+    """
+        modified QLabel which might close the statuswindow if leftclicked
+    """
+
+    def __init__(self, text='', parent=None):
+        QLabel.__init__(self, text, parent=parent)
+
+
+    def mouseReleaseEvent(self, event):
+        """
+            left click and configured close-if-clicking-somewhere makes statuswindow close
+        """
+        if event.button() == Qt.LeftButton and conf.close_details_clicking_somewhere:
+            # if popup window should be closed by clicking do it now
+            if statuswindow.is_shown and\
+               not conf.fullscreen:
+                statuswindow.is_hiding_timestamp = time.time()
+                statuswindow.hide_window()
 
 
 class StatusWindow(QWidget):
@@ -896,7 +931,7 @@ class StatusWindow(QWidget):
         self.hide()
 
         # ewmh.py in thirdparty directory needed to keep floating statusbar on all desktops in Linux
-        if not platform.system() in NON_LINUX:
+        if not OS in NON_LINUX:
             self.ewmh = EWMH()
 
         # avoid quitting when using Qt.Tool flag and closing settings dialog
@@ -908,12 +943,17 @@ class StatusWindow(QWidget):
         # show statusbar without being active, just floating
         self.setAttribute(Qt.WA_ShowWithoutActivating)
 
-        if platform.system() == 'Darwin':
+        if OS == 'Darwin':
             # avoid hiding window if it has no focus - necessary on OSX if using flag Qt.Tool
             self.setAttribute(Qt.WA_MacAlwaysShowToolWindow)
 
         self.setWindowTitle(AppInfo.NAME)
         self.setWindowIcon(QIcon('%s%snagstamon.svg' % (RESOURCES, os.sep)))
+
+        #self.setMouseTracking(True)
+
+        #self.setContentsMargins(10, 10, 10, 10)  # no margin
+
 
         self.vbox = QVBoxLayout(self)  # global VBox
         self.vbox.setSpacing(0)  # no spacing
@@ -939,7 +979,7 @@ class StatusWindow(QWidget):
         self.servers_vbox.setContentsMargins(0, 0, 0, 0)
 
         # test with OSX top menubar
-        if platform.system() == 'Darwin':
+        if OS == 'Darwin':
             self.menubar = QMenuBar()
             action_exit = QAction('exit', self.menubar)
             action_settings = QAction('settings', self.menubar)
@@ -1064,6 +1104,9 @@ class StatusWindow(QWidget):
         # store show_window timestamp to avoid flickering window in KDE5 with systray
         self.is_shown_timestamp = time.time()
 
+        # store timestamp to avoid reappearing window shortly after clicking onto toparea
+        self.is_hiding_timestamp = time.time()
+
         # if status_ok is true no server_vboxes are needed
         self.status_ok = True
 
@@ -1112,7 +1155,7 @@ class StatusWindow(QWidget):
             # gets in a race condition race the focus or is topmost instead of Nagstamon
             # so the floating statusbar moves silently into a quiet corner of the desktop
             # and raises itself serveral times to be the topmost to make the flags stick
-            if platform.system() == 'Windows':
+            if OS == 'Windows':
                 self.move(-32768, -32768)
                 # just a guess - 10 times seem to be enough
                 for counter in range(100):
@@ -1131,7 +1174,7 @@ class StatusWindow(QWidget):
                 self.show()
 
                 # X11/Linux needs some special treatment to get the statusbar floating on all virtual desktops
-                if not platform.system() in NON_LINUX:
+                if not OS in NON_LINUX:
                     # get all windows...
                     winid = self.winId().__int__()
                     self.ewmh.setWmDesktop(winid, 0xffffffff)
@@ -1179,7 +1222,7 @@ class StatusWindow(QWidget):
 
             self.show_window()
             # fullscreen mode is rather buggy on everything other than OSX so just use a maximized window
-            if platform.system() == 'Darwin':
+            if OS == 'Darwin':
                 self.showFullScreen()
             else:
                 self.show()
@@ -1228,7 +1271,8 @@ class StatusWindow(QWidget):
             # display authentication dialog if password is not known
             if not conf.servers[server.name].save_password and\
                not conf.servers[server.name].use_autologin and\
-               conf.servers[server.name].password == '':
+               conf.servers[server.name].password == '' and\
+               not conf.servers[server.name].authentication == 'kerberos':
                 dialogs.authentication.show_auth_dialog(server.name)
 
             # without parent there is some flickering when starting
@@ -1361,7 +1405,7 @@ class StatusWindow(QWidget):
                 icon_y = QCursor.pos().y()
 
             # move into direction of systray - where the cursor hangs around too
-            self.move(icon_x, icon_y)
+            ###self.move(icon_x, icon_y)
 
             # get available desktop specs
             available_width = desktop.availableGeometry(self).width()
@@ -1382,8 +1426,11 @@ class StatusWindow(QWidget):
             self.move(x, y)
 
             # under unfortunate circumstances statusbar might have the the moving flag true
-            # fix it here because it makes no sense but my cause non-appearing statuswindow
+            # fix it here because it makes no sense but might cause non-appearing statuswindow
             self.moving = False
+
+            # already show here because was closed before in hide_window()
+            self.show()
 
             self.show_window()
         else:
@@ -1437,18 +1484,21 @@ class StatusWindow(QWidget):
                     # ...and practice
                     self.resize_window(width, height, x, y)
                     # switch on
-                    if platform.system() == 'Darwin':
+                    if OS == 'Darwin':
                         # delayed because of flickering window in OSX
                         self.timer.singleShot(200, self.set_shown)
                     else:
                         self.set_shown()
+
+                    # avoid horizontally scrollable tables
+                    self.adjust_dummy_columns()
 
                     self.show()
 
                     # Using the EWMH protocol to move the window to the active desktop.
                     # Seemed to be a problem on XFCE
                     # https://github.com/HenriWahl/Nagstamon/pull/199
-                    if not platform.system() in NON_LINUX and conf.icon_in_systray:
+                    if not OS in NON_LINUX and conf.icon_in_systray:
                         try:
                             winid = self.winId().__int__()
                             deskid = self.ewmh.getCurrentDesktop()
@@ -1465,6 +1515,13 @@ class StatusWindow(QWidget):
 
                     # tell others like notification that statuswindow shows up now
                     self.showing.emit()
+            else:
+                # hide vboxes in fullscreen and whole window in any other case if all is OK
+                if conf.fullscreen:
+                    for vbox in self.servers_vbox.children():
+                        vbox.hide_all()
+                else:
+                    self.hide_window()
 
                 if conf.windowed:
                     self.set_shown()
@@ -1483,6 +1540,7 @@ class StatusWindow(QWidget):
         if self.is_shown or conf.fullscreen or ( conf.windowed and self.is_shown):
             self.show_window()
 
+
     @pyqtSlot()
     def hide_window(self):
         """
@@ -1498,15 +1556,21 @@ class StatusWindow(QWidget):
                self.is_shown is True and\
                self.moving is True:
                 # only hide if shown at least a fraction of a second
-                if self.is_shown_timestamp + 0.1 < time.time():
+                # or has not been hidden a too short time ago
+                if self.is_shown_timestamp + 0.5 < time.time() or \
+                   self.is_hiding_timestamp + 0.2 < time.time():
                     if conf.statusbar_floating:
                         self.statusbar.show()
-                        self.statusbar.adjustSize()
+                        #self.statusbar.adjustSize()
                     self.toparea.hide()
                     self.servers_scrollarea.hide()
                     self.setMinimumSize(1, 1)
                     self.adjustSize()
-                    self.move(self.stored_x, self.stored_y)
+
+                    if conf.icon_in_systray:
+                        self.close()
+
+                    ###self.move(self.stored_x, self.stored_y)
 
                     # switch off
                     self.is_shown = False
@@ -1522,6 +1586,12 @@ class StatusWindow(QWidget):
                     self.hiding.emit()
                     if conf.windowed:
                         self.hide()
+
+                    # store time of hiding
+                    self.is_hiding_timestamp = time.time()
+
+                    self.move(self.stored_x, self.stored_y)
+
 
     @pyqtSlot()
     def correct_moving_position(self):
@@ -1575,8 +1645,12 @@ class StatusWindow(QWidget):
 
             screen_or_widget = get_screen(self.icon_x, self.icon_y)
 
+        # only consider offset if it is configured
+        if conf.systray_offset_use and conf.icon_in_systray:
+            available_height = desktop.availableGeometry(screen_or_widget).height() - conf.systray_offset
+        else:
+            available_height = desktop.availableGeometry(screen_or_widget).height()
         available_width = desktop.availableGeometry(screen_or_widget).width()
-        available_height = desktop.availableGeometry(screen_or_widget).height()
         available_x = desktop.availableGeometry(screen_or_widget).x()
         available_y = desktop.availableGeometry(screen_or_widget).y()
         del(screen_or_widget)
@@ -1599,15 +1673,17 @@ class StatusWindow(QWidget):
                 self.top = True
             else:
                 self.top = False
-
             # take systray icon position as reference
-            x = self.icon_x
+            # assuming that a left oriented systray as in GNOME3 will need x = 0
+            if self.icon_x < desktop.screenGeometry(self).width() / 2 + available_x and OS not in NON_LINUX:
+                x = 0
+            else:
+                x = self.icon_x
 
         # get height from tablewidgets
         real_height = self.get_real_height()
 
         # width simply will be the current screen maximal width - less hassle!
-
         if self.get_real_width() > available_width:
             width = available_width
             x = available_x
@@ -1662,10 +1738,15 @@ class StatusWindow(QWidget):
                     # simply take the available max height if there is no more screen real estate
                     # possible because systrayicon resides aside from available space, in fact cutting it
                     height = available_height
-                    y = available_y
+                    ###y = available_y
+                    y = available_height - height
                 else:
-                    height = real_height
-                    y = available_height - real_height
+                    if available_height < real_height:
+                        y = available_y
+                        height = available_height
+                    else:
+                        y = available_height - real_height
+                        height = real_height
 
         return width, height, x, y
 
@@ -1679,7 +1760,7 @@ class StatusWindow(QWidget):
             self.stored_y = self.y()
             self.stored_width = self.width()
 
-        if platform.system() == 'Windows':
+        if OS == 'Windows':
             # absolutely strange, but no other solution available
             # - Only on Windows the statusbar is moving FIRST before resizing - no matter which
             #   order was used
@@ -1698,6 +1779,7 @@ class StatusWindow(QWidget):
         self.adjustSize()
 
         return True
+
 
     @pyqtSlot()
     def move_timer(self):
@@ -1718,6 +1800,7 @@ class StatusWindow(QWidget):
                 # fully displayed statuswindow
                 if self.is_shown is True:
                     width, height, x, y = self.calculate_size()
+                    self.adjust_dummy_columns()
                 else:
                     # statusbar only
                     hint = self.sizeHint()
@@ -1732,6 +1815,37 @@ class StatusWindow(QWidget):
                 self.resize_window(width, height, x, y)
 
                 del(width, height, x, y)
+            else:
+                self.adjust_dummy_columns()
+
+    @pyqtSlot()
+    def adjust_dummy_columns(self):
+        """
+            calculate widest width of all server tables to hide dummy column at the widest one
+        """
+        max_width = 0
+        max_width_table = None
+        for server in self.servers_vbox.children():
+            # if table is wider than current max_width take its width as max_width
+            if server.table.get_real_width() > max_width:
+                max_width = server.table.get_real_width()
+                max_width_table = server.table
+
+        # widest table does not need the dummy column #9
+        for server in self.servers_vbox.children():
+            if max_width_table == server.table:
+                ###server.table.setColumnHidden(9, True)
+                # chances are that on fullscreen everything is stretched
+                if conf.fullscreen:
+                    server.table.header().setStretchLastSection(True)
+                else:
+                    server.table.header().setStretchLastSection(False)
+            else:
+                #server.table.setColumnHidden(9, False)
+                server.table.header().setStretchLastSection(True)
+
+        del(max_width, max_width_table)
+        return True
 
     @pyqtSlot()
     def store_position(self):
@@ -1747,6 +1861,7 @@ class StatusWindow(QWidget):
         """
             check if popup has to be hidden depending on mouse position
         """
+
         # check first if popup has to be shown by hovering or clicking
         if conf.close_details_hover and not conf.fullscreen and not conf.windowed:
             # only hide window if cursor is outside of it
@@ -1780,7 +1895,7 @@ class StatusWindow(QWidget):
             if server.table.get_real_width() > width:
                 width = server.table.get_real_width()
 
-            # if header in ser vbox is wider than width adjust the latter
+            # if header in server vbox is wider than width adjust the latter
             if server.header.sizeHint().width() > width:
                 width = server.header.sizeHint().width()
         return width
@@ -1865,7 +1980,6 @@ class StatusWindow(QWidget):
         try:
             dbus_connection.show(AppInfo.NAME, message)
         except Exception:
-            import traceback
             traceback.print_exc(file=sys.stdout)
 
     @pyqtSlot()
@@ -1877,7 +1991,7 @@ class StatusWindow(QWidget):
         if conf.windowed:
             return
         # X11/Linux needs some special treatment to get the statusbar floating on all virtual desktops
-        if not platform.system() in NON_LINUX and not conf.windowed:
+        if not OS in NON_LINUX:
             # get all windows...
             winid = self.winId().__int__()
             self.ewmh.setWmDesktop(winid, 0xffffffff)
@@ -1889,7 +2003,8 @@ class StatusWindow(QWidget):
             self.setWindowFlags(WINDOW_FLAGS)
 
         # again and again try to keep that statuswindow on top!
-        if platform.system() == 'Windows' and not conf.fullscreen and not conf.windowed:
+        if OS == 'Windows' and not conf.fullscreen and not conf.windowed:
+
             # find out if no context menu is shown and thus would be
             # overlapped by statuswindow
             for vbox in self.servers_vbox.children():
@@ -1965,6 +2080,7 @@ class StatusWindow(QWidget):
         # tell statusbar labels to flash
         start_flash = pyqtSignal()
         stop_flash = pyqtSignal()
+
         # tell mediaplayer to load and play sound file
         load_sound = pyqtSignal(str)
         play_sound = pyqtSignal()
@@ -2123,7 +2239,7 @@ class StatusWindow(QWidget):
             subprocess.Popen(custom_action_string, shell=True)
 
 
-class NagstamonLogo(QSvgWidget, _Draggable_Widget):
+class NagstamonLogo(QSvgWidget, DraggableWidget):
 
     """
         SVG based logo, used for statusbar and toparea logos
@@ -2302,7 +2418,7 @@ class StatusBar(QWidget):
 
         # absolutely silly but no other cure in sight
         # strange miscalculation of nagstamon logo on MacOSX
-        if platform.system() == 'Darwin' and 18 <= height <= 24:
+        if OS == 'Darwin' and 18 <= height <= 24:
             height += 1
 
         # adjust logo size to fit to label size
@@ -2329,7 +2445,7 @@ class StatusBar(QWidget):
             self.label_message.hide()
 
 
-class StatusBarLabel(Draggable_Label):
+class StatusBarLabel(DraggableLabel):
 
     """
         one piece of the status bar labels for one state
@@ -2346,7 +2462,7 @@ class StatusBarLabel(Draggable_Label):
     mouse_released = pyqtSignal()
 
     def __init__(self, state, parent=None):
-        Draggable_Label.__init__(self, parent=parent)
+        DraggableLabel.__init__(self, parent=parent)
         self.setStyleSheet('''padding-left: 1px;
                               padding-right: 1px;
                               color: %s; background-color: %s;'''
@@ -2401,8 +2517,8 @@ class TopArea(QWidget):
 
         # top button box
         self.logo = NagstamonLogo(self.icons['nagstamon_logo_toparea'], width=150, height=42, parent=self)
-        self.label_version = Draggable_Label(text=AppInfo.VERSION, parent=self)
-        self.label_empty_space = Draggable_Label(text='', parent=self)
+        self.label_version = DraggableLabel(text=AppInfo.VERSION, parent=self)
+        self.label_empty_space = DraggableLabel(text='', parent=self)
         self.label_empty_space.setSizePolicy(QSizePolicy.Expanding, QSizePolicy.Ignored)
         self.combobox_servers = ComboBox_Servers(parent=self)
         self.button_filters = Button("Filters", parent=self)
@@ -2494,7 +2610,7 @@ class TopArea(QWidget):
                 self.icons[icon] = QIcon(svg_pixmap)
 
 
-class ServerStatusLabel(QLabel):
+class ServerStatusLabel(ClosingLabel):
 
     """
         label for ServerVBox to show server connection state
@@ -2515,7 +2631,7 @@ class ServerStatusLabel(QLabel):
 
         # set stylesheet depending on submitted style
         if style in COLOR_STATUS_LABEL:
-            if platform.system() == 'Darwin':
+            if OS == 'Darwin':
                 self.setStyleSheet('''background: {0};
                                       border-radius: 3px;
                                       '''.format(COLOR_STATUS_LABEL[style]))
@@ -2578,7 +2694,8 @@ class ServerVBox(QVBoxLayout):
         # top and bottom should be kept by padding
         self.header.setContentsMargins(0, 0, SPACE, 0)
 
-        self.label = QLabel(parent=parent)
+        #self.label = QLabel(parent=parent)
+        self.label = ClosingLabel(parent=parent)
         self.update_label()
         self.button_monitor = PushButton_BrowserURL(text='Monitor', parent=parent, server=self.server, url_type='monitor')
         self.button_hosts = PushButton_BrowserURL(text='Hosts', parent=parent, server=self.server, url_type='hosts')
@@ -2586,9 +2703,14 @@ class ServerVBox(QVBoxLayout):
         self.button_history = PushButton_BrowserURL(text='History', parent=parent, server=self.server, url_type='history')
         self.button_edit = Button('Edit', parent=parent)
 
-        self.stretcher = QSpacerItem(0, 0, QSizePolicy.MinimumExpanding, QSizePolicy.Maximum)
+        #self.stretcher = QSpacerItem(0, 0, QSizePolicy.MinimumExpanding, QSizePolicy.Maximum)
+        # use label instead of spacer to be clickable
+        self.label_stretcher = ClosingLabel('', parent=parent)
+        self.label_stretcher.setSizePolicy(QSizePolicy.MinimumExpanding, QSizePolicy.Expanding)
 
         self.label_status = ServerStatusLabel(parent=parent)
+        self.label_status.setSizePolicy(QSizePolicy.Fixed, QSizePolicy.Expanding)
+
         self.button_authenticate = QPushButton('Authenticate', parent=parent)
 
         self.button_monitor.clicked.connect(self.button_monitor.open_url)
@@ -2604,7 +2726,8 @@ class ServerVBox(QVBoxLayout):
         self.header.addWidget(self.button_history)
         self.header.addWidget(self.button_edit)
 
-        self.header.addItem(self.stretcher)
+        #self.header.addItem(self.stretcher)
+        self.header.addWidget(self.label_stretcher)
 
         self.header.addWidget(self.label_status)
         self.header.addWidget(self.button_authenticate)
@@ -2651,9 +2774,9 @@ class ServerVBox(QVBoxLayout):
         if self.label.isVisible() and self.button_monitor.isVisible():
             # compare item heights, decide to take the largest and add 2 time the MARGIN (top and bottom)
             if self.label.sizeHint().height() > self.button_monitor.sizeHint().height():
-                height += self.label.sizeHint().height()
+                height += self.label.sizeHint().height() + 2
             else:
-                height += self.button_monitor.sizeHint().height()
+                height += self.button_monitor.sizeHint().height() + 2
         return height
 
     @pyqtSlot()
@@ -2668,6 +2791,7 @@ class ServerVBox(QVBoxLayout):
         self.button_history.show()
         self.button_edit.show()
         self.label_status.show()
+        self.label_stretcher.show()
         self.button_authenticate.hide()
 
         # special table treatment
@@ -2686,6 +2810,7 @@ class ServerVBox(QVBoxLayout):
         self.button_history.show()
         self.button_edit.show()
         self.label_status.show()
+        self.label_stretcher.show()
         self.button_authenticate.hide()
 
         # special table treatment
@@ -2704,6 +2829,7 @@ class ServerVBox(QVBoxLayout):
         self.button_history.hide()
         self.button_edit.hide()
         self.label_status.hide()
+        self.label_stretcher.hide()
         self.button_authenticate.hide()
 
         # special table treatment
@@ -2722,6 +2848,7 @@ class ServerVBox(QVBoxLayout):
                        self.button_history,
                        self.button_edit,
                        self.label_status,
+                       self.label_stretcher,
                        self.button_authenticate):
             widget.hide()
             widget.deleteLater()
@@ -2749,7 +2876,7 @@ class ServerVBox(QVBoxLayout):
     def update_label(self):
         self.label.setText('<big><b>&nbsp;{0}@{1}</b></big>'.format(self.server.username, self.server.name))
         # let label padding keep top and bottom space - apparently not necessary on OSX
-        if platform.system() != 'Darwin':
+        if OS != 'Darwin':
             self.label.setStyleSheet('''padding-top: {0}px;
                                         padding-bottom: {0}px;'''.format(SPACE))
 
@@ -2843,11 +2970,13 @@ class Model(QAbstractTableModel):
 
         elif role == Qt.ForegroundRole:
             # return(self.data_array[index.row()][COLOR_INDEX['text'][index.column()]])
-            return(self.data_array[index.row()][10])
+            ###return(self.data_array[index.row()][10])
+            return(self.data_array[index.row()][9])
 
         elif role == Qt.BackgroundRole:
             # return(self.data_array[index.row()][COLOR_INDEX['background'][index.column()]])
-            return(self.data_array[index.row()][11])
+            ###return(self.data_array[index.row()][11])
+            return(self.data_array[index.row()][10])
 
         elif role == Qt.FontRole:
             if index.column() == 1:
@@ -2926,6 +3055,7 @@ class TreeView(QTreeView):
         self.setSizePolicy(QSizePolicy.Ignored, QSizePolicy.Expanding)
 
         self.header().setSectionResizeMode(QHeaderView.ResizeToContents)
+        self.header().setStretchLastSection(False)
         self.header().setDefaultAlignment(Qt.AlignLeft)
         self.header().setSortIndicatorShown(True)
 
@@ -3071,7 +3201,8 @@ class TreeView(QTreeView):
     def get_real_width(self):
         width = 0
         # avoid the last dummy column to be counted
-        for column in range(len(HEADERS) - 1):
+        #for column in range(len(HEADERS) - 1):
+        for column in range(len(HEADERS)):
             width += self.columnWidth(column)
         return(width)
 
@@ -3092,8 +3223,17 @@ class TreeView(QTreeView):
         """
             forward clicked cell info from event
         """
-        index = self.indexAt(QPoint(event.x(), event.y()))
-        self.cell_clicked(index)
+        if conf.close_details_clicking_somewhere and event.button() == Qt.LeftButton:
+            statuswindow.hide_window()
+        else:
+            index = self.indexAt(QPoint(event.x(), event.y()))
+            self.cell_clicked(index)
+
+    def wheelEvent(self, event):
+        """
+            avoid scrollable single treeview in Linux and GNOME3 by simply do nothing when getting a wheel event
+        """
+        event.ignore()
 
     @pyqtSlot()
     def cell_clicked(self, index):
@@ -3102,7 +3242,7 @@ class TreeView(QTreeView):
             Therefore the .available flag is necessary
         """
 
-        if self.action_menu.available or platform.system() != 'Windows':
+        if self.action_menu.available or OS != 'Windows':
 
             # set flag for Windows
             self.action_menu.available = False
@@ -3429,6 +3569,7 @@ class TreeView(QTreeView):
         # wait until thread is really stopped
         self.worker_thread.wait(2000)
 
+
     class Worker(QObject):
 
         """
@@ -3532,6 +3673,8 @@ class TreeView(QTreeView):
                         self.change_label_status.emit('Connection error', 'error')
                     elif status.error.startswith('requests.exceptions.ReadTimeout'):
                         self.change_label_status.emit('Connection timeout', 'error')
+                    elif status.error.startswith('requests.exceptions.SSLError'):
+                        self.change_label_status.emit('SSL/TLS problem', 'critical')
                     elif self.server.status_code in self.server.STATUS_CODES_NO_AUTH or\
                             self.server.refresh_authentication:
                         self.change_label_status.emit('Authentication problem', 'critical')
@@ -3630,7 +3773,7 @@ class TreeView(QTreeView):
                             if self.data_array[-1][3] != '':
                                 self.info['services_flags_column_needed'] = True
 
-                            self.data_array[-1].append('X')
+                            ###self.data_array[-1].append('X')
 
             # sort data before it gets transmitted to treeview model
             self.sort_data_array(self.sort_column, self.sort_order, False)
@@ -3661,9 +3804,9 @@ class TreeView(QTreeView):
             # fix alternating colors
             for count, row in enumerate(self.data_array):
                 # change text color of sorted rows
-                row[10] = QBRUSHES[count % 2][row[12]]
+                row[9] = QBRUSHES[count % 2][row[11]]
                 # change background color of sorted rows
-                row[11] = QBRUSHES[count % 2][row[13]]
+                row[10] = QBRUSHES[count % 2][row[12]]
 
             # if header was clicked tell model to use new data_array
             if header_clicked:
@@ -3870,7 +4013,6 @@ class TreeView(QTreeView):
                     self.recheck(info)
 
             except Exception:
-                import traceback
                 traceback.print_exc(file=sys.stdout)
 
         def _URLify(self, string):
@@ -3986,10 +4128,6 @@ class Dialog(QObject):
         # try to get and keep focus
         self.window.setWindowModality(Qt.ApplicationModal)
 
-        # window position to be used to fix strange movement bug
-        # ##self.x = 0
-        # ##self.y = 0
-
     def initialize(self):
         """
             dummy initialize method
@@ -4027,6 +4165,7 @@ class Dialog(QObject):
             else:
                 for widget in widgets:
                     widget.hide()
+
 
     @pyqtSlot(str)
     def toggle(self, checkbox):
@@ -4109,6 +4248,10 @@ class Dialog_Settings(Dialog):
             # regular expressions for filtering status information
             self.ui.input_checkbox_re_status_information_enabled: [self.ui.input_lineedit_re_status_information_pattern,
                 self.ui.input_checkbox_re_status_information_reverse],
+            # offset for statuswindow when using systray
+            self.ui.input_radiobutton_icon_in_systray: [self.ui.input_checkbox_systray_offset_use],
+            self.ui.input_checkbox_systray_offset_use: [self.ui.input_spinbox_systray_offset,
+                                                        self.ui.label_offset_statuswindow],
             # display to use in fullscreen mode
             self.ui.input_radiobutton_fullscreen: [self.ui.label_fullscreen_display,
                 self.ui.input_combobox_fullscreen_display],
@@ -4166,6 +4309,11 @@ class Dialog_Settings(Dialog):
         # self.ui.button_check_for_new_version_now.clicked.connect(check_version.check)
         self.ui.button_check_for_new_version_now.clicked.connect(self.button_check_for_new_version_clicked)
         self.check_for_new_version.connect(check_version.check)
+
+        # avoid offset spinbox if offest is not enabled
+        self.ui.input_radiobutton_fullscreen.clicked.connect(self.toggle_systray_icon_offset)
+        self.ui.input_radiobutton_icon_in_systray.clicked.connect(self.toggle_systray_icon_offset)
+        self.ui.input_radiobutton_statusbar_floating.clicked.connect(self.toggle_systray_icon_offset)
 
         # connect font chooser button to font choosing dialog
         self.ui.button_fontchooser.clicked.connect(self.font_chooser)
@@ -4241,6 +4389,7 @@ class Dialog_Settings(Dialog):
         # paint alternating colors when example is wanted for customized intensity
         self.ui.input_checkbox_grid_use_custom_intensity.clicked.connect(self.paint_color_alternation)
         self.ui.input_checkbox_grid_use_custom_intensity.clicked.connect(self.change_color_alternation_by_value)
+        self.ui.input_checkbox_grid_use_custom_intensity.clicked.connect(self.toggle_zabbix_widgets)
 
         # finally map signals with .sender() - [<type>] is important!
         self.signalmapper_colors.mapped[str].connect(self.color_chooser)
@@ -4250,6 +4399,37 @@ class Dialog_Settings(Dialog):
 
         # apply toggle-dependencies between checkboxes as certain widgets
         self.toggle_toggles()
+
+        # workaround to avoid gigantic settings dialog
+        # list of Zabbix-related widgets, only to be shown if there is a Zabbix monitor server configured
+        self.ZABBIX_WIDGETS = [self.ui.input_checkbox_filter_all_average_services,
+                               self.ui.input_checkbox_filter_all_disaster_services,
+                               self.ui.input_checkbox_filter_all_high_services,
+                               self.ui.input_checkbox_filter_all_information_services,
+                               self.ui.input_checkbox_notify_if_average,
+                               self.ui.input_checkbox_notify_if_disaster,
+                               self.ui.input_checkbox_notify_if_high,
+                               self.ui.input_checkbox_notify_if_information,
+                               self.ui.label_color_average,
+                               self.ui.label_color_disaster,
+                               self.ui.label_color_high,
+                               self.ui.label_color_information,
+                               self.ui.input_button_color_average_text,
+                               self.ui.input_button_color_average_background,
+                               self.ui.input_button_color_disaster_text,
+                               self.ui.input_button_color_disaster_background,
+                               self.ui.input_button_color_high_text,
+                               self.ui.input_button_color_high_background,
+                               self.ui.input_button_color_information_text,
+                               self.ui.input_button_color_information_background,
+                               self.ui.label_intensity_average_0,
+                               self.ui.label_intensity_average_1,
+                               self.ui.label_intensity_disaster_0,
+                               self.ui.label_intensity_disaster_1,
+                               self.ui.label_intensity_high_0,
+                               self.ui.label_intensity_high_1,
+                               self.ui.label_intensity_information_0,
+                               self.ui.label_intensity_information_1]
 
     def initialize(self):
         # apply configuration values
@@ -4271,7 +4451,11 @@ class Dialog_Settings(Dialog):
                     self.ui.__dict__[widget].setValue(int(conf.__dict__[widget.split('input_spinbox_')[1]]))
                 elif widget.startswith('input_slider_'):
                     self.ui.__dict__[widget].setValue(int(conf.__dict__[widget.split('input_slider_')[1]]))
-
+            # bruteforce size smallification, lazy try/except variant
+            try:
+                self.ui.__dict__[widget].adjustSize()
+            except:
+                pass
         # fill default order fields combobox with s names
         # kick out empty headers for hosts and services flags
         sort_fields = copy.copy(HEADERS_HEADERS)
@@ -4316,10 +4500,19 @@ class Dialog_Settings(Dialog):
         self.window.adjustSize()
 
     def show(self, tab=0):
+        # hide them and thus be able to fix size if no extra Zabbix widgets are shown
+        self.toggle_zabbix_widgets()
+
+        # small workaround for timestamp trick to avoid flickering
+        # if the 'Settings' button was clicked too fast the timestamp difference
+        # is too short and the statuswindow will keep open
+        # modifying the timestamp could help
+        statuswindow.is_shown_timestamp -= 1
+
         # tell the world that dialog pops up
         self.show_dialog.emit()
 
-        # jump to actions tab in settings dialog
+        # jump to requested tab in settings dialog
         self.ui.tabs.setCurrentIndex(tab)
 
         # reset window if only needs smaller screen estate
@@ -4331,7 +4524,6 @@ class Dialog_Settings(Dialog):
         """
             opens settings and new server dialogs - used by dialogs.server_missing
         """
-        # self.show()
         # emulate button click
         self.ui.button_new_server.clicked.emit()
 
@@ -4390,10 +4582,12 @@ class Dialog_Settings(Dialog):
         # convert some strings to integers and bools
         for item in conf.__dict__:
             if type(conf.__dict__[item]) == str:
-                if conf.__dict__[item] in BOOLPOOL:
-                    conf.__dict__[item] = BOOLPOOL[conf.__dict__[item]]
-                elif conf.__dict__[item].isdecimal():
-                    conf.__dict__[item] = int(conf.__dict__[item])
+                # when item is not one of those which always have to be strings then it might be OK to convert it
+                if not item in CONFIG_STRINGS:
+                    if conf.__dict__[item] in BOOLPOOL:
+                        conf.__dict__[item] = BOOLPOOL[conf.__dict__[item]]
+                    elif conf.__dict__[item].isdecimal():
+                        conf.__dict__[item] = int(conf.__dict__[item])
 
         # start debug loop if debugging is enabled
         if conf.debug_mode:
@@ -4802,7 +4996,11 @@ class Dialog_Settings(Dialog):
             derived from level 0 labels aka default
         """
         for state in COLORS:
-            try:
+            # only evaluate colors if there is any stylesheet
+            if len(self.ui.__dict__['input_button_color_{0}_text'
+                        .format(state.lower())]\
+                        .styleSheet()) > 0:
+
                 # access both labels
                 label_0 = self.ui.__dict__['label_intensity_{0}_0'.format(state.lower())]
                 label_1 = self.ui.__dict__['label_intensity_{0}_1'.format(state.lower())]
@@ -4810,8 +5008,8 @@ class Dialog_Settings(Dialog):
                 # get text color from text color chooser button
                 text = self.ui.__dict__['input_button_color_{0}_text'
                             .format(state.lower())]\
-                    .styleSheet()\
-                    .split(';\n')[0].split(': ')[1]
+                            .styleSheet()\
+                            .split(';\n')[0].split(': ')[1]
 
                 # get background of level 0 label
                 background = label_0.palette().color(QPalette.Window)
@@ -4838,8 +5036,6 @@ class Dialog_Settings(Dialog):
                                          padding-top: 3px;
                                          padding-bottom: 3px;
                                       '''.format(text, r, g, b))
-            except Exception:
-                pass
 
     @pyqtSlot()
     def change_color_alternation_by_value(self):
@@ -4874,13 +5070,13 @@ class Dialog_Settings(Dialog):
     @pyqtSlot()
     def choose_browser_executable(self):
         """
-            shopw dialog for selection of non-default browser
+            show dialog for selection of non-default browser
         """
         # present dialog with OS-specific sensible defaults
-        if platform.system() == 'Windows':
+        if OS == 'Windows':
             filter = 'Executables (*.exe *.EXE);; All files (*)'
             directory = os.environ['ProgramFiles']
-        elif platform.system() == 'Darwin':
+        elif OS == 'Darwin':
             filter = ''
             directory = '/Applications'
         else:
@@ -4894,6 +5090,40 @@ class Dialog_Settings(Dialog):
         # only take filename if QFileDialog gave something useful back
         if file != '':
             self.ui.input_lineedit_custom_browser.setText(file)
+
+    @pyqtSlot()
+    def toggle_zabbix_widgets(self):
+        """
+            Depending on the existence of an enabled Zabbix monitor the Zabbix widgets are shown or hidden
+        """
+        use_zabbix_widgets = False
+        for server in servers.values():
+            if server.enabled:
+                if server.type == 'Zabbix':
+                    use_zabbix_widgets = True
+                    break
+        if use_zabbix_widgets:
+            for widget in self.ZABBIX_WIDGETS:
+                widget.show()
+        else:
+            for widget in self.ZABBIX_WIDGETS:
+                widget.hide()
+
+    @pyqtSlot()
+    def toggle_systray_icon_offset(self):
+        """
+            Only show offset spinbox when offset is enabled
+        """
+        if self.ui.input_checkbox_systray_offset_use.isVisible():
+            if self.ui.input_checkbox_systray_offset_use.isChecked():
+                self.ui.input_spinbox_systray_offset.show()
+                self.ui.label_offset_statuswindow.show()
+            else:
+                self.ui.input_spinbox_systray_offset.hide()
+                self.ui.label_offset_statuswindow.hide()
+        else:
+            self.ui.input_spinbox_systray_offset.hide()
+            self.ui.label_offset_statuswindow.hide()
 
 
 class Dialog_Server(Dialog):
@@ -4918,7 +5148,10 @@ class Dialog_Server(Dialog):
                 self.ui.input_lineedit_proxy_username,
                 self.ui.label_proxy_password,
                 self.ui.input_lineedit_proxy_password],
-            self.ui.input_checkbox_show_options: [self.ui.groupbox_options]}
+            self.ui.input_checkbox_show_options: [self.ui.groupbox_options],
+            self.ui.input_checkbox_custom_cert_use: [self.ui.label_custom_ca_file,
+                                                     self.ui.input_lineedit_custom_cert_ca_file,
+                                                     self.ui.button_choose_custom_cert_ca_file]}
 
         self.TOGGLE_DEPS_INVERTED = [self.ui.input_checkbox_use_proxy_from_os]
 
@@ -4939,21 +5172,39 @@ class Dialog_Server(Dialog):
             self.ui.label_service_filter: ['op5Monitor'],
             self.ui.label_host_filter: ['op5Monitor']}
 
+        # to be used when selecting authentication method Kerberos
+        self.AUTHENTICATION_WIDGETS = [
+            self.ui.label_username,
+            self.ui.input_lineedit_username,
+            self.ui.label_password,
+            self.ui.input_lineedit_password,
+            self.ui.input_checkbox_save_password]
+
         # fill default order fields combobox with monitor server types
         self.ui.input_combobox_type.addItems(sorted(SERVER_TYPES.keys(), key=str.lower))
         # default to Nagios as it is the mostly used monitor server
         self.ui.input_combobox_type.setCurrentText('Nagios')
+
+        # set folder and play symbols to choose and play buttons
+        self.ui.button_choose_custom_cert_ca_file.setText('')
+        self.ui.button_choose_custom_cert_ca_file.setIcon(self.ui.button_choose_custom_cert_ca_file.style().standardIcon(QStyle.SP_DirIcon))
+        # connect choose custom cert CA file button with file dialog
+        self.ui.button_choose_custom_cert_ca_file.clicked.connect(self.choose_custom_cert_ca_file)
+
         # fill authentication combobox
         self.ui.input_combobox_authentication.addItems(['Basic', 'Digest', 'Kerberos'])
 
         # detect change of server type which leads to certain options shown or hidden
-        self.ui.input_combobox_type.activated.connect(self.server_type_changed)
+        self.ui.input_combobox_type.activated.connect(self.toggle_type)
+
+        # when authentication is changed to Kerberos then disable username/password as the are now useless
+        self.ui.input_combobox_authentication.activated.connect(self.toggle_authentication)
 
         # mode needed for evaluate dialog after ok button pressed - defaults to 'new'
         self.mode = 'new'
 
     @pyqtSlot(int)
-    def server_type_changed(self, server_type_index=0):
+    def toggle_type(self, server_type_index=0):
         # server_type_index is not needed - we get the server type from .currentText()
         # check if server type is listed in volatile widgets to decide if it has to be shown or hidden
         for widget, server_types in self.VOLATILE_WIDGETS.items():
@@ -4961,6 +5212,22 @@ class Dialog_Server(Dialog):
                 widget.show()
             else:
                 widget.hide()
+
+    @pyqtSlot()
+    def toggle_authentication(self):
+        """
+            when authentication is changed to Kerberos then disable username/password as the are now useless
+        """
+        if self.ui.input_combobox_authentication.currentText() == 'Kerberos':
+           for widget in self.AUTHENTICATION_WIDGETS:
+               widget.hide()
+        else:
+            for widget in self.AUTHENTICATION_WIDGETS:
+                widget.show()
+
+        # after hiding authentication widgets dialog might shrink
+        self.window.adjustSize()
+
 
     def dialog_decoration(method):
         """
@@ -5001,7 +5268,10 @@ class Dialog_Server(Dialog):
             self.ui.input_combobox_authentication.setCurrentText(self.server_conf.authentication.title())
 
             # initially hide not needed widgets
-            self.server_type_changed()
+            self.toggle_type()
+
+            # disable unneeded authentication widgets if Kerberos is used
+            self.toggle_authentication()
 
             # apply toggle-dependencies between checkboxes and certain widgets
             self.toggle_toggles()
@@ -5100,10 +5370,12 @@ class Dialog_Server(Dialog):
             # convert some strings to integers and bools
             for item in self.server_conf.__dict__:
                 if type(self.server_conf.__dict__[item]) == str:
-                    if self.server_conf.__dict__[item] in BOOLPOOL:
-                        self.server_conf.__dict__[item] = BOOLPOOL[self.server_conf.__dict__[item]]
-                    elif self.server_conf.__dict__[item].isdecimal():
-                        self.server_conf.__dict__[item] = int(self.server_conf.__dict__[item])
+                    # when item is not one of those which always have to be strings then it might be OK to convert it
+                    if not item in CONFIG_STRINGS:
+                        if self.server_conf.__dict__[item] in BOOLPOOL:
+                            self.server_conf.__dict__[item] = BOOLPOOL[self.server_conf.__dict__[item]]
+                        elif self.server_conf.__dict__[item].isdecimal():
+                            self.server_conf.__dict__[item] = int(self.server_conf.__dict__[item])
 
             # store lowered authentication type
             self.server_conf.authentication = self.server_conf.authentication.lower()
@@ -5163,6 +5435,21 @@ class Dialog_Server(Dialog):
 
             # store server settings
             conf.SaveMultipleConfig('servers', 'server')
+
+
+    @pyqtSlot()
+    def choose_custom_cert_ca_file(self):
+        """
+            show dialog for selection of non-default browser
+        """
+        filter = 'All files (*)'
+        file = dialogs.file_chooser.getOpenFileName(self.window,
+                                                    directory=os.path.expanduser('~'),
+                                                    filter=filter)[0]
+
+        # only take filename if QFileDialog gave something useful back
+        if file != '':
+            self.ui.input_lineedit_custom_cert_ca_file.setText(file)
 
 
 class Dialog_Action(Dialog):
@@ -5672,6 +5959,9 @@ class Dialog_Authentication(Dialog):
         """
         self.server = servers[server]
         self.initialize()
+        # workaround instead of sent signal
+        if not statuswindow == None:
+            statuswindow.hide_window()
         self.window.adjustSize()
         self.window.exec_()
 
@@ -6024,7 +6314,7 @@ class DBus(QObject):
         # see https://developer.gnome.org/notification-spec/#icons-and-images
         self.hints = {'image-path': '%s%snagstamon.svg' % (RESOURCES, os.sep)}
 
-        if not platform.system() in NON_LINUX and DBUS_AVAILABLE:
+        if not OS in NON_LINUX and DBUS_AVAILABLE:
             if 'dbus' in sys.modules:
                 # try/except needed because of partly occuring problems with DBUS
                 # see https://github.com/HenriWahl/Nagstamon/issues/320
@@ -6041,7 +6331,6 @@ class DBus(QObject):
                     self.connected = True
 
                 except Exception:
-                    import traceback
                     traceback.print_exc(file=sys.stdout)
                     self.connected = False
         else:
@@ -6187,7 +6476,7 @@ def check_servers():
         dialogs.server_missing.show()
         dialogs.server_missing.initialize('no_server_enabled')
 
-# if platform.system() == 'Darwin':
+# if OS == 'Darwin':
 #    Button = QPushButton
 # else:
 #    Button = FlatButton

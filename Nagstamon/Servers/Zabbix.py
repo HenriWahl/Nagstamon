@@ -60,33 +60,21 @@ class ZabbixServer(GenericServer):
         self.MENU_ACTIONS = ["Recheck", "Acknowledge", "Downtime"]
         self.username = conf.servers[self.get_name()].username
         self.password = conf.servers[self.get_name()].password
+        self.ignore_cert = conf.servers[self.get_name()].ignore_cert
+        if self.ignore_cert == True:
+            self.validate_certs=False
+        else:
+            self.validate_certs=True
 
     def _login(self):
         try:
-            self.zapi = ZabbixAPI(server=self.monitor_url, path="", log_level=0)
+            self.zapi = ZabbixAPI(server=self.monitor_url, path="", log_level=0,
+                                  validate_certs=self.validate_certs)
             self.zapi.login(self.username, self.password)
         except ZabbixAPIException:
             result, error = self.Error(sys.exc_info())
             return Result(result=result, error=error)
 
-    """
-    def init_HTTP(self):
-
-        # not necessary to be initialized wit hevery HTTP request
-        self.statemap = {
-            'UNREACH': 'UNREACHABLE',
-            'CRIT': 'CRITICAL',
-            'WARN': 'WARNING',
-            'UNKN': 'UNKNOWN',
-            'PEND': 'PENDING',
-            '0': 'OK',
-            '1': 'UNKNOWN',
-            '2': 'WARNING',
-            '5': 'CRITICAL',
-            '3': 'WARNING',
-            '4': 'CRITICAL'}
-        GenericServer.init_HTTP(self)
-    """
 
     def _get_status(self):
         """

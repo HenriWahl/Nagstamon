@@ -332,17 +332,50 @@
       <property name="verticalSpacing">
        <number>5</number>
       </property>
-      <item row="1" column="1">
-       <widget class="QComboBox" name="input_combobox_authentication"/>
-      </item>
-      <item row="4" column="1" colspan="2">
-       <widget class="QLineEdit" name="input_lineedit_autologin_key">
+      <item row="2" column="0">
+       <widget class="QLabel" name="label_custom_ca_file">
         <property name="text">
-         <string/>
+         <string>Custom CA file: </string>
         </property>
        </widget>
       </item>
-      <item row="2" column="1">
+      <item row="8" column="0">
+       <widget class="QLabel" name="label_autologin_key">
+        <property name="sizePolicy">
+         <sizepolicy hsizetype="Minimum" vsizetype="Preferred">
+          <horstretch>0</horstretch>
+          <verstretch>0</verstretch>
+         </sizepolicy>
+        </property>
+        <property name="text">
+         <string>Autologin Key:</string>
+        </property>
+       </widget>
+      </item>
+      <item row="5" column="2">
+       <widget class="QComboBox" name="input_combobox_authentication"/>
+      </item>
+      <item row="5" column="3">
+       <spacer name="horizontalSpacer_2">
+        <property name="orientation">
+         <enum>Qt::Horizontal</enum>
+        </property>
+        <property name="sizeHint" stdset="0">
+         <size>
+          <width>40</width>
+          <height>20</height>
+         </size>
+        </property>
+       </spacer>
+      </item>
+      <item row="6" column="0">
+       <widget class="QLabel" name="label_timeout">
+        <property name="text">
+         <string>Timeout:</string>
+        </property>
+       </widget>
+      </item>
+      <item row="6" column="2">
        <layout class="QHBoxLayout" name="horizontalLayout_timeout_seconds">
         <property name="spacing">
          <number>5</number>
@@ -359,27 +392,7 @@
         </item>
        </layout>
       </item>
-      <item row="5" column="0">
-       <widget class="QLabel" name="label_host_filter">
-        <property name="sizePolicy">
-         <sizepolicy hsizetype="Minimum" vsizetype="Preferred">
-          <horstretch>0</horstretch>
-          <verstretch>0</verstretch>
-         </sizepolicy>
-        </property>
-        <property name="text">
-         <string>Host filter:</string>
-        </property>
-       </widget>
-      </item>
-      <item row="5" column="1" colspan="2">
-       <widget class="QLineEdit" name="input_lineedit_host_filter">
-        <property name="text">
-         <string/>
-        </property>
-       </widget>
-      </item>
-      <item row="2" column="2">
+      <item row="6" column="3">
        <spacer name="horizontalSpacer">
         <property name="orientation">
          <enum>Qt::Horizontal</enum>
@@ -392,43 +405,22 @@
         </property>
        </spacer>
       </item>
-      <item row="2" column="0">
-       <widget class="QLabel" name="label_timeout">
-        <property name="text">
-         <string>Timeout:</string>
-        </property>
-       </widget>
-      </item>
-      <item row="3" column="0" colspan="3">
+      <item row="7" column="0" colspan="4">
        <widget class="QCheckBox" name="input_checkbox_use_autologin">
         <property name="text">
          <string>Use autologin</string>
         </property>
        </widget>
       </item>
-      <item row="1" column="0">
-       <widget class="QLabel" name="label_auth_type">
+      <item row="8" column="2" colspan="2">
+       <widget class="QLineEdit" name="input_lineedit_autologin_key">
         <property name="text">
-         <string>Authentication:</string>
+         <string/>
         </property>
        </widget>
       </item>
-      <item row="9" column="0" colspan="3">
-       <widget class="QCheckBox" name="input_checkbox_use_display_name_service">
-        <property name="text">
-         <string>Use display name as service name</string>
-        </property>
-       </widget>
-      </item>
-      <item row="7" column="0" colspan="3">
-       <widget class="QCheckBox" name="input_checkbox_no_cookie_auth">
-        <property name="text">
-         <string>Do not use cookie authentication</string>
-        </property>
-       </widget>
-      </item>
-      <item row="4" column="0">
-       <widget class="QLabel" name="label_autologin_key">
+      <item row="9" column="0">
+       <widget class="QLabel" name="label_host_filter">
         <property name="sizePolicy">
          <sizepolicy hsizetype="Minimum" vsizetype="Preferred">
           <horstretch>0</horstretch>
@@ -436,38 +428,39 @@
          </sizepolicy>
         </property>
         <property name="text">
-         <string>Autologin Key:</string>
+         <string>Host filter:</string>
         </property>
        </widget>
       </item>
-      <item row="1" column="2">
-       <spacer name="horizontalSpacer_2">
-        <property name="orientation">
-         <enum>Qt::Horizontal</enum>
+      <item row="5" column="0">
+       <widget class="QLabel" name="label_auth_type">
+        <property name="text">
+         <string>Authentication:</string>
         </property>
-        <property name="sizeHint" stdset="0">
-         <size>
-          <width>40</width>
-          <height>20</height>
-         </size>
-        </property>
-       </spacer>
+       </widget>
       </item>
-      <item row="8" column="0" colspan="3">
+      <item row="12" column="0" colspan="4">
        <widget class="QCheckBox" name="input_checkbox_use_display_name_host">
         <property name="text">
          <string>Use display name as host name</string>
         </property>
        </widget>
       </item>
-      <item row="10" column="0" colspan="3">
-       <widget class="QCheckBox" name="input_checkbox_force_authuser">
+      <item row="13" column="0" colspan="4">
+       <widget class="QCheckBox" name="input_checkbox_use_display_name_service">
         <property name="text">
-         <string>Only show permitted hosts for &quot;see all&quot; users (1.4.0i1 or newer)</string>
+         <string>Use display name as service name</string>
         </property>
        </widget>
       </item>
-      <item row="6" column="0">
+      <item row="9" column="2" colspan="2">
+       <widget class="QLineEdit" name="input_lineedit_host_filter">
+        <property name="text">
+         <string/>
+        </property>
+       </widget>
+      </item>
+      <item row="10" column="0">
        <widget class="QLabel" name="label_service_filter">
         <property name="sizePolicy">
          <sizepolicy hsizetype="Minimum" vsizetype="Preferred">
@@ -480,12 +473,54 @@
         </property>
        </widget>
       </item>
-      <item row="6" column="1" colspan="2">
+      <item row="10" column="2" colspan="2">
        <widget class="QLineEdit" name="input_lineedit_service_filter">
         <property name="text">
          <string/>
         </property>
        </widget>
+      </item>
+      <item row="11" column="0" colspan="4">
+       <widget class="QCheckBox" name="input_checkbox_no_cookie_auth">
+        <property name="text">
+         <string>Do not use cookie authentication</string>
+        </property>
+       </widget>
+      </item>
+      <item row="14" column="0" colspan="4">
+       <widget class="QCheckBox" name="input_checkbox_force_authuser">
+        <property name="text">
+         <string>Only show permitted hosts for &quot;see all&quot; users (1.4.0i1 or newer)</string>
+        </property>
+       </widget>
+      </item>
+      <item row="0" column="0" colspan="4">
+       <widget class="QCheckBox" name="input_checkbox_ignore_cert">
+        <property name="text">
+         <string>Ignore SSL/TLS certificate</string>
+        </property>
+       </widget>
+      </item>
+      <item row="1" column="0" colspan="3">
+       <widget class="QCheckBox" name="input_checkbox_custom_cert_use">
+        <property name="text">
+         <string>Use custom CA file</string>
+        </property>
+       </widget>
+      </item>
+      <item row="2" column="2" colspan="2">
+       <layout class="QHBoxLayout" name="horizontalLayout">
+        <item>
+         <widget class="QLineEdit" name="input_lineedit_custom_cert_ca_file"/>
+        </item>
+        <item>
+         <widget class="QPushButton" name="button_choose_custom_cert_ca_file">
+          <property name="text">
+           <string>Choose file...</string>
+          </property>
+         </widget>
+        </item>
+       </layout>
       </item>
      </layout>
     </widget>

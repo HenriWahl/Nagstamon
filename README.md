@@ -22,5 +22,6 @@ Successfully tested monitors include:
  - Livestatus – experimental
  - Zabbix 2.2+ – experimental
  - Zenoss – experimental
+ - Monitos3 - experimental
 
 See https://nagstamon.ifw-dresden.de for further information.
