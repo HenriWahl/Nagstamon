@@ -579,20 +579,6 @@
           <property name="spacing">
            <number>5</number>
           </property>
-          <item row="5" column="0" colspan="2">
-           <widget class="QCheckBox" name="input_checkbox_systray_offset_use">
-            <property name="text">
-             <string>Use offset to correct position problems</string>
-            </property>
-           </widget>
-          </item>
-          <item row="0" column="0">
-           <widget class="QRadioButton" name="input_radiobutton_statusbar_floating">
-            <property name="text">
-             <string>Floating statusbar</string>
-            </property>
-           </widget>
-          </item>
           <item row="1" column="0">
            <widget class="QRadioButton" name="input_radiobutton_icon_in_systray">
             <property name="text">
@@ -600,14 +586,14 @@
             </property>
            </widget>
           </item>
-          <item row="4" column="0">
-           <widget class="QRadioButton" name="input_radiobutton_fullscreen">
+          <item row="7" column="0" colspan="2">
+           <widget class="QCheckBox" name="input_checkbox_systray_offset_use">
             <property name="text">
-             <string>Fullscreen</string>
+             <string>Use offset to correct position problems</string>
             </property>
            </widget>
           </item>
-          <item row="10" column="0">
+          <item row="12" column="0">
            <layout class="QGridLayout" name="gridLayout_20">
             <item row="1" column="0">
              <widget class="QLabel" name="label_fullscreen_display">
@@ -630,6 +616,27 @@
              <widget class="QComboBox" name="input_combobox_fullscreen_display"/>
             </item>
            </layout>
+          </item>
+          <item row="5" column="0">
+           <widget class="QRadioButton" name="input_radiobutton_fullscreen">
+            <property name="text">
+             <string>Fullscreen</string>
+            </property>
+           </widget>
+          </item>
+          <item row="0" column="0">
+           <widget class="QRadioButton" name="input_radiobutton_statusbar_floating">
+            <property name="text">
+             <string>Floating statusbar</string>
+            </property>
+           </widget>
+          </item>
+          <item row="4" column="0">
+           <widget class="QRadioButton" name="input_radiobutton_windowed">
+            <property name="text">
+             <string>Window</string>
+            </property>
+           </widget>
           </item>
          </layout>
         </widget>

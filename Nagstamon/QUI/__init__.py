@@ -833,7 +833,7 @@ class DraggableWidget(QWidget):
         if not(conf.close_details_clicking and
                statuswindow.is_shown and
                statuswindow.is_shown_timestamp + 0.5 < time.time()):
-            if not conf.fullscreen and not self.right_mouse_button_pressed:
+            if not conf.fullscreen and not conf.windowed and not self.right_mouse_button_pressed:
                 # lock window as moving
                 # if not set calculate relative position
                 if not statuswindow.relative_x and not statuswindow.relative_y:
@@ -893,7 +893,8 @@ class ClosingLabel(QLabel):
         if event.button() == Qt.LeftButton and conf.close_details_clicking_somewhere:
             # if popup window should be closed by clicking do it now
             if statuswindow.is_shown and\
-               not conf.fullscreen:
+               not conf.fullscreen and\
+               not conf.windowed:
                 statuswindow.is_hiding_timestamp = time.time()
                 statuswindow.hide_window()
 
@@ -1232,30 +1233,20 @@ class StatusWindow(QWidget):
             self.toparea.button_close.hide()
 
         elif conf.windowed:
-            #self.statusbar.hide()
+            self.statusbar.hide()
             self.toparea.show()
             self.servers_scrollarea.show()
 
-            # get screen geometry to get right screen to position window on
-            #screen_geometry = get_screen_geometry(conf.fullscreen_display)
-            #self.move(screen_geometry.x(), screen_geometry.y())
-
             # keep window entry in taskbar and thus no Qt.Tool
-            #self.setWindowFlags(Qt.Widget | Qt.FramelessWindowHint)
             self.setWindowFlags(Qt.Widget)
 
             self.show_window()
-            # fullscreen mode is rather buggy on everything other than OSX so just use a maximized window
-            #if platform.system() == 'Darwin':
-            #    self.showFullScreen()
-            #else:
-            #    self.show()
-            #    self.showMaximized()
-            systrayicon.show()
+
+            systrayicon.hide()
             self.show()
 
             # no need for close button
-            #self.toparea.button_close.hide()
+            self.toparea.button_close.hide()
 
         # store position for showing/hiding statuswindow
         self.stored_x = self.x()
@@ -1546,11 +1537,7 @@ class StatusWindow(QWidget):
         """
             hide window if not needed
         """
-        if conf.windowed:
-            self.is_shown = False
-            self.hiding.emit()
-            self.hide()
-        elif not conf.fullscreen:
+        if not conf.fullscreen and not conf.windowed:
             # only hide if shown and not locked or if not yet hidden if moving
             if self.is_shown is True or\
                self.is_shown is True and\
@@ -1880,10 +1867,7 @@ class StatusWindow(QWidget):
         """
         # check first if popup has to be shown by hovering or clicking
         if conf.windowed:
-            self.is_shown = False
-            self.hiding.emit()
-            self.hide()
-            self.hide_window()
+            exit()
 
     def get_real_width(self):
         """
@@ -2004,7 +1988,6 @@ class StatusWindow(QWidget):
 
         # again and again try to keep that statuswindow on top!
         if OS == 'Windows' and not conf.fullscreen and not conf.windowed:
-
             # find out if no context menu is shown and thus would be
             # overlapped by statuswindow
             for vbox in self.servers_vbox.children():
