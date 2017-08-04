@@ -232,6 +232,7 @@ class Config(object):
         self.color_error_background = self.default_color_error_background = '#D3D3D3'
         self.statusbar_floating = True
         self.icon_in_systray = False
+        self.windowed = False
         self.fullscreen = False
         self.fullscreen_display = 0
         self.systray_offset_use = False
