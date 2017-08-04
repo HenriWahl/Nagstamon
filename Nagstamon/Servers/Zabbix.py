@@ -60,10 +60,16 @@ class ZabbixServer(GenericServer):
         self.MENU_ACTIONS = ["Recheck", "Acknowledge", "Downtime"]
         self.username = conf.servers[self.get_name()].username
         self.password = conf.servers[self.get_name()].password
+        self.ignore_cert = conf.servers[self.get_name()].ignore_cert
+        if self.ignore_cert == True:
+            self.validate_certs=False
+        else:
+            self.validate_certs=True
 
     def _login(self):
         try:
-            self.zapi = ZabbixAPI(server=self.monitor_url, path="", log_level=0)
+            self.zapi = ZabbixAPI(server=self.monitor_url, path="", log_level=0,
+                                  validate_certs=self.validate_certs)
             self.zapi.login(self.username, self.password)
         except ZabbixAPIException:
             result, error = self.Error(sys.exc_info())
