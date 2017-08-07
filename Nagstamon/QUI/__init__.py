@@ -898,6 +898,27 @@ class ClosingLabel(QLabel):
                 statuswindow.is_hiding_timestamp = time.time()
                 statuswindow.hide_window()
 
+class AllOKLabel(QLabel):
+    """
+        Label which is shown in fullscreen and windowed mode when all is OK - pretty seldomly
+    """
+    def __init__(self, text='', parent=None):
+        QLabel.__init__(self, text='OK', parent=parent)
+        self.setSizePolicy(QSizePolicy.MinimumExpanding, QSizePolicy.MinimumExpanding)
+        self.setAlignment(Qt.AlignCenter)
+        self.set_color()
+        dialogs.settings.changed.connect(self.set_color)
+
+    @pyqtSlot()
+    def set_color(self):
+        self.setStyleSheet('''padding-left: 1px;
+                              padding-right: 1px;
+                              color: %s;
+                              background-color: %s;
+                              font-size: 92px;
+                              font-weight: bold;'''
+                           % (conf.__dict__['color_ok_text'],
+                           conf.__dict__['color_ok_background']))
 
 class StatusWindow(QWidget):
 
@@ -951,11 +972,6 @@ class StatusWindow(QWidget):
         self.setWindowTitle(AppInfo.NAME)
         self.setWindowIcon(QIcon('%s%snagstamon.svg' % (RESOURCES, os.sep)))
 
-        #self.setMouseTracking(True)
-
-        #self.setContentsMargins(10, 10, 10, 10)  # no margin
-
-
         self.vbox = QVBoxLayout(self)  # global VBox
         self.vbox.setSpacing(0)  # no spacing
         self.vbox.setContentsMargins(0, 0, 0, 0)  # no margin
@@ -978,6 +994,11 @@ class StatusWindow(QWidget):
         self.servers_vbox = QVBoxLayout(self.servers_scrollarea)  # VBox full of servers
         self.servers_vbox.setSpacing(0)
         self.servers_vbox.setContentsMargins(0, 0, 0, 0)
+
+        self.label_all_ok = AllOKLabel(parent=self)
+        self.label_all_ok.hide()
+
+        self.servers_vbox.addWidget(self.label_all_ok)
 
         # test with OSX top menubar
         if OS == 'Darwin':
@@ -1073,7 +1094,6 @@ class StatusWindow(QWidget):
         # create vbox for each enabled server
         for server in servers.values():
             if server.enabled:
-                print(server)
                 self.servers_vbox.addLayout(self.create_ServerVBox(server))
 
         self.sort_ServerVBoxes()
@@ -1453,6 +1473,8 @@ class StatusWindow(QWidget):
                     # show the other status window components
                     self.toparea.show()
                     self.servers_scrollarea.show()
+                else:
+                    self.label_all_ok.hide()
 
                 for vbox in self.servers_vbox.children():
                     if not vbox.server.all_ok:
@@ -1510,6 +1532,8 @@ class StatusWindow(QWidget):
                 # hide vboxes in fullscreen and whole window in any other case if all is OK
                 for vbox in self.servers_vbox.children():
                     vbox.hide_all()
+                if conf.fullscreen or conf.windowed:
+                    self.label_all_ok.show()
 
     @pyqtSlot()
     def update_window(self):
