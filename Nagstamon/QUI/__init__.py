@@ -1073,6 +1073,7 @@ class StatusWindow(QWidget):
         # create vbox for each enabled server
         for server in servers.values():
             if server.enabled:
+                print(server)
                 self.servers_vbox.addLayout(self.create_ServerVBox(server))
 
         self.sort_ServerVBoxes()
@@ -1234,6 +1235,8 @@ class StatusWindow(QWidget):
 
         elif conf.windowed:
             self.statusbar.hide()
+            # no need for close button
+            self.toparea.button_close.hide()
             self.toparea.show()
             self.servers_scrollarea.show()
 
@@ -1244,9 +1247,6 @@ class StatusWindow(QWidget):
 
             systrayicon.hide()
             self.show()
-
-            # no need for close button
-            self.toparea.button_close.hide()
 
         # store position for showing/hiding statuswindow
         self.stored_x = self.x()
@@ -1482,7 +1482,7 @@ class StatusWindow(QWidget):
                         self.set_shown()
 
                     # avoid horizontally scrollable tables
-                    self.adjust_dummy_columns()
+                    self.adjust_stretch_columns()
 
                     self.show()
 
@@ -1508,20 +1508,8 @@ class StatusWindow(QWidget):
                     self.showing.emit()
             else:
                 # hide vboxes in fullscreen and whole window in any other case if all is OK
-                if conf.fullscreen:
-                    for vbox in self.servers_vbox.children():
-                        vbox.hide_all()
-                else:
-                    self.hide_window()
-
-                if conf.windowed:
-                    self.set_shown()
-                    self.setWindowFlags(Qt.Widget)
-                    #self.toparea.show()
-                    #self.servers_scrollarea.show()
-                    systrayicon.show()
-                    self.show()
-                    self.showing.emit()
+                for vbox in self.servers_vbox.children():
+                    vbox.hide_all()
 
     @pyqtSlot()
     def update_window(self):
@@ -1530,7 +1518,6 @@ class StatusWindow(QWidget):
         """
         if self.is_shown or conf.fullscreen or ( conf.windowed and self.is_shown):
             self.show_window()
-
 
     @pyqtSlot()
     def hide_window(self):
@@ -1787,7 +1774,7 @@ class StatusWindow(QWidget):
                 # fully displayed statuswindow
                 if self.is_shown is True:
                     width, height, x, y = self.calculate_size()
-                    self.adjust_dummy_columns()
+                    self.adjust_stretch_columns()
                 else:
                     # statusbar only
                     hint = self.sizeHint()
@@ -1803,10 +1790,10 @@ class StatusWindow(QWidget):
 
                 del(width, height, x, y)
             else:
-                self.adjust_dummy_columns()
+                self.adjust_stretch_columns()
 
     @pyqtSlot()
-    def adjust_dummy_columns(self):
+    def adjust_stretch_columns(self):
         """
             calculate widest width of all server tables to hide dummy column at the widest one
         """
@@ -1823,7 +1810,7 @@ class StatusWindow(QWidget):
             if max_width_table == server.table:
                 ###server.table.setColumnHidden(9, True)
                 # chances are that on fullscreen everything is stretched
-                if conf.fullscreen:
+                if conf.fullscreen or conf.windowed:
                     server.table.header().setStretchLastSection(True)
                 else:
                     server.table.header().setStretchLastSection(False)

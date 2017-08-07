@@ -59,7 +59,8 @@ try:
 
         # show and resize status window
         statuswindow.show()
-        statuswindow.adjustSize()
+        if not conf.fullscreen or conf.windowed:
+            statuswindow.adjustSize()
 
         if conf.check_for_new_version is True:
             check_version.check(start_mode=True, parent=statuswindow)
