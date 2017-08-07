@@ -1228,7 +1228,7 @@ class StatusWindow(QWidget):
 
             # no need for window and its parts
             self.statusbar.hide()
-            self.hide()
+            self.hide_window()
 
         elif conf.fullscreen:
             self.statusbar.hide()
@@ -1272,6 +1272,7 @@ class StatusWindow(QWidget):
         self.stored_x = self.x()
         self.stored_y = self.y()
         self.stored_width = self.width()
+
 
     def create_ServerVBox(self, server):
         """
@@ -4607,9 +4608,6 @@ class Dialog_Settings(Dialog):
         # store configuration
         conf.SaveConfig()
 
-        # stop statuswindow worker
-        # ##statuswindow.worker.running = False
-
         # save configuration
         conf.SaveConfig()
 
@@ -4625,7 +4623,7 @@ class Dialog_Settings(Dialog):
             NUMBER_OF_DISPLAY_CHANGES += 1
 
             # stop statuswindow worker
-            # ##statuswindow.worker.running = False
+            statuswindow.worker.running = False
 
             # hide window to avoid laggy GUI - better none than laggy
             statuswindow.hide()
@@ -4644,10 +4642,11 @@ class Dialog_Settings(Dialog):
             statuswindow.worker_thread.wait(1000)
 
             # kick out ol' statuswindow
-            statuswindow.destroy(True, True)
+            ###statuswindow.destroy(True, True)
 
             # create new global one
-            statuswindow = StatusWindow()
+            ###statuswindow = StatusWindow()
+            statuswindow.__init__()
 
             # context menu for systray and statuswindow
             menu = MenuContext()
