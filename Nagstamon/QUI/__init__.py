@@ -1286,6 +1286,8 @@ class StatusWindow(QWidget):
             self.move(conf.position_x, conf.position_y)
             self.resize(conf.position_width, conf.position_height)
 
+            # make sure window is shown
+            self.show()
             self.show_window()
 
             # make sure windows comes up
