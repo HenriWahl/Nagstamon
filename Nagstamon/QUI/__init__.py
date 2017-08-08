@@ -777,7 +777,6 @@ class DraggableWidget(QWidget):
         """
             save position from window into config
         """
-
         statuswindow.store_position_to_conf()
         conf.SaveConfig()
 
@@ -1089,11 +1088,13 @@ class StatusWindow(QWidget):
         self.worker_notification_thread.start(0)
 
         # create vbox for each enabled server
-        for server in servers.values():
-            if server.enabled:
-                self.servers_vbox.addLayout(self.create_ServerVBox(server))
+        ###for server in servers.values():
+        ###   if server.enabled:
+        ###        self.servers_vbox.addLayout(self.create_ServerVBox(server))
+        ###
+        ###self.sort_ServerVBoxes()
 
-        self.sort_ServerVBoxes()
+        self.create_ServerVBoxes()
 
         self.servers_scrollarea_widget.setLayout(self.servers_vbox)
         self.servers_scrollarea.setWidget(self.servers_scrollarea_widget)
@@ -1260,7 +1261,9 @@ class StatusWindow(QWidget):
             self.toparea.button_close.hide()
 
         elif conf.windowed:
+            systrayicon.hide()
             self.statusbar.hide()
+
             # no need for close button
             self.toparea.button_close.hide()
             self.toparea.show()
@@ -1272,10 +1275,21 @@ class StatusWindow(QWidget):
             # show statusbar actively
             self.setAttribute(Qt.WA_ShowWithoutActivating, False)
 
+            self.setMinimumSize(400, 300)
+
+            #self.setMinimumSize(conf.position_width, conf.position_height)
+            self.setSizePolicy(QSizePolicy.MinimumExpanding, QSizePolicy.MinimumExpanding)
+            #self.setSizePolicy(QSizePolicy.Ignored, QSizePolicy.Ignored)
+            # default maximum size
+            self.setMaximumSize(16777215, 16777215)
+
+            self.move(conf.position_x, conf.position_y)
+            self.resize(conf.position_width, conf.position_height)
+
             self.show_window()
 
-            systrayicon.hide()
-            self.show()
+            # make sure windows comes up
+            self.raise_()
 
         # store position for showing/hiding statuswindow
         self.stored_x = self.x()
@@ -1382,6 +1396,17 @@ class StatusWindow(QWidget):
         self.servers_scrollarea.setWidget(self.servers_scrollarea_widget)
 
         del(vboxes_dict)
+
+
+    def create_ServerVBoxes(self):
+        # create vbox for each enabled server
+        for server in servers.values():
+            if server.enabled:
+                self.servers_vbox.addLayout(self.create_ServerVBox(server))
+
+        self.sort_ServerVBoxes()
+
+
 
     @pyqtSlot()
     def show_window_after_checking_for_clicking(self):
@@ -1641,17 +1666,17 @@ class StatusWindow(QWidget):
             # also at Ubuntu Unity 16.04
             if icon_x == 0 and self.icon_x == 0:
                 self.icon_x = QCursor.pos().x()
-            elif self.icon_x == 0:
-                self.icon_x = QCursor.pos().x()
-            elif icon_x != 0:
-                self.icon_x = icon_x
+            #elif self.icon_x == 0:
+            #    self.icon_x = QCursor.pos().x()
+            #elif icon_x != 0:
+            #    self.icon_x = icon_x
 
             if icon_y == 0 and self.icon_y == 0:
                 self.icon_y = QCursor.pos().y()
-            elif self.icon_y == 0:
-                self.icon_y = QCursor.pos().y()
-            elif icon_y != 0:
-                self.icon_y = icon_y
+            #elif self.icon_y == 0:
+            #    self.icon_y = QCursor.pos().y()
+            #elif icon_y != 0:
+            #    self.icon_y = icon_y
 
             screen_or_widget = get_screen(self.icon_x, self.icon_y)
 
@@ -1663,6 +1688,7 @@ class StatusWindow(QWidget):
         available_width = desktop.availableGeometry(screen_or_widget).width()
         available_x = desktop.availableGeometry(screen_or_widget).x()
         available_y = desktop.availableGeometry(screen_or_widget).y()
+
         del(screen_or_widget)
 
         # take whole screen height into account when deciding about upper/lower-ness
@@ -1758,7 +1784,6 @@ class StatusWindow(QWidget):
                         y = available_height - real_height
                         height = real_height
 
-        return width, height, x, y
 
     def resize_window(self, width, height, x, y):
         """
@@ -1782,9 +1807,8 @@ class StatusWindow(QWidget):
         else:
             self.move(x, y)
 
-        if not conf.windowed:
-            self.setMaximumSize(width, height)
-            self.setMinimumSize(width, height)
+        self.setMaximumSize(width, height)
+        self.setMinimumSize(width, height)
 
         self.adjustSize()
 
@@ -1936,6 +1960,11 @@ class StatusWindow(QWidget):
             self.hide_window()
             conf.position_x = self.x()
             conf.position_y = self.y()
+        if conf.windowed:
+            conf.position_x = self.x()
+            conf.position_y = self.y()
+            conf.position_width = self.width()
+            conf.position_height = self.height()
 
     @pyqtSlot(str, str)
     def show_message(self, msg_type, message):
@@ -2709,7 +2738,6 @@ class ServerVBox(QVBoxLayout):
         self.button_history = PushButton_BrowserURL(text='History', parent=parent, server=self.server, url_type='history')
         self.button_edit = Button('Edit', parent=parent)
 
-        #self.stretcher = QSpacerItem(0, 0, QSizePolicy.MinimumExpanding, QSizePolicy.Maximum)
         # use label instead of spacer to be clickable
         self.label_stretcher = ClosingLabel('', parent=parent)
         self.label_stretcher.setSizePolicy(QSizePolicy.MinimumExpanding, QSizePolicy.Expanding)
@@ -4634,8 +4662,8 @@ class Dialog_Settings(Dialog):
             NUMBER_OF_DISPLAY_CHANGES += 1
 
             # stop statuswindow worker
-            statuswindow.worker.running = False
-            statuswindow.worker_notification.running = False
+            #statuswindow.worker.running = False
+            #statuswindow.worker_notification.running = False
 
             # hide window to avoid laggy GUI - better none than laggy
             statuswindow.hide()
@@ -4648,17 +4676,20 @@ class Dialog_Settings(Dialog):
                 server_vbox.table.worker_thread.wait(1000)
 
             # wait until statuswindow worker has finished
-            statuswindow.worker_thread.wait(1000)
+            #statuswindow.worker_thread.wait(1000)
 
             # wait until statuswindow notification worker has finished
-            statuswindow.worker_notification_thread.wait(1000)
+            #statuswindow.worker_notification_thread.wait(1000)
 
             # kick out ol' statuswindow
-            statuswindow.destroy(True, True)
+            #statuswindow.destroy(True, True)
 
             # create new global one
-            statuswindow = StatusWindow()
+            #statuswindow = StatusWindow()
             #statuswindow.__init__()
+
+            statuswindow.create_ServerVBoxes()
+            statuswindow.set_mode()
 
             # context menu for systray and statuswindow
             menu = MenuContext()
