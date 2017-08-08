@@ -1784,6 +1784,8 @@ class StatusWindow(QWidget):
                         y = available_height - real_height
                         height = real_height
 
+        return width, height, x, y
+
 
     def resize_window(self, width, height, x, y):
         """
