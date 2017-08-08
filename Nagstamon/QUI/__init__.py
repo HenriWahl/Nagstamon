@@ -1544,6 +1544,8 @@ class StatusWindow(QWidget):
                     vbox.hide_all()
                 if conf.fullscreen or conf.windowed:
                     self.label_all_ok.show()
+                if conf.icon_in_systray:
+                    self.hide_window()
 
     @pyqtSlot()
     def update_window(self):
