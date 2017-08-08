@@ -962,9 +962,6 @@ class StatusWindow(QWidget):
         # show tooltips even if popup window has no focus
         self.setAttribute(Qt.WA_AlwaysShowToolTips)
 
-        # show statusbar without being active, just floating
-        self.setAttribute(Qt.WA_ShowWithoutActivating)
-
         if OS == 'Darwin':
             # avoid hiding window if it has no focus - necessary on OSX if using flag Qt.Tool
             self.setAttribute(Qt.WA_MacAlwaysShowToolWindow)
@@ -1070,7 +1067,7 @@ class StatusWindow(QWidget):
         check_version.version_info_retrieved.connect(self.hide_window)
 
         # worker and thread duo needed for notifications
-        self.worker_notification_thread = QThread()
+        self.worker_notification_thread = QThread(self)
         self.worker_notification = self.Worker_Notification()
         # flashing statusbar
         self.worker_notification.start_flash.connect(self.statusbar.flash)
@@ -1137,7 +1134,7 @@ class StatusWindow(QWidget):
 
         # a thread + worker is necessary to do actions thread-safe in background
         # like debugging
-        self.worker_thread = QThread()
+        self.worker_thread = QThread(self)
         self.worker = self.Worker()
         self.worker.moveToThread(self.worker_thread)
         # start thread and debugging loop if debugging is enabled
@@ -1192,6 +1189,9 @@ class StatusWindow(QWidget):
                 # tool flag helps to be invisible in taskbar
                 self.setWindowFlags(WINDOW_FLAGS)
 
+                # show statusbar without being active, just floating
+                self.setAttribute(Qt.WA_ShowWithoutActivating)
+
                 # necessary to be shown before Linux EWMH-mantra can be applied
                 self.show()
 
@@ -1220,6 +1220,9 @@ class StatusWindow(QWidget):
             # tool flag helps to be invisible in taskbar
             self.setWindowFlags(WINDOW_FLAGS)
 
+            # show statusbar without being active, just floating
+            self.setAttribute(Qt.WA_ShowWithoutActivating)
+
             # yeah! systray!
             systrayicon.show()
 
@@ -1242,6 +1245,9 @@ class StatusWindow(QWidget):
             # keep window entry in taskbar and thus no Qt.Tool
             self.setWindowFlags(Qt.Widget | Qt.FramelessWindowHint)
 
+            # show statusbar actively
+            self.setAttribute(Qt.WA_ShowWithoutActivating, False)
+
             self.show_window()
             # fullscreen mode is rather buggy on everything other than OSX so just use a maximized window
             if OS == 'Darwin':
@@ -1262,6 +1268,9 @@ class StatusWindow(QWidget):
 
             # keep window entry in taskbar and thus no Qt.Tool
             self.setWindowFlags(Qt.Widget)
+
+            # show statusbar actively
+            self.setAttribute(Qt.WA_ShowWithoutActivating, False)
 
             self.show_window()
 
@@ -3106,7 +3115,7 @@ class TreeView(QTreeView):
 
         # a thread + worker is necessary to get new monitor server data in the background and
         # to refresh the table cell by cell after new data is available
-        self.worker_thread = QThread()
+        self.worker_thread = QThread(self)
         self.worker = self.Worker(server=server, sort_column=self.sort_column, sort_order=self.sort_order)
         self.worker.moveToThread(self.worker_thread)
 
@@ -4624,6 +4633,7 @@ class Dialog_Settings(Dialog):
 
             # stop statuswindow worker
             statuswindow.worker.running = False
+            statuswindow.worker_notification.running = False
 
             # hide window to avoid laggy GUI - better none than laggy
             statuswindow.hide()
@@ -4635,18 +4645,18 @@ class Dialog_Settings(Dialog):
             for server_vbox in statuswindow.servers_vbox.children():
                 server_vbox.table.worker_thread.wait(1000)
 
-            # wait until statuswindow notification worker has finished
-            statuswindow.worker_notification_thread.wait(1000)
-
             # wait until statuswindow worker has finished
             statuswindow.worker_thread.wait(1000)
 
+            # wait until statuswindow notification worker has finished
+            statuswindow.worker_notification_thread.wait(1000)
+
             # kick out ol' statuswindow
-            ###statuswindow.destroy(True, True)
+            statuswindow.destroy(True, True)
 
             # create new global one
-            ###statuswindow = StatusWindow()
-            statuswindow.__init__()
+            statuswindow = StatusWindow()
+            #statuswindow.__init__()
 
             # context menu for systray and statuswindow
             menu = MenuContext()
@@ -6170,7 +6180,7 @@ class CheckVersion(QObject):
                 self.parent = parent
 
             # thread for worker to avoid
-            self.worker_thread = QThread()
+            self.worker_thread = QThread(self)
             self.worker = self.Worker()
 
             # if update check is ready it sends the message to GUI thread
