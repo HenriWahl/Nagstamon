@@ -1293,6 +1293,8 @@ class StatusWindow(QWidget):
             # make sure windows comes up
             self.raise_()
 
+
+
         # store position for showing/hiding statuswindow
         self.stored_x = self.x()
         self.stored_y = self.y()

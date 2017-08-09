@@ -103,18 +103,18 @@ bdist_dmg_options = dict(volume_label='{0} {1}'.format(NAME, VERSION),
                          applications_shortcut=False)
 
 bdist_rpm_options = dict(requires='python3 '
-        'python3-qt5 '
         'python3-beautifulsoup4 '
-        'python3-requests '
-        'python3-requests-kerberos '
-        'python3-qt5 '
-        'python3-SecretStorage '
         'python3-crypto '
         'python3-cryptography '
+        'python3-keyring '
         'python3-psutil '
-        'qt5-qtsvg '
-        'qt5-qtmultimedia ',
-        dist_dir='./build')
+        'python3-qt5 '
+        'python3-requests '
+        'python3-requests-kerberos '
+        'python3-SecretStorage '
+        'qt5-qtmultimedia '
+        'qt5-qtsvg ',
+dist_dir='./build')
 
 setup(name=NAME,
       version=VERSION,
