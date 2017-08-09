@@ -1668,17 +1668,19 @@ class StatusWindow(QWidget):
             # also at Ubuntu Unity 16.04
             if icon_x == 0 and self.icon_x == 0:
                 self.icon_x = QCursor.pos().x()
-            #elif self.icon_x == 0:
-            #    self.icon_x = QCursor.pos().x()
-            #elif icon_x != 0:
-            #    self.icon_x = icon_x
+            if OS in NON_LINUX:
+                if self.icon_x == 0:
+                    self.icon_x = QCursor.pos().x()
+                elif icon_x != 0:
+                    self.icon_x = icon_x
 
             if icon_y == 0 and self.icon_y == 0:
                 self.icon_y = QCursor.pos().y()
-            #elif self.icon_y == 0:
-            #    self.icon_y = QCursor.pos().y()
-            #elif icon_y != 0:
-            #    self.icon_y = icon_y
+            if OS in NON_LINUX:
+                if self.icon_y == 0:
+                    self.icon_y = QCursor.pos().y()
+                elif icon_y != 0:
+                    self.icon_y = icon_y
 
             screen_or_widget = get_screen(self.icon_x, self.icon_y)
 
@@ -1713,10 +1715,11 @@ class StatusWindow(QWidget):
                 self.top = False
             # take systray icon position as reference
             # assuming that a left oriented systray as in GNOME3 will need x = 0
-            if self.icon_x < desktop.screenGeometry(self).width() / 2 + available_x and OS not in NON_LINUX:
-                x = 0
-            else:
-                x = self.icon_x
+            #if self.icon_x < desktop.screenGeometry(self).width() / 2 + available_x and OS not in NON_LINUX:
+            #    x = 0
+            #else:
+            #    x = self.icon_x
+            x = self.icon_x
 
         # get height from tablewidgets
         real_height = self.get_real_height()
