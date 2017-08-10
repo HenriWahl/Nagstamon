@@ -91,7 +91,7 @@ class AppInfo(object):
         contains app information previously located in GUI.py
     """
     NAME = 'Nagstamon'
-    VERSION = '2.1-20170809'
+    VERSION = '2.1-20170810'
     WEBSITE = 'https://nagstamon.ifw-dresden.de'
     COPYRIGHT = '©2008-2017 Henri Wahl et al.'
     COMMENTS = 'Nagios status monitor for your desktop'
@@ -453,7 +453,8 @@ class Config(object):
                         config.read(self.configdir + os.sep + settingsdir + os.sep + f)
 
                         # create object for every setting
-                        name = f.split('_', 1)[1].rpartition('.')[0]
+                        name = config.sections()[0].lstrip(setting + '_')
+
                         settings[name] = globals()[configobj]()
 
                         # go through all items of the server
