@@ -806,7 +806,8 @@ class DraggableWidget(QWidget):
         if event.button() == Qt.LeftButton:
             # if popup window should be closed by clicking do it now
             if statuswindow.is_shown and\
-               conf.close_details_clicking and\
+                (conf.close_details_clicking or
+                 conf.close_details_clicking_somewhere) and\
                not conf.fullscreen and not conf.windowed:
                 statuswindow.is_hiding_timestamp = time.time()
                 statuswindow.hide_window()
@@ -1508,7 +1509,6 @@ class StatusWindow(QWidget):
                 if not conf.fullscreen and not conf.windowed:
                     # attempt to avoid flickering on MacOSX - already hide statusbar here
                     self.statusbar.hide()
-
                     # show the other status window components
                     self.toparea.show()
                     self.servers_scrollarea.show()
@@ -1567,6 +1567,7 @@ class StatusWindow(QWidget):
 
                     # tell others like notification that statuswindow shows up now
                     self.showing.emit()
+
             else:
                 # hide vboxes in fullscreen and whole window in any other case if all is OK
                 for vbox in self.servers_vbox.children():
