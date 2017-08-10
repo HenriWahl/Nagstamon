@@ -23,5 +23,6 @@ Successfully tested monitors include:
  - Zabbix 2.2+ – experimental
  - Zenoss – experimental
  - Monitos3 - experimental
+ - SNAG-View3 - experimental
 
 See https://nagstamon.ifw-dresden.de for further information.
