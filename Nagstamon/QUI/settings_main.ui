@@ -579,32 +579,50 @@
           <property name="spacing">
            <number>5</number>
           </property>
-          <item row="7" column="0">
-           <layout class="QHBoxLayout" name="horizontalLayout_16">
-            <item>
+          <item row="1" column="0">
+           <widget class="QRadioButton" name="input_radiobutton_icon_in_systray">
+            <property name="text">
+             <string>Icon in systray</string>
+            </property>
+           </widget>
+          </item>
+          <item row="7" column="0" colspan="2">
+           <widget class="QCheckBox" name="input_checkbox_systray_offset_use">
+            <property name="text">
+             <string>Use offset to correct position problems</string>
+            </property>
+           </widget>
+          </item>
+          <item row="12" column="0">
+           <layout class="QGridLayout" name="gridLayout_20">
+            <item row="1" column="0">
              <widget class="QLabel" name="label_fullscreen_display">
               <property name="text">
                <string>Display to use:</string>
               </property>
              </widget>
             </item>
-            <item>
+            <item row="0" column="0">
+             <widget class="QLabel" name="label_offset_statuswindow">
+              <property name="text">
+               <string>Offset for statuswindow:</string>
+              </property>
+             </widget>
+            </item>
+            <item row="0" column="1">
+             <widget class="QSpinBox" name="input_spinbox_systray_offset"/>
+            </item>
+            <item row="1" column="1">
              <widget class="QComboBox" name="input_combobox_fullscreen_display"/>
             </item>
-            <item>
-             <spacer name="horizontalSpacer_8">
-              <property name="orientation">
-               <enum>Qt::Horizontal</enum>
-              </property>
-              <property name="sizeHint" stdset="0">
-               <size>
-                <width>40</width>
-                <height>20</height>
-               </size>
-              </property>
-             </spacer>
-            </item>
            </layout>
+          </item>
+          <item row="5" column="0">
+           <widget class="QRadioButton" name="input_radiobutton_fullscreen">
+            <property name="text">
+             <string>Fullscreen</string>
+            </property>
+           </widget>
           </item>
           <item row="0" column="0">
            <widget class="QRadioButton" name="input_radiobutton_statusbar_floating">
@@ -613,53 +631,12 @@
             </property>
            </widget>
           </item>
-          <item row="1" column="0">
-           <widget class="QRadioButton" name="input_radiobutton_icon_in_systray">
-            <property name="text">
-             <string>Icon in systray</string>
-            </property>
-           </widget>
-          </item>
           <item row="4" column="0">
-           <widget class="QRadioButton" name="input_radiobutton_fullscreen">
+           <widget class="QRadioButton" name="input_radiobutton_windowed">
             <property name="text">
-             <string>Fullscreen</string>
+             <string>Window</string>
             </property>
            </widget>
-          </item>
-          <item row="5" column="0">
-           <widget class="QCheckBox" name="input_checkbox_systray_offset_use">
-            <property name="text">
-             <string>Use offset to correct position problems</string>
-            </property>
-           </widget>
-          </item>
-          <item row="6" column="0">
-           <layout class="QHBoxLayout" name="horizontalLayout_15">
-            <item>
-             <widget class="QLabel" name="label_offset_statuswindow">
-              <property name="text">
-               <string>Offset to use for statuswindow:</string>
-              </property>
-             </widget>
-            </item>
-            <item>
-             <widget class="QSpinBox" name="input_spinbox_systray_offset"/>
-            </item>
-            <item>
-             <spacer name="horizontalSpacer_9">
-              <property name="orientation">
-               <enum>Qt::Horizontal</enum>
-              </property>
-              <property name="sizeHint" stdset="0">
-               <size>
-                <width>40</width>
-                <height>20</height>
-               </size>
-              </property>
-             </spacer>
-            </item>
-           </layout>
           </item>
          </layout>
         </widget>
@@ -2825,8 +2802,6 @@
   <tabstop>input_radiobutton_icon_in_systray</tabstop>
   <tabstop>input_radiobutton_fullscreen</tabstop>
   <tabstop>input_checkbox_systray_offset_use</tabstop>
-  <tabstop>input_spinbox_systray_offset</tabstop>
-  <tabstop>input_combobox_fullscreen_display</tabstop>
   <tabstop>button_fontchooser</tabstop>
   <tabstop>button_default_font</tabstop>
   <tabstop>input_radiobutton_popup_details_hover</tabstop>
@@ -2994,7 +2969,7 @@
   </connection>
  </connections>
  <buttongroups>
-  <buttongroup name="buttongroup_close_statusbar"/>
   <buttongroup name="buttongroup_popup_statuswindow"/>
+  <buttongroup name="buttongroup_close_statusbar"/>
  </buttongroups>
 </ui>

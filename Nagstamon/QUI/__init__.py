@@ -89,6 +89,11 @@ if not OS in NON_LINUX:
     # extract thirdparty path from resources path - make submodules accessible by thirdparty modules
     THIRDPARTY = os.sep.join(RESOURCES.split(os.sep)[0:-1] + ['thirdparty'])
     sys.path.insert(0, THIRDPARTY)
+
+    # Xlib for EWMH needs the file ~/.Xauthority and crashes if it does not exist
+    if not os.path.exists(os.path.expanduser('~') + os.sep + '.Xauthority'):
+        open(os.path.expanduser('~') + os.sep + '.Xauthority', 'a').close()
+
     from Nagstamon.thirdparty.ewmh import EWMH
 
     # DBus only interesting for Linux too
@@ -156,9 +161,9 @@ HEADERS = OrderedDict([('host', {'header': 'Host',
                        ('attempt', {'header': 'Attempt',
                                     'column': 7}),
                        ('status_information', {'header': 'Status Information',
-                                               'column': 8}),
-                       ('dummy_column', {'header': '',
-                                         'column': 8})])
+                                               'column': 8}),])
+                       #('dummy_column', {'header': '',
+                       #                  'column': 8})])
 
 # various headers-key-columns variations needed in different parts
 HEADERS_HEADERS = list()
@@ -193,8 +198,8 @@ SORT_COLUMNS_INDEX = {0: 0,
                       5: 5,
                       6: 6,
                       7: 7,
-                      8: 8,
-                      9: 8}
+                      8: 8,}
+                      ###9: 8}
 
 # space used in LayoutBoxes
 SPACE = 10
@@ -696,7 +701,7 @@ class PushButton_BrowserURL(Button):
         webbrowser_open(url)
 
         # hide statuswindow to get screen space for browser
-        if not conf.fullscreen:
+        if not conf.fullscreen and not conf.windowed:
             statuswindow.hide_window()
 
 
@@ -772,7 +777,6 @@ class DraggableWidget(QWidget):
         """
             save position from window into config
         """
-
         statuswindow.store_position_to_conf()
         conf.SaveConfig()
 
@@ -802,7 +806,9 @@ class DraggableWidget(QWidget):
         if event.button() == Qt.LeftButton:
             # if popup window should be closed by clicking do it now
             if statuswindow.is_shown and\
-               not conf.fullscreen:
+                (conf.close_details_clicking or
+                 conf.close_details_clicking_somewhere) and\
+               not conf.fullscreen and not conf.windowed:
                 statuswindow.is_hiding_timestamp = time.time()
                 statuswindow.hide_window()
             elif not statuswindow.is_shown:
@@ -827,7 +833,7 @@ class DraggableWidget(QWidget):
         if not(conf.close_details_clicking and
                statuswindow.is_shown and
                statuswindow.is_shown_timestamp + 0.5 < time.time()):
-            if not conf.fullscreen and not self.right_mouse_button_pressed:
+            if not conf.fullscreen and not conf.windowed and not self.right_mouse_button_pressed:
                 # lock window as moving
                 # if not set calculate relative position
                 if not statuswindow.relative_x and not statuswindow.relative_y:
@@ -887,10 +893,32 @@ class ClosingLabel(QLabel):
         if event.button() == Qt.LeftButton and conf.close_details_clicking_somewhere:
             # if popup window should be closed by clicking do it now
             if statuswindow.is_shown and\
-               not conf.fullscreen:
+               not conf.fullscreen and\
+               not conf.windowed:
                 statuswindow.is_hiding_timestamp = time.time()
                 statuswindow.hide_window()
 
+class AllOKLabel(QLabel):
+    """
+        Label which is shown in fullscreen and windowed mode when all is OK - pretty seldomly
+    """
+    def __init__(self, text='', parent=None):
+        QLabel.__init__(self, text='OK', parent=parent)
+        self.setSizePolicy(QSizePolicy.MinimumExpanding, QSizePolicy.MinimumExpanding)
+        self.setAlignment(Qt.AlignCenter)
+        self.set_color()
+        dialogs.settings.changed.connect(self.set_color)
+
+    @pyqtSlot()
+    def set_color(self):
+        self.setStyleSheet('''padding-left: 1px;
+                              padding-right: 1px;
+                              color: %s;
+                              background-color: %s;
+                              font-size: 92px;
+                              font-weight: bold;'''
+                           % (conf.__dict__['color_ok_text'],
+                           conf.__dict__['color_ok_background']))
 
 class StatusWindow(QWidget):
 
@@ -934,20 +962,12 @@ class StatusWindow(QWidget):
         # show tooltips even if popup window has no focus
         self.setAttribute(Qt.WA_AlwaysShowToolTips)
 
-        # show statusbar without being active, just floating
-        self.setAttribute(Qt.WA_ShowWithoutActivating)
-
         if OS == 'Darwin':
             # avoid hiding window if it has no focus - necessary on OSX if using flag Qt.Tool
             self.setAttribute(Qt.WA_MacAlwaysShowToolWindow)
 
         self.setWindowTitle(AppInfo.NAME)
         self.setWindowIcon(QIcon('%s%snagstamon.svg' % (RESOURCES, os.sep)))
-
-        #self.setMouseTracking(True)
-
-        #self.setContentsMargins(10, 10, 10, 10)  # no margin
-
 
         self.vbox = QVBoxLayout(self)  # global VBox
         self.vbox.setSpacing(0)  # no spacing
@@ -971,6 +991,11 @@ class StatusWindow(QWidget):
         self.servers_vbox = QVBoxLayout(self.servers_scrollarea)  # VBox full of servers
         self.servers_vbox.setSpacing(0)
         self.servers_vbox.setContentsMargins(0, 0, 0, 0)
+
+        self.label_all_ok = AllOKLabel(parent=self)
+        self.label_all_ok.hide()
+
+        self.servers_vbox.addWidget(self.label_all_ok)
 
         # test with OSX top menubar
         if OS == 'Darwin':
@@ -1042,7 +1067,7 @@ class StatusWindow(QWidget):
         check_version.version_info_retrieved.connect(self.hide_window)
 
         # worker and thread duo needed for notifications
-        self.worker_notification_thread = QThread()
+        self.worker_notification_thread = QThread(self)
         self.worker_notification = self.Worker_Notification()
         # flashing statusbar
         self.worker_notification.start_flash.connect(self.statusbar.flash)
@@ -1064,11 +1089,13 @@ class StatusWindow(QWidget):
         self.worker_notification_thread.start(0)
 
         # create vbox for each enabled server
-        for server in servers.values():
-            if server.enabled:
-                self.servers_vbox.addLayout(self.create_ServerVBox(server))
+        ###for server in servers.values():
+        ###   if server.enabled:
+        ###        self.servers_vbox.addLayout(self.create_ServerVBox(server))
+        ###
+        ###self.sort_ServerVBoxes()
 
-        self.sort_ServerVBoxes()
+        self.create_ServerVBoxes()
 
         self.servers_scrollarea_widget.setLayout(self.servers_vbox)
         self.servers_scrollarea.setWidget(self.servers_scrollarea_widget)
@@ -1090,7 +1117,10 @@ class StatusWindow(QWidget):
         self.icon_y = 0
 
         # flag to mark if window is shown or not
-        self.is_shown = False
+        if conf.windowed:
+            self.is_shown = True
+        else:
+            self.is_shown = False
 
         # store show_window timestamp to avoid flickering window in KDE5 with systray
         self.is_shown_timestamp = time.time()
@@ -1106,7 +1136,7 @@ class StatusWindow(QWidget):
 
         # a thread + worker is necessary to do actions thread-safe in background
         # like debugging
-        self.worker_thread = QThread()
+        self.worker_thread = QThread(self)
         self.worker = self.Worker()
         self.worker.moveToThread(self.worker_thread)
         # start thread and debugging loop if debugging is enabled
@@ -1161,6 +1191,9 @@ class StatusWindow(QWidget):
                 # tool flag helps to be invisible in taskbar
                 self.setWindowFlags(WINDOW_FLAGS)
 
+                # show statusbar without being active, just floating
+                self.setAttribute(Qt.WA_ShowWithoutActivating)
+
                 # necessary to be shown before Linux EWMH-mantra can be applied
                 self.show()
 
@@ -1189,6 +1222,9 @@ class StatusWindow(QWidget):
             # tool flag helps to be invisible in taskbar
             self.setWindowFlags(WINDOW_FLAGS)
 
+            # show statusbar without being active, just floating
+            self.setAttribute(Qt.WA_ShowWithoutActivating)
+
             # yeah! systray!
             systrayicon.show()
 
@@ -1197,7 +1233,7 @@ class StatusWindow(QWidget):
 
             # no need for window and its parts
             self.statusbar.hide()
-            self.hide()
+            self.hide_window()
 
         elif conf.fullscreen:
             self.statusbar.hide()
@@ -1211,6 +1247,9 @@ class StatusWindow(QWidget):
             # keep window entry in taskbar and thus no Qt.Tool
             self.setWindowFlags(Qt.Widget | Qt.FramelessWindowHint)
 
+            # show statusbar actively
+            self.setAttribute(Qt.WA_ShowWithoutActivating, False)
+
             self.show_window()
             # fullscreen mode is rather buggy on everything other than OSX so just use a maximized window
             if OS == 'Darwin':
@@ -1222,10 +1261,46 @@ class StatusWindow(QWidget):
             # no need for close button
             self.toparea.button_close.hide()
 
+        elif conf.windowed:
+            systrayicon.hide()
+            self.statusbar.hide()
+
+            # no need for close button
+            self.toparea.button_close.hide()
+            self.toparea.show()
+            self.servers_scrollarea.show()
+
+            # keep window entry in taskbar and thus no Qt.Tool
+            self.setWindowFlags(Qt.Widget)
+
+            # show statusbar actively
+            self.setAttribute(Qt.WA_ShowWithoutActivating, False)
+
+            self.setMinimumSize(400, 300)
+
+            #self.setMinimumSize(conf.position_width, conf.position_height)
+            self.setSizePolicy(QSizePolicy.MinimumExpanding, QSizePolicy.MinimumExpanding)
+            #self.setSizePolicy(QSizePolicy.Ignored, QSizePolicy.Ignored)
+            # default maximum size
+            self.setMaximumSize(16777215, 16777215)
+
+            self.move(conf.position_x, conf.position_y)
+            self.resize(conf.position_width, conf.position_height)
+
+            # make sure window is shown
+            self.show()
+            self.show_window()
+
+            # make sure windows comes up
+            self.raise_()
+
+
+
         # store position for showing/hiding statuswindow
         self.stored_x = self.x()
         self.stored_y = self.y()
         self.stored_width = self.width()
+
 
     def create_ServerVBox(self, server):
         """
@@ -1327,6 +1402,17 @@ class StatusWindow(QWidget):
 
         del(vboxes_dict)
 
+
+    def create_ServerVBoxes(self):
+        # create vbox for each enabled server
+        for server in servers.values():
+            if server.enabled:
+                self.servers_vbox.addLayout(self.create_ServerVBox(server))
+
+        self.sort_ServerVBoxes()
+
+
+
     @pyqtSlot()
     def show_window_after_checking_for_clicking(self):
         """
@@ -1408,7 +1494,6 @@ class StatusWindow(QWidget):
         """
         # do not show up when being dragged around
         if not self.moving:
-
             # check if really all is OK
             for vbox in self.servers_vbox.children():
                 if vbox.server.all_ok and\
@@ -1421,13 +1506,14 @@ class StatusWindow(QWidget):
 
             # here we should check if scroll_area should be shown at all
             if not self.status_ok:
-                if not conf.fullscreen:
+                if not conf.fullscreen and not conf.windowed:
                     # attempt to avoid flickering on MacOSX - already hide statusbar here
                     self.statusbar.hide()
-
                     # show the other status window components
                     self.toparea.show()
                     self.servers_scrollarea.show()
+                else:
+                    self.label_all_ok.hide()
 
                 for vbox in self.servers_vbox.children():
                     if not vbox.server.all_ok:
@@ -1444,7 +1530,7 @@ class StatusWindow(QWidget):
                     else:
                         vbox.button_authenticate.hide()
 
-                if not conf.fullscreen:
+                if not conf.fullscreen and not conf.windowed:
                     # theory...
                     width, height, x, y = self.calculate_size()
                     # ...and practice
@@ -1457,7 +1543,7 @@ class StatusWindow(QWidget):
                         self.set_shown()
 
                     # avoid horizontally scrollable tables
-                    self.adjust_dummy_columns()
+                    self.adjust_stretch_columns()
 
                     self.show()
 
@@ -1476,34 +1562,35 @@ class StatusWindow(QWidget):
                             # workaround for https://github.com/HenriWahl/Nagstamon/issues/246#issuecomment-220478066
                             pass
 
-                    # recalculate size again to avoid silly scrollbar since using self.close()
-                    #if conf.icon_in_systray:
-                    # theory...
-                    #width, height, x, y = self.calculate_size()
-                    # ...and practice
-                    #self.resize_window(width, height, x, y)
-
                     # store timestamp to avoid flickering as in https://github.com/HenriWahl/Nagstamon/issues/184
                     self.is_shown_timestamp = time.time()
 
                     # tell others like notification that statuswindow shows up now
                     self.showing.emit()
 
+            else:
+                # hide vboxes in fullscreen and whole window in any other case if all is OK
+                for vbox in self.servers_vbox.children():
+                    vbox.hide_all()
+                if conf.fullscreen or conf.windowed:
+                    self.label_all_ok.show()
+                if conf.icon_in_systray:
+                    self.hide_window()
+
     @pyqtSlot()
     def update_window(self):
         """
             redraw window content, to be effective only when window is shown
         """
-        if self.is_shown or conf.fullscreen:
+        if self.is_shown or conf.fullscreen or ( conf.windowed and self.is_shown):
             self.show_window()
-
 
     @pyqtSlot()
     def hide_window(self):
         """
             hide window if not needed
         """
-        if not conf.fullscreen:
+        if not conf.fullscreen and not conf.windowed:
             # only hide if shown and not locked or if not yet hidden if moving
             if self.is_shown is True or\
                self.is_shown is True and\
@@ -1514,7 +1601,7 @@ class StatusWindow(QWidget):
                    self.is_hiding_timestamp + 0.2 < time.time():
                     if conf.statusbar_floating:
                         self.statusbar.show()
-                        self.statusbar.adjustSize()
+                        #self.statusbar.adjustSize()
                     self.toparea.hide()
                     self.servers_scrollarea.hide()
                     self.setMinimumSize(1, 1)
@@ -1523,7 +1610,7 @@ class StatusWindow(QWidget):
                     if conf.icon_in_systray:
                         self.close()
 
-                    self.move(self.stored_x, self.stored_y)
+                    ###self.move(self.stored_x, self.stored_y)
 
                     # switch off
                     self.is_shown = False
@@ -1535,13 +1622,15 @@ class StatusWindow(QWidget):
                     self.icon_x = 0
                     self.icon_y = 0
 
-
-
                     # tell the world that window goes down
                     self.hiding.emit()
+                    if conf.windowed:
+                        self.hide()
 
                     # store time of hiding
                     self.is_hiding_timestamp = time.time()
+
+                    self.move(self.stored_x, self.stored_y)
 
 
     @pyqtSlot()
@@ -1567,10 +1656,12 @@ class StatusWindow(QWidget):
         """
             get size of popup window
         """
-
         # screen number or widget object needed for desktop.availableGeometry
         if conf.statusbar_floating:
             screen_or_widget = self
+        elif conf.windowed:
+            screen_or_widget = self
+
         elif conf.icon_in_systray:
             # where is the pointer which clicked onto systray icon
             icon_x = systrayicon.geometry().x()
@@ -1580,17 +1671,19 @@ class StatusWindow(QWidget):
             # also at Ubuntu Unity 16.04
             if icon_x == 0 and self.icon_x == 0:
                 self.icon_x = QCursor.pos().x()
-            elif self.icon_x == 0:
-                self.icon_x = QCursor.pos().x()
-            elif icon_x != 0:
-                self.icon_x = icon_x
+            if OS in NON_LINUX:
+                if self.icon_x == 0:
+                    self.icon_x = QCursor.pos().x()
+                elif icon_x != 0:
+                    self.icon_x = icon_x
 
             if icon_y == 0 and self.icon_y == 0:
                 self.icon_y = QCursor.pos().y()
-            elif self.icon_y == 0:
-                self.icon_y = QCursor.pos().y()
-            elif icon_y != 0:
-                self.icon_y = icon_y
+            if OS in NON_LINUX:
+                if self.icon_y == 0:
+                    self.icon_y = QCursor.pos().y()
+                elif icon_y != 0:
+                    self.icon_y = icon_y
 
             screen_or_widget = get_screen(self.icon_x, self.icon_y)
 
@@ -1602,6 +1695,7 @@ class StatusWindow(QWidget):
         available_width = desktop.availableGeometry(screen_or_widget).width()
         available_x = desktop.availableGeometry(screen_or_widget).x()
         available_y = desktop.availableGeometry(screen_or_widget).y()
+
         del(screen_or_widget)
 
         # take whole screen height into account when deciding about upper/lower-ness
@@ -1617,17 +1711,18 @@ class StatusWindow(QWidget):
             # always take the stored position of the statusbar
             x = self.stored_x
 
-        elif conf.icon_in_systray:
+        elif conf.icon_in_systray or conf.windowed:
             if self.icon_y < desktop.screenGeometry(self).height() / 2 + available_y:
                 self.top = True
             else:
                 self.top = False
             # take systray icon position as reference
             # assuming that a left oriented systray as in GNOME3 will need x = 0
-            if self.icon_x < desktop.screenGeometry(self).width() / 2 + available_x and OS not in NON_LINUX:
-                x = 0
-            else:
-                x = self.icon_x
+            #if self.icon_x < desktop.screenGeometry(self).width() / 2 + available_x and OS not in NON_LINUX:
+            #    x = 0
+            #else:
+            #    x = self.icon_x
+            x = self.icon_x
 
         # get height from tablewidgets
         real_height = self.get_real_height()
@@ -1670,7 +1765,7 @@ class StatusWindow(QWidget):
                     height = real_height
                     y = self.y() + self.height() - height
 
-        elif conf.icon_in_systray:
+        elif conf.icon_in_systray or conf.windowed:
             # when systrayicon resides in uppermost part of current screen extend from top to bottom
             if self.top is True:
                 # when being top y is of course the available one
@@ -1699,11 +1794,11 @@ class StatusWindow(QWidget):
 
         return width, height, x, y
 
+
     def resize_window(self, width, height, x, y):
         """
             resize status window according to its new size
         """
-
         # store position for restoring it when hiding - only if not shown of course
         if self.is_shown is False:
             self.stored_x = self.x()
@@ -1724,6 +1819,7 @@ class StatusWindow(QWidget):
 
         self.setMaximumSize(width, height)
         self.setMinimumSize(width, height)
+
         self.adjustSize()
 
         return True
@@ -1743,12 +1839,12 @@ class StatusWindow(QWidget):
         """
         # avoid race condition when waiting for password dialog
         if 'is_shown' in self.__dict__:
-            if not conf.fullscreen:
+            if not conf.fullscreen and not conf.windowed:
                 self.adjusting_size_lock = True
                 # fully displayed statuswindow
                 if self.is_shown is True:
                     width, height, x, y = self.calculate_size()
-                    self.adjust_dummy_columns()
+                    self.adjust_stretch_columns()
                 else:
                     # statusbar only
                     hint = self.sizeHint()
@@ -1763,9 +1859,11 @@ class StatusWindow(QWidget):
                 self.resize_window(width, height, x, y)
 
                 del(width, height, x, y)
+            else:
+                self.adjust_stretch_columns()
 
     @pyqtSlot()
-    def adjust_dummy_columns(self):
+    def adjust_stretch_columns(self):
         """
             calculate widest width of all server tables to hide dummy column at the widest one
         """
@@ -1780,9 +1878,15 @@ class StatusWindow(QWidget):
         # widest table does not need the dummy column #9
         for server in self.servers_vbox.children():
             if max_width_table == server.table:
-                server.table.setColumnHidden(9, True)
+                ###server.table.setColumnHidden(9, True)
+                # chances are that on fullscreen everything is stretched
+                if conf.fullscreen or conf.windowed:
+                    server.table.header().setStretchLastSection(True)
+                else:
+                    server.table.header().setStretchLastSection(False)
             else:
-                server.table.setColumnHidden(9, False)
+                #server.table.setColumnHidden(9, False)
+                server.table.header().setStretchLastSection(True)
 
         del(max_width, max_width_table)
         return True
@@ -1803,7 +1907,7 @@ class StatusWindow(QWidget):
         """
 
         # check first if popup has to be shown by hovering or clicking
-        if conf.close_details_hover and not conf.fullscreen:
+        if conf.close_details_hover and not conf.fullscreen and not conf.windowed:
             # only hide window if cursor is outside of it
             mouse_x = QCursor.pos().x()
             mouse_y = QCursor.pos().y()
@@ -1813,6 +1917,14 @@ class StatusWindow(QWidget):
                 self.hide_window()
 
             del(mouse_x, mouse_y)
+
+    def closeEvent(self, event):
+        """
+            window close
+        """
+        # check first if popup has to be shown by hovering or clicking
+        if conf.windowed:
+            exit()
 
     def get_real_width(self):
         """
@@ -1858,6 +1970,11 @@ class StatusWindow(QWidget):
             self.hide_window()
             conf.position_x = self.x()
             conf.position_y = self.y()
+        if conf.windowed:
+            conf.position_x = self.x()
+            conf.position_y = self.y()
+            conf.position_width = self.width()
+            conf.position_height = self.height()
 
     @pyqtSlot(str, str)
     def show_message(self, msg_type, message):
@@ -1917,7 +2034,8 @@ class StatusWindow(QWidget):
             experimental workaround for floating-statusbar-only-on-one-virtual-desktop-after-a-while bug
             see https://github.com/HenriWahl/Nagstamon/issues/217
         """
-
+        if conf.windowed:
+            return
         # X11/Linux needs some special treatment to get the statusbar floating on all virtual desktops
         if not OS in NON_LINUX:
             # get all windows...
@@ -1927,11 +2045,11 @@ class StatusWindow(QWidget):
 
         # apparently sometime the floating statusbsr vanishes in the background
         # lets try here to keep it on top - only if not fullscreen
-        if not conf.fullscreen and not platform.system == 'Windows':
+        if not conf.fullscreen and not conf.windowed and not platform.system == 'Windows':
             self.setWindowFlags(WINDOW_FLAGS)
 
         # again and again try to keep that statuswindow on top!
-        if OS == 'Windows' and not conf.fullscreen:
+        if OS == 'Windows' and not conf.fullscreen and not conf.windowed:
             # find out if no context menu is shown and thus would be
             # overlapped by statuswindow
             for vbox in self.servers_vbox.children():
@@ -2630,7 +2748,6 @@ class ServerVBox(QVBoxLayout):
         self.button_history = PushButton_BrowserURL(text='History', parent=parent, server=self.server, url_type='history')
         self.button_edit = Button('Edit', parent=parent)
 
-        #self.stretcher = QSpacerItem(0, 0, QSizePolicy.MinimumExpanding, QSizePolicy.Maximum)
         # use label instead of spacer to be clickable
         self.label_stretcher = ClosingLabel('', parent=parent)
         self.label_stretcher.setSizePolicy(QSizePolicy.MinimumExpanding, QSizePolicy.Expanding)
@@ -2789,7 +2906,7 @@ class ServerVBox(QVBoxLayout):
         """
             call dialogs.server.edit() with server name
         """
-        if not conf.fullscreen:
+        if not conf.fullscreen and not conf.windowed:
             statuswindow.hide_window()
         dialogs.server.edit(server_name=self.server.name)
 
@@ -2897,11 +3014,13 @@ class Model(QAbstractTableModel):
 
         elif role == Qt.ForegroundRole:
             # return(self.data_array[index.row()][COLOR_INDEX['text'][index.column()]])
-            return(self.data_array[index.row()][10])
+            ###return(self.data_array[index.row()][10])
+            return(self.data_array[index.row()][9])
 
         elif role == Qt.BackgroundRole:
             # return(self.data_array[index.row()][COLOR_INDEX['background'][index.column()]])
-            return(self.data_array[index.row()][11])
+            ###return(self.data_array[index.row()][11])
+            return(self.data_array[index.row()][10])
 
         elif role == Qt.FontRole:
             if index.column() == 1:
@@ -2980,6 +3099,7 @@ class TreeView(QTreeView):
         self.setSizePolicy(QSizePolicy.Ignored, QSizePolicy.Expanding)
 
         self.header().setSectionResizeMode(QHeaderView.ResizeToContents)
+        self.header().setStretchLastSection(False)
         self.header().setDefaultAlignment(Qt.AlignLeft)
         self.header().setSortIndicatorShown(True)
 
@@ -3035,7 +3155,7 @@ class TreeView(QTreeView):
 
         # a thread + worker is necessary to get new monitor server data in the background and
         # to refresh the table cell by cell after new data is available
-        self.worker_thread = QThread()
+        self.worker_thread = QThread(self)
         self.worker = self.Worker(server=server, sort_column=self.sort_column, sort_order=self.sort_order)
         self.worker.moveToThread(self.worker_thread)
 
@@ -3125,7 +3245,8 @@ class TreeView(QTreeView):
     def get_real_width(self):
         width = 0
         # avoid the last dummy column to be counted
-        for column in range(len(HEADERS) - 1):
+        #for column in range(len(HEADERS) - 1):
+        for column in range(len(HEADERS)):
             width += self.columnWidth(column)
         return(width)
 
@@ -3322,7 +3443,7 @@ class TreeView(QTreeView):
                                                                  })
 
         # if action wants a closed status window it should be closed now
-        if conf.actions[action].close_popwin and not conf.fullscreen:
+        if conf.actions[action].close_popwin and not conf.fullscreen and not conf.windowed:
             statuswindow.hide_window()
 
     @pyqtSlot()
@@ -3337,7 +3458,7 @@ class TreeView(QTreeView):
             # run decorated method
             method(self)
             # default actions need closed statuswindow to display own dialogs
-            if not conf.fullscreen and\
+            if not conf.fullscreen and not conf.windowed and\
                 not method.__name__ == 'action_recheck' and\
                     not method.__name__ == 'action_archive_event':
                 statuswindow.hide_window()
@@ -3346,7 +3467,7 @@ class TreeView(QTreeView):
     @action_response_decorator
     def action_edit_actions(self):
         # buttons in toparee
-        if not conf.fullscreen:
+        if not conf.fullscreen and not conf.windowed:
             statuswindow.hide_window()
         # open actions tab (#3) of settings dialog
         dialogs.settings.show(tab=3)
@@ -3696,7 +3817,7 @@ class TreeView(QTreeView):
                             if self.data_array[-1][3] != '':
                                 self.info['services_flags_column_needed'] = True
 
-                            self.data_array[-1].append('X')
+                            ###self.data_array[-1].append('X')
 
             # sort data before it gets transmitted to treeview model
             self.sort_data_array(self.sort_column, self.sort_order, False)
@@ -3727,9 +3848,9 @@ class TreeView(QTreeView):
             # fix alternating colors
             for count, row in enumerate(self.data_array):
                 # change text color of sorted rows
-                row[10] = QBRUSHES[count % 2][row[12]]
+                row[9] = QBRUSHES[count % 2][row[11]]
                 # change background color of sorted rows
-                row[11] = QBRUSHES[count % 2][row[13]]
+                row[10] = QBRUSHES[count % 2][row[12]]
 
             # if header was clicked tell model to use new data_array
             if header_clicked:
@@ -4478,7 +4599,8 @@ class Dialog_Settings(Dialog):
         display_mode = str(conf.statusbar_floating) + \
             str(conf.icon_in_systray) + \
             str(conf.fullscreen) + \
-            str(conf.fullscreen_display)
+            str(conf.fullscreen_display) + \
+            str(conf.windowed)
 
         # do all stuff necessary after OK button was clicked
         # put widget values into conf
@@ -4535,9 +4657,6 @@ class Dialog_Settings(Dialog):
         # store configuration
         conf.SaveConfig()
 
-        # stop statuswindow worker
-        # ##statuswindow.worker.running = False
-
         # save configuration
         conf.SaveConfig()
 
@@ -4546,13 +4665,15 @@ class Dialog_Settings(Dialog):
         if display_mode != str(conf.statusbar_floating) + \
                 str(conf.icon_in_systray) + \
                 str(conf.fullscreen) + \
-                str(conf.fullscreen_display):
+                str(conf.fullscreen_display) + \
+                str(conf.windowed):
 
             # increase number of display changes for silly Windows-hides-statusbar-after-display-mode-change problem
             NUMBER_OF_DISPLAY_CHANGES += 1
 
             # stop statuswindow worker
-            # ##statuswindow.worker.running = False
+            #statuswindow.worker.running = False
+            #statuswindow.worker_notification.running = False
 
             # hide window to avoid laggy GUI - better none than laggy
             statuswindow.hide()
@@ -4564,17 +4685,21 @@ class Dialog_Settings(Dialog):
             for server_vbox in statuswindow.servers_vbox.children():
                 server_vbox.table.worker_thread.wait(1000)
 
-            # wait until statuswindow notification worker has finished
-            statuswindow.worker_notification_thread.wait(1000)
-
             # wait until statuswindow worker has finished
-            statuswindow.worker_thread.wait(1000)
+            #statuswindow.worker_thread.wait(1000)
+
+            # wait until statuswindow notification worker has finished
+            #statuswindow.worker_notification_thread.wait(1000)
 
             # kick out ol' statuswindow
-            statuswindow.destroy(True, True)
+            #statuswindow.destroy(True, True)
 
             # create new global one
-            statuswindow = StatusWindow()
+            #statuswindow = StatusWindow()
+            #statuswindow.__init__()
+
+            statuswindow.create_ServerVBoxes()
+            statuswindow.set_mode()
 
             # context menu for systray and statuswindow
             menu = MenuContext()
@@ -6098,7 +6223,7 @@ class CheckVersion(QObject):
                 self.parent = parent
 
             # thread for worker to avoid
-            self.worker_thread = QThread()
+            self.worker_thread = QThread(self)
             self.worker = self.Worker()
 
             # if update check is ready it sends the message to GUI thread
