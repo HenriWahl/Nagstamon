@@ -611,7 +611,7 @@ class MenuContextSystrayicon(MenuContext):
         """
         MenuContext.initialize(self)
         # makes even less sense on OSX
-        if OS != 'Darwin':
+        if OS != 'Darwin' and not statuswindow.status_ok:
             self.action_status = QAction('Show status window', self)
             self.action_status.triggered.connect(statuswindow.show_window)
             self.insertAction(self.action_refresh, self.action_status)

@@ -1,10 +1,10 @@
 nagstamon (2.1-20170810) unstable; urgency=low
   * New upstream
+   - added Kerberos authentification
+   - added increased security by taking TLS seriously
    - added window mode
    - added large OK label for fullscreen and window mode
    - added click-somewhere-to-close-statuswindow mode
-   - added Kerberos authentification
-   - added increased security by taking TLS seriously
    - added monitor type Monitos3
    - added monitor type SNAG-View 3
    - fixes statuswindow garbage when changing mode
