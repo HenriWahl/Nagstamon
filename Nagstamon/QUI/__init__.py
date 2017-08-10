@@ -1276,11 +1276,10 @@ class StatusWindow(QWidget):
             # show statusbar actively
             self.setAttribute(Qt.WA_ShowWithoutActivating, False)
 
-            self.setMinimumSize(400, 300)
-
-            #self.setMinimumSize(conf.position_width, conf.position_height)
+            # some maybe sensible default
+            self.setMinimumSize(500, 300)
             self.setSizePolicy(QSizePolicy.MinimumExpanding, QSizePolicy.MinimumExpanding)
-            #self.setSizePolicy(QSizePolicy.Ignored, QSizePolicy.Ignored)
+
             # default maximum size
             self.setMaximumSize(16777215, 16777215)
 
@@ -1293,8 +1292,6 @@ class StatusWindow(QWidget):
 
             # make sure windows comes up
             self.raise_()
-
-
 
         # store position for showing/hiding statuswindow
         self.stored_x = self.x()
