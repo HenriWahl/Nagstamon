@@ -42,7 +42,7 @@
       </sizepolicy>
      </property>
      <property name="currentIndex">
-      <number>1</number>
+      <number>5</number>
      </property>
      <widget class="QWidget" name="tab_servers">
       <attribute name="title">
@@ -2802,6 +2802,8 @@
   <tabstop>input_radiobutton_icon_in_systray</tabstop>
   <tabstop>input_radiobutton_fullscreen</tabstop>
   <tabstop>input_checkbox_systray_offset_use</tabstop>
+  <tabstop>input_spinbox_systray_offset</tabstop>
+  <tabstop>input_combobox_fullscreen_display</tabstop>
   <tabstop>button_fontchooser</tabstop>
   <tabstop>button_default_font</tabstop>
   <tabstop>input_radiobutton_popup_details_hover</tabstop>
@@ -2817,12 +2819,23 @@
   <tabstop>input_checkbox_filter_all_unreachable_hosts</tabstop>
   <tabstop>input_checkbox_filter_all_flapping_hosts</tabstop>
   <tabstop>input_checkbox_filter_all_critical_services</tabstop>
+  <tabstop>input_checkbox_filter_all_flapping_services</tabstop>
+  <tabstop>input_checkbox_filter_all_unknown_services</tabstop>
+  <tabstop>input_checkbox_filter_all_warning_services</tabstop>
+  <tabstop>input_checkbox_filter_all_information_services</tabstop>
+  <tabstop>input_checkbox_filter_all_average_services</tabstop>
+  <tabstop>input_checkbox_filter_all_disaster_services</tabstop>
+  <tabstop>input_checkbox_filter_all_high_services</tabstop>
   <tabstop>input_checkbox_filter_acknowledged_hosts_services</tabstop>
   <tabstop>input_checkbox_filter_hosts_services_disabled_notifications</tabstop>
   <tabstop>input_checkbox_filter_hosts_services_disabled_checks</tabstop>
   <tabstop>input_checkbox_filter_hosts_services_maintenance</tabstop>
   <tabstop>input_checkbox_filter_services_on_acknowledged_hosts</tabstop>
   <tabstop>input_checkbox_filter_services_on_down_hosts</tabstop>
+  <tabstop>input_checkbox_filter_services_on_hosts_in_maintenance</tabstop>
+  <tabstop>input_checkbox_filter_services_on_unreachable_hosts</tabstop>
+  <tabstop>input_checkbox_filter_hosts_in_soft_state</tabstop>
+  <tabstop>input_checkbox_filter_services_in_soft_state</tabstop>
   <tabstop>input_checkbox_re_host_enabled</tabstop>
   <tabstop>input_lineedit_re_host_pattern</tabstop>
   <tabstop>input_checkbox_re_host_reverse</tabstop>
@@ -2850,6 +2863,10 @@
   <tabstop>input_checkbox_notify_if_unknown</tabstop>
   <tabstop>input_checkbox_notify_if_unreachable</tabstop>
   <tabstop>input_checkbox_notify_if_down</tabstop>
+  <tabstop>input_checkbox_notify_if_information</tabstop>
+  <tabstop>input_checkbox_notify_if_disaster</tabstop>
+  <tabstop>input_checkbox_notify_if_average</tabstop>
+  <tabstop>input_checkbox_notify_if_high</tabstop>
   <tabstop>input_checkbox_notification_flashing</tabstop>
   <tabstop>input_checkbox_notification_desktop</tabstop>
   <tabstop>input_checkbox_notification_sound</tabstop>
@@ -2914,24 +2931,10 @@
   <tabstop>input_lineedit_defaults_downtime_comment</tabstop>
   <tabstop>input_lineedit_defaults_submit_check_result_comment</tabstop>
   <tabstop>tabs</tabstop>
-  <tabstop>input_checkbox_filter_all_high_services</tabstop>
-  <tabstop>input_checkbox_filter_all_disaster_services</tabstop>
-  <tabstop>input_checkbox_filter_all_flapping_services</tabstop>
-  <tabstop>input_checkbox_filter_all_unknown_services</tabstop>
-  <tabstop>input_checkbox_filter_all_warning_services</tabstop>
-  <tabstop>input_checkbox_filter_all_information_services</tabstop>
-  <tabstop>input_checkbox_filter_all_average_services</tabstop>
-  <tabstop>input_checkbox_filter_services_on_hosts_in_maintenance</tabstop>
-  <tabstop>input_checkbox_filter_services_on_unreachable_hosts</tabstop>
-  <tabstop>input_checkbox_filter_hosts_in_soft_state</tabstop>
-  <tabstop>input_checkbox_filter_services_in_soft_state</tabstop>
-  <tabstop>input_checkbox_notify_if_information</tabstop>
-  <tabstop>input_checkbox_notify_if_disaster</tabstop>
-  <tabstop>input_checkbox_notify_if_average</tabstop>
-  <tabstop>input_checkbox_notify_if_high</tabstop>
   <tabstop>input_checkbox_show_grid</tabstop>
   <tabstop>input_checkbox_grid_use_custom_intensity</tabstop>
   <tabstop>input_slider_grid_alternation_intensity</tabstop>
+  <tabstop>input_radiobutton_windowed</tabstop>
  </tabstops>
  <resources/>
  <connections>
