@@ -1664,14 +1664,17 @@ class StatusWindow(QWidget):
             icon_x = systrayicon.geometry().x()
             icon_y = systrayicon.geometry().y()
 
-            # strangely enough on KDE the systray icon geometry gives back 0, 0 as coordinates
-            # also at Ubuntu Unity 16.04
-            if icon_x == 0 and self.icon_x == 0:
-                self.icon_x = QCursor.pos().x()
             if OS in NON_LINUX:
                 if self.icon_x == 0:
                     self.icon_x = QCursor.pos().x()
                 elif icon_x != 0:
+                    self.icon_x = icon_x
+            else:
+                # strangely enough on KDE the systray icon geometry gives back 0, 0 as coordinates
+                # also at Ubuntu Unity 16.04
+                if icon_x == 0 and self.icon_x == 0:
+                    self.icon_x = QCursor.pos().x()
+                else:
                     self.icon_x = icon_x
 
             if icon_y == 0 and self.icon_y == 0:
