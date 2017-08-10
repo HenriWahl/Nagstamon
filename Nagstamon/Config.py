@@ -84,6 +84,15 @@ CONFIG_STRINGS = ['custom_browser',
 # needed when OS-specific decisions have to be made, mostly Linux/non-Linux
 NON_LINUX = ('Darwin', 'Windows')
 
+# invalid characters in path names of config files have to be replaced
+INVALID_CHARACTERS = { '\\': '_backslash_',
+                       '/': '_slash_',
+                       ':': '_colon_',
+                       '*': '_aterisk_',
+                       '?': '_question_mark_',
+                       '"': '_double_quotes_',
+                       '<': '_less_than_',
+                       '>': '_greater_than_'}
 
 class AppInfo(object):
 
@@ -593,7 +602,13 @@ class Config(object):
             # open, save and close config_server file
             if not os.path.exists(self.configdir + os.sep + settingsdir):
                 os.makedirs(self.configdir + os.sep + settingsdir)
-            f = open(os.path.normpath(self.configdir + os.sep + settingsdir + os.sep + setting + "_" + s + ".conf"), "w")
+
+            # replace invalid characters by their literal replacements
+            s_clean = s
+            for c in INVALID_CHARACTERS:
+                s_clean = s_clean.replace(c, INVALID_CHARACTERS[c])
+
+            f = open(os.path.normpath(self.configdir + os.sep + settingsdir + os.sep + setting + "_" + s_clean + ".conf"), "w")
             config.write(f)
             f.close()
 
