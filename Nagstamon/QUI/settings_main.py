@@ -11,7 +11,7 @@ from PyQt5 import QtCore, QtGui, QtWidgets
 class Ui_settings_main(object):
     def setupUi(self, settings_main):
         settings_main.setObjectName("settings_main")
-        settings_main.resize(620, 1069)
+        settings_main.resize(620, 1109)
         sizePolicy = QtWidgets.QSizePolicy(QtWidgets.QSizePolicy.Minimum, QtWidgets.QSizePolicy.Minimum)
         sizePolicy.setHorizontalStretch(0)
         sizePolicy.setVerticalStretch(0)
@@ -1067,7 +1067,7 @@ class Ui_settings_main(object):
         self.verticalLayout.addWidget(self.button_box)
 
         self.retranslateUi(settings_main)
-        self.tabs.setCurrentIndex(5)
+        self.tabs.setCurrentIndex(4)
         self.button_box.accepted.connect(settings_main.accept)
         self.button_box.rejected.connect(settings_main.reject)
         QtCore.QMetaObject.connectSlotsByName(settings_main)
@@ -1337,15 +1337,90 @@ class Ui_settings_main(object):
         self.input_radiobutton_notification_custom_sound.setText(_translate("settings_main", "Use custom sounds"))
         self.input_checkbox_notification_actions.setText(_translate("settings_main", "Enable notification actions"))
         self.notification_actions_groupbox.setTitle(_translate("settings_main", "Notification actions:"))
+        self.input_lineedit_notification_action_ok_string.setToolTip(_translate("settings_main", "Available variables for action strings:\n"
+"\n"
+"$HOST$ - host as in monitor\n"
+"$SERVICE$ - service as in monitor\n"
+"$MONITOR$ - monitor address\n"
+"$MONITOR-CGI$ - monitor CGI address\n"
+"$ADDRESS$ - address of host, delivered from connection method\n"
+"$USERNAME$ - username on monitor\n"
+"$STATUS-INFO$ - status information for host or service\n"
+"$PASSWORD$ - username\'s password on monitor\n"
+"$COMMENT-ACK$ - default acknowledge comment\n"
+"$COMMENT-DOWN$ - default downtime comment\n"
+"$COMMENT-SUBMIT$ - default submit check result comment\n"
+"\n"
+"$TRANSID$ - only useful for Check_MK as _transid=$TRANSID$"))
         self.input_checkbox_notification_action_critical.setText(_translate("settings_main", "CRITICAL"))
         self.input_checkbox_notification_action_down.setText(_translate("settings_main", "DOWN"))
         self.input_checkbox_notification_action_ok.setText(_translate("settings_main", "OK"))
         self.input_checkbox_notification_action_warning.setText(_translate("settings_main", "WARNING"))
+        self.input_lineedit_notification_action_down_string.setToolTip(_translate("settings_main", "Available variables for action strings:\n"
+"\n"
+"$HOST$ - host as in monitor\n"
+"$SERVICE$ - service as in monitor\n"
+"$MONITOR$ - monitor address\n"
+"$MONITOR-CGI$ - monitor CGI address\n"
+"$ADDRESS$ - address of host, delivered from connection method\n"
+"$USERNAME$ - username on monitor\n"
+"$STATUS-INFO$ - status information for host or service\n"
+"$PASSWORD$ - username\'s password on monitor\n"
+"$COMMENT-ACK$ - default acknowledge comment\n"
+"$COMMENT-DOWN$ - default downtime comment\n"
+"$COMMENT-SUBMIT$ - default submit check result comment\n"
+"\n"
+"$TRANSID$ - only useful for Check_MK as _transid=$TRANSID$"))
         self.input_checkbox_notification_custom_action.setText(_translate("settings_main", "Use custom notification action"))
         self.notification_custom_action_groupbox.setTitle(_translate("settings_main", "Custom notification action:"))
         self.label_notification_custom_action_string.setText(_translate("settings_main", "Action string:"))
         self.input_checkbox_notification_custom_action_single.setText(_translate("settings_main", "Run one single action for every event"))
         self.label_notification_custom_action_separator.setText(_translate("settings_main", "Event separator:"))
+        self.input_lineedit_notification_custom_action_string.setToolTip(_translate("settings_main", "Available variables for action strings:\n"
+"\n"
+"$HOST$ - host as in monitor\n"
+"$SERVICE$ - service as in monitor\n"
+"$MONITOR$ - monitor address\n"
+"$MONITOR-CGI$ - monitor CGI address\n"
+"$ADDRESS$ - address of host, delivered from connection method\n"
+"$USERNAME$ - username on monitor\n"
+"$STATUS-INFO$ - status information for host or service\n"
+"$PASSWORD$ - username\'s password on monitor\n"
+"$COMMENT-ACK$ - default acknowledge comment\n"
+"$COMMENT-DOWN$ - default downtime comment\n"
+"$COMMENT-SUBMIT$ - default submit check result comment\n"
+"\n"
+"$TRANSID$ - only useful for Check_MK as _transid=$TRANSID$"))
+        self.input_lineedit_notification_action_critical_string.setToolTip(_translate("settings_main", "Available variables for action strings:\n"
+"\n"
+"$HOST$ - host as in monitor\n"
+"$SERVICE$ - service as in monitor\n"
+"$MONITOR$ - monitor address\n"
+"$MONITOR-CGI$ - monitor CGI address\n"
+"$ADDRESS$ - address of host, delivered from connection method\n"
+"$USERNAME$ - username on monitor\n"
+"$STATUS-INFO$ - status information for host or service\n"
+"$PASSWORD$ - username\'s password on monitor\n"
+"$COMMENT-ACK$ - default acknowledge comment\n"
+"$COMMENT-DOWN$ - default downtime comment\n"
+"$COMMENT-SUBMIT$ - default submit check result comment\n"
+"\n"
+"$TRANSID$ - only useful for Check_MK as _transid=$TRANSID$"))
+        self.input_lineedit_notification_action_warning_string.setToolTip(_translate("settings_main", "Available variables for action strings:\n"
+"\n"
+"$HOST$ - host as in monitor\n"
+"$SERVICE$ - service as in monitor\n"
+"$MONITOR$ - monitor address\n"
+"$MONITOR-CGI$ - monitor CGI address\n"
+"$ADDRESS$ - address of host, delivered from connection method\n"
+"$USERNAME$ - username on monitor\n"
+"$STATUS-INFO$ - status information for host or service\n"
+"$PASSWORD$ - username\'s password on monitor\n"
+"$COMMENT-ACK$ - default acknowledge comment\n"
+"$COMMENT-DOWN$ - default downtime comment\n"
+"$COMMENT-SUBMIT$ - default submit check result comment\n"
+"\n"
+"$TRANSID$ - only useful for Check_MK as _transid=$TRANSID$"))
         self.tabs.setTabText(self.tabs.indexOf(self.tab_notifications), _translate("settings_main", "Notifications"))
         self.label_colors.setText(_translate("settings_main", "Set colors for text and background of status information:"))
         self.states_groupbox.setTitle(_translate("settings_main", "Status:"))

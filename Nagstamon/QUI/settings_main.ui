@@ -8,7 +8,7 @@
     <x>0</x>
     <y>0</y>
     <width>620</width>
-    <height>1069</height>
+    <height>1109</height>
    </rect>
   </property>
   <property name="sizePolicy">
@@ -42,7 +42,7 @@
       </sizepolicy>
      </property>
      <property name="currentIndex">
-      <number>5</number>
+      <number>4</number>
      </property>
      <widget class="QWidget" name="tab_servers">
       <attribute name="title">
@@ -1651,7 +1651,25 @@
               <number>5</number>
              </property>
              <item row="3" column="2">
-              <widget class="QLineEdit" name="input_lineedit_notification_action_ok_string"/>
+              <widget class="QLineEdit" name="input_lineedit_notification_action_ok_string">
+               <property name="toolTip">
+                <string>Available variables for action strings:
+
+$HOST$ - host as in monitor
+$SERVICE$ - service as in monitor
+$MONITOR$ - monitor address
+$MONITOR-CGI$ - monitor CGI address
+$ADDRESS$ - address of host, delivered from connection method
+$USERNAME$ - username on monitor
+$STATUS-INFO$ - status information for host or service
+$PASSWORD$ - username's password on monitor
+$COMMENT-ACK$ - default acknowledge comment
+$COMMENT-DOWN$ - default downtime comment
+$COMMENT-SUBMIT$ - default submit check result comment
+
+$TRANSID$ - only useful for Check_MK as _transid=$TRANSID$</string>
+               </property>
+              </widget>
              </item>
              <item row="1" column="0">
               <widget class="QCheckBox" name="input_checkbox_notification_action_critical">
@@ -1682,7 +1700,25 @@
               </widget>
              </item>
              <item row="2" column="2">
-              <widget class="QLineEdit" name="input_lineedit_notification_action_down_string"/>
+              <widget class="QLineEdit" name="input_lineedit_notification_action_down_string">
+               <property name="toolTip">
+                <string>Available variables for action strings:
+
+$HOST$ - host as in monitor
+$SERVICE$ - service as in monitor
+$MONITOR$ - monitor address
+$MONITOR-CGI$ - monitor CGI address
+$ADDRESS$ - address of host, delivered from connection method
+$USERNAME$ - username on monitor
+$STATUS-INFO$ - status information for host or service
+$PASSWORD$ - username's password on monitor
+$COMMENT-ACK$ - default acknowledge comment
+$COMMENT-DOWN$ - default downtime comment
+$COMMENT-SUBMIT$ - default submit check result comment
+
+$TRANSID$ - only useful for Check_MK as _transid=$TRANSID$</string>
+               </property>
+              </widget>
              </item>
              <item row="4" column="0" colspan="3">
               <widget class="QCheckBox" name="input_checkbox_notification_custom_action">
@@ -1737,16 +1773,70 @@
                  <widget class="QLineEdit" name="input_lineedit_notification_custom_action_separator"/>
                 </item>
                 <item row="1" column="1">
-                 <widget class="QLineEdit" name="input_lineedit_notification_custom_action_string"/>
+                 <widget class="QLineEdit" name="input_lineedit_notification_custom_action_string">
+                  <property name="toolTip">
+                   <string>Available variables for action strings:
+
+$HOST$ - host as in monitor
+$SERVICE$ - service as in monitor
+$MONITOR$ - monitor address
+$MONITOR-CGI$ - monitor CGI address
+$ADDRESS$ - address of host, delivered from connection method
+$USERNAME$ - username on monitor
+$STATUS-INFO$ - status information for host or service
+$PASSWORD$ - username's password on monitor
+$COMMENT-ACK$ - default acknowledge comment
+$COMMENT-DOWN$ - default downtime comment
+$COMMENT-SUBMIT$ - default submit check result comment
+
+$TRANSID$ - only useful for Check_MK as _transid=$TRANSID$</string>
+                  </property>
+                 </widget>
                 </item>
                </layout>
               </widget>
              </item>
              <item row="1" column="2">
-              <widget class="QLineEdit" name="input_lineedit_notification_action_critical_string"/>
+              <widget class="QLineEdit" name="input_lineedit_notification_action_critical_string">
+               <property name="toolTip">
+                <string>Available variables for action strings:
+
+$HOST$ - host as in monitor
+$SERVICE$ - service as in monitor
+$MONITOR$ - monitor address
+$MONITOR-CGI$ - monitor CGI address
+$ADDRESS$ - address of host, delivered from connection method
+$USERNAME$ - username on monitor
+$STATUS-INFO$ - status information for host or service
+$PASSWORD$ - username's password on monitor
+$COMMENT-ACK$ - default acknowledge comment
+$COMMENT-DOWN$ - default downtime comment
+$COMMENT-SUBMIT$ - default submit check result comment
+
+$TRANSID$ - only useful for Check_MK as _transid=$TRANSID$</string>
+               </property>
+              </widget>
              </item>
              <item row="0" column="2">
-              <widget class="QLineEdit" name="input_lineedit_notification_action_warning_string"/>
+              <widget class="QLineEdit" name="input_lineedit_notification_action_warning_string">
+               <property name="toolTip">
+                <string>Available variables for action strings:
+
+$HOST$ - host as in monitor
+$SERVICE$ - service as in monitor
+$MONITOR$ - monitor address
+$MONITOR-CGI$ - monitor CGI address
+$ADDRESS$ - address of host, delivered from connection method
+$USERNAME$ - username on monitor
+$STATUS-INFO$ - status information for host or service
+$PASSWORD$ - username's password on monitor
+$COMMENT-ACK$ - default acknowledge comment
+$COMMENT-DOWN$ - default downtime comment
+$COMMENT-SUBMIT$ - default submit check result comment
+
+$TRANSID$ - only useful for Check_MK as _transid=$TRANSID$</string>
+               </property>
+              </widget>
              </item>
             </layout>
            </widget>

@@ -1882,6 +1882,8 @@ class StatusWindow(QWidget):
                 # chances are that on fullscreen everything is stretched
                 if conf.fullscreen or conf.windowed:
                     server.table.header().setStretchLastSection(True)
+                elif len(self.servers_vbox.children()) == 1:
+                    server.table.header().setStretchLastSection(True)
                 else:
                     server.table.header().setStretchLastSection(False)
             else:
@@ -3099,7 +3101,8 @@ class TreeView(QTreeView):
         self.setSizePolicy(QSizePolicy.Ignored, QSizePolicy.Expanding)
 
         self.header().setSectionResizeMode(QHeaderView.ResizeToContents)
-        self.header().setStretchLastSection(False)
+        ###self.header().setStretchLastSection(False)
+        self.header().setStretchLastSection(True)
         self.header().setDefaultAlignment(Qt.AlignLeft)
         self.header().setSortIndicatorShown(True)
 
