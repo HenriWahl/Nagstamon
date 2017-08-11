@@ -1882,6 +1882,7 @@ class StatusWindow(QWidget):
                 # chances are that on fullscreen everything is stretched
                 if conf.fullscreen or conf.windowed:
                     server.table.header().setStretchLastSection(True)
+                # when only one monitor is used its info should stretch
                 elif len(self.servers_vbox.children()) == 1:
                     server.table.header().setStretchLastSection(True)
                 else:
