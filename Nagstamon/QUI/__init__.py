@@ -161,9 +161,9 @@ HEADERS = OrderedDict([('host', {'header': 'Host',
                        ('attempt', {'header': 'Attempt',
                                     'column': 7}),
                        ('status_information', {'header': 'Status Information',
-                                               'column': 8}),])
-                       #('dummy_column', {'header': '',
-                       #                  'column': 8})])
+                                               'column': 8}),
+                       ('dummy_column', {'header': '',
+                                         'column': 8})])
 
 # various headers-key-columns variations needed in different parts
 HEADERS_HEADERS = list()
@@ -198,8 +198,8 @@ SORT_COLUMNS_INDEX = {0: 0,
                       5: 5,
                       6: 6,
                       7: 7,
-                      8: 8,}
-                      ###9: 8}
+                      8: 8,
+                      9: 8}
 
 # space used in LayoutBoxes
 SPACE = 10
@@ -1088,13 +1088,6 @@ class StatusWindow(QWidget):
         # start with priority 0 = lowest
         self.worker_notification_thread.start(0)
 
-        # create vbox for each enabled server
-        ###for server in servers.values():
-        ###   if server.enabled:
-        ###        self.servers_vbox.addLayout(self.create_ServerVBox(server))
-        ###
-        ###self.sort_ServerVBoxes()
-
         self.create_ServerVBoxes()
 
         self.servers_scrollarea_widget.setLayout(self.servers_vbox)
@@ -1452,9 +1445,6 @@ class StatusWindow(QWidget):
             if icon_y == 0:
                 icon_y = QCursor.pos().y()
 
-            # move into direction of systray - where the cursor hangs around too
-            ###self.move(icon_x, icon_y)
-
             # get available desktop specs
             available_width = desktop.availableGeometry(self).width()
             available_height = desktop.availableGeometry(self).height()
@@ -1540,7 +1530,7 @@ class StatusWindow(QWidget):
                         self.set_shown()
 
                     # avoid horizontally scrollable tables
-                    self.adjust_stretch_columns()
+                    self.adjust_dummy_columns()
 
                     self.show()
 
@@ -1606,8 +1596,6 @@ class StatusWindow(QWidget):
 
                     if conf.icon_in_systray:
                         self.close()
-
-                    ###self.move(self.stored_x, self.stored_y)
 
                     # switch off
                     self.is_shown = False
@@ -1782,7 +1770,6 @@ class StatusWindow(QWidget):
                     # simply take the available max height if there is no more screen real estate
                     # possible because systrayicon resides aside from available space, in fact cutting it
                     height = available_height
-                    ###y = available_y
                     y = available_height - height
                 else:
                     if available_height < real_height:
@@ -1844,7 +1831,7 @@ class StatusWindow(QWidget):
                 # fully displayed statuswindow
                 if self.is_shown is True:
                     width, height, x, y = self.calculate_size()
-                    self.adjust_stretch_columns()
+                    self.adjust_dummy_columns()
                 else:
                     # statusbar only
                     hint = self.sizeHint()
@@ -1860,10 +1847,10 @@ class StatusWindow(QWidget):
 
                 del(width, height, x, y)
             else:
-                self.adjust_stretch_columns()
+                self.adjust_dummy_columns()
 
     @pyqtSlot()
-    def adjust_stretch_columns(self):
+    def adjust_dummy_columns(self):
         """
             calculate widest width of all server tables to hide dummy column at the widest one
         """
@@ -1878,21 +1865,13 @@ class StatusWindow(QWidget):
         # widest table does not need the dummy column #9
         for server in self.servers_vbox.children():
             if max_width_table == server.table:
-                ###server.table.setColumnHidden(9, True)
-                # chances are that on fullscreen everything is stretched
-                if conf.fullscreen or conf.windowed:
-                    server.table.header().setStretchLastSection(True)
-                # when only one monitor is used its info should stretch
-                elif len(self.servers_vbox.children()) == 1:
-                    server.table.header().setStretchLastSection(True)
-                else:
-                    server.table.header().setStretchLastSection(False)
+                server.table.setColumnHidden(9, True)
             else:
-                #server.table.setColumnHidden(9, False)
-                server.table.header().setStretchLastSection(True)
+                server.table.setColumnHidden(9, False)
 
         del(max_width, max_width_table)
         return True
+
 
     @pyqtSlot()
     def store_position(self):
@@ -2066,10 +2045,6 @@ class StatusWindow(QWidget):
         """
            run a thread for example for debugging
         """
-
-        # used by DialogSettings.ok() to tell debug loop it should start
-        # ###start_debug_loop = pyqtSignal()
-
         def __init__(self):
             QObject.__init__(self)
             # flag to decide if thread has to run or to be stopped
@@ -3017,13 +2992,11 @@ class Model(QAbstractTableModel):
 
         elif role == Qt.ForegroundRole:
             # return(self.data_array[index.row()][COLOR_INDEX['text'][index.column()]])
-            ###return(self.data_array[index.row()][10])
-            return(self.data_array[index.row()][9])
+            return(self.data_array[index.row()][10])
 
         elif role == Qt.BackgroundRole:
             # return(self.data_array[index.row()][COLOR_INDEX['background'][index.column()]])
-            ###return(self.data_array[index.row()][11])
-            return(self.data_array[index.row()][10])
+            return(self.data_array[index.row()][11])
 
         elif role == Qt.FontRole:
             if index.column() == 1:
@@ -3102,8 +3075,6 @@ class TreeView(QTreeView):
         self.setSizePolicy(QSizePolicy.Ignored, QSizePolicy.Expanding)
 
         self.header().setSectionResizeMode(QHeaderView.ResizeToContents)
-        ###self.header().setStretchLastSection(False)
-        self.header().setStretchLastSection(True)
         self.header().setDefaultAlignment(Qt.AlignLeft)
         self.header().setSortIndicatorShown(True)
 
@@ -3249,8 +3220,7 @@ class TreeView(QTreeView):
     def get_real_width(self):
         width = 0
         # avoid the last dummy column to be counted
-        #for column in range(len(HEADERS) - 1):
-        for column in range(len(HEADERS)):
+        for column in range(len(HEADERS) - 1):
             width += self.columnWidth(column)
         return(width)
 
@@ -3821,7 +3791,7 @@ class TreeView(QTreeView):
                             if self.data_array[-1][3] != '':
                                 self.info['services_flags_column_needed'] = True
 
-                            ###self.data_array[-1].append('X')
+                            self.data_array[-1].append('X')
 
             # sort data before it gets transmitted to treeview model
             self.sort_data_array(self.sort_column, self.sort_order, False)
@@ -3852,9 +3822,9 @@ class TreeView(QTreeView):
             # fix alternating colors
             for count, row in enumerate(self.data_array):
                 # change text color of sorted rows
-                row[9] = QBRUSHES[count % 2][row[11]]
-                # change background color of sorted rows
                 row[10] = QBRUSHES[count % 2][row[12]]
+                # change background color of sorted rows
+                row[11] = QBRUSHES[count % 2][row[13]]
 
             # if header was clicked tell model to use new data_array
             if header_clicked:
