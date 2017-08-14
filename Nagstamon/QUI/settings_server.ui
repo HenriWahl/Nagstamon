@@ -419,6 +419,26 @@
         </property>
        </widget>
       </item>
+      <item row="15" column="0">
+       <widget class="QLabel" name="label_monitor_site">
+        <property name="sizePolicy">
+         <sizepolicy hsizetype="Minimum" vsizetype="Preferred">
+          <horstretch>0</horstretch>
+          <verstretch>0</verstretch>
+         </sizepolicy>
+        </property>
+        <property name="text">
+         <string>Monitor Site:</string>
+        </property>
+       </widget>
+      </item>
+      <item row="15" column="2" colspan="2">
+       <widget class="QLineEdit" name="input_lineedit_monitor_site">
+        <property name="text">
+         <string>Site 1</string>
+        </property>
+       </widget>
+      </item>
       <item row="9" column="0">
        <widget class="QLabel" name="label_host_filter">
         <property name="sizePolicy">
@@ -470,6 +490,13 @@
         </property>
         <property name="text">
          <string>Service filter:</string>
+        </property>
+       </widget>
+      </item>
+      <item row="10" column="2" colspan="2">
+       <widget class="QLineEdit" name="input_lineedit_service_filter">
+        <property name="text">
+         <string/>
         </property>
        </widget>
       </item>
