@@ -1,4 +1,4 @@
-nagstamon (2.1-20170811) unstable; urgency=low
+nagstamon (2.1-20170815) unstable; urgency=low
   * New upstream
    - added Kerberos authentification
    - added increased security by taking TLS seriously
@@ -7,6 +7,7 @@ nagstamon (2.1-20170811) unstable; urgency=low
    - added click-somewhere-to-close-statuswindow mode
    - added monitor type Monitos3
    - added monitor type SNAG-View 3
+   - added monitor type Sensu
    - fixes statuswindow garbage when changing mode
    - fixed filename bug
    - fixed check for .Xauthority file
