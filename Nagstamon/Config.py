@@ -463,7 +463,7 @@ class Config(object):
                         config.read(self.configdir + os.sep + settingsdir + os.sep + f)
 
                         # create object for every setting
-                        name = config.sections()[0].lstrip(setting + '_')
+                        name = config.sections()[0].replace(setting + '_', '', 1)
 
                         settings[name] = globals()[configobj]()
 
