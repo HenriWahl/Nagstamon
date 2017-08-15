@@ -78,7 +78,8 @@ CONFIG_STRINGS = ['custom_browser',
                   'proxy_username',
                   'proxy_password',
                   'autologin_key',
-                  'custom_cert_ca_file'
+                  'custom_cert_ca_file',
+                  'monitor_site'
                   ]
 
 # needed when OS-specific decisions have to be made, mostly Linux/non-Linux
@@ -868,6 +869,8 @@ class Server(object):
         self.host_filter = 'state !=0'
         self.service_filter = 'state !=0 or host.state != 0'
 
+        # Sensu/Uchiwa/??? Datacenter/Site config
+        self.monitor_site = 'Site 1'
 
 class Action(object):
 

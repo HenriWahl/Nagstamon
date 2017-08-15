@@ -176,6 +176,9 @@ class GenericServer(object):
         self.host_filter = 'state !=0'
         self.service_filter = 'state !=0 or host.state != 0'
 
+        # Sensu/Uchiwa/??? Datacenter/Site config
+        self.monitor_site = 'Site 1'
+
     def init_config(self):
         '''
             set URLs for CGI - they are static and there is no need to set them with every cycle
