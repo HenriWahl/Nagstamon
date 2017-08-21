@@ -1915,7 +1915,7 @@ class StatusWindow(QWidget):
         width = 0
         for server in self.servers_vbox.children():
             # if table is wider than window adjust with to table
-            if server.table.get_real_width() > width:
+            if server.table.isVisible() and server.table.get_real_width() > width:
                 width = server.table.get_real_width()
 
             # if header in server vbox is wider than width adjust the latter
