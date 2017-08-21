@@ -1865,11 +1865,14 @@ class StatusWindow(QWidget):
         # widest table does not need the dummy column #9
         for server in self.servers_vbox.children():
             if max_width_table == server.table:
+                # hide dummy column as here is the most stretched table
                 server.table.setColumnHidden(9, True)
-                server.table.header().setStretchLastSection(False)
+
+                #server.table.header().setStretchLastSection(True)
             else:
+                # show dummy column because some other table is wider
                 server.table.setColumnHidden(9, False)
-                server.table.header().setStretchLastSection(True)
+                #server.table.header().setStretchLastSection(True)
         del(max_width, max_width_table)
         return True
 
@@ -3078,6 +3081,7 @@ class TreeView(QTreeView):
         self.header().setSectionResizeMode(QHeaderView.ResizeToContents)
         self.header().setDefaultAlignment(Qt.AlignLeft)
         self.header().setSortIndicatorShown(True)
+        self.header().setStretchLastSection(True)
 
         try:
             self.header().setSortIndicator(sort_column, SORT_ORDER[self.sort_order])
