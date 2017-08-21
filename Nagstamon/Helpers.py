@@ -226,7 +226,11 @@ def MachineSortableDate(raw):
         # split components of duration into dictionary
         for c in raw.strip().replace('  ', ' ').split(' '):
             number, period = c[0:-1], c[-1]
-            d[period] = int(number)
+            # attempt to be more robust in case of https://github.com/HenriWahl/Nagstamon/issues/405
+            try:
+                d[period] = int(number)
+            except:
+                d[period] = 0
             del number, period
 
     # convert collected duration data components into seconds for being comparable
