@@ -1866,9 +1866,10 @@ class StatusWindow(QWidget):
         for server in self.servers_vbox.children():
             if max_width_table == server.table:
                 server.table.setColumnHidden(9, True)
+                server.table.header().setStretchLastSection(False)
             else:
                 server.table.setColumnHidden(9, False)
-
+                server.table.header().setStretchLastSection(True)
         del(max_width, max_width_table)
         return True
 
