@@ -78,12 +78,22 @@ CONFIG_STRINGS = ['custom_browser',
                   'proxy_username',
                   'proxy_password',
                   'autologin_key',
-                  'custom_cert_ca_file'
+                  'custom_cert_ca_file',
+                  'monitor_site'
                   ]
 
 # needed when OS-specific decisions have to be made, mostly Linux/non-Linux
 NON_LINUX = ('Darwin', 'Windows')
 
+# invalid characters in path names of config files have to be replaced
+INVALID_CHARACTERS = { '\\': '_backslash_',
+                       '/': '_slash_',
+                       ':': '_colon_',
+                       '*': '_aterisk_',
+                       '?': '_question_mark_',
+                       '"': '_double_quotes_',
+                       '<': '_less_than_',
+                       '>': '_greater_than_'}
 
 class AppInfo(object):
 
@@ -91,7 +101,7 @@ class AppInfo(object):
         contains app information previously located in GUI.py
     """
     NAME = 'Nagstamon'
-    VERSION = '2.1-20170809'
+    VERSION = '2.1-20170822'
     WEBSITE = 'https://nagstamon.ifw-dresden.de'
     COPYRIGHT = '©2008-2017 Henri Wahl et al.'
     COMMENTS = 'Nagios status monitor for your desktop'
@@ -453,7 +463,8 @@ class Config(object):
                         config.read(self.configdir + os.sep + settingsdir + os.sep + f)
 
                         # create object for every setting
-                        name = f.split('_', 1)[1].rpartition('.')[0]
+                        name = config.sections()[0].replace(setting + '_', '', 1)
+
                         settings[name] = globals()[configobj]()
 
                         # go through all items of the server
@@ -592,7 +603,13 @@ class Config(object):
             # open, save and close config_server file
             if not os.path.exists(self.configdir + os.sep + settingsdir):
                 os.makedirs(self.configdir + os.sep + settingsdir)
-            f = open(os.path.normpath(self.configdir + os.sep + settingsdir + os.sep + setting + "_" + s + ".conf"), "w")
+
+            # replace invalid characters by their literal replacements
+            s_clean = s
+            for c in INVALID_CHARACTERS:
+                s_clean = s_clean.replace(c, INVALID_CHARACTERS[c])
+
+            f = open(os.path.normpath(self.configdir + os.sep + settingsdir + os.sep + setting + "_" + s_clean + ".conf"), "w")
             config.write(f)
             f.close()
 
@@ -852,6 +869,8 @@ class Server(object):
         self.host_filter = 'state !=0'
         self.service_filter = 'state !=0 or host.state != 0'
 
+        # Sensu/Uchiwa/??? Datacenter/Site config
+        self.monitor_site = 'Site 1'
 
 class Action(object):
 

@@ -176,6 +176,9 @@ class GenericServer(object):
         self.host_filter = 'state !=0'
         self.service_filter = 'state !=0 or host.state != 0'
 
+        # Sensu/Uchiwa/??? Datacenter/Site config
+        self.monitor_site = 'Site 1'
+
     def init_config(self):
         '''
             set URLs for CGI - they are static and there is no need to set them with every cycle
@@ -589,7 +592,7 @@ class GenericServer(object):
                                 if len(tds[4](text=not_empty)) == 0:
                                     n['status_information'] = ''
                                 else:
-                                    n['status_information'] = str(tds[4].text).replace('\n', ' ').strip()
+                                    n['status_information'] = str(tds[4].text).replace('\n', ' ').replace('\t', ' ').strip()
                                 # attempts are not shown in case of hosts so it defaults to 'n/a'
                                 n['attempt'] = 'n/a'
                             else:
@@ -601,7 +604,7 @@ class GenericServer(object):
                                 if len(tds[5](text=not_empty)) == 0:
                                     n['status_information'] = ''
                                 else:
-                                    n['status_information'] = str(tds[5].text).replace('\n', ' ').strip()
+                                    n['status_information'] = str(tds[5].text).replace('\n', ' ').replace('\t', ' ').strip()
                             # status flags
                             n['passiveonly'] = False
                             n['notifications_disabled'] = False
@@ -715,7 +718,7 @@ class GenericServer(object):
                             if len(tds[6](text=not_empty)) == 0:
                                 n['status_information'] = ''
                             else:
-                                n['status_information'] = str(tds[6].text).replace('\n',  '').strip()
+                                n['status_information'] = str(tds[6].text).replace('\n', ' ').replace('\t', ' ').strip()
                             # status flags
                             n['passiveonly'] = False
                             n['notifications_disabled'] = False
@@ -1357,10 +1360,8 @@ class GenericServer(object):
                     # most requests come without multipart/form-data
                     if multipart is False:
                         if cgi_data is None:
-                            # response = self.session.get(url, timeout=30)
                             response = self.session.get(url, timeout=self.timeout)
                         else:
-                            # response = self.session.post(url, data=cgi_data, timeout=30)
                             response = self.session.post(url, data=cgi_data, timeout=self.timeout)
                     else:
                         # Check_MK and Opsview need multipart/form-data encoding
