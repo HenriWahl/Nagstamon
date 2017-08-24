@@ -2677,7 +2677,7 @@ class ServerStatusLabel(ClosingLabel):
             self.setText(' {0} '.format(text))
             self.setToolTip('')
         else:
-            # set new text to first word of tect, delegate full text to tooltip
+            # set new text to first word of text, delegate full text to tooltip
             self.setText(text.split(' ')[0])
             self.setToolTip(text)
 
@@ -3700,9 +3700,13 @@ class TreeView(QTreeView):
                     elif self.server.status_code in self.server.STATUS_CODES_NO_AUTH or\
                             self.server.refresh_authentication:
                         self.change_label_status.emit('Authentication problem', 'critical')
+                    elif self.server.status_code == 503:
+                        self.change_label_status.emit('Service unavailable', 'error')
                     else:
                         # kick out line breaks to avoid broken status window
-                        self.change_label_status.emit(self.server.status_description.replace('\n', ''), 'unknown')
+                        if self.server.status_description == '':
+                            self.server.status_description = 'Unknown error'
+                        self.change_label_status.emit(self.server.status_description.replace('\n', ''), 'error')
 
                     # set server error flag, needed for error label in statusbar
                     self.server.has_error = True
