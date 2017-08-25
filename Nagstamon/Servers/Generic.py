@@ -1419,12 +1419,12 @@ class GenericServer(object):
 
             # objectified HTML
             if giveback == 'obj':
-                yummysoup = BeautifulSoup(response.text, 'html.parser')
+                yummysoup = BeautifulSoup(response.text, 'lxml')
                 return Result(result=yummysoup, status_code=response.status_code)
 
             # objectified generic XML, valid at least for Opsview and Centreon
             elif giveback == 'xml':
-                xmlobj = BeautifulSoup(response.text, 'html.parser')
+                xmlobj = BeautifulSoup(response.text, 'lxml')
                 return Result(result=xmlobj,
                               status_code=response.status_code)
 

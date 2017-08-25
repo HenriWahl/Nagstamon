@@ -39,37 +39,11 @@ VERSION = AppInfo.VERSION.replace('-', '.') + '.' + DIST + DIST_VERSION
 
 NAGSTAMON_SCRIPT = 'nagstamon.py'
 
-# workaround to get directory of Qt5 plugins to add missing 'mediaservice' folder needed for audio on OSX and Windows
-from PyQt5 import QtCore
-if OS == 'Windows':
-    QTPLUGINS = os.path.join(os.path.dirname(QtCore.__file__), 'Qt', 'plugins')
-elif OS == 'Darwin':
-    # works of course only with Fink-based Qt5-installation
-    QTPLUGINS = '/sw/lib/qt5-mac/plugins'
-
-if OS == 'Windows':
-    base = 'Win32GUI'
-else:
-    base = None
-
-if OS in ('Windows', 'Darwin'):
-    from cx_Freeze import setup, Executable
-    os_dependent_include_files = ['Nagstamon/resources/qt.conf',
-                                  'Nagstamon/resources',
-                                  '{0}/mediaservice'.format(QTPLUGINS)]
-
-    executables = [
-        Executable(NAGSTAMON_SCRIPT,
-                   base=base,
-                   icon='Nagstamon/resources/nagstamon.ico')
-    ]
-
-else:
-    from setuptools import setup
-    os_dependent_include_files = ['Nagstamon/resources']
-    executables = []
-    if os.path.exists('nagstamon'):
-        NAGSTAMON_SCRIPT = 'nagstamon'
+from setuptools import setup
+os_dependent_include_files = ['Nagstamon/resources']
+executables = []
+if os.path.exists('nagstamon'):
+    NAGSTAMON_SCRIPT = 'nagstamon'
 
 CLASSIFIERS = ['Intended Audience :: System Administrators',
                'Development Status :: 5 - Production/Stable',
@@ -107,6 +81,7 @@ bdist_rpm_options = dict(requires='python3 '
         'python3-crypto '
         'python3-cryptography '
         'python3-keyring '
+        'python3-lxml '
         'python3-psutil '
         'python3-qt5 '
         'python3-requests '
