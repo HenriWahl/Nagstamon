@@ -1,4 +1,4 @@
-nagstamon (2.1-20170825) unstable; urgency=low
+nagstamon (2.1-20170828) unstable; urgency=low
   * New upstream
    - added Kerberos authentification
    - added increased security by taking TLS seriously
