@@ -5347,8 +5347,9 @@ class Dialog_Server(Dialog):
             self.toggle_toggles()
 
             # open extra options if wanted e.g. by button_fix_tls_error
-            if self.show_options:
-                self.ui.input_checkbox_show_options.setChecked(True)
+            if 'show_options' in self.__dict__:
+                if self.show_options:
+                    self.ui.input_checkbox_show_options.setChecked(True)
 
             # important final size adjustment
             self.window.adjustSize()
