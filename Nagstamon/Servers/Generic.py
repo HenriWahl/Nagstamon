@@ -93,6 +93,10 @@ class GenericServer(object):
     # needed to check return code of monitor server in case of false authentication
     STATUS_CODES_NO_AUTH = [401, 403]
 
+    # default parser for BeautifulSoup - the rediscovered lxml causes trouble for Centreon so there should be choice
+    # see https://github.com/HenriWahl/Nagstamon/issues/431
+    PARSER = 'lxml'
+
     def __init__(self, **kwds):
         # add all keywords to object, every mode searchs inside for its favorite arguments/keywords
         for k in kwds:
@@ -159,6 +163,9 @@ class GenericServer(object):
 
         # flag which decides if authentication has to be renewed
         self.refresh_authentication = False
+        # flag which tells GUI if there is an TLS problem
+        self.tls_error = False
+
         # to handle Icinga versions this information is necessary, might be of future use for others too
         self.version = ''
 
@@ -856,8 +863,11 @@ class GenericServer(object):
                     self.status_description = status.error
                     self.status_code = status.status_code
                     return(status)
+            elif self.status_description.startswith('requests.exceptions.SSLError:'):
+                self.tls_error = True
             else:
                 self.isChecking = False
+                self.tls_error = False
                 return Result(result=self.status,
                               error=self.status_description,
                               status_code=self.status_code)
@@ -866,9 +876,6 @@ class GenericServer(object):
         self.refresh_authentication = False
 
         # this part has been before in GUI.RefreshDisplay() - wrong place, here it needs to be reset
-        # self.nagitems_filtered = {'services': {'CRITICAL': [], 'WARNING': [], 'UNKNOWN': []},
-                # 'hosts': {'DOWN': [], 'UNREACHABLE': []}}
-
         self.nagitems_filtered = {'services': {'DISASTER': [], 'CRITICAL': [], 'HIGH': [],
             'AVERAGE': [], 'WARNING': [], 'INFORMATION': [], 'UNKNOWN': []},
             'hosts': {'DOWN': [], 'UNREACHABLE': []}}
@@ -1379,7 +1386,6 @@ class GenericServer(object):
 
                     # add proxy information if necessary
                     self.proxify(temporary_session)
-
                     # default to check TLS validity for temporary sessions
                     if self.ignore_cert:
                         temporary_session.verify = False
@@ -1419,12 +1425,12 @@ class GenericServer(object):
 
             # objectified HTML
             if giveback == 'obj':
-                yummysoup = BeautifulSoup(response.text, 'html.parser')
+                yummysoup = BeautifulSoup(response.text, self.PARSER)
                 return Result(result=yummysoup, status_code=response.status_code)
 
             # objectified generic XML, valid at least for Opsview and Centreon
             elif giveback == 'xml':
-                xmlobj = BeautifulSoup(response.text, 'html.parser')
+                xmlobj = BeautifulSoup(response.text, self.PARSER)
                 return Result(result=xmlobj,
                               status_code=response.status_code)
 

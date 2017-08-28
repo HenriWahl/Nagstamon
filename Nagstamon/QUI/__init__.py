@@ -1485,7 +1485,8 @@ class StatusWindow(QWidget):
             for vbox in self.servers_vbox.children():
                 if vbox.server.all_ok and\
                    vbox.server.status == '' and\
-                   not vbox.server.refresh_authentication:
+                   not vbox.server.refresh_authentication and\
+                   not vbox.server.tls_error:
                     self.status_ok = True
                 else:
                     self.status_ok = False
@@ -1506,7 +1507,7 @@ class StatusWindow(QWidget):
                     if not vbox.server.all_ok:
                         vbox.show_all()
                     # show at least server vbox header to notify about connection or other errors
-                    elif vbox.server.status != '' or vbox.server.refresh_authentication:
+                    elif vbox.server.status != '' or vbox.server.refresh_authentication or vbox.server.tls_error:
                         vbox.show_only_header()
                     elif vbox.server.all_ok and vbox.server.status == '':
                         vbox.hide_all()
@@ -1516,6 +1517,12 @@ class StatusWindow(QWidget):
                         vbox.button_authenticate.show()
                     else:
                         vbox.button_authenticate.hide()
+
+                    # depending on TLS error show fix-TLS-button
+                    if vbox.server.tls_error:
+                        vbox.button_fix_tls_error.show()
+                    else:
+                        vbox.button_fix_tls_error.hide()
 
                 if not conf.fullscreen and not conf.windowed:
                     # theory...
@@ -2677,7 +2684,7 @@ class ServerStatusLabel(ClosingLabel):
             self.setText(' {0} '.format(text))
             self.setToolTip('')
         else:
-            # set new text to first word of tect, delegate full text to tooltip
+            # set new text to first word of text, delegate full text to tooltip
             self.setText(text.split(' ')[0])
             self.setToolTip(text)
 
@@ -2703,6 +2710,9 @@ class ServerVBox(QVBoxLayout):
 
     # signal to submit server to authentication dialog
     authenticate = pyqtSignal(str)
+
+    button_fix_tls_error_show = pyqtSignal()
+    button_fix_tls_error_hide = pyqtSignal()
 
     def __init__(self, server, parent=None):
         QVBoxLayout.__init__(self, parent)
@@ -2738,6 +2748,8 @@ class ServerVBox(QVBoxLayout):
 
         self.button_authenticate = QPushButton('Authenticate', parent=parent)
 
+        self.button_fix_tls_error = QPushButton('Fix error', parent=parent)
+
         self.button_monitor.clicked.connect(self.button_monitor.open_url)
         self.button_hosts.clicked.connect(self.button_hosts.open_url)
         self.button_services.clicked.connect(self.button_services.open_url)
@@ -2751,11 +2763,11 @@ class ServerVBox(QVBoxLayout):
         self.header.addWidget(self.button_history)
         self.header.addWidget(self.button_edit)
 
-        #self.header.addItem(self.stretcher)
         self.header.addWidget(self.label_stretcher)
 
         self.header.addWidget(self.label_status)
         self.header.addWidget(self.button_authenticate)
+        self.header.addWidget(self.button_fix_tls_error)
 
         # attempt to get header strings
         try:
@@ -2778,13 +2790,20 @@ class ServerVBox(QVBoxLayout):
         self.table.worker.restore_label_status.connect(self.label_status.restore)
 
         # connect reauthentication button to authentication state
-        self.table.worker.button_authenticate_show.connect(self.button_authenticate.show)
-        self.table.worker.button_authenticate_hide.connect(self.button_authenticate.hide)
+        ###self.table.worker.button_authenticate_show.connect(self.button_authenticate.show)
+        ###self.table.worker.button_authenticate_hide.connect(self.button_authenticate.hide)
+
+        # connect ignore invalid certificate button to TLS state
+        ###self.table.worker.button_fix_tls_error_show.connect(self.button_fix_tls_error.show)
+        ###self.table.worker.button_fix_tls_error_hide.connect(self.button_fix_tls_error.hide)
 
         # care about authentications
         self.button_authenticate.clicked.connect(self.authenticate_server)
         self.authenticate.connect(dialogs.authentication.show_auth_dialog)
         dialogs.authentication.update.connect(self.update_label)
+
+        # start ignoring TLS trouble when button clicked
+        self.button_fix_tls_error.clicked.connect(self.fix_tls_error)
 
         self.addWidget(self.table, 1)
 
@@ -2818,7 +2837,7 @@ class ServerVBox(QVBoxLayout):
         self.label_status.show()
         self.label_stretcher.show()
         self.button_authenticate.hide()
-
+        self.button_fix_tls_error.hide()
         # special table treatment
         self.table.show()
         self.table.is_shown = True
@@ -2826,7 +2845,7 @@ class ServerVBox(QVBoxLayout):
     @pyqtSlot()
     def show_only_header(self):
         """
-            show all items in server vbox except the table - not needed if empty
+            show all items in server vbox except the table - not needed if empty or major connection problem
         """
         self.label.show()
         self.button_monitor.show()
@@ -2837,7 +2856,7 @@ class ServerVBox(QVBoxLayout):
         self.label_status.show()
         self.label_stretcher.show()
         self.button_authenticate.hide()
-
+        self.button_fix_tls_error.hide()
         # special table treatment
         self.table.hide()
         self.table.is_shown = False
@@ -2856,6 +2875,7 @@ class ServerVBox(QVBoxLayout):
         self.label_status.hide()
         self.label_stretcher.hide()
         self.button_authenticate.hide()
+        self.button_fix_tls_error.hide()
 
         # special table treatment
         self.table.hide()
@@ -2874,7 +2894,8 @@ class ServerVBox(QVBoxLayout):
                        self.button_edit,
                        self.label_status,
                        self.label_stretcher,
-                       self.button_authenticate):
+                       self.button_authenticate,
+                       self.button_fix_tls_error):
             widget.hide()
             widget.deleteLater()
         self.removeItem(self.header)
@@ -2893,7 +2914,7 @@ class ServerVBox(QVBoxLayout):
 
     def authenticate_server(self):
         """
-            send signal to open authentication dialog with self.server
+            send signal to open authentication dialog with self.server.name
         """
         self.authenticate.emit(self.server.name)
 
@@ -2905,8 +2926,16 @@ class ServerVBox(QVBoxLayout):
             self.label.setStyleSheet('''padding-top: {0}px;
                                         padding-bottom: {0}px;'''.format(SPACE))
 
+    @pyqtSlot()
+    def fix_tls_error(self):
+        """
+            call dialogs.server.edit() with server name and showing extra options
+        """
+        if not conf.fullscreen and not conf.windowed:
+            statuswindow.hide_window()
+        dialogs.server.edit(server_name=self.server.name, show_options=True)
 
-# class Model(QStandardItemModel):
+
 class Model(QAbstractTableModel):
 
     """
@@ -3629,8 +3658,12 @@ class TreeView(QTreeView):
         rechecking_all = False
 
         # signals to show/hide reauthentication
-        button_authenticate_show = pyqtSignal()
-        button_authenticate_hide = pyqtSignal()
+        ###button_authenticate_show = pyqtSignal()
+        ###button_authenticate_hide = pyqtSignal()
+
+        # show button to ignore invalid certificate in server vbox
+        ###button_fix_tls_error_show = pyqtSignal()
+        ###button_fix_tls_error_hide = pyqtSignal()
 
         # signals to control error message in statusbar
         show_error = pyqtSignal(str)
@@ -3676,7 +3709,8 @@ class TreeView(QTreeView):
                 # all is OK if no error info came back
                 if self.server.status_description == '' and\
                    self.server.status_code < 400 and\
-                   not self.server.refresh_authentication:
+                   not self.server.refresh_authentication and\
+                   not self.server.tls_error:
                     # show last update time
                     self.change_label_status.emit('Last updated at {0}'.format(datetime.datetime.now().strftime('%X')), '')
 
@@ -3695,14 +3729,18 @@ class TreeView(QTreeView):
                         self.change_label_status.emit('Connection error', 'error')
                     elif status.error.startswith('requests.exceptions.ReadTimeout'):
                         self.change_label_status.emit('Connection timeout', 'error')
-                    elif status.error.startswith('requests.exceptions.SSLError'):
+                    elif self.server.tls_error:
                         self.change_label_status.emit('SSL/TLS problem', 'critical')
                     elif self.server.status_code in self.server.STATUS_CODES_NO_AUTH or\
                             self.server.refresh_authentication:
                         self.change_label_status.emit('Authentication problem', 'critical')
+                    elif self.server.status_code == 503:
+                        self.change_label_status.emit('Service unavailable', 'error')
                     else:
                         # kick out line breaks to avoid broken status window
-                        self.change_label_status.emit(self.server.status_description.replace('\n', ''), 'unknown')
+                        if self.server.status_description == '':
+                            self.server.status_description = 'Unknown error'
+                        self.change_label_status.emit(self.server.status_description.replace('\n', ''), 'error')
 
                     # set server error flag, needed for error label in statusbar
                     self.server.has_error = True
@@ -3726,10 +3764,16 @@ class TreeView(QTreeView):
                 self.fill_data_array(self.sort_column, self.sort_order)
 
                 # depending on authentication state show reauthentication button
-                if self.server.refresh_authentication:
-                    self.button_authenticate_show.emit()
-                else:
-                    self.button_authenticate_hide.emit()
+                #if self.server.refresh_authentication:
+                #    self.button_authenticate_show.emit()
+                #else:
+                #    self.button_authenticate_hide.emit()
+
+                # special treatment for ignore-invalid-certificate button
+                #if self.server.tls_error:
+                #    self.button_fix_tls_error_show.emit()
+                #else:
+                #    self.button_fix_tls_error_hide.emit()
 
                 # tell news about new status available
                 self.new_status.emit()
@@ -5302,6 +5346,10 @@ class Dialog_Server(Dialog):
             # apply toggle-dependencies between checkboxes and certain widgets
             self.toggle_toggles()
 
+            # open extra options if wanted e.g. by button_fix_tls_error
+            if self.show_options:
+                self.ui.input_checkbox_show_options.setChecked(True)
+
             # important final size adjustment
             self.window.adjustSize()
 
@@ -5324,7 +5372,7 @@ class Dialog_Server(Dialog):
         self.window.setWindowTitle('New server')
 
     @dialog_decoration
-    def edit(self, server_name=None):
+    def edit(self, server_name=None, show_options=False):
         """
             edit existing server
             when called by Edit button in ServerVBox use given server_name to get server config
@@ -5339,6 +5387,9 @@ class Dialog_Server(Dialog):
         self.previous_server_conf = deepcopy(self.server_conf)
         # set window title
         self.window.setWindowTitle('Edit %s' % (self.server_conf.name))
+        # set self.shot_optios to give value to decorator
+        self.show_options = show_options
+
 
     @dialog_decoration
     def copy(self):

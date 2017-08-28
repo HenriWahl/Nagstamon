@@ -50,6 +50,9 @@ class CentreonServer(GenericServer):
     # Entries for monitor default actions in context menu
     MENU_ACTIONS = ['Monitor', 'Recheck', 'Acknowledge', 'Downtime']
 
+    # Centreon works better or at all with html.parser for BeautifulSoup
+    PARSER = 'html.parser'
+
     # Needed to detect each Centreon's version
     centreon_version = None
     # Token that centreon use to protect the system
