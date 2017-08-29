@@ -68,6 +68,8 @@ from Nagstamon.Helpers import (is_found_by_re,
                                STATES_SOUND,
                                SORT_COLUMNS_FUNCTIONS)
 
+from Nagstamon.Objects import Result
+
 # dialogs
 from Nagstamon.QUI.settings_main import Ui_settings_main
 from Nagstamon.QUI.settings_server import Ui_settings_server
@@ -3703,8 +3705,12 @@ class TreeView(QTreeView):
                 # reflect status retrieval attempt on server vbox label
                 self.change_label_status.emit('Refreshing...', '')
 
-                # get status from server instance
-                status = self.server.GetStatus()
+                # get status from server instance if connection was already possible and no TLS error
+                if not self.server.tls_error:
+                    status = self.server.GetStatus()
+                else:
+                    # dummy status result
+                    status = Result()
 
                 # all is OK if no error info came back
                 if self.server.status_description == '' and\

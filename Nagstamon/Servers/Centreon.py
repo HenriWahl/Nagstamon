@@ -66,7 +66,8 @@ class CentreonServer(GenericServer):
         '''
         # set URLs here already
         self.init_HTTP()
-        self._define_url()
+        if not self.tls_error:
+            self._define_url()
 
     def init_HTTP(self):
         """
