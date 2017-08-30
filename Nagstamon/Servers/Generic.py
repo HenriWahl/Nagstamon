@@ -1415,6 +1415,10 @@ class GenericServer(object):
             except Exception:
                 traceback.print_exc(file=sys.stdout)
                 result, error = self.Error(sys.exc_info())
+                if error.startswith('requests.exceptions.SSLError:'):
+                    self.tls_error = True
+                else:
+                    self.tls_error = False
                 return Result(result=result, error=error, status_code=-1)
 
             # give back pure HTML or XML in case giveback is 'raw'
