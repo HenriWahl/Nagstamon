@@ -83,13 +83,15 @@ class MultisiteServer(GenericServer):
             self.urls = {
               'api_services':    self.monitor_url + 'view.py?view_name=nagstamon_svc&output_format=python&lang=&limit=hard',
               'human_services':  self.monitor_url + 'index.py?%s' % \
-                                                   urllib.parse.urlencode({'start_url': 'view.py?view_name=nagstamon_svc'}),
+                                                   urllib.parse.urlencode({'start_url': 'view.py?view_name={0}'.\
+                                                                          format(self.check_mk_view_services)}),
               'human_service':   self.monitor_url + 'index.py?%s' %
                                                    urllib.parse.urlencode({'start_url': 'view.py?view_name=service'}),
 
               'api_hosts':       self.monitor_url + 'view.py?view_name=nagstamon_hosts&output_format=python&lang=&limit=hard',
               'human_hosts':     self.monitor_url + 'index.py?%s' %
-                                                   urllib.parse.urlencode({'start_url': 'view.py?view_name=nagstamon_hosts'}),
+                                                   urllib.parse.urlencode({'start_url': 'view.py?view_name={0}'.\
+                                                                           format(self.check_mk_view_services)}),
               'human_host':      self.monitor_url + 'index.py?%s' %
                                                    urllib.parse.urlencode({'start_url': 'view.py?view_name=hoststatus'}),
               # URLs do not need pythonic output because since werk #0766 API does not work with transid=-1 anymore
@@ -157,7 +159,8 @@ class MultisiteServer(GenericServer):
                                               status_code=status_code))
 
         # in case of auth problem enable GUI auth part in popup
-        if self.CookieAuth == True and len(self.session.cookies) == 0:
+        ###if self.CookieAuth == True and len(self.session.cookies) == 0:
+        if self.CookieAuth == True and not 'auth_monitor' in self.session.cookies:
             self.refresh_authentication = True
             return ''
 
@@ -165,7 +168,8 @@ class MultisiteServer(GenericServer):
         elif content.startswith('<'):
             self.CookieAuth = True
             # if first attempt login and then try to get data again
-            if len(self.session.cookies) == 0:
+            ###if len(self.session.cookies) == 0:
+            if not 'auth_monitor' in self.session.cookies:
                 self._get_cookie_login()
                 result = self.FetchURL(url, 'raw')
                 content, error = result.result, result.error

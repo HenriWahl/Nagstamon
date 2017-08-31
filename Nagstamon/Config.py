@@ -101,7 +101,7 @@ class AppInfo(object):
         contains app information previously located in GUI.py
     """
     NAME = 'Nagstamon'
-    VERSION = '2.1-20170829'
+    VERSION = '2.1-20170831'
     WEBSITE = 'https://nagstamon.ifw-dresden.de'
     COPYRIGHT = '©2008-2017 Henri Wahl et al.'
     COMMENTS = 'Nagios status monitor for your desktop'
@@ -864,6 +864,8 @@ class Server(object):
         # Force Check_MK livestatus code to set AuthUser header for users who
         # are permitted to see all objects.
         self.force_authuser = False
+        self.check_mk_view_hosts = 'nagstamon_hosts'
+        self.check_mk_view_services = 'nagstamon_svc'
 
         # OP5 api filters
         self.host_filter = 'state !=0'

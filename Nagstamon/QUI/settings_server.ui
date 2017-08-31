@@ -7,7 +7,7 @@
     <x>0</x>
     <y>0</y>
     <width>659</width>
-    <height>855</height>
+    <height>1183</height>
    </rect>
   </property>
   <property name="sizePolicy">
@@ -332,112 +332,19 @@
       <property name="verticalSpacing">
        <number>5</number>
       </property>
-      <item row="2" column="0">
-       <widget class="QLabel" name="label_custom_ca_file">
-        <property name="text">
-         <string>Custom CA file: </string>
-        </property>
-       </widget>
-      </item>
-      <item row="8" column="0">
-       <widget class="QLabel" name="label_autologin_key">
-        <property name="sizePolicy">
-         <sizepolicy hsizetype="Minimum" vsizetype="Preferred">
-          <horstretch>0</horstretch>
-          <verstretch>0</verstretch>
-         </sizepolicy>
-        </property>
-        <property name="text">
-         <string>Autologin Key:</string>
-        </property>
-       </widget>
-      </item>
-      <item row="5" column="2">
-       <widget class="QComboBox" name="input_combobox_authentication"/>
-      </item>
-      <item row="5" column="3">
-       <spacer name="horizontalSpacer_2">
-        <property name="orientation">
-         <enum>Qt::Horizontal</enum>
-        </property>
-        <property name="sizeHint" stdset="0">
-         <size>
-          <width>40</width>
-          <height>20</height>
-         </size>
-        </property>
-       </spacer>
-      </item>
-      <item row="6" column="0">
-       <widget class="QLabel" name="label_timeout">
-        <property name="text">
-         <string>Timeout:</string>
-        </property>
-       </widget>
-      </item>
-      <item row="6" column="2">
-       <layout class="QHBoxLayout" name="horizontalLayout_timeout_seconds">
-        <property name="spacing">
-         <number>5</number>
-        </property>
+      <item row="2" column="2" colspan="2">
+       <layout class="QHBoxLayout" name="horizontalLayout">
         <item>
-         <widget class="QSpinBox" name="input_spinbox_timeout"/>
+         <widget class="QLineEdit" name="input_lineedit_custom_cert_ca_file"/>
         </item>
         <item>
-         <widget class="QLabel" name="label_timeout_sec">
+         <widget class="QPushButton" name="button_choose_custom_cert_ca_file">
           <property name="text">
-           <string>seconds</string>
+           <string>Choose file...</string>
           </property>
          </widget>
         </item>
        </layout>
-      </item>
-      <item row="6" column="3">
-       <spacer name="horizontalSpacer">
-        <property name="orientation">
-         <enum>Qt::Horizontal</enum>
-        </property>
-        <property name="sizeHint" stdset="0">
-         <size>
-          <width>40</width>
-          <height>20</height>
-         </size>
-        </property>
-       </spacer>
-      </item>
-      <item row="7" column="0" colspan="4">
-       <widget class="QCheckBox" name="input_checkbox_use_autologin">
-        <property name="text">
-         <string>Use autologin</string>
-        </property>
-       </widget>
-      </item>
-      <item row="8" column="2" colspan="2">
-       <widget class="QLineEdit" name="input_lineedit_autologin_key">
-        <property name="text">
-         <string/>
-        </property>
-       </widget>
-      </item>
-      <item row="15" column="0">
-       <widget class="QLabel" name="label_monitor_site">
-        <property name="sizePolicy">
-         <sizepolicy hsizetype="Minimum" vsizetype="Preferred">
-          <horstretch>0</horstretch>
-          <verstretch>0</verstretch>
-         </sizepolicy>
-        </property>
-        <property name="text">
-         <string>Monitor Site:</string>
-        </property>
-       </widget>
-      </item>
-      <item row="15" column="2" colspan="2">
-       <widget class="QLineEdit" name="input_lineedit_monitor_site">
-        <property name="text">
-         <string>Site 1</string>
-        </property>
-       </widget>
       </item>
       <item row="9" column="0">
        <widget class="QLabel" name="label_host_filter">
@@ -459,6 +366,13 @@
         </property>
        </widget>
       </item>
+      <item row="11" column="0" colspan="4">
+       <widget class="QCheckBox" name="input_checkbox_no_cookie_auth">
+        <property name="text">
+         <string>Do not use cookie authentication</string>
+        </property>
+       </widget>
+      </item>
       <item row="12" column="0" colspan="4">
        <widget class="QCheckBox" name="input_checkbox_use_display_name_host">
         <property name="text">
@@ -470,6 +384,33 @@
        <widget class="QCheckBox" name="input_checkbox_use_display_name_service">
         <property name="text">
          <string>Use display name as service name</string>
+        </property>
+       </widget>
+      </item>
+      <item row="5" column="3">
+       <spacer name="horizontalSpacer_2">
+        <property name="orientation">
+         <enum>Qt::Horizontal</enum>
+        </property>
+        <property name="sizeHint" stdset="0">
+         <size>
+          <width>40</width>
+          <height>20</height>
+         </size>
+        </property>
+       </spacer>
+      </item>
+      <item row="6" column="0">
+       <widget class="QLabel" name="label_timeout">
+        <property name="text">
+         <string>Timeout:</string>
+        </property>
+       </widget>
+      </item>
+      <item row="0" column="0" colspan="4">
+       <widget class="QCheckBox" name="input_checkbox_ignore_cert">
+        <property name="text">
+         <string>Ignore SSL/TLS certificate</string>
         </property>
        </widget>
       </item>
@@ -500,20 +441,6 @@
         </property>
        </widget>
       </item>
-      <item row="10" column="2" colspan="2">
-       <widget class="QLineEdit" name="input_lineedit_service_filter">
-        <property name="text">
-         <string/>
-        </property>
-       </widget>
-      </item>
-      <item row="11" column="0" colspan="4">
-       <widget class="QCheckBox" name="input_checkbox_no_cookie_auth">
-        <property name="text">
-         <string>Do not use cookie authentication</string>
-        </property>
-       </widget>
-      </item>
       <item row="14" column="0" colspan="4">
        <widget class="QCheckBox" name="input_checkbox_force_authuser">
         <property name="text">
@@ -521,10 +448,90 @@
         </property>
        </widget>
       </item>
-      <item row="0" column="0" colspan="4">
-       <widget class="QCheckBox" name="input_checkbox_ignore_cert">
+      <item row="5" column="2">
+       <widget class="QComboBox" name="input_combobox_authentication"/>
+      </item>
+      <item row="17" column="2" colspan="2">
+       <widget class="QLineEdit" name="input_lineedit_monitor_site">
         <property name="text">
-         <string>Ignore SSL/TLS certificate</string>
+         <string>Site 1</string>
+        </property>
+       </widget>
+      </item>
+      <item row="7" column="0" colspan="4">
+       <widget class="QCheckBox" name="input_checkbox_use_autologin">
+        <property name="text">
+         <string>Use autologin</string>
+        </property>
+       </widget>
+      </item>
+      <item row="6" column="3">
+       <spacer name="horizontalSpacer">
+        <property name="orientation">
+         <enum>Qt::Horizontal</enum>
+        </property>
+        <property name="sizeHint" stdset="0">
+         <size>
+          <width>40</width>
+          <height>20</height>
+         </size>
+        </property>
+       </spacer>
+      </item>
+      <item row="8" column="0">
+       <widget class="QLabel" name="label_autologin_key">
+        <property name="sizePolicy">
+         <sizepolicy hsizetype="Minimum" vsizetype="Preferred">
+          <horstretch>0</horstretch>
+          <verstretch>0</verstretch>
+         </sizepolicy>
+        </property>
+        <property name="text">
+         <string>Autologin Key:</string>
+        </property>
+       </widget>
+      </item>
+      <item row="8" column="2" colspan="2">
+       <widget class="QLineEdit" name="input_lineedit_autologin_key">
+        <property name="text">
+         <string/>
+        </property>
+       </widget>
+      </item>
+      <item row="10" column="2" colspan="2">
+       <widget class="QLineEdit" name="input_lineedit_service_filter">
+        <property name="text">
+         <string/>
+        </property>
+       </widget>
+      </item>
+      <item row="6" column="2">
+       <layout class="QHBoxLayout" name="horizontalLayout_timeout_seconds">
+        <property name="spacing">
+         <number>5</number>
+        </property>
+        <item>
+         <widget class="QSpinBox" name="input_spinbox_timeout"/>
+        </item>
+        <item>
+         <widget class="QLabel" name="label_timeout_sec">
+          <property name="text">
+           <string>seconds</string>
+          </property>
+         </widget>
+        </item>
+       </layout>
+      </item>
+      <item row="17" column="0">
+       <widget class="QLabel" name="label_monitor_site">
+        <property name="sizePolicy">
+         <sizepolicy hsizetype="Minimum" vsizetype="Preferred">
+          <horstretch>0</horstretch>
+          <verstretch>0</verstretch>
+         </sizepolicy>
+        </property>
+        <property name="text">
+         <string>Monitor Site:</string>
         </property>
        </widget>
       </item>
@@ -535,19 +542,62 @@
         </property>
        </widget>
       </item>
-      <item row="2" column="2" colspan="2">
-       <layout class="QHBoxLayout" name="horizontalLayout">
-        <item>
-         <widget class="QLineEdit" name="input_lineedit_custom_cert_ca_file"/>
-        </item>
-        <item>
-         <widget class="QPushButton" name="button_choose_custom_cert_ca_file">
-          <property name="text">
-           <string>Choose file...</string>
-          </property>
-         </widget>
-        </item>
-       </layout>
+      <item row="2" column="0">
+       <widget class="QLabel" name="label_custom_ca_file">
+        <property name="text">
+         <string>Custom CA file: </string>
+        </property>
+       </widget>
+      </item>
+      <item row="15" column="0">
+       <widget class="QCheckBox" name="checkBox">
+        <property name="text">
+         <string>CheckBox</string>
+        </property>
+       </widget>
+      </item>
+      <item row="16" column="0" colspan="4">
+       <widget class="QGroupBox" name="groupBox">
+        <property name="title">
+         <string>GroupBox</string>
+        </property>
+        <layout class="QGridLayout" name="gridLayout_4">
+         <item row="0" column="0">
+          <widget class="QLabel" name="label">
+           <property name="text">
+            <string>TextLabel</string>
+           </property>
+          </widget>
+         </item>
+         <item row="1" column="0">
+          <widget class="QLabel" name="label_2">
+           <property name="text">
+            <string>TextLabel</string>
+           </property>
+          </widget>
+         </item>
+         <item row="1" column="1">
+          <widget class="QLineEdit" name="lineEdit_2"/>
+         </item>
+         <item row="0" column="1">
+          <widget class="QLineEdit" name="lineEdit"/>
+         </item>
+         <item row="0" column="2">
+          <widget class="QPushButton" name="pushButton">
+           <property name="text">
+            <string>PushButton</string>
+           </property>
+          </widget>
+         </item>
+         <item row="1" column="2">
+          <widget class="QPushButton" name="pushButton_2">
+           <property name="text">
+            <string>PushButton</string>
+           </property>
+          </widget>
+         </item>
+        </layout>
+       </widget>
       </item>
      </layout>
     </widget>
