@@ -5241,6 +5241,7 @@ class Dialog_Server(Dialog):
             self.ui.input_checkbox_use_display_name_host: ['Icinga', 'IcingaWeb2'],
             self.ui.input_checkbox_use_display_name_service: ['Icinga', 'IcingaWeb2'],
             self.ui.input_checkbox_force_authuser: ['Check_MK Multisite'],
+            self.ui.groupbox_check_mk_views: ['Check_MK Multisite'],
             self.ui.input_lineedit_host_filter: ['op5Monitor'],
             self.ui.input_lineedit_service_filter: ['op5Monitor'],
             self.ui.label_service_filter: ['op5Monitor'],
@@ -5275,6 +5276,10 @@ class Dialog_Server(Dialog):
 
         # when authentication is changed to Kerberos then disable username/password as the are now useless
         self.ui.input_combobox_authentication.activated.connect(self.toggle_authentication)
+
+        # reset Check_MK views
+        self.ui.button_check_mk_view_hosts_reset.clicked.connect(self.check_mk_view_hosts_reset)
+        self.ui.button_check_mk_view_services_reset.clicked.connect(self.check_mk_view_services_reset)
 
         # mode needed for evaluate dialog after ok button pressed - defaults to 'new'
         self.mode = 'new'
@@ -5534,6 +5539,17 @@ class Dialog_Server(Dialog):
         # only take filename if QFileDialog gave something useful back
         if file != '':
             self.ui.input_lineedit_custom_cert_ca_file.setText(file)
+
+
+    @pyqtSlot()
+    def check_mk_view_hosts_reset(self):
+        self.ui.input_lineedit_check_mk_view_hosts.setText('nagstamon_hosts')
+
+
+    @pyqtSlot()
+    def check_mk_view_services_reset(self):
+        self.ui.input_lineedit_check_mk_view_services.setText('nagstamon_svc')
+
 
 
 class Dialog_Action(Dialog):

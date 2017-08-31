@@ -81,14 +81,16 @@ class MultisiteServer(GenericServer):
         # Prepare all urls needed by nagstamon if not yet done
         if len(self.urls) == len(self.statemap):
             self.urls = {
-              'api_services':    self.monitor_url + 'view.py?view_name=nagstamon_svc&output_format=python&lang=&limit=hard',
+              'api_services':    self.monitor_url + 'view.py?view_name={0}&output_format=python&lang=&limit=hard'.\
+                                                                          format(self.check_mk_view_services),
               'human_services':  self.monitor_url + 'index.py?%s' % \
                                                    urllib.parse.urlencode({'start_url': 'view.py?view_name={0}'.\
                                                                           format(self.check_mk_view_services)}),
               'human_service':   self.monitor_url + 'index.py?%s' %
                                                    urllib.parse.urlencode({'start_url': 'view.py?view_name=service'}),
 
-              'api_hosts':       self.monitor_url + 'view.py?view_name=nagstamon_hosts&output_format=python&lang=&limit=hard',
+              'api_hosts':       self.monitor_url + 'view.py?view_name={0}&output_format=python&lang=&limit=hard'.\
+                                                                          format(self.check_mk_view_hosts),
               'human_hosts':     self.monitor_url + 'index.py?%s' %
                                                    urllib.parse.urlencode({'start_url': 'view.py?view_name={0}'.\
                                                                            format(self.check_mk_view_services)}),

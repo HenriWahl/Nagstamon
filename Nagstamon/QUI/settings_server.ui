@@ -359,6 +359,49 @@
         </property>
        </widget>
       </item>
+      <item row="15" column="0" colspan="4">
+       <widget class="QGroupBox" name="groupbox_check_mk_views">
+        <property name="title">
+         <string>Views:</string>
+        </property>
+        <layout class="QGridLayout" name="gridLayout_4">
+         <item row="0" column="0">
+          <widget class="QLabel" name="label_check_mk_view_hosts">
+           <property name="text">
+            <string>Hosts:</string>
+           </property>
+          </widget>
+         </item>
+         <item row="1" column="0">
+          <widget class="QLabel" name="label_check_mk_view_services">
+           <property name="text">
+            <string>Services:</string>
+           </property>
+          </widget>
+         </item>
+         <item row="1" column="1">
+          <widget class="QLineEdit" name="input_lineedit_check_mk_view_services"/>
+         </item>
+         <item row="0" column="1">
+          <widget class="QLineEdit" name="input_lineedit_check_mk_view_hosts"/>
+         </item>
+         <item row="0" column="2">
+          <widget class="QPushButton" name="button_check_mk_view_hosts_reset">
+           <property name="text">
+            <string>Reset</string>
+           </property>
+          </widget>
+         </item>
+         <item row="1" column="2">
+          <widget class="QPushButton" name="button_check_mk_view_services_reset">
+           <property name="text">
+            <string>Reset</string>
+           </property>
+          </widget>
+         </item>
+        </layout>
+       </widget>
+      </item>
       <item row="5" column="0">
        <widget class="QLabel" name="label_auth_type">
         <property name="text">
@@ -434,13 +477,6 @@
         </property>
        </widget>
       </item>
-      <item row="10" column="2" colspan="2">
-       <widget class="QLineEdit" name="input_lineedit_service_filter">
-        <property name="text">
-         <string/>
-        </property>
-       </widget>
-      </item>
       <item row="14" column="0" colspan="4">
        <widget class="QCheckBox" name="input_checkbox_force_authuser">
         <property name="text">
@@ -451,7 +487,7 @@
       <item row="5" column="2">
        <widget class="QComboBox" name="input_combobox_authentication"/>
       </item>
-      <item row="17" column="2" colspan="2">
+      <item row="16" column="2" colspan="2">
        <widget class="QLineEdit" name="input_lineedit_monitor_site">
         <property name="text">
          <string>Site 1</string>
@@ -522,7 +558,7 @@
         </item>
        </layout>
       </item>
-      <item row="17" column="0">
+      <item row="16" column="0">
        <widget class="QLabel" name="label_monitor_site">
         <property name="sizePolicy">
          <sizepolicy hsizetype="Minimum" vsizetype="Preferred">
@@ -547,56 +583,6 @@
         <property name="text">
          <string>Custom CA file: </string>
         </property>
-       </widget>
-      </item>
-      <item row="15" column="0">
-       <widget class="QCheckBox" name="checkBox">
-        <property name="text">
-         <string>CheckBox</string>
-        </property>
-       </widget>
-      </item>
-      <item row="16" column="0" colspan="4">
-       <widget class="QGroupBox" name="groupBox">
-        <property name="title">
-         <string>GroupBox</string>
-        </property>
-        <layout class="QGridLayout" name="gridLayout_4">
-         <item row="0" column="0">
-          <widget class="QLabel" name="label">
-           <property name="text">
-            <string>TextLabel</string>
-           </property>
-          </widget>
-         </item>
-         <item row="1" column="0">
-          <widget class="QLabel" name="label_2">
-           <property name="text">
-            <string>TextLabel</string>
-           </property>
-          </widget>
-         </item>
-         <item row="1" column="1">
-          <widget class="QLineEdit" name="lineEdit_2"/>
-         </item>
-         <item row="0" column="1">
-          <widget class="QLineEdit" name="lineEdit"/>
-         </item>
-         <item row="0" column="2">
-          <widget class="QPushButton" name="pushButton">
-           <property name="text">
-            <string>PushButton</string>
-           </property>
-          </widget>
-         </item>
-         <item row="1" column="2">
-          <widget class="QPushButton" name="pushButton_2">
-           <property name="text">
-            <string>PushButton</string>
-           </property>
-          </widget>
-         </item>
-        </layout>
        </widget>
       </item>
      </layout>
