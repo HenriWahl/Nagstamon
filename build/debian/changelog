@@ -1,10 +1,11 @@
-nagstamon (2.1-20170831) unstable; urgency=low
+nagstamon (2.1-20170904) unstable; urgency=low
   * New upstream
    - added Kerberos authentification
    - added increased security by taking TLS seriously
    - added window mode
    - added large OK label for fullscreen and window mode
    - added click-somewhere-to-close-statuswindow mode
+   - added custom views to Check_MK
    - added monitor type Monitos3
    - added monitor type SNAG-View 3
    - added monitor type Sensu
@@ -16,7 +17,7 @@ nagstamon (2.1-20170831) unstable; urgency=low
    - fixes for Zabbix
    - switched to pyinstaller
 
- -- Henri Wahl <h.wahl@ifw-dresden.de>  Thu, 10 Aug 2017 16:00:00 +0200
+ -- Henri Wahl <h.wahl@ifw-dresden.de>  Mon, 04 Sep 2017 16:00:00 +0200
 
 nagstamon (2.0.1) stable; urgency=low
   * New upstream

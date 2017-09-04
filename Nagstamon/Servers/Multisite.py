@@ -132,6 +132,17 @@ class MultisiteServer(GenericServer):
         pass
 
 
+    def _is_auth_in_cookies(self):
+        """
+            check if there is any valid auth session in cookies which has the name 'auth_<monitor_name>'
+        """
+        if not self.session == None:
+            for cookie in self.session.cookies:
+                if cookie.startswith('auth_'):
+                    return True
+        return False
+
+
     def _get_url(self, url):
         result = self.FetchURL(url, 'raw')
         content, error, status_code = result.result, result.error, result.status_code
@@ -147,10 +158,6 @@ class MultisiteServer(GenericServer):
             # Print non ERRORS to the log in debug mode
             self.Debug(server=self.get_name(), debug=c[0])
 
-            #raise MultisiteError(False, Result(result = '\n'.join(c[1:]),
-            #                                   content = eval('\n'.join(c[1:])),
-            #
-            # the content argumment does not make sense here, right?                                   error = c[0]))
             raise MultisiteError(False, Result(result='\n'.join(c[1:]),
                                                error=c[0],
                                                status_code=status_code))
@@ -162,16 +169,18 @@ class MultisiteServer(GenericServer):
 
         # in case of auth problem enable GUI auth part in popup
         ###if self.CookieAuth == True and len(self.session.cookies) == 0:
-        if self.CookieAuth == True and not 'auth_monitor' in self.session.cookies:
-            self.refresh_authentication = True
-            return ''
+        if self.CookieAuth == True and not self.session == None:
+            if not 'auth_monitor' in self.session.cookies:
+                self.refresh_authentication = True
+                return ''
 
        # looks like cookieauth
         elif content.startswith('<'):
             self.CookieAuth = True
             # if first attempt login and then try to get data again
             ###if len(self.session.cookies) == 0:
-            if not 'auth_monitor' in self.session.cookies:
+            ###if not 'auth_monitor' in self.session.cookies:
+            if not self._is_auth_in_cookies():
                 self._get_cookie_login()
                 result = self.FetchURL(url, 'raw')
                 content, error = result.result, result.error
