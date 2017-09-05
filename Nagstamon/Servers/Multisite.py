@@ -138,7 +138,7 @@ class MultisiteServer(GenericServer):
         """
         if not self.session == None:
             for cookie in self.session.cookies:
-                if cookie.startswith('auth_'):
+                if cookie.name.startswith('auth_'):
                     return True
         return False
 
@@ -168,9 +168,8 @@ class MultisiteServer(GenericServer):
                                               status_code=status_code))
 
         # in case of auth problem enable GUI auth part in popup
-        ###if self.CookieAuth == True and len(self.session.cookies) == 0:
         if self.CookieAuth == True and not self.session == None:
-            if not 'auth_monitor' in self.session.cookies:
+            if not self._is_auth_in_cookies():
                 self.refresh_authentication = True
                 return ''
 
@@ -178,8 +177,6 @@ class MultisiteServer(GenericServer):
         elif content.startswith('<'):
             self.CookieAuth = True
             # if first attempt login and then try to get data again
-            ###if len(self.session.cookies) == 0:
-            ###if not 'auth_monitor' in self.session.cookies:
             if not self._is_auth_in_cookies():
                 self._get_cookie_login()
                 result = self.FetchURL(url, 'raw')
