@@ -19,7 +19,6 @@
 from datetime import timezone, datetime
 import sys
 import traceback
-from typing import Dict
 from requests.structures import CaseInsensitiveDict
 
 from Nagstamon.Config import conf
@@ -105,7 +104,7 @@ class SensuServer(GenericServer):
         return local_dt.strftime('%Y-%m-%d %H:%M:%S')
 
     def _get_status(self):
-        self.new_hosts = dict()  # type: Dict[str, GenericHost]
+        self.new_hosts = dict()
 
         try:
             events = self._get_all_events()
