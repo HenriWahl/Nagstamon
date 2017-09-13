@@ -59,6 +59,8 @@ class CentreonServer(GenericServer):
     centreon_token = None
     # To only detect broker once
     first_login = True
+    # limit number of services retrived
+    limit_services_number = 9999
 
     def init_config(self):
         '''
@@ -502,18 +504,18 @@ class CentreonServer(GenericServer):
 
         # services (unknown, warning or critical?)
         if self.centreon_version == 2.7 or self.centreon_version == 2.8:
-            nagcgiurl_services = self.urls_centreon['xml_services'] + '?' + urllib.parse.urlencode({'num':0, 'limit':999, 'o':'svcpb', 'p':20201, 'nc':0, 'criticality':0, 'statusService':'svcpb', 'sSetOrderInMemory':1, 'sid':self.SID})
+            nagcgiurl_services = self.urls_centreon['xml_services'] + '?' + urllib.parse.urlencode({'num':0, 'limit':self.limit_services_number, 'o':'svcpb', 'p':20201, 'nc':0, 'criticality':0, 'statusService':'svcpb', 'sSetOrderInMemory':1, 'sid':self.SID})
         else:
-            nagcgiurl_services = self.urls_centreon['xml_services'] + '?' + urllib.parse.urlencode({'num':0, 'limit':999, 'o':'svcpb', 'sort_type':'status', 'sid':self.SID})
+            nagcgiurl_services = self.urls_centreon['xml_services'] + '?' + urllib.parse.urlencode({'num':0, 'limit':self.limit_services_number, 'o':'svcpb', 'sort_type':'status', 'sid':self.SID})
 
         # hosts (up or down or unreachable)
         # define hosts xml URL, because of inconsistant url
         if self.centreon_version == 2.7:
-            nagcgiurl_hosts = self.urls_centreon['xml_hosts'] + '?' + urllib.parse.urlencode({'num':0, 'limit':999, 'o':'hpb', 'p':20202, 'criticality':0, 'statusHost':'hpb', 'sSetOrderInMemory':1, 'sid':self.SID})
+            nagcgiurl_hosts = self.urls_centreon['xml_hosts'] + '?' + urllib.parse.urlencode({'num':0, 'limit':self.limit_services_number, 'o':'hpb', 'p':20202, 'criticality':0, 'statusHost':'hpb', 'sSetOrderInMemory':1, 'sid':self.SID})
         elif self.centreon_version == 2.8:
-            nagcgiurl_hosts = self.urls_centreon['xml_hosts'] + '?' + urllib.parse.urlencode({'num':0, 'limit':999, 'o':'hpb', 'p':20202, 'criticality':0, 'statusHost':'hpb', 'sSetOrderInMemory':1, 'sid':self.SID})
+            nagcgiurl_hosts = self.urls_centreon['xml_hosts'] + '?' + urllib.parse.urlencode({'num':0, 'limit':self.limit_services_number, 'o':'hpb', 'p':20202, 'criticality':0, 'statusHost':'hpb', 'sSetOrderInMemory':1, 'sid':self.SID})
         else:
-            nagcgiurl_hosts = self.urls_centreon['xml_hosts'] + '?' + urllib.parse.urlencode({'num':0, 'limit':999, 'o':'hpb', 'sort_type':'status', 'sid':self.SID})
+            nagcgiurl_hosts = self.urls_centreon['xml_hosts'] + '?' + urllib.parse.urlencode({'num':0, 'limit':self.limit_services_number, 'o':'hpb', 'sort_type':'status', 'sid':self.SID})
 
         # hosts - mostly the down ones
         # unfortunately the hosts status page has a different structure so
@@ -645,9 +647,9 @@ class CentreonServer(GenericServer):
             if self.centreon_version < 2.8:
                 # define meta-services xml URL
                 if self.centreon_version == 2.7:
-                    nagcgiurl_meta_services = self.urls_centreon['xml_meta'] + '?' + urllib.parse.urlencode({'num':0, 'limit':999, 'o':'meta', 'sort_type':'status', 'sid':self.SID})
+                    nagcgiurl_meta_services = self.urls_centreon['xml_meta'] + '?' + urllib.parse.urlencode({'num':0, 'limit':self.limit_services_number, 'o':'meta', 'sort_type':'status', 'sid':self.SID})
                 else:
-                    nagcgiurl_meta_services = self.urls_centreon['xml_meta'] + '?' + urllib.parse.urlencode({'num':0, 'limit':999, 'o':'meta', 'sort_type':'status', 'sid':self.SID})
+                    nagcgiurl_meta_services = self.urls_centreon['xml_meta'] + '?' + urllib.parse.urlencode({'num':0, 'limit':self.limit_services_number, 'o':'meta', 'sort_type':'status', 'sid':self.SID})
 
                 # retrive meta-services xml STATUS
                 result_meta = self.FetchURL(nagcgiurl_meta_services, giveback='xml')
