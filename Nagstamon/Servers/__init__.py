@@ -37,6 +37,9 @@ from Nagstamon.Servers.Thruk import ThrukServer
 from Nagstamon.Servers.Zabbix import ZabbixServer
 from Nagstamon.Servers.Livestatus import LivestatusServer
 from Nagstamon.Servers.Zenoss import ZenossServer
+from Nagstamon.Servers.Monitos3 import Monitos3Server
+from Nagstamon.Servers.SnagView3 import SnagViewServer
+from Nagstamon.Servers.Sensu import SensuServer
 
 from Nagstamon.Config import conf
 
@@ -140,6 +143,11 @@ def create_server(server=None):
     new_server.authentication = server.authentication
     new_server.timeout = server.timeout
 
+    # SSL/TLS
+    new_server.ignore_cert = server.ignore_cert
+    new_server.custom_cert_use = server.custom_cert_use
+    new_server.custom_cert_ca_file = server.custom_cert_ca_file
+
     # if password is not to be saved ask for it at startup
     if (server.enabled is True and server.save_password is False and
             server.use_autologin is False):
@@ -149,13 +157,18 @@ def create_server(server=None):
     # Centreon
     new_server.use_autologin = server.use_autologin
     new_server.autologin_key = server.autologin_key
+
     # Icinga
     new_server.use_display_name_host = server.use_display_name_host
     new_server.use_display_name_service = server.use_display_name_service
+
     # IcingaWeb2
     new_server.no_cookie_auth = server.no_cookie_auth
+
     # Check_MK Multisite
     new_server.force_authuser = server.force_authuser
+    new_server.check_mk_view_hosts = server.check_mk_view_hosts
+    new_server.check_mk_view_services = server.check_mk_view_services
 
     # OP5 api filters
     new_server.host_filter = server.host_filter
@@ -178,8 +191,8 @@ def create_server(server=None):
 
 # moved registration process here because of circular dependencies
 for server in (CentreonServer, IcingaServer, IcingaWeb2Server, MultisiteServer, NagiosServer,
-               Op5MonitorServer, OpsviewServer, ThrukServer, ZabbixServer,
-               LivestatusServer, ZenossServer):
+               Op5MonitorServer, OpsviewServer, ThrukServer, ZabbixServer, SensuServer,
+               LivestatusServer, ZenossServer, Monitos3Server, SnagViewServer):
     register_server(server)
 
 # create servers

@@ -7,8 +7,8 @@
    <rect>
     <x>0</x>
     <y>0</y>
-    <width>650</width>
-    <height>972</height>
+    <width>620</width>
+    <height>1109</height>
    </rect>
   </property>
   <property name="sizePolicy">
@@ -399,7 +399,7 @@
          </layout>
         </widget>
        </item>
-       <item row="10" column="0">
+       <item row="11" column="0">
         <spacer name="verticalSpacer_4">
          <property name="orientation">
           <enum>Qt::Vertical</enum>
@@ -412,7 +412,7 @@
          </property>
         </spacer>
        </item>
-       <item row="9" column="0">
+       <item row="10" column="0">
         <widget class="QGroupBox" name="groupbox_detailed_summary_popup">
          <property name="title">
           <string>Statusbar details popup:</string>
@@ -450,6 +450,16 @@
             <property name="spacing">
              <number>5</number>
             </property>
+            <item row="1" column="1">
+             <widget class="QRadioButton" name="input_radiobutton_close_details_clicking">
+              <property name="text">
+               <string>Close when clicking statusbar</string>
+              </property>
+              <attribute name="buttonGroup">
+               <string notr="true">buttongroup_close_statusbar</string>
+              </attribute>
+             </widget>
+            </item>
             <item row="1" column="0">
              <widget class="QRadioButton" name="input_radiobutton_popup_details_clicking">
               <property name="text">
@@ -480,10 +490,10 @@
               </attribute>
              </widget>
             </item>
-            <item row="1" column="1">
-             <widget class="QRadioButton" name="input_radiobutton_close_details_clicking">
+            <item row="2" column="1">
+             <widget class="QRadioButton" name="input_radiobutton_close_details_clicking_somewhere">
               <property name="text">
-               <string>Close when clicking statusbar</string>
+               <string>Close when clicking somewhere</string>
               </property>
               <attribute name="buttonGroup">
                <string notr="true">buttongroup_close_statusbar</string>
@@ -569,78 +579,48 @@
           <property name="spacing">
            <number>5</number>
           </property>
-          <item row="2" column="0">
-           <layout class="QHBoxLayout" name="horizontalLayout_16">
-            <property name="spacing">
-             <number>5</number>
-            </property>
-            <property name="leftMargin">
-             <number>0</number>
-            </property>
-            <property name="topMargin">
-             <number>0</number>
-            </property>
-            <property name="rightMargin">
-             <number>0</number>
-            </property>
-            <property name="bottomMargin">
-             <number>0</number>
-            </property>
-            <item>
-             <widget class="QRadioButton" name="input_radiobutton_fullscreen">
-              <property name="text">
-               <string>Fullscreen</string>
-              </property>
-             </widget>
-            </item>
-            <item>
-             <layout class="QHBoxLayout" name="horizontalLayout_17">
-              <property name="spacing">
-               <number>5</number>
-              </property>
-              <property name="leftMargin">
-               <number>5</number>
-              </property>
-              <property name="topMargin">
-               <number>0</number>
-              </property>
-              <property name="rightMargin">
-               <number>5</number>
-              </property>
-              <property name="bottomMargin">
-               <number>0</number>
-              </property>
-              <item>
-               <widget class="QLabel" name="label_fullscreen_display">
-                <property name="text">
-                 <string>Display to use:</string>
-                </property>
-               </widget>
-              </item>
-              <item>
-               <widget class="QComboBox" name="input_combobox_fullscreen_display"/>
-              </item>
-              <item>
-               <spacer name="horizontalSpacer_6">
-                <property name="orientation">
-                 <enum>Qt::Horizontal</enum>
-                </property>
-                <property name="sizeHint" stdset="0">
-                 <size>
-                  <width>40</width>
-                  <height>20</height>
-                 </size>
-                </property>
-               </spacer>
-              </item>
-             </layout>
-            </item>
-           </layout>
-          </item>
           <item row="1" column="0">
            <widget class="QRadioButton" name="input_radiobutton_icon_in_systray">
             <property name="text">
              <string>Icon in systray</string>
+            </property>
+           </widget>
+          </item>
+          <item row="7" column="0" colspan="2">
+           <widget class="QCheckBox" name="input_checkbox_systray_offset_use">
+            <property name="text">
+             <string>Use offset to correct position problems</string>
+            </property>
+           </widget>
+          </item>
+          <item row="12" column="0">
+           <layout class="QGridLayout" name="gridLayout_20">
+            <item row="1" column="0">
+             <widget class="QLabel" name="label_fullscreen_display">
+              <property name="text">
+               <string>Display to use:</string>
+              </property>
+             </widget>
+            </item>
+            <item row="0" column="0">
+             <widget class="QLabel" name="label_offset_statuswindow">
+              <property name="text">
+               <string>Offset for statuswindow:</string>
+              </property>
+             </widget>
+            </item>
+            <item row="0" column="1">
+             <widget class="QSpinBox" name="input_spinbox_systray_offset"/>
+            </item>
+            <item row="1" column="1">
+             <widget class="QComboBox" name="input_combobox_fullscreen_display"/>
+            </item>
+           </layout>
+          </item>
+          <item row="5" column="0">
+           <widget class="QRadioButton" name="input_radiobutton_fullscreen">
+            <property name="text">
+             <string>Fullscreen</string>
             </property>
            </widget>
           </item>
@@ -651,10 +631,17 @@
             </property>
            </widget>
           </item>
+          <item row="4" column="0">
+           <widget class="QRadioButton" name="input_radiobutton_windowed">
+            <property name="text">
+             <string>Window</string>
+            </property>
+           </widget>
+          </item>
          </layout>
         </widget>
        </item>
-       <item row="3" column="0">
+       <item row="4" column="0">
         <widget class="QGroupBox" name="groupbox_font">
          <property name="title">
           <string>Font:</string>
@@ -886,59 +873,10 @@
             </property>
            </widget>
           </item>
-          <item row="3" column="0">
-           <widget class="QCheckBox" name="input_checkbox_filter_all_disaster_services">
-            <property name="text">
-             <string>All disaster services</string>
-            </property>
-           </widget>
-          </item>
           <item row="4" column="0">
            <widget class="QCheckBox" name="input_checkbox_filter_all_critical_services">
             <property name="text">
              <string>All critical services</string>
-            </property>
-           </widget>
-          </item>
-          <item row="5" column="0">
-           <widget class="QCheckBox" name="input_checkbox_filter_all_unknown_services">
-            <property name="text">
-             <string>All unknown services</string>
-            </property>
-           </widget>
-          </item>
-          <item row="6" column="0">
-           <widget class="qcheckbox" name="input_checkbox_filter_all_high_services">
-            <property name="text">
-             <string>all high services</string>
-            </property>
-           </widget>
-          </item>
-          <item row="7" column="0">
-           <widget class="qcheckbox" name="input_checkbox_filter_all_average_services">
-            <property name="text">
-             <string>all average services</string>
-            </property>
-           </widget>
-          </item>
-          <item row="8" column="0">
-           <widget class="QCheckBox" name="input_checkbox_filter_all_warning_services">
-            <property name="text">
-             <string>All warning services</string>
-            </property>
-           </widget>
-          </item>
-          <item row="9" column="0">
-           <widget class="QCheckBox" name="input_checkbox_filter_all_information_services">
-            <property name="text">
-             <string>All information services</string>
-            </property>
-           </widget>
-          </item>
-          <item row="10" column="0">
-           <widget class="QCheckBox" name="input_checkbox_filter_all_flapping_services">
-            <property name="text">
-             <string>All flapping services</string>
             </property>
            </widget>
           </item>
@@ -984,6 +922,55 @@
             </property>
            </widget>
           </item>
+          <item row="13" column="0">
+           <widget class="QCheckBox" name="input_checkbox_filter_all_high_services">
+            <property name="text">
+             <string>All high services</string>
+            </property>
+           </widget>
+          </item>
+          <item row="11" column="0">
+           <widget class="QCheckBox" name="input_checkbox_filter_all_disaster_services">
+            <property name="text">
+             <string>All disaster services</string>
+            </property>
+           </widget>
+          </item>
+          <item row="5" column="0">
+           <widget class="QCheckBox" name="input_checkbox_filter_all_flapping_services">
+            <property name="text">
+             <string>All flapping services</string>
+            </property>
+           </widget>
+          </item>
+          <item row="6" column="0">
+           <widget class="QCheckBox" name="input_checkbox_filter_all_unknown_services">
+            <property name="text">
+             <string>All unknown services</string>
+            </property>
+           </widget>
+          </item>
+          <item row="7" column="0">
+           <widget class="QCheckBox" name="input_checkbox_filter_all_warning_services">
+            <property name="text">
+             <string>All warning services</string>
+            </property>
+           </widget>
+          </item>
+          <item row="9" column="0">
+           <widget class="QCheckBox" name="input_checkbox_filter_all_information_services">
+            <property name="text">
+             <string>All information services</string>
+            </property>
+           </widget>
+          </item>
+          <item row="10" column="0">
+           <widget class="QCheckBox" name="input_checkbox_filter_all_average_services">
+            <property name="text">
+             <string>All average services</string>
+            </property>
+           </widget>
+          </item>
           <item row="6" column="1">
            <widget class="QCheckBox" name="input_checkbox_filter_services_on_hosts_in_maintenance">
             <property name="text">
@@ -991,7 +978,7 @@
             </property>
            </widget>
           </item>
-          <item row="8" column="1">
+          <item row="7" column="1">
            <widget class="QCheckBox" name="input_checkbox_filter_services_on_unreachable_hosts">
             <property name="text">
              <string>Services on unreachable hosts</string>
@@ -1379,13 +1366,6 @@
              <number>0</number>
             </property>
             <item>
-             <widget class="QCheckBox" name="input_checkbox_notify_if_information">
-              <property name="text">
-               <string>INFORMATION</string>
-              </property>
-             </widget>
-            </item>
-            <item>
              <widget class="QCheckBox" name="input_checkbox_notify_if_warning">
               <property name="text">
                <string>WARNING</string>
@@ -1393,30 +1373,9 @@
              </widget>
             </item>
             <item>
-             <widget class="QCheckBox" name="input_checkbox_notify_if_average">
-              <property name="text">
-               <string>AVERAGE</string>
-              </property>
-             </widget>
-            </item>
-            <item>
-             <widget class="QCheckBox" name="input_checkbox_notify_if_high">
-              <property name="text">
-               <string>HIGH</string>
-              </property>
-             </widget>
-            </item>
-            <item>
              <widget class="QCheckBox" name="input_checkbox_notify_if_critical">
               <property name="text">
                <string>CRITICAL</string>
-              </property>
-             </widget>
-            </item>
-            <item>
-             <widget class="QCheckBox" name="input_checkbox_notify_if_disaster">
-              <property name="text">
-               <string>DISASTER</string>
               </property>
              </widget>
             </item>
@@ -1440,6 +1399,64 @@
                <string>DOWN</string>
               </property>
              </widget>
+            </item>
+            <item>
+             <spacer name="horizontalSpacer_7">
+              <property name="orientation">
+               <enum>Qt::Horizontal</enum>
+              </property>
+              <property name="sizeHint" stdset="0">
+               <size>
+                <width>40</width>
+                <height>20</height>
+               </size>
+              </property>
+             </spacer>
+            </item>
+           </layout>
+          </item>
+          <item>
+           <layout class="QHBoxLayout" name="horizontalLayout_notifications_zabbix">
+            <item>
+             <widget class="QCheckBox" name="input_checkbox_notify_if_information">
+              <property name="text">
+               <string>INFORMATION</string>
+              </property>
+             </widget>
+            </item>
+            <item>
+             <widget class="QCheckBox" name="input_checkbox_notify_if_disaster">
+              <property name="text">
+               <string>DISASTER</string>
+              </property>
+             </widget>
+            </item>
+            <item>
+             <widget class="QCheckBox" name="input_checkbox_notify_if_average">
+              <property name="text">
+               <string>AVERAGE</string>
+              </property>
+             </widget>
+            </item>
+            <item>
+             <widget class="QCheckBox" name="input_checkbox_notify_if_high">
+              <property name="text">
+               <string>HIGH</string>
+              </property>
+             </widget>
+            </item>
+            <item>
+             <spacer name="horizontalSpacer_5">
+              <property name="orientation">
+               <enum>Qt::Horizontal</enum>
+              </property>
+              <property name="sizeHint" stdset="0">
+               <size>
+                <width>40</width>
+                <height>20</height>
+               </size>
+              </property>
+             </spacer>
             </item>
            </layout>
           </item>
@@ -1634,7 +1651,25 @@
               <number>5</number>
              </property>
              <item row="3" column="2">
-              <widget class="QLineEdit" name="input_lineedit_notification_action_ok_string"/>
+              <widget class="QLineEdit" name="input_lineedit_notification_action_ok_string">
+               <property name="toolTip">
+                <string>Available variables for action strings:
+
+$HOST$ - host as in monitor
+$SERVICE$ - service as in monitor
+$MONITOR$ - monitor address
+$MONITOR-CGI$ - monitor CGI address
+$ADDRESS$ - address of host, delivered from connection method
+$USERNAME$ - username on monitor
+$STATUS-INFO$ - status information for host or service
+$PASSWORD$ - username's password on monitor
+$COMMENT-ACK$ - default acknowledge comment
+$COMMENT-DOWN$ - default downtime comment
+$COMMENT-SUBMIT$ - default submit check result comment
+
+$TRANSID$ - only useful for Check_MK as _transid=$TRANSID$</string>
+               </property>
+              </widget>
              </item>
              <item row="1" column="0">
               <widget class="QCheckBox" name="input_checkbox_notification_action_critical">
@@ -1665,7 +1700,25 @@
               </widget>
              </item>
              <item row="2" column="2">
-              <widget class="QLineEdit" name="input_lineedit_notification_action_down_string"/>
+              <widget class="QLineEdit" name="input_lineedit_notification_action_down_string">
+               <property name="toolTip">
+                <string>Available variables for action strings:
+
+$HOST$ - host as in monitor
+$SERVICE$ - service as in monitor
+$MONITOR$ - monitor address
+$MONITOR-CGI$ - monitor CGI address
+$ADDRESS$ - address of host, delivered from connection method
+$USERNAME$ - username on monitor
+$STATUS-INFO$ - status information for host or service
+$PASSWORD$ - username's password on monitor
+$COMMENT-ACK$ - default acknowledge comment
+$COMMENT-DOWN$ - default downtime comment
+$COMMENT-SUBMIT$ - default submit check result comment
+
+$TRANSID$ - only useful for Check_MK as _transid=$TRANSID$</string>
+               </property>
+              </widget>
              </item>
              <item row="4" column="0" colspan="3">
               <widget class="QCheckBox" name="input_checkbox_notification_custom_action">
@@ -1720,16 +1773,70 @@
                  <widget class="QLineEdit" name="input_lineedit_notification_custom_action_separator"/>
                 </item>
                 <item row="1" column="1">
-                 <widget class="QLineEdit" name="input_lineedit_notification_custom_action_string"/>
+                 <widget class="QLineEdit" name="input_lineedit_notification_custom_action_string">
+                  <property name="toolTip">
+                   <string>Available variables for action strings:
+
+$HOST$ - host as in monitor
+$SERVICE$ - service as in monitor
+$MONITOR$ - monitor address
+$MONITOR-CGI$ - monitor CGI address
+$ADDRESS$ - address of host, delivered from connection method
+$USERNAME$ - username on monitor
+$STATUS-INFO$ - status information for host or service
+$PASSWORD$ - username's password on monitor
+$COMMENT-ACK$ - default acknowledge comment
+$COMMENT-DOWN$ - default downtime comment
+$COMMENT-SUBMIT$ - default submit check result comment
+
+$TRANSID$ - only useful for Check_MK as _transid=$TRANSID$</string>
+                  </property>
+                 </widget>
                 </item>
                </layout>
               </widget>
              </item>
              <item row="1" column="2">
-              <widget class="QLineEdit" name="input_lineedit_notification_action_critical_string"/>
+              <widget class="QLineEdit" name="input_lineedit_notification_action_critical_string">
+               <property name="toolTip">
+                <string>Available variables for action strings:
+
+$HOST$ - host as in monitor
+$SERVICE$ - service as in monitor
+$MONITOR$ - monitor address
+$MONITOR-CGI$ - monitor CGI address
+$ADDRESS$ - address of host, delivered from connection method
+$USERNAME$ - username on monitor
+$STATUS-INFO$ - status information for host or service
+$PASSWORD$ - username's password on monitor
+$COMMENT-ACK$ - default acknowledge comment
+$COMMENT-DOWN$ - default downtime comment
+$COMMENT-SUBMIT$ - default submit check result comment
+
+$TRANSID$ - only useful for Check_MK as _transid=$TRANSID$</string>
+               </property>
+              </widget>
              </item>
              <item row="0" column="2">
-              <widget class="QLineEdit" name="input_lineedit_notification_action_warning_string"/>
+              <widget class="QLineEdit" name="input_lineedit_notification_action_warning_string">
+               <property name="toolTip">
+                <string>Available variables for action strings:
+
+$HOST$ - host as in monitor
+$SERVICE$ - service as in monitor
+$MONITOR$ - monitor address
+$MONITOR-CGI$ - monitor CGI address
+$ADDRESS$ - address of host, delivered from connection method
+$USERNAME$ - username on monitor
+$STATUS-INFO$ - status information for host or service
+$PASSWORD$ - username's password on monitor
+$COMMENT-ACK$ - default acknowledge comment
+$COMMENT-DOWN$ - default downtime comment
+$COMMENT-SUBMIT$ - default submit check result comment
+
+$TRANSID$ - only useful for Check_MK as _transid=$TRANSID$</string>
+               </property>
+              </widget>
              </item>
             </layout>
            </widget>
@@ -1823,7 +1930,7 @@
           <item>
            <widget class="QLabel" name="label_color_information">
             <property name="text">
-             <string> INFORMATIOn </string>
+             <string> INFORMATION</string>
             </property>
            </widget>
           </item>
@@ -2782,12 +2889,18 @@
   <tabstop>input_radiobutton_long_display</tabstop>
   <tabstop>input_radiobutton_short_display</tabstop>
   <tabstop>input_radiobutton_statusbar_floating</tabstop>
+  <tabstop>input_radiobutton_icon_in_systray</tabstop>
   <tabstop>input_radiobutton_fullscreen</tabstop>
+  <tabstop>input_checkbox_systray_offset_use</tabstop>
+  <tabstop>input_spinbox_systray_offset</tabstop>
   <tabstop>input_combobox_fullscreen_display</tabstop>
+  <tabstop>button_fontchooser</tabstop>
+  <tabstop>button_default_font</tabstop>
   <tabstop>input_radiobutton_popup_details_hover</tabstop>
-  <tabstop>input_radiobutton_close_details_hover</tabstop>
   <tabstop>input_radiobutton_popup_details_clicking</tabstop>
+  <tabstop>input_radiobutton_close_details_hover</tabstop>
   <tabstop>input_radiobutton_close_details_clicking</tabstop>
+  <tabstop>input_radiobutton_close_details_clicking_somewhere</tabstop>
   <tabstop>input_checkbox_highlight_new_events</tabstop>
   <tabstop>input_checkbox_show_tooltips</tabstop>
   <tabstop>input_combobox_default_sort_field</tabstop>
@@ -2795,14 +2908,14 @@
   <tabstop>input_checkbox_filter_all_down_hosts</tabstop>
   <tabstop>input_checkbox_filter_all_unreachable_hosts</tabstop>
   <tabstop>input_checkbox_filter_all_flapping_hosts</tabstop>
-  <tabstop>input_checkbox_filter_all_disaster_services</tabstop>
   <tabstop>input_checkbox_filter_all_critical_services</tabstop>
+  <tabstop>input_checkbox_filter_all_flapping_services</tabstop>
   <tabstop>input_checkbox_filter_all_unknown_services</tabstop>
-  <tabstop>input_checkbox_filter_all_high_services</tabstop>
-  <tabstop>input_checkbox_filter_all_average_services</tabstop>
   <tabstop>input_checkbox_filter_all_warning_services</tabstop>
   <tabstop>input_checkbox_filter_all_information_services</tabstop>
-  <tabstop>input_checkbox_filter_all_flapping_services</tabstop>
+  <tabstop>input_checkbox_filter_all_average_services</tabstop>
+  <tabstop>input_checkbox_filter_all_disaster_services</tabstop>
+  <tabstop>input_checkbox_filter_all_high_services</tabstop>
   <tabstop>input_checkbox_filter_acknowledged_hosts_services</tabstop>
   <tabstop>input_checkbox_filter_hosts_services_disabled_notifications</tabstop>
   <tabstop>input_checkbox_filter_hosts_services_disabled_checks</tabstop>
@@ -2830,16 +2943,20 @@
   <tabstop>input_radiobutton_connect_by_host</tabstop>
   <tabstop>input_radiobutton_connect_by_dns</tabstop>
   <tabstop>input_radiobutton_connect_by_ip</tabstop>
+  <tabstop>input_radiobutton_use_default_browser</tabstop>
+  <tabstop>input_radiobutton_use_custom_browser</tabstop>
+  <tabstop>input_lineedit_custom_browser</tabstop>
+  <tabstop>button_choose_browser</tabstop>
   <tabstop>input_checkbox_notification</tabstop>
-  <tabstop>input_checkbox_notify_if_information</tabstop>
   <tabstop>input_checkbox_notify_if_warning</tabstop>
-  <tabstop>input_checkbox_notify_if_average</tabstop>
-  <tabstop>input_checkbox_notify_if_high</tabstop>
   <tabstop>input_checkbox_notify_if_critical</tabstop>
-  <tabstop>input_checkbox_notify_if_disaster</tabstop>
   <tabstop>input_checkbox_notify_if_unknown</tabstop>
   <tabstop>input_checkbox_notify_if_unreachable</tabstop>
   <tabstop>input_checkbox_notify_if_down</tabstop>
+  <tabstop>input_checkbox_notify_if_information</tabstop>
+  <tabstop>input_checkbox_notify_if_disaster</tabstop>
+  <tabstop>input_checkbox_notify_if_average</tabstop>
+  <tabstop>input_checkbox_notify_if_high</tabstop>
   <tabstop>input_checkbox_notification_flashing</tabstop>
   <tabstop>input_checkbox_notification_desktop</tabstop>
   <tabstop>input_checkbox_notification_sound</tabstop>
@@ -2903,7 +3020,11 @@
   <tabstop>input_spinbox_defaults_downtime_duration_minutes</tabstop>
   <tabstop>input_lineedit_defaults_downtime_comment</tabstop>
   <tabstop>input_lineedit_defaults_submit_check_result_comment</tabstop>
-  <tabstop>input_radiobutton_icon_in_systray</tabstop>
+  <tabstop>tabs</tabstop>
+  <tabstop>input_checkbox_show_grid</tabstop>
+  <tabstop>input_checkbox_grid_use_custom_intensity</tabstop>
+  <tabstop>input_slider_grid_alternation_intensity</tabstop>
+  <tabstop>input_radiobutton_windowed</tabstop>
  </tabstops>
  <resources/>
  <connections>
@@ -2941,7 +3062,7 @@
   </connection>
  </connections>
  <buttongroups>
-  <buttongroup name="buttongroup_close_statusbar"/>
   <buttongroup name="buttongroup_popup_statuswindow"/>
+  <buttongroup name="buttongroup_close_statusbar"/>
  </buttongroups>
 </ui>

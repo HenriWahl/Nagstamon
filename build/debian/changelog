@@ -1,8 +1,23 @@
-nagstamon (2.1-20161129) unstable; urgency=low
+nagstamon (3.0) stable; urgency=low
   * New upstream
-   - Development 'master' branch
-   
- -- Henri Wahl <h.wahl@ifw-dresden.de>  Wed, 02 Nov 2016 08:00:00 +0200
+   - added Kerberos authentification
+   - added increased security by taking TLS seriously
+   - added window mode
+   - added large OK label for fullscreen and window mode
+   - added click-somewhere-to-close-statuswindow mode
+   - added custom views to Check_MK
+   - added monitor type Monitos3
+   - added monitor type SNAG-View 3
+   - added monitor type Sensu
+   - fixes statuswindow garbage when changing mode
+   - fixed filename bug
+   - fixed check for .Xauthority file
+   - fixes for Centreon
+   - fixes for Check_MK 1.4.0
+   - fixes for Zabbix
+   - switched to pyinstaller
+
+ -- Henri Wahl <h.wahl@ifw-dresden.de>  Wed, 13 Sep 2017 16:00:00 +0200
 
 nagstamon (2.0.1) stable; urgency=low
   * New upstream

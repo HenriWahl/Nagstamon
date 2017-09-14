@@ -16,15 +16,16 @@ BuildRequires: python3-devel
 BuildRequires: python3-qt5-devel
 BuildRequires: desktop-file-utils
 Requires:      python3
-Requires:      python3-qt5
 Requires:      python3-beautifulsoup4
-Requires:      python3-requests
-Requires:      python3-requests-kerberos
-Requires:      python3-qt5
-Requires:      python3-SecretStorage
 Requires:      python3-crypto
 Requires:      python3-cryptography
+Requires:      python3-keyring
+Requires:      python3-lxml
 Requires:      python3-psutil
+Requires:      python3-qt5
+Requires:      python3-requests
+Requires:      python3-requests-kerberos
+Requires:      python3-SecretStorage
 Requires:      qt5-qtsvg
 Requires:      qt5-qtmultimedia
 

@@ -81,15 +81,19 @@ class MultisiteServer(GenericServer):
         # Prepare all urls needed by nagstamon if not yet done
         if len(self.urls) == len(self.statemap):
             self.urls = {
-              'api_services':    self.monitor_url + 'view.py?view_name=nagstamon_svc&output_format=python&lang=&limit=hard',
+              'api_services':    self.monitor_url + 'view.py?view_name={0}&output_format=python&lang=&limit=hard'.\
+                                                                          format(self.check_mk_view_services),
               'human_services':  self.monitor_url + 'index.py?%s' % \
-                                                   urllib.parse.urlencode({'start_url': 'view.py?view_name=nagstamon_svc'}),
+                                                   urllib.parse.urlencode({'start_url': 'view.py?view_name={0}'.\
+                                                                          format(self.check_mk_view_services)}),
               'human_service':   self.monitor_url + 'index.py?%s' %
                                                    urllib.parse.urlencode({'start_url': 'view.py?view_name=service'}),
 
-              'api_hosts':       self.monitor_url + 'view.py?view_name=nagstamon_hosts&output_format=python&lang=&limit=hard',
+              'api_hosts':       self.monitor_url + 'view.py?view_name={0}&output_format=python&lang=&limit=hard'.\
+                                                                          format(self.check_mk_view_hosts),
               'human_hosts':     self.monitor_url + 'index.py?%s' %
-                                                   urllib.parse.urlencode({'start_url': 'view.py?view_name=nagstamon_hosts'}),
+                                                   urllib.parse.urlencode({'start_url': 'view.py?view_name={0}'.\
+                                                                           format(self.check_mk_view_services)}),
               'human_host':      self.monitor_url + 'index.py?%s' %
                                                    urllib.parse.urlencode({'start_url': 'view.py?view_name=hoststatus'}),
               # URLs do not need pythonic output because since werk #0766 API does not work with transid=-1 anymore
@@ -128,6 +132,17 @@ class MultisiteServer(GenericServer):
         pass
 
 
+    def _is_auth_in_cookies(self):
+        """
+            check if there is any valid auth session in cookies which has the name 'auth_<monitor_name>'
+        """
+        if not self.session == None:
+            for cookie in self.session.cookies:
+                if cookie.name.startswith('auth_'):
+                    return True
+        return False
+
+
     def _get_url(self, url):
         result = self.FetchURL(url, 'raw')
         content, error, status_code = result.result, result.error, result.status_code
@@ -143,10 +158,6 @@ class MultisiteServer(GenericServer):
             # Print non ERRORS to the log in debug mode
             self.Debug(server=self.get_name(), debug=c[0])
 
-            #raise MultisiteError(False, Result(result = '\n'.join(c[1:]),
-            #                                   content = eval('\n'.join(c[1:])),
-            #
-            # the content argumment does not make sense here, right?                                   error = c[0]))
             raise MultisiteError(False, Result(result='\n'.join(c[1:]),
                                                error=c[0],
                                                status_code=status_code))
@@ -157,15 +168,16 @@ class MultisiteServer(GenericServer):
                                               status_code=status_code))
 
         # in case of auth problem enable GUI auth part in popup
-        if self.CookieAuth == True and len(self.session.cookies) == 0:
-            self.refresh_authentication = True
-            return ''
+        if self.CookieAuth == True and not self.session == None:
+            if not self._is_auth_in_cookies():
+                self.refresh_authentication = True
+                return ''
 
        # looks like cookieauth
         elif content.startswith('<'):
             self.CookieAuth = True
             # if first attempt login and then try to get data again
-            if len(self.session.cookies) == 0:
+            if not self._is_auth_in_cookies():
                 self._get_cookie_login()
                 result = self.FetchURL(url, 'raw')
                 content, error = result.result, result.error

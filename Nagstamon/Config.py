@@ -26,6 +26,7 @@ import configparser
 import base64
 import zlib
 import datetime
+import keyring
 from collections import OrderedDict
 
 # avoid build error because of debug_queue unknown to setup.py
@@ -48,9 +49,51 @@ BOOLPOOL = {'False': False,
             False: False,
             True: True}
 
+# config settings which should always be strings, never converted to integer or bool
+CONFIG_STRINGS = ['custom_browser',
+                  'debug_file',
+                  'notification_custom_sound_warning',
+                  'notification_custom_sound_critical',
+                  'notification_custom_sound_down',
+                  'notification_action_warning_string',
+                  'notification_action_critical_string',
+                  'notification_action_down_string',
+                  'notification_action_ok_string',
+                  'notification_custom_action_string',
+                  'notification_custom_action_separator',
+                  're_host_pattern',
+                  're_service_pattern',
+                  're_status_information_pattern',
+                  're_criticality_pattern',
+                  'font',
+                  'defaults_acknowledge_comment',
+                  'defaults_submit_check_result_comment',
+                  'defaults_downtime_comment',
+                  'name',
+                  'monitor_url',
+                  'monitor_cgi_url',
+                  'username',
+                  'password',
+                  'proxy_address',
+                  'proxy_username',
+                  'proxy_password',
+                  'autologin_key',
+                  'custom_cert_ca_file',
+                  'monitor_site'
+                  ]
+
 # needed when OS-specific decisions have to be made, mostly Linux/non-Linux
 NON_LINUX = ('Darwin', 'Windows')
 
+# invalid characters in path names of config files have to be replaced
+INVALID_CHARACTERS = { '\\': '_backslash_',
+                       '/': '_slash_',
+                       ':': '_colon_',
+                       '*': '_aterisk_',
+                       '?': '_question_mark_',
+                       '"': '_double_quotes_',
+                       '<': '_less_than_',
+                       '>': '_greater_than_'}
 
 class AppInfo(object):
 
@@ -58,9 +101,9 @@ class AppInfo(object):
         contains app information previously located in GUI.py
     """
     NAME = 'Nagstamon'
-    VERSION = '2.1-20170131'
+    VERSION = '3.0'
     WEBSITE = 'https://nagstamon.ifw-dresden.de'
-    COPYRIGHT = '©2008-2016 Henri Wahl et al.'
+    COPYRIGHT = '©2008-2017 Henri Wahl et al.'
     COMMENTS = 'Nagios status monitor for your desktop'
     # version URL depends on version string
     if 'alpha' in VERSION.lower() or\
@@ -117,10 +160,13 @@ class Config(object):
         self.filter_services_in_soft_state = False
         self.position_x = 30
         self.position_y = 30
+        self.position_width = 640
+        self.position_height = 480
         self.popup_details_hover = True
         self.popup_details_clicking = False
         self.close_details_hover = True
         self.close_details_clicking = False
+        self.close_details_clicking_somewhere = False
         self.connect_by_host = True
         self.connect_by_dns = False
         self.connect_by_ip = False
@@ -198,9 +244,11 @@ class Config(object):
         self.color_error_background = self.default_color_error_background = '#D3D3D3'
         self.statusbar_floating = True
         self.icon_in_systray = False
-        # ##self.appindicator = False
+        self.windowed = False
         self.fullscreen = False
         self.fullscreen_display = 0
+        self.systray_offset_use = False
+        self.systray_offset = 10
         self.font = ''
         self.defaults_acknowledge_sticky = False
         self.defaults_acknowledge_send_notification = False
@@ -234,10 +282,6 @@ class Config(object):
 
         # Parse the command line
         parser = argparse.ArgumentParser(description='Nagstamon for your CLI')
-        # might be not necessary anymore - to be tested
-        # ##parser.add_argument('-psn', action='store_true',
-        # ##    help='force ~/.nagstamon as config folder (used by launchd in MacOSX)')
-        # necessary because otherwise setup.py goes crazy of argparse
 
         # separate NagstaCLI from
         if len(sys.argv) > 2 or (len(sys.argv) > 1 and sys.argv[1] in ['--help', '-h']):
@@ -257,11 +301,6 @@ class Config(object):
         self.cli_args, unknown = parser.parse_known_args()
 
         # try to use a given config file - there must be one given
-        # if sys.argv is larger than 1
-        # ##if args.psn:
-        # ##    # new configdir approach
-        # ##    self.configdir = os.path.expanduser('~') + os.sep + '.nagstamon'
-        # ##elif args.cfgpath:
         if len(sys.argv) < 3 and self.cli_args.config:
             # allow to give a config file
             self.configdir = self.cli_args.config
@@ -322,7 +361,6 @@ class Config(object):
             # and all the thousands 1.0 installations do not know it yet it will be more comfortable
             # for most of the Windows users if it is only defined as False after it was checked
             # from config file
-            # if not self.__dict__.has_key("use_system_keyring"):
             if 'use_system_keyring' not in self.__dict__.keys():
                 if self.unconfigured is True:
                     # an unconfigured system should start with no keyring to prevent crashes
@@ -373,11 +411,6 @@ class Config(object):
                 if servers[server].save_password == 'False':
                     servers[server].password = ""
                 elif self.keyring_available and self.use_system_keyring:
-                    # necessary to import on-the-fly due to possible Windows crashes
-                    if platform.system() in NON_LINUX:
-                        import keyring
-                    else:
-                        import Nagstamon.thirdparty.keyring as keyring
                     password = keyring.get_password('Nagstamon', '@'.join((servers[server].username,
                                                                            servers[server].monitor_url))) or ""
                     if password == "":
@@ -389,11 +422,6 @@ class Config(object):
                     servers[server].password = self.DeObfuscate(servers[server].password)
                 # proxy password
                 if self.keyring_available and self.use_system_keyring:
-                    # necessary to import on-the-fly due to possible Windows crashes
-                    if platform.system() in NON_LINUX:
-                        import keyring
-                    else:
-                        import Nagstamon.thirdparty.keyring as keyring
                     proxy_password = keyring.get_password('Nagstamon', '@'.join(('proxy',
                                                                                  servers[server].proxy_username,
                                                                                  servers[server].proxy_address))) or ""
@@ -435,7 +463,8 @@ class Config(object):
                         config.read(self.configdir + os.sep + settingsdir + os.sep + f)
 
                         # create object for every setting
-                        name = f.split('_', 1)[1].rpartition('.')[0]
+                        name = config.sections()[0].replace(setting + '_', '', 1)
+
                         settings[name] = globals()[configobj]()
 
                         # go through all items of the server
@@ -538,11 +567,6 @@ class Config(object):
                                 value = ''
                             elif self.keyring_available and self.use_system_keyring:
                                 if self.__dict__[settingsdir][s].password != '':
-                                    # necessary to import on-the-fly due to possible Windows crashes
-                                    if platform.system() in NON_LINUX:
-                                        import keyring
-                                    else:
-                                        import Nagstamon.thirdparty.keyring as keyring
                                     # provoke crash if password saving does not work - this is the case
                                     # on newer Ubuntu releases
                                     try:
@@ -556,11 +580,6 @@ class Config(object):
                                 value = ''
                         if option == 'proxy_password':
                             if self.keyring_available and self.use_system_keyring:
-                                # necessary to import on-the-fly due to possible Windows crashes
-                                if platform.system() in NON_LINUX:
-                                    import keyring
-                                else:
-                                    import Nagstamon.thirdparty.keyring as keyring
                                 if self.__dict__[settingsdir][s].proxy_password != '':
                                     # provoke crash if password saving does not work - this is the case
                                     # on newer Ubuntu releases
@@ -584,7 +603,13 @@ class Config(object):
             # open, save and close config_server file
             if not os.path.exists(self.configdir + os.sep + settingsdir):
                 os.makedirs(self.configdir + os.sep + settingsdir)
-            f = open(os.path.normpath(self.configdir + os.sep + settingsdir + os.sep + setting + "_" + s + ".conf"), "w")
+
+            # replace invalid characters by their literal replacements
+            s_clean = s
+            for c in INVALID_CHARACTERS:
+                s_clean = s_clean.replace(c, INVALID_CHARACTERS[c])
+
+            f = open(os.path.normpath(self.configdir + os.sep + settingsdir + os.sep + setting + "_" + s_clean + ".conf"), "w")
             config.write(f)
             f.close()
 
@@ -616,7 +641,7 @@ class Config(object):
                     return False
             else:
                 # keyring and secretstorage have to be importable
-                import Nagstamon.thirdparty.keyring as keyring
+                import keyring
                 # import secretstorage module as dependency of keyring -
                 # if not available keyring won't work
                 import secretstorage
@@ -795,7 +820,7 @@ class Config(object):
 class Server(object):
 
     """
-    one Server realized as object for config info
+        one Server realized as object for config info
     """
 
     def __init__(self):
@@ -812,11 +837,16 @@ class Server(object):
         self.proxy_address = 'http://proxyserver:port/'
         self.proxy_username = 'proxyusername'
         self.proxy_password = 'proxypassword'
-        # defaults to 'basic', another possible value at the moment is 'digest'
+        # defaults to 'basic', other possible values are 'digest' and 'kerberos'
         self.authentication = 'basic'
         self.timeout = 10
         # just GUI-wise deciding if more options are shown in server dialog
         self.show_options = False
+
+        # SSL/TLS certificate verification
+        self.ignore_cert = False
+        self.custom_cert_use = False
+        self.custom_cert_ca_file = ''
 
         # special FX
         # Centreon autologin
@@ -834,11 +864,15 @@ class Server(object):
         # Force Check_MK livestatus code to set AuthUser header for users who
         # are permitted to see all objects.
         self.force_authuser = False
+        self.check_mk_view_hosts = 'nagstamon_hosts'
+        self.check_mk_view_services = 'nagstamon_svc'
 
         # OP5 api filters
         self.host_filter = 'state !=0'
         self.service_filter = 'state !=0 or host.state != 0'
 
+        # Sensu/Uchiwa/??? Datacenter/Site config
+        self.monitor_site = 'Site 1'
 
 class Action(object):
 

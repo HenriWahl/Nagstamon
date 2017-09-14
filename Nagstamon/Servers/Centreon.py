@@ -24,8 +24,6 @@ import socket
 import sys
 import re
 import copy
-# import time
-# import datetime
 
 from Nagstamon.Objects import *
 from Nagstamon.Servers.Generic import GenericServer
@@ -52,18 +50,26 @@ class CentreonServer(GenericServer):
     # Entries for monitor default actions in context menu
     MENU_ACTIONS = ['Monitor', 'Recheck', 'Acknowledge', 'Downtime']
 
+    # Centreon works better or at all with html.parser for BeautifulSoup
+    PARSER = 'html.parser'
+
     # Needed to detect each Centreon's version
     centreon_version = None
     # Token that centreon use to protect the system
     centreon_token = None
     # To only detect broker once
     first_login = True
+    # limit number of services retrived
+    limit_services_number = 9999
 
     def init_config(self):
         '''
         dummy init_config, called at thread start, not really needed here, just omit extra properties
         '''
-        pass
+        # set URLs here already
+        self.init_HTTP()
+        if not self.tls_error:
+            self._define_url()
 
     def init_HTTP(self):
         """
@@ -136,6 +142,11 @@ class CentreonServer(GenericServer):
             else:
                 if conf.debug_mode is True:
                     self.Debug(server=self.get_name(), debug='Error getting the home page: ' + error_versioncheck)
+
+            if self.first_login:
+                self.SID = self._get_sid().result
+                self.first_login = False
+
             del result_versioncheck, raw_versioncheck, error_versioncheck
 
     def reset_HTTP(self):
@@ -219,7 +230,6 @@ class CentreonServer(GenericServer):
             # those broker urls would not be changing too often so this check migth be done here
             if self.first_login:
                 self._get_xml_path(sid)
-                self._define_url()
                 self.first_login = False
             return Result(result=sid)
 
@@ -483,18 +493,32 @@ class CentreonServer(GenericServer):
 
         # services (unknown, warning or critical?)
         if self.centreon_version == 2.7 or self.centreon_version == 2.8:
+<<<<<<< HEAD
             nagcgiurl_services = self.urls_centreon['xml_services'] + '?' + urllib.parse.urlencode({'num': 0, 'limit': 999, 'o': 'svcpb', 'p': 20201, 'nc': 0, 'criticality': 0, 'statusService': 'svcpb', 'sSetOrderInMemory': 1, 'sid': self.SID})
         else:
             nagcgiurl_services = self.urls_centreon['xml_services'] + '?' + urllib.parse.urlencode({'num': 0, 'limit': 999, 'o': 'svcpb', 'sort_type': 'status', 'sid': self.SID})
+=======
+            nagcgiurl_services = self.urls_centreon['xml_services'] + '?' + urllib.parse.urlencode({'num':0, 'limit':self.limit_services_number, 'o':'svcpb', 'p':20201, 'nc':0, 'criticality':0, 'statusService':'svcpb', 'sSetOrderInMemory':1, 'sid':self.SID})
+        else:
+            nagcgiurl_services = self.urls_centreon['xml_services'] + '?' + urllib.parse.urlencode({'num':0, 'limit':self.limit_services_number, 'o':'svcpb', 'sort_type':'status', 'sid':self.SID})
+>>>>>>> upstream/master
 
         # hosts (up or down or unreachable)
         # define hosts xml URL, because of inconsistant url
         if self.centreon_version == 2.7:
+<<<<<<< HEAD
             nagcgiurl_hosts = self.urls_centreon['xml_hosts'] + '?' + urllib.parse.urlencode({'num': 0, 'limit': 999, 'o': 'hpb', 'p': 20202, 'criticality': 0, 'statusHost': 'hpb', 'sSetOrderInMemory': 1, 'sid': self.SID})
         elif self.centreon_version == 2.8:
             nagcgiurl_hosts = self.urls_centreon['xml_hosts'] + '?' + urllib.parse.urlencode({'num': 0, 'limit': 999, 'o': 'hpb', 'p': 20202, 'criticality': 0, 'statusHost': 'hpb', 'sSetOrderInMemory': 1, 'sid': self.SID})
         else:
             nagcgiurl_hosts = self.urls_centreon['xml_hosts'] + '?' + urllib.parse.urlencode({'num': 0, 'limit': 999, 'o': 'hpb', 'sort_type': 'status', 'sid': self.SID})
+=======
+            nagcgiurl_hosts = self.urls_centreon['xml_hosts'] + '?' + urllib.parse.urlencode({'num':0, 'limit':self.limit_services_number, 'o':'hpb', 'p':20202, 'criticality':0, 'statusHost':'hpb', 'sSetOrderInMemory':1, 'sid':self.SID})
+        elif self.centreon_version == 2.8:
+            nagcgiurl_hosts = self.urls_centreon['xml_hosts'] + '?' + urllib.parse.urlencode({'num':0, 'limit':self.limit_services_number, 'o':'hpb', 'p':20202, 'criticality':0, 'statusHost':'hpb', 'sSetOrderInMemory':1, 'sid':self.SID})
+        else:
+            nagcgiurl_hosts = self.urls_centreon['xml_hosts'] + '?' + urllib.parse.urlencode({'num':0, 'limit':self.limit_services_number, 'o':'hpb', 'sort_type':'status', 'sid':self.SID})
+>>>>>>> upstream/master
 
         # hosts - mostly the down ones
         # unfortunately the hosts status page has a different structure so
@@ -505,9 +529,16 @@ class CentreonServer(GenericServer):
 
             # check if any error occured
             errors_occured = self.check_for_error(xmlobj, error, status_code)
+
             # if there are errors return them
             if errors_occured is not False:
                 return(errors_occured)
+
+            # Check if the result is not empty
+            if len(xmlobj) == 0:
+                if conf.debug_mode == True:
+                    self.Debug(server=self.get_name(), debug='Empty host XML result')
+                return Result(result=None, error="Empty host XML result")
 
             # in case there are no children session ID is expired
             if xmlobj.text.lower() == 'bad session id':
@@ -519,10 +550,10 @@ class CentreonServer(GenericServer):
                 self.SID = self._get_sid().result
                 result = self.FetchURL(nagcgiurl_hosts, giveback='xml')
                 xmlobj, error, status_code = result.result, result.error, result.status_code
-                if error != '' or status_code > 400:
-                    return Result(result=copy.deepcopy(xmlobj),
-                                  error=copy.deepcopy(error),
-                                  status_code=status_code)
+                errors_occured = self.check_for_error(xmlobj, error, status_code)
+                # if there are errors return them
+                if errors_occured != False:
+                    return(errors_occured)
 
                 # a second time a bad session id should raise an error
                 if xmlobj.text.lower() == 'bad session id':
@@ -589,6 +620,12 @@ class CentreonServer(GenericServer):
             if errors_occured is not False:
                 return(errors_occured)
 
+            # Check if the result is not empty
+            if len(xmlobj) == 0:
+                if conf.debug_mode == True:
+                    self.Debug(server=self.get_name(), debug='Empty service XML result')
+                return Result(result=None, error="Empty service XML result")
+
             # in case there are no children session id is invalid
             if xmlobj.text.lower() == 'bad session id':
                 # debug
@@ -598,10 +635,11 @@ class CentreonServer(GenericServer):
                 self.SID = self._get_sid().result
                 result = self.FetchURL(nagcgiurl_services, giveback='xml')
                 xmlobj, error, status_code = result.result, result.error, result.status_code
-                if error != '' or status_code > 400:
-                    return Result(result=copy.deepcopy(xmlobj),
-                                  error=copy.deepcopy(error),
-                                  status_code=status_code)
+                errors_occured = self.check_for_error(xmlobj, error, status_code)
+                # if there are errors return them
+                if errors_occured != False:
+                    return(errors_occured)
+
                 # a second time a bad session id should raise an error
                 if xmlobj.text.lower() == 'bad session id':
                     return Result(result='ERROR',
@@ -612,17 +650,26 @@ class CentreonServer(GenericServer):
             if self.centreon_version < 2.8:
                 # define meta-services xml URL
                 if self.centreon_version == 2.7:
+<<<<<<< HEAD
                     nagcgiurl_meta_services = self.urls_centreon['xml_meta'] + '?' + urllib.parse.urlencode({'num': 0, 'limit': 999, 'o': 'meta', 'sort_type': 'status', 'sid': self.SID})
                 else:
                     nagcgiurl_meta_services = self.urls_centreon['xml_meta'] + '?' + urllib.parse.urlencode({'num': 0, 'limit': 999, 'o': 'meta', 'sort_type': 'status', 'sid': self.SID})
+=======
+                    nagcgiurl_meta_services = self.urls_centreon['xml_meta'] + '?' + urllib.parse.urlencode({'num':0, 'limit':self.limit_services_number, 'o':'meta', 'sort_type':'status', 'sid':self.SID})
+                else:
+                    nagcgiurl_meta_services = self.urls_centreon['xml_meta'] + '?' + urllib.parse.urlencode({'num':0, 'limit':self.limit_services_number, 'o':'meta', 'sort_type':'status', 'sid':self.SID})
+>>>>>>> upstream/master
 
                 # retrive meta-services xml STATUS
                 result_meta = self.FetchURL(nagcgiurl_meta_services, giveback='xml')
                 xmlobj_meta, error_meta, status_code_meta = result_meta.result, result_meta.error, result_meta.status_code
-                if error_meta != '' or status_code_meta > 400:
-                    return Result(result=xmlobj_meta,
-                                  error=copy.deepcopy(error_meta),
-                                  status_code=status_code_meta)
+
+                # check if any error occured
+                errors_occured = self.check_for_error(xmlobj_meta, error_meta, status_code_meta)
+
+                # if there are errors return them
+                if errors_occured != False:
+                    return(errors_occured)
 
                 # a second time a bad session id should raise an error
                 if xmlobj_meta.text.lower() == 'bad session id':
@@ -687,8 +734,13 @@ class CentreonServer(GenericServer):
                             self.new_hosts[str(l.hn.text)].services[str(l.sd.text)].status_type =\
                                 self.HARD_SOFT[self.new_hosts[str(l.hn.text)].services[str(l.sd.text)].status_type]
 
+<<<<<<< HEAD
                         if conf.debug_mode is True:
                             self.Debug(server=self.get_name(), debug='Service status type: ' + self.new_hosts[str(l.hn.text)].services[str(l.sd.text)].name + '/' + self.new_hosts[str(l.hn.text)].services[str(l.sd.text)].status_type)
+=======
+                        if conf.debug_mode == True:
+                            self.Debug(server=self.get_name(), debug='Service / status_type : ' + self.new_hosts[str(l.hn.text)].services[str(l.sd.text)].name + '/' + self.new_hosts[str(l.hn.text)].services[str(l.sd.text)].status_type)
+>>>>>>> upstream/master
                         self.new_hosts[str(l.hn.text)].services[str(l.sd.text)].last_check = str(l.lc.text)
                         self.new_hosts[str(l.hn.text)].services[str(l.sd.text)].duration = str(l.d.text)
                         self.new_hosts[str(l.hn.text)].services[str(l.sd.text)].status_information = str(l.po.text).replace('\n', ' ').strip()
@@ -918,7 +970,11 @@ class CentreonServer(GenericServer):
         except:
             self.Error(sys.exc_info())
 
+    # This Hook seems to not be called anymore from main loop
     def Hook(self):
+        # debug
+        if conf.debug_mode == True:
+            self.Debug(server=self.get_name(), debug='Hook function')
         '''
         in case count is down get a new SID, just in case
         was kicked out but as to be seen in https://sourceforge.net/p/nagstamon/bugs/86/ there are problems with older

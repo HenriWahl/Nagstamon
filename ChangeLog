@@ -1,3 +1,57 @@
+nagstamon (3.0) stable; urgency=low
+  * New upstream
+   - added Kerberos authentification
+   - added increased security by taking TLS seriously
+   - added window mode
+   - added large OK label for fullscreen and window mode
+   - added click-somewhere-to-close-statuswindow mode
+   - added custom views to Check_MK
+   - added monitor type Monitos3
+   - added monitor type SNAG-View 3
+   - added monitor type Sensu
+   - fixes statuswindow garbage when changing mode
+   - fixed filename bug
+   - fixed check for .Xauthority file
+   - fixes for Centreon
+   - fixes for Check_MK 1.4.0
+   - fixes for Zabbix
+   - switched to pyinstaller
+
+ -- Henri Wahl <h.wahl@ifw-dresden.de>  Wed, 13 Sep 2017 16:00:00 +0200
+
+nagstamon (2.0.1) stable; urgency=low
+  * New upstream
+   - Major Centreon bug making it useless
+   - Icinga version check fix
+   - Thruk login fix
+   - EWMH initialization change
+   - Systrayicon left mouse click without context menu
+   - DBus crash workaround
+
+ -- Henri Wahl <h.wahl@ifw-dresden.de>  Thu, 20 Oct 2016 08:00:00 +0200
+ 
+nagstamon (2.0) stable; urgency=low
+  * New upstream
+   - Based on Qt 5 it now comes with a better integrated look-and-feel – especially remarkable on MacOS
+   - Partly simplified design
+   - Less clutter in setting dialogs
+   - Runs on latest Windows and MacOS
+   - Uses QT 5 multimedia which means native sound on Linux and MacOS
+   - Uses only SVG graphics – allows changing colors even in systray icon
+   - Customizable font and font size
+   - Adjust to dark or light desktop theme
+   - Action allowing to copy host/service information to clipboard
+   - Added ‘Archive Event’ action for Check_MK monitors
+   - Additionally supports IcingaWeb2
+   - Updated Opsview and Centreon to support latest monitor server versions
+   - Experimental support for Livestatus and Zenoss
+   - New build script based on cx-Freeze for Windows and MacOS
+   - Native 64 bit version for Windows
+   - No or less memory leaks, especially in Windows
+   - Make sure only one instance per config is running
+
+-- Henri Wahl <h.wahl@ifw-dresden.de> Mon, 29 Aug 2016 16:00:00 +0200
+
 nagstamon (1.0.1) stable; urgency=low
 
   * New upstream

@@ -17,16 +17,6 @@
 # along with this program; if not, write to the Free Software
 # Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA  02110-1301, USA
 
-import requests
-import requests_kerberos
-# disable annoying InsecureRequestWarning warnings
-try:
-    requests.packages.urllib3.disable_warnings()
-except Exception:
-    # older requests version might not have the packages submodule
-    # for example the one in Ubuntu 14.04
-    pass
-
 import sys
 import socket
 import copy
@@ -53,6 +43,18 @@ from Nagstamon.Config import (conf,
                               debug_queue)
 
 from collections import OrderedDict
+
+import requests
+import requests_kerberos
+
+# disable annoying SubjectAltNameWarning warnings
+try:
+    from requests.packages.urllib3.exceptions import SubjectAltNameWarning
+    requests.packages.urllib3.disable_warnings(SubjectAltNameWarning)
+except:
+    # older requests version might not have the packages submodule
+    # for example the one in Ubuntu 14.04
+    pass
 
 
 class GenericServer(object):
@@ -90,6 +92,10 @@ class GenericServer(object):
 
     # needed to check return code of monitor server in case of false authentication
     STATUS_CODES_NO_AUTH = [401, 403]
+
+    # default parser for BeautifulSoup - the rediscovered lxml causes trouble for Centreon so there should be choice
+    # see https://github.com/HenriWahl/Nagstamon/issues/431
+    PARSER = 'lxml'
 
     def __init__(self, **kwds):
         # add all keywords to object, every mode searchs inside for its favorite arguments/keywords
@@ -157,6 +163,9 @@ class GenericServer(object):
 
         # flag which decides if authentication has to be renewed
         self.refresh_authentication = False
+        # flag which tells GUI if there is an TLS problem
+        self.tls_error = False
+
         # to handle Icinga versions this information is necessary, might be of future use for others too
         self.version = ''
 
@@ -173,6 +182,9 @@ class GenericServer(object):
         # OP5 api filters
         self.host_filter = 'state !=0'
         self.service_filter = 'state !=0 or host.state != 0'
+
+        # Sensu/Uchiwa/??? Datacenter/Site config
+        self.monitor_site = 'Site 1'
 
     def init_config(self):
         '''
@@ -219,8 +231,13 @@ class GenericServer(object):
             elif self.authentication == 'kerberos':
                 self.session.auth = requests_kerberos.HTTPKerberosAuth()
 
-            # default to not check TLS validity
-            self.session.verify = False
+            # default to check TLS validity
+            if self.ignore_cert:
+                self.session.verify = False
+            elif self.custom_cert_use:
+                self.session.verify = self.custom_cert_ca_file
+            else:
+                self.session.verify = True
 
             # add proxy information
             self.proxify(self.session)
@@ -296,27 +313,30 @@ class GenericServer(object):
             if self.hosts[host].services[service].is_passive_only():
                 # Do not check passive only checks
                 return
-        # get start time from Nagios as HTML to use same timezone setting like the locally installed Nagios
-        result = self.FetchURL(
-            self.monitor_cgi_url + '/cmd.cgi?' + urllib.parse.urlencode({'cmd_typ': '96', 'host': host}))
-        self.start_time = dict(result.result.find(attrs={'name': 'start_time'}).attrs)['value']
-        # decision about host or service - they have different URLs
-        if service == '':
-            # host
-            cmd_typ = '96'
-        else:
-            # service @ host
-            cmd_typ = '7'
-        # ignore empty service in case of rechecking a host
-        cgi_data = urllib.parse.urlencode([('cmd_typ', cmd_typ),
-                                           ('cmd_mod', '2'),
-                                           ('host', host),
-                                           ('service', service),
-                                           ('start_time', self.start_time),
-                                           ('force_check', 'on'),
-                                           ('btnSubmit', 'Commit')])
-        # execute POST request
-        self.FetchURL(self.monitor_cgi_url + '/cmd.cgi', giveback='raw', cgi_data=cgi_data)
+        try:
+            # get start time from Nagios as HTML to use same timezone setting like the locally installed Nagios
+            result = self.FetchURL(
+                self.monitor_cgi_url + '/cmd.cgi?' + urllib.parse.urlencode({'cmd_typ': '96', 'host': host}))
+            self.start_time = dict(result.result.find(attrs={'name': 'start_time'}).attrs)['value']
+            # decision about host or service - they have different URLs
+            if service == '':
+                # host
+                cmd_typ = '96'
+            else:
+                # service @ host
+                cmd_typ = '7'
+            # ignore empty service in case of rechecking a host
+            cgi_data = urllib.parse.urlencode([('cmd_typ', cmd_typ),
+                                               ('cmd_mod', '2'),
+                                               ('host', host),
+                                               ('service', service),
+                                               ('start_time', self.start_time),
+                                               ('force_check', 'on'),
+                                               ('btnSubmit', 'Commit')])
+            # execute POST request
+            self.FetchURL(self.monitor_cgi_url + '/cmd.cgi', giveback='raw', cgi_data=cgi_data)
+        except:
+            traceback.print_exc(file=sys.stdout)
 
     def set_acknowledge(self, info_dict):
         '''
@@ -335,8 +355,6 @@ class GenericServer(object):
                               info_dict['persistent'],
                               all_services)
 
-        # refresh immediately according to https://github.com/HenriWahl/Nagstamon/issues/86
-        # ##self.thread.doRefresh = True
 
     def _set_acknowledge(self, host, service, author, comment, sticky, notify, persistent, all_services=[]):
         '''
@@ -581,7 +599,7 @@ class GenericServer(object):
                                 if len(tds[4](text=not_empty)) == 0:
                                     n['status_information'] = ''
                                 else:
-                                    n['status_information'] = str(tds[4].text).replace('\n', ' ').strip()
+                                    n['status_information'] = str(tds[4].text).replace('\n', ' ').replace('\t', ' ').strip()
                                 # attempts are not shown in case of hosts so it defaults to 'n/a'
                                 n['attempt'] = 'n/a'
                             else:
@@ -593,7 +611,7 @@ class GenericServer(object):
                                 if len(tds[5](text=not_empty)) == 0:
                                     n['status_information'] = ''
                                 else:
-                                    n['status_information'] = str(tds[5].text).replace('\n', ' ').strip()
+                                    n['status_information'] = str(tds[5].text).replace('\n', ' ').replace('\t', ' ').strip()
                             # status flags
                             n['passiveonly'] = False
                             n['notifications_disabled'] = False
@@ -707,7 +725,7 @@ class GenericServer(object):
                             if len(tds[6](text=not_empty)) == 0:
                                 n['status_information'] = ''
                             else:
-                                n['status_information'] = str(tds[6].text).replace('\n',  '').strip()
+                                n['status_information'] = str(tds[6].text).replace('\n', ' ').replace('\t', ' ').strip()
                             # status flags
                             n['passiveonly'] = False
                             n['notifications_disabled'] = False
@@ -845,8 +863,11 @@ class GenericServer(object):
                     self.status_description = status.error
                     self.status_code = status.status_code
                     return(status)
+            elif self.status_description.startswith('requests.exceptions.SSLError:'):
+                self.tls_error = True
             else:
                 self.isChecking = False
+                self.tls_error = False
                 return Result(result=self.status,
                               error=self.status_description,
                               status_code=self.status_code)
@@ -855,9 +876,6 @@ class GenericServer(object):
         self.refresh_authentication = False
 
         # this part has been before in GUI.RefreshDisplay() - wrong place, here it needs to be reset
-        # self.nagitems_filtered = {'services': {'CRITICAL': [], 'WARNING': [], 'UNKNOWN': []},
-                # 'hosts': {'DOWN': [], 'UNREACHABLE': []}}
-
         self.nagitems_filtered = {'services': {'DISASTER': [], 'CRITICAL': [], 'HIGH': [],
             'AVERAGE': [], 'WARNING': [], 'INFORMATION': [], 'UNKNOWN': []},
             'hosts': {'DOWN': [], 'UNREACHABLE': []}}
@@ -1349,10 +1367,8 @@ class GenericServer(object):
                     # most requests come without multipart/form-data
                     if multipart is False:
                         if cgi_data is None:
-                            # response = self.session.get(url, timeout=30)
                             response = self.session.get(url, timeout=self.timeout)
                         else:
-                            # response = self.session.post(url, data=cgi_data, timeout=30)
                             response = self.session.post(url, data=cgi_data, timeout=self.timeout)
                     else:
                         # Check_MK and Opsview need multipart/form-data encoding
@@ -1370,17 +1386,19 @@ class GenericServer(object):
 
                     # add proxy information if necessary
                     self.proxify(temporary_session)
-
-                    # default to not check TLS validity for temporary sessions
-                    temporary_session.verify = False
+                    # default to check TLS validity for temporary sessions
+                    if self.ignore_cert:
+                        temporary_session.verify = False
+                    elif self.custom_cert_use:
+                        temporary_session.verify = self.custom_cert_ca_file
+                    else:
+                        temporary_session.verify = True
 
                     # most requests come without multipart/form-data
                     if multipart is False:
                         if cgi_data is None:
-                            # response = temporary_session.get(url, timeout=30)
                             response = temporary_session.get(url, timeout=self.timeout)
                         else:
-                            # response = temporary_session.post(url, data=cgi_data, timeout=30)
                             response = temporary_session.post(url, data=cgi_data, timeout=self.timeout)
                     else:
                         # Check_MK and Opsview nees multipart/form-data encoding
@@ -1389,7 +1407,6 @@ class GenericServer(object):
                         for key in cgi_data:
                             form_data[key] = (None, cgi_data[key])
                         # get response with cgi_data encodes as files
-                        # response = temporary_session.post(url, files=form_data, timeout=30)
                         response = temporary_session.post(url, files=form_data, timeout=self.timeout)
 
                     # cleanup
@@ -1398,6 +1415,10 @@ class GenericServer(object):
             except Exception:
                 traceback.print_exc(file=sys.stdout)
                 result, error = self.Error(sys.exc_info())
+                if error.startswith('requests.exceptions.SSLError:'):
+                    self.tls_error = True
+                else:
+                    self.tls_error = False
                 return Result(result=result, error=error, status_code=-1)
 
             # give back pure HTML or XML in case giveback is 'raw'
@@ -1408,12 +1429,12 @@ class GenericServer(object):
 
             # objectified HTML
             if giveback == 'obj':
-                yummysoup = BeautifulSoup(response.text, 'html.parser')
+                yummysoup = BeautifulSoup(response.text, self.PARSER)
                 return Result(result=yummysoup, status_code=response.status_code)
 
             # objectified generic XML, valid at least for Opsview and Centreon
             elif giveback == 'xml':
-                xmlobj = BeautifulSoup(response.text, 'html.parser')
+                xmlobj = BeautifulSoup(response.text, self.PARSER)
                 return Result(result=xmlobj,
                               status_code=response.status_code)
 
@@ -1424,7 +1445,6 @@ class GenericServer(object):
             return Result(result=result, error=error, status_code=response.status_code)
 
         result, error = self.Error(sys.exc_info())
-
         return Result(result=result, error=error, status_code=response.status_code)
 
     def GetHost(self, host):
