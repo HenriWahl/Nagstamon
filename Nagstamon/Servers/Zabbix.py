@@ -61,10 +61,10 @@ class ZabbixServer(GenericServer):
         self.username = conf.servers[self.get_name()].username
         self.password = conf.servers[self.get_name()].password
         self.ignore_cert = conf.servers[self.get_name()].ignore_cert
-        if self.ignore_cert == True:
-            self.validate_certs=False
+        if self.ignore_cert is True:
+            self.validate_certs = False
         else:
-            self.validate_certs=True
+            self.validate_certs = True
 
     def _login(self):
         try:
@@ -79,7 +79,7 @@ class ZabbixServer(GenericServer):
         if len(this_item) > 0:
             last_app = len(this_item[0]['applications']) - 1  # use it to get the last application name
             if last_app > -1:
-                return this_item[0]['applications'][last_app]['name']
+                return "%s" % this_item[0]['applications'][last_app]['name']
             else:
                 return "NO APP"
         else:
@@ -343,33 +343,33 @@ class ZabbixServer(GenericServer):
         webbrowser_open(url)
 
     # def GetHost(self, host):
-        # """
-            # find out ip or hostname of given host to access hosts/devices which do not appear in DNS but
-            # have their ip saved in Nagios
-        # """
+    #     """
+    #         find out ip or hostname of given host to access hosts/devices which do not appear in DNS but
+    #         have their ip saved in Nagios
+    #     """
 
-        # # the fasted method is taking hostname as used in monitor
-        # if conf.connect_by_host is True:
-            # return Result(result=host)
+    #     # the fasted method is taking hostname as used in monitor
+    #     if conf.connect_by_host is True:
+    #         return Result(result=host)
 
-        # ip = ""
+    #     ip = ""
 
-        # try:
-            # if host in self.hosts:
-                # ip = self.hosts[host].address
-            # if conf.debug_mode is True:
-                # self.Debug(server=self.get_name(), host=host, debug="IP of %s:" % host + " " + ip)
+    #     try:
+    #         if host in self.hosts:
+    #             ip = self.hosts[host].address
+    #         if conf.debug_mode is True:
+    #             self.Debug(server=self.get_name(), host=host, debug="IP of %s:" % host + " " + ip)
 
-            # if conf.connect_by_dns is True:
-                # try:
-                    # address = socket.gethostbyaddr(ip)[0]
-                # except socket.herror:
-                    # address = ip
-            # else:
-                # address = ip
-        # except ZabbixError:
-            # result, error = self.Error(sys.exc_info())
-            # return Result(result=result, error=error)
+    #         if conf.connect_by_dns is True:
+    #             try:
+    #                 address = socket.gethostbyaddr(ip)[0]
+    #             except socket.herror:
+    #                 address = ip
+    #         else:
+    #             address = ip
+    #     except ZabbixError:
+    #         result, error = self.Error(sys.exc_info())
+    #         return Result(result=result, error=error)
 
         # return Result(result=address)
 
