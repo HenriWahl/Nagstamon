@@ -1,9 +1,3 @@
-nagstamon (3.0.0-20170918) unstable; urgency=low
-  * New upstream
-   - fix for Zabbix trouble #440
-
- -- Henri Wahl <h.wahl@ifw-dresden.de>  Fri, 15 Sep 2017 16:00:00 +0200
-
 nagstamon (3.0) stable; urgency=low
   * New upstream
    - added Kerberos authentification
