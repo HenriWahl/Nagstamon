@@ -1,4 +1,4 @@
-nagstamon (3.0.0-201709015) unstable; urgency=low
+nagstamon (3.0.0-20170915) unstable; urgency=low
   * New upstream
    - fix for Zabbix trouble #440
 
