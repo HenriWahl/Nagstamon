@@ -75,6 +75,15 @@ class ZabbixServer(GenericServer):
             result, error = self.Error(sys.exc_info())
             return Result(result=result, error=error)
 
+    def getLastApp(self, this_item):
+        if len(this_item) > 0:
+            last_app = len(this_item[0]['applications']) - 1  # use it to get the last application name
+            if last_app > -1:
+                return this_item[0]['applications'][last_app]['name']
+            else:
+                return "NO APP"
+        else:
+            return "Web scenario"
 
     def _get_status(self):
         """
@@ -188,12 +197,9 @@ class ZabbixServer(GenericServer):
                             {'itemids': [this_trigger[triggerid]['items'][0]['itemid']],
                              'selectApplications': 'extend'}
                         )
-                        # last_app = 0  # use it to get the first application name
-                        last_app = len(this_item[0]['applications']) - 1  # use it to get the last application name
-                        if last_app > -1:
-                            this_trigger[triggerid]['application'] = this_item[0]['applications'][last_app]['name']
-                        else:
-                            this_trigger[triggerid]['application'] = "NO APP"
+
+                        this_trigger[triggerid]['application'] = self.getLastApp(this_item)
+
                 elif type(this_trigger) is list:
                     for trigger in this_trigger:
                         services.append(trigger)
@@ -202,12 +208,8 @@ class ZabbixServer(GenericServer):
                             {'itemids': trigger['items'][0]['itemid'],
                              'selectApplications': 'extend'}
                         )
-                        # last_app = 0  # use it to get the first application name
-                        last_app = len(this_item[0]['applications']) - 1  # use it to get the last application name
-                        if last_app > -1:
-                            trigger['application'] = this_item[0]['applications'][last_app]['name']
-                        else:
-                            trigger['application'] = "NO APP"
+
+                        trigger['application'] = self.getLastApp(this_item)
 
             except ZabbixAPIException:
                 # FIXME Is there a cleaner way to handle this? I just borrowed
