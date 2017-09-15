@@ -19,7 +19,6 @@
 
 import sys
 import json
-import urllib
 import time
 
 from datetime import datetime
@@ -27,7 +26,7 @@ from datetime import datetime
 from Nagstamon.Helpers import webbrowser_open
 from Nagstamon.Objects import (GenericHost, GenericService, Result)
 from Nagstamon.Servers.Generic import GenericServer
-
+from Nagstamon.Config import BOOLPOOL
 
 def human_duration(start):
     """
@@ -165,11 +164,11 @@ class Op5MonitorServer(GenericServer):
                 n = dict()
                 for api in data:
                     n['host'] = api['name']
-                    n["acknowledged"] = api['acknowledged']
-                    n["flapping"] = api['is_flapping']
-                    n["notifications_disabled"] = 0 if api['notifications_enabled'] else 1
-                    n["passiveonly"] = 0 if api['active_checks_enabled'] else 1
-                    n["scheduled_downtime"] = 1 if api['scheduled_downtime_depth'] else 0
+                    n["acknowledged"] = BOOLPOOL[api['acknowledged']]
+                    n["flapping"] = BOOLPOOL[api['is_flapping']]
+                    n["notifications_disabled"] = False if api['notifications_enabled'] else True
+                    n["passiveonly"] = False if api['active_checks_enabled'] else True
+                    n["scheduled_downtime"] = True if api['scheduled_downtime_depth'] else False
                     n['attempt'] = "%s/%s" % (str(api['current_attempt']), str(api['max_check_attempts']))
                     n['duration'] = human_duration(api['last_state_change'])
                     n['last_check'] = datetime.fromtimestamp(int(api['last_check'])).strftime('%Y-%m-%d %H:%M:%S')
@@ -225,7 +224,7 @@ class Op5MonitorServer(GenericServer):
                     n = dict()
                     n['host'] = api['host']['name']
                     n['status'] = self.STATUS_HOST_MAPPING[str(api['host']['state'])]
-                    n["passiveonly"] = 0 if api['host']['active_checks_enabled'] else 1
+                    n["passiveonly"] = False if api['host']['active_checks_enabled'] else True
 
                     if not n['host'] in self.new_hosts:
                         self.new_hosts[n['host']] = GenericHost()
@@ -234,11 +233,11 @@ class Op5MonitorServer(GenericServer):
                         self.new_hosts[n['host']].passiveonly = n["passiveonly"]
 
                     n['service'] = api['description']
-                    n["acknowledged"] = api['acknowledged']
-                    n["flapping"] = api['is_flapping']
-                    n["notifications_disabled"] = 0 if api['notifications_enabled'] else 1
-                    n["passiveonly"] = 0 if api['active_checks_enabled'] else 1
-                    n["scheduled_downtime"] = 1 if api['scheduled_downtime_depth'] or api['host']['scheduled_downtime_depth'] else 0
+                    n["acknowledged"] = BOOLPOOL[api['acknowledged']]
+                    n["flapping"] = BOOLPOOL[api['is_flapping']]
+                    n["notifications_disabled"] = False if api['notifications_enabled'] else True
+                    n["passiveonly"] = False if api['active_checks_enabled'] else True
+                    n["scheduled_downtime"] = True if api['scheduled_downtime_depth'] or api['host']['scheduled_downtime_depth'] else False
                     n['attempt'] = "%s/%s" % (str(api['current_attempt']), str(api['max_check_attempts']))
                     n['duration'] = human_duration(api['last_state_change'])
                     n['last_check'] = datetime.fromtimestamp(int(api['last_check'])).strftime('%Y-%m-%d %H:%M:%S')
