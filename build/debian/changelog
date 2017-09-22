@@ -1,7 +1,8 @@
-nagstamon (3.1-20170921) unstable; urgency=low
+nagstamon (3.0.2) stable; urgency=low
   * New upstream
+   - fixed Retina problem for macOS
 
--- Henri Wahl <h.wahl@ifw-dresden.de> Thu, 21 Sep 2017 08:00:00 +0200
+-- Henri Wahl <h.wahl@ifw-dresden.de> Fri, 22 Sep 2017 14:00:00 +0200
 
 nagstamon (3.0.1) stable; urgency=low
   * New upstream
