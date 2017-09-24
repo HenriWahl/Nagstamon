@@ -1169,7 +1169,7 @@ class GenericServer(object):
                                 service.visible = False
                             else:
                                 self.nagitems_filtered["services"]["INFORMATION"].append(service)
-                                self.informations += 1
+                                self.information += 1
 
                     if service.status == "AVERAGE":
                         if conf.filter_all_unknown_services is True:
