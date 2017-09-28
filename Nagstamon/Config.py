@@ -34,7 +34,7 @@ KEYRING = True
 if platform.system() == 'Linux':
     distribution, version, codename = platform.linux_distribution()
     if distribution == 'Ubuntu':
-        if version > '16.04':
+        if version > '16.10':
             import keyring
         else:
             KEYRING = False
