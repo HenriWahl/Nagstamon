@@ -51,6 +51,7 @@ from Nagstamon.Config import (conf,
                               BOOLPOOL,
                               CONFIG_STRINGS,
                               NON_LINUX,
+                              KEYRING,
                               AppInfo,
                               debug_queue)
 
@@ -4567,6 +4568,12 @@ class Dialog_Settings(Dialog):
         self.paint_colors()
         self.paint_color_alternation()
         self.change_color_alternation(conf.grid_alternation_intensity)
+
+        # hide keyring setting if keyring is not available
+        if KEYRING:
+          self.ui.input_checkbox_use_system_keyring.show()
+        else
+          self.ui.input_checkbox_use_system_keyring.hide()
 
         # important final size adjustment
         self.window.adjustSize()

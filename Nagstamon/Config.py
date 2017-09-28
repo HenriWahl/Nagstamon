@@ -26,15 +26,23 @@ import configparser
 import base64
 import zlib
 import datetime
-import keyring
 from collections import OrderedDict
 
-# avoid build error because of debug_queue unknown to setup.py
-# if anybody knows a more elegant way (which surely exists) let me know
-# it had to work quickly!
-# ##if not 'setup.py' in sys.argv[0] and not 'build.py' in sys.argv[0]:
-# ##    # get debug queue from nagstamon.py
-# ##    debug_queue = sys.modules['__main__'].debug_queue
+# older Kubuntu has trouble with keyring
+# see https://github.com/HenriWahl/Nagstamon/issues/447
+KEYRING = True
+if platform.system() == 'Linux':
+    distribution, version, codename = platform.linux_distribution()
+    if distribution == 'Ubuntu':
+        if version > '16.04':
+            import keyring
+        else:
+            KEYRING = False
+    else:
+        import keyring
+
+else:
+    import keyring
 
 # queue.Queue() needs threading module which might be not such a good idea to be used
 # because QThread is already in use
@@ -86,37 +94,36 @@ CONFIG_STRINGS = ['custom_browser',
 NON_LINUX = ('Darwin', 'Windows')
 
 # invalid characters in path names of config files have to be replaced
-INVALID_CHARACTERS = { '\\': '_backslash_',
-                       '/': '_slash_',
-                       ':': '_colon_',
-                       '*': '_aterisk_',
-                       '?': '_question_mark_',
-                       '"': '_double_quotes_',
-                       '<': '_less_than_',
-                       '>': '_greater_than_'}
+INVALID_CHARACTERS = {'\\': '_backslash_',
+                      '/': '_slash_',
+                      ':': '_colon_',
+                      '*': '_aterisk_',
+                      '?': '_question_mark_',
+                      '"': '_double_quotes_',
+                      '<': '_less_than_',
+                      '>': '_greater_than_'}
+
 
 class AppInfo(object):
-
     """
         contains app information previously located in GUI.py
     """
     NAME = 'Nagstamon'
-    VERSION = '3.0.2'
+    VERSION = '3.1-20170927'
     WEBSITE = 'https://nagstamon.ifw-dresden.de'
     COPYRIGHT = '©2008-2017 Henri Wahl et al.'
     COMMENTS = 'Nagios status monitor for your desktop'
     # version URL depends on version string
-    if 'alpha' in VERSION.lower() or\
-       'beta' in VERSION.lower() or\
-       'rc' in VERSION.lower() or\
-       '-' in VERSION.lower():
+    if 'alpha' in VERSION.lower() or \
+                    'beta' in VERSION.lower() or \
+                    'rc' in VERSION.lower() or \
+                    '-' in VERSION.lower():
         VERSION_URL = WEBSITE + '/version/unstable'
     else:
         VERSION_URL = WEBSITE + '/version/stable'
 
 
 class Config(object):
-
     """
         The place for central configuration.
     """
@@ -288,13 +295,16 @@ class Config(object):
             parser.add_argument('--servername', type=str, help="name of the (Nagios)server. Look in nagstamon config")
             parser.add_argument('--hostname', type=str)
             parser.add_argument('--comment', type=str, default="")
-            parser.add_argument('--service', type=str, default="", help="specify service, if needed. Mostly the whole host goes to downstate")
-            parser.add_argument('--fixed', type=str, choices=['y', 'n'], default="y", help="fixed=n means wait for service/host to go down, then start the downtime")
+            parser.add_argument('--service', type=str, default="",
+                                help="specify service, if needed. Mostly the whole host goes to downstate")
+            parser.add_argument('--fixed', type=str, choices=['y', 'n'], default="y",
+                                help="fixed=n means wait for service/host to go down, then start the downtime")
             parser.add_argument('--start_time', type=str, help="start time for downtime")
             parser.add_argument('--hours', type=int, help="amount of hours for downtime")
             parser.add_argument('--minutes', type=int, help="amount of minutes for downtime")
             parser.add_argument('--config', type=str, help="Path for configuration folder")
-            parser.add_argument('--output', type=str, choices=['y', 'n'], default="y", help="lists given parameter (for debugging)")
+            parser.add_argument('--output', type=str, choices=['y', 'n'], default="y",
+                                help="lists given parameter (for debugging)")
         else:
             parser.add_argument('config', nargs='?', help='Path for configuration folder')
 
@@ -531,15 +541,16 @@ class Config(object):
             # debug
             if self.debug_mode:
                 debug_queue.append('DEBUG: {0} Saving configuration to file {1}'.format(str(datetime.datetime.now()),
-                    self.configfile))
+                                                                                        self.configfile))
         except Exception as err:
             import traceback
             traceback.print_exc(file=sys.stdout)
             # debug
             if self.debug_mode:
-                debug_queue.append('ERROR: {0} {1} while saving configuration to file {2}'.format(str(datetime.datetime.now()),
-                                                                                                  err,
-                                                                                                  self.configfile))
+                debug_queue.append(
+                    'ERROR: {0} {1} while saving configuration to file {2}'.format(str(datetime.datetime.now()),
+                                                                                   err,
+                                                                                   self.configfile))
 
     def SaveMultipleConfig(self, settingsdir, setting):
         """
@@ -570,9 +581,10 @@ class Config(object):
                                     # provoke crash if password saving does not work - this is the case
                                     # on newer Ubuntu releases
                                     try:
-                                        keyring.set_password('Nagstamon', '@'.join((self.__dict__[settingsdir][s].username,
-                                            self.__dict__[settingsdir][s].monitor_url)),
-                                            self.__dict__[settingsdir][s].password)
+                                        keyring.set_password('Nagstamon',
+                                                             '@'.join((self.__dict__[settingsdir][s].username,
+                                                                       self.__dict__[settingsdir][s].monitor_url)),
+                                                             self.__dict__[settingsdir][s].password)
                                     except Exception:
                                         import traceback
                                         traceback.print_exc(file=sys.stdout)
@@ -585,9 +597,11 @@ class Config(object):
                                     # on newer Ubuntu releases
                                     try:
                                         keyring.set_password('Nagstamon', '@'.join(('proxy',
-                                            self.__dict__[settingsdir][s].proxy_username,
-                                            self.__dict__[settingsdir][s].proxy_address)),
-                                            self.__dict__[settingsdir][s].proxy_password)
+                                                                                    self.__dict__[settingsdir][
+                                                                                        s].proxy_username,
+                                                                                    self.__dict__[settingsdir][
+                                                                                        s].proxy_address)),
+                                                             self.__dict__[settingsdir][s].proxy_password)
                                     except Exception:
                                         import traceback
                                         traceback.print_exc(file=sys.stdout)
@@ -609,15 +623,17 @@ class Config(object):
             for c in INVALID_CHARACTERS:
                 s_clean = s_clean.replace(c, INVALID_CHARACTERS[c])
 
-            f = open(os.path.normpath(self.configdir + os.sep + settingsdir + os.sep + setting + "_" + s_clean + ".conf"), "w")
+            f = open(
+                os.path.normpath(self.configdir + os.sep + settingsdir + os.sep + setting + "_" + s_clean + ".conf"),
+                "w")
             config.write(f)
             f.close()
 
-        # ### clean up old deleted/renamed config files
-        # ##if os.path.exists(self.configdir + os.sep + settingsdir):
-        # ##    for f in os.listdir(self.configdir + os.sep + settingsdir):
-        # ##        if not f.split(setting + "_")[1].split(".conf")[0] in self.__dict__[settingsdir]:
-        # ##            os.unlink(self.configdir + os.sep + settingsdir + os.sep + f)
+            # ### clean up old deleted/renamed config files
+            # ##if os.path.exists(self.configdir + os.sep + settingsdir):
+            # ##    for f in os.listdir(self.configdir + os.sep + settingsdir):
+            # ##        if not f.split(setting + "_")[1].split(".conf")[0] in self.__dict__[settingsdir]:
+            # ##            os.unlink(self.configdir + os.sep + settingsdir + os.sep + f)
 
     def KeyringAvailable(self):
         """
@@ -639,7 +655,7 @@ class Config(object):
                     return not (keyring.get_keyring() is None)
                 else:
                     return False
-            else:
+            elif KEYRING:
                 # keyring and secretstorage have to be importable
                 import keyring
                 # import secretstorage module as dependency of keyring -
@@ -647,6 +663,9 @@ class Config(object):
                 import secretstorage
                 if ("SecretService") in dir(keyring.backends) and not (keyring.get_keyring() is None):
                     return True
+            else:
+                # apparently an Ubuntu 16.04 which has problems with keyring
+                return False
         except Exception:
             import traceback
             traceback.print_exc(file=sys.stdout)
@@ -696,69 +715,79 @@ class Config(object):
         """
         if platform.system() == "Windows":
             defaultactions = {"RDP": Action(name="RDP", description="Connect via RDP.",
-                type="command", string="C:\windows\system32\mstsc.exe /v:$ADDRESS$"),
-                "VNC": Action(name="VNC", description="Connect via VNC.",
-                    type="command", string="C:\Program Files\TightVNC\vncviewer.exe $ADDRESS$"),
-                "Telnet": Action(name="Telnet", description="Connect via Telnet.",
-                    type="command", string="C:\Windows\System32\Telnet.exe root@$ADDRESS$"),
-                "SSH": Action(name="SSH", description="Connect via SSH.",
-                    type="command", string="C:\Program Files\PuTTY\putty.exe -l root $ADDRESS$")}
+                                            type="command", string="C:\windows\system32\mstsc.exe /v:$ADDRESS$"),
+                              "VNC": Action(name="VNC", description="Connect via VNC.",
+                                            type="command", string="C:\Program Files\TightVNC\vncviewer.exe $ADDRESS$"),
+                              "Telnet": Action(name="Telnet", description="Connect via Telnet.",
+                                               type="command", string="C:\Windows\System32\Telnet.exe root@$ADDRESS$"),
+                              "SSH": Action(name="SSH", description="Connect via SSH.",
+                                            type="command",
+                                            string="C:\Program Files\PuTTY\putty.exe -l root $ADDRESS$")}
         elif platform.system() == "Darwin":
             defaultactions = {"RDP": Action(name="RDP", description="Connect via RDP.",
-                type="command", string="open rdp://$ADDRESS$"),
-                "VNC": Action(name="VNC", description="Connect via VNC.",
-                    type="command", string="open vnc://$ADDRESS$"),
-                "SSH": Action(name="SSH", description="Connect via SSH.",
-                    type="command", string="open ssh://root@$ADDRESS$"),
-                "Telnet": Action(name="Telnet", description="Connect via Telnet.",
-                    type="command", string="open telnet://root@$ADDRESS$")}
+                                            type="command", string="open rdp://$ADDRESS$"),
+                              "VNC": Action(name="VNC", description="Connect via VNC.",
+                                            type="command", string="open vnc://$ADDRESS$"),
+                              "SSH": Action(name="SSH", description="Connect via SSH.",
+                                            type="command", string="open ssh://root@$ADDRESS$"),
+                              "Telnet": Action(name="Telnet", description="Connect via Telnet.",
+                                               type="command", string="open telnet://root@$ADDRESS$")}
         else:
             # the Linux settings
             defaultactions = {"RDP": Action(name="RDP", description="Connect via RDP.",
-                type="command", string="/usr/bin/rdesktop -g 1024x768 $ADDRESS$"),
-                "VNC": Action(name="VNC", description="Connect via VNC.",
-                    type="command", string="/usr/bin/vncviewer $ADDRESS$"),
-                "SSH": Action(name="SSH", description="Connect via SSH.",
-                    type="command", string="/usr/bin/gnome-terminal -x ssh root@$ADDRESS$"),
-                "Telnet": Action(name="Telnet", description="Connect via Telnet.",
-                    type="command", string="/usr/bin/gnome-terminal -x telnet root@$ADDRESS$"),
-                "Update-Linux": Action(name="Update-Linux", description="Run remote update script.",
-                    type="command", string="/usr/bin/terminator -x ssh root@$HOST$ update.sh",
-                    enabled=False)}
-                # OS agnostic actions as examples
+                                            type="command", string="/usr/bin/rdesktop -g 1024x768 $ADDRESS$"),
+                              "VNC": Action(name="VNC", description="Connect via VNC.",
+                                            type="command", string="/usr/bin/vncviewer $ADDRESS$"),
+                              "SSH": Action(name="SSH", description="Connect via SSH.",
+                                            type="command", string="/usr/bin/gnome-terminal -x ssh root@$ADDRESS$"),
+                              "Telnet": Action(name="Telnet", description="Connect via Telnet.",
+                                               type="command",
+                                               string="/usr/bin/gnome-terminal -x telnet root@$ADDRESS$"),
+                              "Update-Linux": Action(name="Update-Linux", description="Run remote update script.",
+                                                     type="command",
+                                                     string="/usr/bin/terminator -x ssh root@$HOST$ update.sh",
+                                                     enabled=False)}
+            # OS agnostic actions as examples
         defaultactions["Nagios-1-Click-Acknowledge-Host"] = Action(name="Nagios-1-Click-Acknowledge-Host", type="url",
-                description="Acknowledges a host with one click.",
-                filter_target_service=False, enabled=False,
-                string="$MONITOR-CGI$/cmd.cgi?cmd_typ=33&cmd_mod=2&host=$HOST$\
+                                                                   description="Acknowledges a host with one click.",
+                                                                   filter_target_service=False, enabled=False,
+                                                                   string="$MONITOR-CGI$/cmd.cgi?cmd_typ=33&cmd_mod=2&host=$HOST$\
                         &com_author=$USERNAME$&com_data=acknowledged&btnSubmit=Commit")
-        defaultactions["Nagios-1-Click-Acknowledge-Service"] = Action(name="Nagios-1-Click-Acknowledge-Service", type="url",
-                description="Acknowledges a service with one click.",
-                filter_target_host=False, enabled=False,
-                string="$MONITOR-CGI$/cmd.cgi?cmd_typ=34&cmd_mod=2&host=$HOST$\
+        defaultactions["Nagios-1-Click-Acknowledge-Service"] = Action(name="Nagios-1-Click-Acknowledge-Service",
+                                                                      type="url",
+                                                                      description="Acknowledges a service with one click.",
+                                                                      filter_target_host=False, enabled=False,
+                                                                      string="$MONITOR-CGI$/cmd.cgi?cmd_typ=34&cmd_mod=2&host=$HOST$\
                         &service=$SERVICE$&com_author=$USERNAME$&com_data=acknowledged&btnSubmit=Commit")
         defaultactions["Opsview-Graph-Service"] = Action(name="Opsview-Graph-Service", type="browser",
-                description="Show graph in browser.", filter_target_host=False,
-                string="$MONITOR$/graph?service=$SERVICE$&host=$HOST$", enabled=False)
+                                                         description="Show graph in browser.", filter_target_host=False,
+                                                         string="$MONITOR$/graph?service=$SERVICE$&host=$HOST$",
+                                                         enabled=False)
         defaultactions["Opsview-History-Host"] = Action(name="Opsview-Host-Service", type="browser",
-                description="Show host in browser.", filter_target_host=True,
-                string="$MONITOR$/event?host=$HOST$", enabled=False)
+                                                        description="Show host in browser.", filter_target_host=True,
+                                                        string="$MONITOR$/event?host=$HOST$", enabled=False)
         defaultactions["Opsview-History-Service"] = Action(name="Opsview-History-Service", type="browser",
-                description="Show history in browser.", filter_target_host=True,
-                string="$MONITOR$/event?host=$HOST$&service=$SERVICE$", enabled=False)
-        defaultactions["Check_MK-1-Click-Acknowledge-Host"] = Action(name="Check_MK-1-Click-Acknowledge-Host", type="url",
-                description="Acknowledges a host with one click.",
-                filter_target_service=False, enabled=False,
-                string="$MONITOR$/view.py?_transid=$TRANSID$&_do_actions=yes&_do_confirm=Yes!&output_format=python&view_name=hoststatus&host=$HOST$&_ack_comment=$COMMENT-ACK$&_acknowledge=Acknowledge")
-        defaultactions["Check_MK-1-Click-Acknowledge-Service"] = Action(name="Check_MK-1-Click-Acknowledge-Service", type="url",
-                description="Acknowledges a host with one click.",
-                filter_target_host=False, enabled=False,
-                string="$MONITOR$/view.py?_transid=$TRANSID$&_do_actions=yes&_do_confirm=Yes!&output_format=python&view_name=service&host=$HOST$&_ack_comment=$COMMENT-ACK$&_acknowledge=Acknowledge&service=$SERVICE$")
+                                                           description="Show history in browser.",
+                                                           filter_target_host=True,
+                                                           string="$MONITOR$/event?host=$HOST$&service=$SERVICE$",
+                                                           enabled=False)
+        defaultactions["Check_MK-1-Click-Acknowledge-Host"] = Action(name="Check_MK-1-Click-Acknowledge-Host",
+                                                                     type="url",
+                                                                     description="Acknowledges a host with one click.",
+                                                                     filter_target_service=False, enabled=False,
+                                                                     string="$MONITOR$/view.py?_transid=$TRANSID$&_do_actions=yes&_do_confirm=Yes!&output_format=python&view_name=hoststatus&host=$HOST$&_ack_comment=$COMMENT-ACK$&_acknowledge=Acknowledge")
+        defaultactions["Check_MK-1-Click-Acknowledge-Service"] = Action(name="Check_MK-1-Click-Acknowledge-Service",
+                                                                        type="url",
+                                                                        description="Acknowledges a host with one click.",
+                                                                        filter_target_host=False, enabled=False,
+                                                                        string="$MONITOR$/view.py?_transid=$TRANSID$&_do_actions=yes&_do_confirm=Yes!&output_format=python&view_name=service&host=$HOST$&_ack_comment=$COMMENT-ACK$&_acknowledge=Acknowledge&service=$SERVICE$")
         defaultactions["Check_MK Edit host in WATO"] = Action(name="Check_MK Edit host in WATO", enabled=False,
-                monitor_type="Check_MK Multisite",
-                description="Edit host in WATO.",
-                string="$MONITOR$index.py?start_url=%2Fmonitor%2Fcheck_mk%2Fwato.py%3Fhost%3D$HOST$%26mode%3Dedit_host")
-        defaultactions["Email"] = Action(name="Email", enabled=False, description="Send email to someone.", type="browser",
-                string="mailto:servicedesk@my.org?subject=Monitor alert: $HOST$ - $SERVICE$ - $STATUS-INFO$&body=Please help!.%0d%0aBest regards from Nagstamon")
+                                                              monitor_type="Check_MK Multisite",
+                                                              description="Edit host in WATO.",
+                                                              string="$MONITOR$index.py?start_url=%2Fmonitor%2Fcheck_mk%2Fwato.py%3Fhost%3D$HOST$%26mode%3Dedit_host")
+        defaultactions["Email"] = Action(name="Email", enabled=False, description="Send email to someone.",
+                                         type="browser",
+                                         string="mailto:servicedesk@my.org?subject=Monitor alert: $HOST$ - $SERVICE$ - $STATUS-INFO$&body=Please help!.%0d%0aBest regards from Nagstamon")
 
         return defaultactions
 
@@ -818,7 +847,6 @@ class Config(object):
 
 
 class Server(object):
-
     """
         one Server realized as object for config info
     """
@@ -874,8 +902,8 @@ class Server(object):
         # Sensu/Uchiwa/??? Datacenter/Site config
         self.monitor_site = 'Site 1'
 
-class Action(object):
 
+class Action(object):
     """
     class for custom actions, which whill be thrown into one config dictionary like the servers
     """
@@ -940,17 +968,19 @@ try:
         RESOURCES = os.path.normcase(os.sep.join((executable_dir, "resources")))
     else:
         import pkg_resources
+
         RESOURCES = pkg_resources.resource_filename("Nagstamon", "resources")
 
 except Exception as err:
     # get resources directory from current directory - only if not being set before by pkg_resources
     # try-excepts necessary for platforms like Windows .EXE
     paths_to_check = [os.path.normcase(os.path.join(os.getcwd(), "Nagstamon", "resources")),
-            os.path.normcase(os.path.join(os.getcwd(), "resources"))]
+                      os.path.normcase(os.path.join(os.getcwd(), "resources"))]
     try:
         # if resources dir is not available in CWD, try the
         # libs dir (site-packages) for the current Python
         from distutils.sysconfig import get_python_lib
+
         paths_to_check.append(os.path.normcase(os.path.join(get_python_lib(), "Nagstamon", "resources")))
     except Exception:
         pass
@@ -958,6 +988,7 @@ except Exception as err:
     # if we're still out of luck, maybe this was a user scheme install
     try:
         import site
+
         site.getusersitepackages()  # make sure USER_SITE is set
         paths_to_check.append(os.path.normcase(os.path.join(site.USER_SITE, "Nagstamon", "resources")))
     except Exception:
