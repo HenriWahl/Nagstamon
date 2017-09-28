@@ -4572,7 +4572,7 @@ class Dialog_Settings(Dialog):
         # hide keyring setting if keyring is not available
         if KEYRING:
           self.ui.input_checkbox_use_system_keyring.show()
-        else
+        else:
           self.ui.input_checkbox_use_system_keyring.hide()
 
         # important final size adjustment
