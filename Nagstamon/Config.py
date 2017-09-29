@@ -30,9 +30,10 @@ from collections import OrderedDict
 
 # older Kubuntu has trouble with keyring
 # see https://github.com/HenriWahl/Nagstamon/issues/447
+# necessary to avoid any import because might result in a segmentation fault
 KEYRING = True
 if platform.system() == 'Linux':
-    if platform.dist()[0] == 'Ubuntu':
+    if 'ubuntu' in platform.platform().lower():
         if 'XDG_SESSION_DESKTOP' in os.environ:
             if os.environ['XDG_SESSION_DESKTOP'].lower() == 'kde':
                 KEYRING = False
@@ -102,7 +103,7 @@ class AppInfo(object):
         contains app information previously located in GUI.py
     """
     NAME = 'Nagstamon'
-    VERSION = '3.1-20170927'
+    VERSION = '3.1-20170928'
     WEBSITE = 'https://nagstamon.ifw-dresden.de'
     COPYRIGHT = '©2008-2017 Henri Wahl et al.'
     COMMENTS = 'Nagios status monitor for your desktop'
@@ -656,8 +657,10 @@ class Config(object):
                 import secretstorage
                 if ("SecretService") in dir(keyring.backends) and not (keyring.get_keyring() is None):
                     return True
+                else:
+                    return False
             else:
-                # apparently an Ubuntu 16.04 which has problems with keyring
+                # apparently an Ubuntu KDE session which has problems with keyring
                 return False
         except Exception:
             import traceback
