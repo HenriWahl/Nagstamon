@@ -36,7 +36,9 @@ if platform.system() == 'Linux':
         if 'XDG_SESSION_DESKTOP' in os.environ:
             if os.environ['XDG_SESSION_DESKTOP'].lower() == 'kde':
                 KEYRING = False
-
+if KEYRING:
+    import keyring
+    
 # queue.Queue() needs threading module which might be not such a good idea to be used
 # because QThread is already in use
 # maybe not the most logical place here to be defined but at least all
