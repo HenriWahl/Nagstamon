@@ -32,17 +32,10 @@ from collections import OrderedDict
 # see https://github.com/HenriWahl/Nagstamon/issues/447
 KEYRING = True
 if platform.system() == 'Linux':
-    distribution, version, codename = platform.linux_distribution()
-    if distribution == 'Ubuntu':
-        if version > '16.10':
-            import keyring
-        else:
-            KEYRING = False
-    else:
-        import keyring
-
-else:
-    import keyring
+    if platform.dist()[0] == 'Ubuntu':
+        if 'XDG_SESSION_DESKTOP' in os.environ:
+            if os.environ['XDG_SESSION_DESKTOP'].lower() == 'kde':
+                KEYRING = False
 
 # queue.Queue() needs threading module which might be not such a good idea to be used
 # because QThread is already in use
@@ -109,7 +102,7 @@ class AppInfo(object):
         contains app information previously located in GUI.py
     """
     NAME = 'Nagstamon'
-    VERSION = '3.0.3'
+    VERSION = '3.1-20170927'
     WEBSITE = 'https://nagstamon.ifw-dresden.de'
     COPYRIGHT = '©2008-2017 Henri Wahl et al.'
     COMMENTS = 'Nagios status monitor for your desktop'
