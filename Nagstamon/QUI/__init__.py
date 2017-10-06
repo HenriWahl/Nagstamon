@@ -1497,6 +1497,9 @@ class StatusWindow(QWidget):
 
             # here we should check if scroll_area should be shown at all
             if not self.status_ok:
+                # store timestamp to avoid flickering as in https://github.com/HenriWahl/Nagstamon/issues/184
+                self.is_shown_timestamp = time.time()
+
                 if not conf.fullscreen and not conf.windowed:
                     # attempt to avoid flickering on MacOSX - already hide statusbar here
                     self.statusbar.hide()
@@ -1559,9 +1562,6 @@ class StatusWindow(QWidget):
                             # workaround for https://github.com/HenriWahl/Nagstamon/issues/246#issuecomment-220478066
                             pass
 
-                    # store timestamp to avoid flickering as in https://github.com/HenriWahl/Nagstamon/issues/184
-                    self.is_shown_timestamp = time.time()
-
                     # tell others like notification that statuswindow shows up now
                     self.showing.emit()
 
@@ -1598,7 +1598,6 @@ class StatusWindow(QWidget):
                    self.is_hiding_timestamp + 0.2 < time.time():
                     if conf.statusbar_floating:
                         self.statusbar.show()
-                        #self.statusbar.adjustSize()
                     self.toparea.hide()
                     self.servers_scrollarea.hide()
                     self.setMinimumSize(1, 1)
