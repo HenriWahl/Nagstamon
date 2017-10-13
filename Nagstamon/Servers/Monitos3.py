@@ -29,9 +29,10 @@ from Nagstamon.Servers.Generic import GenericServer
 from Nagstamon.Config import conf
 
 import logging
-logging.basicConfig( level=logging.INFO )
+# logging.basicConfig( level=logging.INFO )
 # logging.basicConfig(filename='nagstamon.log',level=logging.INFO)
 log = logging.getLogger('Monitos3')
+log.setLevel(logging.INFO)
 
 import re
 import json

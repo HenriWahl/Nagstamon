@@ -7,6 +7,7 @@ import urllib.request
 import urllib.parse
 import urllib.error
 import time
+import logging
 # import socket  # never used
 
 from Nagstamon.Helpers import (HumanReadableDurationFromTimestamp,
@@ -36,6 +37,10 @@ class ZabbixServer(GenericServer):
     """
     TYPE = 'Zabbix'
     zapi = None
+    if conf.debug_mode is True:
+        log_level = logging.DEBUG
+    else:
+        log_level = logging.WARNING
 
     def __init__(self, **kwds):
         GenericServer.__init__(self, **kwds)
@@ -68,7 +73,7 @@ class ZabbixServer(GenericServer):
 
     def _login(self):
         try:
-            self.zapi = ZabbixAPI(server=self.monitor_url, path="", log_level=0,
+            self.zapi = ZabbixAPI(server=self.monitor_url, path="", log_level=self.log_level,
                                   validate_certs=self.validate_certs)
             self.zapi.login(self.username, self.password)
         except ZabbixAPIException:
