@@ -8,6 +8,7 @@
 
 from PyQt5 import QtCore, QtGui, QtWidgets
 
+
 class Ui_settings_server(object):
     def setupUi(self, settings_server):
         settings_server.setObjectName("settings_server")
@@ -105,7 +106,7 @@ class Ui_settings_server(object):
         self.gridLayout.addWidget(self.groupbox_proxy, 18, 0, 1, 4)
         self.button_box = QtWidgets.QDialogButtonBox(settings_server)
         self.button_box.setOrientation(QtCore.Qt.Horizontal)
-        self.button_box.setStandardButtons(QtWidgets.QDialogButtonBox.Cancel|QtWidgets.QDialogButtonBox.Ok)
+        self.button_box.setStandardButtons(QtWidgets.QDialogButtonBox.Cancel | QtWidgets.QDialogButtonBox.Ok)
         self.button_box.setObjectName("button_box")
         self.gridLayout.addWidget(self.button_box, 29, 3, 1, 1)
         self.label_server_type = QtWidgets.QLabel(settings_server)
@@ -200,7 +201,7 @@ class Ui_settings_server(object):
         self.button_check_mk_view_services_reset = QtWidgets.QPushButton(self.groupbox_check_mk_views)
         self.button_check_mk_view_services_reset.setObjectName("button_check_mk_view_services_reset")
         self.gridLayout_4.addWidget(self.button_check_mk_view_services_reset, 1, 2, 1, 1)
-        self.gridLayout_3.addWidget(self.groupbox_check_mk_views, 15, 0, 1, 4)
+        self.gridLayout_3.addWidget(self.groupbox_check_mk_views, 16, 0, 1, 4)
         self.label_auth_type = QtWidgets.QLabel(self.groupbox_options)
         self.label_auth_type.setObjectName("label_auth_type")
         self.gridLayout_3.addWidget(self.label_auth_type, 5, 0, 1, 1)
@@ -213,6 +214,9 @@ class Ui_settings_server(object):
         self.input_checkbox_use_display_name_service = QtWidgets.QCheckBox(self.groupbox_options)
         self.input_checkbox_use_display_name_service.setObjectName("input_checkbox_use_display_name_service")
         self.gridLayout_3.addWidget(self.input_checkbox_use_display_name_service, 13, 0, 1, 4)
+        self.input_checkbox_use_description_name_service = QtWidgets.QCheckBox(self.groupbox_options)
+        self.input_checkbox_use_description_name_service.setObjectName("input_checkbox_use_description_name_service")
+        self.gridLayout_3.addWidget(self.input_checkbox_use_description_name_service, 14, 0, 1, 4)
         spacerItem1 = QtWidgets.QSpacerItem(40, 20, QtWidgets.QSizePolicy.Expanding, QtWidgets.QSizePolicy.Minimum)
         self.gridLayout_3.addItem(spacerItem1, 5, 3, 1, 1)
         self.label_timeout = QtWidgets.QLabel(self.groupbox_options)
@@ -235,7 +239,7 @@ class Ui_settings_server(object):
         self.gridLayout_3.addWidget(self.label_service_filter, 10, 0, 1, 1)
         self.input_checkbox_force_authuser = QtWidgets.QCheckBox(self.groupbox_options)
         self.input_checkbox_force_authuser.setObjectName("input_checkbox_force_authuser")
-        self.gridLayout_3.addWidget(self.input_checkbox_force_authuser, 14, 0, 1, 4)
+        self.gridLayout_3.addWidget(self.input_checkbox_force_authuser, 15, 0, 1, 4)
         self.input_combobox_authentication = QtWidgets.QComboBox(self.groupbox_options)
         self.input_combobox_authentication.setObjectName("input_combobox_authentication")
         self.gridLayout_3.addWidget(self.input_combobox_authentication, 5, 2, 1, 1)
@@ -342,6 +346,7 @@ class Ui_settings_server(object):
         self.input_checkbox_no_cookie_auth.setText(_translate("settings_server", "Do not use cookie authentication"))
         self.input_checkbox_use_display_name_host.setText(_translate("settings_server", "Use display name as host name"))
         self.input_checkbox_use_display_name_service.setText(_translate("settings_server", "Use display name as service name"))
+        self.input_checkbox_use_description_name_service.setText(_translate("settings_server", "Use description as service name"))
         self.label_timeout.setText(_translate("settings_server", "Timeout:"))
         self.input_checkbox_ignore_cert.setText(_translate("settings_server", "Ignore SSL/TLS certificate"))
         self.label_service_filter.setText(_translate("settings_server", "Service filter:"))
@@ -353,4 +358,3 @@ class Ui_settings_server(object):
         self.label_monitor_site.setText(_translate("settings_server", "Monitor Site:"))
         self.input_checkbox_custom_cert_use.setText(_translate("settings_server", "Use custom CA file"))
         self.label_custom_ca_file.setText(_translate("settings_server", "Custom CA file: "))
-

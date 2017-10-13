@@ -22,6 +22,8 @@ from Nagstamon.thirdparty.zabbix_api import (ZabbixAPI,
                                              APITimeout,
                                              Already_Exists)
 
+log = logging.getLogger('Zabbix')
+
 
 class ZabbixError(Exception):
 
@@ -41,6 +43,7 @@ class ZabbixServer(GenericServer):
         log_level = logging.DEBUG
     else:
         log_level = logging.WARNING
+    log.setLevel(log_level)
 
     def __init__(self, **kwds):
         GenericServer.__init__(self, **kwds)
@@ -66,6 +69,7 @@ class ZabbixServer(GenericServer):
         self.username = conf.servers[self.get_name()].username
         self.password = conf.servers[self.get_name()].password
         self.ignore_cert = conf.servers[self.get_name()].ignore_cert
+        self.use_description_name_service = conf.servers[self.get_name()].use_description_name_service
         if self.ignore_cert is True:
             self.validate_certs = False
         else:
@@ -248,10 +252,11 @@ class ZabbixServer(GenericServer):
                     for item in service['items']:
                         if int(item['lastclock']) > lastcheck:
                             lastcheck = int(item['lastclock'])
-                    if len(service['comments']) == 0:
-                        srvc = service['application']
-                    else:
+                    if self.use_description_name_service and \
+                            len(service['comments']) != 0:
                         srvc = self.nagiosify_service(service['comments'])
+                    else:
+                        srvc = service['application']
                     n = {
                         'service': srvc,
                         'status': status,

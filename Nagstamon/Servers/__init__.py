@@ -174,6 +174,9 @@ def create_server(server=None):
     new_server.host_filter = server.host_filter
     new_server.service_filter = server.service_filter
 
+    # Zabbix
+    new_server.use_description_name_service = server.use_description_name_service
+
     # server's individual preparations for HTTP connections (for example cookie creation)
     # is done in GetStatus() method of monitor
     if server.enabled is True:

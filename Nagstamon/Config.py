@@ -39,7 +39,7 @@ if platform.system() == 'Linux':
                 KEYRING = False
 if KEYRING:
     import keyring
-    
+
 # queue.Queue() needs threading module which might be not such a good idea to be used
 # because QThread is already in use
 # maybe not the most logical place here to be defined but at least all
@@ -111,9 +111,9 @@ class AppInfo(object):
     COMMENTS = 'Nagios status monitor for your desktop'
     # version URL depends on version string
     if 'alpha' in VERSION.lower() or \
-                    'beta' in VERSION.lower() or \
-                    'rc' in VERSION.lower() or \
-                    '-' in VERSION.lower():
+            'beta' in VERSION.lower() or \
+            'rc' in VERSION.lower() or \
+            '-' in VERSION.lower():
         VERSION_URL = WEBSITE + '/version/unstable'
     else:
         VERSION_URL = WEBSITE + '/version/stable'
@@ -899,6 +899,9 @@ class Server(object):
 
         # Sensu/Uchiwa/??? Datacenter/Site config
         self.monitor_site = 'Site 1'
+
+        # Zabbix "Item Description" as "Service Name"
+        self.use_description_name_service = False
 
 
 class Action(object):
