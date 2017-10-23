@@ -2,17 +2,21 @@
 <!DOCTYPE plist PUBLIC "-//Apple//DTD PLIST 1.0//EN" "http://www.apple.com/DTDs/PropertyList-1.0.dtd">
 <plist version="1.0">
 <dict>
-	<key>CFBundleDevelopmentRegion</key>
-	<string>English</string>
 	<key>CFBundleExecutable</key>
-	<string>nagstamon</string>
+	<string>MacOS/Nagstamon</string>
 	<key>CFBundleIconFile</key>
-	<string>icon.icns</string>
+	<string>nagstamon.icns</string>
+	<key>CFBundleName</key>
+	<string>Nagstamon</string>
 	<key>CFBundleDisplayName</key>
 	<string>Nagstamon</string>
 	<key>CFBundleIdentifier</key>
 	<string>de.ifw-dresden.nagstamon</string>
 	<key>NSHighResolutionCapable</key>
 	<true/>
+	<key>LSBackgroundOnly</key>
+	<string>0</string>
+	<key>CFBundlePackageType</key>
+	<string>APPL</string>
 </dict>
 </plist>

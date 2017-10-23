@@ -1169,7 +1169,7 @@ class GenericServer(object):
                                 service.visible = False
                             else:
                                 self.nagitems_filtered["services"]["INFORMATION"].append(service)
-                                self.informations += 1
+                                self.information += 1
 
                     if service.status == "AVERAGE":
                         if conf.filter_all_unknown_services is True:
@@ -1386,13 +1386,9 @@ class GenericServer(object):
 
                     # add proxy information if necessary
                     self.proxify(temporary_session)
-                    # default to check TLS validity for temporary sessions
-                    if self.ignore_cert:
-                        temporary_session.verify = False
-                    elif self.custom_cert_use:
-                        temporary_session.verify = self.custom_cert_ca_file
-                    else:
-                        temporary_session.verify = True
+
+                    # no need to check TLS validity for temporary sessions like update check
+                    temporary_session.verify = False
 
                     # most requests come without multipart/form-data
                     if multipart is False:

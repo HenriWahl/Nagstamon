@@ -1770,26 +1770,16 @@ $TRANSID$ - only useful for Check_MK as _transid=$TRANSID$</string>
                  </widget>
                 </item>
                 <item row="2" column="1">
-                 <widget class="QLineEdit" name="input_lineedit_notification_custom_action_separator"/>
+                 <widget class="QLineEdit" name="input_lineedit_notification_custom_action_separator">
+                  <property name="toolTip">
+                   <string>Arbitrarily choosen string or character to separate events in $EVENTS$.</string>
+                  </property>
+                 </widget>
                 </item>
                 <item row="1" column="1">
                  <widget class="QLineEdit" name="input_lineedit_notification_custom_action_string">
                   <property name="toolTip">
-                   <string>Available variables for action strings:
-
-$HOST$ - host as in monitor
-$SERVICE$ - service as in monitor
-$MONITOR$ - monitor address
-$MONITOR-CGI$ - monitor CGI address
-$ADDRESS$ - address of host, delivered from connection method
-$USERNAME$ - username on monitor
-$STATUS-INFO$ - status information for host or service
-$PASSWORD$ - username's password on monitor
-$COMMENT-ACK$ - default acknowledge comment
-$COMMENT-DOWN$ - default downtime comment
-$COMMENT-SUBMIT$ - default submit check result comment
-
-$TRANSID$ - only useful for Check_MK as _transid=$TRANSID$</string>
+                   <string>&lt;html&gt;&lt;head/&gt;&lt;body&gt;&lt;p&gt;Available variables for action strings are $EVENTS$ for all events concatenated by the event separator or $EVENT$ if single actions are choosen.&lt;/p&gt;&lt;/body&gt;&lt;/html&gt;</string>
                   </property>
                  </widget>
                 </item>

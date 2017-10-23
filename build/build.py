@@ -49,7 +49,8 @@ def winmain():
     """
     # InnoSetup does not like VersionInfoVersion with letters, only 0.0.0.0 schemed numbers
     if 'alpha' in VERSION.lower() or 'beta' in VERSION.lower() or 'rc' in VERSION.lower() or '-' in VERSION.lower():
-        VERSION_IS = VERSION.replace('alpha', '').replace('beta', '').replace('rc', '').replace('-', '.').replace('..', '.')
+        VERSION_IS = VERSION.replace('alpha', '').replace('beta', '').replace('rc', '').replace('-', '.').replace('..',
+                                                                                                                  '.')
         VERSION_IS = VERSION_IS.split('.')
         version_segments = list()
         for part in VERSION_IS:
@@ -100,7 +101,7 @@ def winmain():
         zip_archive.write(os.path.basename(DIR_BUILD_NAGSTAMON))
         for root, dirs, files in os.walk(os.path.basename(DIR_BUILD_NAGSTAMON)):
             for file in files:
-                zip_archive.write('{0}{1}{2}'.format(root, os.sep, file ))
+                zip_archive.write('{0}{1}{2}'.format(root, os.sep, file))
 
     # execute InnoSetup with many variables set by ISCC.EXE outside .iss file
     subprocess.call([ISCC,
@@ -122,7 +123,7 @@ def macmain():
     os.chdir('{0}{1}..'.format(CURRENT_DIR, os.sep))
 
     # create one-file .app bundle by pyinstaller
-    subprocess.call(['/sw/bin/pyinstaller',
+    subprocess.call(['/usr/local/bin/pyinstaller',
                      '--noconfirm',
                      '--add-data=Nagstamon/resources:Nagstamon/resources',
                      '--icon=Nagstamon/resources/nagstamon.icns',
@@ -134,22 +135,29 @@ def macmain():
 
     # go back to build directory
     os.chdir(CURRENT_DIR)
-    
+
+    # use own modified Info.plist for Retina compatibility
+    shutil.copyfile('../Nagstamon/resources/Info.plist', '../dist/Nagstamon.app/Contents/Info.plist')
+
     # create staging DMG folder for later compressing of DMG
     shutil.rmtree('Nagstamon {0} Staging DMG'.format(VERSION), ignore_errors=True)
-    
+
     # copy app bundle folder
     shutil.move('../dist/Nagstamon.app', 'Nagstamon {0} Staging DMG/Nagstamon.app'.format(VERSION))
-    
+
     # cleanup before new images get created
     for dmg_file in glob.iglob('*.dmg'):
         os.unlink(dmg_file)
-        
+
     # create DMG
-    subprocess.call(['hdiutil create -srcfolder "Nagstamon {0} Staging DMG" -volname "Nagstamon {0}" -fs HFS+ -format UDRW -size 100M "Nagstamon {0} uncompressed.dmg"'.format(VERSION)], shell=True)
+    subprocess.call([
+                        'hdiutil create -srcfolder "Nagstamon {0} Staging DMG" -volname "Nagstamon {0}" -fs HFS+ -format UDRW -size 100M "Nagstamon {0} uncompressed.dmg"'.format(
+                            VERSION)], shell=True)
 
     # Compress DMG
-    subprocess.call(['hdiutil convert "Nagstamon {0} uncompressed".dmg -format UDZO -imagekey zlib-level=9 -o "Nagstamon {0}.dmg"'.format(VERSION)], shell=True)
+    subprocess.call([
+                        'hdiutil convert "Nagstamon {0} uncompressed".dmg -format UDZO -imagekey zlib-level=9 -o "Nagstamon {0}.dmg"'.format(
+                            VERSION)], shell=True)
 
     # Delete uncompressed DMG file as it is no longer needed
     os.unlink('Nagstamon {0} uncompressed.dmg'.format(VERSION))
@@ -167,7 +175,7 @@ def debmain():
 
     shutil.copytree('{0}{1}debian{1}'.format(CURRENT_DIR, os.sep), '{0}{1}debian'.format(NAGSTAMON_DIR, os.sep))
 
-    os.chmod('{0}{1}debian{1}rules'.format(CURRENT_DIR, os.sep),0o755)
+    os.chmod('{0}{1}debian{1}rules'.format(CURRENT_DIR, os.sep), 0o755)
 
     subprocess.call(['fakeroot', 'debian/rules', 'build'])
 
@@ -200,14 +208,12 @@ def rpmmain():
     subprocess.call(['python3', 'setup.py', 'bdist_rpm'], shell=False)
 
 
-
 DISTS = {
     'debian': debmain,
     'Ubuntu': debmain,
     'LinuxMint': debmain,
     'fedora': rpmmain
 }
-
 
 if __name__ == '__main__':
     if platform.system() == 'Windows':

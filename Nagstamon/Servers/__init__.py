@@ -157,13 +157,18 @@ def create_server(server=None):
     # Centreon
     new_server.use_autologin = server.use_autologin
     new_server.autologin_key = server.autologin_key
+
     # Icinga
     new_server.use_display_name_host = server.use_display_name_host
     new_server.use_display_name_service = server.use_display_name_service
+
     # IcingaWeb2
     new_server.no_cookie_auth = server.no_cookie_auth
+
     # Check_MK Multisite
     new_server.force_authuser = server.force_authuser
+    new_server.check_mk_view_hosts = server.check_mk_view_hosts
+    new_server.check_mk_view_services = server.check_mk_view_services
 
     # OP5 api filters
     new_server.host_filter = server.host_filter

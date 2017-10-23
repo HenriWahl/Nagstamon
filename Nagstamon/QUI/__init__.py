@@ -51,6 +51,7 @@ from Nagstamon.Config import (conf,
                               BOOLPOOL,
                               CONFIG_STRINGS,
                               NON_LINUX,
+                              KEYRING,
                               AppInfo,
                               debug_queue)
 
@@ -1496,6 +1497,9 @@ class StatusWindow(QWidget):
 
             # here we should check if scroll_area should be shown at all
             if not self.status_ok:
+                # store timestamp to avoid flickering as in https://github.com/HenriWahl/Nagstamon/issues/184
+                self.is_shown_timestamp = time.time()
+
                 if not conf.fullscreen and not conf.windowed:
                     # attempt to avoid flickering on MacOSX - already hide statusbar here
                     self.statusbar.hide()
@@ -1558,9 +1562,6 @@ class StatusWindow(QWidget):
                             # workaround for https://github.com/HenriWahl/Nagstamon/issues/246#issuecomment-220478066
                             pass
 
-                    # store timestamp to avoid flickering as in https://github.com/HenriWahl/Nagstamon/issues/184
-                    self.is_shown_timestamp = time.time()
-
                     # tell others like notification that statuswindow shows up now
                     self.showing.emit()
 
@@ -1597,7 +1598,6 @@ class StatusWindow(QWidget):
                    self.is_hiding_timestamp + 0.2 < time.time():
                     if conf.statusbar_floating:
                         self.statusbar.show()
-                        #self.statusbar.adjustSize()
                     self.toparea.hide()
                     self.servers_scrollarea.hide()
                     self.setMinimumSize(1, 1)
@@ -4568,6 +4568,12 @@ class Dialog_Settings(Dialog):
         self.paint_color_alternation()
         self.change_color_alternation(conf.grid_alternation_intensity)
 
+        # hide keyring setting if keyring is not available
+        if KEYRING:
+          self.ui.input_checkbox_use_system_keyring.show()
+        else:
+          self.ui.input_checkbox_use_system_keyring.hide()
+
         # important final size adjustment
         self.window.adjustSize()
 
@@ -5241,6 +5247,7 @@ class Dialog_Server(Dialog):
             self.ui.input_checkbox_use_display_name_host: ['Icinga', 'IcingaWeb2'],
             self.ui.input_checkbox_use_display_name_service: ['Icinga', 'IcingaWeb2'],
             self.ui.input_checkbox_force_authuser: ['Check_MK Multisite'],
+            self.ui.groupbox_check_mk_views: ['Check_MK Multisite'],
             self.ui.input_lineedit_host_filter: ['op5Monitor'],
             self.ui.input_lineedit_service_filter: ['op5Monitor'],
             self.ui.label_service_filter: ['op5Monitor'],
@@ -5275,6 +5282,10 @@ class Dialog_Server(Dialog):
 
         # when authentication is changed to Kerberos then disable username/password as the are now useless
         self.ui.input_combobox_authentication.activated.connect(self.toggle_authentication)
+
+        # reset Check_MK views
+        self.ui.button_check_mk_view_hosts_reset.clicked.connect(self.check_mk_view_hosts_reset)
+        self.ui.button_check_mk_view_services_reset.clicked.connect(self.check_mk_view_services_reset)
 
         # mode needed for evaluate dialog after ok button pressed - defaults to 'new'
         self.mode = 'new'
@@ -5534,6 +5545,17 @@ class Dialog_Server(Dialog):
         # only take filename if QFileDialog gave something useful back
         if file != '':
             self.ui.input_lineedit_custom_cert_ca_file.setText(file)
+
+
+    @pyqtSlot()
+    def check_mk_view_hosts_reset(self):
+        self.ui.input_lineedit_check_mk_view_hosts.setText('nagstamon_hosts')
+
+
+    @pyqtSlot()
+    def check_mk_view_services_reset(self):
+        self.ui.input_lineedit_check_mk_view_services.setText('nagstamon_svc')
+
 
 
 class Dialog_Action(Dialog):
