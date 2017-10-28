@@ -372,7 +372,7 @@ class CentreonServer(GenericServer):
         elif self.centreon_version == 2.7 or self.centreon_version == 2.8:
             self.XML_PATH = 'xml'
             if conf.debug_mode == True:
-                self.Debug(server=self.get_name(), debug='Only Centreon Broker is supported in Centeon >= 2.7 so: XML_PATH='+ self.XML_PATH)
+                self.Debug(server=self.get_name(), debug='Only Centreon Broker is supported in Centeon >= 2.7 -> XML_PATH='+ self.XML_PATH)
 
 
     def _define_url(self):
@@ -384,7 +384,9 @@ class CentreonServer(GenericServer):
             'xml_meta': self.monitor_cgi_url + '/include/monitoring/status/Meta/' + self.XML_PATH + '/metaServiceXML.php',
             'xml_hostSendCommand': self.monitor_cgi_url + '/include/monitoring/objectDetails/xml/hostSendCommand.php',
             'xml_serviceSendCommand': self.monitor_cgi_url + '/include/monitoring/objectDetails/xml/serviceSendCommand.php',
-            'external_cmd_cmdPopup': self.monitor_cgi_url + '/include/monitoring/external_cmd/cmdPopup.php'
+            'external_cmd_cmdPopup': self.monitor_cgi_url + '/include/monitoring/external_cmd/cmdPopup.php',
+            # no idea if this really exist in centreon < 2.7
+            'autologoutXMLresponse': self.monitor_cgi_url + '/include/common/javascript/autologoutXMLresponse.php'
         }
 
         # inconsistant url in Centreon 2.7
@@ -396,7 +398,8 @@ class CentreonServer(GenericServer):
             'xml_meta': self.monitor_cgi_url + '/include/monitoring/status/Meta/' + self.XML_PATH + '/broker/metaServiceXML.php',
             'xml_hostSendCommand': self.monitor_cgi_url + '/include/monitoring/objectDetails/xml/hostSendCommand.php',
             'xml_serviceSendCommand': self.monitor_cgi_url + '/include/monitoring/objectDetails/xml/serviceSendCommand.php',
-            'external_cmd_cmdPopup': self.monitor_cgi_url + '/include/monitoring/external_cmd/cmdPopup.php'
+            'external_cmd_cmdPopup': self.monitor_cgi_url + '/include/monitoring/external_cmd/cmdPopup.php',
+            'autologoutXMLresponse': self.monitor_cgi_url + '/include/common/javascript/autologoutXMLresponse.php'
         }
 
         urls_centreon_2_8 = {
@@ -406,7 +409,8 @@ class CentreonServer(GenericServer):
             'xml_hosts': self.monitor_cgi_url + '/include/monitoring/status/Hosts/' + self.XML_PATH + '/hostXML.php',
             'xml_hostSendCommand': self.monitor_cgi_url + '/include/monitoring/objectDetails/xml/hostSendCommand.php',
             'xml_serviceSendCommand': self.monitor_cgi_url + '/include/monitoring/objectDetails/xml/serviceSendCommand.php',
-            'external_cmd_cmdPopup': self.monitor_cgi_url + '/include/monitoring/external_cmd/cmdPopup.php'
+            'external_cmd_cmdPopup': self.monitor_cgi_url + '/include/monitoring/external_cmd/cmdPopup.php',
+            'autologoutXMLresponse': self.monitor_cgi_url + '/include/core/autologout/autologoutXMLresponse.php'
         }
 
         if self.centreon_version < 2.7:
@@ -498,9 +502,8 @@ class CentreonServer(GenericServer):
         '''
         Get status from Centreon Server
         '''
-        # get sid in case this has not yet been done
-        if self.SID == None or self.SID == '':
-            self.SID = self._get_sid().result
+        # Be sure that the session is still active
+        self._check_session()
 
         # services (unknown, warning or critical?)
         if self.centreon_version == 2.7 or self.centreon_version == 2.8:
@@ -726,7 +729,7 @@ class CentreonServer(GenericServer):
                             self.HARD_SOFT[self.new_hosts[str(l.hn.text)].services[str(l.sd.text)].status_type]
 
                         if conf.debug_mode == True:
-                            self.Debug(server=self.get_name(), debug='Service / status_type : ' + self.new_hosts[str(l.hn.text)].services[str(l.sd.text)].name + '/' + self.new_hosts[str(l.hn.text)].services[str(l.sd.text)].status_type)
+                            self.Debug(server=self.get_name(), debug='Parsing service XML (Host/Service/Status_type) ' + self.new_hosts[str(l.hn.text)].services[str(l.sd.text)].host + '/' + self.new_hosts[str(l.hn.text)].services[str(l.sd.text)].name + '/' + self.new_hosts[str(l.hn.text)].services[str(l.sd.text)].status_type)
                         self.new_hosts[str(l.hn.text)].services[str(l.sd.text)].last_check = str(l.lc.text)
                         self.new_hosts[str(l.hn.text)].services[str(l.sd.text)].duration = str(l.d.text)
                         self.new_hosts[str(l.hn.text)].services[str(l.sd.text)].status_information = str(l.po.text).replace('\n', ' ').strip()
@@ -960,29 +963,49 @@ class CentreonServer(GenericServer):
         except:
             self.Error(sys.exc_info())
 
-    # This Hook seems to not be called anymore from main loop
-    def Hook(self):
-        # debug
-        if conf.debug_mode == True:
-            self.Debug(server=self.get_name(), debug='Hook function')
-        '''
-        in case count is down get a new SID, just in case
-        was kicked out but as to be seen in https://sourceforge.net/p/nagstamon/bugs/86/ there are problems with older
-        Centreon installations so this should come back
-        '''
-        # renewing the SID once an hour might be enough
-        # maybe this is unnecessary now that we authenticate via login/password, no md5
-        if self.SIDcount >= 3600:
-            if conf.debug_mode == 'True':
-                self.Debug(server=self.get_name(), debug='Old SID: ' + self.SID + ' ' + str(self.Cookie))
-            # close the connections to avoid the accumulation of sessions on Centreon
-            url_disconnect = self.urls_centreon['index'] + '?disconnect=1'
-            raw = self.FetchURL(url_disconnect, giveback='raw')
-            del raw
-            self.SID = self._get_sid().result
-            if conf.debug_mode == 'True':
-                self.Debug(server=self.get_name(), debug='New SID: ' + self.SID + ' ' + str(self.Cookie))
-            self.SIDcount = 0
-        else:
-            self.SIDcount += 1
 
+    def _check_session(self):
+        if conf.debug_mode == True:
+            self.Debug(server=self.get_name(), debug='Checking session status')
+        try:
+            result = self.FetchURL(self.urls_centreon['autologoutXMLresponse'], giveback='xml')
+            xmlobj, error, status_code = result.result, result.error, result.status_code
+            self.session_state = xmlobj.find("state").text.lower()
+            if conf.debug_mode == True:
+                self.Debug(server=self.get_name(), debug='Session status : ' + self.session_state)
+            if self.session_state == "nok":
+                self.SID = self._get_sid().result
+                if conf.debug_mode == True:
+                    self.Debug(server=self.get_name(), debug='Session renewed')
+
+        except:
+            import traceback
+            traceback.print_exc(file=sys.stdout)
+            result, error = self.Error(sys.exc_info())
+            return Result(result=result, error=error)
+        
+    # This Hook seems to not be called anymore from main loop
+    # def Hook(self):
+        # # debug
+        # if conf.debug_mode == True:
+        #     self.Debug(server=self.get_name(), debug='Hook function')
+        # '''
+        # in case count is down get a new SID, just in case
+        # was kicked out but as to be seen in https://sourceforge.net/p/nagstamon/bugs/86/ there are problems with older
+        # Centreon installations so this should come back
+        # '''
+        # # renewing the SID once an hour might be enough
+        # # maybe this is unnecessary now that we authenticate via login/password, no md5
+        # if self.SIDcount >= 3600:
+        #     if conf.debug_mode == 'True':
+        #         self.Debug(server=self.get_name(), debug='Old SID: ' + self.SID + ' ' + str(self.Cookie))
+        #     # close the connections to avoid the accumulation of sessions on Centreon
+        #     url_disconnect = self.urls_centreon['index'] + '?disconnect=1'
+        #     raw = self.FetchURL(url_disconnect, giveback='raw')
+        #     del raw
+        #     self.SID = self._get_sid().result
+        #     if conf.debug_mode == 'True':
+        #         self.Debug(server=self.get_name(), debug='New SID: ' + self.SID + ' ' + str(self.Cookie))
+        #     self.SIDcount = 0
+        # else:
+        #     self.SIDcount += 1
