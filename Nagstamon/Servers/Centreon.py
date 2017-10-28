@@ -967,16 +967,23 @@ class CentreonServer(GenericServer):
     def _check_session(self):
         if conf.debug_mode == True:
             self.Debug(server=self.get_name(), debug='Checking session status')
-        result = self.FetchURL(self.urls_centreon['autologoutXMLresponse'], giveback='xml')
-        xmlobj, error, status_code = result.result, result.error, result.status_code
-        self.session_state = xmlobj.find("state").text.lower()
-        if conf.debug_mode == True:
-            self.Debug(server=self.get_name(), debug='Session status : ' + self.session_state)
-        if self.session_state == "nok":
-            self.SID = self._get_sid().result
+        try:
+            result = self.FetchURL(self.urls_centreon['autologoutXMLresponse'], giveback='xml')
+            xmlobj, error, status_code = result.result, result.error, result.status_code
+            self.session_state = xmlobj.find("state").text.lower()
             if conf.debug_mode == True:
-                self.Debug(server=self.get_name(), debug='Session renewed')
+                self.Debug(server=self.get_name(), debug='Session status : ' + self.session_state)
+            if self.session_state == "nok":
+                self.SID = self._get_sid().result
+                if conf.debug_mode == True:
+                    self.Debug(server=self.get_name(), debug='Session renewed')
 
+        except:
+            import traceback
+            traceback.print_exc(file=sys.stdout)
+            result, error = self.Error(sys.exc_info())
+            return Result(result=result, error=error)
+        
     # This Hook seems to not be called anymore from main loop
     # def Hook(self):
         # # debug
