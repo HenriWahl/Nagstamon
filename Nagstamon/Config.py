@@ -201,8 +201,8 @@ class Config(object):
         self.notification_action_ok_string = ''
         self.notification_custom_action = False
         self.notification_custom_action_string = ''
-        self.notification_custom_action_separator = ''
-        self.notification_custom_action_single = False
+        self.notification_custom_action_separator = '|'
+        self.notification_custom_action_single = True
         self.notify_if_up = False
         self.notify_if_information = True
         self.notify_if_warning = True

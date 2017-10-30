@@ -2214,7 +2214,9 @@ class StatusWindow(QWidget):
                     else:
                         for server in get_enabled_servers():
                             for event in [k for k, v in server.events_notification.items() if v is True]:
-                                custom_action_string = conf.notification_custom_action_string.replace('$EVENTS$', event)
+                                custom_action_string = conf.notification_custom_action_string.replace('$EVENT$',
+                                                                                                      '$EVENTS$')
+                                custom_action_string = custom_action_string.replace('$EVENTS$', event)
                                 # execute action
                                 self.execute_action(server_name, custom_action_string)
                                 # clear already notified events setting them to False
@@ -4342,6 +4344,9 @@ class Dialog_Settings(Dialog):
             self.ui.input_checkbox_notification_action_ok: [self.ui.input_lineedit_notification_action_ok_string],
             # single custom notification action
             self.ui.input_checkbox_notification_custom_action: [self.ui.notification_custom_action_groupbox],
+            # use event separator or not
+            self.ui.input_checkbox_notification_custom_action_single: [self.ui.label_notification_custom_action_separator,
+                                                                       self.ui.input_lineedit_notification_custom_action_separator],
             # customized color alternation
             self.ui.input_checkbox_show_grid: [self.ui.input_checkbox_grid_use_custom_intensity],
             self.ui.input_checkbox_grid_use_custom_intensity: [
@@ -4367,6 +4372,8 @@ class Dialog_Settings(Dialog):
             self.ui.input_radiobutton_use_custom_browser: [self.ui.groupbox_custom_browser,
                 self.ui.input_lineedit_custom_browser,
                 self.ui.button_choose_browser]}
+
+        self.TOGGLE_DEPS_INVERTED = [self.ui.input_checkbox_notification_custom_action_single]
 
         # set title to current version
         self.window.setWindowTitle(' '.join((AppInfo.NAME, AppInfo.VERSION)))

@@ -1720,6 +1720,13 @@
                 <property name="spacing">
                  <number>5</number>
                 </property>
+                <item row="4" column="2">
+                 <widget class="QLabel" name="label_notification_custom_action_separator">
+                  <property name="text">
+                   <string>Event separator:</string>
+                  </property>
+                 </widget>
+                </item>
                 <item row="1" column="0">
                  <widget class="QLabel" name="label_notification_custom_action_string">
                   <property name="text">
@@ -1727,31 +1734,24 @@
                   </property>
                  </widget>
                 </item>
-                <item row="3" column="0" colspan="2">
-                 <widget class="QCheckBox" name="input_checkbox_notification_custom_action_single">
-                  <property name="text">
-                   <string>Run one single action for every event</string>
-                  </property>
-                 </widget>
-                </item>
-                <item row="2" column="0">
-                 <widget class="QLabel" name="label_notification_custom_action_separator">
-                  <property name="text">
-                   <string>Event separator:</string>
-                  </property>
-                 </widget>
-                </item>
-                <item row="2" column="1">
+                <item row="4" column="3">
                  <widget class="QLineEdit" name="input_lineedit_notification_custom_action_separator">
                   <property name="toolTip">
                    <string>Arbitrarily choosen string or character to separate events in $EVENTS$.</string>
                   </property>
                  </widget>
                 </item>
-                <item row="1" column="1">
+                <item row="2" column="1" colspan="3">
+                 <widget class="QCheckBox" name="input_checkbox_notification_custom_action_single">
+                  <property name="text">
+                   <string>Run one single action for every event</string>
+                  </property>
+                 </widget>
+                </item>
+                <item row="1" column="1" colspan="3">
                  <widget class="QLineEdit" name="input_lineedit_notification_custom_action_string">
                   <property name="toolTip">
-                   <string>&lt;html&gt;&lt;head/&gt;&lt;body&gt;&lt;p&gt;Available variables for action strings are $EVENTS$ for all events concatenated by the event separator or $EVENT$ if single actions are choosen.&lt;/p&gt;&lt;/body&gt;&lt;/html&gt;</string>
+                   <string>&lt;html&gt;&lt;head/&gt;&lt;body&gt;&lt;p&gt;Available variables for action strings are $EVENTS$ for all events concatenated by the event separator or $EVENT$ if single actions are choosen.&lt;/p&gt;&lt;p&gt;To get all information into executable the variable should be quoted like '$EVENT$'.&lt;/p&gt;&lt;/body&gt;&lt;/html&gt;</string>
                   </property>
                  </widget>
                 </item>
@@ -2917,8 +2917,6 @@
   <tabstop>input_lineedit_notification_action_ok_string</tabstop>
   <tabstop>input_checkbox_notification_custom_action</tabstop>
   <tabstop>input_lineedit_notification_custom_action_string</tabstop>
-  <tabstop>input_lineedit_notification_custom_action_separator</tabstop>
-  <tabstop>input_checkbox_notification_custom_action_single</tabstop>
   <tabstop>input_button_color_ok_text</tabstop>
   <tabstop>input_button_color_ok_background</tabstop>
   <tabstop>input_button_color_information_text</tabstop>
