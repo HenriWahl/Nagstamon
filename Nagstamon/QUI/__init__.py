@@ -5246,6 +5246,7 @@ class Dialog_Server(Dialog):
             self.ui.input_checkbox_no_cookie_auth: ['IcingaWeb2', 'Sensu'],
             self.ui.input_checkbox_use_display_name_host: ['Icinga', 'IcingaWeb2'],
             self.ui.input_checkbox_use_display_name_service: ['Icinga', 'IcingaWeb2'],
+            self.ui.input_checkbox_use_description_name_service: ['Zabbix'],
             self.ui.input_checkbox_force_authuser: ['Check_MK Multisite'],
             self.ui.groupbox_check_mk_views: ['Check_MK Multisite'],
             self.ui.input_lineedit_host_filter: ['op5Monitor'],

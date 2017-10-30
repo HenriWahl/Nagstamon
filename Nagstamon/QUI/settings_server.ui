@@ -359,7 +359,7 @@
         </property>
        </widget>
       </item>
-      <item row="15" column="0" colspan="4">
+      <item row="16" column="0" colspan="4">
        <widget class="QGroupBox" name="groupbox_check_mk_views">
         <property name="title">
          <string>Views:</string>
@@ -430,6 +430,13 @@
         </property>
        </widget>
       </item>
+      <item row="14" column="0" colspan="4">
+       <widget class="QCheckBox" name="input_checkbox_use_description_service">
+        <property name="text">
+         <string>Use description as service name</string>
+        </property>
+       </widget>
+      </item>
       <item row="5" column="3">
        <spacer name="horizontalSpacer_2">
         <property name="orientation">
@@ -477,7 +484,7 @@
         </property>
        </widget>
       </item>
-      <item row="14" column="0" colspan="4">
+      <item row="15" column="0" colspan="4">
        <widget class="QCheckBox" name="input_checkbox_force_authuser">
         <property name="text">
          <string>Only show permitted hosts for &quot;see all&quot; users (1.4.0i1 or newer)</string>
