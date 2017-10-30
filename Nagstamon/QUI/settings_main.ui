@@ -1720,17 +1720,17 @@
                 <property name="spacing">
                  <number>5</number>
                 </property>
-                <item row="4" column="2">
-                 <widget class="QLabel" name="label_notification_custom_action_separator">
-                  <property name="text">
-                   <string>Event separator:</string>
-                  </property>
-                 </widget>
-                </item>
                 <item row="1" column="0">
                  <widget class="QLabel" name="label_notification_custom_action_string">
                   <property name="text">
                    <string>Action string:</string>
+                  </property>
+                 </widget>
+                </item>
+                <item row="4" column="0">
+                 <widget class="QLabel" name="label_notification_custom_action_separator">
+                  <property name="text">
+                   <string>Event separator:</string>
                   </property>
                  </widget>
                 </item>
@@ -1741,14 +1741,14 @@
                   </property>
                  </widget>
                 </item>
-                <item row="2" column="1" colspan="3">
+                <item row="2" column="3">
                  <widget class="QCheckBox" name="input_checkbox_notification_custom_action_single">
                   <property name="text">
                    <string>Run one single action for every event</string>
                   </property>
                  </widget>
                 </item>
-                <item row="1" column="1" colspan="3">
+                <item row="1" column="3">
                  <widget class="QLineEdit" name="input_lineedit_notification_custom_action_string">
                   <property name="toolTip">
                    <string>&lt;html&gt;&lt;head/&gt;&lt;body&gt;&lt;p&gt;Available variables for action strings are $EVENTS$ for all events concatenated by the event separator or $EVENT$ if single actions are choosen.&lt;/p&gt;&lt;p&gt;To get all information into executable the variable should be quoted like '$EVENT$'.&lt;/p&gt;&lt;/body&gt;&lt;/html&gt;</string>
