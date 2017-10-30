@@ -1653,21 +1653,7 @@
              <item row="3" column="2">
               <widget class="QLineEdit" name="input_lineedit_notification_action_ok_string">
                <property name="toolTip">
-                <string>Available variables for action strings:
-
-$HOST$ - host as in monitor
-$SERVICE$ - service as in monitor
-$MONITOR$ - monitor address
-$MONITOR-CGI$ - monitor CGI address
-$ADDRESS$ - address of host, delivered from connection method
-$USERNAME$ - username on monitor
-$STATUS-INFO$ - status information for host or service
-$PASSWORD$ - username's password on monitor
-$COMMENT-ACK$ - default acknowledge comment
-$COMMENT-DOWN$ - default downtime comment
-$COMMENT-SUBMIT$ - default submit check result comment
-
-$TRANSID$ - only useful for Check_MK as _transid=$TRANSID$</string>
+                <string>Just one single command to be executed like starting some blinking light etc.</string>
                </property>
               </widget>
              </item>
@@ -1702,21 +1688,7 @@ $TRANSID$ - only useful for Check_MK as _transid=$TRANSID$</string>
              <item row="2" column="2">
               <widget class="QLineEdit" name="input_lineedit_notification_action_down_string">
                <property name="toolTip">
-                <string>Available variables for action strings:
-
-$HOST$ - host as in monitor
-$SERVICE$ - service as in monitor
-$MONITOR$ - monitor address
-$MONITOR-CGI$ - monitor CGI address
-$ADDRESS$ - address of host, delivered from connection method
-$USERNAME$ - username on monitor
-$STATUS-INFO$ - status information for host or service
-$PASSWORD$ - username's password on monitor
-$COMMENT-ACK$ - default acknowledge comment
-$COMMENT-DOWN$ - default downtime comment
-$COMMENT-SUBMIT$ - default submit check result comment
-
-$TRANSID$ - only useful for Check_MK as _transid=$TRANSID$</string>
+                <string>Just one single command to be executed like starting some blinking light etc.</string>
                </property>
               </widget>
              </item>
@@ -1789,42 +1761,14 @@ $TRANSID$ - only useful for Check_MK as _transid=$TRANSID$</string>
              <item row="1" column="2">
               <widget class="QLineEdit" name="input_lineedit_notification_action_critical_string">
                <property name="toolTip">
-                <string>Available variables for action strings:
-
-$HOST$ - host as in monitor
-$SERVICE$ - service as in monitor
-$MONITOR$ - monitor address
-$MONITOR-CGI$ - monitor CGI address
-$ADDRESS$ - address of host, delivered from connection method
-$USERNAME$ - username on monitor
-$STATUS-INFO$ - status information for host or service
-$PASSWORD$ - username's password on monitor
-$COMMENT-ACK$ - default acknowledge comment
-$COMMENT-DOWN$ - default downtime comment
-$COMMENT-SUBMIT$ - default submit check result comment
-
-$TRANSID$ - only useful for Check_MK as _transid=$TRANSID$</string>
+                <string>Just one single command to be executed like starting some blinking light etc.</string>
                </property>
               </widget>
              </item>
              <item row="0" column="2">
               <widget class="QLineEdit" name="input_lineedit_notification_action_warning_string">
                <property name="toolTip">
-                <string>Available variables for action strings:
-
-$HOST$ - host as in monitor
-$SERVICE$ - service as in monitor
-$MONITOR$ - monitor address
-$MONITOR-CGI$ - monitor CGI address
-$ADDRESS$ - address of host, delivered from connection method
-$USERNAME$ - username on monitor
-$STATUS-INFO$ - status information for host or service
-$PASSWORD$ - username's password on monitor
-$COMMENT-ACK$ - default acknowledge comment
-$COMMENT-DOWN$ - default downtime comment
-$COMMENT-SUBMIT$ - default submit check result comment
-
-$TRANSID$ - only useful for Check_MK as _transid=$TRANSID$</string>
+                <string>Just one single command to be executed like starting some blinking light etc.</string>
                </property>
               </widget>
              </item>

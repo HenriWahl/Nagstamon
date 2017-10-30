@@ -1337,40 +1337,12 @@ class Ui_settings_main(object):
         self.input_radiobutton_notification_custom_sound.setText(_translate("settings_main", "Use custom sounds"))
         self.input_checkbox_notification_actions.setText(_translate("settings_main", "Enable notification actions"))
         self.notification_actions_groupbox.setTitle(_translate("settings_main", "Notification actions:"))
-        self.input_lineedit_notification_action_ok_string.setToolTip(_translate("settings_main", "Available variables for action strings:\n"
-"\n"
-"$HOST$ - host as in monitor\n"
-"$SERVICE$ - service as in monitor\n"
-"$MONITOR$ - monitor address\n"
-"$MONITOR-CGI$ - monitor CGI address\n"
-"$ADDRESS$ - address of host, delivered from connection method\n"
-"$USERNAME$ - username on monitor\n"
-"$STATUS-INFO$ - status information for host or service\n"
-"$PASSWORD$ - username\'s password on monitor\n"
-"$COMMENT-ACK$ - default acknowledge comment\n"
-"$COMMENT-DOWN$ - default downtime comment\n"
-"$COMMENT-SUBMIT$ - default submit check result comment\n"
-"\n"
-"$TRANSID$ - only useful for Check_MK as _transid=$TRANSID$"))
+        self.input_lineedit_notification_action_ok_string.setToolTip(_translate("settings_main", "Just one single command to be executed like starting some blinking light etc."))
         self.input_checkbox_notification_action_critical.setText(_translate("settings_main", "CRITICAL"))
         self.input_checkbox_notification_action_down.setText(_translate("settings_main", "DOWN"))
         self.input_checkbox_notification_action_ok.setText(_translate("settings_main", "OK"))
         self.input_checkbox_notification_action_warning.setText(_translate("settings_main", "WARNING"))
-        self.input_lineedit_notification_action_down_string.setToolTip(_translate("settings_main", "Available variables for action strings:\n"
-"\n"
-"$HOST$ - host as in monitor\n"
-"$SERVICE$ - service as in monitor\n"
-"$MONITOR$ - monitor address\n"
-"$MONITOR-CGI$ - monitor CGI address\n"
-"$ADDRESS$ - address of host, delivered from connection method\n"
-"$USERNAME$ - username on monitor\n"
-"$STATUS-INFO$ - status information for host or service\n"
-"$PASSWORD$ - username\'s password on monitor\n"
-"$COMMENT-ACK$ - default acknowledge comment\n"
-"$COMMENT-DOWN$ - default downtime comment\n"
-"$COMMENT-SUBMIT$ - default submit check result comment\n"
-"\n"
-"$TRANSID$ - only useful for Check_MK as _transid=$TRANSID$"))
+        self.input_lineedit_notification_action_down_string.setToolTip(_translate("settings_main", "Just one single command to be executed like starting some blinking light etc."))
         self.input_checkbox_notification_custom_action.setText(_translate("settings_main", "Use custom notification action"))
         self.notification_custom_action_groupbox.setTitle(_translate("settings_main", "Custom notification action:"))
         self.label_notification_custom_action_string.setText(_translate("settings_main", "Action string:"))
@@ -1378,36 +1350,8 @@ class Ui_settings_main(object):
         self.label_notification_custom_action_separator.setText(_translate("settings_main", "Event separator:"))
         self.input_lineedit_notification_custom_action_separator.setToolTip(_translate("settings_main", "Arbitrarily choosen string or character to separate events in $EVENTS$."))
         self.input_lineedit_notification_custom_action_string.setToolTip(_translate("settings_main", "<html><head/><body><p>Available variables for action strings are $EVENTS$ for all events concatenated by the event separator or $EVENT$ if single actions are choosen.</p></body></html>"))
-        self.input_lineedit_notification_action_critical_string.setToolTip(_translate("settings_main", "Available variables for action strings:\n"
-"\n"
-"$HOST$ - host as in monitor\n"
-"$SERVICE$ - service as in monitor\n"
-"$MONITOR$ - monitor address\n"
-"$MONITOR-CGI$ - monitor CGI address\n"
-"$ADDRESS$ - address of host, delivered from connection method\n"
-"$USERNAME$ - username on monitor\n"
-"$STATUS-INFO$ - status information for host or service\n"
-"$PASSWORD$ - username\'s password on monitor\n"
-"$COMMENT-ACK$ - default acknowledge comment\n"
-"$COMMENT-DOWN$ - default downtime comment\n"
-"$COMMENT-SUBMIT$ - default submit check result comment\n"
-"\n"
-"$TRANSID$ - only useful for Check_MK as _transid=$TRANSID$"))
-        self.input_lineedit_notification_action_warning_string.setToolTip(_translate("settings_main", "Available variables for action strings:\n"
-"\n"
-"$HOST$ - host as in monitor\n"
-"$SERVICE$ - service as in monitor\n"
-"$MONITOR$ - monitor address\n"
-"$MONITOR-CGI$ - monitor CGI address\n"
-"$ADDRESS$ - address of host, delivered from connection method\n"
-"$USERNAME$ - username on monitor\n"
-"$STATUS-INFO$ - status information for host or service\n"
-"$PASSWORD$ - username\'s password on monitor\n"
-"$COMMENT-ACK$ - default acknowledge comment\n"
-"$COMMENT-DOWN$ - default downtime comment\n"
-"$COMMENT-SUBMIT$ - default submit check result comment\n"
-"\n"
-"$TRANSID$ - only useful for Check_MK as _transid=$TRANSID$"))
+        self.input_lineedit_notification_action_critical_string.setToolTip(_translate("settings_main", "Just one single command to be executed like starting some blinking light etc."))
+        self.input_lineedit_notification_action_warning_string.setToolTip(_translate("settings_main", "Just one single command to be executed like starting some blinking light etc."))
         self.tabs.setTabText(self.tabs.indexOf(self.tab_notifications), _translate("settings_main", "Notifications"))
         self.label_colors.setText(_translate("settings_main", "Set colors for text and background of status information:"))
         self.states_groupbox.setTitle(_translate("settings_main", "Status:"))
