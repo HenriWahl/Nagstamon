@@ -924,7 +924,6 @@ class AllOKLabel(QLabel):
                            conf.__dict__['color_ok_background']))
 
 class StatusWindow(QWidget):
-
     """
         Consists of statusbar, toparea and scrolling area.
         Either statusbar is shown or (toparea + scrolling area)
