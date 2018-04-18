@@ -41,6 +41,8 @@ import base64
 import datetime
 import traceback
 
+from urllib.parse import quote
+
 from collections import OrderedDict
 from copy import deepcopy
 
@@ -4048,6 +4050,9 @@ class TreeView(QTreeView):
 
                 # mapping mapping
                 for i in mapping:
+                    # mapping with urllib.quote
+                    string = string.replace("$"+i+"$", quote(mapping[i]))
+                    # normal mapping
                     string = string.replace(i, mapping[i])
 
                 # see what action to take
