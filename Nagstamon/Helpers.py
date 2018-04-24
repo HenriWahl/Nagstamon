@@ -132,17 +132,18 @@ def HumanReadableDurationFromSeconds(seconds):
         if timedelta.find("day") == -1:
             hms = timedelta.split(":")
             if len(hms) == 1:
-                return "%02ds" % (hms[0])
+                return "%02sh" % (hms[0])
             elif len(hms) == 2:
-                return "%02dm %02ds" % (hms[0], hms[1])
+                return "%02sm %02ss" % (hms[1], hms[2])
             else:
-                return "%sh %02dm %02ds" % (hms[0], hms[1], hms[2])
+                return "%sh %02sm %02ss" % (hms[0], hms[1], hms[2])
         else:
             # waste is waste - does anyone need it?
             days, waste, hms = str(timedelta).split(" ")
             hms = hms.split(":")
-            return "%sd %sh %02dm %02ds" % (days, hms[0], hms[1], hms[2])
+            return "%sd %sh %02sm %02ss" % (days, hms[0], hms[1], hms[2])
     except Exception:
+        traceback.print_exc(file=sys.stdout)
         # in case of any error return seconds we got
         return seconds
 
