@@ -41,6 +41,8 @@ import base64
 import datetime
 import traceback
 
+from urllib.parse import quote
+
 from collections import OrderedDict
 from copy import deepcopy
 
@@ -924,7 +926,6 @@ class AllOKLabel(QLabel):
                            conf.__dict__['color_ok_background']))
 
 class StatusWindow(QWidget):
-
     """
         Consists of statusbar, toparea and scrolling area.
         Either statusbar is shown or (toparea + scrolling area)
@@ -1571,7 +1572,7 @@ class StatusWindow(QWidget):
                     vbox.hide_all()
                 if conf.fullscreen or conf.windowed:
                     self.label_all_ok.show()
-                if conf.icon_in_systray:
+                if conf.icon_in_systray or conf.statusbar_floating:
                     self.hide_window()
 
     @pyqtSlot()
@@ -4049,6 +4050,9 @@ class TreeView(QTreeView):
 
                 # mapping mapping
                 for i in mapping:
+                    # mapping with urllib.quote
+                    string = string.replace("$"+i+"$", quote(mapping[i]))
+                    # normal mapping
                     string = string.replace(i, mapping[i])
 
                 # see what action to take

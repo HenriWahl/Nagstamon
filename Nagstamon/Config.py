@@ -105,9 +105,9 @@ class AppInfo(object):
         contains app information previously located in GUI.py
     """
     NAME = 'Nagstamon'
-    VERSION = '3.1-20171101'
+    VERSION = '3.1-20180425'
     WEBSITE = 'https://nagstamon.ifw-dresden.de'
-    COPYRIGHT = '©2008-2017 Henri Wahl et al.'
+    COPYRIGHT = '©2008-2018 Henri Wahl et al.'
     COMMENTS = 'Nagios status monitor for your desktop'
     # version URL depends on version string
     if 'alpha' in VERSION.lower() or \
