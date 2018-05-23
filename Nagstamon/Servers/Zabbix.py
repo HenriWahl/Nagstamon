@@ -8,6 +8,7 @@ import urllib.parse
 import urllib.error
 import time
 import logging
+import datetime
 # import socket  # never used
 
 from Nagstamon.Helpers import (HumanReadableDurationFromTimestamp,
@@ -44,6 +45,9 @@ class ZabbixServer(GenericServer):
     else:
         log_level = logging.WARNING
     log.setLevel(log_level)
+
+    # Store indexed host information
+    hostinfo = dict()
 
     def __init__(self, **kwds):
         GenericServer.__init__(self, **kwds)
@@ -115,13 +119,11 @@ class ZabbixServer(GenericServer):
             self._login()
 
         try:
-            # Store indexed host information
-            hostinfo = dict()
             # Hosts Zabbix API data
             hosts = []
             try:
                 hosts = self.zapi.host.get(
-                    {"output": ["host", "name", "proxy_hostid", "status", "available", "error", "errors_from","maintenance_status"], "selectInterfaces": ["ip"], "filter": {}})
+                    {"output": ["hostid", "host", "name", "proxy_hostid", "status", "available", "error", "errors_from","maintenance_status"], "selectInterfaces": ["ip"], "filter": {}})
             except (ZabbixError, ZabbixAPIException, APITimeout, Already_Exists):
                 # set checking flag back to False
                 self.isChecking = False
@@ -130,6 +132,7 @@ class ZabbixServer(GenericServer):
 
             for host in hosts:
                 n = {
+                    'hostid': host['hostid'],
                     'host': host['host'],
                     'name': host['name'],
                     'proxy_hostid': host['proxy_hostid'],
@@ -143,7 +146,7 @@ class ZabbixServer(GenericServer):
                     'address': host['interfaces'][0]['ip'],
                 }
 
-                hostinfo[host['host']] = n
+                self.hostinfo[host['host']] = n
 
                 # if host is disabled on server safely ignore it
                 if host['available'] != '0':
@@ -158,6 +161,7 @@ class ZabbixServer(GenericServer):
                         if n["host"] not in self.new_hosts:
                             new_host = n["host"]
                             self.new_hosts[new_host] = GenericHost()
+                            self.new_hosts[new_host].hostid = n["hostid"]
                             self.new_hosts[new_host].host = n["host"]
                             self.new_hosts[new_host].name = n["name"]
                             self.new_hosts[new_host].status = n["status"]
@@ -318,7 +322,7 @@ class ZabbixServer(GenericServer):
 
                     if service['acknowledged'] == '1':
                         n['acknowledged'] = True
-                    if hostinfo[n['host']]['maintenance_status'] == '1':
+                    if self.hostinfo[n['host']]['maintenance_status'] == '1':
                         n['scheduled_downtime'] = True
 
                     nagitems["services"].append(n)
@@ -479,8 +483,24 @@ class ZabbixServer(GenericServer):
             events.append(e['eventid'])
         self.zapi.event.acknowledge({'eventids': events, 'message': params['message']})
 
-    def _set_downtime(self, host, service, author, comment, fixed, start_time, end_time, hours, minutes):
-        pass
+    def _set_downtime(self, hostname, service, author, comment, fixed, start_time, end_time, hours, minutes):
+        hostsids = [0]
+        for hostcode in self.hostinfo:
+            if self.hostinfo[hostcode]['name'] == hostname:
+                hostids = [ self.hostinfo[hostcode]['hostid'] ]
+        
+        date  = datetime.datetime.strptime(start_time, "%Y-%m-%d %H:%M")
+        stime = time.mktime(date.timetuple())
+
+        date  = datetime.datetime.strptime(end_time, "%Y-%m-%d %H:%M")
+        etime = time.mktime(date.timetuple())
+        
+        if conf.debug_mode is True:
+            self.Debug(server=self.get_name(), debug="Downtime for " + hostname + "[" + str(hostids[0]) + "] stime:" + str(stime) + " etime:" + str(etime))
+            
+        self.zapi.maintenance.create({'hostids': hostids, 'name': comment, 'description': author, 'active_since': stime, 'active_till': etime, 'maintenance_type' : 0, "timeperiods": [
+            { "timeperiod_type": 0, "start_date": stime, "period": etime - stime }
+        ]})
 
     def _set_acknowledge(self, host, service, author, comment, sticky, notify, persistent, all_services=[]):
         if conf.debug_mode is True:
