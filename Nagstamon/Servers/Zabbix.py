@@ -69,7 +69,7 @@ class ZabbixServer(GenericServer):
             '5': 'DISASTER'}
 
         # Entries for monitor default actions in context menu
-        self.MENU_ACTIONS = ["Recheck", "Acknowledge", "Downtime"]
+        self.MENU_ACTIONS = ["Acknowledge", "Downtime"]
         # URLs for browser shortlinks/buttons on popup window
         self.BROWSER_URLS = {'monitor': '$MONITOR$',
                              'hosts': '$MONITOR-CGI$/hosts.php?ddreset=1',
@@ -122,55 +122,130 @@ class ZabbixServer(GenericServer):
             # Hosts Zabbix API data
             hosts = []
             try:
-                hosts = self.zapi.host.get(
-                    {"output": ["hostid", "host", "name", "proxy_hostid", "status", "available", "error", "errors_from","maintenance_status"], "selectInterfaces": ["ip"], "filter": {}})
+                hosts = self.zapi.host.get({"output": ["hostid", "host", "name", "status", \
+                                                       "available",      "error",      "errors_from", \
+                                                       "snmp_available", "snmp_error", "snmp_errors_from", \
+                                                       "ipmi_available", "ipmi_error", "ipmi_errors_from", \
+                                                       "jmx_available",  "jmx_error",  "jmx_errors_from", \
+                                                       "maintenance_status", "maintenance_from"], "selectInterfaces": ["ip"], "filter": {}})
             except (ZabbixError, ZabbixAPIException, APITimeout, Already_Exists):
                 # set checking flag back to False
                 self.isChecking = False
                 result, error = self.Error(sys.exc_info())
                 return Result(result=result, error=error)
 
+            #sys.exit(0)
+# Enabled no-ZBX
+#{'hostid': '10156', 'host': 'p720',                                 'status': '0', 'error': '',                                                                                               'available': '0', 'ipmi_available': '0', 'snmp_available': '0', 'maintenance_status': '0', 'maintenance_from': '0',          'ipmi_errors_from': '0', 'snmp_errors_from': '0',           'ipmi_error': '', 'snmp_error': '',                                                  'jmx_available': '0', 'jmx_errors_from': '0', 'jmx_error': '', 'name': 'p720',            'description': 'Vmware Server hosting Mustang VMs', 'interfaces': [{'ip': '192.168.0.12'}]}
+# Enabled    ZBX-Error
+#{'hostid': '10152', 'host': 'p710',                                 'status': '0', 'error': 'Get value from agent failed: cannot connect to [[192.168.0.11]:10050]: [113] No route to host',  'available': '2', 'ipmi_available': '0', 'snmp_available': '0', 'maintenance_status': '0', 'maintenance_from': '0',          'ipmi_errors_from': '0', 'snmp_errors_from': '0',           'ipmi_error': '', 'snmp_error': '',                                                  'jmx_available': '0', 'jmx_errors_from': '0', 'jmx_error': '', 'name': 'p710',            'description': '',                                  'interfaces': [{'ip': '192.168.0.11'}]}
+# Disabled   ZBX-Error
+#{'hostid': '10363', 'host': '564d64fe-fbe0-f6fc-77bf-ae917aae0069', 'status': '1', 'error': 'Get value from agent failed: cannot connect to [[192.168.1.129]:10050]: [113] No route to host', 'available': '2', 'ipmi_available': '0', 'snmp_available': '0', 'maintenance_status': '1', 'maintenance_from': '1513042200', 'ipmi_errors_from': '0', 'snmp_errors_from': '0',           'ipmi_error': '', 'snmp_error': '',                                                  'jmx_available': '0', 'jmx_errors_from': '0', 'jmx_error': '', 'name': 'p720[cloudsrv1]', 'description': 'Eurofims',                          'interfaces': [{'ip': '192.168.1.129'}]}
+# Enabled,   No-ZBX, SMTP Error
+#{'hostid': '10146', 'host': 'cam4',                                 'status': '0', 'error': '',                                                                                               'available': '0', 'ipmi_available': '0', 'snmp_available': '2', 'maintenance_status': '0', 'maintenance_from': '0',          'ipmi_errors_from': '0', 'snmp_errors_from': '1513770779',  'ipmi_error': '', 'snmp_error': 'Timeout while connecting to "192.168.10.214:161".', 'jmx_available': '0', 'jmx_errors_from': '0', 'jmx_error': '', 'name': 'cam4',            'description': '',                                  'interfaces': [{'ip': '192.168.10.214'}]}
+# Enabled,  ZBX OK, JMX OK
+#{'hostid': '10108', 'host': '40f4859a-7649-4e1b-8e9c-bb278508335e', 'status': '0', 'error': '',                                                                                               'available': '1', 'ipmi_available': '0', 'snmp_available': '0', 'maintenance_status': '0', 'maintenance_from': '0',          'ipmi_errors_from': '0', 'snmp_errors_from': '0',           'ipmi_error': '', 'snmp_error': '',                                                  'jmx_available': '1', 'jmx_errors_from': '0', 'jmx_error': '', 'name': 'web1',            'description': '', 'interfaces': [{'ip': '192.168.10.14'}, {'ip': '192.168.10.14'}]}
+# Enabled   ZBX OK  JMX OK - In maintenance
+#{'hostid': '10108', 'host': '40f4859a-7649-4e1b-8e9c-bb278508335e', 'status': '0', 'error': '',                                                                                               'available': '1', 'ipmi_available': '0', 'snmp_available': '0', 'maintenance_status': '1', 'maintenance_from': '1527288840', 'ipmi_errors_from': '0', 'snmp_errors_from': '0',           'ipmi_error': '', 'snmp_error': '',                                                  'jmx_available': '1', 'jmx_errors_from': '0', 'jmx_error': '', 'name': 'web1',            'description': '',  'interfaces': [{'ip': '192.168.10.14'}, {'ip': '192.168.10.14'}]}
+            # get All Hosts.
+            # 1. Store data in cache (to be used in events
+            # 2. We store as faulty two kinds of hosts incidences:
+            #    - Disabled hosts
+            #    - Hosts with issues trying to connect to agent/service
+            #    - In maintenance
+            # status = 1 -> Disabled
+            # available ZBX: 0 -> No agents 1 -> available 2-> Agent access error
+            # ipmi_available IPMI: 0 -> No agents 1 -> available 2-> Agent access error
+            # maintenance_status = 1 In maintenance
             for host in hosts:
+                
                 n = {
-                    'hostid': host['hostid'],
                     'host': host['host'],
                     'name': host['name'],
-                    'proxy_hostid': host['proxy_hostid'],
-                    'status': self.statemap.get(host['status'], host['status']),
+                    'server': self.name,
+                    'status': 'UP', # Host is OK by default
                     'last_check': 'n/a',
-                    'duration': HumanReadableDurationFromTimestamp(host['errors_from']),
-                    'status_information': host['error'],
+                    'duration': '',
                     'attempt': 'N/A',
+                    'status_information': '',
+                    # status flags
+                    'passiveonly': False,
+                    'notifications_disabled': False,
+                    'flapping': False,
+                    'acknowledged': False,
+                    'scheduled_downtime': False,
+                    # Zabbix backend data
+                    'hostid': host['hostid'],
                     'site': '',
-                    'maintenance_status': host['maintenance_status'],
                     'address': host['interfaces'][0]['ip'],
                 }
 
+
+                if host['maintenance_status'] == '1':
+                    n['scheduled_downtime'] = True
+
+                if host['status'] == '1':
+                    # filter services and hosts by "filter_hosts_services_disabled_notifications"
+                    n['notifications_disabled'] = True
+                    # Filter only hosts by filter "Host & services with disabled checks"
+                    n['passiveonly']           = True
+                    # This is just to put an icon on host
+                    #n['acknowledged']           = True
+                    # This is just to put an icon on host
+                    #n['flapping']           = True
+
+                if host['available'] == '0' and host['snmp_available'] == '0' and host['ipmi_available'] == '0' and host['jmx_available'] == '0':
+                    n['status']             = 'UNREACHABLE'
+                    n['status_information'] = 'Host agents in unknown state'
+                    n['duration']           = 'Unknown'
+                    
+                if host['ipmi_available'] == '2':
+                    n['status']             = 'DOWN'
+                    n['status_information'] = host['ipmi_error']
+                    n['duration']           = HumanReadableDurationFromTimestamp(host['ipmi_errors_from'])
+                if host['snmp_available'] == '2':
+                    n['status']             = 'DOWN'
+                    n['status_information'] = host['snmp_error']
+                    n['duration']           = HumanReadableDurationFromTimestamp(host['snmp_errors_from'])
+                if host['jmx_available'] == '2':
+                    n['status']             = 'DOWN'
+                    n['status_information'] = host['jmx_error']
+                    n['duration']           = HumanReadableDurationFromTimestamp(host['jmx_errors_from'])
+                if host['available'] == '2':
+                    n['status']             = 'DOWN'
+                    n['status_information'] = host['error']
+                    n['duration']           = HumanReadableDurationFromTimestamp(host['errors_from'])
+                
+                # TODO: Try to remove hostinfo             
                 self.hostinfo[host['host']] = n
 
-                # if host is disabled on server safely ignore it
-                if host['available'] != '0':
-                    # Zabbix shows OK hosts too - kick 'em!
-                    if not n['status'] == 'OK':
-                        # add dictionary full of information about this host item to nagitems
+                # Zabbix shows OK hosts too - kick 'em!
+                if not n['status'] == 'UP':
+                    # add dictionary full of information about this host item to nagitems
+                    nagitems["hosts"].append(n)
 
-                        nagitems["hosts"].append(n)
-
-                        # after collection data in nagitems create objects from its informations
-                        # host objects contain service objects
-                        if n["host"] not in self.new_hosts:
-                            new_host = n["host"]
-                            self.new_hosts[new_host] = GenericHost()
-                            self.new_hosts[new_host].hostid = n["hostid"]
-                            self.new_hosts[new_host].host = n["host"]
-                            self.new_hosts[new_host].name = n["name"]
-                            self.new_hosts[new_host].status = n["status"]
-                            self.new_hosts[new_host].last_check = n["last_check"]
-                            self.new_hosts[new_host].duration = n["duration"]
-                            self.new_hosts[new_host].attempt = n["attempt"]
-                            self.new_hosts[new_host].status_information = n["status_information"]
-                            self.new_hosts[new_host].site = n["site"]
-                            self.new_hosts[new_host].address = n["address"]
+                # after collection data in nagitems create objects from its informations
+                # host objects contain service objects
+                new_host = n["host"]
+                if new_host not in self.new_hosts:
+                    self.new_hosts[new_host] = GenericHost()
+                    self.new_hosts[new_host].hostid = n["hostid"]
+                    self.new_hosts[new_host].host = n["host"]
+                    self.new_hosts[new_host].name = n["name"]
+                    self.new_hosts[new_host].status = n["status"]
+                    self.new_hosts[new_host].last_check = n["last_check"]
+                    self.new_hosts[new_host].duration = n["duration"]
+                    self.new_hosts[new_host].attempt = n["attempt"]
+                    self.new_hosts[new_host].status_information = n["status_information"]
+                    self.new_hosts[new_host].site = n["site"]
+                    self.new_hosts[new_host].address = n["address"]
+                    self.new_hosts[new_host].notifications_disabled = n["notifications_disabled"]
+                    self.new_hosts[new_host].scheduled_downtime = n["scheduled_downtime"]
+                    self.new_hosts[new_host].passiveonly = n["passiveonly"]
+                    self.new_hosts[new_host].acknowledged = n["acknowledged"]
+                    self.new_hosts[new_host].flapping = n["flapping"]
+                    
+                    
         except ZabbixError:
             self.isChecking = False
             result, error = self.Error(sys.exc_info())
@@ -178,7 +253,6 @@ class ZabbixServer(GenericServer):
 
         # services
         services = []
-        # groupids = [] # never used - probably old code
         zabbix_triggers = []
         try:
             api_version = self.zapi.api_version()
@@ -322,7 +396,7 @@ class ZabbixServer(GenericServer):
 
                     if service['acknowledged'] == '1':
                         n['acknowledged'] = True
-                    if self.hostinfo[n['host']]['maintenance_status'] == '1':
+                    if self.hostinfo[n['host']]['scheduled_downtime'] == True:
                         n['scheduled_downtime'] = True
 
                     nagitems["services"].append(n)
@@ -422,6 +496,49 @@ class ZabbixServer(GenericServer):
                        debug="Open host/service monitor web page " + url)
         webbrowser_open(url)
 
+    # Disable set_recheck (nosense in Zabbix)
+    def set_recheck(self, info_dict):
+        pass
+
+    def _set_acknowledge(self, host, service, author, comment, sticky, notify, persistent, all_services=[]):
+        if conf.debug_mode is True:
+            self.Debug(server=self.get_name(), debug="Set Acknowledge Host: " + host + " Service: " + service + " Sticky: " + sticky + " persistent:" + persistent)
+
+        # Service column is storing current trigger id
+        triggerid  = service
+        p = {
+            'message': '%s: %s' % (author, comment),
+            'triggerids': [triggerid],
+        }
+        self._action(self.hosts[host].site, host, service, p)
+
+        # TODO: Currently not working. This should acknowledge all problems from same host
+        # acknowledge all services on a host when told to do so
+        for s in all_services:
+            self._action(self.hosts[host].site, host, s, p)
+
+    def _set_downtime(self, hostname, service, author, comment, fixed, start_time, end_time, hours, minutes):
+        hostsids = [0]
+        for hostcode in self.hostinfo:
+            if self.hostinfo[hostcode]['name'] == hostname:
+                hostids = [ self.hostinfo[hostcode]['hostid'] ]
+        
+        date  = datetime.datetime.strptime(start_time, "%Y-%m-%d %H:%M")
+        stime = time.mktime(date.timetuple())
+
+        date  = datetime.datetime.strptime(end_time, "%Y-%m-%d %H:%M")
+        etime = time.mktime(date.timetuple())
+        
+        if conf.debug_mode is True:
+            self.Debug(server=self.get_name(), debug="Downtime for " + hostname + "[" + str(hostids[0]) + "] stime:" + str(stime) + " etime:" + str(etime))
+            
+        self.zapi.maintenance.create({'hostids': hostids, 'name': comment, 'description': author, 'active_since': stime, 'active_till': etime, 'maintenance_type' : 0, "timeperiods": [
+            { "timeperiod_type": 0, "start_date": stime, "period": etime - stime }
+        ]})
+
+    def get_start_end(self, host):
+        return time.strftime("%Y-%m-%d %H:%M"), time.strftime("%Y-%m-%d %H:%M", time.localtime(time.time() + 7200))
+
     def GetHost(self, host):
         """
             find out ip or hostname of given host to access hosts/devices which do not appear in DNS but
@@ -454,12 +571,10 @@ class ZabbixServer(GenericServer):
 
         return Result(result=address)
 
-    def _set_recheck(self, host, service):
-        pass
 
-    def get_start_end(self, host):
-        return time.strftime("%Y-%m-%d %H:%M"), time.strftime("%Y-%m-%d %H:%M", time.localtime(time.time() + 7200))
-
+    # ======================================================
+    # Special Zabbix implementation functions
+    # ======================================================
     def _action(self, site, host, service, specific_params):
         params = {
             'site': self.hosts[host].site,
@@ -481,43 +596,7 @@ class ZabbixServer(GenericServer):
             if e['value'] == '0':
                 break
             events.append(e['eventid'])
-        self.zapi.event.acknowledge({'eventids': events, 'message': params['message']})
-
-    def _set_downtime(self, hostname, service, author, comment, fixed, start_time, end_time, hours, minutes):
-        hostsids = [0]
-        for hostcode in self.hostinfo:
-            if self.hostinfo[hostcode]['name'] == hostname:
-                hostids = [ self.hostinfo[hostcode]['hostid'] ]
-        
-        date  = datetime.datetime.strptime(start_time, "%Y-%m-%d %H:%M")
-        stime = time.mktime(date.timetuple())
-
-        date  = datetime.datetime.strptime(end_time, "%Y-%m-%d %H:%M")
-        etime = time.mktime(date.timetuple())
-        
-        if conf.debug_mode is True:
-            self.Debug(server=self.get_name(), debug="Downtime for " + hostname + "[" + str(hostids[0]) + "] stime:" + str(stime) + " etime:" + str(etime))
-            
-        self.zapi.maintenance.create({'hostids': hostids, 'name': comment, 'description': author, 'active_since': stime, 'active_till': etime, 'maintenance_type' : 0, "timeperiods": [
-            { "timeperiod_type": 0, "start_date": stime, "period": etime - stime }
-        ]})
-
-    def _set_acknowledge(self, host, service, author, comment, sticky, notify, persistent, all_services=[]):
-        if conf.debug_mode is True:
-            self.Debug(server=self.get_name(), debug="Set Ack Host: " + host + " Service: " + service)
-
-        #triggerid = self.hosts[host].services[service].triggerid
-        # Service column is storing current trigger id
-        triggerid  = service
-        p = {
-            'message': '%s: %s' % (author, comment),
-            'triggerids': [triggerid],
-        }
-        self._action(self.hosts[host].site, host, service, p)
-
-        # acknowledge all services on a host when told to do so
-        for s in all_services:
-            self._action(self.hosts[host].site, host, s, p)
+        self.zapi.event.acknowledge({'eventids': events, 'message': params['message'], 'action': 0})
 
     def nagiosify_service(self, service):
         """
