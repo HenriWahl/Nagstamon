@@ -9,7 +9,7 @@ import urllib.error
 import time
 import logging
 import datetime
-# import socket  # never used
+import socket
 
 from Nagstamon.Helpers import (HumanReadableDurationFromTimestamp,
                                webbrowser_open)
