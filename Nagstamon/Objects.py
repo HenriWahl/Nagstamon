@@ -31,6 +31,7 @@ class GenericObject(object):
     """
 
     def __init__(self):
+        self.hostid = ''
         self.name = ''
         self.status = ''
         self.status_information = ''
