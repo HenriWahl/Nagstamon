@@ -1057,13 +1057,17 @@ class GenericServer(object):
                     if len(service.attempt) < 3:
                         service.visible = True
                     elif len(service.attempt) == 3:
-                        # the old, actually wrong, behaviour
-                        real_attempt, max_attempt = service.attempt.split('/')
-                        if real_attempt != max_attempt and conf.filter_services_in_soft_state is True:
-                            if conf.debug_mode:
-                                self.Debug(server=self.get_name(),
-                                           debug='Filter: SOFT STATE ' + str(host.name) + ';' + str(service.name))
-                            service.visible = False
+                        # fixing a bug introduced in 038fa34 for zabbix service name in attempt
+                        if service.attempt.find("/") == -1:
+                            service.visible = True
+                        else:
+                            # the old, actually wrong, behaviour
+                            real_attempt, max_attempt = service.attempt.split('/')
+                            if real_attempt != max_attempt and conf.filter_services_in_soft_state is True:
+                                if conf.debug_mode:
+                                    self.Debug(server=self.get_name(),
+                                            debug='Filter: SOFT STATE ' + str(host.name) + ';' + str(service.name))
+                                service.visible = False
 
                 if host_is_filtered_out_by_re(host.name, conf) is True:
                     if conf.debug_mode:
