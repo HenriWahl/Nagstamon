@@ -285,7 +285,11 @@ class ZabbixServer(GenericServer):
                          'selectApplications': 'extend'}
                     )
                     t['application'] = self.getLastApp(this_item)
-                    t['lastvalue']   = this_item[0]['lastvalue']
+                    try:
+                        t['lastvalue']   = this_item[0]['lastvalue']
+                    except IndexError as e:
+                        self.Debug(server=self.get_name(), debug="ItemID '%s' has no values" %
+                            t['items'][0]['itemid'], head='WARNING')
 
                     services.append(t)
 
