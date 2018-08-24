@@ -4504,15 +4504,7 @@ class Dialog_Settings(Dialog):
                                self.ui.input_button_color_high_text,
                                self.ui.input_button_color_high_background,
                                self.ui.input_button_color_information_text,
-                               self.ui.input_button_color_information_background,
-                               self.ui.label_intensity_average_0,
-                               self.ui.label_intensity_average_1,
-                               self.ui.label_intensity_disaster_0,
-                               self.ui.label_intensity_disaster_1,
-                               self.ui.label_intensity_high_0,
-                               self.ui.label_intensity_high_1,
-                               self.ui.label_intensity_information_0,
-                               self.ui.label_intensity_information_1]
+                               self.ui.input_button_color_information_background]
 
     def initialize(self):
         # apply configuration values
