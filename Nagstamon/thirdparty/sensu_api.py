@@ -45,6 +45,9 @@ class SensuAPI(object):
 
         if username and password:
             self.auth = HTTPBasicAuth(username, password)
+        elif password and not username:
+            self._header['Authorization'] = 'token {}'.format(password)
+            self.auth = None
         else:
             self.auth = None
 
