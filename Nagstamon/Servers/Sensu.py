@@ -95,6 +95,7 @@ class SensuServer(GenericServer):
         if service_host not in self.new_hosts:
             self.new_hosts[service_host] = GenericHost()
             self.new_hosts[service_host].name = service_host
+            self.new_hosts[service_host].site = service.site
 
         self.new_hosts[service_host].services[service.name] = service
 
@@ -111,11 +112,15 @@ class SensuServer(GenericServer):
             for event in events:
                 event_check = event['check']
                 event_client = event['client']
-
                 new_service = GenericService()
                 new_service.event_id = event['id']
                 new_service.host = event_client['name']
                 new_service.name = event_check['name']
+                # Uchiwa needs the 'dc' for re_check; Sensu does not
+                if 'dc' in event:
+                  new_service.site = event['dc']
+                else:
+                  new_service.site = None
                 new_service.status = None
                 try:
                     new_service.status = self.SEVERITY_CODE_TEXT_MAP.get(event_check['status'])
@@ -196,7 +201,11 @@ class SensuServer(GenericServer):
         return '%sd %sh %sm %ss' % (days, hours, mins, sec)
 
     def set_recheck(self, info_dict):
-        self.sensu_api.post_check_request(info_dict['service'], self._format_client_subscription(info_dict['host']))
+        self.sensu_api.post_check_request(
+            info_dict['service'],
+            self._format_client_subscription(info_dict['host']),
+            self.hosts[info_dict['host']].site
+        )
 
     def set_downtime(self, info_dict):
         subscription = self._format_client_subscription(info_dict['host'])
