@@ -112,6 +112,7 @@ class SensuServer(GenericServer):
             for event in events:
                 event_check = event['check']
                 event_client = event['client']
+
                 new_service = GenericService()
                 new_service.event_id = event['id']
                 new_service.host = event_client['name']
