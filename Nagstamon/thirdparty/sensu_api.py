@@ -45,6 +45,9 @@ class SensuAPI(object):
 
         if username and password:
             self.auth = HTTPBasicAuth(username, password)
+        elif password and not username:
+            self._header['Authorization'] = 'token {}'.format(password)
+            self.auth = None
         else:
             self.auth = None
 
@@ -185,7 +188,7 @@ class SensuAPI(object):
         data = self._request('GET', '/checks/{}'.format(check))
         return data.json()
 
-    def post_check_request(self, check, subscribers):
+    def post_check_request(self, check, subscribers, dc=None):
         """
         Issues a check execution request.
         """
@@ -193,7 +196,9 @@ class SensuAPI(object):
             'check': check,
             'subscribers': [subscribers]
         }
-        self._request('POST', '/request', data=json.dumps(data))
+        if dc is not None:
+            data['dc'] = dc
+        self._request('POST', '/request', json=data)
         return True
 
     """
