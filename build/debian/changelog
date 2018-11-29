@@ -1,7 +1,13 @@
-nagstamon (3.1-20180829) unstable; urgency=low
+nagstamon (3.1.99) stable; urgency=low
   * New upstream
+    - new Zabbix backend
+    - added Sensu/Uchiwa changes
+    - fixed Opsview/Nagios duration counter
+    - fixed non-closing floating statusbar
+    - fixed certain custom notification action bugs
+    - fixed certain keyring bugs
 
--- Henri Wahl <h.wahl@ifw-dresden.de> Sun, 29 Oct 2017 01:30:00 +0200
+-- Henri Wahl <h.wahl@ifw-dresden.de> Thu, 29 Nov 2018 12:00:00 +0200
 
 nagstamon (3.0.1) stable; urgency=low
   * New upstream
