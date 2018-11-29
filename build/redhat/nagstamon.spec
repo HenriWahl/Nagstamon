@@ -3,7 +3,7 @@
 %global shortcommit %(c=%{commit}; echo ${c:0:7})
 
 Name:     nagstamon
-Version:  2.0
+Version:  3.1.99
 Release:  0.1.%{gitdate}git%{shortcommit}%{?dist}
 Summary:  Nagios status monitor for desktop
 
