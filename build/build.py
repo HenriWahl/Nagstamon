@@ -86,6 +86,7 @@ def winmain():
                      '--windowed',
                      '--name=Nagstamon',
                      '--hidden-import=PyQt5.uic.plugins',
+                     '--hidden-import=win32timezone',
                      '..\\nagstamon.py'], shell=True)
 
     # rename output
