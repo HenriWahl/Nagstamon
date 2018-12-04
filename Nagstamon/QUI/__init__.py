@@ -1185,7 +1185,6 @@ class StatusWindow(QWidget):
             if OS == 'Windows':
                 # workaround for PyQt behavior since Qt 5.10
                 systrayicon = QSystemTrayIcon()
-                self.connect_systrayicon()
             else:
                 systrayicon.hide()
             self.hide_window()
