@@ -293,7 +293,7 @@ class SystemTrayIcon(QSystemTrayIcon):
         Windows if run on commandline as nagstamon.py - the binary .exe works
     """
 
-    show_menu = pyqtSignal()
+    # show_menu = pyqtSignal()
 
     show_popwin = pyqtSignal()
     hide_popwin = pyqtSignal()
@@ -314,7 +314,8 @@ class SystemTrayIcon(QSystemTrayIcon):
         # little workaround to match statuswindow.worker_notification.worst_notification_status
         self.icons['UP'] = self.icons['OK']
         # default icon is OK
-        self.setIcon(self.icons['OK'])
+        if OS != 'Windows' or conf.icon_in_systray:
+            self.setIcon(self.icons['OK'])
 
         debug_queue.append('DEBUG: SystemTrayIcon initial icon: {}'.format(self.currentIconName()))
 
@@ -400,11 +401,12 @@ class SystemTrayIcon(QSystemTrayIcon):
         """
             evaluate mouse click
         """
-        # some obscure Windows problem again
-        if reason == QSystemTrayIcon.Context and OS == 'Windows':
-                self.show_menu.emit()
+        # # some obscure Windows problem again
+        # if reason == QSystemTrayIcon.Context and OS == 'Windows':
+        #     self.show_menu.emit()
         # only react on left mouse click on OSX
-        elif reason == (QSystemTrayIcon.Trigger or QSystemTrayIcon.DoubleClick):
+        # elif reason == (QSystemTrayIcon.Trigger or QSystemTrayIcon.DoubleClick):
+        if reason == (QSystemTrayIcon.Trigger or QSystemTrayIcon.DoubleClick):
             # when green icon is displayed and no popwin is about to po up show at least menu
             if get_worst_status() == 'UP' and OS == 'Darwin':
                     self.menu.show_at_cursor()
@@ -588,7 +590,6 @@ class MenuContext(MenuAtCursor):
 
 
 class MenuContextSystrayicon(MenuContext):
-
     """
         Necessary for Ubuntu 16.04 new Qt5-Systray-AppIndicator meltdown
         Maybe in general a good idea to offer status window popup here
@@ -612,7 +613,7 @@ class MenuContextSystrayicon(MenuContext):
 
     def initialize(self):
         """
-            initialize as herited + a popup menu entry mostly useful in Ubuntu Unity
+            initialize as inherited + a popup menu entry mostly useful in Ubuntu Unity
         """
         MenuContext.initialize(self)
         # makes even less sense on OSX
@@ -1063,9 +1064,9 @@ class StatusWindow(QWidget):
         dialogs.settings.changed.connect(self.refresh)
         dialogs.settings.changed.connect(self.toparea.combobox_servers.fill)
 
-        # show status popup when systray icon was clicked
-        systrayicon.show_popwin.connect(self.show_window_systrayicon)
-        systrayicon.hide_popwin.connect(self.hide_window)
+        # # show status popup when systray icon was clicked
+        # systrayicon.show_popwin.connect(self.show_window_systrayicon)
+        # systrayicon.hide_popwin.connect(self.hide_window)
 
         # hide status window if version check finished
         check_version.version_info_retrieved.connect(self.hide_window)
@@ -1076,9 +1077,9 @@ class StatusWindow(QWidget):
         # flashing statusbar
         self.worker_notification.start_flash.connect(self.statusbar.flash)
         self.worker_notification.stop_flash.connect(self.statusbar.reset)
-        # flashing statusicon
-        self.worker_notification.start_flash.connect(systrayicon.flash)
-        self.worker_notification.stop_flash.connect(systrayicon.reset)
+        # # flashing statusicon
+        # self.worker_notification.start_flash.connect(systrayicon.flash)
+        # self.worker_notification.stop_flash.connect(systrayicon.reset)
         # desktop notification
         self.worker_notification.desktop_notification.connect(self.desktop_notification)
 
@@ -1140,21 +1141,53 @@ class StatusWindow(QWidget):
         if conf.debug_mode:
             self.worker_thread.started.connect(self.worker.debug_loop)
         # start debug loop by signal
-        # ##self.worker.start_debug_loop.connect(self.worker.debug_loop)
         dialogs.settings.start_debug_loop.connect(self.worker.debug_loop)
         # start with priority 0 = lowest
         self.worker_thread.start(0)
 
+        # part of the stupid workaround for Qt-5.10-Windows-QSystemTrayIcon-madness
+        self.connect_systrayicon()
+
         # finally show up
         self.set_mode()
+
+    def connect_systrayicon(self):
+        '''
+        stupid workaround for QSystemTrayIcon-problem under Windows since Qt 5.10:
+        - systray icon cannot be hidden anymore and so if it should be hidden it has to be reinitialized without icon
+        - to react to signals these have to be reconnected when changing mode via set_mode()
+        :return:
+        '''
+        # show status popup when systray icon was clicked
+        systrayicon.show_popwin.connect(self.show_window_systrayicon)
+        systrayicon.hide_popwin.connect(self.hide_window)
+        # flashing statusicon
+        self.worker_notification.start_flash.connect(systrayicon.flash)
+        self.worker_notification.stop_flash.connect(systrayicon.reset)
+        # connect status window server vboxes to systray
+        for server_vbox in self.servers_vbox.children():
+            if 'server' in server_vbox.__dict__.keys():
+                # tell systray after table was refreshed
+                server_vbox.table.worker.new_status.connect(systrayicon.show_state)
+                # show error icon in systray
+                server_vbox.table.worker.show_error.connect(systrayicon.set_error)
+                server_vbox.table.worker.hide_error.connect(systrayicon.reset_error)
 
     def set_mode(self):
         """
             apply presentation mode
         """
+        # so sorry but how to solve this Qt-5.10-Windows-mess otherwise?
+        global systrayicon
+
         if conf.statusbar_floating:
             # no need for systray
-            systrayicon.hide()
+            if OS == 'Windows':
+                # workaround for PyQt behavior since Qt 5.10
+                systrayicon = QSystemTrayIcon()
+                self.connect_systrayicon()
+            else:
+                systrayicon.hide()
             self.hide_window()
             self.statusbar.show()
 
@@ -1173,7 +1206,7 @@ class StatusWindow(QWidget):
             # gets in a race condition race the focus or is topmost instead of Nagstamon
             # so the floating statusbar moves silently into a quiet corner of the desktop
             # and raises itself serveral times to be the topmost to make the flags stick
-            if OS == 'Windows':
+            if OS == 'Windows does not seem to need this workaround anymore':
                 self.move(-32768, -32768)
                 # just a guess - 10 times seem to be enough
                 for counter in range(100):
@@ -1223,6 +1256,9 @@ class StatusWindow(QWidget):
             self.setAttribute(Qt.WA_ShowWithoutActivating)
 
             # yeah! systray!
+            if OS == 'Windows':
+                systrayicon = SystemTrayIcon()
+                self.connect_systrayicon()
             systrayicon.show()
 
             # need a close button
@@ -1233,6 +1269,12 @@ class StatusWindow(QWidget):
             self.hide_window()
 
         elif conf.fullscreen:
+            # no need for systray
+            if OS == 'Windows':
+                # workaround for PyQt behavior since Qt 5.10
+                systrayicon = QSystemTrayIcon()
+            else:
+                systrayicon.hide()
             self.statusbar.hide()
             self.toparea.show()
             self.servers_scrollarea.show()
@@ -1259,7 +1301,11 @@ class StatusWindow(QWidget):
             self.toparea.button_close.hide()
 
         elif conf.windowed:
-            systrayicon.hide()
+            if OS == 'Windows':
+                # workaround for PyQt behavior since Qt 5.10
+                systrayicon = QSystemTrayIcon()
+            else:
+                systrayicon.hide()
             self.statusbar.hide()
 
             # no need for close button
@@ -1321,7 +1367,7 @@ class StatusWindow(QWidget):
             # tell statusbar to summarize after table was refreshed
             server_vbox.table.worker.new_status.connect(self.statusbar.summarize_states)
             server_vbox.table.worker.new_status.connect(self.raise_window_on_all_desktops)
-            server_vbox.table.worker.new_status.connect(systrayicon.show_state)
+            # server_vbox.table.worker.new_status.connect(systrayicon.show_state)
 
             # if problems go themselves there is no need to notify user anymore
             server_vbox.table.worker.problems_vanished.connect(self.worker_notification.stop)
@@ -1330,9 +1376,9 @@ class StatusWindow(QWidget):
             server_vbox.table.worker.show_error.connect(self.statusbar.set_error)
             server_vbox.table.worker.hide_error.connect(self.statusbar.reset_error)
 
-            # show error icon in systray
-            server_vbox.table.worker.show_error.connect(systrayicon.set_error)
-            server_vbox.table.worker.hide_error.connect(systrayicon.reset_error)
+            # # show error icon in systray
+            # server_vbox.table.worker.show_error.connect(systrayicon.set_error)
+            # server_vbox.table.worker.hide_error.connect(systrayicon.reset_error)
 
             # tell notification worker to do something AFTER the table was updated
             server_vbox.table.status_changed.connect(self.worker_notification.start)
@@ -1404,7 +1450,6 @@ class StatusWindow(QWidget):
                 self.servers_vbox.addLayout(self.create_ServerVBox(server))
 
         self.sort_ServerVBoxes()
-
 
 
     @pyqtSlot()
@@ -6617,7 +6662,12 @@ statuswindow = StatusWindow()
 # context menu for statuswindow etc.
 menu = MenuContext()
 # necessary extra menu due to Qt5-Unity-integration
-menu_systray = MenuContextSystrayicon()
+if not OS in NON_LINUX:
+    menu_systray = MenuContextSystrayicon()
+
+# Menu has to be set here to solve Qt-5.10-Windows-systray-mess
+if OS == 'Windows' and conf.icon_in_systray:
+    systrayicon.set_menu(menu)
 
 # versatile mediaplayer
 mediaplayer = MediaPlayer()
