@@ -116,9 +116,10 @@ class Monitos4xServer(GenericServer):
         if self.use_autologin is False:
             if len(self.session.cookies) == 0:
                 form_inputs = dict()
-                if self.username.startswith('ldap:'):
+                if '@' in self.username:
+                    user = self.username.split('@')
                     form_inputs['module'] = 'ldap'
-                    form_inputs['_username'] = self.username[5:]
+                    form_inputs['_username'] = user[0]
                 else:
                     form_inputs['module'] = 'sv'
                     form_inputs['_username'] = self.username
