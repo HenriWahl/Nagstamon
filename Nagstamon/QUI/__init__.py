@@ -1151,6 +1151,7 @@ class StatusWindow(QWidget):
         # finally show up
         self.set_mode()
 
+
     def connect_systrayicon(self):
         '''
         stupid workaround for QSystemTrayIcon-problem under Windows since Qt 5.10:
@@ -1158,6 +1159,7 @@ class StatusWindow(QWidget):
         - to react to signals these have to be reconnected when changing mode via set_mode()
         :return:
         '''
+        global menu
         # show status popup when systray icon was clicked
         systrayicon.show_popwin.connect(self.show_window_systrayicon)
         systrayicon.hide_popwin.connect(self.hide_window)
@@ -1172,6 +1174,11 @@ class StatusWindow(QWidget):
                 # show error icon in systray
                 server_vbox.table.worker.show_error.connect(systrayicon.set_error)
                 server_vbox.table.worker.hide_error.connect(systrayicon.reset_error)
+
+        # context menu, checking for existence necessary at startup
+        if not menu == None:
+            systrayicon.set_menu(menu)
+
 
     def set_mode(self):
         """
@@ -6653,13 +6660,16 @@ dialogs = Dialogs()
 # system tray icon
 systrayicon = SystemTrayIcon()
 
-# combined statusbar/status window
 # set to none here due to race condition
 statuswindow = None
+menu = None
+
+# combined statusbar/status window
 statuswindow = StatusWindow()
 
 # context menu for statuswindow etc.
 menu = MenuContext()
+
 # necessary extra menu due to Qt5-Unity-integration
 if not OS in NON_LINUX:
     menu_systray = MenuContextSystrayicon()
