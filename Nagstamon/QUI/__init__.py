@@ -5297,9 +5297,9 @@ class Dialog_Server(Dialog):
         self.VOLATILE_WIDGETS = {
             self.ui.label_monitor_cgi_url: ['Nagios', 'Icinga', 'Thruk', 'Sensu'],
             self.ui.input_lineedit_monitor_cgi_url: ['Nagios', 'Icinga', 'Thruk', 'Sensu'],
-            self.ui.input_checkbox_use_autologin: ['Centreon'],
-            self.ui.input_lineedit_autologin_key: ['Centreon'],
-            self.ui.label_autologin_key: ['Centreon'],
+            self.ui.input_checkbox_use_autologin: ['Centreon', 'monitos4x'],
+            self.ui.input_lineedit_autologin_key: ['Centreon', 'monitos4x'],
+            self.ui.label_autologin_key: ['Centreon', 'monitos4x'],
             self.ui.input_checkbox_no_cookie_auth: ['IcingaWeb2', 'Sensu'],
             self.ui.input_checkbox_use_display_name_host: ['Icinga', 'IcingaWeb2'],
             self.ui.input_checkbox_use_display_name_service: ['Icinga', 'IcingaWeb2'],
