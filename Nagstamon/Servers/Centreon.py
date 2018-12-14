@@ -129,6 +129,15 @@ class CentreonServer(GenericServer):
                                     'hosts': '$MONITOR$/main.php?p=20202',
                                     'services': '$MONITOR$/main.php?p=20201',
                                     'history': '$MONITOR$/main.php?p=203'}
+                elif re.search('18\.10\.[0-9]', raw_versioncheck):
+                    self.centreon_version = 18.10
+                    if conf.debug_mode is True:
+                        self.Debug(server=self.get_name(), debug='Centreon version detected : 18.10')
+                    # URLs for browser shortlinks/buttons on popup window
+                    self.BROWSER_URLS = {'monitor': '$MONITOR$/main.php?',
+                                    'hosts': '$MONITOR$/main.php?p=20202',
+                                    'services': '$MONITOR$/main.php?p=20201',
+                                    'history': '$MONITOR$/main.php?p=203'}
                 else:
                     # unsupported version or unable do determine
                     self.centreon_version = 2.8
@@ -209,7 +218,7 @@ class CentreonServer(GenericServer):
                 login = self.FetchURL(self.monitor_cgi_url + '/index.php')
                 if login.error == '' and login.status_code == 200:
                     # Centreon > 2.6.6 implement a token
-                    if  self.centreon_version == 2.8 or self.centreon_version == 2.7 or self.centreon_version == 2.66:
+                    if  self.centreon_version in [18.10, 2.8, 2.7, 2.66]:
                         form = login.result.find('form')
                         form_inputs = {}
                         # Need to catch the centreon_token for login to work
@@ -255,6 +264,9 @@ class CentreonServer(GenericServer):
             elif self.centreon_version == 2.8:
                 cgi_data['o'] = 'a'
                 cgi_data['p'] = '210'
+            elif self.centreon_version == 18.10:
+                cgi_data['o'] = 'a'
+                cgi_data['p'] = '21001'
             result = self.FetchURL(self.urls_centreon['main'], cgi_data = cgi_data, giveback='obj')
 
             html, error = result.result, result.error
@@ -369,7 +381,7 @@ class CentreonServer(GenericServer):
                 if conf.debug_mode == True:
                     self.Debug(server=self.get_name(), debug='Unable to fetch the main page to detect the broker : ' + error)
             del result, error
-        elif self.centreon_version == 2.7 or self.centreon_version == 2.8:
+        elif self.centreon_version in [18.10, 2.8, 2.7]:
             self.XML_PATH = 'xml'
             if conf.debug_mode == True:
                 self.Debug(server=self.get_name(), debug='Only Centreon Broker is supported in Centeon >= 2.7 -> XML_PATH='+ self.XML_PATH)
@@ -413,12 +425,25 @@ class CentreonServer(GenericServer):
             'autologoutXMLresponse': self.monitor_cgi_url + '/include/core/autologout/autologoutXMLresponse.php'
         }
 
+        urls_centreon_18_10 = {
+            'main': self.monitor_cgi_url + '/main.get.php',
+            'index': self.monitor_cgi_url + '/index.php',
+            'xml_services': self.monitor_cgi_url + '/include/monitoring/status/Services/' + self.XML_PATH + '/serviceXML.php',
+            'xml_hosts': self.monitor_cgi_url + '/include/monitoring/status/Hosts/' + self.XML_PATH + '/hostXML.php',
+            'xml_hostSendCommand': self.monitor_cgi_url + '/include/monitoring/objectDetails/xml/hostSendCommand.php',
+            'xml_serviceSendCommand': self.monitor_cgi_url + '/include/monitoring/objectDetails/xml/serviceSendCommand.php',
+            'external_cmd_cmdPopup': self.monitor_cgi_url + '/include/monitoring/external_cmd/cmdPopup.php',
+            'autologoutXMLresponse': self.monitor_cgi_url + '/api/internal.php?object=centreon_keepalive&action=keepAlive'
+        }
+
         if self.centreon_version < 2.7:
             self.urls_centreon = urls_centreon_2_2
         elif self.centreon_version == 2.7:
             self.urls_centreon = urls_centreon_2_7
         elif self.centreon_version == 2.8:
             self.urls_centreon = urls_centreon_2_8
+        elif self.centreon_version == 18.10:
+            self.urls_centreon = urls_centreon_18_10
         # print IP in debug mode
         if conf.debug_mode == True:
             self.Debug(server=self.get_name(), debug='URLs defined for Centreon %s' % (self.centreon_version))
@@ -817,13 +842,15 @@ class CentreonServer(GenericServer):
                                 'service_description': s,
                                 'force_check': '1',
                                 'persistent': int(persistent),
+                                # follewing not needed in 18.10, requiered in wich version ?
                                 'persistant': int(persistent),
                                 'sticky': int(sticky),
                                 'o': 'svcd',
                                 'en': '1'}
                     if self.centreon_version < 2.7:
                         cgi_data['p'] = '20215'
-                    elif self.centreon_version == 2.7 or self.centreon_version == 2.8:
+                    # elif self.centreon_version == 2.7 or self.centreon_version == 2.8:
+                    elif self.centreon_version in [18.10, 2.8, 2.7]:
                         cgi_data['p'] = '20201'
                         cgi_data['centreon_token'] = self.centreon_token
 
@@ -968,44 +995,29 @@ class CentreonServer(GenericServer):
         if conf.debug_mode == True:
             self.Debug(server=self.get_name(), debug='Checking session status')
         try:
-            result = self.FetchURL(self.urls_centreon['autologoutXMLresponse'], giveback='xml')
-            xmlobj, error, status_code = result.result, result.error, result.status_code
-            self.session_state = xmlobj.find("state").text.lower()
-            if conf.debug_mode == True:
-                self.Debug(server=self.get_name(), debug='Session status : ' + self.session_state)
-            if self.session_state == "nok":
-                self.SID = self._get_sid().result
+            if self.centreon_version == 18.10:
+                result = self.FetchURL(self.urls_centreon['autologoutXMLresponse'], giveback='raw')
+                raw, error, status_code = result.result, result.error, result.status_code
                 if conf.debug_mode == True:
-                    self.Debug(server=self.get_name(), debug='Session renewed')
+                    self.Debug(server=self.get_name(), debug='Session status : ' + raw)
+                if self.status_code == 401:
+                    self.SID = self._get_sid().result
+                    if conf.debug_mode == True:
+                        self.Debug(server=self.get_name(), debug='Session renewed')
+
+            else:
+                result = self.FetchURL(self.urls_centreon['autologoutXMLresponse'], giveback='xml')
+                xmlobj, error, status_code = result.result, result.error, result.status_code
+                self.session_state = xmlobj.find("state").text.lower()
+                if conf.debug_mode == True:
+                    self.Debug(server=self.get_name(), debug='Session status : ' + self.session_state)
+                if self.session_state == "nok":
+                    self.SID = self._get_sid().result
+                    if conf.debug_mode == True:
+                        self.Debug(server=self.get_name(), debug='Session renewed')
 
         except:
             import traceback
             traceback.print_exc(file=sys.stdout)
             result, error = self.Error(sys.exc_info())
             return Result(result=result, error=error)
-        
-    # This Hook seems to not be called anymore from main loop
-    # def Hook(self):
-        # # debug
-        # if conf.debug_mode == True:
-        #     self.Debug(server=self.get_name(), debug='Hook function')
-        # '''
-        # in case count is down get a new SID, just in case
-        # was kicked out but as to be seen in https://sourceforge.net/p/nagstamon/bugs/86/ there are problems with older
-        # Centreon installations so this should come back
-        # '''
-        # # renewing the SID once an hour might be enough
-        # # maybe this is unnecessary now that we authenticate via login/password, no md5
-        # if self.SIDcount >= 3600:
-        #     if conf.debug_mode == 'True':
-        #         self.Debug(server=self.get_name(), debug='Old SID: ' + self.SID + ' ' + str(self.Cookie))
-        #     # close the connections to avoid the accumulation of sessions on Centreon
-        #     url_disconnect = self.urls_centreon['index'] + '?disconnect=1'
-        #     raw = self.FetchURL(url_disconnect, giveback='raw')
-        #     del raw
-        #     self.SID = self._get_sid().result
-        #     if conf.debug_mode == 'True':
-        #         self.Debug(server=self.get_name(), debug='New SID: ' + self.SID + ' ' + str(self.Cookie))
-        #     self.SIDcount = 0
-        # else:
-        #     self.SIDcount += 1
