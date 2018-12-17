@@ -563,8 +563,6 @@ class CentreonServer(GenericServer):
         # define hosts xml URL, because of inconsistant url
         if self.centreon_version in [2.7, 2.8, 18.10]:
             nagcgiurl_hosts = self.urls_centreon['xml_hosts'] + '?' + urllib.parse.urlencode({'num':0, 'limit':self.limit_services_number, 'o':'hpb', 'p':20202, 'criticality':0, 'statusHost':'hpb', 'sSetOrderInMemory':1, 'sid':self.SID})
-        # elif self.centreon_version == 2.8:
-        #     nagcgiurl_hosts = self.urls_centreon['xml_hosts'] + '?' + urllib.parse.urlencode({'num':0, 'limit':self.limit_services_number, 'o':'hpb', 'p':20202, 'criticality':0, 'statusHost':'hpb', 'sSetOrderInMemory':1, 'sid':self.SID})
         else:
             nagcgiurl_hosts = self.urls_centreon['xml_hosts'] + '?' + urllib.parse.urlencode({'num':0, 'limit':self.limit_services_number, 'o':'hpb', 'sort_type':'status', 'sid':self.SID})
 
@@ -837,7 +835,7 @@ class CentreonServer(GenericServer):
                 if self.centreon_version < 2.7:
                     cgi_data['p'] = '20105'
                     cgi_data['o'] = 'hpb'
-                elif self.centreon_version == 2.7 or self.centreon_version == 2.8:
+                elif self.centreon_version in [2.7, 2.8, 18.10]:
                     cgi_data['p'] = '20202'
                     cgi_data['o'] = 'hpb'
                     cgi_data['centreon_token'] = self.centreon_token
@@ -888,7 +886,7 @@ class CentreonServer(GenericServer):
                                             'cmd': '70',
                                             'select[' + host + ';' + rsd + ']': '1',
                                             'limit': '0'}
-                            elif self.centreon_version == 2.8:
+                            elif self.centreon_version in [2.8, 18.10]:
                                 cgi_data['service_description'] = rsd
 
                     # debug - redondant avec le FetchURL qui donne les données
