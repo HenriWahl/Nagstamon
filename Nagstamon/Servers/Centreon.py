@@ -25,6 +25,8 @@ import sys
 import re
 import copy
 
+from datetime import datetime, timedelta
+
 from Nagstamon.Objects import *
 from Nagstamon.Servers.Generic import GenericServer
 from Nagstamon.Config import conf
@@ -255,32 +257,37 @@ class CentreonServer(GenericServer):
         get start and end time for downtime from Centreon server
         '''
         try:
-            cgi_data = {'o':'ah',\
-                        'host_name':host}
-            if self.centreon_version < 2.7:
-                cgi_data['p'] = '20106'
-            elif self.centreon_version == 2.7:
-                cgi_data['p'] = '210'
-            elif self.centreon_version == 2.8:
-                cgi_data['o'] = 'a'
-                cgi_data['p'] = '210'
-            elif self.centreon_version == 18.10:
-                cgi_data['o'] = 'a'
-                cgi_data['p'] = '21001'
-            result = self.FetchURL(self.urls_centreon['main'], cgi_data = cgi_data, giveback='obj')
+            # It's not possible since 18.10 to get date from the webinterface
+            # because it's set in javascript
+            if self.centreon_version in [2.3456, 2.66, 2.7, 2.8]:
+                cgi_data = {'o':'ah',\
+                            'host_name':host}
+                if self.centreon_version < 2.7:
+                    cgi_data['p'] = '20106'
+                elif self.centreon_version == 2.7:
+                    cgi_data['p'] = '210'
+                elif self.centreon_version == 2.8:
+                    cgi_data['o'] = 'a'
+                    cgi_data['p'] = '210'
+                result = self.FetchURL(self.urls_centreon['main'], cgi_data = cgi_data, giveback='obj')
 
-            html, error = result.result, result.error
-            if error == '':
-                start_date = html.find(attrs={'name':'start'}).attrs['value']
-                start_hour = html.find(attrs={'name':'start_time'}).attrs['value']
-                start_time = start_date + ' ' + start_hour
+                html, error = result.result, result.error
+                if error == '':
+                    start_date = html.find(attrs={'name':'start'}).attrs['value']
+                    start_hour = html.find(attrs={'name':'start_time'}).attrs['value']
+                    start_time = start_date + ' ' + start_hour
 
-                end_date = html.find(attrs={'name':'end'}).attrs['value']
-                end_hour = html.find(attrs={'name':'end_time'}).attrs['value']
-                end_time = end_date + ' ' + end_hour
+                    end_date = html.find(attrs={'name':'end'}).attrs['value']
+                    end_hour = html.find(attrs={'name':'end_time'}).attrs['value']
+                    end_time = end_date + ' ' + end_hour
+                    return start_time, end_time
 
-                # give values back as tuple
+            else:
+                start_time = datetime.now().strftime("%m/%d/%Y %H:%M")
+                end_time = datetime.now() + timedelta(hours=2)
+                end_time = end_time.strftime("%m/%d/%Y %H:%M")
                 return start_time, end_time
+
         except:
             self.Error(sys.exc_info())
             return 'n/a', 'n/a'
