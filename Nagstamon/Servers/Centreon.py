@@ -982,7 +982,7 @@ class CentreonServer(GenericServer):
                 # It is a service downtime
 
                 # Centreon 2.8 only, in case of a meta-service, extract the 'rsd' field from the service name :
-                if host == '_Module_Meta' and self.centreon_version == 2.8:
+                if host == '_Module_Meta' and self.centreon_version in [2.8, 18.10]:
                     m =  re.search(r'^.+ \((?P<rsd>.+)\)$', service)
                     if m:
                         rsd = m.group('rsd')
