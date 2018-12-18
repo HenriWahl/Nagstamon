@@ -25,6 +25,8 @@ import sys
 import re
 import copy
 
+from datetime import datetime, timedelta
+
 from Nagstamon.Objects import *
 from Nagstamon.Servers.Generic import GenericServer
 from Nagstamon.Config import conf
@@ -88,27 +90,27 @@ class CentreonServer(GenericServer):
                         self.Debug(server=self.get_name(), debug='Centreon version detected : 2.2')
                     # URLs for browser shortlinks/buttons on popup window
                     self.BROWSER_URLS = {'monitor': '$MONITOR$/main.php?p=1',
-                                    'hosts': '$MONITOR$/main.php?p=20103&o=hpb',
-                                    'services': '$MONITOR$/main.php?p=20202&o=svcpb',
-                                    'history': '$MONITOR$/main.php?p=203'}
+                                        'hosts': '$MONITOR$/main.php?p=20103&o=hpb',
+                                        'services': '$MONITOR$/main.php?p=20202&o=svcpb',
+                                        'history': '$MONITOR$/main.php?p=203'}
                 elif re.search('2\.[3-6]\.[0-5]', raw_versioncheck):
                     self.centreon_version = 2.3456
                     if conf.debug_mode is True:
                         self.Debug(server=self.get_name(), debug='Centreon version detected : 2.6.5 <=> 2.3')
                     # URLs for browser shortlinks/buttons on popup window
                     self.BROWSER_URLS = {'monitor': '$MONITOR$/main.php?p=1',
-                                    'hosts': '$MONITOR$/main.php?p=20103&o=hpb',
-                                    'services': '$MONITOR$/main.php?p=20202&o=svcpb',
-                                    'history': '$MONITOR$/main.php?p=203'}
+                                        'hosts': '$MONITOR$/main.php?p=20103&o=hpb',
+                                        'services': '$MONITOR$/main.php?p=20202&o=svcpb',
+                                        'history': '$MONITOR$/main.php?p=203'}
                 elif re.search('2\.6\.[6-9]', raw_versioncheck):
                     self.centreon_version = 2.66
                     if conf.debug_mode is True:
                         self.Debug(server=self.get_name(), debug='Centreon version detected : 2.6.6')
                     # URLs for browser shortlinks/buttons on popup window
                     self.BROWSER_URLS = {'monitor': '$MONITOR$/main.php?p=1',
-                                    'hosts': '$MONITOR$/main.php?p=20103&o=hpb',
-                                    'services': '$MONITOR$/main.php?p=20202&o=svcpb',
-                                    'history': '$MONITOR$/main.php?p=203'}
+                                        'hosts': '$MONITOR$/main.php?p=20103&o=hpb',
+                                        'services': '$MONITOR$/main.php?p=20202&o=svcpb',
+                                        'history': '$MONITOR$/main.php?p=203'}
                 elif re.search('2\.7\.[0-9]', raw_versioncheck):
                     # Centreon 2.7 only support C. Broker
                     self.centreon_version = 2.7
@@ -116,9 +118,9 @@ class CentreonServer(GenericServer):
                         self.Debug(server=self.get_name(), debug='Centreon version detected : 2.7')
                     # URLs for browser shortlinks/buttons on popup window
                     self.BROWSER_URLS = {'monitor': '$MONITOR$/main.php?',
-                                    'hosts': '$MONITOR$/main.php?p=20202&o=hpb',
-                                    'services': '$MONITOR$/main.php?p=20201&o=svcpb',
-                                    'history': '$MONITOR$/main.php?p=203'}
+                                        'hosts': '$MONITOR$/main.php?p=20202&o=hpb',
+                                        'services': '$MONITOR$/main.php?p=20201&o=svcpb',
+                                        'history': '$MONITOR$/main.php?p=203'}
                 elif re.search('2\.8\.[0-9]', raw_versioncheck):
                     # Centreon 2.8 only support C. Broker
                     self.centreon_version = 2.8
@@ -126,19 +128,28 @@ class CentreonServer(GenericServer):
                         self.Debug(server=self.get_name(), debug='Centreon version detected : 2.8')
                     # URLs for browser shortlinks/buttons on popup window
                     self.BROWSER_URLS = {'monitor': '$MONITOR$/main.php?',
-                                    'hosts': '$MONITOR$/main.php?p=20202',
-                                    'services': '$MONITOR$/main.php?p=20201',
-                                    'history': '$MONITOR$/main.php?p=203'}
-                else:
-                    # unsupported version or unable do determine
-                    self.centreon_version = 2.8
+                                        'hosts': '$MONITOR$/main.php?p=20202',
+                                        'services': '$MONITOR$/main.php?p=20201',
+                                        'history': '$MONITOR$/main.php?p=203'}
+                elif re.search('18\.10\.[0-9]', raw_versioncheck):
+                    self.centreon_version = 18.10
                     if conf.debug_mode is True:
-                        self.Debug(server=self.get_name(), debug='Centreon version unknown : supposed to be >= 2.8')
+                        self.Debug(server=self.get_name(), debug='Centreon version detected : 18.10')
                     # URLs for browser shortlinks/buttons on popup window
                     self.BROWSER_URLS = {'monitor': '$MONITOR$/main.php?',
-                                    'hosts': '$MONITOR$/main.php?p=20202&o=hpb',
-                                    'services': '$MONITOR$/main.php?p=20201&o=svcpb',
-                                    'history': '$MONITOR$/main.php?p=203'}
+                                        'hosts': '$MONITOR$/main.php?p=20202',
+                                        'services': '$MONITOR$/main.php?p=20201',
+                                        'history': '$MONITOR$/main.php?p=203'}
+                else:
+                    # unsupported version or unable do determine
+                    self.centreon_version = 18.10
+                    if conf.debug_mode is True:
+                        self.Debug(server=self.get_name(), debug='Centreon version unknown : supposed to be >= 18.10')
+                    # URLs for browser shortlinks/buttons on popup window
+                    self.BROWSER_URLS = {'monitor': '$MONITOR$/main.php?',
+                                        'hosts': '$MONITOR$/main.php?p=20202&o=hpb',
+                                        'services': '$MONITOR$/main.php?p=20201&o=svcpb',
+                                        'history': '$MONITOR$/main.php?p=203'}
             else:
                 if conf.debug_mode is True:
                     self.Debug(server=self.get_name(), debug='Error getting the home page : ' + error_versioncheck)
@@ -162,28 +173,42 @@ class CentreonServer(GenericServer):
         else:
             auth = ''
 
-        #  Meta - Centreon < 2.7
-        if host == '_Module_Meta' and self.centreon_version < 2.7:
-            webbrowser_open(self.urls_centreon['index'] + '?' + urllib.parse.urlencode({'p': 20206, 'o': 'meta'}) + auth )
-        #  Meta - Centreon 2.7
-        elif host == '_Module_Meta' and self.centreon_version == 2.7:
-            webbrowser_open(self.urls_centreon['main'] + '?' + urllib.parse.urlencode({'p':20206, 'o':'meta'}) + auth )
-        #  Meta - Centreon 2.8
-        elif host == '_Module_Meta' and self.centreon_version == 2.8:
-            m =  re.search(r'^.+ \((?P<rsd>.+)\)$', service)
-            if m:
-                service = m.group('rsd')
-                webbrowser_open(self.urls_centreon['main'] + '?' + urllib.parse.urlencode({'p':20201,'o':'svcd','host_name':'_Module_Meta','service_description':service}) + auth )
+        #  Meta
+        if host == '_Module_Meta':
+            # Centreon < 2.7
+            if self.centreon_version < 2.7:
+                webbrowser_open(self.urls_centreon['index'] + '?' + urllib.parse.urlencode({'p': 20206, 'o': 'meta'}) + auth )
+            #  Centreon 2.7
+            elif self.centreon_version == 2.7:
+                webbrowser_open(self.urls_centreon['main'] + '?' + urllib.parse.urlencode({'p':20206, 'o':'meta'}) + auth )
+            #  Centreon 2.8
+            elif self.centreon_version == 2.8:
+                m =  re.search(r'^.+ \((?P<rsd>.+)\)$', service)
+                if m:
+                    service = m.group('rsd')
+                    webbrowser_open(self.urls_centreon['main'] + '?' + urllib.parse.urlencode({'p':20201,'o':'svcd','host_name':'_Module_Meta','service_description':service}) + auth )
+            # Centreon 18.10
+            elif self.centreon_version in [18.10]:
+                m =  re.search(r'^.+ \((?P<rsd>.+)\)$', service)
+                if m:
+                    service = m.group('rsd')
+                    webbrowser_open(self.urls_centreon['main_with_frames'] + '?' + urllib.parse.urlencode({'p':20201,'o':'svcd','host_name':'_Module_Meta','service_description':service}) + auth )
+
         # must be a host if service is empty
         elif service == '':
-            if self.centreon_version == 2.7 or self.centreon_version == 2.8:
+            if self.centreon_version in [2.7, 2.8]:
                 webbrowser_open(self.urls_centreon['main'] + '?' + urllib.parse.urlencode({'p':20202,'o':'hd', 'host_name':host}) + auth )
+            elif self.centreon_version in [18.10]:
+                webbrowser_open(self.urls_centreon['main_with_frames'] + '?' + urllib.parse.urlencode({'p':20202,'o':'hd', 'host_name':host}) + auth )
             else:
                 webbrowser_open(self.urls_centreon['main'] + '?' + urllib.parse.urlencode({'p':201,'o':'hd', 'host_name':host}) + auth )
+
         # so it's a service
         else:
-            if self.centreon_version == 2.7 or self.centreon_version == 2.8:
+            if self.centreon_version in [2.7, 2.8]:
                 webbrowser_open(self.urls_centreon['main'] + '?' + urllib.parse.urlencode({'p':20201,'o':'svcd', 'host_name':host, 'service_description':service}) + auth )
+            elif self.centreon_version in [18.10]:
+                webbrowser_open(self.urls_centreon['main_with_frames'] + '?' + urllib.parse.urlencode({'p':20201,'o':'svcd', 'host_name':host, 'service_description':service}) + auth )
             else:
                 webbrowser_open(self.urls_centreon['main'] + '?' + urllib.parse.urlencode({'p':202, 'o':'svcd',  'host_name':host, 'service_description':service}) + auth )
 
@@ -209,7 +234,7 @@ class CentreonServer(GenericServer):
                 login = self.FetchURL(self.monitor_cgi_url + '/index.php')
                 if login.error == '' and login.status_code == 200:
                     # Centreon > 2.6.6 implement a token
-                    if  self.centreon_version == 2.8 or self.centreon_version == 2.7 or self.centreon_version == 2.66:
+                    if  self.centreon_version in [18.10, 2.8, 2.7, 2.66]:
                         form = login.result.find('form')
                         form_inputs = {}
                         # Need to catch the centreon_token for login to work
@@ -246,29 +271,37 @@ class CentreonServer(GenericServer):
         get start and end time for downtime from Centreon server
         '''
         try:
-            cgi_data = {'o':'ah',\
-                        'host_name':host}
-            if self.centreon_version < 2.7:
-                cgi_data['p'] = '20106'
-            elif self.centreon_version == 2.7:
-                cgi_data['p'] = '210'
-            elif self.centreon_version == 2.8:
-                cgi_data['o'] = 'a'
-                cgi_data['p'] = '210'
-            result = self.FetchURL(self.urls_centreon['main'], cgi_data = cgi_data, giveback='obj')
+            # It's not possible since 18.10 to get date from the webinterface
+            # because it's set in javascript
+            if self.centreon_version in [2.3456, 2.66, 2.7, 2.8]:
+                cgi_data = {'o':'ah',\
+                            'host_name':host}
+                if self.centreon_version < 2.7:
+                    cgi_data['p'] = '20106'
+                elif self.centreon_version == 2.7:
+                    cgi_data['p'] = '210'
+                elif self.centreon_version == 2.8:
+                    cgi_data['o'] = 'a'
+                    cgi_data['p'] = '210'
+                result = self.FetchURL(self.urls_centreon['main'], cgi_data = cgi_data, giveback='obj')
 
-            html, error = result.result, result.error
-            if error == '':
-                start_date = html.find(attrs={'name':'start'}).attrs['value']
-                start_hour = html.find(attrs={'name':'start_time'}).attrs['value']
-                start_time = start_date + ' ' + start_hour
+                html, error = result.result, result.error
+                if error == '':
+                    start_date = html.find(attrs={'name':'start'}).attrs['value']
+                    start_hour = html.find(attrs={'name':'start_time'}).attrs['value']
+                    start_time = start_date + ' ' + start_hour
 
-                end_date = html.find(attrs={'name':'end'}).attrs['value']
-                end_hour = html.find(attrs={'name':'end_time'}).attrs['value']
-                end_time = end_date + ' ' + end_hour
+                    end_date = html.find(attrs={'name':'end'}).attrs['value']
+                    end_hour = html.find(attrs={'name':'end_time'}).attrs['value']
+                    end_time = end_date + ' ' + end_hour
+                    return start_time, end_time
 
-                # give values back as tuple
+            else:
+                start_time = datetime.now().strftime("%m/%d/%Y %H:%M")
+                end_time = datetime.now() + timedelta(hours=2)
+                end_time = end_time.strftime("%m/%d/%Y %H:%M")
                 return start_time, end_time
+
         except:
             self.Error(sys.exc_info())
             return 'n/a', 'n/a'
@@ -369,7 +402,7 @@ class CentreonServer(GenericServer):
                 if conf.debug_mode == True:
                     self.Debug(server=self.get_name(), debug='Unable to fetch the main page to detect the broker : ' + error)
             del result, error
-        elif self.centreon_version == 2.7 or self.centreon_version == 2.8:
+        else:
             self.XML_PATH = 'xml'
             if conf.debug_mode == True:
                 self.Debug(server=self.get_name(), debug='Only Centreon Broker is supported in Centeon >= 2.7 -> XML_PATH='+ self.XML_PATH)
@@ -413,12 +446,27 @@ class CentreonServer(GenericServer):
             'autologoutXMLresponse': self.monitor_cgi_url + '/include/core/autologout/autologoutXMLresponse.php'
         }
 
+        urls_centreon_18_10 = {
+            'main': self.monitor_cgi_url + '/main.get.php',
+            # needed to get the frames around the page when opening the monitoring on a host/service
+            'main_with_frames': self.monitor_cgi_url + '/main.php',
+            'index': self.monitor_cgi_url + '/index.php',
+            'xml_services': self.monitor_cgi_url + '/include/monitoring/status/Services/' + self.XML_PATH + '/serviceXML.php',
+            'xml_hosts': self.monitor_cgi_url + '/include/monitoring/status/Hosts/' + self.XML_PATH + '/hostXML.php',
+            'xml_hostSendCommand': self.monitor_cgi_url + '/include/monitoring/objectDetails/xml/hostSendCommand.php',
+            'xml_serviceSendCommand': self.monitor_cgi_url + '/include/monitoring/objectDetails/xml/serviceSendCommand.php',
+            'external_cmd_cmdPopup': self.monitor_cgi_url + '/include/monitoring/external_cmd/cmdPopup.php',
+            'keepAlive': self.monitor_cgi_url + '/api/internal.php?object=centreon_keepalive&action=keepAlive'
+        }
+
         if self.centreon_version < 2.7:
             self.urls_centreon = urls_centreon_2_2
         elif self.centreon_version == 2.7:
             self.urls_centreon = urls_centreon_2_7
         elif self.centreon_version == 2.8:
             self.urls_centreon = urls_centreon_2_8
+        elif self.centreon_version == 18.10:
+            self.urls_centreon = urls_centreon_18_10
         # print IP in debug mode
         if conf.debug_mode == True:
             self.Debug(server=self.get_name(), debug='URLs defined for Centreon %s' % (self.centreon_version))
@@ -506,16 +554,14 @@ class CentreonServer(GenericServer):
         self._check_session()
 
         # services (unknown, warning or critical?)
-        if self.centreon_version == 2.7 or self.centreon_version == 2.8:
+        if self.centreon_version in [2.7, 2.8, 18.10]:
             nagcgiurl_services = self.urls_centreon['xml_services'] + '?' + urllib.parse.urlencode({'num':0, 'limit':self.limit_services_number, 'o':'svcpb', 'p':20201, 'nc':0, 'criticality':0, 'statusService':'svcpb', 'sSetOrderInMemory':1, 'sid':self.SID})
         else:
             nagcgiurl_services = self.urls_centreon['xml_services'] + '?' + urllib.parse.urlencode({'num':0, 'limit':self.limit_services_number, 'o':'svcpb', 'sort_type':'status', 'sid':self.SID})
 
         # hosts (up or down or unreachable)
         # define hosts xml URL, because of inconsistant url
-        if self.centreon_version == 2.7:
-            nagcgiurl_hosts = self.urls_centreon['xml_hosts'] + '?' + urllib.parse.urlencode({'num':0, 'limit':self.limit_services_number, 'o':'hpb', 'p':20202, 'criticality':0, 'statusHost':'hpb', 'sSetOrderInMemory':1, 'sid':self.SID})
-        elif self.centreon_version == 2.8:
+        if self.centreon_version in [2.7, 2.8, 18.10]:
             nagcgiurl_hosts = self.urls_centreon['xml_hosts'] + '?' + urllib.parse.urlencode({'num':0, 'limit':self.limit_services_number, 'o':'hpb', 'p':20202, 'criticality':0, 'statusHost':'hpb', 'sSetOrderInMemory':1, 'sid':self.SID})
         else:
             nagcgiurl_hosts = self.urls_centreon['xml_hosts'] + '?' + urllib.parse.urlencode({'num':0, 'limit':self.limit_services_number, 'o':'hpb', 'sort_type':'status', 'sid':self.SID})
@@ -789,7 +835,7 @@ class CentreonServer(GenericServer):
                 if self.centreon_version < 2.7:
                     cgi_data['p'] = '20105'
                     cgi_data['o'] = 'hpb'
-                elif self.centreon_version == 2.7 or self.centreon_version == 2.8:
+                elif self.centreon_version in [2.7, 2.8, 18.10]:
                     cgi_data['p'] = '20202'
                     cgi_data['o'] = 'hpb'
                     cgi_data['centreon_token'] = self.centreon_token
@@ -817,13 +863,15 @@ class CentreonServer(GenericServer):
                                 'service_description': s,
                                 'force_check': '1',
                                 'persistent': int(persistent),
+                                # follewing not needed in 18.10, requiered in wich version ?
                                 'persistant': int(persistent),
                                 'sticky': int(sticky),
                                 'o': 'svcd',
                                 'en': '1'}
                     if self.centreon_version < 2.7:
                         cgi_data['p'] = '20215'
-                    elif self.centreon_version == 2.7 or self.centreon_version == 2.8:
+                    # elif self.centreon_version == 2.7 or self.centreon_version == 2.8:
+                    elif self.centreon_version in [18.10, 2.8, 2.7]:
                         cgi_data['p'] = '20201'
                         cgi_data['centreon_token'] = self.centreon_token
 
@@ -838,7 +886,7 @@ class CentreonServer(GenericServer):
                                             'cmd': '70',
                                             'select[' + host + ';' + rsd + ']': '1',
                                             'limit': '0'}
-                            elif self.centreon_version == 2.8:
+                            elif self.centreon_version in [2.8, 18.10]:
                                 cgi_data['service_description'] = rsd
 
                     # debug - redondant avec le FetchURL qui donne les données
@@ -934,7 +982,7 @@ class CentreonServer(GenericServer):
                 # It is a service downtime
 
                 # Centreon 2.8 only, in case of a meta-service, extract the 'rsd' field from the service name :
-                if host == '_Module_Meta' and self.centreon_version == 2.8:
+                if host == '_Module_Meta' and self.centreon_version in [2.8, 18.10]:
                     m =  re.search(r'^.+ \((?P<rsd>.+)\)$', service)
                     if m:
                         rsd = m.group('rsd')
@@ -968,44 +1016,29 @@ class CentreonServer(GenericServer):
         if conf.debug_mode == True:
             self.Debug(server=self.get_name(), debug='Checking session status')
         try:
-            result = self.FetchURL(self.urls_centreon['autologoutXMLresponse'], giveback='xml')
-            xmlobj, error, status_code = result.result, result.error, result.status_code
-            self.session_state = xmlobj.find("state").text.lower()
-            if conf.debug_mode == True:
-                self.Debug(server=self.get_name(), debug='Session status : ' + self.session_state)
-            if self.session_state == "nok":
-                self.SID = self._get_sid().result
+            if self.centreon_version == 18.10:
+                result = self.FetchURL(self.urls_centreon['keepAlive'], giveback='raw')
+                raw, error, status_code = result.result, result.error, result.status_code
                 if conf.debug_mode == True:
-                    self.Debug(server=self.get_name(), debug='Session renewed')
+                    self.Debug(server=self.get_name(), debug='Session status : ' + raw)
+                if self.status_code == 401:
+                    self.SID = self._get_sid().result
+                    if conf.debug_mode == True:
+                        self.Debug(server=self.get_name(), debug='Session renewed')
+
+            else:
+                result = self.FetchURL(self.urls_centreon['autologoutXMLresponse'], giveback='xml')
+                xmlobj, error, status_code = result.result, result.error, result.status_code
+                self.session_state = xmlobj.find("state").text.lower()
+                if conf.debug_mode == True:
+                    self.Debug(server=self.get_name(), debug='Session status : ' + self.session_state)
+                if self.session_state == "nok":
+                    self.SID = self._get_sid().result
+                    if conf.debug_mode == True:
+                        self.Debug(server=self.get_name(), debug='Session renewed')
 
         except:
             import traceback
             traceback.print_exc(file=sys.stdout)
             result, error = self.Error(sys.exc_info())
             return Result(result=result, error=error)
-        
-    # This Hook seems to not be called anymore from main loop
-    # def Hook(self):
-        # # debug
-        # if conf.debug_mode == True:
-        #     self.Debug(server=self.get_name(), debug='Hook function')
-        # '''
-        # in case count is down get a new SID, just in case
-        # was kicked out but as to be seen in https://sourceforge.net/p/nagstamon/bugs/86/ there are problems with older
-        # Centreon installations so this should come back
-        # '''
-        # # renewing the SID once an hour might be enough
-        # # maybe this is unnecessary now that we authenticate via login/password, no md5
-        # if self.SIDcount >= 3600:
-        #     if conf.debug_mode == 'True':
-        #         self.Debug(server=self.get_name(), debug='Old SID: ' + self.SID + ' ' + str(self.Cookie))
-        #     # close the connections to avoid the accumulation of sessions on Centreon
-        #     url_disconnect = self.urls_centreon['index'] + '?disconnect=1'
-        #     raw = self.FetchURL(url_disconnect, giveback='raw')
-        #     del raw
-        #     self.SID = self._get_sid().result
-        #     if conf.debug_mode == 'True':
-        #         self.Debug(server=self.get_name(), debug='New SID: ' + self.SID + ' ' + str(self.Cookie))
-        #     self.SIDcount = 0
-        # else:
-        #     self.SIDcount += 1
