@@ -619,7 +619,7 @@ class MenuContextSystrayicon(MenuContext):
         # makes even less sense on OSX
         if OS != 'Darwin':
             self.action_status = QAction('Show status window', self)
-            self.action_status.triggered.connect(statuswindow.show_window)
+            self.action_status.triggered.connect(statuswindow.show_window_systrayicon)
             self.insertAction(self.action_refresh, self.action_status)
             self.insertSeparator(self.action_refresh)
 

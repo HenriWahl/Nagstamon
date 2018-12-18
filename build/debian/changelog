@@ -1,4 +1,4 @@
-nagstamon (3.1.99rc2) stable; urgency=low
+nagstamon (3.1.99rc3) stable; urgency=low
   * New upstream
     - new Zabbix backend
     - added Sensu/Uchiwa changes
