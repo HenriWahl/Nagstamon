@@ -1953,7 +1953,10 @@ class StatusWindow(QWidget):
         """
 
         # check first if popup has to be shown by hovering or clicking
-        if conf.close_details_hover and not conf.fullscreen and not conf.windowed:
+        if conf.close_details_hover and \
+                not conf.fullscreen and \
+                not conf.windowed and \
+                self.is_shown_timestamp + 0.25 < time.time():
             # only hide window if cursor is outside of it
             mouse_x = QCursor.pos().x()
             mouse_y = QCursor.pos().y()
