@@ -87,7 +87,7 @@ class Ui_dialog_about(object):
         dialog_about.setWindowTitle(_translate("dialog_about", "About Nagstamon"))
         self.label_nagstamon.setText(_translate("dialog_about", "Nagstamon x"))
         self.label_nagstamon_long.setText(_translate("dialog_about", "Nagios status monitor"))
-        self.label_copyright.setText(_translate("dialog_about", "©2008-2016 Henri Wahl et al."))
+        self.label_copyright.setText(_translate("dialog_about", "©2008-2019 Henri Wahl et al."))
         self.label_website.setText(_translate("dialog_about", "https://nagstamon.ifw-dresden.de"))
         self.label_footnote.setText(_translate("dialog_about", "Footnote"))
         self.tabs.setTabText(self.tabs.indexOf(self.tab_about), _translate("dialog_about", "About"))

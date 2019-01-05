@@ -1,3 +1,8 @@
+nagstamon (3.3-20190105) unstable; urgency=low
+  * New upstream
+
+-- Henri Wahl <h.wahl@ifw-dresden.de> Sat, 5 Jan 2019 14:00:00 +0100
+
 nagstamon (3.2) stable; urgency=low
   * New upstream
     - new Zabbix backend

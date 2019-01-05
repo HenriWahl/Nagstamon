@@ -1,6 +1,6 @@
 # encoding: utf-8
 # Nagstamon - Nagios status monitor for your desktop
-# Copyright (C) 2008-2016 Henri Wahl <h.wahl@ifw-dresden.de> et al.
+# Copyright (C) 2008-2019 Henri Wahl <h.wahl@ifw-dresden.de> et al.
 #
 # This program is free software; you can redistribute it and/or modify
 # it under the terms of the GNU General Public License as published by
@@ -409,7 +409,7 @@ class SystemTrayIcon(QSystemTrayIcon):
         if reason == (QSystemTrayIcon.Trigger or QSystemTrayIcon.DoubleClick):
             # when green icon is displayed and no popwin is about to po up show at least menu
             if get_worst_status() == 'UP' and OS == 'Darwin':
-                    self.menu.show_at_cursor()
+                self.menu.show_at_cursor()
             else:
                 # show status window if there is something to tell
                 if statuswindow.is_shown:
@@ -6676,9 +6676,9 @@ menu = MenuContext()
 # necessary extra menu due to Qt5-Unity-integration
 if not OS in NON_LINUX:
     menu_systray = MenuContextSystrayicon()
-
-# Menu has to be set here to solve Qt-5.10-Windows-systray-mess
-if OS == 'Windows' and conf.icon_in_systray:
+# menu has to be set here to solve Qt-5.10-Windows-systray-mess
+# and non-existence of macOS-systray-context-menu
+elif conf.icon_in_systray:
     systrayicon.set_menu(menu)
 
 # versatile mediaplayer
