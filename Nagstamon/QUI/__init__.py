@@ -1,6 +1,6 @@
 # encoding: utf-8
 # Nagstamon - Nagios status monitor for your desktop
-# Copyright (C) 2008-2019 Henri Wahl <h.wahl@ifw-dresden.de> et al.
+# Copyright (C) 2008-2016 Henri Wahl <h.wahl@ifw-dresden.de> et al.
 #
 # This program is free software; you can redistribute it and/or modify
 # it under the terms of the GNU General Public License as published by
@@ -252,7 +252,6 @@ APP.setStyleSheet('''QToolTip { margin: 3px;
 
 
 class HBoxLayout(QHBoxLayout):
-
     """
         Apparently necessary to get a HBox which is able to hide its children
     """
@@ -284,7 +283,6 @@ class HBoxLayout(QHBoxLayout):
 
 
 class SystemTrayIcon(QSystemTrayIcon):
-
     """
         Icon in system tray, works at least in Windows and OSX
         Several Linux desktop environments have different problems
@@ -409,7 +407,7 @@ class SystemTrayIcon(QSystemTrayIcon):
         if reason == (QSystemTrayIcon.Trigger or QSystemTrayIcon.DoubleClick):
             # when green icon is displayed and no popwin is about to po up show at least menu
             if get_worst_status() == 'UP' and OS == 'Darwin':
-                self.menu.show_at_cursor()
+                    self.menu.show_at_cursor()
             else:
                 # show status window if there is something to tell
                 if statuswindow.is_shown:
@@ -478,7 +476,6 @@ class SystemTrayIcon(QSystemTrayIcon):
 
 
 class MenuAtCursor(QMenu):
-
     """
         open menu at position of mouse pointer - normal .exec() shows menu at (0, 0)
     """
@@ -501,7 +498,6 @@ class MenuAtCursor(QMenu):
 
 
 class MenuContext(MenuAtCursor):
-
     """
         class for universal context menu, used at systray icon and hamburger menu
     """
@@ -625,7 +621,6 @@ class MenuContextSystrayicon(MenuContext):
 
 
 class FlatButton(QToolButton):
-
     """
         QToolButton acting as push button
     """
@@ -657,7 +652,6 @@ else:
 
 
 class PushButton_Hamburger(Button):
-
     """
         Pushbutton with menu for hamburger
     """
@@ -680,7 +674,6 @@ class PushButton_Hamburger(Button):
 
 # ##class PushButton_BrowserURL(QPushButton):
 class PushButton_BrowserURL(Button):
-
     """
         QPushButton for ServerVBox which opens certain URL if clicked
     """
@@ -712,7 +705,6 @@ class PushButton_BrowserURL(Button):
 
 
 class ComboBox_Servers(QComboBox):
-
     """
         combobox which does lock statuswindow so it does not close when opening combobox
     """
@@ -865,7 +857,6 @@ class DraggableWidget(QWidget):
 
 
 class DraggableLabel(QLabel, DraggableWidget):
-
     """
        label with dragging capabilities used by toparea
     """
@@ -904,6 +895,7 @@ class ClosingLabel(QLabel):
                 statuswindow.is_hiding_timestamp = time.time()
                 statuswindow.hide_window()
 
+
 class AllOKLabel(QLabel):
     """
         Label which is shown in fullscreen and windowed mode when all is OK - pretty seldomly
@@ -925,6 +917,7 @@ class AllOKLabel(QLabel):
                               font-weight: bold;'''
                            % (conf.__dict__['color_ok_text'],
                            conf.__dict__['color_ok_background']))
+
 
 class StatusWindow(QWidget):
     """
@@ -2332,7 +2325,6 @@ class StatusWindow(QWidget):
 
 
 class NagstamonLogo(QSvgWidget, DraggableWidget):
-
     """
         SVG based logo, used for statusbar and toparea logos
     """
@@ -2363,7 +2355,6 @@ class NagstamonLogo(QSvgWidget, DraggableWidget):
 
 
 class StatusBar(QWidget):
-
     """
         status bar for short display of problems
     """
@@ -2538,7 +2529,6 @@ class StatusBar(QWidget):
 
 
 class StatusBarLabel(DraggableLabel):
-
     """
         one piece of the status bar labels for one state
     """
@@ -2593,7 +2583,6 @@ class StatusBarLabel(DraggableLabel):
 
 
 class TopArea(QWidget):
-
     """
         Top area of status window
     """
@@ -2703,7 +2692,6 @@ class TopArea(QWidget):
 
 
 class ServerStatusLabel(ClosingLabel):
-
     """
         label for ServerVBox to show server connection state
         extra class to apply simple slots for changing text or color
@@ -2760,7 +2748,6 @@ class ServerStatusLabel(ClosingLabel):
 
 
 class ServerVBox(QVBoxLayout):
-
     """
         one VBox per server containing buttons and hosts/services listview
     """
@@ -2996,7 +2983,6 @@ class ServerVBox(QVBoxLayout):
 
 
 class Model(QAbstractTableModel):
-
     """
         Model for storing status data to be presented in Treeview-table
     """
@@ -3114,7 +3100,6 @@ class Model(QAbstractTableModel):
 
 
 class TreeView(QTreeView):
-
     """
         attempt to get a less resource-hungry table/tree
     """
@@ -3147,7 +3132,7 @@ class TreeView(QTreeView):
 
         # no handling of selection by treeview
         self.setSelectionBehavior(QAbstractItemView.SelectRows)
-        self.setSelectionMode(QAbstractItemView.NoSelection)
+        self.setSelectionMode(QAbstractItemView.ExtendedSelection)
 
         # disable space at the left side
         self.setRootIsDecorated(False)
@@ -3268,6 +3253,9 @@ class TreeView(QTreeView):
 
         # display mode - all or only header to display error
         self.is_shown = False
+        
+        # connect signal for handling copy from keyboard
+        
 
     @pyqtSlot()
     def set_font(self):
@@ -3332,12 +3320,17 @@ class TreeView(QTreeView):
     def mouseReleaseEvent(self, event):
         """
             forward clicked cell info from event
-        """
+        """                    
         if conf.close_details_clicking_somewhere and event.button() == Qt.LeftButton:
             statuswindow.hide_window()
-        else:
+            return
+        
+        if conf.close_details_clicking_somewhere == False and event.button() == Qt.RightButton:
             index = self.indexAt(QPoint(event.x(), event.y()))
             self.cell_clicked(index)
+            #self.cell_clicked()
+            return
+        super(TreeView, self).mouseReleaseEvent(event)
 
     def wheelEvent(self, event):
         """
@@ -3345,6 +3338,16 @@ class TreeView(QTreeView):
         """
         event.ignore()
 
+    def keyPressEvent(self, event):
+        """
+            Use to handle copy from keyboard
+        """  
+        if event.matches(QKeySequence.Copy):
+            self.action_clipboard_action_all()
+            return
+        super(TreeView, self).keyPressEvent(event)
+        
+        
     @pyqtSlot()
     def cell_clicked(self, index):
         """
@@ -3353,14 +3356,10 @@ class TreeView(QTreeView):
         """
 
         if self.action_menu.available or OS != 'Windows':
-
             # set flag for Windows
             self.action_menu.available = False
 
-            # take data from model data_array
-            self.miserable_host = self.model().data_array[index.row()][0]
-            self.miserable_service = self.model().data_array[index.row()][2]
-            self.miserable_status_info = self.model().data_array[index.row()][8]
+
 
             # empty the menu
             self.action_menu.clear()
@@ -3371,101 +3370,108 @@ class TreeView(QTreeView):
             # add custom actions
             actions_list = list(conf.actions)
             actions_list.sort(key=str.lower)
+            
+            # How many rows we have
+            list_rows = []
+            for ind in self.selectedIndexes():
+                if ind.row() not in list_rows:
+                    list_rows.append(ind.row())
+            
+            # Only add custom action if one row is selected
+            if len(list_rows) == 1:
+                # take data from model data_array
+                miserable_host = self.model().data_array[index.row()][0]
+                miserable_service = self.model().data_array[index.row()][2]
+                
+                for a in actions_list:
+                    # shortcut for next lines
+                    action = conf.actions[a]
 
-            for a in actions_list:
-                # shortcut for next lines
-                action = conf.actions[a]
+                    # check if current monitor server type is in action
+                    # second scheck for server type is legacy-compatible with older settions
+                    if action.enabled is True and (action.monitor_type in ['', self.server.TYPE] or 
+                                                   action.monitor_type not in SERVER_TYPES):
+                        # menu item visibility flag
+                        item_visible = False
+                        # check if clicked line is a service or host
+                        # if it is check if the action is targeted on hosts or services
+                        if miserable_service:
+                            if action.filter_target_service is True:
+                                # only check if there is some to check
+                                if action.re_host_enabled is True:
+                                    if is_found_by_re(miserable_host,
+                                                      action.re_host_pattern,
+                                                      action.re_host_reverse):
+                                        item_visible = True
+                                # dito
+                                if action.re_service_enabled is True:
+                                    if is_found_by_re(miserable_service,
+                                                      action.re_service_pattern,
+                                                      action.re_service_reverse):
+                                        item_visible = True
+                                # dito
+                                if action.re_status_information_enabled is True:
+                                    if is_found_by_re(miserable_service,
+                                                      action.re_status_information_pattern,
+                                                      action.re_status_information_reverse):
+                                        item_visible = True
 
-                # check if current monitor server type is in action
-                # second scheck for server type is legacy-compatible with older settions
-                if action.enabled is True and (action.monitor_type in ['', self.server.TYPE] or
-                                               action.monitor_type not in SERVER_TYPES):
-                    # menu item visibility flag
-                    item_visible = False
-                    # check if clicked line is a service or host
-                    # if it is check if the action is targeted on hosts or services
-                    if self.miserable_service:
-                        if action.filter_target_service is True:
-                            # only check if there is some to check
-                            if action.re_host_enabled is True:
-                                if is_found_by_re(self.miserable_host,
-                                        action.re_host_pattern,
-                                        action.re_host_reverse):
+                                # fallback if no regexp is selected
+                                if action.re_host_enabled == action.re_service_enabled == \
+                                   action.re_status_information_enabled is False:
                                     item_visible = True
-                            # dito
-                            if action.re_service_enabled is True:
-                                if is_found_by_re(self.miserable_service,
-                                        action.re_service_pattern,
-                                        action.re_service_reverse):
-                                    item_visible = True
-                            # dito
-                            if action.re_status_information_enabled is True:
-                                if is_found_by_re(self.miserable_service,
-                                        action.re_status_information_pattern,
-                                        action.re_status_information_reverse):
-                                    item_visible = True
 
-                            # fallback if no regexp is selected
-                            if action.re_host_enabled == action.re_service_enabled == \
-                               action.re_status_information_enabled is False:
-                                item_visible = True
-
+                        else:
+                            # hosts should only care about host specific actions, no services
+                            if action.filter_target_host is True:
+                                if action.re_host_enabled is True:
+                                    if is_found_by_re(miserable_host,
+                                                      action.re_host_pattern,
+                                                      action.re_host_reverse):
+                                        item_visible = True
+                                else:
+                                    # a non specific action will be displayed per default
+                                    item_visible = True
                     else:
-                        # hosts should only care about host specific actions, no services
-                        if action.filter_target_host is True:
-                            if action.re_host_enabled is True:
-                                if is_found_by_re(self.miserable_host,
-                                        action.re_host_pattern,
-                                        action.re_host_reverse):
-                                    item_visible = True
-                            else:
-                                # a non specific action will be displayed per default
-                                item_visible = True
-                else:
-                    item_visible = False
+                        item_visible = False
 
-                # populate context menu with service actions
-                if item_visible is True:
-                    # create action
-                    action_menuentry = QAction(a, self)
-                    # add action
-                    self.action_menu.addAction(action_menuentry)
-                    # action to signalmapper
-                    self.signalmapper_action_menu.setMapping(action_menuentry, a)
-                    action_menuentry.triggered.connect(self.signalmapper_action_menu.map)
+                    # populate context menu with service actions
+                    if item_visible is True:
+                        # create action
+                        action_menuentry = QAction(a, self)
+                        # add action
+                        self.action_menu.addAction(action_menuentry)
+                        # action to signalmapper
+                        self.signalmapper_action_menu.setMapping(action_menuentry, a)
+                        action_menuentry.triggered.connect(self.signalmapper_action_menu.map)
 
-                del action, item_visible
+                    del action, item_visible
 
-            # create adn add default actions
+            # create and add default actions
             action_edit_actions = QAction('Edit actions...', self)
             action_edit_actions.triggered.connect(self.action_edit_actions)
+            self.action_menu.addAction(action_edit_actions)
+            # put actions into menu after separator
 
-            if 'Monitor' in self.server.MENU_ACTIONS:
+            self.action_menu.addSeparator()
+            if 'Monitor' in self.server.MENU_ACTIONS and len(list_rows) == 1:
                 action_monitor = QAction('Monitor', self)
                 action_monitor.triggered.connect(self.action_monitor)
-
+                self.action_menu.addAction(action_monitor)
+                
             if 'Recheck' in self.server.MENU_ACTIONS:
                 action_recheck = QAction('Recheck', self)
                 action_recheck.triggered.connect(self.action_recheck)
-
+                self.action_menu.addAction(action_recheck)
+                
             if 'Acknowledge' in self.server.MENU_ACTIONS:
                 action_acknowledge = QAction('Acknowledge', self)
                 action_acknowledge.triggered.connect(self.action_acknowledge)
-
+                self.action_menu.addAction(action_acknowledge)
+                
             if 'Downtime' in self.server.MENU_ACTIONS:
                 action_downtime = QAction('Downtime', self)
                 action_downtime.triggered.connect(self.action_downtime)
-
-            # put actions into menu after separator
-            self.action_menu.addAction(action_edit_actions)
-            self.action_menu.addSeparator()
-            if 'Monitor' in self.server.MENU_ACTIONS:
-                self.action_menu.addAction(action_monitor)
-            if 'Recheck' in self.server.MENU_ACTIONS:
-                self.action_menu.addAction(action_recheck)
-            if 'Acknowledge' in self.server.MENU_ACTIONS:
-                self.action_menu.addAction(action_acknowledge)
-            if 'Downtime' in self.server.MENU_ACTIONS:
                 self.action_menu.addAction(action_downtime)
 
             # special menu entry for Check_MK for archiving events
@@ -3476,7 +3482,7 @@ class TreeView(QTreeView):
                     self.action_menu.addAction(action_archive_event)
 
             # not all servers allow to submit fake check results
-            if 'Submit check result' in self.server.MENU_ACTIONS:
+            if 'Submit check result' in self.server.MENU_ACTIONS and len(list_rows) == 1:
                 action_submit = QAction('Submit check result', self)
                 action_submit.triggered.connect(self.action_submit)
                 self.action_menu.addAction(action_submit)
@@ -3493,19 +3499,38 @@ class TreeView(QTreeView):
     def action_menu_custom_response(self, action):
         # avoid blocked context menu
         self.action_menu.available = True
+        
+        # only on 1 row
+        indexes = self.selectedIndexes()
+        index = indexes[0]
+        miserable_host = self.model().data(self.model().createIndex(index.row(),0), Qt.DisplayRole)
+        miserable_service = self.model().data(self.model().createIndex(index.row(),2), Qt.DisplayRole)
+        miserable_status_info = self.model().data(self.model().createIndex(index.row(),8), Qt.DisplayRole)
+        
+        # get data to send to action       
+        server = self.server.get_name()
+        address = self.server.GetHost(miserable_host).result
+        monitor = self.server.monitor_url
+        monitor_cgi = self.server.monitor_cgi_url
+        username = self.server.username
+        password = self.server.password
+        comment_ack = conf.defaults_acknowledge_comment
+        comment_down = conf.defaults_downtime_comment
+        comment_submit = conf.defaults_submit_check_result_comment
+        
         # send dict with action info and dict with host/service info
-        self.request_action.emit(conf.actions[action].__dict__, {'server': self.server.get_name(),
-                                                                 'host': self.miserable_host,
-                                                                 'service': self.miserable_service,
-                                                                 'status-info': self.miserable_status_info,
-                                                                 'address': self.server.GetHost(self.miserable_host).result,
-                                                                 'monitor': self.server.monitor_url,
-                                                                 'monitor-cgi': self.server.monitor_cgi_url,
-                                                                 'username': self.server.username,
-                                                                 'password': self.server.password,
-                                                                 'comment-ack': conf.defaults_acknowledge_comment,
-                                                                 'comment-down': conf.defaults_downtime_comment,
-                                                                 'comment-submit': conf.defaults_submit_check_result_comment
+        self.request_action.emit(conf.actions[action].__dict__, {'server': server,
+                                                                 'host': miserable_host,
+                                                                 'service': miserable_service,
+                                                                 'status-info': miserable_status_info,
+                                                                 'address': address,
+                                                                 'monitor': monitor,
+                                                                 'monitor-cgi': monitor_cgi,
+                                                                 'username': username,
+                                                                 'password': password,
+                                                                 'comment-ack': comment_ack,
+                                                                 'comment-down': comment_down,
+                                                                 'comment-submit': comment_submit
                                                                  })
 
         # if action wants a closed status window it should be closed now
@@ -3540,30 +3565,72 @@ class TreeView(QTreeView):
 
     @action_response_decorator
     def action_monitor(self):
+        # only on 1 row
+        indexes = self.selectedIndexes()
+        index = indexes[0]
+        miserable_host = self.model().data(self.model().createIndex(index.row(),0), Qt.DisplayRole)
+        miserable_service = self.model().data(self.model().createIndex(index.row(),2), Qt.DisplayRole)
+        
         # open host/service monitor in browser
-        self.server.open_monitor(self.miserable_host, self.miserable_service)
+        self.server.open_monitor(miserable_host, miserable_service)
 
     @action_response_decorator
     def action_recheck(self):
-        # send signal to worker recheck slot
-        self.recheck.emit({'host':    self.miserable_host,
-                           'service': self.miserable_service})
+        # How many rows we have
+        list_rows = []
+        for ind in self.selectedIndexes():
+            if ind.row() not in list_rows:
+                list_rows.append(ind.row())
+        
+        for lrow in list_rows:
+            miserable_host = self.model().data(self.model().createIndex(lrow,0), Qt.DisplayRole)
+            miserable_service = self.model().data(self.model().createIndex(lrow,2), Qt.DisplayRole)
+            
+            # send signal to worker recheck slot
+            self.recheck.emit({'host':    miserable_host,
+                               'service': miserable_service})
 
     @action_response_decorator
     def action_acknowledge(self):
+        list_host = []
+        list_service = []
+        
+        # How many rows we have
+        list_rows = []
+        for ind in self.selectedIndexes():
+            if ind.row() not in list_rows:
+                list_rows.append(ind.row())
+                
+        for lrow in list_rows:
+            list_host.append(self.model().data(self.model().createIndex(lrow, 0), Qt.DisplayRole))
+            list_service.append(self.model().data(self.model().createIndex(lrow, 2), Qt.DisplayRole))
+
         # running worker method is left to OK button of dialog
-        dialogs.acknowledge.show()
         dialogs.acknowledge.initialize(server=self.server,
-                                       host=self.miserable_host,
-                                       service=self.miserable_service)
+                                       host=list_host,
+                                       service=list_service)
+        dialogs.acknowledge.show()
 
     @action_response_decorator
     def action_downtime(self):
+        list_host = []
+        list_service = []
+        
+        # How many rows we have
+        list_rows = []
+        for ind in self.selectedIndexes():
+            if ind.row() not in list_rows:
+                list_rows.append(ind.row())
+                
+        for lrow in list_rows:
+            list_host.append(self.model().data(self.model().createIndex(lrow, 0), Qt.DisplayRole))
+            list_service.append(self.model().data(self.model().createIndex(lrow, 2), Qt.DisplayRole))
+            
         # running worker method is left to OK button of dialog
-        dialogs.downtime.show()
         dialogs.downtime.initialize(server=self.server,
-                                    host=self.miserable_host,
-                                    service=self.miserable_service)
+                                    host=list_host,
+                                    service=list_service)
+        dialogs.downtime.show()
 
     @action_response_decorator
     def action_archive_event(self):
@@ -3573,64 +3640,144 @@ class TreeView(QTreeView):
 
         # fill action and info dict for thread-safe action request
         action = {'string': '$MONITOR$/view.py?_transid=$TRANSID$&_do_actions=yes&_do_confirm=Yes!&output_format=python&view_name=ec_events_of_monhost&host=$HOST$&_mkeventd_comment=archived&_mkeventd_acknowledge=on&_mkeventd_state=2&_delete_event=Archive Event&event_first_from=&event_first_until=&event_last_from=&event_last_until=', 'type': 'url', 'recheck': True}
+        
+        list_host = []
+        list_service = []
+        list_status = []
+        
+        # How many rows we have
+        list_rows = []
+        for ind in self.selectedIndexes():
+            if ind.row() not in list_rows:
+                list_rows.append(ind.row())
+                
+        for lrow in list_rows:
+            list_host.append(self.model().data(self.model().createIndex(lrow, 0), Qt.DisplayRole))
+            list_service.append(self.model().data(self.model().createIndex(lrow, 2), Qt.DisplayRole))
+            list_status.append(self.model().data(self.model().createIndex(lrow, 8), Qt.DisplayRole))
+        
+        for line_number in range(len(list_host)):
+            host=list_host[line_number]
+            service=list_service[line_number]
+            status=list_status[line_number]
+            
+            
+            info = {'server': self.server.get_name(),
+                    'host': host,
+                    'service': service,
+                    'status-info': status,
+                    'address': self.server.GetHost(host).result,
+                    'monitor': self.server.monitor_url,
+                    'monitor-cgi': self.server.monitor_cgi_url,
+                    'username': self.server.username,
+                    'password': self.server.password,
+                    'comment-ack': conf.defaults_acknowledge_comment,
+                    'comment-down': conf.defaults_downtime_comment,
+                    'comment-submit': conf.defaults_submit_check_result_comment
+                   }
 
-        info = {'server': self.server.get_name(),
-                'host': self.miserable_host,
-                'service': self.miserable_service,
-                'status-info': self.miserable_status_info,
-                'address': self.server.GetHost(self.miserable_host).result,
-                'monitor': self.server.monitor_url,
-                'monitor-cgi': self.server.monitor_cgi_url,
-                'username': self.server.username,
-                'password': self.server.password,
-                'comment-ack': conf.defaults_acknowledge_comment,
-                'comment-down': conf.defaults_downtime_comment,
-                'comment-submit': conf.defaults_submit_check_result_comment}
-
-        # tell worker to do the action
-        self.request_action.emit(action, info)
+            # tell worker to do the action
+            self.request_action.emit(action, info)
 
     @action_response_decorator
     def action_submit(self):
+        # only on 1 row
+        indexes = self.selectedIndexes()
+        index = indexes[0]
+        miserable_host = self.model().data(self.model().createIndex(index.row(),0), Qt.DisplayRole)
+        miserable_service = self.model().data(self.model().createIndex(index.row(),2), Qt.DisplayRole)
+            
         # running worker method is left to OK button of dialog
-        dialogs.submit.show()
         dialogs.submit.initialize(server=self.server,
-                host=self.miserable_host,
-                service=self.miserable_service)
+                                  host=miserable_host,
+                                  service=miserable_service)
+        dialogs.submit.show()
+
 
     @pyqtSlot()
     def action_clipboard_action_host(self):
         """
             copy host name to clipboard
         """
-        clipboard.setText(self.miserable_host)
+        
+        list_host = []
+        str = ''
+        
+        # How many rows we have
+        list_rows = []
+        for ind in self.selectedIndexes():
+            if ind.row() not in list_rows:
+                list_rows.append(ind.row())
+                
+        for lrow in list_rows:
+            list_host.append(self.model().data(self.model().createIndex(lrow, 0), Qt.DisplayRole))
+        
+        for line_number in range(len(list_host)):
+            str = str + list_host[line_number] + '\n'
+            
+        clipboard.setText(str)
 
     @pyqtSlot()
     def action_clipboard_action_statusinformation(self):
         """
             copy status information to clipboard
         """
-        clipboard.setText(self.miserable_status_info)
+        list_status = []
+        str = ''
+        
+        # How many rows we have
+        list_rows = []
+        for ind in self.selectedIndexes():
+            if ind.row() not in list_rows:
+                list_rows.append(ind.row())
+                
+        for lrow in list_rows:
+            list_status.append(self.model().data(self.model().createIndex(lrow, 8), Qt.DisplayRole))
+        
+        for line_number in range(len(list_status)):
+            str = str + list_status[line_number] + '\n'
+            
+        clipboard.setText(str)
 
     @pyqtSlot()
     def action_clipboard_action_all(self):
         """
 
         """
-        # item to access all properties of host/service object
-        # defaults to host
-        item = self.server.hosts[self.miserable_host]
-        text = 'Host: {0}\n'.format(self.miserable_host)
-        # if it is a service switch to service object
-        if self.miserable_service != '':
-            item = item.services[self.miserable_service]
-            text += 'Service: {0}\n'.format(self.miserable_service)
-        # the other properties belong to both hosts and services
-        text += 'Status: {0}\n'.format(item.status)
-        text += 'Last check: {0}\n'.format(item.last_check)
-        text += 'Duration: {0}\n'.format(item.duration)
-        text += 'Attempt: {0}\n'.format(item.attempt)
-        text += 'Status information: {0}\n'.format(item.status_information)
+        
+        list_host = []
+        list_service = []
+        text = ''
+        
+        # How many rows we have
+        list_rows = []
+        for ind in self.selectedIndexes():
+            if ind.row() not in list_rows:
+                list_rows.append(ind.row())
+                
+        for lrow in list_rows:
+            list_host.append(self.model().data(self.model().createIndex(lrow, 0), Qt.DisplayRole))
+            list_service.append(self.model().data(self.model().createIndex(lrow, 2), Qt.DisplayRole))
+        
+        for line_number in range(len(list_host)):
+            host=list_host[line_number]
+            service=list_service[line_number]
+            
+            # item to access all properties of host/service object
+            # defaults to host
+            item = self.server.hosts[host]
+            text += 'Host: {0}\n'.format(host)
+            # if it is a service switch to service object
+            if service != '':
+                item = item.services[service]
+                text += 'Service: {0}\n'.format(service)
+            # the other properties belong to both hosts and services
+            text += 'Status: {0}\n'.format(item.status)
+            text += 'Last check: {0}\n'.format(item.last_check)
+            text += 'Duration: {0}\n'.format(item.duration)
+            text += 'Attempt: {0}\n'.format(item.attempt)
+            text += 'Status information: {0}\n'.format(item.status_information)
+            text += '\n'
 
         # copy text to clipboard
         clipboard.setText(text)
@@ -3681,7 +3828,6 @@ class TreeView(QTreeView):
 
 
     class Worker(QObject):
-
         """
             attempt to run a server status update thread - only needed by table so it is defined here inside table
         """
@@ -4162,7 +4308,6 @@ class TreeView(QTreeView):
 
 
 class Dialogs(object):
-
     """
         class for accessing all dialogs
     """
@@ -4217,7 +4362,6 @@ class Dialogs(object):
 
 
 class Dialog(QObject):
-
     """
         one single dialog
     """
@@ -4348,7 +4492,6 @@ class Dialog(QObject):
 
 
 class Dialog_Settings(Dialog):
-
     """
         class for settings dialog
     """
@@ -5264,7 +5407,6 @@ class Dialog_Settings(Dialog):
 
 
 class Dialog_Server(Dialog):
-
     """
         Dialog used to setup one single server
     """
@@ -5297,9 +5439,9 @@ class Dialog_Server(Dialog):
         self.VOLATILE_WIDGETS = {
             self.ui.label_monitor_cgi_url: ['Nagios', 'Icinga', 'Thruk', 'Sensu'],
             self.ui.input_lineedit_monitor_cgi_url: ['Nagios', 'Icinga', 'Thruk', 'Sensu'],
-            self.ui.input_checkbox_use_autologin: ['Centreon', 'monitos4x'],
-            self.ui.input_lineedit_autologin_key: ['Centreon', 'monitos4x'],
-            self.ui.label_autologin_key: ['Centreon', 'monitos4x'],
+            self.ui.input_checkbox_use_autologin: ['Centreon'],
+            self.ui.input_lineedit_autologin_key: ['Centreon'],
+            self.ui.label_autologin_key: ['Centreon'],
             self.ui.input_checkbox_no_cookie_auth: ['IcingaWeb2', 'Sensu'],
             self.ui.input_checkbox_use_display_name_host: ['Icinga', 'IcingaWeb2'],
             self.ui.input_checkbox_use_display_name_service: ['Icinga', 'IcingaWeb2'],
@@ -5613,11 +5755,9 @@ class Dialog_Server(Dialog):
     @pyqtSlot()
     def check_mk_view_services_reset(self):
         self.ui.input_lineedit_check_mk_view_services.setText('nagstamon_svc')
-
-
+        
 
 class Dialog_Action(Dialog):
-
     """
         Dialog used to setup one single action
     """
@@ -5800,14 +5940,13 @@ class Dialog_Action(Dialog):
 
 
 class Dialog_Acknowledge(Dialog):
-
     """
         Dialog for acknowledging host/service problems
     """
 
     # store host and service to be used for OK button evaluation
     server = None
-    host = service = ''
+    host_list = service_list = []
 
     # tell worker to acknowledge some troublesome item
     acknowledge = pyqtSignal(dict)
@@ -5815,27 +5954,33 @@ class Dialog_Acknowledge(Dialog):
     def __init__(self, dialog):
         Dialog.__init__(self, dialog)
 
-    def initialize(self, server=None, host='', service=''):
+    def initialize(self, server=None, host=[], service=[]):
         # store server, host and service to be used for OK button evaluation
         self.server = server
-        self.host = host
-        self.service = service
-
-        # if service is "" it must be a host
-        if service == "":
-            # set label for acknowledging a host
-            self.window.setWindowTitle('Acknowledge host')
-            self.ui.input_label_description.setText('Host <b>%s</b>' % (host))
-        else:
-            # set label for acknowledging a service on host
-            self.window.setWindowTitle('Acknowledge service')
-            self.ui.input_label_description.setText('Service <b>%s</b> on host <b>%s</b>' % (service, host))
+        self.host_list = host
+        self.service_list = service
+        
+        self.window.setWindowTitle('Acknowledge hosts and services')
+        str = ''
+        
+        for i in range(len(self.host_list)):
+            if self.service_list[i] == "":
+                str = str + 'Host <b>%s</b><br>' % (host_list[i])
+            else:
+                str = str + 'Service <b>%s</b> on host <b>%s</b><br>' % (self.service_list[i], self.host_list[i])
+        
+        self.ui.input_label_description.setText(str)
 
         # default flags of monitor acknowledgement
         self.ui.input_checkbox_sticky_acknowledgement.setChecked(conf.defaults_acknowledge_sticky)
         self.ui.input_checkbox_send_notification.setChecked(conf.defaults_acknowledge_send_notification)
         self.ui.input_checkbox_persistent_comment.setChecked(conf.defaults_acknowledge_persistent_comment)
-        self.ui.input_checkbox_acknowledge_all_services.setChecked(conf.defaults_acknowledge_all_services)
+        if len(self.host_list) == 1:
+            self.ui.input_checkbox_acknowledge_all_services.setChecked(conf.defaults_acknowledge_all_services)
+            self.ui.input_checkbox_acknowledge_all_services.show()
+        else:
+            self.ui.input_checkbox_acknowledge_all_services.setChecked(False)
+            self.ui.input_checkbox_acknowledge_all_services.hide()
 
         # default author + comment
         self.ui.input_lineedit_comment.setText(conf.defaults_acknowledge_comment)
@@ -5855,21 +6000,24 @@ class Dialog_Acknowledge(Dialog):
                     if s.host == self.host:
                         all_services.append(s.name)
 
-        # send signal to tablewidget worker to care about acknowledging with supplied information
-        self.acknowledge.emit({'server': self.server,
-                               'host': self.host,
-                               'service': self.service,
-                               'author': self.server.username,
-                               'comment': self.ui.input_lineedit_comment.text(),
-                               'sticky': self.ui.input_checkbox_sticky_acknowledgement.isChecked(),
-                               'notify': self.ui.input_checkbox_send_notification.isChecked(),
-                               'persistent': self.ui.input_checkbox_persistent_comment.isChecked(),
-                               'acknowledge_all_services': acknowledge_all_services,
-                               'all_services': all_services})
+        for line_number in range(len(self.host_list)):
+            service = self.service_list[line_number]
+            host = self.host_list[line_number]
+            
+            # send signal to tablewidget worker to care about acknowledging with supplied information
+            self.acknowledge.emit({'server': self.server,
+                                   'host': host,
+                                   'service': service,
+                                   'author': self.server.username,
+                                   'comment': self.ui.input_lineedit_comment.text(),
+                                   'sticky': self.ui.input_checkbox_sticky_acknowledgement.isChecked(),
+                                   'notify': self.ui.input_checkbox_send_notification.isChecked(),
+                                   'persistent': self.ui.input_checkbox_persistent_comment.isChecked(),
+                                   'acknowledge_all_services': acknowledge_all_services,
+                                   'all_services': all_services})
 
 
 class Dialog_Downtime(Dialog):
-
     """
         Dialog for putting hosts/services into downtime
     """
@@ -5882,27 +6030,28 @@ class Dialog_Downtime(Dialog):
 
     # store host and service to be used for OK button evaluation
     server = None
-    host = service = ''
+    host_list = service_list = []
 
     def __init__(self, dialog):
         Dialog.__init__(self, dialog)
 
-    def initialize(self, server=None, host='', service=''):
+    def initialize(self, server=None, host=[], service=[]):
         # store server, host and service to be used for OK button evaluation
         self.server = server
-        self.host = host
-        self.service = service
-
-        # if service is "" it must be a host
-        if service == "":
-            # set label for acknowledging a host
-            self.window.setWindowTitle('Downtime for host')
-            self.ui.input_label_description.setText('Host <b>%s</b>' % (host))
-        else:
-            # set label for acknowledging a service on host
-            self.window.setWindowTitle('Downtime for service')
-            self.ui.input_label_description.setText('Service <b>%s</b> on host <b>%s</b>' % (service, host))
-
+        self.host_list = host
+        self.service_list = service
+        
+        self.window.setWindowTitle('Downtime for host and service')
+        str = ''
+        
+        for i in range(len(self.host_list)):
+            if self.service_list[i] == "":
+                str = str + 'Host <b>%s</b><br>' % (host_list[i])
+            else:
+                str = str + 'Service <b>%s</b> on host <b>%s</b><br>' % (self.service_list[i], self.host_list[i])
+        
+        self.ui.input_label_description.setText(str)
+        
         # default flags of monitor acknowledgement
         self.ui.input_spinbox_duration_hours.setValue(int(conf.defaults_downtime_duration_hours))
         self.ui.input_spinbox_duration_minutes.setValue(int(conf.defaults_downtime_duration_minutes))
@@ -5929,7 +6078,7 @@ class Dialog_Downtime(Dialog):
 
         if self.server is not None:
             # at first initialization server is still None
-            self.get_start_end.emit(self.server.name, self.host)
+            self.get_start_end.emit(self.server.name, self.host_list[0])
 
     def ok(self):
         """
@@ -5941,16 +6090,20 @@ class Dialog_Downtime(Dialog):
         else:
             fixed = 0
 
-        self.downtime.emit({'server': self.server,
-                            'host': self.host,
-                            'service': self.service,
-                            'author': self.server.username,
-                            'comment': self.ui.input_lineedit_comment.text(),
-                            'fixed': fixed,
-                            'start_time': self.ui.input_lineedit_start_time.text(),
-                            'end_time': self.ui.input_lineedit_end_time.text(),
-                            'hours': int(self.ui.input_spinbox_duration_hours.value()),
-                            'minutes': int(self.ui.input_spinbox_duration_minutes.value())})
+        for line_number in range(len(self.host_list)):
+            service = self.service_list[line_number]
+            host = self.host_list[line_number]
+            
+            self.downtime.emit({'server': self.server,
+                               'host': host,
+                               'service': service,
+                               'author': self.server.username,
+                               'comment': self.ui.input_lineedit_comment.text(),
+                               'fixed': fixed,
+                               'start_time': self.ui.input_lineedit_start_time.text(),
+                               'end_time': self.ui.input_lineedit_end_time.text(),
+                               'hours': int(self.ui.input_spinbox_duration_hours.value()),
+                               'minutes': int(self.ui.input_spinbox_duration_minutes.value())})
 
     pyqtSlot(str, str)
 
@@ -5997,7 +6150,6 @@ class Dialog_Downtime(Dialog):
 
 
 class Dialog_Submit(Dialog):
-
     """
         Dialog for submitting arbitrarily chosen results
     """
@@ -6075,7 +6227,6 @@ class Dialog_Submit(Dialog):
 
 
 class Dialog_Authentication(Dialog):
-
     """
         Dialog for authentication
     """
@@ -6194,7 +6345,6 @@ class Dialog_Authentication(Dialog):
 
 
 class Dialog_Server_missing(Dialog):
-
     """
         small dialog to ask about disabled ot not configured servers
     """
@@ -6228,7 +6378,6 @@ class Dialog_Server_missing(Dialog):
 
 
 class Dialog_About(Dialog):
-
     """
         About information dialog
     """
@@ -6269,7 +6418,6 @@ class Dialog_About(Dialog):
 
 
 class MediaPlayer(QObject):
-
     """
         play media files for notification
     """
@@ -6311,7 +6459,6 @@ class MediaPlayer(QObject):
 
 
 class CheckVersion(QObject):
-
     """
         checking for updates
     """
@@ -6451,7 +6598,6 @@ class CheckVersion(QObject):
 
 
 class DBus(QObject):
-
     """
         Create connection to DBus for desktop notification for Linux/Unix
     """
@@ -6676,9 +6822,9 @@ menu = MenuContext()
 # necessary extra menu due to Qt5-Unity-integration
 if not OS in NON_LINUX:
     menu_systray = MenuContextSystrayicon()
-# menu has to be set here to solve Qt-5.10-Windows-systray-mess
-# and non-existence of macOS-systray-context-menu
-elif conf.icon_in_systray:
+
+# Menu has to be set here to solve Qt-5.10-Windows-systray-mess
+if OS == 'Windows' and conf.icon_in_systray:
     systrayicon.set_menu(menu)
 
 # versatile mediaplayer
