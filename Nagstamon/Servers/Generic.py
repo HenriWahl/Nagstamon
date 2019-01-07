@@ -1395,7 +1395,7 @@ class GenericServer(object):
                     self.proxify(temporary_session)
 
                     # no need to check TLS validity for temporary sessions like update check
-                    temporary_session.verify = False
+                    ###temporary_session.verify = False
 
                     # most requests come without multipart/form-data
                     if multipart is False:
