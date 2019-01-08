@@ -1,9 +1,3 @@
-nagstamon (3.2.2) stable; urgency=low
-  * New upstream
-    - enable verification od TLS certificate when checking for new version
-
--- Henri Wahl <h.wahl@ifw-dresden.de> Mon, 7 Jan 2019 15:00:00 +0100
-
 nagstamon (3.2.1) stable; urgency=low
   * New upstream
     - fixed macOS system tray icon crash
