@@ -1,7 +1,7 @@
 # encoding: utf-8
 
 # Nagstamon - Nagios status monitor for your desktop
-# Copyright (C) 2008-2016 Henri Wahl <h.wahl@ifw-dresden.de> et al.
+# Copyright (C) 2008-2019 Henri Wahl <h.wahl@ifw-dresden.de> et al.
 #
 # This program is free software; you can redistribute it and/or modify
 # it under the terms of the GNU General Public License as published by
@@ -38,6 +38,7 @@ from Nagstamon.Servers.Zabbix import ZabbixServer
 from Nagstamon.Servers.Livestatus import LivestatusServer
 from Nagstamon.Servers.Zenoss import ZenossServer
 from Nagstamon.Servers.Monitos3 import Monitos3Server
+from Nagstamon.Servers.Monitos4x import Monitos4xServer
 from Nagstamon.Servers.SnagView3 import SnagViewServer
 from Nagstamon.Servers.Sensu import SensuServer
 
@@ -195,7 +196,7 @@ def create_server(server=None):
 # moved registration process here because of circular dependencies
 for server in (CentreonServer, IcingaServer, IcingaWeb2Server, MultisiteServer, NagiosServer,
                Op5MonitorServer, OpsviewServer, ThrukServer, ZabbixServer, SensuServer,
-               LivestatusServer, ZenossServer, Monitos3Server, SnagViewServer):
+               LivestatusServer, ZenossServer, Monitos3Server, Monitos4xServer, SnagViewServer):
     register_server(server)
 
 # create servers

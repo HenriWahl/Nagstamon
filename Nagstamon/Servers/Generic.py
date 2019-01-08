@@ -1,7 +1,7 @@
 # encoding: utf-8
 
 # Nagstamon - Nagios status monitor for your desktop
-# Copyright (C) 2008-2016 Henri Wahl <h.wahl@ifw-dresden.de> et al.
+# Copyright (C) 2008-2019 Henri Wahl <h.wahl@ifw-dresden.de> et al.
 #
 # This program is free software; you can redistribute it and/or modify
 # it under the terms of the GNU General Public License as published by
@@ -1395,7 +1395,7 @@ class GenericServer(object):
                     self.proxify(temporary_session)
 
                     # no need to check TLS validity for temporary sessions like update check
-                    temporary_session.verify = False
+                    ###temporary_session.verify = False
 
                     # most requests come without multipart/form-data
                     if multipart is False:

@@ -1,13 +1,27 @@
-nagstamon (3.1.99rc2) stable; urgency=low
+nagstamon (3.3-20190107) unstable; urgency=low
+  * New upstream
+    - enable verification od TLS certificate when checking for new version
+
+-- Henri Wahl <h.wahl@ifw-dresden.de> Mon, 7 Jan 2019 15:00:00 +0100
+
+nagstamon (3.2.1) stable; urgency=low
+  * New upstream
+    - fixed macOS system tray icon crash
+
+-- Henri Wahl <h.wahl@ifw-dresden.de> Mon, 7 Jan 2019 10:00:00 +0100
+
+nagstamon (3.2) stable; urgency=low
   * New upstream
     - new Zabbix backend
     - added Sensu/Uchiwa changes
     - fixed Opsview/Nagios duration counter
+    - fixed Centreon new versions
     - fixed non-closing floating statusbar
     - fixed certain custom notification action bugs
     - fixed certain keyring bugs
+    - fixed macOS Retina support
 
--- Henri Wahl <h.wahl@ifw-dresden.de> Thu, 29 Nov 2018 12:00:00 +0200
+-- Henri Wahl <h.wahl@ifw-dresden.de> Wed, 19 Dec 2018 22:00:00 +0100
 
 nagstamon (3.0.1) stable; urgency=low
   * New upstream
