@@ -3475,7 +3475,7 @@ class TreeView(QTreeView):
                 self.action_menu.addAction(action_downtime)
 
             # special menu entry for Check_MK for archiving events
-            if self.server.type == 'Check_MK Multisite':
+            if self.server.type == 'Check_MK Multisite' and len(list_rows) == 1:
                 if self.miserable_service == 'Events':
                     action_archive_event = QAction('Archive event', self)
                     action_archive_event.triggered.connect(self.action_archive_event)
