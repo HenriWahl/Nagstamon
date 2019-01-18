@@ -266,7 +266,11 @@ class Monitos4xServer(GenericServer):
                         else:
                             self.new_hosts[host_name].acknowledged = int(h['status']['acknowleged'])
 
-                        self.new_hosts[host_name].scheduled_downtime = int(h['status']['scheduledDowntimeDepth'])
+                        try:
+                            if int(h['status']['scheduledDowntimeDepth']) != 0:
+                                self.new_hosts[host_name].scheduled_downtime = True
+                        except:
+                            self.new_hosts[host_name].scheduled_downtime = False
 
                         try:
                             self.new_hosts[host_name].status_type = 'soft' if int(h['status']['stateType']) == 0 else 'hard'
