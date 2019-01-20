@@ -36,6 +36,7 @@ import sys
 import copy
 import json
 import datetime
+import socket
 
 from bs4 import BeautifulSoup
 from Nagstamon.Objects import (GenericHost,
@@ -516,3 +517,55 @@ class IcingaWeb2Server(GenericServer):
             self.Debug(server=self.get_name(), host=host, service=service,
                        debug='Open host/service monitor web page {0}'.format(url))
         webbrowser_open(url)
+
+    def GetHost(self, host):
+        '''
+            find out ip or hostname of given host to access hosts/devices which do not appear in DNS but
+            have their ip saved in Icinga
+        '''
+        # Host is the display name as in the GUI
+        # but we need the FQDN not the display name
+        host = self.hosts[host].real_name
+
+        # the fasted method is taking hostname as used in monitor
+        if conf.connect_by_host is True or host == '':
+            return Result(result=host)
+
+        # initialize ip string
+        ip = ''
+        address = ''
+
+        # glue nagios cgi url and hostinfo
+        cgiurl_host = self.monitor_cgi_url + '/monitoring/list/hosts?host={0}&addColumns=host_address&format=json'.format(host)
+
+        # get host info
+        hostobj = self.FetchURL(cgiurl_host, giveback='raw')
+        jsonhost = hostobj.result
+
+        try:
+            # take ip from json output
+            result = json.loads(jsonhost)[0]
+            ip = result["host_address"]
+
+            # print IP in debug mode
+            if conf.debug_mode is True:
+                self.Debug(server=self.get_name(), host=host, debug='IP of %s:' % (host) + ' ' + ip)
+
+            # when connection by DNS is not configured do it by IP
+            if conf.connect_by_dns is True:
+                # try to get DNS name for ip, if not available use ip
+                try:
+                    address = socket.gethostbyaddr(ip)[0]
+                except socket.error:
+                    address = ip
+            else:
+                address = ip
+        except Exception:
+            result, error = self.Error(sys.exc_info())
+            return Result(result=result, error=error)
+
+        # do some cleanup
+        del hostobj
+
+        # give back host or ip
+        return Result(result=address)
