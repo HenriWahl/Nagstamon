@@ -1200,38 +1200,22 @@ class StatusWindow(QWidget):
                 available_y = desktop.availableGeometry(self).y()
                 self.move(available_x, available_y)
 
-            # proud winner of the-dirty-workaround-of-the-year-award
-            # stay on top flag seems to have a problem on Windows if some other window
-            # gets in a race condition race the focus or is topmost instead of Nagstamon
-            # so the floating statusbar moves silently into a quiet corner of the desktop
-            # and raises itself serveral times to be the topmost to make the flags stick
-            if OS == 'Windows does not seem to need this workaround anymore':
-                self.move(-32768, -32768)
-                # just a guess - 10 times seem to be enough
-                for counter in range(100):
-                    self.setWindowFlags(Qt.FramelessWindowHint)
-                    self.show()
-                    self.setWindowFlags(WINDOW_FLAGS)
-                    self.hide()
-                    self.show()
-                    self.raise_()
-            else:
-                # statusbar and detail window should be frameless and stay on top
-                # tool flag helps to be invisible in taskbar
-                self.setWindowFlags(WINDOW_FLAGS)
+            # statusbar and detail window should be frameless and stay on top
+            # tool flag helps to be invisible in taskbar
+            self.setWindowFlags(WINDOW_FLAGS)
 
-                # show statusbar without being active, just floating
-                self.setAttribute(Qt.WA_ShowWithoutActivating)
+            # show statusbar without being active, just floating
+            self.setAttribute(Qt.WA_ShowWithoutActivating)
 
-                # necessary to be shown before Linux EWMH-mantra can be applied
-                self.show()
+            # necessary to be shown before Linux EWMH-mantra can be applied
+            self.show()
 
-                # X11/Linux needs some special treatment to get the statusbar floating on all virtual desktops
-                if not OS in NON_LINUX:
-                    # get all windows...
-                    winid = self.winId().__int__()
-                    self.ewmh.setWmDesktop(winid, 0xffffffff)
-                    self.ewmh.display.flush()
+            # X11/Linux needs some special treatment to get the statusbar floating on all virtual desktops
+            if not OS in NON_LINUX:
+                # get all windows...
+                winid = self.winId().__int__()
+                self.ewmh.setWmDesktop(winid, 0xffffffff)
+                self.ewmh.display.flush()
 
             # show statusbar/statuswindow on last saved position
             # when coordinates are inside known screens
@@ -3321,15 +3305,27 @@ class TreeView(QTreeView):
         """
             forward clicked cell info from event
         """
-        if conf.close_details_clicking_somewhere and event.button() == Qt.LeftButton:
-            statuswindow.hide_window()
+        # special treatment if window should be closed when left-clicking somewhere
+        # it is important to check if CTRL or SHIFT key is presses while clicking to select lines
+        if conf.close_details_clicking_somewhere:
+            if event.button() == Qt.LeftButton:
+                modifiers = event.modifiers()
+                if modifiers == Qt.ControlModifier or \
+                   modifiers == Qt.ShiftModifier or \
+                   modifiers == (Qt.ControlModifier | Qt.ShiftModifier):
+                    pass
+                else:
+                    statuswindow.hide_window()
+                del modifiers
+            elif event.button() == Qt.RightButton:
+                index = self.indexAt(QPoint(event.x(), event.y()))
+                self.cell_clicked(index)
             return
-        
-        if not conf.close_details_clicking_somewhere and event.button() == Qt.RightButton:
-            index = self.indexAt(QPoint(event.x(), event.y()))
-            self.cell_clicked(index)
-            #self.cell_clicked()
-            return
+        else:
+            if event.button() == Qt.RightButton or event.button() == Qt.LeftButton:
+                index = self.indexAt(QPoint(event.x(), event.y()))
+                self.cell_clicked(index)
+                return
         super(TreeView, self).mouseReleaseEvent(event)
 
     def wheelEvent(self, event):
