@@ -118,11 +118,11 @@ COLORS = OrderedDict([('DOWN', 'color_down_'),
                       ('UNREACHABLE', 'color_unreachable_'),
                       ('DISASTER', 'color_disaster_'),
                       ('CRITICAL', 'color_critical_'),
-                      ('UNKNOWN', 'color_unknown_'),
                       ('HIGH', 'color_high_'),
                       ('AVERAGE', 'color_average_'),
                       ('WARNING', 'color_warning_'),
-                      ('INFORMATION', 'color_information_')])
+                      ('INFORMATION', 'color_information_'),
+                      ('UNKNOWN', 'color_unknown_')])
 
 # states to be used in statusbar if long version is used
 COLOR_STATE_NAMES = {'DOWN': {True: 'DOWN', False: ''},
@@ -3325,7 +3325,7 @@ class TreeView(QTreeView):
             statuswindow.hide_window()
             return
         
-        if conf.close_details_clicking_somewhere == False and event.button() == Qt.RightButton:
+        if not conf.close_details_clicking_somewhere and event.button() == Qt.RightButton:
             index = self.indexAt(QPoint(event.x(), event.y()))
             self.cell_clicked(index)
             #self.cell_clicked()
@@ -3358,8 +3358,6 @@ class TreeView(QTreeView):
         if self.action_menu.available or OS != 'Windows':
             # set flag for Windows
             self.action_menu.available = False
-
-
 
             # empty the menu
             self.action_menu.clear()
