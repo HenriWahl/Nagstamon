@@ -1350,7 +1350,6 @@ class StatusWindow(QWidget):
             # tell statusbar to summarize after table was refreshed
             server_vbox.table.worker.new_status.connect(self.statusbar.summarize_states)
             server_vbox.table.worker.new_status.connect(self.raise_window_on_all_desktops)
-            # server_vbox.table.worker.new_status.connect(systrayicon.show_state)
 
             # if problems go themselves there is no need to notify user anymore
             server_vbox.table.worker.problems_vanished.connect(self.worker_notification.stop)
@@ -1358,10 +1357,6 @@ class StatusWindow(QWidget):
             # show error message in statusbar
             server_vbox.table.worker.show_error.connect(self.statusbar.set_error)
             server_vbox.table.worker.hide_error.connect(self.statusbar.reset_error)
-
-            # # show error icon in systray
-            # server_vbox.table.worker.show_error.connect(systrayicon.set_error)
-            # server_vbox.table.worker.hide_error.connect(systrayicon.reset_error)
 
             # tell notification worker to do something AFTER the table was updated
             server_vbox.table.status_changed.connect(self.worker_notification.start)
@@ -1608,7 +1603,7 @@ class StatusWindow(QWidget):
         """
             redraw window content, to be effective only when window is shown
         """
-        if self.is_shown or conf.fullscreen or ( conf.windowed and self.is_shown):
+        if self.is_shown or conf.fullscreen or (conf.windowed and self.is_shown):
             self.show_window()
 
     @pyqtSlot()
@@ -3790,9 +3785,6 @@ class TreeView(QTreeView):
                     self.is_shown = True
                 else:
                     self.is_shown = False
-                # pre-calculate dimensions
-                # height = self.get_real_height()  # never been used
-
                 # tell statusbar it should update
                 self.refreshed.emit()
 
@@ -3855,14 +3847,6 @@ class TreeView(QTreeView):
 
         # flag to keep recheck_all from being started more than once
         rechecking_all = False
-
-        # signals to show/hide reauthentication
-        ###button_authenticate_show = pyqtSignal()
-        ###button_authenticate_hide = pyqtSignal()
-
-        # show button to ignore invalid certificate in server vbox
-        ###button_fix_tls_error_show = pyqtSignal()
-        ###button_fix_tls_error_hide = pyqtSignal()
 
         # signals to control error message in statusbar
         show_error = pyqtSignal(str)
@@ -3965,18 +3949,6 @@ class TreeView(QTreeView):
 
                 # stuff data into array and sort it
                 self.fill_data_array(self.sort_column, self.sort_order)
-
-                # depending on authentication state show reauthentication button
-                #if self.server.refresh_authentication:
-                #    self.button_authenticate_show.emit()
-                #else:
-                #    self.button_authenticate_hide.emit()
-
-                # special treatment for ignore-invalid-certificate button
-                #if self.server.tls_error:
-                #    self.button_fix_tls_error_show.emit()
-                #else:
-                #    self.button_fix_tls_error_hide.emit()
 
                 # tell news about new status available
                 self.new_status.emit()
