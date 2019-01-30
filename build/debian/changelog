@@ -1,4 +1,4 @@
-nagstamon (3.3-20190120) unstable; urgency=low
+nagstamon (3.3-20190130) unstable; urgency=low
   * New upstream
     - enable verification of TLS certificate when checking for new version
 
