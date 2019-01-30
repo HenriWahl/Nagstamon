@@ -2966,7 +2966,7 @@ class Model(QAbstractTableModel):
         Model for storing status data to be presented in Treeview-table
     """
 
-    data_array_filled = pyqtSignal()
+    model_data_array_filled = pyqtSignal()
 
     # list of lists for storage of status data
     data_array = list()
@@ -3015,7 +3015,6 @@ class Model(QAbstractTableModel):
         """
             fill data_array for model
         """
-
         # tell treeview that model is about to change - necessary because
         # otherwise new number of rows would not be applied
         self.beginResetModel()
@@ -3033,7 +3032,7 @@ class Model(QAbstractTableModel):
         self.hosts_flags_column_needed.emit(info['hosts_flags_column_needed'])
         self.services_flags_column_needed.emit(info['services_flags_column_needed'])
 
-        self.data_array_filled.emit()
+        self.model_data_array_filled.emit()
 
         # new model applied
         self.endResetModel()
@@ -3180,7 +3179,7 @@ class TreeView(QTreeView):
 
         self.treeview_model = Model(server=self.server, parent=self)
         self.setModel(self.treeview_model)
-        self.model().data_array_filled.connect(self.adjust_table)
+        self.model().model_data_array_filled.connect(self.adjust_table)
         self.model().hosts_flags_column_needed.connect(self.show_hosts_flags_column)
         self.model().services_flags_column_needed.connect(self.show_services_flags_column)
 
@@ -3192,7 +3191,7 @@ class TreeView(QTreeView):
 
         # if worker got new status data from monitor server get_status
         # the treeview model has to be updated
-        self.worker.data_array_filled.connect(self.model().fill_data_array)
+        self.worker.worker_data_array_filled.connect(self.model().fill_data_array)
 
         # fill array again if data has been sorted after a header column click
         self.worker.data_array_sorted.connect(self.model().fill_data_array)
@@ -3853,7 +3852,7 @@ class TreeView(QTreeView):
         hide_error = pyqtSignal()
 
         # sent to treeview with new data_array
-        data_array_filled = pyqtSignal(list, dict)
+        worker_data_array_filled = pyqtSignal(list, dict)
 
         # sendt to treeview if data has been sorted by click on column header
         data_array_sorted = pyqtSignal(list, dict)
@@ -3882,76 +3881,77 @@ class TreeView(QTreeView):
             """
             # if counter is at least update interval get status
             if self.server.thread_counter >= conf.update_interval_seconds:
+                # only if no multiple selection is done at the moment
+                if not is_modifier_pressed():
+                    # reflect status retrieval attempt on server vbox label
+                    self.change_label_status.emit('Refreshing...', '')
 
-                # reflect status retrieval attempt on server vbox label
-                self.change_label_status.emit('Refreshing...', '')
-
-                # get status from server instance if connection was already possible and no TLS error
-                if not self.server.tls_error:
-                    status = self.server.GetStatus()
-                else:
-                    # dummy status result
-                    status = Result()
-
-                # all is OK if no error info came back
-                if self.server.status_description == '' and\
-                   self.server.status_code < 400 and\
-                   not self.server.refresh_authentication and\
-                   not self.server.tls_error:
-                    # show last update time
-                    self.change_label_status.emit('Last updated at {0}'.format(datetime.datetime.now().strftime('%X')), '')
-
-                    # reset server error flag, needed for error label in statusbar
-                    self.server.has_error = False
-
-                    # tell statusbar there is no error
-                    self.hide_error.emit()
-                else:
-                    # try to display some more user friendly error description
-                    if self.server.status_code == 404:
-                        self.change_label_status.emit('Monitor URL not valid', 'critical')
-                    elif status.error.startswith('requests.exceptions.ConnectTimeout'):
-                        self.change_label_status.emit('Connection timeout', 'error')
-                    elif status.error.startswith('requests.exceptions.ConnectionError'):
-                        self.change_label_status.emit('Connection error', 'error')
-                    elif status.error.startswith('requests.exceptions.ReadTimeout'):
-                        self.change_label_status.emit('Connection timeout', 'error')
-                    elif self.server.tls_error:
-                        self.change_label_status.emit('SSL/TLS problem', 'critical')
-                    elif self.server.status_code in self.server.STATUS_CODES_NO_AUTH or\
-                            self.server.refresh_authentication:
-                        self.change_label_status.emit('Authentication problem', 'critical')
-                    elif self.server.status_code == 503:
-                        self.change_label_status.emit('Service unavailable', 'error')
+                    # get status from server instance if connection was already possible and no TLS error
+                    if not self.server.tls_error:
+                        status = self.server.GetStatus()
                     else:
-                        # kick out line breaks to avoid broken status window
-                        if self.server.status_description == '':
-                            self.server.status_description = 'Unknown error'
-                        self.change_label_status.emit(self.server.status_description.replace('\n', ''), 'error')
+                        # dummy status result
+                        status = Result()
 
-                    # set server error flag, needed for error label in statusbar
-                    self.server.has_error = True
+                    # all is OK if no error info came back
+                    if self.server.status_description == '' and\
+                       self.server.status_code < 400 and\
+                       not self.server.refresh_authentication and\
+                       not self.server.tls_error:
+                        # show last update time
+                        self.change_label_status.emit('Last updated at {0}'.format(datetime.datetime.now().strftime('%X')), '')
 
-                    # tell statusbar there is some error to display
-                    self.show_error.emit('ERROR')
+                        # reset server error flag, needed for error label in statusbar
+                        self.server.has_error = False
 
-                # reset counter for this thread
-                self.server.thread_counter = 0
+                        # tell statusbar there is no error
+                        self.hide_error.emit()
+                    else:
+                        # try to display some more user friendly error description
+                        if self.server.status_code == 404:
+                            self.change_label_status.emit('Monitor URL not valid', 'critical')
+                        elif status.error.startswith('requests.exceptions.ConnectTimeout'):
+                            self.change_label_status.emit('Connection timeout', 'error')
+                        elif status.error.startswith('requests.exceptions.ConnectionError'):
+                            self.change_label_status.emit('Connection error', 'error')
+                        elif status.error.startswith('requests.exceptions.ReadTimeout'):
+                            self.change_label_status.emit('Connection timeout', 'error')
+                        elif self.server.tls_error:
+                            self.change_label_status.emit('SSL/TLS problem', 'critical')
+                        elif self.server.status_code in self.server.STATUS_CODES_NO_AUTH or\
+                                self.server.refresh_authentication:
+                            self.change_label_status.emit('Authentication problem', 'critical')
+                        elif self.server.status_code == 503:
+                            self.change_label_status.emit('Service unavailable', 'error')
+                        else:
+                            # kick out line breaks to avoid broken status window
+                            if self.server.status_description == '':
+                                self.server.status_description = 'Unknown error'
+                            self.change_label_status.emit(self.server.status_description.replace('\n', ''), 'error')
 
-                # if failures have gone and nobody took notice switch notification off again
-                if len([k for k, v in self.server.events_history.items() if v
-                    is True]) == 0 and\
-                        statuswindow and \
-                        statuswindow.worker_notification.is_notifying is True and\
-                        statuswindow.worker_notification.notifying_server == self.server.name:
-                    # tell notification that unnoticed problems are gone
-                    self.problems_vanished.emit()
+                        # set server error flag, needed for error label in statusbar
+                        self.server.has_error = True
 
-                # stuff data into array and sort it
-                self.fill_data_array(self.sort_column, self.sort_order)
+                        # tell statusbar there is some error to display
+                        self.show_error.emit('ERROR')
 
-                # tell news about new status available
-                self.new_status.emit()
+                    # reset counter for this thread
+                    self.server.thread_counter = 0
+
+                    # if failures have gone and nobody took notice switch notification off again
+                    if len([k for k, v in self.server.events_history.items() if v
+                        is True]) == 0 and\
+                            statuswindow and \
+                            statuswindow.worker_notification.is_notifying is True and\
+                            statuswindow.worker_notification.notifying_server == self.server.name:
+                        # tell notification that unnoticed problems are gone
+                        self.problems_vanished.emit()
+
+                    # stuff data into array and sort it
+                    self.fill_data_array(self.sort_column, self.sort_order)
+
+                    # tell news about new status available
+                    self.new_status.emit()
 
             # increase thread counter
             self.server.thread_counter += 1
@@ -3959,7 +3959,6 @@ class TreeView(QTreeView):
             # if running flag is still set call myself after 1 second
             if self.running is True:
                 self.timer.singleShot(1000, self.get_status)
-                pass
             else:
                 # tell treeview to finish worker_thread
                 self.finish.emit()
@@ -4019,8 +4018,10 @@ class TreeView(QTreeView):
             # sort data before it gets transmitted to treeview model
             self.sort_data_array(self.sort_column, self.sort_order, False)
 
+
+
             # give sorted data to model
-            self.data_array_filled.emit(self.data_array, self.info)
+            self.worker_data_array_filled.emit(self.data_array, self.info)
 
         @pyqtSlot(int, int, bool)
         def sort_data_array(self, sort_column, sort_order, header_clicked=False):
@@ -6752,10 +6753,19 @@ def check_servers():
         dialogs.server_missing.show()
         dialogs.server_missing.initialize('no_server_enabled')
 
-# if OS == 'Darwin':
-#    Button = QPushButton
-# else:
-#    Button = FlatButton
+
+def is_modifier_pressed():
+    """
+        check if (left) CTRL or Shift keys are pressed
+    """
+    modifiers = APP.keyboardModifiers()
+    if modifiers == Qt.ControlModifier or \
+       modifiers == Qt.ShiftModifier or \
+       modifiers == (Qt.ControlModifier | Qt.ShiftModifier):
+        del modifiers
+        return True
+    del modifiers
+    return False
 
 # check for updates
 check_version = CheckVersion()
