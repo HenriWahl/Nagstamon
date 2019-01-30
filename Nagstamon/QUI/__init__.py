@@ -290,9 +290,6 @@ class SystemTrayIcon(QSystemTrayIcon):
         For some dark, very dark reason systray menu does NOT work in
         Windows if run on commandline as nagstamon.py - the binary .exe works
     """
-
-    # show_menu = pyqtSignal()
-
     show_popwin = pyqtSignal()
     hide_popwin = pyqtSignal()
 
@@ -482,6 +479,8 @@ class MenuAtCursor(QMenu):
     # flag to avoid too fast popping up menus
     available = True
 
+    is_shown = pyqtSignal(bool)
+
     def __init__(self, parent=None):
         QMenu.__init__(self, parent=parent)
 
@@ -493,7 +492,12 @@ class MenuAtCursor(QMenu):
         # get cursor coordinates and decrease them to show menu under mouse pointer
         x = QCursor.pos().x() - 10
         y = QCursor.pos().y() - 10
-        self.exec_(QPoint(x, y))  # noqa
+        # tell the world that the menu will be shown
+        self.is_shown.emit(True)
+        # show menu
+        self.exec_(QPoint(x, y))
+        # tell world that menu will be closed
+        self.is_shown.emit(False)
         del(x, y)
 
 
@@ -3205,6 +3209,9 @@ class TreeView(QTreeView):
         # quit thread if worker has finished
         self.worker.finish.connect(self.finish_worker_thread)
 
+        # receive information if action menu is shown
+        self.action_menu.is_shown.connect(self.worker.track_action_menu)
+
         # get status if started
         self.worker_thread.started.connect(self.worker.get_status)
         # start with priority 0 = lowest
@@ -3792,6 +3799,7 @@ class TreeView(QTreeView):
                 if self.server.get_events_history_count() > 0:
                     self.status_changed.emit(self.server.name, self.server.worst_status_diff)
 
+
     @pyqtSlot(int, Qt.SortOrder)
     def sort_columns(self, sort_column, sort_order):
         """
@@ -3800,6 +3808,7 @@ class TreeView(QTreeView):
         # better int() the Qt.* values because they partly seem to be
         # intransmissible
         self.sort_data_array_for_columns.emit(int(sort_column), int(sort_order), True)
+
 
     @pyqtSlot()
     def finish_worker_thread(self):
@@ -3863,6 +3872,10 @@ class TreeView(QTreeView):
         last_sort_column_real = 0
         last_sort_order = 0
 
+        # keep track of action menu being shown or not to avoid refresh while selecting multiple items
+        action_menu_shown = False
+
+
         def __init__(self, parent=None, server=None, sort_column=0, sort_order=0):
             QObject.__init__(self)
             self.server = server
@@ -3873,6 +3886,7 @@ class TreeView(QTreeView):
             self.sort_column = sort_column
             self.sort_order = sort_order
 
+
         @pyqtSlot()
         def get_status(self):
             """
@@ -3881,8 +3895,8 @@ class TreeView(QTreeView):
             """
             # if counter is at least update interval get status
             if self.server.thread_counter >= conf.update_interval_seconds:
-                # only if no multiple selection is done at the moment
-                if not is_modifier_pressed():
+                # only if no multiple selection is done at the moment and no context action menu is open
+                if not is_modifier_pressed() and not self.action_menu_shown:
                     # reflect status retrieval attempt on server vbox label
                     self.change_label_status.emit('Refreshing...', '')
 
@@ -3962,6 +3976,7 @@ class TreeView(QTreeView):
             else:
                 # tell treeview to finish worker_thread
                 self.finish.emit()
+
 
         @pyqtSlot(int, int)
         def fill_data_array(self, sort_column, sort_order):
@@ -4260,6 +4275,7 @@ class TreeView(QTreeView):
             except Exception:
                 traceback.print_exc(file=sys.stdout)
 
+
         def _URLify(self, string):
             """
                 return a string that fulfills requirements for URLs
@@ -4267,11 +4283,18 @@ class TreeView(QTreeView):
             """
             return urllib.parse.quote(string, ":/=?&@+")
 
+
         @pyqtSlot()
         def unfresh_event_history(self):
             # set all flagged-as-fresh-events to un-fresh
             for event in self.server.events_history.keys():
                 self.server.events_history[event] = False
+
+
+        @pyqtSlot(bool)
+        def track_action_menu(self, action_menu_shown):
+            self.action_menu_shown = action_menu_shown
+
 
 
 class Dialogs(object):
