@@ -118,11 +118,11 @@ COLORS = OrderedDict([('DOWN', 'color_down_'),
                       ('UNREACHABLE', 'color_unreachable_'),
                       ('DISASTER', 'color_disaster_'),
                       ('CRITICAL', 'color_critical_'),
-                      ('UNKNOWN', 'color_unknown_'),
                       ('HIGH', 'color_high_'),
                       ('AVERAGE', 'color_average_'),
                       ('WARNING', 'color_warning_'),
-                      ('INFORMATION', 'color_information_')])
+                      ('INFORMATION', 'color_information_'),
+                      ('UNKNOWN', 'color_unknown_')])
 
 # states to be used in statusbar if long version is used
 COLOR_STATE_NAMES = {'DOWN': {True: 'DOWN', False: ''},
@@ -290,9 +290,6 @@ class SystemTrayIcon(QSystemTrayIcon):
         For some dark, very dark reason systray menu does NOT work in
         Windows if run on commandline as nagstamon.py - the binary .exe works
     """
-
-    # show_menu = pyqtSignal()
-
     show_popwin = pyqtSignal()
     hide_popwin = pyqtSignal()
 
@@ -482,6 +479,8 @@ class MenuAtCursor(QMenu):
     # flag to avoid too fast popping up menus
     available = True
 
+    is_shown = pyqtSignal(bool)
+
     def __init__(self, parent=None):
         QMenu.__init__(self, parent=parent)
 
@@ -493,7 +492,12 @@ class MenuAtCursor(QMenu):
         # get cursor coordinates and decrease them to show menu under mouse pointer
         x = QCursor.pos().x() - 10
         y = QCursor.pos().y() - 10
-        self.exec_(QPoint(x, y))  # noqa
+        # tell the world that the menu will be shown
+        self.is_shown.emit(True)
+        # show menu
+        self.exec_(QPoint(x, y))
+        # tell world that menu will be closed
+        self.is_shown.emit(False)
         del(x, y)
 
 
@@ -1200,38 +1204,22 @@ class StatusWindow(QWidget):
                 available_y = desktop.availableGeometry(self).y()
                 self.move(available_x, available_y)
 
-            # proud winner of the-dirty-workaround-of-the-year-award
-            # stay on top flag seems to have a problem on Windows if some other window
-            # gets in a race condition race the focus or is topmost instead of Nagstamon
-            # so the floating statusbar moves silently into a quiet corner of the desktop
-            # and raises itself serveral times to be the topmost to make the flags stick
-            if OS == 'Windows does not seem to need this workaround anymore':
-                self.move(-32768, -32768)
-                # just a guess - 10 times seem to be enough
-                for counter in range(100):
-                    self.setWindowFlags(Qt.FramelessWindowHint)
-                    self.show()
-                    self.setWindowFlags(WINDOW_FLAGS)
-                    self.hide()
-                    self.show()
-                    self.raise_()
-            else:
-                # statusbar and detail window should be frameless and stay on top
-                # tool flag helps to be invisible in taskbar
-                self.setWindowFlags(WINDOW_FLAGS)
+            # statusbar and detail window should be frameless and stay on top
+            # tool flag helps to be invisible in taskbar
+            self.setWindowFlags(WINDOW_FLAGS)
 
-                # show statusbar without being active, just floating
-                self.setAttribute(Qt.WA_ShowWithoutActivating)
+            # show statusbar without being active, just floating
+            self.setAttribute(Qt.WA_ShowWithoutActivating)
 
-                # necessary to be shown before Linux EWMH-mantra can be applied
-                self.show()
+            # necessary to be shown before Linux EWMH-mantra can be applied
+            self.show()
 
-                # X11/Linux needs some special treatment to get the statusbar floating on all virtual desktops
-                if not OS in NON_LINUX:
-                    # get all windows...
-                    winid = self.winId().__int__()
-                    self.ewmh.setWmDesktop(winid, 0xffffffff)
-                    self.ewmh.display.flush()
+            # X11/Linux needs some special treatment to get the statusbar floating on all virtual desktops
+            if not OS in NON_LINUX:
+                # get all windows...
+                winid = self.winId().__int__()
+                self.ewmh.setWmDesktop(winid, 0xffffffff)
+                self.ewmh.display.flush()
 
             # show statusbar/statuswindow on last saved position
             # when coordinates are inside known screens
@@ -1366,7 +1354,6 @@ class StatusWindow(QWidget):
             # tell statusbar to summarize after table was refreshed
             server_vbox.table.worker.new_status.connect(self.statusbar.summarize_states)
             server_vbox.table.worker.new_status.connect(self.raise_window_on_all_desktops)
-            # server_vbox.table.worker.new_status.connect(systrayicon.show_state)
 
             # if problems go themselves there is no need to notify user anymore
             server_vbox.table.worker.problems_vanished.connect(self.worker_notification.stop)
@@ -1374,10 +1361,6 @@ class StatusWindow(QWidget):
             # show error message in statusbar
             server_vbox.table.worker.show_error.connect(self.statusbar.set_error)
             server_vbox.table.worker.hide_error.connect(self.statusbar.reset_error)
-
-            # # show error icon in systray
-            # server_vbox.table.worker.show_error.connect(systrayicon.set_error)
-            # server_vbox.table.worker.hide_error.connect(systrayicon.reset_error)
 
             # tell notification worker to do something AFTER the table was updated
             server_vbox.table.status_changed.connect(self.worker_notification.start)
@@ -1624,7 +1607,7 @@ class StatusWindow(QWidget):
         """
             redraw window content, to be effective only when window is shown
         """
-        if self.is_shown or conf.fullscreen or ( conf.windowed and self.is_shown):
+        if self.is_shown or conf.fullscreen or (conf.windowed and self.is_shown):
             self.show_window()
 
     @pyqtSlot()
@@ -2987,7 +2970,7 @@ class Model(QAbstractTableModel):
         Model for storing status data to be presented in Treeview-table
     """
 
-    data_array_filled = pyqtSignal()
+    model_data_array_filled = pyqtSignal()
 
     # list of lists for storage of status data
     data_array = list()
@@ -3036,7 +3019,6 @@ class Model(QAbstractTableModel):
         """
             fill data_array for model
         """
-
         # tell treeview that model is about to change - necessary because
         # otherwise new number of rows would not be applied
         self.beginResetModel()
@@ -3054,7 +3036,7 @@ class Model(QAbstractTableModel):
         self.hosts_flags_column_needed.emit(info['hosts_flags_column_needed'])
         self.services_flags_column_needed.emit(info['services_flags_column_needed'])
 
-        self.data_array_filled.emit()
+        self.model_data_array_filled.emit()
 
         # new model applied
         self.endResetModel()
@@ -3201,7 +3183,7 @@ class TreeView(QTreeView):
 
         self.treeview_model = Model(server=self.server, parent=self)
         self.setModel(self.treeview_model)
-        self.model().data_array_filled.connect(self.adjust_table)
+        self.model().model_data_array_filled.connect(self.adjust_table)
         self.model().hosts_flags_column_needed.connect(self.show_hosts_flags_column)
         self.model().services_flags_column_needed.connect(self.show_services_flags_column)
 
@@ -3213,7 +3195,7 @@ class TreeView(QTreeView):
 
         # if worker got new status data from monitor server get_status
         # the treeview model has to be updated
-        self.worker.data_array_filled.connect(self.model().fill_data_array)
+        self.worker.worker_data_array_filled.connect(self.model().fill_data_array)
 
         # fill array again if data has been sorted after a header column click
         self.worker.data_array_sorted.connect(self.model().fill_data_array)
@@ -3226,6 +3208,9 @@ class TreeView(QTreeView):
 
         # quit thread if worker has finished
         self.worker.finish.connect(self.finish_worker_thread)
+
+        # receive information if action menu is shown
+        self.action_menu.is_shown.connect(self.worker.track_action_menu)
 
         # get status if started
         self.worker_thread.started.connect(self.worker.get_status)
@@ -3321,15 +3306,27 @@ class TreeView(QTreeView):
         """
             forward clicked cell info from event
         """
-        if conf.close_details_clicking_somewhere and event.button() == Qt.LeftButton:
-            statuswindow.hide_window()
+        # special treatment if window should be closed when left-clicking somewhere
+        # it is important to check if CTRL or SHIFT key is presses while clicking to select lines
+        if conf.close_details_clicking_somewhere:
+            if event.button() == Qt.LeftButton:
+                modifiers = event.modifiers()
+                if modifiers == Qt.ControlModifier or \
+                   modifiers == Qt.ShiftModifier or \
+                   modifiers == (Qt.ControlModifier | Qt.ShiftModifier):
+                    pass
+                else:
+                    statuswindow.hide_window()
+                del modifiers
+            elif event.button() == Qt.RightButton:
+                index = self.indexAt(QPoint(event.x(), event.y()))
+                self.cell_clicked(index)
             return
-        
-        if conf.close_details_clicking_somewhere == False and event.button() == Qt.RightButton:
-            index = self.indexAt(QPoint(event.x(), event.y()))
-            self.cell_clicked(index)
-            #self.cell_clicked()
-            return
+        else:
+            if event.button() == Qt.RightButton or event.button() == Qt.LeftButton:
+                index = self.indexAt(QPoint(event.x(), event.y()))
+                self.cell_clicked(index)
+                return
         super(TreeView, self).mouseReleaseEvent(event)
 
     def wheelEvent(self, event):
@@ -3358,8 +3355,6 @@ class TreeView(QTreeView):
         if self.action_menu.available or OS != 'Windows':
             # set flag for Windows
             self.action_menu.available = False
-
-
 
             # empty the menu
             self.action_menu.clear()
@@ -3796,9 +3791,6 @@ class TreeView(QTreeView):
                     self.is_shown = True
                 else:
                     self.is_shown = False
-                # pre-calculate dimensions
-                # height = self.get_real_height()  # never been used
-
                 # tell statusbar it should update
                 self.refreshed.emit()
 
@@ -3806,6 +3798,7 @@ class TreeView(QTreeView):
                 # send signal because there are unseen events
                 if self.server.get_events_history_count() > 0:
                     self.status_changed.emit(self.server.name, self.server.worst_status_diff)
+
 
     @pyqtSlot(int, Qt.SortOrder)
     def sort_columns(self, sort_column, sort_order):
@@ -3815,6 +3808,7 @@ class TreeView(QTreeView):
         # better int() the Qt.* values because they partly seem to be
         # intransmissible
         self.sort_data_array_for_columns.emit(int(sort_column), int(sort_order), True)
+
 
     @pyqtSlot()
     def finish_worker_thread(self):
@@ -3862,20 +3856,12 @@ class TreeView(QTreeView):
         # flag to keep recheck_all from being started more than once
         rechecking_all = False
 
-        # signals to show/hide reauthentication
-        ###button_authenticate_show = pyqtSignal()
-        ###button_authenticate_hide = pyqtSignal()
-
-        # show button to ignore invalid certificate in server vbox
-        ###button_fix_tls_error_show = pyqtSignal()
-        ###button_fix_tls_error_hide = pyqtSignal()
-
         # signals to control error message in statusbar
         show_error = pyqtSignal(str)
         hide_error = pyqtSignal()
 
         # sent to treeview with new data_array
-        data_array_filled = pyqtSignal(list, dict)
+        worker_data_array_filled = pyqtSignal(list, dict)
 
         # sendt to treeview if data has been sorted by click on column header
         data_array_sorted = pyqtSignal(list, dict)
@@ -3885,6 +3871,10 @@ class TreeView(QTreeView):
         last_sort_column_cached = 0
         last_sort_column_real = 0
         last_sort_order = 0
+
+        # keep track of action menu being shown or not to avoid refresh while selecting multiple items
+        action_menu_shown = False
+
 
         def __init__(self, parent=None, server=None, sort_column=0, sort_order=0):
             QObject.__init__(self)
@@ -3896,6 +3886,7 @@ class TreeView(QTreeView):
             self.sort_column = sort_column
             self.sort_order = sort_order
 
+
         @pyqtSlot()
         def get_status(self):
             """
@@ -3904,88 +3895,77 @@ class TreeView(QTreeView):
             """
             # if counter is at least update interval get status
             if self.server.thread_counter >= conf.update_interval_seconds:
+                # only if no multiple selection is done at the moment and no context action menu is open
+                if not is_modifier_pressed() and not self.action_menu_shown:
+                    # reflect status retrieval attempt on server vbox label
+                    self.change_label_status.emit('Refreshing...', '')
 
-                # reflect status retrieval attempt on server vbox label
-                self.change_label_status.emit('Refreshing...', '')
-
-                # get status from server instance if connection was already possible and no TLS error
-                if not self.server.tls_error:
-                    status = self.server.GetStatus()
-                else:
-                    # dummy status result
-                    status = Result()
-
-                # all is OK if no error info came back
-                if self.server.status_description == '' and\
-                   self.server.status_code < 400 and\
-                   not self.server.refresh_authentication and\
-                   not self.server.tls_error:
-                    # show last update time
-                    self.change_label_status.emit('Last updated at {0}'.format(datetime.datetime.now().strftime('%X')), '')
-
-                    # reset server error flag, needed for error label in statusbar
-                    self.server.has_error = False
-
-                    # tell statusbar there is no error
-                    self.hide_error.emit()
-                else:
-                    # try to display some more user friendly error description
-                    if self.server.status_code == 404:
-                        self.change_label_status.emit('Monitor URL not valid', 'critical')
-                    elif status.error.startswith('requests.exceptions.ConnectTimeout'):
-                        self.change_label_status.emit('Connection timeout', 'error')
-                    elif status.error.startswith('requests.exceptions.ConnectionError'):
-                        self.change_label_status.emit('Connection error', 'error')
-                    elif status.error.startswith('requests.exceptions.ReadTimeout'):
-                        self.change_label_status.emit('Connection timeout', 'error')
-                    elif self.server.tls_error:
-                        self.change_label_status.emit('SSL/TLS problem', 'critical')
-                    elif self.server.status_code in self.server.STATUS_CODES_NO_AUTH or\
-                            self.server.refresh_authentication:
-                        self.change_label_status.emit('Authentication problem', 'critical')
-                    elif self.server.status_code == 503:
-                        self.change_label_status.emit('Service unavailable', 'error')
+                    # get status from server instance if connection was already possible and no TLS error
+                    if not self.server.tls_error:
+                        status = self.server.GetStatus()
                     else:
-                        # kick out line breaks to avoid broken status window
-                        if self.server.status_description == '':
-                            self.server.status_description = 'Unknown error'
-                        self.change_label_status.emit(self.server.status_description.replace('\n', ''), 'error')
+                        # dummy status result
+                        status = Result()
 
-                    # set server error flag, needed for error label in statusbar
-                    self.server.has_error = True
+                    # all is OK if no error info came back
+                    if self.server.status_description == '' and\
+                       self.server.status_code < 400 and\
+                       not self.server.refresh_authentication and\
+                       not self.server.tls_error:
+                        # show last update time
+                        self.change_label_status.emit('Last updated at {0}'.format(datetime.datetime.now().strftime('%X')), '')
 
-                    # tell statusbar there is some error to display
-                    self.show_error.emit('ERROR')
+                        # reset server error flag, needed for error label in statusbar
+                        self.server.has_error = False
 
-                # reset counter for this thread
-                self.server.thread_counter = 0
+                        # tell statusbar there is no error
+                        self.hide_error.emit()
+                    else:
+                        # try to display some more user friendly error description
+                        if self.server.status_code == 404:
+                            self.change_label_status.emit('Monitor URL not valid', 'critical')
+                        elif status.error.startswith('requests.exceptions.ConnectTimeout'):
+                            self.change_label_status.emit('Connection timeout', 'error')
+                        elif status.error.startswith('requests.exceptions.ConnectionError'):
+                            self.change_label_status.emit('Connection error', 'error')
+                        elif status.error.startswith('requests.exceptions.ReadTimeout'):
+                            self.change_label_status.emit('Connection timeout', 'error')
+                        elif self.server.tls_error:
+                            self.change_label_status.emit('SSL/TLS problem', 'critical')
+                        elif self.server.status_code in self.server.STATUS_CODES_NO_AUTH or\
+                                self.server.refresh_authentication:
+                            self.change_label_status.emit('Authentication problem', 'critical')
+                        elif self.server.status_code == 503:
+                            self.change_label_status.emit('Service unavailable', 'error')
+                        else:
+                            # kick out line breaks to avoid broken status window
+                            if self.server.status_description == '':
+                                self.server.status_description = 'Unknown error'
+                            self.change_label_status.emit(self.server.status_description.replace('\n', ''), 'error')
 
-                # if failures have gone and nobody took notice switch notification off again
-                if len([k for k, v in self.server.events_history.items() if v
-                    is True]) == 0 and\
-                        statuswindow and \
-                        statuswindow.worker_notification.is_notifying is True and\
-                        statuswindow.worker_notification.notifying_server == self.server.name:
-                    # tell notification that unnoticed problems are gone
-                    self.problems_vanished.emit()
+                        # set server error flag, needed for error label in statusbar
+                        self.server.has_error = True
 
-                # stuff data into array and sort it
-                self.fill_data_array(self.sort_column, self.sort_order)
+                        # tell statusbar there is some error to display
+                        self.show_error.emit('ERROR')
 
-                # depending on authentication state show reauthentication button
-                #if self.server.refresh_authentication:
-                #    self.button_authenticate_show.emit()
-                #else:
-                #    self.button_authenticate_hide.emit()
+                    # reset counter for this thread
+                    self.server.thread_counter = 0
 
-                # special treatment for ignore-invalid-certificate button
-                #if self.server.tls_error:
-                #    self.button_fix_tls_error_show.emit()
-                #else:
-                #    self.button_fix_tls_error_hide.emit()
+                    # if failures have gone and nobody took notice switch notification off again
+                    if len([k for k, v in self.server.events_history.items() if v
+                        is True]) == 0 and\
+                            statuswindow and \
+                            statuswindow.worker_notification.is_notifying is True and\
+                            statuswindow.worker_notification.notifying_server == self.server.name:
+                        # tell notification that unnoticed problems are gone
+                        self.problems_vanished.emit()
 
-                # tell news about new status available
-                self.new_status.emit()
+                    # stuff data into array and sort it
+                    self.fill_data_array(self.sort_column, self.sort_order)
+
+                    # tell news about new status available
+                    self.new_status.emit()
 
             # increase thread counter
             self.server.thread_counter += 1
@@ -3993,10 +3973,10 @@ class TreeView(QTreeView):
             # if running flag is still set call myself after 1 second
             if self.running is True:
                 self.timer.singleShot(1000, self.get_status)
-                pass
             else:
                 # tell treeview to finish worker_thread
                 self.finish.emit()
+
 
         @pyqtSlot(int, int)
         def fill_data_array(self, sort_column, sort_order):
@@ -4053,8 +4033,10 @@ class TreeView(QTreeView):
             # sort data before it gets transmitted to treeview model
             self.sort_data_array(self.sort_column, self.sort_order, False)
 
+
+
             # give sorted data to model
-            self.data_array_filled.emit(self.data_array, self.info)
+            self.worker_data_array_filled.emit(self.data_array, self.info)
 
         @pyqtSlot(int, int, bool)
         def sort_data_array(self, sort_column, sort_order, header_clicked=False):
@@ -4293,6 +4275,7 @@ class TreeView(QTreeView):
             except Exception:
                 traceback.print_exc(file=sys.stdout)
 
+
         def _URLify(self, string):
             """
                 return a string that fulfills requirements for URLs
@@ -4300,11 +4283,18 @@ class TreeView(QTreeView):
             """
             return urllib.parse.quote(string, ":/=?&@+")
 
+
         @pyqtSlot()
         def unfresh_event_history(self):
             # set all flagged-as-fresh-events to un-fresh
             for event in self.server.events_history.keys():
                 self.server.events_history[event] = False
+
+
+        @pyqtSlot(bool)
+        def track_action_menu(self, action_menu_shown):
+            self.action_menu_shown = action_menu_shown
+
 
 
 class Dialogs(object):
@@ -6786,10 +6776,19 @@ def check_servers():
         dialogs.server_missing.show()
         dialogs.server_missing.initialize('no_server_enabled')
 
-# if OS == 'Darwin':
-#    Button = QPushButton
-# else:
-#    Button = FlatButton
+
+def is_modifier_pressed():
+    """
+        check if (left) CTRL or Shift keys are pressed
+    """
+    modifiers = APP.keyboardModifiers()
+    if modifiers == Qt.ControlModifier or \
+       modifiers == Qt.ShiftModifier or \
+       modifiers == (Qt.ControlModifier | Qt.ShiftModifier):
+        del modifiers
+        return True
+    del modifiers
+    return False
 
 # check for updates
 check_version = CheckVersion()

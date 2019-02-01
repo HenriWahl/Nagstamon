@@ -296,7 +296,9 @@ class MultisiteServer(GenericServer):
 
         # Add filters to the url which should only be applied to the service request
         if conf.filter_services_on_unreachable_hosts == True:
-            url_params += '&hst2=0'
+            ###url_params += '&hst2=0'
+            # thanks to https://github.com/HenriWahl/Nagstamon/issues/510
+            url_params += '&hst0=On&hst1=On'
 
         # services
         try:
