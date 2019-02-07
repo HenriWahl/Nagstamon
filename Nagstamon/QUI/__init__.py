@@ -3377,23 +3377,27 @@ class TreeView(QTreeView):
             for ind in self.selectedIndexes():
                 if ind.row() not in list_rows:
                     list_rows.append(ind.row())
-            
-            # Only add custom action if one row is selected
-            if len(list_rows) == 1:
-                # take data from model data_array
-                miserable_host = self.model().data_array[index.row()][0]
-                miserable_service = self.model().data_array[index.row()][2]
-                
-                for a in actions_list:
-                    # shortcut for next lines
-                    action = conf.actions[a]
 
-                    # check if current monitor server type is in action
-                    # second scheck for server type is legacy-compatible with older settions
-                    if action.enabled is True and (action.monitor_type in ['', self.server.TYPE] or 
-                                                   action.monitor_type not in SERVER_TYPES):
-                        # menu item visibility flag
-                        item_visible = False
+            # Add custom actions if all selected rows want them, one per one
+            for a in actions_list:
+                # shortcut for next lines
+                action = conf.actions[a]
+
+                # check if current monitor server type is in action
+                # second check for server type is legacy-compatible with older settings
+                if action.enabled is True and (action.monitor_type in ['', self.server.TYPE] or
+                                               action.monitor_type not in SERVER_TYPES):
+
+                    # menu item visibility flag
+                    item_visible = None
+
+                    for lrow in list_rows:
+                        # temporary menu item visibility flag to collect all visibility info
+                        item_visible_temporary = False
+                        # take data from model data_array
+                        miserable_host = self.model().data_array[lrow][0]
+                        miserable_service = self.model().data_array[lrow][2]
+
                         # check if clicked line is a service or host
                         # if it is check if the action is targeted on hosts or services
                         if miserable_service:
@@ -3403,24 +3407,24 @@ class TreeView(QTreeView):
                                     if is_found_by_re(miserable_host,
                                                       action.re_host_pattern,
                                                       action.re_host_reverse):
-                                        item_visible = True
+                                        item_visible_temporary = True
                                 # dito
                                 if action.re_service_enabled is True:
                                     if is_found_by_re(miserable_service,
                                                       action.re_service_pattern,
                                                       action.re_service_reverse):
-                                        item_visible = True
+                                        item_visible_temporary = True
                                 # dito
                                 if action.re_status_information_enabled is True:
                                     if is_found_by_re(miserable_service,
                                                       action.re_status_information_pattern,
                                                       action.re_status_information_reverse):
-                                        item_visible = True
+                                        item_visible_temporary = True
 
                                 # fallback if no regexp is selected
                                 if action.re_host_enabled == action.re_service_enabled == \
                                    action.re_status_information_enabled is False:
-                                    item_visible = True
+                                    item_visible_temporary = True
 
                         else:
                             # hosts should only care about host specific actions, no services
@@ -3429,24 +3433,32 @@ class TreeView(QTreeView):
                                     if is_found_by_re(miserable_host,
                                                       action.re_host_pattern,
                                                       action.re_host_reverse):
-                                        item_visible = True
+                                        item_visible_temporary = True
                                 else:
                                     # a non specific action will be displayed per default
-                                    item_visible = True
-                    else:
-                        item_visible = False
+                                    item_visible_temporary = True
 
-                    # populate context menu with service actions
-                    if item_visible is True:
-                        # create action
-                        action_menuentry = QAction(a, self)
-                        # add action
-                        self.action_menu.addAction(action_menuentry)
-                        # action to signalmapper
-                        self.signalmapper_action_menu.setMapping(action_menuentry, a)
-                        action_menuentry.triggered.connect(self.signalmapper_action_menu.map)
+                        # when item_visible never has been set it shall be false
+                        # also if at least one row leads to not-showing the item it will be false
+                        if item_visible_temporary == True and item_visible == None:
+                            item_visible = True
+                        if item_visible_temporary == False:
+                            item_visible = False
 
-                    del action, item_visible
+                else:
+                    item_visible = False
+
+                # populate context menu with service actions
+                if item_visible is True:
+                    # create action
+                    action_menuentry = QAction(a, self)
+                    # add action
+                    self.action_menu.addAction(action_menuentry)
+                    # action to signalmapper
+                    self.signalmapper_action_menu.setMapping(action_menuentry, a)
+                    action_menuentry.triggered.connect(self.signalmapper_action_menu.map)
+
+                del action, item_visible
 
             # create and add default actions
             action_edit_actions = QAction('Edit actions...', self)
@@ -4206,7 +4218,7 @@ class TreeView(QTreeView):
 
 
         @pyqtSlot(dict, dict)
-        def execute_action(self, action, info, number):
+        def execute_action(self, action, info):
             """
                 runs action, may it be custom or included like the Check_MK actions
             """
