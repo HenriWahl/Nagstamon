@@ -3497,40 +3497,45 @@ class TreeView(QTreeView):
         
         # only on 1 row
         indexes = self.selectedIndexes()
-        index = indexes[0]
-        miserable_host = self.model().data(self.model().createIndex(index.row(),0), Qt.DisplayRole)
-        miserable_service = self.model().data(self.model().createIndex(index.row(),2), Qt.DisplayRole)
-        miserable_status_info = self.model().data(self.model().createIndex(index.row(),8), Qt.DisplayRole)
-        
-        # get data to send to action       
-        server = self.server.get_name()
-        address = self.server.GetHost(miserable_host).result
-        monitor = self.server.monitor_url
-        monitor_cgi = self.server.monitor_cgi_url
-        username = self.server.username
-        password = self.server.password
-        comment_ack = conf.defaults_acknowledge_comment
-        comment_down = conf.defaults_downtime_comment
-        comment_submit = conf.defaults_submit_check_result_comment
-        
-        # send dict with action info and dict with host/service info
-        self.request_action.emit(conf.actions[action].__dict__, {'server': server,
-                                                                 'host': miserable_host,
-                                                                 'service': miserable_service,
-                                                                 'status-info': miserable_status_info,
-                                                                 'address': address,
-                                                                 'monitor': monitor,
-                                                                 'monitor-cgi': monitor_cgi,
-                                                                 'username': username,
-                                                                 'password': password,
-                                                                 'comment-ack': comment_ack,
-                                                                 'comment-down': comment_down,
-                                                                 'comment-submit': comment_submit
-                                                                 })
+        if len(indexes) > 0:
+            index = indexes[0]
+            miserable_host = self.model().data(self.model().createIndex(index.row(),0), Qt.DisplayRole)
+            miserable_service = self.model().data(self.model().createIndex(index.row(),2), Qt.DisplayRole)
+            miserable_status_info = self.model().data(self.model().createIndex(index.row(),8), Qt.DisplayRole)
 
-        # if action wants a closed status window it should be closed now
-        if conf.actions[action].close_popwin and not conf.fullscreen and not conf.windowed:
-            statuswindow.hide_window()
+            # get data to send to action
+            server = self.server.get_name()
+            address = self.server.GetHost(miserable_host).result
+            monitor = self.server.monitor_url
+            monitor_cgi = self.server.monitor_cgi_url
+            username = self.server.username
+            password = self.server.password
+            comment_ack = conf.defaults_acknowledge_comment
+            comment_down = conf.defaults_downtime_comment
+            comment_submit = conf.defaults_submit_check_result_comment
+
+            # send dict with action info and dict with host/service info
+            self.request_action.emit(conf.actions[action].__dict__, {'server': server,
+                                                                     'host': miserable_host,
+                                                                     'service': miserable_service,
+                                                                     'status-info': miserable_status_info,
+                                                                     'address': address,
+                                                                     'monitor': monitor,
+                                                                     'monitor-cgi': monitor_cgi,
+                                                                     'username': username,
+                                                                     'password': password,
+                                                                     'comment-ack': comment_ack,
+                                                                     'comment-down': comment_down,
+                                                                     'comment-submit': comment_submit
+                                                                     })
+
+            # if action wants a closed status window it should be closed now
+            if conf.actions[action].close_popwin and not conf.fullscreen and not conf.windowed:
+                statuswindow.hide_window()
+
+        # clean up
+        del index, indexes
+
 
     @pyqtSlot()
     def action_response_decorator(method):
