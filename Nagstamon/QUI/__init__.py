@@ -5960,7 +5960,7 @@ class Dialog_Acknowledge(Dialog):
         
         for i in range(len(self.host_list)):
             if self.service_list[i] == "":
-                str = str + 'Host <b>%s</b><br>' % (host_list[i])
+                str = str + 'Host <b>%s</b><br>' % (self.host_list[i])
             else:
                 str = str + 'Service <b>%s</b> on host <b>%s</b><br>' % (self.service_list[i], self.host_list[i])
         
@@ -5992,7 +5992,7 @@ class Dialog_Acknowledge(Dialog):
         if acknowledge_all_services is True:
             for i in self.server.nagitems_filtered["services"].values():
                 for s in i:
-                    if s.host == self.host:
+                    if s.host in self.host_list:
                         all_services.append(s.name)
 
         for line_number in range(len(self.host_list)):
