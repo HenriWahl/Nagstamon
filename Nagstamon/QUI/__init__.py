@@ -3311,13 +3311,19 @@ class TreeView(QTreeView):
         if conf.close_details_clicking_somewhere:
             if event.button() == Qt.LeftButton:
                 modifiers = event.modifiers()
+                # count selected rows - if more than 1 do not close popwin
+                rows = []
+                for index in self.selectedIndexes():
+                    if index.row() not in rows:
+                        rows.append(index.row())
                 if modifiers == Qt.ControlModifier or \
                    modifiers == Qt.ShiftModifier or \
-                   modifiers == (Qt.ControlModifier | Qt.ShiftModifier):
+                   modifiers == (Qt.ControlModifier | Qt.ShiftModifier) or \
+                   len(rows) > 1:
                     pass
                 else:
                     statuswindow.hide_window()
-                del modifiers
+                del modifiers, rows
             elif event.button() == Qt.RightButton:
                 index = self.indexAt(QPoint(event.x(), event.y()))
                 self.cell_clicked(index)
@@ -3515,19 +3521,21 @@ class TreeView(QTreeView):
             comment_submit = conf.defaults_submit_check_result_comment
 
             # send dict with action info and dict with host/service info
-            self.request_action.emit(conf.actions[action].__dict__, {'server': server,
-                                                                     'host': miserable_host,
-                                                                     'service': miserable_service,
-                                                                     'status-info': miserable_status_info,
-                                                                     'address': address,
-                                                                     'monitor': monitor,
-                                                                     'monitor-cgi': monitor_cgi,
-                                                                     'username': username,
-                                                                     'password': password,
-                                                                     'comment-ack': comment_ack,
-                                                                     'comment-down': comment_down,
-                                                                     'comment-submit': comment_submit
-                                                                     })
+            self.request_action.emit(conf.actions[action].__dict__,
+                                     {'server': server,
+                                      'host': miserable_host,
+                                      'service': miserable_service,
+                                      'status-info': miserable_status_info,
+                                      'address': address,
+                                      'monitor': monitor,
+                                      'monitor-cgi': monitor_cgi,
+                                      'username': username,
+                                      'password': password,
+                                      'comment-ack': comment_ack,
+                                      'comment-down': comment_down,
+                                      'comment-submit': comment_submit
+                                      }
+                                     )
 
             # if action wants a closed status window it should be closed now
             if conf.actions[action].close_popwin and not conf.fullscreen and not conf.windowed:
@@ -3647,9 +3655,10 @@ class TreeView(QTreeView):
         
         # How many rows we have
         list_rows = []
-        for ind in self.selectedIndexes():
-            if ind.row() not in list_rows:
-                list_rows.append(ind.row())
+        indexes = self.selectedIndexes()
+        for index in indexes:
+            if index.row() not in list_rows:
+                list_rows.append(index.row())
                 
         for lrow in list_rows:
             list_host.append(self.model().data(self.model().createIndex(lrow, 0), Qt.DisplayRole))
@@ -3657,11 +3666,10 @@ class TreeView(QTreeView):
             list_status.append(self.model().data(self.model().createIndex(lrow, 8), Qt.DisplayRole))
         
         for line_number in range(len(list_host)):
-            host=list_host[line_number]
-            service=list_service[line_number]
-            status=list_status[line_number]
-            
-            
+            host = list_host[line_number]
+            service = list_service[line_number]
+            status = list_status[line_number]
+
             info = {'server': self.server.get_name(),
                     'host': host,
                     'service': service,
@@ -3678,6 +3686,10 @@ class TreeView(QTreeView):
 
             # tell worker to do the action
             self.request_action.emit(action, info)
+
+        # clean up
+        del index, indexes, list_rows, list_host, list_service, list_status
+
 
     @action_response_decorator
     def action_submit(self):
@@ -4192,8 +4204,9 @@ class TreeView(QTreeView):
                 # send start/end time to slot
                 self.set_start_end.emit(start, end)
 
+
         @pyqtSlot(dict, dict)
-        def execute_action(self, action, info):
+        def execute_action(self, action, info, number):
             """
                 runs action, may it be custom or included like the Check_MK actions
             """
@@ -5980,6 +5993,7 @@ class Dialog_Acknowledge(Dialog):
         # default author + comment
         self.ui.input_lineedit_comment.setText(conf.defaults_acknowledge_comment)
         self.ui.input_lineedit_comment.setFocus()
+
 
     def ok(self):
         """
