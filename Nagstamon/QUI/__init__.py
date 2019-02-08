@@ -3372,7 +3372,7 @@ class TreeView(QTreeView):
             actions_list = list(conf.actions)
             actions_list.sort(key=str.lower)
             
-            # How many rows we have
+            # How many rows do we have
             list_rows = []
             for ind in self.selectedIndexes():
                 if ind.row() not in list_rows:
@@ -3436,13 +3436,13 @@ class TreeView(QTreeView):
                                         item_visible_temporary = True
                                 else:
                                     # a non specific action will be displayed per default
-                                    item_visible_temporary = True
+                                    item_visible_temporary = False
 
                         # when item_visible never has been set it shall be false
                         # also if at least one row leads to not-showing the item it will be false
-                        if item_visible_temporary == True and item_visible == None:
+                        if item_visible_temporary and item_visible is None:
                             item_visible = True
-                        if item_visible_temporary == False:
+                        if not item_visible_temporary:
                             item_visible = False
 
                 else:
@@ -3508,18 +3508,22 @@ class TreeView(QTreeView):
         else:
             self.action_menu.available = True
 
+
     @pyqtSlot(str)
     def action_menu_custom_response(self, action):
         # avoid blocked context menu
         self.action_menu.available = True
-        
-        # only on 1 row
-        indexes = self.selectedIndexes()
-        if len(indexes) > 0:
-            index = indexes[0]
-            miserable_host = self.model().data(self.model().createIndex(index.row(),0), Qt.DisplayRole)
-            miserable_service = self.model().data(self.model().createIndex(index.row(),2), Qt.DisplayRole)
-            miserable_status_info = self.model().data(self.model().createIndex(index.row(),8), Qt.DisplayRole)
+
+        # How many rows do we have
+        list_rows = []
+        for ind in self.selectedIndexes():
+            if ind.row() not in list_rows:
+                list_rows.append(ind.row())
+
+        for lrow in list_rows:
+            miserable_host = self.model().data(self.model().createIndex(lrow, 0), Qt.DisplayRole)
+            miserable_service = self.model().data(self.model().createIndex(lrow, 2), Qt.DisplayRole)
+            miserable_status_info = self.model().data(self.model().createIndex(lrow, 8), Qt.DisplayRole)
 
             # get data to send to action
             server = self.server.get_name()
@@ -3554,7 +3558,7 @@ class TreeView(QTreeView):
                 statuswindow.hide_window()
 
         # clean up
-        del index, indexes
+        del list_rows
 
 
     @pyqtSlot()
