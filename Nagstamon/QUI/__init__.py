@@ -3352,7 +3352,7 @@ class TreeView(QTreeView):
                modifiers == Qt.ShiftModifier or \
                modifiers == (Qt.ControlModifier | Qt.ShiftModifier) or \
                len(rows) > 1:
-                pass
+                super(TreeView, self).mouseReleaseEvent(event)
             else:
                 if conf.close_details_clicking_somewhere:
                     statuswindow.hide_window()
@@ -3366,7 +3366,6 @@ class TreeView(QTreeView):
                 index = self.indexAt(QPoint(event.x(), event.y()))
                 self.cell_clicked(index)
                 return
-        super(TreeView, self).mouseReleaseEvent(event)
 
     def wheelEvent(self, event):
         """
