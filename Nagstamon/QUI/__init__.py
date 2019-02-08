@@ -3302,7 +3302,7 @@ class TreeView(QTreeView):
         # after setting table whole window can be repainted
         self.ready_to_resize.emit()
 
-    def mouseReleaseEvent(self, event):
+    def mouseReleaseEvent_X(self, event):
         """
             forward clicked cell info from event
         """
@@ -3327,6 +3327,39 @@ class TreeView(QTreeView):
             elif event.button() == Qt.RightButton:
                 index = self.indexAt(QPoint(event.x(), event.y()))
                 self.cell_clicked(index)
+            return
+        else:
+            if event.button() == Qt.RightButton or event.button() == Qt.LeftButton:
+                index = self.indexAt(QPoint(event.x(), event.y()))
+                self.cell_clicked(index)
+                return
+        super(TreeView, self).mouseReleaseEvent(event)
+
+    def mouseReleaseEvent(self, event):
+        """
+            forward clicked cell info from event
+        """
+        # special treatment if window should be closed when left-clicking somewhere
+        # it is important to check if CTRL or SHIFT key is presses while clicking to select lines
+        if event.button() == Qt.LeftButton:
+            modifiers = event.modifiers()
+            # count selected rows - if more than 1 do not close popwin
+            rows = []
+            for index in self.selectedIndexes():
+                if index.row() not in rows:
+                    rows.append(index.row())
+            if modifiers == Qt.ControlModifier or \
+               modifiers == Qt.ShiftModifier or \
+               modifiers == (Qt.ControlModifier | Qt.ShiftModifier) or \
+               len(rows) > 1:
+                pass
+            else:
+                if conf.close_details_clicking_somewhere:
+                    statuswindow.hide_window()
+                else:
+                    index = self.indexAt(QPoint(event.x(), event.y()))
+                    self.cell_clicked(index)
+            del modifiers, rows
             return
         else:
             if event.button() == Qt.RightButton or event.button() == Qt.LeftButton:
