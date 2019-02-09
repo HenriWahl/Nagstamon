@@ -201,6 +201,15 @@ class IcingaWeb2Server(GenericServer):
                         # extra Icinga properties to solve https://github.com/HenriWahl/Nagstamon/issues/192
                         # acknowledge needs host_description and no display name
                         self.new_hosts[host_name].real_name = h['host_name']
+
+                        # Icinga only updates the attempts for soft states. When hard state is reached, a flag is set and
+                        # attemt is set to 1/x.
+                        if (status_type == 'hard'):
+                            try:
+                                maxAttempts = h['host_attempt'].split('/')[1]
+                                self.new_hosts[host_name].attempt = "{0}/{0}".format(maxAttempts)
+                            except Exception:
+                                self.new_hosts[host_name].attempt = "HARD"
        
                         # extra duration needed for calculation
                         duration = datetime.datetime.now() - datetime.datetime.fromtimestamp(int(h['host_last_state_change']))
@@ -290,6 +299,15 @@ class IcingaWeb2Server(GenericServer):
                         # extra Icinga properties to solve https://github.com/HenriWahl/Nagstamon/issues/192
                         # acknowledge needs service_description and no display name
                         self.new_hosts[host_name].services[service_name].real_name = s['service_description']
+
+                        # Icinga only updates the attempts for soft states. When hard state is reached, a flag is set and
+                        # attemt is set to 1/x.
+                        if (status_type == 'hard'):
+                            try:
+                                maxAttempts = s['service_attempt'].split('/')[1]
+                                self.new_hosts[host_name].services[service_name].attempt = "{0}/{0}".format(maxAttempts)
+                            except Exception:
+                                self.new_hosts[host_name].services[service_name].attempt = "HARD"
                         
                         # extra duration needed for calculation
                         duration = datetime.datetime.now() - datetime.datetime.fromtimestamp(int(s['service_last_state_change']))
