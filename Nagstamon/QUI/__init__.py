@@ -3862,7 +3862,7 @@ class TreeView(QTreeView):
                 # check if status changed and notification is necessary
                 # send signal because there are unseen events
                 if self.server.get_events_history_count() > 0:
-                    self.status_changed.emit(self.server.name, self.server.worst_status_diff)
+                    self.status_changed.emit(self.server.name, self.server.get_worst_status_diff())
 
 
     @pyqtSlot(int, Qt.SortOrder)

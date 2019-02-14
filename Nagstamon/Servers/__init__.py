@@ -78,8 +78,10 @@ def get_worst_status():
     """
     worst_status = 'UP'
     for server in get_enabled_servers():
-        if STATES.index(server.worst_status_current) > STATES.index(worst_status):
-            worst_status = server.worst_status_current
+        worst_status_current = server.get_worst_status_current()
+        if STATES.index(worst_status_current) > STATES.index(worst_status):
+            worst_status = worst_status_current
+        del worst_status_current
     return worst_status
 
 
@@ -91,8 +93,8 @@ def get_status_count():
                    'INFORMATION': 0,
                    'WARNING': 0,
                    'AVERAGE': 0,
-                   'CRITICAL': 0,
                    'HIGH': 0,
+                   'CRITICAL': 0,
                    'DISASTER': 0,
                    'UNREACHABLE': 0,
                    'DOWN': 0}
@@ -101,8 +103,8 @@ def get_status_count():
         state_count['INFORMATION'] += server.information
         state_count['WARNING'] += server.warning
         state_count['AVERAGE'] += server.average
-        state_count['CRITICAL'] += server.critical
         state_count['HIGH'] += server.high
+        state_count['CRITICAL'] += server.critical
         state_count['DISASTER'] += server.disaster
         state_count['UNREACHABLE'] += server.unreachable
         state_count['DOWN'] += server.down

@@ -39,10 +39,21 @@ from Nagstamon.Config import conf
 
 # states needed for gravity comparison for notification and Generic.py
 # STATES = ['UP', 'UNKNOWN', 'WARNING', 'CRITICAL', 'UNREACHABLE', 'DOWN']
-STATES = ['UP', 'UNKNOWN', 'INFORMATION', 'WARNING', 'AVERAGE', 'HIGH', 'CRITICAL', 'DISASTER', 'UNREACHABLE', 'DOWN']
+STATES = ['UP',
+          'UNKNOWN',
+          'INFORMATION',
+          'WARNING',
+          'AVERAGE',
+          'HIGH',
+          'CRITICAL',
+          'DISASTER',
+          'UNREACHABLE',
+          'DOWN']
 
 # sound at the moment is only available for these states
-STATES_SOUND = ['WARNING', 'CRITICAL', 'DOWN']
+STATES_SOUND = ['WARNING',
+                'CRITICAL',
+                'DOWN']
 
 
 def not_empty(x):

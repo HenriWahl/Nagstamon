@@ -1274,27 +1274,6 @@ class GenericServer(object):
                 # final worst state is one of the predefined states
                 self.worst_status_diff = STATES[worst]
 
-        # get the current worst state, needed at least for systraystatusicon
-        self.worst_status_current = 'UP'
-        if self.down > 0:
-            self.worst_status_current = 'DOWN'
-        elif self.unreachable > 0:
-            self.worst_status_current = 'UNREACHABLE'
-        elif self.disaster > 0:
-            self.worst_status_current = 'DISASTER'
-        elif self.critical > 0:
-            self.worst_status_current = 'CRITICAL'
-        elif self.high > 0:
-            self.worst_status_current = 'HIGH'
-        elif self.average > 0:
-            self.worst_status_current = 'AVERAGE'
-        elif self.warning > 0:
-            self.worst_status_current = 'WARNING'
-        elif self.information > 0:
-            self.worst_status_current = 'INFORMATION'
-        elif self.unknown > 0:
-            self.worst_status_current = 'UNKNOWN'
-
         # when everything is OK set this flag for GUI to evaluate
         if self.down == 0 and\
            self.unreachable == 0 and\
@@ -1579,3 +1558,36 @@ class GenericServer(object):
                           status_code=copy.deepcopy(status_code)))
         else:
             return(False)
+
+    def get_worst_status_current(self):
+        """
+            hand over the current worst status for get_worst_status()
+        """
+        # get the current worst state, needed at least for systraystatusicon
+        self.worst_status_current = 'UP'
+        if self.down > 0:
+            self.worst_status_current = 'DOWN'
+        elif self.unreachable > 0:
+            self.worst_status_current = 'UNREACHABLE'
+        elif self.disaster > 0:
+            self.worst_status_current = 'DISASTER'
+        elif self.critical > 0:
+            self.worst_status_current = 'CRITICAL'
+        elif self.high > 0:
+            self.worst_status_current = 'HIGH'
+        elif self.average > 0:
+            self.worst_status_current = 'AVERAGE'
+        elif self.warning > 0:
+            self.worst_status_current = 'WARNING'
+        elif self.information > 0:
+            self.worst_status_current = 'INFORMATION'
+        elif self.unknown > 0:
+            self.worst_status_current = 'UNKNOWN'
+
+        return self.worst_status_current
+
+    def get_worst_status_diff(self):
+        """
+            hand over the current worst status difference for QUI
+        """
+        return self.worst_status_diff
