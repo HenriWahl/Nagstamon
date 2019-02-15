@@ -1273,6 +1273,9 @@ class GenericServer(object):
 
                 # final worst state is one of the predefined states
                 self.worst_status_diff = STATES[worst]
+                del diff_states
+
+            del diff
 
         # when everything is OK set this flag for GUI to evaluate
         if self.down == 0 and\

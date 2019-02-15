@@ -297,7 +297,8 @@ class SystemTrayIcon(QSystemTrayIcon):
     error_shown = False
 
     def __init__(self):
-        debug_queue.append('DEBUG: Initializing SystemTrayIcon')
+        if conf.debug_mode:
+            debug_queue.append('DEBUG: Initializing SystemTrayIcon')
 
         QSystemTrayIcon.__init__(self)
 
@@ -312,7 +313,8 @@ class SystemTrayIcon(QSystemTrayIcon):
         if OS != 'Windows' or conf.icon_in_systray:
             self.setIcon(self.icons['OK'])
 
-        debug_queue.append('DEBUG: SystemTrayIcon initial icon: {}'.format(self.currentIconName()))
+        if conf.debug_mode:
+            debug_queue.append('DEBUG: SystemTrayIcon initial icon: {}'.format(self.currentIconName()))
 
         # store icon for flashing
         self.current_icon = None
@@ -436,7 +438,7 @@ class SystemTrayIcon(QSystemTrayIcon):
             # store current icon to get it reset back
             if self.current_icon is None:
                 if self.error_shown is False:
-                    self.current_icon = self.icons[statuswindow.worker_notification.worst_notification_status]
+                    self.current_icon = self.icons[statuswindow.worker_notification.get_worst_notification_status()]
                 else:
                     self.current_icon = self.icons['ERROR']
             # use empty SVG icon to display emptiness
@@ -2182,7 +2184,6 @@ class StatusWindow(QWidget):
                    conf.__dict__['notify_if_{0}'.format(worst_status_diff.lower())] is True:
                     # keep last worst state worth a notification for comparison 3 lines above
                     self.worst_notification_status = worst_status_diff
-
                     # set flag to avoid innecessary notification
                     self.is_notifying = True
                     if self.notifying_server == '':
@@ -2306,6 +2307,11 @@ class StatusWindow(QWidget):
                 servers[server_name].Debug(debug='NOTIFICATION: ' + custom_action_string)
             subprocess.Popen(custom_action_string, shell=True)
 
+        def get_worst_notification_status(self):
+            """
+                hand over the current worst status notification
+            """
+            return self.worst_notification_status
 
 class NagstamonLogo(QSvgWidget, DraggableWidget):
     """
