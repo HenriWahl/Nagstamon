@@ -3331,13 +3331,15 @@ class TreeView(QTreeView):
                     statuswindow.hide_window()
                 del modifiers, rows
             elif event.button() == Qt.RightButton:
-                index = self.indexAt(QPoint(event.x(), event.y()))
-                self.cell_clicked(index)
+                # index = self.indexAt(QPoint(event.x(), event.y()))
+                # self.cell_clicked(index)
+                self.cell_clicked()
             return
         else:
             if event.button() == Qt.RightButton or event.button() == Qt.LeftButton:
-                index = self.indexAt(QPoint(event.x(), event.y()))
-                self.cell_clicked(index)
+                # index = self.indexAt(QPoint(event.x(), event.y()))
+                # self.cell_clicked(index)
+                self.cell_clicked()
                 return
         super(TreeView, self).mouseReleaseEvent(event)
 
@@ -3363,14 +3365,16 @@ class TreeView(QTreeView):
                 if conf.close_details_clicking_somewhere:
                     statuswindow.hide_window()
                 else:
-                    index = self.indexAt(QPoint(event.x(), event.y()))
-                    self.cell_clicked(index)
+                    # index = self.indexAt(QPoint(event.x(), event.y()))
+                    # self.cell_clicked(index)
+                    self.cell_clicked()
             del modifiers, rows
             return
         else:
             if event.button() == Qt.RightButton or event.button() == Qt.LeftButton:
-                index = self.indexAt(QPoint(event.x(), event.y()))
-                self.cell_clicked(index)
+                # index = self.indexAt(QPoint(event.x(), event.y()))
+                # self.cell_clicked(index)
+                self.cell_clicked()
                 return
 
     def wheelEvent(self, event):
@@ -3390,7 +3394,7 @@ class TreeView(QTreeView):
         
         
     @pyqtSlot()
-    def cell_clicked(self, index):
+    def cell_clicked(self):
         """
             Windows reacts differently to clicks into table cells than Linux and MacOSX
             Therefore the .available flag is necessary
@@ -3412,9 +3416,9 @@ class TreeView(QTreeView):
             
             # How many rows do we have
             list_rows = []
-            for ind in self.selectedIndexes():
-                if ind.row() not in list_rows:
-                    list_rows.append(ind.row())
+            for index in self.selectedIndexes():
+                if index.row() not in list_rows:
+                    list_rows.append(index.row())
 
             # Add custom actions if all selected rows want them, one per one
             for a in actions_list:
@@ -3554,9 +3558,9 @@ class TreeView(QTreeView):
 
         # How many rows do we have
         list_rows = []
-        for ind in self.selectedIndexes():
-            if ind.row() not in list_rows:
-                list_rows.append(ind.row())
+        for index in self.selectedIndexes():
+            if index.row() not in list_rows:
+                list_rows.append(index.row())
 
         for lrow in list_rows:
             miserable_host = self.model().data(self.model().createIndex(lrow, 0), Qt.DisplayRole)
@@ -3629,20 +3633,21 @@ class TreeView(QTreeView):
     def action_monitor(self):
         # only on 1 row
         indexes = self.selectedIndexes()
-        index = indexes[0]
-        miserable_host = self.model().data(self.model().createIndex(index.row(),0), Qt.DisplayRole)
-        miserable_service = self.model().data(self.model().createIndex(index.row(),2), Qt.DisplayRole)
-        
-        # open host/service monitor in browser
-        self.server.open_monitor(miserable_host, miserable_service)
+        if len(indexes) > 0:
+            index = indexes[0]
+            miserable_host = self.model().data(self.model().createIndex(index.row(),0), Qt.DisplayRole)
+            miserable_service = self.model().data(self.model().createIndex(index.row(),2), Qt.DisplayRole)
+
+            # open host/service monitor in browser
+            self.server.open_monitor(miserable_host, miserable_service)
 
     @action_response_decorator
     def action_recheck(self):
         # How many rows we have
         list_rows = []
-        for ind in self.selectedIndexes():
-            if ind.row() not in list_rows:
-                list_rows.append(ind.row())
+        for index in self.selectedIndexes():
+            if index.row() not in list_rows:
+                list_rows.append(index.row())
         
         for lrow in list_rows:
             miserable_host = self.model().data(self.model().createIndex(lrow,0), Qt.DisplayRole)
@@ -3659,9 +3664,9 @@ class TreeView(QTreeView):
         
         # How many rows we have
         list_rows = []
-        for ind in self.selectedIndexes():
-            if ind.row() not in list_rows:
-                list_rows.append(ind.row())
+        for index in self.selectedIndexes():
+            if index.row() not in list_rows:
+                list_rows.append(index.row())
                 
         for lrow in list_rows:
             list_host.append(self.model().data(self.model().createIndex(lrow, 0), Qt.DisplayRole))
@@ -3680,9 +3685,9 @@ class TreeView(QTreeView):
         
         # How many rows we have
         list_rows = []
-        for ind in self.selectedIndexes():
-            if ind.row() not in list_rows:
-                list_rows.append(ind.row())
+        for index in self.selectedIndexes():
+            if index.row() not in list_rows:
+                list_rows.append(index.row())
                 
         for lrow in list_rows:
             list_host.append(self.model().data(self.model().createIndex(lrow, 0), Qt.DisplayRole))
@@ -3771,9 +3776,9 @@ class TreeView(QTreeView):
         
         # How many rows we have
         list_rows = []
-        for ind in self.selectedIndexes():
-            if ind.row() not in list_rows:
-                list_rows.append(ind.row())
+        for index in self.selectedIndexes():
+            if index.row() not in list_rows:
+                list_rows.append(index.row())
                 
         for lrow in list_rows:
             list_host.append(self.model().data(self.model().createIndex(lrow, 0), Qt.DisplayRole))
@@ -3793,9 +3798,9 @@ class TreeView(QTreeView):
         
         # How many rows we have
         list_rows = []
-        for ind in self.selectedIndexes():
-            if ind.row() not in list_rows:
-                list_rows.append(ind.row())
+        for index in self.selectedIndexes():
+            if index.row() not in list_rows:
+                list_rows.append(index.row())
                 
         for lrow in list_rows:
             list_status.append(self.model().data(self.model().createIndex(lrow, 8), Qt.DisplayRole))
@@ -3817,9 +3822,9 @@ class TreeView(QTreeView):
         
         # How many rows we have
         list_rows = []
-        for ind in self.selectedIndexes():
-            if ind.row() not in list_rows:
-                list_rows.append(ind.row())
+        for index in self.selectedIndexes():
+            if index.row() not in list_rows:
+                list_rows.append(index.row())
                 
         for lrow in list_rows:
             list_host.append(self.model().data(self.model().createIndex(lrow, 0), Qt.DisplayRole))
