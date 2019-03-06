@@ -118,8 +118,8 @@ class GenericServer(object):
         self.new_hosts = dict()
         self.isChecking = False
         self.CheckingForNewVersion = False
-        # store current and difference of worst state for notification
-        self.worst_status_diff = self.worst_status_current = 'UP'
+        # store current, last and difference of worst state for notification
+        self.worst_status_diff = self.worst_status_current = self.worst_status_last = ''
         self.nagitems_filtered_list = list()
         self.nagitems_filtered = {'services': {'DISASTER': [], 'CRITICAL': [], 'HIGH': [],
             'AVERAGE': [], 'WARNING': [], 'INFORMATION': [], 'UNKNOWN': []},
@@ -1275,7 +1275,27 @@ class GenericServer(object):
                 self.worst_status_diff = STATES[worst]
                 del diff_states
 
-            del diff
+        # get the current worst state, needed at least for systraystatusicon
+        self.worst_status_last = self.worst_status_current
+        self.worst_status_current = 'UP'
+        if self.down > 0:
+            self.worst_status_current = 'DOWN'
+        elif self.unreachable > 0:
+            self.worst_status_current = 'UNREACHABLE'
+        elif self.disaster > 0:
+            self.worst_status_current = 'DISASTER'
+        elif self.critical > 0:
+            self.worst_status_current = 'CRITICAL'
+        elif self.high > 0:
+            self.worst_status_current = 'HIGH'
+        elif self.average > 0:
+            self.worst_status_current = 'AVERAGE'
+        elif self.warning > 0:
+            self.worst_status_current = 'WARNING'
+        elif self.information > 0:
+            self.worst_status_current = 'INFORMATION'
+        elif self.unknown > 0:
+            self.worst_status_current = 'UNKNOWN'
 
         # when everything is OK set this flag for GUI to evaluate
         if self.down == 0 and\
