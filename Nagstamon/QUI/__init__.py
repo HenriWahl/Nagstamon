@@ -2169,8 +2169,8 @@ class StatusWindow(QWidget):
         def __init__(self):
             QObject.__init__(self)
 
-        @pyqtSlot(str, str)
-        def start(self, server_name, worst_status_diff):
+        @pyqtSlot(str, str, str)
+        def start(self, server_name, worst_status_diff, worst_status_current):
             """
                 start notification
             """
@@ -2221,6 +2221,12 @@ class StatusWindow(QWidget):
                         if conf.notification_action_down is True and worst_status_diff == 'DOWN':
                             self.execute_action(server_name, conf.notification_action_down_string)
 
+
+                # Notification action OK
+                if worst_status_current == 'UP' and\
+                   conf.notification_actions and conf.notification_action_ok: 
+                    self.execute_action(server_name, conf.notification_action_ok_string)
+                
                 # Custom event notification - valid vor ALL events, thus without status comparison
                 if conf.notification_actions is True and conf.notification_custom_action is True:
                     # temporarily used to collect executed events
@@ -3096,7 +3102,7 @@ class TreeView(QTreeView):
     recheck = pyqtSignal(dict)
 
     # tell notification that status of server has changed
-    status_changed = pyqtSignal(str, str)
+    status_changed = pyqtSignal(str, str, str)
 
     # action to be executed by worker
     # 2 values: action and host/service info
@@ -3861,8 +3867,10 @@ class TreeView(QTreeView):
 
                 # check if status changed and notification is necessary
                 # send signal because there are unseen events
-                if self.server.get_events_history_count() > 0:
-                    self.status_changed.emit(self.server.name, self.server.worst_status_diff)
+                # status has changed if there are unseen events in the list OR (current status is up AND has been changed since last time)
+                if (self.server.get_events_history_count() > 0) or\
+                   ((self.server.worst_status_current == 'UP') and (self.server.worst_status_current != self.server.worst_status_last)):
+                    self.status_changed.emit(self.server.name, self.server.worst_status_diff, self.server.worst_status_current)
 
 
     @pyqtSlot(int, Qt.SortOrder)
