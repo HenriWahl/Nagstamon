@@ -262,9 +262,10 @@ class Monitos4xServer(GenericServer):
                             self.new_hosts[host_name].flapping = False
 
                         if h['status']['acknowleged'] is None:
-                            self.new_hosts[host_name].acknowledged = 0
+                            self.new_hosts[host_name].acknowledged = False
                         else:
-                            self.new_hosts[host_name].acknowledged = int(h['status']['acknowleged'])
+                            if h['status']['acknowleged'] != 0:
+                                self.new_hosts[host_name].acknowledged = True
 
                         try:
                             if int(h['status']['scheduledDowntimeDepth']) != 0:
@@ -392,9 +393,10 @@ class Monitos4xServer(GenericServer):
                             self.new_hosts[host_name].services[service_name].flapping = False
 
                         if s['status']['acknowleged'] is None:
-                            self.new_hosts[host_name].services[service_name].acknowledged  = 0
+                            self.new_hosts[host_name].services[service_name].acknowledged  = False
                         else:
-                            self.new_hosts[host_name].services[service_name].acknowledged = int(s['status']['acknowleged'])
+                            if s['status']['acknowleged'] != 0:
+                                self.new_hosts[host_name].services[service_name].acknowledged = True
 
                         try:
                             if int(s['status']['scheduledDowntimeDepth']) != 0:
