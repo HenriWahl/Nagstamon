@@ -145,20 +145,20 @@ class Monitos4xServer(GenericServer):
         if self.use_autologin is True:
             if self.cgiurl_hosts is None:
                 # hosts (up, down, unreachable)
-                self.cgiurl_hosts = self.monitor_cgi_url + '/api/host?include=status,configuration&limit=100&filter[states]=0,1,2' + '&authtoken=' + self.autologin_key
+                self.cgiurl_hosts = self.monitor_cgi_url + '/api/host?include=status,configuration&limit=100&onylsyncenabled=true&filter[states]=0,1,2' + '&authtoken=' + self.autologin_key
 
             if self.cgiurl_services is None:
                 # services (warning, critical, unknown)
                 self.cgiurl_services = self.monitor_cgi_url + \
-                                       '/api/serviceinstance?include=status,configuration&limit=100&filter[states]=1,2,3' + '&authtoken=' + self.autologin_key
+                                       '/api/serviceinstance?include=status,configuration&limit=100&onylsyncenabled=true&filter[states]=1,2,3' + '&authtoken=' + self.autologin_key
         else:
             if self.cgiurl_hosts is None:
                 # hosts (up, down, unreachable)
-                self.cgiurl_hosts = self.monitor_cgi_url + '/api/host?include=status,configuration&limit=100&filter[states]=0,1,2'
+                self.cgiurl_hosts = self.monitor_cgi_url + '/api/host?include=status,configuration&limit=100&onylsyncenabled=true&filter[states]=0,1,2'
 
             if self.cgiurl_services is None:
                 # services (warning, critical, unknown)
-                self.cgiurl_services = self.monitor_cgi_url + '/api/serviceinstance?include=status,configuration&limit=100&filter[states]=1,2,3'
+                self.cgiurl_services = self.monitor_cgi_url + '/api/serviceinstance?include=status,configuration&limit=100&onylsyncenabled=true&filter[states]=1,2,3'
 
         self.new_hosts = dict()
 
