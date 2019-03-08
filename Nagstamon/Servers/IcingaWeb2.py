@@ -77,6 +77,7 @@ class IcingaWeb2Server(GenericServer):
         # dummy default empty cgi urls - get filled later when server version is known
         self.cgiurl_services = None
         self.cgiurl_hosts = None
+        self.cgiurl_monitoring_health = None
         
         # https://github.com/HenriWahl/Nagstamon/issues/400
         # The displayed name for host and service is the Icinga2 "internal" name and not the display_name from host/service configuration
@@ -119,13 +120,15 @@ class IcingaWeb2Server(GenericServer):
             Get status from Icinga Server - only JSON
         """
         # define CGI URLs for hosts and services
-        if self.cgiurl_hosts == self.cgiurl_services == None:
+        if self.cgiurl_hosts == self.cgiurl_services == self.cgiurl_monitoring_health == None:
             # services (unknown, warning or critical?)
             self.cgiurl_services = {'hard': self.monitor_cgi_url + '/monitoring/list/services?service_state>0&service_state<=3&service_state_type=1&addColumns=service_last_check&format=json', \
                                     'soft': self.monitor_cgi_url + '/monitoring/list/services?service_state>0&service_state<=3&service_state_type=0&addColumns=service_last_check&format=json'}
             # hosts (up or down or unreachable)
             self.cgiurl_hosts = {'hard': self.monitor_cgi_url + '/monitoring/list/hosts?host_state>0&host_state<=2&host_state_type=1&addColumns=host_last_check&format=json', \
                                  'soft': self.monitor_cgi_url + '/monitoring/list/hosts?host_state>0&host_state<=2&host_state_type=0&addColumns=host_last_check&format=json'}
+            # monitoring health
+            self.cgiurl_monitoring_health = self.monitor_cgi_url + '/monitoring/health/info?format=json'
 
         # new_hosts dictionary
         self.new_hosts = dict()
@@ -163,6 +166,15 @@ class IcingaWeb2Server(GenericServer):
 
                 # check if any error occured
                 self.check_for_error(jsonraw, error, status_code)
+
+                # Check if the backend is running
+                # If it isnt running the last values stored in the database are returned/shown
+                # Unfortunately we need to make a extra request for this
+                result = self.FetchURL(self.cgiurl_monitoring_health, giveback='raw')
+                monitoring_health = json.loads(result.result)[0]
+                if (monitoring_health['is_currently_running'] == '0'):
+                    return Result(result=monitoring_health,
+                                error='Icinga2 backend not running')
 
                 hosts = json.loads(jsonraw)
 
