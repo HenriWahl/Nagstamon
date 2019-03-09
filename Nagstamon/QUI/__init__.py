@@ -3476,7 +3476,7 @@ class TreeView(QTreeView):
                                         item_visible_temporary = True
                                 else:
                                     # a non specific action will be displayed per default
-                                    item_visible_temporary = False
+                                    item_visible_temporary = True
 
                         # when item_visible never has been set it shall be false
                         # also if at least one row leads to not-showing the item it will be false
