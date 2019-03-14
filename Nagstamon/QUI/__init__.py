@@ -6114,7 +6114,7 @@ class Dialog_Downtime(Dialog):
         
         for i in range(len(self.host_list)):
             if self.service_list[i] == "":
-                str = str + 'Host <b>%s</b><br>' % (host_list[i])
+                str = str + 'Host <b>%s</b><br>' % (self.host_list[i])
             else:
                 str = str + 'Service <b>%s</b> on host <b>%s</b><br>' % (self.service_list[i], self.host_list[i])
         
