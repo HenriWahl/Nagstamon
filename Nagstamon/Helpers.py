@@ -38,7 +38,6 @@ from Nagstamon.Config import conf
 # ##debug_queue = sys.modules['__main__'].debug_queue
 
 # states needed for gravity comparison for notification and Generic.py
-# STATES = ['UP', 'UNKNOWN', 'WARNING', 'CRITICAL', 'UNREACHABLE', 'DOWN']
 STATES = ['UP',
           'UNKNOWN',
           'INFORMATION',

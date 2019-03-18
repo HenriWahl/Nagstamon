@@ -119,7 +119,7 @@ class GenericServer(object):
         self.isChecking = False
         self.CheckingForNewVersion = False
         # store current, last and difference of worst state for notification
-        self.worst_status_diff = self.worst_status_current = self.worst_status_last = ''
+        self.worst_status_diff = self.worst_status_current = self.worst_status_last = 'UP'
         self.nagitems_filtered_list = list()
         self.nagitems_filtered = {'services': {'DISASTER': [], 'CRITICAL': [], 'HIGH': [],
             'AVERAGE': [], 'WARNING': [], 'INFORMATION': [], 'UNKNOWN': []},
@@ -845,8 +845,8 @@ class GenericServer(object):
                           status_code=self.status_code)
 
         if (self.status == 'ERROR' or
-         self.status_description != '' or
-         self.status_code >= 400):
+            self.status_description != '' or
+            self.status_code >= 400):
 
             # ask for password if authorization failed
             if 'HTTP Error 401' in self.status_description or \
@@ -1373,6 +1373,10 @@ class GenericServer(object):
                 # use session only for connections to monitor servers, other requests like looking for updates
                 # should go out without credentials
                 if no_auth is False:
+                    # check if there is really a session
+                    if not self.session:
+                        self.reset_HTTP()
+                        self.init_HTTP()
                     # most requests come without multipart/form-data
                     if multipart is False:
                         if cgi_data is None:
