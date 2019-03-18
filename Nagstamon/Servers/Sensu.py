@@ -211,15 +211,20 @@ class SensuServer(GenericServer):
         return '%sd %sh %sm %ss' % (days, hours, mins, sec)
 
     def set_recheck(self, info_dict):
-        standalone = self.sensu_api.get_event(info_dict['host'], info_dict['service'])['check']['standalone']
-        if standalone and conf.debug_mode:
-            self.Debug(server=self.name, debug='Service {0} on host {1} is a standalone service, will not recheck'.format(info_dict['service'], info_dict['host']))
+        if info_dict['service'] == 'keepalive':
+            if conf.debug_mode:
+                self.Debug(server=self.name, debug='Keepalive results must come from the client running on host {0}, unable to recheck'.format(info_dict['host']))
         else:
-            self.sensu_api.post_check_request(
-                info_dict['service'],
-                self._format_client_subscription(info_dict['host']),
-                self.hosts[info_dict['host']].site
-            )
+            standalone = self.sensu_api.get_event(info_dict['host'], info_dict['service'])['check']['standalone']
+            if standalone:
+                if conf.debug_mode:
+                    self.Debug(server=self.name, debug='Service {0} on host {1} is a standalone service, will not recheck'.format(info_dict['service'], info_dict['host']))
+            else:
+                self.sensu_api.post_check_request(
+                    info_dict['service'],
+                    self._format_client_subscription(info_dict['host']),
+                    self.hosts[info_dict['host']].site
+                )
 
     def set_downtime(self, info_dict):
         subscription = self._format_client_subscription(info_dict['host'])
