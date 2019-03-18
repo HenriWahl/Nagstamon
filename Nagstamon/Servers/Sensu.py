@@ -121,8 +121,8 @@ class SensuServer(GenericServer):
                 if 'dc' in event:
                   new_service.site = event['dc']
                 else:
-                  new_service.site = None
-                new_service.status = None
+                  new_service.site = ''
+                new_service.status = ''
                 try:
                     new_service.status = self.SEVERITY_CODE_TEXT_MAP.get(event_check['status'])
                 except KeyError:
@@ -202,11 +202,15 @@ class SensuServer(GenericServer):
         return '%sd %sh %sm %ss' % (days, hours, mins, sec)
 
     def set_recheck(self, info_dict):
-        self.sensu_api.post_check_request(
-            info_dict['service'],
-            self._format_client_subscription(info_dict['host']),
-            self.hosts[info_dict['host']].site
-        )
+        standalone = self.sensu_api.get_event(info_dict['host'], info_dict['service'])['check']['standalone']
+        if standalone and conf.debug_mode:
+            self.Debug(server=self.name, debug='Service {0} on host {1} is a standalone service, will not recheck'.format(info_dict['service'], info_dict['host']))
+        else:
+            self.sensu_api.post_check_request(
+                info_dict['service'],
+                self._format_client_subscription(info_dict['host']),
+                self.hosts[info_dict['host']].site
+            )
 
     def set_downtime(self, info_dict):
         subscription = self._format_client_subscription(info_dict['host'])
