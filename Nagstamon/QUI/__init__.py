@@ -4006,6 +4006,10 @@ class TreeView(QTreeView):
                             self.change_label_status.emit('Connection error', 'error')
                         elif status.error.startswith('requests.exceptions.ReadTimeout'):
                             self.change_label_status.emit('Connection timeout', 'error')
+                        elif status.error.startswith('requests.exceptions.ProxyError'):
+                            self.change_label_status.emit('Proxy error', 'error')
+                        elif status.error.startswith('requests.exceptions.MaxRetryError'):
+                            self.change_label_status.emit('Max retry error', 'error')
                         elif self.server.tls_error:
                             self.change_label_status.emit('SSL/TLS problem', 'critical')
                         elif self.server.status_code in self.server.STATUS_CODES_NO_AUTH or\
