@@ -3871,8 +3871,10 @@ class TreeView(QTreeView):
                 # check if status changed and notification is necessary
                 # send signal because there are unseen events
                 # status has changed if there are unseen events in the list OR (current status is up AND has been changed since last time)
+                bla = self.server.get_events_history_count()
                 if (self.server.get_events_history_count() > 0) or\
                    ((self.server.worst_status_current == 'UP') and (self.server.worst_status_current != self.server.worst_status_last)):
+                    pass
                     self.status_changed.emit(self.server.name, self.server.worst_status_diff, self.server.worst_status_current)
 
 
