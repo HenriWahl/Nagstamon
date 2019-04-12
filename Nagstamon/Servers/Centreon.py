@@ -63,6 +63,8 @@ class CentreonServer(GenericServer):
     first_login = True
     # limit number of services retrived
     limit_services_number = 9999
+    # default value, applies to version 2.2 and others
+    XML_PATH = 'xml'
 
     def init_config(self):
         '''
@@ -70,7 +72,7 @@ class CentreonServer(GenericServer):
         '''
         # set URLs here already
         self.init_HTTP()
-        if not self.tls_error:
+        if not self.tls_error and self.centreon_version is not None:
             self._define_url()
 
     def init_HTTP(self):
@@ -376,9 +378,7 @@ class CentreonServer(GenericServer):
         Centreon 2.8 + c.broker - /include/monitoring/status/Hosts/xml/hostXML.php
         regexping HTML for Javascript
         '''
-        if self.centreon_version == 2.2:
-            self.XML_PATH = 'xml'
-        elif self.centreon_version == 2.3456 or self.centreon_version == 2.66:
+        if self.centreon_version == 2.3456 or self.centreon_version == 2.66:
             # 2.6 support NDO and C. Broker, we must check which one is used
             # cgi_data = {'p':201, 'sid':self.SID}
             cgi_data = {'p':201, 'sid':sid}
@@ -403,7 +403,6 @@ class CentreonServer(GenericServer):
                     self.Debug(server=self.get_name(), debug='Unable to fetch the main page to detect the broker : ' + error)
             del result, error
         else:
-            self.XML_PATH = 'xml'
             if conf.debug_mode == True:
                 self.Debug(server=self.get_name(), debug='Only Centreon Broker is supported in Centeon >= 2.7 -> XML_PATH='+ self.XML_PATH)
 
@@ -458,7 +457,6 @@ class CentreonServer(GenericServer):
             'external_cmd_cmdPopup': self.monitor_cgi_url + '/include/monitoring/external_cmd/cmdPopup.php',
             'keepAlive': self.monitor_cgi_url + '/api/internal.php?object=centreon_keepalive&action=keepAlive'
         }
-
         if self.centreon_version < 2.7:
             self.urls_centreon = urls_centreon_2_2
         elif self.centreon_version == 2.7:
@@ -545,13 +543,17 @@ class CentreonServer(GenericServer):
         except:
             return '',''
 
-
     def _get_status(self):
         '''
         Get status from Centreon Server
         '''
         # Be sure that the session is still active
-        self._check_session()
+        result = self._check_session()
+        if result is not None:
+            if result.result == 'ERROR':
+                if 'urls_centreon' in result.error:
+                    result.error = 'Connection error'
+                return result
 
         # services (unknown, warning or critical?)
         if self.centreon_version in [2.7, 2.8, 18.10]:
@@ -1015,6 +1017,8 @@ class CentreonServer(GenericServer):
     def _check_session(self):
         if conf.debug_mode == True:
             self.Debug(server=self.get_name(), debug='Checking session status')
+        if 'url_centreon' not in self.__dict__:
+            self.init_config()
         try:
             if self.centreon_version == 18.10:
                 result = self.FetchURL(self.urls_centreon['keepAlive'], giveback='raw')
