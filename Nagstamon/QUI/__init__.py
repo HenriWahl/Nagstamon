@@ -2048,12 +2048,14 @@ class StatusWindow(QWidget):
         for state in ['DOWN', 'UNREACHABLE', 'DISASTER', 'CRITICAL', 'HIGH', 'AVERAGE', 'WARNING', 'INFORMATION', 'UNKNOWN']:
             if current_status_count[state] > 0:
                 message += '{0} {1} '.format(str(current_status_count[state]), state)
-        # due to mysterious DBus-Crashes
-        # see https://github.com/HenriWahl/Nagstamon/issues/320
-        try:
-            dbus_connection.show(AppInfo.NAME, message)
-        except Exception:
-            traceback.print_exc(file=sys.stdout)
+
+        if not message == '':
+            # due to mysterious DBus-Crashes
+            # see https://github.com/HenriWahl/Nagstamon/issues/320
+            try:
+                dbus_connection.show(AppInfo.NAME, message)
+            except Exception:
+                traceback.print_exc(file=sys.stdout)
 
     @pyqtSlot()
     def raise_window_on_all_desktops(self):
