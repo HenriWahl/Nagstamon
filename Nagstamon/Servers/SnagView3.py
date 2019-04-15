@@ -201,10 +201,6 @@ class SnagViewServer(GenericServer):
                 if int(h['sv_host__nagios_status__current_state']) == 4:
                     continue
 
-                # Skip if Host has notifications disabled
-                if int(h['sv_host__nagios_status__notifications_enabled']) == 0:
-                    continue
-
                 # host
                 host_name = h['sv_host__nagios__host_name']
 
@@ -285,11 +281,6 @@ class SnagViewServer(GenericServer):
                 # Skip if Host or Service is 'Pending'
                 if int(s['sv_service_status__nagios_status__current_state']) == 4 or int(
                         s['sv_host__nagios_status__current_state']) == 4:
-                    continue
-
-                # Skip if Host or Service has notifications disabled
-                if int(s['sv_service_status__nagios_status__notifications_enabled']) == 0 or int(
-                        s['sv_host__nagios_status__notifications_enabled']) == 0:
                     continue
 
                 # host and service

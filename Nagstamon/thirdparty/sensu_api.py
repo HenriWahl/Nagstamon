@@ -36,40 +36,37 @@ class SensuAPIException(Exception):
 
 
 class SensuAPI(object):
-    def __init__(self, url_base, username=None, password=None):
+    def __init__(self, url_base, username=None, password=None, verify=None):
         self._url_base = url_base
-        self._header = {
+        self._session = requests.Session()
+        self._session.headers.update({
             'User-Agent': 'PySensu Client v0.9.0'
-        }
+        })
+        self._session.verify = verify
         self.good_status = (200, 201, 202, 204)
 
         if username and password:
-            self.auth = HTTPBasicAuth(username, password)
+            self._session.auth = HTTPBasicAuth(username, password)
         elif password and not username:
-            self._header['Authorization'] = 'token {}'.format(password)
-            self.auth = None
-        else:
-            self.auth = None
+            self._session.headers.update({
+                'Authorization': 'token {}'.format(password)
+            })
 
     def _request(self, method, path, **kwargs):
         url = '{}{}'.format(self._url_base, path)
         logger.debug('{} -> {} with {}'.format(method, url, kwargs))
 
         if method == 'GET':
-            resp = requests.get(url, auth=self.auth, headers=self._header,
-                                **kwargs)
+            resp = self._session.get(url, **kwargs)
 
         elif method == 'POST':
-            resp = requests.post(url, auth=self.auth, headers=self._header,
-                                 **kwargs)
+            resp = self._session.post(url, **kwargs)
 
         elif method == 'PUT':
-            resp = requests.put(url, auth=self.auth, headers=self._header,
-                                **kwargs)
+            resp = self._session.put(url, **kwargs)
 
         elif method == 'DELETE':
-            resp = requests.delete(url, auth=self.auth, headers=self._header,
-                                   **kwargs)
+            resp = self._session.delete(url, **kwargs)
         else:
             raise SensuAPIException(
                 'Method {} not implemented'.format(method)
@@ -167,8 +164,7 @@ class SensuAPI(object):
         """
         Resolves an event. (delayed action)
         """
-        self._request('POST', '/resolve',
-                      data=json.dumps({'client': client, 'check': check}))
+        self._request('POST', '/resolve', json={'client': client, 'check': check})
         return True
 
     """
@@ -213,21 +209,21 @@ class SensuAPI(object):
             data['limit'] = limit
         if offset:
             data['offset'] = offset
-        result = self._request('GET', '/silenced', data=json.dumps(data))
+        result = self._request('GET', '/silenced', json=data)
         return result.json()
 
     def post_silence_request(self, kwargs):
         """
         Create a silence entry.
         """
-        self._request('POST', '/silenced', data=json.dumps(kwargs))
+        self._request('POST', '/silenced', json=kwargs)
         return True
 
     def clear_silence(self, kwargs):
         """
         Clear a silence entry.
         """
-        self._request('POST', '/silenced/clear', data=json.dumps(kwargs))
+        self._request('POST', '/silenced/clear', json=kwargs)
         return True
 
     """
@@ -248,8 +244,7 @@ class SensuAPI(object):
         if age:
             data['max_age'] = age
 
-        result = self._request('GET', '/aggregates/{}'.format(check),
-                               data=json.dumps(data))
+        result = self._request('GET', '/aggregates/{}'.format(check), json=data)
         return result.json()
 
     def delete_aggregate(self, check):
@@ -276,7 +271,7 @@ class SensuAPI(object):
         data = {'consumers': consumers, 'messages': messages}
 
         try:
-            self._request('GET', '/health', data=json.dumps(data))
+            self._request('GET', '/health', json=data)
             return True
         except SensuAPIException:
             return False
@@ -322,7 +317,7 @@ class SensuAPI(object):
             'output': output,
             'status': status,
         }
-        self._request('POST', '/results', data=json.dumps(data))
+        self._request('POST', '/results', json=data)
         return True
 
     """

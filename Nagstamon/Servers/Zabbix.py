@@ -175,11 +175,11 @@ class ZabbixServer(GenericServer):
                     n['notifications_disabled'] = True
                     # Filter only hosts by filter "Host & services with disabled checks"
                     n['passiveonly']           = True
-
-                if host['available'] == '0' and host['snmp_available'] == '0' and host['ipmi_available'] == '0' and host['jmx_available'] == '0':
-                    n['status']             = 'UNREACHABLE'
-                    n['status_information'] = 'Host agents in unknown state'
-                    n['duration']           = 'Unknown' 
+                # attempt to fix https://github.com/HenriWahl/Nagstamon/issues/535
+                # if host['available'] == '0' and host['snmp_available'] == '0' and host['ipmi_available'] == '0' and host['jmx_available'] == '0':
+                #     n['status']             = 'UNREACHABLE'
+                #     n['status_information'] = 'Host agents in unknown state'
+                #     n['duration']           = 'Unknown'
                 if host['ipmi_available'] == '2':
                     n['status']             = 'DOWN'
                     n['status_information'] = host['ipmi_error']

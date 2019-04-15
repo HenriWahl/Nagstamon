@@ -55,6 +55,9 @@ class SensuServer(GenericServer):
         self.uchiwa_datacenter = conf.servers[self.get_name()].monitor_site
         self.username = conf.servers[self.get_name()].username
         self.password = conf.servers[self.get_name()].password
+        self.ignore_cert = conf.servers[self.get_name()].ignore_cert
+        self.custom_cert_use = conf.servers[self.get_name()].custom_cert_use
+        self.custom_cert_ca_file = conf.servers[self.get_name()].custom_cert_ca_file
 
         self.BROWSER_URLS = {
             'monitor': '$MONITOR$',
@@ -81,11 +84,17 @@ class SensuServer(GenericServer):
         """
         GenericServer.init_HTTP(self)
 
+        if self.custom_cert_use:
+            verify = self.custom_cert_ca_file
+        else: 
+            verify = not self.ignore_cert
+
         try:
             self.sensu_api = SensuAPI(
                 self.api_url,
                 username=self.username,
-                password=self.password
+                password=self.password,
+                verify=verify
             )
         except SensuAPIException:
                 self.Error(sys.exc_info())
@@ -121,8 +130,8 @@ class SensuServer(GenericServer):
                 if 'dc' in event:
                   new_service.site = event['dc']
                 else:
-                  new_service.site = None
-                new_service.status = None
+                  new_service.site = ''
+                new_service.status = ''
                 try:
                     new_service.status = self.SEVERITY_CODE_TEXT_MAP.get(event_check['status'])
                 except KeyError:
@@ -202,11 +211,20 @@ class SensuServer(GenericServer):
         return '%sd %sh %sm %ss' % (days, hours, mins, sec)
 
     def set_recheck(self, info_dict):
-        self.sensu_api.post_check_request(
-            info_dict['service'],
-            self._format_client_subscription(info_dict['host']),
-            self.hosts[info_dict['host']].site
-        )
+        if info_dict['service'] == 'keepalive':
+            if conf.debug_mode:
+                self.Debug(server=self.name, debug='Keepalive results must come from the client running on host {0}, unable to recheck'.format(info_dict['host']))
+        else:
+            standalone = self.sensu_api.get_event(info_dict['host'], info_dict['service'])['check']['standalone']
+            if standalone:
+                if conf.debug_mode:
+                    self.Debug(server=self.name, debug='Service {0} on host {1} is a standalone service, will not recheck'.format(info_dict['service'], info_dict['host']))
+            else:
+                self.sensu_api.post_check_request(
+                    info_dict['service'],
+                    self._format_client_subscription(info_dict['host']),
+                    self.hosts[info_dict['host']].site
+                )
 
     def set_downtime(self, info_dict):
         subscription = self._format_client_subscription(info_dict['host'])

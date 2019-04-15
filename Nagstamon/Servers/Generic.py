@@ -118,8 +118,8 @@ class GenericServer(object):
         self.new_hosts = dict()
         self.isChecking = False
         self.CheckingForNewVersion = False
-        # store current and difference of worst state for notification
-        self.worst_status_diff = self.worst_status_current = 'UP'
+        # store current, last and difference of worst state for notification
+        self.worst_status_diff = self.worst_status_current = self.worst_status_last = 'UP'
         self.nagitems_filtered_list = list()
         self.nagitems_filtered = {'services': {'DISASTER': [], 'CRITICAL': [], 'HIGH': [],
             'AVERAGE': [], 'WARNING': [], 'INFORMATION': [], 'UNKNOWN': []},
@@ -845,8 +845,8 @@ class GenericServer(object):
                           status_code=self.status_code)
 
         if (self.status == 'ERROR' or
-         self.status_description != '' or
-         self.status_code >= 400):
+            self.status_description != '' or
+            self.status_code >= 400):
 
             # ask for password if authorization failed
             if 'HTTP Error 401' in self.status_description or \
@@ -1273,8 +1273,10 @@ class GenericServer(object):
 
                 # final worst state is one of the predefined states
                 self.worst_status_diff = STATES[worst]
+                del diff_states
 
         # get the current worst state, needed at least for systraystatusicon
+        self.worst_status_last = self.worst_status_current
         self.worst_status_current = 'UP'
         if self.down > 0:
             self.worst_status_current = 'DOWN'
@@ -1371,6 +1373,10 @@ class GenericServer(object):
                 # use session only for connections to monitor servers, other requests like looking for updates
                 # should go out without credentials
                 if no_auth is False:
+                    # check if there is really a session
+                    if not self.session:
+                        self.reset_HTTP()
+                        self.init_HTTP()
                     # most requests come without multipart/form-data
                     if multipart is False:
                         if cgi_data is None:
@@ -1579,3 +1585,36 @@ class GenericServer(object):
                           status_code=copy.deepcopy(status_code)))
         else:
             return(False)
+
+    def get_worst_status_current(self):
+        """
+            hand over the current worst status for get_worst_status()
+        """
+        # get the current worst state, needed at least for systraystatusicon
+        self.worst_status_current = 'UP'
+        if self.down > 0:
+            self.worst_status_current = 'DOWN'
+        elif self.unreachable > 0:
+            self.worst_status_current = 'UNREACHABLE'
+        elif self.disaster > 0:
+            self.worst_status_current = 'DISASTER'
+        elif self.critical > 0:
+            self.worst_status_current = 'CRITICAL'
+        elif self.high > 0:
+            self.worst_status_current = 'HIGH'
+        elif self.average > 0:
+            self.worst_status_current = 'AVERAGE'
+        elif self.warning > 0:
+            self.worst_status_current = 'WARNING'
+        elif self.information > 0:
+            self.worst_status_current = 'INFORMATION'
+        elif self.unknown > 0:
+            self.worst_status_current = 'UNKNOWN'
+
+        return self.worst_status_current
+
+    def get_worst_status_diff(self):
+        """
+            hand over the current worst status difference for QUI
+        """
+        return self.worst_status_diff

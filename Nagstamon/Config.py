@@ -93,7 +93,7 @@ NON_LINUX = ('Darwin', 'Windows')
 INVALID_CHARACTERS = {'\\': '_backslash_',
                       '/': '_slash_',
                       ':': '_colon_',
-                      '*': '_aterisk_',
+                      '*': '_asterisk_',
                       '?': '_question_mark_',
                       '"': '_double_quotes_',
                       '<': '_less_than_',
@@ -105,7 +105,7 @@ class AppInfo(object):
         contains app information previously located in GUI.py
     """
     NAME = 'Nagstamon'
-    VERSION = '3.3-20190130'
+    VERSION = '3.3-20190415'
     WEBSITE = 'https://nagstamon.ifw-dresden.de'
     COPYRIGHT = '©2008-2019 Henri Wahl et al.'
     COMMENTS = 'Nagios status monitor for your desktop'

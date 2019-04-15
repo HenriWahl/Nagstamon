@@ -145,20 +145,20 @@ class Monitos4xServer(GenericServer):
         if self.use_autologin is True:
             if self.cgiurl_hosts is None:
                 # hosts (up, down, unreachable)
-                self.cgiurl_hosts = self.monitor_cgi_url + '/api/host?include=status,configuration&limit=100&filter[states]=0,1,2' + '&authtoken=' + self.autologin_key
+                self.cgiurl_hosts = self.monitor_cgi_url + '/api/host?include=status,configuration&limit=100&filter[states]=0,1,2&filter[onlysyncenabled]' + '&authtoken=' + self.autologin_key
 
             if self.cgiurl_services is None:
                 # services (warning, critical, unknown)
                 self.cgiurl_services = self.monitor_cgi_url + \
-                                       '/api/serviceinstance?include=status,configuration&limit=100&filter[states]=1,2,3' + '&authtoken=' + self.autologin_key
+                                       '/api/serviceinstance?include=status,configuration&limit=100&filter[states]=1,2,3&filter[onlysyncenabled]' + '&authtoken=' + self.autologin_key
         else:
             if self.cgiurl_hosts is None:
                 # hosts (up, down, unreachable)
-                self.cgiurl_hosts = self.monitor_cgi_url + '/api/host?include=status,configuration&limit=100&filter[states]=0,1,2'
+                self.cgiurl_hosts = self.monitor_cgi_url + '/api/host?include=status,configuration&limit=100&filter[states]=0,1,2&filter[onlysyncenabled]'
 
             if self.cgiurl_services is None:
                 # services (warning, critical, unknown)
-                self.cgiurl_services = self.monitor_cgi_url + '/api/serviceinstance?include=status,configuration&limit=100&filter[states]=1,2,3'
+                self.cgiurl_services = self.monitor_cgi_url + '/api/serviceinstance?include=status,configuration&limit=100&filter[states]=1,2,3&filter[onlysyncenabled]'
 
         self.new_hosts = dict()
 
@@ -262,9 +262,10 @@ class Monitos4xServer(GenericServer):
                             self.new_hosts[host_name].flapping = False
 
                         if h['status']['acknowleged'] is None:
-                            self.new_hosts[host_name].acknowledged = 0
+                            self.new_hosts[host_name].acknowledged = False
                         else:
-                            self.new_hosts[host_name].acknowledged = int(h['status']['acknowleged'])
+                            if h['status']['acknowleged'] != 0:
+                                self.new_hosts[host_name].acknowledged = True
 
                         try:
                             if int(h['status']['scheduledDowntimeDepth']) != 0:
@@ -392,9 +393,10 @@ class Monitos4xServer(GenericServer):
                             self.new_hosts[host_name].services[service_name].flapping = False
 
                         if s['status']['acknowleged'] is None:
-                            self.new_hosts[host_name].services[service_name].acknowledged  = 0
+                            self.new_hosts[host_name].services[service_name].acknowledged  = False
                         else:
-                            self.new_hosts[host_name].services[service_name].acknowledged = int(s['status']['acknowleged'])
+                            if s['status']['acknowleged'] != 0:
+                                self.new_hosts[host_name].services[service_name].acknowledged = True
 
                         try:
                             if int(s['status']['scheduledDowntimeDepth']) != 0:

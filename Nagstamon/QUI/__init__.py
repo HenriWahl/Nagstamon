@@ -297,7 +297,8 @@ class SystemTrayIcon(QSystemTrayIcon):
     error_shown = False
 
     def __init__(self):
-        debug_queue.append('DEBUG: Initializing SystemTrayIcon')
+        if conf.debug_mode:
+            debug_queue.append('DEBUG: Initializing SystemTrayIcon')
 
         QSystemTrayIcon.__init__(self)
 
@@ -312,7 +313,8 @@ class SystemTrayIcon(QSystemTrayIcon):
         if OS != 'Windows' or conf.icon_in_systray:
             self.setIcon(self.icons['OK'])
 
-        debug_queue.append('DEBUG: SystemTrayIcon initial icon: {}'.format(self.currentIconName()))
+        if conf.debug_mode:
+            debug_queue.append('DEBUG: SystemTrayIcon initial icon: {}'.format(self.currentIconName()))
 
         # store icon for flashing
         self.current_icon = None
@@ -436,7 +438,7 @@ class SystemTrayIcon(QSystemTrayIcon):
             # store current icon to get it reset back
             if self.current_icon is None:
                 if self.error_shown is False:
-                    self.current_icon = self.icons[statuswindow.worker_notification.worst_notification_status]
+                    self.current_icon = self.icons[statuswindow.worker_notification.get_worst_notification_status()]
                 else:
                     self.current_icon = self.icons['ERROR']
             # use empty SVG icon to display emptiness
@@ -2046,12 +2048,14 @@ class StatusWindow(QWidget):
         for state in ['DOWN', 'UNREACHABLE', 'DISASTER', 'CRITICAL', 'HIGH', 'AVERAGE', 'WARNING', 'INFORMATION', 'UNKNOWN']:
             if current_status_count[state] > 0:
                 message += '{0} {1} '.format(str(current_status_count[state]), state)
-        # due to mysterious DBus-Crashes
-        # see https://github.com/HenriWahl/Nagstamon/issues/320
-        try:
-            dbus_connection.show(AppInfo.NAME, message)
-        except Exception:
-            traceback.print_exc(file=sys.stdout)
+
+        if not message == '':
+            # due to mysterious DBus-Crashes
+            # see https://github.com/HenriWahl/Nagstamon/issues/320
+            try:
+                dbus_connection.show(AppInfo.NAME, message)
+            except Exception:
+                traceback.print_exc(file=sys.stdout)
 
     @pyqtSlot()
     def raise_window_on_all_desktops(self):
@@ -2169,8 +2173,8 @@ class StatusWindow(QWidget):
         def __init__(self):
             QObject.__init__(self)
 
-        @pyqtSlot(str, str)
-        def start(self, server_name, worst_status_diff):
+        @pyqtSlot(str, str, str)
+        def start(self, server_name, worst_status_diff, worst_status_current):
             """
                 start notification
             """
@@ -2182,7 +2186,6 @@ class StatusWindow(QWidget):
                    conf.__dict__['notify_if_{0}'.format(worst_status_diff.lower())] is True:
                     # keep last worst state worth a notification for comparison 3 lines above
                     self.worst_notification_status = worst_status_diff
-
                     # set flag to avoid innecessary notification
                     self.is_notifying = True
                     if self.notifying_server == '':
@@ -2220,6 +2223,12 @@ class StatusWindow(QWidget):
                             self.execute_action(server_name, conf.notification_action_critical_string)
                         if conf.notification_action_down is True and worst_status_diff == 'DOWN':
                             self.execute_action(server_name, conf.notification_action_down_string)
+
+
+                # Notification action OK
+                if worst_status_current == 'UP' and\
+                   conf.notification_actions and conf.notification_action_ok:
+                    self.execute_action(server_name, conf.notification_action_ok_string)
 
                 # Custom event notification - valid vor ALL events, thus without status comparison
                 if conf.notification_actions is True and conf.notification_custom_action is True:
@@ -2306,6 +2315,11 @@ class StatusWindow(QWidget):
                 servers[server_name].Debug(debug='NOTIFICATION: ' + custom_action_string)
             subprocess.Popen(custom_action_string, shell=True)
 
+        def get_worst_notification_status(self):
+            """
+                hand over the current worst status notification
+            """
+            return self.worst_notification_status
 
 class NagstamonLogo(QSvgWidget, DraggableWidget):
     """
@@ -3096,7 +3110,7 @@ class TreeView(QTreeView):
     recheck = pyqtSignal(dict)
 
     # tell notification that status of server has changed
-    status_changed = pyqtSignal(str, str)
+    status_changed = pyqtSignal(str, str, str)
 
     # action to be executed by worker
     # 2 values: action and host/service info
@@ -3302,7 +3316,7 @@ class TreeView(QTreeView):
         # after setting table whole window can be repainted
         self.ready_to_resize.emit()
 
-    def mouseReleaseEvent(self, event):
+    def mouseReleaseEvent_X(self, event):
         """
             forward clicked cell info from event
         """
@@ -3311,23 +3325,57 @@ class TreeView(QTreeView):
         if conf.close_details_clicking_somewhere:
             if event.button() == Qt.LeftButton:
                 modifiers = event.modifiers()
+                # count selected rows - if more than 1 do not close popwin
+                rows = []
+                for index in self.selectedIndexes():
+                    if index.row() not in rows:
+                        rows.append(index.row())
                 if modifiers == Qt.ControlModifier or \
                    modifiers == Qt.ShiftModifier or \
-                   modifiers == (Qt.ControlModifier | Qt.ShiftModifier):
+                   modifiers == (Qt.ControlModifier | Qt.ShiftModifier) or \
+                   len(rows) > 1:
                     pass
                 else:
                     statuswindow.hide_window()
-                del modifiers
+                del modifiers, rows
             elif event.button() == Qt.RightButton:
-                index = self.indexAt(QPoint(event.x(), event.y()))
-                self.cell_clicked(index)
+                self.cell_clicked()
             return
         else:
             if event.button() == Qt.RightButton or event.button() == Qt.LeftButton:
-                index = self.indexAt(QPoint(event.x(), event.y()))
-                self.cell_clicked(index)
+                self.cell_clicked()
                 return
         super(TreeView, self).mouseReleaseEvent(event)
+
+    def mouseReleaseEvent(self, event):
+        """
+            forward clicked cell info from event
+        """
+        # special treatment if window should be closed when left-clicking somewhere
+        # it is important to check if CTRL or SHIFT key is presses while clicking to select lines
+        if event.button() == Qt.LeftButton:
+            modifiers = event.modifiers()
+            # count selected rows - if more than 1 do not close popwin
+            rows = []
+            for index in self.selectedIndexes():
+                if index.row() not in rows:
+                    rows.append(index.row())
+            if modifiers == Qt.ControlModifier or \
+               modifiers == Qt.ShiftModifier or \
+               modifiers == (Qt.ControlModifier | Qt.ShiftModifier) or \
+               len(rows) > 1:
+                super(TreeView, self).mouseReleaseEvent(event)
+            else:
+                if conf.close_details_clicking_somewhere:
+                    statuswindow.hide_window()
+                else:
+                    self.cell_clicked()
+            del modifiers, rows
+            return
+        else:
+            if event.button() == Qt.RightButton or event.button() == Qt.LeftButton:
+                self.cell_clicked()
+                return
 
     def wheelEvent(self, event):
         """
@@ -3346,7 +3394,7 @@ class TreeView(QTreeView):
         
         
     @pyqtSlot()
-    def cell_clicked(self, index):
+    def cell_clicked(self):
         """
             Windows reacts differently to clicks into table cells than Linux and MacOSX
             Therefore the .available flag is necessary
@@ -3366,28 +3414,32 @@ class TreeView(QTreeView):
             actions_list = list(conf.actions)
             actions_list.sort(key=str.lower)
             
-            # How many rows we have
+            # How many rows do we have
             list_rows = []
-            for ind in self.selectedIndexes():
-                if ind.row() not in list_rows:
-                    list_rows.append(ind.row())
-            
-            # Only add custom action if one row is selected
-            if len(list_rows) == 1:
-                # take data from model data_array
-                miserable_host = self.model().data_array[index.row()][0]
-                miserable_service = self.model().data_array[index.row()][2]
-                
-                for a in actions_list:
-                    # shortcut for next lines
-                    action = conf.actions[a]
+            for index in self.selectedIndexes():
+                if index.row() not in list_rows:
+                    list_rows.append(index.row())
 
-                    # check if current monitor server type is in action
-                    # second scheck for server type is legacy-compatible with older settions
-                    if action.enabled is True and (action.monitor_type in ['', self.server.TYPE] or 
-                                                   action.monitor_type not in SERVER_TYPES):
-                        # menu item visibility flag
-                        item_visible = False
+            # Add custom actions if all selected rows want them, one per one
+            for a in actions_list:
+                # shortcut for next lines
+                action = conf.actions[a]
+
+                # check if current monitor server type is in action
+                # second check for server type is legacy-compatible with older settings
+                if action.enabled is True and (action.monitor_type in ['', self.server.TYPE] or
+                                               action.monitor_type not in SERVER_TYPES):
+
+                    # menu item visibility flag
+                    item_visible = None
+
+                    for lrow in list_rows:
+                        # temporary menu item visibility flag to collect all visibility info
+                        item_visible_temporary = False
+                        # take data from model data_array
+                        miserable_host = self.model().data_array[lrow][0]
+                        miserable_service = self.model().data_array[lrow][2]
+
                         # check if clicked line is a service or host
                         # if it is check if the action is targeted on hosts or services
                         if miserable_service:
@@ -3397,24 +3449,24 @@ class TreeView(QTreeView):
                                     if is_found_by_re(miserable_host,
                                                       action.re_host_pattern,
                                                       action.re_host_reverse):
-                                        item_visible = True
+                                        item_visible_temporary = True
                                 # dito
                                 if action.re_service_enabled is True:
                                     if is_found_by_re(miserable_service,
                                                       action.re_service_pattern,
                                                       action.re_service_reverse):
-                                        item_visible = True
+                                        item_visible_temporary = True
                                 # dito
                                 if action.re_status_information_enabled is True:
                                     if is_found_by_re(miserable_service,
                                                       action.re_status_information_pattern,
                                                       action.re_status_information_reverse):
-                                        item_visible = True
+                                        item_visible_temporary = True
 
                                 # fallback if no regexp is selected
                                 if action.re_host_enabled == action.re_service_enabled == \
                                    action.re_status_information_enabled is False:
-                                    item_visible = True
+                                    item_visible_temporary = True
 
                         else:
                             # hosts should only care about host specific actions, no services
@@ -3423,24 +3475,32 @@ class TreeView(QTreeView):
                                     if is_found_by_re(miserable_host,
                                                       action.re_host_pattern,
                                                       action.re_host_reverse):
-                                        item_visible = True
+                                        item_visible_temporary = True
                                 else:
                                     # a non specific action will be displayed per default
-                                    item_visible = True
-                    else:
-                        item_visible = False
+                                    item_visible_temporary = True
 
-                    # populate context menu with service actions
-                    if item_visible is True:
-                        # create action
-                        action_menuentry = QAction(a, self)
-                        # add action
-                        self.action_menu.addAction(action_menuentry)
-                        # action to signalmapper
-                        self.signalmapper_action_menu.setMapping(action_menuentry, a)
-                        action_menuentry.triggered.connect(self.signalmapper_action_menu.map)
+                        # when item_visible never has been set it shall be false
+                        # also if at least one row leads to not-showing the item it will be false
+                        if item_visible_temporary and item_visible is None:
+                            item_visible = True
+                        if not item_visible_temporary:
+                            item_visible = False
 
-                    del action, item_visible
+                else:
+                    item_visible = False
+
+                # populate context menu with service actions
+                if item_visible is True:
+                    # create action
+                    action_menuentry = QAction(a, self)
+                    # add action
+                    self.action_menu.addAction(action_menuentry)
+                    # action to signalmapper
+                    self.signalmapper_action_menu.setMapping(action_menuentry, a)
+                    action_menuentry.triggered.connect(self.signalmapper_action_menu.map)
+
+                del action, item_visible
 
             # create and add default actions
             action_edit_actions = QAction('Edit actions...', self)
@@ -3490,47 +3550,58 @@ class TreeView(QTreeView):
         else:
             self.action_menu.available = True
 
+
     @pyqtSlot(str)
     def action_menu_custom_response(self, action):
         # avoid blocked context menu
         self.action_menu.available = True
-        
-        # only on 1 row
-        indexes = self.selectedIndexes()
-        index = indexes[0]
-        miserable_host = self.model().data(self.model().createIndex(index.row(),0), Qt.DisplayRole)
-        miserable_service = self.model().data(self.model().createIndex(index.row(),2), Qt.DisplayRole)
-        miserable_status_info = self.model().data(self.model().createIndex(index.row(),8), Qt.DisplayRole)
-        
-        # get data to send to action       
-        server = self.server.get_name()
-        address = self.server.GetHost(miserable_host).result
-        monitor = self.server.monitor_url
-        monitor_cgi = self.server.monitor_cgi_url
-        username = self.server.username
-        password = self.server.password
-        comment_ack = conf.defaults_acknowledge_comment
-        comment_down = conf.defaults_downtime_comment
-        comment_submit = conf.defaults_submit_check_result_comment
-        
-        # send dict with action info and dict with host/service info
-        self.request_action.emit(conf.actions[action].__dict__, {'server': server,
-                                                                 'host': miserable_host,
-                                                                 'service': miserable_service,
-                                                                 'status-info': miserable_status_info,
-                                                                 'address': address,
-                                                                 'monitor': monitor,
-                                                                 'monitor-cgi': monitor_cgi,
-                                                                 'username': username,
-                                                                 'password': password,
-                                                                 'comment-ack': comment_ack,
-                                                                 'comment-down': comment_down,
-                                                                 'comment-submit': comment_submit
-                                                                 })
 
-        # if action wants a closed status window it should be closed now
-        if conf.actions[action].close_popwin and not conf.fullscreen and not conf.windowed:
-            statuswindow.hide_window()
+        # How many rows do we have
+        list_rows = []
+        for index in self.selectedIndexes():
+            if index.row() not in list_rows:
+                list_rows.append(index.row())
+
+        for lrow in list_rows:
+            miserable_host = self.model().data(self.model().createIndex(lrow, 0), Qt.DisplayRole)
+            miserable_service = self.model().data(self.model().createIndex(lrow, 2), Qt.DisplayRole)
+            miserable_status_info = self.model().data(self.model().createIndex(lrow, 8), Qt.DisplayRole)
+
+            # get data to send to action
+            server = self.server.get_name()
+            address = self.server.GetHost(miserable_host).result
+            monitor = self.server.monitor_url
+            monitor_cgi = self.server.monitor_cgi_url
+            username = self.server.username
+            password = self.server.password
+            comment_ack = conf.defaults_acknowledge_comment
+            comment_down = conf.defaults_downtime_comment
+            comment_submit = conf.defaults_submit_check_result_comment
+
+            # send dict with action info and dict with host/service info
+            self.request_action.emit(conf.actions[action].__dict__,
+                                     {'server': server,
+                                      'host': miserable_host,
+                                      'service': miserable_service,
+                                      'status-info': miserable_status_info,
+                                      'address': address,
+                                      'monitor': monitor,
+                                      'monitor-cgi': monitor_cgi,
+                                      'username': username,
+                                      'password': password,
+                                      'comment-ack': comment_ack,
+                                      'comment-down': comment_down,
+                                      'comment-submit': comment_submit
+                                      }
+                                     )
+
+            # if action wants a closed status window it should be closed now
+            if conf.actions[action].close_popwin and not conf.fullscreen and not conf.windowed:
+                statuswindow.hide_window()
+
+        # clean up
+        del list_rows
+
 
     @pyqtSlot()
     def action_response_decorator(method):
@@ -3562,20 +3633,21 @@ class TreeView(QTreeView):
     def action_monitor(self):
         # only on 1 row
         indexes = self.selectedIndexes()
-        index = indexes[0]
-        miserable_host = self.model().data(self.model().createIndex(index.row(),0), Qt.DisplayRole)
-        miserable_service = self.model().data(self.model().createIndex(index.row(),2), Qt.DisplayRole)
-        
-        # open host/service monitor in browser
-        self.server.open_monitor(miserable_host, miserable_service)
+        if len(indexes) > 0:
+            index = indexes[0]
+            miserable_host = self.model().data(self.model().createIndex(index.row(),0), Qt.DisplayRole)
+            miserable_service = self.model().data(self.model().createIndex(index.row(),2), Qt.DisplayRole)
+
+            # open host/service monitor in browser
+            self.server.open_monitor(miserable_host, miserable_service)
 
     @action_response_decorator
     def action_recheck(self):
         # How many rows we have
         list_rows = []
-        for ind in self.selectedIndexes():
-            if ind.row() not in list_rows:
-                list_rows.append(ind.row())
+        for index in self.selectedIndexes():
+            if index.row() not in list_rows:
+                list_rows.append(index.row())
         
         for lrow in list_rows:
             miserable_host = self.model().data(self.model().createIndex(lrow,0), Qt.DisplayRole)
@@ -3592,9 +3664,9 @@ class TreeView(QTreeView):
         
         # How many rows we have
         list_rows = []
-        for ind in self.selectedIndexes():
-            if ind.row() not in list_rows:
-                list_rows.append(ind.row())
+        for index in self.selectedIndexes():
+            if index.row() not in list_rows:
+                list_rows.append(index.row())
                 
         for lrow in list_rows:
             list_host.append(self.model().data(self.model().createIndex(lrow, 0), Qt.DisplayRole))
@@ -3613,9 +3685,9 @@ class TreeView(QTreeView):
         
         # How many rows we have
         list_rows = []
-        for ind in self.selectedIndexes():
-            if ind.row() not in list_rows:
-                list_rows.append(ind.row())
+        for index in self.selectedIndexes():
+            if index.row() not in list_rows:
+                list_rows.append(index.row())
                 
         for lrow in list_rows:
             list_host.append(self.model().data(self.model().createIndex(lrow, 0), Qt.DisplayRole))
@@ -3642,9 +3714,10 @@ class TreeView(QTreeView):
         
         # How many rows we have
         list_rows = []
-        for ind in self.selectedIndexes():
-            if ind.row() not in list_rows:
-                list_rows.append(ind.row())
+        indexes = self.selectedIndexes()
+        for index in indexes:
+            if index.row() not in list_rows:
+                list_rows.append(index.row())
                 
         for lrow in list_rows:
             list_host.append(self.model().data(self.model().createIndex(lrow, 0), Qt.DisplayRole))
@@ -3652,11 +3725,10 @@ class TreeView(QTreeView):
             list_status.append(self.model().data(self.model().createIndex(lrow, 8), Qt.DisplayRole))
         
         for line_number in range(len(list_host)):
-            host=list_host[line_number]
-            service=list_service[line_number]
-            status=list_status[line_number]
-            
-            
+            host = list_host[line_number]
+            service = list_service[line_number]
+            status = list_status[line_number]
+
             info = {'server': self.server.get_name(),
                     'host': host,
                     'service': service,
@@ -3673,6 +3745,10 @@ class TreeView(QTreeView):
 
             # tell worker to do the action
             self.request_action.emit(action, info)
+
+        # clean up
+        del index, indexes, list_rows, list_host, list_service, list_status
+
 
     @action_response_decorator
     def action_submit(self):
@@ -3700,9 +3776,9 @@ class TreeView(QTreeView):
         
         # How many rows we have
         list_rows = []
-        for ind in self.selectedIndexes():
-            if ind.row() not in list_rows:
-                list_rows.append(ind.row())
+        for index in self.selectedIndexes():
+            if index.row() not in list_rows:
+                list_rows.append(index.row())
                 
         for lrow in list_rows:
             list_host.append(self.model().data(self.model().createIndex(lrow, 0), Qt.DisplayRole))
@@ -3722,9 +3798,9 @@ class TreeView(QTreeView):
         
         # How many rows we have
         list_rows = []
-        for ind in self.selectedIndexes():
-            if ind.row() not in list_rows:
-                list_rows.append(ind.row())
+        for index in self.selectedIndexes():
+            if index.row() not in list_rows:
+                list_rows.append(index.row())
                 
         for lrow in list_rows:
             list_status.append(self.model().data(self.model().createIndex(lrow, 8), Qt.DisplayRole))
@@ -3746,9 +3822,9 @@ class TreeView(QTreeView):
         
         # How many rows we have
         list_rows = []
-        for ind in self.selectedIndexes():
-            if ind.row() not in list_rows:
-                list_rows.append(ind.row())
+        for index in self.selectedIndexes():
+            if index.row() not in list_rows:
+                list_rows.append(index.row())
                 
         for lrow in list_rows:
             list_host.append(self.model().data(self.model().createIndex(lrow, 0), Qt.DisplayRole))
@@ -3796,8 +3872,12 @@ class TreeView(QTreeView):
 
                 # check if status changed and notification is necessary
                 # send signal because there are unseen events
-                if self.server.get_events_history_count() > 0:
-                    self.status_changed.emit(self.server.name, self.server.worst_status_diff)
+                # status has changed if there are unseen events in the list OR (current status is up AND has been changed since last time)
+                bla = self.server.get_events_history_count()
+                if (self.server.get_events_history_count() > 0) or\
+                   ((self.server.worst_status_current == 'UP') and (self.server.worst_status_current != self.server.worst_status_last)):
+                    pass
+                    self.status_changed.emit(self.server.name, self.server.worst_status_diff, self.server.worst_status_current)
 
 
     @pyqtSlot(int, Qt.SortOrder)
@@ -3930,6 +4010,10 @@ class TreeView(QTreeView):
                             self.change_label_status.emit('Connection error', 'error')
                         elif status.error.startswith('requests.exceptions.ReadTimeout'):
                             self.change_label_status.emit('Connection timeout', 'error')
+                        elif status.error.startswith('requests.exceptions.ProxyError'):
+                            self.change_label_status.emit('Proxy error', 'error')
+                        elif status.error.startswith('requests.exceptions.MaxRetryError'):
+                            self.change_label_status.emit('Max retry error', 'error')
                         elif self.server.tls_error:
                             self.change_label_status.emit('SSL/TLS problem', 'critical')
                         elif self.server.status_code in self.server.STATUS_CODES_NO_AUTH or\
@@ -4186,6 +4270,7 @@ class TreeView(QTreeView):
                 start, end = self.server.get_start_end(host)
                 # send start/end time to slot
                 self.set_start_end.emit(start, end)
+
 
         @pyqtSlot(dict, dict)
         def execute_action(self, action, info):
@@ -5955,7 +6040,7 @@ class Dialog_Acknowledge(Dialog):
         
         for i in range(len(self.host_list)):
             if self.service_list[i] == "":
-                str = str + 'Host <b>%s</b><br>' % (host_list[i])
+                str = str + 'Host <b>%s</b><br>' % (self.host_list[i])
             else:
                 str = str + 'Service <b>%s</b> on host <b>%s</b><br>' % (self.service_list[i], self.host_list[i])
         
@@ -5976,6 +6061,7 @@ class Dialog_Acknowledge(Dialog):
         self.ui.input_lineedit_comment.setText(conf.defaults_acknowledge_comment)
         self.ui.input_lineedit_comment.setFocus()
 
+
     def ok(self):
         """
             acknowledge miserable host/service
@@ -5987,7 +6073,7 @@ class Dialog_Acknowledge(Dialog):
         if acknowledge_all_services is True:
             for i in self.server.nagitems_filtered["services"].values():
                 for s in i:
-                    if s.host == self.host:
+                    if s.host in self.host_list:
                         all_services.append(s.name)
 
         for line_number in range(len(self.host_list)):
@@ -6036,7 +6122,7 @@ class Dialog_Downtime(Dialog):
         
         for i in range(len(self.host_list)):
             if self.service_list[i] == "":
-                str = str + 'Host <b>%s</b><br>' % (host_list[i])
+                str = str + 'Host <b>%s</b><br>' % (self.host_list[i])
             else:
                 str = str + 'Service <b>%s</b> on host <b>%s</b><br>' % (self.service_list[i], self.host_list[i])
         

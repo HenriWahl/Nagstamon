@@ -1,8 +1,7 @@
-nagstamon (3.3-20190130) unstable; urgency=low
+nagstamon (3.3-20190415) unstable; urgency=low
   * New upstream
-    - enable verification of TLS certificate when checking for new version
 
--- Henri Wahl <h.wahl@ifw-dresden.de> Mon, 7 Jan 2019 15:00:00 +0100
+-- Henri Wahl <h.wahl@ifw-dresden.de> Fri, 12 Apr 2019 08:00:00 +0100
 
 nagstamon (3.2.1) stable; urgency=low
   * New upstream
