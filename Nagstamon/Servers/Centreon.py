@@ -98,7 +98,7 @@ class CentreonServer(GenericServer):
                 elif re.search('2\.[3-6]\.[0-5]', raw_versioncheck):
                     self.centreon_version = 2.3456
                     if conf.debug_mode is True:
-                        self.Debug(server=self.get_name(), debug='Centreon version detected : 2.6.5 <=> 2.3')
+                        self.Debug(server=self.get_name(), debug='Centreon version detected : 2.3 <=> 2.6.5')
                     # URLs for browser shortlinks/buttons on popup window
                     self.BROWSER_URLS = {'monitor': '$MONITOR$/main.php?p=1',
                                         'hosts': '$MONITOR$/main.php?p=20103&o=hpb',
@@ -133,10 +133,10 @@ class CentreonServer(GenericServer):
                                         'hosts': '$MONITOR$/main.php?p=20202',
                                         'services': '$MONITOR$/main.php?p=20201',
                                         'history': '$MONITOR$/main.php?p=203'}
-                elif re.search('18\.10\.[0-9]', raw_versioncheck):
+                elif re.search('18\.10\.[0-9]', raw_versioncheck) or re.search('19\.04\.[0-9]', raw_versioncheck):
                     self.centreon_version = 18.10
                     if conf.debug_mode is True:
-                        self.Debug(server=self.get_name(), debug='Centreon version detected : 18.10')
+                        self.Debug(server=self.get_name(), debug='Centreon version detected : 18.10 <=> 19.04')
                     # URLs for browser shortlinks/buttons on popup window
                     self.BROWSER_URLS = {'monitor': '$MONITOR$/main.php?',
                                         'hosts': '$MONITOR$/main.php?p=20202',
