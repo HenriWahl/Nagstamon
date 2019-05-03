@@ -198,7 +198,7 @@ class SnagViewServer(GenericServer):
                 h = dict(host)
 
                 # Skip if Host is 'Pending'
-                if int(h['sv_host__nagios_status__current_state']) == 4:
+                if int(h['sv_host__nagios_status__current_state'] or 4) == 4:
                     continue
 
                 # host
@@ -211,23 +211,23 @@ class SnagViewServer(GenericServer):
                     self.new_hosts[host_name].svid = h['sv_host__svobjects____SVID']
                     self.new_hosts[host_name].server = self.name
                     self.new_hosts[host_name].status = self.STATES_MAPPING['hosts'][int(
-                        h['sv_host__nagios_status__current_state'])]
+                        h['sv_host__nagios_status__current_state'] or 4)]
                     self.new_hosts[host_name].last_check = datetime.datetime.fromtimestamp(
                         int(h['sv_host__nagios_status__last_check']))
                     self.new_hosts[host_name].attempt = h['sv_host__nagios__max_check_attempts']
                     self.new_hosts[host_name].status_information = h['sv_host__nagios_status__plugin_output']
                     self.new_hosts[host_name].passiveonly = not (
-                        int(h['sv_host__nagios_status__checks_enabled']))
+                        int(h['sv_host__nagios_status__checks_enabled'] or 0))
                     self.new_hosts[host_name].notifications_disabled = not (
-                        int(h['sv_host__nagios_status__notifications_enabled']))
+                        int(h['sv_host__nagios_status__notifications_enabled'] or 0))
                     self.new_hosts[host_name].flapping = int(
-                        h['sv_host__nagios_status__is_flapping'])
+                        h['sv_host__nagios_status__is_flapping'] or 0)
                     self.new_hosts[host_name].acknowledged = int(
-                        h['sv_host__nagios_status__problem_has_been_acknowledged'])
+                        h['sv_host__nagios_status__problem_has_been_acknowledged'] or 0)
                     self.new_hosts[host_name].scheduled_downtime = int(
-                        h['sv_host__nagios_status__scheduled_downtime_depth'])
+                        h['sv_host__nagios_status__scheduled_downtime_depth'] or 0)
                     self.new_hosts[host_name].status_type = 'soft' if int(
-                        h['sv_host__nagios_status__state_type']) == 0 else 'hard'
+                        h['sv_host__nagios_status__state_type'] or 0) == 0 else 'hard'
 
                     # extra duration needed for calculation
                     duration = datetime.datetime.now(
@@ -279,8 +279,8 @@ class SnagViewServer(GenericServer):
                 s = dict(service)
 
                 # Skip if Host or Service is 'Pending'
-                if int(s['sv_service_status__nagios_status__current_state']) == 4 or int(
-                        s['sv_host__nagios_status__current_state']) == 4:
+                if int(s['sv_service_status__nagios_status__current_state'] or 4) == 4 or int(
+                        s['sv_host__nagios_status__current_state'] or 4) == 4:
                     continue
 
                 # host and service
@@ -297,7 +297,7 @@ class SnagViewServer(GenericServer):
                     self.new_hosts[host_name].services[service_name].name = service_name
                     self.new_hosts[host_name].services[service_name].server = self.name
                     self.new_hosts[host_name].services[service_name].status = self.STATES_MAPPING['services'][int(
-                        s['sv_service_status__nagios_status__current_state'])]
+                        s['sv_service_status__nagios_status__current_state'] or 4)]
                     self.new_hosts[host_name].services[service_name].last_check = datetime.datetime.fromtimestamp(
                         int(s['sv_service_status__nagios_status__last_check']))
                     self.new_hosts[host_name].services[service_name].attempt = s[
@@ -307,17 +307,17 @@ class SnagViewServer(GenericServer):
                             '\n', ' ').strip(),
                         'html.parser').text
                     self.new_hosts[host_name].services[service_name].passiveonly = not (
-                        int(s['sv_service_status__nagios_status__checks_enabled']))
+                        int(s['sv_service_status__nagios_status__checks_enabled'] or 0))
                     self.new_hosts[host_name].services[service_name].notifications_disabled = not (
-                        int(s['sv_service_status__nagios_status__notifications_enabled']))
+                        int(s['sv_service_status__nagios_status__notifications_enabled'] or 0))
                     self.new_hosts[host_name].services[service_name].flapping = int(
-                        s['sv_service_status__nagios_status__is_flapping'])
+                        s['sv_service_status__nagios_status__is_flapping'] or 0)
                     self.new_hosts[host_name].services[service_name].acknowledged = int(
-                        s['sv_service_status__nagios_status__problem_has_been_acknowledged'])
+                        s['sv_service_status__nagios_status__problem_has_been_acknowledged'] or 0)
                     self.new_hosts[host_name].services[service_name].scheduled_downtime = int(
-                        s['sv_service_status__nagios_status__scheduled_downtime_depth'])
+                        s['sv_service_status__nagios_status__scheduled_downtime_depth'] or 0)
                     self.new_hosts[host_name].services[service_name].status_type = 'soft' if int(
-                        s['sv_service_status__nagios_status__state_type']) == 0 else 'hard'
+                        s['sv_service_status__nagios_status__state_type'] or 0) == 0 else 'hard'
 
                     # acknowledge needs service_description and no display name
                     self.new_hosts[host_name].services[service_name].real_name = s[
