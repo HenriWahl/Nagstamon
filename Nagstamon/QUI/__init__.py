@@ -1604,6 +1604,29 @@ class StatusWindow(QWidget):
                 if conf.icon_in_systray or conf.statusbar_floating:
                     self.hide_window()
 
+            # If the mouse cursor drives too fast over and out the window will not be hidden.
+            # Thus we check again with this timer to catch missed mouse-outs.
+            self.periodically_check_window_under_mouse_and_hide()
+
+    def periodically_check_window_under_mouse_and_hide(self):
+        """
+        Periodically check if window is under mouse and hide it if not
+        """
+        if not self.hide_window_if_not_under_mouse():
+            QTimer.singleShot(1000, self.periodically_check_window_under_mouse_and_hide)
+
+    def hide_window_if_not_under_mouse(self):
+        """
+        Hide window if it is under mouse
+        """
+        mouse_x = QCursor.pos().x()
+        mouse_y = QCursor.pos().y()
+        if statuswindow.geometry().contains(mouse_x, mouse_y):
+            return False
+
+        self.hide_window()
+        return True
+
     @pyqtSlot()
     def update_window(self):
         """
