@@ -200,7 +200,7 @@ class MultisiteServer(GenericServer):
         # get cookie from login page via url retrieving as with other urls
         try:
             # login and get cookie
-            self.FetchURL(self.monitor_url + '/login.py', cgi_data=login_data, multipart=True)
+            self.FetchURL(self.monitor_url + 'login.py', cgi_data=login_data, multipart=True)
         except:
             import traceback
             traceback.print_exc(file=sys.stdout)
