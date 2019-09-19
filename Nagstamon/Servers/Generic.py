@@ -31,6 +31,7 @@ from Nagstamon.Helpers import (host_is_filtered_out_by_re,
                                StatusInformationIsFilteredOutByRE,
                                DurationIsFilteredOutByRE,
                                AttemptIsFilteredOutByRE,
+                               GroupsIsFilteredOutByRE,
                                CriticalityIsFilteredOutByRE,
                                not_empty,
                                webbrowser_open,
@@ -1096,6 +1097,12 @@ class GenericServer(object):
                     service.visible = False
 
                 if AttemptIsFilteredOutByRE(service.attempt, conf) is True:
+                    if conf.debug_mode:
+                        self.Debug(server=self.get_name(),
+                                   debug='Filter: REGEXP ' + str(host.name) + ';' + str(service.name))
+                    service.visible = False
+
+                if GroupsIsFilteredOutByRE(service.groups, conf) is True:
                     if conf.debug_mode:
                         self.Debug(server=self.get_name(),
                                    debug='Filter: REGEXP ' + str(host.name) + ';' + str(service.name))
