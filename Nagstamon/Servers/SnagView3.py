@@ -217,15 +217,15 @@ class SnagViewServer(GenericServer):
                     self.new_hosts[host_name].attempt = h['sv_host__nagios__max_check_attempts']
                     self.new_hosts[host_name].status_information = h['sv_host__nagios_status__plugin_output']
                     self.new_hosts[host_name].passiveonly = not (
-                        int(h['sv_host__nagios_status__checks_enabled'] or 0))
+                        bool(h['sv_host__nagios_status__checks_enabled'] or False))
                     self.new_hosts[host_name].notifications_disabled = not (
-                        int(h['sv_host__nagios_status__notifications_enabled'] or 0))
-                    self.new_hosts[host_name].flapping = int(
-                        h['sv_host__nagios_status__is_flapping'] or 0)
-                    self.new_hosts[host_name].acknowledged = int(
-                        h['sv_host__nagios_status__problem_has_been_acknowledged'] or 0)
-                    self.new_hosts[host_name].scheduled_downtime = int(
-                        h['sv_host__nagios_status__scheduled_downtime_depth'] or 0)
+                        bool(h['sv_host__nagios_status__notifications_enabled'] or False))
+                    self.new_hosts[host_name].flapping = bool(
+                        h['sv_host__nagios_status__is_flapping'] or False)
+                    self.new_hosts[host_name].acknowledged = bool(
+                        h['sv_host__nagios_status__problem_has_been_acknowledged'] or False)
+                    self.new_hosts[host_name].scheduled_downtime = bool(
+                        h['sv_host__nagios_status__scheduled_downtime_depth'] or False)
                     self.new_hosts[host_name].status_type = 'soft' if int(
                         h['sv_host__nagios_status__state_type'] or 0) == 0 else 'hard'
 
@@ -307,15 +307,15 @@ class SnagViewServer(GenericServer):
                             '\n', ' ').strip(),
                         'html.parser').text
                     self.new_hosts[host_name].services[service_name].passiveonly = not (
-                        int(s['sv_service_status__nagios_status__checks_enabled'] or 0))
+                        bool(s['sv_service_status__nagios_status__checks_enabled'] or False))
                     self.new_hosts[host_name].services[service_name].notifications_disabled = not (
-                        int(s['sv_service_status__nagios_status__notifications_enabled'] or 0))
-                    self.new_hosts[host_name].services[service_name].flapping = int(
-                        s['sv_service_status__nagios_status__is_flapping'] or 0)
-                    self.new_hosts[host_name].services[service_name].acknowledged = int(
-                        s['sv_service_status__nagios_status__problem_has_been_acknowledged'] or 0)
-                    self.new_hosts[host_name].services[service_name].scheduled_downtime = int(
-                        s['sv_service_status__nagios_status__scheduled_downtime_depth'] or 0)
+                        bool(s['sv_service_status__nagios_status__notifications_enabled'] or False))
+                    self.new_hosts[host_name].services[service_name].flapping = bool(
+                        s['sv_service_status__nagios_status__is_flapping'] or False)
+                    self.new_hosts[host_name].services[service_name].acknowledged = bool(
+                        s['sv_service_status__nagios_status__problem_has_been_acknowledged'] or False)
+                    self.new_hosts[host_name].services[service_name].scheduled_downtime = bool(
+                        s['sv_service_status__nagios_status__scheduled_downtime_depth'] or False)
                     self.new_hosts[host_name].services[service_name].status_type = 'soft' if int(
                         s['sv_service_status__nagios_status__state_type'] or 0) == 0 else 'hard'
 
