@@ -1606,8 +1606,10 @@ class StatusWindow(QWidget):
 
             # If the mouse cursor drives too fast over and out the window will not be hidden.
             # Thus we check again with this timer to catch missed mouse-outs.
-            if not conf.fullscreen and not conf.windowed:
-              self.periodically_check_window_under_mouse_and_hide()
+            if conf.close_details_hover \
+                    and not conf.fullscreen \
+                    and not conf.windowed:
+                self.periodically_check_window_under_mouse_and_hide()
 
     def periodically_check_window_under_mouse_and_hide(self):
         """
@@ -1620,9 +1622,11 @@ class StatusWindow(QWidget):
         """
         Hide window if it is under mouse
         """
-        mouse_x = QCursor.pos().x()
-        mouse_y = QCursor.pos().y()
-        if statuswindow.geometry().contains(mouse_x, mouse_y):
+        mouse_pos = QCursor.pos()
+
+        # Check mouse cursor over window and an opened context menu or dropdown list
+        if statuswindow.geometry().contains(mouse_pos.x(), mouse_pos.y()) \
+                or not qApp.activePopupWidget() is None:
             return False
 
         self.hide_window()
