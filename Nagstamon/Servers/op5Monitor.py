@@ -83,6 +83,7 @@ class Op5MonitorServer(GenericServer):
     api_host_col.append('plugin_output')
     api_host_col.append('scheduled_downtime_depth')
     api_host_col.append('state')
+    api_host_col.append('groups')
 
     api_svc_col.append('acknowledged')
     api_svc_col.append('active_checks_enabled')
@@ -100,6 +101,7 @@ class Op5MonitorServer(GenericServer):
     api_svc_col.append('plugin_output')
     api_svc_col.append('scheduled_downtime_depth')
     api_svc_col.append('state')
+    api_svc_col.append('host.groups')
 
 
     # URLs for browser shortlinks/buttons on popup window
@@ -175,6 +177,7 @@ class Op5MonitorServer(GenericServer):
                     n['status'] = self.STATUS_HOST_MAPPING[str(api['state'])]
                     n['status_information'] = api['plugin_output']
                     n['status_type'] = api['state']
+                    n['groups'] = str(api['groups'])
 
                     if not n['host'] in self.new_hosts:
                         self.new_hosts[n['host']] = GenericHost()
@@ -190,6 +193,7 @@ class Op5MonitorServer(GenericServer):
                         self.new_hosts[n['host']].status = n['status']
                         self.new_hosts[n['host']].status_information = n['status_information'].replace("\n", " ").strip()
                         self.new_hosts[n['host']].status_type = n['status_type']
+                        self.new_hosts[n['host']].groups = n['groups']
                     nagitems['hosts'].append(n)
                 del n
 
@@ -242,6 +246,7 @@ class Op5MonitorServer(GenericServer):
                     n['duration'] = human_duration(api['last_state_change'])
                     n['last_check'] = datetime.fromtimestamp(int(api['last_check'])).strftime('%Y-%m-%d %H:%M:%S')
                     n['status_information'] = api['plugin_output']
+                    n['groups'] = str(api['host']['groups'])
 
                     if not n['host'] in self.new_hosts:
                         self.new_hosts[n['host']] = GenericHost()
@@ -265,6 +270,7 @@ class Op5MonitorServer(GenericServer):
                         self.new_hosts[n['host']].services[n['service']].scheduled_downtime = n['scheduled_downtime']
                         self.new_hosts[n['host']].services[n['service']].status = n['status']
                         self.new_hosts[n['host']].services[n['service']].status_information = n['status_information'].replace("\n", " ").strip()
+                        self.new_hosts[n['host']].services[n['service']].groups = n['groups']
 
                     nagitems['services'].append(n)
                 return Result()

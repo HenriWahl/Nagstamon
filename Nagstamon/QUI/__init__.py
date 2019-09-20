@@ -1606,7 +1606,8 @@ class StatusWindow(QWidget):
 
             # If the mouse cursor drives too fast over and out the window will not be hidden.
             # Thus we check again with this timer to catch missed mouse-outs.
-            self.periodically_check_window_under_mouse_and_hide()
+            if not conf.fullscreen and not conf.windowed:
+              self.periodically_check_window_under_mouse_and_hide()
 
     def periodically_check_window_under_mouse_and_hide(self):
         """
@@ -3485,10 +3486,31 @@ class TreeView(QTreeView):
                                                       action.re_status_information_pattern,
                                                       action.re_status_information_reverse):
                                         item_visible_temporary = True
+                                # dito
+                                if action.re_duration_enabled is True:
+                                    if is_found_by_re(miserable_service,
+                                                      action.re_duration_pattern,
+                                                      action.re_duration_reverse):
+                                        item_visible_temporary = True
+
+                                # dito
+                                if action.re_attempt_enabled is True:
+                                    if is_found_by_re(miserable_service,
+                                                      action.re_attempt_pattern,
+                                                      action.re_attempt_reverse):
+                                        item_visible_temporary = True
+
+                                # dito
+                                if action.re_groups_enabled is True:
+                                    if is_found_by_re(miserable_service,
+                                                      action.re_groups_pattern,
+                                                      action.re_groups_reverse):
+                                        item_visible_temporary = True
 
                                 # fallback if no regexp is selected
                                 if action.re_host_enabled == action.re_service_enabled == \
-                                   action.re_status_information_enabled is False:
+                                   action.re_status_information_enabled == action.re_duration_enabled == \
+                                   action.re_attempt_enabled == action.re_groups_enabled is False:
                                     item_visible_temporary = True
 
                         else:
@@ -4621,6 +4643,15 @@ class Dialog_Settings(Dialog):
             # regular expressions for filtering status information
             self.ui.input_checkbox_re_status_information_enabled: [self.ui.input_lineedit_re_status_information_pattern,
                 self.ui.input_checkbox_re_status_information_reverse],
+            # regular expressions for filtering duration
+            self.ui.input_checkbox_re_duration_enabled: [self.ui.input_lineedit_re_duration_pattern,
+                self.ui.input_checkbox_re_duration_reverse],
+            # regular expressions for filtering duration
+            self.ui.input_checkbox_re_attempt_enabled: [self.ui.input_lineedit_re_attempt_pattern,
+                self.ui.input_checkbox_re_attempt_reverse],
+            # regular expressions for filtering groups
+            self.ui.input_checkbox_re_groups_enabled: [self.ui.input_lineedit_re_groups_pattern,
+                self.ui.input_checkbox_re_groups_reverse],
             # offset for statuswindow when using systray
             self.ui.input_radiobutton_icon_in_systray: [self.ui.input_checkbox_systray_offset_use],
             self.ui.input_checkbox_systray_offset_use: [self.ui.input_spinbox_systray_offset,
@@ -5877,7 +5908,13 @@ class Dialog_Action(Dialog):
             self.ui.input_checkbox_re_service_enabled: [self.ui.input_lineedit_re_service_pattern,
                 self.ui.input_checkbox_re_service_reverse],
             self.ui.input_checkbox_re_status_information_enabled: [self.ui.input_lineedit_re_status_information_pattern,
-                self.ui.input_checkbox_re_status_information_reverse]}
+                self.ui.input_checkbox_re_status_information_reverse],
+            self.ui.input_checkbox_re_duration_enabled: [self.ui.input_lineedit_re_duration_pattern,
+                self.ui.input_checkbox_re_duration_reverse],
+            self.ui.input_checkbox_re_attempt_enabled: [self.ui.input_lineedit_re_attempt_pattern,
+                self.ui.input_checkbox_re_attempt_reverse],
+            self.ui.input_checkbox_re_groups_enabled: [self.ui.input_lineedit_re_groups_pattern,
+                self.ui.input_checkbox_re_groups_reverse]}
 
         # fill action types into combobox
         self.ui.input_combobox_type.addItems(sorted(self.ACTION_TYPES.values()))
