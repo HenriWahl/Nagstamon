@@ -247,6 +247,57 @@ Request given URL string in the background, for example to acknowledge a service
     </widget>
    </item>
    <item row="27" column="0" colspan="6">
+    <widget class="QCheckBox" name="input_checkbox_re_duration_enabled">
+     <property name="text">
+      <string>Regular expressions for duration</string>
+     </property>
+    </widget>
+   </item>
+   <item row="28" column="0" colspan="5">
+    <widget class="QLineEdit" name="input_lineedit_re_duration_pattern"/>
+   </item>
+   <item row="28" column="5">
+    <widget class="QCheckBox" name="input_checkbox_re_duration_reverse">
+     <property name="text">
+      <string>reverse</string>
+     </property>
+    </widget>
+   </item>
+   <item row="27" column="0" colspan="6">
+    <widget class="QCheckBox" name="input_checkbox_re_attempt_enabled">
+     <property name="text">
+      <string>Regular expressions for duration</string>
+     </property>
+    </widget>
+   </item>
+   <item row="28" column="0" colspan="5">
+    <widget class="QLineEdit" name="input_lineedit_re_attempt_pattern"/>
+   </item>
+   <item row="28" column="5">
+    <widget class="QCheckBox" name="input_checkbox_re_attempt_reverse">
+     <property name="text">
+      <string>reverse</string>
+     </property>
+    </widget>
+   </item>
+   <item row="29" column="0" colspan="6">
+    <widget class="QCheckBox" name="input_checkbox_re_groups_enabled">
+     <property name="text">
+      <string>Regular expressions for groups</string>
+     </property>
+    </widget>
+   </item>
+   <item row="30" column="0" colspan="5">
+    <widget class="QLineEdit" name="input_lineedit_re_groups_pattern"/>
+   </item>
+   <item row="30" column="5">
+    <widget class="QCheckBox" name="input_checkbox_re_groups_reverse">
+     <property name="text">
+      <string>reverse</string>
+     </property>
+    </widget>
+   </item>
+   <item row="31" column="0" colspan="6">
     <widget class="QLabel" name="label_python_re">
      <property name="text">
       <string>&lt;a href=http://docs.python.org/howto/regex.html&gt;See Python Regular Expressions HOWTO for filtering details.&lt;/a&gt;</string>
@@ -259,7 +310,7 @@ Request given URL string in the background, for example to acknowledge a service
      </property>
     </widget>
    </item>
-   <item row="29" column="0" colspan="6">
+   <item row="30" column="0" colspan="6">
     <widget class="QLabel" name="label_status_popup">
      <property name="text">
       <string>Status popup window:</string>
@@ -299,6 +350,15 @@ Request given URL string in the background, for example to acknowledge a service
   <tabstop>input_checkbox_re_status_information_enabled</tabstop>
   <tabstop>input_lineedit_re_status_information_pattern</tabstop>
   <tabstop>input_checkbox_re_status_information_reverse</tabstop>
+  <tabstop>input_checkbox_re_duration_enabled</tabstop>
+  <tabstop>input_lineedit_re_duration_pattern</tabstop>
+  <tabstop>input_checkbox_re_duration_reverse</tabstop>
+  <tabstop>input_checkbox_re_attempt_enabled</tabstop>
+  <tabstop>input_lineedit_re_attempt_pattern</tabstop>
+  <tabstop>input_checkbox_re_attempt_reverse</tabstop>
+  <tabstop>input_checkbox_re_groups_enabled</tabstop>
+  <tabstop>input_lineedit_re_groups_pattern</tabstop>
+  <tabstop>input_checkbox_re_groups_reverse</tabstop>
   <tabstop>input_radiobutton_close_popwin</tabstop>
   <tabstop>input_radiobutton_leave_popwin_open</tabstop>
  </tabstops>

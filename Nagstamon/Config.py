@@ -68,6 +68,9 @@ CONFIG_STRINGS = ['custom_browser',
                   're_host_pattern',
                   're_service_pattern',
                   're_status_information_pattern',
+                  're_duration_pattern',
+                  're_attempt_pattern',
+                  're_groups_pattern',
                   're_criticality_pattern',
                   'font',
                   'defaults_acknowledge_comment',
@@ -223,6 +226,15 @@ class Config(object):
         self.re_status_information_enabled = False
         self.re_status_information_pattern = ''
         self.re_status_information_reverse = False
+        self.re_duration_enabled = False
+        self.re_duration_pattern = ''
+        self.re_duration_reverse = False
+        self.re_attempt_enabled = False
+        self.re_attempt_pattern = ''
+        self.re_attempt_reverse = False
+        self.re_groups_enabled = False
+        self.re_groups_pattern = ''
+        self.re_groups_reverse = False
         self.color_ok_text = self.default_color_ok_text = '#FFFFFF'
         self.color_ok_background = self.default_color_ok_background = '#006400'
         self.color_information_text = self.default_color_information_text = "#000000"
@@ -939,6 +951,15 @@ class Action(object):
         self.re_status_information_enabled = False
         self.re_status_information_pattern = ""
         self.re_status_information_reverse = False
+        self.re_duration_enabled = False
+        self.re_duration_pattern = ""
+        self.re_duration_reverse = False
+        self.re_attempt_enabled = False
+        self.re_attempt_pattern = ""
+        self.re_attempt_reverse = False
+        self.re_groups_enabled = False
+        self.re_groups_pattern = ""
+        self.re_groups_reverse = False
         # close powin or not, depends on personal preference
         self.close_popwin = True
         self.leave_popwin_open = False

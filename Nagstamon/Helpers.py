@@ -118,6 +118,41 @@ def StatusInformationIsFilteredOutByRE(status_information, conf=None):
     except Exception:
         traceback.print_exc(file=sys.stdout)
 
+def DurationIsFilteredOutByRE(duration, conf=None):
+    """
+        helper for applying RE filters in Generic.GetStatus()
+    """
+    try:
+        if conf.re_duration_enabled is True:
+            return is_found_by_re(duration, conf.re_duration_pattern, conf.re_duration_reverse)
+        # if RE are disabled return True because host is not filtered
+        return False
+    except Exception:
+        traceback.print_exc(file=sys.stdout)
+
+def AttemptIsFilteredOutByRE(attempt, conf=None):
+    """
+        helper for applying RE filters in Generic.GetStatus()
+    """
+    try:
+        if conf.re_attempt_enabled is True:
+            return is_found_by_re(attempt, conf.re_attempt_pattern, conf.re_attempt_reverse)
+        # if RE are disabled return True because host is not filtered
+        return False
+    except Exception:
+        traceback.print_exc(file=sys.stdout)
+
+def GroupsIsFilteredOutByRE(groups, conf=None):
+    """
+        helper for applying RE filters in Generic.GetStatus()
+    """
+    try:
+        if conf.re_groups_enabled is True:
+            return is_found_by_re(groups, conf.re_groups_pattern, conf.re_groups_reverse)
+        # if RE are disabled return True because host is not filtered
+        return False
+    except Exception:
+        traceback.print_exc(file=sys.stdout)
 
 def CriticalityIsFilteredOutByRE(criticality, conf=None):
     """
