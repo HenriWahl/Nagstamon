@@ -57,6 +57,8 @@ class GenericObject(object):
         self.host = ''
         self.service = ''
         self.dummy_column = ''
+        # might be used in Op5Monitor and maybe more if groups are used more widely
+        self.groups = ''
 
     def is_passive_only(self):
         return bool(self.passiveonly)
