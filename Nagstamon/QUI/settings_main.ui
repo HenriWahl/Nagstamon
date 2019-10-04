@@ -7,8 +7,8 @@
    <rect>
     <x>0</x>
     <y>0</y>
-    <width>620</width>
-    <height>1109</height>
+    <width>665</width>
+    <height>1193</height>
    </rect>
   </property>
   <property name="sizePolicy">
@@ -42,7 +42,7 @@
       </sizepolicy>
      </property>
      <property name="currentIndex">
-      <number>4</number>
+      <number>2</number>
      </property>
      <widget class="QWidget" name="tab_servers">
       <attribute name="title">
@@ -752,8 +752,22 @@
        <property name="spacing">
         <number>5</number>
        </property>
-       <item row="4" column="0" rowspan="2">
-        <layout class="QHBoxLayout" name="horizontalLayout_9">
+       <item row="17" column="0">
+        <widget class="QCheckBox" name="input_checkbox_re_attempt_enabled">
+         <property name="text">
+          <string>Regular expression for attempt</string>
+         </property>
+        </widget>
+       </item>
+       <item row="8" column="0">
+        <widget class="QCheckBox" name="input_checkbox_re_service_enabled">
+         <property name="text">
+          <string>Regular expression for services</string>
+         </property>
+        </widget>
+       </item>
+       <item row="12" column="0" rowspan="2">
+        <layout class="QHBoxLayout" name="layout_re_status_information">
          <property name="spacing">
           <number>5</number>
          </property>
@@ -770,17 +784,10 @@
           <number>5</number>
          </property>
          <item>
-          <widget class="QLineEdit" name="input_lineedit_re_host_pattern">
-           <property name="sizePolicy">
-            <sizepolicy hsizetype="Expanding" vsizetype="Fixed">
-             <horstretch>0</horstretch>
-             <verstretch>0</verstretch>
-            </sizepolicy>
-           </property>
-          </widget>
+          <widget class="QLineEdit" name="input_lineedit_re_status_information_pattern"/>
          </item>
          <item>
-          <widget class="QCheckBox" name="input_checkbox_re_host_reverse">
+          <widget class="QCheckBox" name="input_checkbox_re_status_information_reverse">
            <property name="text">
             <string>reverse</string>
            </property>
@@ -788,20 +795,7 @@
          </item>
         </layout>
        </item>
-       <item row="15" column="0">
-        <widget class="QLabel" name="label_python_re">
-         <property name="text">
-          <string>&lt;a href=http://docs.python.org/howto/regex.html&gt;See Python Regular Expressions HOWTO for filtering details.&lt;/a&gt;</string>
-         </property>
-         <property name="openExternalLinks">
-          <bool>true</bool>
-         </property>
-         <property name="textInteractionFlags">
-          <set>Qt::TextBrowserInteraction</set>
-         </property>
-        </widget>
-       </item>
-       <item row="16" column="0">
+       <item row="24" column="0">
         <spacer name="verticalSpacer_5">
          <property name="orientation">
           <enum>Qt::Vertical</enum>
@@ -814,6 +808,35 @@
          </property>
         </spacer>
        </item>
+       <item row="15" column="0">
+        <layout class="QHBoxLayout" name="layout_re_duration">
+         <property name="spacing">
+          <number>5</number>
+         </property>
+         <property name="leftMargin">
+          <number>5</number>
+         </property>
+         <property name="topMargin">
+          <number>5</number>
+         </property>
+         <property name="rightMargin">
+          <number>5</number>
+         </property>
+         <property name="bottomMargin">
+          <number>5</number>
+         </property>
+         <item>
+          <widget class="QLineEdit" name="input_lineedit_re_duration_pattern"/>
+         </item>
+         <item>
+          <widget class="QCheckBox" name="input_checkbox_re_duration_reverse">
+           <property name="text">
+            <string>reverse</string>
+           </property>
+          </widget>
+         </item>
+        </layout>
+       </item>
        <item row="11" column="0">
         <widget class="QCheckBox" name="input_checkbox_re_status_information_enabled">
          <property name="text">
@@ -821,10 +844,124 @@
          </property>
         </widget>
        </item>
-       <item row="8" column="0">
-        <widget class="QCheckBox" name="input_checkbox_re_service_enabled">
+       <item row="9" column="0" rowspan="2">
+        <layout class="QHBoxLayout" name="horizontalLayout_10">
+         <property name="spacing">
+          <number>5</number>
+         </property>
+         <property name="leftMargin">
+          <number>5</number>
+         </property>
+         <property name="topMargin">
+          <number>5</number>
+         </property>
+         <property name="rightMargin">
+          <number>5</number>
+         </property>
+         <property name="bottomMargin">
+          <number>5</number>
+         </property>
+         <item>
+          <widget class="QLineEdit" name="input_lineedit_re_service_pattern"/>
+         </item>
+         <item>
+          <widget class="QCheckBox" name="input_checkbox_re_service_reverse">
+           <property name="text">
+            <string>reverse</string>
+           </property>
+          </widget>
+         </item>
+        </layout>
+       </item>
+       <item row="20" column="0">
+        <widget class="QCheckBox" name="input_checkbox_re_groups_enabled">
          <property name="text">
-          <string>Regular expression for services</string>
+          <string>Regular expression for groups</string>
+         </property>
+        </widget>
+       </item>
+       <item row="18" column="0">
+        <layout class="QHBoxLayout" name="layout_re_attempt">
+         <property name="spacing">
+          <number>5</number>
+         </property>
+         <property name="leftMargin">
+          <number>5</number>
+         </property>
+         <property name="topMargin">
+          <number>5</number>
+         </property>
+         <property name="rightMargin">
+          <number>5</number>
+         </property>
+         <property name="bottomMargin">
+          <number>5</number>
+         </property>
+         <item>
+          <widget class="QLineEdit" name="input_lineedit_re_attempt_pattern"/>
+         </item>
+         <item>
+          <widget class="QCheckBox" name="input_checkbox_re_attempt_reverse">
+           <property name="text">
+            <string>reverse</string>
+           </property>
+          </widget>
+         </item>
+        </layout>
+       </item>
+       <item row="14" column="0">
+        <widget class="QCheckBox" name="input_checkbox_re_duration_enabled">
+         <property name="text">
+          <string>Regular expression for duration</string>
+         </property>
+        </widget>
+       </item>
+       <item row="21" column="0">
+        <layout class="QHBoxLayout" name="layout_re_groups">
+         <property name="spacing">
+          <number>5</number>
+         </property>
+         <property name="leftMargin">
+          <number>5</number>
+         </property>
+         <property name="topMargin">
+          <number>5</number>
+         </property>
+         <property name="rightMargin">
+          <number>5</number>
+         </property>
+         <property name="bottomMargin">
+          <number>5</number>
+         </property>
+         <item>
+          <widget class="QLineEdit" name="input_lineedit_re_groups_pattern"/>
+         </item>
+         <item>
+          <widget class="QCheckBox" name="input_checkbox_re_groups_reverse">
+           <property name="text">
+            <string>reverse</string>
+           </property>
+          </widget>
+         </item>
+        </layout>
+       </item>
+       <item row="23" column="0">
+        <widget class="QLabel" name="label_python_re">
+         <property name="text">
+          <string>&lt;a href=http://docs.python.org/howto/regex.html&gt;See Python Regular Expressions HOWTO for filtering details.&lt;/a&gt;</string>
+         </property>
+         <property name="openExternalLinks">
+          <bool>true</bool>
+         </property>
+         <property name="textInteractionFlags">
+          <set>Qt::TextBrowserInteraction</set>
+         </property>
+        </widget>
+       </item>
+       <item row="3" column="0">
+        <widget class="QCheckBox" name="input_checkbox_re_host_enabled">
+         <property name="text">
+          <string>Regular expression for hosts</string>
          </property>
         </widget>
        </item>
@@ -1002,15 +1139,8 @@
          </layout>
         </widget>
        </item>
-       <item row="3" column="0">
-        <widget class="QCheckBox" name="input_checkbox_re_host_enabled">
-         <property name="text">
-          <string>Regular expression for hosts</string>
-         </property>
-        </widget>
-       </item>
-       <item row="12" column="0" rowspan="2">
-        <layout class="QHBoxLayout" name="horizontalLayout_11">
+       <item row="4" column="0" rowspan="2">
+        <layout class="QHBoxLayout" name="horizontalLayout_9">
          <property name="spacing">
           <number>5</number>
          </property>
@@ -1027,39 +1157,17 @@
           <number>5</number>
          </property>
          <item>
-          <widget class="QLineEdit" name="input_lineedit_re_status_information_pattern"/>
-         </item>
-         <item>
-          <widget class="QCheckBox" name="input_checkbox_re_status_information_reverse">
-           <property name="text">
-            <string>reverse</string>
+          <widget class="QLineEdit" name="input_lineedit_re_host_pattern">
+           <property name="sizePolicy">
+            <sizepolicy hsizetype="Expanding" vsizetype="Fixed">
+             <horstretch>0</horstretch>
+             <verstretch>0</verstretch>
+            </sizepolicy>
            </property>
           </widget>
          </item>
-        </layout>
-       </item>
-       <item row="9" column="0" rowspan="2">
-        <layout class="QHBoxLayout" name="horizontalLayout_10">
-         <property name="spacing">
-          <number>5</number>
-         </property>
-         <property name="leftMargin">
-          <number>5</number>
-         </property>
-         <property name="topMargin">
-          <number>5</number>
-         </property>
-         <property name="rightMargin">
-          <number>5</number>
-         </property>
-         <property name="bottomMargin">
-          <number>5</number>
-         </property>
          <item>
-          <widget class="QLineEdit" name="input_lineedit_re_service_pattern"/>
-         </item>
-         <item>
-          <widget class="QCheckBox" name="input_checkbox_re_service_reverse">
+          <widget class="QCheckBox" name="input_checkbox_re_host_reverse">
            <property name="text">
             <string>reverse</string>
            </property>
@@ -2869,6 +2977,15 @@
   <tabstop>input_checkbox_re_status_information_enabled</tabstop>
   <tabstop>input_lineedit_re_status_information_pattern</tabstop>
   <tabstop>input_checkbox_re_status_information_reverse</tabstop>
+  <tabstop>input_checkbox_re_duration_enabled</tabstop>
+  <tabstop>input_lineedit_re_duration_pattern</tabstop>
+  <tabstop>input_checkbox_re_duration_reverse</tabstop>
+  <tabstop>input_checkbox_re_attempt_enabled</tabstop>
+  <tabstop>input_lineedit_re_attempt_pattern</tabstop>
+  <tabstop>input_checkbox_re_attempt_reverse</tabstop>
+  <tabstop>input_checkbox_re_groups_enabled</tabstop>
+  <tabstop>input_lineedit_re_groups_pattern</tabstop>
+  <tabstop>input_checkbox_re_groups_reverse</tabstop>
   <tabstop>list_actions</tabstop>
   <tabstop>button_new_action</tabstop>
   <tabstop>button_edit_action</tabstop>
@@ -2957,6 +3074,8 @@
   <tabstop>input_checkbox_grid_use_custom_intensity</tabstop>
   <tabstop>input_slider_grid_alternation_intensity</tabstop>
   <tabstop>input_radiobutton_windowed</tabstop>
+  <tabstop>input_lineedit_notification_custom_action_separator</tabstop>
+  <tabstop>input_checkbox_notification_custom_action_single</tabstop>
  </tabstops>
  <resources/>
  <connections>
@@ -2967,8 +3086,8 @@
    <slot>accept()</slot>
    <hints>
     <hint type="sourcelabel">
-     <x>404</x>
-     <y>986</y>
+     <x>410</x>
+     <y>1186</y>
     </hint>
     <hint type="destinationlabel">
      <x>386</x>
@@ -2983,8 +3102,8 @@
    <slot>reject()</slot>
    <hints>
     <hint type="sourcelabel">
-     <x>404</x>
-     <y>986</y>
+     <x>410</x>
+     <y>1186</y>
     </hint>
     <hint type="destinationlabel">
      <x>386</x>
