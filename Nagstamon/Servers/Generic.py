@@ -51,6 +51,7 @@ import requests
 
 # requests_gssapi is newer but not available everywhere
 try:
+    import gssapi.raw.cython_converters
     from requests_gssapi import HTTPSPNEGOAuth as HTTPSKerberos
 except ImportError:
     from requests_kerberos import HTTPKerberosAuth as HTTPSKerberos
