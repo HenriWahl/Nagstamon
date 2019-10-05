@@ -48,7 +48,12 @@ from Nagstamon.Config import (conf,
 from collections import OrderedDict
 
 import requests
-import requests_kerberos
+
+# requests_gssapi is newer but not available everywhere
+try:
+    from requests_gssapi import HTTPSPNEGOAuth as HTTPSKerberos
+except ImportError:
+    from requests_kerberos import HTTPKerberosAuth as HTTPSKerberos
 
 # disable annoying SubjectAltNameWarning warnings
 try:
@@ -235,7 +240,7 @@ class GenericServer(object):
             elif self.authentication == 'digest':
                 self.session.auth = requests.auth.HTTPDigestAuth(self.username, self.password)
             elif self.authentication == 'kerberos':
-                self.session.auth = requests_kerberos.HTTPKerberosAuth()
+                self.session.auth = HTTPSKerberos()
 
             # default to check TLS validity
             if self.ignore_cert:
