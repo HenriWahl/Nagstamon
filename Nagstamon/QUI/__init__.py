@@ -1605,7 +1605,8 @@ class StatusWindow(QWidget):
             # Thus we check again with this timer to catch missed mouse-outs.
             if conf.close_details_hover \
                     and not conf.fullscreen \
-                    and not conf.windowed:
+                    and not conf.windowed \
+                    and not conf.icon_in_systray:
                 self.periodically_check_window_under_mouse_and_hide()
 
     def periodically_check_window_under_mouse_and_hide(self):
@@ -1623,7 +1624,7 @@ class StatusWindow(QWidget):
 
         # Check mouse cursor over window and an opened context menu or dropdown list
         if statuswindow.geometry().contains(mouse_pos.x(), mouse_pos.y()) \
-                or not qApp.activePopupWidget() is None:
+           or not qApp.activePopupWidget() is None:
             return False
 
         self.hide_window()
