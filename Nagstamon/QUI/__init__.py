@@ -1604,8 +1604,9 @@ class StatusWindow(QWidget):
             # If the mouse cursor drives too fast over and out the window will not be hidden.
             # Thus we check again with this timer to catch missed mouse-outs.
             if conf.close_details_hover \
-                    and not conf.fullscreen \
-                    and not conf.windowed:
+                    and not conf.icon_in_systray \
+                    and not conf.windowed \
+                    and not conf.fullscreen:
                 self.periodically_check_window_under_mouse_and_hide()
 
     def periodically_check_window_under_mouse_and_hide(self):
