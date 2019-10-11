@@ -3444,6 +3444,9 @@ class TreeView(QTreeView):
                 if index.row() not in list_rows:
                     list_rows.append(index.row())
 
+            # dummy definition to avoid crash if no actions are enabled - asked for some lines later
+            miserable_service = None
+
             # Add custom actions if all selected rows want them, one per one
             for a in actions_list:
                 # shortcut for next lines
