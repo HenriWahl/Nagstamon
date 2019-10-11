@@ -54,7 +54,9 @@ from Nagstamon.Config import (conf,
                               NON_LINUX,
                               KEYRING,
                               AppInfo,
-                              debug_queue)
+                              debug_queue,
+                              OS_DARWIN,
+                              OS_WINDOWS)
 
 from Nagstamon.Servers import (SERVER_TYPES,
                                servers,
@@ -251,15 +253,13 @@ APP.setStyleSheet('''QToolTip { margin: 3px;
                                 }''')
 
 # store default sounds as buffers to avoid https://github.com/HenriWahl/Nagstamon/issues/578
-DEFAULT_SOUNDS = {}
-for state in ['critical', 'down', 'warning']:
-    file = QFile('{0}{1}{2}.wav'.format(RESOURCES, os.sep, state))
-    file.open(QIODevice.ReadOnly)
-    buffer = QBuffer()
-    buffer.open(QIODevice.ReadWrite)
-    buffer.write(file.readAll())
-    # use whole file path as key to avoid larger changes in MediaPlayer.set_media()
-    DEFAULT_SOUNDS['{0}{1}{2}.wav'.format(RESOURCES, os.sep, state)] = buffer
+# meanwhile used as backup copy in case they had been deleted by macOS
+if OS == OS_DARWIN:
+    SOUND_FILES_BACKUP = {}
+    for state in ['critical', 'down', 'warning']:
+        with open('{0}{1}{2}.wav'.format(RESOURCES, os.sep, state), mode='rb') as file:
+            # use whole file path as key to avoid larger changes in MediaPlayer.set_media()
+            SOUND_FILES_BACKUP['{0}{1}{2}.wav'.format(RESOURCES, os.sep, state)] = file.read()
 
 
 class HBoxLayout(QHBoxLayout):
@@ -362,7 +362,7 @@ class SystemTrayIcon(QSystemTrayIcon):
 
         # MacOSX does not distinguish between left and right click so menu will go to upper menu bar
         # update: apparently not, but own context menu will be shown when icon is clicked an all is OK = green
-        if OS != 'Darwin':
+        if OS != OS_DARWIN:
             self.setContextMenu(self.menu)
 
     @pyqtSlot()
@@ -417,7 +417,7 @@ class SystemTrayIcon(QSystemTrayIcon):
         # elif reason == (QSystemTrayIcon.Trigger or QSystemTrayIcon.DoubleClick):
         if reason == (QSystemTrayIcon.Trigger or QSystemTrayIcon.DoubleClick):
             # when green icon is displayed and no popwin is about to po up show at least menu
-            if get_worst_status() == 'UP' and OS == 'Darwin':
+            if get_worst_status() == 'UP' and OS == OS_DARWIN:
                 self.menu.show_at_cursor()
             else:
                 # show status window if there is something to tell
@@ -631,7 +631,7 @@ class MenuContextSystrayicon(MenuContext):
         """
         MenuContext.initialize(self)
         # makes even less sense on OSX
-        if OS != 'Darwin':
+        if OS != OS_DARWIN:
             self.action_status = QAction('Show status window', self)
             self.action_status.triggered.connect(statuswindow.show_window_systrayicon)
             self.insertAction(self.action_refresh, self.action_status)
@@ -651,7 +651,7 @@ class FlatButton(QToolButton):
 
 
 # OSX does not support flat QToolButtons so keep the neat default ones
-if OS == 'Darwin':
+if OS == OS_DARWIN:
     Button = QPushButton
     CSS_CLOSE_BUTTON = '''QPushButton {border-width: 0px;
                                        border-style: none;
@@ -978,7 +978,7 @@ class StatusWindow(QWidget):
         # show tooltips even if popup window has no focus
         self.setAttribute(Qt.WA_AlwaysShowToolTips)
 
-        if OS == 'Darwin':
+        if OS == OS_DARWIN:
             # avoid hiding window if it has no focus - necessary on OSX if using flag Qt.Tool
             self.setAttribute(Qt.WA_MacAlwaysShowToolWindow)
 
@@ -1015,7 +1015,7 @@ class StatusWindow(QWidget):
         self.servers_vbox.addWidget(self.label_all_ok)
 
         # test with OSX top menubar
-        if OS == 'Darwin':
+        if OS == OS_DARWIN:
             self.menubar = QMenuBar()
             action_exit = QAction('exit', self.menubar)
             action_settings = QAction('settings', self.menubar)
@@ -1199,7 +1199,7 @@ class StatusWindow(QWidget):
 
         if conf.statusbar_floating:
             # no need for systray
-            if OS == 'Windows':
+            if OS == OS_WINDOWS:
                 # workaround for PyQt behavior since Qt 5.10
                 systrayicon = QSystemTrayIcon()
             else:
@@ -1256,7 +1256,7 @@ class StatusWindow(QWidget):
             self.setAttribute(Qt.WA_ShowWithoutActivating)
 
             # yeah! systray!
-            if OS == 'Windows':
+            if OS == OS_WINDOWS:
                 systrayicon = SystemTrayIcon()
                 self.connect_systrayicon()
             systrayicon.show()
@@ -1270,7 +1270,7 @@ class StatusWindow(QWidget):
 
         elif conf.fullscreen:
             # no need for systray
-            if OS == 'Windows':
+            if OS == OS_WINDOWS:
                 # workaround for PyQt behavior since Qt 5.10
                 systrayicon = QSystemTrayIcon()
             else:
@@ -1291,7 +1291,7 @@ class StatusWindow(QWidget):
 
             self.show_window()
             # fullscreen mode is rather buggy on everything other than OSX so just use a maximized window
-            if OS == 'Darwin':
+            if OS == OS_DARWIN:
                 self.showFullScreen()
             else:
                 self.show()
@@ -1301,7 +1301,7 @@ class StatusWindow(QWidget):
             self.toparea.button_close.hide()
 
         elif conf.windowed:
-            if OS == 'Windows':
+            if OS == OS_WINDOWS:
                 # workaround for PyQt behavior since Qt 5.10
                 systrayicon = QSystemTrayIcon()
             else:
@@ -1574,7 +1574,7 @@ class StatusWindow(QWidget):
                     # ...and practice
                     self.resize_window(width, height, x, y)
                     # switch on
-                    if OS == 'Darwin':
+                    if OS == OS_DARWIN:
                         # delayed because of flickering window in OSX
                         self.timer.singleShot(200, self.set_shown)
                     else:
@@ -1864,7 +1864,7 @@ class StatusWindow(QWidget):
             self.stored_y = self.y()
             self.stored_width = self.width()
 
-        if OS == 'Windows':
+        if OS == OS_WINDOWS:
             # absolutely strange, but no other solution available
             # - Only on Windows the statusbar is moving FIRST before resizing - no matter which
             #   order was used
@@ -2106,11 +2106,11 @@ class StatusWindow(QWidget):
 
         # apparently sometime the floating statusbsr vanishes in the background
         # lets try here to keep it on top - only if not fullscreen
-        if not conf.fullscreen and not conf.windowed and not platform.system == 'Windows':
+        if not conf.fullscreen and not conf.windowed and not platform.system == OS_WINDOWS:
             self.setWindowFlags(WINDOW_FLAGS)
 
         # again and again try to keep that statuswindow on top!
-        if OS == 'Windows' and not conf.fullscreen and not conf.windowed:
+        if OS == OS_WINDOWS and not conf.fullscreen and not conf.windowed:
             # find out if no context menu is shown and thus would be
             # overlapped by statuswindow
             for vbox in self.servers_vbox.children():
@@ -2532,7 +2532,7 @@ class StatusBar(QWidget):
 
         # absolutely silly but no other cure in sight
         # strange miscalculation of nagstamon logo on MacOSX
-        if OS == 'Darwin' and 18 <= height <= 24:
+        if OS == OS_DARWIN and 18 <= height <= 24:
             height += 1
 
         # adjust logo size to fit to label size
@@ -2742,7 +2742,7 @@ class ServerStatusLabel(ClosingLabel):
 
         # set stylesheet depending on submitted style
         if style in COLOR_STATUS_LABEL:
-            if OS == 'Darwin':
+            if OS == OS_DARWIN:
                 self.setStyleSheet('''background: {0};
                                       border-radius: 3px;
                                       '''.format(COLOR_STATUS_LABEL[style]))
@@ -3002,7 +3002,7 @@ class ServerVBox(QVBoxLayout):
     def update_label(self):
         self.label.setText('<big><b>&nbsp;{0}@{1}</b></big>'.format(self.server.username, self.server.name))
         # let label padding keep top and bottom space - apparently not necessary on OSX
-        if OS != 'Darwin':
+        if OS != OS_DARWIN:
             self.label.setStyleSheet('''padding-top: {0}px;
                                         padding-bottom: {0}px;'''.format(SPACE))
 
@@ -3435,7 +3435,7 @@ class TreeView(QTreeView):
             Therefore the .available flag is necessary
         """
 
-        if self.action_menu.available or OS != 'Windows':
+        if self.action_menu.available or OS != OS_WINDOWS:
             # set flag for Windows
             self.action_menu.available = False
 
@@ -5506,10 +5506,10 @@ class Dialog_Settings(Dialog):
             show dialog for selection of non-default browser
         """
         # present dialog with OS-specific sensible defaults
-        if OS == 'Windows':
+        if OS == OS_WINDOWS:
             filter = 'Executables (*.exe *.EXE);; All files (*)'
             directory = os.environ['ProgramFiles']
-        elif OS == 'Darwin':
+        elif OS == OS_DARWIN:
             filter = ''
             directory = '/Applications'
         else:
@@ -6295,11 +6295,6 @@ class Dialog_Downtime(Dialog):
         """
             enable/disable appropriate widgets if type is "Fixed"
         """
-        # self.ui.label_start_time.show()
-        # self.ui.label_end_time.show()
-        # self.ui.input_lineedit_start_time.show()
-        # self.ui.input_lineedit_end_time.show()
-
         self.ui.label_duration.hide()
         self.ui.label_duration_hours.hide()
         self.ui.label_duration_minutes.hide()
@@ -6312,11 +6307,6 @@ class Dialog_Downtime(Dialog):
         """
             enable/disable appropriate widgets if type is "Flexible"
         """
-        # self.ui.label_start_time.hide()
-        # self.ui.label_end_time.hide()
-        # self.ui.input_lineedit_start_time.hide()
-        # self.ui.input_lineedit_end_time.hide()
-
         self.ui.label_duration.show()
         self.ui.label_duration_hours.show()
         self.ui.label_duration_minutes.show()
@@ -6450,7 +6440,7 @@ class Dialog_Authentication(Dialog):
         self.server = servers[server]
         self.initialize()
         # workaround instead of sent signal
-        if not statuswindow == None:
+        if not statuswindow is None:
             statuswindow.hide_window()
         self.window.adjustSize()
         self.window.exec_()
@@ -6614,22 +6604,22 @@ class MediaPlayer(QObject):
         statuswindow.worker_notification.play_sound.connect(self.play)
 
     @pyqtSlot(str)
-    def set_media(self, file):
-        if not conf.notification_custom_sound:
-            # default sounds are cached to avoid https://github.com/HenriWahl/Nagstamon/issues/578
-            self.player.setMedia(QMediaContent(), DEFAULT_SOUNDS[file])
+    def set_media(self, media_file):
+        if OS == OS_DARWIN:
+            if not os.path.exists(media_file):
+                with open(media_file, mode='wb') as file:
+                    file.write(SOUND_FILES_BACKUP[media_file])
+        # only existing file can be played
+        if os.path.exists(media_file):
+            url = QUrl.fromLocalFile(media_file)
+            mediacontent = QMediaContent(url)
+            self.player.setMedia(mediacontent)
+            del url, mediacontent
+            return True
         else:
-            # only existing file can be played
-            if os.path.exists(file):
-                url = QUrl.fromLocalFile(file)
-                mediacontent = QMediaContent(url)
-                self.player.setMedia(mediacontent)
-                del url, mediacontent
-                return True
-            else:
-                # cry and tell no file was found
-                self.send_message.emit('warning', 'Sound file <b>\'{0}\'</b> not found for playback.'.format(file))
-                return False
+            # cry and tell no file was found
+            self.send_message.emit('warning', 'Sound file <b>\'{0}\'</b> not found for playback.'.format(media_file))
+            return False
 
     @pyqtSlot()
     def play(self):

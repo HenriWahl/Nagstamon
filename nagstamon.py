@@ -18,10 +18,8 @@
 # along with this program; if not, write to the Free Software
 # Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA  02110-1301, USA
 
-import os
 import sys
 import socket
-import platform
 
 # fix/patch for https://bugs.launchpad.net/ubuntu/+source/nagstamon/+bug/732544
 socket.setdefaulttimeout(30)

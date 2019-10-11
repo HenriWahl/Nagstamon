@@ -90,7 +90,9 @@ CONFIG_STRINGS = ['custom_browser',
                   ]
 
 # needed when OS-specific decisions have to be made, mostly Linux/non-Linux
-NON_LINUX = ('Darwin', 'Windows')
+OS_DARWIN = 'Darwin'
+OS_WINDOWS = 'Windows'
+NON_LINUX = (OS_DARWIN, OS_WINDOWS)
 
 # invalid characters in path names of config files have to be replaced
 INVALID_CHARACTERS = {'\\': '_backslash_',
