@@ -254,11 +254,14 @@ APP.setStyleSheet('''QToolTip { margin: 3px;
 
 # store default sounds as buffers to avoid https://github.com/HenriWahl/Nagstamon/issues/578
 # meanwhile used as backup copy in case they had been deleted by macOS
+# https://github.com/HenriWahl/Nagstamon/issues/578
 if OS == OS_DARWIN:
     SOUND_FILES_BACKUP = {}
     for state in ['critical', 'down', 'warning']:
         with open('{0}{1}{2}.wav'.format(RESOURCES, os.sep, state), mode='rb') as file:
-            # use whole file path as key to avoid larger changes in MediaPlayer.set_media()
+            # macOS sometines cleans up the /var/folders-something-path used by the onefile created by pyinstaller
+            # this backup dict allows to recreate the needed default files
+            # madness at least... but works
             SOUND_FILES_BACKUP['{0}{1}{2}.wav'.format(RESOURCES, os.sep, state)] = file.read()
 
 
@@ -6605,6 +6608,8 @@ class MediaPlayer(QObject):
 
     @pyqtSlot(str)
     def set_media(self, media_file):
+        # ticket to hell, but no other idea how to solve vanishing-.wav-files-issue
+        # https://github.com/HenriWahl/Nagstamon/issues/578
         if OS == OS_DARWIN:
             if not os.path.exists(media_file):
                 with open(media_file, mode='wb') as file:
