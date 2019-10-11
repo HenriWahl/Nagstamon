@@ -1,7 +1,7 @@
-nagstamon (3.3-20191010) unstable; urgency=low
+nagstamon (3.3-20191011) unstable; urgency=low
   * New upstream
 
--- Henri Wahl <h.wahl@ifw-dresden.de> Thu, 10 Oct 2019 16:00:00 +0100
+-- Henri Wahl <h.wahl@ifw-dresden.de> Fri, 11 Oct 2019 16:00:00 +0100
 
 nagstamon (3.2.1) stable; urgency=low
   * New upstream
