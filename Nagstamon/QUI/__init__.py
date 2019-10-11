@@ -250,6 +250,17 @@ ICON = QIcon('{0}{1}nagstamon.ico'.format(RESOURCES, os.sep))
 APP.setStyleSheet('''QToolTip { margin: 3px;
                                 }''')
 
+# store default sounds as buffers to avoid https://github.com/HenriWahl/Nagstamon/issues/578
+DEFAULT_SOUNDS = {}
+for state in ['critical', 'down', 'warning']:
+    file = QFile('{0}{1}{2}.wav'.format(RESOURCES, os.sep, state))
+    file.open(QIODevice.ReadOnly)
+    buffer = QBuffer()
+    buffer.open(QIODevice.ReadWrite)
+    buffer.write(file.readAll())
+    # use whole file path as key to avoid larger changes in MediaPlayer.set_media()
+    DEFAULT_SOUNDS['{0}{1}{2}.wav'.format(RESOURCES, os.sep, state)] = buffer
+
 
 class HBoxLayout(QHBoxLayout):
     """
@@ -6604,17 +6615,21 @@ class MediaPlayer(QObject):
 
     @pyqtSlot(str)
     def set_media(self, file):
-        # only existing file can be played
-        if os.path.exists(file):
-            url = QUrl.fromLocalFile(file)
-            mediacontent = QMediaContent(url)
-            self.player.setMedia(mediacontent)
-            del url, mediacontent
-            return True
+        if not conf.notification_custom_sound:
+            # default sounds are cached to avoid https://github.com/HenriWahl/Nagstamon/issues/578
+            self.player.setMedia(QMediaContent(), DEFAULT_SOUNDS[file])
         else:
-            # cry and tell no file was found
-            self.send_message.emit('warning', 'Sound file <b>\'{0}\'</b> not found for playback.'.format(file))
-            return False
+            # only existing file can be played
+            if os.path.exists(file):
+                url = QUrl.fromLocalFile(file)
+                mediacontent = QMediaContent(url)
+                self.player.setMedia(mediacontent)
+                del url, mediacontent
+                return True
+            else:
+                # cry and tell no file was found
+                self.send_message.emit('warning', 'Sound file <b>\'{0}\'</b> not found for playback.'.format(file))
+                return False
 
     @pyqtSlot()
     def play(self):
