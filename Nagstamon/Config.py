@@ -110,15 +110,15 @@ class AppInfo(object):
         contains app information previously located in GUI.py
     """
     NAME = 'Nagstamon'
-    VERSION = '3.3-20191011'
+    VERSION = '3.3-20191014'
     WEBSITE = 'https://nagstamon.ifw-dresden.de'
     COPYRIGHT = '©2008-2019 Henri Wahl et al.'
     COMMENTS = 'Nagios status monitor for your desktop'
     # version URL depends on version string
     if 'alpha' in VERSION.lower() or \
-            'beta' in VERSION.lower() or \
-            'rc' in VERSION.lower() or \
-            '-' in VERSION.lower():
+        'beta' in VERSION.lower() or \
+        'rc' in VERSION.lower() or \
+        '-' in VERSION.lower():
         VERSION_URL = WEBSITE + '/version/unstable'
     else:
         VERSION_URL = WEBSITE + '/version/stable'

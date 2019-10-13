@@ -256,13 +256,13 @@ APP.setStyleSheet('''QToolTip { margin: 3px;
 # meanwhile used as backup copy in case they had been deleted by macOS
 # https://github.com/HenriWahl/Nagstamon/issues/578
 if OS == OS_DARWIN:
-    SOUND_FILES_BACKUP = {}
-    for state in ['critical', 'down', 'warning']:
-        with open('{0}{1}{2}.wav'.format(RESOURCES, os.sep, state), mode='rb') as file:
+    MACOS_PYINSTALLER_FILES_BACKUP = {}
+    for state in ['critical.wav', 'down.wav', 'warning.wav', 'nagstamon_systrayicon_template.svg']:
+        with open('{0}{1}{2}'.format(RESOURCES, os.sep, state), mode='rb') as file:
             # macOS sometines cleans up the /var/folders-something-path used by the onefile created by pyinstaller
             # this backup dict allows to recreate the needed default files
             # madness at least... but works
-            SOUND_FILES_BACKUP['{0}{1}{2}.wav'.format(RESOURCES, os.sep, state)] = file.read()
+            MACOS_PYINSTALLER_FILES_BACKUP['{0}{1}{2}.wav'.format(RESOURCES, os.sep, state)] = file.read()
 
 
 class HBoxLayout(QHBoxLayout):
@@ -373,8 +373,15 @@ class SystemTrayIcon(QSystemTrayIcon):
         """
             create icons from template, applying colors
         """
+        svg_template = '{0}{1}nagstamon_systrayicon_template.svg'.format(RESOURCES, os.sep)
+        # like with default sound .wavs first check if file still exists
+        # if not then rewrite file from backup cache
+        if OS == OS_DARWIN:
+            if not os.path.exists(svg_template):
+                with open(svg_template, mode='wb') as file:
+                    file.write(MACOS_PYINSTALLER_FILES_BACKUP[svg_template])
         # get template from file
-        svg_template_file = open('{0}{1}nagstamon_systrayicon_template.svg'.format(RESOURCES, os.sep))
+        svg_template_file = open(svg_template)
         svg_template_xml = svg_template_file.readlines()
 
         # create icons for all states
@@ -6613,7 +6620,7 @@ class MediaPlayer(QObject):
         if OS == OS_DARWIN:
             if not os.path.exists(media_file):
                 with open(media_file, mode='wb') as file:
-                    file.write(SOUND_FILES_BACKUP[media_file])
+                    file.write(MACOS_PYINSTALLER_FILES_BACKUP[media_file])
         # only existing file can be played
         if os.path.exists(media_file):
             url = QUrl.fromLocalFile(media_file)
