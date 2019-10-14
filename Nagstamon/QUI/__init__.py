@@ -257,12 +257,12 @@ APP.setStyleSheet('''QToolTip { margin: 3px;
 # https://github.com/HenriWahl/Nagstamon/issues/578
 if OS == OS_DARWIN:
     MACOS_PYINSTALLER_FILES_BACKUP = {}
-    for state in ['critical.wav', 'down.wav', 'warning.wav', 'nagstamon_systrayicon_template.svg']:
-        with open('{0}{1}{2}'.format(RESOURCES, os.sep, state), mode='rb') as file:
+    for file_name in ['critical.wav', 'down.wav', 'warning.wav', 'nagstamon_systrayicon_template.svg']:
+        with open('{0}{1}{2}'.format(RESOURCES, os.sep, file_name), mode='rb') as file:
             # macOS sometines cleans up the /var/folders-something-path used by the onefile created by pyinstaller
             # this backup dict allows to recreate the needed default files
             # madness at least... but works
-            MACOS_PYINSTALLER_FILES_BACKUP['{0}{1}{2}.wav'.format(RESOURCES, os.sep, state)] = file.read()
+            MACOS_PYINSTALLER_FILES_BACKUP['{0}{1}{2}'.format(RESOURCES, os.sep, file_name)] = file.read()
 
 
 class HBoxLayout(QHBoxLayout):
