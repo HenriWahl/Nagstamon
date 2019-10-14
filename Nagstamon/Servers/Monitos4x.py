@@ -92,8 +92,8 @@ class Monitos4xServer(GenericServer):
     }
     BROWSER_URLS = {
         'monitor': '$MONITOR$',
-        'hosts': '$MONITOR$',
-        'services': '$MONITOR$',
+        'hosts': '$MONITOR$/#/host-problems',
+        'services': '$MONITOR$/#/service-problems',
         'history': '$MONITOR$/#/alert/ticker'
     }
 
