@@ -55,6 +55,22 @@ STATES_SOUND = ['WARNING',
                 'DOWN']
 
 
+# store default sounds as buffers to avoid https://github.com/HenriWahl/Nagstamon/issues/578
+# meanwhile used as backup copy in case they had been deleted by macOS
+# https://github.com/HenriWahl/Nagstamon/issues/578
+class ResourceFiles(dict):
+    """
+    Care about vanished resource files in macOS pyinstaller temp folder
+    """
+    def check(self, resource_file):
+        if not os.path.exists(resource_file):
+            # pyinstaller temp folder seems to be emptied completely after a while
+            # so the directories containing the resources have to be recreated too
+            os.makedirs(os.path.dirname(resource_file), exist_ok=True)
+            # write cached content of resource file back onto disk
+            with open(resource_file, mode='wb') as file:
+                file.write(self[resource_file])
+
 def not_empty(x):
     '''
         tiny helper function for BeautifulSoup in server Generic.py to filter text elements
