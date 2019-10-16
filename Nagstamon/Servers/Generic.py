@@ -51,7 +51,8 @@ import requests
 
 # requests_gssapi is newer but not available everywhere
 try:
-    # extra-import needed to get it compiled on macOS
+    # extra imports needed to get it compiled on macOS
+    import numbers
     import gssapi.raw.cython_converters
     from requests_gssapi import HTTPSPNEGOAuth as HTTPSKerberos
 except ImportError:

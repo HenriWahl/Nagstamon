@@ -252,12 +252,29 @@ ICON = QIcon('{0}{1}nagstamon.ico'.format(RESOURCES, os.sep))
 APP.setStyleSheet('''QToolTip { margin: 3px;
                                 }''')
 
+
 # store default sounds as buffers to avoid https://github.com/HenriWahl/Nagstamon/issues/578
 # meanwhile used as backup copy in case they had been deleted by macOS
 # https://github.com/HenriWahl/Nagstamon/issues/578
+class ResourceFiles(dict):
+    """
+    Care about vanished resource files in macOS pyinstaller temp folder
+    """
+    def check(self, resource_file):
+        if not os.path.exists(resource_file):
+            # pyinstaller temp folder seems to be emptied completely after a while
+            # so the directories containing the resources have to be recreated too
+            os.makedirs(os.path.dirname(resource_file), exist_ok=True)
+            # write cached content of resource file back onto disk
+            with open(resource_file, mode='wb') as file:
+                file.write(self[resource_file])
+
 if OS == OS_DARWIN:
-    MACOS_PYINSTALLER_FILES_BACKUP = {}
-    for file_name in ['critical.wav', 'down.wav', 'warning.wav', 'nagstamon_systrayicon_template.svg']:
+    MACOS_PYINSTALLER_FILES_BACKUP = ResourceFiles()
+    for file_name in ['critical.wav',
+                      'down.wav',
+                      'warning.wav',
+                      'nagstamon_systrayicon_template.svg']:
         with open('{0}{1}{2}'.format(RESOURCES, os.sep, file_name), mode='rb') as file:
             # macOS sometines cleans up the /var/folders-something-path used by the onefile created by pyinstaller
             # this backup dict allows to recreate the needed default files
@@ -377,43 +394,41 @@ class SystemTrayIcon(QSystemTrayIcon):
         # like with default sound .wavs first check if file still exists
         # if not then rewrite file from backup cache
         if OS == OS_DARWIN:
-            if not os.path.exists(svg_template):
-                with open(svg_template, mode='wb') as file:
-                    file.write(MACOS_PYINSTALLER_FILES_BACKUP[svg_template])
+            MACOS_PYINSTALLER_FILES_BACKUP.check(svg_template)
         # get template from file
-        svg_template_file = open(svg_template)
-        svg_template_xml = svg_template_file.readlines()
+        with open(svg_template) as svg_template_file:
+            svg_template_xml = svg_template_file.readlines()
 
-        # create icons for all states
-        for state in ['OK', 'INFORMATION', 'UNKNOWN', 'WARNING', 'AVERAGE', 'HIGH', 'CRITICAL', 'DISASTER',
-                      'UNREACHABLE', 'DOWN', 'ERROR']:
-            # current SVG XML for state icon, derived from svg_template_cml
-            svg_state_xml = list()
+            # create icons for all states
+            for state in ['OK', 'INFORMATION', 'UNKNOWN', 'WARNING', 'AVERAGE', 'HIGH', 'CRITICAL', 'DISASTER',
+                          'UNREACHABLE', 'DOWN', 'ERROR']:
+                # current SVG XML for state icon, derived from svg_template_cml
+                svg_state_xml = list()
 
-            # replace dummy text and background colors with configured ones
-            for line in svg_template_xml:
-                line = line.replace('fill:#ff00ff', 'fill:' + conf.__dict__['color_' + state.lower() + '_text'])
-                line = line.replace('fill:#00ff00', 'fill:' + conf.__dict__['color_' + state.lower() + '_background'])
-                svg_state_xml.append(line)
+                # replace dummy text and background colors with configured ones
+                for line in svg_template_xml:
+                    line = line.replace('fill:#ff00ff', 'fill:' + conf.__dict__['color_' + state.lower() + '_text'])
+                    line = line.replace('fill:#00ff00', 'fill:' + conf.__dict__['color_' + state.lower() + '_background'])
+                    svg_state_xml.append(line)
 
-            # create XML stream of SVG
-            svg_xml_stream = QXmlStreamReader(''.join(svg_state_xml))
-            # create renderer for SVG and put SVG XML into renderer
-            svg_renderer = QSvgRenderer(svg_xml_stream)
-            # pixmap to be painted on - arbitrarily choosen 128x128 px
-            svg_pixmap = QPixmap(128, 128)
-            # fill transparent backgound
-            svg_pixmap.fill(Qt.transparent)
-            # initiate painter which paints onto paintdevice pixmap
-            svg_painter = QPainter(svg_pixmap)
-            # render svg to pixmap
-            svg_renderer.render(svg_painter)
-            # close painting
-            svg_painter.end()
-            # put pixmap into icon
-            self.icons[state] = QIcon(svg_pixmap)
+                # create XML stream of SVG
+                svg_xml_stream = QXmlStreamReader(''.join(svg_state_xml))
+                # create renderer for SVG and put SVG XML into renderer
+                svg_renderer = QSvgRenderer(svg_xml_stream)
+                # pixmap to be painted on - arbitrarily choosen 128x128 px
+                svg_pixmap = QPixmap(128, 128)
+                # fill transparent backgound
+                svg_pixmap.fill(Qt.transparent)
+                # initiate painter which paints onto paintdevice pixmap
+                svg_painter = QPainter(svg_pixmap)
+                # render svg to pixmap
+                svg_renderer.render(svg_painter)
+                # close painting
+                svg_painter.end()
+                # put pixmap into icon
+                self.icons[state] = QIcon(svg_pixmap)
 
-            debug_queue.append('DEBUG: SystemTrayIcon created icon {} for state "{}"'.format(self.icons[state], state))
+                debug_queue.append('DEBUG: SystemTrayIcon created icon {} for state "{}"'.format(self.icons[state], state))
 
     @pyqtSlot(QSystemTrayIcon.ActivationReason)
     def icon_clicked(self, reason):
@@ -6618,9 +6633,7 @@ class MediaPlayer(QObject):
         # ticket to hell, but no other idea how to solve vanishing-.wav-files-issue
         # https://github.com/HenriWahl/Nagstamon/issues/578
         if OS == OS_DARWIN:
-            if not os.path.exists(media_file):
-                with open(media_file, mode='wb') as file:
-                    file.write(MACOS_PYINSTALLER_FILES_BACKUP[media_file])
+               MACOS_PYINSTALLER_FILES_BACKUP.check(media_file)
         # only existing file can be played
         if os.path.exists(media_file):
             url = QUrl.fromLocalFile(media_file)

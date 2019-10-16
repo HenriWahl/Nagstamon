@@ -151,14 +151,13 @@ def macmain():
         os.unlink(dmg_file)
 
     # create DMG
-    subprocess.call([
-                        'hdiutil create -srcfolder "Nagstamon {0} Staging DMG" -volname "Nagstamon {0}" -fs HFS+ -format UDRW -size 100M "Nagstamon {0} uncompressed.dmg"'.format(
-                            VERSION)], shell=True)
+    subprocess.call(['hdiutil create -srcfolder "Nagstamon {0} Staging DMG" '
+                     '-volname "Nagstamon {0}" -fs HFS+ -format UDRW -size 100M '
+                     '"Nagstamon {0} uncompressed.dmg"'.format(VERSION)], shell=True)
 
     # Compress DMG
-    subprocess.call([
-                        'hdiutil convert "Nagstamon {0} uncompressed".dmg -format UDZO -imagekey zlib-level=9 -o "Nagstamon {0}.dmg"'.format(
-                            VERSION)], shell=True)
+    subprocess.call(['hdiutil convert "Nagstamon {0} uncompressed".dmg '
+                     '-format UDZO -imagekey zlib-level=9 -o "Nagstamon {0}.dmg"'.format(VERSION)], shell=True)
 
     # Delete uncompressed DMG file as it is no longer needed
     os.unlink('Nagstamon {0} uncompressed.dmg'.format(VERSION))
