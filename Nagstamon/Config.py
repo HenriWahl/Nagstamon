@@ -40,6 +40,13 @@ if platform.system() == 'Linux':
 if KEYRING:
     import keyring
 
+# instead of calling platform.system() every now and then just do it once here
+OS = platform.system()
+# needed when OS-specific decisions have to be made, mostly Linux/non-Linux
+OS_DARWIN = 'Darwin'
+OS_WINDOWS = 'Windows'
+NON_LINUX = (OS_DARWIN, OS_WINDOWS)
+
 # queue.Queue() needs threading module which might be not such a good idea to be used
 # because QThread is already in use
 # maybe not the most logical place here to be defined but at least all
@@ -88,11 +95,6 @@ CONFIG_STRINGS = ['custom_browser',
                   'custom_cert_ca_file',
                   'monitor_site'
                   ]
-
-# needed when OS-specific decisions have to be made, mostly Linux/non-Linux
-OS_DARWIN = 'Darwin'
-OS_WINDOWS = 'Windows'
-NON_LINUX = (OS_DARWIN, OS_WINDOWS)
 
 # invalid characters in path names of config files have to be replaced
 INVALID_CHARACTERS = {'\\': '_backslash_',
@@ -387,7 +389,7 @@ class Config(object):
                     self.use_system_keyring = False
                 else:
                     # a configured system seemed to be able to run and thus use system keyring
-                    if platform.system() in NON_LINUX:
+                    if OS in NON_LINUX:
                         self.use_system_keyring = True
                     else:
                         self.use_system_keyring = self.KeyringAvailable()
@@ -532,7 +534,7 @@ class Config(object):
                     self.use_system_keyring = False
                 else:
                     # a configured system seemed to be able to run and thus use system keyring
-                    if platform.system() in NON_LINUX:
+                    if OS in NON_LINUX:
                         self.use_system_keyring = True
                     else:
                         self.use_system_keyring = self.KeyringAvailable()
@@ -652,7 +654,7 @@ class Config(object):
         try:
             # Linux systems should use keyring only if it comes with the distro, otherwise chances are small
             # that keyring works at all
-            if platform.system() in NON_LINUX:
+            if OS in NON_LINUX:
                 # safety first - if not yet available disable it
                 if 'use_system_keyring' not in self.__dict__.keys():
                     self.use_system_keyring = False
@@ -725,7 +727,7 @@ class Config(object):
         """
         create some default actions like SSH and so on
         """
-        if platform.system() == "Windows":
+        if OS == OS_WINDOWS:
             defaultactions = {"RDP": Action(name="RDP", description="Connect via RDP.",
                                             type="command", string="C:\windows\system32\mstsc.exe /v:$ADDRESS$"),
                               "VNC": Action(name="VNC", description="Connect via VNC.",
@@ -735,7 +737,7 @@ class Config(object):
                               "SSH": Action(name="SSH", description="Connect via SSH.",
                                             type="command",
                                             string="C:\Program Files\PuTTY\putty.exe -l root $ADDRESS$")}
-        elif platform.system() == "Darwin":
+        elif OS == OS_DARWIN:
             defaultactions = {"RDP": Action(name="RDP", description="Connect via RDP.",
                                             type="command", string="open rdp://$ADDRESS$"),
                               "VNC": Action(name="VNC", description="Connect via VNC.",

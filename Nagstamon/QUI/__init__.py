@@ -45,18 +45,19 @@ from urllib.parse import quote
 from collections import OrderedDict
 from copy import deepcopy
 
-from Nagstamon.Config import (conf,
-                              Server,
-                              Action,
-                              RESOURCES,
-                              BOOLPOOL,
-                              CONFIG_STRINGS,
-                              NON_LINUX,
-                              KEYRING,
+from Nagstamon.Config import (Action,
                               AppInfo,
+                              BOOLPOOL,
+                              conf,
+                              CONFIG_STRINGS,
                               debug_queue,
+                              KEYRING,
+                              NON_LINUX,
+                              OS,
                               OS_DARWIN,
-                              OS_WINDOWS)
+                              OS_WINDOWS,
+                              RESOURCES,
+                              Server)
 
 from Nagstamon.Servers import (SERVER_TYPES,
                                servers,
@@ -68,7 +69,9 @@ from Nagstamon.Servers import (SERVER_TYPES,
 
 from Nagstamon.Helpers import (is_found_by_re,
                                webbrowser_open,
+
                                ResourceFiles,
+                               ResourceFilesDict,
                                STATES,
                                STATES_SOUND,
                                SORT_COLUMNS_FUNCTIONS)
@@ -85,9 +88,6 @@ from Nagstamon.QUI.dialog_submit import Ui_dialog_submit
 from Nagstamon.QUI.dialog_authentication import Ui_dialog_authentication
 from Nagstamon.QUI.dialog_server_missing import Ui_dialog_server_missing
 from Nagstamon.QUI.dialog_about import Ui_dialog_about
-
-# instead of calling platform.system() every now and then just do it once here
-OS = platform.system()
 
 # only on X11/Linux thirdparty path should be added because it contains the Xlib module
 # needed to tell window manager via EWMH to keep Nagstamon window on all virtual desktops
@@ -256,18 +256,21 @@ APP.setStyleSheet('''QToolTip { margin: 3px;
 # store default sounds as buffers to avoid https://github.com/HenriWahl/Nagstamon/issues/578
 # meanwhile used as backup copy in case they had been deleted by macOS
 # https://github.com/HenriWahl/Nagstamon/issues/578
-if OS == OS_DARWIN:
-    MACOS_PYINSTALLER_FILES_BACKUP = ResourceFiles()
-    for file_name in ['critical.wav',
-                      'down.wav',
-                      'nagstamon_systrayicon_empty.svg',
-                      'nagstamon_systrayicon_template.svg',
-                      'warning.wav']:
-        with open('{0}{1}{2}'.format(RESOURCES, os.sep, file_name), mode='rb') as file:
-            # macOS sometines cleans up the /var/folders-something-path used by the onefile created by pyinstaller
-            # this backup dict allows to recreate the needed default files
-            # madness at least... but works
-            MACOS_PYINSTALLER_FILES_BACKUP['{0}{1}{2}'.format(RESOURCES, os.sep, file_name)] = file.read()
+#MACOS_PYINSTALLER_FILES_BACKUP = ResourceFilesDict(RESOURCES)
+RESOURCE_FILES = ResourceFilesDict(RESOURCES)
+# if OS == OS_DARWIN:
+#     RESOURCE_FILES = ResourceFilesDict(RESOURCES)
+#     # MACOS_PYINSTALLER_FILES_BACKUP = ResourceFiles()
+#     # for file_name in ['critical.wav',
+#     #                   'down.wav',
+#     #                   'nagstamon_systrayicon_empty.svg',
+#     #                   'nagstamon_systrayicon_template.svg',
+#     #                   'warning.wav']:
+#     #     with open('{0}{1}{2}'.format(RESOURCES, os.sep, file_name), mode='rb') as file:
+#     #         # macOS sometines cleans up the /var/folders-something-path used by the onefile created by pyinstaller
+#     #         # this backup dict allows to recreate the needed default files
+#     #         # madness at least... but works
+#     #         MACOS_PYINSTALLER_FILES_BACKUP['{0}{1}{2}'.format(RESOURCES, os.sep, file_name)] = file.read()
 
 
 class HBoxLayout(QHBoxLayout):
@@ -388,10 +391,10 @@ class SystemTrayIcon(QSystemTrayIcon):
         svg_template = '{0}{1}nagstamon_systrayicon_template.svg'.format(RESOURCES, os.sep)
         # like with default sound .wavs first check if file still exists
         # if not then rewrite file from backup cache
-        if OS == OS_DARWIN:
-            MACOS_PYINSTALLER_FILES_BACKUP.check(svg_template)
+        # if OS == OS_DARWIN:
+        #     RESOURCE_FILES.check(svg_template)
         # get template from file
-        with open(svg_template) as svg_template_file:
+        with open(RESOURCE_FILES[svg_template]) as svg_template_file:
             svg_template_xml = svg_template_file.readlines()
 
             # create icons for all states
@@ -474,9 +477,8 @@ class SystemTrayIcon(QSystemTrayIcon):
                 else:
                     self.current_icon = self.icons['ERROR']
             # use empty SVG icon to display emptiness
-            if OS == OS_DARWIN:
-                MACOS_PYINSTALLER_FILES_BACKUP.check(self.icons['EMPTY'].filename)
-            self.setIcon(self.icons['EMPTY'])
+            if RESOURCE_FILES[self.icons['EMPTY'].filename]:
+                self.setIcon(self.icons['EMPTY'])
             # fire up  a singleshot to reset color soon
             self.timer.singleShot(500, self.reset)
 
@@ -1005,7 +1007,7 @@ class StatusWindow(QWidget):
             self.setAttribute(Qt.WA_MacAlwaysShowToolWindow)
 
         self.setWindowTitle(AppInfo.NAME)
-        self.setWindowIcon(QIcon('%s%snagstamon.svg' % (RESOURCES, os.sep)))
+        self.setWindowIcon(QIcon('{0}{1}nagstamon.svg'.format(RESOURCES, os.sep)))
 
         self.vbox = QVBoxLayout(self)  # global VBox
         self.vbox.setSpacing(0)  # no spacing
@@ -2442,7 +2444,7 @@ class StatusBar(QWidget):
         self.labels_reset.connect(self.label_message.reset)
 
         # derive logo dimensions from status label
-        self.logo = NagstamonLogo('%s%snagstamon_logo_bar.svg' % (RESOURCES, os.sep),
+        self.logo = NagstamonLogo('{0}{1}nagstamon_logo_bar.svg'.format(RESOURCES, os.sep),
                                   self.color_labels['OK'].fontMetrics().height(),
                                   self.color_labels['OK'].fontMetrics().height(),
                                   parent=parent)
@@ -6629,10 +6631,10 @@ class MediaPlayer(QObject):
     def set_media(self, media_file):
         # ticket to hell, but no other idea how to solve vanishing-.wav-files-issue
         # https://github.com/HenriWahl/Nagstamon/issues/578
-        if OS == OS_DARWIN:
-               MACOS_PYINSTALLER_FILES_BACKUP.check(media_file)
+        # if OS == OS_DARWIN:
+        #        RESOURCE_FILES.check(media_file)
         # only existing file can be played
-        if os.path.exists(media_file):
+        if os.path.exists(RESOURCE_FILES[media_file]):
             url = QUrl.fromLocalFile(media_file)
             mediacontent = QMediaContent(url)
             self.player.setMedia(mediacontent)

@@ -18,24 +18,22 @@
 # Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA  02110-1301, USA
 
 import datetime
-# import subprocess  # not used
+import getpass
+from glob import glob
+import platform
+import psutil
+import os
 import re
 import sys
 import traceback
-import os
-import psutil
-import getpass
 import webbrowser
 
 # import md5 for centreon url autologin encoding
 from hashlib import md5
 
-from Nagstamon.Config import conf
-
-# queue.Queue() needs threading module which might be not such a good idea to be used
-# because QThread is already in use
-# get debug queue from nagstamon.py
-# ##debug_queue = sys.modules['__main__'].debug_queue
+from Nagstamon.Config import (conf,
+                              OS,
+                              OS_DARWIN)
 
 # states needed for gravity comparison for notification and Generic.py
 STATES = ['UP',
@@ -70,6 +68,41 @@ class ResourceFiles(dict):
             # write cached content of resource file back onto disk
             with open(resource_file, mode='wb') as file:
                 file.write(self[resource_file])
+
+
+# store default sounds as buffers to avoid https://github.com/HenriWahl/Nagstamon/issues/578
+# meanwhile used as backup copy in case they had been deleted by macOS
+# https://github.com/HenriWahl/Nagstamon/issues/578
+class ResourceFilesDict(dict):
+    """
+    Care about vanished resource files in macOS pyinstaller temp folder
+    """
+    def __init__(self, resources_path):
+        super().__init__()
+        self.read_dir(resources_path)
+
+    def read_dir(self, resources_path):
+        for suffix in ('*.wav', '*.svg'):
+            for filename in glob('{0}{1}{2}'.format(resources_path, os.sep, suffix)):
+                if OS == OS_DARWIN:
+                    with open(filename, mode='rb') as file:
+                        # macOS sometines cleans up the /var/folders-something-path used by the onefile created by pyinstaller
+                        # this backup dict allows to recreate the needed default files
+                        # madness at least... but works
+                        self.update({filename: file.read()})
+                else:
+                    self.update({filename: None})
+
+    def __getitem__(self, key):
+        if OS == OS_DARWIN:
+            if not os.path.exists(key):
+                # pyinstaller temp folder seems to be emptied completely after a while
+                # so the directories containing the resources have to be recreated too
+                os.makedirs(os.path.dirname(key), exist_ok=True)
+                # write cached content of resource file back onto disk
+                with open(key, mode='wb') as file:
+                    file.write(self[key])
+        return key
 
 
 def not_empty(x):
