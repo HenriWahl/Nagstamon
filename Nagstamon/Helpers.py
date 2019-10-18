@@ -84,14 +84,11 @@ class ResourceFilesDict(dict):
     def read_dir(self, resources_path):
         for suffix in ('*.wav', '*.svg'):
             for filename in glob('{0}{1}{2}'.format(resources_path, os.sep, suffix)):
-                if OS == OS_DARWIN:
-                    with open(filename, mode='rb') as file:
-                        # macOS sometines cleans up the /var/folders-something-path used by the onefile created by pyinstaller
-                        # this backup dict allows to recreate the needed default files
-                        # madness at least... but works
-                        self.update({filename: file.read()})
-                else:
-                    self.update({filename: None})
+                with open(filename, mode='rb') as file:
+                    # macOS sometines cleans up the /var/folders-something-path used by the onefile created by pyinstaller
+                    # this backup dict allows to recreate the needed default files
+                    # madness at least... but works
+                    self.update({filename: file.read()})
 
     def __getitem__(self, key):
         if OS == OS_DARWIN:
