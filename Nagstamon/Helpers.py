@@ -98,7 +98,7 @@ class ResourceFilesDict(dict):
                 os.makedirs(os.path.dirname(key), exist_ok=True)
                 # write cached content of resource file back onto disk
                 with open(key, mode='wb') as file:
-                    file.write(self[key])
+                    file.write(dict.__getitem__(self, key))
         return key
 
 
