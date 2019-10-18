@@ -260,8 +260,9 @@ if OS == OS_DARWIN:
     MACOS_PYINSTALLER_FILES_BACKUP = ResourceFiles()
     for file_name in ['critical.wav',
                       'down.wav',
-                      'warning.wav',
-                      'nagstamon_systrayicon_template.svg']:
+                      'nagstamon_systrayicon_empty.svg',
+                      'nagstamon_systrayicon_template.svg',
+                      'warning.wav']:
         with open('{0}{1}{2}'.format(RESOURCES, os.sep, file_name), mode='rb') as file:
             # macOS sometines cleans up the /var/folders-something-path used by the onefile created by pyinstaller
             # this backup dict allows to recreate the needed default files
@@ -299,6 +300,14 @@ class HBoxLayout(QHBoxLayout):
         for item in range(self.count() - 1):
             self.itemAt(item).widget().show()
 
+class QIconWithFilename(QIcon):
+    """
+    extend QIcon with a filename property
+    """
+    def __init__(self, *args, **kwargs):
+        super().__init__(*args, **kwargs)
+        if type(args[0]) == str:
+            self.filename = args[0]
 
 class SystemTrayIcon(QSystemTrayIcon):
     """
@@ -324,13 +333,12 @@ class SystemTrayIcon(QSystemTrayIcon):
         self.icons = {}
         self.create_icons()
         # empty icon for flashing notification
-        self.icons['EMPTY'] = QIcon('{0}{1}nagstamon_systrayicon_empty.svg'.format(RESOURCES, os.sep))
+        self.icons['EMPTY'] = QIconWithFilename('{0}{1}nagstamon_systrayicon_empty.svg'.format(RESOURCES, os.sep))
         # little workaround to match statuswindow.worker_notification.worst_notification_status
         self.icons['UP'] = self.icons['OK']
         # default icon is OK
-        if OS != 'Windows' or conf.icon_in_systray:
+        if OS != OS_WINDOWS or conf.icon_in_systray:
             self.setIcon(self.icons['OK'])
-
         if conf.debug_mode:
             debug_queue.append('DEBUG: SystemTrayIcon initial icon: {}'.format(self.currentIconName()))
 
@@ -413,7 +421,7 @@ class SystemTrayIcon(QSystemTrayIcon):
                 # close painting
                 svg_painter.end()
                 # put pixmap into icon
-                self.icons[state] = QIcon(svg_pixmap)
+                self.icons[state] = QIconWithFilename(svg_pixmap)
 
                 debug_queue.append('DEBUG: SystemTrayIcon created icon {} for state "{}"'.format(self.icons[state], state))
 
@@ -466,6 +474,8 @@ class SystemTrayIcon(QSystemTrayIcon):
                 else:
                     self.current_icon = self.icons['ERROR']
             # use empty SVG icon to display emptiness
+            if OS == OS_DARWIN:
+                MACOS_PYINSTALLER_FILES_BACKUP.check(self.icons['EMPTY'].filename)
             self.setIcon(self.icons['EMPTY'])
             # fire up  a singleshot to reset color soon
             self.timer.singleShot(500, self.reset)
@@ -6802,7 +6812,8 @@ class DBus(QObject):
         self.icon = ''
         # use Nagstamon image if icon is not available from system
         # see https://developer.gnome.org/notification-spec/#icons-and-images
-        self.hints = {'image-path': '%s%snagstamon.svg' % (RESOURCES, os.sep)}
+        # self.hints = {'image-path': '%s%snagstamon.svg' % (RESOURCES, os.sep)}
+        self.hints = {'image-path': '{0}{1}nagstamon.svg'.format(RESOURCES, os.sep)}
 
         if not OS in NON_LINUX and DBUS_AVAILABLE:
             if 'dbus' in sys.modules:

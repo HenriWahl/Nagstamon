@@ -71,6 +71,7 @@ class ResourceFiles(dict):
             with open(resource_file, mode='wb') as file:
                 file.write(self[resource_file])
 
+
 def not_empty(x):
     '''
         tiny helper function for BeautifulSoup in server Generic.py to filter text elements
