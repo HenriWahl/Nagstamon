@@ -78,10 +78,16 @@ class ResourceFilesDict(dict):
     Care about vanished resource files in macOS pyinstaller temp folder
     """
     def __init__(self, resources_path):
+        # after becoming a dict load given media files from given resource path
         super().__init__()
         self.read_dir(resources_path)
 
     def read_dir(self, resources_path):
+        """
+        Read media files into contained dict
+        :param resources_path:
+        :return:
+        """
         for suffix in ('*.wav', '*.svg'):
             for filename in glob('{0}{1}{2}'.format(resources_path, os.sep, suffix)):
                 with open(filename, mode='rb') as file:
@@ -91,6 +97,11 @@ class ResourceFilesDict(dict):
                     self.update({filename: file.read()})
 
     def __getitem__(self, key):
+        """
+        Overwrite commont __getitem__ method of dict to restore files on macOS
+        :param key:
+        :return:
+        """
         if OS == OS_DARWIN:
             if not os.path.exists(key):
                 # pyinstaller temp folder seems to be emptied completely after a while
@@ -99,6 +110,7 @@ class ResourceFilesDict(dict):
                 # write cached content of resource file back onto disk
                 with open(key, mode='wb') as file:
                     file.write(dict.__getitem__(self, key))
+        # looks strange but the filename is all the caller expects here
         return key
 
 

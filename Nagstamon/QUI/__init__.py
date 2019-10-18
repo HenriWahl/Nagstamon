@@ -389,11 +389,8 @@ class SystemTrayIcon(QSystemTrayIcon):
             create icons from template, applying colors
         """
         svg_template = '{0}{1}nagstamon_systrayicon_template.svg'.format(RESOURCES, os.sep)
-        # like with default sound .wavs first check if file still exists
-        # if not then rewrite file from backup cache
-        # if OS == OS_DARWIN:
-        #     RESOURCE_FILES.check(svg_template)
         # get template from file
+        # by using RESOURCE_FILES the file path will be checked on macOS and the file restored if necessary
         with open(RESOURCE_FILES[svg_template]) as svg_template_file:
             svg_template_xml = svg_template_file.readlines()
 
@@ -6629,12 +6626,16 @@ class MediaPlayer(QObject):
 
     @pyqtSlot(str)
     def set_media(self, media_file):
-        # ticket to hell, but no other idea how to solve vanishing-.wav-files-issue
-        # https://github.com/HenriWahl/Nagstamon/issues/578
-        # if OS == OS_DARWIN:
-        #        RESOURCE_FILES.check(media_file)
+        """
+        Give media_file to player and if it is one of the default files check first if still exists
+        :param media_file:
+        :return:
+        """
+        if media_file in RESOURCE_FILES:
+            # by using RESOURCE_FILES the file path will be checked on macOS and the file restored if necessary
+            media_file = RESOURCE_FILES[media_file]
         # only existing file can be played
-        if os.path.exists(RESOURCE_FILES[media_file]):
+        if os.path.exists(media_file):
             url = QUrl.fromLocalFile(media_file)
             mediacontent = QMediaContent(url)
             self.player.setMedia(mediacontent)
