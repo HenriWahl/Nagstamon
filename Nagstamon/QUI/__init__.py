@@ -1757,10 +1757,11 @@ class StatusWindow(QWidget):
         available_y = desktop.availableGeometry(screen_or_widget).y()
 
         # Workaround for Cinnamon
-        if available_x == 0:
-            available_x = available_width
-        if available_y == 0:
-            available_y = available_height
+        if OS not in NON_LINUX:
+            if available_x == 0:
+                available_x = available_width
+            if available_y == 0:
+                available_y = available_height
 
         # del (screen_or_widget)
 
