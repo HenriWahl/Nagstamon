@@ -69,8 +69,6 @@ from Nagstamon.Servers import (SERVER_TYPES,
 
 from Nagstamon.Helpers import (is_found_by_re,
                                webbrowser_open,
-
-                               ResourceFiles,
                                ResourceFilesDict,
                                STATES,
                                STATES_SOUND,
@@ -256,21 +254,7 @@ APP.setStyleSheet('''QToolTip { margin: 3px;
 # store default sounds as buffers to avoid https://github.com/HenriWahl/Nagstamon/issues/578
 # meanwhile used as backup copy in case they had been deleted by macOS
 # https://github.com/HenriWahl/Nagstamon/issues/578
-#MACOS_PYINSTALLER_FILES_BACKUP = ResourceFilesDict(RESOURCES)
 RESOURCE_FILES = ResourceFilesDict(RESOURCES)
-# if OS == OS_DARWIN:
-#     RESOURCE_FILES = ResourceFilesDict(RESOURCES)
-#     # MACOS_PYINSTALLER_FILES_BACKUP = ResourceFiles()
-#     # for file_name in ['critical.wav',
-#     #                   'down.wav',
-#     #                   'nagstamon_systrayicon_empty.svg',
-#     #                   'nagstamon_systrayicon_template.svg',
-#     #                   'warning.wav']:
-#     #     with open('{0}{1}{2}'.format(RESOURCES, os.sep, file_name), mode='rb') as file:
-#     #         # macOS sometines cleans up the /var/folders-something-path used by the onefile created by pyinstaller
-#     #         # this backup dict allows to recreate the needed default files
-#     #         # madness at least... but works
-#     #         MACOS_PYINSTALLER_FILES_BACKUP['{0}{1}{2}'.format(RESOURCES, os.sep, file_name)] = file.read()
 
 
 class HBoxLayout(QHBoxLayout):
@@ -1097,22 +1081,17 @@ class StatusWindow(QWidget):
         dialogs.settings.changed.connect(self.refresh)
         dialogs.settings.changed.connect(self.toparea.combobox_servers.fill)
 
-        # # show status popup when systray icon was clicked
-        # systrayicon.show_popwin.connect(self.show_window_systrayicon)
-        # systrayicon.hide_popwin.connect(self.hide_window)
-
         # hide status window if version check finished
         check_version.version_info_retrieved.connect(self.hide_window)
 
         # worker and thread duo needed for notifications
         self.worker_notification_thread = QThread(self)
         self.worker_notification = self.Worker_Notification()
+
         # flashing statusbar
         self.worker_notification.start_flash.connect(self.statusbar.flash)
         self.worker_notification.stop_flash.connect(self.statusbar.reset)
-        # # flashing statusicon
-        # self.worker_notification.start_flash.connect(systrayicon.flash)
-        # self.worker_notification.stop_flash.connect(systrayicon.reset)
+
         # desktop notification
         self.worker_notification.desktop_notification.connect(self.desktop_notification)
 
@@ -1777,14 +1756,20 @@ class StatusWindow(QWidget):
         available_x = desktop.availableGeometry(screen_or_widget).x()
         available_y = desktop.availableGeometry(screen_or_widget).y()
 
-        del (screen_or_widget)
+        # Workaround for Cinnamon
+        if available_x == 0:
+            available_x = available_width
+        if available_y == 0:
+            available_y = available_height
+
+        # del (screen_or_widget)
 
         # take whole screen height into account when deciding about upper/lower-ness
         # add available_y because it might vary on differently setup screens
         # calculate top-ness only if window is closed
         if conf.statusbar_floating:
             if self.is_shown is False:
-                if self.y() < desktop.screenGeometry(self).height() / 2 + available_y:
+                if self.y() < desktop.screenGeometry(self).height() // 2 + available_y:
                     self.top = True
                 else:
                     self.top = False
@@ -1793,16 +1778,10 @@ class StatusWindow(QWidget):
             x = self.stored_x
 
         elif conf.icon_in_systray or conf.windowed:
-            if self.icon_y < desktop.screenGeometry(self).height() / 2 + available_y:
+            if self.icon_y < desktop.screenGeometry(self).height() // 2 + available_y:
                 self.top = True
             else:
                 self.top = False
-            # take systray icon position as reference
-            # assuming that a left oriented systray as in GNOME3 will need x = 0
-            # if self.icon_x < desktop.screenGeometry(self).width() / 2 + available_x and OS not in NON_LINUX:
-            #    x = 0
-            # else:
-            #    x = self.icon_x
             x = self.icon_x
 
         # get height from tablewidgets
