@@ -42,9 +42,15 @@
       </sizepolicy>
      </property>
      <property name="currentIndex">
-      <number>2</number>
+      <number>6</number>
      </property>
      <widget class="QWidget" name="tab_servers">
+      <property name="sizePolicy">
+       <sizepolicy hsizetype="Minimum" vsizetype="Minimum">
+        <horstretch>0</horstretch>
+        <verstretch>0</verstretch>
+       </sizepolicy>
+      </property>
       <attribute name="title">
        <string>Servers</string>
       </attribute>
@@ -323,6 +329,12 @@
       </layout>
      </widget>
      <widget class="QWidget" name="tab_display">
+      <property name="sizePolicy">
+       <sizepolicy hsizetype="Minimum" vsizetype="Minimum">
+        <horstretch>0</horstretch>
+        <verstretch>0</verstretch>
+       </sizepolicy>
+      </property>
       <attribute name="title">
        <string>Display</string>
       </attribute>
@@ -344,6 +356,12 @@
        </property>
        <item row="0" column="0">
         <widget class="QGroupBox" name="groupbox_display_size">
+         <property name="sizePolicy">
+          <sizepolicy hsizetype="Minimum" vsizetype="Minimum">
+           <horstretch>0</horstretch>
+           <verstretch>0</verstretch>
+          </sizepolicy>
+         </property>
          <property name="title">
           <string>Statusbar display size:</string>
          </property>
@@ -414,6 +432,12 @@
        </item>
        <item row="10" column="0">
         <widget class="QGroupBox" name="groupbox_detailed_summary_popup">
+         <property name="sizePolicy">
+          <sizepolicy hsizetype="Minimum" vsizetype="Minimum">
+           <horstretch>0</horstretch>
+           <verstretch>0</verstretch>
+          </sizepolicy>
+         </property>
          <property name="title">
           <string>Statusbar details popup:</string>
          </property>
@@ -560,6 +584,12 @@
        </item>
        <item row="2" column="0">
         <widget class="QGroupBox" name="groupbox_appearance">
+         <property name="sizePolicy">
+          <sizepolicy hsizetype="Minimum" vsizetype="Minimum">
+           <horstretch>0</horstretch>
+           <verstretch>0</verstretch>
+          </sizepolicy>
+         </property>
          <property name="title">
           <string>Appearance:</string>
          </property>
@@ -643,6 +673,12 @@
        </item>
        <item row="4" column="0">
         <widget class="QGroupBox" name="groupbox_font">
+         <property name="sizePolicy">
+          <sizepolicy hsizetype="Minimum" vsizetype="Minimum">
+           <horstretch>0</horstretch>
+           <verstretch>0</verstretch>
+          </sizepolicy>
+         </property>
          <property name="title">
           <string>Font:</string>
          </property>
@@ -733,6 +769,12 @@
       </layout>
      </widget>
      <widget class="QWidget" name="tab_filters">
+      <property name="sizePolicy">
+       <sizepolicy hsizetype="Minimum" vsizetype="Minimum">
+        <horstretch>0</horstretch>
+        <verstretch>0</verstretch>
+       </sizepolicy>
+      </property>
       <attribute name="title">
        <string>Filters</string>
       </attribute>
@@ -967,6 +1009,12 @@
        </item>
        <item row="1" column="0">
         <widget class="QGroupBox" name="groupbox_filters">
+         <property name="sizePolicy">
+          <sizepolicy hsizetype="Minimum" vsizetype="Minimum">
+           <horstretch>0</horstretch>
+           <verstretch>0</verstretch>
+          </sizepolicy>
+         </property>
          <property name="title">
           <string>Filter out the following:</string>
          </property>
@@ -1178,6 +1226,12 @@
       </layout>
      </widget>
      <widget class="QWidget" name="tab_actions">
+      <property name="sizePolicy">
+       <sizepolicy hsizetype="Minimum" vsizetype="Minimum">
+        <horstretch>0</horstretch>
+        <verstretch>0</verstretch>
+       </sizepolicy>
+      </property>
       <attribute name="title">
        <string>Actions</string>
       </attribute>
@@ -1278,6 +1332,12 @@
        </item>
        <item row="1" column="0">
         <widget class="QGroupBox" name="groupbox_connection_method">
+         <property name="sizePolicy">
+          <sizepolicy hsizetype="Minimum" vsizetype="Minimum">
+           <horstretch>0</horstretch>
+           <verstretch>0</verstretch>
+          </sizepolicy>
+         </property>
          <property name="title">
           <string>Connection method:</string>
          </property>
@@ -1336,6 +1396,12 @@
        </item>
        <item row="2" column="0">
         <widget class="QGroupBox" name="groupbox_browser">
+         <property name="sizePolicy">
+          <sizepolicy hsizetype="Minimum" vsizetype="Minimum">
+           <horstretch>0</horstretch>
+           <verstretch>0</verstretch>
+          </sizepolicy>
+         </property>
          <property name="title">
           <string>Browser:</string>
          </property>
@@ -1371,6 +1437,12 @@
           </item>
           <item>
            <widget class="QGroupBox" name="groupbox_custom_browser">
+            <property name="sizePolicy">
+             <sizepolicy hsizetype="Minimum" vsizetype="Minimum">
+              <horstretch>0</horstretch>
+              <verstretch>0</verstretch>
+             </sizepolicy>
+            </property>
             <property name="title">
              <string>Custom browser:</string>
             </property>
@@ -1409,6 +1481,12 @@
       </layout>
      </widget>
      <widget class="QWidget" name="tab_notifications">
+      <property name="sizePolicy">
+       <sizepolicy hsizetype="Minimum" vsizetype="Minimum">
+        <horstretch>0</horstretch>
+        <verstretch>0</verstretch>
+       </sizepolicy>
+      </property>
       <attribute name="title">
        <string>Notifications</string>
       </attribute>
@@ -1437,6 +1515,12 @@
        </item>
        <item>
         <widget class="QGroupBox" name="notification_groupbox">
+         <property name="sizePolicy">
+          <sizepolicy hsizetype="Minimum" vsizetype="Minimum">
+           <horstretch>0</horstretch>
+           <verstretch>0</verstretch>
+          </sizepolicy>
+         </property>
          <property name="title">
           <string>Notifications:</string>
          </property>
@@ -1591,6 +1675,12 @@
           </item>
           <item>
            <widget class="QGroupBox" name="notification_sounds_groupbox">
+            <property name="sizePolicy">
+             <sizepolicy hsizetype="Minimum" vsizetype="Minimum">
+              <horstretch>0</horstretch>
+              <verstretch>0</verstretch>
+             </sizepolicy>
+            </property>
             <property name="title">
              <string>Sounds:</string>
             </property>
@@ -1612,6 +1702,12 @@
              </property>
              <item row="3" column="0" colspan="2">
               <widget class="QGroupBox" name="notification_custom_sounds_groupbox">
+               <property name="sizePolicy">
+                <sizepolicy hsizetype="Minimum" vsizetype="Minimum">
+                 <horstretch>0</horstretch>
+                 <verstretch>0</verstretch>
+                </sizepolicy>
+               </property>
                <property name="title">
                 <string>Custom sounds:</string>
                </property>
@@ -1739,6 +1835,12 @@
           </item>
           <item>
            <widget class="QGroupBox" name="notification_actions_groupbox">
+            <property name="sizePolicy">
+             <sizepolicy hsizetype="Minimum" vsizetype="Minimum">
+              <horstretch>0</horstretch>
+              <verstretch>0</verstretch>
+             </sizepolicy>
+            </property>
             <property name="title">
              <string>Notification actions:</string>
             </property>
@@ -1809,6 +1911,12 @@
              </item>
              <item row="6" column="0" colspan="3">
               <widget class="QGroupBox" name="notification_custom_action_groupbox">
+               <property name="sizePolicy">
+                <sizepolicy hsizetype="Minimum" vsizetype="Minimum">
+                 <horstretch>0</horstretch>
+                 <verstretch>0</verstretch>
+                </sizepolicy>
+               </property>
                <property name="title">
                 <string>Custom notification action:</string>
                </property>
@@ -1902,6 +2010,12 @@
       </layout>
      </widget>
      <widget class="QWidget" name="tab_colors">
+      <property name="sizePolicy">
+       <sizepolicy hsizetype="Minimum" vsizetype="Minimum">
+        <horstretch>0</horstretch>
+        <verstretch>0</verstretch>
+       </sizepolicy>
+      </property>
       <attribute name="title">
        <string>Colors</string>
       </attribute>
@@ -1943,6 +2057,12 @@
        </item>
        <item row="1" column="0" rowspan="8">
         <widget class="QGroupBox" name="states_groupbox">
+         <property name="sizePolicy">
+          <sizepolicy hsizetype="Minimum" vsizetype="Minimum">
+           <horstretch>0</horstretch>
+           <verstretch>0</verstretch>
+          </sizepolicy>
+         </property>
          <property name="title">
           <string>Status:</string>
          </property>
@@ -2044,6 +2164,12 @@
        </item>
        <item row="1" column="1" rowspan="8">
         <widget class="QGroupBox" name="text_groupbox">
+         <property name="sizePolicy">
+          <sizepolicy hsizetype="Minimum" vsizetype="Minimum">
+           <horstretch>0</horstretch>
+           <verstretch>0</verstretch>
+          </sizepolicy>
+         </property>
          <property name="title">
           <string>Text:</string>
          </property>
@@ -2145,6 +2271,12 @@
        </item>
        <item row="1" column="2" rowspan="8">
         <widget class="QGroupBox" name="background_groupbox">
+         <property name="sizePolicy">
+          <sizepolicy hsizetype="Minimum" vsizetype="Minimum">
+           <horstretch>0</horstretch>
+           <verstretch>0</verstretch>
+          </sizepolicy>
+         </property>
          <property name="title">
           <string>Background:</string>
          </property>
@@ -2279,6 +2411,12 @@
        </item>
        <item row="11" column="0" colspan="3">
         <widget class="QGroupBox" name="groupBox_color_grid">
+         <property name="sizePolicy">
+          <sizepolicy hsizetype="Minimum" vsizetype="Minimum">
+           <horstretch>0</horstretch>
+           <verstretch>0</verstretch>
+          </sizepolicy>
+         </property>
          <property name="title">
           <string>Colored grid:</string>
          </property>
@@ -2602,6 +2740,12 @@
       </layout>
      </widget>
      <widget class="QWidget" name="tab_defaults">
+      <property name="sizePolicy">
+       <sizepolicy hsizetype="Minimum" vsizetype="Minimum">
+        <horstretch>0</horstretch>
+        <verstretch>0</verstretch>
+       </sizepolicy>
+      </property>
       <attribute name="title">
        <string>Defaults</string>
       </attribute>
@@ -2630,6 +2774,12 @@
        </item>
        <item>
         <widget class="QGroupBox" name="label_defaults_acknowledge">
+         <property name="sizePolicy">
+          <sizepolicy hsizetype="Minimum" vsizetype="Minimum">
+           <horstretch>0</horstretch>
+           <verstretch>0</verstretch>
+          </sizepolicy>
+         </property>
          <property name="title">
           <string>Acknowledgements:</string>
          </property>
@@ -2708,6 +2858,12 @@
        </item>
        <item>
         <widget class="QGroupBox" name="label_defaults_downtime">
+         <property name="sizePolicy">
+          <sizepolicy hsizetype="Minimum" vsizetype="Minimum">
+           <horstretch>0</horstretch>
+           <verstretch>0</verstretch>
+          </sizepolicy>
+         </property>
          <property name="title">
           <string>Downtime:</string>
          </property>
@@ -2848,6 +3004,12 @@
        </item>
        <item>
         <widget class="QGroupBox" name="label_acknowledge_submit_result">
+         <property name="sizePolicy">
+          <sizepolicy hsizetype="Minimum" vsizetype="Minimum">
+           <horstretch>0</horstretch>
+           <verstretch>0</verstretch>
+          </sizepolicy>
+         </property>
          <property name="title">
           <string>Submit check result:</string>
          </property>
@@ -3113,7 +3275,7 @@
   </connection>
  </connections>
  <buttongroups>
-  <buttongroup name="buttongroup_popup_statuswindow"/>
   <buttongroup name="buttongroup_close_statusbar"/>
+  <buttongroup name="buttongroup_popup_statuswindow"/>
  </buttongroups>
 </ui>
