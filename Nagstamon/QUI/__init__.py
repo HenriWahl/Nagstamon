@@ -2870,14 +2870,6 @@ class ServerVBox(QVBoxLayout):
         self.table.worker.change_label_status.connect(self.label_status.change)
         self.table.worker.restore_label_status.connect(self.label_status.restore)
 
-        # connect reauthentication button to authentication state
-        ###self.table.worker.button_authenticate_show.connect(self.button_authenticate.show)
-        ###self.table.worker.button_authenticate_hide.connect(self.button_authenticate.hide)
-
-        # connect ignore invalid certificate button to TLS state
-        ###self.table.worker.button_fix_tls_error_show.connect(self.button_fix_tls_error.show)
-        ###self.table.worker.button_fix_tls_error_hide.connect(self.button_fix_tls_error.hide)
-
         # care about authentications
         self.button_authenticate.clicked.connect(self.authenticate_server)
         self.authenticate.connect(dialogs.authentication.show_auth_dialog)
@@ -4732,6 +4724,9 @@ class Dialog_Settings(Dialog):
         self.ui.button_copy_server.clicked.connect(self.copy_server)
         self.ui.button_delete_server.clicked.connect(self.delete_server)
 
+        # double click on server to edit
+        self.ui.list_servers.doubleClicked.connect(self.edit_server)
+
         # connect check-for-updates button to update check
         # self.ui.button_check_for_new_version_now.clicked.connect(check_version.check)
         self.ui.button_check_for_new_version_now.clicked.connect(self.button_check_for_new_version_clicked)
@@ -4756,6 +4751,9 @@ class Dialog_Settings(Dialog):
         self.ui.button_edit_action.clicked.connect(self.edit_action)
         self.ui.button_copy_action.clicked.connect(self.copy_action)
         self.ui.button_delete_action.clicked.connect(self.delete_action)
+
+        # double click on action to edit
+        self.ui.list_actions.doubleClicked.connect(self.edit_action)
 
         # connect custom sound file buttons
         self.ui.button_choose_warning.clicked.connect(self.choose_sound_file_warning)
