@@ -1494,12 +1494,12 @@ class StatusWindow(QWidget):
 
             y = 0
 
-            if icon_x > (available_width + available_x) / 2:
+            if icon_x > (available_width + available_x) // 2:
                 x = available_x + available_width - self.statusbar.width()
             else:
                 x = available_x + self.statusbar.width()
 
-            if icon_y > (available_height - available_y) / 2:
+            if icon_y > (available_height - available_y) // 2:
                 y = available_height - available_y
 
             self.move(x, y)
@@ -1701,8 +1701,8 @@ class StatusWindow(QWidget):
             # when cursor is outside moved window correct the coordinates of statusbar/statuswindow
             if not statuswindow.geometry().contains(mouse_x, mouse_y):
                 rect = statuswindow.geometry()
-                corrected_x = int(mouse_x - rect.width() / 2)
-                corrected_y = int(mouse_y - rect.height() / 2)
+                corrected_x = int(mouse_x - rect.width() // 2)
+                corrected_y = int(mouse_y - rect.height() // 2)
                 # calculate new relative values
                 self.relative_x = mouse_x - corrected_x
                 self.relative_y = mouse_y - corrected_y
@@ -1799,7 +1799,7 @@ class StatusWindow(QWidget):
                 width = self.toparea.sizeHint().width()
 
             # always take the stored width of the statusbar into account
-            x = x - int(width / 2) + int(self.stored_width / 2)
+            x = x - int(width // 2) + int(self.stored_width // 2)
 
             # check left and right limits of x
             if x < available_x:
@@ -4522,6 +4522,9 @@ class Dialog(QObject):
         # explicitly set window flags to avoid '?' button on Windows
         self.window.setWindowFlags(Qt.WindowCloseButtonHint)
 
+        # hoping to avoid overly large dialogs
+        self.window.setSizePolicy(QSizePolicy.Minimum, QSizePolicy.Minimum)
+
         # set small titlebar icon
         self.window.setWindowIcon(ICON)
 
@@ -4596,6 +4599,7 @@ class Dialog(QObject):
             # Due to older Qt5 in Ubuntu 14.04 signalmapper has to use strings
             self.signalmapper_toggles.setMapping(checkbox, checkbox.objectName())
             checkbox.toggled.connect(self.signalmapper_toggles.map)
+            checkbox.toggled.connect(self.window.adjustSize)
 
         # finally map signals with .sender() - [QWidget] is important!
         self.signalmapper_toggles.mapped[str].connect(self.toggle)
@@ -4694,26 +4698,25 @@ class Dialog_Settings(Dialog):
                 self.ui.input_lineedit_notification_custom_action_separator],
             # customized color alternation
             self.ui.input_checkbox_show_grid: [self.ui.input_checkbox_grid_use_custom_intensity],
-            self.ui.input_checkbox_grid_use_custom_intensity: [
-                self.ui.input_slider_grid_alternation_intensity,
-                self.ui.label_intensity_information_0,
-                self.ui.label_intensity_information_1,
-                self.ui.label_intensity_warning_0,
-                self.ui.label_intensity_warning_1,
-                self.ui.label_intensity_average_0,
-                self.ui.label_intensity_average_1,
-                self.ui.label_intensity_high_0,
-                self.ui.label_intensity_high_1,
-                self.ui.label_intensity_critical_0,
-                self.ui.label_intensity_critical_1,
-                self.ui.label_intensity_disaster_0,
-                self.ui.label_intensity_disaster_1,
-                self.ui.label_intensity_down_0,
-                self.ui.label_intensity_down_1,
-                self.ui.label_intensity_unreachable_0,
-                self.ui.label_intensity_unreachable_1,
-                self.ui.label_intensity_unknown_0,
-                self.ui.label_intensity_unknown_1],
+            self.ui.input_checkbox_grid_use_custom_intensity: [self.ui.input_slider_grid_alternation_intensity,
+                                                               self.ui.label_intensity_information_0,
+                                                               self.ui.label_intensity_information_1,
+                                                               self.ui.label_intensity_warning_0,
+                                                               self.ui.label_intensity_warning_1,
+                                                               self.ui.label_intensity_average_0,
+                                                               self.ui.label_intensity_average_1,
+                                                               self.ui.label_intensity_high_0,
+                                                               self.ui.label_intensity_high_1,
+                                                               self.ui.label_intensity_critical_0,
+                                                               self.ui.label_intensity_critical_1,
+                                                               self.ui.label_intensity_disaster_0,
+                                                               self.ui.label_intensity_disaster_1,
+                                                               self.ui.label_intensity_down_0,
+                                                               self.ui.label_intensity_down_1,
+                                                               self.ui.label_intensity_unreachable_0,
+                                                               self.ui.label_intensity_unreachable_1,
+                                                               self.ui.label_intensity_unknown_0,
+                                                               self.ui.label_intensity_unknown_1],
             self.ui.input_radiobutton_use_custom_browser: [self.ui.groupbox_custom_browser,
                                                            self.ui.input_lineedit_custom_browser,
                                                            self.ui.button_choose_browser]}
