@@ -4488,6 +4488,11 @@ class Dialogs(object):
         # file chooser Dialog
         self.file_chooser = QFileDialog()
 
+        # check if special widgets have to be shown
+        self.server.edited.connect(self.settings.toggle_zabbix_widgets)
+        self.server.edited.connect(self.settings.toggle_op5monitor_widgets)
+
+
 
 class Dialog(QObject):
     """
@@ -4835,18 +4840,6 @@ class Dialog_Settings(Dialog):
                                self.ui.input_checkbox_notify_if_disaster,
                                self.ui.input_checkbox_notify_if_high,
                                self.ui.input_checkbox_notify_if_information,
-                               self.ui.label_color_average,
-                               self.ui.label_color_disaster,
-                               self.ui.label_color_high,
-                               self.ui.label_color_information,
-                               self.ui.label_intensity_average_0,
-                               self.ui.label_intensity_average_1,
-                               self.ui.label_intensity_disaster_0,
-                               self.ui.label_intensity_disaster_1,
-                               self.ui.label_intensity_high_0,
-                               self.ui.label_intensity_high_1,
-                               self.ui.label_intensity_information_0,
-                               self.ui.label_intensity_information_1,
                                self.ui.input_button_color_average_text,
                                self.ui.input_button_color_average_background,
                                self.ui.input_button_color_disaster_text,
@@ -4854,7 +4847,21 @@ class Dialog_Settings(Dialog):
                                self.ui.input_button_color_high_text,
                                self.ui.input_button_color_high_background,
                                self.ui.input_button_color_information_text,
-                               self.ui.input_button_color_information_background]
+                               self.ui.input_button_color_information_background,
+                               self.ui.label_color_average,
+                               self.ui.label_color_disaster,
+                               self.ui.label_color_high,
+                               self.ui.label_color_information]
+
+        # Labes for customized color intensity
+        self.ZABBIX_COLOR_INTENSITY_LABELS = [self.ui.label_intensity_average_0,
+                                              self.ui.label_intensity_average_1,
+                                              self.ui.label_intensity_disaster_0,
+                                              self.ui.label_intensity_disaster_1,
+                                              self.ui.label_intensity_high_0,
+                                              self.ui.label_intensity_high_1,
+                                              self.ui.label_intensity_information_0,
+                                              self.ui.label_intensity_information_1]
 
         # the next workaround...
         self.OP5MONITOR_WIDGETS = [self.ui.input_checkbox_re_groups_enabled,
@@ -5536,17 +5543,25 @@ class Dialog_Settings(Dialog):
         """
             Depending on the existence of an enabled Zabbix monitor the Zabbix widgets are shown or hidden
         """
-        use_zabbix_widgets = False
+        use_zabbix = False
         for server in servers.values():
             if server.enabled:
                 if server.type == 'Zabbix':
-                    use_zabbix_widgets = True
+                    use_zabbix = True
                     break
-        if use_zabbix_widgets:
+        # remove extra Zabbix options
+        if use_zabbix:
             for widget in self.ZABBIX_WIDGETS:
                 widget.show()
         else:
             for widget in self.ZABBIX_WIDGETS:
+                widget.hide()
+        # remove custom color intensity labels
+        if use_zabbix and self.ui.input_checkbox_grid_use_custom_intensity.isChecked():
+            for widget in self.ZABBIX_COLOR_INTENSITY_LABELS:
+                widget.show()
+        else:
+            for widget in self.ZABBIX_COLOR_INTENSITY_LABELS:
                 widget.hide()
 
     @pyqtSlot()
@@ -5554,13 +5569,13 @@ class Dialog_Settings(Dialog):
         """
             Depending on the existence of an enabled Op5Monitor monitor the Op5Monitor widgets are shown or hidden
         """
-        use_op5monitor_widgets = False
+        use_op5monitor = False
         for server in servers.values():
             if server.enabled:
                 if server.type == 'op5Monitor':
-                    use_op5monitor_widgets = True
+                    use_op5monitor = True
                     break
-        if use_op5monitor_widgets:
+        if use_op5monitor:
             for widget in self.OP5MONITOR_WIDGETS:
                 widget.show()
         else:
@@ -5588,6 +5603,9 @@ class Dialog_Server(Dialog):
     """
         Dialog used to setup one single server
     """
+
+    # tell server has been edited
+    edited = pyqtSignal()
 
     def __init__(self, dialog):
         Dialog.__init__(self, dialog)
@@ -5899,6 +5917,10 @@ class Dialog_Server(Dialog):
             dialogs.settings.refresh_list(list_widget=dialogs.settings.ui.list_servers,
                                           list_conf=conf.servers,
                                           current=self.server_conf.name)
+
+            # tell main window about changes (Zabbix, Opsview for example)
+            self.edited.emit()
+
             self.window.close()
 
             # delete old server .conf file to reflect name changes
@@ -6854,7 +6876,7 @@ def create_brushes():
     """
         fill static brushes with current colors for treeview
     """
-    # if not customized usse default intensity
+    # if not customized use default intensity
     if conf.grid_use_custom_intensity:
         intensity = 100 + conf.grid_alternation_intensity
     else:
