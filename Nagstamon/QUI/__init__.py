@@ -4822,7 +4822,7 @@ class Dialog_Settings(Dialog):
         # connect slider to alternating colors
         self.ui.input_slider_grid_alternation_intensity.valueChanged.connect(self.change_color_alternation)
 
-        # apply toggle-dependencies between checkboxes as certain widgets
+        # apply toggle-dependencies between checkboxes and certain widgets
         self.toggle_toggles()
 
         # workaround to avoid gigantic settings dialog
