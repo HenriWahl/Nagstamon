@@ -1401,9 +1401,14 @@ class GenericServer(object):
                     self.Debug(server=self.get_name(), debug='FetchURL: ' + url + ' CGI Data: ' + str(cgi_data))
 
                 # in case we know the server's encoding use it
-                if cgi_data is not None and self.encoding is not None:
-                    for k in cgi_data:
-                        cgi_data[k] = cgi_data[k].encode(self.encoding)
+                if self.encoding:
+                    if cgi_data is not None:
+                        try:
+                            for k in cgi_data:
+                                cgi_data[k] = cgi_data[k].encode(self.encoding)
+                        except:
+                            # set to false to mark it as invalid
+                            self.encoding = False
 
                 # use session only for connections to monitor servers, other requests like looking for updates
                 # should go out without credentials
@@ -1465,8 +1470,9 @@ class GenericServer(object):
                     self.tls_error = False
                 return Result(result=result, error=error, status_code=-1)
 
-            # store encoding
-            self.encoding = response.encoding
+            # store encoding in case it is not set yet and is not False
+            if self.encoding is None:
+                self.encoding = response.encoding
 
             # give back pure HTML or XML in case giveback is 'raw'
             if giveback == 'raw':
