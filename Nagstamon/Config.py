@@ -47,6 +47,14 @@ OS_DARWIN = 'Darwin'
 OS_WINDOWS = 'Windows'
 NON_LINUX = (OS_DARWIN, OS_WINDOWS)
 
+# simple Wayland detection
+if 'WAYLAND_DISPLAY' in os.environ or \
+        ('XDG_SESSION_TYPE' in os.environ and \
+         os.environ['XDG_SESSION_TYPE'] == 'wayland'):
+    WAYLAND = True
+else:
+    WAYLAND = False
+
 # queue.Queue() needs threading module which might be not such a good idea to be used
 # because QThread is already in use
 # maybe not the most logical place here to be defined but at least all
@@ -112,7 +120,7 @@ class AppInfo(object):
         contains app information previously located in GUI.py
     """
     NAME = 'Nagstamon'
-    VERSION = '3.3-20191021'
+    VERSION = '3.3-20191022'
     WEBSITE = 'https://nagstamon.ifw-dresden.de'
     COPYRIGHT = '©2008-2019 Henri Wahl et al.'
     COMMENTS = 'Nagios status monitor for your desktop'

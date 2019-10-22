@@ -57,7 +57,8 @@ from Nagstamon.Config import (Action,
                               OS_DARWIN,
                               OS_WINDOWS,
                               RESOURCES,
-                              Server)
+                              Server,
+                              WAYLAND)
 
 from Nagstamon.Servers import (SERVER_TYPES,
                                servers,
@@ -1614,7 +1615,10 @@ class StatusWindow(QWidget):
 
             # If the mouse cursor drives too fast over and out the window will not be hidden.
             # Thus we check again with this timer to catch missed mouse-outs.
-            if conf.close_details_hover and conf.statusbar_floating:
+            # causes trouble in Wayland so is disabled for it
+            if conf.close_details_hover and \
+                    conf.statusbar_floating and\
+                    not WAYLAND:
                 self.periodically_check_window_under_mouse_and_hide()
 
     def periodically_check_window_under_mouse_and_hide(self):
