@@ -120,7 +120,7 @@ class AppInfo(object):
         contains app information previously located in GUI.py
     """
     NAME = 'Nagstamon'
-    VERSION = '3.3-20191022'
+    VERSION = '3.3-20191027'
     WEBSITE = 'https://nagstamon.ifw-dresden.de'
     COPYRIGHT = '©2008-2019 Henri Wahl et al.'
     COMMENTS = 'Nagios status monitor for your desktop'
@@ -473,7 +473,7 @@ class Config(object):
                     servers[server].type = 'IcingaWeb2'
 
                 # Check_MK is now Checkmk - same renaming as with IcingaWeb2
-                if servers[server].type == 'Checkmk Multisite':
+                if servers[server].type == 'Check_MK Multisite':
                     servers[server].type = 'Checkmk Multisite'
 
 
