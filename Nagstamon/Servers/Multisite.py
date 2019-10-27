@@ -12,9 +12,9 @@
 #
 # The official homepage is at http://mathias-kettner.de/check_mk.
 #
-# check_mk is free software;  you can redistribute it and/or modify it
+# Checkmk is free software;  you can redistribute it and/or modify it
 # under the  terms of the  GNU General Public License  as published by
-# the Free Software Foundation in version 2.  check_mk is  distributed
+# the Free Software Foundation in version 2.  Checkmk is  distributed
 # in the hope that it will be useful, but WITHOUT ANY WARRANTY;  with-
 # out even the implied warranty of  MERCHANTABILITY  or  FITNESS FOR A
 # PARTICULAR PURPOSE. See the  GNU General Public License for more de-
@@ -46,9 +46,9 @@ class MultisiteError(Exception):
 
 class MultisiteServer(GenericServer):
     """
-       special treatment for Check_MK Multisite JSON API
+       special treatment for Checkmk Multisite JSON API
     """
-    TYPE = 'Check_MK Multisite'
+    TYPE = 'Checkmk Multisite'
 
     # URLs for browser shortlinks/buttons on popup window
     BROWSER_URLS= { 'monitor': '$MONITOR$',\
@@ -115,7 +115,7 @@ class MultisiteServer(GenericServer):
             }
 
         if self.CookieAuth:
-            # get cookie to access Check_MK web interface
+            # get cookie to access Checkmk web interface
             if 'cookies' in dir(self.session):
                 if len(self.session.cookies) == 0:
                     # if no cookie yet login
@@ -210,7 +210,7 @@ class MultisiteServer(GenericServer):
 
     def _get_status(self):
         """
-            Get status from Check_MK Server
+            Get status from Checkmk Server
         """
 
         ret = Result()
@@ -266,7 +266,7 @@ class MultisiteServer(GenericServer):
                     self.new_hosts[new_host].site = n['site']
                     self.new_hosts[new_host].address = n['address']
 
-                    # transisition to Check_MK 1.1.10p2
+                    # transisition to Checkmk 1.1.10p2
                     if 'host_in_downtime' in host:
                         if host['host_in_downtime'] == 'yes':
                             self.new_hosts[new_host].scheduled_downtime = True
@@ -322,7 +322,7 @@ class MultisiteServer(GenericServer):
                     'duration':           service['svc_state_age'],
                     'attempt':            service['svc_attempt'],
                     'status_information': html.unescape(service['svc_plugin_output'].replace('\n', ' ')),
-                    # Check_MK passive services can be re-scheduled by using the Check_MK service
+                    # Checkmk passive services can be re-scheduled by using the Checkmk service
                     'passiveonly':        service['svc_is_active'] == 'no' and not service['svc_check_command'].startswith('check_mk'),
                     'flapping':           service['svc_flapping'] == 'yes',
                     'site':               service['sitename_plain'],
@@ -355,7 +355,7 @@ class MultisiteServer(GenericServer):
                     self.new_hosts[n['host']].services[new_service].address = n['address']
                     self.new_hosts[n['host']].services[new_service].command = n['command']
 
-                    # transistion to Check_MK 1.1.10p2
+                    # transistion to Checkmk 1.1.10p2
                     if 'svc_in_downtime' in service:
                         if service['svc_in_downtime'] == 'yes':
                             self.new_hosts[n['host']].services[new_service].scheduled_downtime = True
@@ -510,7 +510,7 @@ class MultisiteServer(GenericServer):
 
     def recheck_all(self):
         """
-            special method for Check_MK as there is one URL for rescheduling all problems to be checked
+            special method for Checkmk as there is one URL for rescheduling all problems to be checked
         """
         params = dict()
         params['_resched_checks'] = 'Reschedule active checks'

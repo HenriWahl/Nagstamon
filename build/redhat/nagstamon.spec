@@ -34,7 +34,7 @@ Nagstamon is a Nagios status monitor which takes place in system tray
 or on desktop (GNOME, KDE, Windows) as floating status bar to inform
 you in real-time about the status of your Nagios and derivatives
 monitored network. It allows to connect to multiple Nagios, Icinga,
-Opsview, Op5Monitor, Check_MK/Multisite, Centreon and Thruk servers.
+Opsview, Op5Monitor, Checkmk/Multisite, Centreon and Thruk servers.
 
 %prep
 %setup -qn Nagstamon-%{commit}

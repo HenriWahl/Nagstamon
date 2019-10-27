@@ -1,6 +1,6 @@
 # -*- encoding: utf-8; py-indent-offset: 4 -*-
 #
-# Zabbix.py based on Check_MK Multisite.py
+# Zabbix.py based on Checkmk Multisite.py
 
 import sys
 import urllib.request

@@ -83,7 +83,7 @@ $COMMENT-ACK$ - default acknowledge comment
 $COMMENT-DOWN$ - default downtime comment
 $COMMENT-SUBMIT$ - default submit check result comment
 
-$TRANSID$ - only useful for Check_MK as _transid=$TRANSID$</string>
+$TRANSID$ - only useful for Checkmk as _transid=$TRANSID$</string>
      </property>
     </widget>
    </item>

@@ -19,4 +19,4 @@ Description: Nagios status monitor which takes place in systray or on desktop
  on desktop (GNOME, KDE) as floating statusbar to inform you in 
  realtime about the status of your Nagios and some of its derivatives monitored network. 
  It allows to connect to multiple Nagios, Icinga, Opsview, Centreon, Op5Monitor,
- Check_MK Multisite, Thruk, Zabbix and Zenoss servers. Events could be handled by instant access to failed hosts/services.
+ Checkmk Multisite, Thruk, Zabbix and Zenoss servers. Events could be handled by instant access to failed hosts/services.

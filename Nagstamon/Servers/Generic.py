@@ -188,7 +188,7 @@ class GenericServer(object):
         # Icinga
         self.use_display_name_host = False
         self.use_display_name_service = False
-        # Check_MK Multisite
+        # Checkmk Multisite
         self.force_authuser = False
 
         # OP5 api filters
@@ -940,7 +940,7 @@ class GenericServer(object):
                         self.Debug(server=self.get_name(), debug='Filter: FLAPPING HOST ' + str(host.name))
                     host.visible = False
 
-                # Check_MK and OP5 do not show the status_type so their host.status_type will be empty
+                # Checkmk and OP5 do not show the status_type so their host.status_type will be empty
                 if host.status_type != '':
                     if conf.filter_hosts_in_soft_state is True and host.status_type == 'soft':
                         if conf.debug_mode:
@@ -1058,7 +1058,7 @@ class GenericServer(object):
                                        service.name))
                     service.visible = False
 
-                # Check_MK and OP5 do not show the status_type so their host.status_type will be empty
+                # Checkmk and OP5 do not show the status_type so their host.status_type will be empty
                 if service.status_type != '':
                     if conf.filter_services_in_soft_state is True and service.status_type == 'soft':
                         if conf.debug_mode:
@@ -1424,7 +1424,7 @@ class GenericServer(object):
                         else:
                             response = self.session.post(url, data=cgi_data, timeout=self.timeout)
                     else:
-                        # Check_MK and Opsview need multipart/form-data encoding
+                        # Checkmk and Opsview need multipart/form-data encoding
                         # http://stackoverflow.com/questions/23120974/python-requests-post-multipart-form-data-without-filename-in-http-request#23131823
                         form_data = dict()
                         for key in cgi_data:
@@ -1450,7 +1450,7 @@ class GenericServer(object):
                         else:
                             response = temporary_session.post(url, data=cgi_data, timeout=self.timeout)
                     else:
-                        # Check_MK and Opsview nees multipart/form-data encoding
+                        # Checkmk and Opsview need multipart/form-data encoding
                         # http://stackoverflow.com/questions/23120974/python-requests-post-multipart-form-data-without-filename-in-http-request#23131823
                         form_data = dict()
                         for key in cgi_data:

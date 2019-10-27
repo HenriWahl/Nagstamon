@@ -3585,8 +3585,8 @@ class TreeView(QTreeView):
                 action_downtime.triggered.connect(self.action_downtime)
                 self.action_menu.addAction(action_downtime)
 
-            # special menu entry for Check_MK for archiving events
-            if self.server.type == 'Check_MK Multisite' and len(list_rows) == 1:
+            # special menu entry for Checkmk Multisite for archiving events
+            if self.server.type == 'Checkmk Multisite' and len(list_rows) == 1:
                 if miserable_service == 'Events':
                     action_archive_event = QAction('Archive event', self)
                     action_archive_event.triggered.connect(self.action_archive_event)
@@ -3757,7 +3757,7 @@ class TreeView(QTreeView):
     @action_response_decorator
     def action_archive_event(self):
         """
-            archive events in Check_MK Event Console
+            archive events in Checkmk Multisite Event Console
         """
 
         # fill action and info dict for thread-safe action request
@@ -4286,8 +4286,8 @@ class TreeView(QTreeView):
                 self.change_label_status.emit('Rechecking all...', '')
                 if conf.debug_mode:
                     self.server.Debug(server=self.server.name, debug='Start rechecking all')
-                # special treatment for Check_MK Multisite because there is only one URL call necessary
-                if self.server.type != 'Check_MK Multisite':
+                # special treatment for Checkmk Multisite because there is only one URL call necessary
+                if self.server.type != 'Checkmk Multisite':
                     # make a copy to preserve hosts/service to recheck - just in case something changes meanwhile
                     nagitems_filtered = deepcopy(self.server.nagitems_filtered)
                     for status in nagitems_filtered['hosts'].items():
@@ -4307,7 +4307,7 @@ class TreeView(QTreeView):
                             self.server.set_recheck({'host': service.host, 'service': service.name})
                     del (nagitems_filtered, status)
                 else:
-                    # Check_MK Multisite does it its own way
+                    # Checkmk Multisite does it its own way
                     self.server.recheck_all()
                 # release rechecking lock
                 self.rechecking_all = False
@@ -4331,7 +4331,7 @@ class TreeView(QTreeView):
         @pyqtSlot(dict, dict)
         def execute_action(self, action, info):
             """
-                runs action, may it be custom or included like the Check_MK actions
+                runs action, may it be custom or included like the Checkmk Multisite actions
             """
             # first replace placeholder variables in string with actual values
             #
@@ -4392,7 +4392,7 @@ class TreeView(QTreeView):
                                           debug='ACTION: COMMAND ' + string)
                     subprocess.Popen(string, shell=True)
                 elif action['type'] == 'url':
-                    # Check_MK uses transids - if this occurs in URL its very likely that a Check_MK-URL is called
+                    # Checkmk uses transids - if this occurs in URL its very likely that a Checkmk-URL is called
                     if '$TRANSID$' in string:
                         transid = servers[info['server']]._get_transid(info['host'], info['service'])
                         string = string.replace('$TRANSID$', transid).replace(' ', '+')
@@ -5648,8 +5648,8 @@ class Dialog_Server(Dialog):
             self.ui.input_checkbox_use_display_name_host: ['Icinga', 'IcingaWeb2'],
             self.ui.input_checkbox_use_display_name_service: ['Icinga', 'IcingaWeb2'],
             self.ui.input_checkbox_use_description_name_service: ['Zabbix'],
-            self.ui.input_checkbox_force_authuser: ['Check_MK Multisite'],
-            self.ui.groupbox_check_mk_views: ['Check_MK Multisite'],
+            self.ui.input_checkbox_force_authuser: ['Checkmk Multisite'],
+            self.ui.groupbox_check_mk_views: ['Checkmk Multisite'],
             self.ui.input_lineedit_host_filter: ['op5Monitor'],
             self.ui.input_lineedit_service_filter: ['op5Monitor'],
             self.ui.label_service_filter: ['op5Monitor'],
@@ -5686,7 +5686,7 @@ class Dialog_Server(Dialog):
         # when authentication is changed to Kerberos then disable username/password as the are now useless
         self.ui.input_combobox_authentication.activated.connect(self.toggle_authentication)
 
-        # reset Check_MK views
+        # reset Checkmk views
         self.ui.button_check_mk_view_hosts_reset.clicked.connect(self.check_mk_view_hosts_reset)
         self.ui.button_check_mk_view_services_reset.clicked.connect(self.check_mk_view_services_reset)
 
@@ -6594,7 +6594,7 @@ class Dialog_About(Dialog):
         self.ui.label_copyright.setText(AppInfo.COPYRIGHT)
         self.ui.label_website.setText('<a href={0}>{0}</a>'.format(AppInfo.WEBSITE))
         self.ui.label_website.setOpenExternalLinks(True)
-        self.ui.label_footnote.setText('<small>¹ plus Check_MK, Op5, Icinga, Centreon and more</small>')
+        self.ui.label_footnote.setText('<small>¹ plus Checkmk, Op5, Icinga, Centreon and more</small>')
 
         # fill in license information
         license_file = open('{0}{1}LICENSE'.format(RESOURCES, os.sep))

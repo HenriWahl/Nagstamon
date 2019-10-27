@@ -286,7 +286,7 @@ def MachineSortableDate(raw):
     if raw is None:
         raw = '0s'
 
-    # Check_MK style - added new variants in 1.4.x, based on abbreviations with spaces :-(
+    # Checkmk style - added new variants in 1.4.x, based on abbreviations with spaces :-(
     if ('-' in raw and ':' in raw) or\
             ('sec' in raw or 'min' in raw or 'hrs' in raw or 'days' in raw or\
              ' s' in raw or ' m' in raw or ' h' in raw or ' d' in raw):
@@ -324,7 +324,7 @@ def MachineSortableDate(raw):
 
         # int-ify d
         for i in d:
-            # workaround to make values negative to fix Check_MK's different order
+            # workaround to make values negative to fix Checkmk's different order
             d[i] = -int(d[i])
     else:
         # strip and replace necessary for Nagios duration values,

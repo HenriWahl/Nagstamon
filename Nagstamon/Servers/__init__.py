@@ -168,7 +168,7 @@ def create_server(server=None):
     # IcingaWeb2
     new_server.no_cookie_auth = server.no_cookie_auth
 
-    # Check_MK Multisite
+    # Checkmk Multisite
     new_server.force_authuser = server.force_authuser
     new_server.check_mk_view_hosts = server.check_mk_view_hosts
     new_server.check_mk_view_services = server.check_mk_view_services

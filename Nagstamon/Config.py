@@ -472,6 +472,11 @@ class Config(object):
                 if servers[server].type == 'Icinga2':
                     servers[server].type = 'IcingaWeb2'
 
+                # Check_MK is now Checkmk - same renaming as with IcingaWeb2
+                if servers[server].type == 'Checkmk Multisite':
+                    servers[server].type = 'Checkmk Multisite'
+
+
         except Exception:
             import traceback
             traceback.print_exc(file=sys.stdout)
@@ -793,18 +798,18 @@ class Config(object):
                                                            filter_target_host=True,
                                                            string="$MONITOR$/event?host=$HOST$&service=$SERVICE$",
                                                            enabled=False)
-        defaultactions["Check_MK-1-Click-Acknowledge-Host"] = Action(name="Check_MK-1-Click-Acknowledge-Host",
+        defaultactions["Checkmk-1-Click-Acknowledge-Host"] = Action(name="Checkmk-1-Click-Acknowledge-Host",
                                                                      type="url",
                                                                      description="Acknowledges a host with one click.",
                                                                      filter_target_service=False, enabled=False,
                                                                      string="$MONITOR$/view.py?_transid=$TRANSID$&_do_actions=yes&_do_confirm=Yes!&output_format=python&view_name=hoststatus&host=$HOST$&_ack_comment=$COMMENT-ACK$&_acknowledge=Acknowledge")
-        defaultactions["Check_MK-1-Click-Acknowledge-Service"] = Action(name="Check_MK-1-Click-Acknowledge-Service",
+        defaultactions["Checkmk-1-Click-Acknowledge-Service"] = Action(name="Checkmk-1-Click-Acknowledge-Service",
                                                                         type="url",
                                                                         description="Acknowledges a host with one click.",
                                                                         filter_target_host=False, enabled=False,
                                                                         string="$MONITOR$/view.py?_transid=$TRANSID$&_do_actions=yes&_do_confirm=Yes!&output_format=python&view_name=service&host=$HOST$&_ack_comment=$COMMENT-ACK$&_acknowledge=Acknowledge&service=$SERVICE$")
-        defaultactions["Check_MK Edit host in WATO"] = Action(name="Check_MK Edit host in WATO", enabled=False,
-                                                              monitor_type="Check_MK Multisite",
+        defaultactions["Checkmk Edit host in WATO"] = Action(name="Checkmk Edit host in WATO", enabled=False,
+                                                              monitor_type="Checkmk Multisite",
                                                               description="Edit host in WATO.",
                                                               string="$MONITOR$index.py?start_url=%2Fmonitor%2Fcheck_mk%2Fwato.py%3Fhost%3D$HOST$%26mode%3Dedit_host")
         defaultactions["Email"] = Action(name="Email", enabled=False, description="Send email to someone.",
@@ -910,8 +915,8 @@ class Server(object):
         # IcingaWeb2 might authenticate without cookies too - default is WITH cookies
         self.no_cookie_auth = False
 
-        # Check_MK Multisite
-        # Force Check_MK livestatus code to set AuthUser header for users who
+        # Checkmk Multisite
+        # Force Checkmk livestatus code to set AuthUser header for users who
         # are permitted to see all objects.
         self.force_authuser = False
         self.check_mk_view_hosts = 'nagstamon_hosts'

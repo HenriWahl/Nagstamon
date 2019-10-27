@@ -223,7 +223,7 @@ class Ui_settings_action(object):
 "$COMMENT-DOWN$ - default downtime comment\n"
 "$COMMENT-SUBMIT$ - default submit check result comment\n"
 "\n"
-"$TRANSID$ - only useful for Check_MK as _transid=$TRANSID$"))
+"$TRANSID$ - only useful for Checkmk as _transid=$TRANSID$"))
         self.input_checkbox_re_duration_enabled.setText(_translate("settings_action", "Regular expressions for duration"))
         self.label_string.setText(_translate("settings_action", "String:"))
         self.label_action_type.setText(_translate("settings_action", "Action type:"))

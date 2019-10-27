@@ -49,7 +49,7 @@ class GenericObject(object):
         self.host_flags = ''
         self.service_flags = ''
         self.visible = True
-        # Check_MK also has site info
+        # Checkmk also has site info
         self.site = ''
         # server to be added to hash
         self.server = ''
