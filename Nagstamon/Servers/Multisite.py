@@ -82,18 +82,18 @@ class MultisiteServer(GenericServer):
         if len(self.urls) == len(self.statemap):
             self.urls = {
               'api_services':    self.monitor_url + 'view.py?view_name={0}&output_format=python&lang=&limit=hard'.\
-                                                                          format(self.check_mk_view_services),
+                                                                          format(self.checkmk_view_services),
               'human_services':  self.monitor_url + 'index.py?%s' % \
                                                    urllib.parse.urlencode({'start_url': 'view.py?view_name={0}'.\
-                                                                          format(self.check_mk_view_services)}),
+                                                                          format(self.checkmk_view_services)}),
               'human_service':   self.monitor_url + 'index.py?%s' %
                                                    urllib.parse.urlencode({'start_url': 'view.py?view_name=service'}),
 
               'api_hosts':       self.monitor_url + 'view.py?view_name={0}&output_format=python&lang=&limit=hard'.\
-                                                                          format(self.check_mk_view_hosts),
+                                                                          format(self.checkmk_view_hosts),
               'human_hosts':     self.monitor_url + 'index.py?%s' %
                                                    urllib.parse.urlencode({'start_url': 'view.py?view_name={0}'.\
-                                                                           format(self.check_mk_view_services)}),
+                                                                           format(self.checkmk_view_services)}),
               'human_host':      self.monitor_url + 'index.py?%s' %
                                                    urllib.parse.urlencode({'start_url': 'view.py?view_name=hoststatus'}),
               # URLs do not need pythonic output because since werk #0766 API does not work with transid=-1 anymore

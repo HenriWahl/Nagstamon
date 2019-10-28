@@ -170,8 +170,8 @@ def create_server(server=None):
 
     # Checkmk Multisite
     new_server.force_authuser = server.force_authuser
-    new_server.check_mk_view_hosts = server.check_mk_view_hosts
-    new_server.check_mk_view_services = server.check_mk_view_services
+    new_server.checkmk_view_hosts = server.checkmk_view_hosts
+    new_server.checkmk_view_services = server.checkmk_view_services
 
     # OP5 api filters
     new_server.host_filter = server.host_filter

@@ -444,7 +444,7 @@
        </layout>
       </item>
       <item row="17" column="0" colspan="4">
-       <widget class="QGroupBox" name="groupbox_check_mk_views">
+       <widget class="QGroupBox" name="groupbox_checkmk_views">
         <property name="sizePolicy">
          <sizepolicy hsizetype="Minimum" vsizetype="Minimum">
           <horstretch>0</horstretch>
@@ -456,34 +456,34 @@
         </property>
         <layout class="QGridLayout" name="gridLayout_4">
          <item row="0" column="0">
-          <widget class="QLabel" name="label_check_mk_view_hosts">
+          <widget class="QLabel" name="label_checkmk_view_hosts">
            <property name="text">
             <string>Hosts:</string>
            </property>
           </widget>
          </item>
          <item row="1" column="0">
-          <widget class="QLabel" name="label_check_mk_view_services">
+          <widget class="QLabel" name="label_checkmk_view_services">
            <property name="text">
             <string>Services:</string>
            </property>
           </widget>
          </item>
          <item row="1" column="1">
-          <widget class="QLineEdit" name="input_lineedit_check_mk_view_services"/>
+          <widget class="QLineEdit" name="input_lineedit_checkmk_view_services"/>
          </item>
          <item row="0" column="1">
-          <widget class="QLineEdit" name="input_lineedit_check_mk_view_hosts"/>
+          <widget class="QLineEdit" name="input_lineedit_checkmk_view_hosts"/>
          </item>
          <item row="0" column="2">
-          <widget class="QPushButton" name="button_check_mk_view_hosts_reset">
+          <widget class="QPushButton" name="button_checkmk_view_hosts_reset">
            <property name="text">
             <string>Reset</string>
            </property>
           </widget>
          </item>
          <item row="1" column="2">
-          <widget class="QPushButton" name="button_check_mk_view_services_reset">
+          <widget class="QPushButton" name="button_checkmk_view_services_reset">
            <property name="text">
             <string>Reset</string>
            </property>

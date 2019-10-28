@@ -5649,7 +5649,7 @@ class Dialog_Server(Dialog):
             self.ui.input_checkbox_use_display_name_service: ['Icinga', 'IcingaWeb2'],
             self.ui.input_checkbox_use_description_name_service: ['Zabbix'],
             self.ui.input_checkbox_force_authuser: ['Checkmk Multisite'],
-            self.ui.groupbox_check_mk_views: ['Checkmk Multisite'],
+            self.ui.groupbox_checkmk_views: ['Checkmk Multisite'],
             self.ui.input_lineedit_host_filter: ['op5Monitor'],
             self.ui.input_lineedit_service_filter: ['op5Monitor'],
             self.ui.label_service_filter: ['op5Monitor'],
@@ -5687,8 +5687,8 @@ class Dialog_Server(Dialog):
         self.ui.input_combobox_authentication.activated.connect(self.toggle_authentication)
 
         # reset Checkmk views
-        self.ui.button_check_mk_view_hosts_reset.clicked.connect(self.check_mk_view_hosts_reset)
-        self.ui.button_check_mk_view_services_reset.clicked.connect(self.check_mk_view_services_reset)
+        self.ui.button_checkmk_view_hosts_reset.clicked.connect(self.checkmk_view_hosts_reset)
+        self.ui.button_checkmk_view_services_reset.clicked.connect(self.checkmk_view_services_reset)
 
         # mode needed for evaluate dialog after ok button pressed - defaults to 'new'
         self.mode = 'new'
@@ -5952,12 +5952,12 @@ class Dialog_Server(Dialog):
             self.ui.input_lineedit_custom_cert_ca_file.setText(file)
 
     @pyqtSlot()
-    def check_mk_view_hosts_reset(self):
-        self.ui.input_lineedit_check_mk_view_hosts.setText('nagstamon_hosts')
+    def checkmk_view_hosts_reset(self):
+        self.ui.input_lineedit_checkmk_view_hosts.setText('nagstamon_hosts')
 
     @pyqtSlot()
-    def check_mk_view_services_reset(self):
-        self.ui.input_lineedit_check_mk_view_services.setText('nagstamon_svc')
+    def checkmk_view_services_reset(self):
+        self.ui.input_lineedit_checkmk_view_services.setText('nagstamon_svc')
 
 
 class Dialog_Action(Dialog):

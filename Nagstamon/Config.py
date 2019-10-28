@@ -475,7 +475,12 @@ class Config(object):
                 # Check_MK is now Checkmk - same renaming as with IcingaWeb2
                 if servers[server].type == 'Check_MK Multisite':
                     servers[server].type = 'Checkmk Multisite'
-
+                if 'check_mk_view_hosts' in servers[server].__dict__.keys():
+                    servers[server].checkmk_view_hosts = servers[server].check_mk_view_hosts
+                    servers[server].__dict__.pop('check_mk_view_hosts')
+                if 'check_mk_view_services' in servers[server].__dict__.keys():
+                    servers[server].checkmk_view_services = servers[server].check_mk_view_services
+                    servers[server].__dict__.pop('check_mk_view_services')
 
         except Exception:
             import traceback
@@ -919,8 +924,8 @@ class Server(object):
         # Force Checkmk livestatus code to set AuthUser header for users who
         # are permitted to see all objects.
         self.force_authuser = False
-        self.check_mk_view_hosts = 'nagstamon_hosts'
-        self.check_mk_view_services = 'nagstamon_svc'
+        self.checkmk_view_hosts = 'nagstamon_hosts'
+        self.checkmk_view_services = 'nagstamon_svc'
 
         # OP5 api filters
         self.host_filter = 'state !=0'
