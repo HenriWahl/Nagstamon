@@ -6,8 +6,8 @@
    <rect>
     <x>0</x>
     <y>0</y>
-    <width>465</width>
-    <height>274</height>
+    <width>475</width>
+    <height>366</height>
    </rect>
   </property>
   <property name="sizePolicy">
@@ -26,7 +26,14 @@
    <bool>true</bool>
   </property>
   <layout class="QGridLayout" name="gridLayout">
-   <item row="7" column="0" colspan="2">
+   <item row="4" column="0">
+    <widget class="QLineEdit" name="input_lineedit_comment">
+     <property name="alignment">
+      <set>Qt::AlignLeading|Qt::AlignLeft|Qt::AlignTop</set>
+     </property>
+    </widget>
+   </item>
+   <item row="8" column="0" colspan="2">
     <layout class="QHBoxLayout" name="horizontalLayout">
      <item>
       <widget class="QPushButton" name="button_change_defaults_acknowledge">
@@ -47,10 +54,28 @@
      </item>
     </layout>
    </item>
-   <item row="5" column="0" colspan="2">
+   <item row="5" column="0" rowspan="2" colspan="2">
     <widget class="QGroupBox" name="options_groupbox">
+     <property name="enabled">
+      <bool>true</bool>
+     </property>
+     <property name="sizePolicy">
+      <sizepolicy hsizetype="Preferred" vsizetype="Preferred">
+       <horstretch>0</horstretch>
+       <verstretch>0</verstretch>
+      </sizepolicy>
+     </property>
+     <property name="minimumSize">
+      <size>
+       <width>0</width>
+       <height>91</height>
+      </size>
+     </property>
      <property name="title">
       <string>Options</string>
+     </property>
+     <property name="alignment">
+      <set>Qt::AlignLeading|Qt::AlignLeft|Qt::AlignTop</set>
      </property>
      <layout class="QVBoxLayout" name="verticalLayout">
       <item>
@@ -81,18 +106,75 @@
         </property>
        </widget>
       </item>
+      <item>
+       <widget class="QCheckBox" name="input_checkbox_use_expire_time">
+        <property name="contextMenuPolicy">
+         <enum>Qt::DefaultContextMenu</enum>
+        </property>
+        <property name="toolTip">
+         <string/>
+        </property>
+        <property name="text">
+         <string>Expire acknowledgement</string>
+        </property>
+       </widget>
+      </item>
+      <item>
+       <widget class="QDateTimeEdit" name="input_datetime_expire_time">
+        <property name="enabled">
+         <bool>true</bool>
+        </property>
+        <property name="buttonSymbols">
+         <enum>QAbstractSpinBox::UpDownArrows</enum>
+        </property>
+        <property name="currentSection">
+         <enum>QDateTimeEdit::HourSection</enum>
+        </property>
+        <property name="calendarPopup">
+         <bool>true</bool>
+        </property>
+       </widget>
+      </item>
      </layout>
     </widget>
    </item>
    <item row="0" column="0" colspan="2">
     <widget class="QLabel" name="input_label_description">
+     <property name="sizePolicy">
+      <sizepolicy hsizetype="Preferred" vsizetype="MinimumExpanding">
+       <horstretch>0</horstretch>
+       <verstretch>0</verstretch>
+      </sizepolicy>
+     </property>
+     <property name="minimumSize">
+      <size>
+       <width>0</width>
+       <height>5</height>
+      </size>
+     </property>
      <property name="text">
       <string>description - set by QUI.py</string>
      </property>
+     <property name="alignment">
+      <set>Qt::AlignLeading|Qt::AlignLeft|Qt::AlignTop</set>
+     </property>
     </widget>
    </item>
-   <item row="4" column="0">
-    <widget class="QLineEdit" name="input_lineedit_comment"/>
+   <item row="7" column="0">
+    <spacer name="verticalSpacer">
+     <property name="orientation">
+      <enum>Qt::Vertical</enum>
+     </property>
+     <property name="sizeType">
+      <enum>QSizePolicy::Expanding</enum>
+     </property>
+     <property name="sizeHint" stdset="0">
+      <size>
+       <width>20</width>
+       <height>0</height>
+      </size>
+     </property>
+    </spacer>
    </item>
   </layout>
  </widget>
@@ -102,6 +184,8 @@
   <tabstop>input_checkbox_send_notification</tabstop>
   <tabstop>input_checkbox_persistent_comment</tabstop>
   <tabstop>input_checkbox_acknowledge_all_services</tabstop>
+  <tabstop>input_checkbox_use_expire_time</tabstop>
+  <tabstop>input_datetime_expire_time</tabstop>
   <tabstop>button_change_defaults_acknowledge</tabstop>
  </tabstops>
  <resources/>
@@ -113,8 +197,8 @@
    <slot>accept()</slot>
    <hints>
     <hint type="sourcelabel">
-     <x>248</x>
-     <y>254</y>
+     <x>464</x>
+     <y>355</y>
     </hint>
     <hint type="destinationlabel">
      <x>157</x>
@@ -129,8 +213,8 @@
    <slot>reject()</slot>
    <hints>
     <hint type="sourcelabel">
-     <x>316</x>
-     <y>260</y>
+     <x>464</x>
+     <y>355</y>
     </hint>
     <hint type="destinationlabel">
      <x>286</x>

@@ -2,7 +2,7 @@
 
 # Form implementation generated from reading ui file 'dialog_acknowledge.ui'
 #
-# Created by: PyQt5 UI code generator 5.5.1
+# Created by: PyQt5 UI code generator 5.10.1
 #
 # WARNING! All changes made in this file will be lost!
 
@@ -11,7 +11,7 @@ from PyQt5 import QtCore, QtGui, QtWidgets
 class Ui_dialog_acknowledge(object):
     def setupUi(self, dialog_acknowledge):
         dialog_acknowledge.setObjectName("dialog_acknowledge")
-        dialog_acknowledge.resize(465, 274)
+        dialog_acknowledge.resize(475, 366)
         sizePolicy = QtWidgets.QSizePolicy(QtWidgets.QSizePolicy.Minimum, QtWidgets.QSizePolicy.Minimum)
         sizePolicy.setHorizontalStretch(0)
         sizePolicy.setVerticalStretch(0)
@@ -21,6 +21,10 @@ class Ui_dialog_acknowledge(object):
         dialog_acknowledge.setModal(True)
         self.gridLayout = QtWidgets.QGridLayout(dialog_acknowledge)
         self.gridLayout.setObjectName("gridLayout")
+        self.input_lineedit_comment = QtWidgets.QLineEdit(dialog_acknowledge)
+        self.input_lineedit_comment.setAlignment(QtCore.Qt.AlignLeading|QtCore.Qt.AlignLeft|QtCore.Qt.AlignTop)
+        self.input_lineedit_comment.setObjectName("input_lineedit_comment")
+        self.gridLayout.addWidget(self.input_lineedit_comment, 4, 0, 1, 1)
         self.horizontalLayout = QtWidgets.QHBoxLayout()
         self.horizontalLayout.setObjectName("horizontalLayout")
         self.button_change_defaults_acknowledge = QtWidgets.QPushButton(dialog_acknowledge)
@@ -31,8 +35,16 @@ class Ui_dialog_acknowledge(object):
         self.button_box.setStandardButtons(QtWidgets.QDialogButtonBox.Cancel|QtWidgets.QDialogButtonBox.Ok)
         self.button_box.setObjectName("button_box")
         self.horizontalLayout.addWidget(self.button_box)
-        self.gridLayout.addLayout(self.horizontalLayout, 7, 0, 1, 2)
+        self.gridLayout.addLayout(self.horizontalLayout, 8, 0, 1, 2)
         self.options_groupbox = QtWidgets.QGroupBox(dialog_acknowledge)
+        self.options_groupbox.setEnabled(True)
+        sizePolicy = QtWidgets.QSizePolicy(QtWidgets.QSizePolicy.Preferred, QtWidgets.QSizePolicy.Preferred)
+        sizePolicy.setHorizontalStretch(0)
+        sizePolicy.setVerticalStretch(0)
+        sizePolicy.setHeightForWidth(self.options_groupbox.sizePolicy().hasHeightForWidth())
+        self.options_groupbox.setSizePolicy(sizePolicy)
+        self.options_groupbox.setMinimumSize(QtCore.QSize(0, 91))
+        self.options_groupbox.setAlignment(QtCore.Qt.AlignLeading|QtCore.Qt.AlignLeft|QtCore.Qt.AlignTop)
         self.options_groupbox.setObjectName("options_groupbox")
         self.verticalLayout = QtWidgets.QVBoxLayout(self.options_groupbox)
         self.verticalLayout.setObjectName("verticalLayout")
@@ -48,13 +60,31 @@ class Ui_dialog_acknowledge(object):
         self.input_checkbox_acknowledge_all_services = QtWidgets.QCheckBox(self.options_groupbox)
         self.input_checkbox_acknowledge_all_services.setObjectName("input_checkbox_acknowledge_all_services")
         self.verticalLayout.addWidget(self.input_checkbox_acknowledge_all_services)
-        self.gridLayout.addWidget(self.options_groupbox, 5, 0, 1, 2)
+        self.input_checkbox_use_expire_time = QtWidgets.QCheckBox(self.options_groupbox)
+        self.input_checkbox_use_expire_time.setContextMenuPolicy(QtCore.Qt.DefaultContextMenu)
+        self.input_checkbox_use_expire_time.setToolTip("")
+        self.input_checkbox_use_expire_time.setObjectName("input_checkbox_use_expire_time")
+        self.verticalLayout.addWidget(self.input_checkbox_use_expire_time)
+        self.input_datetime_expire_time = QtWidgets.QDateTimeEdit(self.options_groupbox)
+        self.input_datetime_expire_time.setEnabled(True)
+        self.input_datetime_expire_time.setButtonSymbols(QtWidgets.QAbstractSpinBox.UpDownArrows)
+        self.input_datetime_expire_time.setCurrentSection(QtWidgets.QDateTimeEdit.HourSection)
+        self.input_datetime_expire_time.setCalendarPopup(True)
+        self.input_datetime_expire_time.setObjectName("input_datetime_expire_time")
+        self.verticalLayout.addWidget(self.input_datetime_expire_time)
+        self.gridLayout.addWidget(self.options_groupbox, 5, 0, 2, 2)
         self.input_label_description = QtWidgets.QLabel(dialog_acknowledge)
+        sizePolicy = QtWidgets.QSizePolicy(QtWidgets.QSizePolicy.Preferred, QtWidgets.QSizePolicy.MinimumExpanding)
+        sizePolicy.setHorizontalStretch(0)
+        sizePolicy.setVerticalStretch(0)
+        sizePolicy.setHeightForWidth(self.input_label_description.sizePolicy().hasHeightForWidth())
+        self.input_label_description.setSizePolicy(sizePolicy)
+        self.input_label_description.setMinimumSize(QtCore.QSize(0, 5))
+        self.input_label_description.setAlignment(QtCore.Qt.AlignLeading|QtCore.Qt.AlignLeft|QtCore.Qt.AlignTop)
         self.input_label_description.setObjectName("input_label_description")
         self.gridLayout.addWidget(self.input_label_description, 0, 0, 1, 2)
-        self.input_lineedit_comment = QtWidgets.QLineEdit(dialog_acknowledge)
-        self.input_lineedit_comment.setObjectName("input_lineedit_comment")
-        self.gridLayout.addWidget(self.input_lineedit_comment, 4, 0, 1, 1)
+        spacerItem = QtWidgets.QSpacerItem(20, 0, QtWidgets.QSizePolicy.Minimum, QtWidgets.QSizePolicy.Expanding)
+        self.gridLayout.addItem(spacerItem, 7, 0, 1, 1)
 
         self.retranslateUi(dialog_acknowledge)
         self.button_box.accepted.connect(dialog_acknowledge.accept)
@@ -64,7 +94,9 @@ class Ui_dialog_acknowledge(object):
         dialog_acknowledge.setTabOrder(self.input_checkbox_sticky_acknowledgement, self.input_checkbox_send_notification)
         dialog_acknowledge.setTabOrder(self.input_checkbox_send_notification, self.input_checkbox_persistent_comment)
         dialog_acknowledge.setTabOrder(self.input_checkbox_persistent_comment, self.input_checkbox_acknowledge_all_services)
-        dialog_acknowledge.setTabOrder(self.input_checkbox_acknowledge_all_services, self.button_change_defaults_acknowledge)
+        dialog_acknowledge.setTabOrder(self.input_checkbox_acknowledge_all_services, self.input_checkbox_use_expire_time)
+        dialog_acknowledge.setTabOrder(self.input_checkbox_use_expire_time, self.input_datetime_expire_time)
+        dialog_acknowledge.setTabOrder(self.input_datetime_expire_time, self.button_change_defaults_acknowledge)
 
     def retranslateUi(self, dialog_acknowledge):
         _translate = QtCore.QCoreApplication.translate
@@ -75,5 +107,6 @@ class Ui_dialog_acknowledge(object):
         self.input_checkbox_send_notification.setText(_translate("dialog_acknowledge", "Send notification"))
         self.input_checkbox_persistent_comment.setText(_translate("dialog_acknowledge", "Persistent comment"))
         self.input_checkbox_acknowledge_all_services.setText(_translate("dialog_acknowledge", "Acknowledge all services on host"))
+        self.input_checkbox_use_expire_time.setText(_translate("dialog_acknowledge", "Expire acknowledgement"))
         self.input_label_description.setText(_translate("dialog_acknowledge", "description - set by QUI.py"))
 
