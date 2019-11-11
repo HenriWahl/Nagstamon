@@ -26,6 +26,7 @@ import configparser
 import base64
 import zlib
 import datetime
+import urllib.parse
 from collections import OrderedDict
 
 # older Kubuntu has trouble with keyring
@@ -103,16 +104,6 @@ CONFIG_STRINGS = ['custom_browser',
                   'custom_cert_ca_file',
                   'monitor_site'
                   ]
-
-# invalid characters in path names of config files have to be replaced
-INVALID_CHARACTERS = {'\\': '_backslash_',
-                      '/': '_slash_',
-                      ':': '_colon_',
-                      '*': '_asterisk_',
-                      '?': '_question_mark_',
-                      '"': '_double_quotes_',
-                      '<': '_less_than_',
-                      '>': '_greater_than_'}
 
 
 class AppInfo(object):
@@ -648,14 +639,14 @@ class Config(object):
             if not os.path.exists(self.configdir + os.sep + settingsdir):
                 os.makedirs(self.configdir + os.sep + settingsdir)
 
-            # replace invalid characters by their literal replacements
-            s_clean = s
-            for c in INVALID_CHARACTERS:
-                s_clean = s_clean.replace(c, INVALID_CHARACTERS[c])
-
+            # quote strings and thus avoid invalid characters
             f = open(
-                os.path.normpath(self.configdir + os.sep + settingsdir + os.sep + setting + "_" + s_clean + ".conf"),
-                "w")
+                os.path.normpath('{0}{1}{2}{1}{3}_{4}.conf'.format(self.configdir,
+                                                                os.sep,
+                                                                settingsdir,
+                                                                setting,
+                                                                urllib.parse.quote(s))),
+                                                                'w')
             config.write(f)
             f.close()
 
