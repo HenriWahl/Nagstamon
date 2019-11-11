@@ -1617,8 +1617,9 @@ class StatusWindow(QWidget):
             # Thus we check again with this timer to catch missed mouse-outs.
             # causes trouble in Wayland so is disabled for it
             if conf.close_details_hover and \
-                    conf.statusbar_floating and\
-                    not WAYLAND:
+               conf.statusbar_floating and\
+               self.is_shown and\
+               not WAYLAND:
                 self.periodically_check_window_under_mouse_and_hide()
 
     def periodically_check_window_under_mouse_and_hide(self):
@@ -1626,17 +1627,17 @@ class StatusWindow(QWidget):
         Periodically check if window is under mouse and hide it if not
         """
         if not self.hide_window_if_not_under_mouse():
-            QTimer.singleShot(1000, self.periodically_check_window_under_mouse_and_hide)
+            self.timer.singleShot(1000, self.periodically_check_window_under_mouse_and_hide)
 
     def hide_window_if_not_under_mouse(self):
         """
-        Hide window if it is under mouse
+        Hide window if it is under mouse pointer
         """
         mouse_pos = QCursor.pos()
-
         # Check mouse cursor over window and an opened context menu or dropdown list
-        if statuswindow.geometry().contains(mouse_pos.x(), mouse_pos.y()) \
-           or not qApp.activePopupWidget() is None:
+        if self.geometry().contains(mouse_pos.x(), mouse_pos.y()) or\
+           not qApp.activePopupWidget() is None or \
+           self.is_shown:
             return False
 
         self.hide_window()
@@ -2115,7 +2116,10 @@ class StatusWindow(QWidget):
             self.setWindowFlags(WINDOW_FLAGS)
 
         # again and again try to keep that statuswindow on top!
-        if OS == OS_WINDOWS and not conf.fullscreen and not conf.windowed:
+        if OS == OS_WINDOWS and\
+           not conf.fullscreen and\
+           not conf.windowed and\
+            qApp.activePopupWidget() == None:
             # find out if no context menu is shown and thus would be
             # overlapped by statuswindow
             for vbox in self.servers_vbox.children():
