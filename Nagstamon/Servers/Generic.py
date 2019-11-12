@@ -1423,7 +1423,7 @@ class GenericServer(object):
                     # so the directories containing the resources have to be recreated too
                     self.cacert_path.parent.mkdir(exist_ok=True)
                     # write cached content of cacert.pem file back onto disk
-                    with open(self.cacert_path, mode='wb') as file:
+                    with self.cacert_path.open(mode='wb') as file:
                         file.write(self.cacert_content)
 
                 # in case we know the server's encoding use it
