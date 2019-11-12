@@ -70,7 +70,7 @@ from Nagstamon.Servers import (SERVER_TYPES,
 
 from Nagstamon.Helpers import (is_found_by_re,
                                webbrowser_open,
-                               ResourceFilesDict,
+                               FilesDict,
                                STATES,
                                STATES_SOUND,
                                SORT_COLUMNS_FUNCTIONS)
@@ -255,7 +255,7 @@ APP.setStyleSheet('''QToolTip { margin: 3px;
 # store default sounds as buffers to avoid https://github.com/HenriWahl/Nagstamon/issues/578
 # meanwhile used as backup copy in case they had been deleted by macOS
 # https://github.com/HenriWahl/Nagstamon/issues/578
-RESOURCE_FILES = ResourceFilesDict(RESOURCES)
+RESOURCE_FILES = FilesDict(RESOURCES)
 
 
 class HBoxLayout(QHBoxLayout):

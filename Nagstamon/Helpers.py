@@ -73,23 +73,23 @@ class ResourceFiles(dict):
 # store default sounds as buffers to avoid https://github.com/HenriWahl/Nagstamon/issues/578
 # meanwhile used as backup copy in case they had been deleted by macOS
 # https://github.com/HenriWahl/Nagstamon/issues/578
-class ResourceFilesDict(dict):
+class FilesDict(dict):
     """
-    Care about vanished resource files in macOS pyinstaller temp folder
+    Care about vanished files in macOS pyinstaller temp folder
     """
-    def __init__(self, resources_path):
-        # after becoming a dict load given media files from given resource path
+    def __init__(self, files_path):
+        # after becoming a dict load given media files from given path
         super().__init__()
-        self.read_dir(resources_path)
+        self.read_dir(files_path)
 
-    def read_dir(self, resources_path):
+    def read_dir(self, files_path):
         """
         Read media files into contained dict
-        :param resources_path:
+        :param files_path:
         :return:
         """
         for suffix in ('*.wav', '*.svg'):
-            for filename in glob('{0}{1}{2}'.format(resources_path, os.sep, suffix)):
+            for filename in glob('{0}{1}{2}'.format(files_path, os.sep, suffix)):
                 with open(filename, mode='rb') as file:
                     # macOS sometines cleans up the /var/folders-something-path used by the onefile created by pyinstaller
                     # this backup dict allows to recreate the needed default files

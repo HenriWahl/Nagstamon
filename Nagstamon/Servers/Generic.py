@@ -17,14 +17,18 @@
 # along with this program; if not, write to the Free Software
 # Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA  02110-1301, USA
 
-import sys
-import socket
+from collections import OrderedDict
 import copy
 import datetime
-import traceback
+from pathlib import Path
 import platform
+import socket
+import sys
+import traceback
 import urllib.parse
+
 from bs4 import BeautifulSoup
+import requests
 
 from Nagstamon.Helpers import (host_is_filtered_out_by_re,
                                ServiceIsFilteredOutByRE,
@@ -41,13 +45,14 @@ from Nagstamon.Objects import (GenericService,
                                GenericHost,
                                Result)
 
-from Nagstamon.Config import (conf,
-                              AppInfo,
-                              debug_queue)
+from Nagstamon.Config import (AppInfo,
+                              conf,
+                              debug_queue,
+                              OS,
+                              OS_DARWIN,
+                              RESOURCES)
 
-from collections import OrderedDict
 
-import requests
 
 # requests_gssapi is newer but not available everywhere
 try:
@@ -180,6 +185,19 @@ class GenericServer(object):
 
         # to handle Icinga versions this information is necessary, might be of future use for others too
         self.version = ''
+
+        # macOS pyinstaller onefile conglomerate tends to lose cacert.pem due to macOS temp folder cleaning
+        self.cacert_path = self.cacert_content = False
+        if OS == OS_DARWIN:
+            # trying to find root path when run by pyinstaller onefile, must be something like
+            # /var/folders/7w/hfvrg7v92x3gjt95cqh974240000gn/T/_MEIQ3l3u3
+            root_path = Path(RESOURCES).parent.parent
+            if root_path.joinpath('certifi').is_dir() and root_path.joinpath('certifi', 'cacert.pem').is_file():
+                # store path of cacert...
+                self.cacert_path = root_path.joinpath('certifi', 'cacert.pem')
+                # ...and its content
+                with open(self.cacert_path, mode='rb') as file:
+                    self.cacert_content = file.read()
 
         # Special FX
         # Centreon
@@ -1399,6 +1417,14 @@ class GenericServer(object):
                 # debug
                 if conf.debug_mode is True:
                     self.Debug(server=self.get_name(), debug='FetchURL: ' + url + ' CGI Data: ' + str(cgi_data))
+
+                if OS == OS_DARWIN and not self.cacert_path.is_file():
+                    # pyinstaller temp folder seems to be emptied completely after a while
+                    # so the directories containing the resources have to be recreated too
+                    self.cacert_path.parent.mkdir(exist_ok=True)
+                    # write cached content of cacert.pem file back onto disk
+                    with open(self.cacert_path, mode='wb') as file:
+                        file.write(self.cacert_content)
 
                 # in case we know the server's encoding use it
                 if self.encoding:
