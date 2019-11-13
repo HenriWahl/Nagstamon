@@ -53,7 +53,6 @@ from Nagstamon.Config import (AppInfo,
                               RESOURCES)
 
 
-
 # requests_gssapi is newer but not available everywhere
 try:
     # extra imports needed to get it compiled on macOS

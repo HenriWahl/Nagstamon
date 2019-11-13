@@ -1719,10 +1719,10 @@ class StatusWindow(QWidget):
             get size of popup window
         """
         # screen number or widget object needed for desktop.availableGeometry
-        if conf.statusbar_floating:
+        if conf.statusbar_floating or conf.windowed:
             screen_or_widget = self
-        elif conf.windowed:
-            screen_or_widget = self
+        # elif conf.windowed:
+        #     screen_or_widget = self
 
         elif conf.icon_in_systray:
             # where is the pointer which clicked onto systray icon
@@ -1763,8 +1763,8 @@ class StatusWindow(QWidget):
 
         # Workaround for Cinnamon
         if OS not in NON_LINUX:
-            if available_x == 0:
-                available_x = available_width
+            # if available_x == 0:
+            #     available_x = available_width
             if available_y == 0:
                 available_y = available_height
 
