@@ -1763,8 +1763,6 @@ class StatusWindow(QWidget):
 
         # Workaround for Cinnamon
         if OS not in NON_LINUX:
-            # if available_x == 0:
-            #     available_x = available_width
             if available_y == 0:
                 available_y = available_height
 
@@ -3225,6 +3223,10 @@ class TreeView(QTreeView):
         self.clipboard_action_host.triggered.connect(self.action_clipboard_action_host)
         self.clipboard_menu.addAction(self.clipboard_action_host)
 
+        self.clipboard_action_service = QAction('Service', self)
+        self.clipboard_action_service.triggered.connect(self.action_clipboard_action_service)
+        self.clipboard_menu.addAction(self.clipboard_action_service)
+
         self.clipboard_action_statusinformation = QAction('Status information', self)
         self.clipboard_action_statusinformation.triggered.connect(self.action_clipboard_action_statusinformation)
         self.clipboard_menu.addAction(self.clipboard_action_statusinformation)
@@ -3831,7 +3833,7 @@ class TreeView(QTreeView):
         """
 
         list_host = []
-        str = ''
+        text = ''
 
         # How many rows we have
         list_rows = []
@@ -3843,9 +3845,36 @@ class TreeView(QTreeView):
             list_host.append(self.model().data(self.model().createIndex(lrow, 0), Qt.DisplayRole))
 
         for line_number in range(len(list_host)):
-            str = str + list_host[line_number] + '\n'
+            text = text + list_host[line_number]
+            if line_number + 1 < len(list_host):
+                text += '\n'
 
-        clipboard.setText(str)
+        clipboard.setText(text)
+
+    @pyqtSlot()
+    def action_clipboard_action_service(self):
+        """
+            copy service name to clipboard
+        """
+
+        list_service = []
+        text = ''
+
+        # How many rows we have
+        list_rows = []
+        for index in self.selectedIndexes():
+            if index.row() not in list_rows:
+                list_rows.append(index.row())
+
+        for lrow in list_rows:
+            list_service.append(self.model().data(self.model().createIndex(lrow, 2), Qt.DisplayRole))
+
+        for line_number in range(len(list_service)):
+            text = text + list_service[line_number]
+            if line_number + 1 < len(list_service):
+                text += '\n'
+
+        clipboard.setText(text)
 
     @pyqtSlot()
     def action_clipboard_action_statusinformation(self):
@@ -3853,7 +3882,7 @@ class TreeView(QTreeView):
             copy status information to clipboard
         """
         list_status = []
-        str = ''
+        text = ''
 
         # How many rows we have
         list_rows = []
@@ -3865,9 +3894,11 @@ class TreeView(QTreeView):
             list_status.append(self.model().data(self.model().createIndex(lrow, 8), Qt.DisplayRole))
 
         for line_number in range(len(list_status)):
-            str = str + list_status[line_number] + '\n'
+            text = text + list_status[line_number]
+            if line_number + 1 < len(list_status):
+                text += '\n'
 
-        clipboard.setText(str)
+        clipboard.setText(text)
 
     @pyqtSlot()
     def action_clipboard_action_all(self):
@@ -3907,7 +3938,8 @@ class TreeView(QTreeView):
             text += 'Duration: {0}\n'.format(item.duration)
             text += 'Attempt: {0}\n'.format(item.attempt)
             text += 'Status information: {0}\n'.format(item.status_information)
-            text += '\n'
+            if line_number + 1 < len(list_host):
+                text += '\n'
 
         # copy text to clipboard
         clipboard.setText(text)
