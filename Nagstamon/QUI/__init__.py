@@ -51,6 +51,7 @@ from Nagstamon.Config import (Action,
                               conf,
                               CONFIG_STRINGS,
                               debug_queue,
+                              DESKTOP_CINNAMON,
                               KEYRING,
                               NON_LINUX,
                               OS,
@@ -58,7 +59,7 @@ from Nagstamon.Config import (Action,
                               OS_WINDOWS,
                               RESOURCES,
                               Server,
-                              WAYLAND)
+                              DESKTOP_WAYLAND)
 
 from Nagstamon.Servers import (SERVER_TYPES,
                                servers,
@@ -1619,7 +1620,7 @@ class StatusWindow(QWidget):
             if conf.close_details_hover and \
                conf.statusbar_floating and\
                self.is_shown and\
-               not WAYLAND:
+               not DESKTOP_WAYLAND:
                 self.periodically_check_window_under_mouse_and_hide()
 
     def periodically_check_window_under_mouse_and_hide(self):
@@ -1762,7 +1763,9 @@ class StatusWindow(QWidget):
         available_y = desktop.availableGeometry(screen_or_widget).y()
 
         # Workaround for Cinnamon
-        if OS not in NON_LINUX:
+        if OS not in NON_LINUX and DESKTOP_CINNAMON:
+            if available_x == 0:
+                available_x = available_width
             if available_y == 0:
                 available_y = available_height
 

@@ -20,7 +20,6 @@
 import datetime
 import getpass
 from glob import glob
-import platform
 import psutil
 import os
 import re

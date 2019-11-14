@@ -49,12 +49,24 @@ OS_WINDOWS = 'Windows'
 NON_LINUX = (OS_DARWIN, OS_WINDOWS)
 
 # simple Wayland detection
-if 'WAYLAND_DISPLAY' in os.environ or \
-        ('XDG_SESSION_TYPE' in os.environ and \
-         os.environ['XDG_SESSION_TYPE'] == 'wayland'):
-    WAYLAND = True
+if 'WAYLAND_DISPLAY' in os.environ or\
+    'XDG_SESSION_TYPE' in os.environ and os.environ['XDG_SESSION_TYPE'] == 'wayland':
+    DESKTOP_WAYLAND = True
 else:
-    WAYLAND = False
+    DESKTOP_WAYLAND = False
+
+# Cinnamon detection
+# CINNAMON_VERSION 4.2.4
+# DESKTOP_SESSION cinnamon
+# GDMSESSION cinnamon
+# XDG_CURRENT_DESKTOP X-Cinnamon
+# XDG_SESSION_DESKTOP cinnamon
+if 'CINNAMON_VERSION' in os.environ or\
+    'DESKTOP_SESSION' in os.environ and os.environ['DESKTOP_SESSION'] == 'cinnamon' or \
+    'XDG_SESSION_DESKTOP' in os.environ and os.environ['XDG_SESSION_DESKTOP'] == 'cinnamon':
+    DESKTOP_CINNAMON = True
+else:
+    DESKTOP_CINNAMON = False
 
 # queue.Queue() needs threading module which might be not such a good idea to be used
 # because QThread is already in use
