@@ -51,9 +51,9 @@ class MultisiteServer(GenericServer):
     TYPE = 'Checkmk Multisite'
 
     # URLs for browser shortlinks/buttons on popup window
-    BROWSER_URLS= { 'monitor': '$MONITOR$',\
-                    'hosts': '$MONITOR$/index.py?start_url=view.py?view_name=hostproblems',\
-                    'services': '$MONITOR$/index.py?start_url=view.py?view_name=svcproblems',\
+    BROWSER_URLS= { 'monitor': '$MONITOR$',
+                    'hosts': '$MONITOR$/index.py?start_url=view.py?view_name=hostproblems',
+                    'services': '$MONITOR$/index.py?start_url=view.py?view_name=svcproblems',
                     'history': '$MONITOR$/index.py?start_url=view.py?view_name=events'}
 
     def __init__(self, **kwds):
@@ -75,35 +75,37 @@ class MultisiteServer(GenericServer):
         GenericServer.init_HTTP(self)
 
         # Fix eventually missing tailing '/' in url
-        if self.monitor_url[-1] != '/':
-            self.monitor_url += '/'
+        # if self.monitor_url[-1] != '/':
+        #     self.monitor_url += '/'
+        if self.monitor_url.endswith('/'):
+            self.monitor_url.rstrip('/')
 
         # Prepare all urls needed by nagstamon if not yet done
         if len(self.urls) == len(self.statemap):
             self.urls = {
-              'api_services':    self.monitor_url + 'view.py?view_name={0}&output_format=python&lang=&limit=hard'.\
+              'api_services':    self.monitor_url + '/view.py?view_name={0}&output_format=python&lang=&limit=hard'.\
                                                                           format(self.checkmk_view_services),
-              'human_services':  self.monitor_url + 'index.py?%s' % \
+              'human_services':  self.monitor_url + '/index.py?%s' % \
                                                    urllib.parse.urlencode({'start_url': 'view.py?view_name={0}'.\
                                                                           format(self.checkmk_view_services)}),
-              'human_service':   self.monitor_url + 'index.py?%s' %
+              'human_service':   self.monitor_url + '/index.py?%s' %
                                                    urllib.parse.urlencode({'start_url': 'view.py?view_name=service'}),
 
-              'api_hosts':       self.monitor_url + 'view.py?view_name={0}&output_format=python&lang=&limit=hard'.\
+              'api_hosts':       self.monitor_url + '/view.py?view_name={0}&output_format=python&lang=&limit=hard'.\
                                                                           format(self.checkmk_view_hosts),
-              'human_hosts':     self.monitor_url + 'index.py?%s' %
+              'human_hosts':     self.monitor_url + '/index.py?%s' %
                                                    urllib.parse.urlencode({'start_url': 'view.py?view_name={0}'.\
                                                                            format(self.checkmk_view_services)}),
-              'human_host':      self.monitor_url + 'index.py?%s' %
+              'human_host':      self.monitor_url + '/index.py?%s' %
                                                    urllib.parse.urlencode({'start_url': 'view.py?view_name=hoststatus'}),
               # URLs do not need pythonic output because since werk #0766 API does not work with transid=-1 anymore
               # thus access to normal webinterface is used
-              'api_host_act':    self.monitor_url + 'view.py?_transid=-1&_do_actions=yes&_do_confirm=Yes!&view_name=hoststatus&filled_in=actions&lang=',
-              'api_service_act': self.monitor_url + 'view.py?_transid=-1&_do_actions=yes&_do_confirm=Yes!&view_name=service&filled_in=actions&lang=',
-              'api_svcprob_act': self.monitor_url + 'view.py?_transid=-1&_do_actions=yes&_do_confirm=Yes!&view_name=svcproblems&filled_in=actions&lang=',
-              'human_events':    self.monitor_url + 'index.py?%s' %
+              'api_host_act':    self.monitor_url + '/view.py?_transid=-1&_do_actions=yes&_do_confirm=Yes!&view_name=hoststatus&filled_in=actions&lang=',
+              'api_service_act': self.monitor_url + '/view.py?_transid=-1&_do_actions=yes&_do_confirm=Yes!&view_name=service&filled_in=actions&lang=',
+              'api_svcprob_act': self.monitor_url + '/view.py?_transid=-1&_do_actions=yes&_do_confirm=Yes!&view_name=svcproblems&filled_in=actions&lang=',
+              'human_events':    self.monitor_url + '/index.py?%s' %
                                                    urllib.parse.urlencode({'start_url': 'view.py?view_name=events'}),
-              'transid':         self.monitor_url + 'view.py?actions=yes&filled_in=actions&host=$HOST$&service=$SERVICE$&view_name=service'
+              'transid':         self.monitor_url + '/view.py?actions=yes&filled_in=actions&host=$HOST$&service=$SERVICE$&view_name=service'
             }
 
             self.statemap = {
@@ -200,7 +202,7 @@ class MultisiteServer(GenericServer):
         # get cookie from login page via url retrieving as with other urls
         try:
             # login and get cookie
-            self.FetchURL(self.monitor_url + 'login.py', cgi_data=login_data, multipart=True)
+            self.FetchURL(self.monitor_url + '/login.py', cgi_data=login_data, multipart=True)
         except:
             import traceback
             traceback.print_exc(file=sys.stdout)
