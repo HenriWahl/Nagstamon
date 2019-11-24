@@ -373,7 +373,32 @@ class IcingaWeb2Server(GenericServer):
         result = self.FetchURL(url, giveback='raw', cgi_data=cgi_data)
 
 
-    def _set_acknowledge(self, host, service, author, comment, sticky, notify, persistent, all_services=[]):
+    # Overwrite function from generic server to add expire_time value
+    def set_acknowledge(self, info_dict):
+        '''
+            different monitors might have different implementations of _set_acknowledge
+        '''
+        if info_dict['acknowledge_all_services'] is True:
+            all_services = info_dict['all_services']
+        else:
+            all_services = []
+
+        # Make sure expire_time is set
+        #if not info_dict['expire_time']:
+        #    info_dict['expire_time'] = None
+
+        self._set_acknowledge(info_dict['host'],
+                              info_dict['service'],
+                              info_dict['author'],
+                              info_dict['comment'],
+                              info_dict['sticky'],
+                              info_dict['notify'],
+                              info_dict['persistent'],
+                              all_services,
+                              info_dict['expire_time'])
+
+
+    def _set_acknowledge(self, host, service, author, comment, sticky, notify, persistent, all_services=[], expire_time=None):
         # First retrieve the info page for this host/service
         if service == '':
             # url = self.monitor_cgi_url + '/monitoring/host/acknowledge-problem?host=' + host
@@ -411,6 +436,9 @@ class IcingaWeb2Server(GenericServer):
         cgi_data['sticky'] = int(sticky)
         cgi_data['notify'] = int(notify)
         cgi_data['comment'] = comment
+        if expire_time:
+            cgi_data['expire'] = 1
+            cgi_data['expire_time'] = expire_time
 
         self.FetchURL(url, giveback='raw', cgi_data=cgi_data)
 

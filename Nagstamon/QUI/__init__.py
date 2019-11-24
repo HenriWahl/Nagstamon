@@ -6203,6 +6203,16 @@ class Dialog_Acknowledge(Dialog):
     def __init__(self, dialog):
         Dialog.__init__(self, dialog)
 
+        self.TOGGLE_DEPS = {
+            self.ui.input_checkbox_use_expire_time: [self.ui.input_datetime_expire_time]
+            }
+
+        self.VOLATILE_WIDGETS = {
+            self.ui.input_checkbox_use_expire_time: ['IcingaWeb2'],
+            self.ui.input_datetime_expire_time: ['IcingaWeb2']
+            }       
+
+
     def initialize(self, server=None, host=[], service=[]):
         # store server, host and service to be used for OK button evaluation
         self.server = server
@@ -6235,6 +6245,23 @@ class Dialog_Acknowledge(Dialog):
         self.ui.input_lineedit_comment.setText(conf.defaults_acknowledge_comment)
         self.ui.input_lineedit_comment.setFocus()
 
+        # set default and minimum value for expire time
+        qdatetime = QDateTime.currentDateTime()
+        self.ui.input_datetime_expire_time.setMinimumDateTime(qdatetime)
+        # default is two hours in the future
+        self.ui.input_datetime_expire_time.setDateTime(qdatetime.addSecs(2 * 60 * 60))
+
+        # Show or hide widgets based on server
+        if self.server is not None:
+            for widget, server_types in self.VOLATILE_WIDGETS.items():
+                if self.server.TYPE in server_types:
+                    widget.show()
+                    self.ui.input_checkbox_use_expire_time.setChecked(False)
+                    self.toggle_toggles() 
+                else:
+                    widget.hide()
+
+
     def ok(self):
         """
             acknowledge miserable host/service
@@ -6248,6 +6275,15 @@ class Dialog_Acknowledge(Dialog):
                 for s in i:
                     if s.host in self.host_list:
                         all_services.append(s.name)
+
+        if self.ui.input_checkbox_use_expire_time.isChecked():
+            # Format used in UI
+            # 2019-11-01T18:17:39
+            expire_datetime = self.ui.input_datetime_expire_time.dateTime().toString("yyyy-MM-ddTHH:mm:ss")
+        else:
+            expire_datetime = None
+
+
 
         for line_number in range(len(self.host_list)):
             service = self.service_list[line_number]
@@ -6263,7 +6299,8 @@ class Dialog_Acknowledge(Dialog):
                                    'notify': self.ui.input_checkbox_send_notification.isChecked(),
                                    'persistent': self.ui.input_checkbox_persistent_comment.isChecked(),
                                    'acknowledge_all_services': acknowledge_all_services,
-                                   'all_services': all_services})
+                                   'all_services': all_services,
+                                   'expire_time': expire_datetime})
 
 
 class Dialog_Downtime(Dialog):
