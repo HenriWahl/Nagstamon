@@ -5971,7 +5971,7 @@ class Dialog_Server(Dialog):
             # delete old server .conf file to reflect name changes
             # new one will be written soon
             if self.previous_server_conf is not None:
-                conf.delete_file('servers', 'server_{0}.conf'.quote(format(self.previous_server_conf.name)))
+                conf.delete_file('servers', 'server_{0}.conf'.format(quote(self.previous_server_conf.name)))
 
             # store server settings
             conf.SaveMultipleConfig('servers', 'server')
