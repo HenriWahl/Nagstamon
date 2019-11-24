@@ -4464,7 +4464,7 @@ class TreeView(QTreeView):
                 return a string that fulfills requirements for URLs
                 exclude several chars
             """
-            return urllib.parse.quote(string, ":/=?&@+")
+            return quote(string, ":/=?&@+")
 
         @pyqtSlot()
         def unfresh_event_history(self):
@@ -5232,8 +5232,8 @@ class Dialog_Settings(Dialog):
             del (row, count)
 
         # delete server config file from disk
-        conf.delete_file('servers', 'server_{0}'.format(server.name))
-        del (server)
+        conf.delete_file('servers', 'server_{0}.conf'.format(quote(server.name)))
+        del server
 
     def refresh_list(self, list_widget, list_conf, current=''):
         """
@@ -5305,8 +5305,8 @@ class Dialog_Settings(Dialog):
             del (row, count)
 
         # delete action config file from disk
-        conf.delete_file('actions', 'action_{0}'.format(action.name))
-        del (action)
+        conf.delete_file('actions', 'action_{0}.conf'.format(quote(action.name)))
+        del action
 
     def choose_sound_file_decoration(method):
         """
@@ -5971,7 +5971,7 @@ class Dialog_Server(Dialog):
             # delete old server .conf file to reflect name changes
             # new one will be written soon
             if self.previous_server_conf is not None:
-                conf.delete_file('servers', 'server_{0}'.format(self.previous_server_conf.name))
+                conf.delete_file('servers', 'server_{0}.conf'.quote(format(self.previous_server_conf.name)))
 
             # store server settings
             conf.SaveMultipleConfig('servers', 'server')
@@ -6182,10 +6182,10 @@ class Dialog_Action(Dialog):
             # delete old action .conf file to reflect name changes
             # new one will be written soon
             if self.previous_action_conf is not None:
-                conf.delete_file('actions', 'action_{0}'.format(self.previous_action_conf.name))
+                conf.delete_file('actions', 'action_{0}.conf'.format(quote(self.previous_action_conf.name)))
 
             # store server settings
-            conf.SaveMultipleConfig("actions", "action")
+            conf.SaveMultipleConfig('actions', 'action')
 
 
 class Dialog_Acknowledge(Dialog):

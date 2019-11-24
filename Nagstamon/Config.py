@@ -26,7 +26,7 @@ import configparser
 import base64
 import zlib
 import datetime
-import urllib.parse
+from urllib.parse import quote
 from collections import OrderedDict
 
 # older Kubuntu has trouble with keyring
@@ -500,10 +500,10 @@ class Config(object):
 
         try:
             if os.path.exists(self.configdir + os.sep + settingsdir):
-                for f in sorted(os.listdir(self.configdir + os.sep + settingsdir)):
-                    if f.startswith(setting + '_') and f.endswith('.conf'):
+                for settingsfile in sorted(os.listdir(self.configdir + os.sep + settingsdir)):
+                    if settingsfile.startswith(setting + '_') and settingsfile.endswith('.conf'):
                         config = configparser.ConfigParser(allow_no_value=True, interpolation=None)
-                        config.read(self.configdir + os.sep + settingsdir + os.sep + f)
+                        config.read(self.configdir + os.sep + settingsdir + os.sep + settingsfile)
 
                         # create object for every setting
                         name = config.sections()[0].replace(setting + '_', '', 1)
@@ -523,6 +523,13 @@ class Config(object):
                             else:
                                 value = i[1]
                             settings[name].__setattr__(i[0], value)
+
+                        # if filename is still one of the non-URL-ones delete duplicate file
+                        if settingsfile != '{0}_{1}.conf'.format(setting, quote(name)):
+                            self.delete_file(settingsdir, settingsfile)
+                            # set flag to store the settings via legacy adjustments
+                            self.save_config_after_urlencode = True
+
         except Exception:
             import traceback
             traceback.print_exc(file=sys.stdout)
@@ -560,16 +567,15 @@ class Config(object):
                     else:
                         self.use_system_keyring = self.KeyringAvailable()
 
-            # save actions dict
+            # save servers dict
             self.SaveMultipleConfig('servers', 'server')
 
             # save actions dict
             self.SaveMultipleConfig('actions', 'action')
 
             # open, save and close config file
-            f = open(os.path.normpath(self.configfile), "w")
-            config.write(f)
-            f.close()
+            with open(os.path.normpath(self.configfile), 'w') as file:
+                config.write(file)
 
             # debug
             if self.debug_mode:
@@ -652,15 +658,14 @@ class Config(object):
                 os.makedirs(self.configdir + os.sep + settingsdir)
 
             # quote strings and thus avoid invalid characters
-            f = open(
-                os.path.normpath('{0}{1}{2}{1}{3}_{4}.conf'.format(self.configdir,
-                                                                os.sep,
-                                                                settingsdir,
-                                                                setting,
-                                                                urllib.parse.quote(s))),
-                                                                'w')
-            config.write(f)
-            f.close()
+            with open(
+                    os.path.normpath('{0}{1}{2}{1}{3}_{4}.conf'.format(self.configdir,
+                                                                       os.sep,
+                                                                       settingsdir,
+                                                                       setting,
+                                                                       quote(s))),
+                    'w') as file:
+                config.write(file)
 
             # ### clean up old deleted/renamed config files
             # ##if os.path.exists(self.configdir + os.sep + settingsdir):
@@ -828,15 +833,15 @@ class Config(object):
 
     def _LegacyAdjustments(self):
         # mere cosmetics but might be more clear for future additions - changing any "nagios"-setting to "monitor"
-        for s in self.servers.values():
-            if 'nagios_url' in s.__dict__.keys():
-                s.monitor_url = s.nagios_url
-            if 'nagios_cgi_url' in s.__dict__.keys():
-                s.monitor_cgi_url = s.nagios_cgi_url
+        for server in self.servers.values():
+            if 'nagios_url' in server.__dict__.keys():
+                server.monitor_url = server.nagios_url
+            if 'nagios_cgi_url' in server.__dict__.keys():
+                server.monitor_cgi_url = server.nagios_cgi_url
 
             # to reduce complexity in Centreon there is also only one URL necessary
-            if s.type == "Centreon":
-                s.monitor_url = s.monitor_cgi_url
+            if server.type == "Centreon":
+                server.monitor_url = server.monitor_cgi_url
 
         # switch to update interval in seconds not minutes
         if 'update_interval' in self.__dict__.keys():
@@ -855,6 +860,10 @@ class Config(object):
                 # set browser as default to make user notice something is wrong
                 action.type = 'browser'
 
+        # might be there only once after starting Nagstamon 3.4 the first time
+        if 'save_config_after_urlencode' in self.__dict__.keys():
+            self.SaveConfig()
+
     def GetNumberOfEnabledMonitors(self):
         """
             returns the number of enabled monitors - in case all are disabled there is no need to display the popwin
@@ -872,7 +881,7 @@ class Config(object):
             delete specified .conf file if setting is deleted in GUI
         """
         # clean up old deleted/renamed config file
-        file = os.path.abspath('{1}{0}{2}{0}{3}.conf'.format(os.sep, self.configdir, settings_dir, settings_file))
+        file = os.path.abspath('{1}{0}{2}{0}{3}'.format(os.sep, self.configdir, settings_dir, settings_file))
         if os.path.exists(file) and (os.path.isfile(file) or os.path.islink(file)):
             try:
                 os.unlink(file)
