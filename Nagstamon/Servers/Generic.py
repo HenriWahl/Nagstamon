@@ -1416,13 +1416,13 @@ class GenericServer(object):
                 # debug
                 if conf.debug_mode is True:
                     # unpasswordify CGI data
-                    if cgi_data is not None:
+                    if cgi_data is not None and not isinstance(cgi_data, str):
                         cgi_data_log = copy.copy(cgi_data)
                         for key in cgi_data_log.keys():
                             if 'pass' in key:
                                 cgi_data_log[key] = '***************'
                     else:
-                        cgi_data_log = None
+                        cgi_data_log = cgi_data
                     self.Debug(server=self.get_name(), debug='FetchURL: ' + url + ' CGI Data: ' + str(cgi_data_log))
 
                 if OS == OS_DARWIN and not self.cacert_path.is_file():
