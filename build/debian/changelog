@@ -1,4 +1,4 @@
-nagstamon (3.3-20191124) unstable; urgency=low
+nagstamon (3.3-20191125) unstable; urgency=low
   * New upstream
     - added multiple item selection and actions execution
     - added notification for OK state
