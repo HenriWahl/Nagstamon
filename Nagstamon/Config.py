@@ -284,6 +284,9 @@ class Config(object):
         self.defaults_acknowledge_send_notification = False
         self.defaults_acknowledge_persistent_comment = False
         self.defaults_acknowledge_all_services = False
+        self.defaults_acknowledge_expire = False
+        self.defaults_acknowledge_expire_duration_hours = 2
+        self.defaults_acknowledge_expire_duration_minutes = 0
         self.defaults_acknowledge_comment = 'acknowledged'
         self.defaults_submit_check_result_comment = 'check result submitted'
         self.defaults_downtime_duration_hours = 2

@@ -2853,6 +2853,81 @@
             </item>
            </layout>
           </item>
+          <item>
+           <widget class="QCheckBox" name="input_checkbox_defaults_acknowledge_expire">
+            <property name="enabled">
+             <bool>true</bool>
+            </property>
+            <property name="text">
+             <string>Use expire acknowledgement</string>
+            </property>
+           </widget>
+          </item>
+          <item>
+           <layout class="QHBoxLayout" name="horizontalLayout_7">
+            <property name="spacing">
+             <number>5</number>
+            </property>
+            <property name="leftMargin">
+             <number>0</number>
+            </property>
+            <property name="topMargin">
+             <number>5</number>
+            </property>
+            <property name="rightMargin">
+             <number>5</number>
+            </property>
+            <property name="bottomMargin">
+             <number>5</number>
+            </property>
+            <item>
+             <widget class="QLabel" name="label_expire_in">
+              <property name="sizePolicy">
+               <sizepolicy hsizetype="Preferred" vsizetype="Preferred">
+                <horstretch>0</horstretch>
+                <verstretch>0</verstretch>
+               </sizepolicy>
+              </property>
+              <property name="text">
+               <string>Expire in:  </string>
+              </property>
+             </widget>
+            </item>
+            <item>
+             <widget class="QSpinBox" name="input_spinbox_defaults_acknowledge_expire_duration_hours"/>
+            </item>
+            <item>
+             <widget class="QLabel" name="label_expire_in_hours">
+              <property name="text">
+               <string>hours</string>
+              </property>
+             </widget>
+            </item>
+            <item>
+             <widget class="QSpinBox" name="input_spinbox_defaults_acknowledge_expire_duration_minutes"/>
+            </item>
+            <item>
+             <widget class="QLabel" name="label_expire_in_minutes">
+              <property name="text">
+               <string>minutes</string>
+              </property>
+             </widget>
+            </item>
+            <item>
+             <spacer name="horizontalSpacer_6">
+              <property name="orientation">
+               <enum>Qt::Horizontal</enum>
+              </property>
+              <property name="sizeHint" stdset="0">
+               <size>
+                <width>40</width>
+                <height>20</height>
+               </size>
+              </property>
+             </spacer>
+            </item>
+           </layout>
+          </item>
          </layout>
         </widget>
        </item>
@@ -2900,55 +2975,6 @@
           <item row="3" column="1">
            <widget class="QLineEdit" name="input_lineedit_defaults_downtime_comment"/>
           </item>
-          <item row="1" column="1">
-           <layout class="QHBoxLayout" name="horizontalLayout_8">
-            <property name="spacing">
-             <number>5</number>
-            </property>
-            <property name="topMargin">
-             <number>5</number>
-            </property>
-            <property name="rightMargin">
-             <number>5</number>
-            </property>
-            <property name="bottomMargin">
-             <number>5</number>
-            </property>
-            <item>
-             <widget class="QSpinBox" name="input_spinbox_defaults_downtime_duration_hours"/>
-            </item>
-            <item>
-             <widget class="QLabel" name="label_duration_hour">
-              <property name="text">
-               <string>hours</string>
-              </property>
-             </widget>
-            </item>
-            <item>
-             <widget class="QSpinBox" name="input_spinbox_defaults_downtime_duration_minutes"/>
-            </item>
-            <item>
-             <widget class="QLabel" name="label_duration_minutes">
-              <property name="text">
-               <string>minutes</string>
-              </property>
-             </widget>
-            </item>
-            <item>
-             <spacer name="horizontalSpacer_4">
-              <property name="orientation">
-               <enum>Qt::Horizontal</enum>
-              </property>
-              <property name="sizeHint" stdset="0">
-               <size>
-                <width>40</width>
-                <height>20</height>
-               </size>
-              </property>
-             </spacer>
-            </item>
-           </layout>
-          </item>
           <item row="0" column="0" colspan="2">
            <layout class="QGridLayout" name="gridLayout_9">
             <property name="topMargin">
@@ -2986,6 +3012,55 @@
             </item>
             <item row="0" column="2">
              <spacer name="horizontalSpacer_2">
+              <property name="orientation">
+               <enum>Qt::Horizontal</enum>
+              </property>
+              <property name="sizeHint" stdset="0">
+               <size>
+                <width>40</width>
+                <height>20</height>
+               </size>
+              </property>
+             </spacer>
+            </item>
+           </layout>
+          </item>
+          <item row="1" column="1">
+           <layout class="QHBoxLayout" name="horizontalLayout_8">
+            <property name="spacing">
+             <number>5</number>
+            </property>
+            <property name="topMargin">
+             <number>5</number>
+            </property>
+            <property name="rightMargin">
+             <number>5</number>
+            </property>
+            <property name="bottomMargin">
+             <number>5</number>
+            </property>
+            <item>
+             <widget class="QSpinBox" name="input_spinbox_defaults_downtime_duration_hours"/>
+            </item>
+            <item>
+             <widget class="QLabel" name="label_duration_hour">
+              <property name="text">
+               <string>hours</string>
+              </property>
+             </widget>
+            </item>
+            <item>
+             <widget class="QSpinBox" name="input_spinbox_defaults_downtime_duration_minutes"/>
+            </item>
+            <item>
+             <widget class="QLabel" name="label_duration_minutes">
+              <property name="text">
+               <string>minutes</string>
+              </property>
+             </widget>
+            </item>
+            <item>
+             <spacer name="horizontalSpacer_4">
               <property name="orientation">
                <enum>Qt::Horizontal</enum>
               </property>
@@ -3275,7 +3350,7 @@
   </connection>
  </connections>
  <buttongroups>
-  <buttongroup name="buttongroup_close_statusbar"/>
   <buttongroup name="buttongroup_popup_statuswindow"/>
+  <buttongroup name="buttongroup_close_statusbar"/>
  </buttongroups>
 </ui>
