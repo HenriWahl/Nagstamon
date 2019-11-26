@@ -6234,6 +6234,7 @@ class Dialog_Acknowledge(Dialog):
         self.ui.input_checkbox_sticky_acknowledgement.setChecked(conf.defaults_acknowledge_sticky)
         self.ui.input_checkbox_send_notification.setChecked(conf.defaults_acknowledge_send_notification)
         self.ui.input_checkbox_persistent_comment.setChecked(conf.defaults_acknowledge_persistent_comment)
+        self.ui.input_checkbox_use_expire_time.setChecked(conf.defaults_acknowledge_expire)
         if len(self.host_list) == 1:
             self.ui.input_checkbox_acknowledge_all_services.setChecked(conf.defaults_acknowledge_all_services)
             self.ui.input_checkbox_acknowledge_all_services.show()
@@ -6248,18 +6249,22 @@ class Dialog_Acknowledge(Dialog):
         # set default and minimum value for expire time
         qdatetime = QDateTime.currentDateTime()
         self.ui.input_datetime_expire_time.setMinimumDateTime(qdatetime)
-        # default is two hours in the future
-        self.ui.input_datetime_expire_time.setDateTime(qdatetime.addSecs(2 * 60 * 60))
+        # set default expire time from configuration
+        self.ui.input_datetime_expire_time.setDateTime(qdatetime.addSecs(
+            conf.defaults_acknowledge_expire_duration_hours * 60 * 60 + conf.defaults_acknowledge_expire_duration_minutes * 60
+        ))
 
         # Show or hide widgets based on server
         if self.server is not None:
             for widget, server_types in self.VOLATILE_WIDGETS.items():
                 if self.server.TYPE in server_types:
                     widget.show()
-                    self.ui.input_checkbox_use_expire_time.setChecked(False)
                     self.toggle_toggles() 
                 else:
                     widget.hide()
+        
+        # Adjust to size
+        self.window.updateGeometry()
 
 
     def ok(self):
