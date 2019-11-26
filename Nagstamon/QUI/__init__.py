@@ -6263,8 +6263,10 @@ class Dialog_Acknowledge(Dialog):
                 else:
                     widget.hide()
         
-        # Adjust to size
-        self.window.updateGeometry()
+        # Adjust to current size if items are hidden in menu
+        # Otherwise it will get confused and chop off text
+        self.ui.options_groupbox.adjustSize()
+        self.window.adjustSize()
 
 
     def ok(self):
