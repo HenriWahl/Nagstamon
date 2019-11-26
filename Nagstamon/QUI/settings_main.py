@@ -2,11 +2,13 @@
 
 # Form implementation generated from reading ui file 'settings_main.ui'
 #
-# Created by: PyQt5 UI code generator 5.10.1
+# Created by: PyQt5 UI code generator 5.13.1
 #
 # WARNING! All changes made in this file will be lost!
 
+
 from PyQt5 import QtCore, QtGui, QtWidgets
+
 
 class Ui_settings_main(object):
     def setupUi(self, settings_main):
@@ -1425,7 +1427,10 @@ class Ui_settings_main(object):
         settings_main.setTabOrder(self.input_checkbox_defaults_acknowledge_send_notification, self.input_checkbox_defaults_acknowledge_persistent_comment)
         settings_main.setTabOrder(self.input_checkbox_defaults_acknowledge_persistent_comment, self.input_checkbox_defaults_acknowledge_all_services)
         settings_main.setTabOrder(self.input_checkbox_defaults_acknowledge_all_services, self.input_lineedit_defaults_acknowledge_comment)
-        settings_main.setTabOrder(self.input_lineedit_defaults_acknowledge_comment, self.input_radiobutton_defaults_downtime_type_fixed)
+        settings_main.setTabOrder(self.input_lineedit_defaults_acknowledge_comment, self.input_checkbox_defaults_acknowledge_expire)
+        settings_main.setTabOrder(self.input_checkbox_defaults_acknowledge_expire, self.input_spinbox_defaults_acknowledge_expire_duration_hours)
+        settings_main.setTabOrder(self.input_spinbox_defaults_acknowledge_expire_duration_hours, self.input_spinbox_defaults_acknowledge_expire_duration_minutes)
+        settings_main.setTabOrder(self.input_spinbox_defaults_acknowledge_expire_duration_minutes, self.input_radiobutton_defaults_downtime_type_fixed)
         settings_main.setTabOrder(self.input_radiobutton_defaults_downtime_type_fixed, self.input_radiobutton_defaults_downtime_type_flexible)
         settings_main.setTabOrder(self.input_radiobutton_defaults_downtime_type_flexible, self.input_spinbox_defaults_downtime_duration_hours)
         settings_main.setTabOrder(self.input_spinbox_defaults_downtime_duration_hours, self.input_spinbox_defaults_downtime_duration_minutes)
@@ -1637,4 +1642,3 @@ class Ui_settings_main(object):
         self.label_acknowledge_submit_result.setTitle(_translate("settings_main", "Submit check result:"))
         self.label_defaults_submit_check_result_comment.setText(_translate("settings_main", "Comment:"))
         self.tabs.setTabText(self.tabs.indexOf(self.tab_defaults), _translate("settings_main", "Defaults"))
-

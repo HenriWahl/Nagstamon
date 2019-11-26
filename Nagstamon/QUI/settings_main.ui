@@ -3300,6 +3300,9 @@
   <tabstop>input_checkbox_defaults_acknowledge_persistent_comment</tabstop>
   <tabstop>input_checkbox_defaults_acknowledge_all_services</tabstop>
   <tabstop>input_lineedit_defaults_acknowledge_comment</tabstop>
+  <tabstop>input_checkbox_defaults_acknowledge_expire</tabstop>
+  <tabstop>input_spinbox_defaults_acknowledge_expire_duration_hours</tabstop>
+  <tabstop>input_spinbox_defaults_acknowledge_expire_duration_minutes</tabstop>
   <tabstop>input_radiobutton_defaults_downtime_type_fixed</tabstop>
   <tabstop>input_radiobutton_defaults_downtime_type_flexible</tabstop>
   <tabstop>input_spinbox_defaults_downtime_duration_hours</tabstop>
@@ -3350,7 +3353,7 @@
   </connection>
  </connections>
  <buttongroups>
-  <buttongroup name="buttongroup_popup_statuswindow"/>
   <buttongroup name="buttongroup_close_statusbar"/>
+  <buttongroup name="buttongroup_popup_statuswindow"/>
  </buttongroups>
 </ui>

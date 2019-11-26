@@ -4533,7 +4533,7 @@ class Dialogs(object):
         # check if special widgets have to be shown
         self.server.edited.connect(self.settings.toggle_zabbix_widgets)
         self.server.edited.connect(self.settings.toggle_op5monitor_widgets)
-
+        self.server.edited.connect(self.settings.toggle_icingaweb2_widgets)
 
 
 class Dialog(QObject):
@@ -4913,6 +4913,15 @@ class Dialog_Settings(Dialog):
                                    self.ui.input_lineedit_re_groups_pattern,
                                    self.ui.input_checkbox_re_groups_reverse]
 
+        # ...and another...
+        self.ICINGAWEB2_WIDGETS = [self.ui.input_checkbox_defaults_acknowledge_expire,
+                                   self.ui.label_expire_in,
+                                   self.ui.label_expire_in_hours,
+                                   self.ui.label_expire_in_minutes,
+                                   self.ui.input_spinbox_defaults_acknowledge_expire_duration_hours,
+                                   self.ui.input_spinbox_defaults_acknowledge_expire_duration_minutes]
+
+
     def initialize(self):
         # apply configuration values
         # start with servers tab
@@ -4988,9 +4997,10 @@ class Dialog_Settings(Dialog):
         self.window.adjustSize()
 
     def show(self, tab=0):
-        # hide them and thus be able to fix size if no extra Zabbix/Op5Monitor widgets are shown
+        # hide them and thus be able to fix size if no extra Zabbix/Op5Monitor/IcingaWeb2 widgets are shown
         self.toggle_zabbix_widgets()
         self.toggle_op5monitor_widgets()
+        self.toggle_icingaweb2_widgets()
 
         # small workaround for timestamp trick to avoid flickering
         # if the 'Settings' button was clicked too fast the timestamp difference
@@ -5625,6 +5635,24 @@ class Dialog_Settings(Dialog):
                 widget.show()
         else:
             for widget in self.OP5MONITOR_WIDGETS:
+                widget.hide()
+
+    @pyqtSlot()
+    def toggle_icingaweb2_widgets(self):
+        """
+            Depending on the existence of an enabled IcingaWeb2 monitor the IcingaWeb2 widgets are shown or hidden
+        """
+        use_icingaweb2 = False
+        for server in servers.values():
+            if server.enabled:
+                if server.type == 'IcingaWeb2':
+                    use_icingaweb2 = True
+                    break
+        if use_icingaweb2:
+            for widget in self.ICINGAWEB2_WIDGETS:
+                widget.show()
+        else:
+            for widget in self.ICINGAWEB2_WIDGETS:
                 widget.hide()
 
     @pyqtSlot()
