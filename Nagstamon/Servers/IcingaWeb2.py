@@ -445,7 +445,7 @@ class IcingaWeb2Server(GenericServer):
         if len(all_services) > 0:
             for s in all_services:
                 # cheap, recursive solution...
-                self._set_acknowledge(host, s, author, comment, sticky, notify, persistent, [])
+                self._set_acknowledge(host, s, author, comment, sticky, notify, persistent, [], expire_time)
 
 
     def _set_submit_check_result(self, host, service, state, comment, check_output, performance_data):

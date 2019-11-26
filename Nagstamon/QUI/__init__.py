@@ -6246,7 +6246,7 @@ class Dialog_Acknowledge(Dialog):
         self.ui.input_lineedit_comment.setFocus()
 
         # set default and minimum value for expire time
-        qdatetime = QDateTime.currentDateTime()ython is
+        qdatetime = QDateTime.currentDateTime()
         self.ui.input_datetime_expire_time.setMinimumDateTime(qdatetime)
         # default is two hours in the future
         self.ui.input_datetime_expire_time.setDateTime(qdatetime.addSecs(2 * 60 * 60))
