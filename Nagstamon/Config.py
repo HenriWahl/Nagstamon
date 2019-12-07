@@ -123,7 +123,7 @@ class AppInfo(object):
         contains app information previously located in GUI.py
     """
     NAME = 'Nagstamon'
-    VERSION = '3.4rc1'
+    VERSION = '3.4.rc2'
     WEBSITE = 'https://nagstamon.ifw-dresden.de'
     COPYRIGHT = '©2008-2019 Henri Wahl et al.'
     COMMENTS = 'Nagios status monitor for your desktop'
@@ -528,7 +528,7 @@ class Config(object):
                             settings[name].__setattr__(i[0], value)
 
                         # if filename is still one of the non-URL-ones delete duplicate file
-                        if settingsfile != '{0}_{1}.conf'.format(setting, quote(name)):
+                        if settingsfile != '{0}_{1}.conf'.format(setting, quote(name, safe='')):
                             self.delete_file(settingsdir, settingsfile)
                             # set flag to store the settings via legacy adjustments
                             self.save_config_after_urlencode = True
@@ -666,7 +666,7 @@ class Config(object):
                                                                        os.sep,
                                                                        settingsdir,
                                                                        setting,
-                                                                       quote(s))),
+                                                                       quote(s, safe=''))),
                     'w') as file:
                 config.write(file)
 
