@@ -1637,7 +1637,7 @@ class StatusWindow(QWidget):
         mouse_pos = QCursor.pos()
         # Check mouse cursor over window and an opened context menu or dropdown list
         if self.geometry().contains(mouse_pos.x(), mouse_pos.y()) or\
-           not qApp.activePopupWidget() is None or \
+           not APP.activePopupWidget() is None or \
            self.is_shown:
             return False
 
@@ -2120,7 +2120,7 @@ class StatusWindow(QWidget):
         if OS == OS_WINDOWS and\
            not conf.fullscreen and\
            not conf.windowed and\
-            qApp.activePopupWidget() == None:
+            APP.activePopupWidget() == None:
             # find out if no context menu is shown and thus would be
             # overlapped by statuswindow
             for vbox in self.servers_vbox.children():
@@ -3267,7 +3267,7 @@ class TreeView(QTreeView):
         self.worker.finish.connect(self.finish_worker_thread)
 
         # receive information if action menu is shown
-        self.action_menu.is_shown.connect(self.worker.track_action_menu)
+        # self.action_menu.is_shown.connect(self.worker.track_action_menu)
 
         # get status if started
         self.worker_thread.started.connect(self.worker.get_status)
@@ -4046,7 +4046,7 @@ class TreeView(QTreeView):
         last_sort_order = 0
 
         # keep track of action menu being shown or not to avoid refresh while selecting multiple items
-        action_menu_shown = False
+        # action_menu_shown = False
 
         def __init__(self, parent=None, server=None, sort_column=0, sort_order=0):
             QObject.__init__(self)
@@ -4067,7 +4067,8 @@ class TreeView(QTreeView):
             # if counter is at least update interval get status
             if self.server.thread_counter >= conf.update_interval_seconds:
                 # only if no multiple selection is done at the moment and no context action menu is open
-                if not is_modifier_pressed() and not self.action_menu_shown:
+                # if not is_modifier_pressed() and not self.action_menu_shown:
+                if not is_modifier_pressed() and APP.activePopupWidget() is None:
                     # reflect status retrieval attempt on server vbox label
                     self.change_label_status.emit('Refreshing...', '')
 
@@ -4472,9 +4473,9 @@ class TreeView(QTreeView):
             for event in self.server.events_history.keys():
                 self.server.events_history[event] = False
 
-        @pyqtSlot(bool)
-        def track_action_menu(self, action_menu_shown):
-            self.action_menu_shown = action_menu_shown
+        # @pyqtSlot(bool)
+        # def track_action_menu(self, action_menu_shown):
+        #     self.action_menu_shown = action_menu_shown
 
 
 class Dialogs(object):
