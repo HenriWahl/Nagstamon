@@ -1,4 +1,4 @@
-nagstamon (3.4rc2) stable; urgency=low
+nagstamon (3.4) stable; urgency=low
   * New upstream
     - added multiple item selection and actions execution
     - added notification for OK state
@@ -20,7 +20,7 @@ nagstamon (3.4rc2) stable; urgency=low
     - op5Monitor fixes
     - Sensu fixes
 
--- Henri Wahl <h.wahl@ifw-dresden.de> Sat, 7 Dec 2019 10:00:00 +0100
+-- Henri Wahl <h.wahl@ifw-dresden.de> Fri, 20 Dec 2019 10:00:00 +0100
 
 nagstamon (3.2.1) stable; urgency=low
   * New upstream
