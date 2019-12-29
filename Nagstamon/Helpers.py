@@ -20,8 +20,9 @@
 import datetime
 import getpass
 from glob import glob
-import psutil
 import os
+import psutil
+from pathlib import Path
 import re
 import sys
 import traceback
@@ -438,7 +439,24 @@ def webbrowser_open(url):
         webbrowser.get('{0} %s &'.format(conf.custom_browser)).open(url)
 
 
-# depending on column different functions have to be used
+def get_distro():
+    """
+    replacement for platform.dist() which is deprecated and not available anymore since Python 3.8
+    read content of /etc/os-release and return it - all relevant distros should deliver this file
+    :return:
+    """
+    os_release_file = Path('/etc/os-release')
+    if os_release_file.exists() and os_release_file.is_file():
+        os_release_dict = {}
+        for property in os_release_file.read_text().splitlines():
+            key, value = property.split('=', 1)
+            os_release_dict[key] = value.strip('"').strip("'")
+        return (os_release_dict['ID'], os_release_dict['VERSION_ID'], os_release_dict['NAME'])
+    else:
+        return False
+
+
+    # depending on column different functions have to be used
 # 0 + 1 are column "Hosts", 1 + 2 are column "Service" due to extra font flag pictograms
 SORT_COLUMNS_FUNCTIONS = {0: compare_host,
         1: compare_host,

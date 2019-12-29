@@ -24,6 +24,7 @@ import platform
 import os.path
 
 from Nagstamon.Config import AppInfo
+from Nagstamon.Helpers import get_distro
 
 # dummy debug queue for compiling
 debug_queue = list()
@@ -33,7 +34,10 @@ NAME = AppInfo.NAME
 OS = platform.system()
 # make name lowercase for Linux/Unix
 if OS not in ['Windows', 'Darwin']:
-    DIST, DIST_VERSION, DIST_NAME = platform.dist()
+    if OS == 'Linux':
+        DIST, DIST_VERSION, DIST_NAME = get_distro()
+    else:
+        DIST, DIST_VERSION, DIST_NAME = platform.dist()
     NAME = NAME.lower()
 VERSION = AppInfo.VERSION.replace('-', '.') + '.' + DIST + DIST_VERSION
 

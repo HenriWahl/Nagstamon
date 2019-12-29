@@ -33,7 +33,9 @@ sys.path.append(NAGSTAMON_DIR)
 
 SCRIPTS_DIR = '{0}{1}scripts-{2}.{3}'.format(CURRENT_DIR, os.sep, sys.version_info.major, sys.version_info.minor)
 
+# has to be imported here after NAGSTAMON_DIR was wadded to sys.path
 from Nagstamon.Config import AppInfo
+from Nagstamon.Helpers import get_distro
 
 VERSION = AppInfo.VERSION
 ARCH = platform.architecture()[0][0:2]
@@ -221,7 +223,8 @@ if __name__ == '__main__':
     elif platform.system() == 'Darwin':
         macmain()
     else:
-        dist = platform.dist()[0]
+        #dist = platform.dist()[0]
+        dist = get_distro()[0]
         if dist in DISTS:
             DISTS[dist]()
         else:
