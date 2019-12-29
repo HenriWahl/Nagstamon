@@ -446,7 +446,7 @@ def get_distro():
     :return:
     """
     os_release_file = Path('/etc/os-release')
-    if os_release_file.exists() and os_release_file.is_file():
+    if os_release_file.exists() and (os_release_file.is_file() or os_release_file.is_symlink()):
         os_release_dict = {}
         for property in os_release_file.read_text().splitlines():
             key, value = property.split('=', 1)
