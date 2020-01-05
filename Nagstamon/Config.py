@@ -2,7 +2,7 @@
 # encoding: utf-8
 
 # Nagstamon - Nagios status monitor for your desktop
-# Copyright (C) 2008-2019 Henri Wahl <h.wahl@ifw-dresden.de> et al.
+# Copyright (C) 2008-2020 Henri Wahl <h.wahl@ifw-dresden.de> et al.
 #
 # This program is free software; you can redistribute it and/or modify
 # it under the terms of the GNU General Public License as published by
@@ -125,7 +125,7 @@ class AppInfo(object):
     NAME = 'Nagstamon'
     VERSION = '3.5-20200105'
     WEBSITE = 'https://nagstamon.ifw-dresden.de'
-    COPYRIGHT = '©2008-2019 Henri Wahl et al.'
+    COPYRIGHT = '©2008-2020 Henri Wahl et al.'
     COMMENTS = 'Nagios status monitor for your desktop'
     # version URL depends on version string
     if 'alpha' in VERSION.lower() or \
