@@ -3995,7 +3995,7 @@ class TreeView(QTreeView):
         # tell thread to quit
         self.worker_thread.quit()
         # wait until thread is really stopped
-        self.worker_thread.wait(2000)
+        self.worker_thread.wait()
 
     class Worker(QObject):
         """
@@ -5142,7 +5142,7 @@ class Dialog_Settings(Dialog):
                 server_vbox.table.worker.finish.emit()
             # wait until all threads are stopped
             for server_vbox in statuswindow.servers_vbox.children():
-                server_vbox.table.worker_thread.wait(1000)
+                server_vbox.table.worker_thread.wait()
 
             # wait until statuswindow worker has finished
             # statuswindow.worker_thread.wait(1000)
