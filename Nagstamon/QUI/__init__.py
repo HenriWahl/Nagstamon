@@ -25,9 +25,6 @@ from PyQt5.QtCore import *
 from PyQt5.QtSvg import *
 from PyQt5.QtMultimedia import *
 
-# global application instance
-APP = QApplication(sys.argv)
-
 import os
 import os.path
 import urllib.parse
@@ -115,6 +112,12 @@ if not OS in NON_LINUX:
     except ImportError:
         print('No DBus for desktop notification available.')
         DBUS_AVAILABLE = False
+
+# enable HighDPI-awareness to avoid https://github.com/HenriWahl/Nagstamon/issues/618
+QApplication.setAttribute(Qt.AA_EnableHighDpiScaling, True)
+QApplication.setAttribute(Qt.AA_UseHighDpiPixmaps, True)
+# global application instance
+APP = QApplication(sys.argv)
 
 # fixed shortened and lowered color names for cells, also used by statusbar label snippets
 COLORS = OrderedDict([('DOWN', 'color_down_'),
