@@ -168,13 +168,19 @@ class IcingaWeb2Server(GenericServer):
                 self.check_for_error(jsonraw, error, status_code)
 
                 # Check if the backend is running
-                # If it isnt running the last values stored in the database are returned/shown
-                # Unfortunately we need to make a extra request for this
-                result = self.FetchURL(self.cgiurl_monitoring_health, giveback='raw')
-                monitoring_health = json.loads(result.result)[0]
-                if (monitoring_health['is_currently_running'] == '0'):
-                    return Result(result=monitoring_health,
-                                error='Icinga2 backend not running')
+                # If it isn't running the last values stored in the database are returned/shown
+                # Unfortunately we need to make a extra request for this and only, if monitoring health is possible
+                if self.cgiurl_monitoring_health:
+                    try:
+                        result = self.FetchURL(self.cgiurl_monitoring_health, giveback='raw')
+                        monitoring_health = json.loads(result.result)[0]
+                        if (monitoring_health['is_currently_running'] == '0'):
+                            return Result(result=monitoring_health,
+                                          error='Icinga2 backend not running')
+                    except json.decoder.JSONDecodeError:
+                        # https://github.com/HenriWahl/Nagstamon/issues/619
+                        # Icinga2 monitoring health status query does not seem to work (on older version?)
+                        self.cgiurl_monitoring_health = None
 
                 hosts = json.loads(jsonraw)
 
