@@ -1202,6 +1202,12 @@ class StatusWindow(QWidget):
         # so sorry but how to solve this Qt-5.10-Windows-mess otherwise?
         global systrayicon
 
+        # hide everything first
+        self.hide_window()
+        self.statusbar.hide()
+        self.toparea.hide()
+        self.servers_scrollarea.hide()
+
         if conf.statusbar_floating:
             # no need for systray
             if OS == OS_WINDOWS:
@@ -1209,7 +1215,6 @@ class StatusWindow(QWidget):
                 systrayicon = QSystemTrayIcon()
             else:
                 systrayicon.hide()
-            self.hide_window()
             self.statusbar.show()
 
             # show statusbar/statuswindow on last saved position
@@ -1269,10 +1274,6 @@ class StatusWindow(QWidget):
             # need a close button
             self.toparea.button_close.show()
 
-            # no need for window and its parts
-            self.statusbar.hide()
-            self.hide_window()
-
         elif conf.fullscreen:
             # no need for systray
             if OS == OS_WINDOWS:
@@ -1280,7 +1281,8 @@ class StatusWindow(QWidget):
                 systrayicon = QSystemTrayIcon()
             else:
                 systrayicon.hide()
-            self.statusbar.hide()
+
+            # needed permanently
             self.toparea.show()
             self.servers_scrollarea.show()
 
@@ -1294,10 +1296,11 @@ class StatusWindow(QWidget):
             # show statusbar actively
             self.setAttribute(Qt.WA_ShowWithoutActivating, False)
 
+            # newer Qt5 seem to be better regarding fullscreen mode on non-OSX
             self.show_window()
             # fullscreen mode is rather buggy on everything other than OSX so just use a maximized window
             if OS == OS_DARWIN:
-                self.showFullScreen()
+                 self.showFullScreen()
             else:
                 self.show()
                 self.showMaximized()
@@ -1311,7 +1314,6 @@ class StatusWindow(QWidget):
                 systrayicon = QSystemTrayIcon()
             else:
                 systrayicon.hide()
-            self.statusbar.hide()
 
             # no need for close button
             self.toparea.button_close.hide()
@@ -1336,9 +1338,10 @@ class StatusWindow(QWidget):
 
             # make sure window is shown
             self.show()
+            self.showNormal()
             self.show_window()
 
-            # make sure windows comes up
+            # make sure window comes up
             self.raise_()
 
         # store position for showing/hiding statuswindow
@@ -1725,8 +1728,6 @@ class StatusWindow(QWidget):
         # screen number or widget object needed for desktop.availableGeometry
         if conf.statusbar_floating or conf.windowed:
             screen_or_widget = self
-        # elif conf.windowed:
-        #     screen_or_widget = self
 
         elif conf.icon_in_systray:
             # where is the pointer which clicked onto systray icon
