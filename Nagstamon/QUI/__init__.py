@@ -1215,6 +1215,7 @@ class StatusWindow(QWidget):
                 systrayicon = QSystemTrayIcon()
             else:
                 systrayicon.hide()
+            self.statusbar.show()
 
             # show statusbar/statuswindow on last saved position
             # when coordinates are inside known screens
@@ -1237,7 +1238,7 @@ class StatusWindow(QWidget):
             self.show()
 
             # X11/Linux needs some special treatment to get the statusbar floating on all virtual desktops
-            if OS not in NON_LINUX:
+            if not OS in NON_LINUX:
                 # get all windows...
                 winid = self.winId().__int__()
                 self.ewmh.setWmDesktop(winid, 0xffffffff)
@@ -1255,8 +1256,6 @@ class StatusWindow(QWidget):
 
             # need a close button
             self.toparea.button_close.show()
-
-            self.show_window()
 
         elif conf.icon_in_systray:
             # statusbar and detail window should be frameless and stay on top
@@ -3995,9 +3994,7 @@ class TreeView(QTreeView):
             attempt to shutdown thread cleanly
         """
         # tell thread to quit
-        #self.worker_thread.quit()
-        # tell thread to quit with force
-        self.worker_thread.terminate()
+        self.worker_thread.quit()
         # wait until thread is really stopped
         self.worker_thread.wait()
 
@@ -5146,29 +5143,20 @@ class Dialog_Settings(Dialog):
                 server_vbox.table.worker.finish.emit()
             # wait until all threads are stopped
             for server_vbox in statuswindow.servers_vbox.children():
-                server_vbox.table.worker_thread.terminate()
                 server_vbox.table.worker_thread.wait()
 
             # wait until statuswindow worker has finished
-            #statuswindow.worker_thread.wait(2000)
-            statuswindow.worker_thread.terminate()
-            #statuswindow.worker_thread.quit()
-            statuswindow.worker_thread.wait()
+            # statuswindow.worker_thread.wait(1000)
 
             # wait until statuswindow notification worker has finished
-            #statuswindow.worker_notification_thread.wait(2000)
-            #statuswindow.worker_notification_thread.quit()
-            statuswindow.worker_notification_thread.terminate()
-            statuswindow.worker_notification_thread.wait()
+            # statuswindow.worker_notification_thread.wait(1000)
 
             # kick out ol' statuswindow
-            #statuswindow.deleteLater()
-            #statuswindow_old = statuswindow
-            #statuswindow_old.destroy(True, True)
+            # statuswindow.destroy(True, True)
 
             # create new global one
-            #statuswindow = StatusWindow()
-            #statuswindow.__init__()
+            # statuswindow = StatusWindow()
+            # statuswindow.__init__()
 
             statuswindow.create_ServerVBoxes()
             statuswindow.set_mode()
