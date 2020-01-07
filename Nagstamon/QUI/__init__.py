@@ -1215,6 +1215,7 @@ class StatusWindow(QWidget):
                 systrayicon = QSystemTrayIcon()
             else:
                 systrayicon.hide()
+            self.statusbar.show()
 
             # show statusbar/statuswindow on last saved position
             # when coordinates are inside known screens
@@ -1255,8 +1256,6 @@ class StatusWindow(QWidget):
 
             # need a close button
             self.toparea.button_close.show()
-
-            self.show_window()
 
         elif conf.icon_in_systray:
             # statusbar and detail window should be frameless and stay on top
