@@ -50,7 +50,7 @@ from Nagstamon.Config import (Action,
                               debug_queue,
                               DESKTOP_CINNAMON,
                               KEYRING,
-                              NON_LINUX,
+                              OS_NON_LINUX,
                               OS,
                               OS_DARWIN,
                               OS_WINDOWS,
@@ -89,7 +89,7 @@ from Nagstamon.QUI.dialog_about import Ui_dialog_about
 # only on X11/Linux thirdparty path should be added because it contains the Xlib module
 # needed to tell window manager via EWMH to keep Nagstamon window on all virtual desktops
 # TODO: test if X11 or Wayland is used
-if not OS in NON_LINUX:
+if not OS in OS_NON_LINUX:
     # extract thirdparty path from resources path - make submodules accessible by thirdparty modules
     THIRDPARTY = os.sep.join(RESOURCES.split(os.sep)[0:-1] + ['thirdparty'])
     sys.path.insert(0, THIRDPARTY)
@@ -979,7 +979,7 @@ class StatusWindow(QWidget):
         self.hide()
 
         # ewmh.py in thirdparty directory needed to keep floating statusbar on all desktops in Linux
-        if not OS in NON_LINUX:
+        if not OS in OS_NON_LINUX:
             self.ewmh = EWMH()
 
         # avoid quitting when using Qt.Tool flag and closing settings dialog
@@ -1210,11 +1210,12 @@ class StatusWindow(QWidget):
 
         if conf.statusbar_floating:
             # no need for systray
-            if OS == OS_WINDOWS:
-                # workaround for PyQt behavior since Qt 5.10
-                systrayicon = QSystemTrayIcon()
-            else:
-                systrayicon.hide()
+            # if OS == OS_WINDOWS:
+            #     # workaround for PyQt behavior since Qt 5.10
+            #     systrayicon = QSystemTrayIcon()
+            # else:
+            #     systrayicon.hide()
+            systrayicon.hide()
             self.statusbar.show()
 
             # show statusbar/statuswindow on last saved position
@@ -1238,7 +1239,7 @@ class StatusWindow(QWidget):
             self.show()
 
             # X11/Linux needs some special treatment to get the statusbar floating on all virtual desktops
-            if OS not in NON_LINUX:
+            if OS not in OS_NON_LINUX:
                 # get all windows...
                 winid = self.winId().__int__()
                 self.ewmh.setWmDesktop(winid, 0xffffffff)
@@ -1276,11 +1277,12 @@ class StatusWindow(QWidget):
 
         elif conf.fullscreen:
             # no need for systray
-            if OS == OS_WINDOWS:
-                # workaround for PyQt behavior since Qt 5.10
-                systrayicon = QSystemTrayIcon()
-            else:
-                systrayicon.hide()
+            # if OS == OS_WINDOWS:
+            #     # workaround for PyQt behavior since Qt 5.10
+            #     systrayicon = QSystemTrayIcon()
+            # else:
+            #     systrayicon.hide()
+            systrayicon.hide()
 
             # needed permanently
             self.toparea.show()
@@ -1309,11 +1311,12 @@ class StatusWindow(QWidget):
             self.toparea.button_close.hide()
 
         elif conf.windowed:
-            if OS == OS_WINDOWS:
-                # workaround for PyQt behavior since Qt 5.10
-                systrayicon = QSystemTrayIcon()
-            else:
-                systrayicon.hide()
+            # if OS == OS_WINDOWS:
+            #     # workaround for PyQt behavior since Qt 5.10
+            #     #systrayicon = QSystemTrayIcon()
+            # else:
+            #     systrayicon.hide()
+            systrayicon.hide()
 
             # no need for close button
             self.toparea.button_close.hide()
@@ -1596,7 +1599,7 @@ class StatusWindow(QWidget):
                     # Using the EWMH protocol to move the window to the active desktop.
                     # Seemed to be a problem on XFCE
                     # https://github.com/HenriWahl/Nagstamon/pull/199
-                    if not OS in NON_LINUX and conf.icon_in_systray:
+                    if not OS in OS_NON_LINUX and conf.icon_in_systray:
                         try:
                             winid = self.winId().__int__()
                             deskid = self.ewmh.getCurrentDesktop()
@@ -1734,7 +1737,7 @@ class StatusWindow(QWidget):
             icon_x = systrayicon.geometry().x()
             icon_y = systrayicon.geometry().y()
 
-            if OS in NON_LINUX:
+            if OS in OS_NON_LINUX:
                 if self.icon_x == 0:
                     self.icon_x = QCursor.pos().x()
                 elif icon_x != 0:
@@ -1749,7 +1752,7 @@ class StatusWindow(QWidget):
 
             if icon_y == 0 and self.icon_y == 0:
                 self.icon_y = QCursor.pos().y()
-            if OS in NON_LINUX:
+            if OS in OS_NON_LINUX:
                 if self.icon_y == 0:
                     self.icon_y = QCursor.pos().y()
                 elif icon_y != 0:
@@ -1767,7 +1770,7 @@ class StatusWindow(QWidget):
         available_y = desktop.availableGeometry(screen_or_widget).y()
 
         # Workaround for Cinnamon
-        if OS not in NON_LINUX and DESKTOP_CINNAMON:
+        if OS not in OS_NON_LINUX and DESKTOP_CINNAMON:
             if available_x == 0:
                 available_x = available_width
             if available_y == 0:
@@ -2109,7 +2112,7 @@ class StatusWindow(QWidget):
         if conf.windowed:
             return
         # X11/Linux needs some special treatment to get the statusbar floating on all virtual desktops
-        if not OS in NON_LINUX:
+        if not OS in OS_NON_LINUX:
             # get all windows...
             winid = self.winId().__int__()
             self.ewmh.setWmDesktop(winid, 0xffffffff)
@@ -2124,14 +2127,18 @@ class StatusWindow(QWidget):
         if OS == OS_WINDOWS and\
            not conf.fullscreen and\
            not conf.windowed and\
-            APP.activePopupWidget() == None:
-            # find out if no context menu is shown and thus would be
-            # overlapped by statuswindow
-            for vbox in self.servers_vbox.children():
-                # jump out here if any action_menu is shown
-                if not vbox.table.action_menu.available:
-                    return
-            self.raise_()
+           APP.activePopupWidget() == None:
+            try:
+                # find out if no context menu is shown and thus would be
+                # overlapped by statuswindow
+                for vbox in self.servers_vbox.children():
+                    # jump out here if any action_menu is shown
+                    if not vbox.table.action_menu.available:
+                        return
+                self.raise_()
+            except Exception as err:
+                # apparently a race condition could occur on set_mode() - grab it here and continue
+                print(err)
 
     def kill(self):
         """
@@ -4006,9 +4013,11 @@ class TreeView(QTreeView):
             attempt to shutdown thread cleanly
         """
         # tell thread to quit
-        #self.worker_thread.quit()
-        # tell thread to quit with force
-        self.worker_thread.terminate()
+        if OS == OS_WINDOWS:
+            self.worker_thread.quit()
+        else:
+            # tell thread to quit with force
+            self.worker_thread.terminate()
         # wait until thread is really stopped
         self.worker_thread.wait()
 
@@ -5128,26 +5137,23 @@ class Dialog_Settings(Dialog):
         # update brushes for treeview
         create_brushes()
 
-        # store configuration
-        conf.SaveConfig()
-
         # save configuration
         conf.SaveConfig()
 
         # when display mode was changed its the easiest to destroy the old status window and create a new one
         # store display_mode to decide if statuswindow has to be recreated
         if display_mode != str(conf.statusbar_floating) + \
-                str(conf.icon_in_systray) + \
-                str(conf.fullscreen) + \
-                str(conf.fullscreen_display) + \
-                str(conf.windowed):
+                           str(conf.icon_in_systray) + \
+                           str(conf.fullscreen) + \
+                           str(conf.fullscreen_display) + \
+                           str(conf.windowed):
 
             # increase number of display changes for silly Windows-hides-statusbar-after-display-mode-change problem
             NUMBER_OF_DISPLAY_CHANGES += 1
 
             # stop statuswindow worker
-            # statuswindow.worker.running = False
-            # statuswindow.worker_notification.running = False
+            statuswindow.worker.running = False
+            statuswindow.worker_notification.running = False
 
             # hide window to avoid laggy GUI - better none than laggy
             statuswindow.hide()
@@ -6961,7 +6967,7 @@ class DBus(QObject):
         # self.hints = {'image-path': '%s%snagstamon.svg' % (RESOURCES, os.sep)}
         self.hints = {'image-path': '{0}{1}nagstamon.svg'.format(RESOURCES, os.sep)}
 
-        if not OS in NON_LINUX and DBUS_AVAILABLE:
+        if not OS in OS_NON_LINUX and DBUS_AVAILABLE:
             if 'dbus' in sys.modules:
                 # try/except needed because of partly occuring problems with DBUS
                 # see https://github.com/HenriWahl/Nagstamon/issues/320
@@ -7167,7 +7173,7 @@ statuswindow = StatusWindow()
 menu = MenuContext()
 
 # necessary extra menu due to Qt5-Unity-integration
-if not OS in NON_LINUX:
+if not OS in OS_NON_LINUX:
     menu_systray = MenuContextSystrayicon()
 # menu has to be set here to solve Qt-5.10-Windows-systray-mess
 # and non-existence of macOS-systray-context-menu
