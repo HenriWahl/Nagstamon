@@ -46,7 +46,7 @@ OS = platform.system()
 # needed when OS-specific decisions have to be made, mostly Linux/non-Linux
 OS_DARWIN = 'Darwin'
 OS_WINDOWS = 'Windows'
-NON_LINUX = (OS_DARWIN, OS_WINDOWS)
+OS_NON_LINUX = (OS_DARWIN, OS_WINDOWS)
 
 # simple Wayland detection
 if 'WAYLAND_DISPLAY' in os.environ or\
@@ -403,7 +403,7 @@ class Config(object):
                     self.use_system_keyring = False
                 else:
                     # a configured system seemed to be able to run and thus use system keyring
-                    if OS in NON_LINUX:
+                    if OS in OS_NON_LINUX:
                         self.use_system_keyring = True
                     else:
                         self.use_system_keyring = self.KeyringAvailable()
@@ -565,7 +565,7 @@ class Config(object):
                     self.use_system_keyring = False
                 else:
                     # a configured system seemed to be able to run and thus use system keyring
-                    if OS in NON_LINUX:
+                    if OS in OS_NON_LINUX:
                         self.use_system_keyring = True
                     else:
                         self.use_system_keyring = self.KeyringAvailable()
@@ -683,7 +683,7 @@ class Config(object):
         try:
             # Linux systems should use keyring only if it comes with the distro, otherwise chances are small
             # that keyring works at all
-            if OS in NON_LINUX:
+            if OS in OS_NON_LINUX:
                 # safety first - if not yet available disable it
                 if 'use_system_keyring' not in self.__dict__.keys():
                     self.use_system_keyring = False
