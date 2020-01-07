@@ -1,6 +1,6 @@
 # encoding: utf-8
 # Nagstamon - Nagios status monitor for your desktop
-# Copyright (C) 2008-2019 Henri Wahl <h.wahl@ifw-dresden.de> et al.
+# Copyright (C) 2008-2020 Henri Wahl <h.wahl@ifw-dresden.de> et al.
 #
 # This program is free software; you can redistribute it and/or modify
 # it under the terms of the GNU General Public License as published by
@@ -24,9 +24,6 @@ from PyQt5.QtGui import *
 from PyQt5.QtCore import *
 from PyQt5.QtSvg import *
 from PyQt5.QtMultimedia import *
-
-# global application instance
-APP = QApplication(sys.argv)
 
 import os
 import os.path
@@ -115,6 +112,12 @@ if not OS in NON_LINUX:
     except ImportError:
         print('No DBus for desktop notification available.')
         DBUS_AVAILABLE = False
+
+# enable HighDPI-awareness to avoid https://github.com/HenriWahl/Nagstamon/issues/618
+QApplication.setAttribute(Qt.AA_EnableHighDpiScaling, True)
+QApplication.setAttribute(Qt.AA_UseHighDpiPixmaps, True)
+# global application instance
+APP = QApplication(sys.argv)
 
 # fixed shortened and lowered color names for cells, also used by statusbar label snippets
 COLORS = OrderedDict([('DOWN', 'color_down_'),
@@ -1640,7 +1643,7 @@ class StatusWindow(QWidget):
         mouse_pos = QCursor.pos()
         # Check mouse cursor over window and an opened context menu or dropdown list
         if self.geometry().contains(mouse_pos.x(), mouse_pos.y()) or\
-           not qApp.activePopupWidget() is None or \
+           not APP.activePopupWidget() is None or \
            self.is_shown:
             return False
 
@@ -2121,7 +2124,7 @@ class StatusWindow(QWidget):
         if OS == OS_WINDOWS and\
            not conf.fullscreen and\
            not conf.windowed and\
-            qApp.activePopupWidget() == None:
+            APP.activePopupWidget() == None:
             # find out if no context menu is shown and thus would be
             # overlapped by statuswindow
             for vbox in self.servers_vbox.children():
@@ -3268,7 +3271,7 @@ class TreeView(QTreeView):
         self.worker.finish.connect(self.finish_worker_thread)
 
         # receive information if action menu is shown
-        self.action_menu.is_shown.connect(self.worker.track_action_menu)
+        # self.action_menu.is_shown.connect(self.worker.track_action_menu)
 
         # get status if started
         self.worker_thread.started.connect(self.worker.get_status)
@@ -3993,7 +3996,7 @@ class TreeView(QTreeView):
         # tell thread to quit
         self.worker_thread.quit()
         # wait until thread is really stopped
-        self.worker_thread.wait(2000)
+        self.worker_thread.wait()
 
     class Worker(QObject):
         """
@@ -4047,7 +4050,7 @@ class TreeView(QTreeView):
         last_sort_order = 0
 
         # keep track of action menu being shown or not to avoid refresh while selecting multiple items
-        action_menu_shown = False
+        # action_menu_shown = False
 
         def __init__(self, parent=None, server=None, sort_column=0, sort_order=0):
             QObject.__init__(self)
@@ -4068,7 +4071,8 @@ class TreeView(QTreeView):
             # if counter is at least update interval get status
             if self.server.thread_counter >= conf.update_interval_seconds:
                 # only if no multiple selection is done at the moment and no context action menu is open
-                if not is_modifier_pressed() and not self.action_menu_shown:
+                # if not is_modifier_pressed() and not self.action_menu_shown:
+                if not is_modifier_pressed() and APP.activePopupWidget() is None:
                     # reflect status retrieval attempt on server vbox label
                     self.change_label_status.emit('Refreshing...', '')
 
@@ -4473,9 +4477,9 @@ class TreeView(QTreeView):
             for event in self.server.events_history.keys():
                 self.server.events_history[event] = False
 
-        @pyqtSlot(bool)
-        def track_action_menu(self, action_menu_shown):
-            self.action_menu_shown = action_menu_shown
+        # @pyqtSlot(bool)
+        # def track_action_menu(self, action_menu_shown):
+        #     self.action_menu_shown = action_menu_shown
 
 
 class Dialogs(object):
@@ -5139,7 +5143,7 @@ class Dialog_Settings(Dialog):
                 server_vbox.table.worker.finish.emit()
             # wait until all threads are stopped
             for server_vbox in statuswindow.servers_vbox.children():
-                server_vbox.table.worker_thread.wait(1000)
+                server_vbox.table.worker_thread.wait()
 
             # wait until statuswindow worker has finished
             # statuswindow.worker_thread.wait(1000)
