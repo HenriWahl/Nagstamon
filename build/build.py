@@ -2,7 +2,7 @@
 # -*- coding: utf-8 -*-
 
 # Nagstamon - Nagios status monitor for your desktop
-# Copyright (C) 2008-2019 Henri Wahl <h.wahl@ifw-dresden.de> et al.
+# Copyright (C) 2008-2020 Henri Wahl <h.wahl@ifw-dresden.de> et al.
 #
 # This program is free software; you can redistribute it and/or modify
 # it under the terms of the GNU General Public License as published by
@@ -33,7 +33,9 @@ sys.path.append(NAGSTAMON_DIR)
 
 SCRIPTS_DIR = '{0}{1}scripts-{2}.{3}'.format(CURRENT_DIR, os.sep, sys.version_info.major, sys.version_info.minor)
 
+# has to be imported here after NAGSTAMON_DIR was wadded to sys.path
 from Nagstamon.Config import AppInfo
+from Nagstamon.Helpers import get_distro
 
 VERSION = AppInfo.VERSION
 ARCH = platform.architecture()[0][0:2]
@@ -221,7 +223,8 @@ if __name__ == '__main__':
     elif platform.system() == 'Darwin':
         macmain()
     else:
-        dist = platform.dist()[0]
+        #dist = platform.dist()[0]
+        dist = get_distro()[0]
         if dist in DISTS:
             DISTS[dist]()
         else:
