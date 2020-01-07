@@ -1330,7 +1330,7 @@ class StatusWindow(QWidget):
             self.setAttribute(Qt.WA_ShowWithoutActivating, False)
 
             # some maybe sensible default
-            self.setMinimumSize(600, 300)
+            self.setMinimumSize(700, 300)
             self.setSizePolicy(QSizePolicy.MinimumExpanding, QSizePolicy.MinimumExpanding)
 
             # default maximum size
@@ -2656,6 +2656,7 @@ class TopArea(QWidget):
     def __init__(self, parent=None):
         QWidget.__init__(self)
         self.hbox = HBoxLayout(spacing=SPACE, parent=self)  # top HBox containing buttons
+        self.hbox.setSizeConstraint(QHBoxLayout.SetMinimumSize)
 
         self.icons = dict()
         self.create_icons()
