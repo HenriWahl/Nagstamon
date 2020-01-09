@@ -133,10 +133,10 @@ class CentreonServer(GenericServer):
                                         'hosts': '$MONITOR$/main.php?p=20202',
                                         'services': '$MONITOR$/main.php?p=20201',
                                         'history': '$MONITOR$/main.php?p=203'}
-                elif re.search('18\.10\.[0-9]', raw_versioncheck) or re.search('19\.04\.[0-9]', raw_versioncheck):
+                elif re.search('18\.10\.[0-9]', raw_versioncheck) or re.search('19\.(04|10)\.[0-9]', raw_versioncheck):
                     self.centreon_version = 18.10
                     if conf.debug_mode is True:
-                        self.Debug(server=self.get_name(), debug='Centreon version detected : 18.10 <=> 19.04')
+                        self.Debug(server=self.get_name(), debug='Centreon version detected : 18.10 <=> 19.10')
                     # URLs for browser shortlinks/buttons on popup window
                     self.BROWSER_URLS = {'monitor': '$MONITOR$/main.php?',
                                         'hosts': '$MONITOR$/main.php?p=20202',
@@ -231,6 +231,11 @@ class CentreonServer(GenericServer):
                 raw = self.FetchURL(self.monitor_cgi_url + '/index.php?p=101&autologin=1&useralias=' + self.username + '&token=' + self.autologin_key, giveback='raw')
                 if conf.debug_mode == True:
                     self.Debug(server=self.get_name(), debug='Autologin : ' + self.username + ' : ' + self.autologin_key)
+                # Gathering of the token who will be used to interact with Centreon
+                page = self.FetchURL(self.monitor_cgi_url + '/main.get.php')
+                if  self.centreon_version in [18.10, 2.8, 2.7, 2.66]:
+                    self.centreon_token = page.result.find('input', {'name': "centreon_token"})['value']
+
             # Password auth
             else:
                 login = self.FetchURL(self.monitor_cgi_url + '/index.php')
@@ -252,9 +257,11 @@ class CentreonServer(GenericServer):
                         raw = self.FetchURL(self.monitor_cgi_url + "/index.php",cgi_data=login_data, giveback="raw")
                 if conf.debug_mode == True:
                     self.Debug(server=self.get_name(), debug='Password login : ' + self.username + ' : ' + self.password)
+
             sid = self.session.cookies['PHPSESSID']
             if conf.debug_mode == True:
                 self.Debug(server=self.get_name(), debug='SID : ' + sid)
+                self.Debug(server=self.get_name(), debug='Centreon Token : ' + self.centreon_token)
             # those broker urls would not be changing too often so this check migth be done here
             if self.first_login:
                 self._get_xml_path(sid)
@@ -1023,8 +1030,10 @@ class CentreonServer(GenericServer):
             if self.centreon_version == 18.10:
                 result = self.FetchURL(self.urls_centreon['keepAlive'], giveback='raw')
                 raw, error, status_code = result.result, result.error, result.status_code
+                # Return 200 & null a session is open
                 if conf.debug_mode == True:
                     self.Debug(server=self.get_name(), debug='Session status : ' + raw)
+                # 401 if no valid session is present
                 if self.status_code == 401:
                     self.SID = self._get_sid().result
                     if conf.debug_mode == True:
