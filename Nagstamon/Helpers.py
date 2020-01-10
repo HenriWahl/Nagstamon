@@ -23,6 +23,7 @@ from glob import glob
 import os
 import psutil
 from pathlib import Path
+import platform
 import re
 import sys
 import traceback
@@ -443,17 +444,21 @@ def get_distro():
     """
     replacement for platform.dist() which is deprecated and not available anymore since Python 3.8
     read content of /etc/os-release and return it - all relevant distros should deliver this file
+    on older Python platform.dist still can be used and even should be on Debian 8 with Python 3.4
     :return:
     """
-    os_release_file = Path('/etc/os-release')
-    if os_release_file.exists() and (os_release_file.is_file() or os_release_file.is_symlink()):
-        os_release_dict = {}
-        for property in os_release_file.read_text().splitlines():
-            key, value = property.split('=', 1)
-            os_release_dict[key] = value.strip('"').strip("'")
-        return (os_release_dict['ID'], os_release_dict['VERSION_ID'], os_release_dict['NAME'])
+    if sys.version_info > (3,7):
+        os_release_file = Path('/etc/os-release')
+        if os_release_file.exists() and (os_release_file.is_file() or os_release_file.is_symlink()):
+            os_release_dict = {}
+            for property in os_release_file.read_text().splitlines():
+                key, value = property.split('=', 1)
+                os_release_dict[key] = value.strip('"').strip("'")
+            return (os_release_dict['ID'], os_release_dict['VERSION_ID'], os_release_dict['NAME'])
+        else:
+            return False
     else:
-        return False
+        return platform.dist()
 
 
     # depending on column different functions have to be used
