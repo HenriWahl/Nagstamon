@@ -28,11 +28,10 @@ Name: {group}\Nagstamon; Filename: {app}\nagstamon.exe; WorkingDir: {app}; IconF
 Name: {commonstartup}\Nagstamon; Filename: {app}\nagstamon.exe; WorkingDir: {app}; IconFilename: {app}\resources\nagstamon.ico; IconIndex: 0
 [Files]
 Source: "*"; DestDir: {app}; Flags: recursesubdirs createallsubdirs; BeforeInstall: KillRunningNagstamon()
+[Tasks]
+Name: RunAfterInstall; Description: Run Nagstamon after installation
 [Run]
-Filename: {app}\{App}.exe; Description: {cm:Launch,{cm:App}}; Flags: nowait postinstall skipifsilent
-[CustomMessages]
-App=Nagstamon
-Launch=Start Nagstamon after finishing installation
+Filename: {app}\nagstamon.exe; Flags: shellexec skipifsilent nowait; Tasks: RunAfterInstall
 [InstallDelete]
 Name: "{app}\*Qt*"; Type: filesandordirs
 [Code]
