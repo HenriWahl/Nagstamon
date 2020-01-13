@@ -28,4 +28,11 @@ Name: {commonstartup}\Nagstamon; Filename: {app}\nagstamon.exe; WorkingDir: {app
 [Files]
 Source: "*"; DestDir: {app}; Flags: recursesubdirs createallsubdirs
 [InstallDelete]
-Name: "{app}\*Qt*"; Type: filesandordirs
+Name: "{app}\*Qt*"; Type: filesandordirs; BeforeInstall: KillRunningNagstamon()
+[Code]
+procedure KillRunningNagstamon();
+var
+  ReturnCode: Integer;
+begin
+    Exec(ExpandConstant('taskkill.exe'), '/f /im nagstamon.exe', '', SW_HIDE, ewWaitUntilTerminated, ReturnCode);
+end;
