@@ -27,5 +27,3 @@ Name: {group}\Nagstamon; Filename: {app}\nagstamon.exe; WorkingDir: {app}; IconF
 Name: {commonstartup}\Nagstamon; Filename: {app}\nagstamon.exe; WorkingDir: {app}; IconFilename: {app}\resources\nagstamon.ico; IconIndex: 0
 [Files]
 Source: "*"; DestDir: {app}; Flags: recursesubdirs createallsubdirs
-[InstallDelete]
-Name: "{app}\*"; Type: filesandordirs
