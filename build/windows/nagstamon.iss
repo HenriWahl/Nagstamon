@@ -22,8 +22,22 @@ SolidCompression=true
 SourceDir={#source}
 ArchitecturesAllowed={#archs_allowed}
 ArchitecturesInstallIn64BitMode=x64
+CloseApplications=no
 [Icons]
 Name: {group}\Nagstamon; Filename: {app}\nagstamon.exe; WorkingDir: {app}; IconFilename: {app}\resources\nagstamon.ico; IconIndex: 0
 Name: {commonstartup}\Nagstamon; Filename: {app}\nagstamon.exe; WorkingDir: {app}; IconFilename: {app}\resources\nagstamon.ico; IconIndex: 0
 [Files]
-Source: "*"; DestDir: {app}; Flags: recursesubdirs createallsubdirs
+Source: "*"; DestDir: {app}; Flags: recursesubdirs createallsubdirs; BeforeInstall: KillRunningNagstamon()
+[Tasks]
+Name: RunAfterInstall; Description: Run Nagstamon after installation
+[Run]
+Filename: {app}\nagstamon.exe; Flags: shellexec skipifsilent nowait; Tasks: RunAfterInstall
+[InstallDelete]
+Name: "{app}\*Qt*"; Type: filesandordirs
+[Code]
+procedure KillRunningNagstamon();
+var
+  ReturnCode: Integer;
+begin
+    Exec(ExpandConstant('taskkill.exe'), '/f /im nagstamon.exe', '', SW_HIDE, ewWaitUntilTerminated, ReturnCode);
+end;
