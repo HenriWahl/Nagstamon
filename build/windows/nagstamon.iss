@@ -22,7 +22,7 @@ SolidCompression=true
 SourceDir={#source}
 ArchitecturesAllowed={#archs_allowed}
 ArchitecturesInstallIn64BitMode=x64
-CloseApplications=yes
+CloseApplications=force
 CloseApplicationsFilter=*.*
 [Icons]
 Name: {group}\Nagstamon; Filename: {app}\nagstamon.exe; WorkingDir: {app}; IconFilename: {app}\resources\nagstamon.ico; IconIndex: 0
