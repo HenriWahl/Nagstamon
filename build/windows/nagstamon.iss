@@ -22,11 +22,8 @@ SolidCompression=true
 SourceDir={#source}
 ArchitecturesAllowed={#archs_allowed}
 ArchitecturesInstallIn64BitMode=x64
-CloseApplications=force
-CloseApplicationsFilter=*.*
 [Icons]
 Name: {group}\Nagstamon; Filename: {app}\nagstamon.exe; WorkingDir: {app}; IconFilename: {app}\resources\nagstamon.ico; IconIndex: 0
 Name: {commonstartup}\Nagstamon; Filename: {app}\nagstamon.exe; WorkingDir: {app}; IconFilename: {app}\resources\nagstamon.ico; IconIndex: 0
 [Files]
 Source: "*"; DestDir: {app}; Flags: recursesubdirs createallsubdirs
-
