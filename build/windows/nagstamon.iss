@@ -29,9 +29,9 @@ Name: {commonstartup}\Nagstamon; Filename: {app}\nagstamon.exe; WorkingDir: {app
 [Files]
 Source: "*"; DestDir: {app}; Flags: recursesubdirs createallsubdirs; BeforeInstall: KillRunningNagstamon()
 [Run]
-Filename: {app}\{Name}.exe; Description: {cm:Launch,{cm:Name}}; Flags: nowait postinstall skipifsilent
+Filename: {app}\{App}.exe; Description: {cm:Launch,{cm:App}}; Flags: nowait postinstall skipifsilent
 [CustomMessages]
-Name=Nagstamon
+App=Nagstamon
 Launch=Start Nagstamon after finishing installation
 [InstallDelete]
 Name: "{app}\*Qt*"; Type: filesandordirs
