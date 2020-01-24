@@ -1,3 +1,15 @@
+nagstamon (3.4.1) stable; urgency=low
+  * New upstream
+   - Centreon fix for acknowledgement when using autologin key
+   - IcingaWeb2 fix support older setups
+   - fix popup in systray mode on Windows
+   - improved mode switching
+   - better support for high resolution displays
+   - build support for Python 3.8
+   - improved Windows installer
+
+ -- Henri Wahl <h.wahl@ifw-dresden.de> Mon, 27 Jan 2020 10:00:00 +0100
+
 nagstamon (3.4) stable; urgency=low
   * New upstream
    - added multiple item selection and actions execution
