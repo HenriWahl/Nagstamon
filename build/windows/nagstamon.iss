@@ -27,17 +27,15 @@ CloseApplications=no
 Name: {group}\Nagstamon; Filename: {app}\nagstamon.exe; WorkingDir: {app}; IconFilename: {app}\resources\nagstamon.ico; IconIndex: 0
 Name: {commonstartup}\Nagstamon; Filename: {app}\nagstamon.exe; WorkingDir: {app}; IconFilename: {app}\resources\nagstamon.ico; IconIndex: 0
 [Files]
-Source: "*"; DestDir: {app}; Flags: recursesubdirs createallsubdirs; BeforeInstall: KillRunningNagstamon()
+Source: "*"; DestDir: {app}; Flags: recursesubdirs createallsubdirs ignoreversion; BeforeInstall: KillRunningNagstamon()
 [Tasks]
 Name: RunAfterInstall; Description: Run Nagstamon after installation
 [Run]
 Filename: {app}\nagstamon.exe; Flags: shellexec skipifsilent nowait; Tasks: RunAfterInstall
-[InstallDelete]
-Name: "{app}\*Qt*"; Type: filesandordirs
 [Code]
 procedure KillRunningNagstamon();
 var
   ReturnCode: Integer;
 begin
-    Exec(ExpandConstant('taskkill.exe'), '/f /t /im nagstamon.exe', '', SW_HIDE, ewWaitUntilIdle, ReturnCode);
+    Exec(ExpandConstant('taskkill.exe'), '/f /t /im nagstamon.exe', '', SW_HIDE, ewWaitUntilTerminated, ReturnCode);
 end;
