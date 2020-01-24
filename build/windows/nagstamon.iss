@@ -39,5 +39,5 @@ procedure KillRunningNagstamon();
 var
   ReturnCode: Integer;
 begin
-    Exec(ExpandConstant('taskkill.exe'), '/f /im nagstamon.exe', '', SW_HIDE, ewWaitUntilTerminated, ReturnCode);
+    Exec(ExpandConstant('taskkill.exe'), '/f /t /im nagstamon.exe', '', SW_HIDE, ewWaitUntilIdle, ReturnCode);
 end;
