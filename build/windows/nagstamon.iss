@@ -33,7 +33,7 @@ Name: RunAfterInstall; Description: Run Nagstamon after installation
 [Run]
 Filename: {app}\nagstamon.exe; Flags: shellexec skipifsilent nowait; Tasks: RunAfterInstall
 [InstallDelete]
-Name: "{app}\*Qt5*.*"; Type: filesandordirs
+Name: "{app}\*Qt*"; Type: filesandordirs
 [Code]
 procedure KillRunningNagstamon();
 var
