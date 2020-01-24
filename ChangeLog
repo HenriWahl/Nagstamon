@@ -1,3 +1,39 @@
+nagstamon (3.4.1) stable; urgency=low
+  * New upstream
+   - Centreon fix for acknowledgement when using autologin key
+   - IcingaWeb2 fix support older setups
+   - fix popup in systray mode on Windows
+   - improved mode switching
+   - better support for high resolution displays
+   - build support for Python 3.8
+   - improved Windows installer
+
+ -- Henri Wahl <h.wahl@ifw-dresden.de> Mon, 27 Jan 2020 10:00:00 +0100
+
+nagstamon (3.4) stable; urgency=low
+  * New upstream
+    - added multiple item selection and actions execution
+    - added notification for OK state
+    - added darkmode for macOS
+    - added option to copy service to clipboard
+    - added support for custom CA cert for Sensu/Uchiwa
+    - added support for IcingaWeb2 expire time
+    - added server encoding detection
+    - updated components
+    - fixed crash when selecting downtime on down host
+    - fixed settings filenames troubles by url-encoding them
+    - fixed pyinstaller onefile issues on macOS
+    - fixed Kerberos issues on macOS
+    - fixed Cinnamon systray/popup issue
+    - Centreon fixes
+    - Checkmk fixes
+    - IcingaWeb2 fixes
+    - Monitos4x fixes
+    - op5Monitor fixes
+    - Sensu fixes
+
+-- Henri Wahl <h.wahl@ifw-dresden.de> Fri, 20 Dec 2019 10:00:00 +0100
+
 nagstamon (3.2.1) stable; urgency=low
   * New upstream
     - fixed macOS system tray icon crash
