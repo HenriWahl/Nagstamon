@@ -454,7 +454,7 @@ def get_distro():
             for property in os_release_file.read_text().splitlines():
                 key, value = property.split('=', 1)
                 os_release_dict[key] = value.strip('"').strip("'")
-            return (os_release_dict['ID'], os_release_dict['VERSION_ID'], os_release_dict['NAME'])
+            return (os_release_dict.get('ID'), os_release_dict.get('VERSION_ID'), os_release_dict.get('NAME'))
         else:
             return False
     else:
