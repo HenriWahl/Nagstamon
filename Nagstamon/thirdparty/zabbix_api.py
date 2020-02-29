@@ -276,7 +276,7 @@ class ZabbixAPI(object):
             jobj = json.loads(reads.decode('utf-8'))
         except ValueError as msg:
             print ("unable to decode. returned string: %s" % reads)
-            sys.exit(-1)
+            raise ZabbixAPIException("Unable to decode answer")
         self.debug(logging.DEBUG, "Response Body: " + str(jobj))
 
         self.id += 1
