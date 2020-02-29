@@ -84,9 +84,12 @@ class ZabbixServer(GenericServer):
 
     def _login(self):
         try:
-            self.zapi = ZabbixAPI(server=self.monitor_url, path="", log_level=self.log_level,
-                                  validate_certs=self.validate_certs)
-            self.zapi.login(self.username, self.password)
+            # create ZabbixAPI if not yet created
+            if self.zapi is None:
+                self.zapi = ZabbixAPI(server=self.monitor_url, path="", log_level=self.log_level, validate_certs=self.validate_certs)
+            # login if not yet logged in, or if login was refused previously
+            if not self.zapi.logged_in():
+                self.zapi.login(self.username, self.password)
         except ZabbixAPIException:
             result, error = self.Error(sys.exc_info())
             return Result(result=result, error=error)
@@ -112,8 +115,7 @@ class ZabbixServer(GenericServer):
         nagitems = {"services": [], "hosts": []}
 
         # Create URLs for the configured filters
-        if self.zapi is None:
-            self._login()
+        self._login()
 
         try:
             # =========================================
@@ -458,8 +460,7 @@ class ZabbixServer(GenericServer):
         for s in all_services:
             triggerids.append(s)
 
-        if self.zapi is None:
-            self._login()
+        self._login()
 
         for triggerid in triggerids:
             events = []
