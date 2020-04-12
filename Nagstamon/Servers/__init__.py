@@ -41,6 +41,7 @@ from Nagstamon.Servers.Monitos3 import Monitos3Server
 from Nagstamon.Servers.Monitos4x import Monitos4xServer
 from Nagstamon.Servers.SnagView3 import SnagViewServer
 from Nagstamon.Servers.Sensu import SensuServer
+from Nagstamon.Servers.Prometheus import PrometheusServer
 
 from Nagstamon.Config import conf
 
@@ -196,9 +197,10 @@ def create_server(server=None):
 
 
 # moved registration process here because of circular dependencies
-for server in (CentreonServer, IcingaServer, IcingaWeb2Server, MultisiteServer, NagiosServer,
+for server in (CentreonServer, IcingaServer, IcingaWeb2Server, MultisiteServer, NagiosSrver,
                Op5MonitorServer, OpsviewServer, ThrukServer, ZabbixServer, SensuServer,
-               LivestatusServer, ZenossServer, Monitos3Server, Monitos4xServer, SnagViewServer):
+               LivestatusServer, ZenossServer, Monitos3Server, Monitos4xServer, SnagViewServer,
+               PrometheusServer):
     register_server(server)
 
 # create servers
