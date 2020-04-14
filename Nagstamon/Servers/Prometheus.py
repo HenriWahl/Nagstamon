@@ -1,7 +1,7 @@
 # encoding: utf-8
 
 # Nagstamon - Nagios status monitor for your desktop
-# Copyright (C) 2008-2014 Henri Wahl <h.wahl@ifw-dresden.de> et al.
+# Copyright (C) 2008-2020 Henri Wahl <h.wahl@ifw-dresden.de> et al.
 #
 # This program is free software; you can redistribute it and/or modify
 # it under the terms of the GNU General Public License as published by
@@ -112,53 +112,18 @@ class PrometheusServer(GenericServer):
             if conf.debug_mode:
                 self.Debug(server=self.get_name(), debug="Fetched JSON: " + pprint.pformat(data))
 
-### Debug Ausgaben nutzen und dann geht's weiter
-
             for alert in data["alerts"]:
                 self.new_hosts[alert["labels"]["job"] = GenericHost()
                 self.new_hosts[alert["labels"]["job"]].name = str(alert["labels"]["job"])
                 self.new_hosts[alert["labels"]["job"]].server = self.name
 
-#                self.new_hosts[alert["labels"]["job"]].status = str(alert["severity"].upper())
-#                self.new_hosts[alert["labels"]["job"]].status_type = str(alert["state_type"])
-#                self.new_hosts[alert["labels"]["job"]].last_check = datetime.fromtimestamp(int(alert["last_check"])).strftime("%Y-%m-%d %H:%M:%S %z")
-#                self.new_hosts[alert["labels"]["job"]].duration = HumanReadableDurationFromSeconds(alert["state_duration"])
-#                self.new_hosts[alert["labels"]["job"]].attempt = alert["current_check_attempt"]+ "/" + alert["max_check_attempts"]
-#                self.new_hosts[alert["labels"]["job"]].status_information = alert["value"].replace("\n", " ")
-
-#                # if host is in downtime add it to known maintained hosts
-#                if alert['downtime'] != "0":
-#                    self.new_hosts[alert["labels"]["job"]].scheduled_downtime = True
-#                #if host.has_key("acknowledged"):
-#                if 'acknowledged' in host:
-#                    self.new_hosts[alert["labels"]["job"]].acknowledged = True
-#                #if host.has_key("flapping"):
-#                if 'flapping' in host:
-#                    self.new_hosts[alert["labels"]["job"]].flapping = True
-
-                #services
                 self.new_hosts[alert["labels"]["job"]].services[alert["labels"]["alertname"]] = PrometheusService()
                 self.new_hosts[alert["labels"]["job"]].services[alert["labels"]["alertname"]].host = str(alert["labels"]["job"])
                 self.new_hosts[alert["labels"]["job"]].services[alert["labels"]["alertname"]].name = services[alert["labels"]["alertname"]]
                 self.new_hosts[alert["labels"]["job"]].services[alert["labels"]["alertname"]].server = self.name
 
-                # states come in lower case from Opsview
                 self.new_hosts[alert["labels"]["job"]].services[alert["labels"]["alertname"]].status = services[alert["severity"]].upper()
-#                self.new_hosts[alert["labels"]["job"]].services[alert["labels"]["alertname"]].status_type = service["state_type"]
-#                self.new_hosts[alert["labels"]["job"]].services[alert["labels"]["alertname"]].last_check = datetime.fromtimestamp(int(service["last_check"])).strftime("%Y-%m-%d %H:%M:%S %z")
-#                self.new_hosts[alert["labels"]["job"]].services[alert["labels"]["alertname"]].duration = HumanReadableDurationFromSeconds(service["state_duration"])
-#                self.new_hosts[alert["labels"]["job"]].services[alert["labels"]["alertname"]].attempt = service["current_check_attempt"]+ "/" + service["max_check_attempts"]
                 self.new_hosts[alert["labels"]["job"]].services[alert["labels"]["alertname"]].status_information = service[alert["value"]].replace("\n", " ")
-#                if service['downtime'] != '0':
-#                    self.new_hosts[alert["labels"]["job"]].services[alert["labels"]["alertname"]].scheduled_downtime = True
-#                #if service.has_key("acknowledged"):
-#                if 'acknowledged' in service:
-#                    self.new_hosts[alert["labels"]["job"]].services[alert["labels"]["alertname"]].acknowledged = True
-#                #f service.has_key("flapping"):
-#                if 'flapping' in service:
-#                    self.new_hosts[alert["labels"]["job"]].services[alert["labels"]["alertname"]].flapping = True
-#                # extra opsview id for service, needed for submitting check results
-#                self.new_hosts[alert["labels"]["job"]].services[alert["labels"]["alertname"]].service_object_id = service["service_object_id"]
 
         except:
             # set checking flag back to False

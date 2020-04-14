@@ -197,7 +197,7 @@ def create_server(server=None):
 
 
 # moved registration process here because of circular dependencies
-for server in (CentreonServer, IcingaServer, IcingaWeb2Server, MultisiteServer, NagiosSrver,
+for server in (CentreonServer, IcingaServer, IcingaWeb2Server, MultisiteServer, NagiosServer,
                Op5MonitorServer, OpsviewServer, ThrukServer, ZabbixServer, SensuServer,
                LivestatusServer, ZenossServer, Monitos3Server, Monitos4xServer, SnagViewServer,
                PrometheusServer):
