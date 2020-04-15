@@ -35,7 +35,9 @@ import copy
 import pprint
 import json
 
-from datetime import datetime, timedelta
+from datetime import datetime, timedelta, timezone
+import dateutil.parser
+
 from ast import literal_eval
 
 from Nagstamon.Config import conf
@@ -45,6 +47,12 @@ from Nagstamon.Objects import (GenericHost,
 from Nagstamon.Servers.Generic import GenericServer
 from Nagstamon.Helpers import (HumanReadableDurationFromSeconds,
                                webbrowser_open)
+
+class PrometheusService(GenericService):
+    """
+	    add Prometheus specific service property to generic service class
+    """
+    service_object_id = ""
 
 
 class PrometheusServer(GenericServer):
@@ -87,6 +95,26 @@ class PrometheusServer(GenericServer):
         return str(start.strftime("%Y-%m-%d %H:%M:%S")), str(end.strftime("%Y-%m-%d %H:%M:%S"))
 
 
+    def _get_duration(self, timestring):
+        """
+            calculates the duration (delta) from Prometheus' activeAt (ISO8601 format) until now
+            an returns a human friendly string
+        """
+        time_object = dateutil.parser.parse(timestring)
+        duration = datetime.now(timezone.utc) - time_object
+        h = int(duration.seconds / 3600)
+        m = int(duration.seconds % 3600 / 60)
+        s = int(duration.seconds % 60)
+        if duration.days > 0:
+            return "%sd %sh %02dm %02ds" % (duration.days, h, m, s)
+        elif h > 0:
+            return "%sh %02dm %02ds" % (h, m, s)
+        elif m > 0:
+            return "%02dm %02ds" % (m, s)
+        else:
+            return "%02ds" % (s)
+
+
     def _set_downtime(self, host, service, author, comment, fixed, start_time, end_time, hours, minutes):
         """
 	        to be implemented in a future release
@@ -112,18 +140,37 @@ class PrometheusServer(GenericServer):
             if conf.debug_mode:
                 self.Debug(server=self.get_name(), debug="Fetched JSON: " + pprint.pformat(data))
 
-            for alert in data["alerts"]:
-                self.new_hosts[alert["labels"]["job"] = GenericHost()
-                self.new_hosts[alert["labels"]["job"]].name = str(alert["labels"]["job"])
-                self.new_hosts[alert["labels"]["job"]].server = self.name
+            for alert in data["data"]["alerts"]:
+                if conf.debug_mode:
+                    self.Debug(server=self.get_name(), debug="Processing Alert: " + pprint.pformat(alert))
 
-                self.new_hosts[alert["labels"]["job"]].services[alert["labels"]["alertname"]] = PrometheusService()
-                self.new_hosts[alert["labels"]["job"]].services[alert["labels"]["alertname"]].host = str(alert["labels"]["job"])
-                self.new_hosts[alert["labels"]["job"]].services[alert["labels"]["alertname"]].name = services[alert["labels"]["alertname"]]
-                self.new_hosts[alert["labels"]["job"]].services[alert["labels"]["alertname"]].server = self.name
+                if alert["labels"]["severity"] != "none":
+                    if "pod_name" in alert["labels"]:
+                        hostname = alert["labels"]["pod_name"]
+                    elif "namespace" in alert["labels"]:
+                        hostname = alert["labels"]["namespace"]
+                    else:
+                        hostname = "unknown"
 
-                self.new_hosts[alert["labels"]["job"]].services[alert["labels"]["alertname"]].status = services[alert["severity"]].upper()
-                self.new_hosts[alert["labels"]["job"]].services[alert["labels"]["alertname"]].status_information = service[alert["value"]].replace("\n", " ")
+                    self.new_hosts[hostname] = GenericHost()
+                    self.new_hosts[hostname].name = str(hostname)
+                    self.new_hosts[hostname].server = self.name
+
+                    if "alertname" in alert["labels"]:
+                        servicename = alert["labels"]["alertname"]
+                    else:
+                        servicename = "unknown"
+
+                    self.new_hosts[hostname].services[servicename] = PrometheusService()
+                    self.new_hosts[hostname].services[servicename].host = str(hostname)
+                    self.new_hosts[hostname].services[servicename].name = servicename
+                    self.new_hosts[hostname].services[servicename].server = self.name
+
+                    self.new_hosts[hostname].services[servicename].status = alert["labels"]["severity"].upper()
+                    self.new_hosts[hostname].services[servicename].last_check = "n/a"
+                    self.new_hosts[hostname].services[servicename].attempt = alert["state"].upper()
+                    self.new_hosts[hostname].services[servicename].duration = str(self._get_duration(alert["activeAt"]))
+                    self.new_hosts[hostname].services[servicename].status_information = alert["annotations"]["message"].replace("\n", " ")
 
         except:
             # set checking flag back to False
