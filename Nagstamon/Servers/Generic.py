@@ -297,7 +297,7 @@ class GenericServer(object):
                 host_port = ''.join(proxy_address_parts[1:])
 
                 # use only valid schemes
-                if scheme.lower() in ('http:', 'https:'):
+                if scheme.lower() in ('http:', 'https:', 'socks5:', 'socks5h:'):
                     # merge proxy URL
                     proxy_url = '{0}//{1}{2}'.format(scheme, user_pass, host_port)
                     # fill session.proxies for both protocols
