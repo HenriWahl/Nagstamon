@@ -28,7 +28,17 @@
 # * Currently we can only fetch and display alerts from Prometheus.
 #   In the future it would be great to be able to interract with
 #   alertmanager, so that managing alerts (e.g. silencing) is possible
-
+#
+# Release Notes:
+#
+#   [1.0.0] - 2020-04-20:
+#     * added:
+#         Inital version
+#
+#   [1.0.1] - 2020-05-13:
+#     * fixed:
+#         Nagstamon crashes due to missing url handling
+#
 import sys
 import urllib.request, urllib.parse, urllib.error
 import copy
@@ -63,7 +73,12 @@ class PrometheusServer(GenericServer):
 
     # Prometheus actions are limited to visiting the monitor for now
     MENU_ACTIONS = ['Monitor']
-    BROWSER_URLS= {'monitor': '$MONITOR$/alerts'}
+    BROWSER_URLS= {
+        'monitor':  '$MONITOR$/alerts',
+        'hosts':    '$MONITOR$/targets',
+        'services': '$MONITOR$/service-discovery',
+        'history':  '$MONITOR$/graph'
+    }
 
 
     def init_HTTP(self):
@@ -184,3 +199,26 @@ class PrometheusServer(GenericServer):
 
     def open_monitor_webpage(self, host, service):
         webbrowser_open('%s' % (self.monitor_url))
+
+    def open_monitor(self, host, service=''):
+        '''
+            open monitor from tablewidget context menu
+        '''
+
+        if conf.debug_mode:
+            self.Debug(server=self.get_name(), host=host, service=service,
+                       debug='Open host/service monitor web page ' +
+                             self.monitor_url + '/graph?g0.range_input=1h&g0.expr=' +
+                             urllib.parse.quote('ALERTS{alertname="' + service + '",pod_name="' + host + '"}', safe='') + '&g0.tab=1')
+        webbrowser_open(self.monitor_url + '/graph?g0.range_input=1h&g0.expr=' +
+                        urllib.parse.quote('ALERTS{alertname="' + service + '",pod_name="' + host + '"}', safe='') + '&g0.tab=1')
+
+    def open_monitor_webpage(self):
+        '''
+            open monitor from systray/toparea context menu
+        '''
+
+        if conf.debug_mode:
+            self.Debug(server=self.get_name(),
+                       debug='Open monitor web page ' + self.monitor_url)
+        webbrowser_open(self.monitor_url)
