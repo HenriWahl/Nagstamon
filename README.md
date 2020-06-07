@@ -25,5 +25,6 @@ Successfully tested monitors include:
  - Zenoss – experimental
  - monitos 3 - experimental
  - SNAG-View3 - experimental
+ - Prometheus - experimental
 
 See https://nagstamon.ifw-dresden.de for further information.

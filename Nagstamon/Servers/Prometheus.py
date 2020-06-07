@@ -31,13 +31,18 @@
 #
 # Release Notes:
 #
-#   [1.0.0] - 2020-04-20:
-#     * added:
-#         Inital version
+#   [1.0.2] - 2020-06-07:
+#     * fixed:
+#         Missing message field in alert stopped integration from working
+#         Alerts with an unknown severity were not shown
 #
 #   [1.0.1] - 2020-05-13:
 #     * fixed:
 #         Nagstamon crashes due to missing url handling
+#
+#   [1.0.0] - 2020-04-20:
+#     * added:
+#         Inital version
 #
 import sys
 import urllib.request, urllib.parse, urllib.error
@@ -181,11 +186,19 @@ class PrometheusServer(GenericServer):
                     self.new_hosts[hostname].services[servicename].name = servicename
                     self.new_hosts[hostname].services[servicename].server = self.name
 
-                    self.new_hosts[hostname].services[servicename].status = alert["labels"]["severity"].upper()
+                    if ((alert["labels"]["severity"].upper() == "CRITICAL") or (alert["labels"]["severity"].upper() == "WARNING")):
+                        self.new_hosts[hostname].services[servicename].status = alert["labels"]["severity"].upper()
+                    else:
+                        self.new_hosts[hostname].services[servicename].status = "UNKNOWN"
+
                     self.new_hosts[hostname].services[servicename].last_check = "n/a"
                     self.new_hosts[hostname].services[servicename].attempt = alert["state"].upper()
                     self.new_hosts[hostname].services[servicename].duration = str(self._get_duration(alert["activeAt"]))
-                    self.new_hosts[hostname].services[servicename].status_information = alert["annotations"]["message"].replace("\n", " ")
+
+                    try:
+                        self.new_hosts[hostname].services[servicename].status_information = alert["annotations"]["message"].replace("\n", " ")
+                    except KeyError:
+                        self.new_hosts[hostname].services[servicename].status_information = ""
 
         except:
             # set checking flag back to False
