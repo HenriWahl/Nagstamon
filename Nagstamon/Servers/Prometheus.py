@@ -31,6 +31,12 @@
 #
 # Release Notes:
 #
+#   [1.1.0] - 2020-06-09:
+#     * fixed:
+#         Some more errors with unset fields from Prometheus
+#     * added:
+#         Feature to let users decide what labels gets mapped to servicename and hostname
+#
 #   [1.0.2] - 2020-06-07:
 #     * fixed:
 #         Missing message field in alert stopped integration from working
@@ -46,22 +52,18 @@
 #
 import sys
 import urllib.request, urllib.parse, urllib.error
-import copy
 import pprint
 import json
 
 from datetime import datetime, timedelta, timezone
 import dateutil.parser
 
-from ast import literal_eval
-
 from Nagstamon.Config import conf
 from Nagstamon.Objects import (GenericHost,
                                GenericService,
                                Result)
 from Nagstamon.Servers.Generic import GenericServer
-from Nagstamon.Helpers import (HumanReadableDurationFromSeconds,
-                               webbrowser_open)
+from Nagstamon.Helpers import webbrowser_open
 
 class PrometheusService(GenericService):
     """
@@ -78,7 +80,7 @@ class PrometheusServer(GenericServer):
 
     # Prometheus actions are limited to visiting the monitor for now
     MENU_ACTIONS = ['Monitor']
-    BROWSER_URLS= {
+    BROWSER_URLS = {
         'monitor':  '$MONITOR$/alerts',
         'hosts':    '$MONITOR$/targets',
         'services': '$MONITOR$/service-discovery',
@@ -160,45 +162,68 @@ class PrometheusServer(GenericServer):
             if conf.debug_mode:
                 self.Debug(server=self.get_name(), debug="Fetched JSON: " + pprint.pformat(data))
 
+            # TODO: fetch these strings from GUI
+            map_to_hostname = "pod_name,namespace"
+            map_to_servicename = "alertname"
+
             for alert in data["data"]["alerts"]:
                 if conf.debug_mode:
                     self.Debug(server=self.get_name(), debug="Processing Alert: " + pprint.pformat(alert))
 
-                if alert["labels"]["severity"] != "none":
-                    if "pod_name" in alert["labels"]:
-                        hostname = alert["labels"]["pod_name"]
-                    elif "namespace" in alert["labels"]:
-                        hostname = alert["labels"]["namespace"]
-                    else:
-                        hostname = "unknown"
+                # try to map hostname
+                try:
+                    hostname = "unknown"
+                    for hostkey in map_to_hostname.split(','):
+                        if hostkey in alert["labels"]:
+                            hostname = alert["labels"][hostkey]
+                            break
+                except KeyError:
+                    hostname = "unknown"
 
-                    self.new_hosts[hostname] = GenericHost()
-                    self.new_hosts[hostname].name = str(hostname)
-                    self.new_hosts[hostname].server = self.name
+                # try to map servicename
+                try:
+                    servicename = "unknown"
+                    for servicekey in map_to_servicename.split(','):
+                        if servicekey in alert["labels"]:
+                            servicename = alert["labels"][servicekey]
+                            break
+                except KeyError:
+                    hostname = "unknown"
 
-                    if "alertname" in alert["labels"]:
-                        servicename = alert["labels"]["alertname"]
-                    else:
-                        servicename = "unknown"
+                self.new_hosts[hostname] = GenericHost()
+                self.new_hosts[hostname].name = str(hostname)
+                self.new_hosts[hostname].server = self.name
+                self.new_hosts[hostname].services[servicename] = PrometheusService()
+                self.new_hosts[hostname].services[servicename].host = str(hostname)
+                self.new_hosts[hostname].services[servicename].name = servicename
+                self.new_hosts[hostname].services[servicename].server = self.name
 
-                    self.new_hosts[hostname].services[servicename] = PrometheusService()
-                    self.new_hosts[hostname].services[servicename].host = str(hostname)
-                    self.new_hosts[hostname].services[servicename].name = servicename
-                    self.new_hosts[hostname].services[servicename].server = self.name
-
-                    if ((alert["labels"]["severity"].upper() == "CRITICAL") or (alert["labels"]["severity"].upper() == "WARNING")):
+                try:
+                    if ((alert["labels"]["severity"].upper() == "CRITICAL") or
+                            (alert["labels"]["severity"].upper() == "WARNING")):
                         self.new_hosts[hostname].services[servicename].status = alert["labels"]["severity"].upper()
                     else:
                         self.new_hosts[hostname].services[servicename].status = "UNKNOWN"
+                except KeyError:
+                    self.new_hosts[hostname].services[servicename].status = "UNKNOWN"
 
-                    self.new_hosts[hostname].services[servicename].last_check = "n/a"
+                self.new_hosts[hostname].services[servicename].last_check = "n/a"
+                try:
                     self.new_hosts[hostname].services[servicename].attempt = alert["state"].upper()
-                    self.new_hosts[hostname].services[servicename].duration = str(self._get_duration(alert["activeAt"]))
+                except KeyError:
+                    self.new_hosts[hostname].services[servicename].attempt = "UNKNOWN"
 
-                    try:
-                        self.new_hosts[hostname].services[servicename].status_information = alert["annotations"]["message"].replace("\n", " ")
-                    except KeyError:
-                        self.new_hosts[hostname].services[servicename].status_information = ""
+                try:
+                    self.new_hosts[hostname].services[servicename].duration = \
+                        str(self._get_duration(alert["activeAt"]))
+                except KeyError:
+                    self.new_hosts[hostname].services[servicename].duration = "UNKNOWN"
+
+                try:
+                    self.new_hosts[hostname].services[servicename].status_information = \
+                        alert["annotations"]["message"].replace("\n", " ")
+                except KeyError:
+                    self.new_hosts[hostname].services[servicename].status_information = ""
 
         except:
             # set checking flag back to False
@@ -210,9 +235,6 @@ class PrometheusServer(GenericServer):
         return Result()
 
 
-    def open_monitor_webpage(self, host, service):
-        webbrowser_open('%s' % (self.monitor_url))
-
     def open_monitor(self, host, service=''):
         '''
             open monitor from tablewidget context menu
@@ -221,10 +243,12 @@ class PrometheusServer(GenericServer):
         if conf.debug_mode:
             self.Debug(server=self.get_name(), host=host, service=service,
                        debug='Open host/service monitor web page ' +
-                             self.monitor_url + '/graph?g0.range_input=1h&g0.expr=' +
-                             urllib.parse.quote('ALERTS{alertname="' + service + '",pod_name="' + host + '"}', safe='') + '&g0.tab=1')
+                       self.monitor_url + '/graph?g0.range_input=1h&g0.expr=' +
+                       urllib.parse.quote('ALERTS{alertname="' + service + '",pod_name="' +
+                       host + '"}', safe='') + '&g0.tab=1')
         webbrowser_open(self.monitor_url + '/graph?g0.range_input=1h&g0.expr=' +
-                        urllib.parse.quote('ALERTS{alertname="' + service + '",pod_name="' + host + '"}', safe='') + '&g0.tab=1')
+                        urllib.parse.quote('ALERTS{alertname="' + service + '",pod_name="' +
+                        host + '"}', safe='') + '&g0.tab=1')
 
     def open_monitor_webpage(self):
         '''
