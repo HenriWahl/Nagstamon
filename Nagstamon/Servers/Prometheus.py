@@ -31,6 +31,13 @@
 #
 # Release Notes:
 #
+#   [1.1.0] - 2020-06-11:
+#     * fixed:
+#         Some more errors with unset fields from Prometheus
+#     * added:
+#         Backend feature preparation to be able to configure which labels get mapped to servicename and hostname...
+#                                                ...and which annotations get mapped to status_information
+#
 #   [1.0.2] - 2020-06-07:
 #     * fixed:
 #         Missing message field in alert stopped integration from working
@@ -48,22 +55,18 @@ import sys
 import urllib.request
 import urllib.parse
 import urllib.error
-import copy
 import pprint
 import json
 
 from datetime import datetime, timedelta, timezone
 import dateutil.parser
 
-from ast import literal_eval
-
 from Nagstamon.Config import conf
 from Nagstamon.Objects import (GenericHost,
                                GenericService,
                                Result)
 from Nagstamon.Servers.Generic import GenericServer
-from Nagstamon.Helpers import (HumanReadableDurationFromSeconds,
-                               webbrowser_open)
+from Nagstamon.Helpers import webbrowser_open
 
 
 class PrometheusService(GenericService):
@@ -162,6 +165,11 @@ class PrometheusServer(GenericServer):
                 self.Debug(server=self.get_name(),
                            debug="Fetched JSON: " + pprint.pformat(data))
 
+            # TODO: fetch these strings from GUI
+            map_to_hostname = "pod_name,namespace,instance"
+            map_to_servicename = "alertname"
+            map_to_status_information = "message,summary,description"
+
             for alert in data["data"]["alerts"]:
                 if conf.debug_mode:
                     self.Debug(
@@ -176,15 +184,17 @@ class PrometheusServer(GenericServer):
                 if severity == "NONE":
                     continue
 
-                if "pod_name" in labels:
-                    hostname = labels["pod_name"]
-                elif "namespace" in labels:
-                    hostname = labels["namespace"]
-                elif "instance" in labels:
-                    hostname = labels["instance"]
-                else:
-                    hostname = "unknown"
-                servicename = labels.get("alertname", "unknown")
+                hostname = "unknown"
+                for host_label in map_to_hostname.split(','):
+                    if host_label in labels:
+                        hostname = labels.get(host_label)
+                        break
+
+                servicename = "unknown"
+                for service_label in map_to_servicename.split(','):
+                    if service_label in labels:
+                        servicename = labels.get(service_label)
+                        break
 
                 service = PrometheusService()
                 service.host = str(hostname)
@@ -197,12 +207,10 @@ class PrometheusServer(GenericServer):
 
                 annotations = alert.get("annotations", {})
                 status_information = ""
-                if "message" in annotations:
-                    status_information = annotations["message"]
-                if "summary" in annotations:
-                    status_information = annotations["summary"]
-                if "descriptions" in annotations:
-                    status_information = annotations["description"]
+                for status_information_label in map_to_status_information.split(','):
+                    if status_information_label in annotations:
+                        status_information = annotations.get(status_information_label)
+                        break
                 service.status_information = status_information
 
                 if hostname not in self.new_hosts:
