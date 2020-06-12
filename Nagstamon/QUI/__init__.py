@@ -5747,7 +5747,13 @@ class Dialog_Server(Dialog):
             self.ui.label_service_filter: ['op5Monitor'],
             self.ui.label_host_filter: ['op5Monitor'],
             self.ui.label_monitor_site: ['Sensu'],
-            self.ui.input_lineedit_monitor_site: ['Sensu']}
+            self.ui.input_lineedit_monitor_site: ['Sensu'],
+            self.ui.label_map_to_hostname: ['Prometheus'],
+            self.ui.input_lineedit_map_to_hostname: ['Prometheus'],
+            self.ui.label_map_to_servicename: ['Prometheus'],
+            self.ui.input_lineedit_map_to_servicename: ['Prometheus'],
+            self.ui.label_map_to_status_information: ['Prometheus'],
+            self.ui.input_lineedit_map_to_status_information: ['Prometheus']}
 
         # to be used when selecting authentication method Kerberos
         self.AUTHENTICATION_WIDGETS = [

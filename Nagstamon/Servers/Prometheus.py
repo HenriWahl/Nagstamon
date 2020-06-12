@@ -31,12 +31,12 @@
 #
 # Release Notes:
 #
-#   [1.1.0] - 2020-06-11:
+#   [1.1.0] - 2020-06-12:
 #     * fixed:
 #         Some more errors with unset fields from Prometheus
 #     * added:
-#         Backend feature preparation to be able to configure which labels get mapped to servicename and hostname...
-#                                                ...and which annotations get mapped to status_information
+#         Feature for configuring which labels get mapped to servicename and hostname...
+#                          ...and which annotations get mapped to status_information
 #
 #   [1.0.2] - 2020-06-07:
 #     * fixed:
@@ -165,11 +165,6 @@ class PrometheusServer(GenericServer):
                 self.Debug(server=self.get_name(),
                            debug="Fetched JSON: " + pprint.pformat(data))
 
-            # TODO: fetch these strings from GUI
-            map_to_hostname = "pod_name,namespace,instance"
-            map_to_servicename = "alertname"
-            map_to_status_information = "message,summary,description"
-
             for alert in data["data"]["alerts"]:
                 if conf.debug_mode:
                     self.Debug(
@@ -185,13 +180,13 @@ class PrometheusServer(GenericServer):
                     continue
 
                 hostname = "unknown"
-                for host_label in map_to_hostname.split(','):
+                for host_label in self.map_to_hostname.split(','):
                     if host_label in labels:
                         hostname = labels.get(host_label)
                         break
 
                 servicename = "unknown"
-                for service_label in map_to_servicename.split(','):
+                for service_label in self.map_to_servicename.split(','):
                     if service_label in labels:
                         servicename = labels.get(service_label)
                         break
@@ -207,7 +202,7 @@ class PrometheusServer(GenericServer):
 
                 annotations = alert.get("annotations", {})
                 status_information = ""
-                for status_information_label in map_to_status_information.split(','):
+                for status_information_label in self.map_to_status_information.split(','):
                     if status_information_label in annotations:
                         status_information = annotations.get(status_information_label)
                         break

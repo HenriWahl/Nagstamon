@@ -952,6 +952,10 @@ class Server(object):
         # Zabbix "Item Description" as "Service Name"
         self.use_description_name_service = False
 
+        # Prometheus mappings
+        self.map_to_hostname = "pod_name,namespace,instance"
+        self.map_to_servicename = "alertname"
+        self.map_to_status_information = "message,summary,description"
 
 class Action(object):
     """
