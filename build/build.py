@@ -212,8 +212,8 @@ def rpmmain():
 
 DISTS = {
     'debian': debmain,
-    'Ubuntu': debmain,
-    'LinuxMint': debmain,
+    'ubuntu': debmain,
+    'linuxmint': debmain,
     'fedora': rpmmain
 }
 
@@ -223,7 +223,6 @@ if __name__ == '__main__':
     elif platform.system() == 'Darwin':
         macmain()
     else:
-        #dist = platform.dist()[0]
         dist = get_distro()[0]
         if dist in DISTS:
             DISTS[dist]()

@@ -454,11 +454,13 @@ def get_distro():
             for property in os_release_file.read_text().splitlines():
                 key, value = property.split('=', 1)
                 os_release_dict[key] = value.strip('"').strip("'")
-            return (os_release_dict.get('ID'), os_release_dict.get('VERSION_ID'), os_release_dict.get('NAME'))
+            return (os_release_dict.get('ID').lower(),
+                    os_release_dict.get('VERSION_ID').lower(),
+                    os_release_dict.get('NAME').lower())
         else:
             return False
     else:
-        return platform.dist()
+        return platform.dist().lower()
 
 
     # depending on column different functions have to be used
