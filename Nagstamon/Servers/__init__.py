@@ -181,6 +181,11 @@ def create_server(server=None):
     # Zabbix
     new_server.use_description_name_service = server.use_description_name_service
 
+    # Prometheus
+    new_server.map_to_hostname = server.map_to_hostname
+    new_server.map_to_servicename = server.map_to_servicename
+    new_server.map_to_status_information = server.map_to_status_information
+
     # server's individual preparations for HTTP connections (for example cookie creation)
     # is done in GetStatus() method of monitor
     if server.enabled is True:
