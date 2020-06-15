@@ -460,10 +460,12 @@ def get_distro():
         else:
             return False
     else:
-        return platform.dist().lower()
+        # fix for non-working build on Debian<10
+        dist_name, dist_version, dist_id = platform.dist()
+        return dist_name.lower(), dist_version, dist_id
 
 
-    # depending on column different functions have to be used
+# depending on column different functions have to be used
 # 0 + 1 are column "Hosts", 1 + 2 are column "Service" due to extra font flag pictograms
 SORT_COLUMNS_FUNCTIONS = {0: compare_host,
         1: compare_host,
