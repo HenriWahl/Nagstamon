@@ -230,7 +230,8 @@ class IcingaWeb2Server(GenericServer):
                                 self.new_hosts[host_name].attempt = "HARD"
        
                         # extra duration needed for calculation
-                        duration = datetime.datetime.now() - datetime.datetime.fromtimestamp(int(h['host_last_state_change']))
+                        last_change = h['host_last_state_change'] if h['host_last_state_change'] is not None else 0
+                        duration = datetime.datetime.now() - datetime.datetime.fromtimestamp(int(last_change))
                         self.new_hosts[host_name].duration = strfdelta(duration, '{days}d {hours}h {minutes}m {seconds}s')
                         
                     del h, host_name
@@ -328,7 +329,8 @@ class IcingaWeb2Server(GenericServer):
                                 self.new_hosts[host_name].services[service_name].attempt = "HARD"
                         
                         # extra duration needed for calculation
-                        duration = datetime.datetime.now() - datetime.datetime.fromtimestamp(int(s['service_last_state_change']))
+                        last_change = s['service_last_state_change'] if s['service_last_state_change'] is not None else 0
+                        duration = datetime.datetime.now() - datetime.datetime.fromtimestamp(int(last_change))
                         self.new_hosts[host_name].services[service_name].duration = strfdelta(duration, '{days}d {hours}h {minutes}m {seconds}s')                      
                         
                     del s, host_name, service_name
