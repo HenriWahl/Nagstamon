@@ -4199,7 +4199,6 @@ class TreeView(QTreeView):
                          'services_flags_column_needed': False, }
 
             # only refresh table if there is no popup opened
-            print(APP.activePopupWidget())
             if not APP.activePopupWidget():
                 # avoid race condition when waiting for password dialog
                 if len(QBRUSHES[0]) > 0:
