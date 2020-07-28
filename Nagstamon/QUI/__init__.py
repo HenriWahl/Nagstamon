@@ -1579,7 +1579,8 @@ class StatusWindow(QWidget):
                     else:
                         vbox.button_fix_tls_error.hide()
 
-                if not conf.fullscreen and not conf.windowed:
+                if not conf.fullscreen and \
+                   not conf.windowed:
                     # theory...
                     width, height, x, y = self.calculate_size()
                     # ...and practice
@@ -1658,7 +1659,9 @@ class StatusWindow(QWidget):
         """
             redraw window content, to be effective only when window is shown
         """
-        if self.is_shown or conf.fullscreen or (conf.windowed and self.is_shown):
+        if self.is_shown or \
+           conf.fullscreen or \
+           (conf.windowed and self.is_shown):
             self.show_window()
 
     @pyqtSlot()
@@ -4195,50 +4198,53 @@ class TreeView(QTreeView):
             self.info = {'hosts_flags_column_needed': False,
                          'services_flags_column_needed': False, }
 
-            # avoid race condition when waiting for password dialog
-            if len(QBRUSHES[0]) > 0:
-                # cruising the whole nagitems structure
-                for category in ('hosts', 'services'):
-                    for state in self.server.nagitems_filtered[category].values():
-                        for item in state:
-                            self.data_array.append(list(item.get_columns(HEADERS)))
+            # only refresh table if there is no popup opened
+            print(APP.activePopupWidget())
+            if not APP.activePopupWidget():
+                # avoid race condition when waiting for password dialog
+                if len(QBRUSHES[0]) > 0:
+                    # cruising the whole nagitems structure
+                    for category in ('hosts', 'services'):
+                        for state in self.server.nagitems_filtered[category].values():
+                            for item in state:
+                                self.data_array.append(list(item.get_columns(HEADERS)))
 
-                            # hash for freshness comparison
-                            hash = item.get_hash()
+                                # hash for freshness comparison
+                                hash = item.get_hash()
 
-                            if item.is_host():
-                                if hash in self.server.events_history and \
-                                        self.server.events_history[hash] is True:
-                                    # second item in las data_array line is host flags
-                                    self.data_array[-1][1] += 'N'
-                            else:
-                                if hash in self.server.events_history and \
-                                        self.server.events_history[hash] is True:
-                                    # fourth item in las data_array line is service flags
-                                    self.data_array[-1][3] += 'N'
-                            # add text color as QBrush from status
-                            self.data_array[-1].append(QBRUSHES[len(self.data_array) % 2][COLORS[item.status] + 'text'])
-                            # add background color as QBrush from status
-                            self.data_array[-1].append(
-                                QBRUSHES[len(self.data_array) % 2][COLORS[item.status] + 'background'])
-                            # add text color name for sorting data
-                            self.data_array[-1].append(COLORS[item.status] + 'text')
-                            # add background color name for sorting data
-                            self.data_array[-1].append(COLORS[item.status] + 'background')
+                                if item.is_host():
+                                    if hash in self.server.events_history and \
+                                            self.server.events_history[hash] is True:
+                                        # second item in las data_array line is host flags
+                                        self.data_array[-1][1] += 'N'
+                                else:
+                                    if hash in self.server.events_history and \
+                                            self.server.events_history[hash] is True:
+                                        # fourth item in las data_array line is service flags
+                                        self.data_array[-1][3] += 'N'
+                                # add text color as QBrush from status
+                                self.data_array[-1].append(QBRUSHES[len(self.data_array) % 2][COLORS[item.status] + 'text'])
+                                # add background color as QBrush from status
+                                self.data_array[-1].append(
+                                    QBRUSHES[len(self.data_array) % 2][COLORS[item.status] + 'background'])
+                                # add text color name for sorting data
+                                self.data_array[-1].append(COLORS[item.status] + 'text')
+                                # add background color name for sorting data
+                                self.data_array[-1].append(COLORS[item.status] + 'background')
 
-                            # check if hosts and services flags should be shown
-                            if self.data_array[-1][1] != '':
-                                self.info['hosts_flags_column_needed'] = True
-                            if self.data_array[-1][3] != '':
-                                self.info['services_flags_column_needed'] = True
+                                # check if hosts and services flags should be shown
+                                if self.data_array[-1][1] != '':
+                                    self.info['hosts_flags_column_needed'] = True
+                                if self.data_array[-1][3] != '':
+                                    self.info['services_flags_column_needed'] = True
 
-                            self.data_array[-1].append('X')
+                                self.data_array[-1].append('X')
 
-            # sort data before it gets transmitted to treeview model
-            self.sort_data_array(self.sort_column, self.sort_order, False)
+                # sort data before it gets transmitted to treeview model
+                self.sort_data_array(self.sort_column, self.sort_order, False)
 
-            # give sorted data to model
-            self.worker_data_array_filled.emit(self.data_array, self.info)
+                # give sorted data to model
+                self.worker_data_array_filled.emit(self.data_array, self.info)
 
         @pyqtSlot(int, int, bool)
         def sort_data_array(self, sort_column, sort_order, header_clicked=False):
