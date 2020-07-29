@@ -1,0 +1,11 @@
+beautifulsoup4
+keyring==10.5.1
+lxml
+psutil
+pypiwin32
+pyqt5==5.13.2
+pysocks
+python-dateutil
+requests
+requests-kerberos
+setuptools==44.1.1
