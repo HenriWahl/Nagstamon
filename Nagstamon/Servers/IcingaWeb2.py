@@ -230,10 +230,12 @@ class IcingaWeb2Server(GenericServer):
                                 self.new_hosts[host_name].attempt = "HARD"
        
                         # extra duration needed for calculation
-                        last_change = h['host_last_state_change'] if h['host_last_state_change'] is not None else 0
-                        duration = datetime.datetime.now() - datetime.datetime.fromtimestamp(int(last_change))
-                        self.new_hosts[host_name].duration = strfdelta(duration, '{days}d {hours}h {minutes}m {seconds}s')
-                        
+                        if h['host_last_state_change'] is not None:
+                            last_change = h['host_last_state_change'] if h['host_last_state_change'] is not None else 0
+                            duration = datetime.datetime.now() - datetime.datetime.fromtimestamp(int(last_change))
+                            self.new_hosts[host_name].duration = strfdelta(duration,'{days}d {hours}h {minutes}m {seconds}s')
+                        else:
+                            self.new_hosts[host_name].duration = 'n/a'
                     del h, host_name
         except:
             import traceback
@@ -287,16 +289,7 @@ class IcingaWeb2Server(GenericServer):
                         # acknowledge needs host_description and no display name
                         self.new_hosts[host_name].real_name = s['host_name']
 
-                    #if self.use_display_name_host == False:
-                    #    # legacy Icinga adjustments
-                    #    if 'service_description' in s: service_name = s['service_description']
-                    #    elif 'description' in s: service_name = s['description']
-                    #    elif 'service' in s: service_name = s['service']
-                    #else:
-                    #    service_name = s['service_display_name']
-                    # regarding to https://github.com/HenriWahl/Nagstamon/issues/400 Icinga2 needs no legacy adjustments
                     service_name = s['service_display_name']
-
 
                     # if a service does not exist create its object
                     if not service_name in self.new_hosts[host_name].services:
@@ -329,10 +322,13 @@ class IcingaWeb2Server(GenericServer):
                                 self.new_hosts[host_name].services[service_name].attempt = "HARD"
                         
                         # extra duration needed for calculation
-                        last_change = s['service_last_state_change'] if s['service_last_state_change'] is not None else 0
-                        duration = datetime.datetime.now() - datetime.datetime.fromtimestamp(int(last_change))
-                        self.new_hosts[host_name].services[service_name].duration = strfdelta(duration, '{days}d {hours}h {minutes}m {seconds}s')                      
-                        
+                        if s['service_last_state_change'] is not None:
+                            last_change = s['service_last_state_change'] if s['service_last_state_change'] is not None else 0
+                            duration = datetime.datetime.now() - datetime.datetime.fromtimestamp(int(last_change))
+                            self.new_hosts[host_name].services[service_name].duration = strfdelta(duration, '{days}d {hours}h {minutes}m {seconds}s')
+                        else:
+                            self.new_hosts[host_name].services[service_name].duration = 'n/a'
+
                     del s, host_name, service_name
         except:
 
