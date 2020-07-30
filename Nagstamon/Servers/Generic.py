@@ -182,6 +182,9 @@ class GenericServer(object):
         # flag which tells GUI if there is an TLS problem
         self.tls_error = False
 
+        # counter for login attempts - have to be threaten differently by every monitoring server type
+        self.login_count = 0
+
         # to handle Icinga versions this information is necessary, might be of future use for others too
         self.version = ''
 
