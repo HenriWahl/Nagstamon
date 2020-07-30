@@ -6637,6 +6637,7 @@ class Dialog_Authentication(Dialog):
 
         self.server.username = self.ui.input_lineedit_username.text()
         self.server.password = self.ui.input_lineedit_password.text()
+        self.server.refresh_authentication = False
 
         # store password if it should be saved
         if self.ui.input_checkbox_save_password.isChecked():

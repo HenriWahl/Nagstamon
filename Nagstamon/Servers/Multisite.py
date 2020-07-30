@@ -116,7 +116,7 @@ class MultisiteServer(GenericServer):
                 'PEND':    'PENDING',
             }
 
-        if self.CookieAuth:
+        if self.CookieAuth and not self.refresh_authentication:
             # get cookie to access Checkmk web interface
             if 'cookies' in dir(self.session):
                 if len(self.session.cookies) == 0:
@@ -144,13 +144,12 @@ class MultisiteServer(GenericServer):
                     return True
         return False
 
-
     def _get_url(self, url):
         result = self.FetchURL(url, 'raw')
         content, error, status_code = result.result, result.error, result.status_code
 
         if error != '' or status_code >= 400:
-            raise MultisiteError(True, Result(result=content, 
+            raise MultisiteError(True, Result(result=content,
                                               error=error,
                                               status_code=status_code))
 
@@ -163,7 +162,7 @@ class MultisiteServer(GenericServer):
             raise MultisiteError(False, Result(result='\n'.join(c[1:]),
                                                error=c[0],
                                                status_code=status_code))
-            
+
         elif content.startswith('ERROR:'):
             raise MultisiteError(True, Result(result=content,
                                               error=content,
@@ -175,7 +174,7 @@ class MultisiteServer(GenericServer):
                 self.refresh_authentication = True
                 return ''
 
-       # looks like cookieauth
+        # looks like cookieauth
         elif content.startswith('<'):
             self.CookieAuth = True
             # if first attempt login and then try to get data again
@@ -186,8 +185,12 @@ class MultisiteServer(GenericServer):
                 if content.startswith('<'):
                     return ''
 
-        return eval(content)
+        # if finally still some <HTML> is sent this looks like a new login due to password change
+        if content.startswith('<'):
+            self.refresh_authentication = True
+            return ''
 
+        return eval(content)
 
     def _get_cookie_login(self):
         """
@@ -298,7 +301,6 @@ class MultisiteServer(GenericServer):
 
         # Add filters to the url which should only be applied to the service request
         if conf.filter_services_on_unreachable_hosts == True:
-            ###url_params += '&hst2=0'
             # thanks to https://github.com/HenriWahl/Nagstamon/issues/510
             url_params += '&hst0=On&hst1=On'
 
