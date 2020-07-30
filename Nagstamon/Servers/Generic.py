@@ -248,18 +248,20 @@ class GenericServer(object):
             'soft': self.monitor_cgi_url + '/status.cgi?hostgroup=all&style=hostdetail&hoststatustypes=12&hostprops=524288&limit=0'}
 
     def init_HTTP(self):
-        '''
-            partly not constantly working Basic Authorization requires extra Authorization headers,
-            different between various server types
-        '''
-        if self.session is None:
+        """
+        partly not constantly working Basic Authorization requires extra Authorization headers,
+        different between various server types
+        """
+        if self.refresh_authentication:
+            self.session = None
+            return False
+        elif self.session is None:
             self.session = requests.Session()
             self.session.headers['User-Agent'] = self.USER_AGENT
 
             # support for different authentication types
             if self.authentication == 'basic':
                 # basic authentication
-                # self.session.auth = (self.username, self.password)
                 self.session.auth = requests.auth.HTTPBasicAuth(self.username, self.password)
             elif self.authentication == 'digest':
                 self.session.auth = requests.auth.HTTPDigestAuth(self.username, self.password)
@@ -276,6 +278,7 @@ class GenericServer(object):
 
             # add proxy information
             self.proxify(self.session)
+            return True
 
     def proxify(self, requester):
         '''
@@ -1448,7 +1451,7 @@ class GenericServer(object):
 
                 # use session only for connections to monitor servers, other requests like looking for updates
                 # should go out without credentials
-                if no_auth is False:
+                if no_auth is False and not self.refresh_authentication:
                     # check if there is really a session
                     if not self.session:
                         self.reset_HTTP()
@@ -1475,9 +1478,6 @@ class GenericServer(object):
 
                     # add proxy information if necessary
                     self.proxify(temporary_session)
-
-                    # no need to check TLS validity for temporary sessions like update check
-                    ###temporary_session.verify = False
 
                     # most requests come without multipart/form-data
                     if multipart is False:
