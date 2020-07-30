@@ -53,9 +53,9 @@ class IcingaServer(GenericServer):
         """
         GenericServer.init_HTTP(self)
 
-        if not "Referer" in self.session.headers:
+        if not 'Referer' in self.session.headers:
             # to execute actions since Icinga 1.11 a Referer Header is necessary
-            self.session.headers["Referer"] = self.monitor_cgi_url + "/cmd.cgi"
+            self.session.headers['Referer'] = self.monitor_cgi_url + '/cmd.cgi'
 
 
     def get_server_version(self):
@@ -72,7 +72,7 @@ class IcingaServer(GenericServer):
             if tacraw.startswith('<'):
                 self.json = False
                 tacsoup = BeautifulSoup(tacraw, 'html.parser')
-                self.version = tacsoup.find('a', { 'class' : 'homepageURL' })
+                self.version = tacsoup.find('a', { 'class': 'homepageURL' })
                 # only extract version if HTML seemed to be OK
                 if 'contents' in self.version.__dict__:
                     self.version = self.version.contents[0].split('Icinga ')[1]

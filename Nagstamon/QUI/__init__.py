@@ -4104,7 +4104,8 @@ class TreeView(QTreeView):
                     self.change_label_status.emit('Refreshing...', '')
 
                     # get status from server instance if connection was already possible and no TLS error
-                    if not self.server.tls_error:
+                    if not self.server.tls_error and \
+                       not self.server.refresh_authentication:
                         status = self.server.GetStatus()
                     else:
                         # dummy status result
