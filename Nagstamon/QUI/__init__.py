@@ -424,7 +424,7 @@ class SystemTrayIcon(QSystemTrayIcon):
         #     self.show_menu.emit()
         # only react on left mouse click on OSX
         # elif reason == (QSystemTrayIcon.Trigger or QSystemTrayIcon.DoubleClick):
-        if reason == (QSystemTrayIcon.Trigger or QSystemTrayIcon.DoubleClick):
+        if reason in (QSystemTrayIcon.Trigger, QSystemTrayIcon.DoubleClick, QSystemTrayIcon.MiddleClick):
             # when green icon is displayed and no popwin is about to po up show at least menu
             if get_worst_status() == 'UP' and OS == OS_DARWIN:
                 self.menu.show_at_cursor()
