@@ -455,7 +455,7 @@ def get_distro():
                 key, value = property.split('=', 1)
                 os_release_dict[key] = value.strip('"').strip("'")
             return (os_release_dict.get('ID').lower(),
-                    os_release_dict.get('VERSION_ID').lower(),
+                    os_release_dict.get('VERSION_ID', 'unknown').lower(),
                     os_release_dict.get('NAME').lower())
         else:
             return False
