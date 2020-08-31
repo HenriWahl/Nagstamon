@@ -114,7 +114,10 @@ if not OS in OS_NON_LINUX:
         DBUS_AVAILABLE = False
 
 # enable HighDPI-awareness to avoid https://github.com/HenriWahl/Nagstamon/issues/618
-QApplication.setAttribute(Qt.AA_EnableHighDpiScaling, True)
+try:
+    QApplication.setAttribute(Qt.AA_EnableHighDpiScaling, True)
+except AttributeError:
+    pass
 QApplication.setAttribute(Qt.AA_UseHighDpiPixmaps, True)
 # global application instance
 APP = QApplication(sys.argv)
