@@ -458,7 +458,7 @@ def get_distro():
                     os_release_dict.get('VERSION_ID', 'unknown').lower(),
                     os_release_dict.get('NAME').lower())
         else:
-            return False
+            return '', '', ''
     else:
         # fix for non-working build on Debian<10
         dist_name, dist_version, dist_id = platform.dist()
