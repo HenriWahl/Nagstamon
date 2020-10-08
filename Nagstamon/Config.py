@@ -1064,3 +1064,6 @@ except Exception as err:
         if os.path.exists(path):
             RESOURCES = path
             break
+    else:
+        from pathlib import Path
+        RESOURCES = str(Path(__file__).parent.absolute().joinpath('resources'))
