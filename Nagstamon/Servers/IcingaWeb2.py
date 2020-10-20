@@ -122,8 +122,8 @@ class IcingaWeb2Server(GenericServer):
         # define CGI URLs for hosts and services
         if self.cgiurl_hosts == self.cgiurl_services == self.cgiurl_monitoring_health == None:
             # services (unknown, warning or critical?)
-            self.cgiurl_services = {'hard': self.monitor_cgi_url + '/monitoring/list/services?service_state>0&service_state<=3&service_state_type=1&addColumns=service_last_check&format=json', \
-                                    'soft': self.monitor_cgi_url + '/monitoring/list/services?service_state>0&service_state<=3&service_state_type=0&addColumns=service_last_check&format=json'}
+            self.cgiurl_services = {'hard': self.monitor_cgi_url + '/monitoring/list/services?service_state>0&service_state<=3&service_state_type=1&addColumns=service_last_check,service_is_reachable&format=json', \
+                                    'soft': self.monitor_cgi_url + '/monitoring/list/services?service_state>0&service_state<=3&service_state_type=0&addColumns=service_last_check,service_is_reachable&format=json'}
             # hosts (up or down or unreachable)
             self.cgiurl_hosts = {'hard': self.monitor_cgi_url + '/monitoring/list/hosts?host_state>0&host_state<=2&host_state_type=1&addColumns=host_last_check&format=json', \
                                  'soft': self.monitor_cgi_url + '/monitoring/list/hosts?host_state>0&host_state<=2&host_state_type=0&addColumns=host_last_check&format=json'}
@@ -307,6 +307,10 @@ class IcingaWeb2Server(GenericServer):
                         self.new_hosts[host_name].services[service_name].acknowledged = bool(int(s['service_acknowledged']))
                         self.new_hosts[host_name].services[service_name].scheduled_downtime = bool(int(s['service_in_downtime']))
                         self.new_hosts[host_name].services[service_name].status_type = status_type
+                        self.new_hosts[host_name].services[service_name].unreachable = s['service_is_reachable'] == '0'
+
+                        if self.new_hosts[host_name].services[service_name].unreachable:
+                            self.new_hosts[host_name].services[service_name].status_information += " (SERVICE UNREACHABLE)"
                         
                         # extra Icinga properties to solve https://github.com/HenriWahl/Nagstamon/issues/192
                         # acknowledge needs service_description and no display name

@@ -147,6 +147,7 @@ class GenericService(GenericObject):
 
     def __init__(self):
         GenericObject.__init__(self)
+        self.unreachable = False
 
     def get_host_name(self):
         return str(self.host)
