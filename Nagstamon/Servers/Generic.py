@@ -200,6 +200,8 @@ class GenericServer(object):
                 # ...and its content
                 with open(self.cacert_path, mode='rb') as file:
                     self.cacert_content = file.read()
+            else:
+                raise AssertionError("Cannot find cacert.pem. SSL Connections will not work.")
 
         # Special FX
         # Centreon
