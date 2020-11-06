@@ -1,4 +1,6 @@
+arrow
 beautifulsoup4
+icinga2api
 keyring==10.5.1
 lxml
 psutil
