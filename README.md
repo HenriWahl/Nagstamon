@@ -26,5 +26,6 @@ Successfully tested monitors include:
  - monitos 3 - experimental
  - SNAG-View3 - experimental
  - Prometheus - experimental
+ - Alertmanager - experimental
 
 See https://nagstamon.ifw-dresden.de for further information.
