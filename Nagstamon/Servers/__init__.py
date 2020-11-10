@@ -42,6 +42,7 @@ from Nagstamon.Servers.Monitos4x import Monitos4xServer
 from Nagstamon.Servers.SnagView3 import SnagViewServer
 from Nagstamon.Servers.Sensu import SensuServer
 from Nagstamon.Servers.Prometheus import PrometheusServer
+from Nagstamon.Servers.Alertmanager import AlertmanagerServer
 
 from Nagstamon.Config import conf
 
@@ -181,7 +182,7 @@ def create_server(server=None):
     # Zabbix
     new_server.use_description_name_service = server.use_description_name_service
 
-    # Prometheus
+    # Prometheus & Alertmanager
     new_server.map_to_hostname = server.map_to_hostname
     new_server.map_to_servicename = server.map_to_servicename
     new_server.map_to_status_information = server.map_to_status_information
@@ -205,7 +206,7 @@ def create_server(server=None):
 for server in (CentreonServer, IcingaServer, IcingaWeb2Server, MultisiteServer, NagiosServer,
                Op5MonitorServer, OpsviewServer, ThrukServer, ZabbixServer, SensuServer,
                LivestatusServer, ZenossServer, Monitos3Server, Monitos4xServer, SnagViewServer,
-               PrometheusServer):
+               PrometheusServer, AlertmanagerServer):
     register_server(server)
 
 # create servers
