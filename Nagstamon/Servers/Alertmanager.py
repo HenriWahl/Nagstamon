@@ -19,29 +19,13 @@
 
 # Initial implementation by Stephan Schwarz (@stearz)
 #
-# This Server class connects against Prometheus.
+# This Server class connects against Prometheus' Alertmanager.
 # The monitor URL in the setup should be something like
-# http://prometheus.example.com
+# http://alertmanager.example.com
 #
 # Release Notes:
 #
-#   [1.1.0] - 2020-06-12:
-#     * fixed:
-#         Some more errors with unset fields from Prometheus
-#     * added:
-#         Feature for configuring which labels get mapped to servicename and hostname...
-#                          ...and which annotations get mapped to status_information
-#
-#   [1.0.2] - 2020-06-07:
-#     * fixed:
-#         Missing message field in alert stopped integration from working
-#         Alerts with an unknown severity were not shown
-#
-#   [1.0.1] - 2020-05-13:
-#     * fixed:
-#         Nagstamon crashes due to missing url handling
-#
-#   [1.0.0] - 2020-04-20:
+#   [1.0.0] - 2020-11-08:
 #     * added:
 #         Inital version
 #
@@ -60,89 +44,37 @@ from Nagstamon.Objects import (GenericHost,
                                GenericService,
                                Result)
 from Nagstamon.Servers.Generic import GenericServer
+from Nagstamon.Servers.Prometheus import PrometheusServer,PrometheusService
 from Nagstamon.Helpers import webbrowser_open
 
 
-class PrometheusService(GenericService):
+class AlertmanagerService(PrometheusService):
     """
-    add Prometheus specific service property to generic service class
+    add Alertmanager specific service property to generic service class
     """
     service_object_id = ""
 
 
-class PrometheusServer(GenericServer):
+class AlertmanagerServer(PrometheusServer):
     """
-    special treatment for Prometheus API
+    special treatment for Alertmanager API
     """
-    TYPE = 'Prometheus'
+    TYPE = 'Alertmanager'
 
-    # Prometheus actions are limited to visiting the monitor for now
+    # Alertmanager actions are limited to visiting the monitor for now
     MENU_ACTIONS = ['Monitor']
     BROWSER_URLS = {
-        'monitor':  '$MONITOR$/alerts',
-        'hosts':    '$MONITOR$/targets',
-        'services': '$MONITOR$/service-discovery',
-        'history':  '$MONITOR$/graph'
+        'monitor':  '$MONITOR$/#/alerts',
+        'hosts':    '$MONITOR$/#/alerts',
+        'services': '$MONITOR$/#/alerts',
+        'history':  '$MONITOR$/#/alerts'
     }
 
-    API_PATH_ALERTS = "/api/v1/alerts"
-
-    def init_HTTP(self):
-        """
-        things to do if HTTP is not initialized
-        """
-        GenericServer.init_HTTP(self)
-
-        # prepare for JSON
-        self.session.headers.update({'Accept': 'application/json',
-                                     'Content-Type': 'application/json'})
-
-    def init_config(self):
-        """
-        dummy init_config, called at thread start
-        """
-        pass
-
-    def get_start_end(self, host):
-        """
-        Set a default of starttime of "now" and endtime is "now + 24 hours"
-        directly from web interface
-        """
-        start = datetime.now()
-        end = datetime.now() + timedelta(hours=24)
-
-        return (str(start.strftime("%Y-%m-%d %H:%M:%S")),
-                str(end.strftime("%Y-%m-%d %H:%M:%S")))
-
-    def _get_duration(self, timestring):
-        """
-        calculates the duration (delta) from Prometheus' activeAt (ISO8601
-        format) until now an returns a human friendly string
-        """
-        time_object = dateutil.parser.parse(timestring)
-        duration = datetime.now(timezone.utc) - time_object
-        h = int(duration.seconds / 3600)
-        m = int(duration.seconds % 3600 / 60)
-        s = int(duration.seconds % 60)
-        if duration.days > 0:
-            return "%sd %sh %02dm %02ds" % (duration.days, h, m, s)
-        elif h > 0:
-            return "%sh %02dm %02ds" % (h, m, s)
-        elif m > 0:
-            return "%02dm %02ds" % (m, s)
-        else:
-            return "%02ds" % (s)
-
-    def _set_downtime(self, host, service, author, comment, fixed, start_time,
-                      end_time, hours, minutes):
-        """
-        to be implemented in a future release
-        """
-        pass
+    API_PATH_ALERTS = "/api/v2/alerts"
 
     def _get_status(self):
         """
-        Get status from Prometheus Server
+        Get status from Alertmanager Server
         """
         # get all alerts from the API server
         try:
@@ -161,7 +93,7 @@ class PrometheusServer(GenericServer):
                 self.Debug(server=self.get_name(),
                            debug="Fetched JSON: " + pprint.pformat(data))
 
-            for alert in data["data"]["alerts"]:
+            for alert in data:
                 if conf.debug_mode:
                     self.Debug(
                         server=self.get_name(),
@@ -192,9 +124,9 @@ class PrometheusServer(GenericServer):
                 service.name = servicename
                 service.server = self.name
                 service.status = severity
-                service.last_check = "n/a"
+                service.last_check = str(self._get_duration(alert["updatedAt"]))
                 service.attempt = alert.get("state", "firirng")
-                service.duration = str(self._get_duration(alert["activeAt"]))
+                service.duration = str(self._get_duration(alert["startsAt"]))
 
                 annotations = alert.get("annotations", {})
                 status_information = ""
@@ -218,18 +150,3 @@ class PrometheusServer(GenericServer):
 
         # dummy return in case all is OK
         return Result()
-
-    def open_monitor_webpage(self, host, service):
-        """
-        open monitor from tablewidget context menu
-        """
-        webbrowser_open('%s' % (self.monitor_url))
-
-    def open_monitor(self, host, service=''):
-        """
-        open monitor for alert
-        """
-        url = '%s/graph?g0.range_input=1h&g0.expr=%s'
-        url = url % (self.monitor_url,
-                     urllib.parse.quote('ALERTS{alertname="%s"}' % service))
-        webbrowser_open(url)

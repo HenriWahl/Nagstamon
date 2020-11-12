@@ -139,8 +139,12 @@ def macmain():
     # go back to build directory
     os.chdir(CURRENT_DIR)
 
-    # use own modified Info.plist for Retina compatibility
-    shutil.copyfile('../Nagstamon/resources/Info.plist', '../dist/Nagstamon.app/Contents/Info.plist')
+    # template own modified Info.plist for Retina compatibility
+    #shutil.copyfile('../Nagstamon/resources/Info.plist', '../dist/Nagstamon.app/Contents/Info.plist')
+    with open("../Nagstamon/resources/Info.plist", "rt") as fin:
+      with open("../dist/Nagstamon.app/Contents/Info.plist", "wt") as fout:
+        for line in fin:
+            fout.write(line.replace('+++VERSION+++', VERSION))
 
     # create staging DMG folder for later compressing of DMG
     shutil.rmtree('Nagstamon {0} Staging DMG'.format(VERSION), ignore_errors=True)
