@@ -25,12 +25,18 @@ import urllib.parse
 
 from collections import OrderedDict
 
+# we need this for uncommon modules
+try:
+    import icinga2api
+    icinga2api_is_available = True
+except:
+    pass
+
 # load all existing server types
 from Nagstamon.Servers.Nagios import NagiosServer
 from Nagstamon.Servers.Centreon import CentreonServer
 from Nagstamon.Servers.Icinga import IcingaServer
 from Nagstamon.Servers.IcingaWeb2 import IcingaWeb2Server
-from Nagstamon.Servers.Icinga2API import Icinga2APIServer
 from Nagstamon.Servers.Multisite import MultisiteServer
 from Nagstamon.Servers.op5Monitor import Op5MonitorServer
 from Nagstamon.Servers.Opsview import OpsviewServer
@@ -43,10 +49,13 @@ from Nagstamon.Servers.Monitos4x import Monitos4xServer
 from Nagstamon.Servers.SnagView3 import SnagViewServer
 from Nagstamon.Servers.Sensu import SensuServer
 from Nagstamon.Servers.Prometheus import PrometheusServer
-
 from Nagstamon.Config import conf
 
 from Nagstamon.Helpers import STATES
+
+# conditional load if module is available
+if icinga2api_is_available is True:
+    from Nagstamon.Servers.Icinga2API import Icinga2APIServer
 
 # dictionary for servers
 servers = OrderedDict()
@@ -203,10 +212,14 @@ def create_server(server=None):
 
 
 # moved registration process here because of circular dependencies
-for server in (CentreonServer, IcingaServer, IcingaWeb2Server, Icinga2APIServer, MultisiteServer, NagiosServer,
-               Op5MonitorServer, OpsviewServer, ThrukServer, ZabbixServer, SensuServer,
-               LivestatusServer, ZenossServer, Monitos3Server, Monitos4xServer, SnagViewServer,
-               PrometheusServer):
+servers_list = [CentreonServer, IcingaServer, IcingaWeb2Server, Icinga2APIServer, MultisiteServer, NagiosServer,
+                Op5MonitorServer, OpsviewServer, ThrukServer, ZabbixServer, SensuServer,
+                LivestatusServer, ZenossServer, Monitos3Server, Monitos4xServer, SnagViewServer,
+                PrometheusServer]
+# we use these servers conditionally if modules are available only
+if icinga2api_is_available is True:
+    servers_list.append(Icinga2APIServer)
+for server in servers_list:
     register_server(server)
 
 # create servers
