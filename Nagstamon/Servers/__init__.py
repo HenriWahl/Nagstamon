@@ -30,7 +30,7 @@ try:
     import icinga2api
     icinga2api_is_available = True
 except:
-    pass
+    icinga2api_is_available = False
 
 # load all existing server types
 from Nagstamon.Servers.Nagios import NagiosServer
@@ -214,10 +214,10 @@ def create_server(server=None):
 
 
 # moved registration process here because of circular dependencies
-servers_list = [CentreonServer, IcingaServer, IcingaWeb2Server, Icinga2APIServer, MultisiteServer, NagiosServer,
+servers_list = [CentreonServer, IcingaServer, IcingaWeb2Server, MultisiteServer, NagiosServer,
                 Op5MonitorServer, OpsviewServer, ThrukServer, ZabbixServer, SensuServer,
                 LivestatusServer, ZenossServer, Monitos3Server, Monitos4xServer, SnagViewServer,
-                PrometheusServer, AlertmanagerServe]
+                PrometheusServer, AlertmanagerServer]
 # we use these servers conditionally if modules are available only
 if icinga2api_is_available is True:
     servers_list.append(Icinga2APIServer)
