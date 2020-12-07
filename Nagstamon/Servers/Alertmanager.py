@@ -25,6 +25,10 @@
 #
 # Release Notes:
 #
+#   [1.0.1] - 2020-11-27:
+#     * added:
+#         Support for hiding suppressed alerts with the scheduled downtime filter
+#
 #   [1.0.0] - 2020-11-08:
 #     * added:
 #         Inital version
@@ -125,8 +129,20 @@ class AlertmanagerServer(PrometheusServer):
                 service.server = self.name
                 service.status = severity
                 service.last_check = str(self._get_duration(alert["updatedAt"]))
-                service.attempt = alert.get("state", "firirng")
+
+                if "status" in alert:
+                    service.attempt = alert["status"].get("state", "unknown")
+                else:
+                    service.attempt = "unknown"
+
+                if service.attempt == "suppressed":
+                    service.scheduled_downtime = True
+                
                 service.duration = str(self._get_duration(alert["startsAt"]))
+
+                # Alertmanager specific extensions
+                service.generatorURL = alert.get("generatorURL", {})
+                service.fingerprint = alert.get("fingerprint", {})
 
                 annotations = alert.get("annotations", {})
                 status_information = ""
@@ -150,3 +166,18 @@ class AlertmanagerServer(PrometheusServer):
 
         # dummy return in case all is OK
         return Result()
+
+    def open_monitor(self, host, service=''):
+        """
+        open monitor for alert
+        """
+        url = self.monitor_url
+        webbrowser_open(url)
+
+
+    def _set_downtime(self, host, service, author, comment, fixed, start_time,
+                      end_time, hours, minutes):
+        """
+        to be implemented in a future release
+        """
+        pass
