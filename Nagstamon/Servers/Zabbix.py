@@ -165,9 +165,11 @@ class ZabbixServer(GenericServer):
                     # Zabbix backend data
                     'hostid': host['hostid'],
                     'site': '',
-                    'address': host['interfaces'][0]['ip'],
+                    # 'address': host['interfaces'][0]['ip'],
                 }
 
+                # try to fix https://github.com/HenriWahl/Nagstamon/issues/687
+                n['address'] = host['interfaces'][0]['ip'] if len(host['interfaces']) > 0 else ''
 
                 if host['maintenance_status'] == '1':
                     n['scheduled_downtime'] = True

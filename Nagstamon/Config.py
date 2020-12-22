@@ -28,6 +28,7 @@ import zlib
 import datetime
 from urllib.parse import quote
 from collections import OrderedDict
+from pathlib import Path
 
 # older Kubuntu has trouble with keyring
 # see https://github.com/HenriWahl/Nagstamon/issues/447
@@ -1065,5 +1066,4 @@ except Exception as err:
             RESOURCES = path
             break
     else:
-        from pathlib import Path
         RESOURCES = str(Path(__file__).parent.absolute().joinpath('resources'))
