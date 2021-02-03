@@ -19,6 +19,7 @@
 # Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA  02110-1301, USA
 
 from Nagstamon.Servers.Generic import GenericServer
+from Nagstamon.Config import conf
 import sys
 import json
 import datetime
@@ -63,41 +64,21 @@ class ThrukServer(GenericServer):
     def __init__(self, **kwds):
         GenericServer.__init__(self, **kwds)
 
-        # flag for newer cookie authentication
-        self.CookieAuth = False
-
-
-    def reset_HTTP(self):
-        """
-            brute force reset by GenericServer disturbs logging in into Thruk
-        """
-        # only reset session if Thruks 2 cookies are there
-        try:
-            # only reset session if Thruks 2 cookies are there
-            if len(self.session.cookies) > 1:
-                self.session = None
-        except:
-            self.Error(sys.exc_info())
-
 
     def init_HTTP(self):
         """
             partly not constantly working Basic Authorization requires extra Autorization headers,
             different between various server types
         """
-        GenericServer.init_HTTP(self)
+        if self.session is None:
+            GenericServer.init_HTTP(self)
 
-        # only if cookies are needed
-        if self.CookieAuth:
-            # get cookie to access Thruk web interface
-            # Thruk first send a test cookie, later an auth cookie
-            if len(self.session.cookies) < 2:
-                # get cookie from login page via url retrieving as with other urls
-                try:
-                    # login and get cookie
-                    self.login()
-                except:
-                    self.Error(sys.exc_info())
+        # get cookie from login page via url retrieving as with other urls
+        try:
+            # login and get cookie
+            self.login()
+        except:
+            self.Error(sys.exc_info())
 
 
     def init_config(self):
@@ -121,26 +102,25 @@ class ThrukServer(GenericServer):
                                                     "active_checks_enabled,notifications_enabled,is_flapping,"\
                                                     "acknowledged,scheduled_downtime_depth,state_type"
 
-        # get cookie from login page via url retrieving as with other urls
-        try:
-            # login and get cookie
-            self.login()
-
-            if len(self.session.cookies) > 0:
-                self.CookieAuth = True
-        except:
-            self.Error(sys.exc_info())
-
-
     def login(self):
         """
             use pure session instead of FetchURL to get Thruk session
         """
-        self.session.post(self.monitor_cgi_url + '/login.cgi?',
+        if self.session is None:
+            self.refresh_authentication = False
+            GenericServer.init_HTTP(self)
+
+        # set thruk test cookie to in order to directly login
+        self.session.cookies.set('thruk_test', '***')
+        req = self.session.post(self.monitor_cgi_url + '/login.cgi?',
                           data={'login': self.get_username(),
                                 'password': self.get_password(),
-                                'submit': 'Login',
-                                'referer': ''})
+                                'submit': 'Login'})
+        if conf.debug_mode == True:
+            self.Debug(server=self.get_name(), debug='Login status: ' + req.url + ' http code : ' + str(req.status_code))
+        if req.status_code != 200:
+            self.refresh_authentication = True
+            return Result(result=None, error="Login failed")
 
 
     def _get_status(self):
@@ -159,16 +139,16 @@ class ThrukServer(GenericServer):
             jsonraw, error, status_code = copy.deepcopy(result.result),\
                                           copy.deepcopy(result.error),\
                                           result.status_code
-            
+
             # check if any error occured
             errors_occured = self.check_for_error(jsonraw, error, status_code)
             # if there are errors return them
             if errors_occured != False:
-                return(errors_occured)     
+                return(errors_occured)
 
             # in case basic auth did not work try form login cookie based login
             if jsonraw.startswith("<"):
-                self.CookieAuth = True
+                self.refresh_authentication = True
                 return Result(result=None, error="Login failed")
 
             # in case JSON is not empty evaluate it
@@ -213,10 +193,10 @@ class ThrukServer(GenericServer):
             # if there are errors return them
             if errors_occured != False:
                 return(errors_occured)
-            
+
             # in case basic auth did not work try form login cookie based login
             if jsonraw.startswith("<"):
-                self.CookieAuth = True
+                self.refresh_authentication = True
                 return Result(result=None, error="Login failed")
 
             # in case JSON is not empty evaluate it
@@ -260,4 +240,3 @@ class ThrukServer(GenericServer):
 
         # dummy return in case all is OK
         return Result()
-
