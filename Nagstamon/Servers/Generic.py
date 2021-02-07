@@ -1088,8 +1088,7 @@ class GenericServer(object):
                             self.Debug(server=self.get_name(),
                                        debug='Filter: SOFT STATE ' + str(host.name) + ';' + str(service.name))
                         service.visible = False
-                # fix for https://github.com/HenriWahl/Nagstamon/issues/654
-                elif self.TYPE.startswith("Zabbix"):
+                else:
                     if len(service.attempt) < 3:
                         service.visible = True
                     elif len(service.attempt) == 3:
