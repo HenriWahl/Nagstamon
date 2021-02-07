@@ -42,6 +42,7 @@ from Nagstamon.Servers.op5Monitor import Op5MonitorServer
 from Nagstamon.Servers.Opsview import OpsviewServer
 from Nagstamon.Servers.Thruk import ThrukServer
 from Nagstamon.Servers.Zabbix import ZabbixServer
+from Nagstamon.Servers.ZabbixProblemBased import ZabbixProblemBasedServer
 from Nagstamon.Servers.Livestatus import LivestatusServer
 from Nagstamon.Servers.Zenoss import ZenossServer
 from Nagstamon.Servers.Monitos3 import Monitos3Server
@@ -217,7 +218,7 @@ def create_server(server=None):
 servers_list = [CentreonServer, IcingaServer, IcingaWeb2Server, MultisiteServer, NagiosServer,
                 Op5MonitorServer, OpsviewServer, ThrukServer, ZabbixServer, SensuServer,
                 LivestatusServer, ZenossServer, Monitos3Server, Monitos4xServer, SnagViewServer,
-                PrometheusServer, AlertmanagerServer]
+                PrometheusServer, AlertmanagerServer, ZabbixProblemBasedServer]
 # we use these servers conditionally if modules are available only
 if icinga2api_is_available is True:
     servers_list.append(Icinga2APIServer)
