@@ -70,7 +70,7 @@ class ZabbixProblemBasedServer(GenericServer):
             Get status from Zabbix Server
         """
 
-        # Create URLs for the configured filters
+        # Login to ZabbixAPI
         self._login()
 
         # =========================================
@@ -96,8 +96,8 @@ class ZabbixProblemBasedServer(GenericServer):
                                                 'selectItems': ['key_', 'lastclock']})
 
 
-                #problems on disabled/maintenanced/deleted hosts don't have triggers
-                #have to to that becouse of how zabbix houesekeeping service worke
+                #problems on disabled/maintenance/deleted hosts don't have triggers
+                #have to do that because of how zabbix housekeeping service work
                 #API reports past problems for hosts that no longer exist
                 if not trigger:
                     continue
