@@ -79,7 +79,7 @@ class ZabbixProblemBasedServer(GenericServer):
         problems = []
         try:
             #Get all current problems (trigger based)
-            problems = self.zapi.problem.get({'recent': "False"})
+            problems = self.zapi.problem.get({'recent': False})
 
             for problem in problems:
 
@@ -87,6 +87,7 @@ class ZabbixProblemBasedServer(GenericServer):
                 trigger = self.zapi.trigger.get({'triggerids': problem['objectid'],
                                                 'monitored': True,
                                                 'active': True,
+                                                'skipDependent': True,
                                                 'selectHosts': ['hostid', 'name', 'maintenance_status',
                                                                 'available', 'error', 'errors_from',
                                                                 'ipmi_available', 'ipmi_error', 'ipmi_errors_from',
