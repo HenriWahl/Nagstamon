@@ -5635,7 +5635,7 @@ class Dialog_Settings(Dialog):
         use_zabbix = False
         for server in servers.values():
             if server.enabled:
-                if server.type == 'Zabbix':
+                if server.type.startswith('Zabbix'):
                     use_zabbix = True
                     break
         # remove extra Zabbix options
