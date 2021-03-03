@@ -6922,15 +6922,25 @@ class CheckVersion(QObject):
 
             # default latest version is 'unavailable'
             latest_version = 'unavailable'
-            message = 'Cannot reach version check at <a href={0}>{0}</<a>.'.format(AppInfo.VERSION_URL)
 
             # find at least one server which allows to get version information
             for server in enabled_servers:
+                for download_server, download_url in AppInfo.DOWNLOAD_SERVERS.items():
 
-                # retrieve VERSION_URL without auth information
-                response = server.FetchURL(AppInfo.VERSION_URL, giveback='raw', no_auth=True)
+                    message = 'Cannot reach version check at <a href={0}>{0}</<a>.'.format(f'https://{download_server}{AppInfo.VERSION_PATH}')
 
-                # stop searching if some valid information has been found
+                    # retrieve VERSION_URL without auth information
+                    response = server.FetchURL(f'https://{download_server}{AppInfo.VERSION_PATH}',
+                                               giveback='raw',
+                                               no_auth=True)
+                    # stop searching the available download URLs
+                    if response.error == "" and not response.result.startswith('<'):
+                        latest_version = response.result.strip()
+                        break
+                # ignore TLS error in case it was caused by requesting latest version
+                server.tls_error = False
+
+                # stop searching via enabled servers
                 if response.error == "" and not response.result.startswith('<'):
                     latest_version = response.result.strip()
                     break

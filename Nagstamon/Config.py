@@ -128,14 +128,19 @@ class AppInfo(object):
     WEBSITE = 'https://nagstamon.ifw-dresden.de'
     COPYRIGHT = '©2008-2020 Henri Wahl et al.'
     COMMENTS = 'Nagios status monitor for your desktop'
+    # dict of servers to offer for downloads if an update is available
+    DOWNLOAD_SERVERS = {'nagstamon.de': 'https://github.com/HenriWahl/Nagstamon/releases',
+                        'nagstamon.ifw-dresden.de': 'https://nagstamon.ifw-dresden.de/download'}
     # version URL depends on version string
     if 'alpha' in VERSION.lower() or \
         'beta' in VERSION.lower() or \
         'rc' in VERSION.lower() or \
         '-' in VERSION.lower():
         VERSION_URL = WEBSITE + '/version/unstable'
+        VERSION_PATH = '/version/unstable'
     else:
         VERSION_URL = WEBSITE + '/version/stable'
+        VERSION_PATH = '/version/stable'
 
 
 class Config(object):
