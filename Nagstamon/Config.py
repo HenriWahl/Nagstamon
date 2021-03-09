@@ -475,7 +475,7 @@ class Config(object):
                 elif servers[server].proxy_password != "":
                     servers[server].proxy_password = self.DeObfuscate(servers[server].proxy_password)
 
-                # do only deobfuscating if any autologin_key is set - will be only Centreon
+                # do only deobfuscating if any autologin_key is set - will be only Centreon/Thruk
                 if 'autologin_key' in servers[server].__dict__.keys():
                     if len(servers[server].__dict__['autologin_key']) > 0:
                         servers[server].autologin_key = self.DeObfuscate(servers[server].autologin_key)
