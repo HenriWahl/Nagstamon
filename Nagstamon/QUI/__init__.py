@@ -5742,9 +5742,9 @@ class Dialog_Server(Dialog):
         self.VOLATILE_WIDGETS = {
             self.ui.label_monitor_cgi_url: ['Nagios', 'Icinga', 'Thruk', 'Sensu'],
             self.ui.input_lineedit_monitor_cgi_url: ['Nagios', 'Icinga', 'Thruk', 'Sensu'],
-            self.ui.input_checkbox_use_autologin: ['Centreon', 'monitos4x'],
-            self.ui.input_lineedit_autologin_key: ['Centreon', 'monitos4x'],
-            self.ui.label_autologin_key: ['Centreon', 'monitos4x'],
+            self.ui.input_checkbox_use_autologin: ['Centreon', 'monitos4x', 'Thruk'],
+            self.ui.input_lineedit_autologin_key: ['Centreon', 'monitos4x', 'Thruk'],
+            self.ui.label_autologin_key: ['Centreon', 'monitos4x', 'Thruk'],
             self.ui.input_checkbox_no_cookie_auth: ['IcingaWeb2', 'Sensu'],
             self.ui.input_checkbox_use_display_name_host: ['Icinga', 'IcingaWeb2'],
             self.ui.input_checkbox_use_display_name_service: ['Icinga', 'IcingaWeb2'],
@@ -6278,7 +6278,7 @@ class Dialog_Acknowledge(Dialog):
         self.VOLATILE_WIDGETS = {
             self.ui.input_checkbox_use_expire_time: ['IcingaWeb2'],
             self.ui.input_datetime_expire_time: ['IcingaWeb2']
-            }       
+            }
 
 
     def initialize(self, server=None, host=[], service=[]):
@@ -6327,10 +6327,10 @@ class Dialog_Acknowledge(Dialog):
             for widget, server_types in self.VOLATILE_WIDGETS.items():
                 if self.server.TYPE in server_types:
                     widget.show()
-                    self.toggle_toggles() 
+                    self.toggle_toggles()
                 else:
                     widget.hide()
-        
+
         # Adjust to current size if items are hidden in menu
         # Otherwise it will get confused and chop off text
         self.ui.options_groupbox.adjustSize()
@@ -6597,7 +6597,7 @@ class Dialog_Authentication(Dialog):
         if self.server is not None:
 
             self.window.setWindowTitle('Authenticate {0}'.format(self.server.name))
-            if self.server.type == 'Centreon':
+            if self.server.type in ['Centreon', 'Thruk']:
                 self.ui.input_checkbox_use_autologin.show()
                 self.ui.input_lineedit_autologin_key.show()
                 self.ui.input_lineedit_autologin_key.show()
@@ -6652,7 +6652,7 @@ class Dialog_Authentication(Dialog):
             conf.SaveMultipleConfig('servers', 'server')
 
         # Centreon
-        if self.server.type == 'Centreon':
+        if self.server.type in ['Centreon', 'Thruk']:
             if self.ui.input_checkbox_use_autologin:
                 conf.servers[self.server.name].use_autologin = self.ui.input_checkbox_use_autologin.isChecked()
                 conf.servers[self.server.name].autologin_key = self.ui.input_lineedit_autologin_key.text()

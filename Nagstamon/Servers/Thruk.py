@@ -76,7 +76,8 @@ class ThrukServer(GenericServer):
         # get cookie from login page via url retrieving as with other urls
         try:
             # login and get cookie
-            self.login()
+            if self.session is None or self.session.cookies.get('thruk_auth') is None:
+                self.login()
         except:
             self.Error(sys.exc_info())
 
@@ -110,17 +111,25 @@ class ThrukServer(GenericServer):
             self.refresh_authentication = False
             GenericServer.init_HTTP(self)
 
-        # set thruk test cookie to in order to directly login
-        self.session.cookies.set('thruk_test', '***')
-        req = self.session.post(self.monitor_cgi_url + '/login.cgi?',
-                          data={'login': self.get_username(),
-                                'password': self.get_password(),
-                                'submit': 'Login'})
-        if conf.debug_mode == True:
-            self.Debug(server=self.get_name(), debug='Login status: ' + req.url + ' http code : ' + str(req.status_code))
-        if req.status_code != 200:
-            self.refresh_authentication = True
-            return Result(result=None, error="Login failed")
+        if self.use_autologin is True:
+            req = self.session.post(self.monitor_cgi_url + '/user.cgi?', data={}, headers={'X-Thruk-Auth-Key':self.autologin_key.strip()})
+            if conf.debug_mode == True:
+                self.Debug(server=self.get_name(), debug='Auto Login status: ' + req.url + ' http code : ' + str(req.status_code))
+            if req.status_code != 200:
+                self.refresh_authentication = True
+                return Result(result=None, error="Login failed")
+        else:
+            # set thruk test cookie to in order to directly login
+            self.session.cookies.set('thruk_test', '***')
+            req = self.session.post(self.monitor_cgi_url + '/login.cgi?',
+                            data={'login': self.get_username(),
+                                    'password': self.get_password(),
+                                    'submit': 'Login'})
+            if conf.debug_mode == True:
+                self.Debug(server=self.get_name(), debug='Login status: ' + req.url + ' http code : ' + str(req.status_code))
+            if req.status_code != 200:
+                self.refresh_authentication = True
+                return Result(result=None, error="Login failed")
 
 
     def _get_status(self):
