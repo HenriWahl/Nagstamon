@@ -1,0 +1,91 @@
+name: build-release-stable
+on:
+  push:
+    tags: 'v*'
+env:
+  python_win_version: 3.9.2
+  python_win_path: c:/hostedtoolcache/windows/python/
+jobs:
+  debian:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v2
+      - run: /usr/bin/docker build -t build-nagstamon -f build/docker/Dockerfile-${{ github.job }} .
+      - run: /usr/bin/docker run -v ${{ github.workspace }}:/nagstamon build-nagstamon
+      - uses: actions/upload-artifact@v2
+        with:
+          path: build/*.deb
+          retention-days: 1
+
+  fedora-33:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v2
+      - run: /usr/bin/docker build -t build-nagstamon -f build/docker/Dockerfile-${{ github.job }} .
+      - run: /usr/bin/docker run -v ${{ github.workspace }}:/nagstamon build-nagstamon
+      - uses: actions/upload-artifact@v2
+        with:
+          path: build/*.rpm
+          retention-days: 1
+
+  macos:
+    runs-on: macos-latest
+    steps:
+      - uses: actions/checkout@v2
+      - run: pip3 install --no-warn-script-location -r build/requirements/macos.txt
+      - run: cd ${{ github.workspace }}/build; python3 build.py
+        env:
+          PYTHONPATH: ${{ github.workspace }}
+      - uses: actions/upload-artifact@v2
+        with:
+          path: build/*.dmg
+          retention-days: 1
+
+  windows-32:
+    runs-on: windows-latest
+    steps:
+      - uses: actions/checkout@v2
+      - run: cinst -y --allow-empty-checksums --no-progress --x86 python3 --version=${{ env.python_win_version }}
+      - run: cinst -y --allow-empty-checksums --no-progress innosetup
+      - run: ${{ env.python_win_path }}/${{ env.python_win_version }}/x86/python.exe -m pip install --no-warn-script-location -r build/requirements/windows.txt
+      - run: cd ${{ github.workspace }}/build; ${{ env.python_win_path }}/${{ env.python_win_version }}/x86/python.exe build.py
+        env:
+          PYTHONPATH: ${{ github.workspace }}
+      - uses: actions/upload-artifact@v2
+        with:
+          path: |
+            build/dist/*.zip
+            build/dist/*.exe
+          retention-days: 1
+
+  windows-64:
+    runs-on: windows-latest
+    steps:
+      - uses: actions/checkout@v2
+      - run: cinst -y --allow-empty-checksums --no-progress python3 --version=${{ env.python_win_version }}
+      - run: cinst -y --allow-empty-checksums --no-progress innosetup
+      - run: ${{ env.python_win_path }}/${{ env.python_win_version }}/x64/python.exe -m pip install --no-warn-script-location -r build/requirements/windows.txt
+      - run: cd ${{ github.workspace }}/build; ${{ env.python_win_path }}/${{ env.python_win_version }}/x64/python.exe build.py
+        env:
+          PYTHONPATH: ${{ github.workspace }}
+      - uses: actions/upload-artifact@v2
+        with:
+          path: |
+            build/dist/*.zip
+            build/dist/*.exe
+          retention-days: 1
+
+  upload-release:
+    runs-on: ubuntu-latest
+    needs: [debian, fedora-33, macos, windows-32, windows-64]
+    steps:
+      - uses: actions/download-artifact@v2
+      - run: cd artifact && md5sum *agstamon* > md5sums.txt
+      - run: cd artifact && sha256sum *agstamon* > sha256sums.txt
+      - uses: marvinpinto/action-automatic-releases@latest
+        with:
+          repo_token: "${{ secrets.GITHUB_TOKEN }}"
+          prerelease: false
+          draft: true
+          files: |
+            artifact/*

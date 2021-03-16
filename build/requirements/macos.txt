@@ -1,0 +1,11 @@
+beautifulsoup4
+keyring==10.5.1
+lxml
+psutil
+pyinstaller
+pyqt5==5.15.3
+pysocks
+python-dateutil
+requests
+requests-gssapi
+setuptools==44.1.1
