@@ -82,12 +82,9 @@ jobs:
       - uses: actions/download-artifact@v2
       - run: cd artifact && md5sum *agstamon* > md5sums.txt
       - run: cd artifact && sha256sum *agstamon* > sha256sums.txt
-      - run: echo ::set-output name=VERSION::${GITHUB_REF#refs/tags/}
-        id: release_version
       - uses: marvinpinto/action-automatic-releases@latest
         with:
           repo_token: "${{ secrets.GITHUB_TOKEN }}"
-          automatic_release_tag: "${{ steps.release_version.outputs.VERSION }}"
           prerelease: false
           draft: true
           files: |
