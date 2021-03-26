@@ -124,8 +124,8 @@ class AppInfo(object):
         contains app information previously located in GUI.py
     """
     NAME = 'Nagstamon'
-    VERSION = '3.5-20210316'
-    WEBSITE = 'https://nagstamon.ifw-dresden.de'
+    VERSION = '3.5-20210326'
+    WEBSITE = 'https://nagstamon.de'
     COPYRIGHT = '©2008-2021 Henri Wahl et al.'
     COMMENTS = 'Nagios status monitor for your desktop'
     # dict of servers to offer for downloads if an update is available
