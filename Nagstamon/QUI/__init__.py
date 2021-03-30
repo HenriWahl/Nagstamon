@@ -6953,6 +6953,8 @@ class CheckVersion(QObject):
                               'Get it at <a href={1}>{1}</a>.'.format(latest_version, AppInfo.WEBSITE + '/download')
                 else:
                     message = ''
+            else:
+                message = ''
 
             # check if there is anything to tell
             if message != '':
