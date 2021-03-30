@@ -6878,11 +6878,6 @@ class CheckVersion(QObject):
         """
         self.version_info_retrieved.emit()
 
-        # QMessageBox.information(self.parent,
-        #                        'Nagstamon version check',
-        #                        message,
-        #                        QMessageBox.Ok)
-
         # attempt to solve https://github.com/HenriWahl/Nagstamon/issues/303
         # might be working this time
         if statuswindow.is_shown:
@@ -6920,8 +6915,9 @@ class CheckVersion(QObject):
             # get servers to be used for checking version
             enabled_servers = get_enabled_servers()
 
-            # default latest version is 'unavailable'
+            # default latest version is 'unavailable' and message empty
             latest_version = 'unavailable'
+            message = ''
 
             # find at least one server which allows to get version information
             for server in enabled_servers:
@@ -6951,10 +6947,6 @@ class CheckVersion(QObject):
                 elif latest_version != AppInfo.VERSION:
                     message = 'The new version <b>Nagstamon {0}</b> is available.<p>' \
                               'Get it at <a href={1}>{1}</a>.'.format(latest_version, AppInfo.WEBSITE + '/download')
-                else:
-                    message = ''
-            else:
-                message = ''
 
             # check if there is anything to tell
             if message != '':
