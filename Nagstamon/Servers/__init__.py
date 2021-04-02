@@ -1,7 +1,7 @@
 # encoding: utf-8
 
 # Nagstamon - Nagios status monitor for your desktop
-# Copyright (C) 2008-2020 Henri Wahl <h.wahl@ifw-dresden.de> et al.
+# Copyright (C) 2008-2021 Henri Wahl <h.wahl@ifw-dresden.de> et al.
 #
 # This program is free software; you can redistribute it and/or modify
 # it under the terms of the GNU General Public License as published by
@@ -49,6 +49,7 @@ from Nagstamon.Servers.Monitos3 import Monitos3Server
 from Nagstamon.Servers.Monitos4x import Monitos4xServer
 from Nagstamon.Servers.SnagView3 import SnagViewServer
 from Nagstamon.Servers.Sensu import SensuServer
+from Nagstamon.Servers.SensuGo import SensuGoServer
 from Nagstamon.Servers.Prometheus import PrometheusServer
 from Nagstamon.Servers.Alertmanager import AlertmanagerServer
 
@@ -217,8 +218,8 @@ def create_server(server=None):
 # moved registration process here because of circular dependencies
 servers_list = [CentreonServer, IcingaServer, IcingaWeb2Server, MultisiteServer, NagiosServer,
                 Op5MonitorServer, OpsviewServer, ThrukServer, ZabbixServer, SensuServer,
-                LivestatusServer, ZenossServer, Monitos3Server, Monitos4xServer, SnagViewServer,
-                PrometheusServer, AlertmanagerServer, ZabbixProblemBasedServer]
+                SensuGoServer, LivestatusServer, ZenossServer, Monitos3Server, Monitos4xServer,
+                SnagViewServer, PrometheusServer, AlertmanagerServer, ZabbixProblemBasedServer]
 # we use these servers conditionally if modules are available only
 if icinga2api_is_available is True:
     servers_list.append(Icinga2APIServer)

@@ -1,7 +1,20 @@
-nagstamon (3.5-20210316) unstable; urgency=low
+nagstamon (3.6) unstable; urgency=low
   * New upstream
+   - added Prometheus support
+   - added SensuGo support
+   - added support for SOCKS5 proxy
+   - added display of macOS version
+   - added Thruk autologin
+   - update for Centreon 20.10
+   - fixes for Zabbix
+   - fix for IcingaWeb2
+   - fix for Nagios/Icinga login with invalid credentials
+   - fixes Thruk login
+   - fixes context menu bug
+   - fix for HighDPI
+   - fix for distro detection
 
- -- Henri Wahl <h.wahl@ifw-dresden.de> Fri, 31 Jul 2020 17:00:00 +0100
+ -- Henri Wahl <h.wahl@ifw-dresden.de> Fri, 02 Apr 2021 17:00:00 +0100
 
 nagstamon (3.4.1) stable; urgency=low
   * New upstream

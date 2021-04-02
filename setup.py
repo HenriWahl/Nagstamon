@@ -2,7 +2,7 @@
 # encoding: utf-8
 
 # Nagstamon - Nagios status monitor for your desktop
-# Copyright (C) 2008-2020 Henri Wahl <h.wahl@ifw-dresden.de> et al.
+# Copyright (C) 2008-2021 Henri Wahl <h.wahl@ifw-dresden.de> et al.
 #
 # This program is free software; you can redistribute it and/or modify
 # it under the terms of the GNU General Public License as published by
@@ -36,6 +36,9 @@ OS = platform.system()
 if OS not in ['Windows', 'Darwin']:
     if OS == 'Linux':
         DIST, DIST_VERSION, DIST_NAME = get_distro()
+    # platform.dist() returns "('', '', '')" on FreeBSD
+    elif OS == 'FreeBSD':
+        DIST, DIST_VERSION, DIST_NAME = ('', '', '')
     else:
         DIST, DIST_VERSION, DIST_NAME = platform.dist()
     NAME = NAME.lower()

@@ -1,6 +1,6 @@
 # encoding: utf-8
 # Nagstamon - Nagios status monitor for your desktop
-# Copyright (C) 2008-2020 Henri Wahl <h.wahl@ifw-dresden.de> et al.
+# Copyright (C) 2008-2021 Henri Wahl <h.wahl@ifw-dresden.de> et al.
 #
 # This program is free software; you can redistribute it and/or modify
 # it under the terms of the GNU General Public License as published by
@@ -5740,8 +5740,8 @@ class Dialog_Server(Dialog):
         # these widgets are shown or hidden depending on server type properties
         # the servers listed at each widget do need them
         self.VOLATILE_WIDGETS = {
-            self.ui.label_monitor_cgi_url: ['Nagios', 'Icinga', 'Thruk', 'Sensu'],
-            self.ui.input_lineedit_monitor_cgi_url: ['Nagios', 'Icinga', 'Thruk', 'Sensu'],
+            self.ui.label_monitor_cgi_url: ['Nagios', 'Icinga', 'Thruk', 'Sensu', 'SensuGo'],
+            self.ui.input_lineedit_monitor_cgi_url: ['Nagios', 'Icinga', 'Thruk', 'Sensu', 'SensuGo'],
             self.ui.input_checkbox_use_autologin: ['Centreon', 'monitos4x', 'Thruk'],
             self.ui.input_lineedit_autologin_key: ['Centreon', 'monitos4x', 'Thruk'],
             self.ui.label_autologin_key: ['Centreon', 'monitos4x', 'Thruk'],
@@ -6920,8 +6920,9 @@ class CheckVersion(QObject):
             # get servers to be used for checking version
             enabled_servers = get_enabled_servers()
 
-            # default latest version is 'unavailable'
+            # default latest version is 'unavailable' and message empty
             latest_version = 'unavailable'
+            message = ''
 
             # find at least one server which allows to get version information
             for server in enabled_servers:
