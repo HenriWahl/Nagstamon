@@ -85,7 +85,7 @@
        <item>
         <widget class="QLabel" name="label_website">
          <property name="text">
-          <string>https://nagstamon.ifw-dresden.de</string>
+          <string>https://nagstamon.de</string>
          </property>
          <property name="alignment">
           <set>Qt::AlignCenter</set>

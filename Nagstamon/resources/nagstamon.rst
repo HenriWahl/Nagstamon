@@ -6,8 +6,8 @@ Nagstamon
 Nagios status monitor which takes place in systray or on desktop
 ----------------------------------------------------------------
 
-:Author: This manual page has been written by Carl Chenet <chaica@ohmytux.com> and updated by Henri Wahl <h.wahl@ifw-dresden.de>
-:Date:   2016-09-05
+:Author: This manual page has been written by Carl Chenet <chaica@ohmytux.com> and updated by Henri Wahl <henri@nagstamon.de>
+:Date:   2021-04-04
 :Version: 2.0
 :Manual section: 1
 :Copyright: This manual page is licensed under the GPL-2 license.
@@ -24,5 +24,5 @@ The command can optionally take one argument giving the path to an alternate con
 
 RESSOURCES
 ==========
-https://nagstamon.ifw-dresden.de
+https://nagstamon.de
 

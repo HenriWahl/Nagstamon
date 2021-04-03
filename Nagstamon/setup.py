@@ -1,7 +1,7 @@
 # encoding: utf-8
 
 # Nagstamon - Nagios status monitor for your desktop
-# Copyright (C) 2008-2021 Henri Wahl <h.wahl@ifw-dresden.de> et al.
+# Copyright (C) 2008-2021 Henri Wahl <henri@nagstamon.de> et al.
 #
 # This program is free software; you can redistribute it and/or modify
 # it under the terms of the GNU General Public License as published by
@@ -99,9 +99,9 @@ setup(name=NAME,
       long_description='Nagstamon is a Nagios status monitor which takes place in systray or on desktop (GNOME, KDE, Windows) as floating statusbar to inform you in realtime about the status of your Nagios and derivatives monitored network. It allows to connect to multiple Nagios, Icinga, Opsview, Op5Monitor, Checkmk/Multisite, Centreon and Thruk servers.',
       classifiers=CLASSIFIERS,
       author='Henri Wahl',
-      author_email='h.wahl@ifw-dresden.de',
-      url='https://nagstamon.ifw-dresden.de',
-      download_url='https://nagstamon.ifw-dresden.de/download',
+      author_email='henri@nagstamon.de',
+      url='https://nagstamon.de',
+      download_url='https://nagstamon.de/download',
       scripts=['nagstamon.py'],
       packages=['Nagstamon', 'Nagstamon.Server', 'Nagstamon.thirdparty'],
       package_dir={'Nagstamon': 'Nagstamon'},

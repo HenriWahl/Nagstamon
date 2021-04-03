@@ -1,5 +1,5 @@
 <?xml version="1.0" encoding="UTF-8"?>
-<!-- Copyright 2016 Henri Wahl <h.wahl@ifw-dresden.de> -->
+<!-- Copyright 2016 Henri Wahl <henri@nagstamon.de> -->
 <application>
  <id type="desktop">nagstamon.desktop</id>
  <metadata_license>GFDL-1.3</metadata_license>
@@ -32,12 +32,12 @@
   </p>
  </description>
  <screenshots>
-  <screenshot type="default" width="624" height="351">https://nagstamon.ifw-dresden.de/files-nagstamon/appdata/nagstamon-appdata-01.png</screenshot>
-  <screenshot width="624" height="351">https://nagstamon.ifw-dresden.de/files-nagstamon/appdata/nagstamon-appdata-02.png</screenshot>
-  <screenshot width="624" height="351">https://nagstamon.ifw-dresden.de/files-nagstamon/appdata/nagstamon-appdata-03.png</screenshot>
-  <screenshot width="624" height="351">https://nagstamon.ifw-dresden.de/files-nagstamon/appdata/nagstamon-appdata-04.png</screenshot>
-  <screenshot width="624" height="351">https://nagstamon.ifw-dresden.de/files-nagstamon/appdata/nagstamon-appdata-05.png</screenshot>
+  <screenshot type="default" width="624" height="351">https://nagstamon.de/files-nagstamon/appdata/nagstamon-appdata-01.png</screenshot>
+  <screenshot width="624" height="351">https://nagstamon.de/files-nagstamon/appdata/nagstamon-appdata-02.png</screenshot>
+  <screenshot width="624" height="351">https://nagstamon.de/files-nagstamon/appdata/nagstamon-appdata-03.png</screenshot>
+  <screenshot width="624" height="351">https://nagstamon.de/files-nagstamon/appdata/nagstamon-appdata-04.png</screenshot>
+  <screenshot width="624" height="351">https://nagstamon.de/files-nagstamon/appdata/nagstamon-appdata-05.png</screenshot>
  </screenshots>
- <url type="homepage">https://nagstamon.ifw-dresden.de</url>
- <updatecontact>h.wahl@ifw-dresden.de</updatecontact>
+ <url type="homepage">https://nagstamon.de</url>
+ <updatecontact>contact@nagstamon.de</updatecontact>
 </application>

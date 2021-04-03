@@ -7,7 +7,7 @@ Uploaders: Carl Chenet <chaica@ohmytux.com>
 Build-Depends: debhelper (>= 9), python3 (>= 3.4), quilt (>= 0.63)
 Build-Depends-Indep: python-support
 Standards-Version: 3.9.2
-Homepage: https://nagstamon.ifw-dresden.de
+Homepage: https://nagstamon.de
 Vcs-Git: git://github.com/HenriWahl/Nagstamon.git
 Vcs-Browser: https://codeload.github.com/HenriWahl/Nagstamon/zip/master
 

@@ -8,7 +8,7 @@ Release:  0.1.%{gitdate}git%{shortcommit}%{?dist}
 Summary:  Nagios status monitor for desktop
 
 License:  GPLv2+
-URL:      https://nagstamon.ifw-dresden.de
+URL:      https://nagstamon.de
 Source0:  https://github.com/HenriWahl/Nagstamon/archive/%{commit}/nagstamon-%{commit}.tar.gz
 
 BuildArch:     noarch

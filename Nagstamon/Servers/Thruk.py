@@ -1,7 +1,7 @@
 # encoding: utf-8
 
 # Nagstamon - Nagios status monitor for your desktop
-# Copyright (C) 2008-2014 Henri Wahl <h.wahl@ifw-dresden.de> et al.
+# Copyright (C) 2008-2021 Henri Wahl <henri@nagstamon.de> et al.
 # Thruk additions copyright by dcec@Github
 #
 # This program is free software; you can redistribute it and/or modify
