@@ -6,6 +6,7 @@ on:
 env:
   python_win_version: 3.9.2
   python_win_path: c:/hostedtoolcache/windows/python/
+  repo_dir: nagstamon-repo/docs
 jobs:
   debian:
     runs-on: ubuntu-latest
