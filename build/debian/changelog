@@ -1,4 +1,4 @@
-nagstamon (3.6) stable; urgency=low
+nagstamon (3.6-rc2) stable; urgency=low
   * New upstream
    - added Prometheus support
    - added SensuGo support
