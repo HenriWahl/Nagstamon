@@ -3,10 +3,12 @@ on:
   push:
     tags-ignore: 'v*'
     branches: '**'
+
 env:
   python_win_version: 3.9.2
   python_win_path: c:/hostedtoolcache/windows/python/
-  repo_dir: nagstamon-repo/docs
+  repo_dir: nagstamon-jekyll/docs/repo
+
 jobs:
   debian:
     runs-on: ubuntu-latest
@@ -96,19 +98,19 @@ jobs:
       - uses: actions/download-artifact@v2
       # organize SSH deploy key for nagstamon-repo
       - run: mkdir ~/.ssh
-      - run: echo "${{ secrets.NAGSTAMON_REPO_KEY }}" >  ~/.ssh/id_ed25519
+      - run: echo "${{ secrets.NAGSTAMON_REPO_KEY_WEB }}" >  ~/.ssh/id_ed25519
       - run: chmod -R go-rwx ~/.ssh
-      # get and prepare nagstamon-repo
-      - run: git clone git@github.com:HenriWahl/nagstamon-repo.git
-      - run: rm -rf ${{ env.repo_dir }}/fedora
+      # get and prepare nagstamon-jekyll
+      - run: git clone git@github.com:HenriWahl/nagstamon-jekyll.git
+      - run: rm -rf ${{ env.repo_dir }}/fedora/latest
       - run: mkdir -p ${{ env.repo_dir }}/fedora/latest
-      # copy *.rpm files into nagstamon-repo
+      # copy *.rpm files into nagstamon-jekyll
       - run: cp -r artifact/*.rpm ${{ env.repo_dir }}/fedora/latest
       # create rpm repo via Fedora container
       - run: docker run --rm -v $PWD/${{ env.repo_dir }}/fedora/latest:/repo fedora /bin/sh -c "dnf -y install createrepo_c && createrepo /repo"
       # commit and push new binaries to nagstamon-repo
       - run: git config --global user.email "repo@nagstamon.de" && git config --global user.name "Nagstamon Repository"
-      - run: cd ${{ env.repo_dir }} && git add . && git commit -am "new testing repo" && git push
+      - run: cd ${{ env.repo_dir }} && git add . && git commit -am "new latest repo" && git push
 
   github-release:
     runs-on: ubuntu-latest
