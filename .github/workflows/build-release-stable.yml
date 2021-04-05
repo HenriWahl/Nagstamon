@@ -4,7 +4,7 @@ on:
     tags: 'v*'
 
 env:
-  python_win_version: 3.9.4
+  python_win_version: 3.9.2
   python_win_path: c:/hostedtoolcache/windows/python/
   repo_dir: nagstamon-jekyll/docs/repo
 
