@@ -5,8 +5,7 @@ on:
     branches: '**'
 
 env:
-  python_win_version: 3.9.2
-  python_win_path: c:/hostedtoolcache/windows/python/
+  python_win_version: 3.9.4
   repo_dir: nagstamon-jekyll/docs/repo
 
 jobs:
@@ -71,10 +70,12 @@ jobs:
     runs-on: windows-latest
     steps:
       - uses: actions/checkout@v2
-      - run: cinst -y --allow-empty-checksums --no-progress --x86 python3 --version=${{ env.python_win_version }}
-      - run: cinst -y --allow-empty-checksums --no-progress innosetup
-      - run: ${{ env.python_win_path }}/${{ env.python_win_version }}/x86/python.exe -m pip install --no-warn-script-location -r build/requirements/windows.txt
-      - run: cd ${{ github.workspace }}/build; ${{ env.python_win_path }}/${{ env.python_win_version }}/x86/python.exe build.py
+      - uses: actions/setup-python@v2
+        with:
+          python-version: ${{ env.python_win_version }}
+          architecture: x86
+      - run: python -m pip install --no-warn-script-location -r build/requirements/windows.txt
+      - run: cd ${{ github.workspace }}/build; python build.py
         env:
           PYTHONPATH: ${{ github.workspace }}
       - uses: actions/upload-artifact@v2
@@ -88,10 +89,12 @@ jobs:
     runs-on: windows-latest
     steps:
       - uses: actions/checkout@v2
-      - run: cinst -y --allow-empty-checksums --no-progress python3 --version=${{ env.python_win_version }}
-      - run: cinst -y --allow-empty-checksums --no-progress innosetup
-      - run: ${{ env.python_win_path }}/${{ env.python_win_version }}/x64/python.exe -m pip install --no-warn-script-location -r build/requirements/windows.txt
-      - run: cd ${{ github.workspace }}/build; ${{ env.python_win_path }}/${{ env.python_win_version }}/x64/python.exe build.py
+      - uses: actions/setup-python@v2
+        with:
+          python-version: ${{ env.python_win_version }}
+          architecture: x64
+      - run: python -m pip install --no-warn-script-location -r build/requirements/windows.txt
+      - run: cd ${{ github.workspace }}/build; python build.py
         env:
           PYTHONPATH: ${{ github.workspace }}
       - uses: actions/upload-artifact@v2
