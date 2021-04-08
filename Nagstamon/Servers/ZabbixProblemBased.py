@@ -121,19 +121,19 @@ class ZabbixProblemBasedServer(GenericServer):
                         self.new_hosts[host_id].duration = HumanReadableDurationFromTimestamp(trigger[0]['hosts'][0]['errors_from'])
 
                     #host not available via ipmi
-                    if trigger[0]['hosts'][0]['ipmi_available'] == "2":
+                    if trigger[0]['hosts'][0].get('ipmi_available', '0') == "2":
                         self.new_hosts[host_id].status = "DOWN"
                         self.new_hosts[host_id].status_information = trigger[0]['hosts'][0]['ipmi_error']
                         self.new_hosts[host_id].duration = HumanReadableDurationFromTimestamp(trigger[0]['hosts'][0]['ipmi_errors_from'])
 
                     #host not available via jmx
-                    if trigger[0]['hosts'][0]['jmx_available'] == "2":
+                    if trigger[0]['hosts'][0].get('jmx_available', '0') == "2":
                         self.new_hosts[host_id].status = "DOWN"
                         self.new_hosts[host_id].status_information = trigger[0]['hosts'][0]['jmx_error']
                         self.new_hosts[host_id].duration = HumanReadableDurationFromTimestamp(trigger[0]['hosts'][0]['jmx_errors_from'])
 
                     #host not available via snmp
-                    if trigger[0]['hosts'][0]['snmp_available'] == "2":
+                    if trigger[0]['hosts'][0].get('snmp_available', '0') == "2":
                         self.new_hosts[host_id].status = "DOWN"
                         self.new_hosts[host_id].status_information = trigger[0]['hosts'][0]['snmp_error']
                         self.new_hosts[host_id].duration = HumanReadableDurationFromTimestamp(trigger[0]['hosts'][0]['snmp_errors_from'])
