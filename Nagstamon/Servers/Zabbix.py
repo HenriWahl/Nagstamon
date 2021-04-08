@@ -184,19 +184,19 @@ class ZabbixServer(GenericServer):
                 #     n['status']             = 'UNREACHABLE'
                 #     n['status_information'] = 'Host agents in unknown state'
                 #     n['duration']           = 'Unknown'
-                if host['ipmi_available'] == '2':
+                if host.get('ipmi_available', '0') == '2':
                     n['status']             = 'DOWN'
                     n['status_information'] = host['ipmi_error']
                     n['duration']           = HumanReadableDurationFromTimestamp(host['ipmi_errors_from'])
-                if host['snmp_available'] == '2':
+                if host.get('snmp_available', '0') == '2':
                     n['status']             = 'DOWN'
                     n['status_information'] = host['snmp_error']
                     n['duration']           = HumanReadableDurationFromTimestamp(host['snmp_errors_from'])
-                if host['jmx_available'] == '2':
+                if host.get('jmx_available', '0') == '2':
                     n['status']             = 'DOWN'
                     n['status_information'] = host['jmx_error']
                     n['duration']           = HumanReadableDurationFromTimestamp(host['jmx_errors_from'])
-                if host['available'] == '2':
+                if host.get('available', '0') == '2':
                     n['status']             = 'DOWN'
                     n['status_information'] = host['error']
                     n['duration']           = HumanReadableDurationFromTimestamp(host['errors_from'])
