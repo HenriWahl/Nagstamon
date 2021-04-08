@@ -2,6 +2,7 @@ name: build-release-stable
 on:
   push:
     tags: 'v*'
+    branches: '3.6.*'
 
 env:
   python_win_version: 3.9.4
