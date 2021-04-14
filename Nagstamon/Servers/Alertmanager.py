@@ -43,6 +43,7 @@ import urllib.parse
 import urllib.error
 import pprint
 import json
+import requests
 
 from datetime import datetime, timedelta, timezone
 import dateutil.parser
@@ -70,7 +71,7 @@ class AlertmanagerServer(PrometheusServer):
     TYPE = 'Alertmanager'
 
     # Alertmanager actions are limited to visiting the monitor for now
-    MENU_ACTIONS = ['Monitor']
+    MENU_ACTIONS = ['Monitor', 'Downtime']
     BROWSER_URLS = {
         'monitor':  '$MONITOR$/#/alerts',
         'hosts':    '$MONITOR$/#/alerts',
@@ -79,6 +80,7 @@ class AlertmanagerServer(PrometheusServer):
     }
 
     API_PATH_ALERTS = "/api/v2/alerts"
+    API_PATH_SILENCES = "/api/v2/silences"
 
     def _get_status(self):
         """
@@ -203,10 +205,38 @@ class AlertmanagerServer(PrometheusServer):
         url = self.monitor_url
         webbrowser_open(url)
 
-
     def _set_downtime(self, host, service, author, comment, fixed, start_time,
                       end_time, hours, minutes):
-        """
-        to be implemented in a future release
-        """
-        pass
+
+        # Get local TZ
+        LOCAL_TIMEZONE = datetime.now(timezone(timedelta(0))).astimezone().tzinfo
+
+        # Convert local dates to UTC
+        start_time_dt = dateutil.parser.parse(start_time).replace(tzinfo=LOCAL_TIMEZONE).astimezone(timezone.utc).isoformat()
+        end_time_dt = dateutil.parser.parse(end_time).replace(tzinfo=LOCAL_TIMEZONE).astimezone(timezone.utc).isoformat()
+
+        # API Spec: https://github.com/prometheus/alertmanager/blob/master/api/v2/openapi.yaml
+        silence_data = {
+            "matchers": [
+                {
+                    "name": "instance",
+                    "value": host,
+                    "isRegex": False,
+                    "isEqual": False
+                },
+                {
+                    "name": "alertname",
+                    "value": service,
+                    "isRegex": False,
+                    "isEqual": False
+                }
+            ],
+            "startsAt": start_time_dt,
+            "endsAt": end_time_dt,
+            "createdBy": author,
+            "comment": comment
+        }
+
+        post = requests.post(self.monitor_url + self.API_PATH_SILENCES, json=silence_data)
+
+        #silence_id = post.json()["silenceID"]
