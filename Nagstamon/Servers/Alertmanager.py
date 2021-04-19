@@ -44,6 +44,7 @@ import urllib.error
 import pprint
 import json
 import requests
+import re
 
 from datetime import datetime, timedelta, timezone
 import dateutil.parser
@@ -135,6 +136,9 @@ class AlertmanagerServer(PrometheusServer):
                 for host_label in self.map_to_hostname.split(','):
                     if host_label in labels:
                         hostname = labels.get(host_label)
+                        m = re.match(r"(.*):[0-9]+", hostname)
+                        if m:
+                            hostname = m.group(1)
                         break
 
                 if conf.debug_mode:
