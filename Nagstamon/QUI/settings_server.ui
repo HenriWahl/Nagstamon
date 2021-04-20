@@ -640,6 +640,16 @@
         </property>
        </widget>
       </item>
+      <item row="12" column="1">
+       <widget class="QLabel" name="label_alertmanager_filter">
+        <property name="text">
+         <string>Filter:</string>
+        </property>
+       </widget>
+      </item>
+      <item row="12" column="2" colspan="2">
+       <widget class="QLineEdit" name="input_lineedit_alertmanager_filter"/>
+      </item>
      </layout>
     </widget>
    </item>

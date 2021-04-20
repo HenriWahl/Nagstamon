@@ -962,6 +962,7 @@ class Server(object):
         self.map_to_hostname = "pod_name,namespace,instance"
         self.map_to_servicename = "alertname"
         self.map_to_status_information = "message,summary,description"
+        self.alertmanager_filter = ''
 
 class Action(object):
     """
