@@ -4571,7 +4571,7 @@ class Dialogs(object):
         # check if special widgets have to be shown
         self.server.edited.connect(self.settings.toggle_zabbix_widgets)
         self.server.edited.connect(self.settings.toggle_op5monitor_widgets)
-        self.server.edited.connect(self.settings.toggle_icingaweb2_widgets)
+        self.server.edited.connect(self.settings.toggle_expire_time_widgets)
 
 
 class Dialog(QObject):
@@ -4952,7 +4952,7 @@ class Dialog_Settings(Dialog):
                                    self.ui.input_checkbox_re_groups_reverse]
 
         # ...and another...
-        self.ICINGAWEB2_WIDGETS = [self.ui.input_checkbox_defaults_acknowledge_expire,
+        self.EXPIRE_TIME_WIDGETS = [self.ui.input_checkbox_defaults_acknowledge_expire,
                                    self.ui.label_expire_in,
                                    self.ui.label_expire_in_hours,
                                    self.ui.label_expire_in_minutes,
@@ -5038,7 +5038,7 @@ class Dialog_Settings(Dialog):
         # hide them and thus be able to fix size if no extra Zabbix/Op5Monitor/IcingaWeb2 widgets are shown
         self.toggle_zabbix_widgets()
         self.toggle_op5monitor_widgets()
-        self.toggle_icingaweb2_widgets()
+        self.toggle_expire_time_widgets()
 
         # small workaround for timestamp trick to avoid flickering
         # if the 'Settings' button was clicked too fast the timestamp difference
@@ -5672,21 +5672,21 @@ class Dialog_Settings(Dialog):
                 widget.hide()
 
     @pyqtSlot()
-    def toggle_icingaweb2_widgets(self):
+    def toggle_expire_time_widgets(self):
         """
-            Depending on the existence of an enabled IcingaWeb2 monitor the IcingaWeb2 widgets are shown or hidden
+            Depending on the existence of an enabled IcingaWeb2 or Alertmanager monitor the expire_time widgets are shown or hidden
         """
-        use_icingaweb2 = False
+        use_expire_time = False
         for server in servers.values():
             if server.enabled:
-                if server.type == 'IcingaWeb2':
-                    use_icingaweb2 = True
+                if server.type in ['IcingaWeb2', 'Alertmanager']:
+                    use_expire_time = True
                     break
-        if use_icingaweb2:
-            for widget in self.ICINGAWEB2_WIDGETS:
+        if use_expire_time:
+            for widget in self.EXPIRE_TIME_WIDGETS:
                 widget.show()
         else:
-            for widget in self.ICINGAWEB2_WIDGETS:
+            for widget in self.EXPIRE_TIME_WIDGETS:
                 widget.hide()
 
     @pyqtSlot()
@@ -6277,8 +6277,10 @@ class Dialog_Acknowledge(Dialog):
 
         self.VOLATILE_WIDGETS = {
             self.ui.input_checkbox_use_expire_time: ['IcingaWeb2'],
-            self.ui.input_datetime_expire_time: ['IcingaWeb2']
+            self.ui.input_datetime_expire_time: ['IcingaWeb2', 'Alertmanager']
             }
+
+        self.FORCE_DATETIME_EXPIRE_TIME = ['Alertmanager']
 
 
     def initialize(self, server=None, host=[], service=[]):
@@ -6330,6 +6332,8 @@ class Dialog_Acknowledge(Dialog):
                     self.toggle_toggles()
                 else:
                     widget.hide()
+            if self.server.TYPE in self.FORCE_DATETIME_EXPIRE_TIME:
+                self.ui.input_datetime_expire_time.show()
 
         # Adjust to current size if items are hidden in menu
         # Otherwise it will get confused and chop off text
@@ -6351,7 +6355,7 @@ class Dialog_Acknowledge(Dialog):
                     if s.host in self.host_list:
                         all_services.append(s.name)
 
-        if self.ui.input_checkbox_use_expire_time.isChecked():
+        if self.ui.input_checkbox_use_expire_time.isChecked() or self.server.TYPE in self.FORCE_DATETIME_EXPIRE_TIME:
             # Format used in UI
             # 2019-11-01T18:17:39
             expire_datetime = self.ui.input_datetime_expire_time.dateTime().toString("yyyy-MM-ddTHH:mm:ss")

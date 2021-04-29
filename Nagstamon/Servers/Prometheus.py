@@ -68,6 +68,7 @@ class PrometheusService(GenericService):
     add Prometheus specific service property to generic service class
     """
     service_object_id = ""
+    labels = {}
 
 
 class PrometheusServer(GenericServer):
