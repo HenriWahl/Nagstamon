@@ -59,6 +59,7 @@ from Nagstamon.Servers.Generic import GenericServer
 from Nagstamon.Servers.Prometheus import PrometheusServer,PrometheusService
 from Nagstamon.Helpers import webbrowser_open
 
+
 class AlertmanagerService(PrometheusService):
     """
     add Alertmanager specific service property to generic service class
@@ -83,6 +84,13 @@ class AlertmanagerServer(PrometheusServer):
 
     API_PATH_ALERTS = "/api/v2/alerts"
     API_PATH_SILENCES = "/api/v2/silences"
+
+    @staticmethod
+    def timestring_to_utc(timestring):
+        local_time = datetime.now(timezone(timedelta(0))).astimezone().tzinfo
+        parsed_time = dateutil.parser.parse(timestring)
+        utc_time = parsed_time.replace(tzinfo=local_time).astimezone(timezone.utc)
+        return utc_time.isoformat()
 
     def _get_status(self):
         """
@@ -216,12 +224,9 @@ class AlertmanagerServer(PrometheusServer):
     def _set_downtime(self, host, service, author, comment, fixed, start_time,
                       end_time, hours, minutes):
 
-        # Get local TZ
-        LOCAL_TIMEZONE = datetime.now(timezone(timedelta(0))).astimezone().tzinfo
-
         # Convert local dates to UTC
-        start_time_dt = dateutil.parser.parse(start_time).replace(tzinfo=LOCAL_TIMEZONE).astimezone(timezone.utc).isoformat()
-        end_time_dt = dateutil.parser.parse(end_time).replace(tzinfo=LOCAL_TIMEZONE).astimezone(timezone.utc).isoformat()
+        start_time_dt = self.timestring_to_utc(start_time) 
+        end_time_dt = self.timestring_to_utc(end_time)
 
         # API Spec: https://github.com/prometheus/alertmanager/blob/master/api/v2/openapi.yaml
         silence_data = {
@@ -277,6 +282,7 @@ class AlertmanagerServer(PrometheusServer):
 
     def _set_acknowledge(self, host, service, author, comment, sticky, notify, persistent, all_services=[], expire_time=None):
         alert = self.hosts[host].services[service]
+        endsAt = self.timestring_to_utc(expire_time)
 
         cgi_data = {}
         cgi_data["matchers"] = []
@@ -287,7 +293,7 @@ class AlertmanagerServer(PrometheusServer):
                 "isRegex": False
             })
         cgi_data["startsAt"] = datetime.utcfromtimestamp(time.time()).isoformat()
-        cgi_data["endsAt"] = expire_time or cgi_data["startAt"]
+        cgi_data["endsAt"] = endsAt or cgi_data["startAt"]
         cgi_data["comment"] = comment or "Nagstamon silence"
         cgi_data["createdBy"] = author or "Nagstamon"
         cgi_data = json.dumps(cgi_data)

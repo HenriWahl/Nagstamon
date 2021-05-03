@@ -6275,9 +6275,34 @@ class Dialog_Acknowledge(Dialog):
             self.ui.input_checkbox_use_expire_time: [self.ui.input_datetime_expire_time]
             }
 
+        NOT_PROMETHEUS_OR_ALERTMANAGER = [
+            'Centreon',
+            'Generic',
+            'Icinga',
+            'Icinga2API',
+            'IcingaWeb2',
+            'Livestatus',
+            'Monitos3',
+            'Monitos4x',
+            'Multisite',
+            'Nagios',
+            'Opsview',
+            'Sensu',
+            'SensuGo',
+            'SnagView3',
+            'Thruk',
+            'Zabbix',
+            'ZabbixProblemBased',
+            'Zenoss'
+            ]
+
         self.VOLATILE_WIDGETS = {
             self.ui.input_checkbox_use_expire_time: ['IcingaWeb2'],
-            self.ui.input_datetime_expire_time: ['IcingaWeb2', 'Alertmanager']
+            self.ui.input_datetime_expire_time: ['IcingaWeb2', 'Alertmanager'],
+            self.ui.input_checkbox_sticky_acknowledgement: NOT_PROMETHEUS_OR_ALERTMANAGER,
+            self.ui.input_checkbox_send_notification: NOT_PROMETHEUS_OR_ALERTMANAGER,
+            self.ui.input_checkbox_persistent_comment: NOT_PROMETHEUS_OR_ALERTMANAGER,
+            self.ui.input_checkbox_acknowledge_all_services: NOT_PROMETHEUS_OR_ALERTMANAGER
             }
 
         self.FORCE_DATETIME_EXPIRE_TIME = ['Alertmanager']
