@@ -1081,6 +1081,12 @@ class GenericServer(object):
                                        service.name))
                     service.visible = False
 
+                if conf.filter_all_unreachable_services is True and service.unreachable is True:
+                    if conf.debug_mode:
+                        self.Debug(server=self.get_name(), debug='Filter: UNREACHABLE ' + str(host.name) + ';' + str(
+                                       service.name))
+                    service.visible = False
+
                 # Checkmk and OP5 do not show the status_type so their host.status_type will be empty
                 if service.status_type != '':
                     if conf.filter_services_in_soft_state is True and service.status_type == 'soft':
@@ -1432,7 +1438,7 @@ class GenericServer(object):
                         cgi_data_log = cgi_data
                     self.Debug(server=self.get_name(), debug='FetchURL: ' + url + ' CGI Data: ' + str(cgi_data_log))
 
-                if OS == OS_DARWIN and not self.cacert_path.is_file():
+                if OS == OS_DARWIN and self.cacert_path and not self.cacert_path.is_file():
                     # pyinstaller temp folder seems to be emptied completely after a while
                     # so the directories containing the resources have to be recreated too
                     self.cacert_path.parent.mkdir(exist_ok=True)

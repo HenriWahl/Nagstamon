@@ -325,6 +325,12 @@ class Ui_settings_server(object):
         self.input_checkbox_use_description_name_service = QtWidgets.QCheckBox(self.groupbox_options)
         self.input_checkbox_use_description_name_service.setObjectName("input_checkbox_use_description_name_service")
         self.gridLayout_3.addWidget(self.input_checkbox_use_description_name_service, 19, 1, 1, 3)
+        self.label_alertmanager_filter = QtWidgets.QLabel(self.groupbox_options)
+        self.label_alertmanager_filter.setObjectName("label_alertmanager_filter")
+        self.gridLayout_3.addWidget(self.label_alertmanager_filter, 12, 1, 1, 1)
+        self.input_lineedit_alertmanager_filter = QtWidgets.QLineEdit(self.groupbox_options)
+        self.input_lineedit_alertmanager_filter.setObjectName("input_lineedit_alertmanager_filter")
+        self.gridLayout_3.addWidget(self.input_lineedit_alertmanager_filter, 12, 2, 1, 2)
         self.gridLayout.addWidget(self.groupbox_options, 28, 0, 1, 4)
 
         self.retranslateUi(settings_server)
@@ -395,3 +401,4 @@ class Ui_settings_server(object):
         self.label_host_filter.setText(_translate("settings_server", "Host filter:"))
         self.label_timeout.setText(_translate("settings_server", "Timeout:"))
         self.input_checkbox_use_description_name_service.setText(_translate("settings_server", "Use description as service name"))
+        self.label_alertmanager_filter.setText(_translate("settings_server", "Filter:"))

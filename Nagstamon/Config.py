@@ -166,6 +166,7 @@ class Config(object):
         self.default_sort_order = 'descending'
         self.filter_all_down_hosts = False
         self.filter_all_unreachable_hosts = False
+        self.filter_all_unreachable_services = False
         self.filter_all_flapping_hosts = False
         self.filter_all_unknown_services = False
         self.filter_all_information_services = False
@@ -962,6 +963,7 @@ class Server(object):
         self.map_to_hostname = "pod_name,namespace,instance"
         self.map_to_servicename = "alertname"
         self.map_to_status_information = "message,summary,description"
+        self.alertmanager_filter = ''
 
 class Action(object):
     """
