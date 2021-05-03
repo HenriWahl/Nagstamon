@@ -45,7 +45,9 @@ import pprint
 import json
 import requests
 import re
+import time
 
+from collections import OrderedDict
 from datetime import datetime, timedelta, timezone
 import dateutil.parser
 
@@ -72,7 +74,7 @@ class AlertmanagerServer(PrometheusServer):
     TYPE = 'Alertmanager'
 
     # Alertmanager actions are limited to visiting the monitor for now
-    MENU_ACTIONS = ['Monitor', 'Downtime']
+    MENU_ACTIONS = ['Monitor', 'Downtime', 'Acknowledge']
     BROWSER_URLS = {
         'monitor':  '$MONITOR$/#/alerts',
         'hosts':    '$MONITOR$/#/alerts',
@@ -83,6 +85,13 @@ class AlertmanagerServer(PrometheusServer):
     API_PATH_ALERTS = "/api/v2/alerts"
     API_PATH_SILENCES = "/api/v2/silences"
     API_FILTERS = '?filter='
+
+    @staticmethod
+    def timestring_to_utc(timestring):
+        local_time = datetime.now(timezone(timedelta(0))).astimezone().tzinfo
+        parsed_time = dateutil.parser.parse(timestring)
+        utc_time = parsed_time.replace(tzinfo=local_time).astimezone(timezone.utc)
+        return utc_time.isoformat()
 
     def _get_status(self):
         """
@@ -125,6 +134,7 @@ class AlertmanagerServer(PrometheusServer):
                     )
 
                 labels = alert.get("labels", {})
+                state = alert.get("status", {"state": "active"})["state"]
 
                 # skip alerts with none severity
                 severity = labels.get("severity", "UNKNOWN").upper()
@@ -163,6 +173,8 @@ class AlertmanagerServer(PrometheusServer):
                 service.name = servicename
                 service.server = self.name
                 service.status = severity
+                service.labels = labels
+                service.acknowledged = state == "suppressed"
                 service.last_check = str(self._get_duration(alert["updatedAt"]))
 
                 if "status" in alert:
@@ -217,12 +229,9 @@ class AlertmanagerServer(PrometheusServer):
     def _set_downtime(self, host, service, author, comment, fixed, start_time,
                       end_time, hours, minutes):
 
-        # Get local TZ
-        LOCAL_TIMEZONE = datetime.now(timezone(timedelta(0))).astimezone().tzinfo
-
         # Convert local dates to UTC
-        start_time_dt = dateutil.parser.parse(start_time).replace(tzinfo=LOCAL_TIMEZONE).astimezone(timezone.utc).isoformat()
-        end_time_dt = dateutil.parser.parse(end_time).replace(tzinfo=LOCAL_TIMEZONE).astimezone(timezone.utc).isoformat()
+        start_time_dt = self.timestring_to_utc(start_time) 
+        end_time_dt = self.timestring_to_utc(end_time)
 
         # API Spec: https://github.com/prometheus/alertmanager/blob/master/api/v2/openapi.yaml
         silence_data = {
@@ -249,3 +258,50 @@ class AlertmanagerServer(PrometheusServer):
         post = requests.post(self.monitor_url + self.API_PATH_SILENCES, json=silence_data)
 
         #silence_id = post.json()["silenceID"]
+
+
+    # Overwrite function from generic server to add expire_time value
+    def set_acknowledge(self, info_dict):
+        '''
+            different monitors might have different implementations of _set_acknowledge
+        '''
+        if info_dict['acknowledge_all_services'] is True:
+            all_services = info_dict['all_services']
+        else:
+            all_services = []
+
+        # Make sure expire_time is set
+        #if not info_dict['expire_time']:
+        #    info_dict['expire_time'] = None
+
+        self._set_acknowledge(info_dict['host'],
+                              info_dict['service'],
+                              info_dict['author'],
+                              info_dict['comment'],
+                              info_dict['sticky'],
+                              info_dict['notify'],
+                              info_dict['persistent'],
+                              all_services,
+                              info_dict['expire_time'])
+
+
+    def _set_acknowledge(self, host, service, author, comment, sticky, notify, persistent, all_services=[], expire_time=None):
+        alert = self.hosts[host].services[service]
+        endsAt = self.timestring_to_utc(expire_time)
+
+        cgi_data = {}
+        cgi_data["matchers"] = []
+        for name, value in alert.labels.items():
+            cgi_data["matchers"].append({
+                "name": name,
+                "value": value,
+                "isRegex": False
+            })
+        cgi_data["startsAt"] = datetime.utcfromtimestamp(time.time()).isoformat()
+        cgi_data["endsAt"] = endsAt or cgi_data["startAt"]
+        cgi_data["comment"] = comment or "Nagstamon silence"
+        cgi_data["createdBy"] = author or "Nagstamon"
+        cgi_data = json.dumps(cgi_data)
+
+        result = self.FetchURL(self.monitor_url + self.API_PATH_SILENCES, giveback="raw", cgi_data=cgi_data)
+        return result

@@ -1432,7 +1432,7 @@ class GenericServer(object):
                         cgi_data_log = cgi_data
                     self.Debug(server=self.get_name(), debug='FetchURL: ' + url + ' CGI Data: ' + str(cgi_data_log))
 
-                if OS == OS_DARWIN and not self.cacert_path.is_file():
+                if OS == OS_DARWIN and self.cacert_path and not self.cacert_path.is_file():
                     # pyinstaller temp folder seems to be emptied completely after a while
                     # so the directories containing the resources have to be recreated too
                     self.cacert_path.parent.mkdir(exist_ok=True)
