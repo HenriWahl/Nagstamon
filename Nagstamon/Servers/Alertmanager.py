@@ -82,6 +82,7 @@ class AlertmanagerServer(PrometheusServer):
 
     API_PATH_ALERTS = "/api/v2/alerts"
     API_PATH_SILENCES = "/api/v2/silences"
+    API_FILTERS = '?filter='
 
     def _get_status(self):
         """
@@ -91,12 +92,16 @@ class AlertmanagerServer(PrometheusServer):
             self.Debug(server=self.get_name(),debug="detection config (map_to_status_information): '" + str(self.map_to_status_information) + "'")
             self.Debug(server=self.get_name(),debug="detection config (map_to_hostname): '" + str(self.map_to_hostname) + "'")
             self.Debug(server=self.get_name(),debug="detection config (map_to_servicename): '" + str(self.map_to_servicename) + "'")
+            self.Debug(server=self.get_name(),debug="detection config (alertmanager_filter): '" + str(self.alertmanager_filter) + "'")
 
         # get all alerts from the API server
         try:
-            result = self.FetchURL(self.monitor_url + self.API_PATH_ALERTS,
-                                   giveback="raw")
-            
+            if self.alertmanager_filter != '':
+                result = self.FetchURL(self.monitor_url + self.API_PATH_ALERTS + self.API_FILTERS + self.alertmanager_filter,
+                                       giveback="raw")
+            else:
+                result = self.FetchURL(self.monitor_url + self.API_PATH_ALERTS,
+                                       giveback="raw")
             if conf.debug_mode:
                 self.Debug(server=self.get_name(),debug="received status code '" + str(result.status_code) + "' with this content in result.result: \n\
 -----------------------------------------------------------------------------------------------------------------------------\n\
@@ -172,7 +177,7 @@ class AlertmanagerServer(PrometheusServer):
                 else:
                     if conf.debug_mode:
                         self.Debug(server=self.get_name(),debug="[" + alert['fingerprint'] + "]: detected status: '" + service.attempt + "'")
-                
+
                 service.duration = str(self._get_duration(alert["startsAt"]))
 
                 # Alertmanager specific extensions

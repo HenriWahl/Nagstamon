@@ -5762,7 +5762,9 @@ class Dialog_Server(Dialog):
             self.ui.label_map_to_servicename: ['Prometheus','Alertmanager'],
             self.ui.input_lineedit_map_to_servicename: ['Prometheus','Alertmanager'],
             self.ui.label_map_to_status_information: ['Prometheus','Alertmanager'],
-            self.ui.input_lineedit_map_to_status_information: ['Prometheus','Alertmanager']}
+            self.ui.input_lineedit_map_to_status_information: ['Prometheus','Alertmanager'],
+            self.ui.input_lineedit_alertmanager_filter: ['Alertmanager'],
+            self.ui.label_alertmanager_filter: ['Alertmanager']}
 
         # to be used when selecting authentication method Kerberos
         self.AUTHENTICATION_WIDGETS = [
