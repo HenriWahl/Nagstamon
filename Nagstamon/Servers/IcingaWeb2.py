@@ -92,7 +92,7 @@ class IcingaWeb2Server(GenericServer):
         """
         GenericServer.init_HTTP(self)
 
-        if not 'Referer' in self.session.headers:
+        if self.session and not 'Referer' in self.session.headers:
             self.session.headers['Referer'] = self.monitor_cgi_url + '/icingaweb2/monitoring'
 
         # normally cookie out will be used
