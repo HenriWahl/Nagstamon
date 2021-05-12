@@ -304,8 +304,11 @@ class Config(object):
         # internal flag to determine if keyring is available at all - defaults to False
         # use_system_keyring is checked and defined some lines later after config file was read
         self.keyring_available = False
-        # setting for keyring usage
-        self.use_system_keyring = True
+        # setting for keyring usage - might cause trouble on Linux so disable it there as default to avoid crash at start
+        if OS in OS_NON_LINUX:
+            self.use_system_keyring = True
+        else:
+            self.use_system_keyring = False
 
         # Special FX
         # Centreon
