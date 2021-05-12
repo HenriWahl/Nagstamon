@@ -1,9 +1,9 @@
 beautifulsoup4
-keyring==10.5.1
+keyring
 lxml
 psutil
 pyinstaller
-pyqt5==5.15.3
+pyqt5==5.15.4
 pysocks
 python-dateutil
 requests
