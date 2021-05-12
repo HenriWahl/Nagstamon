@@ -86,34 +86,7 @@ class IcingaWeb2Server(GenericServer):
         self.use_display_name_host = True
         self.use_display_name_service = True
 
-    def init_HTTP(self):
-        """
-            initializing of session object
-        """
-        GenericServer.init_HTTP(self)
-
-        if self.session and not 'Referer' in self.session.headers:
-            self.session.headers['Referer'] = self.monitor_cgi_url + '/icingaweb2/monitoring'
-
-        # normally cookie out will be used
-        if not self.no_cookie_auth:
-            if len(self.session.cookies) == 0:
-                # get login page, thus automatically a cookie
-                login = self.FetchURL('{0}/authentication/login'.format(self.monitor_url))
-                if login.error == '' and login.status_code == 200:
-                    form = login.result.find('form')
-                    form_inputs = {}
-                    for form_input in ('redirect', 'formUID', 'CSRFToken', 'btn_submit'):
-                        if not form.find('input', {'name': form_input}) is None:
-                            form_inputs[form_input] = form.find('input', {'name': form_input})['value']
-                        else:
-                            form_inputs[form_input] = ''
-                    form_inputs['username'] = self.username
-                    form_inputs['password'] = self.password
-    
-                    # fire up login button with all needed data
-                    self.FetchURL('{0}/authentication/login'.format(self.monitor_url), cgi_data=form_inputs)
-
+        self.authentication = 'basic'
 
     def _get_status(self):
         """
