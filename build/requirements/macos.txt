@@ -3,7 +3,7 @@ keyring
 lxml
 psutil
 pyinstaller
-pyqt5==5.15.4
+pyqt5==5.15.3
 pysocks
 python-dateutil
 requests
