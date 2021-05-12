@@ -305,7 +305,7 @@ class Config(object):
         # use_system_keyring is checked and defined some lines later after config file was read
         self.keyring_available = False
         # setting for keyring usage
-        self.use_system_keyring = False
+        self.use_system_keyring = True
 
         # Special FX
         # Centreon
