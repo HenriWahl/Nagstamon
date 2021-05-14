@@ -1052,6 +1052,13 @@
            </widget>
           </item>
           <item row="2" column="0">
+           <widget class="QCheckBox" name="input_checkbox_filter_all_unreachable_services">
+            <property name="text">
+             <string>All unreachable services</string>
+            </property>
+           </widget>
+          </item>
+          <item row="3" column="0">
            <widget class="QCheckBox" name="input_checkbox_filter_all_flapping_hosts">
             <property name="text">
              <string>All flapping hosts</string>

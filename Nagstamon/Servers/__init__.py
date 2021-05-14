@@ -196,6 +196,7 @@ def create_server(server=None):
     new_server.use_description_name_service = server.use_description_name_service
 
     # Prometheus & Alertmanager
+    new_server.alertmanager_filter = server.alertmanager_filter
     new_server.map_to_hostname = server.map_to_hostname
     new_server.map_to_servicename = server.map_to_servicename
     new_server.map_to_status_information = server.map_to_status_information

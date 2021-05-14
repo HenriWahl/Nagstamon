@@ -2,7 +2,7 @@
 
 # Form implementation generated from reading ui file 'settings_main.ui'
 #
-# Created by: PyQt5 UI code generator 5.13.1
+# Created by: PyQt5 UI code generator 5.13.2
 #
 # WARNING! All changes made in this file will be lost!
 
@@ -408,9 +408,12 @@ class Ui_settings_main(object):
         self.input_checkbox_filter_all_unreachable_hosts = QtWidgets.QCheckBox(self.groupbox_filters)
         self.input_checkbox_filter_all_unreachable_hosts.setObjectName("input_checkbox_filter_all_unreachable_hosts")
         self.gridLayout_5.addWidget(self.input_checkbox_filter_all_unreachable_hosts, 1, 0, 1, 1)
+        self.input_checkbox_filter_all_unreachable_services = QtWidgets.QCheckBox(self.groupbox_filters)
+        self.input_checkbox_filter_all_unreachable_services.setObjectName("input_checkbox_filter_all_unreachable_services")
+        self.gridLayout_5.addWidget(self.input_checkbox_filter_all_unreachable_services, 2, 0, 1, 1)
         self.input_checkbox_filter_all_flapping_hosts = QtWidgets.QCheckBox(self.groupbox_filters)
         self.input_checkbox_filter_all_flapping_hosts.setObjectName("input_checkbox_filter_all_flapping_hosts")
-        self.gridLayout_5.addWidget(self.input_checkbox_filter_all_flapping_hosts, 2, 0, 1, 1)
+        self.gridLayout_5.addWidget(self.input_checkbox_filter_all_flapping_hosts, 3, 0, 1, 1)
         self.input_checkbox_filter_all_critical_services = QtWidgets.QCheckBox(self.groupbox_filters)
         self.input_checkbox_filter_all_critical_services.setObjectName("input_checkbox_filter_all_critical_services")
         self.gridLayout_5.addWidget(self.input_checkbox_filter_all_critical_services, 4, 0, 1, 1)
@@ -1500,6 +1503,7 @@ class Ui_settings_main(object):
         self.groupbox_filters.setTitle(_translate("settings_main", "Filter out the following:"))
         self.input_checkbox_filter_all_down_hosts.setText(_translate("settings_main", "All down hosts"))
         self.input_checkbox_filter_all_unreachable_hosts.setText(_translate("settings_main", "All unreachable hosts"))
+        self.input_checkbox_filter_all_unreachable_services.setText(_translate("settings_main", "All unreachable services"))
         self.input_checkbox_filter_all_flapping_hosts.setText(_translate("settings_main", "All flapping hosts"))
         self.input_checkbox_filter_all_critical_services.setText(_translate("settings_main", "All critical services"))
         self.input_checkbox_filter_acknowledged_hosts_services.setText(_translate("settings_main", "Acknowledged hosts and services"))
@@ -1642,3 +1646,13 @@ class Ui_settings_main(object):
         self.label_acknowledge_submit_result.setTitle(_translate("settings_main", "Submit check result:"))
         self.label_defaults_submit_check_result_comment.setText(_translate("settings_main", "Comment:"))
         self.tabs.setTabText(self.tabs.indexOf(self.tab_defaults), _translate("settings_main", "Defaults"))
+
+
+if __name__ == "__main__":
+    import sys
+    app = QtWidgets.QApplication(sys.argv)
+    settings_main = QtWidgets.QDialog()
+    ui = Ui_settings_main()
+    ui.setupUi(settings_main)
+    settings_main.show()
+    sys.exit(app.exec_())
