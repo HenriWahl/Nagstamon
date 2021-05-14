@@ -1,12 +1,12 @@
 arrow
 beautifulsoup4
 icinga2api
-keyring==10.5.1
+keyring
 lxml
 psutil
 pyinstaller
 pypiwin32
-pyqt5==5.15.3
+pyqt5==5.15.4
 pysocks
 python-dateutil
 requests
