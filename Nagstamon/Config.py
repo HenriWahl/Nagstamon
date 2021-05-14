@@ -115,6 +115,7 @@ CONFIG_STRINGS = ['custom_browser',
                   'proxy_password',
                   'autologin_key',
                   'custom_cert_ca_file',
+                  'idp_ecp_endpoint',
                   'monitor_site'
                   ]
 
@@ -929,6 +930,8 @@ class Server(object):
         self.ignore_cert = False
         self.custom_cert_use = False
         self.custom_cert_ca_file = ''
+
+        self.idp_ecp_endpoint = 'https://idp/idp/profile/SAML2/SOAP/ECP'
 
         # special FX
         # Centreon autologin

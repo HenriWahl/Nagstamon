@@ -5787,7 +5787,7 @@ class Dialog_Server(Dialog):
         self.ui.button_choose_custom_cert_ca_file.clicked.connect(self.choose_custom_cert_ca_file)
 
         # fill authentication combobox
-        self.ui.input_combobox_authentication.addItems(['Basic', 'Digest', 'Kerberos'])
+        self.ui.input_combobox_authentication.addItems(['Basic', 'Digest', 'Kerberos', 'ECP'])
 
         # detect change of server type which leads to certain options shown or hidden
         self.ui.input_combobox_type.activated.connect(self.toggle_type)
