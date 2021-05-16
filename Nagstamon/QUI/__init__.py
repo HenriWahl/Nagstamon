@@ -6277,6 +6277,7 @@ class Dialog_Acknowledge(Dialog):
             self.ui.input_checkbox_use_expire_time: [self.ui.input_datetime_expire_time]
             }
 
+        # somewhat clumsy... but well, One Day (TM)...
         NOT_PROMETHEUS_OR_ALERTMANAGER = [
             'Centreon',
             'Generic',
@@ -6286,7 +6287,7 @@ class Dialog_Acknowledge(Dialog):
             'Livestatus',
             'Monitos3',
             'Monitos4x',
-            'Multisite',
+            'Checkmk Multisite',
             'Nagios',
             'Opsview',
             'Sensu',
