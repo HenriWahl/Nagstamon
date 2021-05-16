@@ -1,6 +1,6 @@
 Nagstamon
 =========
-
+[![build-release-stable](https://github.com/HenriWahl/Nagstamon/actions/workflows/build-release-stable.yml/badge.svg)](https://github.com/HenriWahl/Nagstamon/actions/workflows/build-release-stable.yml)
 [![build-release-latest](https://github.com/HenriWahl/Nagstamon/actions/workflows/build-release-latest.yml/badge.svg)](https://github.com/HenriWahl/Nagstamon/actions/workflows/build-release-latest.yml)
 
 Nagstamon is a status monitor for the desktop. It connects to multiple Nagios, Icinga, Opsview, Centreon, Op5 Monitor/Ninja, Checkmk Multisite, Thruk and monitos monitoring servers. Experimental support is provided for Zabbix, Zenoss and Livestatus monitors. It resides in systray, as a floating statusbar or fullscreen at the desktop showing a brief summary of critical, warning, unknown, unreachable and down hosts and services. It pops up a detailed status overview when being touched by the mouse pointer. Connections to displayed hosts and services are easily established by context menu via SSH, RDP, VNC or any self defined actions. Users can be notified by sound. Hosts and services can be filtered by category and regular expressions.
