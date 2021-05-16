@@ -6277,27 +6277,10 @@ class Dialog_Acknowledge(Dialog):
             self.ui.input_checkbox_use_expire_time: [self.ui.input_datetime_expire_time]
             }
 
-        # somewhat clumsy... but well, One Day (TM)...
-        NOT_PROMETHEUS_OR_ALERTMANAGER = [
-            'Centreon',
-            'Generic',
-            'Icinga',
-            'Icinga2API',
-            'IcingaWeb2',
-            'Livestatus',
-            'Monitos3',
-            'Monitos4x',
-            'Checkmk Multisite',
-            'Nagios',
-            'Opsview',
-            'Sensu',
-            'SensuGo',
-            'SnagView3',
-            'Thruk',
-            'Zabbix',
-            'ZabbixProblemBased',
-            'Zenoss'
-            ]
+        # still clumsy but better than negating the other server types
+        PROMETHEUS_OR_ALERTMANAGER = ['Alertmanager',
+                                      'Prometheus']
+        NOT_PROMETHEUS_OR_ALERTMANAGER = [x.TYPE for x in SERVER_TYPES.values() if x.TYPE not in PROMETHEUS_OR_ALERTMANAGER]
 
         self.VOLATILE_WIDGETS = {
             self.ui.input_checkbox_use_expire_time: ['IcingaWeb2'],
