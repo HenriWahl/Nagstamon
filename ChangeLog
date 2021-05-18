@@ -1,5 +1,7 @@
-nagstamon (3.7-20210408) unstable; urgency=low
+nagstamon (3.7-20210517) unstable; urgency=low
   * New upstream
+   - added test section to GitHub actions workflows to enable testing
+   - added basic unit tests and linting to Alertmanager
 
  -- Henri Wahl <henri@nagstamon.de> Tue, 07 Apr 2021 19:00:00 +0100
 

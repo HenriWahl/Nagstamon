@@ -25,6 +25,13 @@
 #
 # Release Notes:
 #
+#   [1.1.0] - 2021-05-18:
+#     * changed:
+#         Using logging module for all outputs
+#         Some refactoring for testing support
+#     * added:
+#         Initial tests based on unittest and pylint (see tests/test_Alertmanager.py)
+#
 #   [1.0.2] - 2021-04-10:
 #     * added:
 #         Better debug output
@@ -38,26 +45,34 @@
 #         Inital version
 #
 import sys
-import urllib.request
-import urllib.parse
-import urllib.error
-import pprint
 import json
-import requests
 import re
 import time
 
-from collections import OrderedDict
 from datetime import datetime, timedelta, timezone
+import logging
 import dateutil.parser
+import requests
 
 from Nagstamon.Config import conf
-from Nagstamon.Objects import (GenericHost,
-                               GenericService,
-                               Result)
-from Nagstamon.Servers.Generic import GenericServer
-from Nagstamon.Servers.Prometheus import PrometheusServer,PrometheusService
+from Nagstamon.Objects import (GenericHost, Result)
+from Nagstamon.Servers.Prometheus import PrometheusServer, PrometheusService
 from Nagstamon.Helpers import webbrowser_open
+
+# logging --------------------------------------------
+log = logging.getLogger('Alertmanager.py')
+handler = logging.StreamHandler(sys.stdout)
+if conf.debug_mode is True:
+    log_level = logging.DEBUG
+    handler.setLevel(logging.DEBUG)
+else:
+    log_level = logging.INFO
+    handler.setLevel(logging.INFO)
+log.setLevel(log_level)
+formatter = logging.Formatter('%(asctime)s - %(name)s - %(levelname)s - %(message)s')
+handler.setFormatter(formatter)
+log.addHandler(handler)
+# ----------------------------------------------------
 
 
 class AlertmanagerService(PrometheusService):
@@ -86,6 +101,13 @@ class AlertmanagerServer(PrometheusServer):
     API_PATH_SILENCES = "/api/v2/silences"
     API_FILTERS = '?filter='
 
+    # vars specific to alertmanager class
+    map_to_hostname = ''
+    map_to_servicename = ''
+    map_to_status_information = ''
+    name = ''
+    alertmanager_filter = ''
+
     @staticmethod
     def timestring_to_utc(timestring):
         local_time = datetime.now(timezone(timedelta(0))).astimezone().tzinfo
@@ -93,29 +115,103 @@ class AlertmanagerServer(PrometheusServer):
         utc_time = parsed_time.replace(tzinfo=local_time).astimezone(timezone.utc)
         return utc_time.isoformat()
 
+
+    def _detect_from_labels(self, labels, config_label_list, default_value="", list_delimiter=","):
+        result = default_value
+        for each_label in config_label_list.split(list_delimiter):
+            if each_label in labels:
+                result = labels.get(each_label)
+                break
+        return result
+
+
+    def _process_alert(self, alert):
+        result = {}
+
+        # Alertmanager specific extensions
+        generatorURL = alert.get("generatorURL", {})
+        fingerprint = alert.get("fingerprint", {})
+        log.debug("processing alert with fingerprint '%s':", fingerprint)
+
+        labels = alert.get("labels", {})
+        state = alert.get("status", {"state": "active"})["state"]
+        severity = labels.get("severity", "UNKNOWN").upper()
+
+        # skip alerts with none severity
+        if severity == "NONE":
+            log.debug("[%s]: detected detected state '%s' and severity '%s' from labels -> skipping alert", fingerprint, state, severity)
+            return False
+        log.debug("[%s]: detected detected state '%s' and severity '%s' from labels", fingerprint, state, severity)
+
+        hostname = self._detect_from_labels(labels,self.map_to_hostname,"unknown")
+        hostname = re.sub(':[0-9]+', '', hostname)        
+        log.debug("[%s]: detected hostname from labels: '%s'", fingerprint, hostname)
+
+        servicename = self._detect_from_labels(labels,self.map_to_servicename,"unknown")                
+        log.debug("[%s]: detected servicename from labels: '%s'", fingerprint, servicename)
+
+        if "status" in alert:
+            attempt = alert["status"].get("state", "unknown")
+        else:
+            attempt = "unknown"
+
+        if attempt == "suppressed":
+            scheduled_downtime = True
+            acknowledged = True
+            log.debug("[%s]: detected status: '%s' -> interpreting as silenced", fingerprint, attempt)
+        else:
+            scheduled_downtime = False
+            acknowledged = False
+            log.debug("[%s]: detected status: '%s'", fingerprint, attempt)
+        
+        duration = str(self._get_duration(alert["startsAt"]))
+
+        annotations = alert.get("annotations", {})
+        status_information = self._detect_from_labels(annotations,self.map_to_status_information,'')
+        
+        result['host'] = str(hostname)
+        result['name'] = servicename
+        result['server'] = self.name
+        result['status'] = severity
+        result['labels'] = labels
+        result['last_check'] = str(self._get_duration(alert["updatedAt"]))
+        result['attempt'] = attempt
+        result['scheduled_downtime'] = scheduled_downtime
+        result['acknowledged'] = acknowledged
+        result['duration'] = duration
+        result['generatorURL'] = generatorURL
+        result['fingerprint'] = fingerprint
+        result['status_information'] = status_information
+
+        return result
+
+
     def _get_status(self):
         """
         Get status from Alertmanager Server
         """
-        if conf.debug_mode:
-            self.Debug(server=self.get_name(),debug="detection config (map_to_status_information): '" + str(self.map_to_status_information) + "'")
-            self.Debug(server=self.get_name(),debug="detection config (map_to_hostname): '" + str(self.map_to_hostname) + "'")
-            self.Debug(server=self.get_name(),debug="detection config (map_to_servicename): '" + str(self.map_to_servicename) + "'")
-            self.Debug(server=self.get_name(),debug="detection config (alertmanager_filter): '" + str(self.alertmanager_filter) + "'")
+        
+        log.debug("detection config (map_to_status_information): '%s'", self.map_to_status_information)
+        log.debug("detection config (map_to_hostname): '%s'", self.map_to_hostname)
+        log.debug("detection config (map_to_servicename): '%s'", self.map_to_servicename)
+        log.debug("detection config (alertmanager_filter): '%s'", self.alertmanager_filter)
 
         # get all alerts from the API server
         try:
             if self.alertmanager_filter != '':
-                result = self.FetchURL(self.monitor_url + self.API_PATH_ALERTS + self.API_FILTERS + self.alertmanager_filter,
-                                       giveback="raw")
+                result = self.FetchURL(self.monitor_url + self.API_PATH_ALERTS + self.API_FILTERS
+                                        + self.alertmanager_filter, giveback="raw")
             else:
                 result = self.FetchURL(self.monitor_url + self.API_PATH_ALERTS,
                                        giveback="raw")
-            if conf.debug_mode:
-                self.Debug(server=self.get_name(),debug="received status code '" + str(result.status_code) + "' with this content in result.result: \n\
+            
+            if result.status_code == 200:
+                log.debug("received status code '%s' with this content in result.result: \n\
 -----------------------------------------------------------------------------------------------------------------------------\n\
-" + result.result + "\
------------------------------------------------------------------------------------------------------------------------------")
+%s\
+-----------------------------------------------------------------------------------------------------------------------------", result.status_code, result.result)
+            else:
+                log.error("received status code '%s'", result.status_code)
 
             data = json.loads(result.result)
             error = result.error
@@ -127,97 +223,43 @@ class AlertmanagerServer(PrometheusServer):
                 return(errors_occured)
 
             for alert in data:
-                if conf.debug_mode:
-                    self.Debug(
-                        server=self.get_name(),
-                        debug="processing alert with fingerprint '" + alert['fingerprint'] + "':"
-                    )
-
-                labels = alert.get("labels", {})
-                state = alert.get("status", {"state": "active"})["state"]
-
-                # skip alerts with none severity
-                severity = labels.get("severity", "UNKNOWN").upper()
-
-                if severity == "NONE":
-                    if conf.debug_mode:
-                        self.Debug(server=self.get_name(),debug="[" + alert['fingerprint'] + "]: detected severity from labels '" + severity + "' -> skipping alert")
-                    continue
-
-                if conf.debug_mode:
-                    self.Debug(server=self.get_name(),debug="[" + alert['fingerprint'] + "]: detected severity from labels '" + severity + "'")
-
-                hostname = "unknown"
-                for host_label in self.map_to_hostname.split(','):
-                    if host_label in labels:
-                        hostname = labels.get(host_label)
-                        m = re.match(r"(.*):[0-9]+", hostname)
-                        if m:
-                            hostname = m.group(1)
-                        break
-
-                if conf.debug_mode:
-                    self.Debug(server=self.get_name(),debug="[" + alert['fingerprint'] + "]: detected hostname from labels: '" + hostname + "'")
-
-                servicename = "unknown"
-                for service_label in self.map_to_servicename.split(','):
-                    if service_label in labels:
-                        servicename = labels.get(service_label)
-                        break
-
-                if conf.debug_mode:
-                    self.Debug(server=self.get_name(),debug="[" + alert['fingerprint'] + "]: detected servicename from labels: '" + servicename + "'")
+                alert_data = self._process_alert(alert)
+                if not alert_data:
+                    break
 
                 service = PrometheusService()
-                service.host = str(hostname)
-                service.name = servicename
-                service.server = self.name
-                service.status = severity
-                service.labels = labels
-                service.acknowledged = state == "suppressed"
-                service.last_check = str(self._get_duration(alert["updatedAt"]))
+                service.host = alert_data['host']
+                service.name = alert_data['name']
+                service.server = alert_data['server']
+                service.status = alert_data['status']
+                service.labels = alert_data['labels']
+                service.scheduled_downtime = alert_data['scheduled_downtime']
+                service.acknowledged = alert_data['acknowledged']
+                service.last_check = alert_data['last_check']
+                service.attempt = alert_data['attempt']
+                service.duration = alert_data['duration']
 
-                if "status" in alert:
-                    service.attempt = alert["status"].get("state", "unknown")
-                else:
-                    service.attempt = "unknown"
+                service.generatorURL = alert_data['generatorURL']
+                service.fingerprint = alert_data['fingerprint']
 
-                if service.attempt == "suppressed":
-                    service.scheduled_downtime = True
-                    if conf.debug_mode:
-                        self.Debug(server=self.get_name(),debug="[" + alert['fingerprint'] + "]: detected status: '" + service.attempt + "' -> interpreting as silenced")
-                else:
-                    if conf.debug_mode:
-                        self.Debug(server=self.get_name(),debug="[" + alert['fingerprint'] + "]: detected status: '" + service.attempt + "'")
+                service.status_information = alert_data['status_information']
 
-                service.duration = str(self._get_duration(alert["startsAt"]))
+                if service.host not in self.new_hosts:
+                    self.new_hosts[service.host] = GenericHost()
+                    self.new_hosts[service.host].name = str(service.host)
+                    self.new_hosts[service.host].server = self.name
+                self.new_hosts[service.host].services[service.name] = service
 
-                # Alertmanager specific extensions
-                service.generatorURL = alert.get("generatorURL", {})
-                service.fingerprint = alert.get("fingerprint", {})
-
-                annotations = alert.get("annotations", {})
-                status_information = ""
-                for status_information_label in self.map_to_status_information.split(','):
-                    if status_information_label in annotations:
-                        status_information = annotations.get(status_information_label)
-                        break
-                service.status_information = status_information
-
-                if hostname not in self.new_hosts:
-                    self.new_hosts[hostname] = GenericHost()
-                    self.new_hosts[hostname].name = str(hostname)
-                    self.new_hosts[hostname].server = self.name
-                self.new_hosts[hostname].services[servicename] = service
-
-        except:
+        except Exception as e:
             # set checking flag back to False
             self.isChecking = False
             result, error = self.Error(sys.exc_info())
+            log.exception(e)
             return Result(result=result, error=error)
 
         # dummy return in case all is OK
         return Result()
+
 
     def open_monitor(self, host, service=''):
         """
@@ -225,6 +267,7 @@ class AlertmanagerServer(PrometheusServer):
         """
         url = self.monitor_url
         webbrowser_open(url)
+
 
     def _set_downtime(self, host, service, author, comment, fixed, start_time,
                       end_time, hours, minutes):
