@@ -1,9 +1,10 @@
 *.pyc
 *~
 .idea/
-.__pycache__/
+__pycache__/
 *.swp
 nagstamon.conf/
 .directory
 .metadata/
 .vscode/
+dist/

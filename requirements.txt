@@ -1,0 +1,10 @@
+beautifulsoup4
+bs4
+keyring
+lxml
+psutil
+PyQt5
+PySocks
+python-dateutil
+requests
+requests-kerberos
