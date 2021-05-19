@@ -62,6 +62,11 @@ try:
 except ImportError:
     from requests_kerberos import HTTPKerberosAuth as HTTPSKerberos
 
+try:
+    from requests_ecp import HTTPECPAuth
+except:
+    pass
+
 # disable annoying SubjectAltNameWarning warnings
 try:
     from requests.packages.urllib3.exceptions import SubjectAltNameWarning
@@ -265,6 +270,8 @@ class GenericServer(object):
                 self.session.auth = requests.auth.HTTPBasicAuth(self.username, self.password)
             elif self.authentication == 'digest':
                 self.session.auth = requests.auth.HTTPDigestAuth(self.username, self.password)
+            elif self.authentication == 'ecp':
+                self.session.auth = HTTPECPAuth(self.idp_ecp_endpoint, username=self.username, password=self.password)
             elif self.authentication == 'kerberos':
                 self.session.auth = HTTPSKerberos()
 

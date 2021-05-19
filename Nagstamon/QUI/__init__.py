@@ -5774,6 +5774,10 @@ class Dialog_Server(Dialog):
             self.ui.input_lineedit_password,
             self.ui.input_checkbox_save_password]
 
+        self.AUTHENTICATION_ECP_WIDGETS = [
+            self.ui.label_idp_ecp_endpoint,
+            self.ui.input_lineedit_idp_ecp_endpoint]
+
         # fill default order fields combobox with monitor server types
         self.ui.input_combobox_type.addItems(sorted(SERVER_TYPES.keys(), key=str.lower))
         # default to Nagios as it is the mostly used monitor server
@@ -5787,7 +5791,7 @@ class Dialog_Server(Dialog):
         self.ui.button_choose_custom_cert_ca_file.clicked.connect(self.choose_custom_cert_ca_file)
 
         # fill authentication combobox
-        self.ui.input_combobox_authentication.addItems(['Basic', 'Digest', 'Kerberos'])
+        self.ui.input_combobox_authentication.addItems(['Basic', 'Digest', 'Kerberos', 'ECP'])
 
         # detect change of server type which leads to certain options shown or hidden
         self.ui.input_combobox_type.activated.connect(self.toggle_type)
@@ -5823,6 +5827,13 @@ class Dialog_Server(Dialog):
         else:
             for widget in self.AUTHENTICATION_WIDGETS:
                 widget.show()
+
+        if self.ui.input_combobox_authentication.currentText() == 'ECP':
+            for widget in self.AUTHENTICATION_ECP_WIDGETS:
+                widget.show()
+        else:
+            for widget in self.AUTHENTICATION_ECP_WIDGETS:
+                widget.hide()
 
         # after hiding authentication widgets dialog might shrink
         self.window.adjustSize()
