@@ -113,6 +113,13 @@ if not OS in OS_NON_LINUX:
         print('No DBus for desktop notification available.')
         DBUS_AVAILABLE = False
 
+# check ECP authentication support availability
+try:
+    from requests_ecp import HTTPECPAuth
+    ECP_AVAILABLE = True
+except ImportError:
+    ECP_AVAILABLE = False
+
 # enable HighDPI-awareness to avoid https://github.com/HenriWahl/Nagstamon/issues/618
 try:
     QApplication.setAttribute(Qt.AA_EnableHighDpiScaling, True)
@@ -5791,7 +5798,9 @@ class Dialog_Server(Dialog):
         self.ui.button_choose_custom_cert_ca_file.clicked.connect(self.choose_custom_cert_ca_file)
 
         # fill authentication combobox
-        self.ui.input_combobox_authentication.addItems(['Basic', 'Digest', 'Kerberos', 'ECP'])
+        self.ui.input_combobox_authentication.addItems(['Basic', 'Digest', 'Kerberos'])
+        if ECP_AVAILABLE is True:
+            self.ui.input_combobox_authentication.addItems(['ECP'])
 
         # detect change of server type which leads to certain options shown or hidden
         self.ui.input_combobox_type.activated.connect(self.toggle_type)
