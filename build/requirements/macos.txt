@@ -9,4 +9,5 @@ pysocks
 python-dateutil
 requests
 requests-gssapi
+requests-ecp
 setuptools==44.1.1

@@ -11,5 +11,6 @@ pysocks
 python-dateutil
 requests
 requests-kerberos
+requests-ecp
 setuptools==44.1.1
 wheel
