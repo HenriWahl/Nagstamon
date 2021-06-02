@@ -96,7 +96,8 @@ class ThrukServer(GenericServer):
                                                       "notifications_enabled,acknowledged,state_type,"\
                                                       "scheduled_downtime_depth"
         # hosts (up or down or unreachable)
-        self.cgiurl_hosts = self.monitor_cgi_url + "/status.cgi?hostgroup=all&style=hostdetail&hoststatustypes=12&"\
+        self.cgiurl_hosts = self.monitor_cgi_url + "/status.cgi?hostgroup=all&style=hostdetail&"\
+                                                    "dfl_s0_hoststatustypes=12&dfl_s1_hostprops=1&dfl_s2_hostprops=4&dfl_s3_hostprops=524288&&dfl_s4_hostprops=4096&dfl_s5_hostprop=16&"\
                                                     "view_mode=json&entries=all&"\
                                                     "columns=name,state,last_check,last_state_change,"\
                                                     "plugin_output,current_attempt,max_check_attempts,"\
