@@ -96,6 +96,8 @@ class ZabbixServer(GenericServer):
 
     def getLastApp(self, this_item):
         if len(this_item) > 0:
+            if "applications" not in this_item[0]:
+                return "NO APP"
             last_app = len(this_item[0]['applications']) - 1  # use it to get the last application name
             if last_app > -1:
                 return "%s" % this_item[0]['applications'][last_app]['name']
@@ -146,7 +148,7 @@ class ZabbixServer(GenericServer):
             # ipmi_available IPMI: 0 -> No agents 1 -> available 2-> Agent access error
             # maintenance_status = 1 In maintenance
             for host in hosts:
-                
+
                 n = {
                     'host': host['host'],
                     'name': host['name'],
@@ -200,7 +202,7 @@ class ZabbixServer(GenericServer):
                     n['status']             = 'DOWN'
                     n['status_information'] = host['error']
                     n['duration']           = HumanReadableDurationFromTimestamp(host['errors_from'])
-                
+
                 # Zabbix shows OK hosts too - kick 'em!
                 if not n['status'] == 'UP':
                     # add dictionary full of information about this host item to nagitems
@@ -278,10 +280,10 @@ class ZabbixServer(GenericServer):
                                                         'withLastEventUnacknowledged': True,
                                                   })
                 unack_trigger_ids = [u['triggerid'] for u in unack_triggers]
-                
+
                 for t in triggers:
                     t['acknowledged'] = False if t['triggerid'] in unack_trigger_ids else True
-                    
+
                     # get Application name for the trigger
                     this_item = self.zapi.item.get(
                         {'itemids': [t['items'][0]['itemid']],
@@ -372,7 +374,7 @@ class ZabbixServer(GenericServer):
                         n['scheduled_downtime'] = True
 
                     nagitems["services"].append(n)
-                    
+
                     # after collection data in nagitems create objects of its informations
                     # host objects contain service objects
                     # if not created previously, host should be created with proper data
@@ -387,7 +389,7 @@ class ZabbixServer(GenericServer):
                     new_service = n["triggerid"]
                     if new_service not in self.new_hosts[key].services:
                         self.new_hosts[key].services[new_service] = GenericService()
-                        
+
                         self.new_hosts[key].services[new_service].host       = n["hostname"] if len(n['hostname']) != 0 else n["host"]
                         self.new_hosts[key].services[new_service].name       = n["service"]
                         self.new_hosts[key].services[new_service].status     = n["status"]
@@ -414,7 +416,7 @@ class ZabbixServer(GenericServer):
             result, error = self.Error(sys.exc_info())
             print(sys.exc_info())
             return Result(result=result, error=error)
-        
+
         return ret
 
     def _open_browser(self, url):
@@ -457,7 +459,7 @@ class ZabbixServer(GenericServer):
         # Service column is storing current trigger id
         triggerids = []
         triggerids.append(service)
-        
+
         # acknowledge all problems (column services) on a host when told to do so
         for s in all_services:
             triggerids.append(s)
@@ -473,13 +475,13 @@ class ZabbixServer(GenericServer):
                                           'sortfield': 'clock',
                                           'sortorder': 'DESC'}):
                 # Get only current event status, but retrieving first row ordered by clock DESC
-                
+
                 # If event status is not "OK" (Still is an active problem), mark event to acknowledge/close
                 if e['value'] != '0':
                     events.append(e['eventid'])
                 # Only take care of newest event, discard all next
                 break
-                
+
             # If events pending of acknowledge, execute ack
             if len(events) > 0:
                 # If sticky is set then close only current event
@@ -487,20 +489,20 @@ class ZabbixServer(GenericServer):
                 if conf.debug_mode is True:
                     self.Debug(server=self.get_name(), debug="Events to acknowledge: " + str(events) + " Close: " + str(close))
                 self.zapi.event.acknowledge({'eventids': events, 'message': '%s: %s' % (author, comment), 'action': close})
- 
+
     def _set_downtime(self, hostname, service, author, comment, fixed, start_time, end_time, hours, minutes):
 
         hostids = [ self.hosts[hostname].hostid ]
-        
+
         date  = datetime.datetime.strptime(start_time, "%Y-%m-%d %H:%M")
         stime = time.mktime(date.timetuple())
 
         date  = datetime.datetime.strptime(end_time, "%Y-%m-%d %H:%M")
         etime = time.mktime(date.timetuple())
-        
+
         if conf.debug_mode is True:
             self.Debug(server=self.get_name(), debug="Downtime for " + hostname + "[" + str(hostids[0]) + "] stime:" + str(stime) + " etime:" + str(etime))
-            
+
         self.zapi.maintenance.create({'hostids': hostids, 'name': comment, 'description': author, 'active_since': stime, 'active_till': etime, 'maintenance_type' : 0, "timeperiods": [
             { "timeperiod_type": 0, "start_date": stime, "period": etime - stime }
         ]})
