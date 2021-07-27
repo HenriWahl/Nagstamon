@@ -198,7 +198,7 @@ class SnagViewServer(GenericServer):
                 h = dict(host)
 
                 # Skip if Host is 'Pending'
-                if int(h['sv_host__nagios_status__current_state'] or 4) == 4:
+                if int(h['sv_host__nagios_status__current_state']) == 4:
                     continue
 
                 # host
@@ -279,8 +279,8 @@ class SnagViewServer(GenericServer):
                 s = dict(service)
 
                 # Skip if Host or Service is 'Pending'
-                if int(s['sv_service_status__nagios_status__current_state'] or 4) == 4 or int(
-                        s['sv_host__nagios_status__current_state'] or 4) == 4:
+                if int(s['sv_service_status__nagios_status__current_state']) == 4 or int(
+                        s['sv_host__nagios_status__current_state']) == 4:
                     continue
 
                 # host and service
