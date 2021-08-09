@@ -212,8 +212,11 @@ class AlertmanagerServer(PrometheusServer):
 -----------------------------------------------------------------------------------------------------------------------------", result.status_code, result.result)
             else:
                 log.error("received status code '%s'", result.status_code)
-
-            data = json.loads(result.result)
+            # when result is not JSON catch it
+            try:
+                data = json.loads(result.result)
+            except json.decoder.JSONDecodeError:
+                data = ''
             error = result.error
             status_code = result.status_code
 
