@@ -216,7 +216,7 @@ class AlertmanagerServer(PrometheusServer):
             try:
                 data = json.loads(result.result)
             except json.decoder.JSONDecodeError:
-                data = ''
+                data = {}
             error = result.error
             status_code = result.status_code
 

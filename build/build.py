@@ -140,7 +140,6 @@ def macmain():
     os.chdir(CURRENT_DIR)
 
     # template own modified Info.plist for Retina compatibility
-    #shutil.copyfile('../Nagstamon/resources/Info.plist', '../dist/Nagstamon.app/Contents/Info.plist')
     with open("../Nagstamon/resources/Info.plist", "rt") as fin:
       with open("../dist/Nagstamon.app/Contents/Info.plist", "wt") as fout:
         for line in fin:
