@@ -8,6 +8,7 @@ pyqt5==5.15.3
 pysocks
 python-dateutil
 requests
-requests-gssapi
 requests-ecp
+# gssapi instead kerberos
+requests-gssapi
 setuptools==44.1.1
