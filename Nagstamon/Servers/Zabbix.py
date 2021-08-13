@@ -97,7 +97,14 @@ class ZabbixServer(GenericServer):
     def getLastApp(self, this_item):
         if len(this_item) > 0:
             if "applications" not in this_item[0]:
-                return "NO APP"
+                if 'tags' in this_item[0]:
+                    app = "NO APP"
+                    for tag in this_item[0]['tags']:
+                        if tag['tag'] == 'Application':
+                            app = tag['value']
+                    return app
+                else:
+                    return "NO APP"
             last_app = len(this_item[0]['applications']) - 1  # use it to get the last application name
             if last_app > -1:
                 return "%s" % this_item[0]['applications'][last_app]['name']
@@ -288,6 +295,7 @@ class ZabbixServer(GenericServer):
                     this_item = self.zapi.item.get(
                         {'itemids': [t['items'][0]['itemid']],
                          'output': ['itemid', 'hostid', 'name', 'lastvalue'],
+                         'selectTags': 'extend',
                          'selectApplications': 'extend'}
                     )
                     t['application'] = self.getLastApp(this_item)
@@ -492,6 +500,23 @@ class ZabbixServer(GenericServer):
 
     def _set_downtime(self, hostname, service, author, comment, fixed, start_time, end_time, hours, minutes):
 
+        # Check if there is an associated Application tag with this trigger/item
+        app = None
+        triggers = self.zapi.trigger.get({
+            'selectItems': ['itemid'],
+            'output': ['triggerid'],
+            'filter': {'triggerid': service}})
+        #import pdb; pdb.set_trace()
+        if triggers and triggers[0]['items']:
+            items = self.zapi.item.get({
+                'itemids': [triggers[0]['items'][0]['itemid']],
+                'output': ['itemid'],
+                'selectTags': 'extend'})
+            if items and items[0]['tags']:
+                for tag in items[0]['tags']:
+                    if tag['tag'] == 'Application':
+                        app = tag['value']
+
         hostids = [ self.hosts[hostname].hostid ]
 
         date  = datetime.datetime.strptime(start_time, "%Y-%m-%d %H:%M")
@@ -503,9 +528,18 @@ class ZabbixServer(GenericServer):
         if conf.debug_mode is True:
             self.Debug(server=self.get_name(), debug="Downtime for " + hostname + "[" + str(hostids[0]) + "] stime:" + str(stime) + " etime:" + str(etime))
 
-        self.zapi.maintenance.create({'hostids': hostids, 'name': comment, 'description': author, 'active_since': stime, 'active_till': etime, 'maintenance_type' : 0, "timeperiods": [
+        body = {'hostids': hostids, 'name': comment, 'description': author, 'active_since': stime, 'active_till': etime, 'maintenance_type' : 0, "timeperiods": [
             { "timeperiod_type": 0, "start_date": stime, "period": etime - stime }
-        ]})
+        ]}
+        if app:
+            body['tags'] = [{'tag': 'Application', 'operator': 0, 'value': app}]
+            body['description'] += ' ' + body['name']
+            body['name'] = f'{hostname} {app}'
+
+        try:
+            self.zapi.maintenance.create(body)
+        except Already_Exists:
+            self.Debug(server=self.get_name(), debug=f"Maintanence with name {body['name']} already exists")
 
     def get_start_end(self, host):
         return time.strftime("%Y-%m-%d %H:%M"), time.strftime("%Y-%m-%d %H:%M", time.localtime(time.time() + 7200))
