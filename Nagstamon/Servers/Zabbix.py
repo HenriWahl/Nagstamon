@@ -500,8 +500,13 @@ class ZabbixServer(GenericServer):
                 # 16 - unacknowledge event
                 actions = 0
                 # If sticky is set then close only current event
-                if triggerid == service and sticky is True:
-                    actions |= 1
+                if triggerid == service and sticky:
+                    # do not send the "Close" flag if this event does not allow manual closing
+                    triggers = self.zapi.trigger.get({
+                        'output': ['triggerid', 'manual_close'],
+                        'filter': {'triggerid': triggerid}})
+                    if not triggers or 'manual_close' not in triggers[0] or triggers[0]['manual_close'] == 1:
+                        actions |= 1
                 # The current Nagstamon menu items don't match up too well with the Zabbix actions,
                 # but perhaps "Persistent comment" is the closest thing to acknowledgement
                 if persistent:
