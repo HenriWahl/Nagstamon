@@ -492,11 +492,25 @@ class ZabbixServer(GenericServer):
 
             # If events pending of acknowledge, execute ack
             if len(events) > 0:
+                # actions is a bitmask with values:
+                # 1 - close problem
+                # 2 - acknowledge event
+                # 4 - add message
+                # 8 - change severity
+                # 16 - unacknowledge event
+                actions = 0
                 # If sticky is set then close only current event
-                close = 1 if (triggerid == service and sticky is True) else 0
+                if triggerid == service and sticky is True:
+                    actions |= 1
+                # The current Nagstamon menu items don't match up too well with the Zabbix actions,
+                # but perhaps "Persistent comment" is the closest thing to acknowledgement
+                if persistent:
+                    actions |= 2
+                if comment:
+                    actions |= 4
                 if conf.debug_mode is True:
-                    self.Debug(server=self.get_name(), debug="Events to acknowledge: " + str(events) + " Close: " + str(close))
-                self.zapi.event.acknowledge({'eventids': events, 'message': '%s: %s' % (author, comment), 'action': close})
+                    self.Debug(server=self.get_name(), debug="Events to acknowledge: " + str(events) + " Close: " + str(actions))
+                self.zapi.event.acknowledge({'eventids': events, 'message': comment, 'action': actions})
 
     def _set_downtime(self, hostname, service, author, comment, fixed, start_time, end_time, hours, minutes):
 
@@ -506,7 +520,7 @@ class ZabbixServer(GenericServer):
             'selectItems': ['itemid'],
             'output': ['triggerid'],
             'filter': {'triggerid': service}})
-        #import pdb; pdb.set_trace()
+
         if triggers and triggers[0]['items']:
             items = self.zapi.item.get({
                 'itemids': [triggers[0]['items'][0]['itemid']],
