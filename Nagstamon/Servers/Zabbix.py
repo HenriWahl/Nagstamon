@@ -553,8 +553,7 @@ class ZabbixServer(GenericServer):
         if app:
             body['tags'] = [{'tag': 'Application', 'operator': 0, 'value': app}]
             body['description'] += ' ' + body['name']
-            body['name'] = f'{hostname} {app}'
-
+            body['name'] = f'{start_time} {hostname} {app}'
         try:
             self.zapi.maintenance.create(body)
         except Already_Exists:
