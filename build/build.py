@@ -122,34 +122,17 @@ def macmain():
     """
         execute steps necessary for compilation of MacOS X binaries and .dmg file
     """
-    # go one directory up and run pyinstaller
-    os.chdir('{0}{1}..'.format(CURRENT_DIR, os.sep))
+    # can't pass --version to pyinstaller in spec mode, so export as env var
+    os.environ['NAGSTAMON_VERSION'] = VERSION
 
     # create one-file .app bundle by pyinstaller
-    subprocess.call(['/usr/local/bin/pyinstaller',
-                     '--noconfirm',
-                     '--add-data=Nagstamon/resources:Nagstamon/resources',
-                     '--icon=Nagstamon/resources/nagstamon.icns',
-                     '--name=Nagstamon',
-                     '--osx-bundle-identifier=de.ifw-dresden.nagstamon',
-                     '--windowed',
-                     '--onefile',
-                     'nagstamon.py'])
-
-    # go back to build directory
-    os.chdir(CURRENT_DIR)
-
-    # template own modified Info.plist for Retina compatibility
-    with open("../Nagstamon/resources/Info.plist", "rt") as fin:
-      with open("../dist/Nagstamon.app/Contents/Info.plist", "wt") as fout:
-        for line in fin:
-            fout.write(line.replace('+++VERSION+++', VERSION))
+    subprocess.call(['pyinstaller --noconfirm Nagstamon-macos.spec'], shell=True)
 
     # create staging DMG folder for later compressing of DMG
     shutil.rmtree('Nagstamon {0} Staging DMG'.format(VERSION), ignore_errors=True)
 
     # copy app bundle folder
-    shutil.move('../dist/Nagstamon.app', 'Nagstamon {0} Staging DMG/Nagstamon.app'.format(VERSION))
+    shutil.move('dist/Nagstamon.app', 'Nagstamon {0} Staging DMG/Nagstamon.app'.format(VERSION))
 
     # cleanup before new images get created
     for dmg_file in glob.iglob('*.dmg'):
