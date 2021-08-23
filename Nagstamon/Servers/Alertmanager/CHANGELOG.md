@@ -1,12 +1,11 @@
 # Changelog
 
-[1.2.0] - 2021-07-22:
+[1.2.0] - 2021-08-23:
   * changed:
       Removed dependencies to the Prometheus integration
       alertmanager is now a full module residing in its own directory
   * added:
       Support user defined severity values for critical or warning
-      TODO: Support for duplicate tupels of (hostname,servicename)
 
 [1.1.0] - 2021-05-18:
   * changed:
