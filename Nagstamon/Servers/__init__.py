@@ -203,6 +203,11 @@ def create_server(server=None):
     new_server.map_to_hostname = server.map_to_hostname
     new_server.map_to_servicename = server.map_to_servicename
     new_server.map_to_status_information = server.map_to_status_information
+    new_server.map_to_ok = server.map_to_ok
+    new_server.map_to_unknown = server.map_to_unknown
+    new_server.map_to_warning = server.map_to_warning
+    new_server.map_to_critical = server.map_to_critical
+
 
     # server's individual preparations for HTTP connections (for example cookie creation)
     # is done in GetStatus() method of monitor

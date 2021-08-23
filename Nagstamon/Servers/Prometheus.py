@@ -21,7 +21,7 @@
 #
 # This Server class connects against Prometheus.
 # The monitor URL in the setup should be something like
-# http://prometheus.example.com
+# http://prometheus.example.com:9090
 #
 # Release Notes:
 #
