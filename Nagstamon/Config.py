@@ -965,11 +965,16 @@ class Server(object):
         # Zabbix "Item Description" as "Service Name"
         self.use_description_name_service = False
 
-        # Prometheus mappings
+        # Prometheus/Alertmanager mappings
         self.map_to_hostname = "pod_name,namespace,instance"
         self.map_to_servicename = "alertname"
         self.map_to_status_information = "message,summary,description"
+        # Alertmanager mappings
         self.alertmanager_filter = ''
+        self.map_to_critical = 'critical,error'
+        self.map_to_warning = 'warning,warn'
+        self.map_to_unknown = 'unknown'
+        self.map_to_ok = 'ok'
 
 class Action(object):
     """

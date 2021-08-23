@@ -344,8 +344,87 @@
       <property name="verticalSpacing">
        <number>5</number>
       </property>
-      <item row="5" column="3">
-       <spacer name="horizontalSpacer_2">
+      <item row="2" column="2" colspan="2">
+       <layout class="QHBoxLayout" name="horizontalLayout">
+        <item>
+         <widget class="QLineEdit" name="input_lineedit_custom_cert_ca_file"/>
+        </item>
+        <item>
+         <widget class="QPushButton" name="button_choose_custom_cert_ca_file">
+          <property name="text">
+           <string>Choose file...</string>
+          </property>
+         </widget>
+        </item>
+       </layout>
+      </item>
+      <item row="7" column="1" colspan="3">
+       <widget class="QCheckBox" name="input_checkbox_use_autologin">
+        <property name="text">
+         <string>Use autologin</string>
+        </property>
+       </widget>
+      </item>
+      <item row="12" column="2" colspan="2">
+       <widget class="QLineEdit" name="input_lineedit_alertmanager_filter"/>
+      </item>
+      <item row="13" column="1">
+       <widget class="QLabel" name="label_map_to_hostname">
+        <property name="text">
+         <string>Map to hostname:</string>
+        </property>
+       </widget>
+      </item>
+      <item row="13" column="2" colspan="2">
+       <widget class="QLineEdit" name="input_lineedit_map_to_hostname"/>
+      </item>
+      <item row="22" column="1" colspan="3">
+       <widget class="QCheckBox" name="input_checkbox_use_display_name_service">
+        <property name="text">
+         <string>Use display name as service name</string>
+        </property>
+       </widget>
+      </item>
+      <item row="9" column="2" colspan="2">
+       <widget class="QLineEdit" name="input_lineedit_autologin_key">
+        <property name="text">
+         <string/>
+        </property>
+       </widget>
+      </item>
+      <item row="16" column="2" colspan="2">
+       <widget class="QLineEdit" name="input_lineedit_map_to_ok"/>
+      </item>
+      <item row="26" column="1">
+       <widget class="QLabel" name="label_idp_ecp_endpoint">
+        <property name="text">
+         <string>IdP ECP endpoint URL</string>
+        </property>
+       </widget>
+      </item>
+      <item row="12" column="1">
+       <widget class="QLabel" name="label_alertmanager_filter">
+        <property name="text">
+         <string>Filter:</string>
+        </property>
+       </widget>
+      </item>
+      <item row="14" column="1">
+       <widget class="QLabel" name="label_map_to_servicename">
+        <property name="text">
+         <string>Map to servicename:</string>
+        </property>
+       </widget>
+      </item>
+      <item row="1" column="1" colspan="2">
+       <widget class="QCheckBox" name="input_checkbox_custom_cert_use">
+        <property name="text">
+         <string>Use custom CA file</string>
+        </property>
+       </widget>
+      </item>
+      <item row="6" column="3">
+       <spacer name="horizontalSpacer">
         <property name="orientation">
          <enum>Qt::Horizontal</enum>
         </property>
@@ -357,20 +436,34 @@
         </property>
        </spacer>
       </item>
-      <item row="7" column="1" colspan="3">
-       <widget class="QCheckBox" name="input_checkbox_use_autologin">
+      <item row="11" column="2" colspan="2">
+       <widget class="QLineEdit" name="input_lineedit_service_filter">
         <property name="text">
-         <string>Use autologin</string>
+         <string/>
         </property>
        </widget>
       </item>
-      <item row="14" column="2" colspan="2">
-       <widget class="QLineEdit" name="input_lineedit_map_to_servicename"/>
-      </item>
-      <item row="8" column="2">
-       <widget class="QLineEdit" name="input_lineedit_monitor_site">
+      <item row="6" column="1">
+       <widget class="QLabel" name="label_timeout">
         <property name="text">
-         <string>Site 1</string>
+         <string>Timeout:</string>
+        </property>
+       </widget>
+      </item>
+      <item row="24" column="1" colspan="3">
+       <widget class="QCheckBox" name="input_checkbox_force_authuser">
+        <property name="text">
+         <string>Only show permitted hosts for &quot;see all&quot; users (1.4.0i1 or newer)</string>
+        </property>
+       </widget>
+      </item>
+      <item row="15" column="2" colspan="2">
+       <widget class="QLineEdit" name="input_lineedit_map_to_status_information"/>
+      </item>
+      <item row="20" column="1" colspan="3">
+       <widget class="QCheckBox" name="input_checkbox_no_cookie_auth">
+        <property name="text">
+         <string>Do not use cookie authentication</string>
         </property>
        </widget>
       </item>
@@ -387,35 +480,83 @@
         </property>
        </widget>
       </item>
-      <item row="11" column="2" colspan="2">
-       <widget class="QLineEdit" name="input_lineedit_service_filter">
+      <item row="5" column="3">
+       <spacer name="horizontalSpacer_2">
+        <property name="orientation">
+         <enum>Qt::Horizontal</enum>
+        </property>
+        <property name="sizeHint" stdset="0">
+         <size>
+          <width>40</width>
+          <height>20</height>
+         </size>
+        </property>
+       </spacer>
+      </item>
+      <item row="26" column="2" colspan="2">
+       <widget class="QLineEdit" name="input_lineedit_idp_ecp_endpoint"/>
+      </item>
+      <item row="5" column="1">
+       <widget class="QLabel" name="label_auth_type">
         <property name="text">
-         <string/>
+         <string>Authentication:</string>
         </property>
        </widget>
       </item>
-      <item row="15" column="1">
-       <widget class="QLabel" name="label_map_to_status_information">
+      <item row="11" column="1">
+       <widget class="QLabel" name="label_service_filter">
+        <property name="sizePolicy">
+         <sizepolicy hsizetype="Minimum" vsizetype="Preferred">
+          <horstretch>0</horstretch>
+          <verstretch>0</verstretch>
+         </sizepolicy>
+        </property>
         <property name="text">
-         <string>Map to status_information:</string>
+         <string>Service filter:</string>
         </property>
        </widget>
       </item>
-      <item row="2" column="2" colspan="2">
-       <layout class="QHBoxLayout" name="horizontalLayout">
+      <item row="6" column="2">
+       <layout class="QHBoxLayout" name="horizontalLayout_timeout_seconds">
+        <property name="spacing">
+         <number>5</number>
+        </property>
         <item>
-         <widget class="QLineEdit" name="input_lineedit_custom_cert_ca_file"/>
+         <widget class="QSpinBox" name="input_spinbox_timeout"/>
         </item>
         <item>
-         <widget class="QPushButton" name="button_choose_custom_cert_ca_file">
+         <widget class="QLabel" name="label_timeout_sec">
           <property name="text">
-           <string>Choose file...</string>
+           <string>seconds</string>
           </property>
          </widget>
         </item>
        </layout>
       </item>
-      <item row="21" column="1" colspan="3">
+      <item row="8" column="1">
+       <widget class="QLabel" name="label_monitor_site">
+        <property name="sizePolicy">
+         <sizepolicy hsizetype="Minimum" vsizetype="Preferred">
+          <horstretch>0</horstretch>
+          <verstretch>0</verstretch>
+         </sizepolicy>
+        </property>
+        <property name="text">
+         <string>Monitor Site:</string>
+        </property>
+       </widget>
+      </item>
+      <item row="23" column="1" colspan="3">
+       <widget class="QCheckBox" name="input_checkbox_use_description_name_service">
+        <property name="text">
+         <string>Use description as service name</string>
+        </property>
+       </widget>
+      </item>
+      <item row="5" column="2">
+       <widget class="QComboBox" name="input_combobox_authentication"/>
+      </item>
+      <item row="25" column="1" colspan="3">
        <widget class="QGroupBox" name="groupbox_checkmk_views">
         <property name="sizePolicy">
          <sizepolicy hsizetype="Minimum" vsizetype="Minimum">
@@ -464,88 +605,6 @@
         </layout>
        </widget>
       </item>
-      <item row="6" column="1">
-       <widget class="QLabel" name="label_timeout">
-        <property name="text">
-         <string>Timeout:</string>
-        </property>
-       </widget>
-      </item>
-      <item row="6" column="2">
-       <layout class="QHBoxLayout" name="horizontalLayout_timeout_seconds">
-        <property name="spacing">
-         <number>5</number>
-        </property>
-        <item>
-         <widget class="QSpinBox" name="input_spinbox_timeout"/>
-        </item>
-        <item>
-         <widget class="QLabel" name="label_timeout_sec">
-          <property name="text">
-           <string>seconds</string>
-          </property>
-         </widget>
-        </item>
-       </layout>
-      </item>
-      <item row="5" column="1">
-       <widget class="QLabel" name="label_auth_type">
-        <property name="text">
-         <string>Authentication:</string>
-        </property>
-       </widget>
-      </item>
-      <item row="5" column="2">
-       <widget class="QComboBox" name="input_combobox_authentication"/>
-      </item>
-      <item row="1" column="1" colspan="2">
-       <widget class="QCheckBox" name="input_checkbox_custom_cert_use">
-        <property name="text">
-         <string>Use custom CA file</string>
-        </property>
-       </widget>
-      </item>
-      <item row="16" column="1" colspan="3">
-       <widget class="QCheckBox" name="input_checkbox_no_cookie_auth">
-        <property name="text">
-         <string>Do not use cookie authentication</string>
-        </property>
-       </widget>
-      </item>
-      <item row="20" column="1" colspan="3">
-       <widget class="QCheckBox" name="input_checkbox_force_authuser">
-        <property name="text">
-         <string>Only show permitted hosts for &quot;see all&quot; users (1.4.0i1 or newer)</string>
-        </property>
-       </widget>
-      </item>
-      <item row="13" column="2" colspan="2">
-       <widget class="QLineEdit" name="input_lineedit_map_to_hostname"/>
-      </item>
-      <item row="10" column="2" colspan="2">
-       <widget class="QLineEdit" name="input_lineedit_host_filter">
-        <property name="text">
-         <string/>
-        </property>
-       </widget>
-      </item>
-      <item row="12" column="2" colspan="2">
-       <widget class="QLineEdit" name="input_lineedit_alertmanager_filter"/>
-      </item>
-      <item row="18" column="1" colspan="3">
-       <widget class="QCheckBox" name="input_checkbox_use_display_name_service">
-        <property name="text">
-         <string>Use display name as service name</string>
-        </property>
-       </widget>
-      </item>
-      <item row="0" column="1" colspan="3">
-       <widget class="QCheckBox" name="input_checkbox_ignore_cert">
-        <property name="text">
-         <string>Ignore SSL/TLS certificate</string>
-        </property>
-       </widget>
-      </item>
       <item row="10" column="1">
        <widget class="QLabel" name="label_host_filter">
         <property name="sizePolicy">
@@ -559,46 +618,20 @@
         </property>
        </widget>
       </item>
-      <item row="15" column="2" colspan="2">
-       <widget class="QLineEdit" name="input_lineedit_map_to_status_information"/>
-      </item>
-      <item row="8" column="1">
-       <widget class="QLabel" name="label_monitor_site">
-        <property name="sizePolicy">
-         <sizepolicy hsizetype="Minimum" vsizetype="Preferred">
-          <horstretch>0</horstretch>
-          <verstretch>0</verstretch>
-         </sizepolicy>
-        </property>
+      <item row="0" column="1" colspan="3">
+       <widget class="QCheckBox" name="input_checkbox_ignore_cert">
         <property name="text">
-         <string>Monitor Site:</string>
+         <string>Ignore SSL/TLS certificate</string>
         </property>
        </widget>
       </item>
-      <item row="11" column="1">
-       <widget class="QLabel" name="label_service_filter">
-        <property name="sizePolicy">
-         <sizepolicy hsizetype="Minimum" vsizetype="Preferred">
-          <horstretch>0</horstretch>
-          <verstretch>0</verstretch>
-         </sizepolicy>
-        </property>
-        <property name="text">
-         <string>Service filter:</string>
-        </property>
-       </widget>
+      <item row="14" column="2" colspan="2">
+       <widget class="QLineEdit" name="input_lineedit_map_to_servicename"/>
       </item>
-      <item row="19" column="1" colspan="3">
-       <widget class="QCheckBox" name="input_checkbox_use_description_name_service">
+      <item row="10" column="2" colspan="2">
+       <widget class="QLineEdit" name="input_lineedit_host_filter">
         <property name="text">
-         <string>Use description as service name</string>
-        </property>
-       </widget>
-      </item>
-      <item row="13" column="1">
-       <widget class="QLabel" name="label_map_to_hostname">
-        <property name="text">
-         <string>Map to hostname:</string>
+         <string/>
         </property>
        </widget>
       </item>
@@ -609,56 +642,63 @@
         </property>
        </widget>
       </item>
-      <item row="17" column="1" colspan="3">
+      <item row="15" column="1">
+       <widget class="QLabel" name="label_map_to_status_information">
+        <property name="text">
+         <string>Map to status_information:</string>
+        </property>
+       </widget>
+      </item>
+      <item row="8" column="2">
+       <widget class="QLineEdit" name="input_lineedit_monitor_site">
+        <property name="text">
+         <string>Site 1</string>
+        </property>
+       </widget>
+      </item>
+      <item row="21" column="1" colspan="3">
        <widget class="QCheckBox" name="input_checkbox_use_display_name_host">
         <property name="text">
          <string>Use display name as host name</string>
         </property>
        </widget>
       </item>
-      <item row="6" column="3">
-       <spacer name="horizontalSpacer">
-        <property name="orientation">
-         <enum>Qt::Horizontal</enum>
-        </property>
-        <property name="sizeHint" stdset="0">
-         <size>
-          <width>40</width>
-          <height>20</height>
-         </size>
-        </property>
-       </spacer>
+      <item row="17" column="2" colspan="2">
+       <widget class="QLineEdit" name="input_lineedit_map_to_warning"/>
       </item>
-      <item row="14" column="1">
-       <widget class="QLabel" name="label_map_to_servicename">
+      <item row="18" column="2" colspan="2">
+       <widget class="QLineEdit" name="input_lineedit_map_to_critical"/>
+      </item>
+      <item row="19" column="2" colspan="2">
+       <widget class="QLineEdit" name="input_lineedit_map_to_unknown"/>
+      </item>
+      <item row="16" column="1">
+       <widget class="QLabel" name="label_map_to_ok">
         <property name="text">
-         <string>Map to servicename:</string>
+         <string>Map to OK</string>
         </property>
        </widget>
       </item>
-      <item row="9" column="2" colspan="2">
-       <widget class="QLineEdit" name="input_lineedit_autologin_key">
+      <item row="17" column="1">
+       <widget class="QLabel" name="label_map_to_warning">
         <property name="text">
-         <string/>
+         <string>Map to WARNING</string>
         </property>
        </widget>
       </item>
-      <item row="12" column="1">
-       <widget class="QLabel" name="label_alertmanager_filter">
+      <item row="18" column="1">
+       <widget class="QLabel" name="label_map_to_critical">
         <property name="text">
-         <string>Filter:</string>
+         <string>Map to CRITICAL</string>
         </property>
        </widget>
       </item>
-      <item row="22" column="1">
-       <widget class="QLabel" name="label_idp_ecp_endpoint">
+      <item row="19" column="1">
+       <widget class="QLabel" name="label_map_to_unknown">
         <property name="text">
-         <string>IdP ECP endpoint URL</string>
+         <string>Map to UNKNOWN</string>
         </property>
        </widget>
-      </item>
-      <item row="22" column="2" colspan="2">
-       <widget class="QLineEdit" name="input_lineedit_idp_ecp_endpoint"/>
       </item>
      </layout>
     </widget>
