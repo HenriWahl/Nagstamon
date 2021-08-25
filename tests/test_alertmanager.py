@@ -3,8 +3,7 @@ import json
 from pylint import lint
 
 import unittest
-import Nagstamon
-import Nagstamon.Servers.Alertmanager
+from Nagstamon.Servers.Alertmanager import AlertmanagerServer
 
 conf = {}
 conf['debug_mode'] = True
@@ -20,7 +19,7 @@ class test_alertmanager(unittest.TestCase):
         with open('tests/test_alertmanager_suppressed.json') as json_file:
             data = json.load(json_file)
         
-        test_class = Nagstamon.Servers.Alertmanager.AlertmanagerServer()
+        test_class = AlertmanagerServer()
         test_class.map_to_hostname = 'instance,pod_name,namespace'
         test_class.map_to_servicename = 'alertname'
         test_class.map_to_status_information = 'message,summary,description'
@@ -48,7 +47,7 @@ class test_alertmanager(unittest.TestCase):
         with open('tests/test_alertmanager_skipped.json') as json_file:
             data = json.load(json_file)
 
-        test_class = Nagstamon.Servers.Alertmanager.AlertmanagerServer()
+        test_class = AlertmanagerServer()
         test_class.map_to_hostname = 'instance,pod_name,namespace'
         test_class.map_to_servicename = 'alertname'
         test_class.map_to_status_information = 'message,summary,description'
@@ -62,7 +61,7 @@ class test_alertmanager(unittest.TestCase):
         with open('tests/test_alertmanager_warning.json') as json_file:
             data = json.load(json_file)
 
-        test_class = Nagstamon.Servers.Alertmanager.AlertmanagerServer()
+        test_class = AlertmanagerServer()
         test_class.map_to_hostname = 'instance,pod_name,namespace'
         test_class.map_to_servicename = 'alertname'
         test_class.map_to_status_information = 'message,summary,description'
@@ -90,7 +89,7 @@ class test_alertmanager(unittest.TestCase):
         with open('tests/test_alertmanager_critical.json') as json_file:
             data = json.load(json_file)
         
-        test_class = Nagstamon.Servers.Alertmanager.AlertmanagerServer()
+        test_class = AlertmanagerServer()
         test_class.map_to_hostname = 'instance,pod_name,namespace'
         test_class.map_to_servicename = 'alertname'
         test_class.map_to_status_information = 'message,summary,description'
@@ -118,7 +117,7 @@ class test_alertmanager(unittest.TestCase):
         with open('tests/test_alertmanager_critical.json') as json_file:
             data = json.load(json_file)
         
-        test_class = Nagstamon.Servers.Alertmanager.AlertmanagerServer()
+        test_class = AlertmanagerServer()
         test_class.map_to_hostname = ''
         test_class.map_to_servicename = ''
         test_class.map_to_status_information = ''
@@ -146,7 +145,7 @@ class test_alertmanager(unittest.TestCase):
         with open('tests/test_alertmanager_custom_severity.json') as json_file:
             data = json.load(json_file)
         
-        test_class = Nagstamon.Servers.Alertmanager.AlertmanagerServer()
+        test_class = AlertmanagerServer()
         test_class.map_to_hostname = 'instance,pod_name,namespace'
         test_class.map_to_servicename = 'alertname'
         test_class.map_to_status_information = 'message,summary,description'
