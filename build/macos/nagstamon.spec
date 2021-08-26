@@ -4,10 +4,10 @@ import os
 
 block_cipher = None
 
-a = Analysis(['../nagstamon.py'],
+a = Analysis(['../../nagstamon.py'],
              pathex=[],
              binaries=[],
-             datas=[('../Nagstamon/resources', 'Nagstamon/resources')],
+             datas=[('../../Nagstamon/resources', '../Nagstamon/resources')],
              hiddenimports=[],
              hookspath=[],
              hooksconfig={},
@@ -37,11 +37,11 @@ exe = EXE(pyz,
           target_arch=None,
           codesign_identity=None,
           entitlements_file=None,
-          icon='../Nagstamon/resources/nagstamon.icns')
+          icon='../../Nagstamon/resources/nagstamon.icns')
 
 app = BUNDLE(exe,
              name='Nagstamon.app',
-             icon='../Nagstamon/resources/nagstamon.icns',
+             icon='../../Nagstamon/resources/nagstamon.icns',
              bundle_identifier='de.ifw-dresden.nagstamon',
              version=os.environ['NAGSTAMON_VERSION'],
              info_plist={

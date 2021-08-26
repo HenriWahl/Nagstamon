@@ -126,7 +126,7 @@ def macmain():
     os.environ['NAGSTAMON_VERSION'] = VERSION
 
     # create one-file .app bundle by pyinstaller
-    subprocess.call(['pyinstaller --noconfirm Nagstamon-macos.spec'], shell=True)
+    subprocess.call(['pyinstaller --noconfirm macos/nagstamon.spec'], shell=True)
 
     # create staging DMG folder for later compressing of DMG
     shutil.rmtree('Nagstamon {0} Staging DMG'.format(VERSION), ignore_errors=True)
