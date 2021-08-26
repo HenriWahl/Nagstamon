@@ -26,7 +26,7 @@ jobs:
         sudo apt-get install libkrb5-dev
         python -m pip install --upgrade pip
         pip install pytest pylint #flake8
-        if [ -f requirements.txt ]; then pip install -r requirements.txt; fi
+        if [ -f build/requirements/linux.txt ]; then pip install -r build/requirements/linux.txt; fi
     # - name: Lint with flake8
     #   run: |
     #     # stop the build if there are Python syntax errors or undefined names
