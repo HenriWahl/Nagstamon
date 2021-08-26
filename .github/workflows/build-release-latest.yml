@@ -98,6 +98,7 @@ jobs:
       - run: /usr/bin/docker build -t build-nagstamon -f build/docker/Dockerfile-${{ github.job }} .
       - run: /usr/bin/docker run -v ${{ github.workspace }}:/nagstamon build-nagstamon
       - run: ls -l build
+      - run: find . -name "*.rpm"
       - uses: actions/upload-artifact@v2
         with:
 #          path: build/*.rpm
