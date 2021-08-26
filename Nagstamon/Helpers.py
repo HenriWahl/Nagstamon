@@ -451,9 +451,10 @@ def get_distro():
         os_release_file = Path('/etc/os-release')
         if os_release_file.exists() and (os_release_file.is_file() or os_release_file.is_symlink()):
             os_release_dict = {}
-            for property in os_release_file.read_text().splitlines():
-                key, value = property.split('=', 1)
-                os_release_dict[key] = value.strip('"').strip("'")
+            for line in os_release_file.read_text().splitlines():
+                if not line.startswith('#'):
+                    key, value = line.split('=', 1)
+                    os_release_dict[key] = value.strip('"').strip("'")
             return (os_release_dict.get('ID').lower(),
                     os_release_dict.get('VERSION_ID', 'unknown').lower(),
                     os_release_dict.get('NAME').lower())
