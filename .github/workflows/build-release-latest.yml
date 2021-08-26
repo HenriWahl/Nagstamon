@@ -100,7 +100,8 @@ jobs:
       - run: ls -lR
       - uses: actions/upload-artifact@v2
         with:
-          path: build/*.rpm
+#          path: build/*.rpm
+          path: **/*.rpm
           retention-days: 1
           if-no-files-found: error
 
