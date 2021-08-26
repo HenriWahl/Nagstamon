@@ -81,6 +81,17 @@ jobs:
           path: build/*.rpm
           retention-days: 1
 
+  fedora-35:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v2
+      - run: /usr/bin/docker build -t build-nagstamon -f build/docker/Dockerfile-${{ github.job }} .
+      - run: /usr/bin/docker run -v ${{ github.workspace }}:/nagstamon build-nagstamon
+      - uses: actions/upload-artifact@v2
+        with:
+          path: build/*.rpm
+          retention-days: 1
+
   macos:
     runs-on: macos-latest
     steps:
