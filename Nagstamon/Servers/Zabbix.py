@@ -288,16 +288,21 @@ class ZabbixServer(GenericServer):
                                                   })
                 unack_trigger_ids = [u['triggerid'] for u in unack_triggers]
 
+                # prefetch items
+                all_item_ids = list(set([t['items'][0]['itemid'] for t in triggers]))
+                all_items = self.zapi.item.get(
+                    {'itemids':all_item_ids,
+                        'output': ['itemid', 'hostid', 'name', 'lastvalue'],
+                        'selectTags': 'extend',
+                        'selectApplications': 'extend'}
+                )
+                itemid_item_map = {i['itemid']: i for i in all_items}
+
                 for t in triggers:
                     t['acknowledged'] = False if t['triggerid'] in unack_trigger_ids else True
 
                     # get Application name for the trigger
-                    this_item = self.zapi.item.get(
-                        {'itemids': [t['items'][0]['itemid']],
-                         'output': ['itemid', 'hostid', 'name', 'lastvalue'],
-                         'selectTags': 'extend',
-                         'selectApplications': 'extend'}
-                    )
+                    this_item = [itemid_item_map[t['items'][0]['itemid']]]
                     t['application'] = self.getLastApp(this_item)
                     try:
                         t['lastvalue']   = this_item[0]['lastvalue']
@@ -505,7 +510,7 @@ class ZabbixServer(GenericServer):
                     triggers = self.zapi.trigger.get({
                         'output': ['triggerid', 'manual_close'],
                         'filter': {'triggerid': triggerid}})
-                    if not triggers or 'manual_close' not in triggers[0] or triggers[0]['manual_close'] == 1:
+                    if not triggers or 'manual_close' not in triggers[0] or str(triggers[0]['manual_close']) == '1':
                         actions |= 1
                 # The current Nagstamon menu items don't match up too well with the Zabbix actions,
                 # but perhaps "Persistent comment" is the closest thing to acknowledgement
