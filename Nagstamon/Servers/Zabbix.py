@@ -302,7 +302,12 @@ class ZabbixServer(GenericServer):
                     t['acknowledged'] = False if t['triggerid'] in unack_trigger_ids else True
 
                     # get Application name for the trigger
-                    this_item = [itemid_item_map[t['items'][0]['itemid']]]
+                    if t['items'][0]['itemid'] in itemid_item_map:
+                        this_item = [itemid_item_map[t['items'][0]['itemid']]]
+                    else:
+                        # This else condition should never be hit, except in rare circumstances the trigger/item
+                        # config is updated at the same time Nagstamon is pulling trigger/item config
+                        this_item = []
                     t['application'] = self.getLastApp(this_item)
                     try:
                         t['lastvalue']   = this_item[0]['lastvalue']
