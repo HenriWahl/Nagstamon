@@ -22,7 +22,7 @@ Nagstamon is a Nagios status monitor which takes place in systray or on desktop 
 
 The command can optionally take one argument giving the path to an alternate configuration file.
 
-RESSOURCES
+RESOURCES
 ==========
 https://nagstamon.de
 
