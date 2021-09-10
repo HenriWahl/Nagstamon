@@ -12,3 +12,4 @@ requests-ecp
 # gssapi instead kerberos
 requests-gssapi
 setuptools==44.1.1
+packaging
