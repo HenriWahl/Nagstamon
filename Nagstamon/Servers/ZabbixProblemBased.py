@@ -4,7 +4,7 @@ import sys
 import time
 import logging
 import requests
-from packaging.version import parse as parse_version
+from pkg_resources import parse_version
 
 from Nagstamon.Helpers import HumanReadableDurationFromTimestamp
 from Nagstamon.Config import conf

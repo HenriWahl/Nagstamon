@@ -9,4 +9,3 @@ requests
 requests-kerberos
 requests-ecp
 setuptools==44.1.1
-packaging
