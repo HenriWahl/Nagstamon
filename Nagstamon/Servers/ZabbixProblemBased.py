@@ -44,14 +44,17 @@ class ZabbixLightApi():
         self.logger.debug("ZabbixLightApi START!")
         self.logger.debug("monitor_url = " + self.monitor_url)
 
-    def do_request(self, method, params={}):
+    def do_request(self, method, params={}, no_auth=False):
         zabbix_rpc_obj = {
             "jsonrpc": "2.0",
             "method": method,
             "params": params,
-            "auth": self.zbx_auth,
             "id": self.zbx_req_id
         }
+
+        if no_auth == False:
+            zabbix_rpc_obj["auth"] = self.zbx_auth
+
         self.zbx_req_id += 1
 
         self.logger.debug("ZBX: > " + str(zabbix_rpc_obj))
@@ -86,7 +89,12 @@ class ZabbixLightApi():
         if self.zbx_auth is None:
             return False
         else:
-            return True
+            is_auth=self.do_request("user.checkAuthentication", {"sessionid": self.zbx_auth}, no_auth=True)
+            if is_auth:
+                return True
+            else:
+                self.zbx_auth = None
+                return False
 
     def login(self, username, password):
         self.logger.debug("Login in as " + username)
@@ -99,6 +107,7 @@ class ZabbixProblemBasedServer(GenericServer):
 
     TYPE = 'ZabbixProblemBased'
     zlapi = None
+    zbx_version = ""
 
     def __init__(self, **kwds):
         GenericServer.__init__(self, **kwds)
@@ -135,11 +144,15 @@ class ZabbixProblemBasedServer(GenericServer):
             #Are we logged in?
             if self.zlapi is None:
                 self.zlapi = ZabbixLightApi(server_name=self.name, monitor_url=self.monitor_url, validate_certs=self.validate_certs)
-                self.zbx_version = self.zlapi.do_request("apiinfo.version", {})
+
+            #zabbix could get an upgrade between checks, we need to check version each time
+            self.zbx_version = self.zlapi.do_request("apiinfo.version", {}, no_auth=True)
+
+            #check are we still logged in, if not, relogin
             if not self.zlapi.logged_in():
                 self.zlapi.login(self.username, self.password)
 
-            #Get all current problems (trigger based)
+            #Get all current problems (trigger based), no need to check acknowledged problems if they are filtered out (load reduce)
             if conf.filter_acknowledged_hosts_services:
                 problems = self.zlapi.do_request("problem.get", {'recent': False, 'acknowledged': False})
             else:
