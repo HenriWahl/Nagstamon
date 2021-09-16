@@ -278,7 +278,8 @@ class IcingaServer(GenericServer):
                         self.new_hosts[host_name].services[service_name].last_check = s['last_check']
                         self.new_hosts[host_name].services[service_name].duration = s['duration']
                         self.new_hosts[host_name].services[service_name].attempt = s['attempts']
-                        self.new_hosts[host_name].services[service_name].status_information = s['status_information'].replace('\n', ' ').strip()
+                        if s['status_information']:
+                            self.new_hosts[host_name].services[service_name].status_information = s['status_information'].replace('\n', ' ').strip()
                         self.new_hosts[host_name].services[service_name].passiveonly = not(s['active_checks_enabled'])
                         self.new_hosts[host_name].services[service_name].notifications_disabled = not(s['notifications_enabled'])
                         self.new_hosts[host_name].services[service_name].flapping = s['is_flapping']
