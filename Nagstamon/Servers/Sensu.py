@@ -133,7 +133,7 @@ class SensuServer(GenericServer):
                   new_service.site = ''
                 new_service.status = ''
                 try:
-                    new_service.status = self.SEVERITY_CODE_TEXT_MAP.get(event_check['status'])
+                    new_service.status = self.SEVERITY_CODE_TEXT_MAP[event_check['status']]
                 except KeyError:
                     new_service.status = 'UNKNOWN'
                 last_check_time = datetime.utcfromtimestamp(int(event['timestamp']))
