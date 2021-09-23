@@ -2,10 +2,10 @@ beautifulsoup4
 keyring
 lxml
 psutil
-pyqt5==5.15.4
+pyqt5
 pysocks
 python-dateutil
 requests
 requests-kerberos
 requests-ecp
-setuptools==44.1.1
+setuptools
