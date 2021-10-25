@@ -92,7 +92,7 @@ jobs:
           retention-days: 1
 
   macos:
-    runs-on: macos-latest
+    runs-on: macos-10.15
     steps:
       - uses: actions/checkout@v2
       - run: pip3 install --no-warn-script-location -r build/requirements/macos.txt
