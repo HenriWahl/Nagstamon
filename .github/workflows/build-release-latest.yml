@@ -161,7 +161,7 @@ jobs:
 
   repo-fedora:
     runs-on: ubuntu-latest
-    needs: [debian, fedora-32, fedora-33, fedora-34, fedora-35, macos, windows-32, windows-64]
+    needs: [debian, fedora-32, fedora-33, fedora-34, macos, windows-32, windows-64]
     steps:
       # get binaries created by other jobs
       - uses: actions/download-artifact@v2
@@ -183,7 +183,7 @@ jobs:
 
   github-release:
     runs-on: ubuntu-latest
-    needs: [debian, fedora-32, fedora-33, fedora-34, fedora-35, macos, windows-32, windows-64]
+    needs: [debian, fedora-32, fedora-33, fedora-34, macos, windows-32, windows-64]
     steps:
       - uses: actions/download-artifact@v2
       - run: cd artifact && md5sum *agstamon* > md5sums.txt
