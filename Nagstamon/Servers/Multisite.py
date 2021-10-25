@@ -471,17 +471,45 @@ class MultisiteServer(GenericServer):
 
 
     def _set_downtime(self, host, service, author, comment, fixed, start_time, end_time, hours, minutes):
-        self._action(self.hosts[host].site, host, service, {
-            '_down_comment':  author == self.username and comment or '%s: %s' % (author, comment),
-            '_down_flexible':  fixed == 0 and 'on' or '',
-            '_down_custom':    'Custom+time+range',
-            '_down_from_date': start_time.split(' ')[0],
-            '_down_from_time': start_time.split(' ')[1],
-            '_down_to_date':   end_time.split(' ')[0],
-            '_down_to_time':   end_time.split(' ')[1],
-            '_down_duration':  '%s:%s' % (hours, minutes),
-            'actions':         'yes'
-        })
+        # Checkmk needs downtime info in more explizit format
+        from_date = from_time = to_date = to_time = ''
+        try:
+            # might be more sophisticated, especially if there is a localized Checkmk web interface
+            from_date, from_time = start_time.split(' ')
+            from_year, from_month, from_day = from_date.split('-')
+            from_hour, from_min = from_time.split(':')
+            to_date, to_time = end_time.split(' ')
+            to_year, to_month, to_day = to_date.split('-')
+            to_hour, to_min = to_time.split(':')
+
+            # let's try to push downtime info in all variants to server - somewhat holzhammery but well...
+            self._action(self.hosts[host].site, host, service, {
+                '_down_comment': author == self.username and comment or '%s: %s' % (author, comment),
+                '_down_flexible': fixed == 0 and 'on' or '',
+                '_down_custom': 'Custom+time+range',
+                '_down_from_date': from_date,
+                '_down_from_time': from_time,
+                '_down_to_date': to_date,
+                '_down_to_time': to_time,
+                '_down_duration': '%s:%s' % (hours, minutes),
+                '_down_from_year': from_year,
+                '_down_from_month': from_month,
+                '_down_from_day': from_day,
+                '_down_from_hour': from_hour,
+                '_down_from_min': from_min,
+                '_down_from_sec': '00',
+                '_down_to_year': to_year,
+                '_down_to_month': to_month,
+                '_down_to_day': to_day,
+                '_down_to_hour': to_hour,
+                '_down_to_min': to_min,
+                '_down_to_sec': '00',
+                'actions': 'yes'
+            })
+        except:
+            if conf.debug_mode:
+                self.Debug(server=self.get_name(), host=host,
+                           debug='Invalid start/end date/time given')
 
 
     def _set_acknowledge(self, host, service, author, comment, sticky, notify, persistent, all_services=[]):
@@ -525,6 +553,9 @@ class MultisiteServer(GenericServer):
         """
             get transid for an action
         """
-        transid = self.FetchURL(self.urls['transid'].replace('$HOST$', host).replace('$SERVICE$', service.replace(' ', '+')),\
+        # since Checkmk 2.0 it seems to be a problem if service is empty so fill it with a definitively existing one
+        if not service:
+            service = 'PING'
+        transid = self.FetchURL(self.urls['transid'].replace('$HOST$', host).replace('$SERVICE$', service.replace(' ', '+')),
                                 'obj').result.find(attrs={'name' : '_transid'})['value']
         return transid
