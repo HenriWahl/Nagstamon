@@ -95,9 +95,9 @@ class MultisiteServer(GenericServer):
                                                    urllib.parse.urlencode({'start_url': 'view.py?view_name=hoststatus'}),
               # URLs do not need pythonic output because since werk #0766 API does not work with transid=-1 anymore
               # thus access to normal webinterface is used
-              'api_host_act':    self.monitor_url + '/view.py?_transid=-1&_do_actions=yes&_do_confirm=Confirm&view_name=hoststatus&filled_in=actions&lang=',
-              'api_service_act': self.monitor_url + '/view.py?_transid=-1&_do_actions=yes&_do_confirm=Confirm&view_name=service&filled_in=actions&lang=',
-              'api_svcprob_act': self.monitor_url + '/view.py?_transid=-1&_do_actions=yes&_do_confirm=Confirm&view_name=svcproblems&filled_in=actions&lang=',
+              'api_host_act':    self.monitor_url + '/view.py?_transid=-1&_do_actions=yes&_do_confirm=Yes!&view_name=hoststatus&filled_in=actions&lang=',
+              'api_service_act': self.monitor_url + '/view.py?_transid=-1&_do_actions=yes&_do_confirm=Yes!&view_name=service&filled_in=actions&lang=',
+              'api_svcprob_act': self.monitor_url + '/view.py?_transid=-1&_do_actions=yes&_do_confirm=Yes!&view_name=svcproblems&filled_in=actions&lang=',
               'human_events':    self.monitor_url + '/index.py?%s' %
                                                    urllib.parse.urlencode({'start_url': 'view.py?view_name=events'}),
               'transid':         self.monitor_url + '/view.py?actions=yes&filled_in=actions&host=$HOST$&service=$SERVICE$&view_name=service'
