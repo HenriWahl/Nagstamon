@@ -525,6 +525,10 @@ class MultisiteServer(GenericServer):
         """
             get transid for an action
         """
-        transid = self.FetchURL(self.urls['transid'].replace('$HOST$', host).replace('$SERVICE$', service.replace(' ', '+')),\
+        dummy2 = self.FetchURL(self.urls['transid'].replace('$HOST$', host).replace('$SERVICE$', service.replace(' ', '+')),\
+                                'obj')
+        dummy = self.FetchURL(self.urls['transid'].replace('$HOST$', host).replace('$SERVICE$', service.replace(' ', '+')),
+                                'obj').result.find(attrs={'name' : '_transid'})
+        transid = self.FetchURL(self.urls['transid'].replace('$HOST$', host).replace('$SERVICE$', service.replace(' ', '+')),
                                 'obj').result.find(attrs={'name' : '_transid'})['value']
         return transid
