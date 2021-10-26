@@ -471,8 +471,6 @@ class MultisiteServer(GenericServer):
 
 
     def _set_downtime(self, host, service, author, comment, fixed, start_time, end_time, hours, minutes):
-        # Checkmk needs downtime info in more explizit format
-        from_date = from_time = to_date = to_time = ''
         try:
             # might be more sophisticated, especially if there is a localized Checkmk web interface
             from_date, from_time = start_time.split(' ')
@@ -483,7 +481,7 @@ class MultisiteServer(GenericServer):
             to_hour, to_min = to_time.split(':')
 
             # let's try to push downtime info in all variants to server - somewhat holzhammery but well...
-            self._action(self.hosts[host].site, host, service, {
+            params = {
                 '_down_comment': author == self.username and comment or '%s: %s' % (author, comment),
                 '_down_flexible': fixed == 0 and 'on' or '',
                 '_down_custom': 'Custom+time+range',
@@ -505,7 +503,11 @@ class MultisiteServer(GenericServer):
                 '_down_to_min': to_min,
                 '_down_to_sec': '00',
                 'actions': 'yes'
-            })
+            }
+            # service needs extra parameter
+            if service:
+                params['_do_confirm_service_downtime'] = 'Schedule+downtime+for+1+service'
+            self._action(self.hosts[host].site, host, service, params)
         except:
             if conf.debug_mode:
                 self.Debug(server=self.get_name(), host=host,
