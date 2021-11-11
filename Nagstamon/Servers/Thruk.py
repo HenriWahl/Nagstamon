@@ -24,8 +24,11 @@ import sys
 import json
 import datetime
 import copy
+import base64
+import urllib.parse
 
 from Nagstamon.Helpers import HumanReadableDurationFromTimestamp
+from Nagstamon.Helpers import webbrowser_open
 from Nagstamon.Objects import (GenericHost, GenericService, Result)
 
 
@@ -94,7 +97,7 @@ class ThrukServer(GenericServer):
                                                       "last_state_change,plugin_output,current_attempt,"\
                                                       "max_check_attempts,active_checks_enabled,is_flapping,"\
                                                       "notifications_enabled,acknowledged,state_type,"\
-                                                      "scheduled_downtime_depth"
+                                                      "scheduled_downtime_depth,host_display_name,display_name"
         # hosts (up or down or unreachable)
         self.cgiurl_hosts = self.monitor_cgi_url + "/status.cgi?hostgroup=all&style=hostdetail&"\
                                                     "dfl_s0_hoststatustypes=12&dfl_s1_hostprops=1&dfl_s2_hostprops=4&dfl_s3_hostprops=524288&&dfl_s4_hostprops=4096&dfl_s5_hostprop=16&"\
@@ -102,7 +105,7 @@ class ThrukServer(GenericServer):
                                                     "columns=name,state,last_check,last_state_change,"\
                                                     "plugin_output,current_attempt,max_check_attempts,"\
                                                     "active_checks_enabled,notifications_enabled,is_flapping,"\
-                                                    "acknowledged,scheduled_downtime_depth,state_type"
+                                                    "acknowledged,scheduled_downtime_depth,state_type,host_display_name,display_name"
 
     def login(self):
         """
@@ -132,6 +135,21 @@ class ThrukServer(GenericServer):
                 self.refresh_authentication = True
                 return Result(result=None, error="Login failed")
 
+
+    def open_monitor(self, host, service=''):
+        '''
+            open monitor from tablewidget context menu
+        '''
+        # only type is important so do not care of service '' in case of host monitor
+        if service == '':
+            url = self.monitor_cgi_url + '/extinfo.cgi?type=1&' + urllib.parse.urlencode( { 'host': host })
+        else:
+            url = self.monitor_cgi_url + '/extinfo.cgi?type=2&' + urllib.parse.urlencode( { 'host': host, 'service': self.hosts[host].services[ base64.b64encode(service.encode()).decode() ].real_name })
+
+        if conf.debug_mode:
+            self.Debug(server=self.get_name(), host=host, service=service,
+                       debug='Open host/service monitor web page {0}'.format(url))
+        webbrowser_open(url)
 
     def _get_status(self):
         """
@@ -226,7 +244,17 @@ class ThrukServer(GenericServer):
                         # ##new_service = s["description"]
                         self.new_hosts[s["host_name"]].services[s["description"]] = GenericService()
                         self.new_hosts[s["host_name"]].services[s["description"]].host = s["host_name"]
-                        self.new_hosts[s["host_name"]].services[s["description"]].name = s["description"]
+
+                        # If we want to use display_name for services
+                        if self.use_display_name_service == False:
+                            self.new_hosts[s["host_name"]].services[s["description"]].name = s["description"]
+                        else:
+                            self.new_hosts[s["host_name"]].services[s["description"]].name = s["display_name"]
+                        # If we use display_name, we have to be able to get back the service real name with the display_name, so I add a entry
+                        # But the display_name can be with any char, some are not allowed in Python, so I encode it
+                        self.new_hosts[s["host_name"]].services[ base64.b64encode(  self.new_hosts[s["host_name"]].services[s["description"]].name.encode()).decode() ] = GenericService()
+                        self.new_hosts[s["host_name"]].services[ base64.b64encode(  self.new_hosts[s["host_name"]].services[s["description"]].name.encode()).decode() ].real_name = s["description"]
+
                         self.new_hosts[s["host_name"]].services[s["description"]].server = self.name
                         self.new_hosts[s["host_name"]].services[s["description"]].status = self.STATES_MAPPING["services"][s["state"]]
                         self.new_hosts[s["host_name"]].services[s["description"]].last_check = datetime.datetime.fromtimestamp(int(s["last_check"])).isoformat(" ")
