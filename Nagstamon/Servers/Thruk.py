@@ -18,6 +18,7 @@
 # along with this program; if not, write to the Free Software
 # Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA  02110-1301, USA
 
+from collections import OrderedDict
 from Nagstamon.Servers.Generic import GenericServer
 from Nagstamon.Config import conf
 import sys
@@ -150,6 +151,53 @@ class ThrukServer(GenericServer):
             self.Debug(server=self.get_name(), host=host, service=service,
                        debug='Open host/service monitor web page {0}'.format(url))
         webbrowser_open(url)
+
+    def _set_acknowledge(self, host, service, author, comment, sticky, notify, persistent, all_services=[]):
+        '''
+            send acknowledge to monitor server - might be different on every monitor type
+        '''
+
+        url = self.monitor_cgi_url + '/cmd.cgi'
+
+        # the following flags apply to hosts and services
+        #
+        # according to sf.net bug #3304098 (https://sourceforge.net/tracker/?func=detail&atid=1101370&aid=3304098&group_id=236865)
+        # the send_notification-flag must not exist if it is set to 'off', otherwise
+        # the Nagios core interpretes it as set, regardless its real value
+        #
+        # for whatever silly reason Icinga depends on the correct order of submitted form items...
+        # see sf.net bug 3428844
+        #
+        # Thanks to Icinga ORDER OF ARGUMENTS IS IMPORTANT HERE!
+        #
+        cgi_data = OrderedDict()
+        if service == '':
+            cgi_data['cmd_typ'] = '33'
+        else:
+            cgi_data['cmd_typ'] = '34'
+        cgi_data['cmd_mod'] = '2'
+        cgi_data['host'] = host
+        if service != '':
+            cgi_data['service'] = self.hosts[host].services[ base64.b64encode(service.encode()).decode() ].real_name
+        cgi_data['com_author'] = author
+        cgi_data['com_data'] = comment
+        cgi_data['btnSubmit'] = 'Commit'
+        if notify is True:
+            cgi_data['send_notification'] = 'on'
+        if persistent is True:
+            cgi_data['persistent'] = 'on'
+        if sticky is True:
+            cgi_data['sticky_ack'] = 'on'
+
+        self.FetchURL(url, giveback='raw', cgi_data=cgi_data)
+
+        # acknowledge all services on a host
+        if len(all_services) > 0:
+            for s in all_services:
+                cgi_data['cmd_typ'] = '34'
+                cgi_data['service'] = self.hosts[host].services[ base64.b64encode(s.encode()).decode() ].real_name
+                self.FetchURL(url, giveback='raw', cgi_data=cgi_data)
+
 
     def _get_status(self):
         """
