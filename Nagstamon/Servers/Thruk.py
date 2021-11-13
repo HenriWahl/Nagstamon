@@ -229,6 +229,36 @@ class ThrukServer(GenericServer):
         except:
             traceback.print_exc(file=sys.stdout)
 
+    def _set_downtime(self, host, service, author, comment, fixed, start_time, end_time, hours, minutes):
+        '''
+            finally send downtime command to monitor server
+        '''
+        url = self.monitor_cgi_url + '/cmd.cgi'
+
+        # for some reason Icinga is very fastidiuos about the order of CGI arguments, so please
+        # here we go... it took DAYS :-(
+        cgi_data = OrderedDict()
+        if service == '':
+            cgi_data['cmd_typ'] = '55'
+        else:
+            cgi_data['cmd_typ'] = '56'
+        cgi_data['cmd_mod'] = '2'
+        cgi_data['trigger'] = '0'
+        cgi_data['host'] = host
+        if service != '':
+            cgi_data['service'] = self.hosts[host].services[ service ].real_name
+        cgi_data['com_author'] = author
+        cgi_data['com_data'] = comment
+        cgi_data['fixed'] = fixed
+        cgi_data['start_time'] = start_time
+        cgi_data['end_time'] = end_time
+        cgi_data['hours'] = hours
+        cgi_data['minutes'] = minutes
+        cgi_data['btnSubmit'] = 'Commit'
+
+        # running remote cgi command
+        self.FetchURL(url, giveback='raw', cgi_data=cgi_data)
+
     def _get_status(self):
         """
             Get status from Thruk Server
