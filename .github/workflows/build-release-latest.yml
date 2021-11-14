@@ -9,8 +9,37 @@ env:
   repo_dir: nagstamon-jekyll/docs/repo
 
 jobs:
+  test:
+    runs-on: ubuntu-latest
+    strategy:
+      matrix:
+        python-version: [3.7, 3.9]
+
+    steps:
+    - uses: actions/checkout@v2
+    - name: Set up Python ${{ matrix.python-version }}
+      uses: actions/setup-python@v2
+      with:
+        python-version: ${{ matrix.python-version }}
+    - name: Install dependencies
+      run: |
+        sudo apt-get install libkrb5-dev
+        python -m pip install --upgrade pip
+        pip install pytest pylint #flake8
+        if [ -f build/requirements/linux.txt ]; then pip install -r build/requirements/linux.txt; fi
+    # - name: Lint with flake8
+    #   run: |
+    #     # stop the build if there are Python syntax errors or undefined names
+    #     flake8 . --count --select=E9,F63,F7,F82 --show-source --statistics
+    #     # exit-zero treats all errors as warnings. The GitHub editor is 127 chars wide
+    #     flake8 . --count --exit-zero --max-complexity=10 --max-line-length=127 --statistics
+    - name: Test with unittest
+      run: |
+        python -m unittest tests/test_*.py
+
   debian:
     runs-on: ubuntu-latest
+    needs: test
     steps:
       - uses: actions/checkout@v2
       - run: /usr/bin/docker build -t build-nagstamon -f build/docker/Dockerfile-${{ github.job }} .
@@ -19,9 +48,11 @@ jobs:
         with:
           path: build/*.deb
           retention-days: 1
+          if-no-files-found: error
 
   fedora-32:
     runs-on: ubuntu-latest
+    needs: test
     steps:
       - uses: actions/checkout@v2
       - run: /usr/bin/docker build -t build-nagstamon -f build/docker/Dockerfile-${{ github.job }} .
@@ -30,9 +61,11 @@ jobs:
         with:
           path: build/*.rpm
           retention-days: 1
+          if-no-files-found: error
 
   fedora-33:
     runs-on: ubuntu-latest
+    needs: test
     steps:
       - uses: actions/checkout@v2
       - run: /usr/bin/docker build -t build-nagstamon -f build/docker/Dockerfile-${{ github.job }} .
@@ -41,9 +74,11 @@ jobs:
         with:
           path: build/*.rpm
           retention-days: 1
+          if-no-files-found: error
 
   fedora-34:
     runs-on: ubuntu-latest
+    needs: test
     steps:
       - uses: actions/checkout@v2
       - run: /usr/bin/docker build -t build-nagstamon -f build/docker/Dockerfile-${{ github.job }} .
@@ -52,9 +87,24 @@ jobs:
         with:
           path: build/*.rpm
           retention-days: 1
+          if-no-files-found: error
+
+  fedora-35:
+    runs-on: ubuntu-latest
+    needs: test
+    steps:
+      - uses: actions/checkout@v2
+      - run: /usr/bin/docker build -t build-nagstamon -f build/docker/Dockerfile-${{ github.job }} .
+      - run: /usr/bin/docker run -v ${{ github.workspace }}:/nagstamon build-nagstamon
+      - uses: actions/upload-artifact@v2
+        with:
+          path: build/*.rpm
+          retention-days: 1
+          if-no-files-found: error
 
   macos:
-    runs-on: macos-latest
+    runs-on: macos-10.15
+    needs: test
     steps:
       - uses: actions/checkout@v2
       - run: pip3 install --no-warn-script-location -r build/requirements/macos.txt
@@ -65,9 +115,11 @@ jobs:
         with:
           path: build/*.dmg
           retention-days: 1
+          if-no-files-found: error
 
   windows-32:
     runs-on: windows-latest
+    needs: test
     steps:
       - uses: actions/checkout@v2
       - uses: actions/setup-python@v2
@@ -84,9 +136,11 @@ jobs:
             build/dist/*.zip
             build/dist/*.exe
           retention-days: 1
+          if-no-files-found: error
 
   windows-64:
     runs-on: windows-latest
+    needs: test
     steps:
       - uses: actions/checkout@v2
       - uses: actions/setup-python@v2
@@ -103,10 +157,11 @@ jobs:
             build/dist/*.zip
             build/dist/*.exe
           retention-days: 1
+          if-no-files-found: error
 
   repo-fedora:
     runs-on: ubuntu-latest
-    needs: [fedora-32, fedora-33, fedora-34]
+    needs: [debian, fedora-32, fedora-33, fedora-34, fedora-35, macos, windows-32, windows-64]
     steps:
       # get binaries created by other jobs
       - uses: actions/download-artifact@v2
@@ -128,7 +183,7 @@ jobs:
 
   github-release:
     runs-on: ubuntu-latest
-    needs: [debian, fedora-32, fedora-33, fedora-34, macos, windows-32, windows-64]
+    needs: [debian, fedora-32, fedora-33, fedora-34, fedora-35, macos, windows-32, windows-64]
     steps:
       - uses: actions/download-artifact@v2
       - run: cd artifact && md5sum *agstamon* > md5sums.txt
