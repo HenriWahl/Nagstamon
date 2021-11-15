@@ -5754,7 +5754,7 @@ class Dialog_Server(Dialog):
             self.ui.label_autologin_key: ['Centreon', 'monitos4x', 'Thruk'],
             self.ui.input_checkbox_no_cookie_auth: ['IcingaWeb2', 'Sensu'],
             self.ui.input_checkbox_use_display_name_host: ['Icinga', 'IcingaWeb2'],
-            self.ui.input_checkbox_use_display_name_service: ['Icinga', 'IcingaWeb2'],
+            self.ui.input_checkbox_use_display_name_service: ['Icinga', 'IcingaWeb2', 'Thruk'],
             self.ui.input_checkbox_use_description_name_service: ['Zabbix'],
             self.ui.input_checkbox_force_authuser: ['Checkmk Multisite'],
             self.ui.groupbox_checkmk_views: ['Checkmk Multisite'],

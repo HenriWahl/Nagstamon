@@ -18,14 +18,17 @@
 # along with this program; if not, write to the Free Software
 # Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA  02110-1301, USA
 
+from collections import OrderedDict
 from Nagstamon.Servers.Generic import GenericServer
 from Nagstamon.Config import conf
 import sys
 import json
 import datetime
 import copy
+import urllib.parse
 
 from Nagstamon.Helpers import HumanReadableDurationFromTimestamp
+from Nagstamon.Helpers import webbrowser_open
 from Nagstamon.Objects import (GenericHost, GenericService, Result)
 
 
@@ -94,7 +97,7 @@ class ThrukServer(GenericServer):
                                                       "last_state_change,plugin_output,current_attempt,"\
                                                       "max_check_attempts,active_checks_enabled,is_flapping,"\
                                                       "notifications_enabled,acknowledged,state_type,"\
-                                                      "scheduled_downtime_depth"
+                                                      "scheduled_downtime_depth,host_display_name,display_name"
         # hosts (up or down or unreachable)
         self.cgiurl_hosts = self.monitor_cgi_url + "/status.cgi?hostgroup=all&style=hostdetail&"\
                                                     "dfl_s0_hoststatustypes=12&dfl_s1_hostprops=1&dfl_s2_hostprops=4&dfl_s3_hostprops=524288&&dfl_s4_hostprops=4096&dfl_s5_hostprop=16&"\
@@ -102,7 +105,7 @@ class ThrukServer(GenericServer):
                                                     "columns=name,state,last_check,last_state_change,"\
                                                     "plugin_output,current_attempt,max_check_attempts,"\
                                                     "active_checks_enabled,notifications_enabled,is_flapping,"\
-                                                    "acknowledged,scheduled_downtime_depth,state_type"
+                                                    "acknowledged,scheduled_downtime_depth,state_type,host_display_name,display_name"
 
     def login(self):
         """
@@ -132,6 +135,129 @@ class ThrukServer(GenericServer):
                 self.refresh_authentication = True
                 return Result(result=None, error="Login failed")
 
+
+    def open_monitor(self, host, service=''):
+        '''
+            open monitor from tablewidget context menu
+        '''
+        # only type is important so do not care of service '' in case of host monitor
+        if service == '':
+            url = self.monitor_cgi_url + '/extinfo.cgi?type=1&' + urllib.parse.urlencode( { 'host': host })
+        else:
+            url = self.monitor_cgi_url + '/extinfo.cgi?type=2&' + urllib.parse.urlencode( { 'host': host, 'service': self.hosts[host].services[ service ].real_name })
+
+        if conf.debug_mode:
+            self.Debug(server=self.get_name(), host=host, service=service,
+                       debug='Open host/service monitor web page {0}'.format(url))
+        webbrowser_open(url)
+
+    def _set_acknowledge(self, host, service, author, comment, sticky, notify, persistent, all_services=[]):
+        '''
+            send acknowledge to monitor server - might be different on every monitor type
+        '''
+
+        url = self.monitor_cgi_url + '/cmd.cgi'
+
+        # the following flags apply to hosts and services
+        #
+        # according to sf.net bug #3304098 (https://sourceforge.net/tracker/?func=detail&atid=1101370&aid=3304098&group_id=236865)
+        # the send_notification-flag must not exist if it is set to 'off', otherwise
+        # the Nagios core interpretes it as set, regardless its real value
+        #
+        # for whatever silly reason Icinga depends on the correct order of submitted form items...
+        # see sf.net bug 3428844
+        #
+        # Thanks to Icinga ORDER OF ARGUMENTS IS IMPORTANT HERE!
+        #
+        cgi_data = OrderedDict()
+        if service == '':
+            cgi_data['cmd_typ'] = '33'
+        else:
+            cgi_data['cmd_typ'] = '34'
+        cgi_data['cmd_mod'] = '2'
+        cgi_data['host'] = host
+        if service != '':
+            cgi_data['service'] = self.hosts[host].services[ service ].real_name
+        cgi_data['com_author'] = author
+        cgi_data['com_data'] = comment
+        cgi_data['btnSubmit'] = 'Commit'
+        if notify is True:
+            cgi_data['send_notification'] = 'on'
+        if persistent is True:
+            cgi_data['persistent'] = 'on'
+        if sticky is True:
+            cgi_data['sticky_ack'] = 'on'
+
+        self.FetchURL(url, giveback='raw', cgi_data=cgi_data)
+
+        # acknowledge all services on a host
+        if len(all_services) > 0:
+            for s in all_services:
+                cgi_data['cmd_typ'] = '34'
+                cgi_data['service'] = self.hosts[host].services[ s ].real_name
+                self.FetchURL(url, giveback='raw', cgi_data=cgi_data)
+
+    def _set_recheck(self, host, service):
+        if service != '':
+            if self.hosts[host].services[ service ].is_passive_only():
+                # Do not check passive only checks
+                return
+        try:
+            # get start time from Nagios as HTML to use same timezone setting like the locally installed Nagios
+            result = self.FetchURL(
+                self.monitor_cgi_url + '/cmd.cgi?' + urllib.parse.urlencode({'cmd_typ': '96', 'host': host}))
+            self.start_time = dict(result.result.find(attrs={'name': 'start_time'}).attrs)['value']
+            # decision about host or service - they have different URLs
+            if service == '':
+                # host
+                cmd_typ = '96'
+                service_name = ''
+            else:
+                # service @ host
+                cmd_typ = '7'
+                service_name = self.hosts[host].services[ service ].real_name
+            # ignore empty service in case of rechecking a host
+            cgi_data = urllib.parse.urlencode([('cmd_typ', cmd_typ),
+                                               ('cmd_mod', '2'),
+                                               ('host', host),
+                                               ('service', service_name),
+                                               ('start_time', self.start_time),
+                                               ('force_check', 'on'),
+                                               ('btnSubmit', 'Commit')])
+            # execute POST request
+            self.FetchURL(self.monitor_cgi_url + '/cmd.cgi', giveback='raw', cgi_data=cgi_data)
+        except:
+            traceback.print_exc(file=sys.stdout)
+
+    def _set_downtime(self, host, service, author, comment, fixed, start_time, end_time, hours, minutes):
+        '''
+            finally send downtime command to monitor server
+        '''
+        url = self.monitor_cgi_url + '/cmd.cgi'
+
+        # for some reason Icinga is very fastidiuos about the order of CGI arguments, so please
+        # here we go... it took DAYS :-(
+        cgi_data = OrderedDict()
+        if service == '':
+            cgi_data['cmd_typ'] = '55'
+        else:
+            cgi_data['cmd_typ'] = '56'
+        cgi_data['cmd_mod'] = '2'
+        cgi_data['trigger'] = '0'
+        cgi_data['host'] = host
+        if service != '':
+            cgi_data['service'] = self.hosts[host].services[ service ].real_name
+        cgi_data['com_author'] = author
+        cgi_data['com_data'] = comment
+        cgi_data['fixed'] = fixed
+        cgi_data['start_time'] = start_time
+        cgi_data['end_time'] = end_time
+        cgi_data['hours'] = hours
+        cgi_data['minutes'] = minutes
+        cgi_data['btnSubmit'] = 'Commit'
+
+        # running remote cgi command
+        self.FetchURL(url, giveback='raw', cgi_data=cgi_data)
 
     def _get_status(self):
         """
@@ -221,24 +347,31 @@ class ThrukServer(GenericServer):
                         self.new_hosts[s["host_name"]].server = self.name
                         self.new_hosts[s["host_name"]].status = "UP"
 
+                    if self.use_display_name_service == True:
+                        entry = s["display_name"]
+                    else:
+                        entry = s["description"]
+
                     # if a service does not exist create its object
-                    if s["description"] not in self.new_hosts[s["host_name"]].services:
-                        # ##new_service = s["description"]
-                        self.new_hosts[s["host_name"]].services[s["description"]] = GenericService()
-                        self.new_hosts[s["host_name"]].services[s["description"]].host = s["host_name"]
-                        self.new_hosts[s["host_name"]].services[s["description"]].name = s["description"]
-                        self.new_hosts[s["host_name"]].services[s["description"]].server = self.name
-                        self.new_hosts[s["host_name"]].services[s["description"]].status = self.STATES_MAPPING["services"][s["state"]]
-                        self.new_hosts[s["host_name"]].services[s["description"]].last_check = datetime.datetime.fromtimestamp(int(s["last_check"])).isoformat(" ")
-                        self.new_hosts[s["host_name"]].services[s["description"]].duration = HumanReadableDurationFromTimestamp(s["last_state_change"])
-                        self.new_hosts[s["host_name"]].services[s["description"]].attempt = "%s/%s" % (s["current_attempt"], s["max_check_attempts"])
-                        self.new_hosts[s["host_name"]].services[s["description"]].status_information = s["plugin_output"].replace("\n", " ").strip()
-                        self.new_hosts[s["host_name"]].services[s["description"]].passiveonly = not(bool(int(s["active_checks_enabled"])))
-                        self.new_hosts[s["host_name"]].services[s["description"]].notifications_disabled = not(bool(int(s["notifications_enabled"])))
-                        self.new_hosts[s["host_name"]].services[s["description"]].flapping = not(bool(int(s["notifications_enabled"])))
-                        self.new_hosts[s["host_name"]].services[s["description"]].acknowledged = bool(int(s["acknowledged"]))
-                        self.new_hosts[s["host_name"]].services[s["description"]].scheduled_downtime = bool(int(s["scheduled_downtime_depth"]))
-                        self.new_hosts[s["host_name"]].services[s["description"]].status_type = {0: "soft", 1: "hard"}[s["state_type"]]
+                    if entry not in self.new_hosts[s["host_name"]].services:
+                        self.new_hosts[s["host_name"]].services[ entry ] = GenericService()
+                        self.new_hosts[s["host_name"]].services[ entry ].host = s["host_name"]
+
+                        self.new_hosts[s["host_name"]].services[ entry ].name = entry
+                        self.new_hosts[s["host_name"]].services[ entry ].real_name = s["description"]
+
+                        self.new_hosts[s["host_name"]].services[ entry ].server = self.name
+                        self.new_hosts[s["host_name"]].services[ entry ].status = self.STATES_MAPPING["services"][s["state"]]
+                        self.new_hosts[s["host_name"]].services[ entry ].last_check = datetime.datetime.fromtimestamp(int(s["last_check"])).isoformat(" ")
+                        self.new_hosts[s["host_name"]].services[ entry ].duration = HumanReadableDurationFromTimestamp(s["last_state_change"])
+                        self.new_hosts[s["host_name"]].services[ entry ].attempt = "%s/%s" % (s["current_attempt"], s["max_check_attempts"])
+                        self.new_hosts[s["host_name"]].services[ entry ].status_information = s["plugin_output"].replace("\n", " ").strip()
+                        self.new_hosts[s["host_name"]].services[ entry ].passiveonly = not(bool(int(s["active_checks_enabled"])))
+                        self.new_hosts[s["host_name"]].services[ entry ].notifications_disabled = not(bool(int(s["notifications_enabled"])))
+                        self.new_hosts[s["host_name"]].services[ entry ].flapping = not(bool(int(s["notifications_enabled"])))
+                        self.new_hosts[s["host_name"]].services[ entry ] .acknowledged = bool(int(s["acknowledged"]))
+                        self.new_hosts[s["host_name"]].services[ entry ].scheduled_downtime = bool(int(s["scheduled_downtime_depth"]))
+                        self.new_hosts[s["host_name"]].services[ entry ].status_type = {0: "soft", 1: "hard"}[s["state_type"]]
                         del s
         except:
             import traceback
