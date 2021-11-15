@@ -38,6 +38,7 @@ jobs:
 
   debian:
     runs-on: ubuntu-latest
+    needs: test
     steps:
       - uses: actions/checkout@v2
       - run: /usr/bin/docker build -t build-nagstamon -f build/docker/Dockerfile-${{ github.job }} .
@@ -49,6 +50,7 @@ jobs:
 
   fedora-32:
     runs-on: ubuntu-latest
+    needs: test
     steps:
       - uses: actions/checkout@v2
       - run: /usr/bin/docker build -t build-nagstamon -f build/docker/Dockerfile-${{ github.job }} .
@@ -60,6 +62,7 @@ jobs:
 
   fedora-33:
     runs-on: ubuntu-latest
+    needs: test
     steps:
       - uses: actions/checkout@v2
       - run: /usr/bin/docker build -t build-nagstamon -f build/docker/Dockerfile-${{ github.job }} .
@@ -71,6 +74,7 @@ jobs:
 
   fedora-34:
     runs-on: ubuntu-latest
+    needs: test
     steps:
       - uses: actions/checkout@v2
       - run: /usr/bin/docker build -t build-nagstamon -f build/docker/Dockerfile-${{ github.job }} .
@@ -82,6 +86,7 @@ jobs:
 
   fedora-35:
     runs-on: ubuntu-latest
+    needs: test
     steps:
       - uses: actions/checkout@v2
       - run: /usr/bin/docker build -t build-nagstamon -f build/docker/Dockerfile-${{ github.job }} .
@@ -93,6 +98,7 @@ jobs:
 
   macos:
     runs-on: macos-10.15
+    needs: test
     steps:
       - uses: actions/checkout@v2
       - run: pip3 install --no-warn-script-location -r build/requirements/macos.txt
@@ -106,6 +112,7 @@ jobs:
 
   windows-32:
     runs-on: windows-latest
+    needs: test
     steps:
       - uses: actions/checkout@v2
       - uses: actions/setup-python@v2
@@ -125,6 +132,7 @@ jobs:
 
   windows-64:
     runs-on: windows-latest
+    needs: test
     steps:
       - uses: actions/checkout@v2
       - uses: actions/setup-python@v2
