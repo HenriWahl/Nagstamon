@@ -1,9 +1,14 @@
-nagstamon (3.7-20210825) unstable; urgency=low
+nagstamon (3.8.0) unstable; urgency=low
   * New upstream
-   - added test section to GitHub actions workflows to enable testing
-   - added basic unit tests and linting to Alertmanager
+    - added alertmanager acknownledgment
+    - added ECP authentication
+    - added Zabbix 5.4+ support
+    - Checkmk 2.0 fixes
+    - Thruk fixes
+    - Zabbix fixes
+    - dependency updates
 
- -- Henri Wahl <henri@nagstamon.de> Tue, 07 Apr 2021 19:00:00 +0100
+ -- Henri Wahl <henri@nagstamon.de> Mon, 15 Nov 2021 19:00:00 +0100
 
 nagstamon (3.6.0) unstable; urgency=low
   * New upstream
