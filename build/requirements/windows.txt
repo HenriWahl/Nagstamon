@@ -4,7 +4,7 @@ icinga2api
 keyring
 lxml
 psutil
-pyinstaller
+pyinstaller==4.7
 pypiwin32
 pyqt5==5.15.4
 pysocks

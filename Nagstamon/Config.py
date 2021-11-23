@@ -125,13 +125,12 @@ class AppInfo(object):
         contains app information previously located in GUI.py
     """
     NAME = 'Nagstamon'
-    VERSION = '3.8.0'
+    VERSION = '3.9-20211116'
     WEBSITE = 'https://nagstamon.de'
     COPYRIGHT = '©2008-2021 Henri Wahl et al.'
     COMMENTS = 'Nagios status monitor for your desktop'
     # dict of servers to offer for downloads if an update is available
-    DOWNLOAD_SERVERS = {'nagstamon.de': 'https://github.com/HenriWahl/Nagstamon/releases',
-                        'nagstamon.ifw-dresden.de': 'https://nagstamon.ifw-dresden.de/download'}
+    DOWNLOAD_SERVERS = {'nagstamon.de': 'https://github.com/HenriWahl/Nagstamon/releases'}
     # version URL depends on version string
     if 'alpha' in VERSION.lower() or \
         'beta' in VERSION.lower() or \
