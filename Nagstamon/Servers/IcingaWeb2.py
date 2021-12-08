@@ -97,7 +97,7 @@ class IcingaWeb2Server(GenericServer):
 
         # normally cookie auth will be used
         if not self.no_cookie_auth:
-            if self.session.get('cookies') and len(self.session.cookies) == 0:
+            if not self.session.get('cookies') or len(self.session.cookies) == 0:
                 # get login page, thus automatically a cookie
                 login = self.FetchURL('{0}/authentication/login'.format(self.monitor_url))
                 if login.error == '' and login.status_code == 200:
