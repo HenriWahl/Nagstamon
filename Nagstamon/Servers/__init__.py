@@ -52,6 +52,7 @@ from Nagstamon.Servers.Sensu import SensuServer
 from Nagstamon.Servers.SensuGo import SensuGoServer
 from Nagstamon.Servers.Prometheus import PrometheusServer
 from Nagstamon.Servers.Alertmanager import AlertmanagerServer
+from Nagstamon.Servers.Orion import OrionServer
 
 from Nagstamon.Config import conf
 
@@ -228,7 +229,7 @@ def create_server(server=None):
 servers_list = [CentreonServer, IcingaServer, IcingaWeb2Server, MultisiteServer, NagiosServer,
                 Op5MonitorServer, OpsviewServer, ThrukServer, ZabbixServer, SensuServer,
                 SensuGoServer, LivestatusServer, ZenossServer, Monitos3Server, Monitos4xServer,
-                SnagViewServer, PrometheusServer, AlertmanagerServer, ZabbixProblemBasedServer]
+                SnagViewServer, PrometheusServer, AlertmanagerServer, ZabbixProblemBasedServer, OrionServer]
 # we use these servers conditionally if modules are available only
 if icinga2api_is_available is True:
     servers_list.append(Icinga2APIServer)
