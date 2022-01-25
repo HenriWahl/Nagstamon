@@ -1,3 +1,33 @@
+This is only a development fork if Nagstamon to add support for the Solarwinds Orion platform. Please visit the main project for up-to-date information!
+
+Solarwinds Orion
+================
+
+The Orion module uses the Solarwinds Orion Python SDK to connect to the Orion API (port 17778) and request a list of existing alerts. It requires the username and password to be specified in the configuration option (Windows SSO does not work).
+
+How does it work
+================
+
+The module connects via https to the Orion API and queries for all active alerts with a status "WARNING OR CRITICAL". Others are ignored.
+In Orion a node status (aka host status) cannot be acknowledged. The node status is a fact. To be able to acknowledge a "node is down". Create an alert that contains #DOWN# in the alert message. The client will convert the alert to a node down status.
+
+What is that number in front of the service?
+============================================
+
+A alert is not always associated with a node. As there is currently no option add user-defined data to an alert line in nagstamon I added the Active-Alert-ID to the service name to open and acknowledge the alert.
+
+Example:
+The volume usage critical alert is triggered by a volume object. Not a node. The node is the parent object of the alert. If the node has multiple volumes with an active alert the information "node name" + "alert name" can match multiple volumes. Which one should be acknowledge. Hence the Alert-ID in the service description the exactly identifies the alert to be acknowledged or opened.
+
+Configuration
+=============
+* Set Monitor type to Orion
+* Monitor name: MyOrion
+* Set the Monitor URL to the MPE (Main polling engine) or AWS (additional web server) URL: https://orion.my-company.com . Do not add a path or the port 17778.
+* For domain users (SSO) use the format DOMAIN\USER as username
+
+Other options are not supported yet
+
 Nagstamon
 =========
 
