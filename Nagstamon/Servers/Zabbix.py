@@ -273,7 +273,7 @@ class ZabbixServer(GenericServer):
                                                   'output': ['triggerid', 'description', 'lastchange'],
                                                   # 'expandDescription': True,
                                                   # 'expandComment': True,
-                                                  'selectLastEvent': ['name', 'ns', 'clock', 'acknowledged', 'value',
+                                                  'selectLastEvent': ['eventid', 'name', 'ns', 'clock', 'acknowledged', 'value',
                                                                       'severity'],
                                                   'selectHosts': ['hostid', 'host', 'name'],
                                                   'selectItems': ['name', 'lastvalue', 'state', 'lastclock'],
@@ -387,7 +387,7 @@ class ZabbixServer(GenericServer):
                         'acknowledged': bool(int(service['lastEvent']['acknowledged'])),
                         'scheduled_downtime': False,
                         # Zabbix data
-                        'triggerid': service['triggerid'],
+                        'triggerid': service['lastEvent']['eventid'],,
                     }
 
                     n['hostid'] = service['hosts'][0]['hostid']
@@ -487,58 +487,64 @@ class ZabbixServer(GenericServer):
         # print("Set Acknowledge Host: " + host + " Service: " + service + " Sticky: " + str(
         #                    sticky) + " persistent:" + str(persistent) + " All services: " + str(all_services))
         # Service column is storing current trigger id
-        triggerids = []
-        triggerids.append(service)
+        services = []
+        services.append(service)
 
         # acknowledge all problems (column services) on a host when told to do so
         for s in all_services:
-            triggerids.append(s)
+            services.append(s)
 
         self._login()
+        eventids=[]
+        get_host = self.hosts[host]
+        # Through all Services
+        for service in services:
+            # find Trigger ID
+            for host_service in get_host.services:
+                host_service = get_host.services[host_service]
+                if host_service.name == service:
+                    eventids.append(host_service.triggerid)
 
-        for triggerid in triggerids:
-            events = []
-            for e in self.zapi.event.get({'triggerids': [triggerid],
-                                          # from zabbix 2.2 should be used "objectids" instead of "triggerids"
-                                          'objectids': [triggerid],
-                                          # 'acknowledged': False,
-                                          'sortfield': 'clock',
-                                          'sortorder': 'DESC'}):
-                # Get only current event status, but retrieving first row ordered by clock DESC
+        #for e in self.zapi.event.get({'triggerids': [triggerid],
+        #                              # from zabbix 2.2 should be used "objectids" instead of "triggerids"
+        #                              'objectids': [triggerid],
+        #                              # 'acknowledged': False,
+        #                              'sortfield': 'clock',
+        #                              'sortorder': 'DESC'}):
+        #    # Get only current event status, but retrieving first row ordered by clock DESC
+        #    # If event status is not "OK" (Still is an active problem), mark event to acknowledge/close
+        #    if e['value'] != '0':
+        #        events.append(e['eventid'])
+        #    # Only take care of newest event, discard all next
+        #    break
 
-                # If event status is not "OK" (Still is an active problem), mark event to acknowledge/close
-                if e['value'] != '0':
-                    events.append(e['eventid'])
-                # Only take care of newest event, discard all next
-                break
-
-            # If events pending of acknowledge, execute ack
-            if len(events) > 0:
-                # actions is a bitmask with values:
-                # 1 - close problem
-                # 2 - acknowledge event
-                # 4 - add message
-                # 8 - change severity
-                # 16 - unacknowledge event
-                actions = 0
-                # If sticky is set then close only current event
-                if triggerid == service and sticky:
-                    # do not send the "Close" flag if this event does not allow manual closing
-                    triggers = self.zapi.trigger.get({
-                        'output': ['triggerid', 'manual_close'],
-                        'filter': {'triggerid': triggerid}})
-                    if not triggers or 'manual_close' not in triggers[0] or str(triggers[0]['manual_close']) == '1':
-                        actions |= 1
-                # The current Nagstamon menu items don't match up too well with the Zabbix actions,
-                # but perhaps "Persistent comment" is the closest thing to acknowledgement
-                if persistent:
-                    actions |= 2
-                if comment:
-                    actions |= 4
-                if conf.debug_mode is True:
-                    self.Debug(server=self.get_name(),
-                               debug="Events to acknowledge: " + str(events) + " Close: " + str(actions))
-                self.zapi.event.acknowledge({'eventids': events, 'message': comment, 'action': actions})
+        # If events pending of acknowledge, execute ack
+        if len(eventids) > 0:
+            # actions is a bitmask with values:
+            # 1 - close problem
+            # 2 - acknowledge event
+            # 4 - add message
+            # 8 - change severity
+            # 16 - unacknowledge event
+            actions = 0
+            # If sticky is set then close only current event
+            # if triggerid == service and sticky:
+            #     # do not send the "Close" flag if this event does not allow manual closing
+            #     triggers = self.zapi.trigger.get({
+            #         'output': ['triggerid', 'manual_close'],
+            #         'filter': {'triggerid': triggerid}})
+            #     if not triggers or 'manual_close' not in triggers[0] or str(triggers[0]['manual_close']) == '1':
+            #         actions |= 1
+            # The current Nagstamon menu items don't match up too well with the Zabbix actions,
+            # but perhaps "Persistent comment" is the closest thing to acknowledgement
+            if persistent:
+                actions |= 2
+            if comment:
+                actions |= 4
+            if conf.debug_mode is True:
+                self.Debug(server=self.get_name(),
+                           debug="Events to acknowledge: " + str(eventids) + " Close: " + str(actions))
+            self.zapi.event.acknowledge({'eventids': eventids, 'message': comment, 'action': actions})
 
     def _set_downtime(self, hostname, service, author, comment, fixed, start_time, end_time, hours, minutes):
         # Check if there is an associated Application tag with this trigger/item
