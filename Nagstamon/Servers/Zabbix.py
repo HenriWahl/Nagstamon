@@ -416,7 +416,6 @@ class ZabbixServer(GenericServer):
                     new_service = n["triggerid"]
                     if new_service not in self.new_hosts[key].services:
                         self.new_hosts[key].services[new_service] = GenericService()
-
                         self.new_hosts[key].services[new_service].host = n["hostname"] if len(n['hostname']) != 0 else \
                             n["host"]
                         self.new_hosts[key].services[new_service].name = n["service"]
@@ -464,7 +463,6 @@ class ZabbixServer(GenericServer):
         """
             open monitor from treeview context menu
         """
-
         if service == "":
             url = self.urls['human_host'] + urllib.parse.urlencode(
                 {'x': 'site=' + self.hosts[host].site + '&host=' + host}).replace('x=', '%26')
@@ -486,8 +484,8 @@ class ZabbixServer(GenericServer):
             self.Debug(server=self.get_name(),
                        debug="Set Acknowledge Host: " + host + " Service: " + service + " Sticky: " + str(
                            sticky) + " persistent:" + str(persistent) + " All services: " + str(all_services))
-        print("Set Acknowledge Host: " + host + " Service: " + service + " Sticky: " + str(
-                           sticky) + " persistent:" + str(persistent) + " All services: " + str(all_services))
+        # print("Set Acknowledge Host: " + host + " Service: " + service + " Sticky: " + str(
+        #                    sticky) + " persistent:" + str(persistent) + " All services: " + str(all_services))
         # Service column is storing current trigger id
         triggerids = []
         triggerids.append(service)
@@ -503,7 +501,7 @@ class ZabbixServer(GenericServer):
             for e in self.zapi.event.get({'triggerids': [triggerid],
                                           # from zabbix 2.2 should be used "objectids" instead of "triggerids"
                                           'objectids': [triggerid],
-                                          #                                          'acknowledged': False,
+                                          # 'acknowledged': False,
                                           'sortfield': 'clock',
                                           'sortorder': 'DESC'}):
                 # Get only current event status, but retrieving first row ordered by clock DESC
@@ -543,7 +541,6 @@ class ZabbixServer(GenericServer):
                 self.zapi.event.acknowledge({'eventids': events, 'message': comment, 'action': actions})
 
     def _set_downtime(self, hostname, service, author, comment, fixed, start_time, end_time, hours, minutes):
-
         # Check if there is an associated Application tag with this trigger/item
         app = None
         triggers = self.zapi.trigger.get({
