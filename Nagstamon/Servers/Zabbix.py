@@ -270,54 +270,56 @@ class ZabbixServer(GenericServer):
                                                   'skipDependent': True,
                                                   'monitored': True,
                                                   'active': True,
-                                                  'output': 'extend',
-                                                  'expandDescription': True,
+                                                  'output': ['triggerid', 'description', 'lastchange'],
+                                                  # 'expandDescription': True,
+                                                  # 'expandComment': True,
+                                                  'selectLastEvent': ['name', 'ns', 'clock', 'acknowledged', 'value',
+                                                                      'severity'],
                                                   'selectHosts': ['hostid', 'host', 'name'],
-                                                  'selectItems': ['itemid', 'name', 'key_', 'lastvalue', 'state',
-                                                                  'lastclock'],  # thats for zabbix api 2.0+
+                                                  'selectItems': ['name', 'lastvalue', 'state', 'lastclock'],
+                                                  # thats for zabbix api 2.0+
                                                   'filter': {'value': 1},
                                                   })
-
                 # Do another query to find out which issues are Unacknowledged
                 # Zabbix 3+ returns array of objects
-                unack_triggers = self.zapi.trigger.get({'only_true': True,
-                                                        'skipDependent': True,
-                                                        'monitored': True,
-                                                        'active': True,
-                                                        'output': ['triggerid'],
-                                                        'expandDescription': True,
-                                                        'selectHosts': ['hostid'],
-                                                        'withLastEventUnacknowledged': True,
-                                                        })
-                unack_trigger_ids = [u['triggerid'] for u in unack_triggers]
+                # unack_triggers = self.zapi.trigger.get({'only_true': True,
+                #                                         'skipDependent': True,
+                #                                         'monitored': True,
+                #                                         'active': True,
+                #                                         'output': ['triggerid'],
+                #                                         #'expandDescription': True,
+                #                                         #'expandComment': True,
+                #                                         'selectHosts': ['hostid'],
+                #                                         'withLastEventUnacknowledged': True,
+                #                                         })
+                # unack_trigger_ids = [u['triggerid'] for u in unack_triggers]
 
-                # prefetch items
-                all_item_ids = list(set([t['items'][0]['itemid'] for t in triggers]))
-                all_items = self.zapi.item.get(
-                    {'itemids': all_item_ids,
-                     'output': ['itemid', 'hostid', 'name', 'lastvalue'],
-                     'selectTags': 'extend',
-                     'selectApplications': 'extend'}
-                )
-                itemid_item_map = {i['itemid']: i for i in all_items}
+                # prefetch items - already in item -> last value
+                # all_item_ids = list(set([t['items'][0]['itemid'] for t in triggers]))
+                # all_items = self.zapi.item.get(
+                #     {'itemids': all_item_ids,
+                #      'output': ['itemid', 'hostid', 'name', 'lastvalue'],
+                #      'selectTags': 'extend',
+                #      'selectApplications': 'extend'}
+                # )
+                # itemid_item_map = {i['itemid']: i for i in all_items}
 
                 for t in triggers:
-                    t['acknowledged'] = False if t['triggerid'] in unack_trigger_ids else True
-
-                    # get Application name for the trigger
-                    if t['items'][0]['itemid'] in itemid_item_map:
-                        this_item = [itemid_item_map[t['items'][0]['itemid']]]
-                    else:
-                        # This else condition should never be hit, except in rare circumstances the trigger/item
-                        # config is updated at the same time Nagstamon is pulling trigger/item config
-                        this_item = []
-                    t['application'] = self.getLastApp(this_item)
-                    try:
-                        t['lastvalue'] = this_item[0]['lastvalue']
-                    except IndexError as e:
-                        self.Debug(server=self.get_name(), debug="ItemID '%s' has no values" %
-                                                                 t['items'][0]['itemid'], head='WARNING')
-
+                    # # t['acknowledged'] = False if t['triggerid'] in unack_trigger_ids else True
+                    # t['lastEvent']['']
+                    # # get Application name for the trigger
+                    # if t['items'][0]['itemid'] in itemid_item_map:
+                    #     this_item = [itemid_item_map[t['items'][0]['itemid']]]
+                    # else:
+                    #     # This else condition should never be hit, except in rare circumstances the trigger/item
+                    #     # config is updated at the same time Nagstamon is pulling trigger/item config
+                    #     this_item = []
+                    # t['application'] = self.getLastApp(this_item)
+                    # try:
+                    #     t['lastvalue'] = this_item[0]['lastvalue']
+                    # except IndexError as e:
+                    #     self.Debug(server=self.get_name(), debug="ItemID '%s' has no values" %
+                    #                                              t['items'][0]['itemid'], head='WARNING')
                     services.append(t)
 
             except ZabbixAPIException:
@@ -340,15 +342,16 @@ class ZabbixServer(GenericServer):
                 # Zabbix probably shows OK services too - kick 'em!
                 # UPDATE Zabbix api 3.0 doesn't but I didn't tried with older
                 #        so I left it
-                status = self.statemap.get(service['priority'], service['priority'])
+                # print(service)
+                status = self.statemap.get(service['lastEvent']['severity'], service['lastEvent']['severity'])
                 # self.Debug(server=self.get_name(), debug="SERVICE (" + service['application'] + ") STATUS: **" +
                 # status + "** PRIORITY: #" + service['priority']) self.Debug(server=self.get_name(),
                 # debug="-----======== SERVICE " + str(service))
                 if not status == 'OK':
-                    if not service['description'].endswith('...'):
-                        state = service['description']
-                    else:
-                        state = service['items'][0]['lastvalue']
+                    # if not service['description'].endswith('...'):
+                    #     state = service['description']
+                    # else:
+                    #     state = service['items'][0]['lastvalue']
                     # A trigger can be triggered by multiple items
                     # Get last checking date of any of the items involved
                     lastcheck = 0
@@ -356,22 +359,24 @@ class ZabbixServer(GenericServer):
                         if int(item['lastclock']) > lastcheck:
                             lastcheck = int(item['lastclock'])
 
-                    if self.use_description_name_service and \
-                            len(service['comments']) != 0:
-                        srvc = self.nagiosify_service(service['comments'])
-                    else:
-                        srvc = service['application']
-
+                    # if self.use_description_name_service and \
+                    #         len(service['comments']) != 0:
+                    #     srvc = self.nagiosify_service(service['comments'])
+                    # else:
+                    #     srvc = "Not Implemented"
+                    status_information = ""
+                    for item in service['items']:
+                        status_information = item['name'] + ": " + item['lastvalue'] + ", " + status_information
                     n = {
                         'host': '',
                         'hostname': '',
-                        'service': service['triggerid'],
+                        'service': service['lastEvent']['name'],
                         'server': self.name,
                         'status': status,
                         # Putting service in attempt column allow to see it in GUI
-                        'attempt': srvc,
+                        'attempt': '',
                         'duration': HumanReadableDurationFromTimestamp(service['lastchange']),
-                        'status_information': state,
+                        'status_information': status_information,
                         'last_check': time.strftime("%d/%m/%Y %H:%M:%S", time.localtime(lastcheck)),
                         'site': '',
                         'command': 'zabbix',
@@ -379,7 +384,7 @@ class ZabbixServer(GenericServer):
                         'passiveonly': False,
                         'notifications_disabled': False,
                         'flapping': False,
-                        'acknowledged': service['acknowledged'],
+                        'acknowledged': bool(int(service['lastEvent']['acknowledged'])),
                         'scheduled_downtime': False,
                         # Zabbix data
                         'triggerid': service['triggerid'],
@@ -481,7 +486,8 @@ class ZabbixServer(GenericServer):
             self.Debug(server=self.get_name(),
                        debug="Set Acknowledge Host: " + host + " Service: " + service + " Sticky: " + str(
                            sticky) + " persistent:" + str(persistent) + " All services: " + str(all_services))
-
+        print("Set Acknowledge Host: " + host + " Service: " + service + " Sticky: " + str(
+                           sticky) + " persistent:" + str(persistent) + " All services: " + str(all_services))
         # Service column is storing current trigger id
         triggerids = []
         triggerids.append(service)
@@ -570,8 +576,8 @@ class ZabbixServer(GenericServer):
 
         body = {'hostids': hostids, 'name': comment, 'description': author, 'active_since': stime, 'active_till': etime,
                 'maintenance_type': 0, "timeperiods": [
-                    {"timeperiod_type": 0, "start_date": stime, "period": etime - stime}
-                ]
+                {"timeperiod_type": 0, "start_date": stime, "period": etime - stime}
+            ]
                 }
         if app:
             body['tags'] = [{'tag': 'Application', 'operator': 0, 'value': app}]
