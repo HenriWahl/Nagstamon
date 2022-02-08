@@ -387,7 +387,8 @@ class ZabbixServer(GenericServer):
                         'acknowledged': bool(int(service['lastEvent']['acknowledged'])),
                         'scheduled_downtime': False,
                         # Zabbix data
-                        'triggerid': service['lastEvent']['eventid'],,
+                        'triggerid': service['triggerid'],
+                        'eventid': service['lastEvent']['eventid'],
                     }
 
                     n['hostid'] = service['hosts'][0]['hostid']
@@ -434,6 +435,7 @@ class ZabbixServer(GenericServer):
                         self.new_hosts[key].services[new_service].command = n["command"]
                         self.new_hosts[key].services[new_service].hostid = n["hostid"]
                         self.new_hosts[key].services[new_service].triggerid = n["triggerid"]
+                        self.new_hosts[key].services[new_service].eventid = n["eventid"]
                         if conf.debug_mode is True:
                             self.Debug(server=self.get_name(),
                                        debug="Adding new service[" + new_service + "] **" + n['service'] + "**")
@@ -485,7 +487,7 @@ class ZabbixServer(GenericServer):
                        debug="Set Acknowledge Host: " + host + " Service: " + service + " Sticky: " + str(
                            sticky) + " persistent:" + str(persistent) + " All services: " + str(all_services))
         # print("Set Acknowledge Host: " + host + " Service: " + service + " Sticky: " + str(
-        #                    sticky) + " persistent:" + str(persistent) + " All services: " + str(all_services))
+        #                     sticky) + " persistent:" + str(persistent) + " All services: " + str(all_services))
         # Service column is storing current trigger id
         services = []
         services.append(service)
@@ -503,7 +505,8 @@ class ZabbixServer(GenericServer):
             for host_service in get_host.services:
                 host_service = get_host.services[host_service]
                 if host_service.name == service:
-                    eventids.append(host_service.triggerid)
+                    eventids.append(host_service.eventid)
+                    break
 
         #for e in self.zapi.event.get({'triggerids': [triggerid],
         #                              # from zabbix 2.2 should be used "objectids" instead of "triggerids"
@@ -526,7 +529,7 @@ class ZabbixServer(GenericServer):
             # 4 - add message
             # 8 - change severity
             # 16 - unacknowledge event
-            actions = 0
+            actions = 2
             # If sticky is set then close only current event
             # if triggerid == service and sticky:
             #     # do not send the "Close" flag if this event does not allow manual closing
@@ -537,32 +540,36 @@ class ZabbixServer(GenericServer):
             #         actions |= 1
             # The current Nagstamon menu items don't match up too well with the Zabbix actions,
             # but perhaps "Persistent comment" is the closest thing to acknowledgement
-            if persistent:
-                actions |= 2
+            # if persistent:
+            #     actions |= 2
             if comment:
                 actions |= 4
             if conf.debug_mode is True:
                 self.Debug(server=self.get_name(),
                            debug="Events to acknowledge: " + str(eventids) + " Close: " + str(actions))
+            # print("Events to acknowledge: " + str(eventids) + " Close: " + str(actions))
             self.zapi.event.acknowledge({'eventids': eventids, 'message': comment, 'action': actions})
 
     def _set_downtime(self, hostname, service, author, comment, fixed, start_time, end_time, hours, minutes):
         # Check if there is an associated Application tag with this trigger/item
-        app = None
-        triggers = self.zapi.trigger.get({
-            'selectItems': ['itemid'],
-            'output': ['triggerid'],
-            'filter': {'triggerid': service}})
-
-        if triggers and triggers[0]['items']:
-            items = self.zapi.item.get({
-                'itemids': [triggers[0]['items'][0]['itemid']],
-                'output': ['itemid'],
-                'selectTags': 'extend'})
-            if items and items[0]['tags']:
-                for tag in items[0]['tags']:
-                    if tag['tag'] == 'Application':
-                        app = tag['value']
+        triggerid = None
+        for host_service in self.hosts[hostname].services:
+            if self.hosts[hostname].services[host_service].name == service:
+                triggerid = self.hosts[hostname].services[host_service].triggerid
+                break
+        # triggers = self.zapi.trigger.get({
+        #     'selectItems': ['itemid'],
+        #     'output': ['triggerid'],
+        #     'filter': {'triggerid': service}})
+        # if triggers and triggers[0]['items']:
+        #     items = self.zapi.item.get({
+        #         'itemids': [triggers[0]['items'][0]['itemid']],
+        #         'output': ['itemid'],
+        #         'selectTags': 'extend'})
+        #     if items and items[0]['tags']:
+        #         for tag in items[0]['tags']:
+        #             if tag['tag'] == 'Application':
+        #                 app = tag['value']
 
         hostids = [self.hosts[hostname].hostid]
 
@@ -574,18 +581,18 @@ class ZabbixServer(GenericServer):
 
         if conf.debug_mode is True:
             self.Debug(server=self.get_name(),
-                       debug="Downtime for " + hostname + "[" + str(hostids[0]) + "] stime:" + str(
+                       debug="Downtime for " + hostname + "[" + str(hostids) + "] stime:" + str(
                            stime) + " etime:" + str(etime))
-
+        # print("Downtime for " + hostname + "[" + str(hostids) + "] stime:" + str(stime) + " etime:" + str(etime))
         body = {'hostids': hostids, 'name': comment, 'description': author, 'active_since': stime, 'active_till': etime,
                 'maintenance_type': 0, "timeperiods": [
-                {"timeperiod_type": 0, "start_date": stime, "period": etime - stime}
-            ]
+                        {"timeperiod_type": 0, "start_date": stime, "period": etime - stime}
+                    ]
                 }
-        if app:
-            body['tags'] = [{'tag': 'Application', 'operator': 0, 'value': app}]
-            body['description'] += ' ' + body['name']
-            body['name'] = f'{start_time} {hostname} {app}'
+        if triggerid:
+            body['tags'] = [{'tag': 'triggerid', 'operator': 0, 'value': triggerid}]
+            body['description'] = body['description'] + '(Nagstamon): ' + comment
+            body['name'] = f'{hostname} - {service}'
         try:
             self.zapi.maintenance.create(body)
         except Already_Exists:
