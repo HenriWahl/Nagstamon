@@ -139,6 +139,7 @@ class ZabbixServer(GenericServer):
                                                        "jmx_available", "jmx_error", "jmx_errors_from",
                                                        "maintenance_status", "maintenance_from"],
                                             "selectInterfaces": ["ip"],
+                                            "with_triggers": True,
                                             "filter": {}
                                             })
             except (ZabbixError, ZabbixAPIException, APITimeout, Already_Exists):
@@ -275,7 +276,7 @@ class ZabbixServer(GenericServer):
                                                   # 'expandComment': True,
                                                   'selectLastEvent': ['eventid', 'name', 'ns', 'clock', 'acknowledged', 'value',
                                                                       'severity'],
-                                                  'selectHosts': ['hostid', 'host', 'name'],
+                                                  'selectHosts': 'extend', #['hostid', 'host', 'name'],
                                                   'selectItems': ['name', 'lastvalue', 'state', 'lastclock'],
                                                   # thats for zabbix api 2.0+
                                                   'filter': {'value': 1},
@@ -592,7 +593,7 @@ class ZabbixServer(GenericServer):
         if triggerid:
             body['tags'] = [{'tag': 'triggerid', 'operator': 0, 'value': triggerid}]
             body['description'] = body['description'] + '(Nagstamon): ' + comment
-            body['name'] = f'{hostname} - {service}'
+            body['name'] = f'{hostname}: {service}'
         try:
             self.zapi.maintenance.create(body)
         except Already_Exists:
