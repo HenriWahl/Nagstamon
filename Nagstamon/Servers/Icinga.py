@@ -1,7 +1,7 @@
 # encoding: utf-8
 
 # Nagstamon - Nagios status monitor for your desktop
-# Copyright (C) 2008-2021 Henri Wahl <henri@nagstamon.de> et al.
+# Copyright (C) 2008-2022 Henri Wahl <henri@nagstamon.de> et al.
 #
 # This program is free software; you can redistribute it and/or modify
 # it under the terms of the GNU General Public License as published by
@@ -23,7 +23,6 @@ import copy
 import json
 from bs4 import BeautifulSoup
 from collections import OrderedDict
-from distutils.version import LooseVersion
 
 from Nagstamon.Servers.Generic import GenericServer
 from Nagstamon.Objects import (GenericHost, GenericService, Result)
@@ -89,6 +88,13 @@ class IcingaServer(GenericServer):
         else:
             self.refresh_authentication = True
 
+    def looseversion(self, version):
+        """
+           Replacement for distutils.version.LooseVersion which got lost in newer Python
+           Fix for https://github.com/HenriWahl/Nagstamon/issues/787
+        """
+        # gives back a list with split version components - makes 2 method calls comparable
+        return [int(x) for x in version.split('.')]
 
     def _get_status(self):
         """
@@ -102,7 +108,7 @@ class IcingaServer(GenericServer):
             if self.version != '':
                 # define CGI URLs for hosts and services depending on JSON-capable server version
                 if self.cgiurl_hosts == self.cgiurl_services == None:
-                    if LooseVersion(self.version) < LooseVersion('1.7'):
+                    if self.looseversion(self.version) < self.looseversion('1.7'):
                         # http://www.nagios-wiki.de/nagios/tips/host-_und_serviceproperties_fuer_status.cgi?s=servicestatustypes
                         # services (unknown, warning or critical?) as dictionary, sorted by hard and soft state type
                         self.cgiurl_services = {'hard': self.monitor_cgi_url + '/status.cgi?host=all&servicestatustypes=253&serviceprops=262144', \
@@ -680,5 +686,4 @@ class IcingaServer(GenericServer):
                 cgi_data['service'] = s
                 self.FetchURL(url, giveback='raw', cgi_data=cgi_data)
 
-0
 

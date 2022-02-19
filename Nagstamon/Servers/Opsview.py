@@ -1,7 +1,7 @@
 # encoding: utf-8
 
 # Nagstamon - Nagios status monitor for your desktop
-# Copyright (C) 2008-2021 Henri Wahl <henri@nagstamon.de> et al.
+# Copyright (C) 2008-2022 Henri Wahl <henri@nagstamon.de> et al.
 #
 # Based on https://github.com/duncs/Nagstamon by @duncs
 #
