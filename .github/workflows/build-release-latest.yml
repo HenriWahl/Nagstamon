@@ -118,7 +118,7 @@ jobs:
           if-no-files-found: error
 
   windows-32:
-    runs-on: windows-latest
+    runs-on: windows-2019
     needs: test
     steps:
       - uses: actions/checkout@v2
@@ -139,7 +139,7 @@ jobs:
           if-no-files-found: error
 
   windows-64:
-    runs-on: windows-latest
+    runs-on: windows-2019
     needs: test
     steps:
       - uses: actions/checkout@v2
