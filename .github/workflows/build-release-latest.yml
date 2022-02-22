@@ -5,7 +5,7 @@ on:
     branches: '**'
 
 env:
-  python_win_version: 3.9.10
+  python_win_version: 3.10.2
   repo_dir: nagstamon-jekyll/docs/repo
 
 jobs:
