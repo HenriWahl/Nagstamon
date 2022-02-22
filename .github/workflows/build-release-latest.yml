@@ -5,7 +5,7 @@ on:
     branches: '**'
 
 env:
-  python_win_version: 3.10.2
+  python_win_version: 3.9.10
   repo_dir: nagstamon-jekyll/docs/repo
 
 jobs:
@@ -118,7 +118,7 @@ jobs:
           if-no-files-found: error
 
   windows-32:
-    runs-on: windows-2019
+    runs-on: windows-latest
     needs: test
     steps:
       - uses: actions/checkout@v2
@@ -139,7 +139,7 @@ jobs:
           if-no-files-found: error
 
   windows-64:
-    runs-on: windows-2019
+    runs-on: windows-latest
     needs: test
     steps:
       - uses: actions/checkout@v2
