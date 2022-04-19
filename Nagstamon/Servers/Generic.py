@@ -254,38 +254,49 @@ class GenericServer(object):
 
     def init_HTTP(self):
         """
-        partly not constantly working Basic Authorization requires extra Authorization headers,
-        different between various server types
+        initialize HTTP connection
+        should return a valid session if none exists yet
+        when reauthentication is needed the session should be removed
         """
         if self.refresh_authentication:
             self.session = None
             return False
         elif self.session is None:
-            self.session = requests.Session()
-            self.session.headers['User-Agent'] = self.USER_AGENT
-
-            # support for different authentication types
-            if self.authentication == 'basic':
-                # basic authentication
-                self.session.auth = requests.auth.HTTPBasicAuth(self.username, self.password)
-            elif self.authentication == 'digest':
-                self.session.auth = requests.auth.HTTPDigestAuth(self.username, self.password)
-            elif self.authentication == 'ecp':
-                self.session.auth = HTTPECPAuth(self.idp_ecp_endpoint, username=self.username, password=self.password)
-            elif self.authentication == 'kerberos':
-                self.session.auth = HTTPSKerberos()
-
-            # default to check TLS validity
-            if self.ignore_cert:
-                self.session.verify = False
-            elif self.custom_cert_use:
-                self.session.verify = self.custom_cert_ca_file
-            else:
-                self.session.verify = True
-
-            # add proxy information
-            self.proxify(self.session)
+            self.session = self.create_session()
             return True
+
+    def create_session(self):
+        """
+        reusable session creation
+        partly not constantly working Basic Authorization requires extra Authorization headers,
+        different between various server types
+        """
+        session = requests.Session()
+        session.headers['User-Agent'] = self.USER_AGENT
+
+        # support for different authentication types
+        if self.authentication == 'basic':
+            # basic authentication
+            session.auth = requests.auth.HTTPBasicAuth(self.username, self.password)
+        elif self.authentication == 'digest':
+            session.auth = requests.auth.HTTPDigestAuth(self.username, self.password)
+        elif self.authentication == 'ecp':
+            session.auth = HTTPECPAuth(self.idp_ecp_endpoint, username=self.username, password=self.password)
+        elif self.authentication == 'kerberos':
+            session.auth = HTTPSKerberos()
+
+        # default to check TLS validity
+        if self.ignore_cert:
+            session.verify = False
+        elif self.custom_cert_use:
+            session.verify = self.custom_cert_ca_file
+        else:
+            session.verify = True
+
+        # add proxy information
+        self.proxify(session)
+
+        return session
 
     def proxify(self, requester):
         '''
@@ -1466,6 +1477,7 @@ class GenericServer(object):
                 # use session only for connections to monitor servers, other requests like looking for updates
                 # should go out without credentials
                 if no_auth is False and not self.refresh_authentication:
+                # if no_auth is False:
                     # check if there is really a session
                     if not self.session:
                         self.reset_HTTP()
@@ -1512,7 +1524,10 @@ class GenericServer(object):
                     del temporary_session
 
             except Exception:
-                traceback.print_exc(file=sys.stdout)
+                if conf.debug_mode:
+                    #traceback.print_exc(file=sys.stdout)
+                    #self.Debug(server=self.get_name(), debug=' '.join(sys.exc_info()))
+                    self.Error(sys.exc_info())
                 result, error = self.Error(sys.exc_info())
                 if error.startswith('requests.exceptions.SSLError:'):
                     self.tls_error = True
@@ -1542,7 +1557,8 @@ class GenericServer(object):
                               status_code=response.status_code)
 
         except Exception:
-            traceback.print_exc(file=sys.stdout)
+            #traceback.print_exc(file=sys.stdout)
+            self.Error(sys.exc_info())
 
             result, error = self.Error(sys.exc_info())
             return Result(result=result, error=error, status_code=response.status_code)

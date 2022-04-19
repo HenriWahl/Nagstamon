@@ -67,11 +67,10 @@ class MultisiteServer(GenericServer):
 
     def init_HTTP(self):
         # general initialization
-        GenericServer.init_HTTP(self)
+        if not self.session:
+            GenericServer.init_HTTP(self)
 
         # Fix eventually missing tailing '/' in url
-        # if self.monitor_url[-1] != '/':
-        #     self.monitor_url += '/'
         if self.monitor_url.endswith('/'):
             self.monitor_url.rstrip('/')
 
@@ -120,6 +119,12 @@ class MultisiteServer(GenericServer):
             elif self.session == None:
                 # if no cookie yet login
                 self._get_cookie_login()
+        elif self.CookieAuth and self.refresh_authentication:
+            if self.session is None:
+                self.session = self.create_session()
+
+            # force re-auth
+            self._get_cookie_login()
 
 
     def init_config(self):
@@ -133,7 +138,7 @@ class MultisiteServer(GenericServer):
         """
             check if there is any valid auth session in cookies which has the name 'auth_<monitor_name>'
         """
-        if not self.session == None:
+        if self.session:
             for cookie in self.session.cookies:
                 if cookie.name.startswith('auth_'):
                     return True
@@ -164,10 +169,10 @@ class MultisiteServer(GenericServer):
                                               status_code=status_code))
 
         # in case of auth problem enable GUI auth part in popup
-        if self.CookieAuth == True and not self.session == None:
-            if not self._is_auth_in_cookies():
-                self.refresh_authentication = True
-                return ''
+        #if self.CookieAuth and self.session is not None:
+        #    if not self._is_auth_in_cookies():
+        #        self.refresh_authentication = True
+        #        return ''
 
         # looks like cookieauth
         elif content.startswith('<'):
@@ -202,9 +207,6 @@ class MultisiteServer(GenericServer):
             # login and get cookie
             self.FetchURL(self.monitor_url + '/login.py', cgi_data=login_data, multipart=True)
         except:
-            import traceback
-            traceback.print_exc(file=sys.stdout)
-
             self.Error(sys.exc_info())
 
 

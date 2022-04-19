@@ -4113,13 +4113,15 @@ class TreeView(QTreeView):
                     # reflect status retrieval attempt on server vbox label
                     self.change_label_status.emit('Refreshing...', '')
 
-                    # get status from server instance if connection was already possible and no TLS error
-                    if not self.server.tls_error and \
-                       not self.server.refresh_authentication:
-                        status = self.server.GetStatus()
-                    else:
-                        # dummy status result
-                        status = Result()
+                    # # get status from server instance if connection was already possible and no TLS error
+                    # if not self.server.tls_error and \
+                    #    not self.server.refresh_authentication:
+                    #     status = self.server.GetStatus()
+                    # else:
+                    #     # dummy status result
+                    #     status = Result()
+
+                    status = self.server.GetStatus()
 
                     # all is OK if no error info came back
                     if self.server.status_description == '' and \
