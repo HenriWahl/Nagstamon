@@ -1251,40 +1251,40 @@ class GenericServer(object):
                             if conf.debug_mode:
                                 self.Debug(server=self.get_name(),
                                         debug="Filter: INFORMATION " + str(host.name) + ";" + str(service.name))
-                                service.visible = False
-                            else:
-                                self.nagitems_filtered["services"]["INFORMATION"].append(service)
-                                self.information += 1
+                            service.visible = False
+                        else:
+                            self.nagitems_filtered["services"]["INFORMATION"].append(service)
+                            self.information += 1
 
                     if service.status == "AVERAGE":
                         if conf.filter_all_unknown_services is True:
                             if conf.debug_mode:
                                 self.Debug(server=self.get_name(),
                                         debug="Filter: AVERAGE " + str(host.name) + ";" + str(service.name))
-                                service.visible = False
-                            else:
-                                self.nagitems_filtered["services"]["AVERAGE"].append(service)
-                                self.average += 1
+                            service.visible = False
+                        else:
+                            self.nagitems_filtered["services"]["AVERAGE"].append(service)
+                            self.average += 1
 
                     if service.status == "HIGH":
                         if conf.filter_all_unknown_services is True:
                             if conf.debug_mode:
                                 self.Debug(server=self.get_name(),
                                         debug="Filter: HIGH " + str(host.name) + ";" + str(service.name))
-                                service.visible = False
-                            else:
-                                self.nagitems_filtered["services"]["HIGH"].append(service)
-                                self.high += 1
+                            service.visible = False
+                        else:
+                            self.nagitems_filtered["services"]["HIGH"].append(service)
+                            self.high += 1
 
                     if service.status == "DISASTER":
                         if conf.filter_all_unknown_services is True:
                             if conf.debug_mode:
                                 self.Debug(server=self.get_name(),
                                         debug="Filter: DISASTER " + str(host.name) + ";" + str(service.name))
-                                service.visible = False
-                            else:
-                                self.nagitems_filtered["services"]["DISASTER"].append(service)
-                                self.disaster += 1
+                            service.visible = False
+                        else:
+                            self.nagitems_filtered["services"]["DISASTER"].append(service)
+                            self.disaster += 1
 
                 # Add service flags for status icons in treeview
                 if service.acknowledged:
