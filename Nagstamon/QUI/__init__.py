@@ -16,31 +16,77 @@
 # along with this program; if not, write to the Free Software
 # Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA  02110-1301, USA
 
-import sys
-
-"""Module QUI"""
-from PyQt5.QtWidgets import *
-from PyQt5.QtGui import *
-from PyQt5.QtCore import *
-from PyQt5.QtSvg import *
-from PyQt5.QtMultimedia import *
-
+import base64
+from collections import OrderedDict
+import copy
+from copy import deepcopy
+import datetime
 import os
 import os.path
-import urllib.parse
-import subprocess
 import platform
-import time
 import random
-import copy
-import base64
-import datetime
+import subprocess
+import sys
+import time
 import traceback
-
 from urllib.parse import quote
 
-from collections import OrderedDict
-from copy import deepcopy
+from PyQt5.QtCore import pyqtSignal, \
+    pyqtSlot, \
+    QAbstractTableModel, \
+    QByteArray, \
+    QDateTime, \
+    QModelIndex, \
+    QObject, \
+    QPoint, \
+    QSignalMapper, \
+    Qt, \
+    QThread, \
+    QTimer, \
+    QUrl, \
+    QVariant, \
+    QXmlStreamReader
+from PyQt5.QtGui import QBrush, \
+    QColor, \
+    QCursor, \
+    QFont, \
+    QFontDatabase, \
+    QIcon, \
+    QKeySequence, \
+    QPainter, \
+    QPalette, \
+    QPixmap
+from PyQt5.QtMultimedia import QMediaContent, \
+    QMediaPlayer, \
+    QMediaPlaylist
+from PyQt5.QtSvg import QSvgRenderer, \
+    QSvgWidget
+
+from PyQt5.QtWidgets import QAbstractItemView, \
+    QAction, \
+    QApplication, \
+    QColorDialog, \
+    QComboBox, \
+    QDialog, \
+    QFileDialog, \
+    QFontDialog, \
+    QHBoxLayout, \
+    QHeaderView, \
+    QListWidgetItem, \
+    QMenu, \
+    QMenuBar, \
+    QMessageBox, \
+    QLabel, \
+    QPushButton, \
+    QScrollArea, \
+    QSizePolicy,\
+    QSpacerItem, \
+    QToolButton, \
+    QTreeView, \
+    QStyle, \
+    QSystemTrayIcon, \
+    QVBoxLayout, \
+    QWidget
 
 from Nagstamon.Config import (Action,
                               AppInfo,
@@ -72,8 +118,6 @@ from Nagstamon.Helpers import (is_found_by_re,
                                STATES,
                                STATES_SOUND,
                                SORT_COLUMNS_FUNCTIONS)
-
-from Nagstamon.Objects import Result
 
 # dialogs
 from Nagstamon.QUI.settings_main import Ui_settings_main
@@ -116,6 +160,7 @@ if not OS in OS_NON_LINUX:
 # check ECP authentication support availability
 try:
     from requests_ecp import HTTPECPAuth
+
     ECP_AVAILABLE = True
 except ImportError:
     ECP_AVAILABLE = False
@@ -302,14 +347,17 @@ class HBoxLayout(QHBoxLayout):
         for item in range(self.count() - 1):
             self.itemAt(item).widget().show()
 
+
 class QIconWithFilename(QIcon):
     """
     extend QIcon with a filename property
     """
+
     def __init__(self, *args, **kwargs):
         super().__init__(*args, **kwargs)
         if type(args[0]) == str:
             self.filename = args[0]
+
 
 class SystemTrayIcon(QSystemTrayIcon):
     """
@@ -402,7 +450,8 @@ class SystemTrayIcon(QSystemTrayIcon):
                 # replace dummy text and background colors with configured ones
                 for line in svg_template_xml:
                     line = line.replace('fill:#ff00ff', 'fill:' + conf.__dict__['color_' + state.lower() + '_text'])
-                    line = line.replace('fill:#00ff00', 'fill:' + conf.__dict__['color_' + state.lower() + '_background'])
+                    line = line.replace('fill:#00ff00',
+                                        'fill:' + conf.__dict__['color_' + state.lower() + '_background'])
                     svg_state_xml.append(line)
 
                 # create XML stream of SVG
@@ -422,7 +471,8 @@ class SystemTrayIcon(QSystemTrayIcon):
                 # put pixmap into icon
                 self.icons[state] = QIconWithFilename(svg_pixmap)
 
-                debug_queue.append('DEBUG: SystemTrayIcon created icon {} for state "{}"'.format(self.icons[state], state))
+                debug_queue.append(
+                    'DEBUG: SystemTrayIcon created icon {} for state "{}"'.format(self.icons[state], state))
 
     @pyqtSlot(QSystemTrayIcon.ActivationReason)
     def icon_clicked(self, reason):
@@ -1312,7 +1362,7 @@ class StatusWindow(QWidget):
             self.show_window()
             # fullscreen mode is rather buggy on everything other than OSX so just use a maximized window
             if OS == OS_DARWIN:
-                 self.showFullScreen()
+                self.showFullScreen()
             else:
                 self.show()
                 self.showMaximized()
@@ -1590,7 +1640,7 @@ class StatusWindow(QWidget):
                         vbox.button_fix_tls_error.hide()
 
                 if not conf.fullscreen and \
-                   not conf.windowed:
+                        not conf.windowed:
                     # theory...
                     width, height, x, y = self.calculate_size()
                     # ...and practice
@@ -1638,9 +1688,9 @@ class StatusWindow(QWidget):
             # Thus we check again with this timer to catch missed mouse-outs.
             # causes trouble in Wayland so is disabled for it
             if conf.close_details_hover and \
-               conf.statusbar_floating and\
-               self.is_shown and\
-               not DESKTOP_WAYLAND:
+                    conf.statusbar_floating and \
+                    self.is_shown and \
+                    not DESKTOP_WAYLAND:
                 self.periodically_check_window_under_mouse_and_hide()
 
     def periodically_check_window_under_mouse_and_hide(self):
@@ -1656,9 +1706,9 @@ class StatusWindow(QWidget):
         """
         mouse_pos = QCursor.pos()
         # Check mouse cursor over window and an opened context menu or dropdown list
-        if self.geometry().contains(mouse_pos.x(), mouse_pos.y()) or\
-           not APP.activePopupWidget() is None or \
-           self.is_shown:
+        if self.geometry().contains(mouse_pos.x(), mouse_pos.y()) or \
+                not APP.activePopupWidget() is None or \
+                self.is_shown:
             return False
 
         self.hide_window()
@@ -1670,8 +1720,8 @@ class StatusWindow(QWidget):
             redraw window content, to be effective only when window is shown
         """
         if self.is_shown or \
-           conf.fullscreen or \
-           (conf.windowed and self.is_shown):
+                conf.fullscreen or \
+                (conf.windowed and self.is_shown):
             self.show_window()
 
     @pyqtSlot()
@@ -1795,7 +1845,7 @@ class StatusWindow(QWidget):
         # add available_y because it might vary on differently setup screens
         # calculate top-ness only if window is closed
         if conf.statusbar_floating:
-            #if self.is_shown is False:
+            # if self.is_shown is False:
             if self.y() < desktop.screenGeometry(self).height() // 2 + available_y:
                 self.top = True
             else:
@@ -1847,7 +1897,7 @@ class StatusWindow(QWidget):
                 # when height is to large for current screen cut it
                 if self.y() + self.height() - real_height < available_y:
                     height = desktop.screenGeometry().height() - available_y - (
-                                desktop.screenGeometry().height() - (self.y() + self.height()))
+                            desktop.screenGeometry().height() - (self.y() + self.height()))
                     y = available_y
                 else:
                     height = real_height
@@ -2137,10 +2187,10 @@ class StatusWindow(QWidget):
             self.setWindowFlags(WINDOW_FLAGS)
 
         # again and again try to keep that statuswindow on top!
-        if OS == OS_WINDOWS and\
-           not conf.fullscreen and\
-           not conf.windowed and\
-           APP.activePopupWidget() == None:
+        if OS == OS_WINDOWS and \
+                not conf.fullscreen and \
+                not conf.windowed and \
+                APP.activePopupWidget() == None:
             try:
                 # find out if no context menu is shown and thus would be
                 # overlapped by statuswindow
@@ -4113,14 +4163,6 @@ class TreeView(QTreeView):
                     # reflect status retrieval attempt on server vbox label
                     self.change_label_status.emit('Refreshing...', '')
 
-                    # # get status from server instance if connection was already possible and no TLS error
-                    # if not self.server.tls_error and \
-                    #    not self.server.refresh_authentication:
-                    #     status = self.server.GetStatus()
-                    # else:
-                    #     # dummy status result
-                    #     status = Result()
-
                     status = self.server.GetStatus()
 
                     # all is OK if no error info came back
@@ -4235,7 +4277,8 @@ class TreeView(QTreeView):
                                         # fourth item in las data_array line is service flags
                                         self.data_array[-1][3] += 'N'
                                 # add text color as QBrush from status
-                                self.data_array[-1].append(QBRUSHES[len(self.data_array) % 2][COLORS[item.status] + 'text'])
+                                self.data_array[-1].append(
+                                    QBRUSHES[len(self.data_array) % 2][COLORS[item.status] + 'text'])
                                 # add background color as QBrush from status
                                 self.data_array[-1].append(
                                     QBRUSHES[len(self.data_array) % 2][COLORS[item.status] + 'background'])
@@ -4962,12 +5005,11 @@ class Dialog_Settings(Dialog):
 
         # ...and another...
         self.EXPIRE_TIME_WIDGETS = [self.ui.input_checkbox_defaults_acknowledge_expire,
-                                   self.ui.label_expire_in,
-                                   self.ui.label_expire_in_hours,
-                                   self.ui.label_expire_in_minutes,
-                                   self.ui.input_spinbox_defaults_acknowledge_expire_duration_hours,
-                                   self.ui.input_spinbox_defaults_acknowledge_expire_duration_minutes]
-
+                                    self.ui.label_expire_in,
+                                    self.ui.label_expire_in_hours,
+                                    self.ui.label_expire_in_minutes,
+                                    self.ui.input_spinbox_defaults_acknowledge_expire_duration_hours,
+                                    self.ui.input_spinbox_defaults_acknowledge_expire_duration_minutes]
 
     def initialize(self):
         # apply configuration values
@@ -5162,10 +5204,10 @@ class Dialog_Settings(Dialog):
         # when display mode was changed its the easiest to destroy the old status window and create a new one
         # store display_mode to decide if statuswindow has to be recreated
         if display_mode != str(conf.statusbar_floating) + \
-                           str(conf.icon_in_systray) + \
-                           str(conf.fullscreen) + \
-                           str(conf.fullscreen_display) + \
-                           str(conf.windowed):
+                str(conf.icon_in_systray) + \
+                str(conf.fullscreen) + \
+                str(conf.fullscreen_display) + \
+                str(conf.windowed):
 
             # increase number of display changes for silly Windows-hides-statusbar-after-display-mode-change problem
             NUMBER_OF_DISPLAY_CHANGES += 1
@@ -5766,12 +5808,12 @@ class Dialog_Server(Dialog):
             self.ui.label_host_filter: ['op5Monitor'],
             self.ui.label_monitor_site: ['Sensu'],
             self.ui.input_lineedit_monitor_site: ['Sensu'],
-            self.ui.label_map_to_hostname: ['Prometheus','Alertmanager'],
-            self.ui.input_lineedit_map_to_hostname: ['Prometheus','Alertmanager'],
-            self.ui.label_map_to_servicename: ['Prometheus','Alertmanager'],
-            self.ui.input_lineedit_map_to_servicename: ['Prometheus','Alertmanager'],
-            self.ui.label_map_to_status_information: ['Prometheus','Alertmanager'],
-            self.ui.input_lineedit_map_to_status_information: ['Prometheus','Alertmanager'],
+            self.ui.label_map_to_hostname: ['Prometheus', 'Alertmanager'],
+            self.ui.input_lineedit_map_to_hostname: ['Prometheus', 'Alertmanager'],
+            self.ui.label_map_to_servicename: ['Prometheus', 'Alertmanager'],
+            self.ui.input_lineedit_map_to_servicename: ['Prometheus', 'Alertmanager'],
+            self.ui.label_map_to_status_information: ['Prometheus', 'Alertmanager'],
+            self.ui.input_lineedit_map_to_status_information: ['Prometheus', 'Alertmanager'],
             self.ui.label_alertmanager_filter: ['Alertmanager'],
             self.ui.input_lineedit_alertmanager_filter: ['Alertmanager'],
             self.ui.label_map_to_ok: ['Alertmanager'],
@@ -6306,12 +6348,13 @@ class Dialog_Acknowledge(Dialog):
 
         self.TOGGLE_DEPS = {
             self.ui.input_checkbox_use_expire_time: [self.ui.input_datetime_expire_time]
-            }
+        }
 
         # still clumsy but better than negating the other server types
         PROMETHEUS_OR_ALERTMANAGER = ['Alertmanager',
                                       'Prometheus']
-        NOT_PROMETHEUS_OR_ALERTMANAGER = [x.TYPE for x in SERVER_TYPES.values() if x.TYPE not in PROMETHEUS_OR_ALERTMANAGER]
+        NOT_PROMETHEUS_OR_ALERTMANAGER = [x.TYPE for x in SERVER_TYPES.values() if
+                                          x.TYPE not in PROMETHEUS_OR_ALERTMANAGER]
 
         self.VOLATILE_WIDGETS = {
             self.ui.input_checkbox_use_expire_time: ['IcingaWeb2'],
@@ -6320,10 +6363,9 @@ class Dialog_Acknowledge(Dialog):
             self.ui.input_checkbox_send_notification: NOT_PROMETHEUS_OR_ALERTMANAGER,
             self.ui.input_checkbox_persistent_comment: NOT_PROMETHEUS_OR_ALERTMANAGER,
             self.ui.input_checkbox_acknowledge_all_services: NOT_PROMETHEUS_OR_ALERTMANAGER
-            }
+        }
 
         self.FORCE_DATETIME_EXPIRE_TIME = ['Alertmanager']
-
 
     def initialize(self, server=None, host=[], service=[]):
         # store server, host and service to be used for OK button evaluation
@@ -6382,7 +6424,6 @@ class Dialog_Acknowledge(Dialog):
         self.ui.options_groupbox.adjustSize()
         self.window.adjustSize()
 
-
     def ok(self):
         """
             acknowledge miserable host/service
@@ -6403,8 +6444,6 @@ class Dialog_Acknowledge(Dialog):
             expire_datetime = self.ui.input_datetime_expire_time.dateTime().toString("yyyy-MM-ddTHH:mm:ss")
         else:
             expire_datetime = None
-
-
 
         for line_number in range(len(self.host_list)):
             service = self.service_list[line_number]
@@ -6969,7 +7008,8 @@ class CheckVersion(QObject):
             for server in enabled_servers:
                 for download_server, download_url in AppInfo.DOWNLOAD_SERVERS.items():
                     # dummy message just in case version check does not work
-                    message = 'Cannot reach version check at <a href={0}>{0}</<a>.'.format(f'https://{download_server}{AppInfo.VERSION_PATH}')
+                    message = 'Cannot reach version check at <a href={0}>{0}</<a>.'.format(
+                        f'https://{download_server}{AppInfo.VERSION_PATH}')
                     # retrieve VERSION_URL without auth information
                     response = server.FetchURL(f'https://{download_server}{AppInfo.VERSION_PATH}',
                                                giveback='raw',
