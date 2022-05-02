@@ -31,10 +31,11 @@ import time
 import traceback
 from urllib.parse import quote
 
-from PyQt5.QtCore import pyqtSignal, \
+from .qt import pyqtSignal, \
     pyqtSlot, \
     QAbstractTableModel, \
     QByteArray, \
+    QBrush, \
     QDateTime, \
     QModelIndex, \
     QObject, \
@@ -45,8 +46,7 @@ from PyQt5.QtCore import pyqtSignal, \
     QTimer, \
     QUrl, \
     QVariant, \
-    QXmlStreamReader
-from PyQt5.QtGui import QBrush, \
+    QXmlStreamReader, \
     QColor, \
     QCursor, \
     QFont, \
@@ -55,14 +55,13 @@ from PyQt5.QtGui import QBrush, \
     QKeySequence, \
     QPainter, \
     QPalette, \
-    QPixmap
-from PyQt5.QtMultimedia import QMediaContent, \
+    QPixmap, \
+    QMediaContent, \
     QMediaPlayer, \
-    QMediaPlaylist
-from PyQt5.QtSvg import QSvgRenderer, \
-    QSvgWidget
-
-from PyQt5.QtWidgets import QAbstractItemView, \
+    QMediaPlaylist, \
+    QSvgRenderer, \
+    QSvgWidget, \
+    QAbstractItemView, \
     QAction, \
     QApplication, \
     QColorDialog, \
@@ -79,7 +78,7 @@ from PyQt5.QtWidgets import QAbstractItemView, \
     QLabel, \
     QPushButton, \
     QScrollArea, \
-    QSizePolicy,\
+    QSizePolicy, \
     QSpacerItem, \
     QToolButton, \
     QTreeView, \
