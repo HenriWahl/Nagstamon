@@ -1655,4 +1655,4 @@ if __name__ == "__main__":
     ui = Ui_settings_main()
     ui.setupUi(settings_main)
     settings_main.show()
-    sys.exit(app.exec_())
+    sys.exit(app.exec())

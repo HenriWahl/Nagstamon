@@ -3,6 +3,8 @@ keyring
 lxml
 psutil
 pyqt5
+pyqt6
+pyside6
 pysocks
 python-dateutil
 requests

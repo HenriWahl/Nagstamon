@@ -20,9 +20,21 @@
 
 import sys
 
-if 'PyQt5' in sys.modules:
-    from PyQt5.QtCore import pyqtSignal, \
-        pyqtSlot, \
+try:
+    from PySide6 import __version__ as QT_VERSION_STR
+except ImportError:
+    try:
+        from PyQt6.QtCore import PYQT_VERSION_STR as QT_VERSION_STR
+    except ImportError:
+        try:
+            from PyQt6.QtCore import PYQT_VERSION_STR as QT_VERSION_STR
+        except ImportError:
+            sys.exit('Qt is missing')
+
+
+if 'PySide6' in sys.modules:
+    from PySide6.QtCore import Signal, \
+        Slot, \
         QAbstractTableModel, \
         QByteArray, \
         QDateTime, \
@@ -34,9 +46,9 @@ if 'PyQt5' in sys.modules:
         QThread, \
         QTimer, \
         QUrl, \
-        QVariant, \
         QXmlStreamReader
-    from PyQt5.QtGui import QBrush, \
+    from PySide6.QtGui import QAction, \
+        QBrush, \
         QColor, \
         QCursor, \
         QFont, \
@@ -46,14 +58,12 @@ if 'PyQt5' in sys.modules:
         QPainter, \
         QPalette, \
         QPixmap
-    from PyQt5.QtMultimedia import QMediaContent, \
+    from PySide6.QtMultimedia import QMediaContent, \
         QMediaPlayer, \
         QMediaPlaylist
-    from PyQt5.QtSvg import QSvgRenderer, \
+    from PySide6.QtSvg import QSvgRenderer, \
         QSvgWidget
-
-    from PyQt5.QtWidgets import QAbstractItemView, \
-        QAction, \
+    from PySide6.QtWidgets import QAbstractItemView, \
         QApplication, \
         QColorDialog, \
         QComboBox, \
@@ -77,3 +87,121 @@ if 'PyQt5' in sys.modules:
         QSystemTrayIcon, \
         QVBoxLayout, \
         QWidget
+# elif 'PyQt6' in sys.modules:
+# # if 'PyQt6' in sys.modules:
+#     # PySide/PyQt compatibility
+#     from PyQt6.QtCore import pyqtSignal as Signal, \
+#         pyqtSlot as Slot, \
+#         PYQT_VERSION_STR as QT_VERSION_STR, \
+#         QAbstractTableModel, \
+#         QByteArray, \
+#         QDateTime, \
+#         QModelIndex, \
+#         QObject, \
+#         QPoint, \
+#         QSignalMapper, \
+#         Qt, \
+#         QThread, \
+#         QTimer, \
+#         QUrl, \
+#         QXmlStreamReader
+#     from PyQt6.QtGui import QAction, \
+#         QBrush, \
+#         QColor, \
+#         QCursor, \
+#         QFont, \
+#         QFontDatabase, \
+#         QIcon, \
+#         QKeySequence, \
+#         QPainter, \
+#         QPalette, \
+#         QPixmap
+#     from PyQt6.QtMultimedia import QMediaContent, \
+#         QMediaPlayer, \
+#         QMediaPlaylist
+#     from PyQt6.QtSvg import QSvgRenderer, \
+#         QSvgWidget
+#     from PyQt6.QtWidgets import QAbstractItemView, \
+#         QApplication, \
+#         QColorDialog, \
+#         QComboBox, \
+#         QDialog, \
+#         QFileDialog, \
+#         QFontDialog, \
+#         QHBoxLayout, \
+#         QHeaderView, \
+#         QListWidgetItem, \
+#         QMenu, \
+#         QMenuBar, \
+#         QMessageBox, \
+#         QLabel, \
+#         QPushButton, \
+#         QScrollArea, \
+#         QSizePolicy, \
+#         QSpacerItem, \
+#         QToolButton, \
+#         QTreeView, \
+#         QStyle, \
+#         QSystemTrayIcon, \
+#         QVBoxLayout, \
+#         QWidget
+# elif 'PyQt5' in sys.modules:
+#     from PyQt5.QtCore import pyqtSignal, \
+#         pyqtSlot, \
+#         PYQT_VERSION_STR as QT_VERSION_STR, \
+#         QAbstractTableModel, \
+#         QByteArray, \
+#         QDateTime, \
+#         QModelIndex, \
+#         QObject, \
+#         QPoint, \
+#         QSignalMapper, \
+#         Qt, \
+#         QThread, \
+#         QTimer, \
+#         QUrl, \
+#         QXmlStreamReader
+#     from PyQt5.QtGui import QBrush, \
+#         QColor, \
+#         QCursor, \
+#         QFont, \
+#         QFontDatabase, \
+#         QIcon, \
+#         QKeySequence, \
+#         QPainter, \
+#         QPalette, \
+#         QPixmap
+#     from PyQt5.QtMultimedia import QMediaContent, \
+#         QMediaPlayer, \
+#         QMediaPlaylist
+#     from PyQt5.QtSvg import QSvgRenderer, \
+#         QSvgWidget
+#
+#     from PyQt5.QtWidgets import QAbstractItemView, \
+#         QAction, \
+#         QApplication, \
+#         QColorDialog, \
+#         QComboBox, \
+#         QDialog, \
+#         QFileDialog, \
+#         QFontDialog, \
+#         QHBoxLayout, \
+#         QHeaderView, \
+#         QListWidgetItem, \
+#         QMenu, \
+#         QMenuBar, \
+#         QMessageBox, \
+#         QLabel, \
+#         QPushButton, \
+#         QScrollArea, \
+#         QSizePolicy, \
+#         QSpacerItem, \
+#         QToolButton, \
+#         QTreeView, \
+#         QStyle, \
+#         QSystemTrayIcon, \
+#         QVBoxLayout, \
+#         QWidget
+
+QT_VERSION_MAJOR, QT_VERSION_MINOR, QT_VERSION_BUGFIX = [int(x) for x in QT_VERSION_STR.split('.')]
+print(QT_VERSION_MAJOR, QT_VERSION_MINOR, QT_VERSION_BUGFIX)

@@ -58,7 +58,7 @@ try:
         if conf.check_for_new_version is True:
             check_version.check(start_mode=True, parent=statuswindow)
 
-        APP.exec_()
+        APP.exec()
         del(APP)
         sys.exit(0)
 
