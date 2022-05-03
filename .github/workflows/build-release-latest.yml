@@ -50,19 +50,6 @@ jobs:
           retention-days: 1
           if-no-files-found: error
 
-  fedora-32:
-    runs-on: ubuntu-latest
-    needs: test
-    steps:
-      - uses: actions/checkout@v2
-      - run: /usr/bin/docker build -t build-nagstamon -f build/docker/Dockerfile-${{ github.job }} .
-      - run: /usr/bin/docker run -v ${{ github.workspace }}:/nagstamon build-nagstamon
-      - uses: actions/upload-artifact@v2
-        with:
-          path: build/*.rpm
-          retention-days: 1
-          if-no-files-found: error
-
   fedora-33:
     runs-on: ubuntu-latest
     needs: test
@@ -167,7 +154,7 @@ jobs:
 
   repo-fedora:
     runs-on: ubuntu-latest
-    needs: [debian, fedora-32, fedora-33, fedora-34, fedora-35, macos, windows-32, windows-64]
+    needs: [debian, fedora-33, fedora-34, fedora-35, macos, windows-32, windows-64]
     steps:
       # get binaries created by other jobs
       - uses: actions/download-artifact@v2
@@ -189,7 +176,7 @@ jobs:
 
   github-release:
     runs-on: ubuntu-latest
-    needs: [debian, fedora-32, fedora-33, fedora-34, fedora-35, macos, windows-32, windows-64]
+    needs: [debian, fedora-33, fedora-34, fedora-35, macos, windows-32, windows-64]
     steps:
       - uses: actions/download-artifact@v2
       - run: cd artifact && md5sum *agstamon* > md5sums.txt
