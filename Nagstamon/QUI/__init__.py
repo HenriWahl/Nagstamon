@@ -3134,7 +3134,7 @@ class Model(QAbstractTableModel):
             return self.data_array[index.row()][index.column()]
 
         elif role == Qt.ForegroundRole:
-            return(self.data_array[index.row()][10]
+            return self.data_array[index.row()][10]
 
         elif role == Qt.BackgroundRole:
             # return(self.data_array[index.row()][COLOR_INDEX['background'][index.column()]])
