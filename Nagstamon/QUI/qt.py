@@ -27,7 +27,7 @@ except ImportError:
         from PyQt6.QtCore import PYQT_VERSION_STR as QT_VERSION_STR
     except ImportError:
         try:
-            from PyQt6.QtCore import PYQT_VERSION_STR as QT_VERSION_STR
+            from PyQt5.QtCore import PYQT_VERSION_STR as QT_VERSION_STR
         except ImportError:
             sys.exit('Qt is missing')
 

@@ -6808,6 +6808,9 @@ class MediaPlayer(QObject):
         self.player = QMediaPlayer(parent=self)
 
         self.player.setVolume(100)
+
+        # Qt6: https://doc-snapshots.qt.io/qt6-dev/qmediaplayer.html#setSource
+
         self.playlist = QMediaPlaylist()
         self.player.setPlaylist(self.playlist)
 
