@@ -31,61 +31,8 @@ import time
 import traceback
 from urllib.parse import quote
 
-from .qt import Signal, \
-    Slot, \
-    QAbstractTableModel, \
-    QByteArray, \
-    QBrush, \
-    QDateTime, \
-    QModelIndex, \
-    QObject, \
-    QPoint, \
-    QSignalMapper, \
-    Qt, \
-    QThread, \
-    QTimer, \
-    QUrl, \
-    QXmlStreamReader, \
-    QColor, \
-    QCursor, \
-    QFont, \
-    QFontDatabase, \
-    QIcon, \
-    QKeySequence, \
-    QPainter, \
-    QPalette, \
-    QPixmap, \
-    QMediaContent, \
-    QMediaPlayer, \
-    QMediaPlaylist, \
-    QSvgRenderer, \
-    QSvgWidget, \
-    QAbstractItemView, \
-    QAction, \
-    QApplication, \
-    QColorDialog, \
-    QComboBox, \
-    QDialog, \
-    QFileDialog, \
-    QFontDialog, \
-    QHBoxLayout, \
-    QHeaderView, \
-    QListWidgetItem, \
-    QMenu, \
-    QMenuBar, \
-    QMessageBox, \
-    QLabel, \
-    QPushButton, \
-    QScrollArea, \
-    QSizePolicy, \
-    QSpacerItem, \
-    QToolButton, \
-    QTreeView, \
-    QT_VERSION_MAJOR, \
-    QStyle, \
-    QSystemTrayIcon, \
-    QVBoxLayout, \
-    QWidget
+# for details of imports look into qt.py
+from .qt import *
 
 from Nagstamon.Config import (Action,
                               AppInfo,
@@ -208,7 +155,6 @@ COLOR_STATUS_LABEL = {'critical': 'lightsalmon',
 QBRUSHES = {0: {}, 1: {}}
 
 # dummy QVariant as empty return value for model data()
-#DUMMY_QVARIANT = QVariant()
 DUMMY_QVARIANT = 'QVariant'
 
 # headers for tablewidgets
@@ -3121,9 +3067,6 @@ class Model(QAbstractTableModel):
     row_count = 0
     column_count = len(HEADERS_HEADERS)
 
-    # do not need to create everytime a new QVariant() object
-    dummy_return_qvariant = QVariant()
-
     # dummy QModelIndex for dataChanged signal
     dummy_qmodelindex = QModelIndex()
 
@@ -3188,39 +3131,36 @@ class Model(QAbstractTableModel):
             overridden method for data delivery for treeview
         """
         if role == Qt.DisplayRole:
-            return (self.data_array[index.row()][index.column()])
-            # return(self.server.data[index.row()][index.column()])
+            return self.data_array[index.row()][index.column()]
 
         elif role == Qt.ForegroundRole:
-            # return(self.data_array[index.row()][COLOR_INDEX['text'][index.column()]])
-            return (self.data_array[index.row()][10])
+            return(self.data_array[index.row()][10]
 
         elif role == Qt.BackgroundRole:
             # return(self.data_array[index.row()][COLOR_INDEX['background'][index.column()]])
-            return (self.data_array[index.row()][11])
+            return self.data_array[index.row()][11]
 
         elif role == Qt.FontRole:
             if index.column() == 1:
-                return (ICONS_FONT)
+                return ICONS_FONT
             elif index.column() == 3:
-                return (ICONS_FONT)
+                return ICONS_FONT
             else:
-                return (DUMMY_QVARIANT)
-
+                return DUMMY_QVARIANT
         # provide icons via Qt.UserRole
         elif role == Qt.UserRole:
             # depending on host or service column return host or service icon list
-            return (self.data_array[index.row()][7 + index.column()])
+            return self.data_array[index.row()][7 + index.column()]
 
         elif role == Qt.ToolTipRole:
             # only if tooltips are wanted show them, combining host + service + status_info
             if conf.show_tooltips:
-                return ('''<div style=white-space:pre;margin:3px;><b>{0}: {1}</b></div>
+                return '''<div style=white-space:pre;margin:3px;><b>{0}: {1}</b></div>
                              {2}'''.format(self.data_array[index.row()][0],
                                            self.data_array[index.row()][2],
-                                           self.data_array[index.row()][8]))
+                                           self.data_array[index.row()][8])
             else:
-                return (DUMMY_QVARIANT)
+                return DUMMY_QVARIANT
 
 
 class TreeView(QTreeView):
