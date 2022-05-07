@@ -88,6 +88,7 @@ if 'PyQt6' in sys.modules:
         QSystemTrayIcon, \
         QVBoxLayout, \
         QWidget
+    from PyQt6 import uic
     # for later decision which differences have to be considered
     QT_FLAVOR = 'PyQt6'
 
@@ -148,6 +149,7 @@ elif 'PyQt5' in sys.modules:
         QSystemTrayIcon, \
         QVBoxLayout, \
         QWidget
+    from PyQt5 import uic
     # for later decision which differences have to be considered
     QT_FLAVOR = 'PyQt5'
 

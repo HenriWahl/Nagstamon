@@ -4518,8 +4518,8 @@ class Dialogs(object):
 
     def __init__(self):
         # settings main dialog
-        self.settings = Dialog_Settings(Ui_settings_main)
-        #self.settings = Dialog_Settings('settings_main')
+        #self.settings = Dialog_Settings(Ui_settings_main)
+        self.settings = Dialog_Settings('settings_main')
         self.settings.initialize()
 
         # server settings dialog
@@ -4591,14 +4591,14 @@ class Dialog(QObject):
 
     def __init__(self, dialog):
         QObject.__init__(self)
-        self.window = QDialog()
+        #self.window = QDialog()
 
-        self.ui = dialog()
-
-        self.ui.setupUi(self.window)
+        self.ui = uic.loadUi(f'Nagstamon/QUI/{dialog}.ui')
+        self.window = self.ui
+        #self.ui.setupUi(self.window)
 
         # explicitly set window flags to avoid '?' button on Windows
-        self.window.setWindowFlags(Qt.WindowCloseButtonHint)
+        self.window.setWindowFlags(Qt.WindowFlags.WindowCloseButtonHint)
 
         # hoping to avoid overly large dialogs
         self.window.setSizePolicy(QSizePolicy.Minimum, QSizePolicy.Minimum)
