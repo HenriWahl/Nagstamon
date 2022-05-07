@@ -20,19 +20,78 @@
 
 import sys
 
+# Enough to handle with differences between PyQt5 + PyQt6, so PySide6 will be
+# ignored right now
+# by the little import the appropriate PyQt version will be loaded
 try:
-    from PySide6 import __version__ as QT_VERSION_STR
+    from PyQt6.QtCore import PYQT_VERSION_STR as QT_VERSION_STR
 except ImportError:
     try:
-        from PyQt6.QtCore import PYQT_VERSION_STR as QT_VERSION_STR
+        from PyQt5.QtCore import PYQT_VERSION_STR as QT_VERSION_STR
     except ImportError:
-        try:
-            from PyQt5.QtCore import PYQT_VERSION_STR as QT_VERSION_STR
-        except ImportError:
-            sys.exit('Qt is missing')
+        sys.exit('Qt is missing')
 
-# as log as Qt6 does not work prefer PyQt5
-if 'PyQt5' in sys.modules:
+if 'PyQt6' in sys.modules:
+    # PySide/PyQt compatibility
+    from PyQt6.QtCore import pyqtSignal as Signal, \
+        pyqtSlot as Slot, \
+        PYQT_VERSION_STR as QT_VERSION_STR, \
+        QAbstractTableModel, \
+        QByteArray, \
+        QDateTime, \
+        QModelIndex, \
+        QObject, \
+        QPoint, \
+        QSignalMapper, \
+        Qt, \
+        QThread, \
+        QTimer, \
+        QUrl, \
+        QXmlStreamReader
+    from PyQt6.QtGui import QAction, \
+        QBrush, \
+        QColor, \
+        QCursor, \
+        QFont, \
+        QFontDatabase, \
+        QIcon, \
+        QKeySequence, \
+        QPainter, \
+        QPalette, \
+        QPixmap, \
+        QScreen
+    from PyQt6.QtMultimedia import QAudioOutput, \
+        QMediaPlayer
+    from PyQt6.QtSvg import QSvgRenderer
+    from PyQt6.QtSvgWidgets import QSvgWidget
+    from PyQt6.QtWidgets import QAbstractItemView, \
+        QApplication, \
+        QColorDialog, \
+        QComboBox, \
+        QDialog, \
+        QFileDialog, \
+        QFontDialog, \
+        QHBoxLayout, \
+        QHeaderView, \
+        QListWidgetItem, \
+        QMenu, \
+        QMenuBar, \
+        QMessageBox, \
+        QLabel, \
+        QPushButton, \
+        QScrollArea, \
+        QSizePolicy, \
+        QSpacerItem, \
+        QToolButton, \
+        QTreeView, \
+        QStyle, \
+        QSystemTrayIcon, \
+        QVBoxLayout, \
+        QWidget
+    # for later decision which differences have to be considered
+    QT_FLAVOR = 'PyQt6'
+
+elif 'PyQt5' in sys.modules:
     from PyQt5.QtCore import pyqtSignal as Signal, \
         pyqtSlot as Slot, \
         PYQT_VERSION_STR as QT_VERSION_STR, \
@@ -57,7 +116,8 @@ if 'PyQt5' in sys.modules:
         QKeySequence, \
         QPainter, \
         QPalette, \
-        QPixmap
+        QPixmap, \
+        QScreen
     from PyQt5.QtMultimedia import QMediaContent, \
         QMediaPlayer, \
         QMediaPlaylist
@@ -88,118 +148,66 @@ if 'PyQt5' in sys.modules:
         QSystemTrayIcon, \
         QVBoxLayout, \
         QWidget
-elif 'PySide6' in sys.modules:
-    from PySide6.QtCore import Signal, \
-        Slot, \
-        QAbstractTableModel, \
-        QByteArray, \
-        QDateTime, \
-        QModelIndex, \
-        QObject, \
-        QPoint, \
-        QSignalMapper, \
-        Qt, \
-        QThread, \
-        QTimer, \
-        QUrl, \
-        QXmlStreamReader
-    from PySide6.QtGui import QAction, \
-        QBrush, \
-        QColor, \
-        QCursor, \
-        QFont, \
-        QFontDatabase, \
-        QIcon, \
-        QKeySequence, \
-        QPainter, \
-        QPalette, \
-        QPixmap
-    from PySide6.QtMultimedia import QMediaContent, \
-        QMediaPlayer, \
-        QMediaPlaylist
-    from PySide6.QtSvg import QSvgRenderer, \
-        QSvgWidget
-    from PySide6.QtWidgets import QAbstractItemView, \
-        QApplication, \
-        QColorDialog, \
-        QComboBox, \
-        QDialog, \
-        QFileDialog, \
-        QFontDialog, \
-        QHBoxLayout, \
-        QHeaderView, \
-        QListWidgetItem, \
-        QMenu, \
-        QMenuBar, \
-        QMessageBox, \
-        QLabel, \
-        QPushButton, \
-        QScrollArea, \
-        QSizePolicy, \
-        QSpacerItem, \
-        QToolButton, \
-        QTreeView, \
-        QStyle, \
-        QSystemTrayIcon, \
-        QVBoxLayout, \
-        QWidget
-elif 'PyQt6' in sys.modules:
-    # PySide/PyQt compatibility
-    from PyQt6.QtCore import pyqtSignal as Signal, \
-        pyqtSlot as Slot, \
-        PYQT_VERSION_STR as QT_VERSION_STR, \
-        QAbstractTableModel, \
-        QByteArray, \
-        QDateTime, \
-        QModelIndex, \
-        QObject, \
-        QPoint, \
-        QSignalMapper, \
-        Qt, \
-        QThread, \
-        QTimer, \
-        QUrl, \
-        QXmlStreamReader
-    from PyQt6.QtGui import QAction, \
-        QBrush, \
-        QColor, \
-        QCursor, \
-        QFont, \
-        QFontDatabase, \
-        QIcon, \
-        QKeySequence, \
-        QPainter, \
-        QPalette, \
-        QPixmap
-    from PyQt6.QtMultimedia import QMediaContent, \
-        QMediaPlayer, \
-        QMediaPlaylist
-    from PyQt6.QtSvg import QSvgRenderer, \
-        QSvgWidget
-    from PyQt6.QtWidgets import QAbstractItemView, \
-        QApplication, \
-        QColorDialog, \
-        QComboBox, \
-        QDialog, \
-        QFileDialog, \
-        QFontDialog, \
-        QHBoxLayout, \
-        QHeaderView, \
-        QListWidgetItem, \
-        QMenu, \
-        QMenuBar, \
-        QMessageBox, \
-        QLabel, \
-        QPushButton, \
-        QScrollArea, \
-        QSizePolicy, \
-        QSpacerItem, \
-        QToolButton, \
-        QTreeView, \
-        QStyle, \
-        QSystemTrayIcon, \
-        QVBoxLayout, \
-        QWidget
+    # for later decision which differences have to be considered
+    QT_FLAVOR = 'PyQt5'
+
+# elif 'PySide6' in sys.modules:
+#     from PySide6.QtCore import Signal, \
+#         Slot, \
+#         QAbstractTableModel, \
+#         QByteArray, \
+#         QDateTime, \
+#         QModelIndex, \
+#         QObject, \
+#         QPoint, \
+#         QSignalMapper, \
+#         Qt, \
+#         QThread, \
+#         QTimer, \
+#         QUrl, \
+#         QXmlStreamReader
+#     from PySide6.QtGui import QAction, \
+#     QBrush, \
+#     QColor, \
+#     QCursor, \
+#     QFont, \
+#     QFontDatabase, \
+#     QIcon, \
+#     QKeySequence, \
+#     QPainter, \
+#     QPalette, \
+#     QPixmap, \
+#     QScreen
+#     from PySide6.QtMultimedia import QAudioOutput, \
+#         QMediaPlayer
+#     from PySide6.QtSvg import QSvgRenderer
+#     from PySide6.QtSvgWidgets import QSvgWidget
+#     from PySide6.QtWidgets import QAbstractItemView, \
+#         QApplication, \
+#         QColorDialog, \
+#         QComboBox, \
+#         QDialog, \
+#         QFileDialog, \
+#         QFontDialog, \
+#         QHBoxLayout, \
+#         QHeaderView, \
+#         QListWidgetItem, \
+#         QMenu, \
+#         QMenuBar, \
+#         QMessageBox, \
+#         QLabel, \
+#         QPushButton, \
+#         QScrollArea, \
+#         QSizePolicy, \
+#         QSpacerItem, \
+#         QToolButton, \
+#         QTreeView, \
+#         QStyle, \
+#         QSystemTrayIcon, \
+#         QVBoxLayout, \
+#         QWidget
+#     # for later decision which differences have to be considered
+#     QT_FLAVOR = 'PySide6'
 
 # get int-ed version parts
 QT_VERSION_MAJOR, QT_VERSION_MINOR, QT_VERSION_BUGFIX = [int(x) for x in QT_VERSION_STR.split('.')]

@@ -34,6 +34,8 @@ from urllib.parse import quote
 # for details of imports look into qt.py
 from .qt import *
 
+print(QT_VERSION_MAJOR)
+
 from Nagstamon.Config import (Action,
                               AppInfo,
                               BOOLPOOL,
@@ -66,7 +68,7 @@ from Nagstamon.Helpers import (is_found_by_re,
                                SORT_COLUMNS_FUNCTIONS)
 
 # dialogs
-from Nagstamon.QUI.settings_main import Ui_settings_main
+#from Nagstamon.QUI.settings_main import Ui_settings_main
 from Nagstamon.QUI.settings_server import Ui_settings_server
 from Nagstamon.QUI.settings_action import Ui_settings_action
 from Nagstamon.QUI.dialog_acknowledge import Ui_dialog_acknowledge
@@ -229,11 +231,10 @@ else:
     FONT = DEFAULT_FONT
 
 # add nagstamon.ttf with icons to fonts
-FONTDATABASE = QFontDatabase()
-FONTDATABASE.addApplicationFont('{0}{1}nagstamon.ttf'.format(RESOURCES, os.sep))
+QFontDatabase.addApplicationFont('{0}{1}nagstamon.ttf'.format(RESOURCES, os.sep))
 
 # always stay in normal weight without any italic
-ICONS_FONT = QFont('Nagstamon', FONT.pointSize() + 2, QFont.Normal, False)
+ICONS_FONT = QFont('Nagstamon', FONT.pointSize() + 2, QFont.Weight.Normal, False)
 
 # completely silly but no other rescue for Windows-hides-statusbar-after-display-mode-change problem
 NUMBER_OF_DISPLAY_CHANGES = 0
@@ -250,7 +251,7 @@ NUMBER_OF_DISPLAY_CHANGES = 0
 # ##    # WINDOW_FLAGS = Qt.FramelessWindowHint | Qt.WindowStaysOnTopHint | Qt.Tool |  Qt.BypassWindowManagerHint
 # ##else:
 # ##    WINDOW_FLAGS = Qt.WindowStaysOnTopHint | Qt.FramelessWindowHint | Qt.Tool
-WINDOW_FLAGS = Qt.WindowStaysOnTopHint | Qt.FramelessWindowHint | Qt.Tool
+WINDOW_FLAGS = Qt.WindowType.WindowStaysOnTopHint | Qt.WindowType.FramelessWindowHint | Qt.WindowType.Tool
 
 # icon for dialogs
 ICON = QIcon('{0}{1}nagstamon.ico'.format(RESOURCES, os.sep))
@@ -981,7 +982,8 @@ class StatusWindow(QWidget):
             Status window combined from status bar and popup window
         """
         # attempt with desktop as parent for window Qt.Tool
-        QWidget.__init__(self, parent=APP.desktop())
+        #QWidget.__init__(self, parent=APP.desktop())
+        QWidget.__init__(self)
 
         # immediately hide to avoid flicker on Windows and OSX
         self.hide()
@@ -4517,6 +4519,7 @@ class Dialogs(object):
     def __init__(self):
         # settings main dialog
         self.settings = Dialog_Settings(Ui_settings_main)
+        #self.settings = Dialog_Settings('settings_main')
         self.settings.initialize()
 
         # server settings dialog
@@ -4584,13 +4587,14 @@ class Dialog(QObject):
     # names of widgets and their defaults
     WIDGET_NAMES = {}
     # style stuff used by settings dialog for servers/actions listwidget
-    GRAY = QBrush(Qt.gray)
+    GRAY = QBrush(Qt.GlobalColor.gray)
 
     def __init__(self, dialog):
         QObject.__init__(self)
         self.window = QDialog()
 
         self.ui = dialog()
+
         self.ui.setupUi(self.window)
 
         # explicitly set window flags to avoid '?' button on Windows
@@ -7199,7 +7203,8 @@ def is_modifier_pressed():
 check_version = CheckVersion()
 
 # access to various desktop parameters
-desktop = APP.desktop()
+#desktop = APP.desktop()
+desktop = QScreen
 
 # access to clipboard
 clipboard = APP.clipboard()
