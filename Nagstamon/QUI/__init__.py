@@ -203,7 +203,7 @@ for item in HEADERS.keys():
     HEADERS_KEYS_HEADERS[item] = HEADERS[item]['header']
 
 # sorting order for tablewidgets
-SORT_ORDER = {'descending': 1, 'ascending': 0, 0: True, 1: False}
+SORT_ORDER = {'descending': 1, 'ascending': 0, 0: Qt.SortOrder.DescendingOrder, 1: Qt.SortOrder.AscendingOrder}
 
 # bend columns 1 and 3 to 0 and 2 to avoid sorting the extra flag icons of hosts and services
 SORT_COLUMNS_INDEX = {0: 0,
@@ -410,7 +410,7 @@ class SystemTrayIcon(QSystemTrayIcon):
                 # pixmap to be painted on - arbitrarily choosen 128x128 px
                 svg_pixmap = QPixmap(128, 128)
                 # fill transparent backgound
-                svg_pixmap.fill(Qt.transparent)
+                svg_pixmap.fill(Qt.GlobalColor.transparent)
                 # initiate painter which paints onto paintdevice pixmap
                 svg_painter = QPainter(svg_pixmap)
                 # render svg to pixmap
@@ -939,8 +939,8 @@ class AllOKLabel(QLabel):
 
     def __init__(self, text='', parent=None):
         QLabel.__init__(self, text='OK', parent=parent)
-        self.setSizePolicy(QSizePolicy.MinimumExpanding, QSizePolicy.MinimumExpanding)
-        self.setAlignment(Qt.AlignCenter)
+        self.setSizePolicy(QSizePolicy.Policy.MinimumExpanding, QSizePolicy.Policy.MinimumExpanding)
+        self.setAlignment(Qt.AlignmentFlag.AlignCenter)
         self.set_color()
         dialogs.settings.changed.connect(self.set_color)
 
@@ -996,7 +996,7 @@ class StatusWindow(QWidget):
         APP.setQuitOnLastWindowClosed(False)
 
         # show tooltips even if popup window has no focus
-        self.setAttribute(Qt.WA_AlwaysShowToolTips)
+        self.setAttribute(Qt.WidgetAttribute.WA_AlwaysShowToolTips)
 
         if OS == OS_DARWIN:
             # avoid hiding window if it has no focus - necessary on OSX if using flag Qt.Tool
@@ -1016,7 +1016,7 @@ class StatusWindow(QWidget):
 
         self.servers_scrollarea = QScrollArea(self)  # scrollable area for server vboxes
         # avoid horizontal scrollbars
-        self.servers_scrollarea.setHorizontalScrollBarPolicy(Qt.ScrollBarAlwaysOff)
+        self.servers_scrollarea.setHorizontalScrollBarPolicy(Qt.ScrollBarPolicy.ScrollBarAlwaysOff)
         self.servers_scrollarea_widget = QWidget(
             self.servers_scrollarea)  # necessary widget to contain vbox for servers
         self.servers_scrollarea.hide()
@@ -1118,7 +1118,7 @@ class StatusWindow(QWidget):
 
         self.worker_notification.moveToThread(self.worker_notification_thread)
         # start with priority 0 = lowest
-        self.worker_notification_thread.start(0)
+        self.worker_notification_thread.start(QThread.Priority.InheritPriority)
 
         self.create_ServerVBoxes()
 
@@ -2419,7 +2419,7 @@ class NagstamonLogo(QSvgWidget, DraggableWidget):
         QSvgWidget.__init__(self, parent=parent)
         # either filepath or QByteArray for toparea logo
         self.load(file)
-        self.setSizePolicy(QSizePolicy.Fixed, QSizePolicy.Fixed)
+        self.setSizePolicy(QSizePolicy.Policy.Fixed, QSizePolicy.Policy.Fixed)
         # size needed for small Nagstamon logo in statusbar
         if width is not None and height is not None:
             self.setMinimumSize(width, height)
@@ -2446,7 +2446,7 @@ class StatusBar(QWidget):
     def __init__(self, parent=None):
         QWidget.__init__(self, parent=parent)
 
-        self.setSizePolicy(QSizePolicy.Fixed, QSizePolicy.Fixed)
+        self.setSizePolicy(QSizePolicy.Policy.Fixed, QSizePolicy.Policy.Fixed)
 
         self.hbox = HBoxLayout(spacing=0, parent=parent)
         self.setLayout(self.hbox)
@@ -2628,7 +2628,7 @@ class StatusBarLabel(DraggableLabel):
                            % (conf.__dict__['color_%s_text' % (state.lower())],
                               conf.__dict__['color_%s_background' % (state.lower())]))
         # just let labels grow as much as they need
-        self.setSizePolicy(QSizePolicy.Maximum, QSizePolicy.Maximum)
+        self.setSizePolicy(QSizePolicy.Policy.Maximum, QSizePolicy.Policy.Maximum)
 
         # hidden per default
         self.hide()
@@ -2669,7 +2669,7 @@ class TopArea(QWidget):
     def __init__(self, parent=None):
         QWidget.__init__(self)
         self.hbox = HBoxLayout(spacing=SPACE, parent=self)  # top HBox containing buttons
-        self.hbox.setSizeConstraint(QHBoxLayout.SetMinimumSize)
+        self.hbox.setSizeConstraint(QHBoxLayout.SizeConstraint.SetMinimumSize)
 
         self.icons = dict()
         self.create_icons()
@@ -2678,7 +2678,7 @@ class TopArea(QWidget):
         self.logo = NagstamonLogo(self.icons['nagstamon_logo_toparea'], width=150, height=42, parent=self)
         self.label_version = DraggableLabel(text=AppInfo.VERSION, parent=self)
         self.label_empty_space = DraggableLabel(text='', parent=self)
-        self.label_empty_space.setSizePolicy(QSizePolicy.Expanding, QSizePolicy.Ignored)
+        self.label_empty_space.setSizePolicy(QSizePolicy.Policy.Expanding, QSizePolicy.Policy.Ignored)
         self.combobox_servers = ComboBox_Servers(parent=self)
         self.button_filters = Button("Filters", parent=self)
         self.button_recheck_all = Button("Recheck all", parent=self)
@@ -2726,7 +2726,7 @@ class TopArea(QWidget):
         """
 
         # get rgb values of current foreground color to be used for SVG icons (menu)
-        r, g, b, a = APP.palette().color(QPalette.Foreground).getRgb()
+        r, g, b, a = APP.palette().color(QPalette.ColorRole.Text).getRgb()
 
         for icon in 'nagstamon_logo_toparea', 'close', 'menu':
             # get template from file
@@ -2749,7 +2749,7 @@ class TopArea(QWidget):
             # pixmap to be painted on - arbitrarily choosen 128x128 px
             svg_pixmap = QPixmap(128, 128)
             # fill transparent backgound
-            svg_pixmap.fill(Qt.transparent)
+            svg_pixmap.fill(Qt.GlobalColor.transparent)
             # initiate painter which paints onto paintdevice pixmap
             svg_painter = QPainter(svg_pixmap)
             # render svg to pixmap
@@ -2868,10 +2868,10 @@ class ServerVBox(QVBoxLayout):
 
         # use label instead of spacer to be clickable
         self.label_stretcher = ClosingLabel('', parent=parent)
-        self.label_stretcher.setSizePolicy(QSizePolicy.MinimumExpanding, QSizePolicy.Expanding)
+        self.label_stretcher.setSizePolicy(QSizePolicy.Policy.MinimumExpanding, QSizePolicy.Policy.Expanding)
 
         self.label_status = ServerStatusLabel(parent=parent)
-        self.label_status.setSizePolicy(QSizePolicy.Fixed, QSizePolicy.Expanding)
+        self.label_status.setSizePolicy(QSizePolicy.Policy.Fixed, QSizePolicy.Policy.Expanding)
 
         self.button_authenticate = QPushButton('Authenticate', parent=parent)
 
@@ -3097,7 +3097,7 @@ class Model(QAbstractTableModel):
         """
             overridden method to get headers of columns
         """
-        if role == Qt.DisplayRole:
+        if role == Qt.ItemDataRole.DisplayRole:
             return (HEADERS_HEADERS[column])
 
     @Slot(list, dict)
@@ -3197,8 +3197,8 @@ class TreeView(QTreeView):
         self.server = server
 
         # no handling of selection by treeview
-        self.setSelectionBehavior(QAbstractItemView.SelectRows)
-        self.setSelectionMode(QAbstractItemView.ExtendedSelection)
+        self.setSelectionBehavior(QAbstractItemView.SelectionBehavior.SelectRows)
+        self.setSelectionMode(QAbstractItemView.SelectionMode.ExtendedSelection)
 
         # disable space at the left side
         self.setRootIsDecorated(False)
@@ -3207,24 +3207,20 @@ class TreeView(QTreeView):
         self.setUniformRowHeights(True)
 
         # no scrollbars at tables because they will be scrollable by the global vertical scrollbar
-        self.setHorizontalScrollBarPolicy(Qt.ScrollBarAlwaysOff)
-        self.setVerticalScrollBarPolicy(Qt.ScrollBarAlwaysOff)
+        self.setHorizontalScrollBarPolicy(Qt.ScrollBarPolicy.ScrollBarAlwaysOff)
+        self.setVerticalScrollBarPolicy(Qt.ScrollBarPolicy.ScrollBarAlwaysOff)
         self.setAutoScroll(False)
         self.setSortingEnabled(True)
 
-        self.sortByColumn(0, Qt.AscendingOrder)
+        self.sortByColumn(0, Qt.SortOrder.AscendingOrder)
 
-        self.setSizePolicy(QSizePolicy.Ignored, QSizePolicy.Expanding)
+        self.setSizePolicy(QSizePolicy.Policy.Ignored, QSizePolicy.Policy.Expanding)
 
-        self.header().setSectionResizeMode(QHeaderView.ResizeToContents)
-        self.header().setDefaultAlignment(Qt.AlignLeft)
+        self.header().setSectionResizeMode(QHeaderView.ResizeMode.ResizeToContents)
         self.header().setSortIndicatorShown(True)
         self.header().setStretchLastSection(True)
 
-        try:
-            self.header().setSortIndicator(sort_column, SORT_ORDER[self.sort_order])
-        except Exception:
-            self.header().setSortIndicator(sort_column, SORT_ORDER[self.sort_order])
+        self.header().setSortIndicator(sort_column, SORT_ORDER[self.sort_order])
 
         # small method needed to tell worker which column and sort order to use
         self.header().sortIndicatorChanged.connect(self.sort_columns)
@@ -3248,7 +3244,7 @@ class TreeView(QTreeView):
         # signalmapper for getting triggered actions
         self.signalmapper_action_menu = QSignalMapper()
         # connect menu to responder
-        self.signalmapper_action_menu.mapped[str].connect(self.action_menu_custom_response)
+        self.signalmapper_action_menu.mappedString[str].connect(self.action_menu_custom_response)
 
         # clipboard actions
         self.clipboard_menu = QMenu('Copy to clipboard', self)
@@ -4523,19 +4519,23 @@ class Dialogs(object):
         self.settings.initialize()
 
         # server settings dialog
-        self.server = Dialog_Server(Ui_settings_server)
+        # self.server = Dialog_Server(Ui_settings_server)
+        self.server = Dialog_Server('settings_server')
         self.server.initialize()
 
         # action settings dialog
-        self.action = Dialog_Action(Ui_settings_action)
+        # self.action = Dialog_Action(Ui_settings_action)
+        self.action = Dialog_Action('settings_action')
         self.action.initialize()
 
         # acknowledge dialog for miserable item context menu
-        self.acknowledge = Dialog_Acknowledge(Ui_dialog_acknowledge)
+        # self.acknowledge = Dialog_Acknowledge(Ui_dialog_acknowledge)
+        self.acknowledge = Dialog_Acknowledge('dialog_acknowledge')
         self.acknowledge.initialize()
 
         # downtime dialog for miserable item context menu
-        self.downtime = Dialog_Downtime(Ui_dialog_downtime)
+        # self.downtime = Dialog_Downtime(Ui_dialog_downtime)
+        self.downtime = Dialog_Downtime('dialog_downtime')
         self.downtime.initialize()
 
         # open defaults settings on button click
@@ -4545,22 +4545,26 @@ class Dialogs(object):
         self.acknowledge.ui.button_change_defaults_acknowledge.clicked.connect(self.acknowledge.window.close)
 
         # downtime dialog for miserable item context menu
-        self.submit = Dialog_Submit(Ui_dialog_submit)
+        #self.submit = Dialog_Submit(Ui_dialog_submit)
+        self.submit = Dialog_Submit('dialog_submit')
         self.submit.initialize()
 
         # authentication dialog for username/password
-        self.authentication = Dialog_Authentication(Ui_dialog_authentication)
+        #self.authentication = Dialog_Authentication(Ui_dialog_authentication)
+        self.authentication = Dialog_Authentication('dialog_authentication')
         self.authentication.initialize()
 
         # dialog for asking about disabled or not configured servers
-        self.server_missing = Dialog_Server_missing(Ui_dialog_server_missing)
+        #self.server_missing = Dialog_Server_missing(Ui_dialog_server_missing)
+        self.server_missing = Dialog_Server_missing('dialog_server_missing')
         self.server_missing.initialize()
         # open server creation dialog
         self.server_missing.ui.button_create_server.clicked.connect(self.settings.show_new_server)
         self.server_missing.ui.button_enable_server.clicked.connect(self.settings.show)
 
         # about dialog
-        self.about = Dialog_About(Ui_dialog_about)
+        #self.about = Dialog_About(Ui_dialog_about)
+        self.about = Dialog_About('dialog_about')
 
         # file chooser Dialog
         self.file_chooser = QFileDialog()
@@ -5792,7 +5796,7 @@ class Dialog_Server(Dialog):
         # set folder and play symbols to choose and play buttons
         self.ui.button_choose_custom_cert_ca_file.setText('')
         self.ui.button_choose_custom_cert_ca_file.setIcon(
-            self.ui.button_choose_custom_cert_ca_file.style().standardIcon(QStyle.SP_DirIcon))
+            self.ui.button_choose_custom_cert_ca_file.style().standardIcon(QStyle.StandardPixmap.SP_DirIcon))
         # connect choose custom cert CA file button with file dialog
         self.ui.button_choose_custom_cert_ca_file.clicked.connect(self.choose_custom_cert_ca_file)
 
@@ -6770,7 +6774,7 @@ class Dialog_About(Dialog):
         # first add the logo on top - no idea how to achive in Qt Designer
         logo = QSvgWidget('{0}{1}nagstamon.svg'.format(RESOURCES, os.sep))
         logo.setFixedSize(100, 100)
-        self.ui.vbox_about.insertWidget(1, logo, 0, Qt.AlignHCenter)
+        self.ui.vbox_about.insertWidget(1, logo, 0, Qt.AlignmentFlag.AlignHCenter)
         # update version information
         self.ui.label_nagstamon.setText('<h1>{0} {1}</h1>'.format(AppInfo.NAME, AppInfo.VERSION))
         self.ui.label_nagstamon_long.setText('<h2>Nagios¹ status monitor for your desktop</2>')
