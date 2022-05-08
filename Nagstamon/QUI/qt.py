@@ -58,8 +58,7 @@ if 'PyQt6' in sys.modules:
         QKeySequence, \
         QPainter, \
         QPalette, \
-        QPixmap, \
-        QScreen
+        QPixmap
     from PyQt6.QtMultimedia import QAudioOutput, \
         QMediaPlayer
     from PyQt6.QtSvg import QSvgRenderer
@@ -117,8 +116,7 @@ elif 'PyQt5' in sys.modules:
         QKeySequence, \
         QPainter, \
         QPalette, \
-        QPixmap, \
-        QScreen
+        QPixmap
     from PyQt5.QtMultimedia import QMediaContent, \
         QMediaPlayer, \
         QMediaPlaylist
@@ -178,8 +176,7 @@ elif 'PyQt5' in sys.modules:
 #     QKeySequence, \
 #     QPainter, \
 #     QPalette, \
-#     QPixmap, \
-#     QScreen
+#     QPixmap
 #     from PySide6.QtMultimedia import QAudioOutput, \
 #         QMediaPlayer
 #     from PySide6.QtSvg import QSvgRenderer

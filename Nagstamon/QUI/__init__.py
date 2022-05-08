@@ -4598,10 +4598,10 @@ class Dialog(QObject):
         #self.ui.setupUi(self.window)
 
         # explicitly set window flags to avoid '?' button on Windows
-        self.window.setWindowFlags(Qt.WindowFlags.WindowCloseButtonHint)
+        self.window.setWindowFlags(Qt.WindowType.WindowCloseButtonHint)
 
         # hoping to avoid overly large dialogs
-        self.window.setSizePolicy(QSizePolicy.Minimum, QSizePolicy.Minimum)
+        self.window.setSizePolicy(QSizePolicy.Policy.Minimum, QSizePolicy.Policy.Minimum)
 
         # set small titlebar icon
         self.window.setWindowIcon(ICON)
@@ -4616,7 +4616,7 @@ class Dialog(QObject):
         self.signalmapper_toggles = QSignalMapper()
 
         # try to get and keep focus
-        self.window.setWindowModality(Qt.ApplicationModal)
+        self.window.setWindowModality(Qt.WindowModality.ApplicationModal)
 
     def initialize(self):
         """
@@ -4680,7 +4680,7 @@ class Dialog(QObject):
             checkbox.toggled.connect(self.window.adjustSize)
 
         # finally map signals with .sender() - [QWidget] is important!
-        self.signalmapper_toggles.mapped[str].connect(self.toggle)
+        self.signalmapper_toggles.mappedString[str].connect(self.toggle)
 
     def fill_list(self, listwidget, config):
         """
@@ -4857,23 +4857,23 @@ class Dialog_Settings(Dialog):
 
         # set folder and play symbols to choose and play buttons
         self.ui.button_choose_warning.setText('')
-        self.ui.button_choose_warning.setIcon(self.ui.button_play_warning.style().standardIcon(QStyle.SP_DirIcon))
+        self.ui.button_choose_warning.setIcon(self.ui.button_play_warning.style().standardIcon(QStyle.StandardPixmap.SP_DirIcon))
         self.ui.button_play_warning.setText('')
-        self.ui.button_play_warning.setIcon(self.ui.button_play_warning.style().standardIcon(QStyle.SP_MediaPlay))
+        self.ui.button_play_warning.setIcon(self.ui.button_play_warning.style().standardIcon(QStyle.StandardPixmap.SP_MediaPlay))
 
         self.ui.button_choose_critical.setText('')
-        self.ui.button_choose_critical.setIcon(self.ui.button_play_warning.style().standardIcon(QStyle.SP_DirIcon))
+        self.ui.button_choose_critical.setIcon(self.ui.button_play_warning.style().standardIcon(QStyle.StandardPixmap.SP_DirIcon))
         self.ui.button_play_critical.setText('')
-        self.ui.button_play_critical.setIcon(self.ui.button_play_warning.style().standardIcon(QStyle.SP_MediaPlay))
+        self.ui.button_play_critical.setIcon(self.ui.button_play_warning.style().standardIcon(QStyle.StandardPixmap.SP_MediaPlay))
 
         self.ui.button_choose_down.setText('')
-        self.ui.button_choose_down.setIcon(self.ui.button_play_warning.style().standardIcon(QStyle.SP_DirIcon))
+        self.ui.button_choose_down.setIcon(self.ui.button_play_warning.style().standardIcon(QStyle.StandardPixmap.SP_DirIcon))
         self.ui.button_play_down.setText('')
-        self.ui.button_play_down.setIcon(self.ui.button_play_warning.style().standardIcon(QStyle.SP_MediaPlay))
+        self.ui.button_play_down.setIcon(self.ui.button_play_warning.style().standardIcon(QStyle.StandardPixmap.SP_MediaPlay))
 
         # set browser file chooser icon and current custom browser path
         self.ui.button_choose_browser.setText('')
-        self.ui.button_choose_browser.setIcon(self.ui.button_play_warning.style().standardIcon(QStyle.SP_DirIcon))
+        self.ui.button_choose_browser.setIcon(self.ui.button_play_warning.style().standardIcon(QStyle.StandardPixmap.SP_DirIcon))
         self.ui.input_lineedit_custom_browser.setText(conf.custom_browser)
         # connect choose browser button with file dialog
         self.ui.button_choose_browser.clicked.connect(self.choose_browser_executable)
@@ -4903,7 +4903,7 @@ class Dialog_Settings(Dialog):
         self.ui.input_checkbox_grid_use_custom_intensity.clicked.connect(self.toggle_zabbix_widgets)
 
         # finally map signals with .sender() - [<type>] is important!
-        self.signalmapper_colors.mapped[str].connect(self.color_chooser)
+        self.signalmapper_colors.mappedString[str].connect(self.color_chooser)
 
         # connect slider to alternating colors
         self.ui.input_slider_grid_alternation_intensity.valueChanged.connect(self.change_color_alternation)
@@ -5001,7 +5001,7 @@ class Dialog_Settings(Dialog):
         self.ui.input_combobox_default_sort_order.setCurrentText(conf.default_sort_order.title())
 
         # fill combobox with screens for fullscreen
-        for display in range(desktop.screenCount()):
+        for display in range(len(desktop)):
             self.ui.input_combobox_fullscreen_display.addItem(str(display))
         self.ui.input_combobox_fullscreen_display.setCurrentText(str(conf.fullscreen_display))
 
@@ -5545,7 +5545,7 @@ class Dialog_Settings(Dialog):
                     .split(';\n')[0].split(': ')[1]
 
                 # get background of level 0 label
-                background = label_0.palette().color(QPalette.Window)
+                background = label_0.palette().color(QPalette.ColorRole.Window)
                 r, g, b, a = background.getRgb()
 
                 # if label background is too dark lighten the color instead of darken it mor
@@ -7204,7 +7204,8 @@ check_version = CheckVersion()
 
 # access to various desktop parameters
 #desktop = APP.desktop()
-desktop = QScreen
+# desktop = QScreen
+desktop = APP.screens()
 
 # access to clipboard
 clipboard = APP.clipboard()
