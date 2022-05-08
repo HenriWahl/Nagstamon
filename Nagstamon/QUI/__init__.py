@@ -813,23 +813,25 @@ class DraggableWidget(QWidget):
             2 - right button, popup menu
         """
 
-        if event.button() == Qt.LeftButton:
+        if event.button() == Qt.MouseButton.LeftButton:
             self.mouse_pressed.emit()
-        if event.button() == Qt.RightButton:
+        if event.button() == Qt.MouseButton.RightButton:
             self.right_mouse_button_pressed = True
 
         # keep x and y relative to statusbar
         # if not set calculate relative position
         if not statuswindow.relative_x and \
                 not statuswindow.relative_y:
-            statuswindow.relative_x = event.globalX() - statuswindow.x()
-            statuswindow.relative_y = event.globalY() - statuswindow.y()
+            globby = event.globalPosition()
+            event_x, event_y = event.globalPosition()
+            statuswindow.relative_x = event_x - statuswindow.x()
+            statuswindow.relative_y = event_y - statuswindow.y()
 
     def mouseReleaseEvent(self, event):
         """
             decide if moving or menu should be treated after mouse button was released
         """
-        if event.button() == Qt.LeftButton:
+        if event.button() == Qt.MouseButton.LeftButton:
             # if popup window should be closed by clicking do it now
             if statuswindow.is_shown and \
                     (conf.close_details_clicking or
@@ -845,7 +847,7 @@ class DraggableWidget(QWidget):
             statuswindow.relative_y = False
             statuswindow.moving = False
 
-        if event.button() == Qt.RightButton:
+        if event.button() == Qt.MouseButton.RightButton:
             self.right_mouse_button_pressed = False
             self.menu.show_at_cursor()
 
@@ -914,7 +916,7 @@ class ClosingLabel(QLabel):
         """
             left click and configured close-if-clicking-somewhere makes statuswindow close
         """
-        if event.button() == Qt.LeftButton and conf.close_details_clicking_somewhere:
+        if event.button() == Qt.MouseButton.LeftButton and conf.close_details_clicking_somewhere:
             # if popup window should be closed by clicking do it now
             if statuswindow.is_shown and \
                     not conf.fullscreen and \
@@ -1221,7 +1223,7 @@ class StatusWindow(QWidget):
 
             # show statusbar/statuswindow on last saved position
             # when coordinates are inside known screens
-            if get_screen(conf.position_x, conf.position_y) is not None:
+            if get_screen(conf.position_x, conf.position_y):
                 self.move(conf.position_x, conf.position_y)
             else:
                 # get available desktop specs
@@ -1248,7 +1250,7 @@ class StatusWindow(QWidget):
 
             # show statusbar/statuswindow on last saved position
             # when coordinates are inside known screens
-            if get_screen(conf.position_x, conf.position_y) is not None:
+            if get_screen(conf.position_x, conf.position_y):
                 self.move(conf.position_x, conf.position_y)
             else:
                 # get available desktop specs
@@ -3379,7 +3381,7 @@ class TreeView(QTreeView):
         # special treatment if window should be closed when left-clicking somewhere
         # it is important to check if CTRL or SHIFT key is presses while clicking to select lines
         if conf.close_details_clicking_somewhere:
-            if event.button() == Qt.LeftButton:
+            if event.button() == Qt.MouseButton.LeftButton:
                 modifiers = event.modifiers()
                 # count selected rows - if more than 1 do not close popwin
                 rows = []
@@ -3394,11 +3396,11 @@ class TreeView(QTreeView):
                 else:
                     statuswindow.hide_window()
                 del modifiers, rows
-            elif event.button() == Qt.RightButton:
+            elif event.button() == Qt.MouseButton.RightButton:
                 self.cell_clicked()
             return
         else:
-            if event.button() == Qt.RightButton or event.button() == Qt.LeftButton:
+            if event.button() == Qt.MouseButton.RightButton or event.button() == Qt.MouseButton.LeftButton:
                 self.cell_clicked()
                 return
         super(TreeView, self).mouseReleaseEvent(event)
@@ -3409,7 +3411,7 @@ class TreeView(QTreeView):
         """
         # special treatment if window should be closed when left-clicking somewhere
         # it is important to check if CTRL or SHIFT key is presses while clicking to select lines
-        if event.button() == Qt.LeftButton:
+        if event.button() == Qt.MouseButton.LeftButton:
             modifiers = event.modifiers()
             # count selected rows - if more than 1 do not close popwin
             rows = []
@@ -3429,7 +3431,7 @@ class TreeView(QTreeView):
             del modifiers, rows
             return
         else:
-            if event.button() == Qt.RightButton or event.button() == Qt.LeftButton:
+            if event.button() == Qt.MouseButton.RightButton or event.button() == Qt.MouseButton.LeftButton:
                 self.cell_clicked()
                 return
 
@@ -7108,18 +7110,18 @@ def get_screen(x, y):
         return None
 
 
-def get_screen_geometry(screen_number):
+def get_screen_geometry(screen_name):
     """
         set screen for fullscreen
     """
     #number_of_screens = len(APP.screens())
     #for screen in range(number_of_screens + 1):
-    for screen in APP.screns():
-        if screen == screen_number:
-            return desktop.screenGeometry(screen)
+    for screen in APP.screens():
+        if screen.name == screen_name:
+            return screen.screenGeometry()
 
     # if not enough displays available reset to display 0
-    return desktop.screenGeometry(0)
+    return self.screen().screenGeometry()
 
 
 @Slot()

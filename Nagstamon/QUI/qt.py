@@ -16,7 +16,7 @@
 # Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA  02110-1301, USA
 
 # Select Qt version based on installation found
-# Prefer in this order: Pyside6 - PyQt6 - PyQt5
+# Prefer in this order: PyQt6 - PyQt5
 
 import sys
 
