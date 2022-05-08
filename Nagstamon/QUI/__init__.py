@@ -1225,8 +1225,8 @@ class StatusWindow(QWidget):
                 self.move(conf.position_x, conf.position_y)
             else:
                 # get available desktop specs
-                available_x = desktop.availableGeometry(self).x()
-                available_y = desktop.availableGeometry(self).y()
+                available_x = self.screen().vailableGeometry().x()
+                available_y = self.screen().availableGeometry().y()
                 self.move(available_x, available_y)
 
             # statusbar and detail window should be frameless and stay on top
@@ -1252,8 +1252,8 @@ class StatusWindow(QWidget):
                 self.move(conf.position_x, conf.position_y)
             else:
                 # get available desktop specs
-                available_x = desktop.availableGeometry(self).x()
-                available_y = desktop.availableGeometry(self).y()
+                available_x = self.screen().availableGeometry().x()
+                available_y = self.screen().availableGeometry().y()
                 self.move(available_x, available_y)
 
             # need a close button
@@ -1325,14 +1325,14 @@ class StatusWindow(QWidget):
             self.servers_scrollarea.show()
 
             # keep window entry in taskbar and thus no Qt.Tool
-            self.setWindowFlags(Qt.Widget)
+            self.setWindowFlags(Qt.WindowType.Widget)
 
             # show statusbar actively
             self.setAttribute(Qt.WidgetAttribute.WA_ShowWithoutActivating, False)
 
             # some maybe sensible default
             self.setMinimumSize(700, 300)
-            self.setSizePolicy(QSizePolicy.MinimumExpanding, QSizePolicy.MinimumExpanding)
+            self.setSizePolicy(QSizePolicy.Policy.MinimumExpanding, QSizePolicy.Policy.MinimumExpanding)
 
             # default maximum size
             self.setMaximumSize(16777215, 16777215)
@@ -1732,11 +1732,7 @@ class StatusWindow(QWidget):
         """
             get size of popup window
         """
-        # screen number or widget object needed for desktop.availableGeometry
-        if conf.statusbar_floating or conf.windowed:
-            screen_or_widget = self
-
-        elif conf.icon_in_systray:
+        if conf.icon_in_systray:
             # where is the pointer which clicked onto systray icon
             icon_x = systrayicon.geometry().x()
             icon_y = systrayicon.geometry().y()
@@ -1766,12 +1762,12 @@ class StatusWindow(QWidget):
 
         # only consider offset if it is configured
         if conf.systray_offset_use and conf.icon_in_systray:
-            available_height = desktop.availableGeometry(screen_or_widget).height() - conf.systray_offset
+            available_height = self.screen().availableGeometry().height() - conf.systray_offset
         else:
-            available_height = desktop.availableGeometry(screen_or_widget).height()
-        available_width = desktop.availableGeometry(screen_or_widget).width()
-        available_x = desktop.availableGeometry(screen_or_widget).x()
-        available_y = desktop.availableGeometry(screen_or_widget).y()
+            available_height = self.screen().availableGeometry().height()
+        available_width = self.screen().availableGeometry().width()
+        available_x = self.screen().availableGeometry().x()
+        available_y = self.screen().availableGeometry().y()
 
         # Workaround for Cinnamon
         if OS not in OS_NON_LINUX and DESKTOP_CINNAMON:
@@ -1787,7 +1783,7 @@ class StatusWindow(QWidget):
         # calculate top-ness only if window is closed
         if conf.statusbar_floating:
             # if self.is_shown is False:
-            if self.y() < desktop.screenGeometry(self).height() // 2 + available_y:
+            if self.y() < self.screen().screenGeometry().height() // 2 + available_y:
                 self.top = True
             else:
                 self.top = False
@@ -1796,7 +1792,7 @@ class StatusWindow(QWidget):
             x = self.stored_x
 
         elif conf.icon_in_systray or conf.windowed:
-            if self.icon_y < desktop.screenGeometry(self).height() // 2 + available_y:
+            if self.icon_y < self.screen().screenGeometry().height() // 2 + available_y:
                 self.top = True
             else:
                 self.top = False
@@ -1837,8 +1833,8 @@ class StatusWindow(QWidget):
             else:
                 # when height is to large for current screen cut it
                 if self.y() + self.height() - real_height < available_y:
-                    height = desktop.screenGeometry().height() - available_y - (
-                            desktop.screenGeometry().height() - (self.y() + self.height()))
+                    height = self.screen().screenGeometry().height() - available_y - (
+                            self.screen().screenGeometry().height() - (self.y() + self.height()))
                     y = available_y
                 else:
                     height = real_height
@@ -4996,7 +4992,7 @@ class Dialog_Settings(Dialog):
         self.ui.input_combobox_default_sort_order.setCurrentText(conf.default_sort_order.title())
 
         # fill combobox with screens for fullscreen
-        for display in range(len(desktop)):
+        for display in APP.screens():
             self.ui.input_combobox_fullscreen_display.addItem(str(display))
         self.ui.input_combobox_fullscreen_display.setCurrentText(str(conf.fullscreen_display))
 
@@ -5134,7 +5130,7 @@ class Dialog_Settings(Dialog):
         conf.font = self.font.toString()
         # update global font and icons font
         FONT = self.font
-        ICONS_FONT = QFont('Nagstamon', FONT.pointSize() + 2, QFont.Normal, False)
+        ICONS_FONT = QFont('Nagstamon', FONT.pointSize() + 2, QFont.Weight.Normal, False)
 
         # update brushes for treeview
         create_brushes()
@@ -7104,20 +7100,12 @@ def get_screen(x, y):
     # integerify these values as they *might* be strings
     x = int(x)
     y = int(y)
-
-    number_of_screens = desktop.screenCount()
-    for screen in range(number_of_screens + 1):
-        # if coordinates are inside screen just break and return screen
-        if (desktop.screenGeometry(screen).contains(x, y)):
-            break
-
-    del (x, y)
-
-    # when 'screen' reached number_of_screens no screen was found, thus return None
-    if screen == number_of_screens:
-        return None
+    screen = APP.screenAt(QPoint(x,y))
+    del x, y
+    if screen:
+        return screen.name
     else:
-        return screen
+        return None
 
 
 def get_screen_geometry(screen_number):
@@ -7197,11 +7185,6 @@ def is_modifier_pressed():
 
 # check for updates
 check_version = CheckVersion()
-
-# access to various desktop parameters
-#desktop = APP.desktop()
-# desktop = QScreen
-desktop = APP.screens()
 
 # access to clipboard
 clipboard = APP.clipboard()
