@@ -67,17 +67,6 @@ from Nagstamon.Helpers import (is_found_by_re,
                                STATES_SOUND,
                                SORT_COLUMNS_FUNCTIONS)
 
-# dialogs
-#from Nagstamon.QUI.settings_main import Ui_settings_main
-from Nagstamon.QUI.settings_server import Ui_settings_server
-from Nagstamon.QUI.settings_action import Ui_settings_action
-from Nagstamon.QUI.dialog_acknowledge import Ui_dialog_acknowledge
-from Nagstamon.QUI.dialog_downtime import Ui_dialog_downtime
-from Nagstamon.QUI.dialog_submit import Ui_dialog_submit
-from Nagstamon.QUI.dialog_authentication import Ui_dialog_authentication
-from Nagstamon.QUI.dialog_server_missing import Ui_dialog_server_missing
-from Nagstamon.QUI.dialog_about import Ui_dialog_about
-
 # only on X11/Linux thirdparty path should be added because it contains the Xlib module
 # needed to tell window manager via EWMH to keep Nagstamon window on all virtual desktops
 # TODO: test if X11 or Wayland is used
@@ -433,7 +422,9 @@ class SystemTrayIcon(QSystemTrayIcon):
         #     self.show_menu.emit()
         # only react on left mouse click on OSX
         # elif reason == (QSystemTrayIcon.Trigger or QSystemTrayIcon.DoubleClick):
-        if reason in (QSystemTrayIcon.Trigger, QSystemTrayIcon.DoubleClick, QSystemTrayIcon.MiddleClick):
+        if reason in (QSystemTrayIcon.ActivationReason.Trigger,
+                      QSystemTrayIcon.ActivationReason.DoubleClick,
+                      QSystemTrayIcon.ActivationReason.MiddleClick):
             # when green icon is displayed and no popwin is about to po up show at least menu
             if get_worst_status() == 'UP' and OS == OS_DARWIN:
                 self.menu.show_at_cursor()
@@ -1000,7 +991,7 @@ class StatusWindow(QWidget):
 
         if OS == OS_DARWIN:
             # avoid hiding window if it has no focus - necessary on OSX if using flag Qt.Tool
-            self.setAttribute(Qt.WA_MacAlwaysShowToolWindow)
+            self.setAttribute(Qt.WidgetAttribute.WA_MacAlwaysShowToolWindow)
 
         self.setWindowTitle(AppInfo.NAME)
         self.setWindowIcon(QIcon('{0}{1}nagstamon.svg'.format(RESOURCES, os.sep)))
@@ -1117,8 +1108,8 @@ class StatusWindow(QWidget):
         self.hiding.connect(self.worker_notification.stop)
 
         self.worker_notification.moveToThread(self.worker_notification_thread)
-        # start with priority 0 = lowest
-        self.worker_notification_thread.start(QThread.Priority.InheritPriority)
+        # start with low priority
+        self.worker_notification_thread.start(QThread.Priority.LowestPriority)
 
         self.create_ServerVBoxes()
 
@@ -1169,8 +1160,8 @@ class StatusWindow(QWidget):
             self.worker_thread.started.connect(self.worker.debug_loop)
         # start debug loop by signal
         dialogs.settings.start_debug_loop.connect(self.worker.debug_loop)
-        # start with priority 0 = lowest
-        self.worker_thread.start(0)
+        # start with low priority
+        self.worker_thread.start(QThread.Priority.LowestPriority)
 
         # part of the stupid workaround for Qt-5.10-Windows-QSystemTrayIcon-madness
         self.connect_systrayicon()
@@ -1243,7 +1234,7 @@ class StatusWindow(QWidget):
             self.setWindowFlags(WINDOW_FLAGS)
 
             # show statusbar without being active, just floating
-            self.setAttribute(Qt.WA_ShowWithoutActivating)
+            self.setAttribute(Qt.WidgetAttribute.WA_ShowWithoutActivating)
 
             # necessary to be shown before Linux EWMH-mantra can be applied
             self.show()
@@ -1274,7 +1265,7 @@ class StatusWindow(QWidget):
             self.setWindowFlags(WINDOW_FLAGS)
 
             # show statusbar without being active, just floating
-            self.setAttribute(Qt.WA_ShowWithoutActivating)
+            self.setAttribute(Qt.WidgetAttribute.WA_ShowWithoutActivating)
 
             # yeah! systray!
             if OS == OS_WINDOWS:
@@ -1306,7 +1297,7 @@ class StatusWindow(QWidget):
             self.setWindowFlags(Qt.Widget | Qt.FramelessWindowHint)
 
             # show statusbar actively
-            self.setAttribute(Qt.WA_ShowWithoutActivating, False)
+            self.setAttribute(Qt.WidgetAttribute.WA_ShowWithoutActivating, False)
 
             # newer Qt5 seem to be better regarding fullscreen mode on non-OSX
             self.show_window()
@@ -1337,7 +1328,7 @@ class StatusWindow(QWidget):
             self.setWindowFlags(Qt.Widget)
 
             # show statusbar actively
-            self.setAttribute(Qt.WA_ShowWithoutActivating, False)
+            self.setAttribute(Qt.WidgetAttribute.WA_ShowWithoutActivating, False)
 
             # some maybe sensible default
             self.setMinimumSize(700, 300)
@@ -1446,8 +1437,8 @@ class StatusWindow(QWidget):
             servers_vbox_new.addLayout(vboxes_dict[vbox])
 
         # add expanding stretching item at the end for fullscreen beauty
-        servers_vbox_new.addSpacerItem(QSpacerItem(0, desktop.availableGeometry(self).height(),
-                                                   QSizePolicy.Minimum, QSizePolicy.Expanding))
+        servers_vbox_new.addSpacerItem(QSpacerItem(0, self.screen().availableGeometry().height(),
+                                                   QSizePolicy.Policy.Minimum, QSizePolicy.Policy.Expanding))
 
         # switch to new servers_vbox
         self.servers_vbox = servers_vbox_new
@@ -1508,10 +1499,10 @@ class StatusWindow(QWidget):
                 icon_y = QCursor.pos().y()
 
             # get available desktop specs
-            available_width = desktop.availableGeometry(self).width()
-            available_height = desktop.availableGeometry(self).height()
-            available_x = desktop.availableGeometry(self).x()
-            available_y = desktop.availableGeometry(self).y()
+            available_width = self.screen().availableGeometry().width()
+            available_height = self.screen().availableGeometry().height()
+            available_x = self.screen().availableGeometry().x()
+            available_y = self.screen().availableGeometry().y()
 
             y = 0
 
@@ -3380,7 +3371,7 @@ class TreeView(QTreeView):
         # force table to its maximal height, calculated by .get_real_height()
         self.setMinimumHeight(self.get_real_height())
         self.setMaximumHeight(self.get_real_height())
-        self.setSizePolicy(QSizePolicy.Ignored, QSizePolicy.Maximum)
+        self.setSizePolicy(QSizePolicy.Policy.Ignored, QSizePolicy.Policy.Maximum)
 
         # after setting table whole window can be repainted
         self.ready_to_resize.emit()
@@ -4597,7 +4588,7 @@ class Dialog(QObject):
         QObject.__init__(self)
         #self.window = QDialog()
 
-        self.ui = uic.loadUi(f'Nagstamon/QUI/{dialog}.ui')
+        self.ui = uic.loadUi(f'Nagstamon/QUI/files/{dialog}.ui')
         self.window = self.ui
         #self.ui.setupUi(self.window)
 
@@ -6815,18 +6806,18 @@ class MediaPlayer(QObject):
         QObject.__init__(self)
         self.player = QMediaPlayer(parent=self)
 
-        self.player.setVolume(100)
+        ##self.player.setVolume(100)
 
         # Qt6: https://doc-snapshots.qt.io/qt6-dev/qmediaplayer.html#setSource
 
-        self.playlist = QMediaPlaylist()
-        self.player.setPlaylist(self.playlist)
+        ##self.playlist = QMediaPlaylist()
+        ##self.player.setPlaylist(self.playlist)
 
         # let statuswindow show message
-        self.send_message.connect(statuswindow.show_message)
+        ##self.send_message.connect(statuswindow.show_message)
         # connect with statuswindow notification worker
-        statuswindow.worker_notification.load_sound.connect(self.set_media)
-        statuswindow.worker_notification.play_sound.connect(self.play)
+        ##statuswindow.worker_notification.load_sound.connect(self.set_media)
+        ##statuswindow.worker_notification.play_sound.connect(self.play)
 
     @Slot(str)
     def set_media(self, media_file):
@@ -6900,7 +6891,7 @@ class CheckVersion(QObject):
             self.worker.moveToThread(self.worker_thread)
             # run check when thread starts
             self.worker_thread.started.connect(self.worker.check)
-            self.worker_thread.start(0)
+            self.worker_thread.start(QThread.Priority.LowestPriority)
 
     @Slot()
     def reset_checking(self):
@@ -6929,7 +6920,7 @@ class CheckVersion(QObject):
                                  QMessageBox.Ok,
                                  parent,
                                  Qt.Dialog | Qt.MSWindowsFixedSizeDialogHint)
-        messagebox.setAttribute(Qt.WA_DeleteOnClose)
+        messagebox.setAttribute(Qt.WidgetAttribute.WA_DeleteOnClose)
         messagebox.setWindowModality(Qt.NonModal)
         messagebox.exec()
 
@@ -7133,8 +7124,9 @@ def get_screen_geometry(screen_number):
     """
         set screen for fullscreen
     """
-    number_of_screens = desktop.screenCount()
-    for screen in range(number_of_screens + 1):
+    #number_of_screens = len(APP.screens())
+    #for screen in range(number_of_screens + 1):
+    for screen in APP.screns():
         if screen == screen_number:
             return desktop.screenGeometry(screen)
 
@@ -7194,9 +7186,9 @@ def is_modifier_pressed():
         check if (left) CTRL or Shift keys are pressed
     """
     modifiers = APP.keyboardModifiers()
-    if modifiers == Qt.ControlModifier or \
-            modifiers == Qt.ShiftModifier or \
-            modifiers == (Qt.ControlModifier | Qt.ShiftModifier):
+    if modifiers == Qt.Modifier.CTRL or \
+            modifiers == Qt.Modifier.SHIFT or \
+            modifiers == (Qt.Modifier.CTRL | Qt.Modifier.SHIFT):
         del modifiers
         return True
     del modifiers
