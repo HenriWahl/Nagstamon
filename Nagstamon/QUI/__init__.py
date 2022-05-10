@@ -823,9 +823,9 @@ class DraggableWidget(QWidget):
         if not statuswindow.relative_x and \
                 not statuswindow.relative_y:
             globby = event.globalPosition()
-            event_x, event_y = event.globalPosition()
-            statuswindow.relative_x = event_x - statuswindow.x()
-            statuswindow.relative_y = event_y - statuswindow.y()
+            #event_x, event_y = event.globalPosition()
+            statuswindow.relative_x = event.globalPosition().x() - statuswindow.x()
+            statuswindow.relative_y = event.globalPosition().y() - statuswindow.y()
 
     def mouseReleaseEvent(self, event):
         """
@@ -865,11 +865,12 @@ class DraggableWidget(QWidget):
                 # lock window as moving
                 # if not set calculate relative position
                 if not statuswindow.relative_x and not statuswindow.relative_y:
-                    statuswindow.relative_x = event.globalX() - statuswindow.x()
-                    statuswindow.relative_y = event.globalY() - statuswindow.y()
+                    statuswindow.relative_x = event.globalPosition().x() - statuswindow.x()
+                    statuswindow.relative_y = event.globalPosition().y() - statuswindow.y()
 
                 statuswindow.moving = True
-                statuswindow.move(event.globalX() - statuswindow.relative_x, event.globalY() - statuswindow.relative_y)
+                statuswindow.move(int(event.globalPosition().x() - statuswindow.relative_x), \
+                                  int(event.globalPosition().y() - statuswindow.relative_y))
 
             # needed for OSX - otherwise statusbar stays blank while moving
             statuswindow.update()
@@ -1785,7 +1786,7 @@ class StatusWindow(QWidget):
         # calculate top-ness only if window is closed
         if conf.statusbar_floating:
             # if self.is_shown is False:
-            if self.y() < self.screen().screenGeometry().height() // 2 + available_y:
+            if self.y() < self.screen().geometry().height() // 2 + available_y:
                 self.top = True
             else:
                 self.top = False
@@ -1794,7 +1795,7 @@ class StatusWindow(QWidget):
             x = self.stored_x
 
         elif conf.icon_in_systray or conf.windowed:
-            if self.icon_y < self.screen().screenGeometry().height() // 2 + available_y:
+            if self.icon_y < self.screen().geometry().height() // 2 + available_y:
                 self.top = True
             else:
                 self.top = False
@@ -1835,8 +1836,8 @@ class StatusWindow(QWidget):
             else:
                 # when height is to large for current screen cut it
                 if self.y() + self.height() - real_height < available_y:
-                    height = self.screen().screenGeometry().height() - available_y - (
-                            self.screen().screenGeometry().height() - (self.y() + self.height()))
+                    height = self.screen().geometry().height() - available_y - (
+                            self.screen().geometry().height() - (self.y() + self.height()))
                     y = available_y
                 else:
                     height = real_height
@@ -3121,17 +3122,17 @@ class Model(QAbstractTableModel):
         """
             overridden method for data delivery for treeview
         """
-        if role == Qt.DisplayRole:
+        if role == Qt.ItemDataRole.DisplayRole:
             return self.data_array[index.row()][index.column()]
 
-        elif role == Qt.ForegroundRole:
+        elif role == Qt.ItemDataRole.ForegroundRole:
             return self.data_array[index.row()][10]
 
-        elif role == Qt.BackgroundRole:
+        elif role == Qt.ItemDataRole.BackgroundRole:
             # return(self.data_array[index.row()][COLOR_INDEX['background'][index.column()]])
             return self.data_array[index.row()][11]
 
-        elif role == Qt.FontRole:
+        elif role == Qt.ItemDataRole.FontRole:
             if index.column() == 1:
                 return ICONS_FONT
             elif index.column() == 3:
@@ -3139,11 +3140,11 @@ class Model(QAbstractTableModel):
             else:
                 return DUMMY_QVARIANT
         # provide icons via Qt.UserRole
-        elif role == Qt.UserRole:
+        elif role == Qt.ItemDataRole.UserRole:
             # depending on host or service column return host or service icon list
             return self.data_array[index.row()][7 + index.column()]
 
-        elif role == Qt.ToolTipRole:
+        elif role == Qt.ItemDataRole.ToolTipRole:
             # only if tooltips are wanted show them, combining host + service + status_info
             if conf.show_tooltips:
                 return '''<div style=white-space:pre;margin:3px;><b>{0}: {1}</b></div>
@@ -3418,9 +3419,9 @@ class TreeView(QTreeView):
             for index in self.selectedIndexes():
                 if index.row() not in rows:
                     rows.append(index.row())
-            if modifiers == Qt.ControlModifier or \
-                    modifiers == Qt.ShiftModifier or \
-                    modifiers == (Qt.ControlModifier | Qt.ShiftModifier) or \
+            if modifiers == Qt.Modifier.CTRL or \
+                    modifiers == Qt.Modifier.SHIFT or \
+                    modifiers == (Qt.Modifier.CTRL | Qt.Modifier.SHIFT) or \
                     len(rows) > 1:
                 super(TreeView, self).mouseReleaseEvent(event)
             else:
@@ -7118,10 +7119,10 @@ def get_screen_geometry(screen_name):
     #for screen in range(number_of_screens + 1):
     for screen in APP.screens():
         if screen.name == screen_name:
-            return screen.screenGeometry()
+            return screen.geometry()
 
     # if not enough displays available reset to display 0
-    return self.screen().screenGeometry()
+    return self.screen().geometry()
 
 
 @Slot()
