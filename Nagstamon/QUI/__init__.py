@@ -231,15 +231,6 @@ NUMBER_OF_DISPLAY_CHANGES = 0
 # Flags for statusbar - experiment with Qt.ToolTip for Windows because
 # statusbar permanently seems to vanish at some users desktops
 # see https://github.com/HenriWahl/Nagstamon/issues/222
-# WINDOW_FLAGS = Qt.WindowStaysOnTopHint | Qt.FramelessWindowHint | Qt.ToolTip
-# ##if OS == 'Windows':
-# ##    # WINDOW_FLAGS = Qt.WindowStaysOnTopHint | Qt.FramelessWindowHint | Qt.ToolTip
-# ##    WINDOW_FLAGS = Qt.WindowStaysOnTopHint | Qt.FramelessWindowHint | Qt.Tool
-# ##    # WINDOW_FLAGS = Qt.FramelessWindowHint | Qt.Tool
-# ##    # WINDOW_FLAGS = Qt.FramelessWindowHint | Qt.ToolTip
-# ##    # WINDOW_FLAGS = Qt.FramelessWindowHint | Qt.WindowStaysOnTopHint | Qt.Tool |  Qt.BypassWindowManagerHint
-# ##else:
-# ##    WINDOW_FLAGS = Qt.WindowStaysOnTopHint | Qt.FramelessWindowHint | Qt.Tool
 WINDOW_FLAGS = Qt.WindowType.WindowStaysOnTopHint | Qt.WindowType.FramelessWindowHint | Qt.WindowType.Tool
 
 # icon for dialogs
@@ -1297,7 +1288,7 @@ class StatusWindow(QWidget):
             self.move(screen_geometry.x(), screen_geometry.y())
 
             # keep window entry in taskbar and thus no Qt.Tool
-            self.setWindowFlags(Qt.Widget | Qt.FramelessWindowHint)
+            self.setWindowFlags(Qt.WindowType.Widget | Qt.WindowType.FramelessWindowHint)
 
             # show statusbar actively
             self.setAttribute(Qt.WidgetAttribute.WA_ShowWithoutActivating, False)
@@ -3389,9 +3380,9 @@ class TreeView(QTreeView):
                 for index in self.selectedIndexes():
                     if index.row() not in rows:
                         rows.append(index.row())
-                if modifiers == Qt.ControlModifier or \
-                        modifiers == Qt.ShiftModifier or \
-                        modifiers == (Qt.ControlModifier | Qt.ShiftModifier) or \
+                if modifiers == Qt.Modifier.CTRL or \
+                        modifiers == Qt.Modifier.SHIFT or \
+                        modifiers == (Qt.Modifier.CTRL| Qt.Modifier.SHIFT) or \
                         len(rows) > 1:
                     pass
                 else:
@@ -3446,7 +3437,7 @@ class TreeView(QTreeView):
         """
             Use to handle copy from keyboard
         """
-        if event.matches(QKeySequence.Copy):
+        if event.matches(QKeySequence.StandardKey.Copy):
             self.action_clipboard_action_all()
             return
         super(TreeView, self).keyPressEvent(event)
@@ -3644,9 +3635,9 @@ class TreeView(QTreeView):
                 list_rows.append(index.row())
 
         for lrow in list_rows:
-            miserable_host = self.model().data(self.model().createIndex(lrow, 0), Qt.DisplayRole)
-            miserable_service = self.model().data(self.model().createIndex(lrow, 2), Qt.DisplayRole)
-            miserable_status_info = self.model().data(self.model().createIndex(lrow, 8), Qt.DisplayRole)
+            miserable_host = self.model().data(self.model().createIndex(lrow, 0), Qt.ItemDataRole.DisplayRole)
+            miserable_service = self.model().data(self.model().createIndex(lrow, 2), Qt.ItemDataRole.DisplayRole)
+            miserable_status_info = self.model().data(self.model().createIndex(lrow, 8), Qt.ItemDataRole.DisplayRole)
 
             # get data to send to action
             server = self.server.get_name()
@@ -3716,8 +3707,8 @@ class TreeView(QTreeView):
         indexes = self.selectedIndexes()
         if len(indexes) > 0:
             index = indexes[0]
-            miserable_host = self.model().data(self.model().createIndex(index.row(), 0), Qt.DisplayRole)
-            miserable_service = self.model().data(self.model().createIndex(index.row(), 2), Qt.DisplayRole)
+            miserable_host = self.model().data(self.model().createIndex(index.row(), 0), Qt.ItemDataRole.DisplayRole)
+            miserable_service = self.model().data(self.model().createIndex(index.row(), 2), Qt.ItemDataRole.DisplayRole)
 
             # open host/service monitor in browser
             self.server.open_monitor(miserable_host, miserable_service)
@@ -3731,8 +3722,8 @@ class TreeView(QTreeView):
                 list_rows.append(index.row())
 
         for lrow in list_rows:
-            miserable_host = self.model().data(self.model().createIndex(lrow, 0), Qt.DisplayRole)
-            miserable_service = self.model().data(self.model().createIndex(lrow, 2), Qt.DisplayRole)
+            miserable_host = self.model().data(self.model().createIndex(lrow, 0), Qt.ItemDataRole.DisplayRole)
+            miserable_service = self.model().data(self.model().createIndex(lrow, 2), Qt.ItemDataRole.DisplayRole)
 
             # send signal to worker recheck slot
             self.recheck.emit({'host': miserable_host,
@@ -3750,8 +3741,8 @@ class TreeView(QTreeView):
                 list_rows.append(index.row())
 
         for lrow in list_rows:
-            list_host.append(self.model().data(self.model().createIndex(lrow, 0), Qt.DisplayRole))
-            list_service.append(self.model().data(self.model().createIndex(lrow, 2), Qt.DisplayRole))
+            list_host.append(self.model().data(self.model().createIndex(lrow, 0), Qt.ItemDataRole.DisplayRole))
+            list_service.append(self.model().data(self.model().createIndex(lrow, 2), Qt.ItemDataRole.DisplayRole))
 
         # running worker method is left to OK button of dialog
         dialogs.acknowledge.initialize(server=self.server,
@@ -3771,8 +3762,8 @@ class TreeView(QTreeView):
                 list_rows.append(index.row())
 
         for lrow in list_rows:
-            list_host.append(self.model().data(self.model().createIndex(lrow, 0), Qt.DisplayRole))
-            list_service.append(self.model().data(self.model().createIndex(lrow, 2), Qt.DisplayRole))
+            list_host.append(self.model().data(self.model().createIndex(lrow, 0), Qt.ItemDataRole.DisplayRole))
+            list_service.append(self.model().data(self.model().createIndex(lrow, 2), Qt.ItemDataRole.DisplayRole))
 
         # running worker method is left to OK button of dialog
         dialogs.downtime.initialize(server=self.server,
@@ -3803,9 +3794,9 @@ class TreeView(QTreeView):
                 list_rows.append(index.row())
 
         for lrow in list_rows:
-            list_host.append(self.model().data(self.model().createIndex(lrow, 0), Qt.DisplayRole))
-            list_service.append(self.model().data(self.model().createIndex(lrow, 2), Qt.DisplayRole))
-            list_status.append(self.model().data(self.model().createIndex(lrow, 8), Qt.DisplayRole))
+            list_host.append(self.model().data(self.model().createIndex(lrow, 0), Qt.ItemDataRole.DisplayRole))
+            list_service.append(self.model().data(self.model().createIndex(lrow, 2), Qt.ItemDataRole.DisplayRole))
+            list_status.append(self.model().data(self.model().createIndex(lrow, 8), Qt.ItemDataRole.DisplayRole))
 
         for line_number in range(len(list_host)):
             host = list_host[line_number]
@@ -3837,8 +3828,8 @@ class TreeView(QTreeView):
         # only on 1 row
         indexes = self.selectedIndexes()
         index = indexes[0]
-        miserable_host = self.model().data(self.model().createIndex(index.row(), 0), Qt.DisplayRole)
-        miserable_service = self.model().data(self.model().createIndex(index.row(), 2), Qt.DisplayRole)
+        miserable_host = self.model().data(self.model().createIndex(index.row(), 0), Qt.ItemDataRole.DisplayRole)
+        miserable_service = self.model().data(self.model().createIndex(index.row(), 2), Qt.ItemDataRole.DisplayRole)
 
         # running worker method is left to OK button of dialog
         dialogs.submit.initialize(server=self.server,
@@ -3862,7 +3853,7 @@ class TreeView(QTreeView):
                 list_rows.append(index.row())
 
         for lrow in list_rows:
-            list_host.append(self.model().data(self.model().createIndex(lrow, 0), Qt.DisplayRole))
+            list_host.append(self.model().data(self.model().createIndex(lrow, 0), Qt.ItemDataRole.DisplayRole))
 
         for line_number in range(len(list_host)):
             text = text + list_host[line_number]
@@ -3887,7 +3878,7 @@ class TreeView(QTreeView):
                 list_rows.append(index.row())
 
         for lrow in list_rows:
-            list_service.append(self.model().data(self.model().createIndex(lrow, 2), Qt.DisplayRole))
+            list_service.append(self.model().data(self.model().createIndex(lrow, 2), Qt.ItemDataRole.DisplayRole))
 
         for line_number in range(len(list_service)):
             text = text + list_service[line_number]
@@ -3911,7 +3902,7 @@ class TreeView(QTreeView):
                 list_rows.append(index.row())
 
         for lrow in list_rows:
-            list_status.append(self.model().data(self.model().createIndex(lrow, 8), Qt.DisplayRole))
+            list_status.append(self.model().data(self.model().createIndex(lrow, 8), Qt.ItemDataRole.DisplayRole))
 
         for line_number in range(len(list_status)):
             text = text + list_status[line_number]
@@ -3937,8 +3928,8 @@ class TreeView(QTreeView):
                 list_rows.append(index.row())
 
         for lrow in list_rows:
-            list_host.append(self.model().data(self.model().createIndex(lrow, 0), Qt.DisplayRole))
-            list_service.append(self.model().data(self.model().createIndex(lrow, 2), Qt.DisplayRole))
+            list_host.append(self.model().data(self.model().createIndex(lrow, 0), Qt.ItemDataRole.DisplayRole))
+            list_service.append(self.model().data(self.model().createIndex(lrow, 2), Qt.ItemDataRole.DisplayRole))
 
         for line_number in range(len(list_host)):
             host = list_host[line_number]
@@ -6918,9 +6909,9 @@ class CheckVersion(QObject):
                                  message,
                                  QMessageBox.Ok,
                                  parent,
-                                 Qt.Dialog | Qt.MSWindowsFixedSizeDialogHint)
+                                 Qt.WindowType.Dialog | Qt.WindowType.MSWindowsFixedSizeDialogHint)
         messagebox.setAttribute(Qt.WidgetAttribute.WA_DeleteOnClose)
-        messagebox.setWindowModality(Qt.NonModal)
+        messagebox.setWindowModality(Qt.WindowModality.NonModal)
         messagebox.exec()
 
     class Worker(QObject):
