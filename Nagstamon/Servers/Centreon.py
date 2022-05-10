@@ -646,7 +646,7 @@ class CentreonServer(GenericServer):
                         self.new_hosts[str(l.hn.text)].status_type = self.HARD_SOFT[self.new_hosts[str(l.hn.text)].status_type]
                         self.new_hosts[str(l.hn.text)].last_check = str(l.lc.text)
                         self.new_hosts[str(l.hn.text)].duration = str(l.lsc.text)
-                        self.new_hosts[str(l.hn.text)].status_information= str(l.ou.text)
+                        self.new_hosts[str(l.hn.text)].status_information = str(l.ou.text).replace('\n', ' ').strip()
                         if l.find('cih') != None:
                             self.new_hosts[str(l.hn.text)].criticality = str(l.cih.text)
                         else:
