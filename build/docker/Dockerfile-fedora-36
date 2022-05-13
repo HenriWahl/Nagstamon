@@ -1,0 +1,25 @@
+FROM fedora:36
+LABEL maintainer=henri@nagstamon.de
+
+RUN dnf -y install desktop-file-utils \
+                   git \
+                   python3 \
+                   python3-beautifulsoup4 \
+                   python3-crypto \
+                   python3-cryptography \
+                   python3-dateutil \
+                   python3-devel \
+                   python3-keyring \
+                   python3-lxml \
+                   python3-psutil \
+                   python3-qt5 \
+                   python3-qt5-devel \
+                   python3-requests \
+                   python3-requests-kerberos \
+                   python3-SecretStorage \
+                   qt5-qtsvg \
+                   qt5-qtmultimedia \
+                   rpm-build
+
+CMD cd /nagstamon/build && \
+    /usr/bin/python3 build.py
