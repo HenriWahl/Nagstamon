@@ -2047,10 +2047,10 @@ class StatusWindow(QWidget):
         """
         title = " ".join((AppInfo.NAME, msg_type))
         if msg_type == 'warning':
-            return (QMessageBox.warning(statuswindow, title, message))
+            return (QMessageBox.Icon.Warning(statuswindow, title, message))
 
         elif msg_type == 'information':
-            return (QMessageBox.information(statuswindow, title, message))
+            return (QMessageBox.Icon.Information(statuswindow, title, message))
 
     @Slot()
     def recheck_all(self):
@@ -5218,9 +5218,9 @@ class Dialog_Settings(Dialog):
 
         reply = QMessageBox.question(self.window, 'Nagstamon',
                                      'Do you really want to delete monitor server <b>%s</b>?' % (server.name),
-                                     QMessageBox.Yes | QMessageBox.No, QMessageBox.No)
+                                     QMessageBox.StandardButton.Yes | QMessageBox.StandardButton.No, QMessageBox.StandardButton.No)
 
-        if reply == QMessageBox.Yes:
+        if reply == QMessageBox.StandardButton.Yes:
             # in case server is enabled delete its vbox
             if server.enabled:
                 for vbox in statuswindow.servers_vbox.children():
@@ -5302,9 +5302,9 @@ class Dialog_Settings(Dialog):
 
         reply = QMessageBox.question(self.window, 'Nagstamon',
                                      'Do you really want to delete action <b>%s</b>?' % (action.name),
-                                     QMessageBox.Yes | QMessageBox.No, QMessageBox.No)
+                                     QMessageBox.StandardButton.Yes | QMessageBox.StandardButton.No, QMessageBox.StandardButton.No)
 
-        if reply == QMessageBox.Yes:
+        if reply == QMessageBox.StandardButton.Yes:
             # kick action out of config items
             conf.actions.pop(action.name)
 
@@ -5947,10 +5947,10 @@ class Dialog_Server(Dialog):
                 (self.mode in ['new', 'copy'] or
                  self.mode == 'edit' and self.server_conf != conf.servers[self.ui.input_lineedit_name.text()]):
             # cry if duplicate name exists
-            QMessageBox.critical(self.window, 'Nagstamon',
+            QMessageBox.Icon.Critical(self.window, 'Nagstamon',
                                  'The monitor server name <b>%s</b> is already used.' %
                                  (self.ui.input_lineedit_name.text()),
-                                 QMessageBox.Ok)
+                                 QMessageBox.StandardButton.Ok)
         else:
             # get configuration from UI
             for widget in self.ui.__dict__:
@@ -6207,10 +6207,10 @@ class Dialog_Action(Dialog):
                 (self.mode in ['new', 'copy'] or
                  self.mode == 'edit' and self.action_conf != conf.actions[self.ui.input_lineedit_name.text()]):
             # cry if duplicate name exists
-            QMessageBox.critical(self.window, 'Nagstamon',
+            QMessageBox.Icon.Critical(self.window, 'Nagstamon',
                                  'The action name <b>%s</b> is already used.' %
                                  (self.ui.input_lineedit_name.text()),
-                                 QMessageBox.Ok)
+                                 QMessageBox.StandardButton.Ok)
         else:
             # get configuration from UI
             for widget in self.ui.__dict__:
@@ -6945,10 +6945,10 @@ class CheckVersion(QObject):
         else:
             parent = self.parent
 
-        messagebox = QMessageBox(QMessageBox.Information,
+        messagebox = QMessageBox(QMessageBox.Icon.Information,
                                  'Nagstamon version check',
                                  message,
-                                 QMessageBox.Ok,
+                                 QMessageBox.StandardButton.Ok,
                                  parent,
                                  Qt.WindowType.Dialog | Qt.WindowType.MSWindowsFixedSizeDialogHint)
         messagebox.setAttribute(Qt.WidgetAttribute.WA_DeleteOnClose)
@@ -7153,8 +7153,8 @@ def get_screen_geometry(screen_name):
         if screen.name == screen_name:
             return screen.geometry()
 
-    # if not enough displays available reset to display 0
-    return self.screen().geometry()
+    # if not enough displays available use primary screen
+    return APP.primaryScreen().geometry()
 
 
 @Slot()
