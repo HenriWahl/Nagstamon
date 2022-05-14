@@ -50,6 +50,7 @@ from Nagstamon.Config import (AppInfo,
                               debug_queue,
                               OS,
                               OS_DARWIN,
+                              OS_WINDOWS,
                               RESOURCES)
 
 if OS != OS_WINDOWS:
