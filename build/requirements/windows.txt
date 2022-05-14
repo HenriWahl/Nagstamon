@@ -6,7 +6,7 @@ lxml
 psutil
 pyinstaller
 pypiwin32
-pyqt5
+pyqt6
 pysocks
 python-dateutil
 requests
