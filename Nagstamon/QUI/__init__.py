@@ -92,12 +92,15 @@ if not OS in OS_NON_LINUX:
         print('No DBus for desktop notification available.')
         DBUS_AVAILABLE = False
 
-# check ECP authentication support availability
-try:
-    from requests_ecp import HTTPECPAuth
-
-    ECP_AVAILABLE = True
-except ImportError:
+# same KfW trouble as in Servers/Generic.py
+if OS != OS_WINDOWS:
+    # check ECP authentication support availability
+    try:
+        from requests_ecp import HTTPECPAuth
+        ECP_AVAILABLE = True
+    except ImportError:
+        ECP_AVAILABLE = False
+else:
     ECP_AVAILABLE = False
 
 # since Qt6 HighDPI-awareness is default behaviour
