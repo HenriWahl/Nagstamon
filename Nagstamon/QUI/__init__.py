@@ -4987,8 +4987,8 @@ class Dialog_Settings(Dialog):
         self.ui.input_combobox_default_sort_order.setCurrentText(conf.default_sort_order.title())
 
         # fill combobox with screens for fullscreen
-        for display in APP.screens():
-            self.ui.input_combobox_fullscreen_display.addItem(str(display))
+        for screen in APP.screens():
+            self.ui.input_combobox_fullscreen_display.addItem(str(screen.name()))
         self.ui.input_combobox_fullscreen_display.setCurrentText(str(conf.fullscreen_display))
 
         # fill servers listwidget with servers
@@ -7150,13 +7150,11 @@ def get_screen_geometry(screen_name):
     """
         set screen for fullscreen
     """
-    #number_of_screens = len(APP.screens())
-    #for screen in range(number_of_screens + 1):
     for screen in APP.screens():
-        if screen.name == screen_name:
+        if screen.name() == screen_name:
             return screen.geometry()
 
-    # if not enough displays available use primary screen
+    # if screen_name didn't match available use primary screen
     return APP.primaryScreen().geometry()
 
 
