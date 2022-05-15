@@ -70,7 +70,7 @@ CLASSIFIERS = ['Intended Audience :: System Administrators',
 
 # Dependencies are automatically detected, but it might need
 # fine tuning.
-build_exe_options = dict(packages=['PyQt5.QtNetwork',
+build_exe_options = dict(packages=['PyQt6.QtNetwork',
                                    'keyring.backends.kwallet',
                                    'keyring.backends.OS_X',
                                    'keyring.backends.SecretService',
@@ -85,6 +85,7 @@ bdist_mac_options = dict(iconfile='Nagstamon/resources/nagstamon.icns',
 bdist_dmg_options = dict(volume_label='{0} {1}'.format(NAME, VERSION),
                          applications_shortcut=False)
 
+# Fedora seems to have no complete pyqt5 yet
 bdist_rpm_options = dict(requires='python3 '
         'python3-beautifulsoup4 '
         'python3-crypto '
