@@ -2,7 +2,7 @@ beautifulsoup4
 keyring
 lxml
 psutil
-pyqt5
+pyqt6
 pysocks
 python-dateutil
 requests

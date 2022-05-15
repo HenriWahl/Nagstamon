@@ -1,0 +1,17 @@
+FROM debian:11
+
+RUN apt update && \
+    apt -y upgrade &&\
+    apt -y install apt-utils
+
+RUN apt -y install python3 \
+                   python3-pip \
+                   python3-setuptools
+
+RUN pip3 install appimage-builder
+
+RUN apt -y install strace patchelf libkrb5-dev wget fuse file
+
+RUN wget https://github.com/AppImage/AppImageKit/releases/download/continuous/appimagetool-x86_64.AppImage -O /usr/local/bin/appimagetool
+RUN chmod +x /usr/local/bin/appimagetool
+

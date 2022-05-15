@@ -1220,7 +1220,7 @@ class StatusWindow(QWidget):
                 self.move(conf.position_x, conf.position_y)
             else:
                 # get available desktop specs
-                available_x = self.screen().vailableGeometry().x()
+                available_x = self.screen().availableGeometry().x()
                 available_y = self.screen().availableGeometry().y()
                 self.move(available_x, available_y)
 
