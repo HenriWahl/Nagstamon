@@ -47,11 +47,6 @@ Opsview, Op5Monitor, Checkmk/Multisite, Centreon and Thruk servers.
 %install
 %{__python3} setup.py install --single-version-externally-managed -O1 --root=%{buildroot}
 
-#Fix 'non-executable-script' error
-chmod +x %{buildroot}%{python3_sitelib}/Nagstamon/Servers/Multisite.py
-chmod +x %{buildroot}%{python3_sitelib}/Nagstamon/thirdparty/keyring/cli.py
-chmod +x %{buildroot}%{python3_sitelib}/Nagstamon/Config.py
-
 #Provide directory to install icon for desktop file
 mkdir -p %{buildroot}%{_datadir}/pixmaps
 

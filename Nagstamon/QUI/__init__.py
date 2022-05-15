@@ -4521,10 +4521,10 @@ class Dialogs(object):
         self.downtime.initialize()
 
         # open defaults settings on button click
-        self.downtime.ui.button_change_defaults_downtime.clicked.connect(self.settings.show_defaults)
-        self.downtime.ui.button_change_defaults_downtime.clicked.connect(self.downtime.window.close)
-        self.acknowledge.ui.button_change_defaults_acknowledge.clicked.connect(self.settings.show_defaults)
-        self.acknowledge.ui.button_change_defaults_acknowledge.clicked.connect(self.acknowledge.window.close)
+        self.downtime.window.button_change_defaults_downtime.clicked.connect(self.settings.show_defaults)
+        self.downtime.window.button_change_defaults_downtime.clicked.connect(self.downtime.window.close)
+        self.acknowledge.window.button_change_defaults_acknowledge.clicked.connect(self.settings.show_defaults)
+        self.acknowledge.window.button_change_defaults_acknowledge.clicked.connect(self.acknowledge.window.close)
 
         # downtime dialog for miserable item context menu
         #self.submit = Dialog_Submit(Ui_dialog_submit)
@@ -4541,8 +4541,8 @@ class Dialogs(object):
         self.server_missing = Dialog_Server_missing('dialog_server_missing')
         self.server_missing.initialize()
         # open server creation dialog
-        self.server_missing.ui.button_create_server.clicked.connect(self.settings.show_new_server)
-        self.server_missing.ui.button_enable_server.clicked.connect(self.settings.show)
+        self.server_missing.window.button_create_server.clicked.connect(self.settings.show_new_server)
+        self.server_missing.window.button_enable_server.clicked.connect(self.settings.show)
 
         # about dialog
         #self.about = Dialog_About(Ui_dialog_about)
@@ -4577,11 +4577,9 @@ class Dialog(QObject):
 
     def __init__(self, dialog):
         QObject.__init__(self)
-        #self.window = QDialog()
 
-        self.ui = uic.loadUi(f'Nagstamon/QUI/files/{dialog}.ui')
-        self.window = self.ui
-        #self.ui.setupUi(self.window)
+        # load UI file from resources
+        self.window = uic.loadUi(f'{RESOURCES}/qui/{dialog}.ui')
 
         # explicitly set window flags to avoid '?' button on Windows
         self.window.setWindowFlags(Qt.WindowType.WindowCloseButtonHint)
@@ -4593,9 +4591,9 @@ class Dialog(QObject):
         self.window.setWindowIcon(ICON)
 
         # treat dialog content after pressing OK button
-        if 'button_box' in dir(self.ui):
-            self.ui.button_box.accepted.connect(self.ok)
-            self.ui.button_box.rejected.connect(self.cancel)
+        if 'button_box' in dir(self.window):
+            self.window.button_box.accepted.connect(self.ok)
+            self.window.button_box.rejected.connect(self.cancel)
 
         # QSignalMapper needed to connect all toggle-needing-checkboxes/radiobuttons to one .toggle()-method which
         # decides which sender to use as key in self.TOGGLE_DEPS
@@ -4648,8 +4646,8 @@ class Dialog(QObject):
             change state of depending widgets, slot for signals from checkboxes in UI
         """
         # Due to older Qt5 in Ubuntu 14.04 signalmapper has to use strings
-        self.toggle_visibility(self.ui.__dict__[checkbox],
-                               self.TOGGLE_DEPS[self.ui.__dict__[checkbox]])
+        self.toggle_visibility(self.window.__dict__[checkbox],
+                               self.TOGGLE_DEPS[self.window.__dict__[checkbox]])
 
         # adjust dialog window size after UI changes
         self.window.adjustSize()
@@ -4712,260 +4710,260 @@ class Dialog_Settings(Dialog):
         # dictionary holds checkbox/radiobutton as key and relevant widgets in list
         self.TOGGLE_DEPS = {
             # debug mode
-            self.ui.input_checkbox_debug_mode: [self.ui.input_checkbox_debug_to_file,
-                                                self.ui.input_lineedit_debug_file],
+            self.window.input_checkbox_debug_mode: [self.window.input_checkbox_debug_to_file,
+                                                self.window.input_lineedit_debug_file],
             # regular expressions for filtering hosts
-            self.ui.input_checkbox_re_host_enabled: [self.ui.input_lineedit_re_host_pattern,
-                                                     self.ui.input_checkbox_re_host_reverse],
+            self.window.input_checkbox_re_host_enabled: [self.window.input_lineedit_re_host_pattern,
+                                                     self.window.input_checkbox_re_host_reverse],
             # regular expressions for filtering services
-            self.ui.input_checkbox_re_service_enabled: [self.ui.input_lineedit_re_service_pattern,
-                                                        self.ui.input_checkbox_re_service_reverse],
+            self.window.input_checkbox_re_service_enabled: [self.window.input_lineedit_re_service_pattern,
+                                                        self.window.input_checkbox_re_service_reverse],
             # regular expressions for filtering status information
-            self.ui.input_checkbox_re_status_information_enabled: [self.ui.input_lineedit_re_status_information_pattern,
-                                                                   self.ui.input_checkbox_re_status_information_reverse],
+            self.window.input_checkbox_re_status_information_enabled: [self.window.input_lineedit_re_status_information_pattern,
+                                                                   self.window.input_checkbox_re_status_information_reverse],
             # regular expressions for filtering duration
-            self.ui.input_checkbox_re_duration_enabled: [self.ui.input_lineedit_re_duration_pattern,
-                                                         self.ui.input_checkbox_re_duration_reverse],
+            self.window.input_checkbox_re_duration_enabled: [self.window.input_lineedit_re_duration_pattern,
+                                                         self.window.input_checkbox_re_duration_reverse],
             # regular expressions for filtering duration
-            self.ui.input_checkbox_re_attempt_enabled: [self.ui.input_lineedit_re_attempt_pattern,
-                                                        self.ui.input_checkbox_re_attempt_reverse],
+            self.window.input_checkbox_re_attempt_enabled: [self.window.input_lineedit_re_attempt_pattern,
+                                                        self.window.input_checkbox_re_attempt_reverse],
             # regular expressions for filtering groups
-            self.ui.input_checkbox_re_groups_enabled: [self.ui.input_lineedit_re_groups_pattern,
-                                                       self.ui.input_checkbox_re_groups_reverse],
+            self.window.input_checkbox_re_groups_enabled: [self.window.input_lineedit_re_groups_pattern,
+                                                       self.window.input_checkbox_re_groups_reverse],
             # offset for statuswindow when using systray
-            self.ui.input_radiobutton_icon_in_systray: [self.ui.input_checkbox_systray_offset_use],
-            self.ui.input_checkbox_systray_offset_use: [self.ui.input_spinbox_systray_offset,
-                                                        self.ui.label_offset_statuswindow],
+            self.window.input_radiobutton_icon_in_systray: [self.window.input_checkbox_systray_offset_use],
+            self.window.input_checkbox_systray_offset_use: [self.window.input_spinbox_systray_offset,
+                                                        self.window.label_offset_statuswindow],
             # display to use in fullscreen mode
-            self.ui.input_radiobutton_fullscreen: [self.ui.label_fullscreen_display,
-                                                   self.ui.input_combobox_fullscreen_display],
+            self.window.input_radiobutton_fullscreen: [self.window.label_fullscreen_display,
+                                                   self.window.input_combobox_fullscreen_display],
             # notifications in general
-            self.ui.input_checkbox_notification: [self.ui.notification_groupbox],
+            self.window.input_checkbox_notification: [self.window.notification_groupbox],
             # sound at all
-            self.ui.input_checkbox_notification_sound: [self.ui.notification_sounds_groupbox],
+            self.window.input_checkbox_notification_sound: [self.window.notification_sounds_groupbox],
             # custom sounds
-            self.ui.input_radiobutton_notification_custom_sound: [self.ui.notification_custom_sounds_groupbox],
+            self.window.input_radiobutton_notification_custom_sound: [self.window.notification_custom_sounds_groupbox],
             # notification actions
-            self.ui.input_checkbox_notification_actions: [self.ui.notification_actions_groupbox],
+            self.window.input_checkbox_notification_actions: [self.window.notification_actions_groupbox],
             # several notification actions depending on status
-            self.ui.input_checkbox_notification_action_warning: [
-                self.ui.input_lineedit_notification_action_warning_string],
-            self.ui.input_checkbox_notification_action_critical: [
-                self.ui.input_lineedit_notification_action_critical_string],
-            self.ui.input_checkbox_notification_action_down: [self.ui.input_lineedit_notification_action_down_string],
-            self.ui.input_checkbox_notification_action_ok: [self.ui.input_lineedit_notification_action_ok_string],
+            self.window.input_checkbox_notification_action_warning: [
+                self.window.input_lineedit_notification_action_warning_string],
+            self.window.input_checkbox_notification_action_critical: [
+                self.window.input_lineedit_notification_action_critical_string],
+            self.window.input_checkbox_notification_action_down: [self.window.input_lineedit_notification_action_down_string],
+            self.window.input_checkbox_notification_action_ok: [self.window.input_lineedit_notification_action_ok_string],
             # single custom notification action
-            self.ui.input_checkbox_notification_custom_action: [self.ui.notification_custom_action_groupbox],
+            self.window.input_checkbox_notification_custom_action: [self.window.notification_custom_action_groupbox],
             # use event separator or not
-            self.ui.input_checkbox_notification_custom_action_single: [
-                self.ui.label_notification_custom_action_separator,
-                self.ui.input_lineedit_notification_custom_action_separator],
+            self.window.input_checkbox_notification_custom_action_single: [
+                self.window.label_notification_custom_action_separator,
+                self.window.input_lineedit_notification_custom_action_separator],
             # customized color alternation
-            self.ui.input_checkbox_show_grid: [self.ui.input_checkbox_grid_use_custom_intensity],
-            self.ui.input_checkbox_grid_use_custom_intensity: [self.ui.input_slider_grid_alternation_intensity,
-                                                               self.ui.label_intensity_information_0,
-                                                               self.ui.label_intensity_information_1,
-                                                               self.ui.label_intensity_warning_0,
-                                                               self.ui.label_intensity_warning_1,
-                                                               self.ui.label_intensity_average_0,
-                                                               self.ui.label_intensity_average_1,
-                                                               self.ui.label_intensity_high_0,
-                                                               self.ui.label_intensity_high_1,
-                                                               self.ui.label_intensity_critical_0,
-                                                               self.ui.label_intensity_critical_1,
-                                                               self.ui.label_intensity_disaster_0,
-                                                               self.ui.label_intensity_disaster_1,
-                                                               self.ui.label_intensity_down_0,
-                                                               self.ui.label_intensity_down_1,
-                                                               self.ui.label_intensity_unreachable_0,
-                                                               self.ui.label_intensity_unreachable_1,
-                                                               self.ui.label_intensity_unknown_0,
-                                                               self.ui.label_intensity_unknown_1],
-            self.ui.input_radiobutton_use_custom_browser: [self.ui.groupbox_custom_browser,
-                                                           self.ui.input_lineedit_custom_browser,
-                                                           self.ui.button_choose_browser]}
+            self.window.input_checkbox_show_grid: [self.window.input_checkbox_grid_use_custom_intensity],
+            self.window.input_checkbox_grid_use_custom_intensity: [self.window.input_slider_grid_alternation_intensity,
+                                                               self.window.label_intensity_information_0,
+                                                               self.window.label_intensity_information_1,
+                                                               self.window.label_intensity_warning_0,
+                                                               self.window.label_intensity_warning_1,
+                                                               self.window.label_intensity_average_0,
+                                                               self.window.label_intensity_average_1,
+                                                               self.window.label_intensity_high_0,
+                                                               self.window.label_intensity_high_1,
+                                                               self.window.label_intensity_critical_0,
+                                                               self.window.label_intensity_critical_1,
+                                                               self.window.label_intensity_disaster_0,
+                                                               self.window.label_intensity_disaster_1,
+                                                               self.window.label_intensity_down_0,
+                                                               self.window.label_intensity_down_1,
+                                                               self.window.label_intensity_unreachable_0,
+                                                               self.window.label_intensity_unreachable_1,
+                                                               self.window.label_intensity_unknown_0,
+                                                               self.window.label_intensity_unknown_1],
+            self.window.input_radiobutton_use_custom_browser: [self.window.groupbox_custom_browser,
+                                                           self.window.input_lineedit_custom_browser,
+                                                           self.window.button_choose_browser]}
 
-        self.TOGGLE_DEPS_INVERTED = [self.ui.input_checkbox_notification_custom_action_single]
+        self.TOGGLE_DEPS_INVERTED = [self.window.input_checkbox_notification_custom_action_single]
 
         # set title to current version
         self.window.setWindowTitle(' '.join((AppInfo.NAME, AppInfo.VERSION)))
 
         # connect server buttons to server dialog
-        self.ui.button_new_server.clicked.connect(self.new_server)
-        self.ui.button_edit_server.clicked.connect(self.edit_server)
-        self.ui.button_copy_server.clicked.connect(self.copy_server)
-        self.ui.button_delete_server.clicked.connect(self.delete_server)
+        self.window.button_new_server.clicked.connect(self.new_server)
+        self.window.button_edit_server.clicked.connect(self.edit_server)
+        self.window.button_copy_server.clicked.connect(self.copy_server)
+        self.window.button_delete_server.clicked.connect(self.delete_server)
 
         # double click on server to edit
-        self.ui.list_servers.doubleClicked.connect(self.edit_server)
+        self.window.list_servers.doubleClicked.connect(self.edit_server)
 
         # connect check-for-updates button to update check
-        # self.ui.button_check_for_new_version_now.clicked.connect(check_version.check)
-        self.ui.button_check_for_new_version_now.clicked.connect(self.button_check_for_new_version_clicked)
+        # self.window.button_check_for_new_version_now.clicked.connect(check_version.check)
+        self.window.button_check_for_new_version_now.clicked.connect(self.button_check_for_new_version_clicked)
         self.check_for_new_version.connect(check_version.check)
 
         # avoid offset spinbox if offest is not enabled
-        self.ui.input_radiobutton_fullscreen.clicked.connect(self.toggle_systray_icon_offset)
-        self.ui.input_radiobutton_icon_in_systray.clicked.connect(self.toggle_systray_icon_offset)
-        self.ui.input_radiobutton_statusbar_floating.clicked.connect(self.toggle_systray_icon_offset)
+        self.window.input_radiobutton_fullscreen.clicked.connect(self.toggle_systray_icon_offset)
+        self.window.input_radiobutton_icon_in_systray.clicked.connect(self.toggle_systray_icon_offset)
+        self.window.input_radiobutton_statusbar_floating.clicked.connect(self.toggle_systray_icon_offset)
 
         # connect font chooser button to font choosing dialog
-        self.ui.button_fontchooser.clicked.connect(self.font_chooser)
+        self.window.button_fontchooser.clicked.connect(self.font_chooser)
         # connect revert-to-default-font button
-        self.ui.button_default_font.clicked.connect(self.font_default)
+        self.window.button_default_font.clicked.connect(self.font_default)
         # store font as default
         self.font = FONT
         # show current font in label_font
-        self.ui.label_font.setFont(FONT)
+        self.window.label_font.setFont(FONT)
 
         # connect action buttons to action dialog
-        self.ui.button_new_action.clicked.connect(self.new_action)
-        self.ui.button_edit_action.clicked.connect(self.edit_action)
-        self.ui.button_copy_action.clicked.connect(self.copy_action)
-        self.ui.button_delete_action.clicked.connect(self.delete_action)
+        self.window.button_new_action.clicked.connect(self.new_action)
+        self.window.button_edit_action.clicked.connect(self.edit_action)
+        self.window.button_copy_action.clicked.connect(self.copy_action)
+        self.window.button_delete_action.clicked.connect(self.delete_action)
 
         # double click on action to edit
-        self.ui.list_actions.doubleClicked.connect(self.edit_action)
+        self.window.list_actions.doubleClicked.connect(self.edit_action)
 
         # connect custom sound file buttons
-        self.ui.button_choose_warning.clicked.connect(self.choose_sound_file_warning)
-        self.ui.button_choose_critical.clicked.connect(self.choose_sound_file_critical)
-        self.ui.button_choose_down.clicked.connect(self.choose_sound_file_down)
+        self.window.button_choose_warning.clicked.connect(self.choose_sound_file_warning)
+        self.window.button_choose_critical.clicked.connect(self.choose_sound_file_critical)
+        self.window.button_choose_down.clicked.connect(self.choose_sound_file_down)
 
         # connect custom sound file buttons
-        self.ui.button_play_warning.clicked.connect(self.play_sound_file_warning)
-        self.ui.button_play_critical.clicked.connect(self.play_sound_file_critical)
-        self.ui.button_play_down.clicked.connect(self.play_sound_file_down)
+        self.window.button_play_warning.clicked.connect(self.play_sound_file_warning)
+        self.window.button_play_critical.clicked.connect(self.play_sound_file_critical)
+        self.window.button_play_down.clicked.connect(self.play_sound_file_down)
 
         # only show desktop notification on systems that support it
         if not dbus_connection.connected:
-            self.ui.input_checkbox_notification_desktop.hide()
+            self.window.input_checkbox_notification_desktop.hide()
 
         # set folder and play symbols to choose and play buttons
-        self.ui.button_choose_warning.setText('')
-        self.ui.button_choose_warning.setIcon(self.ui.button_play_warning.style().standardIcon(QStyle.StandardPixmap.SP_DirIcon))
-        self.ui.button_play_warning.setText('')
-        self.ui.button_play_warning.setIcon(self.ui.button_play_warning.style().standardIcon(QStyle.StandardPixmap.SP_MediaPlay))
+        self.window.button_choose_warning.setText('')
+        self.window.button_choose_warning.setIcon(self.window.button_play_warning.style().standardIcon(QStyle.StandardPixmap.SP_DirIcon))
+        self.window.button_play_warning.setText('')
+        self.window.button_play_warning.setIcon(self.window.button_play_warning.style().standardIcon(QStyle.StandardPixmap.SP_MediaPlay))
 
-        self.ui.button_choose_critical.setText('')
-        self.ui.button_choose_critical.setIcon(self.ui.button_play_warning.style().standardIcon(QStyle.StandardPixmap.SP_DirIcon))
-        self.ui.button_play_critical.setText('')
-        self.ui.button_play_critical.setIcon(self.ui.button_play_warning.style().standardIcon(QStyle.StandardPixmap.SP_MediaPlay))
+        self.window.button_choose_critical.setText('')
+        self.window.button_choose_critical.setIcon(self.window.button_play_warning.style().standardIcon(QStyle.StandardPixmap.SP_DirIcon))
+        self.window.button_play_critical.setText('')
+        self.window.button_play_critical.setIcon(self.window.button_play_warning.style().standardIcon(QStyle.StandardPixmap.SP_MediaPlay))
 
-        self.ui.button_choose_down.setText('')
-        self.ui.button_choose_down.setIcon(self.ui.button_play_warning.style().standardIcon(QStyle.StandardPixmap.SP_DirIcon))
-        self.ui.button_play_down.setText('')
-        self.ui.button_play_down.setIcon(self.ui.button_play_warning.style().standardIcon(QStyle.StandardPixmap.SP_MediaPlay))
+        self.window.button_choose_down.setText('')
+        self.window.button_choose_down.setIcon(self.window.button_play_warning.style().standardIcon(QStyle.StandardPixmap.SP_DirIcon))
+        self.window.button_play_down.setText('')
+        self.window.button_play_down.setIcon(self.window.button_play_warning.style().standardIcon(QStyle.StandardPixmap.SP_MediaPlay))
 
         # set browser file chooser icon and current custom browser path
-        self.ui.button_choose_browser.setText('')
-        self.ui.button_choose_browser.setIcon(self.ui.button_play_warning.style().standardIcon(QStyle.StandardPixmap.SP_DirIcon))
-        self.ui.input_lineedit_custom_browser.setText(conf.custom_browser)
+        self.window.button_choose_browser.setText('')
+        self.window.button_choose_browser.setIcon(self.window.button_play_warning.style().standardIcon(QStyle.StandardPixmap.SP_DirIcon))
+        self.window.input_lineedit_custom_browser.setText(conf.custom_browser)
         # connect choose browser button with file dialog
-        self.ui.button_choose_browser.clicked.connect(self.choose_browser_executable)
+        self.window.button_choose_browser.clicked.connect(self.choose_browser_executable)
 
         # QSignalMapper needed to connect all color buttons to color dialogs
         self.signalmapper_colors = QSignalMapper()
 
         # connect color buttons with color dialog
-        for widget in [x for x in self.ui.__dict__ if x.startswith('input_button_color_')]:
-            button = self.ui.__dict__[widget]
+        for widget in [x for x in self.window.__dict__ if x.startswith('input_button_color_')]:
+            button = self.window.__dict__[widget]
             item = widget.split('input_button_color_')[1]
             # multiplex slot for open color dialog by signal-mapping
             self.signalmapper_colors.setMapping(button, item)
             button.clicked.connect(self.signalmapper_colors.map)
 
         # connect reset and defaults buttons
-        self.ui.button_colors_reset.clicked.connect(self.paint_colors)
-        self.ui.button_colors_reset.clicked.connect(self.paint_color_alternation)
-        self.ui.button_colors_reset.clicked.connect(self.change_color_alternation_by_value)
-        self.ui.button_colors_defaults.clicked.connect(self.colors_defaults)
-        self.ui.button_colors_defaults.clicked.connect(self.paint_color_alternation)
-        self.ui.button_colors_defaults.clicked.connect(self.change_color_alternation_by_value)
+        self.window.button_colors_reset.clicked.connect(self.paint_colors)
+        self.window.button_colors_reset.clicked.connect(self.paint_color_alternation)
+        self.window.button_colors_reset.clicked.connect(self.change_color_alternation_by_value)
+        self.window.button_colors_defaults.clicked.connect(self.colors_defaults)
+        self.window.button_colors_defaults.clicked.connect(self.paint_color_alternation)
+        self.window.button_colors_defaults.clicked.connect(self.change_color_alternation_by_value)
 
         # paint alternating colors when example is wanted for customized intensity
-        self.ui.input_checkbox_grid_use_custom_intensity.clicked.connect(self.paint_color_alternation)
-        self.ui.input_checkbox_grid_use_custom_intensity.clicked.connect(self.change_color_alternation_by_value)
-        self.ui.input_checkbox_grid_use_custom_intensity.clicked.connect(self.toggle_zabbix_widgets)
+        self.window.input_checkbox_grid_use_custom_intensity.clicked.connect(self.paint_color_alternation)
+        self.window.input_checkbox_grid_use_custom_intensity.clicked.connect(self.change_color_alternation_by_value)
+        self.window.input_checkbox_grid_use_custom_intensity.clicked.connect(self.toggle_zabbix_widgets)
 
         # finally map signals with .sender() - [<type>] is important!
         self.signalmapper_colors.mappedString[str].connect(self.color_chooser)
 
         # connect slider to alternating colors
-        self.ui.input_slider_grid_alternation_intensity.valueChanged.connect(self.change_color_alternation)
+        self.window.input_slider_grid_alternation_intensity.valueChanged.connect(self.change_color_alternation)
 
         # apply toggle-dependencies between checkboxes and certain widgets
         self.toggle_toggles()
 
         # workaround to avoid gigantic settings dialog
         # list of Zabbix-related widgets, only to be shown if there is a Zabbix monitor server configured
-        self.ZABBIX_WIDGETS = [self.ui.input_checkbox_filter_all_average_services,
-                               self.ui.input_checkbox_filter_all_disaster_services,
-                               self.ui.input_checkbox_filter_all_high_services,
-                               self.ui.input_checkbox_filter_all_information_services,
-                               self.ui.input_checkbox_notify_if_average,
-                               self.ui.input_checkbox_notify_if_disaster,
-                               self.ui.input_checkbox_notify_if_high,
-                               self.ui.input_checkbox_notify_if_information,
-                               self.ui.input_button_color_average_text,
-                               self.ui.input_button_color_average_background,
-                               self.ui.input_button_color_disaster_text,
-                               self.ui.input_button_color_disaster_background,
-                               self.ui.input_button_color_high_text,
-                               self.ui.input_button_color_high_background,
-                               self.ui.input_button_color_information_text,
-                               self.ui.input_button_color_information_background,
-                               self.ui.label_color_average,
-                               self.ui.label_color_disaster,
-                               self.ui.label_color_high,
-                               self.ui.label_color_information]
+        self.ZABBIX_WIDGETS = [self.window.input_checkbox_filter_all_average_services,
+                               self.window.input_checkbox_filter_all_disaster_services,
+                               self.window.input_checkbox_filter_all_high_services,
+                               self.window.input_checkbox_filter_all_information_services,
+                               self.window.input_checkbox_notify_if_average,
+                               self.window.input_checkbox_notify_if_disaster,
+                               self.window.input_checkbox_notify_if_high,
+                               self.window.input_checkbox_notify_if_information,
+                               self.window.input_button_color_average_text,
+                               self.window.input_button_color_average_background,
+                               self.window.input_button_color_disaster_text,
+                               self.window.input_button_color_disaster_background,
+                               self.window.input_button_color_high_text,
+                               self.window.input_button_color_high_background,
+                               self.window.input_button_color_information_text,
+                               self.window.input_button_color_information_background,
+                               self.window.label_color_average,
+                               self.window.label_color_disaster,
+                               self.window.label_color_high,
+                               self.window.label_color_information]
 
         # Labes for customized color intensity
-        self.ZABBIX_COLOR_INTENSITY_LABELS = [self.ui.label_intensity_average_0,
-                                              self.ui.label_intensity_average_1,
-                                              self.ui.label_intensity_disaster_0,
-                                              self.ui.label_intensity_disaster_1,
-                                              self.ui.label_intensity_high_0,
-                                              self.ui.label_intensity_high_1,
-                                              self.ui.label_intensity_information_0,
-                                              self.ui.label_intensity_information_1]
+        self.ZABBIX_COLOR_INTENSITY_LABELS = [self.window.label_intensity_average_0,
+                                              self.window.label_intensity_average_1,
+                                              self.window.label_intensity_disaster_0,
+                                              self.window.label_intensity_disaster_1,
+                                              self.window.label_intensity_high_0,
+                                              self.window.label_intensity_high_1,
+                                              self.window.label_intensity_information_0,
+                                              self.window.label_intensity_information_1]
 
         # the next workaround...
-        self.OP5MONITOR_WIDGETS = [self.ui.input_checkbox_re_groups_enabled,
-                                   self.ui.input_lineedit_re_groups_pattern,
-                                   self.ui.input_checkbox_re_groups_reverse]
+        self.OP5MONITOR_WIDGETS = [self.window.input_checkbox_re_groups_enabled,
+                                   self.window.input_lineedit_re_groups_pattern,
+                                   self.window.input_checkbox_re_groups_reverse]
 
         # ...and another...
-        self.EXPIRE_TIME_WIDGETS = [self.ui.input_checkbox_defaults_acknowledge_expire,
-                                    self.ui.label_expire_in,
-                                    self.ui.label_expire_in_hours,
-                                    self.ui.label_expire_in_minutes,
-                                    self.ui.input_spinbox_defaults_acknowledge_expire_duration_hours,
-                                    self.ui.input_spinbox_defaults_acknowledge_expire_duration_minutes]
+        self.EXPIRE_TIME_WIDGETS = [self.window.input_checkbox_defaults_acknowledge_expire,
+                                    self.window.label_expire_in,
+                                    self.window.label_expire_in_hours,
+                                    self.window.label_expire_in_minutes,
+                                    self.window.input_spinbox_defaults_acknowledge_expire_duration_hours,
+                                    self.window.input_spinbox_defaults_acknowledge_expire_duration_minutes]
 
     def initialize(self):
         # apply configuration values
         # start with servers tab
-        self.ui.tabs.setCurrentIndex(0)
-        for widget in dir(self.ui):
+        self.window.tabs.setCurrentIndex(0)
+        for widget in dir(self.window):
             if widget.startswith('input_'):
                 if widget.startswith('input_checkbox_'):
                     if conf.__dict__[widget.split('input_checkbox_')[1]] is True:
-                        self.ui.__dict__[widget].toggle()
+                        self.window.__dict__[widget].toggle()
                 elif widget.startswith('input_radiobutton_'):
                     if conf.__dict__[widget.split('input_radiobutton_')[1]] is True:
-                        self.ui.__dict__[widget].toggle()
+                        self.window.__dict__[widget].toggle()
                 elif widget.startswith('input_lineedit_'):
                     # older versions of Nagstamon have a bool value for custom_action_separator
                     # which leads to a crash here - thus str() to solve this
-                    self.ui.__dict__[widget].setText(str(conf.__dict__[widget.split('input_lineedit_')[1]]))
+                    self.window.__dict__[widget].setText(str(conf.__dict__[widget.split('input_lineedit_')[1]]))
                 elif widget.startswith('input_spinbox_'):
-                    self.ui.__dict__[widget].setValue(int(conf.__dict__[widget.split('input_spinbox_')[1]]))
+                    self.window.__dict__[widget].setValue(int(conf.__dict__[widget.split('input_spinbox_')[1]]))
                 elif widget.startswith('input_slider_'):
-                    self.ui.__dict__[widget].setValue(int(conf.__dict__[widget.split('input_slider_')[1]]))
+                    self.window.__dict__[widget].setValue(int(conf.__dict__[widget.split('input_slider_')[1]]))
             # bruteforce size smallification, lazy try/except variant
             try:
-                self.ui.__dict__[widget].adjustSize()
+                self.window.__dict__[widget].adjustSize()
             except:
                 pass
         # fill default order fields combobox with s names
@@ -4974,34 +4972,34 @@ class Dialog_Settings(Dialog):
         while '' in sort_fields:
             sort_fields.remove('')
 
-        self.ui.input_combobox_default_sort_field.addItems(sort_fields)
+        self.window.input_combobox_default_sort_field.addItems(sort_fields)
         # catch exception which will occur when older settings are used which have real header names as values
         try:
-            self.ui.input_combobox_default_sort_field.setCurrentText(HEADERS_KEYS_HEADERS[conf.default_sort_field])
+            self.window.input_combobox_default_sort_field.setCurrentText(HEADERS_KEYS_HEADERS[conf.default_sort_field])
         except Exception:
-            self.ui.input_combobox_default_sort_field.setCurrentText(conf.default_sort_field)
+            self.window.input_combobox_default_sort_field.setCurrentText(conf.default_sort_field)
 
         # fill default sort order combobox
-        self.ui.input_combobox_default_sort_order.addItems(['Ascending', 'Descending'])
+        self.window.input_combobox_default_sort_order.addItems(['Ascending', 'Descending'])
         # .title() to get upper first letter
-        self.ui.input_combobox_default_sort_order.setCurrentText(conf.default_sort_order.title())
+        self.window.input_combobox_default_sort_order.setCurrentText(conf.default_sort_order.title())
 
         # fill combobox with screens for fullscreen
         for screen in APP.screens():
-            self.ui.input_combobox_fullscreen_display.addItem(str(screen.name()))
-        self.ui.input_combobox_fullscreen_display.setCurrentText(str(conf.fullscreen_display))
+            self.window.input_combobox_fullscreen_display.addItem(str(screen.name()))
+        self.window.input_combobox_fullscreen_display.setCurrentText(str(conf.fullscreen_display))
 
         # fill servers listwidget with servers
-        self.fill_list(self.ui.list_servers, conf.servers)
+        self.fill_list(self.window.list_servers, conf.servers)
 
         # select first item
-        self.ui.list_servers.setCurrentRow(0)
+        self.window.list_servers.setCurrentRow(0)
 
         # fill actions listwidget with actions
-        self.fill_list(self.ui.list_actions, conf.actions)
+        self.fill_list(self.window.list_actions, conf.actions)
 
         # select first item
-        self.ui.list_actions.setCurrentRow(0)
+        self.window.list_actions.setCurrentRow(0)
 
         # paint colors onto color selection buttons and alternation example
         self.paint_colors()
@@ -5010,9 +5008,9 @@ class Dialog_Settings(Dialog):
 
         # hide keyring setting if keyring is not available
         if KEYRING:
-            self.ui.input_checkbox_use_system_keyring.show()
+            self.window.input_checkbox_use_system_keyring.show()
         else:
-            self.ui.input_checkbox_use_system_keyring.hide()
+            self.window.input_checkbox_use_system_keyring.hide()
 
         # important final size adjustment
         self.window.adjustSize()
@@ -5033,7 +5031,7 @@ class Dialog_Settings(Dialog):
         self.show_dialog.emit()
 
         # jump to requested tab in settings dialog
-        self.ui.tabs.setCurrentIndex(tab)
+        self.window.tabs.setCurrentIndex(tab)
 
         # reset window if only needs smaller screen estate
         self.window.adjustSize()
@@ -5045,7 +5043,7 @@ class Dialog_Settings(Dialog):
             opens settings and new server dialogs - used by dialogs.server_missing
         """
         # emulate button click
-        self.ui.button_new_server.clicked.emit()
+        self.window.button_new_server.clicked.emit()
 
     @Slot()
     def show_filters(self):
@@ -5080,7 +5078,7 @@ class Dialog_Settings(Dialog):
 
         # do all stuff necessary after OK button was clicked
         # put widget values into conf
-        for widget in self.ui.__dict__.values():
+        for widget in self.window.__dict__.values():
             if widget.objectName().startswith('input_checkbox_'):
                 conf.__dict__[widget.objectName().split('input_checkbox_')[1]] = widget.isChecked()
             elif widget.objectName().startswith('input_radiobutton_'):
@@ -5095,7 +5093,7 @@ class Dialog_Settings(Dialog):
                 conf.__dict__[widget.objectName().split('input_combobox_')[1]] = widget.currentText()
             elif widget.objectName().startswith('input_button_color_'):
                 # get color value from color button stylesheet
-                color = self.ui.__dict__[widget.objectName()].styleSheet()
+                color = self.window.__dict__[widget.objectName()].styleSheet()
                 color = color.split(':')[1].strip().split(';')[0]
                 conf.__dict__[widget.objectName().split('input_button_')[1]] = color
 
@@ -5217,7 +5215,7 @@ class Dialog_Settings(Dialog):
             delete server, stop its thread, remove from config and list
         """
         # server to delete from current row in servers list
-        server = conf.servers[self.ui.list_servers.currentItem().text()]
+        server = conf.servers[self.window.list_servers.currentItem().text()]
 
         reply = QMessageBox.question(self.window, 'Nagstamon',
                                      'Do you really want to delete monitor server <b>%s</b>?' % (server.name),
@@ -5240,9 +5238,9 @@ class Dialog_Settings(Dialog):
 
             # refresh list
             # row index 0 to x
-            row = self.ui.list_servers.currentRow()
+            row = self.window.list_servers.currentRow()
             # count real number, 1 to x
-            count = self.ui.list_servers.count()
+            count = self.window.list_servers.count()
 
             # if deleted row was the last line the new current row has to be the new last line, accidently the same as count
             if row == count - 1:
@@ -5253,9 +5251,9 @@ class Dialog_Settings(Dialog):
                 row = row + 1
 
             # refresh list and mark new current row
-            self.refresh_list(list_widget=self.ui.list_servers,
+            self.refresh_list(list_widget=self.window.list_servers,
                               list_conf=conf.servers,
-                              current=self.ui.list_servers.item(row).text())
+                              current=self.window.list_servers.item(row).text())
             del (row, count)
 
         # delete server config file from disk
@@ -5301,7 +5299,7 @@ class Dialog_Settings(Dialog):
             delete action remove from config and list
         """
         # action to delete from current row in actions list
-        action = conf.actions[self.ui.list_actions.currentItem().text()]
+        action = conf.actions[self.window.list_actions.currentItem().text()]
 
         reply = QMessageBox.question(self.window, 'Nagstamon',
                                      'Do you really want to delete action <b>%s</b>?' % (action.name),
@@ -5313,9 +5311,9 @@ class Dialog_Settings(Dialog):
 
             # refresh list
             # row index 0 to x
-            row = self.ui.list_actions.currentRow()
+            row = self.window.list_actions.currentRow()
             # count real number, 1 to x
-            count = self.ui.list_actions.count()
+            count = self.window.list_actions.count()
 
             # if deleted row was the last line the new current row has to be the new last line, accidently the same as count
             if row == count - 1:
@@ -5326,8 +5324,8 @@ class Dialog_Settings(Dialog):
                 row = row + 1
 
             # refresh list and mark new current row
-            self.refresh_list(list_widget=self.ui.list_actions, list_conf=conf.actions,
-                              current=self.ui.list_actions.item(row).text())
+            self.refresh_list(list_widget=self.window.list_actions, list_conf=conf.actions,
+                              current=self.window.list_actions.item(row).text())
 
             del (row, count)
 
@@ -5344,7 +5342,7 @@ class Dialog_Settings(Dialog):
             # execute decorated function
             method(self)
             # shortcut for widget to fill and revaluate
-            widget = self.ui.__dict__['input_lineedit_notification_custom_sound_%s' % self.sound_file_type]
+            widget = self.window.__dict__['input_lineedit_notification_custom_sound_%s' % self.sound_file_type]
 
             # use 2 filters, sound files and all files
             file = dialogs.file_chooser.getOpenFileName(self.window,
@@ -5382,7 +5380,7 @@ class Dialog_Settings(Dialog):
             # execute decorated function
             method(self)
             # shortcut for widget to fill and revaluate
-            widget = self.ui.__dict__['input_lineedit_notification_custom_sound_%s' % self.sound_file_type]
+            widget = self.window.__dict__['input_lineedit_notification_custom_sound_%s' % self.sound_file_type]
 
             # get file path from widget
             file = widget.text()
@@ -5414,15 +5412,15 @@ class Dialog_Settings(Dialog):
         """
         # color buttons
         for color in [x for x in conf.__dict__ if x.startswith('color_')]:
-            self.ui.__dict__['input_button_%s' % (color)].setStyleSheet('''background-color: %s;
+            self.window.__dict__['input_button_%s' % (color)].setStyleSheet('''background-color: %s;
                                                                            border-width: 1px;
                                                                            border-color: black;
                                                                            border-style: solid;'''
                                                                         % conf.__dict__[color])
         # example color labels
-        for label in [x for x in self.ui.__dict__ if x.startswith('label_color_')]:
+        for label in [x for x in self.window.__dict__ if x.startswith('label_color_')]:
             status = label.split('label_color_')[1]
-            self.ui.__dict__[label].setStyleSheet('color: %s; background: %s' %
+            self.window.__dict__[label].setStyleSheet('color: %s; background: %s' %
                                                   (conf.__dict__['color_%s_text' % (status)],
                                                    (conf.__dict__['color_%s_background' % (status)])))
 
@@ -5435,23 +5433,23 @@ class Dialog_Settings(Dialog):
         for default_color in [x for x in conf.__dict__ if x.startswith('default_color_')]:
             # cut 'default_' off to get color
             color = default_color.split('default_')[1]
-            self.ui.__dict__['input_button_%s' % (color)].setStyleSheet('''background-color: %s;
+            self.window.__dict__['input_button_%s' % (color)].setStyleSheet('''background-color: %s;
                                                                            border-width: 1px;
                                                                            border-color: black;
                                                                            border-style: solid;'''
                                                                         % conf.__dict__[default_color])
         # example color labels
-        for label in [x for x in self.ui.__dict__ if x.startswith('label_color_')]:
+        for label in [x for x in self.window.__dict__ if x.startswith('label_color_')]:
             status = label.split('label_color_')[1]
 
             # get color values from color button stylesheets
-            color_text = self.ui.__dict__['input_button_color_' + status + '_text'].styleSheet()
+            color_text = self.window.__dict__['input_button_color_' + status + '_text'].styleSheet()
             color_text = color_text.split(':')[1].strip().split(';')[0]
-            color_background = self.ui.__dict__['input_button_color_' + status + '_background'].styleSheet()
+            color_background = self.window.__dict__['input_button_color_' + status + '_background'].styleSheet()
             color_background = color_background.split(':')[1].strip().split(';')[0]
 
             # apply color values from stylesheet to label
-            self.ui.__dict__[label].setStyleSheet('color: %s; background: %s' %
+            self.window.__dict__[label].setStyleSheet('color: %s; background: %s' %
                                                   (color_text, color_background))
 
     @Slot(str)
@@ -5464,24 +5462,24 @@ class Dialog_Settings(Dialog):
         new_color = QColorDialog.getColor(QColor(color), parent=self.window)
         # if canceled the color is invalid
         if new_color.isValid():
-            self.ui.__dict__['input_button_color_%s' % (item)].setStyleSheet('''background-color: %s;
+            self.window.__dict__['input_button_color_%s' % (item)].setStyleSheet('''background-color: %s;
                                                                                 border-width: 1px;
                                                                                 border-color: black;
                                                                                 border-style: solid;'''
                                                                              % new_color.name())
             status = item.split('_')[0]
             # get color value from stylesheet to paint example
-            text = self.ui.__dict__['input_button_color_%s_text' % (status)].styleSheet()
+            text = self.window.__dict__['input_button_color_%s_text' % (status)].styleSheet()
             text = text.split(':')[1].strip().split(';')[0]
-            background = self.ui.__dict__['input_button_color_%s_background' % (status)].styleSheet()
+            background = self.window.__dict__['input_button_color_%s_background' % (status)].styleSheet()
             background = background.split(':')[1].strip().split(';')[0]
             # set example color
-            self.ui.__dict__['label_color_%s' % (status)].setStyleSheet('''color: {0};
+            self.window.__dict__['label_color_%s' % (status)].setStyleSheet('''color: {0};
                                                                            background: {1}
                                                                         '''.format(text, background))
             # update alternation colors
             self.paint_color_alternation()
-            self.change_color_alternation(self.ui.input_slider_grid_alternation_intensity.value())
+            self.change_color_alternation(self.window.input_slider_grid_alternation_intensity.value())
 
     def paint_color_alternation(self):
         """
@@ -5491,17 +5489,17 @@ class Dialog_Settings(Dialog):
         """
         for state in COLORS:
             # get text color from button CSS
-            text = self.ui.__dict__['input_button_color_{0}_text'
+            text = self.window.__dict__['input_button_color_{0}_text'
                 .format(state.lower())] \
                 .styleSheet() \
                 .split(';\n')[0].split(': ')[1]
             # get background color from button CSS
-            background = self.ui.__dict__['input_button_color_{0}_background'
+            background = self.window.__dict__['input_button_color_{0}_background'
                 .format(state.lower())] \
                 .styleSheet() \
                 .split(';\n')[0].split(': ')[1]
             # set CSS
-            self.ui.__dict__['label_intensity_{0}_0'.format(state.lower())] \
+            self.window.__dict__['label_intensity_{0}_0'.format(state.lower())] \
                 .setStyleSheet('''color: {0};
                                               background-color: {1};
                                               padding-top: 3px;
@@ -5516,16 +5514,16 @@ class Dialog_Settings(Dialog):
         """
         for state in COLORS:
             # only evaluate colors if there is any stylesheet
-            if len(self.ui.__dict__['input_button_color_{0}_text'
+            if len(self.window.__dict__['input_button_color_{0}_text'
                     .format(state.lower())] \
                            .styleSheet()) > 0:
 
                 # access both labels
-                label_0 = self.ui.__dict__['label_intensity_{0}_0'.format(state.lower())]
-                label_1 = self.ui.__dict__['label_intensity_{0}_1'.format(state.lower())]
+                label_0 = self.window.__dict__['label_intensity_{0}_0'.format(state.lower())]
+                label_1 = self.window.__dict__['label_intensity_{0}_1'.format(state.lower())]
 
                 # get text color from text color chooser button
-                text = self.ui.__dict__['input_button_color_{0}_text'
+                text = self.window.__dict__['input_button_color_{0}_text'
                     .format(state.lower())] \
                     .styleSheet() \
                     .split(';\n')[0].split(': ')[1]
@@ -5561,7 +5559,7 @@ class Dialog_Settings(Dialog):
         """
             to be fired up when colors are reset
         """
-        self.change_color_alternation(self.ui.input_slider_grid_alternation_intensity.value())
+        self.change_color_alternation(self.window.input_slider_grid_alternation_intensity.value())
 
     @Slot()
     def font_chooser(self):
@@ -5569,14 +5567,14 @@ class Dialog_Settings(Dialog):
             use font dialog to choose a font
         """
         self.font = QFontDialog.getFont(self.font, parent=self.window)[0]
-        self.ui.label_font.setFont(self.font)
+        self.window.label_font.setFont(self.font)
 
     @Slot()
     def font_default(self):
         """
             reset font to default font which was valid when Nagstamon was launched
         """
-        self.ui.label_font.setFont(DEFAULT_FONT)
+        self.window.label_font.setFont(DEFAULT_FONT)
         self.font = DEFAULT_FONT
 
     @Slot()
@@ -5608,7 +5606,7 @@ class Dialog_Settings(Dialog):
 
         # only take filename if QFileDialog gave something useful back
         if file != '':
-            self.ui.input_lineedit_custom_browser.setText(file)
+            self.window.input_lineedit_custom_browser.setText(file)
 
     @Slot()
     def toggle_zabbix_widgets(self):
@@ -5629,7 +5627,7 @@ class Dialog_Settings(Dialog):
             for widget in self.ZABBIX_WIDGETS:
                 widget.hide()
         # remove custom color intensity labels
-        if use_zabbix and self.ui.input_checkbox_grid_use_custom_intensity.isChecked():
+        if use_zabbix and self.window.input_checkbox_grid_use_custom_intensity.isChecked():
             for widget in self.ZABBIX_COLOR_INTENSITY_LABELS:
                 widget.show()
         else:
@@ -5677,16 +5675,16 @@ class Dialog_Settings(Dialog):
         """
             Only show offset spinbox when offset is enabled
         """
-        if self.ui.input_checkbox_systray_offset_use.isVisible():
-            if self.ui.input_checkbox_systray_offset_use.isChecked():
-                self.ui.input_spinbox_systray_offset.show()
-                self.ui.label_offset_statuswindow.show()
+        if self.window.input_checkbox_systray_offset_use.isVisible():
+            if self.window.input_checkbox_systray_offset_use.isChecked():
+                self.window.input_spinbox_systray_offset.show()
+                self.window.label_offset_statuswindow.show()
             else:
-                self.ui.input_spinbox_systray_offset.hide()
-                self.ui.label_offset_statuswindow.hide()
+                self.window.input_spinbox_systray_offset.hide()
+                self.window.label_offset_statuswindow.hide()
         else:
-            self.ui.input_spinbox_systray_offset.hide()
-            self.ui.label_offset_statuswindow.hide()
+            self.window.input_spinbox_systray_offset.hide()
+            self.window.label_offset_statuswindow.hide()
 
 
 class Dialog_Server(Dialog):
@@ -5703,99 +5701,99 @@ class Dialog_Server(Dialog):
         # which widgets have to be hidden because of irrelevance
         # dictionary holds checkbox/radiobutton as key and relevant widgets in list
         self.TOGGLE_DEPS = {
-            self.ui.input_checkbox_use_autologin: [self.ui.label_autologin_key,
-                                                   self.ui.input_lineedit_autologin_key],
-            self.ui.input_checkbox_use_proxy: [self.ui.groupbox_proxy],
+            self.window.input_checkbox_use_autologin: [self.window.label_autologin_key,
+                                                   self.window.input_lineedit_autologin_key],
+            self.window.input_checkbox_use_proxy: [self.window.groupbox_proxy],
 
-            self.ui.input_checkbox_use_proxy_from_os: [self.ui.label_proxy_address,
-                                                       self.ui.input_lineedit_proxy_address,
-                                                       self.ui.label_proxy_username,
-                                                       self.ui.input_lineedit_proxy_username,
-                                                       self.ui.label_proxy_password,
-                                                       self.ui.input_lineedit_proxy_password],
-            self.ui.input_checkbox_show_options: [self.ui.groupbox_options],
-            self.ui.input_checkbox_custom_cert_use: [self.ui.label_custom_ca_file,
-                                                     self.ui.input_lineedit_custom_cert_ca_file,
-                                                     self.ui.button_choose_custom_cert_ca_file]}
+            self.window.input_checkbox_use_proxy_from_os: [self.window.label_proxy_address,
+                                                       self.window.input_lineedit_proxy_address,
+                                                       self.window.label_proxy_username,
+                                                       self.window.input_lineedit_proxy_username,
+                                                       self.window.label_proxy_password,
+                                                       self.window.input_lineedit_proxy_password],
+            self.window.input_checkbox_show_options: [self.window.groupbox_options],
+            self.window.input_checkbox_custom_cert_use: [self.window.label_custom_ca_file,
+                                                     self.window.input_lineedit_custom_cert_ca_file,
+                                                     self.window.button_choose_custom_cert_ca_file]}
 
-        self.TOGGLE_DEPS_INVERTED = [self.ui.input_checkbox_use_proxy_from_os]
+        self.TOGGLE_DEPS_INVERTED = [self.window.input_checkbox_use_proxy_from_os]
 
         # these widgets are shown or hidden depending on server type properties
         # the servers listed at each widget do need them
         self.VOLATILE_WIDGETS = {
-            self.ui.label_monitor_cgi_url: ['Nagios', 'Icinga', 'Thruk', 'Sensu', 'SensuGo'],
-            self.ui.input_lineedit_monitor_cgi_url: ['Nagios', 'Icinga', 'Thruk', 'Sensu', 'SensuGo'],
-            self.ui.input_checkbox_use_autologin: ['Centreon', 'monitos4x', 'Thruk'],
-            self.ui.input_lineedit_autologin_key: ['Centreon', 'monitos4x', 'Thruk'],
-            self.ui.label_autologin_key: ['Centreon', 'monitos4x', 'Thruk'],
-            self.ui.input_checkbox_no_cookie_auth: ['IcingaWeb2', 'Sensu'],
-            self.ui.input_checkbox_use_display_name_host: ['Icinga', 'IcingaWeb2'],
-            self.ui.input_checkbox_use_display_name_service: ['Icinga', 'IcingaWeb2', 'Thruk'],
-            self.ui.input_checkbox_use_description_name_service: ['Zabbix'],
-            self.ui.input_checkbox_force_authuser: ['Checkmk Multisite'],
-            self.ui.groupbox_checkmk_views: ['Checkmk Multisite'],
-            self.ui.input_lineedit_host_filter: ['op5Monitor'],
-            self.ui.input_lineedit_service_filter: ['op5Monitor'],
-            self.ui.label_service_filter: ['op5Monitor'],
-            self.ui.label_host_filter: ['op5Monitor'],
-            self.ui.label_monitor_site: ['Sensu'],
-            self.ui.input_lineedit_monitor_site: ['Sensu'],
-            self.ui.label_map_to_hostname: ['Prometheus', 'Alertmanager'],
-            self.ui.input_lineedit_map_to_hostname: ['Prometheus', 'Alertmanager'],
-            self.ui.label_map_to_servicename: ['Prometheus', 'Alertmanager'],
-            self.ui.input_lineedit_map_to_servicename: ['Prometheus', 'Alertmanager'],
-            self.ui.label_map_to_status_information: ['Prometheus', 'Alertmanager'],
-            self.ui.input_lineedit_map_to_status_information: ['Prometheus', 'Alertmanager'],
-            self.ui.label_alertmanager_filter: ['Alertmanager'],
-            self.ui.input_lineedit_alertmanager_filter: ['Alertmanager'],
-            self.ui.label_map_to_ok: ['Alertmanager'],
-            self.ui.input_lineedit_map_to_ok: ['Alertmanager'],
-            self.ui.label_map_to_unknown: ['Alertmanager'],
-            self.ui.input_lineedit_map_to_unknown: ['Alertmanager'],
-            self.ui.label_map_to_warning: ['Alertmanager'],
-            self.ui.input_lineedit_map_to_warning: ['Alertmanager'],
-            self.ui.label_map_to_critical: ['Alertmanager'],
-            self.ui.input_lineedit_map_to_critical: ['Alertmanager']
+            self.window.label_monitor_cgi_url: ['Nagios', 'Icinga', 'Thruk', 'Sensu', 'SensuGo'],
+            self.window.input_lineedit_monitor_cgi_url: ['Nagios', 'Icinga', 'Thruk', 'Sensu', 'SensuGo'],
+            self.window.input_checkbox_use_autologin: ['Centreon', 'monitos4x', 'Thruk'],
+            self.window.input_lineedit_autologin_key: ['Centreon', 'monitos4x', 'Thruk'],
+            self.window.label_autologin_key: ['Centreon', 'monitos4x', 'Thruk'],
+            self.window.input_checkbox_no_cookie_auth: ['IcingaWeb2', 'Sensu'],
+            self.window.input_checkbox_use_display_name_host: ['Icinga', 'IcingaWeb2'],
+            self.window.input_checkbox_use_display_name_service: ['Icinga', 'IcingaWeb2', 'Thruk'],
+            self.window.input_checkbox_use_description_name_service: ['Zabbix'],
+            self.window.input_checkbox_force_authuser: ['Checkmk Multisite'],
+            self.window.groupbox_checkmk_views: ['Checkmk Multisite'],
+            self.window.input_lineedit_host_filter: ['op5Monitor'],
+            self.window.input_lineedit_service_filter: ['op5Monitor'],
+            self.window.label_service_filter: ['op5Monitor'],
+            self.window.label_host_filter: ['op5Monitor'],
+            self.window.label_monitor_site: ['Sensu'],
+            self.window.input_lineedit_monitor_site: ['Sensu'],
+            self.window.label_map_to_hostname: ['Prometheus', 'Alertmanager'],
+            self.window.input_lineedit_map_to_hostname: ['Prometheus', 'Alertmanager'],
+            self.window.label_map_to_servicename: ['Prometheus', 'Alertmanager'],
+            self.window.input_lineedit_map_to_servicename: ['Prometheus', 'Alertmanager'],
+            self.window.label_map_to_status_information: ['Prometheus', 'Alertmanager'],
+            self.window.input_lineedit_map_to_status_information: ['Prometheus', 'Alertmanager'],
+            self.window.label_alertmanager_filter: ['Alertmanager'],
+            self.window.input_lineedit_alertmanager_filter: ['Alertmanager'],
+            self.window.label_map_to_ok: ['Alertmanager'],
+            self.window.input_lineedit_map_to_ok: ['Alertmanager'],
+            self.window.label_map_to_unknown: ['Alertmanager'],
+            self.window.input_lineedit_map_to_unknown: ['Alertmanager'],
+            self.window.label_map_to_warning: ['Alertmanager'],
+            self.window.input_lineedit_map_to_warning: ['Alertmanager'],
+            self.window.label_map_to_critical: ['Alertmanager'],
+            self.window.input_lineedit_map_to_critical: ['Alertmanager']
         }
 
         # to be used when selecting authentication method Kerberos
         self.AUTHENTICATION_WIDGETS = [
-            self.ui.label_username,
-            self.ui.input_lineedit_username,
-            self.ui.label_password,
-            self.ui.input_lineedit_password,
-            self.ui.input_checkbox_save_password]
+            self.window.label_username,
+            self.window.input_lineedit_username,
+            self.window.label_password,
+            self.window.input_lineedit_password,
+            self.window.input_checkbox_save_password]
 
         self.AUTHENTICATION_ECP_WIDGETS = [
-            self.ui.label_idp_ecp_endpoint,
-            self.ui.input_lineedit_idp_ecp_endpoint]
+            self.window.label_idp_ecp_endpoint,
+            self.window.input_lineedit_idp_ecp_endpoint]
 
         # fill default order fields combobox with monitor server types
-        self.ui.input_combobox_type.addItems(sorted(SERVER_TYPES.keys(), key=str.lower))
+        self.window.input_combobox_type.addItems(sorted(SERVER_TYPES.keys(), key=str.lower))
         # default to Nagios as it is the mostly used monitor server
-        self.ui.input_combobox_type.setCurrentText('Nagios')
+        self.window.input_combobox_type.setCurrentText('Nagios')
 
         # set folder and play symbols to choose and play buttons
-        self.ui.button_choose_custom_cert_ca_file.setText('')
-        self.ui.button_choose_custom_cert_ca_file.setIcon(
-            self.ui.button_choose_custom_cert_ca_file.style().standardIcon(QStyle.StandardPixmap.SP_DirIcon))
+        self.window.button_choose_custom_cert_ca_file.setText('')
+        self.window.button_choose_custom_cert_ca_file.setIcon(
+            self.window.button_choose_custom_cert_ca_file.style().standardIcon(QStyle.StandardPixmap.SP_DirIcon))
         # connect choose custom cert CA file button with file dialog
-        self.ui.button_choose_custom_cert_ca_file.clicked.connect(self.choose_custom_cert_ca_file)
+        self.window.button_choose_custom_cert_ca_file.clicked.connect(self.choose_custom_cert_ca_file)
 
         # fill authentication combobox
-        self.ui.input_combobox_authentication.addItems(['Basic', 'Digest', 'Kerberos'])
+        self.window.input_combobox_authentication.addItems(['Basic', 'Digest', 'Kerberos'])
         if ECP_AVAILABLE is True:
-            self.ui.input_combobox_authentication.addItems(['ECP'])
+            self.window.input_combobox_authentication.addItems(['ECP'])
 
         # detect change of server type which leads to certain options shown or hidden
-        self.ui.input_combobox_type.activated.connect(self.toggle_type)
+        self.window.input_combobox_type.activated.connect(self.toggle_type)
 
         # when authentication is changed to Kerberos then disable username/password as the are now useless
-        self.ui.input_combobox_authentication.activated.connect(self.toggle_authentication)
+        self.window.input_combobox_authentication.activated.connect(self.toggle_authentication)
 
         # reset Checkmk views
-        self.ui.button_checkmk_view_hosts_reset.clicked.connect(self.checkmk_view_hosts_reset)
-        self.ui.button_checkmk_view_services_reset.clicked.connect(self.checkmk_view_services_reset)
+        self.window.button_checkmk_view_hosts_reset.clicked.connect(self.checkmk_view_hosts_reset)
+        self.window.button_checkmk_view_services_reset.clicked.connect(self.checkmk_view_services_reset)
 
         # mode needed for evaluate dialog after ok button pressed - defaults to 'new'
         self.mode = 'new'
@@ -5805,7 +5803,7 @@ class Dialog_Server(Dialog):
         # server_type_index is not needed - we get the server type from .currentText()
         # check if server type is listed in volatile widgets to decide if it has to be shown or hidden
         for widget, server_types in self.VOLATILE_WIDGETS.items():
-            if self.ui.input_combobox_type.currentText() in server_types:
+            if self.window.input_combobox_type.currentText() in server_types:
                 widget.show()
             else:
                 widget.hide()
@@ -5815,14 +5813,14 @@ class Dialog_Server(Dialog):
         """
             when authentication is changed to Kerberos then disable username/password as the are now useless
         """
-        if self.ui.input_combobox_authentication.currentText() == 'Kerberos':
+        if self.window.input_combobox_authentication.currentText() == 'Kerberos':
             for widget in self.AUTHENTICATION_WIDGETS:
                 widget.hide()
         else:
             for widget in self.AUTHENTICATION_WIDGETS:
                 widget.show()
 
-        if self.ui.input_combobox_authentication.currentText() == 'ECP':
+        if self.window.input_combobox_authentication.currentText() == 'ECP':
             for widget in self.AUTHENTICATION_ECP_WIDGETS:
                 widget.show()
         else:
@@ -5850,26 +5848,26 @@ class Dialog_Server(Dialog):
             method(self, **kwargs)
 
             # run through all input widgets and and apply defaults from config
-            for widget in self.ui.__dict__:
+            for widget in self.window.__dict__:
                 if widget.startswith('input_'):
                     if widget.startswith('input_checkbox_'):
                         setting = widget.split('input_checkbox_')[1]
-                        self.ui.__dict__[widget].setChecked(self.server_conf.__dict__[setting])
+                        self.window.__dict__[widget].setChecked(self.server_conf.__dict__[setting])
                     elif widget.startswith('input_radiobutton_'):
                         setting = widget.split('input_radiobutton_')[1]
-                        self.ui.__dict__[widget].setChecked(self.server_conf.__dict__[setting])
+                        self.window.__dict__[widget].setChecked(self.server_conf.__dict__[setting])
                     elif widget.startswith('input_combobox_'):
                         setting = widget.split('input_combobox_')[1]
-                        self.ui.__dict__[widget].setCurrentText(self.server_conf.__dict__[setting])
+                        self.window.__dict__[widget].setCurrentText(self.server_conf.__dict__[setting])
                     elif widget.startswith('input_lineedit_'):
                         setting = widget.split('input_lineedit_')[1]
-                        self.ui.__dict__[widget].setText(self.server_conf.__dict__[setting])
+                        self.window.__dict__[widget].setText(self.server_conf.__dict__[setting])
                     elif widget.startswith('input_spinbox_'):
                         setting = widget.split('input_spinbox_')[1]
-                        self.ui.__dict__[widget].setValue(self.server_conf.__dict__[setting])
+                        self.window.__dict__[widget].setValue(self.server_conf.__dict__[setting])
 
             # set current authentication type by using capitalized first letter via .title()
-            self.ui.input_combobox_authentication.setCurrentText(self.server_conf.authentication.title())
+            self.window.input_combobox_authentication.setCurrentText(self.server_conf.authentication.title())
 
             # initially hide not needed widgets
             self.toggle_type()
@@ -5883,7 +5881,7 @@ class Dialog_Server(Dialog):
             # open extra options if wanted e.g. by button_fix_tls_error
             if 'show_options' in self.__dict__:
                 if self.show_options:
-                    self.ui.input_checkbox_show_options.setChecked(True)
+                    self.window.input_checkbox_show_options.setChecked(True)
 
             # important final size adjustment
             self.window.adjustSize()
@@ -5915,7 +5913,7 @@ class Dialog_Server(Dialog):
         self.mode = 'edit'
         # shorter server conf
         if server_name is None:
-            self.server_conf = conf.servers[dialogs.settings.ui.list_servers.currentItem().text()]
+            self.server_conf = conf.servers[dialogs.settings.window.list_servers.currentItem().text()]
         else:
             self.server_conf = conf.servers[server_name]
         # store monitor name in case it will be changed
@@ -5932,7 +5930,7 @@ class Dialog_Server(Dialog):
         """
         self.mode = 'copy'
         # shorter server conf
-        self.server_conf = deepcopy(conf.servers[dialogs.settings.ui.list_servers.currentItem().text()])
+        self.server_conf = deepcopy(conf.servers[dialogs.settings.window.list_servers.currentItem().text()])
         # set window title before name change to reflect copy
         self.window.setWindowTitle('Copy %s' % (self.server_conf.name))
         # indicate copy of other server
@@ -5946,33 +5944,33 @@ class Dialog_Server(Dialog):
         global servers
 
         # check that no duplicate name exists
-        if self.ui.input_lineedit_name.text() in conf.servers and \
+        if self.window.input_lineedit_name.text() in conf.servers and \
                 (self.mode in ['new', 'copy'] or
-                 self.mode == 'edit' and self.server_conf != conf.servers[self.ui.input_lineedit_name.text()]):
+                 self.mode == 'edit' and self.server_conf != conf.servers[self.window.input_lineedit_name.text()]):
             # cry if duplicate name exists
             QMessageBox.Icon.Critical(self.window, 'Nagstamon',
                                  'The monitor server name <b>%s</b> is already used.' %
-                                 (self.ui.input_lineedit_name.text()),
+                                 (self.window.input_lineedit_name.text()),
                                  QMessageBox.StandardButton.Ok)
         else:
             # get configuration from UI
-            for widget in self.ui.__dict__:
+            for widget in self.window.__dict__:
                 if widget.startswith('input_'):
                     if widget.startswith('input_checkbox_'):
                         setting = widget.split('input_checkbox_')[1]
-                        self.server_conf.__dict__[setting] = self.ui.__dict__[widget].isChecked()
+                        self.server_conf.__dict__[setting] = self.window.__dict__[widget].isChecked()
                     elif widget.startswith('input_radiobutton_'):
                         setting = widget.split('input_radiobutton_')[1]
-                        self.server_conf.__dict__[setting] = self.ui.__dict__[widget].isChecked()
+                        self.server_conf.__dict__[setting] = self.window.__dict__[widget].isChecked()
                     elif widget.startswith('input_combobox_'):
                         setting = widget.split('input_combobox_')[1]
-                        self.server_conf.__dict__[setting] = self.ui.__dict__[widget].currentText()
+                        self.server_conf.__dict__[setting] = self.window.__dict__[widget].currentText()
                     elif widget.startswith('input_lineedit_'):
                         setting = widget.split('input_lineedit_')[1]
-                        self.server_conf.__dict__[setting] = self.ui.__dict__[widget].text()
+                        self.server_conf.__dict__[setting] = self.window.__dict__[widget].text()
                     elif widget.startswith('input_spinbox_'):
                         setting = widget.split('input_spinbox_')[1]
-                        self.server_conf.__dict__[setting] = self.ui.__dict__[widget].value()
+                        self.server_conf.__dict__[setting] = self.window.__dict__[widget].value()
 
             # URLs should not end with / - clean it
             self.server_conf.monitor_url = self.server_conf.monitor_url.rstrip('/')
@@ -6012,7 +6010,7 @@ class Dialog_Server(Dialog):
                     servers.pop(self.previous_server_conf.name)
 
             # some monitor servers do not need cgi-url - reuse self.VOLATILE_WIDGETS to find out which one
-            if self.server_conf.type not in self.VOLATILE_WIDGETS[self.ui.input_lineedit_monitor_cgi_url]:
+            if self.server_conf.type not in self.VOLATILE_WIDGETS[self.window.input_lineedit_monitor_cgi_url]:
                 self.server_conf.monitor_cgi_url = self.server_conf.monitor_url
 
             # add new server configuration in every case
@@ -6034,7 +6032,7 @@ class Dialog_Server(Dialog):
             del (servers_freshly_sorted)
 
             # refresh list of servers, give call the current server name to highlight it
-            dialogs.settings.refresh_list(list_widget=dialogs.settings.ui.list_servers,
+            dialogs.settings.refresh_list(list_widget=dialogs.settings.window.list_servers,
                                           list_conf=conf.servers,
                                           current=self.server_conf.name)
 
@@ -6063,15 +6061,15 @@ class Dialog_Server(Dialog):
 
         # only take filename if QFileDialog gave something useful back
         if file != '':
-            self.ui.input_lineedit_custom_cert_ca_file.setText(file)
+            self.window.input_lineedit_custom_cert_ca_file.setText(file)
 
     @Slot()
     def checkmk_view_hosts_reset(self):
-        self.ui.input_lineedit_checkmk_view_hosts.setText('nagstamon_hosts')
+        self.window.input_lineedit_checkmk_view_hosts.setText('nagstamon_hosts')
 
     @Slot()
     def checkmk_view_services_reset(self):
-        self.ui.input_lineedit_checkmk_view_services.setText('nagstamon_svc')
+        self.window.input_lineedit_checkmk_view_services.setText('nagstamon_svc')
 
 
 class Dialog_Action(Dialog):
@@ -6091,27 +6089,27 @@ class Dialog_Action(Dialog):
         # which widgets have to be hidden because of irrelevance
         # dictionary holds checkbox/radiobutton as key and relevant widgets in list
         self.TOGGLE_DEPS = {
-            self.ui.input_checkbox_re_host_enabled: [self.ui.input_lineedit_re_host_pattern,
-                                                     self.ui.input_checkbox_re_host_reverse],
-            self.ui.input_checkbox_re_service_enabled: [self.ui.input_lineedit_re_service_pattern,
-                                                        self.ui.input_checkbox_re_service_reverse],
-            self.ui.input_checkbox_re_status_information_enabled: [self.ui.input_lineedit_re_status_information_pattern,
-                                                                   self.ui.input_checkbox_re_status_information_reverse],
-            self.ui.input_checkbox_re_duration_enabled: [self.ui.input_lineedit_re_duration_pattern,
-                                                         self.ui.input_checkbox_re_duration_reverse],
-            self.ui.input_checkbox_re_attempt_enabled: [self.ui.input_lineedit_re_attempt_pattern,
-                                                        self.ui.input_checkbox_re_attempt_reverse],
-            self.ui.input_checkbox_re_groups_enabled: [self.ui.input_lineedit_re_groups_pattern,
-                                                       self.ui.input_checkbox_re_groups_reverse]}
+            self.window.input_checkbox_re_host_enabled: [self.window.input_lineedit_re_host_pattern,
+                                                     self.window.input_checkbox_re_host_reverse],
+            self.window.input_checkbox_re_service_enabled: [self.window.input_lineedit_re_service_pattern,
+                                                        self.window.input_checkbox_re_service_reverse],
+            self.window.input_checkbox_re_status_information_enabled: [self.window.input_lineedit_re_status_information_pattern,
+                                                                   self.window.input_checkbox_re_status_information_reverse],
+            self.window.input_checkbox_re_duration_enabled: [self.window.input_lineedit_re_duration_pattern,
+                                                         self.window.input_checkbox_re_duration_reverse],
+            self.window.input_checkbox_re_attempt_enabled: [self.window.input_lineedit_re_attempt_pattern,
+                                                        self.window.input_checkbox_re_attempt_reverse],
+            self.window.input_checkbox_re_groups_enabled: [self.window.input_lineedit_re_groups_pattern,
+                                                       self.window.input_checkbox_re_groups_reverse]}
 
         # fill action types into combobox
-        self.ui.input_combobox_type.addItems(sorted(self.ACTION_TYPES.values()))
+        self.window.input_combobox_type.addItems(sorted(self.ACTION_TYPES.values()))
 
         # fill default order fields combobox with monitor server types
-        self.ui.input_combobox_monitor_type.addItem("All monitor servers")
-        self.ui.input_combobox_monitor_type.addItems(sorted(SERVER_TYPES.keys(), key=str.lower))
+        self.window.input_combobox_monitor_type.addItem("All monitor servers")
+        self.window.input_combobox_monitor_type.addItems(sorted(SERVER_TYPES.keys(), key=str.lower))
         # default to Nagios as it is the mostly used monitor server
-        self.ui.input_combobox_monitor_type.setCurrentIndex(0)
+        self.window.input_combobox_monitor_type.setCurrentIndex(0)
 
     def dialog_decoration(method):
         """
@@ -6132,24 +6130,24 @@ class Dialog_Action(Dialog):
             method(self)
 
             # run through all input widgets and and apply defaults from config
-            for widget in self.ui.__dict__:
+            for widget in self.window.__dict__:
                 if widget.startswith('input_'):
                     if widget.startswith('input_checkbox_'):
                         setting = widget.split('input_checkbox_')[1]
-                        self.ui.__dict__[widget].setChecked(self.action_conf.__dict__[setting])
+                        self.window.__dict__[widget].setChecked(self.action_conf.__dict__[setting])
                     elif widget.startswith('input_radiobutton_'):
                         setting = widget.split('input_radiobutton_')[1]
-                        self.ui.__dict__[widget].setChecked(self.action_conf.__dict__[setting])
+                        self.window.__dict__[widget].setChecked(self.action_conf.__dict__[setting])
                     elif widget.startswith('input_lineedit_'):
                         setting = widget.split('input_lineedit_')[1]
-                        self.ui.__dict__[widget].setText(self.action_conf.__dict__[setting])
+                        self.window.__dict__[widget].setText(self.action_conf.__dict__[setting])
                     elif widget.startswith('input_textedit_'):
                         setting = widget.split('input_textedit_')[1]
-                        self.ui.__dict__[widget].setText(self.action_conf.__dict__[setting])
+                        self.window.__dict__[widget].setText(self.action_conf.__dict__[setting])
 
             # set comboboxes
-            self.ui.input_combobox_type.setCurrentText(self.ACTION_TYPES[self.action_conf.type.lower()])
-            self.ui.input_combobox_monitor_type.setCurrentText(self.action_conf.monitor_type)
+            self.window.input_combobox_type.setCurrentText(self.ACTION_TYPES[self.action_conf.type.lower()])
+            self.window.input_combobox_monitor_type.setCurrentText(self.action_conf.monitor_type)
 
             # apply toggle-dependencies between checkboxes and certain widgets
             self.toggle_toggles()
@@ -6182,7 +6180,7 @@ class Dialog_Action(Dialog):
         """
         self.mode = 'edit'
         # shorter action conf
-        self.action_conf = conf.actions[dialogs.settings.ui.list_actions.currentItem().text()]
+        self.action_conf = conf.actions[dialogs.settings.window.list_actions.currentItem().text()]
         # store action name in case it will be changed
         self.previous_action_conf = deepcopy(self.action_conf)
         # set window title
@@ -6195,7 +6193,7 @@ class Dialog_Action(Dialog):
         """
         self.mode = 'copy'
         # shorter action conf
-        self.action_conf = deepcopy(conf.actions[dialogs.settings.ui.list_actions.currentItem().text()])
+        self.action_conf = deepcopy(conf.actions[dialogs.settings.window.list_actions.currentItem().text()])
         # set window title before name change to reflect copy
         self.window.setWindowTitle('Copy %s' % (self.action_conf.name))
         # indicate copy of other action
@@ -6206,33 +6204,33 @@ class Dialog_Action(Dialog):
             evaluate state of widgets to get new configuration
         """
         # check that no duplicate name exists
-        if self.ui.input_lineedit_name.text() in conf.actions and \
+        if self.window.input_lineedit_name.text() in conf.actions and \
                 (self.mode in ['new', 'copy'] or
-                 self.mode == 'edit' and self.action_conf != conf.actions[self.ui.input_lineedit_name.text()]):
+                 self.mode == 'edit' and self.action_conf != conf.actions[self.window.input_lineedit_name.text()]):
             # cry if duplicate name exists
             QMessageBox.Icon.Critical(self.window, 'Nagstamon',
                                  'The action name <b>%s</b> is already used.' %
-                                 (self.ui.input_lineedit_name.text()),
+                                 (self.window.input_lineedit_name.text()),
                                  QMessageBox.StandardButton.Ok)
         else:
             # get configuration from UI
-            for widget in self.ui.__dict__:
+            for widget in self.window.__dict__:
                 if widget.startswith('input_'):
                     if widget.startswith('input_checkbox_'):
                         setting = widget.split('input_checkbox_')[1]
-                        self.action_conf.__dict__[setting] = self.ui.__dict__[widget].isChecked()
+                        self.action_conf.__dict__[setting] = self.window.__dict__[widget].isChecked()
                     if widget.startswith('input_radiobutton_'):
                         setting = widget.split('input_radiobutton_')[1]
-                        self.action_conf.__dict__[setting] = self.ui.__dict__[widget].isChecked()
+                        self.action_conf.__dict__[setting] = self.window.__dict__[widget].isChecked()
                     elif widget.startswith('input_combobox_'):
                         setting = widget.split('input_combobox_')[1]
-                        self.action_conf.__dict__[setting] = self.ui.__dict__[widget].currentText()
+                        self.action_conf.__dict__[setting] = self.window.__dict__[widget].currentText()
                     elif widget.startswith('input_lineedit_'):
                         setting = widget.split('input_lineedit_')[1]
-                        self.action_conf.__dict__[setting] = self.ui.__dict__[widget].text()
+                        self.action_conf.__dict__[setting] = self.window.__dict__[widget].text()
                     elif widget.startswith('input_textedit_'):
                         setting = widget.split('input_textedit_')[1]
-                        self.action_conf.__dict__[setting] = self.ui.__dict__[widget].toPlainText()
+                        self.action_conf.__dict__[setting] = self.window.__dict__[widget].toPlainText()
 
             # edited action will be deleted and recreated with new configuration
             if self.mode == 'edit':
@@ -6250,7 +6248,7 @@ class Dialog_Action(Dialog):
             conf.actions[self.action_conf.name] = self.action_conf
 
             # refresh list of actions, give call the current action name to highlight it
-            dialogs.settings.refresh_list(list_widget=dialogs.settings.ui.list_actions,
+            dialogs.settings.refresh_list(list_widget=dialogs.settings.window.list_actions,
                                           list_conf=conf.actions,
                                           current=self.action_conf.name)
 
@@ -6279,7 +6277,7 @@ class Dialog_Acknowledge(Dialog):
         Dialog.__init__(self, dialog)
 
         self.TOGGLE_DEPS = {
-            self.ui.input_checkbox_use_expire_time: [self.ui.input_datetime_expire_time]
+            self.window.input_checkbox_use_expire_time: [self.window.input_datetime_expire_time]
         }
 
         # still clumsy but better than negating the other server types
@@ -6289,12 +6287,12 @@ class Dialog_Acknowledge(Dialog):
                                           x.TYPE not in PROMETHEUS_OR_ALERTMANAGER]
 
         self.VOLATILE_WIDGETS = {
-            self.ui.input_checkbox_use_expire_time: ['IcingaWeb2'],
-            self.ui.input_datetime_expire_time: ['IcingaWeb2', 'Alertmanager'],
-            self.ui.input_checkbox_sticky_acknowledgement: NOT_PROMETHEUS_OR_ALERTMANAGER,
-            self.ui.input_checkbox_send_notification: NOT_PROMETHEUS_OR_ALERTMANAGER,
-            self.ui.input_checkbox_persistent_comment: NOT_PROMETHEUS_OR_ALERTMANAGER,
-            self.ui.input_checkbox_acknowledge_all_services: NOT_PROMETHEUS_OR_ALERTMANAGER
+            self.window.input_checkbox_use_expire_time: ['IcingaWeb2'],
+            self.window.input_datetime_expire_time: ['IcingaWeb2', 'Alertmanager'],
+            self.window.input_checkbox_sticky_acknowledgement: NOT_PROMETHEUS_OR_ALERTMANAGER,
+            self.window.input_checkbox_send_notification: NOT_PROMETHEUS_OR_ALERTMANAGER,
+            self.window.input_checkbox_persistent_comment: NOT_PROMETHEUS_OR_ALERTMANAGER,
+            self.window.input_checkbox_acknowledge_all_services: NOT_PROMETHEUS_OR_ALERTMANAGER
         }
 
         self.FORCE_DATETIME_EXPIRE_TIME = ['Alertmanager']
@@ -6314,29 +6312,29 @@ class Dialog_Acknowledge(Dialog):
             else:
                 str = str + 'Service <b>%s</b> on host <b>%s</b><br>' % (self.service_list[i], self.host_list[i])
 
-        self.ui.input_label_description.setText(str)
+        self.window.input_label_description.setText(str)
 
         # default flags of monitor acknowledgement
-        self.ui.input_checkbox_sticky_acknowledgement.setChecked(conf.defaults_acknowledge_sticky)
-        self.ui.input_checkbox_send_notification.setChecked(conf.defaults_acknowledge_send_notification)
-        self.ui.input_checkbox_persistent_comment.setChecked(conf.defaults_acknowledge_persistent_comment)
-        self.ui.input_checkbox_use_expire_time.setChecked(conf.defaults_acknowledge_expire)
+        self.window.input_checkbox_sticky_acknowledgement.setChecked(conf.defaults_acknowledge_sticky)
+        self.window.input_checkbox_send_notification.setChecked(conf.defaults_acknowledge_send_notification)
+        self.window.input_checkbox_persistent_comment.setChecked(conf.defaults_acknowledge_persistent_comment)
+        self.window.input_checkbox_use_expire_time.setChecked(conf.defaults_acknowledge_expire)
         if len(self.host_list) == 1:
-            self.ui.input_checkbox_acknowledge_all_services.setChecked(conf.defaults_acknowledge_all_services)
-            self.ui.input_checkbox_acknowledge_all_services.show()
+            self.window.input_checkbox_acknowledge_all_services.setChecked(conf.defaults_acknowledge_all_services)
+            self.window.input_checkbox_acknowledge_all_services.show()
         else:
-            self.ui.input_checkbox_acknowledge_all_services.setChecked(False)
-            self.ui.input_checkbox_acknowledge_all_services.hide()
+            self.window.input_checkbox_acknowledge_all_services.setChecked(False)
+            self.window.input_checkbox_acknowledge_all_services.hide()
 
         # default author + comment
-        self.ui.input_lineedit_comment.setText(conf.defaults_acknowledge_comment)
-        self.ui.input_lineedit_comment.setFocus()
+        self.window.input_lineedit_comment.setText(conf.defaults_acknowledge_comment)
+        self.window.input_lineedit_comment.setFocus()
 
         # set default and minimum value for expire time
         qdatetime = QDateTime.currentDateTime()
-        self.ui.input_datetime_expire_time.setMinimumDateTime(qdatetime)
+        self.window.input_datetime_expire_time.setMinimumDateTime(qdatetime)
         # set default expire time from configuration
-        self.ui.input_datetime_expire_time.setDateTime(qdatetime.addSecs(
+        self.window.input_datetime_expire_time.setDateTime(qdatetime.addSecs(
             conf.defaults_acknowledge_expire_duration_hours * 60 * 60 + conf.defaults_acknowledge_expire_duration_minutes * 60
         ))
 
@@ -6349,11 +6347,11 @@ class Dialog_Acknowledge(Dialog):
                 else:
                     widget.hide()
             if self.server.TYPE in self.FORCE_DATETIME_EXPIRE_TIME:
-                self.ui.input_datetime_expire_time.show()
+                self.window.input_datetime_expire_time.show()
 
         # Adjust to current size if items are hidden in menu
         # Otherwise it will get confused and chop off text
-        self.ui.options_groupbox.adjustSize()
+        self.window.options_groupbox.adjustSize()
         self.window.adjustSize()
 
     def ok(self):
@@ -6362,7 +6360,7 @@ class Dialog_Acknowledge(Dialog):
         """
         # create a list of all service of selected host to acknowledge them all
         all_services = list()
-        acknowledge_all_services = self.ui.input_checkbox_acknowledge_all_services.isChecked()
+        acknowledge_all_services = self.window.input_checkbox_acknowledge_all_services.isChecked()
 
         if acknowledge_all_services is True:
             for i in self.server.nagitems_filtered["services"].values():
@@ -6370,10 +6368,10 @@ class Dialog_Acknowledge(Dialog):
                     if s.host in self.host_list:
                         all_services.append(s.name)
 
-        if self.ui.input_checkbox_use_expire_time.isChecked() or self.server.TYPE in self.FORCE_DATETIME_EXPIRE_TIME:
+        if self.window.input_checkbox_use_expire_time.isChecked() or self.server.TYPE in self.FORCE_DATETIME_EXPIRE_TIME:
             # Format used in UI
             # 2019-11-01T18:17:39
-            expire_datetime = self.ui.input_datetime_expire_time.dateTime().toString("yyyy-MM-ddTHH:mm:ss")
+            expire_datetime = self.window.input_datetime_expire_time.dateTime().toString("yyyy-MM-ddTHH:mm:ss")
         else:
             expire_datetime = None
 
@@ -6386,10 +6384,10 @@ class Dialog_Acknowledge(Dialog):
                                    'host': host,
                                    'service': service,
                                    'author': self.server.username,
-                                   'comment': self.ui.input_lineedit_comment.text(),
-                                   'sticky': self.ui.input_checkbox_sticky_acknowledgement.isChecked(),
-                                   'notify': self.ui.input_checkbox_send_notification.isChecked(),
-                                   'persistent': self.ui.input_checkbox_persistent_comment.isChecked(),
+                                   'comment': self.window.input_lineedit_comment.text(),
+                                   'sticky': self.window.input_checkbox_sticky_acknowledgement.isChecked(),
+                                   'notify': self.window.input_checkbox_send_notification.isChecked(),
+                                   'persistent': self.window.input_checkbox_persistent_comment.isChecked(),
                                    'acknowledge_all_services': acknowledge_all_services,
                                    'all_services': all_services,
                                    'expire_time': expire_datetime})
@@ -6428,31 +6426,31 @@ class Dialog_Downtime(Dialog):
             else:
                 str = str + 'Service <b>%s</b> on host <b>%s</b><br>' % (self.service_list[i], self.host_list[i])
 
-        self.ui.input_label_description.setText(str)
+        self.window.input_label_description.setText(str)
 
         # default flags of monitor acknowledgement
-        self.ui.input_spinbox_duration_hours.setValue(int(conf.defaults_downtime_duration_hours))
-        self.ui.input_spinbox_duration_minutes.setValue(int(conf.defaults_downtime_duration_minutes))
-        self.ui.input_radiobutton_type_fixed.setChecked(conf.defaults_downtime_type_fixed)
-        self.ui.input_radiobutton_type_flexible.setChecked(conf.defaults_downtime_type_flexible)
+        self.window.input_spinbox_duration_hours.setValue(int(conf.defaults_downtime_duration_hours))
+        self.window.input_spinbox_duration_minutes.setValue(int(conf.defaults_downtime_duration_minutes))
+        self.window.input_radiobutton_type_fixed.setChecked(conf.defaults_downtime_type_fixed)
+        self.window.input_radiobutton_type_flexible.setChecked(conf.defaults_downtime_type_flexible)
 
         # hide/show downtime settings according to typw
-        self.ui.input_radiobutton_type_fixed.clicked.connect(self.set_type_fixed)
-        self.ui.input_radiobutton_type_flexible.clicked.connect(self.set_type_flexible)
+        self.window.input_radiobutton_type_fixed.clicked.connect(self.set_type_fixed)
+        self.window.input_radiobutton_type_flexible.clicked.connect(self.set_type_flexible)
 
         # show or hide widgets for time settings
-        if self.ui.input_radiobutton_type_fixed.isChecked():
+        if self.window.input_radiobutton_type_fixed.isChecked():
             self.set_type_fixed()
         else:
             self.set_type_flexible()
 
         # empty times at start, will be filled by set_start_end
-        self.ui.input_lineedit_start_time.setText('n/a')
-        self.ui.input_lineedit_end_time.setText('n/a')
+        self.window.input_lineedit_start_time.setText('n/a')
+        self.window.input_lineedit_end_time.setText('n/a')
 
         # default author + comment
-        self.ui.input_lineedit_comment.setText(conf.defaults_downtime_comment)
-        self.ui.input_lineedit_comment.setFocus()
+        self.window.input_lineedit_comment.setText(conf.defaults_downtime_comment)
+        self.window.input_lineedit_comment.setFocus()
 
         if self.server is not None:
             # at first initialization server is still None
@@ -6463,7 +6461,7 @@ class Dialog_Downtime(Dialog):
             schedule downtime for miserable host/service
         """
         # type of downtime - fixed or flexible
-        if self.ui.input_radiobutton_type_fixed.isChecked() is True:
+        if self.window.input_radiobutton_type_fixed.isChecked() is True:
             fixed = 1
         else:
             fixed = 0
@@ -6476,12 +6474,12 @@ class Dialog_Downtime(Dialog):
                                 'host': host,
                                 'service': service,
                                 'author': self.server.username,
-                                'comment': self.ui.input_lineedit_comment.text(),
+                                'comment': self.window.input_lineedit_comment.text(),
                                 'fixed': fixed,
-                                'start_time': self.ui.input_lineedit_start_time.text(),
-                                'end_time': self.ui.input_lineedit_end_time.text(),
-                                'hours': int(self.ui.input_spinbox_duration_hours.value()),
-                                'minutes': int(self.ui.input_spinbox_duration_minutes.value())})
+                                'start_time': self.window.input_lineedit_start_time.text(),
+                                'end_time': self.window.input_lineedit_end_time.text(),
+                                'hours': int(self.window.input_spinbox_duration_hours.value()),
+                                'minutes': int(self.window.input_spinbox_duration_minutes.value())})
 
     Slot(str, str)
 
@@ -6489,8 +6487,8 @@ class Dialog_Downtime(Dialog):
         """
             put values sent by worker into start and end fields
         """
-        self.ui.input_lineedit_start_time.setText(start)
-        self.ui.input_lineedit_end_time.setText(end)
+        self.window.input_lineedit_start_time.setText(start)
+        self.window.input_lineedit_end_time.setText(end)
 
     Slot()
 
@@ -6498,11 +6496,11 @@ class Dialog_Downtime(Dialog):
         """
             enable/disable appropriate widgets if type is "Fixed"
         """
-        self.ui.label_duration.hide()
-        self.ui.label_duration_hours.hide()
-        self.ui.label_duration_minutes.hide()
-        self.ui.input_spinbox_duration_hours.hide()
-        self.ui.input_spinbox_duration_minutes.hide()
+        self.window.label_duration.hide()
+        self.window.label_duration_hours.hide()
+        self.window.label_duration_minutes.hide()
+        self.window.input_spinbox_duration_hours.hide()
+        self.window.input_spinbox_duration_minutes.hide()
 
     Slot()
 
@@ -6510,11 +6508,11 @@ class Dialog_Downtime(Dialog):
         """
             enable/disable appropriate widgets if type is "Flexible"
         """
-        self.ui.label_duration.show()
-        self.ui.label_duration_hours.show()
-        self.ui.label_duration_minutes.show()
-        self.ui.input_spinbox_duration_hours.show()
-        self.ui.input_spinbox_duration_minutes.show()
+        self.window.label_duration.show()
+        self.window.label_duration_hours.show()
+        self.window.label_duration_minutes.show()
+        self.window.input_spinbox_duration_hours.show()
+        self.window.input_spinbox_duration_minutes.show()
 
 
 class Dialog_Submit(Dialog):
@@ -6540,37 +6538,37 @@ class Dialog_Submit(Dialog):
         if service == "":
             # set label for acknowledging a host
             self.window.setWindowTitle('Submit check result for host')
-            self.ui.input_label_description.setText('Host <b>%s</b>' % (host))
+            self.window.input_label_description.setText('Host <b>%s</b>' % (host))
             # services do not need all states
-            self.ui.input_radiobutton_result_up.show()
-            self.ui.input_radiobutton_result_ok.hide()
-            self.ui.input_radiobutton_result_warning.hide()
-            self.ui.input_radiobutton_result_critical.hide()
-            self.ui.input_radiobutton_result_unknown.show()
-            self.ui.input_radiobutton_result_unreachable.show()
-            self.ui.input_radiobutton_result_down.show()
+            self.window.input_radiobutton_result_up.show()
+            self.window.input_radiobutton_result_ok.hide()
+            self.window.input_radiobutton_result_warning.hide()
+            self.window.input_radiobutton_result_critical.hide()
+            self.window.input_radiobutton_result_unknown.show()
+            self.window.input_radiobutton_result_unreachable.show()
+            self.window.input_radiobutton_result_down.show()
             # activate first radiobutton
-            self.ui.input_radiobutton_result_up.setChecked(True)
+            self.window.input_radiobutton_result_up.setChecked(True)
         else:
             # set label for acknowledging a service on host
             self.window.setWindowTitle('Submit check result for service')
-            self.ui.input_label_description.setText('Service <b>%s</b> on host <b>%s</b>' % (service, host))
+            self.window.input_label_description.setText('Service <b>%s</b> on host <b>%s</b>' % (service, host))
             # hosts do not need all states
-            self.ui.input_radiobutton_result_up.hide()
-            self.ui.input_radiobutton_result_ok.show()
-            self.ui.input_radiobutton_result_warning.show()
-            self.ui.input_radiobutton_result_critical.show()
-            self.ui.input_radiobutton_result_unknown.show()
-            self.ui.input_radiobutton_result_unreachable.hide()
-            self.ui.input_radiobutton_result_down.hide()
+            self.window.input_radiobutton_result_up.hide()
+            self.window.input_radiobutton_result_ok.show()
+            self.window.input_radiobutton_result_warning.show()
+            self.window.input_radiobutton_result_critical.show()
+            self.window.input_radiobutton_result_unknown.show()
+            self.window.input_radiobutton_result_unreachable.hide()
+            self.window.input_radiobutton_result_down.hide()
             # activate first radiobutton
-            self.ui.input_radiobutton_result_ok.setChecked(True)
+            self.window.input_radiobutton_result_ok.setChecked(True)
 
         # clear text fields
-        self.ui.input_lineedit_check_output.setText('')
-        self.ui.input_lineedit_performance_data.setText('')
-        self.ui.input_lineedit_comment.setText(conf.defaults_submit_check_result_comment)
-        self.ui.input_lineedit_check_output.setFocus()
+        self.window.input_lineedit_check_output.setText('')
+        self.window.input_lineedit_performance_data.setText('')
+        self.window.input_lineedit_comment.setText(conf.defaults_submit_check_result_comment)
+        self.window.input_lineedit_check_output.setFocus()
 
     def ok(self):
         """
@@ -6580,7 +6578,7 @@ class Dialog_Submit(Dialog):
         state = "ok"
 
         for button in ["ok", "up", "warning", "critical", "unreachable", "unknown", "down"]:
-            if self.ui.__dict__['input_radiobutton_result_' + button].isChecked():
+            if self.window.__dict__['input_radiobutton_result_' + button].isChecked():
                 state = button
                 break
 
@@ -6589,9 +6587,9 @@ class Dialog_Submit(Dialog):
                           'host': self.host,
                           'service': self.service,
                           'state': state,
-                          'comment': self.ui.input_lineedit_comment.text(),
-                          'check_output': self.ui.input_lineedit_check_output.text(),
-                          'performance_data': self.ui.input_lineedit_performance_data.text()})
+                          'comment': self.window.input_lineedit_comment.text(),
+                          'check_output': self.window.input_lineedit_check_output.text(),
+                          'performance_data': self.window.input_lineedit_performance_data.text()})
 
 
 class Dialog_Authentication(Dialog):
@@ -6615,25 +6613,25 @@ class Dialog_Authentication(Dialog):
 
             self.window.setWindowTitle('Authenticate {0}'.format(self.server.name))
             if self.server.type in ['Centreon', 'Thruk']:
-                self.ui.input_checkbox_use_autologin.show()
-                self.ui.input_lineedit_autologin_key.show()
-                self.ui.input_lineedit_autologin_key.show()
-                self.ui.label_autologin_key.show()
+                self.window.input_checkbox_use_autologin.show()
+                self.window.input_lineedit_autologin_key.show()
+                self.window.input_lineedit_autologin_key.show()
+                self.window.label_autologin_key.show()
                 # enable switching autologin key and password
-                self.ui.input_checkbox_use_autologin.clicked.connect(self.toggle_autologin)
-                self.ui.input_checkbox_use_autologin.setChecked(self.server.use_autologin)
-                self.ui.input_lineedit_autologin_key.setText(self.server.autologin_key)
+                self.window.input_checkbox_use_autologin.clicked.connect(self.toggle_autologin)
+                self.window.input_checkbox_use_autologin.setChecked(self.server.use_autologin)
+                self.window.input_lineedit_autologin_key.setText(self.server.autologin_key)
                 # initialize autologin
                 self.toggle_autologin()
             else:
-                self.ui.input_checkbox_use_autologin.hide()
-                self.ui.input_lineedit_autologin_key.hide()
-                self.ui.label_autologin_key.hide()
+                self.window.input_checkbox_use_autologin.hide()
+                self.window.input_lineedit_autologin_key.hide()
+                self.window.label_autologin_key.hide()
 
             # set existing values
-            self.ui.input_lineedit_username.setText(self.server.username)
-            self.ui.input_lineedit_password.setText(self.server.password)
-            self.ui.input_checkbox_save_password.setChecked(conf.servers[self.server.name].save_password)
+            self.window.input_lineedit_username.setText(self.server.username)
+            self.window.input_lineedit_password.setText(self.server.password)
+            self.window.input_checkbox_save_password.setChecked(conf.servers[self.server.name].save_password)
 
     @Slot(str)
     def show_auth_dialog(self, server):
@@ -6656,23 +6654,23 @@ class Dialog_Authentication(Dialog):
         # close window fist to avoid lagging UI
         self.window.close()
 
-        self.server.username = self.ui.input_lineedit_username.text()
-        self.server.password = self.ui.input_lineedit_password.text()
+        self.server.username = self.window.input_lineedit_username.text()
+        self.server.password = self.window.input_lineedit_password.text()
         self.server.refresh_authentication = False
 
         # store password if it should be saved
-        if self.ui.input_checkbox_save_password.isChecked():
+        if self.window.input_checkbox_save_password.isChecked():
             conf.servers[self.server.name].username = self.server.username
             conf.servers[self.server.name].password = self.server.password
-            conf.servers[self.server.name].save_password = self.ui.input_checkbox_save_password.isChecked()
+            conf.servers[self.server.name].save_password = self.window.input_checkbox_save_password.isChecked()
             # store server settings
             conf.SaveMultipleConfig('servers', 'server')
 
         # Centreon
         if self.server.type in ['Centreon', 'Thruk']:
-            if self.ui.input_checkbox_use_autologin:
-                conf.servers[self.server.name].use_autologin = self.ui.input_checkbox_use_autologin.isChecked()
-                conf.servers[self.server.name].autologin_key = self.ui.input_lineedit_autologin_key.text()
+            if self.window.input_checkbox_use_autologin:
+                conf.servers[self.server.name].use_autologin = self.window.input_checkbox_use_autologin.isChecked()
+                conf.servers[self.server.name].autologin_key = self.window.input_lineedit_autologin_key.text()
                 # store server settings
                 conf.SaveMultipleConfig('servers', 'server')
 
@@ -6690,24 +6688,24 @@ class Dialog_Authentication(Dialog):
         """
             toolge autologin option for Centreon
         """
-        if self.ui.input_checkbox_use_autologin.isChecked():
-            self.ui.label_username.hide()
-            self.ui.label_password.hide()
-            self.ui.input_lineedit_username.hide()
-            self.ui.input_lineedit_password.hide()
-            self.ui.input_checkbox_save_password.hide()
+        if self.window.input_checkbox_use_autologin.isChecked():
+            self.window.label_username.hide()
+            self.window.label_password.hide()
+            self.window.input_lineedit_username.hide()
+            self.window.input_lineedit_password.hide()
+            self.window.input_checkbox_save_password.hide()
 
-            self.ui.label_autologin_key.show()
-            self.ui.input_lineedit_autologin_key.show()
+            self.window.label_autologin_key.show()
+            self.window.input_lineedit_autologin_key.show()
         else:
-            self.ui.label_username.show()
-            self.ui.label_password.show()
-            self.ui.input_lineedit_username.show()
-            self.ui.input_lineedit_password.show()
-            self.ui.input_checkbox_save_password.show()
+            self.window.label_username.show()
+            self.window.label_password.show()
+            self.window.input_lineedit_username.show()
+            self.window.input_lineedit_password.show()
+            self.window.input_checkbox_save_password.show()
 
-            self.ui.label_autologin_key.hide()
-            self.ui.input_lineedit_autologin_key.hide()
+            self.window.label_autologin_key.hide()
+            self.window.input_lineedit_autologin_key.hide()
 
         # adjust dialog window size after UI changes
         self.window.adjustSize()
@@ -6722,28 +6720,28 @@ class Dialog_Server_missing(Dialog):
         Dialog.__init__(self, dialog)
 
         # hide dialog when server is to be created or enabled
-        self.ui.button_create_server.clicked.connect(self.window.hide)
-        self.ui.button_enable_server.clicked.connect(self.window.hide)
+        self.window.button_create_server.clicked.connect(self.window.hide)
+        self.window.button_enable_server.clicked.connect(self.window.hide)
         # simply hide window if ignore button chosen
-        self.ui.button_ignore.clicked.connect(self.window.hide)
+        self.window.button_ignore.clicked.connect(self.window.hide)
         # byebye if exit button was pressed
-        self.ui.button_exit.clicked.connect(self.window.hide)
-        self.ui.button_exit.clicked.connect(exit)
+        self.window.button_exit.clicked.connect(self.window.hide)
+        self.window.button_exit.clicked.connect(exit)
 
     def initialize(self, mode='no_server'):
         """
             use dialog for missing and not enabled servers, depending on mode
         """
         if mode == 'no_server':
-            self.ui.label_no_server_configured.show()
-            self.ui.label_no_server_enabled.hide()
-            self.ui.button_enable_server.hide()
-            self.ui.button_create_server.show()
+            self.window.label_no_server_configured.show()
+            self.window.label_no_server_enabled.hide()
+            self.window.button_enable_server.hide()
+            self.window.button_create_server.show()
         else:
-            self.ui.label_no_server_configured.hide()
-            self.ui.label_no_server_enabled.show()
-            self.ui.button_enable_server.show()
-            self.ui.button_create_server.hide()
+            self.window.label_no_server_configured.hide()
+            self.window.label_no_server_enabled.show()
+            self.window.button_enable_server.show()
+            self.window.button_create_server.hide()
 
 
 class Dialog_About(Dialog):
@@ -6756,31 +6754,31 @@ class Dialog_About(Dialog):
         # first add the logo on top - no idea how to achive in Qt Designer
         logo = QSvgWidget('{0}{1}nagstamon.svg'.format(RESOURCES, os.sep))
         logo.setFixedSize(100, 100)
-        self.ui.vbox_about.insertWidget(1, logo, 0, Qt.AlignmentFlag.AlignHCenter)
+        self.window.vbox_about.insertWidget(1, logo, 0, Qt.AlignmentFlag.AlignHCenter)
         # update version information
-        self.ui.label_nagstamon.setText('<h1>{0} {1}</h1>'.format(AppInfo.NAME, AppInfo.VERSION))
-        self.ui.label_nagstamon_long.setText('<h2>Nagios¹ status monitor for your desktop</2>')
-        self.ui.label_copyright.setText(AppInfo.COPYRIGHT)
-        self.ui.label_website.setText('<a href={0}>{0}</a>'.format(AppInfo.WEBSITE))
-        self.ui.label_website.setOpenExternalLinks(True)
-        self.ui.label_footnote.setText('<small>¹ plus Checkmk, Op5, Icinga, Centreon and more</small>')
+        self.window.label_nagstamon.setText('<h1>{0} {1}</h1>'.format(AppInfo.NAME, AppInfo.VERSION))
+        self.window.label_nagstamon_long.setText('<h2>Nagios¹ status monitor for your desktop</2>')
+        self.window.label_copyright.setText(AppInfo.COPYRIGHT)
+        self.window.label_website.setText('<a href={0}>{0}</a>'.format(AppInfo.WEBSITE))
+        self.window.label_website.setOpenExternalLinks(True)
+        self.window.label_footnote.setText('<small>¹ plus Checkmk, Op5, Icinga, Centreon and more</small>')
 
         # fill in license information
         license_file = open('{0}{1}LICENSE'.format(RESOURCES, os.sep))
         license = license_file.read()
         license_file.close()
-        self.ui.textedit_license.setPlainText(license)
-        self.ui.textedit_license.setReadOnly(True)
+        self.window.textedit_license.setPlainText(license)
+        self.window.textedit_license.setReadOnly(True)
 
         # fill in credits information
         credits_file = open('{0}{1}CREDITS'.format(RESOURCES, os.sep), encoding='utf-8')
         credits = credits_file.read()
         credits_file.close()
-        self.ui.textedit_credits.setText(credits)
-        self.ui.textedit_credits.setOpenExternalLinks(True)
-        self.ui.textedit_credits.setReadOnly(True)
+        self.window.textedit_credits.setText(credits)
+        self.window.textedit_credits.setOpenExternalLinks(True)
+        self.window.textedit_credits.setReadOnly(True)
 
-        self.ui.tabs.setCurrentIndex(0)
+        self.window.tabs.setCurrentIndex(0)
 
     def show(self):
         self.window.exec()

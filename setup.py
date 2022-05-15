@@ -23,7 +23,8 @@ import sys
 import platform
 import os.path
 
-from Nagstamon.Config import AppInfo
+from Nagstamon.Config import AppInfo, \
+                      OS
 from Nagstamon.Helpers import get_distro
 
 # dummy debug queue for compiling
@@ -31,7 +32,6 @@ debug_queue = list()
 
 NAME = AppInfo.NAME
 
-OS = platform.system()
 # make name lowercase for Linux/Unix
 if OS not in ['Windows', 'Darwin']:
     if OS == 'Linux':
@@ -71,7 +71,7 @@ CLASSIFIERS = ['Intended Audience :: System Administrators',
 
 # Dependencies are automatically detected, but it might need
 # fine tuning.
-build_exe_options = dict(packages=['PyQt5.QtNetwork',
+build_exe_options = dict(packages=['PyQt6.QtNetwork',
                                    'keyring.backends.kwallet',
                                    'keyring.backends.OS_X',
                                    'keyring.backends.SecretService',
@@ -125,7 +125,7 @@ setup(name=NAME,
                 'Nagstamon.thirdparty.Xlib.support',
                 'Nagstamon.thirdparty.Xlib.xobject'],
       package_dir={'Nagstamon': 'Nagstamon'},
-      package_data={'Nagstamon': ['resources/*']},
+      package_data={'Nagstamon': ['resources/*', 'resources/qui/*']},
       data_files=[('%s/share/man/man1' % sys.prefix, ['Nagstamon/resources/nagstamon.1.gz']),
           ('%s/share/pixmaps' % sys.prefix, ['Nagstamon/resources/nagstamon.svg']),
           ('%s/share/applications' % sys.prefix, ['Nagstamon/resources/nagstamon.desktop'])],
