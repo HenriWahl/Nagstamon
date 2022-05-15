@@ -31,67 +31,9 @@ except ImportError:
     except ImportError:
         sys.exit('Qt is missing')
 
-if 'PyQt6' in sys.modules:
-    # PySide/PyQt compatibility
-    from PyQt6.QtCore import pyqtSignal as Signal, \
-        pyqtSlot as Slot, \
-        PYQT_VERSION_STR as QT_VERSION_STR, \
-        QAbstractTableModel, \
-        QByteArray, \
-        QDateTime, \
-        QModelIndex, \
-        QObject, \
-        QPoint, \
-        QSignalMapper, \
-        Qt, \
-        QThread, \
-        QTimer, \
-        QUrl, \
-        QXmlStreamReader
-    from PyQt6.QtGui import QAction, \
-        QBrush, \
-        QColor, \
-        QCursor, \
-        QFont, \
-        QFontDatabase, \
-        QIcon, \
-        QKeySequence, \
-        QPainter, \
-        QPalette, \
-        QPixmap
-    from PyQt6.QtMultimedia import QAudioOutput, \
-        QMediaPlayer
-    from PyQt6.QtSvg import QSvgRenderer
-    from PyQt6.QtSvgWidgets import QSvgWidget
-    from PyQt6.QtWidgets import QAbstractItemView, \
-        QApplication, \
-        QColorDialog, \
-        QComboBox, \
-        QDialog, \
-        QFileDialog, \
-        QFontDialog, \
-        QHBoxLayout, \
-        QHeaderView, \
-        QListWidgetItem, \
-        QMenu, \
-        QMenuBar, \
-        QMessageBox, \
-        QLabel, \
-        QPushButton, \
-        QScrollArea, \
-        QSizePolicy, \
-        QSpacerItem, \
-        QToolButton, \
-        QTreeView, \
-        QStyle, \
-        QSystemTrayIcon, \
-        QVBoxLayout, \
-        QWidget
-    from PyQt6 import uic
-    # for later decision which differences have to be considered
-    QT_FLAVOR = 'PyQt6'
-
-elif 'PyQt5' in sys.modules:
+# because 'PyQt6' is in sys.modules even if the import some line befoe failed
+# the backup PyQt5 should be loaded earlier if it exists due to exception treatment
+if 'PyQt5' in sys.modules:
     from PyQt5.QtCore import pyqtSignal as Signal, \
         pyqtSlot as Slot, \
         PYQT_VERSION_STR as QT_VERSION_STR, \
@@ -150,6 +92,66 @@ elif 'PyQt5' in sys.modules:
     from PyQt5 import uic
     # for later decision which differences have to be considered
     QT_FLAVOR = 'PyQt5'
+
+elif 'PyQt6' in sys.modules:
+    # PySide/PyQt compatibility
+    from PyQt6.QtCore import pyqtSignal as Signal, \
+        pyqtSlot as Slot, \
+        PYQT_VERSION_STR as QT_VERSION_STR, \
+        QAbstractTableModel, \
+        QByteArray, \
+        QDateTime, \
+        QModelIndex, \
+        QObject, \
+        QPoint, \
+        QSignalMapper, \
+        Qt, \
+        QThread, \
+        QTimer, \
+        QUrl, \
+        QXmlStreamReader
+    from PyQt6.QtGui import QAction, \
+        QBrush, \
+        QColor, \
+        QCursor, \
+        QFont, \
+        QFontDatabase, \
+        QIcon, \
+        QKeySequence, \
+        QPainter, \
+        QPalette, \
+        QPixmap
+    from PyQt6.QtMultimedia import QAudioOutput, \
+        QMediaPlayer
+    from PyQt6.QtSvg import QSvgRenderer
+    from PyQt6.QtSvgWidgets import QSvgWidget
+    from PyQt6.QtWidgets import QAbstractItemView, \
+        QApplication, \
+        QColorDialog, \
+        QComboBox, \
+        QDialog, \
+        QFileDialog, \
+        QFontDialog, \
+        QHBoxLayout, \
+        QHeaderView, \
+        QListWidgetItem, \
+        QMenu, \
+        QMenuBar, \
+        QMessageBox, \
+        QLabel, \
+        QPushButton, \
+        QScrollArea, \
+        QSizePolicy, \
+        QSpacerItem, \
+        QToolButton, \
+        QTreeView, \
+        QStyle, \
+        QSystemTrayIcon, \
+        QVBoxLayout, \
+        QWidget
+    from PyQt6 import uic
+    # for later decision which differences have to be considered
+    QT_FLAVOR = 'PyQt6'
 
 # elif 'PySide6' in sys.modules:
 #     from PySide6.QtCore import Signal, \
