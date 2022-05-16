@@ -18,4 +18,4 @@ RUN chmod +x /usr/local/bin/appimagetool
 RUN which appimage-builder
 
 CMD cd /nagstamon/build/appimage && \
-    /usr/local/bin/apimage-builder
+    /usr/local/bin/appimage-builder
