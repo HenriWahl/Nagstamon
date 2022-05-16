@@ -814,8 +814,6 @@ class DraggableWidget(QWidget):
         # if not set calculate relative position
         if not statuswindow.relative_x and \
                 not statuswindow.relative_y:
-            globby = event.globalPosition()
-            #event_x, event_y = event.globalPosition()
             statuswindow.relative_x = event.globalPosition().x() - statuswindow.x()
             statuswindow.relative_y = event.globalPosition().y() - statuswindow.y()
 
@@ -2050,10 +2048,10 @@ class StatusWindow(QWidget):
         """
         title = " ".join((AppInfo.NAME, msg_type))
         if msg_type == 'warning':
-            return (QMessageBox.Icon.Warning(statuswindow, title, message))
+            return QMessageBox.Icon.Warning(statuswindow, title, message)
 
         elif msg_type == 'information':
-            return (QMessageBox.Icon.Information(statuswindow, title, message))
+            return QMessageBox.Icon.Information(statuswindow, title, message)
 
     @Slot()
     def recheck_all(self):
