@@ -15,7 +15,5 @@ RUN apt -y install strace patchelf libkrb5-dev wget fuse file
 RUN wget https://github.com/AppImage/AppImageKit/releases/download/continuous/appimagetool-x86_64.AppImage -O /usr/local/bin/appimagetool
 RUN chmod +x /usr/local/bin/appimagetool
 
-RUN which appimage-builder
-
 CMD cd /nagstamon/build/appimage && \
     /usr/local/bin/appimage-builder

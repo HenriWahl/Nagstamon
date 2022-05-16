@@ -24,7 +24,7 @@ import platform
 import os.path
 
 from Nagstamon.Config import AppInfo, \
-                      OS
+    OS
 from Nagstamon.Helpers import get_distro
 
 # dummy debug queue for compiling
@@ -50,6 +50,7 @@ VERSION = AppInfo.VERSION.replace('-', '.') + '.' + DIST + DIST_VERSION
 NAGSTAMON_SCRIPT = 'nagstamon.py'
 
 from setuptools import setup
+
 os_dependent_include_files = ['Nagstamon/resources']
 if os.path.exists('nagstamon'):
     NAGSTAMON_SCRIPT = 'nagstamon'
@@ -87,21 +88,21 @@ bdist_dmg_options = dict(volume_label='{0} {1}'.format(NAME, VERSION),
 
 # Fedora seems to have no complete pyqt5 yet
 bdist_rpm_options = dict(requires='python3 '
-        'python3-beautifulsoup4 '
-        'python3-crypto '
-        'python3-cryptography '
-        'python3-dateutil '
-        'python3-keyring '
-        'python3-lxml '
-        'python3-psutil '
-        'python3-pysocks '
-        'python3-qt5 '
-        'python3-requests '
-        'python3-requests-kerberos '
-        'python3-SecretStorage '
-        'qt5-qtmultimedia '
-        'qt5-qtsvg ',
-dist_dir='./build')
+                                  'python3-beautifulsoup4 '
+                                  'python3-crypto '
+                                  'python3-cryptography '
+                                  'python3-dateutil '
+                                  'python3-keyring '
+                                  'python3-lxml '
+                                  'python3-psutil '
+                                  'python3-pysocks '
+                                  'python3-qt5 '
+                                  'python3-requests '
+                                  'python3-requests-kerberos '
+                                  'python3-SecretStorage '
+                                  'qt5-qtmultimedia '
+                                  'qt5-qtsvg ',
+                         dist_dir='./build')
 
 setup(name=NAME,
       version=VERSION,
@@ -126,13 +127,13 @@ setup(name=NAME,
                 'Nagstamon.thirdparty.Xlib.xobject'],
       package_dir={'Nagstamon': 'Nagstamon'},
       package_data={'Nagstamon': ['resources/*.*',
-                                  'resources/qui/*',
-                                  '../LICENSE']},
+                                  'resources/qui/*'],
+                    'Nagstamon/resources/LICENSE': ['../LICENSE']},
       data_files=[('%s/share/man/man1' % sys.prefix, ['Nagstamon/resources/nagstamon.1.gz']),
-          ('%s/share/pixmaps' % sys.prefix, ['Nagstamon/resources/nagstamon.svg']),
-          ('%s/share/applications' % sys.prefix, ['Nagstamon/resources/nagstamon.desktop'])],
+                  ('%s/share/pixmaps' % sys.prefix, ['Nagstamon/resources/nagstamon.svg']),
+                  ('%s/share/applications' % sys.prefix, ['Nagstamon/resources/nagstamon.desktop'])],
       options=dict(build_exe=build_exe_options,
-          bdist_mac=bdist_mac_options,
-          bdist_dmg=bdist_dmg_options,
-          bdist_rpm=bdist_rpm_options)
+                   bdist_mac=bdist_mac_options,
+                   bdist_dmg=bdist_dmg_options,
+                   bdist_rpm=bdist_rpm_options)
       )
