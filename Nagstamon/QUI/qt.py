@@ -18,6 +18,7 @@
 # Select Qt version based on installation found
 # Prefer in this order: PyQt6 - PyQt5
 
+from pathlib import Path
 import sys
 
 # Enough to handle with differences between PyQt5 + PyQt6, so PySide6 will be
@@ -99,6 +100,53 @@ if 'PyQt5' in sys.modules:
         '''
         return event.globalPos()
 
+    class MediaPlayer(QObject):
+        """
+            play media files for notification
+        """
+        # needed to show error in a thread-safe way
+        send_message = Signal(str, str)
+
+        def __init__(self, statuswindow, resource_files):
+            QObject.__init__(self)
+            self.player = QMediaPlayer(parent=self)
+
+            self.player.setVolume(100)
+            self.playlist = QMediaPlaylist()
+            self.player.setPlaylist(self.playlist)
+            self.resource_files = resource_files
+            # let statuswindow show message
+            self.send_message.connect(statuswindow.show_message)
+            # connect with statuswindow notification worker
+            statuswindow.worker_notification.load_sound.connect(self.set_media)
+            statuswindow.worker_notification.play_sound.connect(self.play)
+
+        @Slot(str)
+        def set_media(self, media_file):
+            """
+            Give media_file to player and if it is one of the default files check first if still exists
+            :param media_file:
+            :return:
+            """
+            if media_file in self.resource_files:
+                # by using RESOURCE_FILES the file path will be checked on macOS and the file restored if necessary
+                media_file = self.resource_files[media_file]
+            # only existing file can be played
+            if Path(media_file).exists:
+                url = QUrl.fromLocalFile(media_file)
+                mediacontent = QMediaContent(url)
+                self.player.setMedia(mediacontent)
+                del url, mediacontent
+                return True
+            else:
+                # cry and tell no file was found
+                self.send_message.emit('warning', 'Sound file <b>\'{0}\'</b> not found for playback.'.format(media_file))
+                return False
+
+        @Slot()
+        def play(self):
+            # just play sound
+            self.player.play()
 
 elif 'PyQt6' in sys.modules:
     # PySide/PyQt compatibility
@@ -165,6 +213,52 @@ elif 'PyQt6' in sys.modules:
         Qt5 uses other method than Qt6
         '''
         return event.globalPosition()
+
+    class MediaPlayer(QObject):
+        """
+            play media files for notification
+        """
+        # needed to show error in a thread-safe way
+        send_message = Signal(str, str)
+
+        def __init__(self, statuswindow, resource_files):
+            QObject.__init__(self)
+            self.audio_output = QAudioOutput()
+            self.audio_output.setVolume(100)
+            self.player = QMediaPlayer(parent=self)
+            self.player.setAudioOutput(self.audio_output)
+            self.resource_files = resource_files
+            # let statuswindow show message
+            self.send_message.connect(statuswindow.show_message)
+            # connect with statuswindow notification worker
+            statuswindow.worker_notification.load_sound.connect(self.set_media)
+            statuswindow.worker_notification.play_sound.connect(self.play)
+
+        @Slot(str)
+        def set_media(self, media_file):
+            """
+            Give media_file to player and if it is one of the default files check first if still exists
+            :param media_file:
+            :return:
+            """
+            if media_file in self.resource_files:
+                # by using RESOURCE_FILES the file path will be checked on macOS and the file restored if necessary
+                media_file = self.resource_files[media_file]
+            # only existing file can be played
+            if Path(media_file).exists():
+                url = QUrl.fromLocalFile(media_file)
+                self.player.setSource(url)
+                del url
+                return True
+            else:
+                # cry and tell no file was found
+                self.send_message.emit('warning', f'Sound file <b>\'{media_file}\'</b> not found for playback.')
+                return False
+
+        @Slot()
+        def play(self):
+            # just play sound
+            self.player.play()
 
 # elif 'PySide6' in sys.modules:
 #     from PySide6.QtCore import Signal, \

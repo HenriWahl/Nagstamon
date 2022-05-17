@@ -6785,101 +6785,6 @@ class Dialog_About(Dialog):
         self.window.exec()
 
 
-class MediaPlayerQt5(QObject):
-    """
-        play media files for notification
-    """
-    # needed to show error in a thread-safe way
-    send_message = Signal(str, str)
-
-    def __init__(self):
-        QObject.__init__(self)
-        self.player = QMediaPlayer(parent=self)
-
-        self.player.setVolume(100)
-        self.playlist = QMediaPlaylist()
-        self.player.setPlaylist(self.playlist)
-
-        # let statuswindow show message
-        self.send_message.connect(statuswindow.show_message)
-        # connect with statuswindow notification worker
-        statuswindow.worker_notification.load_sound.connect(self.set_media)
-        statuswindow.worker_notification.play_sound.connect(self.play)
-
-    @Slot(str)
-    def set_media(self, media_file):
-        """
-        Give media_file to player and if it is one of the default files check first if still exists
-        :param media_file:
-        :return:
-        """
-        if media_file in RESOURCE_FILES:
-            # by using RESOURCE_FILES the file path will be checked on macOS and the file restored if necessary
-            media_file = RESOURCE_FILES[media_file]
-        # only existing file can be played
-        if os.path.exists(media_file):
-            url = QUrl.fromLocalFile(media_file)
-            mediacontent = QMediaContent(url)
-            self.player.setMedia(mediacontent)
-            del url, mediacontent
-            return True
-        else:
-            # cry and tell no file was found
-            self.send_message.emit('warning', 'Sound file <b>\'{0}\'</b> not found for playback.'.format(media_file))
-            return False
-
-    @Slot()
-    def play(self):
-        # just play sound
-        self.player.play()
-
-
-class MediaPlayerQt6(QObject):
-    """
-        play media files for notification
-    """
-    # needed to show error in a thread-safe way
-    send_message = Signal(str, str)
-
-    def __init__(self):
-        QObject.__init__(self)
-        self.audio_output = QAudioOutput()
-        self.audio_output.setVolume(100)
-        self.player = QMediaPlayer(parent=self)
-        self.player.setAudioOutput(self.audio_output)
-        # let statuswindow show message
-        self.send_message.connect(statuswindow.show_message)
-        # connect with statuswindow notification worker
-        statuswindow.worker_notification.load_sound.connect(self.set_media)
-        statuswindow.worker_notification.play_sound.connect(self.play)
-
-    @Slot(str)
-    def set_media(self, media_file):
-        """
-        Give media_file to player and if it is one of the default files check first if still exists
-        :param media_file:
-        :return:
-        """
-        if media_file in RESOURCE_FILES:
-            # by using RESOURCE_FILES the file path will be checked on macOS and the file restored if necessary
-            media_file = RESOURCE_FILES[media_file]
-        # only existing file can be played
-        if os.path.exists(media_file):
-            url = QUrl.fromLocalFile(media_file)
-            self.player.setSource(url)
-            del url
-            return True
-        else:
-            # cry and tell no file was found
-            self.send_message.emit('warning', f'Sound file <b>\'{media_file}\'</b> not found for playback.')
-            return False
-
-    @Slot()
-    def play(self):
-        # just play sound
-        self.player.play()
-
-
 class CheckVersion(QObject):
     """
         checking for updates
@@ -7252,7 +7157,4 @@ elif conf.icon_in_systray:
     systrayicon.set_menu(menu)
 
 # versatile mediaplayer
-if QT_VERSION_MAJOR < 6:
-    mediaplayer = MediaPlayerQt5()
-else:
-    mediaplayer = MediaPlayerQt6()
+mediaplayer = MediaPlayer(statuswindow, RESOURCE_FILES)
