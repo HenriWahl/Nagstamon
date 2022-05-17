@@ -26,15 +26,23 @@ import sys
 # by the little import the appropriate PyQt version will be loaded
 try:
     from PyQt6.QtCore import PYQT_VERSION_STR as QT_VERSION_STR
+    # get int-ed version parts
+    QT_VERSION_MAJOR, QT_VERSION_MINOR, QT_VERSION_BUGFIX = [int(x) for x in QT_VERSION_STR.split('.')]
+    # for later decision which differences have to be considered
+    QT_FLAVOR = 'PyQt6'
 except ImportError:
     try:
         from PyQt5.QtCore import PYQT_VERSION_STR as QT_VERSION_STR
+        # get int-ed version parts
+        QT_VERSION_MAJOR, QT_VERSION_MINOR, QT_VERSION_BUGFIX = [int(x) for x in QT_VERSION_STR.split('.')]
+        # for later decision which differences have to be considered
+        QT_FLAVOR = 'PyQt5'
     except ImportError:
         sys.exit('Qt is missing')
 
-# because 'PyQt6' is in sys.modules even if the import some line befoe failed
+# because 'PyQt6' is in sys.modules even if the import some line before failed
 # the backup PyQt5 should be loaded earlier if it exists due to exception treatment
-if 'PyQt5' in sys.modules:
+if QT_FLAVOR == 'PyQt5':
     from PyQt5.QtCore import pyqtSignal as Signal, \
         pyqtSlot as Slot, \
         PYQT_VERSION_STR as QT_VERSION_STR, \
@@ -91,8 +99,6 @@ if 'PyQt5' in sys.modules:
         QVBoxLayout, \
         QWidget
     from PyQt5 import uic
-    # for later decision which differences have to be considered
-    QT_FLAVOR = 'PyQt5'
 
     def get_global_position(event):
         '''
@@ -148,7 +154,7 @@ if 'PyQt5' in sys.modules:
             # just play sound
             self.player.play()
 
-elif 'PyQt6' in sys.modules:
+elif QT_FLAVOR == 'PyQt6':
     # PySide/PyQt compatibility
     from PyQt6.QtCore import pyqtSignal as Signal, \
         pyqtSlot as Slot, \
@@ -316,7 +322,3 @@ elif 'PyQt6' in sys.modules:
 #         QWidget
 #     # for later decision which differences have to be considered
 #     QT_FLAVOR = 'PySide6'
-
-# get int-ed version parts
-QT_VERSION_MAJOR, QT_VERSION_MINOR, QT_VERSION_BUGFIX = [int(x) for x in QT_VERSION_STR.split('.')]
-
