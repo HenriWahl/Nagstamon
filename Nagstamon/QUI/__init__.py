@@ -814,8 +814,12 @@ class DraggableWidget(QWidget):
         # if not set calculate relative position
         if not statuswindow.relative_x and \
                 not statuswindow.relative_y:
-            statuswindow.relative_x = event.globalPosition().x() - statuswindow.x()
-            statuswindow.relative_y = event.globalPosition().y() - statuswindow.y()
+            if QT_VERSION_MAJOR == 6:
+                global_position = event.globalPosition()
+            elif QT_VERSION_MAJOR == 5:
+                global_position = event.globalPos()
+            statuswindow.relative_x = global_position.x() - statuswindow.x()
+            statuswindow.relative_y = global_position.y() - statuswindow.y()
 
     def mouseReleaseEvent(self, event):
         """
@@ -852,15 +856,19 @@ class DraggableWidget(QWidget):
                 statuswindow.is_shown and
                 statuswindow.is_shown_timestamp + 0.5 < time.time()):
             if not conf.fullscreen and not conf.windowed and not self.right_mouse_button_pressed:
+                # Qt5 & Qt6 have different methods for getting the global position
+                if QT_VERSION_MAJOR == 6:
+                    global_position = event.globalPosition()
+                elif QT_VERSION_MAJOR == 5:
+                    global_position = event.globalPos()
                 # lock window as moving
                 # if not set calculate relative position
                 if not statuswindow.relative_x and not statuswindow.relative_y:
-                    statuswindow.relative_x = event.globalPosition().x() - statuswindow.x()
-                    statuswindow.relative_y = event.globalPosition().y() - statuswindow.y()
-
+                    statuswindow.relative_x = global_position.x() - statuswindow.x()
+                    statuswindow.relative_y = global_position.y() - statuswindow.y()
                 statuswindow.moving = True
-                statuswindow.move(int(event.globalPosition().x() - statuswindow.relative_x), \
-                                  int(event.globalPosition().y() - statuswindow.relative_y))
+                statuswindow.move(int(global_position.x() - statuswindow.relative_x),
+                                  int(global_position.y() - statuswindow.relative_y))
 
             # needed for OSX - otherwise statusbar stays blank while moving
             statuswindow.update()
