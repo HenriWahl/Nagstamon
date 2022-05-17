@@ -93,6 +93,13 @@ if 'PyQt5' in sys.modules:
     # for later decision which differences have to be considered
     QT_FLAVOR = 'PyQt5'
 
+    def get_global_position(event):
+        '''
+        Qt5 uses other method than Qt6
+        '''
+        return event.globalPos()
+
+
 elif 'PyQt6' in sys.modules:
     # PySide/PyQt compatibility
     from PyQt6.QtCore import pyqtSignal as Signal, \
@@ -152,6 +159,12 @@ elif 'PyQt6' in sys.modules:
     from PyQt6 import uic
     # for later decision which differences have to be considered
     QT_FLAVOR = 'PyQt6'
+
+    def get_global_position(event):
+        '''
+        Qt5 uses other method than Qt6
+        '''
+        return event.globalPosition()
 
 # elif 'PySide6' in sys.modules:
 #     from PySide6.QtCore import Signal, \
