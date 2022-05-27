@@ -59,8 +59,6 @@ class CentreonServer(GenericServer):
     # Centreon works better or at all with html.parser for BeautifulSoup
     PARSER = 'html.parser'
 
-    # Needed to detect each Centreon's version
-    centreon_version = None
     # Token that centreon use to protect the system
     centreon_token = None
     # URLs of the Centreon pages
@@ -71,20 +69,39 @@ class CentreonServer(GenericServer):
     limit_services_number = 9999
     # default value, applies to version 2.2 and others
     XML_PATH = 'xml'
-	# use the RestAPI
-    use_restapi = True
-    restapi_version = "latest"
 
     def init_config(self):
         '''
         dummy init_config, called at thread start, not really needed here, just omit extra properties
         '''
+
+        # FIX but be provided by user
+        self.user_provided_centreon_version = "20.04"
+
+        if re.search('2(0|1|2)\.(04|10)', self.user_provided_centreon_version):
+            self.centreon_version = 20.04
+            if conf.debug_mode is True:
+                self.Debug(server='[' + self.get_name() + ']', debug='Centreon version selected : 20.04 <=> 22.04')
+            # URLs for browser shortlinks/buttons on popup window
+            self.BROWSER_URLS = {'monitor': '$MONITOR$/monitoring/resources',
+            'hosts': '$MONITOR$/monitoring/resources',
+            'services': '$MONITOR$/monitoring/resources',
+            'history': '$MONITOR$/main.php?p=20301'}
+            # RestAPI version
+            self.restapi_version = "latest"
+
+        else:
+            if conf.debug_mode is True:
+                self.Debug(server='[' + self.get_name() + ']', debug='No Centreon version provided')
+
         # set URLs here already
-        self.init_HTTP()
+        # self.init_HTTP()
+
         # Changed this because define_url was called 2 times
         #if not self.tls_error and self.centreon_version is not None:
         if not self.tls_error and self.urls_centreon is None:
             self.define_url()
+
 
     def init_HTTP(self):
         """
@@ -92,98 +109,12 @@ class CentreonServer(GenericServer):
         """
         if self.session is None:
             GenericServer.init_HTTP(self)
-            if self.use_restapi == True:
-                # prepare for JSON
-                self.session.headers.update({'Content-Type': 'application/json'})
-
-        if self.centreon_version is None:
-            result_versioncheck = self.FetchURL(self.monitor_cgi_url + '/index.php', giveback='raw')
-            raw_versioncheck, error_versioncheck = result_versioncheck.result, result_versioncheck.error
-            if error_versioncheck == '':
-                if re.search('2\.2\.[0-9]', raw_versioncheck):
-                    self.centreon_version = 2.2
-                    if conf.debug_mode is True:
-                        self.Debug(server='[' + self.get_name() + ']', debug='Centreon version detected : 2.2')
-                    # URLs for browser shortlinks/buttons on popup window
-                    self.BROWSER_URLS = {'monitor': '$MONITOR$/main.php?p=1',
-                                        'hosts': '$MONITOR$/main.php?p=20103&o=hpb',
-                                        'services': '$MONITOR$/main.php?p=20202&o=svcpb',
-                                        'history': '$MONITOR$/main.php?p=203'}
-                elif re.search('2\.[3-6]\.[0-5]', raw_versioncheck):
-                    self.centreon_version = 2.3456
-                    if conf.debug_mode is True:
-                        self.Debug(server='[' + self.get_name() + ']', debug='Centreon version detected : 2.3 <=> 2.6.5')
-                    # URLs for browser shortlinks/buttons on popup window
-                    self.BROWSER_URLS = {'monitor': '$MONITOR$/main.php?p=1',
-                                        'hosts': '$MONITOR$/main.php?p=20103&o=hpb',
-                                        'services': '$MONITOR$/main.php?p=20202&o=svcpb',
-                                        'history': '$MONITOR$/main.php?p=203'}
-                elif re.search('2\.6\.[6-9]', raw_versioncheck):
-                    self.centreon_version = 2.66
-                    if conf.debug_mode is True:
-                        self.Debug(server='[' + self.get_name() + ']', debug='Centreon version detected : 2.6.6')
-                    # URLs for browser shortlinks/buttons on popup window
-                    self.BROWSER_URLS = {'monitor': '$MONITOR$/main.php?p=1',
-                                        'hosts': '$MONITOR$/main.php?p=20103&o=hpb',
-                                        'services': '$MONITOR$/main.php?p=20202&o=svcpb',
-                                        'history': '$MONITOR$/main.php?p=203'}
-                elif re.search('2\.7\.[0-9]', raw_versioncheck):
-                    # Centreon 2.7 only support C. Broker
-                    self.centreon_version = 2.7
-                    if conf.debug_mode is True:
-                        self.Debug(server='[' + self.get_name() + ']', debug='Centreon version detected : 2.7')
-                    # URLs for browser shortlinks/buttons on popup window
-                    self.BROWSER_URLS = {'monitor': '$MONITOR$/main.php?',
-                                        'hosts': '$MONITOR$/main.php?p=20202&o=hpb',
-                                        'services': '$MONITOR$/main.php?p=20201&o=svcpb',
-                                        'history': '$MONITOR$/main.php?p=203'}
-                elif re.search('2\.8\.[0-9]', raw_versioncheck):
-                    # Centreon 2.8 only support C. Broker
-                    self.centreon_version = 2.8
-                    if conf.debug_mode is True:
-                        self.Debug(server='[' + self.get_name() + ']', debug='Centreon version detected : 2.8')
-                    # URLs for browser shortlinks/buttons on popup window
-                    self.BROWSER_URLS = {'monitor': '$MONITOR$/main.php?',
-                                        'hosts': '$MONITOR$/main.php?p=20202',
-                                        'services': '$MONITOR$/main.php?p=20201',
-                                        'history': '$MONITOR$/main.php?p=203'}
-                elif re.search('18\.10\.[0-9]', raw_versioncheck):
-                    self.centreon_version = 18.10
-                    if conf.debug_mode is True:
-                        self.Debug(server='[' + self.get_name() + ']', debug='Centreon version detected : 18.10')
-                    # URLs for browser shortlinks/buttons on popup window
-                    self.BROWSER_URLS = {'monitor': '$MONITOR$/main.php?',
-                                        'hosts': '$MONITOR$/main.php?p=20202',
-                                        'services': '$MONITOR$/main.php?p=20201',
-                                        'history': '$MONITOR$/main.php?p=203'}
-                elif re.search('19\.(04|10)\.[0-9]', raw_versioncheck) or re.search('20\.(04|10)\.[0-9]', raw_versioncheck):
-                    self.centreon_version = 19.04
-                    if conf.debug_mode is True:
-                        self.Debug(server='[' + self.get_name() + ']', debug='Centreon version detected : 19.04 <=> 21.04')
-                    # URLs for browser shortlinks/buttons on popup window
-                    self.BROWSER_URLS = {'monitor': '$MONITOR$/main.php?',
-                                        'hosts': '$MONITOR$/main.php?p=20202',
-                                        'services': '$MONITOR$/main.php?p=20201',
-                                        'history': '$MONITOR$/main.php?p=203'}
-                else:
-                    # unsupported version or unable do determine
-                    self.centreon_version = 19.04
-                    if conf.debug_mode is True:
-                        self.Debug(server='[' + self.get_name() + ']', debug='Centreon version unknown : supposed to be >= 19.04')
-                    # URLs for browser shortlinks/buttons on popup window
-                    self.BROWSER_URLS = {'monitor': '$MONITOR$/main.php?',
-                                        'hosts': '$MONITOR$/main.php?p=20202&o=hpb',
-                                        'services': '$MONITOR$/main.php?p=20201&o=svcpb',
-                                        'history': '$MONITOR$/main.php?p=203'}
-            else:
-                if conf.debug_mode is True:
-                    self.Debug(server='[' + self.get_name() + ']', debug='Error getting the home page : ' + error_versioncheck)
+            self.session.headers.update({'Content-Type': 'application/json'})
 
             if self.first_login:
                 self.SID = self.get_sid().result
                 self.first_login = False
 
-            del result_versioncheck, raw_versioncheck, error_versioncheck
 
     def reset_HTTP(self):
         '''
@@ -192,139 +123,65 @@ class CentreonServer(GenericServer):
         self.SID = None
         self.SID = self.get_sid().result
 
+
+    def define_url(self):
+        urls_centreon_api_v2 = {
+            'main': self.monitor_cgi_url + '/monitoring/resources',
+            'login': self.monitor_cgi_url + '/api/' + self.restapi_version + '/login',
+            'services': self.monitor_cgi_url + '/api/' + self.restapi_version + '/monitoring/resources',
+            'hosts': self.monitor_cgi_url + '/api/' + self.restapi_version + '/monitoring/resources'
+        }
+
+        if self.centreon_version == 20.04:
+            self.urls_centreon = urls_centreon_api_v2
+        if conf.debug_mode == True:
+            self.Debug(server='[' + self.get_name() + ']', debug='URLs defined for Centreon %s' % (self.centreon_version))
+
+
     def open_monitor(self, host, service=''):
         if self.use_autologin is True:
             auth = '&autologin=1&useralias=' + self.username + '&token=' + self.autologin_key
         else:
             auth = ''
 
-        #  Meta
-        if host == '_Module_Meta':
-            # Centreon < 2.7
-            if self.centreon_version < 2.7:
-                webbrowser_open(self.urls_centreon['index'] + '?' + urllib.parse.urlencode({'p': 20206, 'o': 'meta'}) + auth )
-            #  Centreon 2.7
-            elif self.centreon_version == 2.7:
-                webbrowser_open(self.urls_centreon['main'] + '?' + urllib.parse.urlencode({'p':20206, 'o':'meta'}) + auth )
-            #  Centreon 2.8
-            elif self.centreon_version == 2.8:
-                m =  re.search(r'^.+ \((?P<rsd>.+)\)$', service)
-                if m:
-                    service = m.group('rsd')
-                    webbrowser_open(self.urls_centreon['main'] + '?' + urllib.parse.urlencode({'p':20201,'o':'svcd','host_name':'_Module_Meta','service_description':service}) + auth )
-            # Starting from Centreon 18.10
-            else:
-                m =  re.search(r'^.+ \((?P<rsd>.+)\)$', service)
-                if m:
-                    service = m.group('rsd')
-                    webbrowser_open(self.urls_centreon['main_with_frames'] + '?' + urllib.parse.urlencode({'p':20201,'o':'svcd','host_name':'_Module_Meta','service_description':service}) + auth )
+        webbrowser_open(self.urls_centreon['main'] + auth )
 
-        # must be a host if service is empty
-        elif service == '':
-            if self.centreon_version < 2.7:
-                webbrowser_open(self.urls_centreon['main'] + '?' + urllib.parse.urlencode({'p':201,'o':'hd', 'host_name':host}) + auth )
-            elif self.centreon_version in [2.7, 2.8]:
-                webbrowser_open(self.urls_centreon['main'] + '?' + urllib.parse.urlencode({'p':20202,'o':'hd', 'host_name':host}) + auth )
-            else:
-                webbrowser_open(self.urls_centreon['main_with_frames'] + '?' + urllib.parse.urlencode({'p':20202,'o':'hd', 'host_name':host}) + auth )
-
-        # so it's a service
-        else:
-            if self.centreon_version < 2.7:
-                webbrowser_open(self.urls_centreon['main'] + '?' + urllib.parse.urlencode({'p':202, 'o':'svcd',  'host_name':host, 'service_description':service}) + auth )
-            elif self.centreon_version in [2.7, 2.8]:
-                webbrowser_open(self.urls_centreon['main'] + '?' + urllib.parse.urlencode({'p':20201,'o':'svcd', 'host_name':host, 'service_description':service}) + auth )
-            else:
-                webbrowser_open(self.urls_centreon['main_with_frames'] + '?' + urllib.parse.urlencode({'p':20201,'o':'svcd', 'host_name':host, 'service_description':service}) + auth )
 
     def get_sid(self):
-        '''
-        gets a shiny new SID for XML HTTP requests to Centreon cutting it out via .partition() from raw HTML
-        additionally get php session cookie
-        '''
         try:
-            # Aulogin with key, BROWSER_URLS needs the key
-            if self.use_autologin == True:
-                auth = '&autologin=1&useralias=' + self.username + '&token=' + self.autologin_key
-                self.BROWSER_URLS= { 'monitor': self.BROWSER_URLS['monitor'] + auth,\
-                                    'hosts': self.BROWSER_URLS['hosts'] + auth,\
-                                    'services': self.BROWSER_URLS['services'] + auth,\
-                                    'history': self.BROWSER_URLS['history'] + auth}
-                raw = self.FetchURL(self.monitor_cgi_url + '/index.php?p=101&autologin=1&useralias=' + self.username + '&token=' + self.autologin_key, giveback='raw')
-                if conf.debug_mode == True:
-                    self.Debug(server='[' + self.get_name() + ']', debug='Autologin : ' + self.username + ' : ' + self.autologin_key)
-                # Gathering of the token who will be used to interact with Centreon (start with 2.66)
-                if  self.centreon_version >= 2.66 and self.centreon_version < 19.04:
-                    page = self.FetchURL(self.monitor_cgi_url + '/main.get.php')
-                    self.centreon_token = page.result.find('input', {'name': "centreon_token"})['value']
-
-            elif self.use_restapi == True:
-                cgi_data = {
-                    "security": {
-                        "credentials": {
-                            "login": self.username,
-                            "password": self.password
-                        }
+            cgi_data = {
+                "security": {
+                    "credentials": {
+                        "login": self.username,
+                        "password": self.password
                     }
                 }
+            }
 
-                # Post json
-                json_string = json.dumps(cgi_data)
-                result = self.FetchURL(self.monitor_cgi_url + '/api/' + self.restapi_version + '/login', cgi_data=json_string, giveback='raw')
+            # Post json
+            json_string = json.dumps(cgi_data)
+            result = self.FetchURL(self.monitor_cgi_url + '/api/' + self.restapi_version + '/login', cgi_data=json_string, giveback='raw')
 
-                data = json.loads(result.result)
-                error = result.error
-                status_code = result.status_code
+            data = json.loads(result.result)
+            error = result.error
+            status_code = result.status_code
 
-                if conf.debug_mode:
-                    self.Debug(server=self.get_name(),
-                               debug="Fetched JSON: " + pprint.pformat(data))
+            if conf.debug_mode:
+                self.Debug(server=self.get_name(),
+                           debug="Fetched JSON: " + pprint.pformat(data))
 
 
-                # check if any error occured
-                errors_occured = self.check_for_error(data, error, status_code)
-                if errors_occured is not False:
-                    return(errors_occured)
+            # check if any error occured
+            errors_occured = self.check_for_error(data, error, status_code)
+            if errors_occured is not False:
+                return(errors_occured)
 
-                sid = data["security"]["token"]
+            sid = data["security"]["token"]
 
-                if conf.debug_mode == True:
-                    self.Debug(server='[' + self.get_name() + ']', debug='API login : ' + self.username + ' / ' + self.password + ' > Token : ' + sid)
-
-                self.session.headers.update({'X-Auth-Token': sid})
-                return Result(result=sid)
-
-            # Password auth
-            else:
-                login = self.FetchURL(self.monitor_cgi_url + '/index.php')
-                if login.error == '' and login.status_code == 200:
-                    # Centreon >= 2.6.6 implement a token
-                    if  self.centreon_version >= 2.66 and self.centreon_version <= 19.04:
-                        form = login.result.find('form')
-                        form_inputs = {}
-                        # Need to catch the centreon_token for login to work
-                        for form_input in ('centreon_token', 'submitLogin'):
-                            form_inputs[form_input] = form.find('input', {'name': form_input})['value']
-                        self.centreon_token = form_inputs['centreon_token']
-                        form_inputs['useralias'] = self.username
-                        form_inputs['password'] = self.password
-                        # fire up login button with all needed data
-                        raw = self.FetchURL(self.monitor_cgi_url + '/index.php', cgi_data=form_inputs)
-                    else:
-                        login_data = {"useralias" : self.username, "password" : self.password, "submit" : "Login"}
-                        raw = self.FetchURL(self.monitor_cgi_url + "/index.php",cgi_data=login_data, giveback="raw")
-                if conf.debug_mode == True:
-                    self.Debug(server='[' + self.get_name() + ']', debug='Password login : ' + self.username + ' : ' + self.password)
-
-            sid = self.session.cookies['PHPSESSID']
             if conf.debug_mode == True:
-                self.Debug(server='[' + self.get_name() + ']', debug='SID : ' + sid)
-                if  self.centreon_version >= 2.66 and self.centreon_version < 19.04:
-                    self.Debug(server='[' + self.get_name() + ']', debug='Centreon Token : ' + self.centreon_token)
-            # those broker urls would not be changing too often so this check migth be done here
-            if self.first_login:
-                self.get_xml_path(sid)
-                self.first_login = False
+                self.Debug(server='[' + self.get_name() + ']', debug='API login : ' + self.username + ' / ' + self.password + ' > Token : ' + sid)
+
+            self.session.headers.update({'X-Auth-Token': sid})
             return Result(result=sid)
 
         except:
@@ -332,6 +189,7 @@ class CentreonServer(GenericServer):
             traceback.print_exc(file=sys.stdout)
             result, error = self.Error(sys.exc_info())
             return Result(result=result, error=error)
+
 
     def get_start_end(self, host):
         '''
@@ -372,6 +230,7 @@ class CentreonServer(GenericServer):
         except:
             self.Error(sys.exc_info())
             return 'n/a', 'n/a'
+
 
     def GetHost(self, host):
         '''
@@ -433,184 +292,74 @@ class CentreonServer(GenericServer):
         # give back host or ip
         return Result(result=address)
 
-    def get_xml_path(self, sid):
-        '''
-        Find out where this instance of Centreon is publishing the status XMLs
-        Centreon 2.6 + ndo/c.broker - /include/monitoring/status/Hosts/xml/{ndo,broker}/hostXML.php according to configuration
-        Centreon 2.7 + c.broker - /include/monitoring/status/Hosts/xml/hostXML.php
-        Centreon 2.8 + c.broker - /include/monitoring/status/Hosts/xml/hostXML.php
-        regexping HTML for Javascript
-        '''
-        if self.centreon_version <= 2.66:
-            # 2.6 support NDO and C. Broker, we must check which one is used
-            cgi_data = {'p':201, 'sid':sid}
-            result = self.FetchURL(self.monitor_cgi_url + '/main.php', cgi_data=cgi_data, giveback='raw')
-            raw, error = result.result, result.error
-            if error == '':
-                if re.search('var _addrXML.*xml\/ndo\/host', raw):
-                  self.XML_PATH = 'xml/ndo'
-                  if conf.debug_mode == True:
-                      self.Debug(server='[' + self.get_name() + ']', debug='Detected broker : NDO')
-                elif re.search('var _addrXML.*xml\/broker\/host', raw):
-                    self.XML_PATH = 'xml/broker'
+
+    def get_host_and_service_id(self, host, service=''):
+        if service == "":
+            # Hosts only
+            if self.centreon_version == 20.04:
+                # https://demo.centreon.com/centreon/api/latest/monitoring/resources?page=1&limit=30&sort_by={"status_severity_code":"asc","last_status_change":"desc"}&types=["host"]&statuses=["WARNING","DOWN","CRITICAL","UNKNOWN"]
+                url_hosts = self.urls_centreon['hosts'] + '?types=["host"]&search={"h.name":"' + host + '"}'
+
+            try:
+                if self.centreon_version == 20.04:
+                    # Get json
+                    result = self.FetchURL(url_hosts, giveback='raw')
+
+                    data = json.loads(result.result)
+                    error = result.error
+                    status_code = result.status_code
+
+                    # check if any error occured
+                    errors_occured = self.check_for_error(data, error, status_code)
+                    if errors_occured is not False:
+                        return(errors_occured)
+
+                    host_id = str(data["result"][0]["id"])
+
                     if conf.debug_mode == True:
-                        self.Debug(server='[' + self.get_name() + ']', debug='Detected broker : C. Broker')
-                else:
+                        self.Debug(server='[' + self.get_name() + ']', debug='Get Host ID : ' + host + " / " + host_id)
+                    return host_id
+
+            except:
+                import traceback
+                traceback.print_exc(file=sys.stdout)
+                # set checking flag back to False
+                self.isChecking = False
+                result, error = self.Error(sys.exc_info())
+                return Result(result=result, error=error)
+        else:
+            # Host + Service
+            if self.centreon_version == 20.04:
+                url_service = self.urls_centreon['services'] + '?types=["service"]&search={"$and":[{"h.name":{"$eq":"'+host+'"}}, {"s.description":{"$eq":"'+service+'"}}]}'
+
+            try:
+                if self.centreon_version == 20.04:
+                    # Get json
+                    result = self.FetchURL(url_service, giveback='raw')
+
+                    data = json.loads(result.result)
+                    error = result.error
+                    status_code = result.status_code
+
+                    # check if any error occured
+                    errors_occured = self.check_for_error(data, error, status_code)
+                    if errors_occured is not False:
+                        return(errors_occured)
+
+                    host_id = str(data["result"][0]["parent"]["id"])
+                    service_id = str(data["result"][0]["id"])
+
                     if conf.debug_mode == True:
-                        self.Debug(server='[' + self.get_name() + ']', debug='Could not detect the broker for Centeron 2.[3-6]. Using Centreon Broker')
-                    self.XML_PATH = 'xml/broker'
-                del raw
-            else:
-                if conf.debug_mode == True:
-                    self.Debug(server='[' + self.get_name() + ']', debug='Unable to fetch the main page to detect the broker : ' + error)
-            del result, error
-        else:
-            if conf.debug_mode == True:
-                self.Debug(server='[' + self.get_name() + ']', debug='Only Centreon Broker is supported in Centeon >= 2.7 -> XML_PATH='+ self.XML_PATH)
+                        self.Debug(server='[' + self.get_name() + ']', debug='Get Host / Service ID : ' + host_id + " / " + service_id)
+                    return host_id,service_id
 
-    def define_url(self):
-        urls_centreon_2_2 = {
-            'main': self.monitor_cgi_url + '/main.php',
-            'index': self.monitor_cgi_url + '/index.php',
-            'xml_services': self.monitor_cgi_url + '/include/monitoring/status/Services/' + self.XML_PATH + '/serviceXML.php',
-            'xml_hosts': self.monitor_cgi_url + '/include/monitoring/status/Hosts/' + self.XML_PATH + '/hostXML.php',
-            'xml_meta': self.monitor_cgi_url + '/include/monitoring/status/Meta/' + self.XML_PATH + '/metaServiceXML.php',
-            'xml_hostSendCommand': self.monitor_cgi_url + '/include/monitoring/objectDetails/xml/hostSendCommand.php',
-            'xml_serviceSendCommand': self.monitor_cgi_url + '/include/monitoring/objectDetails/xml/serviceSendCommand.php',
-            'external_cmd_cmdPopup': self.monitor_cgi_url + '/include/monitoring/external_cmd/cmdPopup.php',
-            # no idea if this really exist in centreon < 2.7
-            'autologoutXMLresponse': self.monitor_cgi_url + '/include/common/javascript/autologoutXMLresponse.php'
-        }
-
-        # inconsistant url in Centreon 2.7
-        urls_centreon_2_7 = {
-            'main': self.monitor_cgi_url + '/main.php',
-            'index': self.monitor_cgi_url + '/index.php',
-            'xml_services': self.monitor_cgi_url + '/include/monitoring/status/Services/' + self.XML_PATH + '/serviceXML.php',
-            'xml_hosts': self.monitor_cgi_url + '/include/monitoring/status/Hosts/' + self.XML_PATH + '/broker/hostXML.php',
-            'xml_meta': self.monitor_cgi_url + '/include/monitoring/status/Meta/' + self.XML_PATH + '/broker/metaServiceXML.php',
-            'xml_hostSendCommand': self.monitor_cgi_url + '/include/monitoring/objectDetails/xml/hostSendCommand.php',
-            'xml_serviceSendCommand': self.monitor_cgi_url + '/include/monitoring/objectDetails/xml/serviceSendCommand.php',
-            'external_cmd_cmdPopup': self.monitor_cgi_url + '/include/monitoring/external_cmd/cmdPopup.php',
-            'autologoutXMLresponse': self.monitor_cgi_url + '/include/common/javascript/autologoutXMLresponse.php'
-        }
-
-        urls_centreon_2_8 = {
-            'main': self.monitor_cgi_url + '/main.php',
-            'index': self.monitor_cgi_url + '/index.php',
-            'xml_services': self.monitor_cgi_url + '/include/monitoring/status/Services/' + self.XML_PATH + '/serviceXML.php',
-            'xml_hosts': self.monitor_cgi_url + '/include/monitoring/status/Hosts/' + self.XML_PATH + '/hostXML.php',
-            'xml_hostSendCommand': self.monitor_cgi_url + '/include/monitoring/objectDetails/xml/hostSendCommand.php',
-            'xml_serviceSendCommand': self.monitor_cgi_url + '/include/monitoring/objectDetails/xml/serviceSendCommand.php',
-            'external_cmd_cmdPopup': self.monitor_cgi_url + '/include/monitoring/external_cmd/cmdPopup.php',
-            'autologoutXMLresponse': self.monitor_cgi_url + '/include/core/autologout/autologoutXMLresponse.php'
-        }
-
-        urls_centreon_18_10 = {
-            'main': self.monitor_cgi_url + '/main.get.php',
-            # needed to get the frames around the page when opening the monitoring on a host/service
-            'main_with_frames': self.monitor_cgi_url + '/main.php',
-            'index': self.monitor_cgi_url + '/index.php',
-            'xml_services': self.monitor_cgi_url + '/include/monitoring/status/Services/' + self.XML_PATH + '/serviceXML.php',
-            'xml_hosts': self.monitor_cgi_url + '/include/monitoring/status/Hosts/' + self.XML_PATH + '/hostXML.php',
-            'xml_hostSendCommand': self.monitor_cgi_url + '/include/monitoring/objectDetails/xml/hostSendCommand.php',
-            'xml_serviceSendCommand': self.monitor_cgi_url + '/include/monitoring/objectDetails/xml/serviceSendCommand.php',
-            'external_cmd_cmdPopup': self.monitor_cgi_url + '/include/monitoring/external_cmd/cmdPopup.php',
-            'keepAlive': self.monitor_cgi_url + '/api/internal.php?object=centreon_keepalive&action=keepAlive'
-        }
-
-        urls_centreon_api_v2 = {
-            'login': self.monitor_cgi_url + '/api/' + self.restapi_version + '/login',
-            'services': self.monitor_cgi_url + '/api/' + self.restapi_version + '/monitoring/resources',
-            'hosts': self.monitor_cgi_url + '/api/' + self.restapi_version + '/monitoring/resources'
-        }
-
-        if self.centreon_version < 2.7:
-            self.urls_centreon = urls_centreon_2_2
-        elif self.centreon_version == 2.7:
-            self.urls_centreon = urls_centreon_2_7
-        elif self.centreon_version == 2.8:
-            self.urls_centreon = urls_centreon_2_8
-        # 18.10 and beyond
-        elif self.centreon_version >= 18.10 and self.use_restapi == False:
-            self.urls_centreon = urls_centreon_18_10
-        elif self.centreon_version >= 18.10 and self.use_restapi == True:
-            self.urls_centreon = urls_centreon_api_v2
-        if conf.debug_mode == True:
-            self.Debug(server='[' + self.get_name() + ']', debug='URLs defined for Centreon %s' % (self.centreon_version))
-
-    def get_host_id(self, host):
-        '''
-        get host_id via parsing raw html
-        '''
-        if self.centreon_version < 2.7:
-            cgi_data = {'p': 20102, 'o': 'hd', 'host_name': host, 'sid': self.SID}
-        else:
-            cgi_data = {'p': 20202, 'o': 'hd', 'host_name': host, 'sid': self.SID}
-
-        url = self.urls_centreon['main'] + '?' + urllib.parse.urlencode(cgi_data)
-
-        result = self.FetchURL(url, giveback='raw')
-        raw, error = result.result, result.error
-
-        if error == '':
-            host_id = raw.partition("var host_id = '")[2].partition("'")[0]
-            del raw
-        else:
-            if conf.debug_mode == True:
-                self.Debug(server='[' + self.get_name() + ']', debug='Host ID could not be retrieved.')
-
-        # some cleanup
-        del result, error
-
-        # only if host_id is an usable integer return it
-        try:
-            if int(host_id):
-                if conf.debug_mode == True:
-                    self.Debug(server='[' + self.get_name() + ']', host=host, debug='Host ID is ' + host_id)
-                return host_id
-            else:
-                return ''
-        except:
-            return ''
-
-
-    def get_host_and_service_id(self, host, service):
-        '''
-        parse a ton of html to get a host and a service id...
-        '''
-        cgi_data = {'p':'20201',\
-                    'host_name':host,\
-                    'service_description':service,\
-                    'o':'svcd'}
-
-        # This request must be done in a GET, so just encode the parameters and fetch
-        result = self.FetchURL(self.urls_centreon['main'] + '?' + urllib.parse.urlencode(cgi_data), giveback="raw")
-        raw, error = result.result, result.error
-
-        if error == '':
-            host_id = raw.partition("var host_id = '")[2].partition("'")[0]
-            svc_id = raw.partition("var svc_id = '")[2].partition("'")[0]
-            del raw
-            if conf.debug_mode == True:
-                self.Debug(server='[' + self.get_name() + ']', host=host, service=service, debug='- Get host/svc ID : ' + host_id + '/' + svc_id)
-        else:
-            if conf.debug_mode == True:
-                self.Debug(server='[' + self.get_name() + ']', host=host, service=service, debug='- IDs could not be retrieved.')
-
-        # some cleanup
-        del result, error
-
-        # only if host_id is an usable integer return it
-        try:
-            if int(host_id) and int(svc_id):
-                if conf.debug_mode == True:
-                    self.Debug(server='[' + self.get_name() + ']', host=host, service=service, debug='- Host & Service ID are valid (int)')
-                return host_id,svc_id
-            else:
-                return '',''
-        except:
-            return '',''
+            except:
+                import traceback
+                traceback.print_exc(file=sys.stdout)
+                # set checking flag back to False
+                self.isChecking = False
+                result, error = self.Error(sys.exc_info())
+                return Result(result=result, error=error)
 
 
     def _get_status(self):
@@ -625,111 +374,19 @@ class CentreonServer(GenericServer):
                     result.error = 'Connection error'
                 return result
 
-        # services (unknown, warning or critical?)
-        if self.centreon_version < 2.7:
-            nagcgiurl_services = self.urls_centreon['xml_services'] + '?' + urllib.parse.urlencode({'num':0, 'limit':self.limit_services_number, 'o':'svcpb', 'sort_type':'status', 'sid':self.SID})
-        elif self.centreon_version >= 2.7 and self.use_restapi == False:
-            nagcgiurl_services = self.urls_centreon['xml_services'] + '?' + urllib.parse.urlencode({'num':0, 'limit':self.limit_services_number, 'o':'svcpb', 'p':20201, 'nc':0, 'criticality':0, 'statusService':'svcpb', 'sSetOrderInMemory':1, 'sid':self.SID})
-        elif self.centreon_version >= 2.7 and self.use_restapi == True:
+        # Services URL
+        if self.centreon_version == 20.04 :
             # https://demo.centreon.com/centreon/api/latest/monitoring/resources?page=1&limit=30&sort_by={"status_severity_code":"asc","last_status_change":"desc"}&types=["service"]&statuses=["WARNING","DOWN","CRITICAL","UNKNOWN"]
-            url_services = self.urls_centreon['services'] + '?types=["service"]&statuses=["WARNING","DOWN","CRITICAL","UNKNOWN"]&limit=' +  str(self.limit_services_number)
+            url_services = self.urls_centreon['services'] + '?types=["metaservice","service"]&statuses=["WARNING","DOWN","CRITICAL","UNKNOWN"]&limit=' +  str(self.limit_services_number)
 
-        # hosts (up or down or unreachable)
-        # define hosts xml URL, because of inconsistant url
-        if self.centreon_version < 2.7:
-            nagcgiurl_hosts = self.urls_centreon['xml_hosts'] + '?' + urllib.parse.urlencode({'num':0, 'limit':self.limit_services_number, 'o':'hpb', 'sort_type':'status', 'sid':self.SID})
-        elif self.centreon_version >= 2.7 and self.centreon_version < 19.04:
-            nagcgiurl_hosts = self.urls_centreon['xml_hosts'] + '?' + urllib.parse.urlencode({'num':0, 'limit':self.limit_services_number, 'o':'hpb', 'p':20202, 'criticality':0, 'statusHost':'hpb', 'sSetOrderInMemory':1, 'sid':self.SID})
-        elif self.centreon_version >= 19.04 and self.use_restapi == False:
-            nagcgiurl_hosts = self.urls_centreon['xml_hosts'] + '?' + urllib.parse.urlencode({'num':0, 'limit':self.limit_services_number, 'o':'hpb', 'p':20202, 'criticality':0, 'statusHost':'hpb', 'sSetOrderInMemory':1})
-        elif self.centreon_version >= 19.04 and self.use_restapi == True:
+        # Hosts URL
+        if self.centreon_version == 20.04:
             # https://demo.centreon.com/centreon/api/latest/monitoring/resources?page=1&limit=30&sort_by={"status_severity_code":"asc","last_status_change":"desc"}&types=["host"]&statuses=["WARNING","DOWN","CRITICAL","UNKNOWN"]
             url_hosts = self.urls_centreon['hosts'] + '?types=["host"]&statuses=["WARNING","DOWN","CRITICAL","UNKNOWN"]&limit=' + str(self.limit_services_number)
 
-
-        # hosts - mostly the down ones
-        # unfortunately the hosts status page has a different structure so
-        # hosts must be analyzed separately
+        # Hosts
         try:
-            if self.centreon_version <= 19.04 and self.use_restapi == False:
-                result = self.FetchURL(nagcgiurl_hosts, giveback='xml')
-                xmlobj, error, status_code = result.result, result.error, result.status_code
-
-                # check if any error occured
-                errors_occured = self.check_for_error(xmlobj, error, status_code)
-
-                # if there are errors return them
-                if errors_occured != False:
-                    return(errors_occured)
-
-                # Check if the result is not empty
-                if len(xmlobj) == 0:
-                    if conf.debug_mode == True:
-                        self.Debug(server='[' + self.get_name() + ']', debug='Empty host XML result')
-                    return Result(result=None, error="Empty host XML result")
-
-                # in case there are no children session ID is expired
-                if xmlobj.text.lower() == 'bad session id':
-                    del xmlobj
-                    if conf.debug_mode == True:
-                        self.Debug(server='[' + self.get_name() + ']', debug='Bad session ID, retrieving new one...')
-
-                    # try again...
-                    self.SID = self.get_sid().result
-                    result = self.FetchURL(nagcgiurl_hosts, giveback='xml')
-                    xmlobj, error, status_code = result.result, result.error, result.status_code
-                    errors_occured = self.check_for_error(xmlobj, error, status_code)
-                    # if there are errors return them
-                    if errors_occured != False:
-                        return(errors_occured)
-
-                    # a second time a bad session id should raise an error
-                    if xmlobj.text.lower() == 'bad session id':
-                        if conf.debug_mode == True:
-                            self.Debug(server='[' + self.get_name() + ']', debug='Even after renewing session ID, unable to get the XML')
-                        return Result(result='ERROR',
-                                      error='Bad session ID',
-                                      status_code=status_code)
-
-                for l in xmlobj.findAll('l'):
-                    try:
-                        # host objects contain service objects
-                        if not l.hn.text in self.new_hosts:
-                            self.new_hosts[str(l.hn.text)] = GenericHost()
-                            self.new_hosts[str(l.hn.text)].name =  str(l.hn.text)
-                            self.new_hosts[str(l.hn.text)].server = self.name
-                            self.new_hosts[str(l.hn.text)].status = str(l.cs.text)
-                            # disgusting workaround for https://github.com/HenriWahl/Nagstamon/issues/91
-                            if self.new_hosts[str(l.hn.text)].status in self.TRANSLATIONS:
-                                self.new_hosts[str(l.hn.text)].status = self.TRANSLATIONS[self.new_hosts[str(l.hn.text)].status]
-                            self.new_hosts[str(l.hn.text)].attempt, self.new_hosts[str(l.hn.text)].status_type  = str(l.tr.text).split(' ')
-                            self.new_hosts[str(l.hn.text)].status_type = self.HARD_SOFT[self.new_hosts[str(l.hn.text)].status_type]
-                            self.new_hosts[str(l.hn.text)].last_check = str(l.lc.text)
-                            self.new_hosts[str(l.hn.text)].duration = str(l.lsc.text)
-                            self.new_hosts[str(l.hn.text)].status_information = str(l.ou.text).replace('\n', ' ').strip()
-                            if l.find('cih') != None:
-                                self.new_hosts[str(l.hn.text)].criticality = str(l.cih.text)
-                            else:
-                                self.new_hosts[str(l.hn.text)].criticality = ''
-                            self.new_hosts[str(l.hn.text)].acknowledged = bool(int(str(l.ha.text)))
-                            self.new_hosts[str(l.hn.text)].scheduled_downtime = bool(int(str(l.hdtm.text)))
-                            if l.find('is') != None:
-                                self.new_hosts[str(l.hn.text)].flapping = bool(int(str(l.find('is').text)))
-                            else:
-                                self.new_hosts[str(l.hn.text)].flapping = False
-                            self.new_hosts[str(l.hn.text)].notifications_disabled = not bool(int(str(l.ne.text)))
-                            self.new_hosts[str(l.hn.text)].passiveonly = not bool(int(str(l.ace.text)))
-
-                    except:
-                        import traceback
-                        traceback.print_exc(file=sys.stdout)
-                        # set checking flag back to False
-                        self.isChecking = False
-                        result, error = self.Error(sys.exc_info())
-                        return Result(result=result, error=error)
-
-                del xmlobj
-            elif self.centreon_version >= 19.04 and self.use_restapi == True:
+            if self.centreon_version >= 20.04:
                 # Get json
                 result = self.FetchURL(url_hosts, giveback='raw')
 
@@ -737,9 +394,9 @@ class CentreonServer(GenericServer):
                 error = result.error
                 status_code = result.status_code
 
-                if conf.debug_mode:
-                    self.Debug(server=self.get_name(),
-                               debug="Get Hosts status Fetched JSON: " + pprint.pformat(data))
+                # if conf.debug_mode:
+                #     self.Debug(server=self.get_name(),
+                #                debug="Get Hosts status Fetched JSON: " + pprint.pformat(data))
 
                 # check if any error occured
                 errors_occured = self.check_for_error(data, error, status_code)
@@ -747,7 +404,6 @@ class CentreonServer(GenericServer):
                     return(errors_occured)
 
                 for alerts in data["result"]:
-                    # Attributs à remplir
                     new_host = alerts["name"]
                     self.new_hosts[new_host] = GenericHost()
                     self.new_hosts[new_host].name = alerts["name"]
@@ -768,8 +424,7 @@ class CentreonServer(GenericServer):
                         self.new_hosts[new_host].status_type = self.HARD_SOFT['(S)']
                     else:
                         self.new_hosts[new_host].status_type = self.HARD_SOFT['(H)']
-                    self.Debug(server='[' + self.get_name() + ']', debug='Host indexed : ' + self.new_hosts[new_host].name)
-
+                    self.Debug(server='[' + self.get_name() + ']', debug='Host indexed : ' + new_host)
 
         except:
             import traceback
@@ -779,158 +434,9 @@ class CentreonServer(GenericServer):
             result, error = self.Error(sys.exc_info())
             return Result(result=result, error=error)
 
-        # services
+        # Services
         try:
-            if self.centreon_version <= 19.04 and self.use_restapi == False:
-                result = self.FetchURL(nagcgiurl_services, giveback='xml')
-                xmlobj, error, status_code = result.result, result.error, result.status_code
-
-                # check if any error occured
-                errors_occured = self.check_for_error(xmlobj, error, status_code)
-                # if there are errors return them
-                if errors_occured != False:
-                    return(errors_occured)
-
-                # Check if the result is not empty
-                if len(xmlobj) == 0:
-                    if conf.debug_mode == True:
-                        self.Debug(server='[' + self.get_name() + ']', debug='Empty service XML result')
-                    return Result(result=None, error="Empty service XML result")
-
-                # in case there are no children session id is invalid
-                if xmlobj.text.lower() == 'bad session id':
-                    # debug
-                    if conf.debug_mode == True:
-                        self.Debug(server='[' + self.get_name() + ']', debug='Bad session ID, retrieving new one...')
-                    # try again...
-                    self.SID = self.get_sid().result
-                    result = self.FetchURL(nagcgiurl_services, giveback='xml')
-                    xmlobj, error, status_code = result.result, result.error, result.status_code
-                    errors_occured = self.check_for_error(xmlobj, error, status_code)
-                    # if there are errors return them
-                    if errors_occured != False:
-                        return(errors_occured)
-
-                    # a second time a bad session id should raise an error
-                    if xmlobj.text.lower() == 'bad session id':
-                        return Result(result='ERROR',
-                                      error='Bad session ID',
-                                      status_code=status_code)
-
-                # In Centreon 2.8, Meta are merged with regular services
-                if self.centreon_version < 2.8:
-                    # define meta-services xml URL
-                    if self.centreon_version == 2.7:
-                        nagcgiurl_meta_services = self.urls_centreon['xml_meta'] + '?' + urllib.parse.urlencode({'num':0, 'limit':self.limit_services_number, 'o':'meta', 'sort_type':'status', 'sid':self.SID})
-                    else:
-                        nagcgiurl_meta_services = self.urls_centreon['xml_meta'] + '?' + urllib.parse.urlencode({'num':0, 'limit':self.limit_services_number, 'o':'meta', 'sort_type':'status', 'sid':self.SID})
-
-                    # retrive meta-services xml STATUS
-                    result_meta = self.FetchURL(nagcgiurl_meta_services, giveback='xml')
-                    xmlobj_meta, error_meta, status_code_meta = result_meta.result, result_meta.error, result_meta.status_code
-
-                    # check if any error occured
-                    errors_occured = self.check_for_error(xmlobj_meta, error_meta, status_code_meta)
-
-                    # if there are errors return them
-                    if errors_occured != False:
-                        return(errors_occured)
-
-                    # a second time a bad session id should raise an error
-                    if xmlobj_meta.text.lower() == 'bad session id':
-                        if conf.debug_mode == True:
-                            self.Debug(server='[' + self.get_name() + ']', debug='Even after renewing session ID, unable to get the XML')
-
-                        return Result(result='ERROR',
-                                      error='Bad session ID',
-                                      status_code=status_code_meta)
-
-                    # INSERT META-services xml at the end of the services xml
-                    try:
-                            xmlobj.append(xmlobj_meta.reponse)
-                    except:
-                            import traceback
-                            traceback.print_exc(file=sys.stdout)
-                            # set checking flag back to False
-                            self.isChecking = False
-                            result, error = self.Error(sys.exc_info())
-                            return Result(result=result, error=error)
-                    # do some cleanup
-                    del xmlobj_meta
-
-                for l in xmlobj.findAll('l'):
-                    try:
-                        # host objects contain service objects
-                        ###if not self.new_hosts.has_key(str(l.hn.text)):
-                        if not l.hn.text in self.new_hosts:
-                            self.new_hosts[str(l.hn.text)] = GenericHost()
-                            self.new_hosts[str(l.hn.text)].name = str(l.hn.text)
-                            self.new_hosts[str(l.hn.text)].status = 'UP'
-                        # if a service does not exist create its object
-                        if not l.sd.text in self.new_hosts[str(l.hn.text)].services:
-                            self.new_hosts[str(l.hn.text)].services[str(l.sd.text)] = GenericService()
-                            self.new_hosts[str(l.hn.text)].services[str(l.sd.text)].host = str(l.hn.text)
-                            self.new_hosts[str(l.hn.text)].services[str(l.sd.text)].name = str(l.sd.text)
-                            self.new_hosts[str(l.hn.text)].services[str(l.sd.text)].server = self.name
-                            self.new_hosts[str(l.hn.text)].services[str(l.sd.text)].status = str(l.cs.text)
-
-                            if self.new_hosts[str(l.hn.text)].services[str(l.sd.text)].host == '_Module_Meta':
-                                # ajusting service name for Meta services
-                                if self.centreon_version < 2.8:
-                                    self.new_hosts[str(l.hn.text)].services[str(l.sd.text)].name = '{} ({})'.format(str(l.sd.text), l.rsd.text)
-                                    self.new_hosts[str(l.hn.text)].services[str(l.sd.text)].attempt = str(l.ca.text)
-                                else:
-                                    self.new_hosts[str(l.hn.text)].services[str(l.sd.text)].name = '{} ({})'.format(str(l.sdn.text), l.sdl.text)
-                                    self.new_hosts[str(l.hn.text)].services[str(l.sd.text)].attempt, \
-                                    self.new_hosts[str(l.hn.text)].services[str(l.sd.text)].status_type = str(l.ca.text).split(' ')
-                            else:
-                                self.new_hosts[str(l.hn.text)].services[str(l.sd.text)].attempt, \
-                                self.new_hosts[str(l.hn.text)].services[str(l.sd.text)].status_type = str(l.ca.text).split(' ')
-
-                            # disgusting workaround for https://github.com/HenriWahl/Nagstamon/issues/91
-                            # Still needed in Centreon 2.8 at least : https://github.com/HenriWahl/Nagstamon/issues/344
-                            # Need enhancement, we can do service state matching with this field <sc>service_unknown</sc>
-                            #if self.centreon_version < 2.66:
-                            if self.new_hosts[str(l.hn.text)].services[str(l.sd.text)].status in self.TRANSLATIONS:
-                                self.new_hosts[str(l.hn.text)].services[str(l.sd.text)].status = self.TRANSLATIONS[\
-                                self.new_hosts[str(l.hn.text)].services[str(l.sd.text)].status]
-
-                            if not (self.centreon_version < 2.8 and self.new_hosts[str(l.hn.text)].services[str(l.sd.text)].host == '_Module_Meta'):
-                                self.new_hosts[str(l.hn.text)].services[str(l.sd.text)].status_type =\
-                                self.HARD_SOFT[self.new_hosts[str(l.hn.text)].services[str(l.sd.text)].status_type]
-
-                            if conf.debug_mode == True:
-                                self.Debug(server='[' + self.get_name() + ']', debug='Parsing service XML (Host/Service/Status_type) ' + self.new_hosts[str(l.hn.text)].services[str(l.sd.text)].host + '/' + self.new_hosts[str(l.hn.text)].services[str(l.sd.text)].name + '/' + self.new_hosts[str(l.hn.text)].services[str(l.sd.text)].status_type)
-                            self.new_hosts[str(l.hn.text)].services[str(l.sd.text)].last_check = str(l.lc.text)
-                            self.new_hosts[str(l.hn.text)].services[str(l.sd.text)].duration = str(l.d.text)
-                            self.new_hosts[str(l.hn.text)].services[str(l.sd.text)].status_information = str(l.po.text).replace('\n', ' ').strip()
-
-                            if l.find('cih') != None:
-                                self.new_hosts[str(l.hn.text)].services[str(l.sd.text)].criticality = str(l.cih.text)
-                            else:
-                                self.new_hosts[str(l.hn.text)].services[str(l.sd.text)].criticality = ''
-
-                            self.new_hosts[str(l.hn.text)].services[str(l.sd.text)].acknowledged = bool(int(str(l.pa.text)))
-                            self.new_hosts[str(l.hn.text)].services[str(l.sd.text)].notifications_disabled = not bool(int(str(l.ne.text)))
-
-                            # for features not available in centreon < 2.8 and meta services
-                            if not (self.centreon_version < 2.8 and self.new_hosts[str(l.hn.text)].services[str(l.sd.text)].host == '_Module_Meta'):
-                                self.new_hosts[str(l.hn.text)].services[str(l.sd.text)].scheduled_downtime = bool(int(str(l.dtm.text)))
-                                self.new_hosts[str(l.hn.text)].services[str(l.sd.text)].flapping = bool(int(str(l.find('is').text)))
-                                self.new_hosts[str(l.hn.text)].services[str(l.sd.text)].passiveonly = not bool(int(str(l.ac.text)))
-
-                    except:
-                        import traceback
-                        traceback.print_exc(file=sys.stdout)
-                        # set checking flag back to False
-                        self.isChecking = False
-                        result, error = self.Error(sys.exc_info())
-                        return Result(result=result, error=error)
-
-                # do some cleanup
-                del xmlobj
-
-            elif self.centreon_version >= 19.04 and self.use_restapi == True:
+            if self.centreon_version >= 20.04:
                 # Get json
                 result = self.FetchURL(url_services, giveback='raw')
 
@@ -938,9 +444,9 @@ class CentreonServer(GenericServer):
                 error = result.error
                 status_code = result.status_code
 
-                if conf.debug_mode:
-                    self.Debug(server=self.get_name(),
-                               debug="Get Services status Fetched JSON: " + pprint.pformat(data))
+                # if conf.debug_mode:
+                #     self.Debug(server=self.get_name(),
+                #                debug="Get Services status Fetched JSON: " + pprint.pformat(data))
 
                 # check if any error occured
                 errors_occured = self.check_for_error(data, error, status_code)
@@ -948,7 +454,10 @@ class CentreonServer(GenericServer):
                     return(errors_occured)
 
                 for alerts in data["result"]:
-                    new_host = alerts["parent"]["name"]
+                    if alerts["type"] == "metaservice":
+                        new_host = "Meta_Services"
+                    else:
+                        new_host = alerts["parent"]["name"]
                     new_service = alerts["name"]
                     # Needed if non-ok services are on a UP host
                     if not new_host in self.new_hosts:
@@ -957,12 +466,11 @@ class CentreonServer(GenericServer):
                         self.new_hosts[new_host].status = 'UP'
                     self.new_hosts[new_host].services[new_service] = GenericService()
                     # Attributs à remplir
-                    self.Debug(server='[' + self.get_name() + ']', debug='Service indexed : ' + alerts["parent"]["name"])
-                    self.Debug(server='[' + self.get_name() + ']', debug='Service status : ' + alerts["status"]["name"])
+                    self.Debug(server='[' + self.get_name() + ']', debug='Service indexed : ' + new_host + ' / ' + new_service)
 
                     self.new_hosts[new_host].services[new_service].server = self.name
-                    self.new_hosts[new_host].services[new_service].host = alerts["parent"]["name"]
-                    self.new_hosts[new_host].services[new_service].name = alerts["name"]
+                    self.new_hosts[new_host].services[new_service].host = new_host
+                    self.new_hosts[new_host].services[new_service].name = new_service
                     self.new_hosts[new_host].services[new_service].status = alerts["status"]["name"]
                     self.new_hosts[new_host].services[new_service].last_check = alerts["last_check"]
                     # last_state_change = datetime.strptime(alerts["last_state_change"], '%Y-%m-%dT%H:%M:%S%z').replace(tzinfo=None)
@@ -970,7 +478,6 @@ class CentreonServer(GenericServer):
                     self.new_hosts[new_host].services[new_service].duration = alerts["duration"]
                     self.new_hosts[new_host].services[new_service].attempt = alerts["tries"]
                     self.new_hosts[new_host].services[new_service].status_information = alerts["information"]
-                    # Impossible de trouver les 3 suivants dans le json
                     self.new_hosts[new_host].services[new_service].passiveonly = alerts["passive_checks"]
                     self.new_hosts[new_host].services[new_service].notifications_disabled = not alerts["notification_enabled"]
                     self.new_hosts[new_host].services[new_service].flapping = alerts["flapping"]
@@ -995,81 +502,72 @@ class CentreonServer(GenericServer):
 
 
     def _set_acknowledge(self, host, service, author, comment, sticky, notify, persistent, all_services=[]):
-        # decision about host or service - they have different URLs
         try:
+            # host
             if service == '':
-                # host
-                cgi_data = {'cmd': '14',
-                            'host_name': host,
-                            'author': author,
-                            'comment': comment,
-                            'submit': 'Add',
-                            'notify': int(notify),
-                            'persistent': int(persistent),
-                            'sticky': int(sticky),
-                            'ackhostservice': '0',
-                            'en': '1'}
-                if self.centreon_version < 2.7:
-                    cgi_data['p'] = '20105'
-                    cgi_data['o'] = 'hpb'
-                else:
-                    cgi_data['p'] = '20202'
-                    cgi_data['o'] = 'hpb'
-                    cgi_data['centreon_token'] = self.centreon_token
+                cgi_data = {
+                    "comment": comment,
+                    "is_notify_contacts": notify,
+                    "is_persistent_comment": persistent,
+                    "is_sticky": sticky,
+                    "with_services": True
+                }
 
-                # Post
-                raw = self.FetchURL(self.urls_centreon['main'], cgi_data=cgi_data, giveback='raw')
-                del raw
+                host_id = self.get_host_and_service_id(host)
 
-            # if host is acknowledged and all services should be to or if a service is acknowledged
-            # (and all other on this host too)
+                # Post json
+                json_string = json.dumps(cgi_data)
+                # {protocol}://{server}:{port}/centreon/api/{version}/monitoring/hosts/{host_id}/acknowledgements
+                result = self.FetchURL(self.monitor_cgi_url + '/api/' + self.restapi_version + '/monitoring/hosts/' + host_id + '/acknowledgements', cgi_data=json_string, giveback='raw')
+
+                error = result.error
+                status_code = result.status_code
+
+                if conf.debug_mode:
+                    self.Debug(server='[' + self.get_name() + ']',
+                               debug="Set Ack on Host, status code : " + str(status_code))
+
+
+            # Service
             if service != '' or len(all_services) > 0:
-                # service(s) @ host
-                # if all_services is empty only one service has to be checked - the one clicked
-                # otherwise if there all services should be acknowledged
-                if len(all_services) == 0: all_services = [service]
+                if len(all_services) == 0:
+                    all_services = [service]
 
-                # acknowledge all services on a host
+                acknowledgements_list=[]
+
                 for s in all_services:
-                    cgi_data = {'cmd': '15',
-                                'host_name': host,
-                                'author': author,
-                                'comment': comment,
-                                'submit': 'Add',
-                                'notify': int(notify),
-                                'service_description': s,
-                                'force_check': '1',
-                                'persistent': int(persistent),
-                                # following not needed in 18.10, required in wich version ?
-                                'persistant': int(persistent),
-                                'sticky': int(sticky),
-                                'o': 'svcd',
-                                'en': '1'}
-                    if self.centreon_version < 2.7:
-                        cgi_data['p'] = '20215'
-                    else:
-                        cgi_data['p'] = '20201'
-                        cgi_data['centreon_token'] = self.centreon_token
+                    host_id, service_id = self.get_host_and_service_id(host, service)
 
-                    # in case of a meta-service, extract the 'rsd' field from the service name :
-                    if host == '_Module_Meta':
-                        m =  re.search(r'^.+ \((?P<rsd>.+)\)$', s)
-                        if m:
-                            rsd = m.group('rsd')
-                            if self.centreon_version < 2.8:
-                                cgi_data = {'p': '20206',
-                                            'o': 'meta',
-                                            'cmd': '70',
-                                            'select[' + host + ';' + rsd + ']': '1',
-                                            'limit': '0'}
-                            elif self.centreon_version in [2.8, 18.10]:
-                                cgi_data['service_description'] = rsd
+                    ack = {
+                        "comment": comment,
+                        "is_notify_contacts": notify,
+                        "is_persistent_comment": persistent,
+                        "is_sticky": sticky,
+                        "resource_id": service_id,
+                        "parent_resource_id": host_id
+                    }
 
-                    # POST, for some strange reason only working if giveback is 'raw'
-                    raw = self.FetchURL(self.urls_centreon['main'], cgi_data=cgi_data, giveback='raw')
-                    del raw
+                    acknowledgements_list.append(ack)
+
+                # Post json
+                json_string = json.dumps(acknowledgements_list)
+                # {protocol}://{server}:{port}/centreon/api/{version}/monitoring/services/acknowledgements
+                result = self.FetchURL(self.monitor_cgi_url + '/api/' + self.restapi_version + '/monitoring/services/acknowledgements', cgi_data=json_string, giveback='raw')
+
+                error = result.error
+                status_code = result.status_code
+
+                if conf.debug_mode:
+                    self.Debug(server='[' + self.get_name() + ']',
+                               debug="Set Ack on Host ("+host+") / Service ("+service+"), status code : " + str(status_code))
+
         except:
-            self.Error(sys.exc_info())
+            import traceback
+            traceback.print_exc(file=sys.stdout)
+            # set checking flag back to False
+            self.isChecking = False
+            result, error = self.Error(sys.exc_info())
+            return Result(result=result, error=error)
 
 
     def _set_recheck(self, host, service):
@@ -1092,7 +590,7 @@ class CentreonServer(GenericServer):
 
             elif service == '':
                 # ... it can only be a host, so check all his services and there is a command for that
-                host_id = self.get_host_id(host)
+                host_id = self.get_host_and_service_id(host)
 
                 if self.centreon_version < 2.7:
                     url = self.urls_centreon['xml_hostSendCommand'] + '?' + urllib.parse.urlencode({'cmd':'host_schedule_check', 'actiontype':1,'host_id':host_id,'sid':self.SID})
@@ -1232,77 +730,52 @@ class CentreonServer(GenericServer):
         if 'url_centreon' not in self.__dict__:
             self.init_config()
         try:
-            if self.use_restapi == True:
+            if conf.debug_mode == True:
+                self.Debug(server='[' + self.get_name() + ']', debug='The token will be deleted if it has not been used for more than one hour. Current Token = ' + self.SID )
+
+            cgi_data = {'limit':'0'}
+            self.session = requests.Session()
+            self.session.headers['Content-Type'] = 'application/json'
+            self.session.headers['X-Auth-Token'] = self.SID
+
+            # Get en empty service list, to check the status of the current token
+            # This request must be done in a GET, so just encode the parameters and fetch
+            result = self.FetchURL(self.urls_centreon['services'] + '?' + urllib.parse.urlencode(cgi_data), giveback="raw")
+
+            # Get json
+            # ~ result = self.FetchURL(self.urls_centreon['services'] + '?' + urllib.parse.urlencode({ 'limit':0 }), giveback='raw')
+
+            # ~ self.session = requests.Session()
+            # ~ self.session.headers['Content-Type'] = 'application/json'
+            # ~ self.session.headers['X-Auth-Token'] = self.SID
+            # ~ url = 'https://demo.centreon.com/centreon/api/latest/monitoring/services?limit=0'
+            # ~ response = self.session.get(url, timeout=5)
+            # ~ data = json.loads(response.text)
+            # ~ error = response.reason
+            # ~ status_code = response.status_code
+
+            print(self.session.headers)
+
+            data = json.loads(result.result)
+            error = result.error
+            status_code = result.status_code
+
+            if conf.debug_mode:
+                self.Debug(server=self.get_name(),
+                           debug="Check-session, Fetched JSON: " + pprint.pformat(data))
+                self.Debug(server=self.get_name(),
+                           debug="Check-session, Error : " + error + " Status code : " + str(status_code))
+
+            # check if any error occured
+            errors_occured = self.check_for_error(data, error, status_code)
+            if errors_occured is not False:
+                return(errors_occured)
+
+            # If we got nothing, the token expired and must be renewed
+            if not data["result"]:
+                self.SID = self.get_sid().result
                 if conf.debug_mode == True:
-                    self.Debug(server='[' + self.get_name() + ']', debug='The token will be deleted if it has not been used for more than one hour. Current Token = ' + self.SID )
-
-
-                cgi_data = {'limit':'0'}
-                self.session = requests.Session()
-                self.session.headers['Content-Type'] = 'application/json'
-                self.session.headers['X-Auth-Token'] = self.SID
-                # This request must be done in a GET, so just encode the parameters and fetch
-                result = self.FetchURL(self.urls_centreon['services'] + '?' + urllib.parse.urlencode(cgi_data), giveback="raw")
-
-                # Get json
-                # ~ result = self.FetchURL(self.urls_centreon['services'] + '?' + urllib.parse.urlencode({ 'limit':0 }), giveback='raw')
-
-
-                # ~ self.session = requests.Session()
-                # ~ self.session.headers['Content-Type'] = 'application/json'
-                # ~ self.session.headers['X-Auth-Token'] = self.SID
-                # ~ url = 'https://demo.centreon.com/centreon/api/latest/monitoring/services?limit=0'
-                # ~ response = self.session.get(url, timeout=5)
-                # ~ data = json.loads(response.text)
-                # ~ error = response.reason
-                # ~ status_code = response.status_code
-
-
-                print(self.session.headers)
-
-                data = json.loads(result.result)
-                error = result.error
-                status_code = result.status_code
-
-                if conf.debug_mode:
-                    self.Debug(server=self.get_name(),
-                               debug="Check-session Fetched JSON: " + pprint.pformat(data))
-                    self.Debug(server=self.get_name(),
-                               debug="Error : " + error + " Status code : " + str(status_code))
-
-                # check if any error occured
-                errors_occured = self.check_for_error(data, error, status_code)
-                if errors_occured is not False:
-                    return(errors_occured)
-
-                if not data["result"]:
-                    self.SID = self.get_sid().result
-                    if conf.debug_mode == True:
-                        self.Debug(server='[' + self.get_name() + ']', debug='Session renewed')
-
-            else:
-                if self.centreon_version >= 18.10:
-                    result = self.FetchURL(self.urls_centreon['keepAlive'], giveback='raw')
-                    self.raw, self.error, self.status_code = result.result, result.error, result.status_code
-                    # Return 200 & null a session is open
-                    if conf.debug_mode == True:
-                        self.Debug(server='[' + self.get_name() + ']', debug='Session status : ' + self.raw + ', http code : ' + str(self.status_code))
-                    # 401 if no valid session is present
-                    if self.status_code == 401:
-                        self.SID = self.get_sid().result
-                        if conf.debug_mode == True:
-                            self.Debug(server='[' + self.get_name() + ']', debug='Session renewed')
-
-                else:
-                    result = self.FetchURL(self.urls_centreon['autologoutXMLresponse'], giveback='xml')
-                    xmlobj, error, status_code = result.result, result.error, result.status_code
-                    self.session_state = xmlobj.find("state").text.lower()
-                    if conf.debug_mode == True:
-                        self.Debug(server='[' + self.get_name() + ']', debug='Session status : ' + self.session_state)
-                    if self.session_state == "nok":
-                        self.SID = self.get_sid().result
-                        if conf.debug_mode == True:
-                            self.Debug(server='[' + self.get_name() + ']', debug='Session renewed')
+                    self.Debug(server='[' + self.get_name() + ']', debug='Session renewed')
 
         except:
             import traceback
