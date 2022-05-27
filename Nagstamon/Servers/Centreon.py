@@ -571,63 +571,55 @@ class CentreonServer(GenericServer):
 
 
     def _set_recheck(self, host, service):
-        '''
-        host and service ids are needed to tell Centreon what whe want
-        '''
         try:
-        # decision about host or service - they have different URLs
-            #  Meta
-            if host == '_Module_Meta':
-                if conf.debug_mode == True:
-                    self.Debug(server='[' + self.get_name() + ']', debug='Recheck on a Meta service, more work to be done')
-                m =  re.search(r'^.+ \((?P<rsd>.+)\)$', service)
-                if m:
-                    rsd = m.group('rsd')
-                    if self.centreon_version < 2.8:
-                        url = self.urls_centreon['main'] + '?' + urllib.parse.urlencode({'p': '20206','o': 'meta','cmd': '3','select[' + host + ';' + rsd + ']': '1','limit':'0'})
-                    else:
-                        url = self.urls_centreon['main'] + '?' + urllib.parse.urlencode({'p': '202','o': 'svc','cmd': '3','select[' + host + ';' + rsd + ']': '1','limit':'1','centreon_token':self.centreon_token})
+            # Host
+            if service == '':
+                cgi_data = {
+                    "is_forced": True
+                }
 
-            elif service == '':
-                # ... it can only be a host, so check all his services and there is a command for that
                 host_id = self.get_host_and_service_id(host)
 
-                if self.centreon_version < 2.7:
-                    url = self.urls_centreon['xml_hostSendCommand'] + '?' + urllib.parse.urlencode({'cmd':'host_schedule_check', 'actiontype':1,'host_id':host_id,'sid':self.SID})
-                else:
-                    url = self.urls_centreon['xml_hostSendCommand'] + '?' + urllib.parse.urlencode({'cmd':'host_schedule_check', 'actiontype':1,'host_id':host_id})
-                del host_id
+                # Post json
+                json_string = json.dumps(cgi_data)
+                # {protocol}://{server}:{port}/centreon/api/{version}/monitoring/hosts/{host_id}/check
+                result = self.FetchURL(self.monitor_cgi_url + '/api/' + self.restapi_version + '/monitoring/hosts/' + host_id + '/check', cgi_data=json_string, giveback='raw')
 
+                error = result.error
+                status_code = result.status_code
+
+                if conf.debug_mode:
+                    self.Debug(server='[' + self.get_name() + ']',
+                               debug="Recheck on Host : "+host+", status code : " + str(status_code))
+
+            # Service
             else:
-                # service @ host
+                cgi_data = {
+                    "is_forced": True
+                }
+
                 host_id, service_id = self.get_host_and_service_id(host, service)
 
-                # Starting from 19.04 this must be in POST
-                if self.centreon_version < 19.04:
-                    # fill and encode URL data
-                    cgi_data = urllib.parse.urlencode({'cmd':'service_schedule_check', 'actiontype':1,\
-                                                 'host_id':host_id, 'service_id':service_id, 'sid':self.SID})
+                # Post json
+                json_string = json.dumps(cgi_data)
+                # {protocol}://{server}:{port}/centreon/api/{version}/monitoring/hosts/{host_id}/services/{service_id}/check
+                result = self.FetchURL(self.monitor_cgi_url + '/api/' + self.restapi_version + '/monitoring/hosts/' + host_id + '/services/' + service_id + '/check', cgi_data=json_string, giveback='raw')
 
-                    url = self.urls_centreon['xml_serviceSendCommand'] + '?' + cgi_data
-                    del host_id, service_id
-                else:
-                    cgi_data = {'cmd': 'service_schedule_check',
-                                'host_id': host_id,
-                                'service_id': service_id,
-                                'actiontype': '0'}
-                    del host_id, service_id
+                error = result.error
+                status_code = result.status_code
 
-            if self.centreon_version < 19.04:
-                # execute GET request
-                raw = self.FetchURL(url, giveback='raw')
-                del raw
-            else:
-                # running remote cgi command with POST method, for some strange reason only working if
-                # giveback is 'raw'
-                raw = self.FetchURL(self.urls_centreon['xml_serviceSendCommand'], cgi_data=cgi_data, giveback='raw')
-                del raw
+                if conf.debug_mode:
+                    self.Debug(server='[' + self.get_name() + ']',
+                               debug="Recheck on Host ("+host+") / Service ("+service+"), status code : " + str(status_code))
+
+
         except:
-            self.Error(sys.exc_info())
+            import traceback
+            traceback.print_exc(file=sys.stdout)
+            # set checking flag back to False
+            self.isChecking = False
+            result, error = self.Error(sys.exc_info())
+            return Result(result=result, error=error)
 
 
     def _set_downtime(self, host, service, author, comment, fixed, start_time, end_time, hours, minutes):
