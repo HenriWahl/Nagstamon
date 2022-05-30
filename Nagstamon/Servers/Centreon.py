@@ -177,10 +177,13 @@ class CentreonServer(GenericServer):
                 return(errors_occured)
 
             sid = data["security"]["token"]
+            # ID of the user is needed by some requests
+            user_id = data["contact"]["id"]
 
             if conf.debug_mode == True:
-                self.Debug(server='[' + self.get_name() + ']', debug='API login : ' + self.username + ' / ' + self.password + ' > Token : ' + sid)
+                self.Debug(server='[' + self.get_name() + ']', debug='API login : ' + self.username + ' / ' + self.password + ' > Token : ' + sid + ' > User ID : ' + str(user_id))
 
+            self.user_id = user_id
             self.session.headers.update({'X-Auth-Token': sid})
             return Result(result=sid)
 
@@ -623,97 +626,83 @@ class CentreonServer(GenericServer):
 
 
     def _set_downtime(self, host, service, author, comment, fixed, start_time, end_time, hours, minutes):
-        '''
-        gets actual host and service ids and apply them to downtime cgi
-        '''
+        obj_start_time = datetime.strptime(start_time, '%m/%d/%Y %H:%M')
+        obj_end_time = datetime.strptime(end_time, '%m/%d/%Y %H:%M')
+
+        # Nagstamon don’t provide the TZ, we need to get it from the OS
+        obj_start_time = obj_start_time.replace(tzinfo=datetime.now().astimezone().tzinfo)
+        obj_end_time = obj_end_time.replace(tzinfo=datetime.now().astimezone().tzinfo)
+
+        # duration unit is second
+        duration = (hours * 3600) + (minutes * 60)
+
+        # API require boolean
+        if fixed == 1:
+            fixed = True
+        else:
+            fixed = False
+
         try:
-            # duration unit is minute
-            duration = (hours * 60) + minutes
-            # need cmdPopup.php needs boolean
-            if fixed == 1:
-                fixed = 'true'
-            else:
-                fixed = 'false'
-
-            # Host downtime
             if service == '':
-                if self.centreon_version < 19.04:
-                    cgi_data = {'cmd':75,\
-                                'duration':duration,\
-                                'duration_scale':'m',\
-                                'start':start_time,\
-                                'end':end_time,\
-                                'comment':comment,\
-                                'fixed':fixed,\
-                                'downtimehostservice':'true',\
-                                'author':author,\
-                                'sid':self.SID,\
-                                'select['+host+']':1
-                                }
-                # Params has changed starting from 19.04
-                else:
-                    cgi_data = {'cmd':75,
-                                'duration':duration,
-                                'duration_scale':'m',
-                                'comment':comment,
-                                'start':start_time,
-                                'end':end_time,
-                                'host_or_centreon_time':0,
-                                'fixed':fixed,
-                                'downtimehostservice':'true',
-                                'author':author,
-                                'resources':'["'+host+'"]'
-                                }
+            # Host
+                cgi_data = {
+                    "start_time": obj_start_time.strftime('%Y-%m-%dT%H:%M:%S%z'),
+                    "end_time": obj_end_time.strftime('%Y-%m-%dT%H:%M:%S%z'),
+                    "is_fixed": fixed,
+                    "duration": duration,
+                    "author_id": self.user_id,
+                    "comment": comment,
+                    "with_services": True
+                }
 
-            # Service downtime
+                host_id = self.get_host_and_service_id(host)
+
+                # Post json
+                json_string = json.dumps(cgi_data)
+                # {protocol}://{server}:{port}/centreon/api/{version}/monitoring/hosts/{host_id}/downtimes
+                result = self.FetchURL(self.monitor_cgi_url + '/api/' + self.restapi_version + '/monitoring/hosts/' + host_id + '/downtimes', cgi_data=json_string, giveback='raw')
+
+                error = result.error
+                status_code = result.status_code
+
+                if conf.debug_mode:
+                    self.Debug(server='[' + self.get_name() + ']',
+                               debug="Downtime on Host : "+host+", status code : " + str(status_code))
+
+            # Service
             else:
-                # Centreon 2.8 only, in case of a meta-service, extract the 'rsd' field from the service name :
-                if host == '_Module_Meta' and self.centreon_version in [2.8, 18.10]:
-                    m =  re.search(r'^.+ \((?P<rsd>.+)\)$', service)
-                    if m:
-                        rsd = m.group('rsd')
-                        service = rsd
-                if self.centreon_version < 19.04:
-                    cgi_data = {'cmd':74,\
-                                'duration':duration,\
-                                'duration_scale':'m',\
-                                'start':start_time,\
-                                'end':end_time,\
-                                'comment':comment,\
-                                'fixed':fixed,\
-                                'downtimehostservice':0,\
-                                'author':author,\
-                                'sid':self.SID,\
-                                'select['+host+';'+service+']':1
-                                }
+                cgi_data = {
+                    "start_time": obj_start_time.strftime('%Y-%m-%dT%H:%M:%S%z'),
+                    "end_time": obj_end_time.strftime('%Y-%m-%dT%H:%M:%S%z'),
+                    "is_fixed": fixed,
+                    "duration": duration,
+                    "author_id": self.user_id,
+                    "comment": comment
+                }
 
-                # Params has changed starting from 19.04
-                else:
-                    cgi_data = {'cmd':74,
-                                'duration':duration,
-                                'duration_scale':'m',
-                                'comment':comment,
-                                'start':start_time,
-                                'end':end_time,
-                                'host_or_centreon_time':0,
-                                'fixed':fixed,
-                                'downtimehostservice':0,
-                                'author':author,
-                                'resources':'["'+host+'%3B'+service+'"]'
-                                }
+                host_id, service_id = self.get_host_and_service_id(host, service)
 
-            if self.centreon_version < 19.04:
-                # This request must be done in a GET, so just encode the parameters and fetch
-                raw = self.FetchURL(self.urls_centreon['external_cmd_cmdPopup'] + '?' + urllib.parse.urlencode(cgi_data), giveback="raw")
-                del raw
-            # Starting from 19.04, must be POST
-            else:
-                # Do it in POST
-                raw = self.FetchURL(self.urls_centreon['external_cmd_cmdPopup'], cgi_data=cgi_data, giveback='raw')
-                del raw
+                # Post json
+                json_string = json.dumps(cgi_data)
+                # {protocol}://{server}:{port}/centreon/api/{version}/monitoring/hosts/{host_id}/services/{service_id}/downtimes
+                result = self.FetchURL(self.monitor_cgi_url + '/api/' + self.restapi_version + '/monitoring/hosts/' + host_id + '/services/' + service_id + '/downtimes', cgi_data=json_string, giveback='raw')
+
+
+                error = result.error
+                status_code = result.status_code
+
+                if conf.debug_mode:
+                    self.Debug(server='[' + self.get_name() + ']',
+                               debug="Downtime on Host ("+host+") / Service ("+service+"), status code : " + str(status_code))
+
 
         except:
-            self.Error(sys.exc_info())
+            import traceback
+            traceback.print_exc(file=sys.stdout)
+            # set checking flag back to False
+            self.isChecking = False
+            result, error = self.Error(sys.exc_info())
+            return Result(result=result, error=error)
 
 
     def check_session(self):
