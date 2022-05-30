@@ -40,35 +40,20 @@ from Nagstamon.Helpers import webbrowser_open
 class CentreonServer(GenericServer):
     TYPE = 'Centreon'
 
-    # centreon generic web interface uses a sid which is needed to ask for news
-    SID = None
+    # Centreon API uses a token
+    token = None
 
     # HARD/SOFT state mapping
     HARD_SOFT = {'(H)': 'hard', '(S)': 'soft'}
 
-    # apparently necessesary because of non-english states as in https://github.com/HenriWahl/Nagstamon/issues/91 (Centeron 2.5)
-    TRANSLATIONS = {'INDISPONIBLE': 'DOWN',
-                    'INJOIGNABLE': 'UNREACHABLE',
-                    'CRITIQUE': 'CRITICAL',
-                    'INCONNU': 'UNKNOWN',
-                    'ALERTE': 'WARNING'}
-
     # Entries for monitor default actions in context menu
     MENU_ACTIONS = ['Monitor', 'Recheck', 'Acknowledge', 'Downtime']
 
-    # Centreon works better or at all with html.parser for BeautifulSoup
-    PARSER = 'html.parser'
-
-    # Token that centreon use to protect the system
-    centreon_token = None
     # URLs of the Centreon pages
     urls_centreon = None
-    # To only detect broker once
-    first_login = True
+
     # limit number of services retrived
     limit_services_number = 9999
-    # default value, applies to version 2.2 and others
-    XML_PATH = 'xml'
 
     def init_config(self):
         '''
@@ -104,24 +89,10 @@ class CentreonServer(GenericServer):
 
 
     def init_HTTP(self):
-        """
-        initialize HTTP connection
-        """
         if self.session is None:
             GenericServer.init_HTTP(self)
             self.session.headers.update({'Content-Type': 'application/json'})
-
-            if self.first_login:
-                self.SID = self.get_sid().result
-                self.first_login = False
-
-
-    def reset_HTTP(self):
-        '''
-        Centreon needs deletion of SID
-        '''
-        self.SID = None
-        self.SID = self.get_sid().result
+            self.token = self.get_token().result
 
 
     def define_url(self):
@@ -147,7 +118,7 @@ class CentreonServer(GenericServer):
         webbrowser_open(self.urls_centreon['main'] + auth )
 
 
-    def get_sid(self):
+    def get_token(self):
         try:
             cgi_data = {
                 "security": {
@@ -176,16 +147,16 @@ class CentreonServer(GenericServer):
             if errors_occured is not False:
                 return(errors_occured)
 
-            sid = data["security"]["token"]
+            token = data["security"]["token"]
             # ID of the user is needed by some requests
             user_id = data["contact"]["id"]
 
             if conf.debug_mode == True:
-                self.Debug(server='[' + self.get_name() + ']', debug='API login : ' + self.username + ' / ' + self.password + ' > Token : ' + sid + ' > User ID : ' + str(user_id))
+                self.Debug(server='[' + self.get_name() + ']', debug='API login : ' + self.username + ' / ' + self.password + ' > Token : ' + token + ' > User ID : ' + str(user_id))
 
             self.user_id = user_id
-            self.session.headers.update({'X-Auth-Token': sid})
-            return Result(result=sid)
+            self.session.headers.update({'X-Auth-Token': token})
+            return Result(result=token)
 
         except:
             import traceback
@@ -194,106 +165,40 @@ class CentreonServer(GenericServer):
             return Result(result=result, error=error)
 
 
-    def get_start_end(self, host):
-        '''
-        get start and end time for downtime from Centreon server
-        '''
+    def GetHost(self, host):
+        if self.centreon_version == 20.04:
+            # https://demo.centreon.com/centreon/api/latest/monitoring/resources?page=1&limit=30&sort_by={"status_severity_code":"asc","last_status_change":"desc"}&types=["host"]&statuses=["WARNING","DOWN","CRITICAL","UNKNOWN"]
+            url_hosts = self.urls_centreon['hosts'] + '?types=["host"]&search={"h.name":"' + host + '"}'
+
         try:
-            # It's not possible since 18.10 to get date from the webinterface
-            # because it's set in javascript
-            if self.centreon_version < 18.10:
-                cgi_data = {'o':'ah',\
-                            'host_name':host}
-                if self.centreon_version < 2.7:
-                    cgi_data['p'] = '20106'
-                elif self.centreon_version == 2.7:
-                    cgi_data['p'] = '210'
-                elif self.centreon_version == 2.8:
-                    cgi_data['o'] = 'a'
-                    cgi_data['p'] = '210'
-                result = self.FetchURL(self.urls_centreon['main'], cgi_data = cgi_data, giveback='obj')
+            if self.centreon_version == 20.04:
+                # Get json
+                result = self.FetchURL(url_hosts, giveback='raw')
 
-                html, error = result.result, result.error
-                if error == '':
-                    start_date = html.find(attrs={'name':'start'}).attrs['value']
-                    start_hour = html.find(attrs={'name':'start_time'}).attrs['value']
-                    start_time = start_date + ' ' + start_hour
+                data = json.loads(result.result)
+                error = result.error
+                status_code = result.status_code
 
-                    end_date = html.find(attrs={'name':'end'}).attrs['value']
-                    end_hour = html.find(attrs={'name':'end_time'}).attrs['value']
-                    end_time = end_date + ' ' + end_hour
-                    return start_time, end_time
+                # check if any error occured
+                errors_occured = self.check_for_error(data, error, status_code)
+                if errors_occured is not False:
+                    return(errors_occured)
 
-            else:
-                start_time = datetime.now().strftime("%m/%d/%Y %H:%M")
-                end_time = datetime.now() + timedelta(hours=2)
-                end_time = end_time.strftime("%m/%d/%Y %H:%M")
-                return start_time, end_time
+                fqdn = str(data["result"][0]["fqdn"])
+
+                if conf.debug_mode == True:
+                    self.Debug(server='[' + self.get_name() + ']', debug='Get Host FQDN or address : ' + host + " / " + fqdn)
+
+                # Give back host or ip
+                return Result(result=fqdn)
 
         except:
-            self.Error(sys.exc_info())
-            return 'n/a', 'n/a'
-
-
-    def GetHost(self, host):
-        '''
-        Centreonified way to get host ip - attribute 'a' in down hosts xml is of no use for up
-        hosts so we need to get ip anyway from web page
-        '''
-        # the fastest method is taking hostname as used in monitor
-        if conf.connect_by_host == True or host == '':
-            return Result(result=host)
-
-        # do a web interface search limited to only one result - the hostname
-        cgi_data = {'sid': self.SID,
-                    'search': host,
-                    'num': 0,
-                    'limit': 1,
-                    'sort_type':'hostname',
-                    'order': 'ASC',
-                    'date_time_format_status': 'd/m/Y H:i:s',
-                    'o': 'h',
-                    'p': 20102,
-                    'time': 0}
-
-        centreon_hosts = self.urls_centreon['xml_hosts'] + '?' + urllib.parse.urlencode(cgi_data)
-
-        result = self.FetchURL(centreon_hosts, giveback='xml')
-        xmlobj, error, status_code = result.result, result.error, result.status_code
-
-        # initialize ip string
-        ip = ''
-
-        if len(xmlobj) != 0:
-            ip = str(xmlobj.l.a.text)
-            # when connection by DNS is not configured do it by IP
-            try:
-                if conf.connect_by_dns == True:
-                   # try to get DNS name for ip (reverse DNS), if not available use ip
-                    try:
-                        address = socket.gethostbyaddr(ip)[0]
-                    except:
-                        if conf.debug_mode == True:
-                            self.Debug(server='[' + self.get_name() + ']', debug='Unable to do a reverse DNS lookup on IP: ' + ip)
-                        address = ip
-                else:
-                    address = ip
-            except:
-                result, error = self.Error(sys.exc_info())
-                return Result(result=result, error=error)
-
-        else:
+            import traceback
+            traceback.print_exc(file=sys.stdout)
+            # set checking flag back to False
+            self.isChecking = False
             result, error = self.Error(sys.exc_info())
-            return Result(error=error)
-
-        del xmlobj
-
-        # print IP in debug mode
-        if conf.debug_mode == True:
-            self.Debug(server='[' + self.get_name() + ']', debug='IP of %s:' % (host) + ' ' + address)
-
-        # give back host or ip
-        return Result(result=address)
+            return Result(result=result, error=error)
 
 
     def get_host_and_service_id(self, host, service=''):
@@ -708,34 +613,21 @@ class CentreonServer(GenericServer):
     def check_session(self):
         if conf.debug_mode == True:
             self.Debug(server='[' + self.get_name() + ']', debug='Checking session status')
-        if 'url_centreon' not in self.__dict__:
-            self.init_config()
+        # Not needed anymore as URLs are set at start
+        # if 'url_centreon' not in self.__dict__:
+        #     self.init_config()
         try:
             if conf.debug_mode == True:
-                self.Debug(server='[' + self.get_name() + ']', debug='The token will be deleted if it has not been used for more than one hour. Current Token = ' + self.SID )
+                self.Debug(server='[' + self.get_name() + ']', debug='Check-session, the token will be deleted if it has not been used for more than one hour. Current Token = ' + self.token )
 
             cgi_data = {'limit':'0'}
             self.session = requests.Session()
             self.session.headers['Content-Type'] = 'application/json'
-            self.session.headers['X-Auth-Token'] = self.SID
+            self.session.headers['X-Auth-Token'] = self.token
 
             # Get en empty service list, to check the status of the current token
             # This request must be done in a GET, so just encode the parameters and fetch
             result = self.FetchURL(self.urls_centreon['services'] + '?' + urllib.parse.urlencode(cgi_data), giveback="raw")
-
-            # Get json
-            # ~ result = self.FetchURL(self.urls_centreon['services'] + '?' + urllib.parse.urlencode({ 'limit':0 }), giveback='raw')
-
-            # ~ self.session = requests.Session()
-            # ~ self.session.headers['Content-Type'] = 'application/json'
-            # ~ self.session.headers['X-Auth-Token'] = self.SID
-            # ~ url = 'https://demo.centreon.com/centreon/api/latest/monitoring/services?limit=0'
-            # ~ response = self.session.get(url, timeout=5)
-            # ~ data = json.loads(response.text)
-            # ~ error = response.reason
-            # ~ status_code = response.status_code
-
-            print(self.session.headers)
 
             data = json.loads(result.result)
             error = result.error
@@ -747,16 +639,11 @@ class CentreonServer(GenericServer):
                 self.Debug(server=self.get_name(),
                            debug="Check-session, Error : " + error + " Status code : " + str(status_code))
 
-            # check if any error occured
-            errors_occured = self.check_for_error(data, error, status_code)
-            if errors_occured is not False:
-                return(errors_occured)
-
-            # If we got nothing, the token expired and must be renewed
-            if not data["result"]:
-                self.SID = self.get_sid().result
+            # If we got an 401, the token expired and must be renewed
+            if status_code == 401:
+                self.token = self.get_token().result
                 if conf.debug_mode == True:
-                    self.Debug(server='[' + self.get_name() + ']', debug='Session renewed')
+                    self.Debug(server='[' + self.get_name() + ']', debug='Check-session, session renewed')
 
         except:
             import traceback
