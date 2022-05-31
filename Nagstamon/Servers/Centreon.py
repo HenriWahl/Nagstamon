@@ -111,12 +111,15 @@ class CentreonServer(GenericServer):
 
 
     def open_monitor(self, host, service=''):
-        if self.use_autologin is True:
-            auth = '&autologin=1&useralias=' + self.username + '&token=' + self.autologin_key
-        else:
-            auth = ''
+        # Autologin seems deprecated as admin must enable it globaly and use the old pages
+        # Ex : http://10.66.113.52/centreon/main.php?autologin=1&useralias=admin&token=xxxxxx
+        # if self.use_autologin is True:
+        #     auth = '&autologin=1&useralias=' + self.username + '&token=' + self.autologin_key
+        # else:
+        #     auth = ''
+        # webbrowser_open(self.urls_centreon['resources'] + auth )
 
-        webbrowser_open(self.urls_centreon['resources'] + auth )
+        webbrowser_open(self.urls_centreon['resources'] )
 
 
     def get_token(self):
