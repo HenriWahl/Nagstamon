@@ -271,11 +271,11 @@ elif QT_FLAVOR == 'PyQt6':
             # just play sound
             self.player.play()
 
-            def get_global_position(event):
-                '''
-                Qt5 uses other method than Qt6
-                '''
-                return event.globalPosition()
+    def get_global_position(event):
+        '''
+        Qt5 uses other method than Qt6
+        '''
+        return event.globalPosition()
 
     def is_modifier_pressed(modifiers):
         """
