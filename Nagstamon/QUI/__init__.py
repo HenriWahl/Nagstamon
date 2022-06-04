@@ -111,6 +111,7 @@ if QT_VERSION_MAJOR < 6:
     except AttributeError:
         pass
     QApplication.setAttribute(Qt.AA_UseHighDpiPixmaps, True)
+    
 # global application instance
 APP = QApplication(sys.argv)
 
@@ -1087,8 +1088,11 @@ class StatusWindow(QWidget):
         check_version.version_info_retrieved.connect(self.hide_window)
 
         # worker and thread duo needed for notifications
-        self.worker_notification_thread = QThread(self)
+        self.worker_notification_thread = QThread(parent=self)
         self.worker_notification = self.Worker_Notification()
+
+        # clean shutdown of thread
+        self.worker_notification.finish.connect(self.finish_worker_notification_thread)
 
         # flashing statusbar
         self.worker_notification.start_flash.connect(self.statusbar.flash)
@@ -1148,7 +1152,7 @@ class StatusWindow(QWidget):
 
         # a thread + worker is necessary to do actions thread-safe in background
         # like debugging
-        self.worker_thread = QThread(self)
+        self.worker_thread = QThread(parent=self)
         self.worker = self.Worker()
         self.worker.moveToThread(self.worker_thread)
         # start thread and debugging loop if debugging is enabled
@@ -1158,6 +1162,9 @@ class StatusWindow(QWidget):
         dialogs.settings.start_debug_loop.connect(self.worker.debug_loop)
         # start with low priority
         self.worker_thread.start(QThread.Priority.LowestPriority)
+
+        # clean shutdown of thread
+        self.worker.finish.connect(self.finish_worker_thread)
 
         # part of the stupid workaround for Qt-5.10-Windows-QSystemTrayIcon-madness
         self.connect_systrayicon()
@@ -1174,7 +1181,7 @@ class StatusWindow(QWidget):
         '''
         global menu
         # show status popup when systray icon was clicked
-        systrayicon.show_popwin.connect(self.show_window_systrayicon)
+        systrayicon.show_popwin.connect(self.show_window_systrayicon) 
         systrayicon.hide_popwin.connect(self.hide_window)
         # flashing statusicon
         self.worker_notification.start_flash.connect(systrayicon.flash)
@@ -2051,10 +2058,10 @@ class StatusWindow(QWidget):
         """
         title = " ".join((AppInfo.NAME, msg_type))
         if msg_type == 'warning':
-            return QMessageBox.Icon.Warning(statuswindow, title, message)
+            return QMessageBox(QMessageBox.Icon.Warning, title, message, parent=statuswindow).show()
 
         elif msg_type == 'information':
-            return QMessageBox.Icon.Information(statuswindow, title, message)
+            return QMessageBox(QMessageBox.Icon.Information, title, message, parent=statuswindow).show()
 
     @Slot()
     def recheck_all(self):
@@ -2148,11 +2155,33 @@ class StatusWindow(QWidget):
         self.servers_scrollarea_widget.deleteLater()
         return self.deleteLater()
 
-    class Worker(QObject):
+    @Slot()
+    def finish_worker_thread(self):
+        """
+            attempt to shutdown thread cleanly
+        """
+        # tell thread to quit
+        self.worker_thread.quit()
+        # wait until thread is really stopped
+        self.worker_thread.wait()
 
+    @Slot()
+    def finish_worker_notification_thread(self):
+        """
+            attempt to shutdown thread cleanly
+        """
+        # tell thread to quit
+        self.worker_notification_thread.quit()
+        # wait until thread is really stopped
+        self.worker_notification_thread.wait()
+
+
+    class Worker(QObject):
         """
            run a thread for example for debugging
         """
+        # send signal if ready to stop
+        finish = Signal()
 
         def __init__(self):
             QObject.__init__(self)
@@ -2231,6 +2260,9 @@ class StatusWindow(QWidget):
 
         # desktop notification needs to store count of states
         status_count = dict()
+
+        # send signal if ready to stop
+        finish = Signal()
 
         def __init__(self):
             QObject.__init__(self)
@@ -3256,7 +3288,7 @@ class TreeView(QTreeView):
 
         # a thread + worker is necessary to get new monitor server data in the background and
         # to refresh the table cell by cell after new data is available
-        self.worker_thread = QThread(self)
+        self.worker_thread = QThread(parent=self)
         self.worker = self.Worker(server=server, sort_column=self.sort_column, sort_order=self.sort_order)
         self.worker.moveToThread(self.worker_thread)
 
@@ -4000,11 +4032,7 @@ class TreeView(QTreeView):
             attempt to shutdown thread cleanly
         """
         # tell thread to quit
-        if OS == OS_WINDOWS:
-            self.worker_thread.quit()
-        else:
-            # tell thread to quit with force
-            self.worker_thread.terminate()
+        self.worker_thread.quit()
         # wait until thread is really stopped
         self.worker_thread.wait()
 
@@ -4156,7 +4184,7 @@ class TreeView(QTreeView):
             self.server.thread_counter += 1
 
             # if running flag is still set call myself after 1 second
-            if self.running is True:
+            if self.running:
                 self.timer.singleShot(1000, self.get_status)
             else:
                 # tell treeview to finish worker_thread
@@ -5155,15 +5183,18 @@ class Dialog_Settings(Dialog):
                 server_vbox.table.worker.finish.emit()
             # wait until all threads are stopped
             for server_vbox in statuswindow.servers_vbox.children():
-                server_vbox.table.worker_thread.terminate()
+                #server_vbox.table.worker_thread.terminate()
+                server_vbox.table.worker_thread.quit()
                 server_vbox.table.worker_thread.wait()
 
             # wait until statuswindow worker has finished
-            statuswindow.worker_thread.terminate()
+            #statuswindow.worker_thread.terminate()
+            statuswindow.worker_thread.quit()
             statuswindow.worker_thread.wait()
 
             # wait until statuswindow notification worker has finished
-            statuswindow.worker_notification_thread.terminate()
+            #statuswindow.worker_notification_thread.terminate()
+            statuswindow.worker_notification_thread.quit()
             statuswindow.worker_notification_thread.wait()
 
             # kick out ol' statuswindow
@@ -6815,7 +6846,7 @@ class CheckVersion(QObject):
                 self.parent = parent
 
             # thread for worker to avoid
-            self.worker_thread = QThread(self)
+            self.worker_thread = QThread(parent=self)
             self.worker = self.Worker()
 
             # if update check is ready it sends the message to GUI thread
@@ -7070,30 +7101,31 @@ def exit():
     # store position of statuswindow/statusbar
     statuswindow.store_position_to_conf()
 
+    # save configuration
+    conf.SaveConfig()
+
     # hide statuswindow first ro avoid lag when waiting for finished threads
     statuswindow.hide()
 
-    # stop statuswindow worker
-    statuswindow.worker.running = False
-
-    # save configuration
-    conf.SaveConfig()
+    # stop statuswindow workers
+    statuswindow.worker.finish.emit()
+    statuswindow.worker_notification.finish.emit()
 
     # tell all treeview threads to stop
     for server_vbox in statuswindow.servers_vbox.children():
         server_vbox.table.worker.finish.emit()
 
-    # delete all windows
-    for dialog in dialogs.__dict__.values():
-        try:
-            dialog.window().destroy()
-        except Exception:
-            dialog.window.destroy()
-    statuswindow.destroy()
-
+    APP.exit()
+    # # delete all windows
+    # for dialog in dialogs.__dict__.values():
+    #     try:
+    #         dialog.window().destroy()
+    #     except:
+    #         dialog.window.destroy()
+    # statuswindow.destroy()
+    # 
     # bye bye
-    APP.instance().quit()
-
+    #APP.instance().quit()
 
 def check_servers():
     """

@@ -64,10 +64,8 @@ try:
         # debug
         print(f'Using {QT_FLAVOR} {QT_VERSION_STR}')
 
-        APP.exec()
-        sys.exit(0)
+        sys.exit(APP.exec())
 
 except Exception as err:
     import traceback
-
     traceback.print_exc(file=sys.stdout)
