@@ -5171,7 +5171,7 @@ class Dialog_Settings(Dialog):
             # increase number of display changes for silly Windows-hides-statusbar-after-display-mode-change problem
             NUMBER_OF_DISPLAY_CHANGES += 1
 
-            # stop statuswindow worker
+            # stop statuswindow workers
             statuswindow.worker.running = False
             statuswindow.worker_notification.running = False
 
@@ -5181,21 +5181,26 @@ class Dialog_Settings(Dialog):
             # tell all treeview threads to stop
             for server_vbox in statuswindow.servers_vbox.children():
                 server_vbox.table.worker.finish.emit()
-            # wait until all threads are stopped
-            for server_vbox in statuswindow.servers_vbox.children():
-                #server_vbox.table.worker_thread.terminate()
-                server_vbox.table.worker_thread.quit()
-                server_vbox.table.worker_thread.wait()
 
-            # wait until statuswindow worker has finished
-            #statuswindow.worker_thread.terminate()
-            statuswindow.worker_thread.quit()
-            statuswindow.worker_thread.wait()
+            # stop statuswindow workers
+            statuswindow.worker.finish.emit()
+            statuswindow.worker_notification.finish.emit()
+
+            # # wait until all threads are stopped
+            # for server_vbox in statuswindow.servers_vbox.children():
+            #     #server_vbox.table.worker_thread.terminate()
+            #     server_vbox.table.worker_thread.quit()
+            #     server_vbox.table.worker_thread.wait()
+            #
+            # # wait until statuswindow worker has finished
+            # #statuswindow.worker_thread.terminate()
+            # statuswindow.worker_thread.quit()
+            # statuswindow.worker_thread.wait()
 
             # wait until statuswindow notification worker has finished
             #statuswindow.worker_notification_thread.terminate()
-            statuswindow.worker_notification_thread.quit()
-            statuswindow.worker_notification_thread.wait()
+            # statuswindow.worker_notification_thread.quit()
+            # statuswindow.worker_notification_thread.wait()
 
             # kick out ol' statuswindow
             statuswindow.kill()
