@@ -100,12 +100,6 @@ if QT_FLAVOR == 'PyQt5':
         QWidget
     from PyQt5 import uic
 
-    def get_global_position(event):
-        '''
-        Qt5 uses other method than Qt6
-        '''
-        return event.globalPos()
-
     class MediaPlayer(QObject):
         """
             play media files for notification
@@ -153,6 +147,23 @@ if QT_FLAVOR == 'PyQt5':
         def play(self):
             # just play sound
             self.player.play()
+
+    def get_global_position(event):
+        '''
+        Qt5 uses other method than Qt6
+        '''
+        return event.globalPos()
+
+    def is_modifier_pressed(modifiers):
+        """
+            check if (left) CTRL or Shift keys are pressed
+        """
+        if modifiers == Qt.Modifier.CTRL or \
+                modifiers == Qt.Modifier.SHIFT or \
+                modifiers == (Qt.Modifier.CTRL | Qt.Modifier.SHIFT):
+            return True
+        return False
+
 
 elif QT_FLAVOR == 'PyQt6':
     # PySide/PyQt compatibility
@@ -214,12 +225,6 @@ elif QT_FLAVOR == 'PyQt6':
     # for later decision which differences have to be considered
     QT_FLAVOR = 'PyQt6'
 
-    def get_global_position(event):
-        '''
-        Qt5 uses other method than Qt6
-        '''
-        return event.globalPosition()
-
     class MediaPlayer(QObject):
         """
             play media files for notification
@@ -265,6 +270,21 @@ elif QT_FLAVOR == 'PyQt6':
         def play(self):
             # just play sound
             self.player.play()
+
+            def get_global_position(event):
+                '''
+                Qt5 uses other method than Qt6
+                '''
+                return event.globalPosition()
+
+    def is_modifier_pressed(modifiers):
+        """
+            check if (left) CTRL or Shift keys are pressed
+        """
+        if modifiers.name in ['ControlModifier', 'ShiftModifier']:
+            return True
+        return False
+
 
 # elif 'PySide6' in sys.modules:
 #     from PySide6.QtCore import Signal, \

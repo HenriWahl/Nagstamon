@@ -111,7 +111,7 @@ if QT_VERSION_MAJOR < 6:
     except AttributeError:
         pass
     QApplication.setAttribute(Qt.AA_UseHighDpiPixmaps, True)
-    
+
 # global application instance
 APP = QApplication(sys.argv)
 
@@ -970,7 +970,7 @@ class StatusWindow(QWidget):
             Status window combined from status bar and popup window
         """
         # attempt with desktop as parent for window Qt.Tool
-        #QWidget.__init__(self, parent=APP.desktop())
+        # QWidget.__init__(self, parent=APP.desktop())
         QWidget.__init__(self)
 
         # immediately hide to avoid flicker on Windows and OSX
@@ -1181,7 +1181,7 @@ class StatusWindow(QWidget):
         '''
         global menu
         # show status popup when systray icon was clicked
-        systrayicon.show_popwin.connect(self.show_window_systrayicon) 
+        systrayicon.show_popwin.connect(self.show_window_systrayicon)
         systrayicon.hide_popwin.connect(self.hide_window)
         # flashing statusicon
         self.worker_notification.start_flash.connect(systrayicon.flash)
@@ -2174,7 +2174,6 @@ class StatusWindow(QWidget):
         self.worker_notification_thread.quit()
         # wait until thread is really stopped
         self.worker_notification_thread.wait()
-
 
     class Worker(QObject):
         """
@@ -3400,37 +3399,6 @@ class TreeView(QTreeView):
         # after setting table whole window can be repainted
         self.ready_to_resize.emit()
 
-    def mouseReleaseEvent_X(self, event):
-        """
-            forward clicked cell info from event
-        """
-        # special treatment if window should be closed when left-clicking somewhere
-        # it is important to check if CTRL or SHIFT key is presses while clicking to select lines
-        if conf.close_details_clicking_somewhere:
-            if event.button() == Qt.MouseButton.LeftButton:
-                modifiers = event.modifiers()
-                # count selected rows - if more than 1 do not close popwin
-                rows = []
-                for index in self.selectedIndexes():
-                    if index.row() not in rows:
-                        rows.append(index.row())
-                if modifiers == Qt.Modifier.CTRL or \
-                        modifiers == Qt.Modifier.SHIFT or \
-                        modifiers == (Qt.Modifier.CTRL| Qt.Modifier.SHIFT) or \
-                        len(rows) > 1:
-                    pass
-                else:
-                    statuswindow.hide_window()
-                del modifiers, rows
-            elif event.button() == Qt.MouseButton.RightButton:
-                self.cell_clicked()
-            return
-        else:
-            if event.button() == Qt.MouseButton.RightButton or event.button() == Qt.MouseButton.LeftButton:
-                self.cell_clicked()
-                return
-        super(TreeView, self).mouseReleaseEvent(event)
-
     def mouseReleaseEvent(self, event):
         """
             forward clicked cell info from event
@@ -3444,9 +3412,8 @@ class TreeView(QTreeView):
             for index in self.selectedIndexes():
                 if index.row() not in rows:
                     rows.append(index.row())
-            if modifiers == Qt.Modifier.CTRL or \
-                    modifiers == Qt.Modifier.SHIFT or \
-                    modifiers == (Qt.Modifier.CTRL | Qt.Modifier.SHIFT) or \
+            # Qt5 vs Qt6
+            if is_modifier_pressed(modifiers) or \
                     len(rows) > 1:
                 super(TreeView, self).mouseReleaseEvent(event)
             else:
@@ -3456,10 +3423,9 @@ class TreeView(QTreeView):
                     self.cell_clicked()
             del modifiers, rows
             return
-        else:
-            if event.button() == Qt.MouseButton.RightButton or event.button() == Qt.MouseButton.LeftButton:
-                self.cell_clicked()
-                return
+        elif event.button() == Qt.MouseButton.RightButton or event.button() == Qt.MouseButton.LeftButton:
+            self.cell_clicked()
+            return
 
     def wheelEvent(self, event):
         """
@@ -3657,6 +3623,7 @@ class TreeView(QTreeView):
         else:
             self.action_menu.available = True
 
+
     @Slot(str)
     def action_menu_custom_response(self, action):
         # avoid blocked context menu
@@ -3708,6 +3675,7 @@ class TreeView(QTreeView):
         # clean up
         del list_rows
 
+
     @Slot()
     def action_response_decorator(method):
         """
@@ -3727,6 +3695,7 @@ class TreeView(QTreeView):
 
         return (decoration_function)
 
+
     @action_response_decorator
     def action_edit_actions(self):
         # buttons in toparee
@@ -3734,6 +3703,7 @@ class TreeView(QTreeView):
             statuswindow.hide_window()
         # open actions tab (#3) of settings dialog
         dialogs.settings.show(tab=3)
+
 
     @action_response_decorator
     def action_monitor(self):
@@ -3746,6 +3716,7 @@ class TreeView(QTreeView):
 
             # open host/service monitor in browser
             self.server.open_monitor(miserable_host, miserable_service)
+
 
     @action_response_decorator
     def action_recheck(self):
@@ -3762,6 +3733,7 @@ class TreeView(QTreeView):
             # send signal to worker recheck slot
             self.recheck.emit({'host': miserable_host,
                                'service': miserable_service})
+
 
     @action_response_decorator
     def action_acknowledge(self):
@@ -3784,6 +3756,7 @@ class TreeView(QTreeView):
                                        service=list_service)
         dialogs.acknowledge.show()
 
+
     @action_response_decorator
     def action_downtime(self):
         list_host = []
@@ -3804,6 +3777,7 @@ class TreeView(QTreeView):
                                     host=list_host,
                                     service=list_service)
         dialogs.downtime.show()
+
 
     @action_response_decorator
     def action_archive_event(self):
@@ -3857,6 +3831,7 @@ class TreeView(QTreeView):
         # clean up
         del index, indexes, list_rows, list_host, list_service, list_status
 
+
     @action_response_decorator
     def action_submit(self):
         # only on 1 row
@@ -3870,6 +3845,7 @@ class TreeView(QTreeView):
                                   host=miserable_host,
                                   service=miserable_service)
         dialogs.submit.show()
+
 
     @Slot()
     def action_clipboard_action_host(self):
@@ -3896,6 +3872,7 @@ class TreeView(QTreeView):
 
         clipboard.setText(text)
 
+
     @Slot()
     def action_clipboard_action_service(self):
         """
@@ -3921,6 +3898,7 @@ class TreeView(QTreeView):
 
         clipboard.setText(text)
 
+
     @Slot()
     def action_clipboard_action_statusinformation(self):
         """
@@ -3944,6 +3922,7 @@ class TreeView(QTreeView):
                 text += '\n'
 
         clipboard.setText(text)
+
 
     @Slot()
     def action_clipboard_action_all(self):
@@ -3989,6 +3968,7 @@ class TreeView(QTreeView):
         # copy text to clipboard
         clipboard.setText(text)
 
+
     @Slot()
     def refresh(self):
         """
@@ -4017,6 +3997,7 @@ class TreeView(QTreeView):
                     self.status_changed.emit(self.server.name, self.server.worst_status_diff,
                                              self.server.worst_status_current)
 
+
     @Slot(int, Qt.SortOrder)
     def sort_columns(self, sort_column, sort_order):
         """
@@ -4025,6 +4006,7 @@ class TreeView(QTreeView):
         # better int() the Qt.* values because they partly seem to be
         # intransmissible
         self.sort_data_array_for_columns.emit(int(sort_column), int(sort_order), True)
+
 
     @Slot()
     def finish_worker_thread(self):
@@ -4035,6 +4017,7 @@ class TreeView(QTreeView):
         self.worker_thread.quit()
         # wait until thread is really stopped
         self.worker_thread.wait()
+
 
     class Worker(QObject):
         """
@@ -4109,8 +4092,7 @@ class TreeView(QTreeView):
             # if counter is at least update interval get status
             if self.server.thread_counter >= conf.update_interval_seconds:
                 # only if no multiple selection is done at the moment and no context action menu is open
-                # if not is_modifier_pressed() and not self.action_menu_shown:
-                if not is_modifier_pressed() and APP.activePopupWidget() is None:
+                if not is_modifier_pressed(APP.keyboardModifiers()) and APP.activePopupWidget() is None:
                     # reflect status retrieval attempt on server vbox label
                     self.change_label_status.emit('Refreshing...', '')
 
@@ -4513,10 +4495,6 @@ class TreeView(QTreeView):
             for event in self.server.events_history.keys():
                 self.server.events_history[event] = False
 
-        # @Slot(bool)
-        # def track_action_menu(self, action_menu_shown):
-        #     self.action_menu_shown = action_menu_shown
-
 
 class Dialogs(object):
     """
@@ -4525,7 +4503,7 @@ class Dialogs(object):
 
     def __init__(self):
         # settings main dialog
-        #self.settings = Dialog_Settings(Ui_settings_main)
+        # self.settings = Dialog_Settings(Ui_settings_main)
         self.settings = Dialog_Settings('settings_main')
         self.settings.initialize()
 
@@ -4556,17 +4534,17 @@ class Dialogs(object):
         self.acknowledge.window.button_change_defaults_acknowledge.clicked.connect(self.acknowledge.window.close)
 
         # downtime dialog for miserable item context menu
-        #self.submit = Dialog_Submit(Ui_dialog_submit)
+        # self.submit = Dialog_Submit(Ui_dialog_submit)
         self.submit = Dialog_Submit('dialog_submit')
         self.submit.initialize()
 
         # authentication dialog for username/password
-        #self.authentication = Dialog_Authentication(Ui_dialog_authentication)
+        # self.authentication = Dialog_Authentication(Ui_dialog_authentication)
         self.authentication = Dialog_Authentication('dialog_authentication')
         self.authentication.initialize()
 
         # dialog for asking about disabled or not configured servers
-        #self.server_missing = Dialog_Server_missing(Ui_dialog_server_missing)
+        # self.server_missing = Dialog_Server_missing(Ui_dialog_server_missing)
         self.server_missing = Dialog_Server_missing('dialog_server_missing')
         self.server_missing.initialize()
         # open server creation dialog
@@ -4574,7 +4552,7 @@ class Dialogs(object):
         self.server_missing.window.button_enable_server.clicked.connect(self.settings.show)
 
         # about dialog
-        #self.about = Dialog_About(Ui_dialog_about)
+        # self.about = Dialog_About(Ui_dialog_about)
         self.about = Dialog_About('dialog_about')
 
         # file chooser Dialog
@@ -4740,32 +4718,33 @@ class Dialog_Settings(Dialog):
         self.TOGGLE_DEPS = {
             # debug mode
             self.window.input_checkbox_debug_mode: [self.window.input_checkbox_debug_to_file,
-                                                self.window.input_lineedit_debug_file],
+                                                    self.window.input_lineedit_debug_file],
             # regular expressions for filtering hosts
             self.window.input_checkbox_re_host_enabled: [self.window.input_lineedit_re_host_pattern,
-                                                     self.window.input_checkbox_re_host_reverse],
+                                                         self.window.input_checkbox_re_host_reverse],
             # regular expressions for filtering services
             self.window.input_checkbox_re_service_enabled: [self.window.input_lineedit_re_service_pattern,
-                                                        self.window.input_checkbox_re_service_reverse],
+                                                            self.window.input_checkbox_re_service_reverse],
             # regular expressions for filtering status information
-            self.window.input_checkbox_re_status_information_enabled: [self.window.input_lineedit_re_status_information_pattern,
-                                                                   self.window.input_checkbox_re_status_information_reverse],
+            self.window.input_checkbox_re_status_information_enabled: [
+                self.window.input_lineedit_re_status_information_pattern,
+                self.window.input_checkbox_re_status_information_reverse],
             # regular expressions for filtering duration
             self.window.input_checkbox_re_duration_enabled: [self.window.input_lineedit_re_duration_pattern,
-                                                         self.window.input_checkbox_re_duration_reverse],
+                                                             self.window.input_checkbox_re_duration_reverse],
             # regular expressions for filtering duration
             self.window.input_checkbox_re_attempt_enabled: [self.window.input_lineedit_re_attempt_pattern,
-                                                        self.window.input_checkbox_re_attempt_reverse],
+                                                            self.window.input_checkbox_re_attempt_reverse],
             # regular expressions for filtering groups
             self.window.input_checkbox_re_groups_enabled: [self.window.input_lineedit_re_groups_pattern,
-                                                       self.window.input_checkbox_re_groups_reverse],
+                                                           self.window.input_checkbox_re_groups_reverse],
             # offset for statuswindow when using systray
             self.window.input_radiobutton_icon_in_systray: [self.window.input_checkbox_systray_offset_use],
             self.window.input_checkbox_systray_offset_use: [self.window.input_spinbox_systray_offset,
-                                                        self.window.label_offset_statuswindow],
+                                                            self.window.label_offset_statuswindow],
             # display to use in fullscreen mode
             self.window.input_radiobutton_fullscreen: [self.window.label_fullscreen_display,
-                                                   self.window.input_combobox_fullscreen_display],
+                                                       self.window.input_combobox_fullscreen_display],
             # notifications in general
             self.window.input_checkbox_notification: [self.window.notification_groupbox],
             # sound at all
@@ -4779,8 +4758,10 @@ class Dialog_Settings(Dialog):
                 self.window.input_lineedit_notification_action_warning_string],
             self.window.input_checkbox_notification_action_critical: [
                 self.window.input_lineedit_notification_action_critical_string],
-            self.window.input_checkbox_notification_action_down: [self.window.input_lineedit_notification_action_down_string],
-            self.window.input_checkbox_notification_action_ok: [self.window.input_lineedit_notification_action_ok_string],
+            self.window.input_checkbox_notification_action_down: [
+                self.window.input_lineedit_notification_action_down_string],
+            self.window.input_checkbox_notification_action_ok: [
+                self.window.input_lineedit_notification_action_ok_string],
             # single custom notification action
             self.window.input_checkbox_notification_custom_action: [self.window.notification_custom_action_groupbox],
             # use event separator or not
@@ -4790,27 +4771,27 @@ class Dialog_Settings(Dialog):
             # customized color alternation
             self.window.input_checkbox_show_grid: [self.window.input_checkbox_grid_use_custom_intensity],
             self.window.input_checkbox_grid_use_custom_intensity: [self.window.input_slider_grid_alternation_intensity,
-                                                               self.window.label_intensity_information_0,
-                                                               self.window.label_intensity_information_1,
-                                                               self.window.label_intensity_warning_0,
-                                                               self.window.label_intensity_warning_1,
-                                                               self.window.label_intensity_average_0,
-                                                               self.window.label_intensity_average_1,
-                                                               self.window.label_intensity_high_0,
-                                                               self.window.label_intensity_high_1,
-                                                               self.window.label_intensity_critical_0,
-                                                               self.window.label_intensity_critical_1,
-                                                               self.window.label_intensity_disaster_0,
-                                                               self.window.label_intensity_disaster_1,
-                                                               self.window.label_intensity_down_0,
-                                                               self.window.label_intensity_down_1,
-                                                               self.window.label_intensity_unreachable_0,
-                                                               self.window.label_intensity_unreachable_1,
-                                                               self.window.label_intensity_unknown_0,
-                                                               self.window.label_intensity_unknown_1],
+                                                                   self.window.label_intensity_information_0,
+                                                                   self.window.label_intensity_information_1,
+                                                                   self.window.label_intensity_warning_0,
+                                                                   self.window.label_intensity_warning_1,
+                                                                   self.window.label_intensity_average_0,
+                                                                   self.window.label_intensity_average_1,
+                                                                   self.window.label_intensity_high_0,
+                                                                   self.window.label_intensity_high_1,
+                                                                   self.window.label_intensity_critical_0,
+                                                                   self.window.label_intensity_critical_1,
+                                                                   self.window.label_intensity_disaster_0,
+                                                                   self.window.label_intensity_disaster_1,
+                                                                   self.window.label_intensity_down_0,
+                                                                   self.window.label_intensity_down_1,
+                                                                   self.window.label_intensity_unreachable_0,
+                                                                   self.window.label_intensity_unreachable_1,
+                                                                   self.window.label_intensity_unknown_0,
+                                                                   self.window.label_intensity_unknown_1],
             self.window.input_radiobutton_use_custom_browser: [self.window.groupbox_custom_browser,
-                                                           self.window.input_lineedit_custom_browser,
-                                                           self.window.button_choose_browser]}
+                                                               self.window.input_lineedit_custom_browser,
+                                                               self.window.button_choose_browser]}
 
         self.TOGGLE_DEPS_INVERTED = [self.window.input_checkbox_notification_custom_action_single]
 
@@ -4870,23 +4851,30 @@ class Dialog_Settings(Dialog):
 
         # set folder and play symbols to choose and play buttons
         self.window.button_choose_warning.setText('')
-        self.window.button_choose_warning.setIcon(self.window.button_play_warning.style().standardIcon(QStyle.StandardPixmap.SP_DirIcon))
+        self.window.button_choose_warning.setIcon(
+            self.window.button_play_warning.style().standardIcon(QStyle.StandardPixmap.SP_DirIcon))
         self.window.button_play_warning.setText('')
-        self.window.button_play_warning.setIcon(self.window.button_play_warning.style().standardIcon(QStyle.StandardPixmap.SP_MediaPlay))
+        self.window.button_play_warning.setIcon(
+            self.window.button_play_warning.style().standardIcon(QStyle.StandardPixmap.SP_MediaPlay))
 
         self.window.button_choose_critical.setText('')
-        self.window.button_choose_critical.setIcon(self.window.button_play_warning.style().standardIcon(QStyle.StandardPixmap.SP_DirIcon))
+        self.window.button_choose_critical.setIcon(
+            self.window.button_play_warning.style().standardIcon(QStyle.StandardPixmap.SP_DirIcon))
         self.window.button_play_critical.setText('')
-        self.window.button_play_critical.setIcon(self.window.button_play_warning.style().standardIcon(QStyle.StandardPixmap.SP_MediaPlay))
+        self.window.button_play_critical.setIcon(
+            self.window.button_play_warning.style().standardIcon(QStyle.StandardPixmap.SP_MediaPlay))
 
         self.window.button_choose_down.setText('')
-        self.window.button_choose_down.setIcon(self.window.button_play_warning.style().standardIcon(QStyle.StandardPixmap.SP_DirIcon))
+        self.window.button_choose_down.setIcon(
+            self.window.button_play_warning.style().standardIcon(QStyle.StandardPixmap.SP_DirIcon))
         self.window.button_play_down.setText('')
-        self.window.button_play_down.setIcon(self.window.button_play_warning.style().standardIcon(QStyle.StandardPixmap.SP_MediaPlay))
+        self.window.button_play_down.setIcon(
+            self.window.button_play_warning.style().standardIcon(QStyle.StandardPixmap.SP_MediaPlay))
 
         # set browser file chooser icon and current custom browser path
         self.window.button_choose_browser.setText('')
-        self.window.button_choose_browser.setIcon(self.window.button_play_warning.style().standardIcon(QStyle.StandardPixmap.SP_DirIcon))
+        self.window.button_choose_browser.setIcon(
+            self.window.button_play_warning.style().standardIcon(QStyle.StandardPixmap.SP_DirIcon))
         self.window.input_lineedit_custom_browser.setText(conf.custom_browser)
         # connect choose browser button with file dialog
         self.window.button_choose_browser.clicked.connect(self.choose_browser_executable)
@@ -5198,7 +5186,7 @@ class Dialog_Settings(Dialog):
             # statuswindow.worker_thread.wait()
 
             # wait until statuswindow notification worker has finished
-            #statuswindow.worker_notification_thread.terminate()
+            # statuswindow.worker_notification_thread.terminate()
             # statuswindow.worker_notification_thread.quit()
             # statuswindow.worker_notification_thread.wait()
 
@@ -5256,7 +5244,8 @@ class Dialog_Settings(Dialog):
 
         reply = QMessageBox.question(self.window, 'Nagstamon',
                                      'Do you really want to delete monitor server <b>%s</b>?' % (server.name),
-                                     QMessageBox.StandardButton.Yes | QMessageBox.StandardButton.No, QMessageBox.StandardButton.No)
+                                     QMessageBox.StandardButton.Yes | QMessageBox.StandardButton.No,
+                                     QMessageBox.StandardButton.No)
 
         if reply == QMessageBox.StandardButton.Yes:
             # in case server is enabled delete its vbox
@@ -5307,7 +5296,7 @@ class Dialog_Settings(Dialog):
         self.fill_list(list_widget, list_conf)
         # select current edited item
         # activate currently created/edited server monitor item by first searching it in the list
-        list_widget.setCurrentItem(list_widget.findItems(current, Qt.MatchExactly)[0])
+        list_widget.setCurrentItem(list_widget.findItems(current, Qt.MatchFlag.MatchExactly)[0])
 
     @Slot()
     def new_action(self):
@@ -5340,7 +5329,8 @@ class Dialog_Settings(Dialog):
 
         reply = QMessageBox.question(self.window, 'Nagstamon',
                                      'Do you really want to delete action <b>%s</b>?' % (action.name),
-                                     QMessageBox.StandardButton.Yes | QMessageBox.StandardButton.No, QMessageBox.StandardButton.No)
+                                     QMessageBox.StandardButton.Yes | QMessageBox.StandardButton.No,
+                                     QMessageBox.StandardButton.No)
 
         if reply == QMessageBox.StandardButton.Yes:
             # kick action out of config items
@@ -5453,13 +5443,13 @@ class Dialog_Settings(Dialog):
                                                                            border-width: 1px;
                                                                            border-color: black;
                                                                            border-style: solid;'''
-                                                                        % conf.__dict__[color])
+                                                                            % conf.__dict__[color])
         # example color labels
         for label in [x for x in self.window.__dict__ if x.startswith('label_color_')]:
             status = label.split('label_color_')[1]
             self.window.__dict__[label].setStyleSheet('color: %s; background: %s' %
-                                                  (conf.__dict__['color_%s_text' % (status)],
-                                                   (conf.__dict__['color_%s_background' % (status)])))
+                                                      (conf.__dict__['color_%s_text' % (status)],
+                                                       (conf.__dict__['color_%s_background' % (status)])))
 
     @Slot()
     def colors_defaults(self):
@@ -5474,7 +5464,7 @@ class Dialog_Settings(Dialog):
                                                                            border-width: 1px;
                                                                            border-color: black;
                                                                            border-style: solid;'''
-                                                                        % conf.__dict__[default_color])
+                                                                            % conf.__dict__[default_color])
         # example color labels
         for label in [x for x in self.window.__dict__ if x.startswith('label_color_')]:
             status = label.split('label_color_')[1]
@@ -5487,7 +5477,7 @@ class Dialog_Settings(Dialog):
 
             # apply color values from stylesheet to label
             self.window.__dict__[label].setStyleSheet('color: %s; background: %s' %
-                                                  (color_text, color_background))
+                                                      (color_text, color_background))
 
     @Slot(str)
     def color_chooser(self, item):
@@ -5503,7 +5493,7 @@ class Dialog_Settings(Dialog):
                                                                                 border-width: 1px;
                                                                                 border-color: black;
                                                                                 border-style: solid;'''
-                                                                             % new_color.name())
+                                                                                 % new_color.name())
             status = item.split('_')[0]
             # get color value from stylesheet to paint example
             text = self.window.__dict__['input_button_color_%s_text' % (status)].styleSheet()
@@ -5527,12 +5517,12 @@ class Dialog_Settings(Dialog):
         for state in COLORS:
             # get text color from button CSS
             text = self.window.__dict__['input_button_color_{0}_text'
-                .format(state.lower())] \
+            .format(state.lower())] \
                 .styleSheet() \
                 .split(';\n')[0].split(': ')[1]
             # get background color from button CSS
             background = self.window.__dict__['input_button_color_{0}_background'
-                .format(state.lower())] \
+            .format(state.lower())] \
                 .styleSheet() \
                 .split(';\n')[0].split(': ')[1]
             # set CSS
@@ -5561,7 +5551,7 @@ class Dialog_Settings(Dialog):
 
                 # get text color from text color chooser button
                 text = self.window.__dict__['input_button_color_{0}_text'
-                    .format(state.lower())] \
+                .format(state.lower())] \
                     .styleSheet() \
                     .split(';\n')[0].split(': ')[1]
 
@@ -5739,19 +5729,19 @@ class Dialog_Server(Dialog):
         # dictionary holds checkbox/radiobutton as key and relevant widgets in list
         self.TOGGLE_DEPS = {
             self.window.input_checkbox_use_autologin: [self.window.label_autologin_key,
-                                                   self.window.input_lineedit_autologin_key],
+                                                       self.window.input_lineedit_autologin_key],
             self.window.input_checkbox_use_proxy: [self.window.groupbox_proxy],
 
             self.window.input_checkbox_use_proxy_from_os: [self.window.label_proxy_address,
-                                                       self.window.input_lineedit_proxy_address,
-                                                       self.window.label_proxy_username,
-                                                       self.window.input_lineedit_proxy_username,
-                                                       self.window.label_proxy_password,
-                                                       self.window.input_lineedit_proxy_password],
+                                                           self.window.input_lineedit_proxy_address,
+                                                           self.window.label_proxy_username,
+                                                           self.window.input_lineedit_proxy_username,
+                                                           self.window.label_proxy_password,
+                                                           self.window.input_lineedit_proxy_password],
             self.window.input_checkbox_show_options: [self.window.groupbox_options],
             self.window.input_checkbox_custom_cert_use: [self.window.label_custom_ca_file,
-                                                     self.window.input_lineedit_custom_cert_ca_file,
-                                                     self.window.button_choose_custom_cert_ca_file]}
+                                                         self.window.input_lineedit_custom_cert_ca_file,
+                                                         self.window.button_choose_custom_cert_ca_file]}
 
         self.TOGGLE_DEPS_INVERTED = [self.window.input_checkbox_use_proxy_from_os]
 
@@ -5986,9 +5976,9 @@ class Dialog_Server(Dialog):
                  self.mode == 'edit' and self.server_conf != conf.servers[self.window.input_lineedit_name.text()]):
             # cry if duplicate name exists
             QMessageBox.Icon.Critical(self.window, 'Nagstamon',
-                                 'The monitor server name <b>%s</b> is already used.' %
-                                 (self.window.input_lineedit_name.text()),
-                                 QMessageBox.StandardButton.Ok)
+                                      'The monitor server name <b>%s</b> is already used.' %
+                                      (self.window.input_lineedit_name.text()),
+                                      QMessageBox.StandardButton.Ok)
         else:
             # get configuration from UI
             for widget in self.window.__dict__:
@@ -6127,17 +6117,18 @@ class Dialog_Action(Dialog):
         # dictionary holds checkbox/radiobutton as key and relevant widgets in list
         self.TOGGLE_DEPS = {
             self.window.input_checkbox_re_host_enabled: [self.window.input_lineedit_re_host_pattern,
-                                                     self.window.input_checkbox_re_host_reverse],
+                                                         self.window.input_checkbox_re_host_reverse],
             self.window.input_checkbox_re_service_enabled: [self.window.input_lineedit_re_service_pattern,
-                                                        self.window.input_checkbox_re_service_reverse],
-            self.window.input_checkbox_re_status_information_enabled: [self.window.input_lineedit_re_status_information_pattern,
-                                                                   self.window.input_checkbox_re_status_information_reverse],
+                                                            self.window.input_checkbox_re_service_reverse],
+            self.window.input_checkbox_re_status_information_enabled: [
+                self.window.input_lineedit_re_status_information_pattern,
+                self.window.input_checkbox_re_status_information_reverse],
             self.window.input_checkbox_re_duration_enabled: [self.window.input_lineedit_re_duration_pattern,
-                                                         self.window.input_checkbox_re_duration_reverse],
+                                                             self.window.input_checkbox_re_duration_reverse],
             self.window.input_checkbox_re_attempt_enabled: [self.window.input_lineedit_re_attempt_pattern,
-                                                        self.window.input_checkbox_re_attempt_reverse],
+                                                            self.window.input_checkbox_re_attempt_reverse],
             self.window.input_checkbox_re_groups_enabled: [self.window.input_lineedit_re_groups_pattern,
-                                                       self.window.input_checkbox_re_groups_reverse]}
+                                                           self.window.input_checkbox_re_groups_reverse]}
 
         # fill action types into combobox
         self.window.input_combobox_type.addItems(sorted(self.ACTION_TYPES.values()))
@@ -6246,9 +6237,9 @@ class Dialog_Action(Dialog):
                  self.mode == 'edit' and self.action_conf != conf.actions[self.window.input_lineedit_name.text()]):
             # cry if duplicate name exists
             QMessageBox.Icon.Critical(self.window, 'Nagstamon',
-                                 'The action name <b>%s</b> is already used.' %
-                                 (self.window.input_lineedit_name.text()),
-                                 QMessageBox.StandardButton.Ok)
+                                      'The action name <b>%s</b> is already used.' %
+                                      (self.window.input_lineedit_name.text()),
+                                      QMessageBox.StandardButton.Ok)
         else:
             # get configuration from UI
             for widget in self.window.__dict__:
@@ -7078,7 +7069,7 @@ def get_screen(x, y):
     # integerify these values as they *might* be strings
     x = int(x)
     y = int(y)
-    screen = APP.screenAt(QPoint(x,y))
+    screen = APP.screenAt(QPoint(x, y))
     del x, y
     if screen:
         return screen.name
@@ -7130,7 +7121,8 @@ def exit():
     # statuswindow.destroy()
     # 
     # bye bye
-    #APP.instance().quit()
+    # APP.instance().quit()
+
 
 def check_servers():
     """
@@ -7144,20 +7136,6 @@ def check_servers():
     elif len([x for x in conf.servers.values() if x.enabled is True]) == 0:
         dialogs.server_missing.show()
         dialogs.server_missing.initialize('no_server_enabled')
-
-
-def is_modifier_pressed():
-    """
-        check if (left) CTRL or Shift keys are pressed
-    """
-    modifiers = APP.keyboardModifiers()
-    if modifiers == Qt.Modifier.CTRL or \
-            modifiers == Qt.Modifier.SHIFT or \
-            modifiers == (Qt.Modifier.CTRL | Qt.Modifier.SHIFT):
-        del modifiers
-        return True
-    del modifiers
-    return False
 
 
 # check for updates
