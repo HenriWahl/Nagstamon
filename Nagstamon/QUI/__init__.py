@@ -3399,33 +3399,42 @@ class TreeView(QTreeView):
         # after setting table whole window can be repainted
         self.ready_to_resize.emit()
 
+    def count_selected_rows(self):
+        """
+        find out if rows are selected and return their number
+        """
+        rows = []
+        for index in self.selectedIndexes():
+            if index.row() not in rows:
+                rows.append(index.row())
+        return len(rows)
+
     def mouseReleaseEvent(self, event):
         """
             forward clicked cell info from event
         """
         # special treatment if window should be closed when left-clicking somewhere
         # it is important to check if CTRL or SHIFT key is presses while clicking to select lines
-        if event.button() == Qt.MouseButton.LeftButton:
-            modifiers = event.modifiers()
-            # count selected rows - if more than 1 do not close popwin
-            rows = []
-            for index in self.selectedIndexes():
-                if index.row() not in rows:
-                    rows.append(index.row())
-            # Qt5 vs Qt6
-            if is_modifier_pressed(modifiers) or \
-                    len(rows) > 1:
-                super(TreeView, self).mouseReleaseEvent(event)
-            else:
-                if conf.close_details_clicking_somewhere:
-                    statuswindow.hide_window()
+        if conf.close_details_clicking_somewhere:
+            if event.button() == Qt.MouseButton.LeftButton:
+                modifiers = event.modifiers()
+                # count selected rows - if more than 1 do not close popwin
+                if modifiers or self.count_selected_rows() > 1:
+                    super(TreeView, self).mouseReleaseEvent(event)
                 else:
-                    self.cell_clicked()
-            del modifiers, rows
-            return
-        elif event.button() == Qt.MouseButton.RightButton or event.button() == Qt.MouseButton.LeftButton:
-            self.cell_clicked()
-            return
+                    if conf.close_details_clicking_somewhere:
+                        statuswindow.hide_window()
+                    else:
+                        self.cell_clicked()
+                return
+            elif event.button() == Qt.MouseButton.RightButton:
+                self.cell_clicked()
+                return
+        else:
+            if event.button() in [Qt.MouseButton.LeftButton, Qt.MouseButton.RightButton]:
+                self.cell_clicked()
+                return
+        super(TreeView, self).mouseReleaseEvent(event)
 
     def wheelEvent(self, event):
         """
@@ -4092,7 +4101,7 @@ class TreeView(QTreeView):
             # if counter is at least update interval get status
             if self.server.thread_counter >= conf.update_interval_seconds:
                 # only if no multiple selection is done at the moment and no context action menu is open
-                if not is_modifier_pressed(APP.keyboardModifiers()) and APP.activePopupWidget() is None:
+                if not APP.keyboardModifiers() and APP.activePopupWidget() is None:
                     # reflect status retrieval attempt on server vbox label
                     self.change_label_status.emit('Refreshing...', '')
 

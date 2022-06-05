@@ -26,6 +26,7 @@ import sys
 # by the little import the appropriate PyQt version will be loaded
 try:
     from PyQt6.QtCore import PYQT_VERSION_STR as QT_VERSION_STR
+
     # get int-ed version parts
     QT_VERSION_MAJOR, QT_VERSION_MINOR, QT_VERSION_BUGFIX = [int(x) for x in QT_VERSION_STR.split('.')]
     # for later decision which differences have to be considered
@@ -33,6 +34,7 @@ try:
 except ImportError:
     try:
         from PyQt5.QtCore import PYQT_VERSION_STR as QT_VERSION_STR
+
         # get int-ed version parts
         QT_VERSION_MAJOR, QT_VERSION_MINOR, QT_VERSION_BUGFIX = [int(x) for x in QT_VERSION_STR.split('.')]
         # for later decision which differences have to be considered
@@ -100,6 +102,7 @@ if QT_FLAVOR == 'PyQt5':
         QWidget
     from PyQt5 import uic
 
+
     class MediaPlayer(QObject):
         """
             play media files for notification
@@ -140,7 +143,8 @@ if QT_FLAVOR == 'PyQt5':
                 return True
             else:
                 # cry and tell no file was found
-                self.send_message.emit('warning', 'Sound file <b>\'{0}\'</b> not found for playback.'.format(media_file))
+                self.send_message.emit('warning',
+                                       'Sound file <b>\'{0}\'</b> not found for playback.'.format(media_file))
                 return False
 
         @Slot()
@@ -148,21 +152,12 @@ if QT_FLAVOR == 'PyQt5':
             # just play sound
             self.player.play()
 
+
     def get_global_position(event):
         '''
         Qt5 uses other method than Qt6
         '''
         return event.globalPos()
-
-    def is_modifier_pressed(modifiers):
-        """
-            check if (left) CTRL or Shift keys are pressed
-        """
-        if modifiers == Qt.Modifier.CTRL or \
-                modifiers == Qt.Modifier.SHIFT or \
-                modifiers == (Qt.Modifier.CTRL | Qt.Modifier.SHIFT):
-            return True
-        return False
 
 
 elif QT_FLAVOR == 'PyQt6':
@@ -222,8 +217,10 @@ elif QT_FLAVOR == 'PyQt6':
         QVBoxLayout, \
         QWidget
     from PyQt6 import uic
+
     # for later decision which differences have to be considered
     QT_FLAVOR = 'PyQt6'
+
 
     class MediaPlayer(QObject):
         """
@@ -271,20 +268,12 @@ elif QT_FLAVOR == 'PyQt6':
             # just play sound
             self.player.play()
 
+
     def get_global_position(event):
         '''
         Qt5 uses other method than Qt6
         '''
         return event.globalPosition()
-
-    def is_modifier_pressed(modifiers):
-        """
-            check if (left) CTRL or Shift keys are pressed
-        """
-        if modifiers.name in ['ControlModifier', 'ShiftModifier']:
-            return True
-        return False
-
 
 # elif 'PySide6' in sys.modules:
 #     from PySide6.QtCore import Signal, \
