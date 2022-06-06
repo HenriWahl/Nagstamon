@@ -2303,12 +2303,11 @@ class StatusWindow(QWidget):
                                 sound_file = conf.__dict__[
                                     'notification_custom_sound_{0}'.format(worst_status_diff.lower())]
 
-                            # once loaded file will be played by every server, even if it is
-                            # not the self.notifying_server that loaded it
-                            self.load_sound.emit(sound_file)
-
                             # only one enabled server should access the mediaplayer
                             if self.notifying_server == server_name:
+                                # once loaded file will be played by every server, even if it is
+                                # not the self.notifying_server that loaded it
+                                self.load_sound.emit(sound_file)
                                 self.play_sound.emit()
 
                     # Notification actions

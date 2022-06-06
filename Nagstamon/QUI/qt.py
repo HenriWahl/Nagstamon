@@ -231,7 +231,6 @@ elif QT_FLAVOR == 'PyQt6':
         def __init__(self, statuswindow, resource_files):
             QObject.__init__(self)
             self.audio_output = QAudioOutput()
-            self.audio_output.setVolume(100)
             self.player = QMediaPlayer(parent=self)
             self.player.setAudioOutput(self.audio_output)
             self.resource_files = resource_files
@@ -253,9 +252,7 @@ elif QT_FLAVOR == 'PyQt6':
                 media_file = self.resource_files[media_file]
             # only existing file can be played
             if Path(media_file).exists():
-                url = QUrl.fromLocalFile(media_file)
-                self.player.setSource(url)
-                del url
+                self.player.setSource(QUrl.fromLocalFile(media_file))
                 return True
             else:
                 # cry and tell no file was found

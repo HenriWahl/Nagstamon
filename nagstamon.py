@@ -61,9 +61,6 @@ try:
         if conf.check_for_new_version is True:
             check_version.check(start_mode=True, parent=statuswindow)
 
-        # debug
-        print(f'Using {QT_FLAVOR} {QT_VERSION_STR}')
-
         sys.exit(APP.exec())
 
 except Exception as err:
