@@ -23,7 +23,7 @@ jobs:
         python-version: ${{ matrix.python-version }}
     - name: Install dependencies
       run: |
-        sudo apt-get install libkrb5-dev
+        sudo apt-get install libdbus-1-dev libkrb5-dev
         python -m pip install --upgrade pip
         pip install pytest pylint #flake8
         if [ -f build/requirements/linux.txt ]; then pip install -r build/requirements/linux.txt; fi
