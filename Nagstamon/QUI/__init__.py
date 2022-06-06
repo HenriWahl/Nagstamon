@@ -6800,6 +6800,7 @@ class Dialog_About(Dialog):
         self.window.label_copyright.setText(AppInfo.COPYRIGHT)
         self.window.label_website.setText('<a href={0}>{0}</a>'.format(AppInfo.WEBSITE))
         self.window.label_website.setOpenExternalLinks(True)
+        self.window.label_versions.setText(f'Python: {platform.python_version()}, Qt: {QT_VERSION_STR}')
         self.window.label_footnote.setText('<small>¹ plus Checkmk, Op5, Icinga, Centreon and more</small>')
 
         # fill in license information

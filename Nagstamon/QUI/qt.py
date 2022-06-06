@@ -34,7 +34,6 @@ try:
 except ImportError:
     try:
         from PyQt5.QtCore import PYQT_VERSION_STR as QT_VERSION_STR
-
         # get int-ed version parts
         QT_VERSION_MAJOR, QT_VERSION_MINOR, QT_VERSION_BUGFIX = [int(x) for x in QT_VERSION_STR.split('.')]
         # for later decision which differences have to be considered

@@ -7,7 +7,7 @@
     <x>0</x>
     <y>0</y>
     <width>500</width>
-    <height>300</height>
+    <height>322</height>
    </rect>
   </property>
   <property name="sizePolicy">
@@ -86,6 +86,16 @@
         <widget class="QLabel" name="label_website">
          <property name="text">
           <string>https://nagstamon.de</string>
+         </property>
+         <property name="alignment">
+          <set>Qt::AlignCenter</set>
+         </property>
+        </widget>
+       </item>
+       <item>
+        <widget class="QLabel" name="label_versions">
+         <property name="text">
+          <string>Python Qt versions</string>
          </property>
          <property name="alignment">
           <set>Qt::AlignCenter</set>
