@@ -83,12 +83,14 @@ if not OS in OS_NON_LINUX:
     try:
         from dbus import (Interface,
                           SessionBus)
-        from dbus.mainloop.glib import DBusQtMainLoop
+        # no DBusQtMainLoop available for Qt6
+        from dbus.mainloop.glib import DBusGMainLoop as DBusMainLoop
 
         # flag to check later if DBus is available
         DBUS_AVAILABLE = True
 
-    except ImportError:
+    except ImportError as ie:
+        print(ie)
         print('No DBus for desktop notification available.')
         DBUS_AVAILABLE = False
 
@@ -6997,7 +6999,7 @@ class DBus(QObject):
                 # see https://github.com/HenriWahl/Nagstamon/issues/320
                 try:
                     # import dbus  # never used
-                    dbus_mainloop = DBusQtMainLoop(set_as_default=True)
+                    dbus_mainloop = DBusMainLoop(set_as_default=True)
                     dbus_sessionbus = SessionBus(dbus_mainloop)
                     dbus_object = dbus_sessionbus.get_object('org.freedesktop.Notifications',
                                                              '/org/freedesktop/Notifications')
