@@ -1,3 +1,4 @@
+arrow
 beautifulsoup4
 dbus-python
 keyring
