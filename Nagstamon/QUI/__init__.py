@@ -99,6 +99,7 @@ if OS != OS_WINDOWS:
     # check ECP authentication support availability
     try:
         from requests_ecp import HTTPECPAuth
+
         ECP_AVAILABLE = True
     except ImportError:
         ECP_AVAILABLE = False
@@ -496,7 +497,7 @@ class MenuAtCursor(QMenu):
         open menu at position of mouse pointer - normal .exec() shows menu at (0, 0)
     """
     # flag to avoid too fast popping up menus
-    available = True
+    #available = True
 
     is_shown = Signal(bool)
 
@@ -2134,12 +2135,6 @@ class StatusWindow(QWidget):
                 not conf.windowed and \
                 APP.activePopupWidget() == None:
             try:
-                # find out if no context menu is shown and thus would be
-                # overlapped by statuswindow
-                for vbox in self.servers_vbox.children():
-                    # jump out here if any action_menu is shown
-                    if not vbox.table.action_menu.available:
-                        return
                 self.raise_()
             except Exception as err:
                 # apparently a race condition could occur on set_mode() - grab it here and continue
@@ -3254,8 +3249,6 @@ class TreeView(QTreeView):
 
         # action context menu
         self.action_menu = MenuAtCursor(parent=self)
-        # flag to avoid popping up menus when clicking somehwere
-        self.action_menu.available = True
         # signalmapper for getting triggered actions
         self.signalmapper_action_menu = QSignalMapper()
         # connect menu to responder
@@ -3416,26 +3409,24 @@ class TreeView(QTreeView):
         """
         # special treatment if window should be closed when left-clicking somewhere
         # it is important to check if CTRL or SHIFT key is presses while clicking to select lines
+        modifiers = event.modifiers()
         if conf.close_details_clicking_somewhere:
             if event.button() == Qt.MouseButton.LeftButton:
-                modifiers = event.modifiers()
                 # count selected rows - if more than 1 do not close popwin
                 if modifiers or self.count_selected_rows() > 1:
                     super(TreeView, self).mouseReleaseEvent(event)
                 else:
-                    if conf.close_details_clicking_somewhere:
-                        statuswindow.hide_window()
-                    else:
-                        self.cell_clicked()
+                    statuswindow.hide_window()
                 return
             elif event.button() == Qt.MouseButton.RightButton:
                 self.cell_clicked()
                 return
+        elif not modifiers or \
+                event.button() == Qt.MouseButton.RightButton:
+            self.cell_clicked()
+            return
         else:
-            if event.button() in [Qt.MouseButton.LeftButton, Qt.MouseButton.RightButton]:
-                self.cell_clicked()
-                return
-        super(TreeView, self).mouseReleaseEvent(event)
+            super(TreeView, self).mouseReleaseEvent(event)
 
     def wheelEvent(self, event):
         """
@@ -3458,187 +3449,176 @@ class TreeView(QTreeView):
             Windows reacts differently to clicks into table cells than Linux and MacOSX
             Therefore the .available flag is necessary
         """
+        # empty the menu
+        self.action_menu.clear()
 
-        if self.action_menu.available or OS != OS_WINDOWS:
-            # set flag for Windows
-            self.action_menu.available = False
+        # clear signal mappings
+        self.signalmapper_action_menu.removeMappings(self.signalmapper_action_menu)
 
-            # empty the menu
-            self.action_menu.clear()
+        # add custom actions
+        actions_list = list(conf.actions)
+        actions_list.sort(key=str.lower)
 
-            # clear signal mappings
-            self.signalmapper_action_menu.removeMappings(self.signalmapper_action_menu)
+        # How many rows do we have
+        list_rows = []
+        for index in self.selectedIndexes():
+            if index.row() not in list_rows:
+                list_rows.append(index.row())
 
-            # add custom actions
-            actions_list = list(conf.actions)
-            actions_list.sort(key=str.lower)
+        # dummy definition to avoid crash if no actions are enabled - asked for some lines later
+        miserable_service = None
 
-            # How many rows do we have
-            list_rows = []
-            for index in self.selectedIndexes():
-                if index.row() not in list_rows:
-                    list_rows.append(index.row())
+        # Add custom actions if all selected rows want them, one per one
+        for a in actions_list:
+            # shortcut for next lines
+            action = conf.actions[a]
 
-            # dummy definition to avoid crash if no actions are enabled - asked for some lines later
-            miserable_service = None
+            # check if current monitor server type is in action
+            # second check for server type is legacy-compatible with older settings
+            if action.enabled is True and (action.monitor_type in ['', self.server.TYPE] or
+                                           action.monitor_type not in SERVER_TYPES):
 
-            # Add custom actions if all selected rows want them, one per one
-            for a in actions_list:
-                # shortcut for next lines
-                action = conf.actions[a]
+                # menu item visibility flag
+                item_visible = None
 
-                # check if current monitor server type is in action
-                # second check for server type is legacy-compatible with older settings
-                if action.enabled is True and (action.monitor_type in ['', self.server.TYPE] or
-                                               action.monitor_type not in SERVER_TYPES):
+                for lrow in list_rows:
+                    # temporary menu item visibility flag to collect all visibility info
+                    item_visible_temporary = False
+                    # take data from model data_array
+                    miserable_host = self.model().data_array[lrow][0]
+                    miserable_service = self.model().data_array[lrow][2]
 
-                    # menu item visibility flag
-                    item_visible = None
-
-                    for lrow in list_rows:
-                        # temporary menu item visibility flag to collect all visibility info
-                        item_visible_temporary = False
-                        # take data from model data_array
-                        miserable_host = self.model().data_array[lrow][0]
-                        miserable_service = self.model().data_array[lrow][2]
-
-                        # check if clicked line is a service or host
-                        # if it is check if the action is targeted on hosts or services
-                        if miserable_service:
-                            if action.filter_target_service is True:
-                                # only check if there is some to check
-                                if action.re_host_enabled is True:
-                                    if is_found_by_re(miserable_host,
-                                                      action.re_host_pattern,
-                                                      action.re_host_reverse):
-                                        item_visible_temporary = True
-                                # dito
-                                if action.re_service_enabled is True:
-                                    if is_found_by_re(miserable_service,
-                                                      action.re_service_pattern,
-                                                      action.re_service_reverse):
-                                        item_visible_temporary = True
-                                # dito
-                                if action.re_status_information_enabled is True:
-                                    if is_found_by_re(miserable_service,
-                                                      action.re_status_information_pattern,
-                                                      action.re_status_information_reverse):
-                                        item_visible_temporary = True
-                                # dito
-                                if action.re_duration_enabled is True:
-                                    if is_found_by_re(miserable_service,
-                                                      action.re_duration_pattern,
-                                                      action.re_duration_reverse):
-                                        item_visible_temporary = True
-
-                                # dito
-                                if action.re_attempt_enabled is True:
-                                    if is_found_by_re(miserable_service,
-                                                      action.re_attempt_pattern,
-                                                      action.re_attempt_reverse):
-                                        item_visible_temporary = True
-
-                                # dito
-                                if action.re_groups_enabled is True:
-                                    if is_found_by_re(miserable_service,
-                                                      action.re_groups_pattern,
-                                                      action.re_groups_reverse):
-                                        item_visible_temporary = True
-
-                                # fallback if no regexp is selected
-                                if action.re_host_enabled == action.re_service_enabled == \
-                                        action.re_status_information_enabled == action.re_duration_enabled == \
-                                        action.re_attempt_enabled == action.re_groups_enabled is False:
+                    # check if clicked line is a service or host
+                    # if it is check if the action is targeted on hosts or services
+                    if miserable_service:
+                        if action.filter_target_service is True:
+                            # only check if there is some to check
+                            if action.re_host_enabled is True:
+                                if is_found_by_re(miserable_host,
+                                                  action.re_host_pattern,
+                                                  action.re_host_reverse):
+                                    item_visible_temporary = True
+                            # dito
+                            if action.re_service_enabled is True:
+                                if is_found_by_re(miserable_service,
+                                                  action.re_service_pattern,
+                                                  action.re_service_reverse):
+                                    item_visible_temporary = True
+                            # dito
+                            if action.re_status_information_enabled is True:
+                                if is_found_by_re(miserable_service,
+                                                  action.re_status_information_pattern,
+                                                  action.re_status_information_reverse):
+                                    item_visible_temporary = True
+                            # dito
+                            if action.re_duration_enabled is True:
+                                if is_found_by_re(miserable_service,
+                                                  action.re_duration_pattern,
+                                                  action.re_duration_reverse):
                                     item_visible_temporary = True
 
-                        else:
-                            # hosts should only care about host specific actions, no services
-                            if action.filter_target_host is True:
-                                if action.re_host_enabled is True:
-                                    if is_found_by_re(miserable_host,
-                                                      action.re_host_pattern,
-                                                      action.re_host_reverse):
-                                        item_visible_temporary = True
-                                else:
-                                    # a non specific action will be displayed per default
+                            # dito
+                            if action.re_attempt_enabled is True:
+                                if is_found_by_re(miserable_service,
+                                                  action.re_attempt_pattern,
+                                                  action.re_attempt_reverse):
                                     item_visible_temporary = True
 
-                        # when item_visible never has been set it shall be false
-                        # also if at least one row leads to not-showing the item it will be false
-                        if item_visible_temporary and item_visible is None:
-                            item_visible = True
-                        if not item_visible_temporary:
-                            item_visible = False
+                            # dito
+                            if action.re_groups_enabled is True:
+                                if is_found_by_re(miserable_service,
+                                                  action.re_groups_pattern,
+                                                  action.re_groups_reverse):
+                                    item_visible_temporary = True
 
-                else:
-                    item_visible = False
+                            # fallback if no regexp is selected
+                            if action.re_host_enabled == action.re_service_enabled == \
+                                    action.re_status_information_enabled == action.re_duration_enabled == \
+                                    action.re_attempt_enabled == action.re_groups_enabled is False:
+                                item_visible_temporary = True
 
-                # populate context menu with service actions
-                if item_visible is True:
-                    # create action
-                    action_menuentry = QAction(a, self)
-                    # add action
-                    self.action_menu.addAction(action_menuentry)
-                    # action to signalmapper
-                    self.signalmapper_action_menu.setMapping(action_menuentry, a)
-                    action_menuentry.triggered.connect(self.signalmapper_action_menu.map)
+                    else:
+                        # hosts should only care about host specific actions, no services
+                        if action.filter_target_host is True:
+                            if action.re_host_enabled is True:
+                                if is_found_by_re(miserable_host,
+                                                  action.re_host_pattern,
+                                                  action.re_host_reverse):
+                                    item_visible_temporary = True
+                            else:
+                                # a non specific action will be displayed per default
+                                item_visible_temporary = True
 
-                del action, item_visible
+                    # when item_visible never has been set it shall be false
+                    # also if at least one row leads to not-showing the item it will be false
+                    if item_visible_temporary and item_visible is None:
+                        item_visible = True
+                    if not item_visible_temporary:
+                        item_visible = False
 
-            # create and add default actions
-            action_edit_actions = QAction('Edit actions...', self)
-            action_edit_actions.triggered.connect(self.action_edit_actions)
-            self.action_menu.addAction(action_edit_actions)
-            # put actions into menu after separator
+            else:
+                item_visible = False
 
-            self.action_menu.addSeparator()
-            if 'Monitor' in self.server.MENU_ACTIONS and len(list_rows) == 1:
-                action_monitor = QAction('Monitor', self)
-                action_monitor.triggered.connect(self.action_monitor)
-                self.action_menu.addAction(action_monitor)
+            # populate context menu with service actions
+            if item_visible is True:
+                # create action
+                action_menuentry = QAction(a, self)
+                # add action
+                self.action_menu.addAction(action_menuentry)
+                # action to signalmapper
+                self.signalmapper_action_menu.setMapping(action_menuentry, a)
+                action_menuentry.triggered.connect(self.signalmapper_action_menu.map)
 
-            if 'Recheck' in self.server.MENU_ACTIONS:
-                action_recheck = QAction('Recheck', self)
-                action_recheck.triggered.connect(self.action_recheck)
-                self.action_menu.addAction(action_recheck)
+            del action, item_visible
 
-            if 'Acknowledge' in self.server.MENU_ACTIONS:
-                action_acknowledge = QAction('Acknowledge', self)
-                action_acknowledge.triggered.connect(self.action_acknowledge)
-                self.action_menu.addAction(action_acknowledge)
+        # create and add default actions
+        action_edit_actions = QAction('Edit actions...', self)
+        action_edit_actions.triggered.connect(self.action_edit_actions)
+        self.action_menu.addAction(action_edit_actions)
+        # put actions into menu after separator
 
-            if 'Downtime' in self.server.MENU_ACTIONS:
-                action_downtime = QAction('Downtime', self)
-                action_downtime.triggered.connect(self.action_downtime)
-                self.action_menu.addAction(action_downtime)
+        self.action_menu.addSeparator()
+        if 'Monitor' in self.server.MENU_ACTIONS and len(list_rows) == 1:
+            action_monitor = QAction('Monitor', self)
+            action_monitor.triggered.connect(self.action_monitor)
+            self.action_menu.addAction(action_monitor)
 
-            # special menu entry for Checkmk Multisite for archiving events
-            if self.server.type == 'Checkmk Multisite' and len(list_rows) == 1:
-                if miserable_service == 'Events':
-                    action_archive_event = QAction('Archive event', self)
-                    action_archive_event.triggered.connect(self.action_archive_event)
-                    self.action_menu.addAction(action_archive_event)
+        if 'Recheck' in self.server.MENU_ACTIONS:
+            action_recheck = QAction('Recheck', self)
+            action_recheck.triggered.connect(self.action_recheck)
+            self.action_menu.addAction(action_recheck)
 
-            # not all servers allow to submit fake check results
-            if 'Submit check result' in self.server.MENU_ACTIONS and len(list_rows) == 1:
-                action_submit = QAction('Submit check result', self)
-                action_submit.triggered.connect(self.action_submit)
-                self.action_menu.addAction(action_submit)
+        if 'Acknowledge' in self.server.MENU_ACTIONS:
+            action_acknowledge = QAction('Acknowledge', self)
+            action_acknowledge.triggered.connect(self.action_acknowledge)
+            self.action_menu.addAction(action_acknowledge)
 
-            # experimental clipboard submenu
-            self.action_menu.addMenu(self.clipboard_menu)
+        if 'Downtime' in self.server.MENU_ACTIONS:
+            action_downtime = QAction('Downtime', self)
+            action_downtime.triggered.connect(self.action_downtime)
+            self.action_menu.addAction(action_downtime)
 
-            # show menu
-            self.action_menu.show_at_cursor()
-        else:
-            self.action_menu.available = True
+        # special menu entry for Checkmk Multisite for archiving events
+        if self.server.type == 'Checkmk Multisite' and len(list_rows) == 1:
+            if miserable_service == 'Events':
+                action_archive_event = QAction('Archive event', self)
+                action_archive_event.triggered.connect(self.action_archive_event)
+                self.action_menu.addAction(action_archive_event)
 
+        # not all servers allow to submit fake check results
+        if 'Submit check result' in self.server.MENU_ACTIONS and len(list_rows) == 1:
+            action_submit = QAction('Submit check result', self)
+            action_submit.triggered.connect(self.action_submit)
+            self.action_menu.addAction(action_submit)
+
+        # experimental clipboard submenu
+        self.action_menu.addMenu(self.clipboard_menu)
+
+        # show menu
+        self.action_menu.show_at_cursor()
 
     @Slot(str)
     def action_menu_custom_response(self, action):
-        # avoid blocked context menu
-        self.action_menu.available = True
-
         # How many rows do we have
         list_rows = []
         for index in self.selectedIndexes():
@@ -3685,7 +3665,6 @@ class TreeView(QTreeView):
         # clean up
         del list_rows
 
-
     @Slot()
     def action_response_decorator(method):
         """
@@ -3693,8 +3672,6 @@ class TreeView(QTreeView):
         """
 
         def decoration_function(self):
-            # avoid blocked context menu
-            self.action_menu.available = True
             # run decorated method
             method(self)
             # default actions need closed statuswindow to display own dialogs
@@ -3705,7 +3682,6 @@ class TreeView(QTreeView):
 
         return (decoration_function)
 
-
     @action_response_decorator
     def action_edit_actions(self):
         # buttons in toparee
@@ -3713,7 +3689,6 @@ class TreeView(QTreeView):
             statuswindow.hide_window()
         # open actions tab (#3) of settings dialog
         dialogs.settings.show(tab=3)
-
 
     @action_response_decorator
     def action_monitor(self):
@@ -3726,7 +3701,6 @@ class TreeView(QTreeView):
 
             # open host/service monitor in browser
             self.server.open_monitor(miserable_host, miserable_service)
-
 
     @action_response_decorator
     def action_recheck(self):
@@ -3743,7 +3717,6 @@ class TreeView(QTreeView):
             # send signal to worker recheck slot
             self.recheck.emit({'host': miserable_host,
                                'service': miserable_service})
-
 
     @action_response_decorator
     def action_acknowledge(self):
@@ -3766,7 +3739,6 @@ class TreeView(QTreeView):
                                        service=list_service)
         dialogs.acknowledge.show()
 
-
     @action_response_decorator
     def action_downtime(self):
         list_host = []
@@ -3787,7 +3759,6 @@ class TreeView(QTreeView):
                                     host=list_host,
                                     service=list_service)
         dialogs.downtime.show()
-
 
     @action_response_decorator
     def action_archive_event(self):
@@ -3841,7 +3812,6 @@ class TreeView(QTreeView):
         # clean up
         del index, indexes, list_rows, list_host, list_service, list_status
 
-
     @action_response_decorator
     def action_submit(self):
         # only on 1 row
@@ -3855,7 +3825,6 @@ class TreeView(QTreeView):
                                   host=miserable_host,
                                   service=miserable_service)
         dialogs.submit.show()
-
 
     @Slot()
     def action_clipboard_action_host(self):
@@ -3882,7 +3851,6 @@ class TreeView(QTreeView):
 
         clipboard.setText(text)
 
-
     @Slot()
     def action_clipboard_action_service(self):
         """
@@ -3908,7 +3876,6 @@ class TreeView(QTreeView):
 
         clipboard.setText(text)
 
-
     @Slot()
     def action_clipboard_action_statusinformation(self):
         """
@@ -3932,7 +3899,6 @@ class TreeView(QTreeView):
                 text += '\n'
 
         clipboard.setText(text)
-
 
     @Slot()
     def action_clipboard_action_all(self):
@@ -3978,7 +3944,6 @@ class TreeView(QTreeView):
         # copy text to clipboard
         clipboard.setText(text)
 
-
     @Slot()
     def refresh(self):
         """
@@ -4007,7 +3972,6 @@ class TreeView(QTreeView):
                     self.status_changed.emit(self.server.name, self.server.worst_status_diff,
                                              self.server.worst_status_current)
 
-
     @Slot(int, Qt.SortOrder)
     def sort_columns(self, sort_column, sort_order):
         """
@@ -4016,7 +3980,6 @@ class TreeView(QTreeView):
         # better int() the Qt.* values because they partly seem to be
         # intransmissible
         self.sort_data_array_for_columns.emit(int(sort_column), int(sort_order), True)
-
 
     @Slot()
     def finish_worker_thread(self):
@@ -4027,7 +3990,6 @@ class TreeView(QTreeView):
         self.worker_thread.quit()
         # wait until thread is really stopped
         self.worker_thread.wait()
-
 
     class Worker(QObject):
         """

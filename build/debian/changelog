@@ -1,7 +1,7 @@
-nagstamon (3.9-20220606) unstable; urgency=low
+nagstamon (3.9-20220611) unstable; urgency=low
   * New upstream
 
- -- Henri Wahl <henri@nagstamon.de> Sun, 05 Jun 2022 08:00:00 +0100
+ -- Henri Wahl <henri@nagstamon.de> Sat, 11 Jun 2022 08:00:00 +0100
 
 nagstamon (3.8.0) stable; urgency=low
   * New upstream
