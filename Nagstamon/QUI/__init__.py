@@ -1227,7 +1227,7 @@ class StatusWindow(QWidget):
 
             # show statusbar/statuswindow on last saved position
             # when coordinates are inside known screens
-            if get_screen(conf.position_x, conf.position_y):
+            if get_screen_name(conf.position_x, conf.position_y):
                 self.move(conf.position_x, conf.position_y)
             else:
                 # get available desktop specs
@@ -1254,7 +1254,7 @@ class StatusWindow(QWidget):
 
             # show statusbar/statuswindow on last saved position
             # when coordinates are inside known screens
-            if get_screen(conf.position_x, conf.position_y):
+            if get_screen_name(conf.position_x, conf.position_y):
                 self.move(conf.position_x, conf.position_y)
             else:
                 # get available desktop specs
@@ -1504,11 +1504,17 @@ class StatusWindow(QWidget):
             if icon_y == 0:
                 icon_y = QCursor.pos().y()
 
+            screen = APP.screenAt(QPoint(icon_x, icon_y))
+
             # get available desktop specs
-            available_width = self.screen().availableGeometry().width()
-            available_height = self.screen().availableGeometry().height()
-            available_x = self.screen().availableGeometry().x()
-            available_y = self.screen().availableGeometry().y()
+            # available_width = self.screen().availableGeometry().width()
+            # available_height = self.screen().availableGeometry().height()
+            # available_x = self.screen().availableGeometry().x()
+            # available_y = self.screen().availableGeometry().y()
+            available_width = screen.availableVirtualGeometry().width()
+            available_height = screen.availableVirtualGeometry().height()
+            available_x = screen.availableVirtualGeometry().x()
+            available_y = screen.availableVirtualGeometry().y()
 
             y = 0
 
@@ -1764,7 +1770,7 @@ class StatusWindow(QWidget):
                 elif icon_y != 0:
                     self.icon_y = icon_y
 
-            screen_or_widget = get_screen(self.icon_x, self.icon_y)
+            screen_or_widget = get_screen_name(self.icon_x, self.icon_y)
 
         # only consider offset if it is configured
         if conf.systray_offset_use and conf.icon_in_systray:
@@ -7034,7 +7040,7 @@ def create_brushes():
                 QBRUSHES[1][COLORS[state] + role] = QBRUSHES[0][COLORS[state] + role]
 
 
-def get_screen(x, y):
+def get_screen_name(x, y):
     """
         find out which screen the given coordinates belong to
         gives back 'None' if coordinates are out of any known screen
