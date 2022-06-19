@@ -33,6 +33,7 @@ try:
         # if there are more args, than the config folder,  nagstaCLI is been executed
         if len(sys.argv) > 2:
             import nagstacli  # fix crash if more than 2 args are passed - mprenditore
+
             nagstacli.executeCli()
             sys.exit(1)
 
@@ -43,9 +44,11 @@ try:
 
         # get GUI
         from Nagstamon.QUI import (APP,
-                statuswindow,
-                check_version,
-                check_servers)
+                                   statuswindow,
+                                   check_version,
+                                   check_servers,
+                                   QT_FLAVOR,
+                                   QT_VERSION_STR)
 
         # ask for help if no servers are configured
         check_servers()
@@ -58,9 +61,7 @@ try:
         if conf.check_for_new_version is True:
             check_version.check(start_mode=True, parent=statuswindow)
 
-        APP.exec()
-        del(APP)
-        sys.exit(0)
+        sys.exit(APP.exec())
 
 except Exception as err:
     import traceback

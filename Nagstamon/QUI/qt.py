@@ -18,6 +18,7 @@
 # Select Qt version based on installation found
 # Prefer in this order: PyQt6 - PyQt5
 
+from pathlib import Path
 import sys
 
 # Enough to handle with differences between PyQt5 + PyQt6, so PySide6 will be
@@ -25,15 +26,24 @@ import sys
 # by the little import the appropriate PyQt version will be loaded
 try:
     from PyQt6.QtCore import PYQT_VERSION_STR as QT_VERSION_STR
+
+    # get int-ed version parts
+    QT_VERSION_MAJOR, QT_VERSION_MINOR, QT_VERSION_BUGFIX = [int(x) for x in QT_VERSION_STR.split('.')]
+    # for later decision which differences have to be considered
+    QT_FLAVOR = 'PyQt6'
 except ImportError:
     try:
         from PyQt5.QtCore import PYQT_VERSION_STR as QT_VERSION_STR
+        # get int-ed version parts
+        QT_VERSION_MAJOR, QT_VERSION_MINOR, QT_VERSION_BUGFIX = [int(x) for x in QT_VERSION_STR.split('.')]
+        # for later decision which differences have to be considered
+        QT_FLAVOR = 'PyQt5'
     except ImportError:
         sys.exit('Qt is missing')
 
-# because 'PyQt6' is in sys.modules even if the import some line befoe failed
+# because 'PyQt6' is in sys.modules even if the import some line before failed
 # the backup PyQt5 should be loaded earlier if it exists due to exception treatment
-if 'PyQt5' in sys.modules:
+if QT_FLAVOR == 'PyQt5':
     from PyQt5.QtCore import pyqtSignal as Signal, \
         pyqtSlot as Slot, \
         PYQT_VERSION_STR as QT_VERSION_STR, \
@@ -90,10 +100,66 @@ if 'PyQt5' in sys.modules:
         QVBoxLayout, \
         QWidget
     from PyQt5 import uic
-    # for later decision which differences have to be considered
-    QT_FLAVOR = 'PyQt5'
 
-elif 'PyQt6' in sys.modules:
+
+    class MediaPlayer(QObject):
+        """
+            play media files for notification
+        """
+        # needed to show error in a thread-safe way
+        send_message = Signal(str, str)
+
+        def __init__(self, statuswindow, resource_files):
+            QObject.__init__(self)
+            self.player = QMediaPlayer(parent=self)
+
+            self.player.setVolume(100)
+            self.playlist = QMediaPlaylist()
+            self.player.setPlaylist(self.playlist)
+            self.resource_files = resource_files
+            # let statuswindow show message
+            self.send_message.connect(statuswindow.show_message)
+            # connect with statuswindow notification worker
+            statuswindow.worker_notification.load_sound.connect(self.set_media)
+            statuswindow.worker_notification.play_sound.connect(self.play)
+
+        @Slot(str)
+        def set_media(self, media_file):
+            """
+            Give media_file to player and if it is one of the default files check first if still exists
+            :param media_file:
+            :return:
+            """
+            if media_file in self.resource_files:
+                # by using RESOURCE_FILES the file path will be checked on macOS and the file restored if necessary
+                media_file = self.resource_files[media_file]
+            # only existing file can be played
+            if Path(media_file).exists:
+                url = QUrl.fromLocalFile(media_file)
+                mediacontent = QMediaContent(url)
+                self.player.setMedia(mediacontent)
+                del url, mediacontent
+                return True
+            else:
+                # cry and tell no file was found
+                self.send_message.emit('warning',
+                                       'Sound file <b>\'{0}\'</b> not found for playback.'.format(media_file))
+                return False
+
+        @Slot()
+        def play(self):
+            # just play sound
+            self.player.play()
+
+
+    def get_global_position(event):
+        '''
+        Qt5 uses other method than Qt6
+        '''
+        return event.globalPos()
+
+
+elif QT_FLAVOR == 'PyQt6':
     # PySide/PyQt compatibility
     from PyQt6.QtCore import pyqtSignal as Signal, \
         pyqtSlot as Slot, \
@@ -150,8 +216,60 @@ elif 'PyQt6' in sys.modules:
         QVBoxLayout, \
         QWidget
     from PyQt6 import uic
+
     # for later decision which differences have to be considered
     QT_FLAVOR = 'PyQt6'
+
+
+    class MediaPlayer(QObject):
+        """
+            play media files for notification
+        """
+        # needed to show error in a thread-safe way
+        send_message = Signal(str, str)
+
+        def __init__(self, statuswindow, resource_files):
+            QObject.__init__(self)
+            self.audio_output = QAudioOutput()
+            self.player = QMediaPlayer(parent=self)
+            self.player.setAudioOutput(self.audio_output)
+            self.resource_files = resource_files
+            # let statuswindow show message
+            self.send_message.connect(statuswindow.show_message)
+            # connect with statuswindow notification worker
+            statuswindow.worker_notification.load_sound.connect(self.set_media)
+            statuswindow.worker_notification.play_sound.connect(self.play)
+
+        @Slot(str)
+        def set_media(self, media_file):
+            """
+            Give media_file to player and if it is one of the default files check first if still exists
+            :param media_file:
+            :return:
+            """
+            if media_file in self.resource_files:
+                # by using RESOURCE_FILES the file path will be checked on macOS and the file restored if necessary
+                media_file = self.resource_files[media_file]
+            # only existing file can be played
+            if Path(media_file).exists():
+                self.player.setSource(QUrl.fromLocalFile(media_file))
+                return True
+            else:
+                # cry and tell no file was found
+                self.send_message.emit('warning', f'Sound file <b>\'{media_file}\'</b> not found for playback.')
+                return False
+
+        @Slot()
+        def play(self):
+            # just play sound
+            self.player.play()
+
+
+    def get_global_position(event):
+        '''
+        Qt5 uses other method than Qt6
+        '''
+        return event.globalPosition()
 
 # elif 'PySide6' in sys.modules:
 #     from PySide6.QtCore import Signal, \
@@ -209,7 +327,3 @@ elif 'PyQt6' in sys.modules:
 #         QWidget
 #     # for later decision which differences have to be considered
 #     QT_FLAVOR = 'PySide6'
-
-# get int-ed version parts
-QT_VERSION_MAJOR, QT_VERSION_MINOR, QT_VERSION_BUGFIX = [int(x) for x in QT_VERSION_STR.split('.')]
-

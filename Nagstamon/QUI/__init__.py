@@ -83,12 +83,14 @@ if not OS in OS_NON_LINUX:
     try:
         from dbus import (Interface,
                           SessionBus)
-        from dbus.mainloop.glib import DBusQtMainLoop
+        # no DBusQtMainLoop available for Qt6
+        from dbus.mainloop.glib import DBusGMainLoop as DBusMainLoop
 
         # flag to check later if DBus is available
         DBUS_AVAILABLE = True
 
-    except ImportError:
+    except ImportError as ie:
+        print(ie)
         print('No DBus for desktop notification available.')
         DBUS_AVAILABLE = False
 
@@ -97,6 +99,7 @@ if OS != OS_WINDOWS:
     # check ECP authentication support availability
     try:
         from requests_ecp import HTTPECPAuth
+
         ECP_AVAILABLE = True
     except ImportError:
         ECP_AVAILABLE = False
@@ -111,6 +114,7 @@ if QT_VERSION_MAJOR < 6:
     except AttributeError:
         pass
     QApplication.setAttribute(Qt.AA_UseHighDpiPixmaps, True)
+
 # global application instance
 APP = QApplication(sys.argv)
 
@@ -493,7 +497,7 @@ class MenuAtCursor(QMenu):
         open menu at position of mouse pointer - normal .exec() shows menu at (0, 0)
     """
     # flag to avoid too fast popping up menus
-    available = True
+    #available = True
 
     is_shown = Signal(bool)
 
@@ -814,10 +818,8 @@ class DraggableWidget(QWidget):
         # if not set calculate relative position
         if not statuswindow.relative_x and \
                 not statuswindow.relative_y:
-            if QT_VERSION_MAJOR == 6:
-                global_position = event.globalPosition()
-            elif QT_VERSION_MAJOR == 5:
-                global_position = event.globalPos()
+            # Qt5 & Qt6 have different methods for getting the global position so take it from qt.py
+            global_position = get_global_position(event)
             statuswindow.relative_x = global_position.x() - statuswindow.x()
             statuswindow.relative_y = global_position.y() - statuswindow.y()
 
@@ -856,11 +858,8 @@ class DraggableWidget(QWidget):
                 statuswindow.is_shown and
                 statuswindow.is_shown_timestamp + 0.5 < time.time()):
             if not conf.fullscreen and not conf.windowed and not self.right_mouse_button_pressed:
-                # Qt5 & Qt6 have different methods for getting the global position
-                if QT_VERSION_MAJOR == 6:
-                    global_position = event.globalPosition()
-                elif QT_VERSION_MAJOR == 5:
-                    global_position = event.globalPos()
+                # Qt5 & Qt6 have different methods for getting the global position so take it from qt.py
+                global_position = get_global_position(event)
                 # lock window as moving
                 # if not set calculate relative position
                 if not statuswindow.relative_x and not statuswindow.relative_y:
@@ -974,7 +973,7 @@ class StatusWindow(QWidget):
             Status window combined from status bar and popup window
         """
         # attempt with desktop as parent for window Qt.Tool
-        #QWidget.__init__(self, parent=APP.desktop())
+        # QWidget.__init__(self, parent=APP.desktop())
         QWidget.__init__(self)
 
         # immediately hide to avoid flicker on Windows and OSX
@@ -1092,8 +1091,11 @@ class StatusWindow(QWidget):
         check_version.version_info_retrieved.connect(self.hide_window)
 
         # worker and thread duo needed for notifications
-        self.worker_notification_thread = QThread(self)
+        self.worker_notification_thread = QThread(parent=self)
         self.worker_notification = self.Worker_Notification()
+
+        # clean shutdown of thread
+        self.worker_notification.finish.connect(self.finish_worker_notification_thread)
 
         # flashing statusbar
         self.worker_notification.start_flash.connect(self.statusbar.flash)
@@ -1153,7 +1155,7 @@ class StatusWindow(QWidget):
 
         # a thread + worker is necessary to do actions thread-safe in background
         # like debugging
-        self.worker_thread = QThread(self)
+        self.worker_thread = QThread(parent=self)
         self.worker = self.Worker()
         self.worker.moveToThread(self.worker_thread)
         # start thread and debugging loop if debugging is enabled
@@ -1163,6 +1165,9 @@ class StatusWindow(QWidget):
         dialogs.settings.start_debug_loop.connect(self.worker.debug_loop)
         # start with low priority
         self.worker_thread.start(QThread.Priority.LowestPriority)
+
+        # clean shutdown of thread
+        self.worker.finish.connect(self.finish_worker_thread)
 
         # part of the stupid workaround for Qt-5.10-Windows-QSystemTrayIcon-madness
         self.connect_systrayicon()
@@ -2056,10 +2061,10 @@ class StatusWindow(QWidget):
         """
         title = " ".join((AppInfo.NAME, msg_type))
         if msg_type == 'warning':
-            return QMessageBox.Icon.Warning(statuswindow, title, message)
+            return QMessageBox(QMessageBox.Icon.Warning, title, message, parent=statuswindow).show()
 
         elif msg_type == 'information':
-            return QMessageBox.Icon.Information(statuswindow, title, message)
+            return QMessageBox(QMessageBox.Icon.Information, title, message, parent=statuswindow).show()
 
     @Slot()
     def recheck_all(self):
@@ -2130,12 +2135,6 @@ class StatusWindow(QWidget):
                 not conf.windowed and \
                 APP.activePopupWidget() == None:
             try:
-                # find out if no context menu is shown and thus would be
-                # overlapped by statuswindow
-                for vbox in self.servers_vbox.children():
-                    # jump out here if any action_menu is shown
-                    if not vbox.table.action_menu.available:
-                        return
                 self.raise_()
             except Exception as err:
                 # apparently a race condition could occur on set_mode() - grab it here and continue
@@ -2153,11 +2152,32 @@ class StatusWindow(QWidget):
         self.servers_scrollarea_widget.deleteLater()
         return self.deleteLater()
 
-    class Worker(QObject):
+    @Slot()
+    def finish_worker_thread(self):
+        """
+            attempt to shutdown thread cleanly
+        """
+        # tell thread to quit
+        self.worker_thread.quit()
+        # wait until thread is really stopped
+        self.worker_thread.wait()
 
+    @Slot()
+    def finish_worker_notification_thread(self):
+        """
+            attempt to shutdown thread cleanly
+        """
+        # tell thread to quit
+        self.worker_notification_thread.quit()
+        # wait until thread is really stopped
+        self.worker_notification_thread.wait()
+
+    class Worker(QObject):
         """
            run a thread for example for debugging
         """
+        # send signal if ready to stop
+        finish = Signal()
 
         def __init__(self):
             QObject.__init__(self)
@@ -2237,6 +2257,9 @@ class StatusWindow(QWidget):
         # desktop notification needs to store count of states
         status_count = dict()
 
+        # send signal if ready to stop
+        finish = Signal()
+
         def __init__(self):
             QObject.__init__(self)
 
@@ -2275,12 +2298,11 @@ class StatusWindow(QWidget):
                                 sound_file = conf.__dict__[
                                     'notification_custom_sound_{0}'.format(worst_status_diff.lower())]
 
-                            # once loaded file will be played by every server, even if it is
-                            # not the self.notifying_server that loaded it
-                            self.load_sound.emit(sound_file)
-
                             # only one enabled server should access the mediaplayer
                             if self.notifying_server == server_name:
+                                # once loaded file will be played by every server, even if it is
+                                # not the self.notifying_server that loaded it
+                                self.load_sound.emit(sound_file)
                                 self.play_sound.emit()
 
                     # Notification actions
@@ -3227,8 +3249,6 @@ class TreeView(QTreeView):
 
         # action context menu
         self.action_menu = MenuAtCursor(parent=self)
-        # flag to avoid popping up menus when clicking somehwere
-        self.action_menu.available = True
         # signalmapper for getting triggered actions
         self.signalmapper_action_menu = QSignalMapper()
         # connect menu to responder
@@ -3261,7 +3281,7 @@ class TreeView(QTreeView):
 
         # a thread + worker is necessary to get new monitor server data in the background and
         # to refresh the table cell by cell after new data is available
-        self.worker_thread = QThread(self)
+        self.worker_thread = QThread(parent=self)
         self.worker = self.Worker(server=server, sort_column=self.sort_column, sort_order=self.sort_order)
         self.worker.moveToThread(self.worker_thread)
 
@@ -3373,36 +3393,15 @@ class TreeView(QTreeView):
         # after setting table whole window can be repainted
         self.ready_to_resize.emit()
 
-    def mouseReleaseEvent_X(self, event):
+    def count_selected_rows(self):
         """
-            forward clicked cell info from event
+        find out if rows are selected and return their number
         """
-        # special treatment if window should be closed when left-clicking somewhere
-        # it is important to check if CTRL or SHIFT key is presses while clicking to select lines
-        if conf.close_details_clicking_somewhere:
-            if event.button() == Qt.MouseButton.LeftButton:
-                modifiers = event.modifiers()
-                # count selected rows - if more than 1 do not close popwin
-                rows = []
-                for index in self.selectedIndexes():
-                    if index.row() not in rows:
-                        rows.append(index.row())
-                if modifiers == Qt.Modifier.CTRL or \
-                        modifiers == Qt.Modifier.SHIFT or \
-                        modifiers == (Qt.Modifier.CTRL| Qt.Modifier.SHIFT) or \
-                        len(rows) > 1:
-                    pass
-                else:
-                    statuswindow.hide_window()
-                del modifiers, rows
-            elif event.button() == Qt.MouseButton.RightButton:
-                self.cell_clicked()
-            return
-        else:
-            if event.button() == Qt.MouseButton.RightButton or event.button() == Qt.MouseButton.LeftButton:
-                self.cell_clicked()
-                return
-        super(TreeView, self).mouseReleaseEvent(event)
+        rows = []
+        for index in self.selectedIndexes():
+            if index.row() not in rows:
+                rows.append(index.row())
+        return len(rows)
 
     def mouseReleaseEvent(self, event):
         """
@@ -3410,29 +3409,24 @@ class TreeView(QTreeView):
         """
         # special treatment if window should be closed when left-clicking somewhere
         # it is important to check if CTRL or SHIFT key is presses while clicking to select lines
-        if event.button() == Qt.MouseButton.LeftButton:
-            modifiers = event.modifiers()
-            # count selected rows - if more than 1 do not close popwin
-            rows = []
-            for index in self.selectedIndexes():
-                if index.row() not in rows:
-                    rows.append(index.row())
-            if modifiers == Qt.Modifier.CTRL or \
-                    modifiers == Qt.Modifier.SHIFT or \
-                    modifiers == (Qt.Modifier.CTRL | Qt.Modifier.SHIFT) or \
-                    len(rows) > 1:
-                super(TreeView, self).mouseReleaseEvent(event)
-            else:
-                if conf.close_details_clicking_somewhere:
-                    statuswindow.hide_window()
+        modifiers = event.modifiers()
+        if conf.close_details_clicking_somewhere:
+            if event.button() == Qt.MouseButton.LeftButton:
+                # count selected rows - if more than 1 do not close popwin
+                if modifiers or self.count_selected_rows() > 1:
+                    super(TreeView, self).mouseReleaseEvent(event)
                 else:
-                    self.cell_clicked()
-            del modifiers, rows
-            return
-        else:
-            if event.button() == Qt.MouseButton.RightButton or event.button() == Qt.MouseButton.LeftButton:
+                    statuswindow.hide_window()
+                return
+            elif event.button() == Qt.MouseButton.RightButton:
                 self.cell_clicked()
                 return
+        elif not modifiers or \
+                event.button() == Qt.MouseButton.RightButton:
+            self.cell_clicked()
+            return
+        else:
+            super(TreeView, self).mouseReleaseEvent(event)
 
     def wheelEvent(self, event):
         """
@@ -3455,186 +3449,176 @@ class TreeView(QTreeView):
             Windows reacts differently to clicks into table cells than Linux and MacOSX
             Therefore the .available flag is necessary
         """
+        # empty the menu
+        self.action_menu.clear()
 
-        if self.action_menu.available or OS != OS_WINDOWS:
-            # set flag for Windows
-            self.action_menu.available = False
+        # clear signal mappings
+        self.signalmapper_action_menu.removeMappings(self.signalmapper_action_menu)
 
-            # empty the menu
-            self.action_menu.clear()
+        # add custom actions
+        actions_list = list(conf.actions)
+        actions_list.sort(key=str.lower)
 
-            # clear signal mappings
-            self.signalmapper_action_menu.removeMappings(self.signalmapper_action_menu)
+        # How many rows do we have
+        list_rows = []
+        for index in self.selectedIndexes():
+            if index.row() not in list_rows:
+                list_rows.append(index.row())
 
-            # add custom actions
-            actions_list = list(conf.actions)
-            actions_list.sort(key=str.lower)
+        # dummy definition to avoid crash if no actions are enabled - asked for some lines later
+        miserable_service = None
 
-            # How many rows do we have
-            list_rows = []
-            for index in self.selectedIndexes():
-                if index.row() not in list_rows:
-                    list_rows.append(index.row())
+        # Add custom actions if all selected rows want them, one per one
+        for a in actions_list:
+            # shortcut for next lines
+            action = conf.actions[a]
 
-            # dummy definition to avoid crash if no actions are enabled - asked for some lines later
-            miserable_service = None
+            # check if current monitor server type is in action
+            # second check for server type is legacy-compatible with older settings
+            if action.enabled is True and (action.monitor_type in ['', self.server.TYPE] or
+                                           action.monitor_type not in SERVER_TYPES):
 
-            # Add custom actions if all selected rows want them, one per one
-            for a in actions_list:
-                # shortcut for next lines
-                action = conf.actions[a]
+                # menu item visibility flag
+                item_visible = None
 
-                # check if current monitor server type is in action
-                # second check for server type is legacy-compatible with older settings
-                if action.enabled is True and (action.monitor_type in ['', self.server.TYPE] or
-                                               action.monitor_type not in SERVER_TYPES):
+                for lrow in list_rows:
+                    # temporary menu item visibility flag to collect all visibility info
+                    item_visible_temporary = False
+                    # take data from model data_array
+                    miserable_host = self.model().data_array[lrow][0]
+                    miserable_service = self.model().data_array[lrow][2]
 
-                    # menu item visibility flag
-                    item_visible = None
-
-                    for lrow in list_rows:
-                        # temporary menu item visibility flag to collect all visibility info
-                        item_visible_temporary = False
-                        # take data from model data_array
-                        miserable_host = self.model().data_array[lrow][0]
-                        miserable_service = self.model().data_array[lrow][2]
-
-                        # check if clicked line is a service or host
-                        # if it is check if the action is targeted on hosts or services
-                        if miserable_service:
-                            if action.filter_target_service is True:
-                                # only check if there is some to check
-                                if action.re_host_enabled is True:
-                                    if is_found_by_re(miserable_host,
-                                                      action.re_host_pattern,
-                                                      action.re_host_reverse):
-                                        item_visible_temporary = True
-                                # dito
-                                if action.re_service_enabled is True:
-                                    if is_found_by_re(miserable_service,
-                                                      action.re_service_pattern,
-                                                      action.re_service_reverse):
-                                        item_visible_temporary = True
-                                # dito
-                                if action.re_status_information_enabled is True:
-                                    if is_found_by_re(miserable_service,
-                                                      action.re_status_information_pattern,
-                                                      action.re_status_information_reverse):
-                                        item_visible_temporary = True
-                                # dito
-                                if action.re_duration_enabled is True:
-                                    if is_found_by_re(miserable_service,
-                                                      action.re_duration_pattern,
-                                                      action.re_duration_reverse):
-                                        item_visible_temporary = True
-
-                                # dito
-                                if action.re_attempt_enabled is True:
-                                    if is_found_by_re(miserable_service,
-                                                      action.re_attempt_pattern,
-                                                      action.re_attempt_reverse):
-                                        item_visible_temporary = True
-
-                                # dito
-                                if action.re_groups_enabled is True:
-                                    if is_found_by_re(miserable_service,
-                                                      action.re_groups_pattern,
-                                                      action.re_groups_reverse):
-                                        item_visible_temporary = True
-
-                                # fallback if no regexp is selected
-                                if action.re_host_enabled == action.re_service_enabled == \
-                                        action.re_status_information_enabled == action.re_duration_enabled == \
-                                        action.re_attempt_enabled == action.re_groups_enabled is False:
+                    # check if clicked line is a service or host
+                    # if it is check if the action is targeted on hosts or services
+                    if miserable_service:
+                        if action.filter_target_service is True:
+                            # only check if there is some to check
+                            if action.re_host_enabled is True:
+                                if is_found_by_re(miserable_host,
+                                                  action.re_host_pattern,
+                                                  action.re_host_reverse):
+                                    item_visible_temporary = True
+                            # dito
+                            if action.re_service_enabled is True:
+                                if is_found_by_re(miserable_service,
+                                                  action.re_service_pattern,
+                                                  action.re_service_reverse):
+                                    item_visible_temporary = True
+                            # dito
+                            if action.re_status_information_enabled is True:
+                                if is_found_by_re(miserable_service,
+                                                  action.re_status_information_pattern,
+                                                  action.re_status_information_reverse):
+                                    item_visible_temporary = True
+                            # dito
+                            if action.re_duration_enabled is True:
+                                if is_found_by_re(miserable_service,
+                                                  action.re_duration_pattern,
+                                                  action.re_duration_reverse):
                                     item_visible_temporary = True
 
-                        else:
-                            # hosts should only care about host specific actions, no services
-                            if action.filter_target_host is True:
-                                if action.re_host_enabled is True:
-                                    if is_found_by_re(miserable_host,
-                                                      action.re_host_pattern,
-                                                      action.re_host_reverse):
-                                        item_visible_temporary = True
-                                else:
-                                    # a non specific action will be displayed per default
+                            # dito
+                            if action.re_attempt_enabled is True:
+                                if is_found_by_re(miserable_service,
+                                                  action.re_attempt_pattern,
+                                                  action.re_attempt_reverse):
                                     item_visible_temporary = True
 
-                        # when item_visible never has been set it shall be false
-                        # also if at least one row leads to not-showing the item it will be false
-                        if item_visible_temporary and item_visible is None:
-                            item_visible = True
-                        if not item_visible_temporary:
-                            item_visible = False
+                            # dito
+                            if action.re_groups_enabled is True:
+                                if is_found_by_re(miserable_service,
+                                                  action.re_groups_pattern,
+                                                  action.re_groups_reverse):
+                                    item_visible_temporary = True
 
-                else:
-                    item_visible = False
+                            # fallback if no regexp is selected
+                            if action.re_host_enabled == action.re_service_enabled == \
+                                    action.re_status_information_enabled == action.re_duration_enabled == \
+                                    action.re_attempt_enabled == action.re_groups_enabled is False:
+                                item_visible_temporary = True
 
-                # populate context menu with service actions
-                if item_visible is True:
-                    # create action
-                    action_menuentry = QAction(a, self)
-                    # add action
-                    self.action_menu.addAction(action_menuentry)
-                    # action to signalmapper
-                    self.signalmapper_action_menu.setMapping(action_menuentry, a)
-                    action_menuentry.triggered.connect(self.signalmapper_action_menu.map)
+                    else:
+                        # hosts should only care about host specific actions, no services
+                        if action.filter_target_host is True:
+                            if action.re_host_enabled is True:
+                                if is_found_by_re(miserable_host,
+                                                  action.re_host_pattern,
+                                                  action.re_host_reverse):
+                                    item_visible_temporary = True
+                            else:
+                                # a non specific action will be displayed per default
+                                item_visible_temporary = True
 
-                del action, item_visible
+                    # when item_visible never has been set it shall be false
+                    # also if at least one row leads to not-showing the item it will be false
+                    if item_visible_temporary and item_visible is None:
+                        item_visible = True
+                    if not item_visible_temporary:
+                        item_visible = False
 
-            # create and add default actions
-            action_edit_actions = QAction('Edit actions...', self)
-            action_edit_actions.triggered.connect(self.action_edit_actions)
-            self.action_menu.addAction(action_edit_actions)
-            # put actions into menu after separator
+            else:
+                item_visible = False
 
-            self.action_menu.addSeparator()
-            if 'Monitor' in self.server.MENU_ACTIONS and len(list_rows) == 1:
-                action_monitor = QAction('Monitor', self)
-                action_monitor.triggered.connect(self.action_monitor)
-                self.action_menu.addAction(action_monitor)
+            # populate context menu with service actions
+            if item_visible is True:
+                # create action
+                action_menuentry = QAction(a, self)
+                # add action
+                self.action_menu.addAction(action_menuentry)
+                # action to signalmapper
+                self.signalmapper_action_menu.setMapping(action_menuentry, a)
+                action_menuentry.triggered.connect(self.signalmapper_action_menu.map)
 
-            if 'Recheck' in self.server.MENU_ACTIONS:
-                action_recheck = QAction('Recheck', self)
-                action_recheck.triggered.connect(self.action_recheck)
-                self.action_menu.addAction(action_recheck)
+            del action, item_visible
 
-            if 'Acknowledge' in self.server.MENU_ACTIONS:
-                action_acknowledge = QAction('Acknowledge', self)
-                action_acknowledge.triggered.connect(self.action_acknowledge)
-                self.action_menu.addAction(action_acknowledge)
+        # create and add default actions
+        action_edit_actions = QAction('Edit actions...', self)
+        action_edit_actions.triggered.connect(self.action_edit_actions)
+        self.action_menu.addAction(action_edit_actions)
+        # put actions into menu after separator
 
-            if 'Downtime' in self.server.MENU_ACTIONS:
-                action_downtime = QAction('Downtime', self)
-                action_downtime.triggered.connect(self.action_downtime)
-                self.action_menu.addAction(action_downtime)
+        self.action_menu.addSeparator()
+        if 'Monitor' in self.server.MENU_ACTIONS and len(list_rows) == 1:
+            action_monitor = QAction('Monitor', self)
+            action_monitor.triggered.connect(self.action_monitor)
+            self.action_menu.addAction(action_monitor)
 
-            # special menu entry for Checkmk Multisite for archiving events
-            if self.server.type == 'Checkmk Multisite' and len(list_rows) == 1:
-                if miserable_service == 'Events':
-                    action_archive_event = QAction('Archive event', self)
-                    action_archive_event.triggered.connect(self.action_archive_event)
-                    self.action_menu.addAction(action_archive_event)
+        if 'Recheck' in self.server.MENU_ACTIONS:
+            action_recheck = QAction('Recheck', self)
+            action_recheck.triggered.connect(self.action_recheck)
+            self.action_menu.addAction(action_recheck)
 
-            # not all servers allow to submit fake check results
-            if 'Submit check result' in self.server.MENU_ACTIONS and len(list_rows) == 1:
-                action_submit = QAction('Submit check result', self)
-                action_submit.triggered.connect(self.action_submit)
-                self.action_menu.addAction(action_submit)
+        if 'Acknowledge' in self.server.MENU_ACTIONS:
+            action_acknowledge = QAction('Acknowledge', self)
+            action_acknowledge.triggered.connect(self.action_acknowledge)
+            self.action_menu.addAction(action_acknowledge)
 
-            # experimental clipboard submenu
-            self.action_menu.addMenu(self.clipboard_menu)
+        if 'Downtime' in self.server.MENU_ACTIONS:
+            action_downtime = QAction('Downtime', self)
+            action_downtime.triggered.connect(self.action_downtime)
+            self.action_menu.addAction(action_downtime)
 
-            # show menu
-            self.action_menu.show_at_cursor()
-        else:
-            self.action_menu.available = True
+        # special menu entry for Checkmk Multisite for archiving events
+        if self.server.type == 'Checkmk Multisite' and len(list_rows) == 1:
+            if miserable_service == 'Events':
+                action_archive_event = QAction('Archive event', self)
+                action_archive_event.triggered.connect(self.action_archive_event)
+                self.action_menu.addAction(action_archive_event)
+
+        # not all servers allow to submit fake check results
+        if 'Submit check result' in self.server.MENU_ACTIONS and len(list_rows) == 1:
+            action_submit = QAction('Submit check result', self)
+            action_submit.triggered.connect(self.action_submit)
+            self.action_menu.addAction(action_submit)
+
+        # experimental clipboard submenu
+        self.action_menu.addMenu(self.clipboard_menu)
+
+        # show menu
+        self.action_menu.show_at_cursor()
 
     @Slot(str)
     def action_menu_custom_response(self, action):
-        # avoid blocked context menu
-        self.action_menu.available = True
-
         # How many rows do we have
         list_rows = []
         for index in self.selectedIndexes():
@@ -3688,8 +3672,6 @@ class TreeView(QTreeView):
         """
 
         def decoration_function(self):
-            # avoid blocked context menu
-            self.action_menu.available = True
             # run decorated method
             method(self)
             # default actions need closed statuswindow to display own dialogs
@@ -4005,11 +3987,7 @@ class TreeView(QTreeView):
             attempt to shutdown thread cleanly
         """
         # tell thread to quit
-        if OS == OS_WINDOWS:
-            self.worker_thread.quit()
-        else:
-            # tell thread to quit with force
-            self.worker_thread.terminate()
+        self.worker_thread.quit()
         # wait until thread is really stopped
         self.worker_thread.wait()
 
@@ -4086,8 +4064,7 @@ class TreeView(QTreeView):
             # if counter is at least update interval get status
             if self.server.thread_counter >= conf.update_interval_seconds:
                 # only if no multiple selection is done at the moment and no context action menu is open
-                # if not is_modifier_pressed() and not self.action_menu_shown:
-                if not is_modifier_pressed() and APP.activePopupWidget() is None:
+                if not APP.keyboardModifiers() and APP.activePopupWidget() is None:
                     # reflect status retrieval attempt on server vbox label
                     self.change_label_status.emit('Refreshing...', '')
 
@@ -4161,7 +4138,7 @@ class TreeView(QTreeView):
             self.server.thread_counter += 1
 
             # if running flag is still set call myself after 1 second
-            if self.running is True:
+            if self.running:
                 self.timer.singleShot(1000, self.get_status)
             else:
                 # tell treeview to finish worker_thread
@@ -4490,10 +4467,6 @@ class TreeView(QTreeView):
             for event in self.server.events_history.keys():
                 self.server.events_history[event] = False
 
-        # @Slot(bool)
-        # def track_action_menu(self, action_menu_shown):
-        #     self.action_menu_shown = action_menu_shown
-
 
 class Dialogs(object):
     """
@@ -4502,7 +4475,7 @@ class Dialogs(object):
 
     def __init__(self):
         # settings main dialog
-        #self.settings = Dialog_Settings(Ui_settings_main)
+        # self.settings = Dialog_Settings(Ui_settings_main)
         self.settings = Dialog_Settings('settings_main')
         self.settings.initialize()
 
@@ -4533,17 +4506,17 @@ class Dialogs(object):
         self.acknowledge.window.button_change_defaults_acknowledge.clicked.connect(self.acknowledge.window.close)
 
         # downtime dialog for miserable item context menu
-        #self.submit = Dialog_Submit(Ui_dialog_submit)
+        # self.submit = Dialog_Submit(Ui_dialog_submit)
         self.submit = Dialog_Submit('dialog_submit')
         self.submit.initialize()
 
         # authentication dialog for username/password
-        #self.authentication = Dialog_Authentication(Ui_dialog_authentication)
+        # self.authentication = Dialog_Authentication(Ui_dialog_authentication)
         self.authentication = Dialog_Authentication('dialog_authentication')
         self.authentication.initialize()
 
         # dialog for asking about disabled or not configured servers
-        #self.server_missing = Dialog_Server_missing(Ui_dialog_server_missing)
+        # self.server_missing = Dialog_Server_missing(Ui_dialog_server_missing)
         self.server_missing = Dialog_Server_missing('dialog_server_missing')
         self.server_missing.initialize()
         # open server creation dialog
@@ -4551,7 +4524,7 @@ class Dialogs(object):
         self.server_missing.window.button_enable_server.clicked.connect(self.settings.show)
 
         # about dialog
-        #self.about = Dialog_About(Ui_dialog_about)
+        # self.about = Dialog_About(Ui_dialog_about)
         self.about = Dialog_About('dialog_about')
 
         # file chooser Dialog
@@ -4717,32 +4690,33 @@ class Dialog_Settings(Dialog):
         self.TOGGLE_DEPS = {
             # debug mode
             self.window.input_checkbox_debug_mode: [self.window.input_checkbox_debug_to_file,
-                                                self.window.input_lineedit_debug_file],
+                                                    self.window.input_lineedit_debug_file],
             # regular expressions for filtering hosts
             self.window.input_checkbox_re_host_enabled: [self.window.input_lineedit_re_host_pattern,
-                                                     self.window.input_checkbox_re_host_reverse],
+                                                         self.window.input_checkbox_re_host_reverse],
             # regular expressions for filtering services
             self.window.input_checkbox_re_service_enabled: [self.window.input_lineedit_re_service_pattern,
-                                                        self.window.input_checkbox_re_service_reverse],
+                                                            self.window.input_checkbox_re_service_reverse],
             # regular expressions for filtering status information
-            self.window.input_checkbox_re_status_information_enabled: [self.window.input_lineedit_re_status_information_pattern,
-                                                                   self.window.input_checkbox_re_status_information_reverse],
+            self.window.input_checkbox_re_status_information_enabled: [
+                self.window.input_lineedit_re_status_information_pattern,
+                self.window.input_checkbox_re_status_information_reverse],
             # regular expressions for filtering duration
             self.window.input_checkbox_re_duration_enabled: [self.window.input_lineedit_re_duration_pattern,
-                                                         self.window.input_checkbox_re_duration_reverse],
+                                                             self.window.input_checkbox_re_duration_reverse],
             # regular expressions for filtering duration
             self.window.input_checkbox_re_attempt_enabled: [self.window.input_lineedit_re_attempt_pattern,
-                                                        self.window.input_checkbox_re_attempt_reverse],
+                                                            self.window.input_checkbox_re_attempt_reverse],
             # regular expressions for filtering groups
             self.window.input_checkbox_re_groups_enabled: [self.window.input_lineedit_re_groups_pattern,
-                                                       self.window.input_checkbox_re_groups_reverse],
+                                                           self.window.input_checkbox_re_groups_reverse],
             # offset for statuswindow when using systray
             self.window.input_radiobutton_icon_in_systray: [self.window.input_checkbox_systray_offset_use],
             self.window.input_checkbox_systray_offset_use: [self.window.input_spinbox_systray_offset,
-                                                        self.window.label_offset_statuswindow],
+                                                            self.window.label_offset_statuswindow],
             # display to use in fullscreen mode
             self.window.input_radiobutton_fullscreen: [self.window.label_fullscreen_display,
-                                                   self.window.input_combobox_fullscreen_display],
+                                                       self.window.input_combobox_fullscreen_display],
             # notifications in general
             self.window.input_checkbox_notification: [self.window.notification_groupbox],
             # sound at all
@@ -4756,8 +4730,10 @@ class Dialog_Settings(Dialog):
                 self.window.input_lineedit_notification_action_warning_string],
             self.window.input_checkbox_notification_action_critical: [
                 self.window.input_lineedit_notification_action_critical_string],
-            self.window.input_checkbox_notification_action_down: [self.window.input_lineedit_notification_action_down_string],
-            self.window.input_checkbox_notification_action_ok: [self.window.input_lineedit_notification_action_ok_string],
+            self.window.input_checkbox_notification_action_down: [
+                self.window.input_lineedit_notification_action_down_string],
+            self.window.input_checkbox_notification_action_ok: [
+                self.window.input_lineedit_notification_action_ok_string],
             # single custom notification action
             self.window.input_checkbox_notification_custom_action: [self.window.notification_custom_action_groupbox],
             # use event separator or not
@@ -4767,27 +4743,27 @@ class Dialog_Settings(Dialog):
             # customized color alternation
             self.window.input_checkbox_show_grid: [self.window.input_checkbox_grid_use_custom_intensity],
             self.window.input_checkbox_grid_use_custom_intensity: [self.window.input_slider_grid_alternation_intensity,
-                                                               self.window.label_intensity_information_0,
-                                                               self.window.label_intensity_information_1,
-                                                               self.window.label_intensity_warning_0,
-                                                               self.window.label_intensity_warning_1,
-                                                               self.window.label_intensity_average_0,
-                                                               self.window.label_intensity_average_1,
-                                                               self.window.label_intensity_high_0,
-                                                               self.window.label_intensity_high_1,
-                                                               self.window.label_intensity_critical_0,
-                                                               self.window.label_intensity_critical_1,
-                                                               self.window.label_intensity_disaster_0,
-                                                               self.window.label_intensity_disaster_1,
-                                                               self.window.label_intensity_down_0,
-                                                               self.window.label_intensity_down_1,
-                                                               self.window.label_intensity_unreachable_0,
-                                                               self.window.label_intensity_unreachable_1,
-                                                               self.window.label_intensity_unknown_0,
-                                                               self.window.label_intensity_unknown_1],
+                                                                   self.window.label_intensity_information_0,
+                                                                   self.window.label_intensity_information_1,
+                                                                   self.window.label_intensity_warning_0,
+                                                                   self.window.label_intensity_warning_1,
+                                                                   self.window.label_intensity_average_0,
+                                                                   self.window.label_intensity_average_1,
+                                                                   self.window.label_intensity_high_0,
+                                                                   self.window.label_intensity_high_1,
+                                                                   self.window.label_intensity_critical_0,
+                                                                   self.window.label_intensity_critical_1,
+                                                                   self.window.label_intensity_disaster_0,
+                                                                   self.window.label_intensity_disaster_1,
+                                                                   self.window.label_intensity_down_0,
+                                                                   self.window.label_intensity_down_1,
+                                                                   self.window.label_intensity_unreachable_0,
+                                                                   self.window.label_intensity_unreachable_1,
+                                                                   self.window.label_intensity_unknown_0,
+                                                                   self.window.label_intensity_unknown_1],
             self.window.input_radiobutton_use_custom_browser: [self.window.groupbox_custom_browser,
-                                                           self.window.input_lineedit_custom_browser,
-                                                           self.window.button_choose_browser]}
+                                                               self.window.input_lineedit_custom_browser,
+                                                               self.window.button_choose_browser]}
 
         self.TOGGLE_DEPS_INVERTED = [self.window.input_checkbox_notification_custom_action_single]
 
@@ -4847,23 +4823,30 @@ class Dialog_Settings(Dialog):
 
         # set folder and play symbols to choose and play buttons
         self.window.button_choose_warning.setText('')
-        self.window.button_choose_warning.setIcon(self.window.button_play_warning.style().standardIcon(QStyle.StandardPixmap.SP_DirIcon))
+        self.window.button_choose_warning.setIcon(
+            self.window.button_play_warning.style().standardIcon(QStyle.StandardPixmap.SP_DirIcon))
         self.window.button_play_warning.setText('')
-        self.window.button_play_warning.setIcon(self.window.button_play_warning.style().standardIcon(QStyle.StandardPixmap.SP_MediaPlay))
+        self.window.button_play_warning.setIcon(
+            self.window.button_play_warning.style().standardIcon(QStyle.StandardPixmap.SP_MediaPlay))
 
         self.window.button_choose_critical.setText('')
-        self.window.button_choose_critical.setIcon(self.window.button_play_warning.style().standardIcon(QStyle.StandardPixmap.SP_DirIcon))
+        self.window.button_choose_critical.setIcon(
+            self.window.button_play_warning.style().standardIcon(QStyle.StandardPixmap.SP_DirIcon))
         self.window.button_play_critical.setText('')
-        self.window.button_play_critical.setIcon(self.window.button_play_warning.style().standardIcon(QStyle.StandardPixmap.SP_MediaPlay))
+        self.window.button_play_critical.setIcon(
+            self.window.button_play_warning.style().standardIcon(QStyle.StandardPixmap.SP_MediaPlay))
 
         self.window.button_choose_down.setText('')
-        self.window.button_choose_down.setIcon(self.window.button_play_warning.style().standardIcon(QStyle.StandardPixmap.SP_DirIcon))
+        self.window.button_choose_down.setIcon(
+            self.window.button_play_warning.style().standardIcon(QStyle.StandardPixmap.SP_DirIcon))
         self.window.button_play_down.setText('')
-        self.window.button_play_down.setIcon(self.window.button_play_warning.style().standardIcon(QStyle.StandardPixmap.SP_MediaPlay))
+        self.window.button_play_down.setIcon(
+            self.window.button_play_warning.style().standardIcon(QStyle.StandardPixmap.SP_MediaPlay))
 
         # set browser file chooser icon and current custom browser path
         self.window.button_choose_browser.setText('')
-        self.window.button_choose_browser.setIcon(self.window.button_play_warning.style().standardIcon(QStyle.StandardPixmap.SP_DirIcon))
+        self.window.button_choose_browser.setIcon(
+            self.window.button_play_warning.style().standardIcon(QStyle.StandardPixmap.SP_DirIcon))
         self.window.input_lineedit_custom_browser.setText(conf.custom_browser)
         # connect choose browser button with file dialog
         self.window.button_choose_browser.clicked.connect(self.choose_browser_executable)
@@ -5148,7 +5131,7 @@ class Dialog_Settings(Dialog):
             # increase number of display changes for silly Windows-hides-statusbar-after-display-mode-change problem
             NUMBER_OF_DISPLAY_CHANGES += 1
 
-            # stop statuswindow worker
+            # stop statuswindow workers
             statuswindow.worker.running = False
             statuswindow.worker_notification.running = False
 
@@ -5158,18 +5141,26 @@ class Dialog_Settings(Dialog):
             # tell all treeview threads to stop
             for server_vbox in statuswindow.servers_vbox.children():
                 server_vbox.table.worker.finish.emit()
-            # wait until all threads are stopped
-            for server_vbox in statuswindow.servers_vbox.children():
-                server_vbox.table.worker_thread.terminate()
-                server_vbox.table.worker_thread.wait()
 
-            # wait until statuswindow worker has finished
-            statuswindow.worker_thread.terminate()
-            statuswindow.worker_thread.wait()
+            # stop statuswindow workers
+            statuswindow.worker.finish.emit()
+            statuswindow.worker_notification.finish.emit()
+
+            # # wait until all threads are stopped
+            # for server_vbox in statuswindow.servers_vbox.children():
+            #     #server_vbox.table.worker_thread.terminate()
+            #     server_vbox.table.worker_thread.quit()
+            #     server_vbox.table.worker_thread.wait()
+            #
+            # # wait until statuswindow worker has finished
+            # #statuswindow.worker_thread.terminate()
+            # statuswindow.worker_thread.quit()
+            # statuswindow.worker_thread.wait()
 
             # wait until statuswindow notification worker has finished
-            statuswindow.worker_notification_thread.terminate()
-            statuswindow.worker_notification_thread.wait()
+            # statuswindow.worker_notification_thread.terminate()
+            # statuswindow.worker_notification_thread.quit()
+            # statuswindow.worker_notification_thread.wait()
 
             # kick out ol' statuswindow
             statuswindow.kill()
@@ -5225,7 +5216,8 @@ class Dialog_Settings(Dialog):
 
         reply = QMessageBox.question(self.window, 'Nagstamon',
                                      'Do you really want to delete monitor server <b>%s</b>?' % (server.name),
-                                     QMessageBox.StandardButton.Yes | QMessageBox.StandardButton.No, QMessageBox.StandardButton.No)
+                                     QMessageBox.StandardButton.Yes | QMessageBox.StandardButton.No,
+                                     QMessageBox.StandardButton.No)
 
         if reply == QMessageBox.StandardButton.Yes:
             # in case server is enabled delete its vbox
@@ -5276,7 +5268,7 @@ class Dialog_Settings(Dialog):
         self.fill_list(list_widget, list_conf)
         # select current edited item
         # activate currently created/edited server monitor item by first searching it in the list
-        list_widget.setCurrentItem(list_widget.findItems(current, Qt.MatchExactly)[0])
+        list_widget.setCurrentItem(list_widget.findItems(current, Qt.MatchFlag.MatchExactly)[0])
 
     @Slot()
     def new_action(self):
@@ -5309,7 +5301,8 @@ class Dialog_Settings(Dialog):
 
         reply = QMessageBox.question(self.window, 'Nagstamon',
                                      'Do you really want to delete action <b>%s</b>?' % (action.name),
-                                     QMessageBox.StandardButton.Yes | QMessageBox.StandardButton.No, QMessageBox.StandardButton.No)
+                                     QMessageBox.StandardButton.Yes | QMessageBox.StandardButton.No,
+                                     QMessageBox.StandardButton.No)
 
         if reply == QMessageBox.StandardButton.Yes:
             # kick action out of config items
@@ -5422,13 +5415,13 @@ class Dialog_Settings(Dialog):
                                                                            border-width: 1px;
                                                                            border-color: black;
                                                                            border-style: solid;'''
-                                                                        % conf.__dict__[color])
+                                                                            % conf.__dict__[color])
         # example color labels
         for label in [x for x in self.window.__dict__ if x.startswith('label_color_')]:
             status = label.split('label_color_')[1]
             self.window.__dict__[label].setStyleSheet('color: %s; background: %s' %
-                                                  (conf.__dict__['color_%s_text' % (status)],
-                                                   (conf.__dict__['color_%s_background' % (status)])))
+                                                      (conf.__dict__['color_%s_text' % (status)],
+                                                       (conf.__dict__['color_%s_background' % (status)])))
 
     @Slot()
     def colors_defaults(self):
@@ -5443,7 +5436,7 @@ class Dialog_Settings(Dialog):
                                                                            border-width: 1px;
                                                                            border-color: black;
                                                                            border-style: solid;'''
-                                                                        % conf.__dict__[default_color])
+                                                                            % conf.__dict__[default_color])
         # example color labels
         for label in [x for x in self.window.__dict__ if x.startswith('label_color_')]:
             status = label.split('label_color_')[1]
@@ -5456,7 +5449,7 @@ class Dialog_Settings(Dialog):
 
             # apply color values from stylesheet to label
             self.window.__dict__[label].setStyleSheet('color: %s; background: %s' %
-                                                  (color_text, color_background))
+                                                      (color_text, color_background))
 
     @Slot(str)
     def color_chooser(self, item):
@@ -5472,7 +5465,7 @@ class Dialog_Settings(Dialog):
                                                                                 border-width: 1px;
                                                                                 border-color: black;
                                                                                 border-style: solid;'''
-                                                                             % new_color.name())
+                                                                                 % new_color.name())
             status = item.split('_')[0]
             # get color value from stylesheet to paint example
             text = self.window.__dict__['input_button_color_%s_text' % (status)].styleSheet()
@@ -5496,12 +5489,12 @@ class Dialog_Settings(Dialog):
         for state in COLORS:
             # get text color from button CSS
             text = self.window.__dict__['input_button_color_{0}_text'
-                .format(state.lower())] \
+            .format(state.lower())] \
                 .styleSheet() \
                 .split(';\n')[0].split(': ')[1]
             # get background color from button CSS
             background = self.window.__dict__['input_button_color_{0}_background'
-                .format(state.lower())] \
+            .format(state.lower())] \
                 .styleSheet() \
                 .split(';\n')[0].split(': ')[1]
             # set CSS
@@ -5530,7 +5523,7 @@ class Dialog_Settings(Dialog):
 
                 # get text color from text color chooser button
                 text = self.window.__dict__['input_button_color_{0}_text'
-                    .format(state.lower())] \
+                .format(state.lower())] \
                     .styleSheet() \
                     .split(';\n')[0].split(': ')[1]
 
@@ -5708,19 +5701,19 @@ class Dialog_Server(Dialog):
         # dictionary holds checkbox/radiobutton as key and relevant widgets in list
         self.TOGGLE_DEPS = {
             self.window.input_checkbox_use_autologin: [self.window.label_autologin_key,
-                                                   self.window.input_lineedit_autologin_key],
+                                                       self.window.input_lineedit_autologin_key],
             self.window.input_checkbox_use_proxy: [self.window.groupbox_proxy],
 
             self.window.input_checkbox_use_proxy_from_os: [self.window.label_proxy_address,
-                                                       self.window.input_lineedit_proxy_address,
-                                                       self.window.label_proxy_username,
-                                                       self.window.input_lineedit_proxy_username,
-                                                       self.window.label_proxy_password,
-                                                       self.window.input_lineedit_proxy_password],
+                                                           self.window.input_lineedit_proxy_address,
+                                                           self.window.label_proxy_username,
+                                                           self.window.input_lineedit_proxy_username,
+                                                           self.window.label_proxy_password,
+                                                           self.window.input_lineedit_proxy_password],
             self.window.input_checkbox_show_options: [self.window.groupbox_options],
             self.window.input_checkbox_custom_cert_use: [self.window.label_custom_ca_file,
-                                                     self.window.input_lineedit_custom_cert_ca_file,
-                                                     self.window.button_choose_custom_cert_ca_file]}
+                                                         self.window.input_lineedit_custom_cert_ca_file,
+                                                         self.window.button_choose_custom_cert_ca_file]}
 
         self.TOGGLE_DEPS_INVERTED = [self.window.input_checkbox_use_proxy_from_os]
 
@@ -5955,9 +5948,9 @@ class Dialog_Server(Dialog):
                  self.mode == 'edit' and self.server_conf != conf.servers[self.window.input_lineedit_name.text()]):
             # cry if duplicate name exists
             QMessageBox.Icon.Critical(self.window, 'Nagstamon',
-                                 'The monitor server name <b>%s</b> is already used.' %
-                                 (self.window.input_lineedit_name.text()),
-                                 QMessageBox.StandardButton.Ok)
+                                      'The monitor server name <b>%s</b> is already used.' %
+                                      (self.window.input_lineedit_name.text()),
+                                      QMessageBox.StandardButton.Ok)
         else:
             # get configuration from UI
             for widget in self.window.__dict__:
@@ -6096,17 +6089,18 @@ class Dialog_Action(Dialog):
         # dictionary holds checkbox/radiobutton as key and relevant widgets in list
         self.TOGGLE_DEPS = {
             self.window.input_checkbox_re_host_enabled: [self.window.input_lineedit_re_host_pattern,
-                                                     self.window.input_checkbox_re_host_reverse],
+                                                         self.window.input_checkbox_re_host_reverse],
             self.window.input_checkbox_re_service_enabled: [self.window.input_lineedit_re_service_pattern,
-                                                        self.window.input_checkbox_re_service_reverse],
-            self.window.input_checkbox_re_status_information_enabled: [self.window.input_lineedit_re_status_information_pattern,
-                                                                   self.window.input_checkbox_re_status_information_reverse],
+                                                            self.window.input_checkbox_re_service_reverse],
+            self.window.input_checkbox_re_status_information_enabled: [
+                self.window.input_lineedit_re_status_information_pattern,
+                self.window.input_checkbox_re_status_information_reverse],
             self.window.input_checkbox_re_duration_enabled: [self.window.input_lineedit_re_duration_pattern,
-                                                         self.window.input_checkbox_re_duration_reverse],
+                                                             self.window.input_checkbox_re_duration_reverse],
             self.window.input_checkbox_re_attempt_enabled: [self.window.input_lineedit_re_attempt_pattern,
-                                                        self.window.input_checkbox_re_attempt_reverse],
+                                                            self.window.input_checkbox_re_attempt_reverse],
             self.window.input_checkbox_re_groups_enabled: [self.window.input_lineedit_re_groups_pattern,
-                                                       self.window.input_checkbox_re_groups_reverse]}
+                                                           self.window.input_checkbox_re_groups_reverse]}
 
         # fill action types into combobox
         self.window.input_combobox_type.addItems(sorted(self.ACTION_TYPES.values()))
@@ -6215,9 +6209,9 @@ class Dialog_Action(Dialog):
                  self.mode == 'edit' and self.action_conf != conf.actions[self.window.input_lineedit_name.text()]):
             # cry if duplicate name exists
             QMessageBox.Icon.Critical(self.window, 'Nagstamon',
-                                 'The action name <b>%s</b> is already used.' %
-                                 (self.window.input_lineedit_name.text()),
-                                 QMessageBox.StandardButton.Ok)
+                                      'The action name <b>%s</b> is already used.' %
+                                      (self.window.input_lineedit_name.text()),
+                                      QMessageBox.StandardButton.Ok)
         else:
             # get configuration from UI
             for widget in self.window.__dict__:
@@ -6767,6 +6761,7 @@ class Dialog_About(Dialog):
         self.window.label_copyright.setText(AppInfo.COPYRIGHT)
         self.window.label_website.setText('<a href={0}>{0}</a>'.format(AppInfo.WEBSITE))
         self.window.label_website.setOpenExternalLinks(True)
+        self.window.label_versions.setText(f'Python: {platform.python_version()}, Qt: {QT_VERSION_STR}')
         self.window.label_footnote.setText('<small>¹ plus Checkmk, Op5, Icinga, Centreon and more</small>')
 
         # fill in license information
@@ -6788,101 +6783,6 @@ class Dialog_About(Dialog):
 
     def show(self):
         self.window.exec()
-
-
-class MediaPlayerQt5(QObject):
-    """
-        play media files for notification
-    """
-    # needed to show error in a thread-safe way
-    send_message = Signal(str, str)
-
-    def __init__(self):
-        QObject.__init__(self)
-        self.player = QMediaPlayer(parent=self)
-
-        self.player.setVolume(100)
-        self.playlist = QMediaPlaylist()
-        self.player.setPlaylist(self.playlist)
-
-        # let statuswindow show message
-        self.send_message.connect(statuswindow.show_message)
-        # connect with statuswindow notification worker
-        statuswindow.worker_notification.load_sound.connect(self.set_media)
-        statuswindow.worker_notification.play_sound.connect(self.play)
-
-    @Slot(str)
-    def set_media(self, media_file):
-        """
-        Give media_file to player and if it is one of the default files check first if still exists
-        :param media_file:
-        :return:
-        """
-        if media_file in RESOURCE_FILES:
-            # by using RESOURCE_FILES the file path will be checked on macOS and the file restored if necessary
-            media_file = RESOURCE_FILES[media_file]
-        # only existing file can be played
-        if os.path.exists(media_file):
-            url = QUrl.fromLocalFile(media_file)
-            mediacontent = QMediaContent(url)
-            self.player.setMedia(mediacontent)
-            del url, mediacontent
-            return True
-        else:
-            # cry and tell no file was found
-            self.send_message.emit('warning', 'Sound file <b>\'{0}\'</b> not found for playback.'.format(media_file))
-            return False
-
-    @Slot()
-    def play(self):
-        # just play sound
-        self.player.play()
-
-
-class MediaPlayerQt6(QObject):
-    """
-        play media files for notification
-    """
-    # needed to show error in a thread-safe way
-    send_message = Signal(str, str)
-
-    def __init__(self):
-        QObject.__init__(self)
-        self.audio_output = QAudioOutput()
-        self.audio_output.setVolume(100)
-        self.player = QMediaPlayer(parent=self)
-        self.player.setAudioOutput(self.audio_output)
-        # let statuswindow show message
-        self.send_message.connect(statuswindow.show_message)
-        # connect with statuswindow notification worker
-        statuswindow.worker_notification.load_sound.connect(self.set_media)
-        statuswindow.worker_notification.play_sound.connect(self.play)
-
-    @Slot(str)
-    def set_media(self, media_file):
-        """
-        Give media_file to player and if it is one of the default files check first if still exists
-        :param media_file:
-        :return:
-        """
-        if media_file in RESOURCE_FILES:
-            # by using RESOURCE_FILES the file path will be checked on macOS and the file restored if necessary
-            media_file = RESOURCE_FILES[media_file]
-        # only existing file can be played
-        if os.path.exists(media_file):
-            url = QUrl.fromLocalFile(media_file)
-            self.player.setSource(url)
-            del url
-            return True
-        else:
-            # cry and tell no file was found
-            self.send_message.emit('warning', f'Sound file <b>\'{media_file}\'</b> not found for playback.')
-            return False
-
-    @Slot()
-    def play(self):
-        # just play sound
-        self.player.play()
 
 
 class CheckVersion(QObject):
@@ -6915,7 +6815,7 @@ class CheckVersion(QObject):
                 self.parent = parent
 
             # thread for worker to avoid
-            self.worker_thread = QThread(self)
+            self.worker_thread = QThread(parent=self)
             self.worker = self.Worker()
 
             # if update check is ready it sends the message to GUI thread
@@ -7061,7 +6961,7 @@ class DBus(QObject):
                 # see https://github.com/HenriWahl/Nagstamon/issues/320
                 try:
                     # import dbus  # never used
-                    dbus_mainloop = DBusQtMainLoop(set_as_default=True)
+                    dbus_mainloop = DBusMainLoop(set_as_default=True)
                     dbus_sessionbus = SessionBus(dbus_mainloop)
                     dbus_object = dbus_sessionbus.get_object('org.freedesktop.Notifications',
                                                              '/org/freedesktop/Notifications')
@@ -7142,7 +7042,7 @@ def get_screen(x, y):
     # integerify these values as they *might* be strings
     x = int(x)
     y = int(y)
-    screen = APP.screenAt(QPoint(x,y))
+    screen = APP.screenAt(QPoint(x, y))
     del x, y
     if screen:
         return screen.name
@@ -7170,29 +7070,31 @@ def exit():
     # store position of statuswindow/statusbar
     statuswindow.store_position_to_conf()
 
+    # save configuration
+    conf.SaveConfig()
+
     # hide statuswindow first ro avoid lag when waiting for finished threads
     statuswindow.hide()
 
-    # stop statuswindow worker
-    statuswindow.worker.running = False
-
-    # save configuration
-    conf.SaveConfig()
+    # stop statuswindow workers
+    statuswindow.worker.finish.emit()
+    statuswindow.worker_notification.finish.emit()
 
     # tell all treeview threads to stop
     for server_vbox in statuswindow.servers_vbox.children():
         server_vbox.table.worker.finish.emit()
 
-    # delete all windows
-    for dialog in dialogs.__dict__.values():
-        try:
-            dialog.window().destroy()
-        except Exception:
-            dialog.window.destroy()
-    statuswindow.destroy()
-
+    APP.exit()
+    # # delete all windows
+    # for dialog in dialogs.__dict__.values():
+    #     try:
+    #         dialog.window().destroy()
+    #     except:
+    #         dialog.window.destroy()
+    # statuswindow.destroy()
+    # 
     # bye bye
-    APP.instance().quit()
+    # APP.instance().quit()
 
 
 def check_servers():
@@ -7207,20 +7109,6 @@ def check_servers():
     elif len([x for x in conf.servers.values() if x.enabled is True]) == 0:
         dialogs.server_missing.show()
         dialogs.server_missing.initialize('no_server_enabled')
-
-
-def is_modifier_pressed():
-    """
-        check if (left) CTRL or Shift keys are pressed
-    """
-    modifiers = APP.keyboardModifiers()
-    if modifiers == Qt.Modifier.CTRL or \
-            modifiers == Qt.Modifier.SHIFT or \
-            modifiers == (Qt.Modifier.CTRL | Qt.Modifier.SHIFT):
-        del modifiers
-        return True
-    del modifiers
-    return False
 
 
 # check for updates
@@ -7257,7 +7145,4 @@ elif conf.icon_in_systray:
     systrayicon.set_menu(menu)
 
 # versatile mediaplayer
-if QT_VERSION_MAJOR < 6:
-    mediaplayer = MediaPlayerQt5()
-else:
-    mediaplayer = MediaPlayerQt6()
+mediaplayer = MediaPlayer(statuswindow, RESOURCE_FILES)

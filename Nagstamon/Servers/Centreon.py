@@ -267,7 +267,7 @@ class CentreonServer(GenericServer):
                 if conf.debug_mode == True:
                     self.Debug(server=self.get_name(), debug='Password login : ' + self.username + ' : ' + self.password)
 
-            sid = self.session.cookies['PHPSESSID']
+            sid = self.session.cookies.get('PHPSESSID', '')
             if conf.debug_mode == True:
                 self.Debug(server=self.get_name(), debug='SID : ' + sid)
                 if  self.centreon_version >= 2.66 and self.centreon_version < 19.04:

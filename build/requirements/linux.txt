@@ -1,4 +1,6 @@
+arrow
 beautifulsoup4
+dbus-python
 keyring
 lxml
 psutil
