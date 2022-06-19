@@ -1277,6 +1277,7 @@ class StatusWindow(QWidget):
             if OS == OS_WINDOWS:
                 systrayicon = SystemTrayIcon()
                 self.connect_systrayicon()
+                systrayicon.show_popwin.emit()
             systrayicon.show()
 
             # need a close button
@@ -1284,11 +1285,6 @@ class StatusWindow(QWidget):
 
         elif conf.fullscreen:
             # no need for systray
-            # if OS == OS_WINDOWS:
-            #     # workaround for PyQt behavior since Qt 5.10
-            #     systrayicon = QSystemTrayIcon()
-            # else:
-            #     systrayicon.hide()
             systrayicon.hide()
 
             # needed permanently
@@ -1507,15 +1503,16 @@ class StatusWindow(QWidget):
             screen = APP.screenAt(QPoint(icon_x, icon_y))
 
             # get available desktop specs
-            # available_width = self.screen().availableGeometry().width()
-            # available_height = self.screen().availableGeometry().height()
-            # available_x = self.screen().availableGeometry().x()
-            # available_y = self.screen().availableGeometry().y()
-            available_width = screen.availableVirtualGeometry().width()
-            available_height = screen.availableVirtualGeometry().height()
-            available_x = screen.availableVirtualGeometry().x()
-            available_y = screen.availableVirtualGeometry().y()
-
+            if OS != OS_NON_LINUX:
+                available_width = screen.availableVirtualGeometry().width()
+                available_height = screen.availableVirtualGeometry().height()
+                available_x = screen.availableVirtualGeometry().x()
+                available_y = screen.availableVirtualGeometry().y()
+            else:
+                available_width = screen.availableGeometry().width()
+                available_height = screen.availableGeometry().height()
+                available_x = screen.availableGeometry().x()
+                available_y = screen.availableGeometry().y()
             y = 0
 
             if icon_x > (available_width + available_x) // 2:
@@ -1534,7 +1531,6 @@ class StatusWindow(QWidget):
 
             # already show here because was closed before in hide_window()
             self.show()
-
             self.show_window()
         else:
             self.hide_window()
