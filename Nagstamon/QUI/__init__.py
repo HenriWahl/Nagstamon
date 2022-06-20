@@ -1110,6 +1110,27 @@ class StatusWindow(QWidget):
         # stop notification if window gets shown or hidden
         self.hiding.connect(self.worker_notification.stop)
 
+        # systray connections
+        # show status popup when systray icon was clicked
+        systrayicon.show_popwin.connect(self.show_window_systrayicon)
+        systrayicon.hide_popwin.connect(self.hide_window)
+        # flashing statusicon
+        self.worker_notification.start_flash.connect(systrayicon.flash)
+        self.worker_notification.stop_flash.connect(systrayicon.reset)
+        # connect status window server vboxes to systray
+        for server_vbox in self.servers_vbox.children():
+            if 'server' in server_vbox.__dict__.keys():
+                # tell systray after table was refreshed
+                server_vbox.table.worker.new_status.connect(systrayicon.show_state)
+                # show error icon in systray
+                server_vbox.table.worker.show_error.connect(systrayicon.set_error)
+                server_vbox.table.worker.hide_error.connect(systrayicon.reset_error)
+
+        # context menu, checking for existence necessary at startup
+        global menu
+        if not menu == None:
+            systrayicon.set_menu(menu)
+
         self.worker_notification.moveToThread(self.worker_notification_thread)
         # start with low priority
         self.worker_notification_thread.start(QThread.Priority.LowestPriority)
@@ -1169,38 +1190,8 @@ class StatusWindow(QWidget):
         # clean shutdown of thread
         self.worker.finish.connect(self.finish_worker_thread)
 
-        # part of the stupid workaround for Qt-5.10-Windows-QSystemTrayIcon-madness
-        self.connect_systrayicon()
-
         # finally show up
         self.set_mode()
-
-    def connect_systrayicon(self):
-        '''
-        stupid workaround for QSystemTrayIcon-problem under Windows since Qt 5.10:
-        - systray icon cannot be hidden anymore and so if it should be hidden it has to be reinitialized without icon
-        - to react to signals these have to be reconnected when changing mode via set_mode()
-        :return:
-        '''
-        global menu
-        # show status popup when systray icon was clicked
-        systrayicon.show_popwin.connect(self.show_window_systrayicon)
-        systrayicon.hide_popwin.connect(self.hide_window)
-        # flashing statusicon
-        self.worker_notification.start_flash.connect(systrayicon.flash)
-        self.worker_notification.stop_flash.connect(systrayicon.reset)
-        # connect status window server vboxes to systray
-        for server_vbox in self.servers_vbox.children():
-            if 'server' in server_vbox.__dict__.keys():
-                # tell systray after table was refreshed
-                server_vbox.table.worker.new_status.connect(systrayicon.show_state)
-                # show error icon in systray
-                server_vbox.table.worker.show_error.connect(systrayicon.set_error)
-                server_vbox.table.worker.hide_error.connect(systrayicon.reset_error)
-
-        # context menu, checking for existence necessary at startup
-        if not menu == None:
-            systrayicon.set_menu(menu)
 
     def set_mode(self):
         """
@@ -1217,11 +1208,6 @@ class StatusWindow(QWidget):
 
         if conf.statusbar_floating:
             # no need for systray
-            # if OS == OS_WINDOWS:
-            #     # workaround for PyQt behavior since Qt 5.10
-            #     systrayicon = QSystemTrayIcon()
-            # else:
-            #     systrayicon.hide()
             systrayicon.hide()
             self.statusbar.show()
 
@@ -1274,10 +1260,6 @@ class StatusWindow(QWidget):
             self.setAttribute(Qt.WidgetAttribute.WA_ShowWithoutActivating)
 
             # yeah! systray!
-            if OS == OS_WINDOWS:
-                systrayicon = SystemTrayIcon()
-                self.connect_systrayicon()
-                systrayicon.show_popwin.emit()
             systrayicon.show()
 
             # need a close button
