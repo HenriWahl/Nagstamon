@@ -97,7 +97,7 @@ class SMHubServer(GenericServer):
         self.session.auth = NoAuth()
 	# add proxy information
         self.proxify(self.session)
-	return True
+        return True
 
 class NoAuth(requests.auth.AuthBase):
     """
