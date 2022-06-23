@@ -10,12 +10,12 @@ def _calc_duration(agtlastcheck,agtlastok):
         agtfaultS = (agtlastcheck - agtlastok).total_seconds()
         # If the SMHUB agent has not received the data (agent offline)
         if agtfaultS == 0:
-            agtlastok = dt.datetime.now()
+            agtlastcheck = dt.datetime.now()
             agtfaultS = (agtlastcheck - agtlastok).total_seconds()
         agtfaultM, agtfaultS = divmod(agtfaultS, 60)
         agtfaultH, agtfaultM = divmod(agtfaultM, 60)
         agtfaultD, agtfaultH = divmod(agtfaultH, 24)
-        agtfaultW, agtfaultD = divmod(agtfaultH, 7)
+        agtfaultW, agtfaultD = divmod(agtfaultD, 7)
         agtduration = str(round(agtfaultW)) + "w " + str(round(agtfaultD)) + "d " + str(round(agtfaultH)) + "h " + str(round(agtfaultM)) + "m " + str(round(agtfaultS)) + "s"
         return agtduration
 class SMHubServer(GenericServer):
