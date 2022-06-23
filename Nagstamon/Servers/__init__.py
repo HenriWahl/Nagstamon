@@ -41,6 +41,7 @@ from Nagstamon.Servers.Multisite import MultisiteServer
 from Nagstamon.Servers.op5Monitor import Op5MonitorServer
 from Nagstamon.Servers.Opsview import OpsviewServer
 from Nagstamon.Servers.Thruk import ThrukServer
+from Nagstamon.Servers.SMHub import SMHubServer
 from Nagstamon.Servers.Zabbix import ZabbixServer
 from Nagstamon.Servers.ZabbixProblemBased import ZabbixProblemBasedServer
 from Nagstamon.Servers.Livestatus import LivestatusServer
@@ -226,7 +227,7 @@ def create_server(server=None):
 
 # moved registration process here because of circular dependencies
 servers_list = [CentreonServer, IcingaServer, IcingaWeb2Server, MultisiteServer, NagiosServer,
-                Op5MonitorServer, OpsviewServer, ThrukServer, ZabbixServer, SensuServer,
+                Op5MonitorServer, OpsviewServer, ThrukServer, ZabbixServer, SensuServer,SMHubServer, 
                 SensuGoServer, LivestatusServer, ZenossServer, Monitos3Server, Monitos4xServer,
                 SnagViewServer, PrometheusServer, AlertmanagerServer, ZabbixProblemBasedServer]
 # we use these servers conditionally if modules are available only

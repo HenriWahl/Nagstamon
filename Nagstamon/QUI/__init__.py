@@ -1369,7 +1369,8 @@ class StatusWindow(QWidget):
         # create server vboxed from current running servers
         if server.enabled:
             # display authentication dialog if password is not known
-            if not conf.servers[server.name].save_password and \
+            if   not server.TYPE=='SMHUB' and \
+                    not conf.servers[server.name].save_password and \
                     not conf.servers[server.name].use_autologin and \
                     conf.servers[server.name].password == '' and \
                     not conf.servers[server.name].authentication == 'kerberos':
@@ -2952,6 +2953,7 @@ class ServerVBox(QVBoxLayout):
         self.button_hosts.show()
         self.button_services.show()
         self.button_history.show()
+        
         self.button_edit.show()
         self.label_status.show()
         self.label_stretcher.show()
@@ -3039,7 +3041,11 @@ class ServerVBox(QVBoxLayout):
 
     @pyqtSlot()
     def update_label(self):
-        self.label.setText('<big><b>&nbsp;{0}@{1}</b></big>'.format(self.server.username, self.server.name))
+        if(self.server.type =="SMHUB"):
+            self.label.setText('<big><b>&nbsp;{0}@{1}</b></big>'.format(self.server.TYPE, self.server.name))
+        else:
+            self.label.setText('<big><b>&nbsp;{0}@{1}</b></big>'.format(self.server.username, self.server.name))
+        
         # let label padding keep top and bottom space - apparently not necessary on OSX
         if OS != OS_DARWIN:
             self.label.setStyleSheet('''padding-top: {0}px;
@@ -3477,7 +3483,7 @@ class TreeView(QTreeView):
             Windows reacts differently to clicks into table cells than Linux and MacOSX
             Therefore the .available flag is necessary
         """
-
+        
         if self.action_menu.available or OS != OS_WINDOWS:
             # set flag for Windows
             self.action_menu.available = False
@@ -3490,6 +3496,13 @@ class TreeView(QTreeView):
 
             # add custom actions
             actions_list = list(conf.actions)
+            print(actions_list)
+            #remove usless default action for SMHUB
+            SMHUB_USLESS_ACTION = ['Telnet','RDP','SSH','VNC'] 
+            if self.server.TYPE=='SMHUB':
+                for action in SMHUB_USLESS_ACTION:
+                    if action in actions_list:
+                        actions_list.remove(action)
             actions_list.sort(key=str.lower)
 
             # How many rows do we have
@@ -4092,6 +4105,7 @@ class TreeView(QTreeView):
         def __init__(self, parent=None, server=None, sort_column=0, sort_order=0):
             QObject.__init__(self)
             self.server = server
+            
             # needed for update interval
             self.timer = QTimer(self)
             self.server.init_config()
@@ -4099,12 +4113,17 @@ class TreeView(QTreeView):
             self.sort_column = sort_column
             self.sort_order = sort_order
 
+
+
+
         @pyqtSlot()
         def get_status(self):
             """
                 check every second if thread still has to run
                 if interval time is reached get status
             """
+            if self.server.TYPE == 'SMHUB':
+                self.server.refresh_authentication = False
             # if counter is at least update interval get status
             if self.server.thread_counter >= conf.update_interval_seconds:
                 # only if no multiple selection is done at the moment and no context action menu is open
@@ -4535,6 +4554,7 @@ class Dialogs(object):
         # server settings dialog
         self.server = Dialog_Server(Ui_settings_server)
         self.server.initialize()
+        
 
         # action settings dialog
         self.action = Dialog_Action(Ui_settings_action)
@@ -5746,6 +5766,7 @@ class Dialog_Server(Dialog):
 
         # these widgets are shown or hidden depending on server type properties
         # the servers listed at each widget do need them
+        NOT_SMHUB = [x.TYPE for x in SERVER_TYPES.values() if x.TYPE !='SMHUB']
         self.VOLATILE_WIDGETS = {
             self.ui.label_monitor_cgi_url: ['Nagios', 'Icinga', 'Thruk', 'Sensu', 'SensuGo'],
             self.ui.input_lineedit_monitor_cgi_url: ['Nagios', 'Icinga', 'Thruk', 'Sensu', 'SensuGo'],
@@ -5779,7 +5800,13 @@ class Dialog_Server(Dialog):
             self.ui.label_map_to_warning: ['Alertmanager'],
             self.ui.input_lineedit_map_to_warning: ['Alertmanager'],
             self.ui.label_map_to_critical: ['Alertmanager'],
-            self.ui.input_lineedit_map_to_critical: ['Alertmanager']
+            self.ui.input_lineedit_map_to_critical: ['Alertmanager'],
+            self.ui.input_lineedit_password:NOT_SMHUB,
+            self.ui.input_lineedit_username:NOT_SMHUB,
+            self.ui.label_username:NOT_SMHUB,
+            self.ui.label_password:NOT_SMHUB,
+            self.ui.input_checkbox_show_options:NOT_SMHUB,
+            self.ui.input_checkbox_save_password:NOT_SMHUB
         }
 
         # to be used when selecting authentication method Kerberos
@@ -5839,7 +5866,7 @@ class Dialog_Server(Dialog):
         """
             when authentication is changed to Kerberos then disable username/password as the are now useless
         """
-        if self.ui.input_combobox_authentication.currentText() == 'Kerberos':
+        if self.ui.input_combobox_authentication.currentText() == 'Kerberos' :
             for widget in self.AUTHENTICATION_WIDGETS:
                 widget.hide()
         else:
@@ -6310,7 +6337,7 @@ class Dialog_Acknowledge(Dialog):
         PROMETHEUS_OR_ALERTMANAGER = ['Alertmanager',
                                       'Prometheus']
         NOT_PROMETHEUS_OR_ALERTMANAGER = [x.TYPE for x in SERVER_TYPES.values() if x.TYPE not in PROMETHEUS_OR_ALERTMANAGER]
-
+        
         self.VOLATILE_WIDGETS = {
             self.ui.input_checkbox_use_expire_time: ['IcingaWeb2'],
             self.ui.input_datetime_expire_time: ['IcingaWeb2', 'Alertmanager'],
@@ -6661,6 +6688,7 @@ class Dialog_Authentication(Dialog):
             self.ui.input_lineedit_username.setText(self.server.username)
             self.ui.input_lineedit_password.setText(self.server.password)
             self.ui.input_checkbox_save_password.setChecked(conf.servers[self.server.name].save_password)
+            
 
     @pyqtSlot(str)
     def show_auth_dialog(self, server):
@@ -6686,9 +6714,11 @@ class Dialog_Authentication(Dialog):
         self.server.username = self.ui.input_lineedit_username.text()
         self.server.password = self.ui.input_lineedit_password.text()
         self.server.refresh_authentication = False
+      
+
 
         # store password if it should be saved
-        if self.ui.input_checkbox_save_password.isChecked():
+        if self.ui.input_checkbox_save_password.isChecked() or self.server.TYPE=='SMHUB':
             conf.servers[self.server.name].username = self.server.username
             conf.servers[self.server.name].password = self.server.password
             conf.servers[self.server.name].save_password = self.ui.input_checkbox_save_password.isChecked()
