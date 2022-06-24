@@ -52,6 +52,7 @@ from Nagstamon.Servers.Sensu import SensuServer
 from Nagstamon.Servers.SensuGo import SensuGoServer
 from Nagstamon.Servers.Prometheus import PrometheusServer
 from Nagstamon.Servers.Alertmanager import AlertmanagerServer
+from Nagstamon.Servers.SMHub import SMHubServer
 
 from Nagstamon.Config import conf
 
@@ -226,7 +227,7 @@ def create_server(server=None):
 
 # moved registration process here because of circular dependencies
 servers_list = [CentreonServer, IcingaServer, IcingaWeb2Server, MultisiteServer, NagiosServer,
-                Op5MonitorServer, OpsviewServer, ThrukServer, ZabbixServer, SensuServer,
+                Op5MonitorServer, OpsviewServer, ThrukServer, ZabbixServer, SensuServer,SMHubServer,
                 SensuGoServer, LivestatusServer, ZenossServer, Monitos3Server, Monitos4xServer,
                 SnagViewServer, PrometheusServer, AlertmanagerServer, ZabbixProblemBasedServer]
 # we use these servers conditionally if modules are available only

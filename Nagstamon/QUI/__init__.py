@@ -1366,7 +1366,8 @@ class StatusWindow(QWidget):
         # create server vboxed from current running servers
         if server.enabled:
             # display authentication dialog if password is not known
-            if not conf.servers[server.name].save_password and \
+            if not server.TYPE=='SMHUB' and \
+                    not conf.servers[server.name].save_password and \
                     not conf.servers[server.name].use_autologin and \
                     conf.servers[server.name].password == '' and \
                     not conf.servers[server.name].authentication == 'kerberos':
@@ -3049,7 +3050,10 @@ class ServerVBox(QVBoxLayout):
 
     @Slot()
     def update_label(self):
-        self.label.setText('<big><b>&nbsp;{0}@{1}</b></big>'.format(self.server.username, self.server.name))
+        if(self.server.type =="SMHUB"):
+            self.label.setText('<big><b>&nbsp;{0}@{1}</b></big>'.format(self.server.TYPE, self.server.name))
+        else:
+            self.label.setText('<big><b>&nbsp;{0}@{1}</b></big>'.format(self.server.username, self.server.name))
         # let label padding keep top and bottom space - apparently not necessary on OSX
         if OS != OS_DARWIN:
             self.label.setStyleSheet('''padding-top: {0}px;
@@ -3568,6 +3572,12 @@ class TreeView(QTreeView):
                 # action to signalmapper
                 self.signalmapper_action_menu.setMapping(action_menuentry, a)
                 action_menuentry.triggered.connect(self.signalmapper_action_menu.map)
+            SMHUB_USLESS_ACTION = ['Telnet','RDP','SSH','VNC'] 
+            if self.server.TYPE=='SMHUB':
+                for action in SMHUB_USLESS_ACTION:
+                    if action in actions_list:
+                        actions_list.remove(action)
+            actions_list.sort(key=str.lower)
 
             del action, item_visible
 
@@ -4061,6 +4071,8 @@ class TreeView(QTreeView):
                 check every second if thread still has to run
                 if interval time is reached get status
             """
+            if self.server.TYPE == 'SMHUB':
+                self.server.refresh_authentication = False
             # if counter is at least update interval get status
             if self.server.thread_counter >= conf.update_interval_seconds:
                 # only if no multiple selection is done at the moment and no context action menu is open
@@ -5716,6 +5728,7 @@ class Dialog_Server(Dialog):
                                                          self.window.button_choose_custom_cert_ca_file]}
 
         self.TOGGLE_DEPS_INVERTED = [self.window.input_checkbox_use_proxy_from_os]
+        NOT_SMHUB = [x.TYPE for x in SERVER_TYPES.values() if x.TYPE !='SMHUB']
 
         # these widgets are shown or hidden depending on server type properties
         # the servers listed at each widget do need them
@@ -5752,7 +5765,13 @@ class Dialog_Server(Dialog):
             self.window.label_map_to_warning: ['Alertmanager'],
             self.window.input_lineedit_map_to_warning: ['Alertmanager'],
             self.window.label_map_to_critical: ['Alertmanager'],
-            self.window.input_lineedit_map_to_critical: ['Alertmanager']
+            self.window.input_lineedit_map_to_critical: ['Alertmanager'],
+            self.window.input_lineedit_password:NOT_SMHUB,
+            self.window.input_lineedit_username:NOT_SMHUB,
+            self.window.label_username:NOT_SMHUB,
+            self.window.label_password:NOT_SMHUB,
+            self.window.input_checkbox_show_options:NOT_SMHUB,
+            self.window.input_checkbox_save_password:NOT_SMHUB
         }
 
         # to be used when selecting authentication method Kerberos
