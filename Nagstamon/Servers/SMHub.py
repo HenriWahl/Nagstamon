@@ -20,9 +20,10 @@ def _calc_duration(agtlastcheck,agtlastok):
         return agtduration
 class SMHubServer(GenericServer):
     """
-        object of Nagios server - when nagstamon will be able to poll various servers this
-        will be useful
-        As Nagios is the default server type all its methods are in GenericServer
+	SMHUB (SAP Monitor Hub)
+Powerful modular and secure monitoring tool ideal for systems that deliver SAP applications: local and/or remote agents monitor the system, using owned schedulers, communicating anomalies   via non permanent connections and/or remote monitoring.
+ All communications to SMHUB are via HTTP/ HTTPS protocol, allowing a controlled traffic management from small to large companies. No sensitive data is sent/stored.
+No authentication required.
     """
 
     TYPE = u'SMHUB'
