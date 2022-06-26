@@ -34,37 +34,39 @@ from Nagstamon.Helpers import webbrowser_open
 
 
 class CentreonServer(GenericServer):
-    TYPE = 'Centreon'
 
-    # centreon generic web interface uses a sid which is needed to ask for news
-    SID = None
+    def __init__(self, **kwds):
+        self.TYPE = 'Centreon'
 
-    # HARD/SOFT state mapping
-    HARD_SOFT = {'(H)': 'hard', '(S)': 'soft'}
+        # centreon generic web interface uses a sid which is needed to ask for news
+        self.SID = None
 
-    # apparently necessesary because of non-english states as in https://github.com/HenriWahl/Nagstamon/issues/91 (Centeron 2.5)
-    TRANSLATIONS = {'INDISPONIBLE': 'DOWN',
-                    'INJOIGNABLE': 'UNREACHABLE',
-                    'CRITIQUE': 'CRITICAL',
-                    'INCONNU': 'UNKNOWN',
-                    'ALERTE': 'WARNING'}
+        # HARD/SOFT state mapping
+        self.HARD_SOFT = {'(H)': 'hard', '(S)': 'soft'}
 
-    # Entries for monitor default actions in context menu
-    MENU_ACTIONS = ['Monitor', 'Recheck', 'Acknowledge', 'Downtime']
+        # apparently necessesary because of non-english states as in https://github.com/HenriWahl/Nagstamon/issues/91 (Centeron 2.5)
+        self.TRANSLATIONS = {'INDISPONIBLE': 'DOWN',
+                        'INJOIGNABLE': 'UNREACHABLE',
+                        'CRITIQUE': 'CRITICAL',
+                        'INCONNU': 'UNKNOWN',
+                        'ALERTE': 'WARNING'}
 
-    # Centreon works better or at all with html.parser for BeautifulSoup
-    PARSER = 'html.parser'
+        # Entries for monitor default actions in context menu
+        self.MENU_ACTIONS = ['Monitor', 'Recheck', 'Acknowledge', 'Downtime']
 
-    # Needed to detect each Centreon's version
-    centreon_version = None
-    # Token that centreon use to protect the system
-    centreon_token = None
-    # To only detect broker once
-    first_login = True
-    # limit number of services retrived
-    limit_services_number = 9999
-    # default value, applies to version 2.2 and others
-    XML_PATH = 'xml'
+        # Centreon works better or at all with html.parser for BeautifulSoup
+        self.PARSER = 'html.parser'
+
+        # Needed to detect each Centreon's version
+        self.centreon_version = None
+        # Token that centreon use to protect the system
+        self.centreon_token = None
+        # To only detect broker once
+        self.first_login = True
+        # limit number of services retrived
+        self.limit_services_number = 9999
+        # default value, applies to version 2.2 and others
+        self.XML_PATH = 'xml'
 
     def init_config(self):
         '''

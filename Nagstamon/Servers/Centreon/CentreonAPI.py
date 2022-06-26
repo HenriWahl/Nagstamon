@@ -43,29 +43,31 @@ from Nagstamon.Helpers import webbrowser_open
 #    to use 'ressources'.
 
 class CentreonServer(GenericServer):
-    TYPE = 'Centreon API'
 
-    # Centreon API uses a token
-    token = None
+    def __init__(self, **kwds):
+        self.TYPE = 'Centreon'
 
-    # HARD/SOFT state mapping
-    HARD_SOFT = {'(H)': 'hard', '(S)': 'soft'}
+        # Centreon API uses a token
+        self.token = None
 
-    # Entries for monitor default actions in context menu
-    MENU_ACTIONS = ['Monitor', 'Recheck', 'Acknowledge', 'Downtime']
+        # HARD/SOFT state mapping
+        self.HARD_SOFT = {'(H)': 'hard', '(S)': 'soft'}
 
-    # URLs of the Centreon pages
-    urls_centreon = None
+        # Entries for monitor default actions in context menu
+        self.MENU_ACTIONS = ['Monitor', 'Recheck', 'Acknowledge', 'Downtime']
 
-    # limit number of services retrived
-    limit_services_number = 9999
+        # URLs of the Centreon pages
+        self.urls_centreon = None
+
+        # limit number of services retrived
+        self.limit_services_number = 9999
 
     def init_config(self):
         '''
         init_config, called at thread start, not really needed here, just omit extra properties
         '''
 
-        # FIX but be provided by user as their is no way to detect it
+        # FIX but be provided by user as their is no way to detect it
         self.user_provided_centreon_version = "20.04"
 
         if re.search('2(0|1|2)\.(04|10)', self.user_provided_centreon_version):
