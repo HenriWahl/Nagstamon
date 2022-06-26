@@ -158,6 +158,12 @@ if QT_FLAVOR == 'PyQt5':
         '''
         return event.globalPos()
 
+    def get_sort_order_value(sort_order):
+        '''
+        Qt5 has int for Qt.SortOrder but Qt6 has Qt.SortOrder.[Ascending|Descending]Order
+        '''
+        return sort_order
+
 
 elif QT_FLAVOR == 'PyQt6':
     # PySide/PyQt compatibility
@@ -270,6 +276,12 @@ elif QT_FLAVOR == 'PyQt6':
         Qt5 uses other method than Qt6
         '''
         return event.globalPosition()
+
+    def get_sort_order_value(sort_order):
+        '''
+        Qt5 has int for Qt.SortOrder but Qt6 has Qt.SortOrder.[Ascending|Descending]Order
+        '''
+        return sort_order.value
 
 # elif 'PySide6' in sys.modules:
 #     from PySide6.QtCore import Signal, \

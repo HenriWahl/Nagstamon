@@ -3948,7 +3948,8 @@ class TreeView(QTreeView):
         """
         # better int() the Qt.* values because they partly seem to be
         # intransmissible
-        self.sort_data_array_for_columns.emit(int(sort_column), int(sort_order), True)
+        # get_sort_order_value() cures the differences between Qt5 and Qt6
+        self.sort_data_array_for_columns.emit(int(sort_column), int(get_sort_order_value(sort_order)), True)
 
     @Slot()
     def finish_worker_thread(self):
