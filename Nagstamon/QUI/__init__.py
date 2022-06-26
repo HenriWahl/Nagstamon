@@ -94,16 +94,11 @@ if not OS in OS_NON_LINUX:
         print('No DBus for desktop notification available.')
         DBUS_AVAILABLE = False
 
-# same KfW trouble as in Servers/Generic.py
-if OS != OS_WINDOWS:
-    # check ECP authentication support availability
-    try:
-        from requests_ecp import HTTPECPAuth
-
-        ECP_AVAILABLE = True
-    except ImportError:
-        ECP_AVAILABLE = False
-else:
+# check ECP authentication support availability
+try:
+    from requests_ecp import HTTPECPAuth
+    ECP_AVAILABLE = True
+except ImportError:
     ECP_AVAILABLE = False
 
 # since Qt6 HighDPI-awareness is default behaviour
@@ -321,7 +316,7 @@ class SystemTrayIcon(QSystemTrayIcon):
         # little workaround to match statuswindow.worker_notification.worst_notification_status
         self.icons['UP'] = self.icons['OK']
         # default icon is OK
-        if OS != OS_WINDOWS or conf.icon_in_systray:
+        if conf.icon_in_systray:
             self.setIcon(self.icons['OK'])
         if conf.debug_mode:
             debug_queue.append('DEBUG: SystemTrayIcon initial icon: {}'.format(self.currentIconName()))
@@ -413,11 +408,6 @@ class SystemTrayIcon(QSystemTrayIcon):
         """
             evaluate mouse click
         """
-        # # some obscure Windows problem again
-        # if reason == QSystemTrayIcon.Context and OS == 'Windows':
-        #     self.show_menu.emit()
-        # only react on left mouse click on OSX
-        # elif reason == (QSystemTrayIcon.Trigger or QSystemTrayIcon.DoubleClick):
         if reason in (QSystemTrayIcon.ActivationReason.Trigger,
                       QSystemTrayIcon.ActivationReason.DoubleClick,
                       QSystemTrayIcon.ActivationReason.MiddleClick):
@@ -1296,11 +1286,6 @@ class StatusWindow(QWidget):
             self.toparea.button_close.hide()
 
         elif conf.windowed:
-            # if OS == OS_WINDOWS:
-            #     # workaround for PyQt behavior since Qt 5.10
-            #     #systrayicon = QSystemTrayIcon()
-            # else:
-            #     systrayicon.hide()
             systrayicon.hide()
 
             # no need for close button
