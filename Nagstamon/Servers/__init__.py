@@ -147,6 +147,9 @@ def create_server(server=None):
         return
     # give argument servername so CentreonServer could use it for initializing MD5 cache
     new_server = SERVER_TYPES[server.type](name=server.name)
+    # apparently somewhat hacky but at the end works - might be used for others than Centreon as well
+    if hasattr(new_server, 'ClassServerReal'):
+        new_server = new_server.ClassServerReal(name=server.name)
     new_server.type = server.type
     new_server.enabled = server.enabled
     new_server.monitor_url = server.monitor_url

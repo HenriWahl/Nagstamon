@@ -36,6 +36,9 @@ from Nagstamon.Helpers import webbrowser_open
 class CentreonServer(GenericServer):
 
     def __init__(self, **kwds):
+
+        GenericServer.__init__(self, **kwds)
+
         self.TYPE = 'Centreon'
 
         # centreon generic web interface uses a sid which is needed to ask for news
