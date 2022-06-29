@@ -21,7 +21,6 @@ from . import CentreonAPI
 from ..Generic import GenericServer
 from Nagstamon.Config import conf
 
-
 class CentreonServer(GenericServer):
     """
     Use this class as switch
@@ -37,18 +36,18 @@ class CentreonServer(GenericServer):
             versions_raw = self.FetchURL(f'{server_conf.monitor_cgi_url}/api/latest/platform/versions', no_auth=True, giveback='raw')
             self.Debug(server='[' + self.get_name() + ']', debug='Status code %s' % (str(versions_raw.status_code)))
             if versions_raw.status_code == 200:
-                # API V2 is usable only after 20.10
                 data = json.loads(versions_raw.result)
                 ver_major = int(data["web"]["major"])
                 ver_minor = int(data["web"]["minor"])
-                if (ver_major > 20) or (ver_major == 20 and ver_minor == 10):
-                    self.Debug(server='[' + self.get_name() + ']', debug='>>>>>>>>>>>>>>>> API ' + str(ver_major) + ' ' + str(ver_minor))
+                # API V2 is usable only after 21.04 (not tested), ressources endpoit is buggy in 20.10
+                if ver_major >= 21:
+                    self.Debug(server='[' + self.get_name() + ']', debug='Loading class API, Centreon version : ' + str(ver_major) + '.' + str(ver_minor))
                     from .CentreonAPI import CentreonServer as CentreonServerReal
                 else:
-                    self.Debug(server='[' + self.get_name() + ']', debug='>>>>>>>>>>>>>>>> LEGACY')
+                    self.Debug(server='[' + self.get_name() + ']', debug='Loading class LEGACY, Centreon version : ' + str(ver_major) + '.' + str(ver_minor))
                     from .CentreonLegacy import CentreonServer as CentreonServerReal
             else:
                 from .CentreonLegacy import CentreonServer as CentreonServerReal
-                self.Debug(server='[' + self.get_name() + ']', debug='>>>>>>>>>>>>>>>> LEGACY')
+                self.Debug(server='[' + self.get_name() + ']', debug='Loading class LEGACY, Centreon version will be checked later')
             # kind of mad but helps the Servers/__init__.py to detect if there is any other class to be used
             self.ClassServerReal = CentreonServerReal
