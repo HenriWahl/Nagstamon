@@ -37,42 +37,54 @@ from Nagstamon.Config import conf
 from Nagstamon.Helpers import webbrowser_open
 
 # This class support Centreon V2 API
-
 # Things to do :
-#  - change the way host/services status is gathered, must change it
-#    to use 'ressources'.
+#  - BROWSER_URLS -> move into define_url() to be consistent
 
 class CentreonServer(GenericServer):
-    TYPE = 'Centreon API'
 
-    # Centreon API uses a token
-    token = None
+    def __init__(self, **kwds):
 
-    # HARD/SOFT state mapping
-    HARD_SOFT = {'(H)': 'hard', '(S)': 'soft'}
+        GenericServer.__init__(self, **kwds)
 
-    # Entries for monitor default actions in context menu
-    MENU_ACTIONS = ['Monitor', 'Recheck', 'Acknowledge', 'Downtime']
+        self.TYPE = 'Centreon'
 
-    # URLs of the Centreon pages
-    urls_centreon = None
+        # Centreon API uses a token
+        self.token = None
 
-    # limit number of services retrived
-    limit_services_number = 9999
+        # HARD/SOFT state mapping
+        self.HARD_SOFT = {'(H)': 'hard', '(S)': 'soft'}
+
+        # Entries for monitor default actions in context menu
+        self.MENU_ACTIONS = ['Monitor', 'Recheck', 'Acknowledge', 'Downtime']
+
+        # URLs of the Centreon pages
+        self.urls_centreon = None
+
+        # limit number of services retrived
+        self.limit_services_number = 9999
 
     def init_config(self):
         '''
-        init_config, called at thread start, not really needed here, just omit extra properties
+        init_config, called at thread start
         '''
+        # Version check
+        result = self.FetchURL(f'{self.monitor_cgi_url}/api/latest/platform/versions', no_auth=True, giveback='raw')
 
-        # FIX but be provided by user as their is no way to detect it
-        self.user_provided_centreon_version = "20.04"
+        data = json.loads(result.result)
+        error = result.error
+        status_code = result.status_code
 
-        if re.search('2(0|1|2)\.(04|10)', self.user_provided_centreon_version):
-            # from 20.04 to 22.04 the API to use is «latest»
-            self.centreon_version = 20.04
+        # check if any error occured
+        errors_occured = self.check_for_error(data, error, status_code)
+        if errors_occured is not False:
+            return(errors_occured)
+
+        self.centreon_version_major = int(data["web"]["major"])
+
+        if self.centreon_version_major >= 21:
+            # starting from 21.xx the API to use is «latest», until something change
             if conf.debug_mode is True:
-                self.Debug(server='[' + self.get_name() + ']', debug='Centreon version selected : 20.04 <=> 22.04')
+                self.Debug(server='[' + self.get_name() + ']', debug='Centreon code version selected : >= 21')
             # URLs for browser shortlinks/buttons on popup window
             self.BROWSER_URLS = {'monitor': '$MONITOR$/monitoring/resources',
             'hosts': '$MONITOR$/monitoring/resources',
@@ -83,7 +95,7 @@ class CentreonServer(GenericServer):
 
         else:
             if conf.debug_mode is True:
-                self.Debug(server='[' + self.get_name() + ']', debug='No Centreon version provided')
+                self.Debug(server='[' + self.get_name() + ']', debug='Unsupported Centreon version')
 
         # Changed this because define_url was called 2 times
         if not self.tls_error and self.urls_centreon is None:
@@ -107,7 +119,7 @@ class CentreonServer(GenericServer):
 
         self.urls_centreon = urls_centreon_api_v2
         if conf.debug_mode == True:
-            self.Debug(server='[' + self.get_name() + ']', debug='URLs defined for Centreon %s' % (self.centreon_version))
+            self.Debug(server='[' + self.get_name() + ']', debug='URLs defined for Centreon vers. : %s' % (self.centreon_version_major))
 
 
     def open_monitor(self, host, service=''):
@@ -722,7 +734,7 @@ class CentreonServer(GenericServer):
                 self.Debug(server=self.get_name(),
                            debug="Check-session, Fetched JSON: " + pprint.pformat(data))
                 self.Debug(server=self.get_name(),
-                           debug="Check-session, Error : " + error + " Status code : " + str(status_code))
+                           debug="Check-session, Error : " + error + ", Status code : " + str(status_code))
 
             # If we got an 401, the token expired and must be renewed
             if status_code == 401:
