@@ -3572,11 +3572,6 @@ class TreeView(QTreeView):
                 # action to signalmapper
                 self.signalmapper_action_menu.setMapping(action_menuentry, a)
                 action_menuentry.triggered.connect(self.signalmapper_action_menu.map)
-            SMHUB_USLESS_ACTION = ['Telnet','RDP','SSH','VNC'] 
-            if self.server.TYPE=='SMHUB':
-                for action in SMHUB_USLESS_ACTION:
-                    if action in actions_list:
-                        actions_list.remove(action)
             actions_list.sort(key=str.lower)
 
             del action, item_visible
