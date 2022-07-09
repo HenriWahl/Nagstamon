@@ -411,7 +411,7 @@ class SystemTrayIcon(QSystemTrayIcon):
         if reason in (QSystemTrayIcon.ActivationReason.Trigger,
                       QSystemTrayIcon.ActivationReason.DoubleClick,
                       QSystemTrayIcon.ActivationReason.MiddleClick):
-            # when green icon is displayed and no popwin is about to po up show at least menu
+            # when green icon is displayed and no popwin is about to pop up show at least menu
             if get_worst_status() == 'UP' and OS == OS_DARWIN:
                 self.menu.show_at_cursor()
             else:
@@ -1107,14 +1107,6 @@ class StatusWindow(QWidget):
         # flashing statusicon
         self.worker_notification.start_flash.connect(systrayicon.flash)
         self.worker_notification.stop_flash.connect(systrayicon.reset)
-        # connect status window server vboxes to systray
-        for server_vbox in self.servers_vbox.children():
-            if 'server' in server_vbox.__dict__.keys():
-                # tell systray after table was refreshed
-                server_vbox.table.worker.new_status.connect(systrayicon.show_state)
-                # show error icon in systray
-                server_vbox.table.worker.show_error.connect(systrayicon.set_error)
-                server_vbox.table.worker.hide_error.connect(systrayicon.reset_error)
 
         # context menu, checking for existence necessary at startup
         global menu
@@ -1126,6 +1118,15 @@ class StatusWindow(QWidget):
         self.worker_notification_thread.start(QThread.Priority.LowestPriority)
 
         self.create_ServerVBoxes()
+
+        # connect status window server vboxes to systray
+        for server_vbox in self.servers_vbox.children():
+            if 'server' in server_vbox.__dict__.keys():
+                # tell systray after table was refreshed
+                server_vbox.table.worker.new_status.connect(systrayicon.show_state)
+                # show error icon in systray
+                server_vbox.table.worker.show_error.connect(systrayicon.set_error)
+                server_vbox.table.worker.hide_error.connect(systrayicon.reset_error)
 
         self.servers_scrollarea_widget.setLayout(self.servers_vbox)
         self.servers_scrollarea.setWidget(self.servers_scrollarea_widget)
@@ -2563,7 +2564,7 @@ class StatusBar(QWidget):
         # adjust logo size to fit to label size
         self.logo.adjust_size(height, height)
 
-        # avoid flickerung/artefact by updating immediately
+        # avoid flickering/artefact by updating immediately
         self.summarize_states()
 
     @Slot(str)
