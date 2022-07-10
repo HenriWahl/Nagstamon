@@ -53,7 +53,7 @@ from Nagstamon.Config import (AppInfo,
                               OS_WINDOWS,
                               RESOURCES)
 
-if OS != OS_WINDOWS:
+if OS == OS_DARWIN:
     # requests_gssapi is newer but not available everywhere
     try:
         # extra imports needed to get it compiled on macOS

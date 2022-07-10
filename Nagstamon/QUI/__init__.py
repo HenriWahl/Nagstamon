@@ -1458,46 +1458,12 @@ class StatusWindow(QWidget):
             handle clicks onto systray icon
         """
         if not self.is_shown:
-
-            # where is the pointer which clicked onto systray icon
-            icon_x = systrayicon.geometry().x()
-            icon_y = systrayicon.geometry().y()
-            # strangely enough on KDE the systray icon geometry gives back 0, 0 as coordinates
-            if icon_x == 0:
-                icon_x = QCursor.pos().x()
-            if icon_y == 0:
-                icon_y = QCursor.pos().y()
-
-            screen = APP.screenAt(QPoint(icon_x, icon_y))
-
-            # get available desktop specs
-            if OS != OS_NON_LINUX:
-                available_width = screen.availableVirtualGeometry().width()
-                available_height = screen.availableVirtualGeometry().height()
-                available_x = screen.availableVirtualGeometry().x()
-                available_y = screen.availableVirtualGeometry().y()
-            else:
-                available_width = screen.availableGeometry().width()
-                available_height = screen.availableGeometry().height()
-                available_x = screen.availableGeometry().x()
-                available_y = screen.availableGeometry().y()
-            y = 0
-
-            if icon_x > (available_width + available_x) // 2:
-                x = available_x + available_width - self.statusbar.width()
-            else:
-                x = available_x + self.statusbar.width()
-
-            if icon_y > (available_height - available_y) // 2:
-                y = available_height - available_y
-
-            self.move(x, y)
-
             # under unfortunate circumstances statusbar might have the the moving flag true
             # fix it here because it makes no sense but might cause non-appearing statuswindow
             self.moving = False
 
             # already show here because was closed before in hide_window()
+            # best results achieved when doing .show() before .show_window()
             self.show()
             self.show_window()
         else:

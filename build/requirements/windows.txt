@@ -10,7 +10,7 @@ pyqt6
 pysocks
 python-dateutil
 requests
-requests-kerberos
 requests-ecp
+requests-kerberos
 setuptools
 wheel
