@@ -68,7 +68,7 @@ from Nagstamon.Helpers import (is_found_by_re,
 # only on X11/Linux thirdparty path should be added because it contains the Xlib module
 # needed to tell window manager via EWMH to keep Nagstamon window on all virtual desktops
 # TODO: test if X11 or Wayland is used
-if not OS in OS_NON_LINUX:
+if OS not in OS_NON_LINUX:
     # extract thirdparty path from resources path - make submodules accessible by thirdparty modules
     THIRDPARTY = os.sep.join(RESOURCES.split(os.sep)[0:-1] + ['thirdparty'])
     sys.path.insert(0, THIRDPARTY)
@@ -1700,8 +1700,6 @@ class StatusWindow(QWidget):
                 elif icon_y != 0:
                     self.icon_y = icon_y
 
-            screen_or_widget = get_screen_name(self.icon_x, self.icon_y)
-
         # only consider offset if it is configured
         if conf.systray_offset_use and conf.icon_in_systray:
             available_height = self.screen().availableGeometry().height() - conf.systray_offset
@@ -2054,15 +2052,15 @@ class StatusWindow(QWidget):
         if conf.windowed:
             return
         # X11/Linux needs some special treatment to get the statusbar floating on all virtual desktops
-        if not OS in OS_NON_LINUX:
+        if OS not in OS_NON_LINUX:
             # get all windows...
             winid = self.winId().__int__()
             self.ewmh.setWmDesktop(winid, 0xffffffff)
             self.ewmh.display.flush()
 
-        # apparently sometime the floating statusbsr vanishes in the background
+        # apparently sometime the floating statusbar vanishes in the background
         # lets try here to keep it on top - only if not fullscreen
-        if not conf.fullscreen and not conf.windowed and not platform.system == OS_WINDOWS:
+        if not conf.fullscreen and not conf.windowed and not OS == OS_WINDOWS:
             self.setWindowFlags(WINDOW_FLAGS)
 
         # again and again try to keep that statuswindow on top!
