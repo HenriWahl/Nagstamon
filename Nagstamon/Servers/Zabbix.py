@@ -74,6 +74,7 @@ class ZabbixServer(GenericServer):
 
         self.username = conf.servers[self.get_name()].username
         self.password = conf.servers[self.get_name()].password
+        self.timeout = conf.servers[self.get_name()].timeout
         self.ignore_cert = conf.servers[self.get_name()].ignore_cert
         self.use_description_name_service = conf.servers[self.get_name()].use_description_name_service
         if self.ignore_cert is True:
@@ -86,7 +87,7 @@ class ZabbixServer(GenericServer):
             # create ZabbixAPI if not yet created
             if self.zapi is None:
                 self.zapi = ZabbixAPI(server=self.monitor_url, path="", log_level=self.log_level,
-                                      validate_certs=self.validate_certs)
+                                      validate_certs=self.validate_certs, timeout=self.timeout)
             # login if not yet logged in, or if login was refused previously
             if not self.zapi.logged_in():
                 self.zapi.login(self.username, self.password)
@@ -150,7 +151,7 @@ class ZabbixServer(GenericServer):
                                                   'skipDependent': True,
                                                   'monitored': True,
                                                   'active': True,
-                                                  'output': ['triggerid', 'description', 'lastchange'],
+                                                  'output': ['triggerid', 'description', 'lastchange', 'manual_close'],
                                                   # 'expandDescription': True,
                                                   # 'expandComment': True,
                                                   'selectLastEvent': ['eventid', 'name', 'ns', 'clock', 'acknowledged',
@@ -351,8 +352,9 @@ class ZabbixServer(GenericServer):
                     for item in service['items']:
                         status_information = item['name'] + ": " + item['lastvalue'] + ", " + status_information
                     n = {
-                        'host': '',
-                        'hostname': '',
+                        'host': service['hosts'][0]['host'],
+                        'hostid': service['hosts'][0]['hostid'],
+                        'hostname': service['hosts'][0]['name'],
                         'service': service['lastEvent']['name'],
                         'server': self.name,
                         'status': status,
@@ -372,11 +374,8 @@ class ZabbixServer(GenericServer):
                         # Zabbix data
                         'triggerid': service['triggerid'],
                         'eventid': service['lastEvent']['eventid'],
+                        'allow_manual_close': 'manual_close' not in service or str(service['manual_close']) == '1',
                     }
-
-                    n['hostid'] = service['hosts'][0]['hostid']
-                    n['host'] = service['hosts'][0]['host']
-                    n['hostname'] = service['hosts'][0]['name']
 
                     key = n["hostname"] if len(n['hostname']) != 0 else n["host"]
                     # key = n["hostid"];
@@ -419,6 +418,7 @@ class ZabbixServer(GenericServer):
                         self.new_hosts[key].services[new_service].hostid = n["hostid"]
                         self.new_hosts[key].services[new_service].triggerid = n["triggerid"]
                         self.new_hosts[key].services[new_service].eventid = n["eventid"]
+                        self.new_hosts[key].services[new_service].allow_manual_close = n["allow_manual_close"]
                         if conf.debug_mode is True:
                             self.Debug(server=self.get_name(),
                                        debug="Adding new service[" + new_service + "] **" + n['service'] + "**")
@@ -469,40 +469,20 @@ class ZabbixServer(GenericServer):
             self.Debug(server=self.get_name(),
                        debug="Set Acknowledge Host: " + host + " Service: " + service + " Sticky: " + str(
                            sticky) + " persistent:" + str(persistent) + " All services: " + str(all_services))
-        # print("Set Acknowledge Host: " + host + " Service: " + service + " Sticky: " + str(
-        #                     sticky) + " persistent:" + str(persistent) + " All services: " + str(all_services))
-        # Service column is storing current trigger id
-        services = []
-        services.append(service)
-
-        # acknowledge all problems (column services) on a host when told to do so
-        for s in all_services:
-            services.append(s)
-
         self._login()
-        eventids=[]
+        eventids = set()
+        unclosable_events = set()
+        all_services.append(service)
         get_host = self.hosts[host]
         # Through all Services
-        for service in services:
+        for s in all_services:
             # find Trigger ID
             for host_service in get_host.services:
                 host_service = get_host.services[host_service]
-                if host_service.name == service:
-                    eventids.append(host_service.eventid)
-                    break
-
-        #for e in self.zapi.event.get({'triggerids': [triggerid],
-        #                              # from zabbix 2.2 should be used "objectids" instead of "triggerids"
-        #                              'objectids': [triggerid],
-        #                              # 'acknowledged': False,
-        #                              'sortfield': 'clock',
-        #                              'sortorder': 'DESC'}):
-        #    # Get only current event status, but retrieving first row ordered by clock DESC
-        #    # If event status is not "OK" (Still is an active problem), mark event to acknowledge/close
-        #    if e['value'] != '0':
-        #        events.append(e['eventid'])
-        #    # Only take care of newest event, discard all next
-        #    break
+                if host_service.name == s:
+                    eventids.add(host_service.eventid)
+                    if not host_service.allow_manual_close:
+                        unclosable_events.add(host_service.eventid)
 
         # If events pending of acknowledge, execute ack
         if len(eventids) > 0:
@@ -513,25 +493,22 @@ class ZabbixServer(GenericServer):
             # 8 - change severity
             # 16 - unacknowledge event
             actions = 2
-            # If sticky is set then close only current event
-            # if triggerid == service and sticky:
-            #     # do not send the "Close" flag if this event does not allow manual closing
-            #     triggers = self.zapi.trigger.get({
-            #         'output': ['triggerid', 'manual_close'],
-            #         'filter': {'triggerid': triggerid}})
-            #     if not triggers or 'manual_close' not in triggers[0] or str(triggers[0]['manual_close']) == '1':
-            #         actions |= 1
-            # The current Nagstamon menu items don't match up too well with the Zabbix actions,
-            # but perhaps "Persistent comment" is the closest thing to acknowledgement
-            # if persistent:
-            #     actions |= 2
             if comment:
                 actions |= 4
-            if conf.debug_mode is True:
+            if conf.debug_mode:
                 self.Debug(server=self.get_name(),
                            debug="Events to acknowledge: " + str(eventids) + " Close: " + str(actions))
-            # print("Events to acknowledge: " + str(eventids) + " Close: " + str(actions))
-            self.zapi.event.acknowledge({'eventids': eventids, 'message': comment, 'action': actions})
+            # If some events are not closable, we need to make 2 requests, 1 for the closable and one for the not closable
+            if sticky and unclosable_events:
+                closable_actions = actions | 1
+                closable_events = set(e for e in eventids if e not in unclosable_events)
+                self.zapi.event.acknowledge({'eventids': list(closable_events), 'message': comment, 'action': closable_actions})
+                self.zapi.event.acknowledge({'eventids': list(unclosable_events), 'message': comment, 'action': actions})
+            else:
+                if sticky:
+                    actions |= 1
+                # print("Events to acknowledge: " + str(eventids) + " Close: " + str(actions))
+                self.zapi.event.acknowledge({'eventids': list(eventids), 'message': comment, 'action': actions})
 
     def _set_downtime(self, hostname, service, author, comment, fixed, start_time, end_time, hours, minutes):
         # Check if there is an associated Application tag with this trigger/item
@@ -540,19 +517,6 @@ class ZabbixServer(GenericServer):
             if self.hosts[hostname].services[host_service].name == service:
                 triggerid = self.hosts[hostname].services[host_service].triggerid
                 break
-        # triggers = self.zapi.trigger.get({
-        #     'selectItems': ['itemid'],
-        #     'output': ['triggerid'],
-        #     'filter': {'triggerid': service}})
-        # if triggers and triggers[0]['items']:
-        #     items = self.zapi.item.get({
-        #         'itemids': [triggers[0]['items'][0]['itemid']],
-        #         'output': ['itemid'],
-        #         'selectTags': 'extend'})
-        #     if items and items[0]['tags']:
-        #         for tag in items[0]['tags']:
-        #             if tag['tag'] == 'Application':
-        #                 app = tag['value']
 
         hostids = [self.hosts[hostname].hostid]
 
