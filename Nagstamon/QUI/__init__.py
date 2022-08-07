@@ -1920,8 +1920,6 @@ class StatusWindow(QWidget):
         """
             check if popup has to be hidden depending on mouse position
         """
-
-        print('leave' * 10)
         # depending on display mode the leave time offset shall be different because
         # it may be too short in systray mode and lead to flickering window
         if conf.statusbar_floating:
