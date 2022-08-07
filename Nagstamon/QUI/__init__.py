@@ -1678,7 +1678,6 @@ class StatusWindow(QWidget):
             # where is the pointer which clicked onto systray icon
             icon_x = systrayicon.geometry().x()
             icon_y = systrayicon.geometry().y()
-
             if OS in OS_NON_LINUX:
                 if self.icon_x == 0:
                     self.icon_x = QCursor.pos().x()
@@ -1694,6 +1693,7 @@ class StatusWindow(QWidget):
 
             if icon_y == 0 and self.icon_y == 0:
                 self.icon_y = QCursor.pos().y()
+
             if OS in OS_NON_LINUX:
                 if self.icon_y == 0:
                     self.icon_y = QCursor.pos().y()
@@ -1705,6 +1705,7 @@ class StatusWindow(QWidget):
             available_height = self.screen().availableGeometry().height() - conf.systray_offset
         else:
             available_height = self.screen().availableGeometry().height()
+
         available_width = self.screen().availableGeometry().width()
         available_x = self.screen().availableGeometry().x()
         available_y = self.screen().availableGeometry().y()
@@ -1715,8 +1716,6 @@ class StatusWindow(QWidget):
                 available_x = available_width
             if available_y == 0:
                 available_y = available_height
-
-        # del (screen_or_widget)
 
         # take whole screen height into account when deciding about upper/lower-ness
         # add available_y because it might vary on differently setup screens
@@ -1771,7 +1770,7 @@ class StatusWindow(QWidget):
 
             # when statusbar hangs around in lowermost part of current screen extend from bottom to top
             else:
-                # when height is to large for current screen cut it
+                # when height is too large for current screen cut it
                 if self.y() + self.height() - real_height < available_y:
                     height = self.screen().geometry().height() - available_y - (
                             self.screen().geometry().height() - (self.y() + self.height()))
@@ -1792,19 +1791,26 @@ class StatusWindow(QWidget):
                     height = available_height - available_y
             # when statusbar hangs around in lowermost part of current screen extend from bottom to top
             else:
-                # when height is to large for current screen cut it
-                if self.y() + self.height() - real_height < available_y:
-                    # simply take the available max height if there is no more screen real estate
-                    # possible because systrayicon resides aside from available space, in fact cutting it
+                ## when height is too large for current screen cut it
+                # if self.y() + self.height() - real_height < available_y:
+                #     # simply take the available max height if there is no more screen real estate
+                #     # possible because systrayicon resides aside from available space, in fact cutting it
+                #     height = available_height
+                #     y = available_height - height
+                # else:
+                #     if available_height < real_height:
+                #         y = available_y
+                #         height = available_height
+                #     else:
+                #         y = available_height - real_height
+                #         height = real_height
+
+                if available_height < real_height:
+                    y = available_y
                     height = available_height
-                    y = available_height - height
                 else:
-                    if available_height < real_height:
-                        y = available_y
-                        height = available_height
-                    else:
-                        y = available_height - real_height
-                        height = real_height
+                    y = available_height - real_height
+                    height = real_height
 
         return width, height, x, y
 
@@ -1915,11 +1921,21 @@ class StatusWindow(QWidget):
             check if popup has to be hidden depending on mouse position
         """
 
+        print('leave' * 10)
+        # depending on display mode the leave time offset shall be different because
+        # it may be too short in systray mode and lead to flickering window
+        if conf.statusbar_floating:
+            leave_time_offset = 0.25
+        elif conf.icon_in_systray:
+            leave_time_offset = 1
+        else:
+            leave_time_offset = 0
+
         # check first if popup has to be shown by hovering or clicking
         if conf.close_details_hover and \
                 not conf.fullscreen and \
                 not conf.windowed and \
-                self.is_shown_timestamp + 0.25 < time.time():
+                self.is_shown_timestamp + leave_time_offset < time.time():
             # only hide window if cursor is outside of it
             mouse_x = QCursor.pos().x()
             mouse_y = QCursor.pos().y()
@@ -1927,8 +1943,6 @@ class StatusWindow(QWidget):
             if mouse_x <= self.x() or mouse_x >= self.x() + self.width() or \
                     mouse_y <= self.y() or mouse_y >= self.y() + self.height():
                 self.hide_window()
-
-            del (mouse_x, mouse_y)
 
     def closeEvent(self, event):
         """
