@@ -1925,7 +1925,8 @@ class StatusWindow(QWidget):
         if conf.statusbar_floating:
             leave_time_offset = 0.25
         elif conf.icon_in_systray:
-            leave_time_offset = 1
+            # offset is max 1 and smaller if window is smaller too
+            leave_time_offset = self.height() / self.screen().availableGeometry().height()
         else:
             leave_time_offset = 0
 
