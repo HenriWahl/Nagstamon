@@ -411,9 +411,11 @@ class SystemTrayIcon(QSystemTrayIcon):
         if reason in (QSystemTrayIcon.ActivationReason.Trigger,
                       QSystemTrayIcon.ActivationReason.DoubleClick,
                       QSystemTrayIcon.ActivationReason.MiddleClick):
-            # when green icon is displayed and no popwin is about to pop up show at least menu
-            if get_worst_status() == 'UP' and OS == OS_DARWIN:
-                self.menu.show_at_cursor()
+            # when green icon is displayed and no popwin is about to pop up...
+            if get_worst_status() == 'UP':
+                # ...nothing to do except on macOS where menu should be shown
+                if OS == OS_DARWIN:
+                    self.menu.show_at_cursor()
             else:
                 # show status window if there is something to tell
                 if statuswindow.is_shown:
