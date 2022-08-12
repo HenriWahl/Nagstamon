@@ -132,6 +132,8 @@ class ZabbixServer(GenericServer):
         # Service
         # =========================================
         services = []
+        services_in_maintenance = set()
+
         try:
             api_version = int(''.join(self.zapi.api_version().split('.')[:-1])) # Make API Version smaller
         except ZabbixAPIException:
@@ -142,6 +144,23 @@ class ZabbixServer(GenericServer):
             result, error = self.Error(sys.exc_info())
             print(sys.exc_info())
             return Result(result=result, error=error)
+
+        try:
+            now_ts = int(datetime.datetime.utcnow().timestamp())
+            # only the maintenance object knows about services "in downtime"
+            maintenances = self.zapi.maintenance.get({
+                "output": ["active_since", "active_till", "tags"],
+                "selectTags": "extend"
+            })
+            for m in maintenances:
+                if int(m["active_since"]) > now_ts or int(m["active_till"]) < now_ts:
+                    continue
+                for tag in m["tags"]:
+                    if tag["tag"] == "triggerid":
+                        services_in_maintenance.add(tag["value"])
+        # Don't really care if this fails, just means we won't exclude any downtimed services
+        except Exception:
+            print(sys.exc_info())
 
         try:
             try:
@@ -367,10 +386,10 @@ class ZabbixServer(GenericServer):
                         'command': 'zabbix',
                         # status flags
                         'passiveonly': False,
-                        'notifications_disabled': False,
+                        'notifications_disabled': service['triggerid'] in services_in_maintenance,
                         'flapping': False,
                         'acknowledged': bool(int(service['lastEvent']['acknowledged'])),
-                        'scheduled_downtime': False,
+                        'scheduled_downtime': service['triggerid'] in services_in_maintenance,
                         # Zabbix data
                         'triggerid': service['triggerid'],
                         'eventid': service['lastEvent']['eventid'],
