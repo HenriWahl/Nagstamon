@@ -1484,8 +1484,6 @@ class GenericServer(object):
 
             except Exception:
                 if conf.debug_mode:
-                    #traceback.print_exc(file=sys.stdout)
-                    #self.Debug(server=self.get_name(), debug=' '.join(sys.exc_info()))
                     self.Error(sys.exc_info())
                 result, error = self.Error(sys.exc_info())
                 if error.startswith('requests.exceptions.SSLError:'):
@@ -1516,9 +1514,7 @@ class GenericServer(object):
                               status_code=response.status_code)
 
         except Exception:
-            #traceback.print_exc(file=sys.stdout)
             self.Error(sys.exc_info())
-
             result, error = self.Error(sys.exc_info())
             return Result(result=result, error=error, status_code=response.status_code)
 
