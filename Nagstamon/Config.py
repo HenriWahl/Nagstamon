@@ -125,7 +125,7 @@ class AppInfo(object):
         contains app information previously located in GUI.py
     """
     NAME = 'Nagstamon'
-    VERSION = '3.9-20220814'
+    VERSION = '3.9-20220815'
     WEBSITE = 'https://nagstamon.de'
     COPYRIGHT = '©2008-2022 Henri Wahl et al.'
     COMMENTS = 'Nagios status monitor for your desktop'
@@ -519,12 +519,11 @@ class Config(object):
                         config.read(self.configdir + os.sep + settingsdir + os.sep + settingsfile)
 
                         # create object for every setting
-                        name = config.sections()[0].replace(setting + '_', '', 1)
-
+                        name = config.get(config.sections()[0], 'name')
                         settings[name] = globals()[configobj]()
 
                         # go through all items of the server
-                        for i in config.items(setting + '_' + name):
+                        for i in config.items(config.sections()[0]):
                             # create a key of every config item with its appropriate value
                             if i[1] in BOOLPOOL:
                                 value = BOOLPOOL[i[1]]

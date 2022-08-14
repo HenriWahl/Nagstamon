@@ -97,6 +97,7 @@ if OS not in OS_NON_LINUX:
 # check ECP authentication support availability
 try:
     from requests_ecp import HTTPECPAuth
+
     ECP_AVAILABLE = True
 except ImportError:
     ECP_AVAILABLE = False
@@ -489,7 +490,7 @@ class MenuAtCursor(QMenu):
         open menu at position of mouse pointer - normal .exec() shows menu at (0, 0)
     """
     # flag to avoid too fast popping up menus
-    #available = True
+    # available = True
 
     is_shown = Signal(bool)
 
@@ -2010,10 +2011,10 @@ class StatusWindow(QWidget):
         """
         title = " ".join((AppInfo.NAME, msg_type))
         if msg_type == 'warning':
-            return QMessageBox(QMessageBox.Icon.Warning, title, message, parent=statuswindow).show()
+            return QMessageBox.warning(statuswindow, title, message)
 
         elif msg_type == 'information':
-            return QMessageBox(QMessageBox.Icon.Information, title, message, parent=statuswindow).show()
+            return QMessageBox.information(statuswindow,title, message)
 
     @Slot()
     def recheck_all(self):
@@ -5167,7 +5168,7 @@ class Dialog_Settings(Dialog):
         server = conf.servers[self.window.list_servers.currentItem().text()]
 
         reply = QMessageBox.question(self.window, 'Nagstamon',
-                                     'Do you really want to delete monitor server <b>%s</b>?' % (server.name),
+                                     f'Do you really want to delete monitor server <b>{server.name}</b>?',
                                      QMessageBox.StandardButton.Yes | QMessageBox.StandardButton.No,
                                      QMessageBox.StandardButton.No)
 
@@ -5252,7 +5253,7 @@ class Dialog_Settings(Dialog):
         action = conf.actions[self.window.list_actions.currentItem().text()]
 
         reply = QMessageBox.question(self.window, 'Nagstamon',
-                                     'Do you really want to delete action <b>%s</b>?' % (action.name),
+                                     'Do you really want to delete action <b>{action.name}</b>?',
                                      QMessageBox.StandardButton.Yes | QMessageBox.StandardButton.No,
                                      QMessageBox.StandardButton.No)
 
@@ -5894,15 +5895,18 @@ class Dialog_Server(Dialog):
         # global statement necessary because of reordering of servers OrderedDict
         global servers
 
+        # strip name to avoid whitespace
+        server_name = self.window.input_lineedit_name.text().strip()
+
         # check that no duplicate name exists
-        if self.window.input_lineedit_name.text() in conf.servers and \
+        if server_name in conf.servers and \
                 (self.mode in ['new', 'copy'] or
-                 self.mode == 'edit' and self.server_conf != conf.servers[self.window.input_lineedit_name.text()]):
+                 self.mode == 'edit' and self.server_conf != conf.servers[server_name]):
             # cry if duplicate name exists
-            QMessageBox.Icon.Critical(self.window, 'Nagstamon',
-                                      'The monitor server name <b>%s</b> is already used.' %
-                                      (self.window.input_lineedit_name.text()),
-                                      QMessageBox.StandardButton.Ok)
+            QMessageBox.critical(self.window,
+                        'Nagstamon',
+                        f'The monitor server name <b>{server_name}</b> is already used.',
+                        QMessageBox.StandardButton.Ok)
         else:
             # get configuration from UI
             for widget in self.window.__dict__:
@@ -5964,15 +5968,16 @@ class Dialog_Server(Dialog):
             if self.server_conf.type not in self.VOLATILE_WIDGETS[self.window.input_lineedit_monitor_cgi_url]:
                 self.server_conf.monitor_cgi_url = self.server_conf.monitor_url
 
-            # add new server configuration in every case
-            conf.servers[self.server_conf.name] = self.server_conf
+            # add new server configuration in every case and use stripped name to avoid spaces
+            self.server_conf.name = server_name
+            conf.servers[server_name] = self.server_conf
 
             # add new server instance to global servers dict
-            servers[self.server_conf.name] = create_server(self.server_conf)
+            servers[server_name] = create_server(self.server_conf)
             if self.server_conf.enabled is True:
-                servers[self.server_conf.name].enabled = True
+                servers[server_name].enabled = True
                 # create vbox
-                statuswindow.servers_vbox.addLayout(statuswindow.create_ServerVBox(servers[self.server_conf.name]))
+                statuswindow.servers_vbox.addLayout(statuswindow.create_ServerVBox(servers[server_name]))
                 # renew list of server vboxes in status window
                 statuswindow.sort_ServerVBoxes()
 
@@ -6160,9 +6165,8 @@ class Dialog_Action(Dialog):
                 (self.mode in ['new', 'copy'] or
                  self.mode == 'edit' and self.action_conf != conf.actions[self.window.input_lineedit_name.text()]):
             # cry if duplicate name exists
-            QMessageBox.Icon.Critical(self.window, 'Nagstamon',
-                                      'The action name <b>%s</b> is already used.' %
-                                      (self.window.input_lineedit_name.text()),
+            QMessageBox.critical(self.window, 'Nagstamon',
+                                      f'The action name <b>{self.window.input_lineedit_name.text()}</b> is already used.',
                                       QMessageBox.StandardButton.Ok)
         else:
             # get configuration from UI
