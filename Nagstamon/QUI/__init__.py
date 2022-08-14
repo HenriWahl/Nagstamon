@@ -2106,6 +2106,8 @@ class StatusWindow(QWidget):
         """
             attempt to shutdown thread cleanly
         """
+        # stop debugging
+        self.worker.debug_loop_looping = False
         # tell thread to quit
         self.worker_thread.quit()
         # wait until thread is really stopped
@@ -2172,7 +2174,7 @@ class StatusWindow(QWidget):
                     time.sleep(1)
 
                 # unset looping
-                self.debug_mode_looping = False
+                self.debug_loop_looping = False
                 # close file if any
                 if self.debug_file is not None:
                     self.close_debug_file()
@@ -7023,7 +7025,7 @@ def exit():
     # save configuration
     conf.SaveConfig()
 
-    # hide statuswindow first ro avoid lag when waiting for finished threads
+    # hide statuswindow first to avoid lag when waiting for finished threads
     statuswindow.hide()
 
     # stop statuswindow workers
@@ -7035,16 +7037,6 @@ def exit():
         server_vbox.table.worker.finish.emit()
 
     APP.exit()
-    # # delete all windows
-    # for dialog in dialogs.__dict__.values():
-    #     try:
-    #         dialog.window().destroy()
-    #     except:
-    #         dialog.window.destroy()
-    # statuswindow.destroy()
-    # 
-    # bye bye
-    # APP.instance().quit()
 
 
 def check_servers():

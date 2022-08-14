@@ -39,7 +39,7 @@ class CentreonServer(GenericServer):
                 data = json.loads(versions_raw.result)
                 ver_major = int(data["web"]["major"])
                 ver_minor = int(data["web"]["minor"])
-                # API V2 is usable only after 21.04 (not tested), ressources endpoit is buggy in 20.10
+                # API V2 is usable only after 21.04 (not tested), ressources endpoint is buggy in 20.10
                 if ver_major >= 21:
                     self.Debug(server='[' + self.get_name() + ']', debug='Loading class API, Centreon version : ' + str(ver_major) + '.' + str(ver_minor))
                     from .CentreonAPI import CentreonServer as CentreonServerReal

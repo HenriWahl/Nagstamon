@@ -17,13 +17,11 @@
 # along with this program; if not, write to the Free Software
 # Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA  02110-1301, USA
 
+import traceback
 import urllib.request
 import urllib.parse
 import urllib.error
-import socket
 import sys
-import re
-import copy
 # API V2
 import pprint
 import json
@@ -103,11 +101,10 @@ class CentreonServer(GenericServer):
 
 
     def init_HTTP(self):
+        GenericServer.init_HTTP(self)
         if self.session is None:
-            GenericServer.init_HTTP(self)
             self.session.headers.update({'Content-Type': 'application/json'})
             self.token = self.get_token().result
-
 
     def define_url(self):
         urls_centreon_api_v2 = {
@@ -175,7 +172,6 @@ class CentreonServer(GenericServer):
             return Result(result=token)
 
         except:
-            import traceback
             traceback.print_exc(file=sys.stdout)
             result, error = self.Error(sys.exc_info())
             return Result(result=result, error=error)
@@ -207,7 +203,6 @@ class CentreonServer(GenericServer):
             return Result(result=fqdn)
 
         except:
-            import traceback
             traceback.print_exc(file=sys.stdout)
             # set checking flag back to False
             self.isChecking = False
@@ -241,13 +236,6 @@ class CentreonServer(GenericServer):
                 return host_id
 
             except:
-                import traceback
-
-
-
-
-
-
                 traceback.print_exc(file=sys.stdout)
                 # set checking flag back to False
                 self.isChecking = False
@@ -284,7 +272,6 @@ class CentreonServer(GenericServer):
                 return host_id,service_id
 
             except:
-                import traceback
                 traceback.print_exc(file=sys.stdout)
                 # set checking flag back to False
                 self.isChecking = False
@@ -365,7 +352,6 @@ class CentreonServer(GenericServer):
                 self.Debug(server='[' + self.get_name() + ']', debug='Host indexed : ' + new_host)
 
         except:
-            import traceback
             traceback.print_exc(file=sys.stdout)
             # set checking flag back to False
             self.isChecking = False
@@ -427,7 +413,6 @@ class CentreonServer(GenericServer):
                 self.new_hosts[new_host].services[new_service].criticality = alerts["severity_level"]
 
         except:
-            import traceback
             traceback.print_exc(file=sys.stdout)
             # set checking flag back to False
             self.isChecking = False
@@ -524,7 +509,6 @@ class CentreonServer(GenericServer):
                                debug="Set Acks, status code : " + str(status_code))
 
         except:
-            import traceback
             traceback.print_exc(file=sys.stdout)
             # set checking flag back to False
             self.isChecking = False
@@ -598,7 +582,6 @@ class CentreonServer(GenericServer):
                                debug="Reckeck on Host ("+host+") / Service ("+service+"), status code : " + str(status_code))
 
         except:
-            import traceback
             traceback.print_exc(file=sys.stdout)
             # set checking flag back to False
             self.isChecking = False
@@ -699,7 +682,6 @@ class CentreonServer(GenericServer):
 
 
         except:
-            import traceback
             traceback.print_exc(file=sys.stdout)
             # set checking flag back to False
             self.isChecking = False
@@ -715,7 +697,7 @@ class CentreonServer(GenericServer):
         #     self.init_config()
         try:
             if conf.debug_mode == True:
-                self.Debug(server='[' + self.get_name() + ']', debug='Check-session, the token will be deleted if it has not been used for more than one hour. Current Token = ' + self.token )
+                self.Debug(server='[' + self.get_name() + ']', debug='Check-session, the token will be deleted if it has not been used for more than one hour. Current Token = ' + str(self.token) )
 
             cgi_data = {'limit':'0'}
             self.session = requests.Session()
@@ -725,7 +707,8 @@ class CentreonServer(GenericServer):
             # Get en empty service list, to check the status of the current token
             # This request must be done in a GET, so just encode the parameters and fetch
             result = self.FetchURL(self.urls_centreon['resources'] + '?' + urllib.parse.urlencode(cgi_data), giveback="raw")
-
+            if result.status_code == 403:
+                self.get_token()
             data = json.loads(result.result)
             error = result.error
             status_code = result.status_code
@@ -743,7 +726,6 @@ class CentreonServer(GenericServer):
                     self.Debug(server='[' + self.get_name() + ']', debug='Check-session, session renewed')
 
         except:
-            import traceback
             traceback.print_exc(file=sys.stdout)
             result, error = self.Error(sys.exc_info())
             return Result(result=result, error=error)
