@@ -1399,6 +1399,9 @@ class GenericServer(object):
             NEW: gives back a list containing result and, if necessary, a more clear error description
         '''
 
+        # asume TLS is OK when connecting
+        self.tls_error = False
+
         # run this method which checks itself if there is some action to take for initializing connection
         # if no_auth is true do not use Auth headers, used by check for new version
         try:
