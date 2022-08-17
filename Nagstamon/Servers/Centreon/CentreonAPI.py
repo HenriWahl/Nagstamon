@@ -708,8 +708,8 @@ class CentreonServer(GenericServer):
             # This request must be done in a GET, so just encode the parameters and fetch
             result = self.FetchURL(self.urls_centreon['resources'] + '?' + urllib.parse.urlencode(cgi_data), giveback="raw")
             if result.status_code == 403:
-                result = self.FetchURL(self.urls_centreon['resources'] + '?' + urllib.parse.urlencode(cgi_data), giveback="raw")
                 self.get_token()
+                result = self.FetchURL(self.urls_centreon['resources'] + '?' + urllib.parse.urlencode(cgi_data), giveback="raw")
             data = json.loads(result.result)
             error = result.error
             status_code = result.status_code
