@@ -187,7 +187,7 @@ class GenericServer(object):
         # flag which tells GUI if there is an TLS problem
         self.tls_error = False
 
-        # counter for login attempts - have to be threaten differently by every monitoring server type
+        # counter for login attempts - have to be treatened differently by every monitoring server type
         self.login_count = 0
 
         # to handle Icinga versions this information is necessary, might be of future use for others too
@@ -1447,9 +1447,9 @@ class GenericServer(object):
                     # most requests come without multipart/form-data
                     if multipart is False:
                         if cgi_data is None:
-                            response = self.session.get(url, timeout=self.timeout)
+                            response = self.session.get(url, timeout=self.timeout, verify=not self.ignore_cert)
                         else:
-                            response = self.session.post(url, data=cgi_data, timeout=self.timeout)
+                            response = self.session.post(url, data=cgi_data, timeout=self.timeout, verify=not self.ignore_cert)
                     else:
                         # Checkmk and Opsview need multipart/form-data encoding
                         # http://stackoverflow.com/questions/23120974/python-requests-post-multipart-form-data-without-filename-in-http-request#23131823
@@ -1463,6 +1463,13 @@ class GenericServer(object):
                     # send request without authentication data
                     temporary_session = requests.Session()
                     temporary_session.headers['User-Agent'] = self.USER_AGENT
+                    # default to check TLS validity
+                    if self.ignore_cert:
+                        temporary_session.verify = False
+                    elif self.custom_cert_use:
+                        temporary_session.verify = self.custom_cert_ca_file
+                    else:
+                        temporary_session.verify = True
 
                     # add proxy information if necessary
                     self.proxify(temporary_session)
@@ -1470,9 +1477,9 @@ class GenericServer(object):
                     # most requests come without multipart/form-data
                     if multipart is False:
                         if cgi_data is None:
-                            response = temporary_session.get(url, timeout=self.timeout)
+                            response = temporary_session.get(url, timeout=self.timeout, verify=not self.ignore_cert)
                         else:
-                            response = temporary_session.post(url, data=cgi_data, timeout=self.timeout)
+                            response = temporary_session.post(url, data=cgi_data, timeout=self.timeout, verify=not self.ignore_cert)
                     else:
                         # Checkmk and Opsview need multipart/form-data encoding
                         # http://stackoverflow.com/questions/23120974/python-requests-post-multipart-form-data-without-filename-in-http-request#23131823
