@@ -182,6 +182,19 @@ class ZabbixServer(GenericServer):
                                                   'filter': {'value': 1},
                                                   })
 
+                # https://github.com/HenriWahl/Nagstamon/issues/826 Zabbix 5.0 may have an empty list for
+                # the 'lastEvent' key if the trigger has no associated events
+                for service in services:
+                    if service['lastEvent'] == []:
+                        service['lastEvent'] = {
+                            'eventid': -1,
+                            'acknowledged': '0',
+                            'name': service['description'],
+                            'severity': 'UNKN'
+                        }
+                    elif isinstance(service['lastEvent'], list):
+                        service['lastEvent'] = service['lastEvent'][0]
+
             except ZabbixAPIException:
                 # FIXME Is there a cleaner way to handle this? I just borrowed
                 # this code from 80 lines ahead. -- AGV
@@ -499,9 +512,13 @@ class ZabbixServer(GenericServer):
             for host_service in get_host.services:
                 host_service = get_host.services[host_service]
                 if host_service.name == s:
-                    eventids.add(host_service.eventid)
+                    eventid = host_service.eventid
+                    # https://github.com/HenriWahl/Nagstamon/issues/826 we may have set eventid = -1 earlier if there was no associated event
+                    if eventid == -1:
+                        continue
+                    eventids.add(eventid)
                     if not host_service.allow_manual_close:
-                        unclosable_events.add(host_service.eventid)
+                        unclosable_events.add(eventid)
 
         # If events pending of acknowledge, execute ack
         if len(eventids) > 0:
