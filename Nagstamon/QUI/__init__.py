@@ -1461,7 +1461,7 @@ class StatusWindow(QWidget):
         """
         if not self.is_shown:
             # under unfortunate circumstances statusbar might have the the moving flag true
-            # fix it here because it makes no sense but might cause non-appearing statuswindow
+            # fix it here because it makes no sense but might cause non-appearing statuswindow‚
             self.moving = False
 
             # already show here because was closed before in hide_window()
@@ -1478,6 +1478,10 @@ class StatusWindow(QWidget):
         """
         # do not show up when being dragged around
         if not self.moving:
+
+            print("show", self.windowFlags())
+            print('show', self.maximumSize())
+
             # check if really all is OK
             for vbox in self.servers_vbox.children():
                 if vbox.server.all_ok and \
@@ -1507,7 +1511,7 @@ class StatusWindow(QWidget):
                     if not vbox.server.all_ok:
                         vbox.show_all()
                     # show at least server vbox header to notify about connection or other errors
-                    elif vbox.server.status != '' or vbox.server.refresh_authentication or vbox.server.tls_error:
+                    if vbox.server.status != '' or vbox.server.refresh_authentication or vbox.server.tls_error:
                         vbox.show_only_header()
                     elif vbox.server.all_ok and vbox.server.status == '':
                         vbox.hide_all()
@@ -1627,8 +1631,10 @@ class StatusWindow(QWidget):
                         self.statusbar.show()
                     self.toparea.hide()
                     self.servers_scrollarea.hide()
-                    self.setMinimumSize(1, 1)
                     self.adjustSize()
+                    # macOS needs this since Qt6 to avoid statuswindow size changeability
+                    self.setMinimumSize(self.stored_width, 16)
+                    self.setMaximumSize(self.stored_width, 16)
 
                     if conf.icon_in_systray:
                         self.close()
