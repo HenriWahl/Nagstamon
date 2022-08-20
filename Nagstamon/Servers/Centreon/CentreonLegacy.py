@@ -1081,8 +1081,8 @@ class CentreonServer(GenericServer):
             self.Debug(server=self.get_name(), debug='Checking session status')
         if 'url_centreon' not in self.__dict__:
             self.init_config()
-        try:
-            if self.centreon_version:
+        if self.centreon_version:
+            try:
                 if self.centreon_version >= 18.10:
                     result = self.FetchURL(self.urls_centreon['keepAlive'], giveback='raw')
                     self.raw, self.error, self.status_code = result.result, result.error, result.status_code
@@ -1105,11 +1105,11 @@ class CentreonServer(GenericServer):
                         self.SID = self._get_sid().result
                         if conf.debug_mode == True:
                             self.Debug(server=self.get_name(), debug='Session renewed')
-            else:
-                return Result(result='ERROR',
-                              error='Cannot detect Centreon version')
-        except:
-            import traceback
-            traceback.print_exc(file=sys.stdout)
-            result, error = self.Error(sys.exc_info())
-            return Result(result=result, error=error)
+            except:
+                import traceback
+                traceback.print_exc(file=sys.stdout)
+                result, error = self.Error(sys.exc_info())
+                return Result(result=result, error=error)
+        else:
+            return Result(result='ERROR',
+                          error='Cannot detect Centreon version')
