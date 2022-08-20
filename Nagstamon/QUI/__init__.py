@@ -1478,10 +1478,6 @@ class StatusWindow(QWidget):
         """
         # do not show up when being dragged around
         if not self.moving:
-
-            print("show", self.windowFlags())
-            print('show', self.maximumSize())
-
             # check if really all is OK
             for vbox in self.servers_vbox.children():
                 if vbox.server.all_ok and \
