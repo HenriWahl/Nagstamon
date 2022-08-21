@@ -1627,10 +1627,13 @@ class StatusWindow(QWidget):
                         self.statusbar.show()
                     self.toparea.hide()
                     self.servers_scrollarea.hide()
-                    self.adjustSize()
                     # macOS needs this since Qt6 to avoid statuswindow size changeability
-                    self.setMinimumSize(self.stored_width, self.stored_height)
-                    self.setMaximumSize(self.stored_width, self.stored_height)
+                    if OS == OS_DARWIN:
+                        self.setMinimumSize(self.stored_width, self.stored_height)
+                        self.setMaximumSize(self.stored_width, self.stored_height)
+                    else:
+                        self.setMinimumSize(1, 1)
+                    self.adjustSize()
 
                     if conf.icon_in_systray:
                         self.close()
