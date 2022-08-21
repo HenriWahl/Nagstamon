@@ -1629,8 +1629,8 @@ class StatusWindow(QWidget):
                     self.servers_scrollarea.hide()
                     self.adjustSize()
                     # macOS needs this since Qt6 to avoid statuswindow size changeability
-                    self.setMinimumSize(self.stored_width, 16)
-                    self.setMaximumSize(self.stored_width, 16)
+                    self.setMinimumSize(self.stored_width, self.stored_height)
+                    self.setMaximumSize(self.stored_width, self.stored_height)
 
                     if conf.icon_in_systray:
                         self.close()
@@ -1827,6 +1827,7 @@ class StatusWindow(QWidget):
             self.stored_x = self.x()
             self.stored_y = self.y()
             self.stored_width = self.width()
+            self.stored_height = self.height()
 
         if OS == OS_WINDOWS:
             # absolutely strange, but no other solution available
@@ -1919,6 +1920,7 @@ class StatusWindow(QWidget):
             self.stored_x = self.x()
             self.stored_y = self.y()
             self.stored_width = self.width()
+            self.stored_height = self.height()
 
     def leaveEvent(self, event):
         """
