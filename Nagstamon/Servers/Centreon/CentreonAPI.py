@@ -54,7 +54,10 @@ class CentreonServer(GenericServer):
         self.HARD_SOFT = {'(H)': 'hard', '(S)': 'soft'}
 
         # Entries for monitor default actions in context menu
-        self.MENU_ACTIONS = ['Monitor', 'Recheck', 'Acknowledge', 'Downtime']
+        # Removed Monitor, as I don’t know a way to show directly the service
+        #  or host details page, so i show the main ressource page
+        # self.MENU_ACTIONS = ['Monitor', 'Recheck', 'Acknowledge', 'Submit check result', 'Downtime']
+        self.MENU_ACTIONS = ['Recheck', 'Acknowledge', 'Downtime']
 
         # URLs of the Centreon pages
         self.urls_centreon = None
@@ -120,6 +123,7 @@ class CentreonServer(GenericServer):
                        debug='URLs defined for Centreon vers. : %s' % (self.centreon_version_major))
 
     def open_monitor(self, host, service=''):
+        # Used for self.MENU_ACTIONS = ['Monitor']
         # Autologin seems deprecated as admin must enable it globaly and use the old pages
         # Ex : http://10.66.113.52/centreon/main.php?autologin=1&useralias=admin&token=xxxxxx
         # if self.use_autologin is True:
@@ -127,8 +131,7 @@ class CentreonServer(GenericServer):
         # else:
         #     auth = ''
         # webbrowser_open(self.urls_centreon['resources'] + auth )
-
-        webbrowser_open(self.urls_centreon['resources'])
+        webbrowser_open(self.monitor_cgi_url)
 
     def get_token(self):
         try:
