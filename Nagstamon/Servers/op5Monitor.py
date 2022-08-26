@@ -315,7 +315,7 @@ class Op5MonitorServer(GenericServer):
         self.send_command(command, params)
 
 
-    def _set_acknowledge(self, host, service, author, comment, sticky, notify, persistent, all_services):
+    def _set_acknowledge(self, host, service, author, comment, sticky, notify, persistent, all_services=None):
         params = {'host_name': host, 'sticky': int(sticky),
                   'notify': int(notify), 'persistent': int(persistent),
                   'comment': comment}

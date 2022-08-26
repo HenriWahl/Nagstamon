@@ -328,7 +328,7 @@ class AlertmanagerServer(GenericServer):
 
 
     def _set_acknowledge(self, host, service, author, comment, sticky, notify, persistent,
-                         all_services=[], expire_time=None):
+                         all_services=None, expire_time=None):
         alert = self.hosts[host].services[service]
         ends_at = convert_timestring_to_utc(expire_time)
 

@@ -844,7 +844,7 @@ class CentreonServer(GenericServer):
         return Result()
 
 
-    def _set_acknowledge(self, host, service, author, comment, sticky, notify, persistent, all_services=[]):
+    def _set_acknowledge(self, host, service, author, comment, sticky, notify, persistent, all_services=None):
         # decision about host or service - they have different URLs
         try:
             if service == '':
@@ -873,11 +873,12 @@ class CentreonServer(GenericServer):
 
             # if host is acknowledged and all services should be to or if a service is acknowledged
             # (and all other on this host too)
-            if service != '' or len(all_services) > 0:
+            if service != '' or all_services:
                 # service(s) @ host
                 # if all_services is empty only one service has to be checked - the one clicked
                 # otherwise if there all services should be acknowledged
-                if len(all_services) == 0: all_services = [service]
+                if not all_services:
+                    all_services = [service]
 
                 # acknowledge all services on a host
                 for s in all_services:
