@@ -37,6 +37,7 @@ from Nagstamon.Servers.Nagios import NagiosServer
 from Nagstamon.Servers.Centreon import CentreonServer
 from Nagstamon.Servers.Icinga import IcingaServer
 from Nagstamon.Servers.IcingaWeb2 import IcingaWeb2Server
+from Nagstamon.Servers.IcingaDBWebServer import IcingaDBWebServer
 from Nagstamon.Servers.Multisite import MultisiteServer
 from Nagstamon.Servers.op5Monitor import Op5MonitorServer
 from Nagstamon.Servers.Opsview import OpsviewServer
