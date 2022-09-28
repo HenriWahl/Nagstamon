@@ -1628,9 +1628,10 @@ class StatusWindow(QWidget):
                     self.toparea.hide()
                     self.servers_scrollarea.hide()
                     # macOS needs this since Qt6 to avoid statuswindow size changeability
+                    # looks silly but works to force using the own hint as hint
                     if OS == OS_DARWIN:
-                        self.setMinimumSize(self.stored_width, self.stored_height)
-                        self.setMaximumSize(self.stored_width, self.stored_height)
+                        self.setMinimumSize(self.sizeHint())
+                        self.setMaximumSize(self.sizeHint())
                     else:
                         self.setMinimumSize(1, 1)
                     self.adjustSize()
@@ -1881,10 +1882,10 @@ class StatusWindow(QWidget):
                     y = self.y()
                     self.setMaximumSize(hint)
                     self.setMinimumSize(hint)
-                    del (hint)
+                    del hint
                 self.resize_window(width, height, x, y)
 
-                del (width, height, x, y)
+                del width, height, x, y
             else:
                 self.adjust_dummy_columns()
 
@@ -2833,15 +2834,23 @@ class ServerVBox(QVBoxLayout):
         self.button_history = PushButton_BrowserURL(text='History', parent=parent, server=self.server,
                                                     url_type='history')
         self.button_edit = Button('Edit', parent=parent)
+        ###self.button_edit.setStyleSheet('background: green;')
+
 
         # use label instead of spacer to be clickable
         self.label_stretcher = ClosingLabel('', parent=parent)
         self.label_stretcher.setSizePolicy(QSizePolicy.Policy.MinimumExpanding, QSizePolicy.Policy.Expanding)
+        ###self.label_stretcher.setStyleSheet('background: green;')
 
         self.label_status = ServerStatusLabel(parent=parent)
         self.label_status.setSizePolicy(QSizePolicy.Policy.Fixed, QSizePolicy.Policy.Expanding)
+        ###self.label_status.setStyleSheet('background: green;')
+
 
         self.button_authenticate = QPushButton('Authenticate', parent=parent)
+        ###self.button_authenticate.setStyleSheet('background: green;')
+
+        ###self.button_authenticate.setStyleSheet('background: green;')
 
         self.button_fix_tls_error = QPushButton('Fix error', parent=parent)
 
