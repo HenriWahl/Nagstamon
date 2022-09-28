@@ -30,6 +30,13 @@ import urllib.parse
 from bs4 import BeautifulSoup
 import requests
 
+# check ECP authentication support availability
+try:
+    from requests_ecp import HTTPECPAuth
+    ECP_AVAILABLE = True
+except ImportError:
+    ECP_AVAILABLE = False
+
 from Nagstamon.Helpers import (host_is_filtered_out_by_re,
                                ServiceIsFilteredOutByRE,
                                StatusInformationIsFilteredOutByRE,
@@ -50,7 +57,6 @@ from Nagstamon.Config import (AppInfo,
                               debug_queue,
                               OS,
                               OS_DARWIN,
-                              OS_WINDOWS,
                               RESOURCES)
 
 if OS == OS_DARWIN:
@@ -71,11 +77,18 @@ else:
 try:
     from requests.packages.urllib3.exceptions import SubjectAltNameWarning
     requests.packages.urllib3.disable_warnings(SubjectAltNameWarning)
-except:
+except ImportError:
     # older requests version might not have the packages submodule
     # for example the one in Ubuntu 14.04
     pass
 
+# avoid flooding logs with InsecureRequestWarnings for connections with 'no_auth' set
+# interestingly this is not available in requests.packages.urllib3.exceptions
+try:
+    import urllib3
+    urllib3.disable_warnings()
+except ImportError:
+    pass
 
 class GenericServer(object):
 
@@ -280,7 +293,7 @@ class GenericServer(object):
             session.auth = requests.auth.HTTPBasicAuth(self.username, self.password)
         elif self.authentication == 'digest':
             session.auth = requests.auth.HTTPDigestAuth(self.username, self.password)
-        elif self.authentication == 'ecp':
+        elif self.authentication == 'ecp' and ECP_AVAILABLE:
             session.auth = HTTPECPAuth(self.idp_ecp_endpoint, username=self.username, password=self.password)
         elif self.authentication == 'kerberos':
             session.auth = HTTPSKerberos()
@@ -1439,7 +1452,6 @@ class GenericServer(object):
                 # use session only for connections to monitor servers, other requests like looking for updates
                 # should go out without credentials
                 if no_auth is False and not self.refresh_authentication:
-                # if no_auth is False:
                     # check if there is really a session
                     if not self.session:
                         self.reset_HTTP()
@@ -1447,9 +1459,9 @@ class GenericServer(object):
                     # most requests come without multipart/form-data
                     if multipart is False:
                         if cgi_data is None:
-                            response = self.session.get(url, timeout=self.timeout, verify=not self.ignore_cert)
+                            response = self.session.get(url, timeout=self.timeout)
                         else:
-                            response = self.session.post(url, data=cgi_data, timeout=self.timeout, verify=not self.ignore_cert)
+                            response = self.session.post(url, data=cgi_data, timeout=self.timeout)
                     else:
                         # Checkmk and Opsview need multipart/form-data encoding
                         # http://stackoverflow.com/questions/23120974/python-requests-post-multipart-form-data-without-filename-in-http-request#23131823
@@ -1477,9 +1489,11 @@ class GenericServer(object):
                     # most requests come without multipart/form-data
                     if multipart is False:
                         if cgi_data is None:
-                            response = temporary_session.get(url, timeout=self.timeout, verify=not self.ignore_cert)
+                            #response = temporary_session.get(url, timeout=self.timeout, verify=not self.ignore_cert)
+                            response = temporary_session.get(url, timeout=self.timeout, verify=False)
                         else:
-                            response = temporary_session.post(url, data=cgi_data, timeout=self.timeout, verify=not self.ignore_cert)
+                            #response = temporary_session.post(url, data=cgi_data, timeout=self.timeout, verify=not self.ignore_cert)
+                            response = temporary_session.post(url, data=cgi_data, timeout=self.timeout, verify=False)
                     else:
                         # Checkmk and Opsview need multipart/form-data encoding
                         # http://stackoverflow.com/questions/23120974/python-requests-post-multipart-form-data-without-filename-in-http-request#23131823
@@ -1487,7 +1501,7 @@ class GenericServer(object):
                         for key in cgi_data:
                             form_data[key] = (None, cgi_data[key])
                         # get response with cgi_data encodes as files
-                        response = temporary_session.post(url, files=form_data, timeout=self.timeout)
+                        response = temporary_session.post(url, files=form_data, timeout=self.timeout, verify=False)
 
                     # cleanup
                     del temporary_session
