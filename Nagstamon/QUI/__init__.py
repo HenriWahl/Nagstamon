@@ -97,7 +97,6 @@ if OS not in OS_NON_LINUX:
 # check ECP authentication support availability
 try:
     from requests_ecp import HTTPECPAuth
-
     ECP_AVAILABLE = True
 except ImportError:
     ECP_AVAILABLE = False
@@ -2964,7 +2963,6 @@ class ServerVBox(QVBoxLayout):
         self.label_stretcher.hide()
         self.button_authenticate.hide()
         self.button_fix_tls_error.hide()
-
         # special table treatment
         self.table.hide()
         self.table.is_shown = False
