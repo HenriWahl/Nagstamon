@@ -145,9 +145,6 @@ COLOR_STATUS_LABEL = {'critical': 'lightsalmon',
 # filled by create_brushes()
 QBRUSHES = {0: {}, 1: {}}
 
-# dummy QVariant as empty return value for model data()
-DUMMY_QVARIANT = 'QVariant'
-
 # headers for tablewidgets
 HEADERS = OrderedDict([('host', {'header': 'Host',
                                  'column': 0}),
@@ -3124,7 +3121,7 @@ class Model(QAbstractTableModel):
             elif index.column() == 3:
                 return ICONS_FONT
             else:
-                return DUMMY_QVARIANT
+                return QVariant
         # provide icons via Qt.UserRole
         elif role == Qt.ItemDataRole.UserRole:
             # depending on host or service column return host or service icon list
@@ -3138,7 +3135,7 @@ class Model(QAbstractTableModel):
                                            self.data_array[index.row()][2],
                                            self.data_array[index.row()][8])
             else:
-                return DUMMY_QVARIANT
+                return QVariant
 
 
 class TreeView(QTreeView):

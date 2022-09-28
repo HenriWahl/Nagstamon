@@ -58,6 +58,7 @@ if QT_FLAVOR == 'PyQt5':
         QThread, \
         QTimer, \
         QUrl, \
+        QVariant, \
         QXmlStreamReader
     from PyQt5.QtGui import QBrush, \
         QColor, \
@@ -181,6 +182,7 @@ elif QT_FLAVOR == 'PyQt6':
         QThread, \
         QTimer, \
         QUrl, \
+        QVariant, \
         QXmlStreamReader
     from PyQt6.QtGui import QAction, \
         QBrush, \
@@ -297,6 +299,7 @@ elif QT_FLAVOR == 'PyQt6':
 #         QThread, \
 #         QTimer, \
 #         QUrl, \
+#         QVariant, \
 #         QXmlStreamReader
 #     from PySide6.QtGui import QAction, \
 #     QBrush, \
