@@ -229,10 +229,26 @@ def create_server(server=None):
 
 
 # moved registration process here because of circular dependencies
-servers_list = [CentreonServer, IcingaServer, IcingaWeb2Server, MultisiteServer, NagiosServer,
-                Op5MonitorServer, OpsviewServer, ThrukServer, ZabbixServer, SensuServer,
-                SensuGoServer, LivestatusServer, ZenossServer, Monitos3Server, Monitos4xServer,
-                SnagViewServer, PrometheusServer, AlertmanagerServer, ZabbixProblemBasedServer]
+servers_list = [AlertmanagerServer,
+                CentreonServer,
+                IcingaServer,
+                IcingaDBWebServer,
+                IcingaWeb2Server,
+                LivestatusServer,
+                Monitos3Server,
+                Monitos4xServer,
+                MultisiteServer,
+                NagiosServer,
+                Op5MonitorServer,
+                OpsviewServer,
+                PrometheusServer,
+                SensuGoServer,
+                SensuServer,
+                SnagViewServer,
+                ThrukServer,
+                ZabbixProblemBasedServer,
+                ZabbixServer,
+                ZenossServer]
 # we use these servers conditionally if modules are available only
 if icinga2api_is_available is True:
     servers_list.append(Icinga2APIServer)
