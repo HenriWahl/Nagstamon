@@ -1081,32 +1081,35 @@ class CentreonServer(GenericServer):
             self.Debug(server=self.get_name(), debug='Checking session status')
         if 'url_centreon' not in self.__dict__:
             self.init_config()
-        try:
-            if self.centreon_version >= 18.10:
-                result = self.FetchURL(self.urls_centreon['keepAlive'], giveback='raw')
-                self.raw, self.error, self.status_code = result.result, result.error, result.status_code
-                # Return 200 & null a session is open
-                if conf.debug_mode == True:
-                    self.Debug(server=self.get_name(), debug='Session status : ' + self.raw + ', http code : ' + str(self.status_code))
-                # 401 if no valid session is present
-                if self.status_code == 401:
-                    self.SID = self._get_sid().result
+        if self.centreon_version:
+            try:
+                if self.centreon_version >= 18.10:
+                    result = self.FetchURL(self.urls_centreon['keepAlive'], giveback='raw')
+                    self.raw, self.error, self.status_code = result.result, result.error, result.status_code
+                    # Return 200 & null a session is open
                     if conf.debug_mode == True:
-                        self.Debug(server=self.get_name(), debug='Session renewed')
+                        self.Debug(server=self.get_name(), debug='Session status : ' + self.raw + ', http code : ' + str(self.status_code))
+                    # 401 if no valid session is present
+                    if self.status_code == 401:
+                        self.SID = self._get_sid().result
+                        if conf.debug_mode == True:
+                            self.Debug(server=self.get_name(), debug='Session renewed')
 
-            else:
-                result = self.FetchURL(self.urls_centreon['autologoutXMLresponse'], giveback='xml')
-                xmlobj, error, status_code = result.result, result.error, result.status_code
-                self.session_state = xmlobj.find("state").text.lower()
-                if conf.debug_mode == True:
-                    self.Debug(server=self.get_name(), debug='Session status : ' + self.session_state)
-                if self.session_state == "nok":
-                    self.SID = self._get_sid().result
+                else:
+                    result = self.FetchURL(self.urls_centreon['autologoutXMLresponse'], giveback='xml')
+                    xmlobj, error, status_code = result.result, result.error, result.status_code
+                    self.session_state = xmlobj.find("state").text.lower()
                     if conf.debug_mode == True:
-                        self.Debug(server=self.get_name(), debug='Session renewed')
-
-        except:
-            import traceback
-            traceback.print_exc(file=sys.stdout)
-            result, error = self.Error(sys.exc_info())
-            return Result(result=result, error=error)
+                        self.Debug(server=self.get_name(), debug='Session status : ' + self.session_state)
+                    if self.session_state == "nok":
+                        self.SID = self._get_sid().result
+                        if conf.debug_mode == True:
+                            self.Debug(server=self.get_name(), debug='Session renewed')
+            except:
+                import traceback
+                traceback.print_exc(file=sys.stdout)
+                result, error = self.Error(sys.exc_info())
+                return Result(result=result, error=error)
+        else:
+            return Result(result='ERROR',
+                          error='Cannot detect Centreon version')

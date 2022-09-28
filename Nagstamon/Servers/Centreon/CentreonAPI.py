@@ -34,6 +34,7 @@ from Nagstamon.Servers.Generic import GenericServer
 from Nagstamon.Config import conf
 from Nagstamon.Helpers import webbrowser_open
 
+
 # This class support Centreon V2 API
 # Things to do :
 #  - BROWSER_URLS -> move into define_url() to be consistent
@@ -53,7 +54,10 @@ class CentreonServer(GenericServer):
         self.HARD_SOFT = {'(H)': 'hard', '(S)': 'soft'}
 
         # Entries for monitor default actions in context menu
-        self.MENU_ACTIONS = ['Monitor', 'Recheck', 'Acknowledge', 'Downtime']
+        # Removed Monitor, as I don’t know a way to show directly the service
+        #  or host details page, so i show the main ressource page
+        # self.MENU_ACTIONS = ['Monitor', 'Recheck', 'Acknowledge', 'Submit check result', 'Downtime']
+        self.MENU_ACTIONS = ['Recheck', 'Acknowledge', 'Downtime']
 
         # URLs of the Centreon pages
         self.urls_centreon = None
@@ -75,7 +79,7 @@ class CentreonServer(GenericServer):
         # check if any error occured
         errors_occured = self.check_for_error(data, error, status_code)
         if errors_occured is not False:
-            return(errors_occured)
+            return (errors_occured)
 
         self.centreon_version_major = int(data["web"]["major"])
 
@@ -85,9 +89,9 @@ class CentreonServer(GenericServer):
                 self.Debug(server='[' + self.get_name() + ']', debug='Centreon code version selected : >= 21')
             # URLs for browser shortlinks/buttons on popup window
             self.BROWSER_URLS = {'monitor': '$MONITOR$/monitoring/resources',
-            'hosts': '$MONITOR$/monitoring/resources',
-            'services': '$MONITOR$/monitoring/resources',
-            'history': '$MONITOR$/main.php?p=20301'}
+                                 'hosts': '$MONITOR$/monitoring/resources',
+                                 'services': '$MONITOR$/monitoring/resources',
+                                 'history': '$MONITOR$/main.php?p=20301'}
             # RestAPI version
             self.restapi_version = "latest"
 
@@ -98,7 +102,6 @@ class CentreonServer(GenericServer):
         # Changed this because define_url was called 2 times
         if not self.tls_error and self.urls_centreon is None:
             self.define_url()
-
 
     def init_HTTP(self):
         GenericServer.init_HTTP(self)
@@ -116,10 +119,11 @@ class CentreonServer(GenericServer):
 
         self.urls_centreon = urls_centreon_api_v2
         if conf.debug_mode == True:
-            self.Debug(server='[' + self.get_name() + ']', debug='URLs defined for Centreon vers. : %s' % (self.centreon_version_major))
-
+            self.Debug(server='[' + self.get_name() + ']',
+                       debug='URLs defined for Centreon vers. : %s' % (self.centreon_version_major))
 
     def open_monitor(self, host, service=''):
+        # Used for self.MENU_ACTIONS = ['Monitor']
         # Autologin seems deprecated as admin must enable it globaly and use the old pages
         # Ex : http://10.66.113.52/centreon/main.php?autologin=1&useralias=admin&token=xxxxxx
         # if self.use_autologin is True:
@@ -127,9 +131,7 @@ class CentreonServer(GenericServer):
         # else:
         #     auth = ''
         # webbrowser_open(self.urls_centreon['resources'] + auth )
-
-        webbrowser_open(self.urls_centreon['resources'] )
-
+        webbrowser_open(self.monitor_cgi_url)
 
     def get_token(self):
         try:
@@ -154,18 +156,19 @@ class CentreonServer(GenericServer):
                 self.Debug(server=self.get_name(),
                            debug="Fetched JSON: " + pprint.pformat(data))
 
-
             # check if any error occured
             errors_occured = self.check_for_error(data, error, status_code)
             if errors_occured is not False:
-                return(errors_occured)
+                return (errors_occured)
 
             token = data["security"]["token"]
             # ID of the user is needed by some requests
             user_id = data["contact"]["id"]
 
             if conf.debug_mode == True:
-                self.Debug(server='[' + self.get_name() + ']', debug='API login : ' + self.username + ' / ' + self.password + ' > Token : ' + token + ' > User ID : ' + str(user_id))
+                self.Debug(server='[' + self.get_name() + ']',
+                           debug='API login : ' + self.username + ' / ' + self.password + ' > Token : ' + token + ' > User ID : ' + str(
+                               user_id))
 
             self.user_id = user_id
             self.session.headers.update({'X-Auth-Token': token})
@@ -175,7 +178,6 @@ class CentreonServer(GenericServer):
             traceback.print_exc(file=sys.stdout)
             result, error = self.Error(sys.exc_info())
             return Result(result=result, error=error)
-
 
     def GetHost(self, host):
         # https://demo.centreon.com/centreon/api/latest/monitoring/resources?page=1&limit=30&sort_by={"status_severity_code":"asc","last_status_change":"desc"}&types=["host"]&statuses=["WARNING","DOWN","CRITICAL","UNKNOWN"]
@@ -192,12 +194,13 @@ class CentreonServer(GenericServer):
             # check if any error occured
             errors_occured = self.check_for_error(data, error, status_code)
             if errors_occured is not False:
-                return(errors_occured)
+                return (errors_occured)
 
             fqdn = str(data["result"][0]["fqdn"])
 
             if conf.debug_mode == True:
-                self.Debug(server='[' + self.get_name() + ']', debug='Get Host FQDN or address : ' + host + " / " + fqdn)
+                self.Debug(server='[' + self.get_name() + ']',
+                           debug='Get Host FQDN or address : ' + host + " / " + fqdn)
 
             # Give back host or ip
             return Result(result=fqdn)
@@ -208,7 +211,6 @@ class CentreonServer(GenericServer):
             self.isChecking = False
             result, error = self.Error(sys.exc_info())
             return Result(result=result, error=error)
-
 
     def get_host_and_service_id(self, host, service=''):
         if service == "":
@@ -227,7 +229,7 @@ class CentreonServer(GenericServer):
                 # check if any error occured
                 errors_occured = self.check_for_error(data, error, status_code)
                 if errors_occured is not False:
-                    return(errors_occured)
+                    return (errors_occured)
 
                 host_id = data["result"][0]["id"]
 
@@ -244,9 +246,11 @@ class CentreonServer(GenericServer):
         else:
             # Host + Service
             if host == "Meta_Services":
-                url_service = self.urls_centreon['services'] + '?types=["metaservice"]&search={"s.name":"'+service+'"}'
+                url_service = self.urls_centreon[
+                                  'services'] + '?types=["metaservice"]&search={"s.name":"' + service + '"}'
             else:
-                url_service = self.urls_centreon['services'] + '?types=["service"]&search={"$and":[{"h.name":{"$eq":"'+host+'"}}, {"s.description":{"$eq":"'+service+'"}}]}'
+                url_service = self.urls_centreon[
+                                  'services'] + '?types=["service"]&search={"$and":[{"h.name":{"$eq":"' + host + '"}}, {"s.description":{"$eq":"' + service + '"}}]}'
 
             try:
                 # Get json
@@ -259,7 +263,7 @@ class CentreonServer(GenericServer):
                 # check if any error occured
                 errors_occured = self.check_for_error(data, error, status_code)
                 if errors_occured is not False:
-                    return(errors_occured)
+                    return (errors_occured)
 
                 if host == "Meta_Services":
                     host_id = 0
@@ -268,8 +272,9 @@ class CentreonServer(GenericServer):
                 service_id = data["result"][0]["id"]
 
                 if conf.debug_mode == True:
-                    self.Debug(server='[' + self.get_name() + ']', debug='Get Host / Service ID : ' + str(host_id) + " / " + str(service_id))
-                return host_id,service_id
+                    self.Debug(server='[' + self.get_name() + ']',
+                               debug='Get Host / Service ID : ' + str(host_id) + " / " + str(service_id))
+                return host_id, service_id
 
             except:
                 traceback.print_exc(file=sys.stdout)
@@ -277,7 +282,6 @@ class CentreonServer(GenericServer):
                 self.isChecking = False
                 result, error = self.Error(sys.exc_info())
                 return Result(result=result, error=error)
-
 
     def get_start_end(self, host):
         # I don’t know how to get this info...
@@ -288,7 +292,6 @@ class CentreonServer(GenericServer):
 
         return (str(start.strftime('%Y-%m-%d %H:%M')),
                 str(end.strftime('%Y-%m-%d %H:%M')))
-
 
     def _get_status(self):
         '''
@@ -304,11 +307,15 @@ class CentreonServer(GenericServer):
 
         # Services URL
         # https://demo.centreon.com/centreon/api/latest/monitoring/resources?page=1&limit=30&sort_by={"status_severity_code":"asc","last_status_change":"desc"}&types=["service"]&statuses=["WARNING","DOWN","CRITICAL","UNKNOWN"]
-        url_services = self.urls_centreon['services'] + '?types=["metaservice","service"]&statuses=["WARNING","DOWN","CRITICAL","UNKNOWN"]&limit=' +  str(self.limit_services_number)
+        url_services = self.urls_centreon[
+                           'services'] + '?types=["metaservice","service"]&statuses=["WARNING","DOWN","CRITICAL","UNKNOWN"]&limit=' + str(
+            self.limit_services_number)
 
         # Hosts URL
         # https://demo.centreon.com/centreon/api/latest/monitoring/resources?page=1&limit=30&sort_by={"status_severity_code":"asc","last_status_change":"desc"}&types=["host"]&statuses=["WARNING","DOWN","CRITICAL","UNKNOWN"]
-        url_hosts = self.urls_centreon['hosts'] + '?types=["host"]&statuses=["WARNING","DOWN","CRITICAL","UNKNOWN"]&limit=' + str(self.limit_services_number)
+        url_hosts = self.urls_centreon[
+                        'hosts'] + '?types=["host"]&statuses=["WARNING","DOWN","CRITICAL","UNKNOWN"]&limit=' + str(
+            self.limit_services_number)
 
         # Hosts
         try:
@@ -326,7 +333,7 @@ class CentreonServer(GenericServer):
             # check if any error occured
             errors_occured = self.check_for_error(data, error, status_code)
             if errors_occured is not False:
-                return(errors_occured)
+                return (errors_occured)
 
             for alerts in data["result"]:
                 new_host = alerts["name"]
@@ -374,7 +381,7 @@ class CentreonServer(GenericServer):
             # check if any error occured
             errors_occured = self.check_for_error(data, error, status_code)
             if errors_occured is not False:
-                return(errors_occured)
+                return (errors_occured)
 
             for alerts in data["result"]:
                 if alerts["type"] == "metaservice":
@@ -389,7 +396,8 @@ class CentreonServer(GenericServer):
                     self.new_hosts[new_host].status = 'UP'
                 self.new_hosts[new_host].services[new_service] = GenericService()
                 # Attributs à remplir
-                self.Debug(server='[' + self.get_name() + ']', debug='Service indexed : ' + new_host + ' / ' + new_service)
+                self.Debug(server='[' + self.get_name() + ']',
+                           debug='Service indexed : ' + new_host + ' / ' + new_service)
 
                 self.new_hosts[new_host].services[new_service].server = self.name
                 self.new_hosts[new_host].services[new_service].host = new_host
@@ -402,7 +410,8 @@ class CentreonServer(GenericServer):
                 self.new_hosts[new_host].services[new_service].attempt = alerts["tries"]
                 self.new_hosts[new_host].services[new_service].status_information = alerts["information"]
                 self.new_hosts[new_host].services[new_service].passiveonly = alerts["passive_checks"]
-                self.new_hosts[new_host].services[new_service].notifications_disabled = not alerts["notification_enabled"]
+                self.new_hosts[new_host].services[new_service].notifications_disabled = not alerts[
+                    "notification_enabled"]
                 self.new_hosts[new_host].services[new_service].flapping = alerts["flapping"]
                 self.new_hosts[new_host].services[new_service].acknowledged = alerts["acknowledged"]
                 self.new_hosts[new_host].services[new_service].scheduled_downtime = alerts["in_downtime"]
@@ -422,20 +431,19 @@ class CentreonServer(GenericServer):
         # return True if all worked well
         return Result()
 
-
     def _set_acknowledge(self, host, service, author, comment, sticky, notify, persistent, all_services=[]):
         try:
 
             acknowledgements = {
-              "acknowledgement": {
-                "comment": comment,
-                "with_services": True,
-                "is_notify_contacts": notify,
-                "is_persistent_comment": persistent,
-                "is_sticky": sticky
-              },
-              "resources": [
-              ]
+                "acknowledgement": {
+                    "comment": comment,
+                    "with_services": True,
+                    "is_notify_contacts": notify,
+                    "is_persistent_comment": persistent,
+                    "is_sticky": sticky
+                },
+                "resources": [
+                ]
             }
 
             # host
@@ -443,11 +451,11 @@ class CentreonServer(GenericServer):
                 host_id = self.get_host_and_service_id(host)
 
                 new_resource = {
-                  "type": "host",
-                  "id": host_id,
-                  "parent": {
-                    "id": None
-                  }
+                    "type": "host",
+                    "id": host_id,
+                    "parent": {
+                        "id": None
+                    }
                 }
 
                 acknowledgements["resources"].append(new_resource)
@@ -455,7 +463,8 @@ class CentreonServer(GenericServer):
                 # Post json
                 json_string = json.dumps(acknowledgements)
                 # {protocol}://{server}:{port}/centreon/api/{version}/monitoring/hosts/{host_id}/acknowledgements
-                result = self.FetchURL(self.urls_centreon['resources'] + '/acknowledge', cgi_data=json_string, giveback='raw')
+                result = self.FetchURL(self.urls_centreon['resources'] + '/acknowledge', cgi_data=json_string,
+                                       giveback='raw')
 
                 error = result.error
                 status_code = result.status_code
@@ -463,7 +472,6 @@ class CentreonServer(GenericServer):
                 if conf.debug_mode:
                     self.Debug(server='[' + self.get_name() + ']',
                                debug="Set Ack on Host, status code : " + str(status_code))
-
 
             # Service
             if service != '' or len(all_services) > 0:
@@ -475,31 +483,32 @@ class CentreonServer(GenericServer):
 
                     if host == "Meta_Services":
                         new_resource = {
-                          "type": "metaservice",
-                          "id": service_id,
-                          "parent": {
-                            "id": None
-                          }
+                            "type": "metaservice",
+                            "id": service_id,
+                            "parent": {
+                                "id": None
+                            }
                         }
 
                     else:
                         new_resource = {
-                          "type": "service",
-                          "id": service_id,
-                          "parent": {
-                            "id": host_id
-                          }
+                            "type": "service",
+                            "id": service_id,
+                            "parent": {
+                                "id": host_id
+                            }
                         }
 
                     acknowledgements["resources"].append(new_resource)
                     if conf.debug_mode:
                         self.Debug(server='[' + self.get_name() + ']',
-                                   debug="Stack ack for Host ("+host+") / Service ("+service+")")
+                                   debug="Stack ack for Host (" + host + ") / Service (" + service + ")")
 
                 # Post json
                 json_string = json.dumps(acknowledgements)
                 # {protocol}://{server}:{port}/centreon/api/{version}/monitoring/services/acknowledgements
-                result = self.FetchURL(self.urls_centreon['resources'] + '/acknowledge', cgi_data=json_string, giveback='raw')
+                result = self.FetchURL(self.urls_centreon['resources'] + '/acknowledge', cgi_data=json_string,
+                                       giveback='raw')
 
                 error = result.error
                 status_code = result.status_code
@@ -515,11 +524,10 @@ class CentreonServer(GenericServer):
             result, error = self.Error(sys.exc_info())
             return Result(result=result, error=error)
 
-
     def _set_recheck(self, host, service):
         rechecks = {
-          "resources": [
-          ]
+            "resources": [
+            ]
         }
 
         try:
@@ -528,9 +536,9 @@ class CentreonServer(GenericServer):
                 host_id = self.get_host_and_service_id(host)
 
                 new_resource = {
-                  "type": "host",
-                  "id": host_id,
-                  "parent": None
+                    "type": "host",
+                    "id": host_id,
+                    "parent": None
                 }
 
                 rechecks["resources"].append(new_resource)
@@ -545,26 +553,26 @@ class CentreonServer(GenericServer):
 
                 if conf.debug_mode:
                     self.Debug(server='[' + self.get_name() + ']',
-                               debug="Recheck on Host : "+host+", status code : " + str(status_code))
+                               debug="Recheck on Host : " + host + ", status code : " + str(status_code))
 
-           # Service
+            # Service
             else:
                 host_id, service_id = self.get_host_and_service_id(host, service)
 
                 if host == "Meta_Services":
                     new_resource = {
-                      "type": "metaservice",
-                      "id": service_id,
-                      "parent": None
+                        "type": "metaservice",
+                        "id": service_id,
+                        "parent": None
                     }
 
                 else:
                     new_resource = {
-                      "type": "service",
-                      "id": service_id,
-                      "parent": {
-                        "id": host_id
-                      }
+                        "type": "service",
+                        "id": service_id,
+                        "parent": {
+                            "id": host_id
+                        }
                     }
 
                 rechecks["resources"].append(new_resource)
@@ -579,7 +587,8 @@ class CentreonServer(GenericServer):
 
                 if conf.debug_mode:
                     self.Debug(server='[' + self.get_name() + ']',
-                               debug="Reckeck on Host ("+host+") / Service ("+service+"), status code : " + str(status_code))
+                               debug="Reckeck on Host (" + host + ") / Service (" + service + "), status code : " + str(
+                                   status_code))
 
         except:
             traceback.print_exc(file=sys.stdout)
@@ -587,7 +596,6 @@ class CentreonServer(GenericServer):
             self.isChecking = False
             result, error = self.Error(sys.exc_info())
             return Result(result=result, error=error)
-
 
     def _set_downtime(self, host, service, author, comment, fixed, start_time, end_time, hours, minutes):
         obj_start_time = datetime.strptime(start_time, '%Y-%m-%d %H:%M')
@@ -600,23 +608,23 @@ class CentreonServer(GenericServer):
         # duration unit is second
         duration = (hours * 3600) + (minutes * 60)
 
-        # API require boolean
+        #  API require boolean
         if fixed == 1:
             fixed = True
         else:
             fixed = False
 
         downtimes = {
-          "downtime": {
-            "comment": comment,
-            "with_services": True,
-            "is_fixed": fixed,
-            "duration": duration,
-            "start_time": obj_start_time.strftime('%Y-%m-%dT%H:%M:%S%z'),
-            "end_time": obj_end_time.strftime('%Y-%m-%dT%H:%M:%S%z')
-          },
-          "resources": [
-          ]
+            "downtime": {
+                "comment": comment,
+                "with_services": True,
+                "is_fixed": fixed,
+                "duration": duration,
+                "start_time": obj_start_time.strftime('%Y-%m-%dT%H:%M:%S%z'),
+                "end_time": obj_end_time.strftime('%Y-%m-%dT%H:%M:%S%z')
+            },
+            "resources": [
+            ]
         }
 
         try:
@@ -625,9 +633,9 @@ class CentreonServer(GenericServer):
                 host_id = self.get_host_and_service_id(host)
 
                 new_resource = {
-                  "type": "host",
-                  "id": host_id,
-                  "parent": None
+                    "type": "host",
+                    "id": host_id,
+                    "parent": None
                 }
 
                 downtimes["resources"].append(new_resource)
@@ -635,14 +643,15 @@ class CentreonServer(GenericServer):
                 # Post json
                 json_string = json.dumps(downtimes)
                 # {protocol}://{server}:{port}/centreon/api/{version}/monitoring/resources/downtime
-                result = self.FetchURL(self.urls_centreon['resources'] + '/downtime', cgi_data=json_string, giveback='raw')
+                result = self.FetchURL(self.urls_centreon['resources'] + '/downtime', cgi_data=json_string,
+                                       giveback='raw')
 
                 error = result.error
                 status_code = result.status_code
 
                 if conf.debug_mode:
                     self.Debug(server='[' + self.get_name() + ']',
-                               debug="Downtime on Host : "+host+", status code : " + str(status_code))
+                               debug="Downtime on Host : " + host + ", status code : " + str(status_code))
 
             # Service
             else:
@@ -650,20 +659,20 @@ class CentreonServer(GenericServer):
 
                 if host == "Meta_Services":
                     new_resource = {
-                      "type": "metaservice",
-                      "id": service_id,
-                      "parent": {
-                        "id": None
-                      }
+                        "type": "metaservice",
+                        "id": service_id,
+                        "parent": {
+                            "id": None
+                        }
                     }
 
                 else:
                     new_resource = {
-                      "type": "service",
-                      "id": service_id,
-                      "parent": {
-                        "id": host_id
-                      }
+                        "type": "service",
+                        "id": service_id,
+                        "parent": {
+                            "id": host_id
+                        }
                     }
 
                 downtimes["resources"].append(new_resource)
@@ -671,14 +680,16 @@ class CentreonServer(GenericServer):
                 # Post json
                 json_string = json.dumps(downtimes)
                 # {protocol}://{server}:{port}/centreon/api/{version}/monitoring/resources/downtime
-                result = self.FetchURL(self.urls_centreon['resources'] + '/downtime', cgi_data=json_string, giveback='raw')
+                result = self.FetchURL(self.urls_centreon['resources'] + '/downtime', cgi_data=json_string,
+                                       giveback='raw')
 
                 error = result.error
                 status_code = result.status_code
 
                 if conf.debug_mode:
                     self.Debug(server='[' + self.get_name() + ']',
-                               debug="Downtime on Host ("+host+") / Service ("+service+"), status code : " + str(status_code))
+                               debug="Downtime on Host (" + host + ") / Service (" + service + "), status code : " + str(
+                                   status_code))
 
 
         except:
@@ -688,7 +699,6 @@ class CentreonServer(GenericServer):
             result, error = self.Error(sys.exc_info())
             return Result(result=result, error=error)
 
-
     def check_session(self):
         if conf.debug_mode == True:
             self.Debug(server='[' + self.get_name() + ']', debug='Checking session status')
@@ -697,21 +707,31 @@ class CentreonServer(GenericServer):
         #     self.init_config()
         try:
             if conf.debug_mode == True:
-                self.Debug(server='[' + self.get_name() + ']', debug='Check-session, the token will be deleted if it has not been used for more than one hour. Current Token = ' + str(self.token) )
+                self.Debug(server='[' + self.get_name() + ']',
+                           debug='Check-session, the token will be deleted if it has not been used for more than one hour. Current Token = ' + str(
+                               self.token))
 
-            cgi_data = {'limit':'0'}
+            cgi_data = {'limit': '0'}
             self.session = requests.Session()
             self.session.headers['Content-Type'] = 'application/json'
             self.session.headers['X-Auth-Token'] = self.token
 
             # Get en empty service list, to check the status of the current token
             # This request must be done in a GET, so just encode the parameters and fetch
-            result = self.FetchURL(self.urls_centreon['resources'] + '?' + urllib.parse.urlencode(cgi_data), giveback="raw")
+            result = self.FetchURL(self.urls_centreon['resources'] + '?' + urllib.parse.urlencode(cgi_data),
+                                   giveback="raw")
             if result.status_code == 403:
                 self.get_token()
-            data = json.loads(result.result)
-            error = result.error
-            status_code = result.status_code
+                result = self.FetchURL(self.urls_centreon['resources'] + '?' + urllib.parse.urlencode(cgi_data),
+                                       giveback="raw")
+            if not 'ConnectTimeoutError' in result.error and \
+                    not 'NewConnectionError' in result.error:
+                data = json.loads(result.result)
+                error = result.error
+                status_code = result.status_code
+            else:
+                return Result(result='ERROR',
+                              error='Connection error')
 
             if conf.debug_mode:
                 self.Debug(server=self.get_name(),

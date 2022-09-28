@@ -1462,7 +1462,7 @@ class StatusWindow(QWidget):
         """
         if not self.is_shown:
             # under unfortunate circumstances statusbar might have the the moving flag true
-            # fix it here because it makes no sense but might cause non-appearing statuswindow
+            # fix it here because it makes no sense but might cause non-appearing statuswindow‚
             self.moving = False
 
             # already show here because was closed before in hide_window()
@@ -1508,7 +1508,7 @@ class StatusWindow(QWidget):
                     if not vbox.server.all_ok:
                         vbox.show_all()
                     # show at least server vbox header to notify about connection or other errors
-                    elif vbox.server.status != '' or vbox.server.refresh_authentication or vbox.server.tls_error:
+                    if vbox.server.status != '' or vbox.server.refresh_authentication or vbox.server.tls_error:
                         vbox.show_only_header()
                     elif vbox.server.all_ok and vbox.server.status == '':
                         vbox.hide_all()
@@ -1628,7 +1628,12 @@ class StatusWindow(QWidget):
                         self.statusbar.show()
                     self.toparea.hide()
                     self.servers_scrollarea.hide()
-                    self.setMinimumSize(1, 1)
+                    # macOS needs this since Qt6 to avoid statuswindow size changeability
+                    if OS == OS_DARWIN:
+                        self.setMinimumSize(self.stored_width, self.stored_height)
+                        self.setMaximumSize(self.stored_width, self.stored_height)
+                    else:
+                        self.setMinimumSize(1, 1)
                     self.adjustSize()
 
                     if conf.icon_in_systray:
@@ -1826,6 +1831,7 @@ class StatusWindow(QWidget):
             self.stored_x = self.x()
             self.stored_y = self.y()
             self.stored_width = self.width()
+            self.stored_height = self.height()
 
         if OS == OS_WINDOWS:
             # absolutely strange, but no other solution available
@@ -1918,6 +1924,7 @@ class StatusWindow(QWidget):
             self.stored_x = self.x()
             self.stored_y = self.y()
             self.stored_width = self.width()
+            self.stored_height = self.height()
 
     def leaveEvent(self, event):
         """

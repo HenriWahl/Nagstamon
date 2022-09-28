@@ -32,6 +32,10 @@ class CentreonServer(GenericServer):
         # due to not being initialized right now we need to access config directly to get this instance's config
         server_conf = conf.servers.get(kwds.get('name'))
         if server_conf and server_conf.enabled:
+            # because auf being very early in init process the property ignore_cert is not known yet
+            # add it here to be able to fetch URL and ignore certs if activated
+            self.ignore_cert = server_conf.ignore_cert
+            self.custom_cert_use = server_conf.custom_cert_use
             # This URL exists on Centreon 22.x - if not accessible it must be legacy
             versions_raw = self.FetchURL(f'{server_conf.monitor_cgi_url}/api/latest/platform/versions', no_auth=True, giveback='raw')
             self.Debug(server='[' + self.get_name() + ']', debug='Status code %s' % (str(versions_raw.status_code)))
