@@ -1399,7 +1399,11 @@ class StatusWindow(QWidget):
         self.servers_scrollarea_widget.setLayout(self.servers_vbox)
         self.servers_scrollarea.setWidget(self.servers_scrollarea_widget)
 
-        del (vboxes_dict)
+        self.servers_scrollarea.contentsMargins().setTop(0)
+        self.servers_scrollarea.contentsMargins().setBottom(0)
+
+
+        del vboxes_dict
 
     def create_ServerVBoxes(self):
         # create vbox for each enabled server
@@ -2815,25 +2819,29 @@ class ServerVBox(QVBoxLayout):
         self.button_history = PushButton_BrowserURL(text='History', parent=parent, server=self.server,
                                                     url_type='history')
         self.button_edit = Button('Edit', parent=parent)
-        ###self.button_edit.setStyleSheet('background: green;')
 
+        # .setAttribute(Qt.WidgetAttribute.WA_LayoutUsesWidgetRect)
 
         # use label instead of spacer to be clickable
         self.label_stretcher = ClosingLabel('', parent=parent)
         self.label_stretcher.setSizePolicy(QSizePolicy.Policy.MinimumExpanding, QSizePolicy.Policy.Expanding)
-        ###self.label_stretcher.setStyleSheet('background: green;')
 
         self.label_status = ServerStatusLabel(parent=parent)
         self.label_status.setSizePolicy(QSizePolicy.Policy.Fixed, QSizePolicy.Policy.Expanding)
-        ###self.label_status.setStyleSheet('background: green;')
-
 
         self.button_authenticate = QPushButton('Authenticate', parent=parent)
-        ###self.button_authenticate.setStyleSheet('background: green;')
-
-        ###self.button_authenticate.setStyleSheet('background: green;')
 
         self.button_fix_tls_error = QPushButton('Fix error', parent=parent)
+
+        # avoid useless spaces in macOS when server has nothing to show
+        # see https://bugreports.qt.io/browse/QTBUG-2699
+        self.button_monitor.setAttribute(Qt.WidgetAttribute.WA_LayoutUsesWidgetRect)
+        self.button_history.setAttribute(Qt.WidgetAttribute.WA_LayoutUsesWidgetRect)
+        self.button_services.setAttribute(Qt.WidgetAttribute.WA_LayoutUsesWidgetRect)
+        self.button_hosts.setAttribute(Qt.WidgetAttribute.WA_LayoutUsesWidgetRect)
+        self.button_edit.setAttribute(Qt.WidgetAttribute.WA_LayoutUsesWidgetRect)
+        self.button_authenticate.setAttribute(Qt.WidgetAttribute.WA_LayoutUsesWidgetRect)
+        self.button_fix_tls_error.setAttribute(Qt.WidgetAttribute.WA_LayoutUsesWidgetRect)
 
         self.button_monitor.clicked.connect(self.button_monitor.open_url)
         self.button_hosts.clicked.connect(self.button_hosts.open_url)
@@ -2859,7 +2867,7 @@ class ServerVBox(QVBoxLayout):
             # when stored as simple lowercase keys
             sort_column = HEADERS_KEYS_COLUMNS[conf.default_sort_field]
         except Exception:
-            # when as legacy stored as presetation string
+            # when as legacy stored as presentation string
             sort_column = HEADERS_HEADERS_COLUMNS[conf.default_sort_field]
 
         # convert sort order to number as used in Qt.SortOrder
@@ -2900,22 +2908,21 @@ class ServerVBox(QVBoxLayout):
                 height += self.button_monitor.sizeHint().height() + 2
         return height
 
-
     @Slot()
     def show_all(self):
         """
             show all items in server vbox except the table - not needed if empty
         """
-        self.label.show()
-        self.button_monitor.show()
-        self.button_hosts.show()
-        self.button_services.show()
-        self.button_history.show()
+        self.button_authenticate.hide()
         self.button_edit.show()
+        self.button_fix_tls_error.hide()
+        self.button_history.show()
+        self.button_hosts.show()
+        self.button_monitor.show()
+        self.button_services.show()
+        self.label.show()
         self.label_status.show()
         self.label_stretcher.show()
-        self.button_authenticate.hide()
-        self.button_fix_tls_error.hide()
         # special table treatment
         self.table.show()
         self.table.is_shown = True
@@ -2925,16 +2932,16 @@ class ServerVBox(QVBoxLayout):
         """
             show all items in server vbox except the table - not needed if empty or major connection problem
         """
-        self.label.show()
-        self.button_monitor.show()
-        self.button_hosts.show()
-        self.button_services.show()
-        self.button_history.show()
+        self.button_authenticate.hide()
         self.button_edit.show()
+        self.button_history.show()
+        self.button_hosts.show()
+        self.button_fix_tls_error.hide()
+        self.button_monitor.show()
+        self.button_services.show()
+        self.label.show()
         self.label_status.show()
         self.label_stretcher.show()
-        self.button_authenticate.hide()
-        self.button_fix_tls_error.hide()
         # special table treatment
         self.table.hide()
         self.table.is_shown = False
@@ -2944,16 +2951,16 @@ class ServerVBox(QVBoxLayout):
         """
             hide all items in server vbox
         """
-        self.label.hide()
-        self.button_monitor.hide()
-        self.button_hosts.hide()
-        self.button_services.hide()
-        self.button_history.hide()
+        self.button_authenticate.hide()
         self.button_edit.hide()
+        self.button_fix_tls_error.hide()
+        self.button_history.hide()
+        self.button_hosts.hide()
+        self.button_monitor.hide()
+        self.button_services.hide()
+        self.label.hide()
         self.label_status.hide()
         self.label_stretcher.hide()
-        self.button_authenticate.hide()
-        self.button_fix_tls_error.hide()
         # special table treatment
         self.table.hide()
         self.table.is_shown = False
