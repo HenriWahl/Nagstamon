@@ -125,7 +125,7 @@ class AppInfo(object):
         contains app information previously located in GUI.py
     """
     NAME = 'Nagstamon'
-    VERSION = '3.9-20220929'
+    VERSION = '3.9-20220930'
     WEBSITE = 'https://nagstamon.de'
     COPYRIGHT = '©2008-2022 Henri Wahl et al.'
     COMMENTS = 'Nagios status monitor for your desktop'
@@ -323,6 +323,7 @@ class Config(object):
         # when more tha a config directory was given something is wrong
         if len(sys.argv) > 2:
             print('Currently Nagstamon supports only 1 config directory.')
+            self.configdir = sys.argv[1]
 
         # try to use a given config file - there must be one given
         elif len(sys.argv) == 2:
