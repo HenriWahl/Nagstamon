@@ -559,7 +559,7 @@ class MenuContext(MenuAtCursor):
         self.action_servers = dict()
 
         # connect every server to its monitoring webpage
-        for server in servers:
+        for server in sorted([x.name for x in conf.servers.values() if x.enabled], key=str.lower):
             self.action_servers[server] = QAction(server, self)
             self.action_servers[server].triggered.connect(servers[server].open_monitor_webpage)
             self.addAction(self.action_servers[server])
@@ -743,7 +743,7 @@ class ComboBox_Servers(QComboBox):
         """
         self.clear()
         self.addItem('Go to monitor...')
-        self.addItems(sorted(conf.servers.keys(), key=str.lower))
+        self.addItems(sorted([x.name for x in conf.servers.values() if x.enabled], key=str.lower))
 
     @Slot()
     def response(self):
