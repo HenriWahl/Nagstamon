@@ -322,7 +322,7 @@ class Config(object):
 
         # when more tha a config directory was given something is wrong
         if len(sys.argv) > 2:
-            sys.exit('Currently Nagstamon supports only 1 config directory.')
+            print('Currently Nagstamon supports only 1 config directory.')
 
         # try to use a given config file - there must be one given
         elif len(sys.argv) == 2:
