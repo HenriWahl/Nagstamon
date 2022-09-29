@@ -257,22 +257,6 @@ class HBoxLayout(QHBoxLayout):
             self.setSpacing(spacing)
         self.setContentsMargins(0, 0, 0, 0)  # no margin
 
-    def hide_items(self):
-        """
-            cruise through all child widgets and hide them
-            self,count()-1 is needed because the last item is None
-        """
-        for item in range(self.count() - 1):
-            self.itemAt(item).widget().hide()
-
-    def show_items(self):
-        """
-            cruise through all child widgets and show them
-            self,count()-1 is needed because the last item is None
-        """
-        for item in range(self.count() - 1):
-            self.itemAt(item).widget().show()
-
 
 class QIconWithFilename(QIcon):
     """
@@ -2915,6 +2899,7 @@ class ServerVBox(QVBoxLayout):
             else:
                 height += self.button_monitor.sizeHint().height() + 2
         return height
+
 
     @Slot()
     def show_all(self):
