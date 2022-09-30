@@ -2827,7 +2827,7 @@ class ServerVBox(QVBoxLayout):
         self.label_stretcher.setSizePolicy(QSizePolicy.Policy.MinimumExpanding, QSizePolicy.Policy.Expanding)
 
         self.label_status = ServerStatusLabel(parent=parent)
-        self.label_status.setSizePolicy(QSizePolicy.Policy.Fixed, QSizePolicy.Policy.Expanding)
+        self.label_status.setSizePolicy(QSizePolicy.Policy.Fixed, QSizePolicy.Policy.Fixed)
 
         self.button_authenticate = QPushButton('Authenticate', parent=parent)
 
