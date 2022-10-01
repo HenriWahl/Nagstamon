@@ -212,7 +212,7 @@ class IcingaDBWebServer(GenericServer):
                             self.new_hosts[host_name].status = self.STATES_MAPPING['hosts'][int(h['state']['soft_state'])]
 
                         self.new_hosts[host_name].last_check = datetime.datetime.fromtimestamp(int(h['state']['last_update']))
-                        self.new_hosts[host_name].attempt = "{}/{}".format(h['state']['check_attempt'],h['state']['max_check_attempts'])
+                        self.new_hosts[host_name].attempt = "{}/{}".format(h['state']['check_attempt'],h['max_check_attempts'])
                         self.new_hosts[host_name].status_information = BeautifulSoup(h['state']['output'].replace('\n', ' ').strip(), 'html.parser').text
                         self.new_hosts[host_name].passiveonly = not(int(h['active_checks_enabled']))
                         self.new_hosts[host_name].notifications_disabled = not(int(h['notifications_enabled']))
@@ -274,14 +274,12 @@ class IcingaDBWebServer(GenericServer):
 
                     if self.use_display_name_host == False:
                         # according to http://sourceforge.net/p/nagstamon/bugs/83/ it might
-                        # better be host_name instead of host_display_name
-                        # legacy Icinga adjustments
-                        if 'host_name' in s: host_name = s['host_name']
-                        elif 'host' in s: host_name = s['host']
+                        # better be name instead of display_name
+                        host_name = s['host']['name']
                     else:
                         # https://github.com/HenriWahl/Nagstamon/issues/46 on the other hand has
                         # problems with that so here we go with extra display_name option
-                        host_name = s['host_display_name']
+                        host_name = s['host']['display_name']
 
                     # host objects contain service objects
                     if not host_name in self.new_hosts:
@@ -290,9 +288,9 @@ class IcingaDBWebServer(GenericServer):
                         self.new_hosts[host_name].status = 'UP'
                         # extra Icinga properties to solve https://github.com/HenriWahl/Nagstamon/issues/192
                         # acknowledge needs host_description and no display name
-                        self.new_hosts[host_name].real_name = s['host_name']
+                        self.new_hosts[host_name].real_name = s['host']['name']
 
-                    service_name = s['service_display_name']
+                    service_name = s['display_name']
 
                     # if a service does not exist create its object
                     if not service_name in self.new_hosts[host_name].services:
@@ -300,37 +298,40 @@ class IcingaDBWebServer(GenericServer):
                         self.new_hosts[host_name].services[service_name].host = host_name
                         self.new_hosts[host_name].services[service_name].name = service_name
                         self.new_hosts[host_name].services[service_name].server = self.name
-                        self.new_hosts[host_name].services[service_name].status = self.STATES_MAPPING['services'][int(s['service_state'])]
-                        self.new_hosts[host_name].services[service_name].last_check = datetime.datetime.fromtimestamp(int(s['service_last_check']))
-                        self.new_hosts[host_name].services[service_name].attempt = s['service_attempt']
-                        self.new_hosts[host_name].services[service_name].status_information = BeautifulSoup(s['service_output'].replace('\n', ' ').strip(), 'html.parser').text
-                        self.new_hosts[host_name].services[service_name].passiveonly = not(int(s['service_active_checks_enabled']))
-                        self.new_hosts[host_name].services[service_name].notifications_disabled = not(int(s['service_notifications_enabled']))
-                        self.new_hosts[host_name].services[service_name].flapping = bool(int(s['service_is_flapping']))
-                        self.new_hosts[host_name].services[service_name].acknowledged = bool(int(s['service_acknowledged']))
-                        self.new_hosts[host_name].services[service_name].scheduled_downtime = bool(int(s['service_in_downtime']))
                         self.new_hosts[host_name].services[service_name].status_type = status_type
-                        self.new_hosts[host_name].services[service_name].unreachable = s['service_is_reachable'] == '0'
+                        if (status_type == 'hard'):
+                            self.new_hosts[host_name].services[service_name].status = self.STATES_MAPPING['services'][int(s['state']['hard_state'])]
+                        else:
+                            self.new_hosts[host_name].services[service_name].status = self.STATES_MAPPING['services'][int(s['state']['soft_state'])]
+
+                        self.new_hosts[host_name].services[service_name].last_check = datetime.datetime.fromtimestamp(int(s['state']['last_update']))
+                        self.new_hosts[host_name].services[service_name].attempt = "{}/{}".format(s['state']['check_attempt'],s['max_check_attempts'])
+                        self.new_hosts[host_name].services[service_name].status_information = BeautifulSoup(s['state']['output'].replace('\n', ' ').strip(), 'html.parser').text
+                        self.new_hosts[host_name].services[service_name].passiveonly = not(int(s['active_checks_enabled']))
+                        self.new_hosts[host_name].services[service_name].notifications_disabled = not(int(s['notifications_enabled']))
+                        self.new_hosts[host_name].services[service_name].flapping = bool(int(s['state']['is_flapping'] or 0))
+                        self.new_hosts[host_name].services[service_name].acknowledged = bool(int(s['state']['is_acknowledged'] or 0))
+                        self.new_hosts[host_name].services[service_name].scheduled_downtime = bool(int(s['state']['in_downtime'] or 0))
+                        self.new_hosts[host_name].services[service_name].unreachable = bool(int(s['state']['is_reachable'] or 0))
 
                         if self.new_hosts[host_name].services[service_name].unreachable:
                             self.new_hosts[host_name].services[service_name].status_information += " (SERVICE UNREACHABLE)"
 
                         # extra Icinga properties to solve https://github.com/HenriWahl/Nagstamon/issues/192
                         # acknowledge needs service_description and no display name
-                        self.new_hosts[host_name].services[service_name].real_name = s['service_description']
+                        self.new_hosts[host_name].services[service_name].real_name = s['name']
 
                         # Icinga only updates the attempts for soft states. When hard state is reached, a flag is set and
                         # attemt is set to 1/x.
                         if (status_type == 'hard'):
                             try:
-                                maxAttempts = s['service_attempt'].split('/')[1]
-                                self.new_hosts[host_name].services[service_name].attempt = "{0}/{0}".format(maxAttempts)
+                                self.new_hosts[host_name].services[service_name].attempt = "{0}/{0}".format(s['max_check_attempts'])
                             except Exception:
                                 self.new_hosts[host_name].services[service_name].attempt = "HARD"
 
                         # extra duration needed for calculation
-                        if s['service_last_state_change'] is not None:
-                            last_change = s['service_last_state_change'] if s['service_last_state_change'] is not None else 0
+                        if s['state']['last_state_change'] is not None:
+                            last_change = s['state']['last_state_change'] if s['state']['last_state_change'] is not None else 0
                             duration = datetime.datetime.now() - datetime.datetime.fromtimestamp(int(last_change))
                             self.new_hosts[host_name].services[service_name].duration = strfdelta(duration, '{days}d {hours}h {minutes}m {seconds}s')
                         else:
