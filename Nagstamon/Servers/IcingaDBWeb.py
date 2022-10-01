@@ -211,7 +211,7 @@ class IcingaDBWebServer(GenericServer):
                         else:
                             self.new_hosts[host_name].status = self.STATES_MAPPING['hosts'][int(h['state']['soft_state'])]
 
-                        self.new_hosts[host_name].last_check = datetime.datetime.fromtimestamp(int(h['state']['last_update']))
+                        self.new_hosts[host_name].last_check = datetime.datetime.fromtimestamp(int(float(h['state']['last_update'])))
                         self.new_hosts[host_name].attempt = "{}/{}".format(h['state']['check_attempt'],h['max_check_attempts'])
                         self.new_hosts[host_name].status_information = BeautifulSoup(h['state']['output'].replace('\n', ' ').strip(), 'html.parser').text
                         self.new_hosts[host_name].passiveonly = not(int(h['active_checks_enabled']))
@@ -235,7 +235,7 @@ class IcingaDBWebServer(GenericServer):
                         # extra duration needed for calculation
                         if h['state']['last_state_change'] is not None:
                             last_change = h['state']['last_state_change'] if h['state']['last_state_change'] is not None else 0
-                            duration = datetime.datetime.now() - datetime.datetime.fromtimestamp(int(last_change))
+                            duration = datetime.datetime.now() - datetime.datetime.fromtimestamp(int(float(last_change)))
                             self.new_hosts[host_name].duration = strfdelta(duration,'{days}d {hours}h {minutes}m {seconds}s')
                         else:
                             self.new_hosts[host_name].duration = 'n/a'
@@ -304,7 +304,7 @@ class IcingaDBWebServer(GenericServer):
                         else:
                             self.new_hosts[host_name].services[service_name].status = self.STATES_MAPPING['services'][int(s['state']['soft_state'])]
 
-                        self.new_hosts[host_name].services[service_name].last_check = datetime.datetime.fromtimestamp(int(s['state']['last_update']))
+                        self.new_hosts[host_name].services[service_name].last_check = datetime.datetime.fromtimestamp(int(float(s['state']['last_update'])))
                         self.new_hosts[host_name].services[service_name].attempt = "{}/{}".format(s['state']['check_attempt'],s['max_check_attempts'])
                         self.new_hosts[host_name].services[service_name].status_information = BeautifulSoup(s['state']['output'].replace('\n', ' ').strip(), 'html.parser').text
                         self.new_hosts[host_name].services[service_name].passiveonly = not(int(s['active_checks_enabled']))
@@ -332,7 +332,7 @@ class IcingaDBWebServer(GenericServer):
                         # extra duration needed for calculation
                         if s['state']['last_state_change'] is not None:
                             last_change = s['state']['last_state_change'] if s['state']['last_state_change'] is not None else 0
-                            duration = datetime.datetime.now() - datetime.datetime.fromtimestamp(int(last_change))
+                            duration = datetime.datetime.now() - datetime.datetime.fromtimestamp(int(float(last_change)))
                             self.new_hosts[host_name].services[service_name].duration = strfdelta(duration, '{days}d {hours}h {minutes}m {seconds}s')
                         else:
                             self.new_hosts[host_name].services[service_name].duration = 'n/a'
