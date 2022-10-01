@@ -312,7 +312,7 @@ class IcingaDBWebServer(GenericServer):
                         self.new_hosts[host_name].services[service_name].flapping = bool(int(s['state']['is_flapping'] or 0))
                         self.new_hosts[host_name].services[service_name].acknowledged = bool(int(s['state']['is_acknowledged'] or 0))
                         self.new_hosts[host_name].services[service_name].scheduled_downtime = bool(int(s['state']['in_downtime'] or 0))
-                        self.new_hosts[host_name].services[service_name].unreachable = bool(int(s['state']['is_reachable'] or 0))
+                        self.new_hosts[host_name].services[service_name].unreachable = not bool(int(s['state']['is_reachable'] or 0))
 
                         if self.new_hosts[host_name].services[service_name].unreachable:
                             self.new_hosts[host_name].services[service_name].status_information += " (SERVICE UNREACHABLE)"
