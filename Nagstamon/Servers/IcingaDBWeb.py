@@ -78,7 +78,7 @@ class IcingaDBWebServer(GenericServer):
         self.cgiurl_services = None
         self.cgiurl_hosts = None
         self.cgiurl_monitoring_health = None
-        
+
         # https://github.com/HenriWahl/Nagstamon/issues/400
         # The displayed name for host and service is the Icinga2 "internal" name and not the display_name from host/service configuration
         # This name is stored in host/service dict under key 'name' but is also used as dict key for dict containing all hosts/services
@@ -110,7 +110,7 @@ class IcingaDBWebServer(GenericServer):
                             form_inputs[form_input] = ''
                     form_inputs['username'] = self.username
                     form_inputs['password'] = self.password
-    
+
                     # fire up login button with all needed data
                     self.FetchURL('{0}/authentication/login'.format(self.monitor_url), cgi_data=form_inputs)
 
@@ -128,7 +128,7 @@ class IcingaDBWebServer(GenericServer):
             self.cgiurl_hosts = {'hard': self.monitor_cgi_url + '/icingadb/hosts?host.state.is_problem=y&host.state.state_type=hard&columns=host.state.last_update&format=json', \
                                  'soft': self.monitor_cgi_url + '/icingadb/hosts?host.state.is_problem=y&host.state.state_type=soft&columns=host.state.last_update&format=json'}
             # monitoring health
-            self.cgiurl_monitoring_health = self.monitor_cgi_url + '/icingaweb2/health?format=json'
+            self.cgiurl_monitoring_health = self.monitor_cgi_url + '/health?format=json'
 
         # new_hosts dictionary
         self.new_hosts = dict()
@@ -136,16 +136,16 @@ class IcingaDBWebServer(GenericServer):
         # hosts - mostly the down ones
         # now using JSON output from Icinga
         try:
-            for status_type in 'hard', 'soft':   
+            for status_type in 'hard', 'soft':
                 # first attempt
-                result = self.FetchURL(self.cgiurl_hosts[status_type], giveback='raw')            
+                result = self.FetchURL(self.cgiurl_hosts[status_type], giveback='raw')
                 # authentication errors get a status code 200 too back because its
                 # HTML works fine :-(
                 if result.status_code < 400 and\
                    result.result.startswith('<'):
                     # in case of auth error reset HTTP session and try again
                     self.reset_HTTP()
-                    result = self.FetchURL(self.cgiurl_hosts[status_type], giveback='raw') 
+                    result = self.FetchURL(self.cgiurl_hosts[status_type], giveback='raw')
                     # if it does not work again tell GUI there is a problem
                     if result.status_code < 400 and\
                        result.result.startswith('<'):
@@ -153,7 +153,7 @@ class IcingaDBWebServer(GenericServer):
                         return Result(result=result.result,
                                       error='Authentication error',
                                       status_code=result.status_code)
-                
+
                 # purify JSON result of unnecessary control sequence \n
                 jsonraw, error, status_code = copy.deepcopy(result.result.replace('\n', '')),\
                                               copy.deepcopy(result.error),\
@@ -193,47 +193,48 @@ class IcingaDBWebServer(GenericServer):
                     # host
                     if self.use_display_name_host == False:
                         # according to http://sourceforge.net/p/nagstamon/bugs/83/ it might
-                        # better be host_name instead of host_display_name
-                        # legacy Icinga adjustments
-                        if 'host_name' in h: host_name = h['host_name']
-                        elif 'host' in h: host_name = h['host']
+                        # better be name instead of display_name
+                        host_name = h['name']
                     else:
                         # https://github.com/HenriWahl/Nagstamon/issues/46 on the other hand has
                         # problems with that so here we go with extra display_name option
-                        host_name = h['host_display_name']
+                        host_name = h['display_name']
 
                     # host objects contain service objects
                     if not host_name in self.new_hosts:
                         self.new_hosts[host_name] = GenericHost()
                         self.new_hosts[host_name].name = host_name
                         self.new_hosts[host_name].server = self.name
-                        self.new_hosts[host_name].status = self.STATES_MAPPING['hosts'][int(h['host_state'])]
-                        self.new_hosts[host_name].last_check = datetime.datetime.fromtimestamp(int(h['host_last_check']))
-                        self.new_hosts[host_name].attempt = h['host_attempt']
-                        self.new_hosts[host_name].status_information = BeautifulSoup(h['host_output'].replace('\n', ' ').strip(), 'html.parser').text
-                        self.new_hosts[host_name].passiveonly = not(int(h['host_active_checks_enabled']))
-                        self.new_hosts[host_name].notifications_disabled = not(int(h['host_notifications_enabled']))
-                        self.new_hosts[host_name].flapping = bool(int(h['host_is_flapping']))
-                        self.new_hosts[host_name].acknowledged = bool(int(h['host_acknowledged']))
-                        self.new_hosts[host_name].scheduled_downtime = bool(int(h['host_in_downtime']))
                         self.new_hosts[host_name].status_type = status_type
-                        
+                        if (status_type == 'hard'):
+                            self.new_hosts[host_name].status = self.STATES_MAPPING['hosts'][int(h['state']['hard_state'])]
+                        else:
+                            self.new_hosts[host_name].status = self.STATES_MAPPING['hosts'][int(h['state']['soft_state'])]
+
+                        self.new_hosts[host_name].last_check = datetime.datetime.fromtimestamp(int(h['state']['last_update']))
+                        self.new_hosts[host_name].attempt = "{}/{}".format(h['state']['check_attempt'],h['state']['max_check_attempts'])
+                        self.new_hosts[host_name].status_information = BeautifulSoup(h['state']['output'].replace('\n', ' ').strip(), 'html.parser').text
+                        self.new_hosts[host_name].passiveonly = not(int(h['active_checks_enabled']))
+                        self.new_hosts[host_name].notifications_disabled = not(int(h['notifications_enabled']))
+                        self.new_hosts[host_name].flapping = bool(int(h['state']['is_flapping'] or 0))
+                        self.new_hosts[host_name].acknowledged = bool(int(h['state']['is_acknowledged'] or 0))
+                        self.new_hosts[host_name].scheduled_downtime = bool(int(h['state']['in_downtime'] or 0))
+
                         # extra Icinga properties to solve https://github.com/HenriWahl/Nagstamon/issues/192
                         # acknowledge needs host_description and no display name
-                        self.new_hosts[host_name].real_name = h['host_name']
+                        self.new_hosts[host_name].real_name = h['name']
 
                         # Icinga only updates the attempts for soft states. When hard state is reached, a flag is set and
                         # attemt is set to 1/x.
                         if (status_type == 'hard'):
                             try:
-                                maxAttempts = h['host_attempt'].split('/')[1]
-                                self.new_hosts[host_name].attempt = "{0}/{0}".format(maxAttempts)
+                                self.new_hosts[host_name].attempt = "{0}/{0}".format(h['max_check_attempts'])
                             except Exception:
                                 self.new_hosts[host_name].attempt = "HARD"
-       
+
                         # extra duration needed for calculation
-                        if h['host_last_state_change'] is not None:
-                            last_change = h['host_last_state_change'] if h['host_last_state_change'] is not None else 0
+                        if h['state']['last_state_change'] is not None:
+                            last_change = h['state']['last_state_change'] if h['state']['last_state_change'] is not None else 0
                             duration = datetime.datetime.now() - datetime.datetime.fromtimestamp(int(last_change))
                             self.new_hosts[host_name].duration = strfdelta(duration,'{days}d {hours}h {minutes}m {seconds}s')
                         else:
@@ -261,7 +262,7 @@ class IcingaDBWebServer(GenericServer):
                     return Result(result=jsonraw,
                                   error=error,
                                   status_code=status_code)
-                
+
                 # check if any error occured
                 self.check_for_error(jsonraw, error, status_code)
 
@@ -300,7 +301,7 @@ class IcingaDBWebServer(GenericServer):
                         self.new_hosts[host_name].services[service_name].name = service_name
                         self.new_hosts[host_name].services[service_name].server = self.name
                         self.new_hosts[host_name].services[service_name].status = self.STATES_MAPPING['services'][int(s['service_state'])]
-                        self.new_hosts[host_name].services[service_name].last_check = datetime.datetime.fromtimestamp(int(s['service_last_check']))                      
+                        self.new_hosts[host_name].services[service_name].last_check = datetime.datetime.fromtimestamp(int(s['service_last_check']))
                         self.new_hosts[host_name].services[service_name].attempt = s['service_attempt']
                         self.new_hosts[host_name].services[service_name].status_information = BeautifulSoup(s['service_output'].replace('\n', ' ').strip(), 'html.parser').text
                         self.new_hosts[host_name].services[service_name].passiveonly = not(int(s['service_active_checks_enabled']))
@@ -313,7 +314,7 @@ class IcingaDBWebServer(GenericServer):
 
                         if self.new_hosts[host_name].services[service_name].unreachable:
                             self.new_hosts[host_name].services[service_name].status_information += " (SERVICE UNREACHABLE)"
-                        
+
                         # extra Icinga properties to solve https://github.com/HenriWahl/Nagstamon/issues/192
                         # acknowledge needs service_description and no display name
                         self.new_hosts[host_name].services[service_name].real_name = s['service_description']
@@ -326,7 +327,7 @@ class IcingaDBWebServer(GenericServer):
                                 self.new_hosts[host_name].services[service_name].attempt = "{0}/{0}".format(maxAttempts)
                             except Exception:
                                 self.new_hosts[host_name].services[service_name].attempt = "HARD"
-                        
+
                         # extra duration needed for calculation
                         if s['service_last_state_change'] is not None:
                             last_change = s['service_last_state_change'] if s['service_last_state_change'] is not None else 0
@@ -570,7 +571,7 @@ class IcingaDBWebServer(GenericServer):
             open monitor from tablewidget context menu
         '''
         # only type is important so do not care of service '' in case of host monitor
-        if service == '':    
+        if service == '':
             url = '{0}/icingadb/hosts?host.state.is_problem=y&sort=host.state.severity#!{1}/icingadb/hosts/{2}'.format(self.monitor_url,
                                                                                                                      (urllib.parse.urlparse(self.monitor_url).path),
                                                                                                                      urllib.parse.urlencode(
