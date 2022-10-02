@@ -235,8 +235,7 @@ class IcingaDBWebServer(GenericServer):
 
                         # extra duration needed for calculation
                         if h['state']['last_state_change'] is not None and h['state']['last_state_change'] != 0:
-                            last_change = h['state']['last_state_change'] if h['state']['last_state_change'] is not None else 0
-                            duration = datetime.datetime.now() - datetime.datetime.fromtimestamp(int(float(last_change)))
+                            duration = datetime.datetime.now() - datetime.datetime.fromtimestamp(int(float(h['state']['last_state_change'])))
                             self.new_hosts[host_name].duration = strfdelta(duration,'{days}d {hours}h {minutes}m {seconds}s')
                         else:
                             self.new_hosts[host_name].duration = 'n/a'
@@ -333,8 +332,7 @@ class IcingaDBWebServer(GenericServer):
 
                         # extra duration needed for calculation
                         if s['state']['last_state_change'] is not None and s['state']['last_state_change'] != 0:
-                            last_change = s['state']['last_state_change'] if s['state']['last_state_change'] is not None else 0
-                            duration = datetime.datetime.now() - datetime.datetime.fromtimestamp(int(float(last_change)))
+                            duration = datetime.datetime.now() - datetime.datetime.fromtimestamp(int(float(s['state']['last_state_change'])))
                             self.new_hosts[host_name].services[service_name].duration = strfdelta(duration, '{days}d {hours}h {minutes}m {seconds}s')
                         else:
                             self.new_hosts[host_name].services[service_name].duration = 'n/a'
