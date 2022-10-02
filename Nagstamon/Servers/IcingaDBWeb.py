@@ -218,7 +218,7 @@ class IcingaDBWebServer(GenericServer):
                         self.new_hosts[host_name].notifications_disabled = not(int(h['notifications_enabled']))
                         self.new_hosts[host_name].flapping = bool(int(h['state']['is_flapping'] or 0))
                         #s['state']['is_acknowledged'] can be null, 0, 1, or 'sticky'
-                        self.new_hosts[host_name].acknowledged = bool(int(h['state']['is_acknowledged'].replace('sticky', 1) or 0))
+                        self.new_hosts[host_name].acknowledged = bool(int(h['state']['is_acknowledged'].replace('sticky', '1') or 0))
                         self.new_hosts[host_name].scheduled_downtime = bool(int(h['state']['in_downtime'] or 0))
 
                         # extra Icinga properties to solve https://github.com/HenriWahl/Nagstamon/issues/192
@@ -234,7 +234,7 @@ class IcingaDBWebServer(GenericServer):
                                 self.new_hosts[host_name].attempt = "HARD"
 
                         # extra duration needed for calculation
-                        if h['state']['last_state_change'] is not None:
+                        if h['state']['last_state_change'] is not None or h['state']['last_state_change'] == 0:
                             last_change = h['state']['last_state_change'] if h['state']['last_state_change'] is not None else 0
                             duration = datetime.datetime.now() - datetime.datetime.fromtimestamp(int(float(last_change)))
                             self.new_hosts[host_name].duration = strfdelta(duration,'{days}d {hours}h {minutes}m {seconds}s')
@@ -312,7 +312,7 @@ class IcingaDBWebServer(GenericServer):
                         self.new_hosts[host_name].services[service_name].notifications_disabled = not(int(s['notifications_enabled']))
                         self.new_hosts[host_name].services[service_name].flapping = bool(int(s['state']['is_flapping'] or 0))
                         #s['state']['is_acknowledged'] can be null, 0, 1, or 'sticky'
-                        self.new_hosts[host_name].services[service_name].acknowledged = bool(int(s['state']['is_acknowledged'].replace('sticky', 1) or 0))
+                        self.new_hosts[host_name].services[service_name].acknowledged = bool(int(s['state']['is_acknowledged'].replace('sticky', '1') or 0))
                         self.new_hosts[host_name].services[service_name].scheduled_downtime = bool(int(s['state']['in_downtime'] or 0))
                         self.new_hosts[host_name].services[service_name].unreachable = not bool(int(s['state']['is_reachable'] or 0))
 
@@ -332,7 +332,7 @@ class IcingaDBWebServer(GenericServer):
                                 self.new_hosts[host_name].services[service_name].attempt = "HARD"
 
                         # extra duration needed for calculation
-                        if s['state']['last_state_change'] is not None:
+                        if s['state']['last_state_change'] is not None or s['state']['last_state_change'] == 0:
                             last_change = s['state']['last_state_change'] if s['state']['last_state_change'] is not None else 0
                             duration = datetime.datetime.now() - datetime.datetime.fromtimestamp(int(float(last_change)))
                             self.new_hosts[host_name].services[service_name].duration = strfdelta(duration, '{days}d {hours}h {minutes}m {seconds}s')
