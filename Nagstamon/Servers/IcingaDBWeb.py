@@ -573,16 +573,16 @@ class IcingaDBWebServer(GenericServer):
         '''
         # only type is important so do not care of service '' in case of host monitor
         if service == '':
-            url = '{0}/icingadb/hosts?host.state.is_problem=y&sort=host.state.severity#!{1}/icingadb/hosts/{2}'.format(self.monitor_url,
+            url = '{0}/icingadb/hosts?host.state.is_problem=y&sort=host.state.severity#!{1}/icingadb/host?{2}'.format(self.monitor_url,
                                                                                                                      (urllib.parse.urlparse(self.monitor_url).path),
                                                                                                                      urllib.parse.urlencode(
-                                                                                                                        {'host': self.hosts[host].real_name}).replace('+', ' '))
+                                                                                                                        {'name': self.hosts[host].real_name}).replace('+', ' '))
         else:
-            url = '{0}/icingadb/services?service.state.is_problem=y&sort=service.state.severity&dir=desc#!{1}/icingadb/services/{2}'.format(self.monitor_url,
+            url = '{0}/icingadb/services?service.state.is_problem=y&sort=service.state.severity%20desc#!{1}/icingadb/service?{2}'.format(self.monitor_url,
                                                                                                                                    (urllib.parse.urlparse(self.monitor_url).path),
                                                                                                                                     urllib.parse.urlencode(
-                                                                                                                                        {'host': self.hosts[host].real_name,
-                                                                                                                                         'service': self.hosts[host].services[service].real_name}).replace('+', ' '))
+                                                                                                                                        {'name': self.hosts[host].services[service].real_name,
+                                                                                                                                         'host.name': self.hosts[host].real_name}).replace('+', ' '))
         if conf.debug_mode:
             self.Debug(server=self.get_name(), host=host, service=service,
                        debug='Open host/service monitor web page {0}'.format(url))
