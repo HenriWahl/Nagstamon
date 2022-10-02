@@ -443,9 +443,9 @@ class IcingaDBWebServer(GenericServer):
         #cgi_data['formUID'] = formUID
         cgi_data['btn_submit'] = btn_submit
         cgi_data['comment'] = comment
-        cgi_data['persistent'] = int(persistent).map(dict(0=n, 1=y))
-        cgi_data['sticky'] = int(sticky).map(dict(0=n, 1=y))
-        cgi_data['notify'] = int(notify).map(dict(0=n, 1=y))
+        cgi_data['persistent'] = int(persistent).replace((1, 0), ('y', 'n'), inplace=True)
+        cgi_data['sticky'] = int(sticky).replace((1, 0), ('y', 'n'), inplace=True)
+        cgi_data['notify'] = int(notify).replace((1, 0), ('y', 'n'), inplace=True)
         if expire_time:
             cgi_data['expire'] = 'y'
             cgi_data['expire_time'] = expire_time
