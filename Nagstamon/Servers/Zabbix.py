@@ -496,7 +496,7 @@ class ZabbixServer(GenericServer):
     def set_recheck(self, info_dict):
         pass
 
-    def _set_acknowledge(self, host, service, author, comment, sticky, notify, persistent, all_services=[]):
+    def _set_acknowledge(self, host, service, author, comment, sticky, notify, persistent, all_services=None):
         if conf.debug_mode is True:
             self.Debug(server=self.get_name(),
                        debug="Set Acknowledge Host: " + host + " Service: " + service + " Sticky: " + str(
@@ -504,6 +504,8 @@ class ZabbixServer(GenericServer):
         self._login()
         eventids = set()
         unclosable_events = set()
+        if all_services is None:
+            all_services = []
         all_services.append(service)
         get_host = self.hosts[host]
         # Through all Services

@@ -151,7 +151,7 @@ class ThrukServer(GenericServer):
                        debug='Open host/service monitor web page {0}'.format(url))
         webbrowser_open(url)
 
-    def _set_acknowledge(self, host, service, author, comment, sticky, notify, persistent, all_services=[]):
+    def _set_acknowledge(self, host, service, author, comment, sticky, notify, persistent, all_services=None):
         '''
             send acknowledge to monitor server - might be different on every monitor type
         '''
@@ -191,7 +191,7 @@ class ThrukServer(GenericServer):
         self.FetchURL(url, giveback='raw', cgi_data=cgi_data)
 
         # acknowledge all services on a host
-        if len(all_services) > 0:
+        if all_services:
             for s in all_services:
                 cgi_data['cmd_typ'] = '34'
                 cgi_data['service'] = self.hosts[host].services[ s ].real_name
