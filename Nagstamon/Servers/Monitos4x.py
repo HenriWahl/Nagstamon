@@ -456,7 +456,7 @@ class Monitos4xServer(GenericServer):
         else:
             self.session.post('{0}/api/{1}/{2}/reschedule'.format(self.monitor_url, type ,uuid))
 
-    def _set_acknowledge(self, host, service, author, comment, sticky, notify, persistent, all_services=[]):
+    def _set_acknowledge(self, host, service, author, comment, sticky, notify, persistent, all_services=None):
         """
             Do a POST-Request to set an acknowledgement for a host, service or host with all services in monitos 4
 
@@ -467,13 +467,13 @@ class Monitos4xServer(GenericServer):
             :param sticky: Bool - Sticky Acknowledgement
             :param notify: Bool - Send Notifications
             :param persistent: Bool - Persistent comment
-            :param all_services: Array - List of all services (filled only if 'Acknowledge all services on host' is set)
+            :param all_services: Optional[Array] - List of all services (filled only if 'Acknowledge all services on host' is set)
         """
         form_data = dict()
 
         type = 'host'
 
-        if len(all_services) > 0:  # Host & all Services
+        if all_services:  # Host & all Services
             uuid = self.hosts[host].uuid
             form_data = json.dumps(
                 {'comment': comment, 'notify': int(notify), 'persistent': int(persistent),
