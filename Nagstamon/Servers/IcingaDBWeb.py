@@ -414,13 +414,13 @@ class IcingaDBWebServer(GenericServer):
         # First retrieve the info page for this host/service
         if service == '':
             # url = self.monitor_cgi_url + '/monitoring/host/acknowledge-problem?host=' + host
-            url = '{0}/icingadb/host/acknowledge?name={1}'.format(self.monitor_cgi_url,
+            url = '{0}/icingadb/host/acknowledge?name={1}&showCompact=1'.format(self.monitor_cgi_url,
                                                                             self.hosts[host].real_name)
         else:
-            # url = self.monitor_cgi_url + '/monitoring/service/acknowledge-problem?host=' + host + '&service=' + service
-            url = '{0}/icingadb/service/acknowledge?host.name={1}&name={2}'.format(self.monitor_cgi_url,
-                                                                                           self.hosts[host].real_name,
-                                                                                           self.hosts[host].services[service].real_name)
+            url = '{0}/icingadb/service/acknowledge?name={1}&host.name={2}&showCompact=1'.format(self.monitor_cgi_url,
+                                                                                           self.hosts[host].services[service].real_name,
+                                                                                           self.hosts[host].real_name
+                                                                                           )
         result = self.FetchURL(url, giveback='raw')
 
         if result.error != '':
@@ -434,23 +434,23 @@ class IcingaDBWebServer(GenericServer):
         formtag = pagesoup.find('form', {'name':'IcingaModuleMonitoringFormsCommandObjectAcknowledgeProblemCommandForm'})
 
         CSRFToken = formtag.findNext('input', {'name':'CSRFToken'})['value']
-        formUID = formtag.findNext('input', {'name':'formUID'})['value']
+        #formUID = formtag.findNext('input', {'name':'formUID'})['value']
         btn_submit = formtag.findNext('input', {'name':'btn_submit'})['value']
 
         # Pass these values to the same URL as cgi_data
         cgi_data = {}
         cgi_data['CSRFToken'] = CSRFToken
-        cgi_data['formUID'] = formUID
+        #cgi_data['formUID'] = formUID
         cgi_data['btn_submit'] = btn_submit
-#
         cgi_data['comment'] = comment
-        cgi_data['persistent'] = int(persistent)
-        cgi_data['sticky'] = int(sticky)
-        cgi_data['notify'] = int(notify)
-        cgi_data['comment'] = comment
+        cgi_data['persistent'] = int(persistent).map(dict(0=n, 1=y))
+        cgi_data['sticky'] = int(sticky).map(dict(0=n, 1=y))
+        cgi_data['notify'] = int(notify).map(dict(0=n, 1=y))
         if expire_time:
-            cgi_data['expire'] = 1
+            cgi_data['expire'] = 'y'
             cgi_data['expire_time'] = expire_time
+        else:
+            cgi_data['expire'] = 'n'
 
         self.FetchURL(url, giveback='raw', cgi_data=cgi_data)
 
