@@ -406,7 +406,7 @@ class IcingaWeb2Server(GenericServer):
                               info_dict['expire_time'])
 
 
-    def _set_acknowledge(self, host, service, author, comment, sticky, notify, persistent, all_services=[], expire_time=None):
+    def _set_acknowledge(self, host, service, author, comment, sticky, notify, persistent, all_services=None, expire_time=None):
         # First retrieve the info page for this host/service
         if service == '':
             # url = self.monitor_cgi_url + '/monitoring/host/acknowledge-problem?host=' + host

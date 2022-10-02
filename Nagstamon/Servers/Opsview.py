@@ -158,7 +158,7 @@ class OpsviewServer(GenericServer):
         self.FetchURL(url + cgi_data, giveback="raw", cgi_data=({ }))
 
 
-    def _set_acknowledge(self, host, service, author, comment, sticky, notify, persistent, all_services=[]):
+    def _set_acknowledge(self, host, service, author, comment, sticky, notify, persistent, all_services=None):
         """
             Sumit acknowledgement for host or service
         """

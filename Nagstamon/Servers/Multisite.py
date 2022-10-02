@@ -516,7 +516,7 @@ class MultisiteServer(GenericServer):
                            debug='Invalid start/end date/time given')
 
 
-    def _set_acknowledge(self, host, service, author, comment, sticky, notify, persistent, all_services=[]):
+    def _set_acknowledge(self, host, service, author, comment, sticky, notify, persistent, all_services=None):
         p = {
             '_acknowledge':    'Acknowledge',
             '_ack_sticky':     sticky == 1 and 'on' or '',
@@ -527,8 +527,9 @@ class MultisiteServer(GenericServer):
         self._action(self.hosts[host].site, host, service, p)
 
         # acknowledge all services on a host when told to do so
-        for s in all_services:
-            self._action(self.hosts[host].site, host, s, p)
+        if all_services:
+            for s in all_services:
+                self._action(self.hosts[host].site, host, s, p)
 
 
     def _set_recheck(self, host, service):

@@ -431,7 +431,7 @@ class CentreonServer(GenericServer):
         # return True if all worked well
         return Result()
 
-    def _set_acknowledge(self, host, service, author, comment, sticky, notify, persistent, all_services=[]):
+    def _set_acknowledge(self, host, service, author, comment, sticky, notify, persistent, all_services=None):
         try:
 
             acknowledgements = {
@@ -474,8 +474,8 @@ class CentreonServer(GenericServer):
                                debug="Set Ack on Host, status code : " + str(status_code))
 
             # Service
-            if service != '' or len(all_services) > 0:
-                if len(all_services) == 0:
+            if service != '' or all_services:
+                if not all_services:
                     all_services = [service]
 
                 for s in all_services:

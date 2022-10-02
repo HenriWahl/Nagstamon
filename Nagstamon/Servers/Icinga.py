@@ -634,7 +634,7 @@ class IcingaServer(GenericServer):
         self.FetchURL(self.monitor_cgi_url + '/cmd.cgi', giveback='raw', cgi_data=cgi_data)
 
 
-    def _set_acknowledge(self, host, service, author, comment, sticky, notify, persistent, all_services=[]):
+    def _set_acknowledge(self, host, service, author, comment, sticky, notify, persistent, all_services=None):
         '''
             send acknowledge to monitor server
             extra _method necessary due to https://github.com/HenriWahl/Nagstamon/issues/192
@@ -680,7 +680,7 @@ class IcingaServer(GenericServer):
         self.FetchURL(url, giveback='raw', cgi_data=cgi_data)
 
         # acknowledge all services on a host
-        if len(all_services) > 0:
+        if all_services:
             for s in all_services:
                 cgi_data['cmd_typ'] = '34'
                 cgi_data['service'] = s
