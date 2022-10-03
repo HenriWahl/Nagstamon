@@ -708,20 +708,20 @@ class CentreonServer(GenericServer):
         try:
             if conf.debug_mode == True:
                 self.Debug(server='[' + self.get_name() + ']',
-                           debug='Check-session, the token will be deleted if it has not been used for more than one hour. Current Token = ' + str(
+                           debug='Check-session, the token expire if not been used for more than one hour. Current Token = ' + str(
                                self.token))
 
             cgi_data = {'limit': '0'}
-            self.session = requests.Session()
-            self.session.headers['Content-Type'] = 'application/json'
-            self.session.headers['X-Auth-Token'] = self.token
-
             # Get en empty service list, to check the status of the current token
             # This request must be done in a GET, so just encode the parameters and fetch
             result = self.FetchURL(self.urls_centreon['resources'] + '?' + urllib.parse.urlencode(cgi_data),
                                    giveback="raw")
-            if result.status_code == 403:
-                self.get_token()
+
+           # If we got an 403 or 401, the token expired and must be renewed
+            if result.status_code == 403 or result.status_code == 401:
+                self.token = self.get_token().result
+                if conf.debug_mode == True:
+                    self.Debug(server='[' + self.get_name() + ']', debug='Check-session, session renewed')
                 result = self.FetchURL(self.urls_centreon['resources'] + '?' + urllib.parse.urlencode(cgi_data),
                                        giveback="raw")
             if not 'ConnectTimeoutError' in result.error and \
@@ -738,12 +738,6 @@ class CentreonServer(GenericServer):
                            debug="Check-session, Fetched JSON: " + pprint.pformat(data))
                 self.Debug(server=self.get_name(),
                            debug="Check-session, Error : " + error + ", Status code : " + str(status_code))
-
-            # If we got an 401, the token expired and must be renewed
-            if status_code == 401:
-                self.token = self.get_token().result
-                if conf.debug_mode == True:
-                    self.Debug(server='[' + self.get_name() + ']', debug='Check-session, session renewed')
 
         except:
             traceback.print_exc(file=sys.stdout)
