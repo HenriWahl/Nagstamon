@@ -120,7 +120,7 @@ class CentreonServer(GenericServer):
         self.urls_centreon = urls_centreon_api_v2
         if conf.debug_mode == True:
             self.Debug(server='[' + self.get_name() + ']',
-                       debug='URLs defined for Centreon vers. : %s' % (self.centreon_version_major))
+                       debug='URLs defined for Centreon version : %s' % (self.centreon_version_major))
 
     def open_monitor(self, host, service=''):
         # Used for self.MENU_ACTIONS = ['Monitor']
@@ -702,9 +702,7 @@ class CentreonServer(GenericServer):
     def check_session(self):
         if conf.debug_mode == True:
             self.Debug(server='[' + self.get_name() + ']', debug='Checking session status')
-        # Not needed anymore as URLs are set at start
-        # if 'url_centreon' not in self.__dict__:
-        #     self.init_config()
+
         try:
             if conf.debug_mode == True:
                 self.Debug(server='[' + self.get_name() + ']',
