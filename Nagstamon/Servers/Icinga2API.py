@@ -209,7 +209,7 @@ class Icinga2APIServer(GenericServer):
         pass
 
     def _set_acknowledge(self, host, service, author, comment, sticky,
-                         notify, persistent, all_services=[]):
+                         notify, persistent, all_services=None):
         '''
         Send acknowledge to monitor server
         '''

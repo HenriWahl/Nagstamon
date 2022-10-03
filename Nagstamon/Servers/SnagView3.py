@@ -366,7 +366,7 @@ class SnagViewServer(GenericServer):
         self.session.post(
             '{0}/rest/private/nagios/command/execute'.format(self.monitor_url), data=form_data)
 
-    def _set_acknowledge(self, host, service, author, comment, sticky, notify, persistent, all_services=[]):
+    def _set_acknowledge(self, host, service, author, comment, sticky, notify, persistent, all_services=None):
         """
             Do a POST-Request to set an acknowledgement for a host, service or host with all services in SNAG-View 3
 
@@ -377,11 +377,11 @@ class SnagViewServer(GenericServer):
             :param sticky: Bool - Sticky Acknowledgement
             :param notify: Bool - Send Notifications
             :param persistent: Bool - Persistent comment
-            :param all_services: Array - List of all services (filled only if 'Acknowledge all services on host' is set)
+            :param all_services: Optional[Array] - List of all services (filled only if 'Acknowledge all services on host' is set)
         """
         form_data = dict()
 
-        if len(all_services) > 0:  # Host & all Services
+        if all_services:  # Host & all Services
             form_data['commandType'] = 'sv_host'
             form_data['commandName'] = 'acknowledge-host-service-problems'
             form_data['params'] = json.dumps(

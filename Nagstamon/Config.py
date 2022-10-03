@@ -125,7 +125,7 @@ class AppInfo(object):
         contains app information previously located in GUI.py
     """
     NAME = 'Nagstamon'
-    VERSION = '3.9-20220820'
+    VERSION = '3.9-20220930'
     WEBSITE = 'https://nagstamon.de'
     COPYRIGHT = '©2008-2022 Henri Wahl et al.'
     COMMENTS = 'Nagios status monitor for your desktop'
@@ -320,36 +320,14 @@ class Config(object):
         # would not find a config file
         self.unconfigured = True
 
-        # adding cli args variable
-        self.cli_args = {}
-
-        # Parse the command line
-        parser = argparse.ArgumentParser(description='Nagstamon for your CLI')
-
-        # separate NagstaCLI from
-        if len(sys.argv) > 2 or (len(sys.argv) > 1 and sys.argv[1] in ['--help', '-h']):
-            parser.add_argument('--servername', type=str, help="name of the (Nagios)server. Look in nagstamon config")
-            parser.add_argument('--hostname', type=str)
-            parser.add_argument('--comment', type=str, default="")
-            parser.add_argument('--service', type=str, default="",
-                                help="specify service, if needed. Mostly the whole host goes to downstate")
-            parser.add_argument('--fixed', type=str, choices=['y', 'n'], default="y",
-                                help="fixed=n means wait for service/host to go down, then start the downtime")
-            parser.add_argument('--start_time', type=str, help="start time for downtime")
-            parser.add_argument('--hours', type=int, help="amount of hours for downtime")
-            parser.add_argument('--minutes', type=int, help="amount of minutes for downtime")
-            parser.add_argument('--config', type=str, help="Path for configuration folder")
-            parser.add_argument('--output', type=str, choices=['y', 'n'], default="y",
-                                help="lists given parameter (for debugging)")
-        else:
-            parser.add_argument('config', nargs='?', help='Path for configuration folder')
-
-        self.cli_args, unknown = parser.parse_known_args()
+        # when more tha a config directory was given something is wrong
+        if len(sys.argv) > 2:
+            print('Currently Nagstamon supports only 1 config directory.')
+            self.configdir = sys.argv[1]
 
         # try to use a given config file - there must be one given
-        if len(sys.argv) < 3 and self.cli_args.config:
-            # allow to give a config file
-            self.configdir = self.cli_args.config
+        elif len(sys.argv) == 2:
+            self.configdir = sys.argv[1]
 
         # otherwise if there exits a configdir in current working directory it should be used
         elif os.path.exists(os.getcwd() + os.sep + 'nagstamon.config'):
@@ -519,12 +497,11 @@ class Config(object):
                         config.read(self.configdir + os.sep + settingsdir + os.sep + settingsfile)
 
                         # create object for every setting
-                        name = config.sections()[0].replace(setting + '_', '', 1)
-
+                        name = config.get(config.sections()[0], 'name')
                         settings[name] = globals()[configobj]()
 
                         # go through all items of the server
-                        for i in config.items(setting + '_' + name):
+                        for i in config.items(config.sections()[0]):
                             # create a key of every config item with its appropriate value
                             if i[1] in BOOLPOOL:
                                 value = BOOLPOOL[i[1]]

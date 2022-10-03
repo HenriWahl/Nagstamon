@@ -54,20 +54,20 @@ def strfdelta(tdelta, fmt):
     return fmt.format(**d)
 
 
-class IcingaWeb2Server(GenericServer):
+class IcingaDBWebServer(GenericServer):
     """
-        object of Incinga server
+        object of Icinga server
     """
-    TYPE = 'IcingaWeb2'
+    TYPE = 'IcingaDBWeb'
     MENU_ACTIONS = ['Monitor', 'Recheck', 'Acknowledge', 'Submit check result', 'Downtime']
     STATES_MAPPING = {'hosts' : {0 : 'UP', 1 : 'DOWN', 2 : 'UNREACHABLE'}, \
                      'services' : {0 : 'OK', 1 : 'WARNING', 2 : 'CRITICAL', 3 : 'UNKNOWN'}}
     STATES_MAPPING_REV = {'hosts' : { 'UP': 0, 'DOWN': 1, 'UNREACHABLE': 2}, \
                      'services' : {'OK': 0, 'WARNING': 1, 'CRITICAL': 2, 'UNKNOWN': 3}}
     BROWSER_URLS = { 'monitor': '$MONITOR-CGI$/dashboard', \
-                    'hosts': '$MONITOR-CGI$/monitoring/list/hosts', \
-                    'services': '$MONITOR-CGI$/monitoring/list/services', \
-                    'history': '$MONITOR-CGI$/monitoring/list/eventhistory?timestamp>=-7 days'}
+                    'hosts': '$MONITOR-CGI$/icingadb/hosts', \
+                    'services': '$MONITOR-CGI$/icingadb/services', \
+                    'history': '$MONITOR-CGI$/icingadb/history'}
 
 
     def init_config(self):
@@ -93,7 +93,7 @@ class IcingaWeb2Server(GenericServer):
         GenericServer.init_HTTP(self)
 
         if self.session and not 'Referer' in self.session.headers:
-            self.session.headers['Referer'] = self.monitor_cgi_url + '/icingaweb2/monitoring'
+            self.session.headers['Referer'] = self.monitor_cgi_url + '/icingaweb2/icingadb'
 
         # normally cookie auth will be used
         if not self.no_cookie_auth:
@@ -122,13 +122,13 @@ class IcingaWeb2Server(GenericServer):
         # define CGI URLs for hosts and services
         if self.cgiurl_hosts == self.cgiurl_services == self.cgiurl_monitoring_health == None:
             # services (unknown, warning or critical?)
-            self.cgiurl_services = {'hard': self.monitor_cgi_url + '/monitoring/list/services?service_state>0&service_state<=3&service_state_type=1&addColumns=service_last_check,service_is_reachable&format=json', \
-                                    'soft': self.monitor_cgi_url + '/monitoring/list/services?service_state>0&service_state<=3&service_state_type=0&addColumns=service_last_check,service_is_reachable&format=json'}
+            self.cgiurl_services = {'hard': self.monitor_cgi_url + '/icingadb/services?service.state.is_problem=y&service.state.in_downtime=n&service.state.state_type=hard&columns=service.state.last_update,service.state.is_reachable&format=json', \
+                                    'soft': self.monitor_cgi_url + '/icingadb/services?service.state.is_problem=y&service.state.in_downtime=n&service.state.state_type=soft&columns=service.state.last_update,service.state.is_reachable&format=json'}
             # hosts (up or down or unreachable)
-            self.cgiurl_hosts = {'hard': self.monitor_cgi_url + '/monitoring/list/hosts?host_state>0&host_state<=2&host_state_type=1&addColumns=host_last_check&format=json', \
-                                 'soft': self.monitor_cgi_url + '/monitoring/list/hosts?host_state>0&host_state<=2&host_state_type=0&addColumns=host_last_check&format=json'}
+            self.cgiurl_hosts = {'hard': self.monitor_cgi_url + '/icingadb/hosts?host.state.is_problem=y&host.state.state_type=hard&columns=host.state.last_update&format=json', \
+                                 'soft': self.monitor_cgi_url + '/icingadb/hosts?host.state.is_problem=y&host.state.state_type=soft&columns=host.state.last_update&format=json'}
             # monitoring health
-            self.cgiurl_monitoring_health = self.monitor_cgi_url + '/monitoring/health/info?format=json'
+            self.cgiurl_monitoring_health = self.monitor_cgi_url + '/icingaweb2/health?format=json'
 
         # new_hosts dictionary
         self.new_hosts = dict()
@@ -171,16 +171,18 @@ class IcingaWeb2Server(GenericServer):
                 # If it isn't running the last values stored in the database are returned/shown
                 # Unfortunately we need to make a extra request for this and only, if monitoring health is possible
                 if self.cgiurl_monitoring_health:
-                    try:
-                        result = self.FetchURL(self.cgiurl_monitoring_health, giveback='raw')
-                        monitoring_health = json.loads(result.result)[0]
-                        if (monitoring_health['is_currently_running'] == '0'):
-                            return Result(result=monitoring_health,
-                                          error='Icinga2 backend not running')
-                    except json.decoder.JSONDecodeError:
-                        # https://github.com/HenriWahl/Nagstamon/issues/619
-                        # Icinga2 monitoring health status query does not seem to work (on older version?)
-                        self.cgiurl_monitoring_health = None
+                    pass
+                    # TODO: Health checks for IcingaDB and icinga-redis
+                    # try:
+                    #     result = self.FetchURL(self.cgiurl_monitoring_health, giveback='raw')
+                    #     monitoring_health = json.loads(result.result)[0]
+                    #     if (monitoring_health['is_currently_running'] == '0'):
+                    #         return Result(result=monitoring_health,
+                    #                       error='Icinga2 backend not running')
+                    # except json.decoder.JSONDecodeError:
+                    #     # https://github.com/HenriWahl/Nagstamon/issues/619
+                    #     # Icinga2 monitoring health status query does not seem to work (on older version?)
+                    #     self.cgiurl_monitoring_health = None
 
                 hosts = json.loads(jsonraw)
 
@@ -354,9 +356,9 @@ class IcingaWeb2Server(GenericServer):
     def _set_recheck(self, host, service):
         # First retrieve the info page for this host/service
         if service == '':
-            url = self.monitor_cgi_url + '/monitoring/host/show?host=' + self.hosts[host].real_name
+            url = self.monitor_cgi_url + '/icingadb/host?name=' + self.hosts[host].real_name
         else:
-            url = self.monitor_cgi_url + '/monitoring/service/show?host=' + self.hosts[host].real_name + '&service=' + self.hosts[host].services[service].real_name
+            url = self.monitor_cgi_url + '/icingadb/service?name=' + self.hosts[host].services[service].real_name + '&host.name=' + self.hosts[host].real_name
         result = self.FetchURL(url, giveback='raw')
 
         if result.error != '':
@@ -406,15 +408,15 @@ class IcingaWeb2Server(GenericServer):
                               info_dict['expire_time'])
 
 
-    def _set_acknowledge(self, host, service, author, comment, sticky, notify, persistent, all_services=None, expire_time=None):
+    def _set_acknowledge(self, host, service, author, comment, sticky, notify, persistent, all_services=[], expire_time=None):
         # First retrieve the info page for this host/service
         if service == '':
             # url = self.monitor_cgi_url + '/monitoring/host/acknowledge-problem?host=' + host
-            url = '{0}/monitoring/host/acknowledge-problem?host={1}'.format(self.monitor_cgi_url,
+            url = '{0}/icingadb/host/acknowledge?name={1}'.format(self.monitor_cgi_url,
                                                                             self.hosts[host].real_name)
         else:
             # url = self.monitor_cgi_url + '/monitoring/service/acknowledge-problem?host=' + host + '&service=' + service
-            url = '{0}/monitoring/service/acknowledge-problem?host={1}&service={2}'.format(self.monitor_cgi_url,
+            url = '{0}/icingadb/service/acknowledge?host.name={1}&name={2}'.format(self.monitor_cgi_url,
                                                                                            self.hosts[host].real_name,
                                                                                            self.hosts[host].services[service].real_name)
         result = self.FetchURL(url, giveback='raw')
@@ -459,10 +461,10 @@ class IcingaWeb2Server(GenericServer):
     def _set_submit_check_result(self, host, service, state, comment, check_output, performance_data):
         # First retrieve the info page for this host/service
         if service == '':
-            url = self.monitor_cgi_url + '/monitoring/host/process-check-result?host=' + self.hosts[host].real_name
+            url = self.monitor_cgi_url + '/icingadb/host/process-checkresult?name=' + self.hosts[host].real_name
             status = self.STATES_MAPPING_REV['hosts'][state.upper()]
         else:
-            url = self.monitor_cgi_url + '/monitoring/service/process-check-result?host=' + self.hosts[host].real_name + '&service=' + self.hosts[host].services[service].real_name
+            url = self.monitor_cgi_url + '/icingadb/service/process-checkresult?host.name=' + self.hosts[host].real_name + '&name=' + self.hosts[host].services[service].real_name
             status = self.STATES_MAPPING_REV['services'][state.upper()]
 
         result = self.FetchURL(url, giveback='raw')
@@ -497,9 +499,9 @@ class IcingaWeb2Server(GenericServer):
     def _set_downtime(self, host, service, author, comment, fixed, start_time, end_time, hours, minutes):
         # First retrieve the info page for this host/service
         if service == '':
-            url = self.monitor_cgi_url + '/monitoring/host/schedule-downtime?host=' + self.hosts[host].real_name
+            url = self.monitor_cgi_url + '/icingadb/host/schedule-downtime?name=' + self.hosts[host].real_name
         else:
-            url = self.monitor_cgi_url + '/monitoring/service/schedule-downtime?host=' + self.hosts[host].real_name + '&service=' + self.hosts[host].services[service].real_name
+            url = self.monitor_cgi_url + '/icingadb/service/schedule-downtime?host.name=' + self.hosts[host].real_name + '&name=' + self.hosts[host].services[service].real_name
 
         result = self.FetchURL(url, giveback='raw')
 
@@ -553,7 +555,7 @@ class IcingaWeb2Server(GenericServer):
             directly from web interface
         '''
         try:
-            downtime = self.FetchURL(self.monitor_cgi_url + '/monitoring/host/schedule-downtime?host=' + self.hosts[host].real_name)
+            downtime = self.FetchURL(self.monitor_cgi_url + '/icingadb/host/schedule-downtime?name=' + self.hosts[host].real_name)
             start = downtime.result.find('input', {'name': 'start'})['value']
             end = downtime.result.find('input', {'name': 'end'})['value']
             # give values back as tuple
@@ -569,12 +571,12 @@ class IcingaWeb2Server(GenericServer):
         '''
         # only type is important so do not care of service '' in case of host monitor
         if service == '':    
-            url = '{0}/monitoring/list/hosts?host_problem=1&sort=host_severity#!{1}/monitoring/host/show?{2}'.format(self.monitor_url,
+            url = '{0}/icingadb/hosts?host.state.is_problem=y&sort=host.state.severity#!{1}/icingadb/hosts/{2}'.format(self.monitor_url,
                                                                                                                      (urllib.parse.urlparse(self.monitor_url).path),
                                                                                                                      urllib.parse.urlencode(
                                                                                                                         {'host': self.hosts[host].real_name}).replace('+', ' '))
         else:
-            url = '{0}/monitoring/list/services?service_problem=1&sort=service_severity&dir=desc#!{1}/monitoring/service/show?{2}'.format(self.monitor_url,
+            url = '{0}/icingadb/services?service.state.is_problem=y&sort=service.state.severity&dir=desc#!{1}/icingadb/services/{2}'.format(self.monitor_url,
                                                                                                                                    (urllib.parse.urlparse(self.monitor_url).path),
                                                                                                                                     urllib.parse.urlencode(
                                                                                                                                         {'host': self.hosts[host].real_name,
@@ -602,7 +604,7 @@ class IcingaWeb2Server(GenericServer):
         address = ''
 
         # glue nagios cgi url and hostinfo
-        cgiurl_host = self.monitor_cgi_url + '/monitoring/list/hosts?host={0}&addColumns=host_address&format=json'.format(host)
+        cgiurl_host = self.monitor_cgi_url + '/icingadb/hosts?name={0}&columns=host.address&format=json'.format(host)
 
         # get host info
         hostobj = self.FetchURL(cgiurl_host, giveback='raw')

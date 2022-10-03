@@ -145,9 +145,6 @@ COLOR_STATUS_LABEL = {'critical': 'lightsalmon',
 # filled by create_brushes()
 QBRUSHES = {0: {}, 1: {}}
 
-# dummy QVariant as empty return value for model data()
-DUMMY_QVARIANT = 'QVariant'
-
 # headers for tablewidgets
 HEADERS = OrderedDict([('host', {'header': 'Host',
                                  'column': 0}),
@@ -259,22 +256,6 @@ class HBoxLayout(QHBoxLayout):
         else:
             self.setSpacing(spacing)
         self.setContentsMargins(0, 0, 0, 0)  # no margin
-
-    def hide_items(self):
-        """
-            cruise through all child widgets and hide them
-            self,count()-1 is needed because the last item is None
-        """
-        for item in range(self.count() - 1):
-            self.itemAt(item).widget().hide()
-
-    def show_items(self):
-        """
-            cruise through all child widgets and show them
-            self,count()-1 is needed because the last item is None
-        """
-        for item in range(self.count() - 1):
-            self.itemAt(item).widget().show()
 
 
 class QIconWithFilename(QIcon):
@@ -489,7 +470,7 @@ class MenuAtCursor(QMenu):
         open menu at position of mouse pointer - normal .exec() shows menu at (0, 0)
     """
     # flag to avoid too fast popping up menus
-    #available = True
+    # available = True
 
     is_shown = Signal(bool)
 
@@ -562,7 +543,7 @@ class MenuContext(MenuAtCursor):
         self.action_servers = dict()
 
         # connect every server to its monitoring webpage
-        for server in servers:
+        for server in sorted([x.name for x in conf.servers.values() if x.enabled], key=str.lower):
             self.action_servers[server] = QAction(server, self)
             self.action_servers[server].triggered.connect(servers[server].open_monitor_webpage)
             self.addAction(self.action_servers[server])
@@ -746,7 +727,7 @@ class ComboBox_Servers(QComboBox):
         """
         self.clear()
         self.addItem('Go to monitor...')
-        self.addItems(sorted(conf.servers.keys(), key=str.lower))
+        self.addItems(sorted([x.name for x in conf.servers.values() if x.enabled], key=str.lower))
 
     @Slot()
     def response(self):
@@ -1418,7 +1399,11 @@ class StatusWindow(QWidget):
         self.servers_scrollarea_widget.setLayout(self.servers_vbox)
         self.servers_scrollarea.setWidget(self.servers_scrollarea_widget)
 
-        del (vboxes_dict)
+        self.servers_scrollarea.contentsMargins().setTop(0)
+        self.servers_scrollarea.contentsMargins().setBottom(0)
+
+
+        del vboxes_dict
 
     def create_ServerVBoxes(self):
         # create vbox for each enabled server
@@ -1628,9 +1613,10 @@ class StatusWindow(QWidget):
                     self.toparea.hide()
                     self.servers_scrollarea.hide()
                     # macOS needs this since Qt6 to avoid statuswindow size changeability
+                    # looks silly but works to force using the own hint as hint
                     if OS == OS_DARWIN:
-                        self.setMinimumSize(self.stored_width, self.stored_height)
-                        self.setMaximumSize(self.stored_width, self.stored_height)
+                        self.setMinimumSize(self.sizeHint())
+                        self.setMaximumSize(self.sizeHint())
                     else:
                         self.setMinimumSize(1, 1)
                     self.adjustSize()
@@ -1881,10 +1867,10 @@ class StatusWindow(QWidget):
                     y = self.y()
                     self.setMaximumSize(hint)
                     self.setMinimumSize(hint)
-                    del (hint)
+                    del hint
                 self.resize_window(width, height, x, y)
 
-                del (width, height, x, y)
+                del width, height, x, y
             else:
                 self.adjust_dummy_columns()
 
@@ -2017,10 +2003,10 @@ class StatusWindow(QWidget):
         """
         title = " ".join((AppInfo.NAME, msg_type))
         if msg_type == 'warning':
-            return QMessageBox(QMessageBox.Icon.Warning, title, message, parent=statuswindow).show()
+            return QMessageBox.warning(statuswindow, title, message)
 
         elif msg_type == 'information':
-            return QMessageBox(QMessageBox.Icon.Information, title, message, parent=statuswindow).show()
+            return QMessageBox.information(statuswindow,title, message)
 
     @Slot()
     def recheck_all(self):
@@ -2834,16 +2820,28 @@ class ServerVBox(QVBoxLayout):
                                                     url_type='history')
         self.button_edit = Button('Edit', parent=parent)
 
+        # .setAttribute(Qt.WidgetAttribute.WA_LayoutUsesWidgetRect)
+
         # use label instead of spacer to be clickable
         self.label_stretcher = ClosingLabel('', parent=parent)
         self.label_stretcher.setSizePolicy(QSizePolicy.Policy.MinimumExpanding, QSizePolicy.Policy.Expanding)
 
         self.label_status = ServerStatusLabel(parent=parent)
-        self.label_status.setSizePolicy(QSizePolicy.Policy.Fixed, QSizePolicy.Policy.Expanding)
+        self.label_status.setSizePolicy(QSizePolicy.Policy.Fixed, QSizePolicy.Policy.Fixed)
 
         self.button_authenticate = QPushButton('Authenticate', parent=parent)
 
         self.button_fix_tls_error = QPushButton('Fix error', parent=parent)
+
+        # avoid useless spaces in macOS when server has nothing to show
+        # see https://bugreports.qt.io/browse/QTBUG-2699
+        self.button_monitor.setAttribute(Qt.WidgetAttribute.WA_LayoutUsesWidgetRect)
+        self.button_history.setAttribute(Qt.WidgetAttribute.WA_LayoutUsesWidgetRect)
+        self.button_services.setAttribute(Qt.WidgetAttribute.WA_LayoutUsesWidgetRect)
+        self.button_hosts.setAttribute(Qt.WidgetAttribute.WA_LayoutUsesWidgetRect)
+        self.button_edit.setAttribute(Qt.WidgetAttribute.WA_LayoutUsesWidgetRect)
+        self.button_authenticate.setAttribute(Qt.WidgetAttribute.WA_LayoutUsesWidgetRect)
+        self.button_fix_tls_error.setAttribute(Qt.WidgetAttribute.WA_LayoutUsesWidgetRect)
 
         self.button_monitor.clicked.connect(self.button_monitor.open_url)
         self.button_hosts.clicked.connect(self.button_hosts.open_url)
@@ -2869,7 +2867,7 @@ class ServerVBox(QVBoxLayout):
             # when stored as simple lowercase keys
             sort_column = HEADERS_KEYS_COLUMNS[conf.default_sort_field]
         except Exception:
-            # when as legacy stored as presetation string
+            # when as legacy stored as presentation string
             sort_column = HEADERS_HEADERS_COLUMNS[conf.default_sort_field]
 
         # convert sort order to number as used in Qt.SortOrder
@@ -2915,16 +2913,16 @@ class ServerVBox(QVBoxLayout):
         """
             show all items in server vbox except the table - not needed if empty
         """
-        self.label.show()
-        self.button_monitor.show()
-        self.button_hosts.show()
-        self.button_services.show()
-        self.button_history.show()
+        self.button_authenticate.hide()
         self.button_edit.show()
+        self.button_fix_tls_error.hide()
+        self.button_history.show()
+        self.button_hosts.show()
+        self.button_monitor.show()
+        self.button_services.show()
+        self.label.show()
         self.label_status.show()
         self.label_stretcher.show()
-        self.button_authenticate.hide()
-        self.button_fix_tls_error.hide()
         # special table treatment
         self.table.show()
         self.table.is_shown = True
@@ -2934,16 +2932,16 @@ class ServerVBox(QVBoxLayout):
         """
             show all items in server vbox except the table - not needed if empty or major connection problem
         """
-        self.label.show()
-        self.button_monitor.show()
-        self.button_hosts.show()
-        self.button_services.show()
-        self.button_history.show()
+        self.button_authenticate.hide()
         self.button_edit.show()
+        self.button_history.show()
+        self.button_hosts.show()
+        self.button_fix_tls_error.hide()
+        self.button_monitor.show()
+        self.button_services.show()
+        self.label.show()
         self.label_status.show()
         self.label_stretcher.show()
-        self.button_authenticate.hide()
-        self.button_fix_tls_error.hide()
         # special table treatment
         self.table.hide()
         self.table.is_shown = False
@@ -2953,17 +2951,16 @@ class ServerVBox(QVBoxLayout):
         """
             hide all items in server vbox
         """
-        self.label.hide()
-        self.button_monitor.hide()
-        self.button_hosts.hide()
-        self.button_services.hide()
-        self.button_history.hide()
+        self.button_authenticate.hide()
         self.button_edit.hide()
+        self.button_fix_tls_error.hide()
+        self.button_history.hide()
+        self.button_hosts.hide()
+        self.button_monitor.hide()
+        self.button_services.hide()
+        self.label.hide()
         self.label_status.hide()
         self.label_stretcher.hide()
-        self.button_authenticate.hide()
-        self.button_fix_tls_error.hide()
-
         # special table treatment
         self.table.hide()
         self.table.is_shown = False
@@ -3116,7 +3113,7 @@ class Model(QAbstractTableModel):
             elif index.column() == 3:
                 return ICONS_FONT
             else:
-                return DUMMY_QVARIANT
+                return QVariant
         # provide icons via Qt.UserRole
         elif role == Qt.ItemDataRole.UserRole:
             # depending on host or service column return host or service icon list
@@ -3130,7 +3127,7 @@ class Model(QAbstractTableModel):
                                            self.data_array[index.row()][2],
                                            self.data_array[index.row()][8])
             else:
-                return DUMMY_QVARIANT
+                return QVariant
 
 
 class TreeView(QTreeView):
@@ -5174,7 +5171,7 @@ class Dialog_Settings(Dialog):
         server = conf.servers[self.window.list_servers.currentItem().text()]
 
         reply = QMessageBox.question(self.window, 'Nagstamon',
-                                     'Do you really want to delete monitor server <b>%s</b>?' % (server.name),
+                                     f'Do you really want to delete monitor server <b>{server.name}</b>?',
                                      QMessageBox.StandardButton.Yes | QMessageBox.StandardButton.No,
                                      QMessageBox.StandardButton.No)
 
@@ -5259,7 +5256,7 @@ class Dialog_Settings(Dialog):
         action = conf.actions[self.window.list_actions.currentItem().text()]
 
         reply = QMessageBox.question(self.window, 'Nagstamon',
-                                     'Do you really want to delete action <b>%s</b>?' % (action.name),
+                                     'Do you really want to delete action <b>{action.name}</b>?',
                                      QMessageBox.StandardButton.Yes | QMessageBox.StandardButton.No,
                                      QMessageBox.StandardButton.No)
 
@@ -5901,15 +5898,18 @@ class Dialog_Server(Dialog):
         # global statement necessary because of reordering of servers OrderedDict
         global servers
 
+        # strip name to avoid whitespace
+        server_name = self.window.input_lineedit_name.text().strip()
+
         # check that no duplicate name exists
-        if self.window.input_lineedit_name.text() in conf.servers and \
+        if server_name in conf.servers and \
                 (self.mode in ['new', 'copy'] or
-                 self.mode == 'edit' and self.server_conf != conf.servers[self.window.input_lineedit_name.text()]):
+                 self.mode == 'edit' and self.server_conf != conf.servers[server_name]):
             # cry if duplicate name exists
-            QMessageBox.Icon.Critical(self.window, 'Nagstamon',
-                                      'The monitor server name <b>%s</b> is already used.' %
-                                      (self.window.input_lineedit_name.text()),
-                                      QMessageBox.StandardButton.Ok)
+            QMessageBox.critical(self.window,
+                        'Nagstamon',
+                        f'The monitor server name <b>{server_name}</b> is already used.',
+                        QMessageBox.StandardButton.Ok)
         else:
             # get configuration from UI
             for widget in self.window.__dict__:
@@ -5971,15 +5971,16 @@ class Dialog_Server(Dialog):
             if self.server_conf.type not in self.VOLATILE_WIDGETS[self.window.input_lineedit_monitor_cgi_url]:
                 self.server_conf.monitor_cgi_url = self.server_conf.monitor_url
 
-            # add new server configuration in every case
-            conf.servers[self.server_conf.name] = self.server_conf
+            # add new server configuration in every case and use stripped name to avoid spaces
+            self.server_conf.name = server_name
+            conf.servers[server_name] = self.server_conf
 
             # add new server instance to global servers dict
-            servers[self.server_conf.name] = create_server(self.server_conf)
+            servers[server_name] = create_server(self.server_conf)
             if self.server_conf.enabled is True:
-                servers[self.server_conf.name].enabled = True
+                servers[server_name].enabled = True
                 # create vbox
-                statuswindow.servers_vbox.addLayout(statuswindow.create_ServerVBox(servers[self.server_conf.name]))
+                statuswindow.servers_vbox.addLayout(statuswindow.create_ServerVBox(servers[server_name]))
                 # renew list of server vboxes in status window
                 statuswindow.sort_ServerVBoxes()
 
@@ -6167,9 +6168,8 @@ class Dialog_Action(Dialog):
                 (self.mode in ['new', 'copy'] or
                  self.mode == 'edit' and self.action_conf != conf.actions[self.window.input_lineedit_name.text()]):
             # cry if duplicate name exists
-            QMessageBox.Icon.Critical(self.window, 'Nagstamon',
-                                      'The action name <b>%s</b> is already used.' %
-                                      (self.window.input_lineedit_name.text()),
+            QMessageBox.critical(self.window, 'Nagstamon',
+                                      f'The action name <b>{self.window.input_lineedit_name.text()}</b> is already used.',
                                       QMessageBox.StandardButton.Ok)
         else:
             # get configuration from UI
