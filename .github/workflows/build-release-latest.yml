@@ -142,7 +142,7 @@ jobs:
           python-version: ${{ env.python_win_version }}
           architecture: x86
       #  no PyQt6 for win32 available on Pypi.org
-      - run: ((Get-Content -path build/requirements/windows.txt -Raw) -replace 'pyqt6','pyqt5') | Set-Content -Path build/requirements/windows.txt
+      - run: ((Get-Content -path build/requirements/windows.txt -Raw) -replace 'pyqt6==6.3.1','pyqt5') | Set-Content -Path build/requirements/windows.txt
       - run: python -m pip install --no-warn-script-location -r build/requirements/windows.txt
       # pretty hacky but no other idea to avoid gssapi being installed which breaks requests-kerberos
       - run: python -m pip uninstall -y gssapi requests-gssapi
