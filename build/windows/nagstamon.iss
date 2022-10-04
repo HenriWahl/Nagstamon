@@ -1,7 +1,7 @@
 [Setup]
 AppName=Nagstamon
 AppVerName=Nagstamon {#version}
-DefaultDirName={pf}\Nagstamon
+DefaultDirName={commonpf}\Nagstamon
 DefaultGroupName=Nagstamon
 AlwaysUsePersonalGroup=false
 ShowLanguageDialog=no
