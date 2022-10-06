@@ -93,7 +93,7 @@ class IcingaDBWebServer(GenericServer):
         GenericServer.init_HTTP(self)
 
         if self.session and not 'Referer' in self.session.headers:
-            self.session.headers['Referer'] = self.monitor_cgi_url + '/icingaweb2/icingadb'
+            self.session.headers['Referer'] = self.monitor_cgi_url
 
         # normally cookie auth will be used
         if not self.no_cookie_auth:
@@ -431,7 +431,7 @@ class IcingaDBWebServer(GenericServer):
         pagesoup = BeautifulSoup(pageraw, 'html.parser')
 
         # Extract the relevant form element values
-        formtag = pagesoup.find('form', {'name':'IcingaModuleMonitoringFormsCommandObjectAcknowledgeProblemCommandForm'})
+        formtag = pagesoup.find('form', {'class':'icinga-form icinga-controls'})
 
         CSRFToken = formtag.findNext('input', {'name':'CSRFToken'})['value']
         #formUID = formtag.findNext('input', {'name':'formUID'})['value']
@@ -443,15 +443,22 @@ class IcingaDBWebServer(GenericServer):
         #cgi_data['formUID'] = formUID
         cgi_data['btn_submit'] = btn_submit
         cgi_data['comment'] = comment
-        cgi_data['persistent'] = int(persistent).replace((1, 0), ('y', 'n'), inplace=True)
-        cgi_data['sticky'] = int(sticky).replace((1, 0), ('y', 'n'), inplace=True)
-        cgi_data['notify'] = int(notify).replace((1, 0), ('y', 'n'), inplace=True)
+        cgi_data['persistent'] = str(persistent).replace('True', 'y').replace('False', 'n')
+        cgi_data['sticky'] = str(sticky).replace('True', 'y').replace('False', 'n')
+        cgi_data['notify'] = str(notify).replace('True', 'y').replace('False', 'n')
         if expire_time:
             cgi_data['expire'] = 'y'
             cgi_data['expire_time'] = expire_time
         else:
             cgi_data['expire'] = 'n'
 
+        # X-Icinga-WindowId seems to be the one triggering icinga2/icingaweb2
+        self.session.headers['X-Icinga-WindowId'] = 'jbpqmtviznre_ivmury'
+        self.session.headers['X-Requested-With'] = 'XMLHttpRequest'
+        self.session.headers['X-Icinga-Accept'] = 'text/html'
+        self.session.headers['X-Icinga-Container'] = 'modal-content'
+        self.session.headers['Origin'] = self.monitor_cgi_url
+        self.session.headers.update({'Content-Type': 'application/x-www-form-urlencoded; charset=UTF-8'})
         self.FetchURL(url, giveback='raw', cgi_data=cgi_data)
 
         if len(all_services) > 0:
