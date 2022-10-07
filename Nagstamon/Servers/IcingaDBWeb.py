@@ -421,6 +421,11 @@ class IcingaDBWebServer(GenericServer):
                                                                                            self.hosts[host].services[service].real_name,
                                                                                            self.hosts[host].real_name
                                                                                            )
+
+        # Set correct headers
+        self.session.headers['X-Requested-With'] = 'XMLHttpRequest'
+        self.session.headers.update({'Content-Type': 'application/x-www-form-urlencoded; charset=UTF-8'})
+
         result = self.FetchURL(url, giveback='raw')
 
         if result.error != '':
@@ -430,17 +435,19 @@ class IcingaDBWebServer(GenericServer):
 
         pagesoup = BeautifulSoup(pageraw, 'html.parser')
 
+        ## Super debug 
+        #if conf.debug_mode:
+        #    self.Debug(server=self.get_name(), host=host, service=service,
+        #        debug='Retrieve html from {0}: {1}'.format(url,pagesoup.prettify()))
+
         # Extract the relevant form element values
         formtag = pagesoup.find('form', {'class':'icinga-form icinga-controls'})
-
-        CSRFToken = formtag.findNext('input', {'name':'CSRFToken'})['value']
-        #formUID = formtag.findNext('input', {'name':'formUID'})['value']
         btn_submit = formtag.findNext('input', {'name':'btn_submit'})['value']
+        CSRFToken = formtag.findNext('input', {'name':'CSRFToken'})['value']
 
         # Pass these values to the same URL as cgi_data
         cgi_data = {}
         cgi_data['CSRFToken'] = CSRFToken
-        #cgi_data['formUID'] = formUID
         cgi_data['btn_submit'] = btn_submit
         cgi_data['comment'] = comment
         cgi_data['persistent'] = str(persistent).replace('True', 'y').replace('False', 'n')
@@ -452,15 +459,34 @@ class IcingaDBWebServer(GenericServer):
         else:
             cgi_data['expire'] = 'n'
 
-        # X-Icinga-WindowId seems to be the one triggering icinga2/icingaweb2
-        self.session.headers['X-Icinga-WindowId'] = 'jbpqmtviznre_ivmury'
-        self.session.headers['X-Requested-With'] = 'XMLHttpRequest'
-        self.session.headers['X-Icinga-Accept'] = 'text/html'
-        self.session.headers['X-Icinga-Container'] = 'modal-content'
-        self.session.headers['Origin'] = self.monitor_cgi_url
-        self.session.headers.update({'Content-Type': 'application/x-www-form-urlencoded; charset=UTF-8'})
-        self.FetchURL(url, giveback='raw', cgi_data=cgi_data)
-
+        response = self.FetchURL(url, giveback='raw', cgi_data=cgi_data)
+        
+        # Some debug data
+        data = response.result
+        error = response.error
+        status_code = response.status_code
+        if conf.debug_mode:
+            self.Debug(server=self.get_name(), host=host, service=service,
+                debug='Achnowledgement response')
+            self.Debug(server=self.get_name(), host=host, service=service,
+                debug="- response: {0}".format(response))
+            self.Debug(server=self.get_name(), host=host, service=service,
+                debug="- data: {0}".format(data))
+            self.Debug(server=self.get_name(), host=host, service=service,
+                debug="- error: {0}".format(error))
+            self.Debug(server=self.get_name(), host=host, service=service,
+                debug="- status_code: {0}".format(status_code))
+        
+        # Test the result
+        if data != "Invalid CSRF token provided":
+            if conf.debug_mode:
+                self.Debug(server=self.get_name(), host=host, service=service,
+                    debug="CSRF valid")
+        else:
+            if conf.debug_mode:
+                self.Debug(server=self.get_name(), host=host, service=service,
+                    debug="ERROR: CSRF invalid")
+             
         if len(all_services) > 0:
             for s in all_services:
                 # cheap, recursive solution...
