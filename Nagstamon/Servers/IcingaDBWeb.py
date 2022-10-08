@@ -356,11 +356,18 @@ class IcingaDBWebServer(GenericServer):
 
 
     def _set_recheck(self, host, service):
+        # Set correct headers
+        self.session.headers['X-Requested-With'] = 'XMLHttpRequest'
+        self.session.headers.update({'Content-Type': 'application/x-www-form-urlencoded; charset=UTF-8'})
+
         # First retrieve the info page for this host/service
         if service == '':
-            url = self.monitor_cgi_url + '/icingadb/host?name=' + self.hosts[host].real_name
+            url = '{0}/icingadb/host?name={1}'.format(self.monitor_cgi_url, self.hosts[host].real_name)
         else:
-            url = self.monitor_cgi_url + '/icingadb/service?name=' + self.hosts[host].services[service].real_name + '&host.name=' + self.hosts[host].real_name
+            url = '{0}/icingadb/service?name={1}&host.name={2}'.format(self.monitor_cgi_url,
+                                                                                           self.hosts[host].services[service].real_name,
+                                                                                           self.hosts[host].real_name
+                                                                                           )
         result = self.FetchURL(url, giveback='raw')
 
         if result.error != '':
@@ -369,20 +376,57 @@ class IcingaDBWebServer(GenericServer):
             pageraw = result.result
 
         pagesoup = BeautifulSoup(pageraw, 'html.parser')
+        print(pagesoup.prettify())
+        
+        ## Super debug
+        #if conf.debug_mode:
+        #    self.Debug(server=self.get_name(), host=host, service=service,
+        #        debug='[Recheck] Retrieve html from {0}: \n{1}'.format(url,pagesoup.prettify()))
 
         # Extract the relevant form element values
+        
+        formtag = pagesoup.select_one('form[action*="check-now"]')
+        #print('-----------------')
+        #print(formtag.prettify())
+        #print('-----------------')
+        
+        if conf.debug_mode:
+            self.Debug(server=self.get_name(), host=host, service=service,
+                debug='[Recheck] Retrieve html form from {0}: \n{1}'.format(url,formtag.prettify()))
 
-        formtag = pagesoup.find('form', {'name':'IcingaModuleMonitoringFormsCommandObjectCheckNowCommandForm'})
-        CSRFToken = formtag.findNext('input', {'name':'CSRFToken'})['value']
-        formUID = formtag.findNext('input', {'name':'formUID'})['value']
         btn_submit = formtag.findNext('button', {'name':'btn_submit'})['value']
+        CSRFToken = formtag.findNext('input', {'name':'CSRFToken'})['value']
 
-        # Pass these values to the same URL as cgi_data
+        # Pass these values to the check-now URL as cgi_data
         cgi_data = {}
         cgi_data['CSRFToken'] = CSRFToken
-        cgi_data['formUID'] = formUID
         cgi_data['btn_submit'] = btn_submit
-        result = self.FetchURL(url, giveback='raw', cgi_data=cgi_data)
+
+        if service == '':
+            url = '{0}/icingadb/host/check-now?name={1}'.format(self.monitor_cgi_url, self.hosts[host].real_name)
+        else:
+            url = '{0}/icingadb/service/check-now?name={1}&host.name={2}'.format(self.monitor_cgi_url,
+                                                                                           self.hosts[host].services[service].real_name,
+                                                                                           self.hosts[host].real_name
+                                                                                           )
+        
+        response = self.FetchURL(url, giveback='raw', cgi_data=cgi_data)
+
+        # Some debug data
+        data = response.result
+        error = response.error
+        status_code = response.status_code
+        if conf.debug_mode:
+            self.Debug(server=self.get_name(), host=host, service=service,
+                debug='Recheck response')
+            self.Debug(server=self.get_name(), host=host, service=service,
+                debug="- response: {0}".format(response))
+            self.Debug(server=self.get_name(), host=host, service=service,
+                debug="- data: {0}".format(data))
+            self.Debug(server=self.get_name(), host=host, service=service,
+                debug="- error: {0}".format(error))
+            self.Debug(server=self.get_name(), host=host, service=service,
+                debug="- status_code: {0}".format(status_code))
 
 
     # Overwrite function from generic server to add expire_time value
@@ -411,9 +455,12 @@ class IcingaDBWebServer(GenericServer):
 
 
     def _set_acknowledge(self, host, service, author, comment, sticky, notify, persistent, all_services=None, expire_time=None):
+        # Set correct headers
+        self.session.headers['X-Requested-With'] = 'XMLHttpRequest'
+        self.session.headers.update({'Content-Type': 'application/x-www-form-urlencoded; charset=UTF-8'})
+
         # First retrieve the info page for this host/service
         if service == '':
-            # url = self.monitor_cgi_url + '/monitoring/host/acknowledge-problem?host=' + host
             url = '{0}/icingadb/host/acknowledge?name={1}&showCompact=1'.format(self.monitor_cgi_url,
                                                                             self.hosts[host].real_name)
         else:
@@ -421,10 +468,6 @@ class IcingaDBWebServer(GenericServer):
                                                                                            self.hosts[host].services[service].real_name,
                                                                                            self.hosts[host].real_name
                                                                                            )
-
-        # Set correct headers
-        self.session.headers['X-Requested-With'] = 'XMLHttpRequest'
-        self.session.headers.update({'Content-Type': 'application/x-www-form-urlencoded; charset=UTF-8'})
 
         result = self.FetchURL(url, giveback='raw')
 
@@ -435,13 +478,22 @@ class IcingaDBWebServer(GenericServer):
 
         pagesoup = BeautifulSoup(pageraw, 'html.parser')
 
-        ## Super debug 
+        ## Super debug
         #if conf.debug_mode:
         #    self.Debug(server=self.get_name(), host=host, service=service,
-        #        debug='Retrieve html from {0}: {1}'.format(url,pagesoup.prettify()))
+        #        debug='[Acknowledge] Retrieve html from {0}: {1}'.format(url,pagesoup.prettify()))
 
         # Extract the relevant form element values
-        formtag = pagesoup.find('form', {'class':'icinga-form icinga-controls'})
+
+        formtag = pagesoup.select_one('form[action*="acknowledge"]')
+        #print('-----------------')
+        #print(formtag.prettify())
+        #print('-----------------')
+
+        if conf.debug_mode:
+            self.Debug(server=self.get_name(), host=host, service=service,
+                debug='[Acknowledge] Retrieve html form from {0}: \n{1}'.format(url,formtag.prettify()))
+                
         btn_submit = formtag.findNext('input', {'name':'btn_submit'})['value']
         CSRFToken = formtag.findNext('input', {'name':'CSRFToken'})['value']
 
@@ -460,7 +512,7 @@ class IcingaDBWebServer(GenericServer):
             cgi_data['expire'] = 'n'
 
         response = self.FetchURL(url, giveback='raw', cgi_data=cgi_data)
-        
+
         # Some debug data
         data = response.result
         error = response.error
@@ -476,17 +528,7 @@ class IcingaDBWebServer(GenericServer):
                 debug="- error: {0}".format(error))
             self.Debug(server=self.get_name(), host=host, service=service,
                 debug="- status_code: {0}".format(status_code))
-        
-        # Test the result
-        if data != "Invalid CSRF token provided":
-            if conf.debug_mode:
-                self.Debug(server=self.get_name(), host=host, service=service,
-                    debug="CSRF valid")
-        else:
-            if conf.debug_mode:
-                self.Debug(server=self.get_name(), host=host, service=service,
-                    debug="ERROR: CSRF invalid")
-             
+
         if len(all_services) > 0:
             for s in all_services:
                 # cheap, recursive solution...
@@ -494,12 +536,20 @@ class IcingaDBWebServer(GenericServer):
 
 
     def _set_submit_check_result(self, host, service, state, comment, check_output, performance_data):
+        # Set correct headers
+        self.session.headers['X-Requested-With'] = 'XMLHttpRequest'
+        self.session.headers.update({'Content-Type': 'application/x-www-form-urlencoded; charset=UTF-8'})
+
         # First retrieve the info page for this host/service
         if service == '':
-            url = self.monitor_cgi_url + '/icingadb/host/process-checkresult?name=' + self.hosts[host].real_name
+            url = '{0}/icingadb/host/process-checkresult?name='.format(self.monitor_cgi_url,
+                                                                            self.hosts[host].real_name)
             status = self.STATES_MAPPING_REV['hosts'][state.upper()]
         else:
-            url = self.monitor_cgi_url + '/icingadb/service/process-checkresult?host.name=' + self.hosts[host].real_name + '&name=' + self.hosts[host].services[service].real_name
+            url = '{0}/icingadb/service/process-checkresult?name={1}&host.name={2}'.format(self.monitor_cgi_url,
+                                                                                           self.hosts[host].services[service].real_name,
+                                                                                           self.hosts[host].real_name
+                                                                                           )
             status = self.STATES_MAPPING_REV['services'][state.upper()]
 
         result = self.FetchURL(url, giveback='raw')
@@ -511,33 +561,68 @@ class IcingaDBWebServer(GenericServer):
 
         pagesoup = BeautifulSoup(pageraw, 'html.parser')
 
+        ## Super debug
+        #if conf.debug_mode:
+        #    self.Debug(server=self.get_name(), host=host, service=service,
+        #        debug='[Submit check result] Retrieve html from {0}: \n{1}'.format(url,pagesoup.prettify()))
+
         # Extract the relevant form element values
 
-        formtag = pagesoup.find('form', {'name':'IcingaModuleMonitoringFormsCommandObjectProcessCheckResultCommandForm'})
-        CSRFToken = formtag.findNext('input', {'name':'CSRFToken'})['value']
-        formUID = formtag.findNext('input', {'name':'formUID'})['value']
-        btn_submit = formtag.findNext('input', {'name':'btn_submit'})['value']
+        formtag = pagesoup.select_one('form[action*="process-checkresult"]')
+        #print('-----------------')
+        #print(formtag.prettify())
+        #print('-----------------')
+        
+        if conf.debug_mode:
+            self.Debug(server=self.get_name(), host=host, service=service,
+                debug='[Submit check result] Retrieve html form from {0}: \n{1}'.format(url,formtag.prettify()))
 
+        btn_submit = formtag.findNext('input', {'name':'btn_submit'})['value']
+        CSRFToken = formtag.findNext('input', {'name':'CSRFToken'})['value']
+        
         # Pass these values to the same URL as cgi_data
         cgi_data = {}
         cgi_data['CSRFToken'] = CSRFToken
-        cgi_data['formUID'] = formUID
         cgi_data['btn_submit'] = btn_submit
 
         cgi_data['status'] = status
         cgi_data['output'] = check_output
         cgi_data['perfdata'] = performance_data
 
-        self.FetchURL(url, giveback='raw', cgi_data=cgi_data)
+        response = self.FetchURL(url, giveback='raw', cgi_data=cgi_data)
+
+        # Some debug data
+        data = response.result
+        error = response.error
+        status_code = response.status_code
+        if conf.debug_mode:
+            self.Debug(server=self.get_name(), host=host, service=service,
+                debug='Achnowledgement response')
+            self.Debug(server=self.get_name(), host=host, service=service,
+                debug="- response: {0}".format(response))
+            self.Debug(server=self.get_name(), host=host, service=service,
+                debug="- data: {0}".format(data))
+            self.Debug(server=self.get_name(), host=host, service=service,
+                debug="- error: {0}".format(error))
+            self.Debug(server=self.get_name(), host=host, service=service,
+                debug="- status_code: {0}".format(status_code))
 
 
     def _set_downtime(self, host, service, author, comment, fixed, start_time, end_time, hours, minutes):
+        # Set correct headers
+        self.session.headers['X-Requested-With'] = 'XMLHttpRequest'
+        self.session.headers.update({'Content-Type': 'application/x-www-form-urlencoded; charset=UTF-8'})
+
         # First retrieve the info page for this host/service
         if service == '':
-            url = self.monitor_cgi_url + '/icingadb/host/schedule-downtime?name=' + self.hosts[host].real_name
+            url = '{0}/icingadb/host/schedule-downtime?name={1}'.format(self.monitor_cgi_url,
+                                                                            self.hosts[host].real_name)
         else:
-            url = self.monitor_cgi_url + '/icingadb/service/schedule-downtime?host.name=' + self.hosts[host].real_name + '&name=' + self.hosts[host].services[service].real_name
-
+            url = '{0}/icingadb/service/schedule-downtime?name={1}&host.name={2}&showCompact=1'.format(self.monitor_cgi_url,
+                                                                                           self.hosts[host].services[service].real_name,
+                                                                                           self.hosts[host].real_name
+                                                                                           )
+                    
         result = self.FetchURL(url, giveback='raw')
 
         if result.error != '':
@@ -547,26 +632,34 @@ class IcingaDBWebServer(GenericServer):
 
         pagesoup = BeautifulSoup(pageraw, 'html.parser')
 
-        # Extract the relevant form element values
-        if service == '':
-            formtag = pagesoup.find('form', {'name':'IcingaModuleMonitoringFormsCommandObjectScheduleHostDowntimeCommandForm'})
-        else:
-            formtag = pagesoup.find('form', {'name':'IcingaModuleMonitoringFormsCommandObjectScheduleServiceDowntimeCommandForm'})
+        ## Super debug
+        #if conf.debug_mode:
+        #    self.Debug(server=self.get_name(), host=host, service=service,
+        #        debug='[Set downtime] Retrieve html from {0}: \n{1}'.format(url,pagesoup.prettify()))
 
-        CSRFToken = formtag.findNext('input', {'name':'CSRFToken'})['value']
-        formUID = formtag.findNext('input', {'name':'formUID'})['value']
+        # Extract the relevant form element values
+        
+        formtag = pagesoup.select_one('form[action*="schedule-downtime"]')
+        #print('-----------------')
+        #print(formtag.prettify())
+        #print('-----------------')
+        
+        if conf.debug_mode:
+            self.Debug(server=self.get_name(), host=host, service=service,
+                debug='[Set downtime] Retrieve html form from {0}: \n{1}'.format(url,formtag.prettify()))
+        
         btn_submit = formtag.findNext('input', {'name':'btn_submit'})['value']
+        CSRFToken = formtag.findNext('input', {'name':'CSRFToken'})['value']
 
         # Pass these values to the same URL as cgi_data
         cgi_data = {}
         cgi_data['CSRFToken'] = CSRFToken
-        cgi_data['formUID'] = formUID
         cgi_data['btn_submit'] = btn_submit
         cgi_data['comment'] = comment
         if fixed:
-            cgi_data['type'] = 'fixed'
+            cgi_data['flexible'] = 'n'
         else:
-            cgi_data['type'] = 'flexible'
+            cgi_data['flexible'] = 'y'
             cgi_data['hours'] = hours
             cgi_data['minutes'] = minutes
         if start_time == '' or start_time == 'n/a':
@@ -581,7 +674,23 @@ class IcingaDBWebServer(GenericServer):
         cgi_data['start'] = start
         cgi_data['end'] = end
 
-        self.FetchURL(url, giveback='raw', cgi_data=cgi_data)
+        response = self.FetchURL(url, giveback='raw', cgi_data=cgi_data)
+
+        # Some debug data
+        data = response.result
+        error = response.error
+        status_code = response.status_code
+        if conf.debug_mode:
+            self.Debug(server=self.get_name(), host=host, service=service,
+                debug='Achnowledgement response')
+            self.Debug(server=self.get_name(), host=host, service=service,
+                debug="- response: {0}".format(response))
+            self.Debug(server=self.get_name(), host=host, service=service,
+                debug="- data: {0}".format(data))
+            self.Debug(server=self.get_name(), host=host, service=service,
+                debug="- error: {0}".format(error))
+            self.Debug(server=self.get_name(), host=host, service=service,
+                debug="- status_code: {0}".format(status_code))
 
 
     def get_start_end(self, host):
@@ -589,10 +698,32 @@ class IcingaDBWebServer(GenericServer):
             for GUI to get actual downtime start and end from server - they may vary so it's better to get
             directly from web interface
         '''
+        # Set correct headers
+        self.session.headers['X-Requested-With'] = 'XMLHttpRequest'
+        self.session.headers.update({'Content-Type': 'application/x-www-form-urlencoded; charset=UTF-8'})
+
         try:
-            downtime = self.FetchURL(self.monitor_cgi_url + '/icingadb/host/schedule-downtime?name=' + self.hosts[host].real_name)
-            start = downtime.result.find('input', {'name': 'start'})['value']
-            end = downtime.result.find('input', {'name': 'end'})['value']
+            url = '{0}/icingadb/host/schedule-downtime?name={1}'.format(self.monitor_cgi_url, self.hosts[host].real_name)
+            downtime = self.FetchURL(url, giveback='raw')
+
+            if downtime.error != '':
+                return 'n/a', 'n/a'
+            else:
+                pageraw = downtime.result
+    
+            pagesoup = BeautifulSoup(pageraw, 'html.parser')
+
+            #print('-----------------')
+            #print(pagesoup.prettify())
+            #print('-----------------')
+        
+            # Super debug
+            if conf.debug_mode:
+                self.Debug(server=self.get_name(), host=host, service='',
+                    debug='[Get downtime start/end] Retrieve html from {0}: {1}'.format(url,pagesoup.prettify()))
+
+            start = pagesoup.find('input', {'name': 'start'})['value']
+            end = pagesoup.find('input', {'name': 'end'})['value']
             # give values back as tuple
             return start, end
         except:
@@ -618,7 +749,7 @@ class IcingaDBWebServer(GenericServer):
                                                                                                                                          'host.name': self.hosts[host].real_name}).replace('+', ' '))
         if conf.debug_mode:
             self.Debug(server=self.get_name(), host=host, service=service,
-                       debug='Open host/service monitor web page {0}'.format(url))
+                       debug='[Open monitor] Open host/service monitor web page {0}'.format(url))
         webbrowser_open(url)
 
     def GetHost(self, host):
