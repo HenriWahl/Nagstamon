@@ -117,7 +117,7 @@ jobs:
           if-no-files-found: error
 
   macos:
-    runs-on: macos-10.15
+    runs-on: macos-12
     needs: test
     steps:
       - uses: actions/checkout@v2
