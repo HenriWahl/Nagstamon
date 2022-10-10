@@ -78,7 +78,7 @@ class IcingaDBWebServer(GenericServer):
         self.cgiurl_services = None
         self.cgiurl_hosts = None
         self.cgiurl_monitoring_health = None
-        
+
         # https://github.com/HenriWahl/Nagstamon/issues/400
         # The displayed name for host and service is the Icinga2 "internal" name and not the display_name from host/service configuration
         # This name is stored in host/service dict under key 'name' but is also used as dict key for dict containing all hosts/services
@@ -93,7 +93,7 @@ class IcingaDBWebServer(GenericServer):
         GenericServer.init_HTTP(self)
 
         if self.session and not 'Referer' in self.session.headers:
-            self.session.headers['Referer'] = self.monitor_cgi_url + '/icingaweb2/icingadb'
+            self.session.headers['Referer'] = self.monitor_cgi_url
 
         # normally cookie auth will be used
         if not self.no_cookie_auth:
@@ -110,7 +110,7 @@ class IcingaDBWebServer(GenericServer):
                             form_inputs[form_input] = ''
                     form_inputs['username'] = self.username
                     form_inputs['password'] = self.password
-    
+
                     # fire up login button with all needed data
                     self.FetchURL('{0}/authentication/login'.format(self.monitor_url), cgi_data=form_inputs)
 
@@ -128,7 +128,7 @@ class IcingaDBWebServer(GenericServer):
             self.cgiurl_hosts = {'hard': self.monitor_cgi_url + '/icingadb/hosts?host.state.is_problem=y&host.state.state_type=hard&columns=host.state.last_update&format=json', \
                                  'soft': self.monitor_cgi_url + '/icingadb/hosts?host.state.is_problem=y&host.state.state_type=soft&columns=host.state.last_update&format=json'}
             # monitoring health
-            self.cgiurl_monitoring_health = self.monitor_cgi_url + '/icingaweb2/health?format=json'
+            self.cgiurl_monitoring_health = self.monitor_cgi_url + '/health?format=json'
 
         # new_hosts dictionary
         self.new_hosts = dict()
@@ -136,16 +136,16 @@ class IcingaDBWebServer(GenericServer):
         # hosts - mostly the down ones
         # now using JSON output from Icinga
         try:
-            for status_type in 'hard', 'soft':   
+            for status_type in 'hard', 'soft':
                 # first attempt
-                result = self.FetchURL(self.cgiurl_hosts[status_type], giveback='raw')            
+                result = self.FetchURL(self.cgiurl_hosts[status_type], giveback='raw')
                 # authentication errors get a status code 200 too back because its
                 # HTML works fine :-(
                 if result.status_code < 400 and\
                    result.result.startswith('<'):
                     # in case of auth error reset HTTP session and try again
                     self.reset_HTTP()
-                    result = self.FetchURL(self.cgiurl_hosts[status_type], giveback='raw') 
+                    result = self.FetchURL(self.cgiurl_hosts[status_type], giveback='raw')
                     # if it does not work again tell GUI there is a problem
                     if result.status_code < 400 and\
                        result.result.startswith('<'):
@@ -153,7 +153,7 @@ class IcingaDBWebServer(GenericServer):
                         return Result(result=result.result,
                                       error='Authentication error',
                                       status_code=result.status_code)
-                
+
                 # purify JSON result of unnecessary control sequence \n
                 jsonraw, error, status_code = copy.deepcopy(result.result.replace('\n', '')),\
                                               copy.deepcopy(result.error),\
@@ -193,48 +193,49 @@ class IcingaDBWebServer(GenericServer):
                     # host
                     if self.use_display_name_host == False:
                         # according to http://sourceforge.net/p/nagstamon/bugs/83/ it might
-                        # better be host_name instead of host_display_name
-                        # legacy Icinga adjustments
-                        if 'host_name' in h: host_name = h['host_name']
-                        elif 'host' in h: host_name = h['host']
+                        # better be name instead of display_name
+                        host_name = h['name']
                     else:
                         # https://github.com/HenriWahl/Nagstamon/issues/46 on the other hand has
                         # problems with that so here we go with extra display_name option
-                        host_name = h['host_display_name']
+                        host_name = h['display_name']
 
                     # host objects contain service objects
                     if not host_name in self.new_hosts:
                         self.new_hosts[host_name] = GenericHost()
                         self.new_hosts[host_name].name = host_name
                         self.new_hosts[host_name].server = self.name
-                        self.new_hosts[host_name].status = self.STATES_MAPPING['hosts'][int(h['host_state'])]
-                        self.new_hosts[host_name].last_check = datetime.datetime.fromtimestamp(int(h['host_last_check']))
-                        self.new_hosts[host_name].attempt = h['host_attempt']
-                        self.new_hosts[host_name].status_information = BeautifulSoup(h['host_output'].replace('\n', ' ').strip(), 'html.parser').text
-                        self.new_hosts[host_name].passiveonly = not(int(h['host_active_checks_enabled']))
-                        self.new_hosts[host_name].notifications_disabled = not(int(h['host_notifications_enabled']))
-                        self.new_hosts[host_name].flapping = bool(int(h['host_is_flapping']))
-                        self.new_hosts[host_name].acknowledged = bool(int(h['host_acknowledged']))
-                        self.new_hosts[host_name].scheduled_downtime = bool(int(h['host_in_downtime']))
                         self.new_hosts[host_name].status_type = status_type
-                        
+                        if (status_type == 'hard'):
+                            self.new_hosts[host_name].status = self.STATES_MAPPING['hosts'][int(h['state']['hard_state'])]
+                        else:
+                            self.new_hosts[host_name].status = self.STATES_MAPPING['hosts'][int(h['state']['soft_state'])]
+
+                        self.new_hosts[host_name].last_check = datetime.datetime.fromtimestamp(int(float(h['state']['last_update'])))
+                        self.new_hosts[host_name].attempt = "{}/{}".format(h['state']['check_attempt'],h['max_check_attempts'])
+                        self.new_hosts[host_name].status_information = BeautifulSoup(h['state']['output'].replace('\n', ' ').strip(), 'html.parser').text
+                        self.new_hosts[host_name].passiveonly = not(int(h['active_checks_enabled']))
+                        self.new_hosts[host_name].notifications_disabled = not(int(h['notifications_enabled']))
+                        self.new_hosts[host_name].flapping = bool(int(h['state']['is_flapping'] or 0))
+                        #s['state']['is_acknowledged'] can be null, 0, 1, or 'sticky'
+                        self.new_hosts[host_name].acknowledged = bool(int(h['state']['is_acknowledged'].replace('sticky', '1') or 0))
+                        self.new_hosts[host_name].scheduled_downtime = bool(int(h['state']['in_downtime'] or 0))
+
                         # extra Icinga properties to solve https://github.com/HenriWahl/Nagstamon/issues/192
                         # acknowledge needs host_description and no display name
-                        self.new_hosts[host_name].real_name = h['host_name']
+                        self.new_hosts[host_name].real_name = h['name']
 
                         # Icinga only updates the attempts for soft states. When hard state is reached, a flag is set and
                         # attemt is set to 1/x.
                         if (status_type == 'hard'):
                             try:
-                                maxAttempts = h['host_attempt'].split('/')[1]
-                                self.new_hosts[host_name].attempt = "{0}/{0}".format(maxAttempts)
+                                self.new_hosts[host_name].attempt = "{0}/{0}".format(h['max_check_attempts'])
                             except Exception:
                                 self.new_hosts[host_name].attempt = "HARD"
-       
+
                         # extra duration needed for calculation
-                        if h['host_last_state_change'] is not None:
-                            last_change = h['host_last_state_change'] if h['host_last_state_change'] is not None else 0
-                            duration = datetime.datetime.now() - datetime.datetime.fromtimestamp(int(last_change))
+                        if h['state']['last_state_change'] is not None and h['state']['last_state_change'] != 0:
+                            duration = datetime.datetime.now() - datetime.datetime.fromtimestamp(int(float(h['state']['last_state_change'])))
                             self.new_hosts[host_name].duration = strfdelta(duration,'{days}d {hours}h {minutes}m {seconds}s')
                         else:
                             self.new_hosts[host_name].duration = 'n/a'
@@ -261,7 +262,7 @@ class IcingaDBWebServer(GenericServer):
                     return Result(result=jsonraw,
                                   error=error,
                                   status_code=status_code)
-                
+
                 # check if any error occured
                 self.check_for_error(jsonraw, error, status_code)
 
@@ -273,14 +274,12 @@ class IcingaDBWebServer(GenericServer):
 
                     if self.use_display_name_host == False:
                         # according to http://sourceforge.net/p/nagstamon/bugs/83/ it might
-                        # better be host_name instead of host_display_name
-                        # legacy Icinga adjustments
-                        if 'host_name' in s: host_name = s['host_name']
-                        elif 'host' in s: host_name = s['host']
+                        # better be name instead of display_name
+                        host_name = s['host']['name']
                     else:
                         # https://github.com/HenriWahl/Nagstamon/issues/46 on the other hand has
                         # problems with that so here we go with extra display_name option
-                        host_name = s['host_display_name']
+                        host_name = s['host']['display_name']
 
                     # host objects contain service objects
                     if not host_name in self.new_hosts:
@@ -289,9 +288,9 @@ class IcingaDBWebServer(GenericServer):
                         self.new_hosts[host_name].status = 'UP'
                         # extra Icinga properties to solve https://github.com/HenriWahl/Nagstamon/issues/192
                         # acknowledge needs host_description and no display name
-                        self.new_hosts[host_name].real_name = s['host_name']
+                        self.new_hosts[host_name].real_name = s['host']['name']
 
-                    service_name = s['service_display_name']
+                    service_name = s['display_name']
 
                     # if a service does not exist create its object
                     if not service_name in self.new_hosts[host_name].services:
@@ -299,38 +298,41 @@ class IcingaDBWebServer(GenericServer):
                         self.new_hosts[host_name].services[service_name].host = host_name
                         self.new_hosts[host_name].services[service_name].name = service_name
                         self.new_hosts[host_name].services[service_name].server = self.name
-                        self.new_hosts[host_name].services[service_name].status = self.STATES_MAPPING['services'][int(s['service_state'])]
-                        self.new_hosts[host_name].services[service_name].last_check = datetime.datetime.fromtimestamp(int(s['service_last_check']))                      
-                        self.new_hosts[host_name].services[service_name].attempt = s['service_attempt']
-                        self.new_hosts[host_name].services[service_name].status_information = BeautifulSoup(s['service_output'].replace('\n', ' ').strip(), 'html.parser').text
-                        self.new_hosts[host_name].services[service_name].passiveonly = not(int(s['service_active_checks_enabled']))
-                        self.new_hosts[host_name].services[service_name].notifications_disabled = not(int(s['service_notifications_enabled']))
-                        self.new_hosts[host_name].services[service_name].flapping = bool(int(s['service_is_flapping']))
-                        self.new_hosts[host_name].services[service_name].acknowledged = bool(int(s['service_acknowledged']))
-                        self.new_hosts[host_name].services[service_name].scheduled_downtime = bool(int(s['service_in_downtime']))
                         self.new_hosts[host_name].services[service_name].status_type = status_type
-                        self.new_hosts[host_name].services[service_name].unreachable = s['service_is_reachable'] == '0'
+                        if (status_type == 'hard'):
+                            self.new_hosts[host_name].services[service_name].status = self.STATES_MAPPING['services'][int(s['state']['hard_state'])]
+                        else:
+                            self.new_hosts[host_name].services[service_name].status = self.STATES_MAPPING['services'][int(s['state']['soft_state'])]
+
+                        self.new_hosts[host_name].services[service_name].last_check = datetime.datetime.fromtimestamp(int(float(s['state']['last_update'])))
+                        self.new_hosts[host_name].services[service_name].attempt = "{}/{}".format(s['state']['check_attempt'],s['max_check_attempts'])
+                        self.new_hosts[host_name].services[service_name].status_information = BeautifulSoup(s['state']['output'].replace('\n', ' ').strip(), 'html.parser').text
+                        self.new_hosts[host_name].services[service_name].passiveonly = not(int(s['active_checks_enabled']))
+                        self.new_hosts[host_name].services[service_name].notifications_disabled = not(int(s['notifications_enabled']))
+                        self.new_hosts[host_name].services[service_name].flapping = bool(int(s['state']['is_flapping'] or 0))
+                        #s['state']['is_acknowledged'] can be null, 0, 1, or 'sticky'
+                        self.new_hosts[host_name].services[service_name].acknowledged = bool(int(s['state']['is_acknowledged'].replace('sticky', '1') or 0))
+                        self.new_hosts[host_name].services[service_name].scheduled_downtime = bool(int(s['state']['in_downtime'] or 0))
+                        self.new_hosts[host_name].services[service_name].unreachable = not bool(int(s['state']['is_reachable'] or 0))
 
                         if self.new_hosts[host_name].services[service_name].unreachable:
                             self.new_hosts[host_name].services[service_name].status_information += " (SERVICE UNREACHABLE)"
-                        
+
                         # extra Icinga properties to solve https://github.com/HenriWahl/Nagstamon/issues/192
                         # acknowledge needs service_description and no display name
-                        self.new_hosts[host_name].services[service_name].real_name = s['service_description']
+                        self.new_hosts[host_name].services[service_name].real_name = s['name']
 
                         # Icinga only updates the attempts for soft states. When hard state is reached, a flag is set and
                         # attemt is set to 1/x.
                         if (status_type == 'hard'):
                             try:
-                                maxAttempts = s['service_attempt'].split('/')[1]
-                                self.new_hosts[host_name].services[service_name].attempt = "{0}/{0}".format(maxAttempts)
+                                self.new_hosts[host_name].services[service_name].attempt = "{0}/{0}".format(s['max_check_attempts'])
                             except Exception:
                                 self.new_hosts[host_name].services[service_name].attempt = "HARD"
-                        
+
                         # extra duration needed for calculation
-                        if s['service_last_state_change'] is not None:
-                            last_change = s['service_last_state_change'] if s['service_last_state_change'] is not None else 0
-                            duration = datetime.datetime.now() - datetime.datetime.fromtimestamp(int(last_change))
+                        if s['state']['last_state_change'] is not None and s['state']['last_state_change'] != 0:
+                            duration = datetime.datetime.now() - datetime.datetime.fromtimestamp(int(float(s['state']['last_state_change'])))
                             self.new_hosts[host_name].services[service_name].duration = strfdelta(duration, '{days}d {hours}h {minutes}m {seconds}s')
                         else:
                             self.new_hosts[host_name].services[service_name].duration = 'n/a'
@@ -354,11 +356,18 @@ class IcingaDBWebServer(GenericServer):
 
 
     def _set_recheck(self, host, service):
+        # Set correct headers
+        self.session.headers['X-Requested-With'] = 'XMLHttpRequest'
+        self.session.headers.update({'Content-Type': 'application/x-www-form-urlencoded; charset=UTF-8'})
+
         # First retrieve the info page for this host/service
         if service == '':
-            url = self.monitor_cgi_url + '/icingadb/host?name=' + self.hosts[host].real_name
+            url = '{0}/icingadb/host?name={1}'.format(self.monitor_cgi_url, self.hosts[host].real_name)
         else:
-            url = self.monitor_cgi_url + '/icingadb/service?name=' + self.hosts[host].services[service].real_name + '&host.name=' + self.hosts[host].real_name
+            url = '{0}/icingadb/service?name={1}&host.name={2}'.format(self.monitor_cgi_url,
+                                                                                           self.hosts[host].services[service].real_name,
+                                                                                           self.hosts[host].real_name
+                                                                                           )
         result = self.FetchURL(url, giveback='raw')
 
         if result.error != '':
@@ -367,20 +376,57 @@ class IcingaDBWebServer(GenericServer):
             pageraw = result.result
 
         pagesoup = BeautifulSoup(pageraw, 'html.parser')
+        print(pagesoup.prettify())
+        
+        ## Super debug
+        #if conf.debug_mode:
+        #    self.Debug(server=self.get_name(), host=host, service=service,
+        #        debug='[Recheck] Retrieve html from {0}: \n{1}'.format(url,pagesoup.prettify()))
 
         # Extract the relevant form element values
+        
+        formtag = pagesoup.select_one('form[action*="check-now"]')
+        #print('-----------------')
+        #print(formtag.prettify())
+        #print('-----------------')
+        
+        if conf.debug_mode:
+            self.Debug(server=self.get_name(), host=host, service=service,
+                debug='[Recheck] Retrieve html form from {0}: \n{1}'.format(url,formtag.prettify()))
 
-        formtag = pagesoup.find('form', {'name':'IcingaModuleMonitoringFormsCommandObjectCheckNowCommandForm'})
-        CSRFToken = formtag.findNext('input', {'name':'CSRFToken'})['value']
-        formUID = formtag.findNext('input', {'name':'formUID'})['value']
         btn_submit = formtag.findNext('button', {'name':'btn_submit'})['value']
+        CSRFToken = formtag.findNext('input', {'name':'CSRFToken'})['value']
 
-        # Pass these values to the same URL as cgi_data
+        # Pass these values to the check-now URL as cgi_data
         cgi_data = {}
         cgi_data['CSRFToken'] = CSRFToken
-        cgi_data['formUID'] = formUID
         cgi_data['btn_submit'] = btn_submit
-        result = self.FetchURL(url, giveback='raw', cgi_data=cgi_data)
+
+        if service == '':
+            url = '{0}/icingadb/host/check-now?name={1}'.format(self.monitor_cgi_url, self.hosts[host].real_name)
+        else:
+            url = '{0}/icingadb/service/check-now?name={1}&host.name={2}'.format(self.monitor_cgi_url,
+                                                                                           self.hosts[host].services[service].real_name,
+                                                                                           self.hosts[host].real_name
+                                                                                           )
+        
+        response = self.FetchURL(url, giveback='raw', cgi_data=cgi_data)
+
+        # Some debug data
+        data = response.result
+        error = response.error
+        status_code = response.status_code
+        if conf.debug_mode:
+            self.Debug(server=self.get_name(), host=host, service=service,
+                debug='Recheck response')
+            self.Debug(server=self.get_name(), host=host, service=service,
+                debug="- response: {0}".format(response))
+            self.Debug(server=self.get_name(), host=host, service=service,
+                debug="- data: {0}".format(data))
+            self.Debug(server=self.get_name(), host=host, service=service,
+                debug="- error: {0}".format(error))
+            self.Debug(server=self.get_name(), host=host, service=service,
+                debug="- status_code: {0}".format(status_code))
 
 
     # Overwrite function from generic server to add expire_time value
@@ -408,17 +454,21 @@ class IcingaDBWebServer(GenericServer):
                               info_dict['expire_time'])
 
 
-    def _set_acknowledge(self, host, service, author, comment, sticky, notify, persistent, all_services=[], expire_time=None):
+    def _set_acknowledge(self, host, service, author, comment, sticky, notify, persistent, all_services=None, expire_time=None):
+        # Set correct headers
+        self.session.headers['X-Requested-With'] = 'XMLHttpRequest'
+        self.session.headers.update({'Content-Type': 'application/x-www-form-urlencoded; charset=UTF-8'})
+
         # First retrieve the info page for this host/service
         if service == '':
-            # url = self.monitor_cgi_url + '/monitoring/host/acknowledge-problem?host=' + host
-            url = '{0}/icingadb/host/acknowledge?name={1}'.format(self.monitor_cgi_url,
+            url = '{0}/icingadb/host/acknowledge?name={1}&showCompact=1'.format(self.monitor_cgi_url,
                                                                             self.hosts[host].real_name)
         else:
-            # url = self.monitor_cgi_url + '/monitoring/service/acknowledge-problem?host=' + host + '&service=' + service
-            url = '{0}/icingadb/service/acknowledge?host.name={1}&name={2}'.format(self.monitor_cgi_url,
-                                                                                           self.hosts[host].real_name,
-                                                                                           self.hosts[host].services[service].real_name)
+            url = '{0}/icingadb/service/acknowledge?name={1}&host.name={2}&showCompact=1'.format(self.monitor_cgi_url,
+                                                                                           self.hosts[host].services[service].real_name,
+                                                                                           self.hosts[host].real_name
+                                                                                           )
+
         result = self.FetchURL(url, giveback='raw')
 
         if result.error != '':
@@ -428,29 +478,56 @@ class IcingaDBWebServer(GenericServer):
 
         pagesoup = BeautifulSoup(pageraw, 'html.parser')
 
-        # Extract the relevant form element values
-        formtag = pagesoup.find('form', {'name':'IcingaModuleMonitoringFormsCommandObjectAcknowledgeProblemCommandForm'})
+        ## Super debug
+        #if conf.debug_mode:
+        #    self.Debug(server=self.get_name(), host=host, service=service,
+        #        debug='[Acknowledge] Retrieve html from {0}: {1}'.format(url,pagesoup.prettify()))
 
-        CSRFToken = formtag.findNext('input', {'name':'CSRFToken'})['value']
-        formUID = formtag.findNext('input', {'name':'formUID'})['value']
+        # Extract the relevant form element values
+
+        formtag = pagesoup.select_one('form[action*="acknowledge"]')
+        #print('-----------------')
+        #print(formtag.prettify())
+        #print('-----------------')
+
+        if conf.debug_mode:
+            self.Debug(server=self.get_name(), host=host, service=service,
+                debug='[Acknowledge] Retrieve html form from {0}: \n{1}'.format(url,formtag.prettify()))
+                
         btn_submit = formtag.findNext('input', {'name':'btn_submit'})['value']
+        CSRFToken = formtag.findNext('input', {'name':'CSRFToken'})['value']
 
         # Pass these values to the same URL as cgi_data
         cgi_data = {}
         cgi_data['CSRFToken'] = CSRFToken
-        cgi_data['formUID'] = formUID
         cgi_data['btn_submit'] = btn_submit
-#
         cgi_data['comment'] = comment
-        cgi_data['persistent'] = int(persistent)
-        cgi_data['sticky'] = int(sticky)
-        cgi_data['notify'] = int(notify)
-        cgi_data['comment'] = comment
+        cgi_data['persistent'] = str(persistent).replace('True', 'y').replace('False', 'n')
+        cgi_data['sticky'] = str(sticky).replace('True', 'y').replace('False', 'n')
+        cgi_data['notify'] = str(notify).replace('True', 'y').replace('False', 'n')
         if expire_time:
-            cgi_data['expire'] = 1
+            cgi_data['expire'] = 'y'
             cgi_data['expire_time'] = expire_time
+        else:
+            cgi_data['expire'] = 'n'
 
-        self.FetchURL(url, giveback='raw', cgi_data=cgi_data)
+        response = self.FetchURL(url, giveback='raw', cgi_data=cgi_data)
+
+        # Some debug data
+        data = response.result
+        error = response.error
+        status_code = response.status_code
+        if conf.debug_mode:
+            self.Debug(server=self.get_name(), host=host, service=service,
+                debug='Achnowledgement response')
+            self.Debug(server=self.get_name(), host=host, service=service,
+                debug="- response: {0}".format(response))
+            self.Debug(server=self.get_name(), host=host, service=service,
+                debug="- data: {0}".format(data))
+            self.Debug(server=self.get_name(), host=host, service=service,
+                debug="- error: {0}".format(error))
+            self.Debug(server=self.get_name(), host=host, service=service,
+                debug="- status_code: {0}".format(status_code))
 
         if len(all_services) > 0:
             for s in all_services:
@@ -459,12 +536,20 @@ class IcingaDBWebServer(GenericServer):
 
 
     def _set_submit_check_result(self, host, service, state, comment, check_output, performance_data):
+        # Set correct headers
+        self.session.headers['X-Requested-With'] = 'XMLHttpRequest'
+        self.session.headers.update({'Content-Type': 'application/x-www-form-urlencoded; charset=UTF-8'})
+
         # First retrieve the info page for this host/service
         if service == '':
-            url = self.monitor_cgi_url + '/icingadb/host/process-checkresult?name=' + self.hosts[host].real_name
+            url = '{0}/icingadb/host/process-checkresult?name='.format(self.monitor_cgi_url,
+                                                                            self.hosts[host].real_name)
             status = self.STATES_MAPPING_REV['hosts'][state.upper()]
         else:
-            url = self.monitor_cgi_url + '/icingadb/service/process-checkresult?host.name=' + self.hosts[host].real_name + '&name=' + self.hosts[host].services[service].real_name
+            url = '{0}/icingadb/service/process-checkresult?name={1}&host.name={2}'.format(self.monitor_cgi_url,
+                                                                                           self.hosts[host].services[service].real_name,
+                                                                                           self.hosts[host].real_name
+                                                                                           )
             status = self.STATES_MAPPING_REV['services'][state.upper()]
 
         result = self.FetchURL(url, giveback='raw')
@@ -476,33 +561,68 @@ class IcingaDBWebServer(GenericServer):
 
         pagesoup = BeautifulSoup(pageraw, 'html.parser')
 
+        ## Super debug
+        #if conf.debug_mode:
+        #    self.Debug(server=self.get_name(), host=host, service=service,
+        #        debug='[Submit check result] Retrieve html from {0}: \n{1}'.format(url,pagesoup.prettify()))
+
         # Extract the relevant form element values
 
-        formtag = pagesoup.find('form', {'name':'IcingaModuleMonitoringFormsCommandObjectProcessCheckResultCommandForm'})
-        CSRFToken = formtag.findNext('input', {'name':'CSRFToken'})['value']
-        formUID = formtag.findNext('input', {'name':'formUID'})['value']
-        btn_submit = formtag.findNext('input', {'name':'btn_submit'})['value']
+        formtag = pagesoup.select_one('form[action*="process-checkresult"]')
+        #print('-----------------')
+        #print(formtag.prettify())
+        #print('-----------------')
+        
+        if conf.debug_mode:
+            self.Debug(server=self.get_name(), host=host, service=service,
+                debug='[Submit check result] Retrieve html form from {0}: \n{1}'.format(url,formtag.prettify()))
 
+        btn_submit = formtag.findNext('input', {'name':'btn_submit'})['value']
+        CSRFToken = formtag.findNext('input', {'name':'CSRFToken'})['value']
+        
         # Pass these values to the same URL as cgi_data
         cgi_data = {}
         cgi_data['CSRFToken'] = CSRFToken
-        cgi_data['formUID'] = formUID
         cgi_data['btn_submit'] = btn_submit
 
         cgi_data['status'] = status
         cgi_data['output'] = check_output
         cgi_data['perfdata'] = performance_data
 
-        self.FetchURL(url, giveback='raw', cgi_data=cgi_data)
+        response = self.FetchURL(url, giveback='raw', cgi_data=cgi_data)
+
+        # Some debug data
+        data = response.result
+        error = response.error
+        status_code = response.status_code
+        if conf.debug_mode:
+            self.Debug(server=self.get_name(), host=host, service=service,
+                debug='Achnowledgement response')
+            self.Debug(server=self.get_name(), host=host, service=service,
+                debug="- response: {0}".format(response))
+            self.Debug(server=self.get_name(), host=host, service=service,
+                debug="- data: {0}".format(data))
+            self.Debug(server=self.get_name(), host=host, service=service,
+                debug="- error: {0}".format(error))
+            self.Debug(server=self.get_name(), host=host, service=service,
+                debug="- status_code: {0}".format(status_code))
 
 
     def _set_downtime(self, host, service, author, comment, fixed, start_time, end_time, hours, minutes):
+        # Set correct headers
+        self.session.headers['X-Requested-With'] = 'XMLHttpRequest'
+        self.session.headers.update({'Content-Type': 'application/x-www-form-urlencoded; charset=UTF-8'})
+
         # First retrieve the info page for this host/service
         if service == '':
-            url = self.monitor_cgi_url + '/icingadb/host/schedule-downtime?name=' + self.hosts[host].real_name
+            url = '{0}/icingadb/host/schedule-downtime?name={1}'.format(self.monitor_cgi_url,
+                                                                            self.hosts[host].real_name)
         else:
-            url = self.monitor_cgi_url + '/icingadb/service/schedule-downtime?host.name=' + self.hosts[host].real_name + '&name=' + self.hosts[host].services[service].real_name
-
+            url = '{0}/icingadb/service/schedule-downtime?name={1}&host.name={2}&showCompact=1'.format(self.monitor_cgi_url,
+                                                                                           self.hosts[host].services[service].real_name,
+                                                                                           self.hosts[host].real_name
+                                                                                           )
+                    
         result = self.FetchURL(url, giveback='raw')
 
         if result.error != '':
@@ -512,26 +632,34 @@ class IcingaDBWebServer(GenericServer):
 
         pagesoup = BeautifulSoup(pageraw, 'html.parser')
 
-        # Extract the relevant form element values
-        if service == '':
-            formtag = pagesoup.find('form', {'name':'IcingaModuleMonitoringFormsCommandObjectScheduleHostDowntimeCommandForm'})
-        else:
-            formtag = pagesoup.find('form', {'name':'IcingaModuleMonitoringFormsCommandObjectScheduleServiceDowntimeCommandForm'})
+        ## Super debug
+        #if conf.debug_mode:
+        #    self.Debug(server=self.get_name(), host=host, service=service,
+        #        debug='[Set downtime] Retrieve html from {0}: \n{1}'.format(url,pagesoup.prettify()))
 
-        CSRFToken = formtag.findNext('input', {'name':'CSRFToken'})['value']
-        formUID = formtag.findNext('input', {'name':'formUID'})['value']
+        # Extract the relevant form element values
+        
+        formtag = pagesoup.select_one('form[action*="schedule-downtime"]')
+        #print('-----------------')
+        #print(formtag.prettify())
+        #print('-----------------')
+        
+        if conf.debug_mode:
+            self.Debug(server=self.get_name(), host=host, service=service,
+                debug='[Set downtime] Retrieve html form from {0}: \n{1}'.format(url,formtag.prettify()))
+        
         btn_submit = formtag.findNext('input', {'name':'btn_submit'})['value']
+        CSRFToken = formtag.findNext('input', {'name':'CSRFToken'})['value']
 
         # Pass these values to the same URL as cgi_data
         cgi_data = {}
         cgi_data['CSRFToken'] = CSRFToken
-        cgi_data['formUID'] = formUID
         cgi_data['btn_submit'] = btn_submit
         cgi_data['comment'] = comment
         if fixed:
-            cgi_data['type'] = 'fixed'
+            cgi_data['flexible'] = 'n'
         else:
-            cgi_data['type'] = 'flexible'
+            cgi_data['flexible'] = 'y'
             cgi_data['hours'] = hours
             cgi_data['minutes'] = minutes
         if start_time == '' or start_time == 'n/a':
@@ -546,7 +674,23 @@ class IcingaDBWebServer(GenericServer):
         cgi_data['start'] = start
         cgi_data['end'] = end
 
-        self.FetchURL(url, giveback='raw', cgi_data=cgi_data)
+        response = self.FetchURL(url, giveback='raw', cgi_data=cgi_data)
+
+        # Some debug data
+        data = response.result
+        error = response.error
+        status_code = response.status_code
+        if conf.debug_mode:
+            self.Debug(server=self.get_name(), host=host, service=service,
+                debug='Achnowledgement response')
+            self.Debug(server=self.get_name(), host=host, service=service,
+                debug="- response: {0}".format(response))
+            self.Debug(server=self.get_name(), host=host, service=service,
+                debug="- data: {0}".format(data))
+            self.Debug(server=self.get_name(), host=host, service=service,
+                debug="- error: {0}".format(error))
+            self.Debug(server=self.get_name(), host=host, service=service,
+                debug="- status_code: {0}".format(status_code))
 
 
     def get_start_end(self, host):
@@ -554,10 +698,32 @@ class IcingaDBWebServer(GenericServer):
             for GUI to get actual downtime start and end from server - they may vary so it's better to get
             directly from web interface
         '''
+        # Set correct headers
+        self.session.headers['X-Requested-With'] = 'XMLHttpRequest'
+        self.session.headers.update({'Content-Type': 'application/x-www-form-urlencoded; charset=UTF-8'})
+
         try:
-            downtime = self.FetchURL(self.monitor_cgi_url + '/icingadb/host/schedule-downtime?name=' + self.hosts[host].real_name)
-            start = downtime.result.find('input', {'name': 'start'})['value']
-            end = downtime.result.find('input', {'name': 'end'})['value']
+            url = '{0}/icingadb/host/schedule-downtime?name={1}'.format(self.monitor_cgi_url, self.hosts[host].real_name)
+            downtime = self.FetchURL(url, giveback='raw')
+
+            if downtime.error != '':
+                return 'n/a', 'n/a'
+            else:
+                pageraw = downtime.result
+    
+            pagesoup = BeautifulSoup(pageraw, 'html.parser')
+
+            #print('-----------------')
+            #print(pagesoup.prettify())
+            #print('-----------------')
+        
+            # Super debug
+            if conf.debug_mode:
+                self.Debug(server=self.get_name(), host=host, service='',
+                    debug='[Get downtime start/end] Retrieve html from {0}: {1}'.format(url,pagesoup.prettify()))
+
+            start = pagesoup.find('input', {'name': 'start'})['value']
+            end = pagesoup.find('input', {'name': 'end'})['value']
             # give values back as tuple
             return start, end
         except:
@@ -570,20 +736,20 @@ class IcingaDBWebServer(GenericServer):
             open monitor from tablewidget context menu
         '''
         # only type is important so do not care of service '' in case of host monitor
-        if service == '':    
-            url = '{0}/icingadb/hosts?host.state.is_problem=y&sort=host.state.severity#!{1}/icingadb/hosts/{2}'.format(self.monitor_url,
+        if service == '':
+            url = '{0}/icingadb/hosts?host.state.is_problem=y&sort=host.state.severity#!{1}/icingadb/host?{2}'.format(self.monitor_url,
                                                                                                                      (urllib.parse.urlparse(self.monitor_url).path),
                                                                                                                      urllib.parse.urlencode(
-                                                                                                                        {'host': self.hosts[host].real_name}).replace('+', ' '))
+                                                                                                                        {'name': self.hosts[host].real_name}).replace('+', ' '))
         else:
-            url = '{0}/icingadb/services?service.state.is_problem=y&sort=service.state.severity&dir=desc#!{1}/icingadb/services/{2}'.format(self.monitor_url,
+            url = '{0}/icingadb/services?service.state.is_problem=y&sort=service.state.severity%20desc#!{1}/icingadb/service?{2}'.format(self.monitor_url,
                                                                                                                                    (urllib.parse.urlparse(self.monitor_url).path),
                                                                                                                                     urllib.parse.urlencode(
-                                                                                                                                        {'host': self.hosts[host].real_name,
-                                                                                                                                         'service': self.hosts[host].services[service].real_name}).replace('+', ' '))
+                                                                                                                                        {'name': self.hosts[host].services[service].real_name,
+                                                                                                                                         'host.name': self.hosts[host].real_name}).replace('+', ' '))
         if conf.debug_mode:
             self.Debug(server=self.get_name(), host=host, service=service,
-                       debug='Open host/service monitor web page {0}'.format(url))
+                       debug='[Open monitor] Open host/service monitor web page {0}'.format(url))
         webbrowser_open(url)
 
     def GetHost(self, host):
