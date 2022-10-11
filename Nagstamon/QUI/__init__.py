@@ -89,8 +89,8 @@ if OS not in OS_NON_LINUX:
         # flag to check later if DBus is available
         DBUS_AVAILABLE = True
 
-    except ImportError as ie:
-        print(ie)
+    except ImportError as error:
+        print(error)
         print('No DBus for desktop notification available.')
         DBUS_AVAILABLE = False
 
@@ -2078,9 +2078,9 @@ class StatusWindow(QWidget):
                 APP.activePopupWidget() == None:
             try:
                 self.raise_()
-            except Exception as err:
+            except Exception as error:
                 # apparently a race condition could occur on set_mode() - grab it here and continue
-                print(err)
+                print(error)
 
     def kill(self):
         """
@@ -3318,7 +3318,8 @@ class TreeView(QTreeView):
         height = 0
 
         # only count if there is anything to display - there is no use of the headers only
-        if self.model().rowCount(self) > 0:
+        if self.is_shown and \
+           self.model().rowCount(self) > 0:
             # height summary starts with headers' height
             # apparently height works better/without scrollbar if some pixels are added
             height = self.header().sizeHint().height() + 2
@@ -3919,11 +3920,9 @@ class TreeView(QTreeView):
                 # check if status changed and notification is necessary
                 # send signal because there are unseen events
                 # status has changed if there are unseen events in the list OR (current status is up AND has been changed since last time)
-                bla = self.server.get_events_history_count()
                 if (self.server.get_events_history_count() > 0) or \
                         ((self.server.worst_status_current == 'UP') and (
                                 self.server.worst_status_current != self.server.worst_status_last)):
-                    pass
                     self.status_changed.emit(self.server.name, self.server.worst_status_diff,
                                              self.server.worst_status_current)
 

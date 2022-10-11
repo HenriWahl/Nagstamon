@@ -394,8 +394,8 @@ def lock_config_folder(folder):
             pidFile.seek(0)
             pidFile.truncate()
             pidFile.write('{}@{}@{}'.format(curPid, curBootTime, curUserName))
-    except Exception as err:
-        print(err)
+    except Exception as error:
+        print(error)
 
     return True
 

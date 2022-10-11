@@ -74,6 +74,10 @@ class MultisiteServer(GenericServer):
         if self.monitor_url.endswith('/'):
             self.monitor_url.rstrip('/')
 
+        # Add /check_mk if not already existent - makes setting URL simpler
+        if not self.monitor_url.endswith('/check_mk'):
+            self.monitor_url += '/check_mk'
+
         # Prepare all urls needed by nagstamon if not yet done
         if len(self.urls) == len(self.statemap):
             self.urls = {
