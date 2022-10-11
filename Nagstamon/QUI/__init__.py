@@ -1784,20 +1784,6 @@ class StatusWindow(QWidget):
                     height = available_height - available_y
             # when statusbar hangs around in lowermost part of current screen extend from bottom to top
             else:
-                ## when height is too large for current screen cut it
-                # if self.y() + self.height() - real_height < available_y:
-                #     # simply take the available max height if there is no more screen real estate
-                #     # possible because systrayicon resides aside from available space, in fact cutting it
-                #     height = available_height
-                #     y = available_height - height
-                # else:
-                #     if available_height < real_height:
-                #         y = available_y
-                #         height = available_height
-                #     else:
-                #         y = available_height - real_height
-                #         height = real_height
-
                 if available_height < real_height:
                     y = available_y
                     height = available_height
@@ -3034,9 +3020,6 @@ class Model(QAbstractTableModel):
     row_count = 0
     column_count = len(HEADERS_HEADERS)
 
-    # dummy QModelIndex for dataChanged signal
-    dummy_qmodelindex = QModelIndex()
-
     # tell treeview if flags columns should be hidden or not
     hosts_flags_column_needed = Signal(bool)
     services_flags_column_needed = Signal(bool)
@@ -3049,21 +3032,20 @@ class Model(QAbstractTableModel):
         """
             overridden method to get number of rows
         """
-        # return(len(self.data_array))
-        return (self.row_count)
+        return self.row_count
 
     def columnCount(self, parent):
         """
             overridden method to get number of columns
         """
-        return (self.column_count)
+        return self.column_count
 
     def headerData(self, column, orientation, role):
         """
             overridden method to get headers of columns
         """
         if role == Qt.ItemDataRole.DisplayRole:
-            return (HEADERS_HEADERS[column])
+            return HEADERS_HEADERS[column]
 
     @Slot(list, dict)
     # @Slot(list)
@@ -3076,7 +3058,7 @@ class Model(QAbstractTableModel):
         self.beginResetModel()
 
         # first empty the data storage
-        del (self.data_array[:])
+        del self.data_array[:]
 
         # use delivered data array
         self.data_array = data_array
@@ -3088,15 +3070,18 @@ class Model(QAbstractTableModel):
         self.hosts_flags_column_needed.emit(info['hosts_flags_column_needed'])
         self.services_flags_column_needed.emit(info['services_flags_column_needed'])
 
-        self.model_data_array_filled.emit()
-
         # new model applied
         self.endResetModel()
+
+        self.model_data_array_filled.emit()
 
     def data(self, index, role):
         """
             overridden method for data delivery for treeview
         """
+        
+        print(index, role)
+        
         if role == Qt.ItemDataRole.DisplayRole:
             return self.data_array[index.row()][index.column()]
 
@@ -3104,7 +3089,6 @@ class Model(QAbstractTableModel):
             return self.data_array[index.row()][10]
 
         elif role == Qt.ItemDataRole.BackgroundRole:
-            # return(self.data_array[index.row()][COLOR_INDEX['background'][index.column()]])
             return self.data_array[index.row()][11]
 
         elif role == Qt.ItemDataRole.FontRole:
@@ -3228,8 +3212,7 @@ class TreeView(QTreeView):
         self.clipboard_action_all.triggered.connect(self.action_clipboard_action_all)
         self.clipboard_menu.addAction(self.clipboard_action_all)
 
-        self.treeview_model = Model(server=self.server, parent=self)
-        self.setModel(self.treeview_model)
+        self.setModel(Model(server=self.server, parent=self))
         self.model().model_data_array_filled.connect(self.adjust_table)
         self.model().hosts_flags_column_needed.connect(self.show_hosts_flags_column)
         self.model().services_flags_column_needed.connect(self.show_services_flags_column)
@@ -3255,9 +3238,6 @@ class TreeView(QTreeView):
 
         # quit thread if worker has finished
         self.worker.finish.connect(self.finish_worker_thread)
-
-        # receive information if action menu is shown
-        # self.action_menu.is_shown.connect(self.worker.track_action_menu)
 
         # get status if started
         self.worker_thread.started.connect(self.worker.get_status)
@@ -3285,8 +3265,6 @@ class TreeView(QTreeView):
 
         # display mode - all or only header to display error
         self.is_shown = False
-
-        # connect signal for handling copy from keyboard
 
     @Slot()
     def set_font(self):
@@ -3317,9 +3295,12 @@ class TreeView(QTreeView):
         """
         height = 0
 
+        mddl = self.model()
+        
+        rwcnt = mddl.rowCount(self)
+
         # only count if there is anything to display - there is no use of the headers only
-        if self.is_shown and \
-           self.model().rowCount(self) > 0:
+        if self.model().rowCount(self) > 0:
             # height summary starts with headers' height
             # apparently height works better/without scrollbar if some pixels are added
             height = self.header().sizeHint().height() + 2
@@ -3327,7 +3308,7 @@ class TreeView(QTreeView):
             # maybe simply take nagitems_filtered_count?
             height += self.indexRowSizeHint(self.model().index(0, 0)) * self.model().rowCount(self)
 
-        return (height)
+        return height
 
     def get_real_width(self):
         width = 0
@@ -3345,7 +3326,6 @@ class TreeView(QTreeView):
         self.setMinimumHeight(self.get_real_height())
         self.setMaximumHeight(self.get_real_height())
         self.setSizePolicy(QSizePolicy.Policy.Ignored, QSizePolicy.Policy.Maximum)
-
         # after setting table whole window can be repainted
         self.ready_to_resize.emit()
 
@@ -4194,8 +4174,6 @@ class TreeView(QTreeView):
             if header_clicked:
                 self.data_array_sorted.emit(self.data_array, self.info)
 
-            del (first_sort)
-
             # store last sorting column for next sorting only if header was clicked
             if header_clicked:
                 # last sorting column needs to be cached to avoid losing it
@@ -4430,27 +4408,22 @@ class Dialogs(object):
 
     def __init__(self):
         # settings main dialog
-        # self.settings = Dialog_Settings(Ui_settings_main)
         self.settings = Dialog_Settings('settings_main')
         self.settings.initialize()
 
         # server settings dialog
-        # self.server = Dialog_Server(Ui_settings_server)
         self.server = Dialog_Server('settings_server')
         self.server.initialize()
 
         # action settings dialog
-        # self.action = Dialog_Action(Ui_settings_action)
         self.action = Dialog_Action('settings_action')
         self.action.initialize()
 
         # acknowledge dialog for miserable item context menu
-        # self.acknowledge = Dialog_Acknowledge(Ui_dialog_acknowledge)
         self.acknowledge = Dialog_Acknowledge('dialog_acknowledge')
         self.acknowledge.initialize()
 
         # downtime dialog for miserable item context menu
-        # self.downtime = Dialog_Downtime(Ui_dialog_downtime)
         self.downtime = Dialog_Downtime('dialog_downtime')
         self.downtime.initialize()
 
@@ -4461,17 +4434,14 @@ class Dialogs(object):
         self.acknowledge.window.button_change_defaults_acknowledge.clicked.connect(self.acknowledge.window.close)
 
         # downtime dialog for miserable item context menu
-        # self.submit = Dialog_Submit(Ui_dialog_submit)
         self.submit = Dialog_Submit('dialog_submit')
         self.submit.initialize()
 
         # authentication dialog for username/password
-        # self.authentication = Dialog_Authentication(Ui_dialog_authentication)
         self.authentication = Dialog_Authentication('dialog_authentication')
         self.authentication.initialize()
 
         # dialog for asking about disabled or not configured servers
-        # self.server_missing = Dialog_Server_missing(Ui_dialog_server_missing)
         self.server_missing = Dialog_Server_missing('dialog_server_missing')
         self.server_missing.initialize()
         # open server creation dialog
@@ -4479,7 +4449,6 @@ class Dialogs(object):
         self.server_missing.window.button_enable_server.clicked.connect(self.settings.show)
 
         # about dialog
-        # self.about = Dialog_About(Ui_dialog_about)
         self.about = Dialog_About('dialog_about')
 
         # file chooser Dialog
@@ -4739,7 +4708,7 @@ class Dialog_Settings(Dialog):
         self.window.button_check_for_new_version_now.clicked.connect(self.button_check_for_new_version_clicked)
         self.check_for_new_version.connect(check_version.check)
 
-        # avoid offset spinbox if offest is not enabled
+        # avoid offset spinbox if offset is not enabled
         self.window.input_radiobutton_fullscreen.clicked.connect(self.toggle_systray_icon_offset)
         self.window.input_radiobutton_icon_in_systray.clicked.connect(self.toggle_systray_icon_offset)
         self.window.input_radiobutton_statusbar_floating.clicked.connect(self.toggle_systray_icon_offset)
@@ -5100,22 +5069,6 @@ class Dialog_Settings(Dialog):
             # stop statuswindow workers
             statuswindow.worker.finish.emit()
             statuswindow.worker_notification.finish.emit()
-
-            # # wait until all threads are stopped
-            # for server_vbox in statuswindow.servers_vbox.children():
-            #     #server_vbox.table.worker_thread.terminate()
-            #     server_vbox.table.worker_thread.quit()
-            #     server_vbox.table.worker_thread.wait()
-            #
-            # # wait until statuswindow worker has finished
-            # #statuswindow.worker_thread.terminate()
-            # statuswindow.worker_thread.quit()
-            # statuswindow.worker_thread.wait()
-
-            # wait until statuswindow notification worker has finished
-            # statuswindow.worker_notification_thread.terminate()
-            # statuswindow.worker_notification_thread.quit()
-            # statuswindow.worker_notification_thread.wait()
 
             # kick out ol' statuswindow
             statuswindow.kill()
