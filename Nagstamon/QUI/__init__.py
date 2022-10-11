@@ -945,8 +945,6 @@ class StatusWindow(QWidget):
         """
             Status window combined from status bar and popup window
         """
-        # attempt with desktop as parent for window Qt.Tool
-        # QWidget.__init__(self, parent=APP.desktop())
         QWidget.__init__(self)
 
         # immediately hide to avoid flicker on Windows and OSX
@@ -1714,7 +1712,6 @@ class StatusWindow(QWidget):
         # add available_y because it might vary on differently setup screens
         # calculate top-ness only if window is closed
         if conf.statusbar_floating:
-            # if self.is_shown is False:
             if self.y() < self.screen().geometry().height() // 2 + available_y:
                 self.top = True
             else:
@@ -2736,8 +2733,10 @@ class ServerStatusLabel(ClosingLabel):
             else:
                 self.setStyleSheet('''background: {0};
                                       margin-top: 8px;
+                                      padding-top: 3px;
                                       margin-bottom: 8px;
-                                      border-radius: 6px;
+                                      padding-bottom: 3px;
+                                      border-radius: 4px;
                                       '''.format(COLOR_STATUS_LABEL[style]))
         elif style == '':
             self.setStyleSheet('')
@@ -2911,7 +2910,7 @@ class ServerVBox(QVBoxLayout):
         self.label_stretcher.show()
         # special table treatment
         self.table.show()
-        self.table.is_shown = True
+        #self.table.is_shown = True
 
     @Slot()
     def show_only_header(self):
@@ -2930,7 +2929,7 @@ class ServerVBox(QVBoxLayout):
         self.label_stretcher.show()
         # special table treatment
         self.table.hide()
-        self.table.is_shown = False
+        #self.table.is_shown = False
 
     @Slot()
     def hide_all(self):
@@ -2949,7 +2948,7 @@ class ServerVBox(QVBoxLayout):
         self.label_stretcher.hide()
         # special table treatment
         self.table.hide()
-        self.table.is_shown = False
+        #self.table.is_shown = False
 
     @Slot()
     def delete(self):
@@ -3263,8 +3262,8 @@ class TreeView(QTreeView):
         # execute action by worker
         self.request_action.connect(self.worker.execute_action)
 
-        # display mode - all or only header to display error
-        self.is_shown = False
+        ## display mode - all or only header to display error
+        #self.is_shown = False
 
     @Slot()
     def set_font(self):
@@ -3889,11 +3888,11 @@ class TreeView(QTreeView):
         if statuswindow is not None:
             # do nothing if window is moving to avoid lagging movement
             if not statuswindow.moving:
-                # get_status table cells with new data by thread
-                if len(self.model().data_array) > 0:
-                    self.is_shown = True
-                else:
-                    self.is_shown = False
+                ## get_status table cells with new data by thread
+                #if len(self.model().data_array) > 0:
+                #    self.is_shown = True
+                #else:
+                #    self.is_shown = False
                 # tell statusbar it should update
                 self.refreshed.emit()
 
