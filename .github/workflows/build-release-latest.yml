@@ -16,9 +16,9 @@ jobs:
         python-version: [3.7, 3.9]
 
     steps:
-    - uses: actions/checkout@v2
+    - uses: actions/checkout@v3
     - name: Set up Python ${{ matrix.python-version }}
-      uses: actions/setup-python@v2
+      uses: actions/setup-python@v3
       with:
         python-version: ${{ matrix.python-version }}
     - name: Install dependencies
@@ -41,11 +41,11 @@ jobs:
 #    runs-on: ubuntu-latest
 #    #needs: test
 #    steps:
-#      - uses: actions/checkout@v2
+#      - uses: actions/checkout@v3
 #      - run: /usr/bin/docker build -t build-nagstamon -f build/docker/Dockerfile-${{ github.job }} .
 #      # higher privileges needed for creation of AppImage
 #      - run: /usr/bin/docker run -v ${{ github.workspace }}:/nagstamon --cap-add SYS_ADMIN --cap-add MKNOD --device /dev/fuse:mrw build-nagstamon
-#      - uses: actions/upload-artifact@v2
+#      - uses: actions/upload-artifact@v3
 #        with:
 #          path: build/*.AppImage
 #          retention-days: 1
@@ -55,10 +55,10 @@ jobs:
     runs-on: ubuntu-latest
     needs: test
     steps:
-      - uses: actions/checkout@v2
+      - uses: actions/checkout@v3
       - run: /usr/bin/docker build -t build-nagstamon -f build/docker/Dockerfile-${{ github.job }} .
       - run: /usr/bin/docker run -v ${{ github.workspace }}:/nagstamon build-nagstamon
-      - uses: actions/upload-artifact@v2
+      - uses: actions/upload-artifact@v3
         with:
           path: build/*.deb
           retention-days: 1
@@ -68,10 +68,10 @@ jobs:
     runs-on: ubuntu-latest
     needs: test
     steps:
-      - uses: actions/checkout@v2
+      - uses: actions/checkout@v3
       - run: /usr/bin/docker build -t build-nagstamon -f build/docker/Dockerfile-${{ github.job }} .
       - run: /usr/bin/docker run -v ${{ github.workspace }}:/nagstamon build-nagstamon
-      - uses: actions/upload-artifact@v2
+      - uses: actions/upload-artifact@v3
         with:
           path: build/*.rpm
           retention-days: 1
@@ -81,10 +81,10 @@ jobs:
     runs-on: ubuntu-latest
     needs: test
     steps:
-      - uses: actions/checkout@v2
+      - uses: actions/checkout@v3
       - run: /usr/bin/docker build -t build-nagstamon -f build/docker/Dockerfile-${{ github.job }} .
       - run: /usr/bin/docker run -v ${{ github.workspace }}:/nagstamon build-nagstamon
-      - uses: actions/upload-artifact@v2
+      - uses: actions/upload-artifact@v3
         with:
           path: build/*.rpm
           retention-days: 1
@@ -94,10 +94,10 @@ jobs:
     runs-on: ubuntu-latest
     needs: test
     steps:
-      - uses: actions/checkout@v2
+      - uses: actions/checkout@v3
       - run: /usr/bin/docker build -t build-nagstamon -f build/docker/Dockerfile-${{ github.job }} .
       - run: /usr/bin/docker run -v ${{ github.workspace }}:/nagstamon build-nagstamon
-      - uses: actions/upload-artifact@v2
+      - uses: actions/upload-artifact@v3
         with:
           path: build/*.rpm
           retention-days: 1
@@ -107,10 +107,10 @@ jobs:
     runs-on: ubuntu-latest
     needs: test
     steps:
-      - uses: actions/checkout@v2
+      - uses: actions/checkout@v3
       - run: /usr/bin/docker build -t build-nagstamon -f build/docker/Dockerfile-${{ github.job }} .
       - run: /usr/bin/docker run -v ${{ github.workspace }}:/nagstamon build-nagstamon
-      - uses: actions/upload-artifact@v2
+      - uses: actions/upload-artifact@v3
         with:
           path: build/*.rpm
           retention-days: 1
@@ -120,12 +120,12 @@ jobs:
     runs-on: macos-10.15
     needs: test
     steps:
-      - uses: actions/checkout@v2
+      - uses: actions/checkout@v3
       - run: pip3 install --no-warn-script-location -r build/requirements/macos.txt
       - run: cd ${{ github.workspace }}/build; python3 build.py
         env:
           PYTHONPATH: ${{ github.workspace }}
-      - uses: actions/upload-artifact@v2
+      - uses: actions/upload-artifact@v3
         with:
           path: build/*.dmg
           retention-days: 1
@@ -136,8 +136,8 @@ jobs:
     runs-on: windows-2019
     needs: test
     steps:
-      - uses: actions/checkout@v2
-      - uses: actions/setup-python@v2
+      - uses: actions/checkout@v3
+      - uses: actions/setup-python@v3
         with:
           python-version: ${{ env.python_win_version }}
           architecture: x86
@@ -149,7 +149,7 @@ jobs:
       - run: cd ${{ github.workspace }}/build; python build.py
         env:
           PYTHONPATH: ${{ github.workspace }}
-      - uses: actions/upload-artifact@v2
+      - uses: actions/upload-artifact@v3
         with:
           path: |
             build/dist/*.zip
@@ -162,8 +162,8 @@ jobs:
     runs-on: windows-2019
     needs: test
     steps:
-      - uses: actions/checkout@v2
-      - uses: actions/setup-python@v2
+      - uses: actions/checkout@v3
+      - uses: actions/setup-python@v3
         with:
           python-version: ${{ env.python_win_version }}
           architecture: x64
@@ -173,7 +173,7 @@ jobs:
       - run: cd ${{ github.workspace }}/build; python build.py
         env:
           PYTHONPATH: ${{ github.workspace }}
-      - uses: actions/upload-artifact@v2
+      - uses: actions/upload-artifact@v3
         with:
           path: |
             build/dist/*.zip
@@ -186,7 +186,7 @@ jobs:
     needs: [fedora-34, fedora-35, fedora-36, fedora-37]
     steps:
       # get binaries created by other jobs
-      - uses: actions/download-artifact@v2
+      - uses: actions/download-artifact@v3
       # organize SSH deploy key for nagstamon-repo
       - run: mkdir ~/.ssh
       - run: echo "${{ secrets.NAGSTAMON_REPO_KEY_WEB }}" >  ~/.ssh/id_ed25519
@@ -207,7 +207,7 @@ jobs:
     runs-on: ubuntu-latest
     needs: [debian, fedora-34, fedora-35, fedora-36, fedora-37, macos, windows-32, windows-64]
     steps:
-      - uses: actions/download-artifact@v2
+      - uses: actions/download-artifact@v3
       - run: cd artifact && md5sum *agstamon* > md5sums.txt
       - run: cd artifact && sha256sum *agstamon* > sha256sums.txt
       - uses: marvinpinto/action-automatic-releases@latest
