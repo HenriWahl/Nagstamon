@@ -1490,7 +1490,7 @@ class StatusWindow(QWidget):
                     if not vbox.server.all_ok:
                         vbox.show_all()
                     # show at least server vbox header to notify about connection or other errors
-                    if vbox.server.status != '' or vbox.server.refresh_authentication or vbox.server.tls_error:
+                    elif vbox.server.status != '' or vbox.server.refresh_authentication or vbox.server.tls_error:
                         vbox.show_only_header()
                     elif vbox.server.all_ok and vbox.server.status == '':
                         vbox.hide_all()
@@ -2896,7 +2896,7 @@ class ServerVBox(QVBoxLayout):
     @Slot()
     def show_all(self):
         """
-            show all items in server vbox except the table - not needed if empty
+            show all items in server vbox
         """
         self.button_authenticate.hide()
         self.button_edit.show()
@@ -3078,9 +3078,6 @@ class Model(QAbstractTableModel):
         """
             overridden method for data delivery for treeview
         """
-        
-        print(index, role)
-        
         if role == Qt.ItemDataRole.DisplayRole:
             return self.data_array[index.row()][index.column()]
 
