@@ -2514,12 +2514,7 @@ class StatusBar(QWidget):
         self.label_message.setFont(FONT)
         height = self.label_message.sizeHint().height()
 
-        # absolutely silly but no other cure in sight
-        # strange miscalculation of nagstamon logo on MacOSX
-        #if OS == OS_DARWIN and 18 <= height <= 24:
-        #    height += 1
-
-        # adjust logo size to fit to label size
+        # adjust logo size to fit to label size - due to being a square height and width are the same
         self.logo.adjust_size(height, height)
 
         # avoid flickering/artefact by updating immediately
