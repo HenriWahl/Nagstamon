@@ -2503,20 +2503,21 @@ class StatusBar(QWidget):
             are shown at the same time - which is very likely the case
         """
         # take height for logo
-        height = 0
+        #height = 0
 
         # run through labels to set font and get height for logo
         for label in self.color_labels.values():
             label.setFont(FONT)
-            if label.fontMetrics().height() > height:
-                height = label.fontMetrics().height()
+        #    if label.fontMetrics().height() > height:
+        #        height = label.fontMetrics().height()
 
         self.label_message.setFont(FONT)
+        height = self.label_message.sizeHint().height()
 
         # absolutely silly but no other cure in sight
         # strange miscalculation of nagstamon logo on MacOSX
-        if OS == OS_DARWIN and 18 <= height <= 24:
-            height += 1
+        #if OS == OS_DARWIN and 18 <= height <= 24:
+        #    height += 1
 
         # adjust logo size to fit to label size
         self.logo.adjust_size(height, height)

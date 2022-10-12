@@ -18,6 +18,9 @@
 # along with this program; if not, write to the Free Software
 # Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA  02110-1301, USA
 
+# according to https://gitlab.com/alelec/pip-system-certs/-/issues/7#note_1066992053
+#import pip_system_certs.wrapt_requests
+
 import sys
 import socket
 
