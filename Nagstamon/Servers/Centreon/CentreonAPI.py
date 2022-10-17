@@ -82,22 +82,27 @@ class CentreonServer(GenericServer):
             return (errors_occured)
 
         self.centreon_version_major = int(data["web"]["major"])
+        self.centreon_version_minor = int(data["web"]["minor"])
+        if conf.debug_mode is True:
+            self.Debug(server='[' + self.get_name() + ']', debug='Centreon version detected : ' + str(self.centreon_version_major) + '.' + str(self.centreon_version_minor))
 
         if self.centreon_version_major >= 21:
-            # starting from 21.xx the API to use is «latest», until something change
-            if conf.debug_mode is True:
-                self.Debug(server='[' + self.get_name() + ']', debug='Centreon code version selected : >= 21')
             # URLs for browser shortlinks/buttons on popup window
             self.BROWSER_URLS = {'monitor': '$MONITOR$/monitoring/resources',
                                  'hosts': '$MONITOR$/monitoring/resources',
                                  'services': '$MONITOR$/monitoring/resources',
                                  'history': '$MONITOR$/main.php?p=20301'}
             # RestAPI version
-            self.restapi_version = "latest"
+            if self.centreon_version_major == 21:
+                self.restapi_version = "latest"
+            else:
+                self.restapi_version = "v22.04"
+            if conf.debug_mode is True:
+                self.Debug(server='[' + self.get_name() + ']', debug='Centreon API version used : ' + self.restapi_version)
 
         else:
             if conf.debug_mode is True:
-                self.Debug(server='[' + self.get_name() + ']', debug='Unsupported Centreon version')
+                self.Debug(server='[' + self.get_name() + ']', debug='Unsupported Centreon version, must be >= 21')
 
         # Changed this because define_url was called 2 times
         if not self.tls_error and self.urls_centreon is None:
@@ -118,9 +123,6 @@ class CentreonServer(GenericServer):
         }
 
         self.urls_centreon = urls_centreon_api_v2
-        if conf.debug_mode == True:
-            self.Debug(server='[' + self.get_name() + ']',
-                       debug='URLs defined for Centreon version : %s' % (self.centreon_version_major))
 
     def open_monitor(self, host, service=''):
         # Used for self.MENU_ACTIONS = ['Monitor']
@@ -335,28 +337,35 @@ class CentreonServer(GenericServer):
             if errors_occured is not False:
                 return (errors_occured)
 
-            for alerts in data["result"]:
-                new_host = alerts["name"]
-                self.new_hosts[new_host] = GenericHost()
-                self.new_hosts[new_host].name = alerts["name"]
-                self.new_hosts[new_host].server = self.name
-                self.new_hosts[new_host].criticality = alerts["severity_level"]
-                self.new_hosts[new_host].status = alerts["status"]["name"]
-                self.new_hosts[new_host].last_check = alerts["last_check"]
-                # last_state_change = datetime.strptime(alerts["last_status_change"], '%Y-%m-%dT%H:%M:%S%z').replace(tzinfo=None)
-                self.new_hosts[new_host].duration = alerts["duration"]
-                self.new_hosts[new_host].attempt = alerts["tries"]
-                self.new_hosts[new_host].status_information = alerts["information"]
-                self.new_hosts[new_host].passiveonly = alerts["passive_checks"]
-                self.new_hosts[new_host].notifications_disabled = not alerts["notification_enabled"]
-                self.new_hosts[new_host].flapping = alerts["flapping"]
-                self.new_hosts[new_host].acknowledged = alerts["acknowledged"]
-                self.new_hosts[new_host].scheduled_downtime = alerts["in_downtime"]
-                if "(S)" in alerts["tries"]:
-                    self.new_hosts[new_host].status_type = self.HARD_SOFT['(S)']
-                else:
-                    self.new_hosts[new_host].status_type = self.HARD_SOFT['(H)']
-                self.Debug(server='[' + self.get_name() + ']', debug='Host indexed : ' + new_host)
+            if data["meta"]["total"] == 0:
+                self.Debug(server='[' + self.get_name() + ']', debug='No host down')
+            else:
+                for alerts in data["result"]:
+                    new_host = alerts["name"]
+                    self.new_hosts[new_host] = GenericHost()
+                    self.new_hosts[new_host].name = alerts["name"]
+                    self.new_hosts[new_host].server = self.name
+                    # API inconsistency, even by fixing exact version number
+                    if self.centreon_version_major == 21 or (self.centreon_version_major == 22 and self.centreon_version_minor == 4):
+                        self.new_hosts[new_host].criticality = alerts["severity_level"]
+                    else:
+                        self.new_hosts[new_host].criticality = alerts["severity"]
+                    self.new_hosts[new_host].status = alerts["status"]["name"]
+                    self.new_hosts[new_host].last_check = alerts["last_check"]
+                    # last_state_change = datetime.strptime(alerts["last_status_change"], '%Y-%m-%dT%H:%M:%S%z').replace(tzinfo=None)
+                    self.new_hosts[new_host].duration = alerts["duration"]
+                    self.new_hosts[new_host].attempt = alerts["tries"]
+                    self.new_hosts[new_host].status_information = alerts["information"]
+                    self.new_hosts[new_host].passiveonly = alerts["passive_checks"]
+                    self.new_hosts[new_host].notifications_disabled = not alerts["notification_enabled"]
+                    self.new_hosts[new_host].flapping = alerts["flapping"]
+                    self.new_hosts[new_host].acknowledged = alerts["acknowledged"]
+                    self.new_hosts[new_host].scheduled_downtime = alerts["in_downtime"]
+                    if "(S)" in alerts["tries"]:
+                        self.new_hosts[new_host].status_type = self.HARD_SOFT['(S)']
+                    else:
+                        self.new_hosts[new_host].status_type = self.HARD_SOFT['(H)']
+                    self.Debug(server='[' + self.get_name() + ']', debug='Host indexed : ' + new_host)
 
         except:
             traceback.print_exc(file=sys.stdout)
@@ -383,43 +392,49 @@ class CentreonServer(GenericServer):
             if errors_occured is not False:
                 return (errors_occured)
 
-            for alerts in data["result"]:
-                if alerts["type"] == "metaservice":
-                    new_host = "Meta_Services"
-                else:
-                    new_host = alerts["parent"]["name"]
-                new_service = alerts["name"]
-                # Needed if non-ok services are on a UP host
-                if not new_host in self.new_hosts:
-                    self.new_hosts[new_host] = GenericHost()
-                    self.new_hosts[new_host].name = new_host
-                    self.new_hosts[new_host].status = 'UP'
-                self.new_hosts[new_host].services[new_service] = GenericService()
-                # Attributs à remplir
-                self.Debug(server='[' + self.get_name() + ']',
-                           debug='Service indexed : ' + new_host + ' / ' + new_service)
+            if data["meta"]["total"] == 0:
+                self.Debug(server='[' + self.get_name() + ']', debug='No service down')
+            else:
+                for alerts in data["result"]:
+                    if alerts["type"] == "metaservice":
+                        new_host = "Meta_Services"
+                    else:
+                        new_host = alerts["parent"]["name"]
+                    new_service = alerts["name"]
+                    # Needed if non-ok services are on a UP host
+                    if not new_host in self.new_hosts:
+                        self.new_hosts[new_host] = GenericHost()
+                        self.new_hosts[new_host].name = new_host
+                        self.new_hosts[new_host].status = 'UP'
+                    self.new_hosts[new_host].services[new_service] = GenericService()
+                    # Attributs à remplir
+                    self.Debug(server='[' + self.get_name() + ']',
+                               debug='Service indexed : ' + new_host + ' / ' + new_service)
 
-                self.new_hosts[new_host].services[new_service].server = self.name
-                self.new_hosts[new_host].services[new_service].host = new_host
-                self.new_hosts[new_host].services[new_service].name = new_service
-                self.new_hosts[new_host].services[new_service].status = alerts["status"]["name"]
-                self.new_hosts[new_host].services[new_service].last_check = alerts["last_check"]
-                # last_state_change = datetime.strptime(alerts["last_state_change"], '%Y-%m-%dT%H:%M:%S%z').replace(tzinfo=None)
-                # self.new_hosts[new_host].services[new_service].duration = datetime.now() - last_state_change
-                self.new_hosts[new_host].services[new_service].duration = alerts["duration"]
-                self.new_hosts[new_host].services[new_service].attempt = alerts["tries"]
-                self.new_hosts[new_host].services[new_service].status_information = alerts["information"]
-                self.new_hosts[new_host].services[new_service].passiveonly = alerts["passive_checks"]
-                self.new_hosts[new_host].services[new_service].notifications_disabled = not alerts[
-                    "notification_enabled"]
-                self.new_hosts[new_host].services[new_service].flapping = alerts["flapping"]
-                self.new_hosts[new_host].services[new_service].acknowledged = alerts["acknowledged"]
-                self.new_hosts[new_host].services[new_service].scheduled_downtime = alerts["in_downtime"]
-                if "(S)" in alerts["tries"]:
-                    self.new_hosts[new_host].services[new_service].status_type = self.HARD_SOFT['(S)']
-                else:
-                    self.new_hosts[new_host].services[new_service].status_type = self.HARD_SOFT['(H)']
-                self.new_hosts[new_host].services[new_service].criticality = alerts["severity_level"]
+                    self.new_hosts[new_host].services[new_service].server = self.name
+                    self.new_hosts[new_host].services[new_service].host = new_host
+                    self.new_hosts[new_host].services[new_service].name = new_service
+                    self.new_hosts[new_host].services[new_service].status = alerts["status"]["name"]
+                    self.new_hosts[new_host].services[new_service].last_check = alerts["last_check"]
+                    # last_state_change = datetime.strptime(alerts["last_state_change"], '%Y-%m-%dT%H:%M:%S%z').replace(tzinfo=None)
+                    # self.new_hosts[new_host].services[new_service].duration = datetime.now() - last_state_change
+                    self.new_hosts[new_host].services[new_service].duration = alerts["duration"]
+                    self.new_hosts[new_host].services[new_service].attempt = alerts["tries"]
+                    self.new_hosts[new_host].services[new_service].status_information = alerts["information"]
+                    self.new_hosts[new_host].services[new_service].passiveonly = alerts["passive_checks"]
+                    self.new_hosts[new_host].services[new_service].notifications_disabled = not alerts["notification_enabled"]
+                    self.new_hosts[new_host].services[new_service].flapping = alerts["flapping"]
+                    self.new_hosts[new_host].services[new_service].acknowledged = alerts["acknowledged"]
+                    self.new_hosts[new_host].services[new_service].scheduled_downtime = alerts["in_downtime"]
+                    if "(S)" in alerts["tries"]:
+                        self.new_hosts[new_host].services[new_service].status_type = self.HARD_SOFT['(S)']
+                    else:
+                        self.new_hosts[new_host].services[new_service].status_type = self.HARD_SOFT['(H)']
+                    # API inconsistency, even by fixing exact version number
+                    if self.centreon_version_major == 21 or (self.centreon_version_major == 22 and self.centreon_version_minor == 4):
+                        self.new_hosts[new_host].services[new_service].criticality = alerts["severity_level"]
+                    else:
+                        self.new_hosts[new_host].services[new_service].criticality = alerts["severity"]
 
         except:
             traceback.print_exc(file=sys.stdout)
