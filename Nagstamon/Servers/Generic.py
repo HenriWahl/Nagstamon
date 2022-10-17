@@ -90,6 +90,14 @@ try:
 except ImportError:
     pass
 
+# add possibility for bearer auth to requests
+class BearerAuth(requests.auth.AuthBase):
+    def __init__(self, token):
+        self.token = token
+    def __call__(self, r):
+        r.headers["Authorization"] = "Bearer " + self.token
+        return r
+
 class GenericServer(object):
 
     '''
@@ -297,6 +305,8 @@ class GenericServer(object):
             session.auth = HTTPECPAuth(self.idp_ecp_endpoint, username=self.username, password=self.password)
         elif self.authentication == 'kerberos':
             session.auth = HTTPSKerberos()
+        elif self.authentication == 'bearer':
+            session.auth = BearerAuth(self.password)
 
         # default to check TLS validity
         if self.ignore_cert:

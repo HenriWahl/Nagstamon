@@ -5663,6 +5663,10 @@ class Dialog_Server(Dialog):
             self.window.input_lineedit_password,
             self.window.input_checkbox_save_password]
 
+        self.AUTHENTICATION_BEARER_WIDGETS = [
+            self.window.label_username,
+            self.window.input_lineedit_username]
+
         self.AUTHENTICATION_ECP_WIDGETS = [
             self.window.label_idp_ecp_endpoint,
             self.window.input_lineedit_idp_ecp_endpoint]
@@ -5680,7 +5684,7 @@ class Dialog_Server(Dialog):
         self.window.button_choose_custom_cert_ca_file.clicked.connect(self.choose_custom_cert_ca_file)
 
         # fill authentication combobox
-        self.window.input_combobox_authentication.addItems(['Basic', 'Digest', 'Kerberos'])
+        self.window.input_combobox_authentication.addItems(['Basic', 'Digest', 'Kerberos', 'Bearer'])
         if ECP_AVAILABLE is True:
             self.window.input_combobox_authentication.addItems(['ECP'])
 
@@ -5725,6 +5729,16 @@ class Dialog_Server(Dialog):
         else:
             for widget in self.AUTHENTICATION_ECP_WIDGETS:
                 widget.hide()
+
+        # change credential input for bearer auth
+        if self.window.input_combobox_authentication.currentText() == 'Bearer':
+            for widget in self.AUTHENTICATION_BEARER_WIDGETS:
+                widget.hide()
+                self.window.label_password.setText('Token')
+        else:
+            for widget in self.AUTHENTICATION_BEARER_WIDGETS:
+                widget.show()
+                self.window.label_password.setText('Password')
 
         # after hiding authentication widgets dialog might shrink
         self.window.adjustSize()
