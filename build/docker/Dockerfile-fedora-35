@@ -21,5 +21,9 @@ RUN dnf -y install desktop-file-utils \
                    qt5-qtmultimedia \
                    rpm-build
 
+# simple workaround for still building legacy Fedora 35 RPM with Qt5 support because Qt66 is not available
+WORKDIR /nagstamon/build
+RUN sed -i s/qt6/qt5/g redhat/nagstamon.spec
+
 CMD cd /nagstamon/build && \
     /usr/bin/python3 build.py

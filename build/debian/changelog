@@ -1,7 +1,14 @@
 nagstamon (3.9-20221018) unstable; urgency=low
   * New upstream
-
- -- Henri Wahl <henri@nagstamon.de> Wed, 17 Aug 2022 08:00:00 +0100
+    - upgrade to Qt6 GUI framework
+    - updates for latest Centreon
+    - added bearer authentication
+    - added IcingaDB support
+    - extended Zabbix support
+    - fixes for GUI
+    - fixes for TLS
+    - fixes for Checkmk
+ -- Henri Wahl <henri@nagstamon.de> Wed, 19 Oct 2022 08:00:00 +0100
 
 nagstamon (3.8.0) stable; urgency=low
   * New upstream
