@@ -21,6 +21,7 @@ RUN dnf -y install desktop-file-utils \
                    qt5-qtmultimedia \
                    rpm-build
 
+# ugly workaround for legacy Qt5 on Fedora < 36
 CMD cd /nagstamon/build && \
     sed -i s/pyqt6/pyqt5/g redhat/nagstamon.spec && \
     sed -i s/qt6/qt5/g redhat/nagstamon.spec && \

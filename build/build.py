@@ -87,7 +87,7 @@ def winmain():
                      '--icon=..\\Nagstamon\\resources\\nagstamon.ico',
                      '--windowed',
                      '--name=Nagstamon',
-                     '--hidden-import=PyQt5.uic.plugins',
+                     '--hidden-import=PyQt6.uic.plugins',
                      '--hidden-import=win32timezone',
                      '..\\nagstamon.py'], shell=True)
 
