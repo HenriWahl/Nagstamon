@@ -13,7 +13,7 @@ Source0:  https://github.com/HenriWahl/Nagstamon/archive/%{commit}/nagstamon-%{c
 
 BuildArch:     noarch
 BuildRequires: python3-devel
-BuildRequires: python3-qt5-devel
+BuildRequires: python3-pyqt6-devel
 BuildRequires: desktop-file-utils
 Requires:      python3
 Requires:      python3-beautifulsoup4
@@ -25,12 +25,12 @@ Requires:      python3-keyring
 Requires:      python3-lxml
 Requires:      python3-psutil
 Requires:      python3-pysocks
-Requires:      python3-qt5
+Requires:      python3-pyqt6
 Requires:      python3-requests
 Requires:      python3-requests-kerberos
 Requires:      python3-SecretStorage
-Requires:      qt5-qtsvg
-Requires:      qt5-qtmultimedia
+Requires:      qt6-qtsvg
+Requires:      qt6-qtmultimedia
 
 %description
 Nagstamon is a Nagios status monitor which takes place in system tray

@@ -22,4 +22,6 @@ RUN dnf -y install desktop-file-utils \
                    rpm-build
 
 CMD cd /nagstamon/build && \
+    sed -i s/pyqt6/pyqt5/g redhat/nagstamon.spec && \
+    sed -i s/qt6/qt5/g redhat/nagstamon.spec && \
     /usr/bin/python3 build.py
