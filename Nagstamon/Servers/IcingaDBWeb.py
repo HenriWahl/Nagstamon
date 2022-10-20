@@ -303,9 +303,6 @@ class IcingaDBWebServer(GenericServer):
                             self.new_hosts[host_name].services[service_name].status = self.STATES_MAPPING['services'][int(s['state']['hard_state'])]
                         else:
                             self.new_hosts[host_name].services[service_name].status = self.STATES_MAPPING['services'][int(s['state']['soft_state'])]
-
-                        print(s)
-
                         self.new_hosts[host_name].services[service_name].last_check = datetime.datetime.fromtimestamp(int(float(s['state']['last_update'])))
                         self.new_hosts[host_name].services[service_name].attempt = "{}/{}".format(s['state']['check_attempt'],s['max_check_attempts'])
                         self.new_hosts[host_name].services[service_name].status_information = BeautifulSoup(s['state']['output'].replace('\n', ' ').strip(), 'html.parser').text
