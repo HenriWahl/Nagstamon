@@ -1,4 +1,4 @@
-nagstamon (3.9-20221018) unstable; urgency=low
+nagstamon (3.9-20221019) unstable; urgency=low
   * New upstream
     - upgrade to Qt6 GUI framework
     - updates for latest Centreon

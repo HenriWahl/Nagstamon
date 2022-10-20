@@ -214,8 +214,8 @@ class IcingaDBWebServer(GenericServer):
                         self.new_hosts[host_name].last_check = datetime.datetime.fromtimestamp(int(float(h['state']['last_update'])))
                         self.new_hosts[host_name].attempt = "{}/{}".format(h['state']['check_attempt'],h['max_check_attempts'])
                         self.new_hosts[host_name].status_information = BeautifulSoup(h['state']['output'].replace('\n', ' ').strip(), 'html.parser').text
-                        self.new_hosts[host_name].passiveonly = not(int(h['active_checks_enabled']))
-                        self.new_hosts[host_name].notifications_disabled = not(int(h['notifications_enabled']))
+                        self.new_hosts[host_name].passiveonly = not int(h.get('active_checks_enabled') or '0')
+                        self.new_hosts[host_name].notifications_disabled = not int(h.get('notifications_enabled') or '0')
                         self.new_hosts[host_name].flapping = bool(int(h['state']['is_flapping'] or 0))
                         #s['state']['is_acknowledged'] can be null, 0, 1, or 'sticky'
                         self.new_hosts[host_name].acknowledged = bool(int(h['state']['is_acknowledged'].replace('sticky', '1') or 0))
@@ -304,11 +304,13 @@ class IcingaDBWebServer(GenericServer):
                         else:
                             self.new_hosts[host_name].services[service_name].status = self.STATES_MAPPING['services'][int(s['state']['soft_state'])]
 
+                        print(s)
+
                         self.new_hosts[host_name].services[service_name].last_check = datetime.datetime.fromtimestamp(int(float(s['state']['last_update'])))
                         self.new_hosts[host_name].services[service_name].attempt = "{}/{}".format(s['state']['check_attempt'],s['max_check_attempts'])
                         self.new_hosts[host_name].services[service_name].status_information = BeautifulSoup(s['state']['output'].replace('\n', ' ').strip(), 'html.parser').text
-                        self.new_hosts[host_name].services[service_name].passiveonly = not(int(s['active_checks_enabled']))
-                        self.new_hosts[host_name].services[service_name].notifications_disabled = not(int(s['notifications_enabled']))
+                        self.new_hosts[host_name].services[service_name].passiveonly = not int(s.get('active_checks_enabled') or '0')
+                        self.new_hosts[host_name].services[service_name].notifications_disabled = not int(s.get('notifications_enabled') or '0')
                         self.new_hosts[host_name].services[service_name].flapping = bool(int(s['state']['is_flapping'] or 0))
                         #s['state']['is_acknowledged'] can be null, 0, 1, or 'sticky'
                         self.new_hosts[host_name].services[service_name].acknowledged = bool(int(s['state']['is_acknowledged'].replace('sticky', '1') or 0))
