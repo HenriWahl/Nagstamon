@@ -2,6 +2,7 @@ name: build-release-latest
 on:
   push:
     tags-ignore: 'v*'
+    branches: '**'
 
 env:
   python_win_version: 3.10.7
