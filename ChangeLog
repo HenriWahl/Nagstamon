@@ -9,7 +9,7 @@ nagstamon (3.10.0) stable; urgency=low
     - fixes for TLS
     - fixes for Checkmk
 
- -- Henri Wahl <henri@nagstamon.de> Mon, 25 Oct 2022 08:00:00 +0100
+ -- Henri Wahl <henri@nagstamon.de> Thu, 27 Oct 2022 08:00:00 +0100
 
 nagstamon (3.8.0) stable; urgency=low
   * New upstream
