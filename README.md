@@ -20,12 +20,12 @@ Successfully tested monitors include:
  - Checkmk/Multisite 1.1.10+
  - Thruk 1.5.0+
  - monitos 4.4+
+ - Prometheus
+ - Alertmanager 
+ - Zabbix 2.2+
  - Livestatus – experimental
- - Zabbix 2.2+ – experimental
  - Zenoss – experimental
  - monitos 3 - experimental
  - SNAG-View3 - experimental
- - Prometheus - experimental
- - Alertmanager - experimental
 
 See https://nagstamon.de for further information.
