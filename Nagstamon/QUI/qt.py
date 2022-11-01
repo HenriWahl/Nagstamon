@@ -103,6 +103,17 @@ if QT_FLAVOR == 'PyQt5':
     from PyQt5 import uic
 
 
+    class QSignalMapper(QSignalMapper):
+        """
+            QSignalMapper has method mappedString since Qt 5.15 which is not available in Ubuntu 20.04
+            See https://github.com/HenriWahl/Nagstamon/issues/865 for details
+        """
+        def __init__(self):
+            super().__init__()
+            # map mappedString onto mapped
+            self.mappedString = self.mapped
+
+
     class MediaPlayer(QObject):
         """
             play media files for notification
