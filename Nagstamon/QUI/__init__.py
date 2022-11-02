@@ -979,8 +979,8 @@ class StatusWindow(QWidget):
         self.servers_scrollarea = QScrollArea(self)  # scrollable area for server vboxes
         # avoid horizontal scrollbars
         self.servers_scrollarea.setHorizontalScrollBarPolicy(Qt.ScrollBarPolicy.ScrollBarAlwaysOff)
-        self.servers_scrollarea_widget = QWidget(
-            self.servers_scrollarea)  # necessary widget to contain vbox for servers
+        # necessary widget to contain vbox for servers
+        self.servers_scrollarea_widget = QWidget(self.servers_scrollarea)
         self.servers_scrollarea.hide()
 
         self.vbox.addWidget(self.statusbar)
@@ -1165,6 +1165,22 @@ class StatusWindow(QWidget):
         # finally show up
         self.set_mode()
 
+    def get_screen(self):
+        """
+            very hackish fix for https://github.com/HenriWahl/Nagstamon/issues/865
+            should actually fit into qt.py but due to the reference to APP it could only
+            be solved here
+        """
+        # Qt6 has .screen() as replacement for QDesktopWidget...
+        if QT_VERSION_MAJOR > 5:
+            return self.screen()
+        # ...and .screen() exists since Qt5 5.15...
+        elif QT_VERSION_MINOR < 15:
+            return APP.desktop()
+        # ...so newer ones can use .screen() again
+        else:
+            return self.screen()
+
     def set_mode(self):
         """
             apply presentation mode
@@ -1189,8 +1205,8 @@ class StatusWindow(QWidget):
                 self.move(conf.position_x, conf.position_y)
             else:
                 # get available desktop specs
-                available_x = self.screen().availableGeometry().x()
-                available_y = self.screen().availableGeometry().y()
+                available_x = self.get_screen().availableGeometry().x()
+                available_y = self.get_screen().availableGeometry().y()
                 self.move(available_x, available_y)
 
             # statusbar and detail window should be frameless and stay on top
@@ -1216,8 +1232,8 @@ class StatusWindow(QWidget):
                 self.move(conf.position_x, conf.position_y)
             else:
                 # get available desktop specs
-                available_x = self.screen().availableGeometry().x()
-                available_y = self.screen().availableGeometry().y()
+                available_x = self.get_screen().availableGeometry().x()
+                available_y = self.get_screen().availableGeometry().y()
                 self.move(available_x, available_y)
 
             # need a close button
@@ -1388,12 +1404,13 @@ class StatusWindow(QWidget):
             servers_vbox_new.addLayout(vboxes_dict[vbox])
 
         # add expanding stretching item at the end for fullscreen beauty
-        servers_vbox_new.addSpacerItem(QSpacerItem(0, self.screen().availableGeometry().height(),
+        servers_vbox_new.addSpacerItem(QSpacerItem(0, self.get_screen().availableGeometry().height(),
                                                    QSizePolicy.Policy.Minimum, QSizePolicy.Policy.Expanding))
 
         # switch to new servers_vbox
         self.servers_vbox = servers_vbox_new
-        self.servers_scrollarea_widget = QWidget()  # necessary widget to contain vbox for servers
+        # necessary widget to contain vbox for servers
+        self.servers_scrollarea_widget = QWidget()
         self.servers_scrollarea_widget.setLayout(self.servers_vbox)
         self.servers_scrollarea.setWidget(self.servers_scrollarea_widget)
 
@@ -1693,13 +1710,13 @@ class StatusWindow(QWidget):
 
         # only consider offset if it is configured
         if conf.systray_offset_use and conf.icon_in_systray:
-            available_height = self.screen().availableGeometry().height() - conf.systray_offset
+            available_height = self.get_screen().availableGeometry().height() - conf.systray_offset
         else:
-            available_height = self.screen().availableGeometry().height()
+            available_height = self.get_screen().availableGeometry().height()
 
-        available_width = self.screen().availableGeometry().width()
-        available_x = self.screen().availableGeometry().x()
-        available_y = self.screen().availableGeometry().y()
+        available_width = self.get_screen().availableGeometry().width()
+        available_x = self.get_screen().availableGeometry().x()
+        available_y = self.get_screen().availableGeometry().y()
 
         # Workaround for Cinnamon
         if OS not in OS_NON_LINUX and DESKTOP_CINNAMON:
@@ -1712,7 +1729,7 @@ class StatusWindow(QWidget):
         # add available_y because it might vary on differently setup screens
         # calculate top-ness only if window is closed
         if conf.statusbar_floating:
-            if self.y() < self.screen().geometry().height() // 2 + available_y:
+            if self.y() < self.get_screen().geometry().height() // 2 + available_y:
                 self.top = True
             else:
                 self.top = False
@@ -1721,7 +1738,7 @@ class StatusWindow(QWidget):
             x = self.stored_x
 
         elif conf.icon_in_systray or conf.windowed:
-            if self.icon_y < self.screen().geometry().height() // 2 + available_y:
+            if self.icon_y < self.get_screen().geometry().height() // 2 + available_y:
                 self.top = True
             else:
                 self.top = False
@@ -1762,8 +1779,8 @@ class StatusWindow(QWidget):
             else:
                 # when height is too large for current screen cut it
                 if self.y() + self.height() - real_height < available_y:
-                    height = self.screen().geometry().height() - available_y - (
-                            self.screen().geometry().height() - (self.y() + self.height()))
+                    height = self.get_screen().geometry().height() - available_y - (
+                            self.get_screen().geometry().height() - (self.y() + self.height()))
                     y = available_y
                 else:
                     height = real_height
@@ -1904,7 +1921,7 @@ class StatusWindow(QWidget):
             leave_time_offset = 0.25
         elif conf.icon_in_systray:
             # offset is max 1 and smaller if window is smaller too
-            leave_time_offset = self.height() / self.screen().availableGeometry().height()
+            leave_time_offset = self.height() / self.get_screen().availableGeometry().height()
         else:
             leave_time_offset = 0
 
