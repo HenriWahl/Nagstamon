@@ -25,7 +25,7 @@ import shutil
 import subprocess
 import zipfile
 import glob
-import time
+
 
 CURRENT_DIR = os.getcwd()
 NAGSTAMON_DIR = os.path.normpath('{0}{1}..{1}'.format(CURRENT_DIR, os.sep))
@@ -44,6 +44,13 @@ ARCH_OPTS = {'32': ('win32', 'win32', '', 'x86'),
 PYTHON_VERSION = '{0}.{1}'.format(sys.version_info[0],
                                   sys.version_info[1])
 
+# depending of debug build or not a console window will be shown or not
+if len(sys.argv) > 1 and sys.argv[1] == 'debug':
+    GUI_MODE = '--console'
+    FILE_SUFFIX = '_debug'
+else:
+    GUI_MODE = '--windowed'
+    FILE_SUFFIX = ''
 
 def winmain():
     """
@@ -69,7 +76,7 @@ def winmain():
 
     ISCC = r'{0}{1}Inno Setup 6{1}iscc.exe'.format(os.environ['PROGRAMFILES{0}'.format(ARCH_OPTS[ARCH][2])], os.sep)
     DIR_BUILD_EXE = '{0}{1}dist{1}Nagstamon'.format(CURRENT_DIR, os.sep, ARCH_OPTS[ARCH][0], PYTHON_VERSION)
-    DIR_BUILD_NAGSTAMON = '{0}{1}dist{1}Nagstamon-{2}-win{3}'.format(CURRENT_DIR, os.sep, VERSION, ARCH)
+    DIR_BUILD_NAGSTAMON = f'{CURRENT_DIR}{os.sep}dist{os.sep}Nagstamon-{VERSION}-win{ARCH}{FILE_SUFFIX}'
     FILE_ZIP = '{0}.zip'.format(DIR_BUILD_NAGSTAMON)
 
     # clean older binaries
@@ -85,11 +92,12 @@ def winmain():
                      '--noconfirm',
                      '--add-data=..\\Nagstamon/resources;resources',
                      '--icon=..\\Nagstamon\\resources\\nagstamon.ico',
-                     '--windowed',
                      '--name=Nagstamon',
                      '--hidden-import=PyQt6.uic.plugins',
                      '--hidden-import=win32timezone',
-                     '..\\nagstamon.py'], shell=True)
+                     GUI_MODE,
+                     '..\\nagstamon.py'],
+                    shell=True)
 
     # rename output
     os.rename(DIR_BUILD_EXE, DIR_BUILD_NAGSTAMON)
