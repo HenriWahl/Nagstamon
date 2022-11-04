@@ -1,7 +1,9 @@
-nagstamon (3.11-20221103) unstable; urgency=low
+nagstamon (3.10.1) stable; urgency=low
   * New upstream
+    - fixes Centreon flapping bug
+    - fixes Kubuntu 20.04 not starting bug
 
- -- Henri Wahl <henri@nagstamon.de> Wed, 02 Nov 2022 08:00:00 +0100
+ -- Henri Wahl <henri@nagstamon.de> Fri, 04 Nov 2022 08:00:00 +0100
 
 nagstamon (3.10.0) stable; urgency=low
   * New upstream
