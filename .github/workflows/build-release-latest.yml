@@ -81,7 +81,7 @@ jobs:
 
   fedora-36:
     runs-on: ubuntu-latest
-    needs: test
+    #needs: test
     steps:
       - uses: actions/checkout@v3
       - run: /usr/bin/docker build -t build-nagstamon -f build/docker/Dockerfile-${{ github.job }} .
@@ -123,7 +123,7 @@ jobs:
   windows-32:
     # better depend on stable build image
     runs-on: windows-2019
-    needs: test
+    #needs: test
     steps:
       - uses: actions/checkout@v3
       - uses: actions/setup-python@v3
