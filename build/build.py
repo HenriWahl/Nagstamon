@@ -18,6 +18,7 @@
 # along with this program; if not, write to the Free Software
 # Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA  02110-1301, USA
 
+from pathlib import Path
 import platform
 import os, os.path
 import sys
@@ -113,6 +114,11 @@ def winmain():
     # create .zip file
     if os.path.exists('{0}{1}dist'.format(CURRENT_DIR, os.sep)):
         os.chdir('{0}{1}dist'.format(CURRENT_DIR, os.sep))
+        # create simple batch file for debugging
+        if DEBUG:
+            batch_file = Path('nagstamon-debug.bat')
+            # cmd /k keeps the console window open to get some debug output
+            batch_file.write_text('cmd /k nagstamon.exe')
         zip_archive = zipfile.ZipFile(FILE_ZIP, mode='w', compression=zipfile.ZIP_DEFLATED)
         zip_archive.write(os.path.basename(DIR_BUILD_NAGSTAMON))
         for root, dirs, files in os.walk(os.path.basename(DIR_BUILD_NAGSTAMON)):

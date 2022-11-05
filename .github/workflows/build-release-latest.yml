@@ -190,7 +190,6 @@ jobs:
         with:
           path: |
             build/dist/*.zip
-            build/dist/*.exe
           retention-days: 1
           if-no-files-found: error
 
