@@ -48,13 +48,16 @@ PYTHON_VERSION = '{0}.{1}'.format(sys.version_info[0],
 # depending on debug build or not a console window will be shown or not
 if len(sys.argv) > 1 and sys.argv[1] == 'debug':
     DEBUG = True
+    # create console window with pyinstaller to get some output
     GUI_MODE = '--console'
-    FILE_SUFFIX = '_debug'
+    # add '_debug' to name of zip file
+    FILENAME_SUFFIX = '_debug'
 else:
     DEBUG = False
+    # no console window via pyinstaller
     GUI_MODE = '--windowed'
-    FILE_SUFFIX = ''
-
+    # also no need for filename suffix
+    FILENAME_SUFFIX = ''
 
 
 def winmain():
@@ -82,7 +85,7 @@ def winmain():
     # old-school formatstrings needed for old Debian build base distro jessie and its old python
     ISCC = r'{0}{1}Inno Setup 6{1}iscc.exe'.format(os.environ['PROGRAMFILES{0}'.format(ARCH_OPTS[ARCH][2])], os.sep)
     DIR_BUILD_EXE = '{0}{1}dist{1}Nagstamon'.format(CURRENT_DIR, os.sep, ARCH_OPTS[ARCH][0], PYTHON_VERSION)
-    DIR_BUILD_NAGSTAMON = '{0}{1}dist{1}Nagstamon-{2}-win{3}{4}'.format(CURRENT_DIR, os.sep, VERSION, ARCH, FILE_SUFFIX)
+    DIR_BUILD_NAGSTAMON = '{0}{1}dist{1}Nagstamon-{2}-win{3}{4}'.format(CURRENT_DIR, os.sep, VERSION, ARCH, FILENAME_SUFFIX)
     FILE_ZIP = '{0}.zip'.format(DIR_BUILD_NAGSTAMON)
 
     # clean older binaries
@@ -108,17 +111,20 @@ def winmain():
     # rename output
     os.rename(DIR_BUILD_EXE, DIR_BUILD_NAGSTAMON)
 
+    # create simple batch file for debugging
+    if DEBUG:
+        # got to Nagstamon build directory with Nagstamon.exe
+        os.chdir(DIR_BUILD_NAGSTAMON)
+        batch_file = Path('nagstamon-debug.bat')
+        # cmd /k keeps the console window open to get some debug output
+        batch_file.write_text('cmd /k nagstamon.exe')
+
     # after cleaning start zipping and setup.exe-building - go back to original directory
     os.chdir(CURRENT_DIR)
 
     # create .zip file
     if os.path.exists('{0}{1}dist'.format(CURRENT_DIR, os.sep)):
         os.chdir('{0}{1}dist'.format(CURRENT_DIR, os.sep))
-        # create simple batch file for debugging
-        if DEBUG:
-            batch_file = Path('nagstamon-debug.bat')
-            # cmd /k keeps the console window open to get some debug output
-            batch_file.write_text('cmd /k nagstamon.exe')
         zip_archive = zipfile.ZipFile(FILE_ZIP, mode='w', compression=zipfile.ZIP_DEFLATED)
         zip_archive.write(os.path.basename(DIR_BUILD_NAGSTAMON))
         for root, dirs, files in os.walk(os.path.basename(DIR_BUILD_NAGSTAMON)):
