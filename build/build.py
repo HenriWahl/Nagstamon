@@ -46,11 +46,14 @@ PYTHON_VERSION = '{0}.{1}'.format(sys.version_info[0],
 
 # depending on debug build or not a console window will be shown or not
 if len(sys.argv) > 1 and sys.argv[1] == 'debug':
+    DEBUG = True
     GUI_MODE = '--console'
     FILE_SUFFIX = '_debug'
 else:
+    DEBUG = False
     GUI_MODE = '--windowed'
     FILE_SUFFIX = ''
+
 
 
 def winmain():
@@ -116,16 +119,17 @@ def winmain():
             for file in files:
                 zip_archive.write('{0}{1}{2}'.format(root, os.sep, file))
 
-    # execute InnoSetup with many variables set by ISCC.EXE outside .iss file
-    subprocess.call([ISCC,
-                     r'/Dsource={0}'.format(DIR_BUILD_NAGSTAMON),
-                     r'/Dversion_is={0}'.format(VERSION_IS),
-                     r'/Dversion={0}'.format(VERSION),
-                     r'/Darch={0}'.format(ARCH),
-                     r'/Darchs_allowed={0}'.format(ARCH_OPTS[ARCH][3]),
-                     r'/Dresources={0}{1}resources'.format(DIR_BUILD_NAGSTAMON, os.sep),
-                     r'/O{0}{1}dist'.format(CURRENT_DIR, os.sep),
-                     r'{0}{1}windows{1}nagstamon.iss'.format(CURRENT_DIR, os.sep)], shell=True)
+    if not DEBUG:
+        # execute InnoSetup with many variables set by ISCC.EXE outside .iss file
+        subprocess.call([ISCC,
+                         r'/Dsource={0}'.format(DIR_BUILD_NAGSTAMON),
+                         r'/Dversion_is={0}'.format(VERSION_IS),
+                         r'/Dversion={0}'.format(VERSION),
+                         r'/Darch={0}'.format(ARCH),
+                         r'/Darchs_allowed={0}'.format(ARCH_OPTS[ARCH][3]),
+                         r'/Dresources={0}{1}resources'.format(DIR_BUILD_NAGSTAMON, os.sep),
+                         r'/O{0}{1}dist'.format(CURRENT_DIR, os.sep),
+                         r'{0}{1}windows{1}nagstamon.iss'.format(CURRENT_DIR, os.sep)], shell=True)
 
 
 def macmain():
