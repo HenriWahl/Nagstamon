@@ -1,3 +1,8 @@
+nagstamon (3.11-20221104) stable; urgency=low
+  * New upstream
+
+ -- Henri Wahl <henri@nagstamon.de> Fri, 04 Nov 2022 08:00:00 +0100
+
 nagstamon (3.10.1) stable; urgency=low
   * New upstream
     - fixes Centreon flapping bug
