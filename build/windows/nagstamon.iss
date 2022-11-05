@@ -1,6 +1,8 @@
 [Setup]
 AppName=Nagstamon
 AppVerName=Nagstamon {#version}
+AppVersion={#version}
+AppPublisher=Henri Wahl
 DefaultDirName={commonpf}\Nagstamon
 DefaultGroupName=Nagstamon
 AlwaysUsePersonalGroup=false
