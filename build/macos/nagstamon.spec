@@ -46,5 +46,6 @@ app = BUNDLE(exe,
              version=os.environ['NAGSTAMON_VERSION'],
              info_plist={
                 'NSRequiresAquaSystemAppearance': False,
-                'LSBackgroundOnly': False
+                'LSBackgroundOnly': False,
+                'LSUIElement': True
              })
