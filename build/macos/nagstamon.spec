@@ -39,6 +39,7 @@ exe = EXE(pyz,
           entitlements_file=None,
           icon='../../Nagstamon/resources/nagstamon.icns')
 
+# LSUIElement in info_plist hides the icon in dock
 app = BUNDLE(exe,
              name='Nagstamon.app',
              icon='../../Nagstamon/resources/nagstamon.icns',
