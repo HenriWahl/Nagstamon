@@ -43,7 +43,7 @@ exe = EXE(pyz,
 app = BUNDLE(exe,
              name='Nagstamon.app',
              icon='../../Nagstamon/resources/nagstamon.icns',
-             bundle_identifier='de.ifw-dresden.nagstamon',
+             bundle_identifier='de.nagstamon',
              version=os.environ['NAGSTAMON_VERSION'],
              info_plist={
                 'NSRequiresAquaSystemAppearance': False,
