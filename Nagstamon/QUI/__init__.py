@@ -1201,6 +1201,10 @@ class StatusWindow(QWidget):
         self.servers_scrollarea.hide()
 
         if conf.statusbar_floating:
+            # no need for icon in dock if floating - apply first to avoid window in background
+            if OS == OS_DARWIN:
+                set_macos_dock_icon_visibility(False)
+
             # no need for systray
             systrayicon.hide()
             self.statusbar.show()
@@ -1245,11 +1249,11 @@ class StatusWindow(QWidget):
             # need a close button
             self.toparea.button_close.show()
 
-            # no need for icon in dock if floating
+        elif conf.icon_in_systray:
+            # no need for icon in dock if in systray
             if OS == OS_DARWIN:
                 set_macos_dock_icon_visibility(False)
 
-        elif conf.icon_in_systray:
             # statusbar and detail window should be frameless and stay on top
             # tool flag helps to be invisible in taskbar
             self.setWindowFlags(WINDOW_FLAGS)
@@ -1262,10 +1266,6 @@ class StatusWindow(QWidget):
 
             # need a close button
             self.toparea.button_close.show()
-
-            # no need for icon in dock if in systray
-            if OS == OS_DARWIN:
-                set_macos_dock_icon_visibility(False)
 
         elif conf.fullscreen:
             # no need for systray
@@ -1300,6 +1300,10 @@ class StatusWindow(QWidget):
             self.toparea.button_close.hide()
 
         elif conf.windowed:
+            # show icon in dock if window is set
+            if OS == OS_DARWIN:
+                set_macos_dock_icon_visibility(True)
+
             systrayicon.hide()
 
             # no need for close button
@@ -1330,10 +1334,6 @@ class StatusWindow(QWidget):
 
             # make sure window comes up
             self.raise_()
-
-            # show icon in dock if window is set
-            if OS == OS_DARWIN:
-                set_macos_dock_icon_visibility(True)
 
         # store position for showing/hiding statuswindow
         self.stored_x = self.x()
