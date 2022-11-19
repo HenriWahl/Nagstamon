@@ -94,6 +94,12 @@ if OS not in OS_NON_LINUX:
         print('No DBus for desktop notification available.')
         DBUS_AVAILABLE = False
 
+# make icon status in macOS dock accessible via NSApp, used by set_macos_dock_icon_visible()
+if OS == OS_DARWIN:
+    from AppKit import (NSApp,
+                        NSApplicationPresentationDefault,
+                        NSApplicationPresentationHideDock)
+
 # check ECP authentication support availability
 try:
     from requests_ecp import HTTPECPAuth
@@ -1239,6 +1245,10 @@ class StatusWindow(QWidget):
             # need a close button
             self.toparea.button_close.show()
 
+            # no need for icon in dock if floating
+            if OS == OS_DARWIN:
+                set_macos_dock_icon_visibility(False)
+
         elif conf.icon_in_systray:
             # statusbar and detail window should be frameless and stay on top
             # tool flag helps to be invisible in taskbar
@@ -1252,6 +1262,10 @@ class StatusWindow(QWidget):
 
             # need a close button
             self.toparea.button_close.show()
+
+            # no need for icon in dock if in systray
+            if OS == OS_DARWIN:
+                set_macos_dock_icon_visibility(False)
 
         elif conf.fullscreen:
             # no need for systray
@@ -1276,6 +1290,8 @@ class StatusWindow(QWidget):
             # fullscreen mode is rather buggy on everything other than OSX so just use a maximized window
             if OS == OS_DARWIN:
                 self.showFullScreen()
+                # no need for icon in dock if fullscreen
+                set_macos_dock_icon_visibility(False)
             else:
                 self.show()
                 self.showMaximized()
@@ -1314,6 +1330,10 @@ class StatusWindow(QWidget):
 
             # make sure window comes up
             self.raise_()
+
+            # show icon in dock if window is set
+            if OS == OS_DARWIN:
+                set_macos_dock_icon_visibility(True)
 
         # store position for showing/hiding statuswindow
         self.stored_x = self.x()
@@ -7034,6 +7054,15 @@ def check_servers():
         dialogs.server_missing.show()
         dialogs.server_missing.initialize('no_server_enabled')
 
+def set_macos_dock_icon_visibility(visible=False):
+    """
+    small helper to make dock icon visible or not in macOS
+    inspired by https://stackoverflow.com/questions/6796028/start-a-gui-process-in-mac-os-x-without-dock-icon
+    """
+    if visible:
+        NSApp.setActivationPolicy_(NSApplicationPresentationDefault)
+    else:
+        NSApp.setActivationPolicy_(NSApplicationPresentationHideDock)
 
 # check for updates
 check_version = CheckVersion()
