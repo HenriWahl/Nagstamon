@@ -23,7 +23,7 @@ RUN apt -y install debhelper \
                    python3-requests \
                    python3-requests-kerberos \
                    python3-setuptools \
-                   python3-pysocks
+                   python3-socks
 
 CMD cd /nagstamon/build && \
     /usr/bin/python3 build.py
