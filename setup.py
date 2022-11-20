@@ -86,23 +86,41 @@ bdist_mac_options = dict(iconfile='Nagstamon/resources/nagstamon.icns',
 bdist_dmg_options = dict(volume_label='{0} {1}'.format(NAME, VERSION),
                          applications_shortcut=False)
 
-# Fedora seems to have no complete pyqt5 yet
-bdist_rpm_options = dict(requires='python3 '
-                                  'python3-beautifulsoup4 '
-                                  'python3-crypto '
-                                  'python3-cryptography '
-                                  'python3-dateutil '
-                                  'python3-keyring '
-                                  'python3-lxml '
-                                  'python3-psutil '
-                                  'python3-pysocks '
-                                  'python3-qt5 '
-                                  'python3-requests '
-                                  'python3-requests-kerberos '
-                                  'python3-SecretStorage '
-                                  'qt5-qtmultimedia '
-                                  'qt5-qtsvg ',
-                         dist_dir='./build')
+# older Fedora needs Qt5
+if DIST.lower() == 'fedora' and int(DIST_VERSION) < 36:
+    bdist_rpm_options = dict(requires='python3 '
+                                      'python3-beautifulsoup4 '
+                                      'python3-crypto '
+                                      'python3-cryptography '
+                                      'python3-dateutil '
+                                      'python3-keyring '
+                                      'python3-lxml '
+                                      'python3-psutil '
+                                      'python3-pysocks '
+                                      'python3-qt5 '
+                                      'python3-requests '
+                                      'python3-requests-kerberos '
+                                      'python3-SecretStorage '
+                                      'qt5-qtmultimedia '
+                                      'qt5-qtsvg ',
+                             dist_dir='./build')
+else:
+    bdist_rpm_options = dict(requires='python3 '
+                                      'python3-beautifulsoup4 '
+                                      'python3-crypto '
+                                      'python3-cryptography '
+                                      'python3-dateutil '
+                                      'python3-keyring '
+                                      'python3-lxml '
+                                      'python3-psutil '
+                                      'python3-pysocks '
+                                      'python3-pyqt6 '
+                                      'python3-requests '
+                                      'python3-requests-kerberos '
+                                      'python3-SecretStorage '
+                                      'qt6-qtmultimedia '
+                                      'qt6-qtsvg ',
+                             dist_dir='./build')
 
 setup(name=NAME,
       version=VERSION,
