@@ -1,4 +1,4 @@
-FROM debian:8
+FROM debian:9
 LABEL maintainer=henri@nagstamon.de
 
 RUN apt -y update
