@@ -2,19 +2,22 @@
 #
 #    Copyright (C) 2000 Peter Liljenberg <petli@ctrl-c.liu.se>
 #
-#    This program is free software; you can redistribute it and/or modify
-#    it under the terms of the GNU General Public License as published by
-#    the Free Software Foundation; either version 2 of the License, or
-#    (at your option) any later version.
+# This library is free software; you can redistribute it and/or
+# modify it under the terms of the GNU Lesser General Public License
+# as published by the Free Software Foundation; either version 2.1
+# of the License, or (at your option) any later version.
 #
-#    This program is distributed in the hope that it will be useful,
-#    but WITHOUT ANY WARRANTY; without even the implied warranty of
-#    MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
-#    GNU General Public License for more details.
+# This library is distributed in the hope that it will be useful,
+# but WITHOUT ANY WARRANTY; without even the implied warranty of
+# MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.
+# See the GNU Lesser General Public License for more details.
 #
-#    You should have received a copy of the GNU General Public License
-#    along with this program; if not, write to the Free Software
-#    Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA  02110-1301,  USA
+# You should have received a copy of the GNU Lesser General Public
+# License along with this library; if not, write to the
+#    Free Software Foundation, Inc.,
+#    59 Temple Place,
+#    Suite 330,
+#    Boston, MA 02111-1307 USA
 
 import re
 import socket
@@ -29,7 +32,7 @@ def get_display(display):
     # check DECW$DISPLAY instead, but that has to wait
 
     if display is None:
-        return ':0.0', 'localhost', 0, 0
+        return ':0.0', None, 'localhost', 0, 0
 
     m = display_re.match(display)
     if not m:
@@ -49,10 +52,10 @@ def get_display(display):
     else:
         screen = 0
 
-    return name, host, dno, screen
+    return name, None, host, dno, screen
 
 
-def get_socket(dname, host, dno):
+def get_socket(dname, protocol, host, dno):
     try:
         # Always use TCP/IP sockets.  Later it would be nice to
         # be able to use DECNET och LOCAL connections.
@@ -60,7 +63,7 @@ def get_socket(dname, host, dno):
         s = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
         s.connect((host, 6000 + dno))
 
-    except OSError as val:
+    except socket.error as val:
         raise error.DisplayConnectionError(dname, str(val))
 
     return s

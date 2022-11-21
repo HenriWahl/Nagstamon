@@ -2,26 +2,30 @@
 #
 #    Copyright (C) 2000-2002 Peter Liljenberg <petli@ctrl-c.liu.se>
 #
-#    This program is free software; you can redistribute it and/or modify
-#    it under the terms of the GNU General Public License as published by
-#    the Free Software Foundation; either version 2 of the License, or
-#    (at your option) any later version.
+# This library is free software; you can redistribute it and/or
+# modify it under the terms of the GNU Lesser General Public License
+# as published by the Free Software Foundation; either version 2.1
+# of the License, or (at your option) any later version.
 #
-#    This program is distributed in the hope that it will be useful,
-#    but WITHOUT ANY WARRANTY; without even the implied warranty of
-#    MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
-#    GNU General Public License for more details.
+# This library is distributed in the hope that it will be useful,
+# but WITHOUT ANY WARRANTY; without even the implied warranty of
+# MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.
+# See the GNU Lesser General Public License for more details.
 #
-#    You should have received a copy of the GNU General Public License
-#    along with this program; if not, write to the Free Software
-#    Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA  02110-1301,  USA
+# You should have received a copy of the GNU Lesser General Public
+# License along with this library; if not, write to the
+#    Free Software Foundation, Inc.,
+#    59 Temple Place,
+#    Suite 330,
+#    Boston, MA 02111-1307 USA
 
 
 # Xlib modules
-from Xlib import X
+from .. import X
 
 # Xlib.protocol modules
-from Xlib.protocol import rq, structs
+from . import rq
+from . import structs
 
 
 class CreateWindow(rq.Request):
@@ -783,7 +787,7 @@ class ListFontsWithInfo(rq.ReplyRequest):
 
     def __init__(self, *args, **keys):
         self._fonts = []
-        ReplyRequest.__init__(*(self, ) + args, **keys)
+        rq.ReplyRequest.__init__(self, *args, **keys)
 
     def _parse_response(self, data):
 
@@ -1062,7 +1066,7 @@ class PutImage(rq.Request):
         rq.Card8('left_pad'),
         rq.Card8('depth'),
         rq.Pad(2),
-        rq.String8('data'),
+        rq.Binary('data'),
         )
 
 class GetImage(rq.ReplyRequest):
@@ -1085,7 +1089,7 @@ class GetImage(rq.ReplyRequest):
         rq.ReplyLength(),
         rq.Card32('visual'),
         rq.Pad(20),
-        rq.String8('data'),
+        rq.Binary('data'),
         )
 
 class PolyText8(rq.Request):
@@ -1636,7 +1640,8 @@ class ChangeHosts(rq.Request):
         rq.Opcode(109),
         rq.Set('mode', 1, (X.HostInsert, X.HostDelete)),
         rq.RequestLength(),
-        rq.Set('host_family', 1, (X.FamilyInternet, X.FamilyDECnet, X.FamilyChaos)),
+        rq.Set('host_family', 1, (X.FamilyInternet, X.FamilyDECnet, X.FamilyChaos,
+                                  X.FamilyServerInterpreted, X.FamilyInternetV6)),
         rq.Pad(1),
         rq.LengthOf('host', 2),
         rq.List('host', rq.Card8Obj)

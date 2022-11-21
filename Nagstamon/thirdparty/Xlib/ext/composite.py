@@ -4,19 +4,22 @@
 #
 #    Copyright (C) 2007 Peter Liljenberg <peter.liljenberg@gmail.com>
 #
-#    This program is free software; you can redistribute it and/or modify
-#    it under the terms of the GNU General Public License as published by
-#    the Free Software Foundation; either version 2 of the License, or
-#    (at your option) any later version.
+# This library is free software; you can redistribute it and/or
+# modify it under the terms of the GNU Lesser General Public License
+# as published by the Free Software Foundation; either version 2.1
+# of the License, or (at your option) any later version.
 #
-#    This program is distributed in the hope that it will be useful,
-#    but WITHOUT ANY WARRANTY; without even the implied warranty of
-#    MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
-#    GNU General Public License for more details.
+# This library is distributed in the hope that it will be useful,
+# but WITHOUT ANY WARRANTY; without even the implied warranty of
+# MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.
+# See the GNU Lesser General Public License for more details.
 #
-#    You should have received a copy of the GNU General Public License
-#    along with this program; if not, write to the Free Software
-#    Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA  02110-1301,  USA
+# You should have received a copy of the GNU Lesser General Public
+# License along with this library; if not, write to the
+#    Free Software Foundation, Inc.,
+#    59 Temple Place,
+#    Suite 330,
+#    Boston, MA 02111-1307 USA
 
 """Composite extension, allowing windows to be rendered to off-screen
 storage.
@@ -62,6 +65,8 @@ def query_version(self):
     return QueryVersion(
         display = self.display,
         opcode = self.display.get_extension_major(extname),
+        major_version=0,
+        minor_version=4
         )
 
 
@@ -75,11 +80,12 @@ class RedirectWindow(rq.Request):
         rq.Pad(3),
         )
 
-def redirect_window(self, update):
+def redirect_window(self, update, onerror = None):
     """Redirect the hierarchy starting at this window to off-screen
     storage.
     """
     RedirectWindow(display = self.display,
+                   onerror = onerror,
                    opcode = self.display.get_extension_major(extname),
                    window = self,
                    update = update,
@@ -96,11 +102,12 @@ class RedirectSubwindows(rq.Request):
         rq.Pad(3),
         )
 
-def redirect_subwindows(self, update):
+def redirect_subwindows(self, update, onerror = None):
     """Redirect the hierarchies starting at all current and future
     children to this window to off-screen storage.
     """
     RedirectSubwindows(display = self.display,
+                       onerror = onerror,
                        opcode = self.display.get_extension_major(extname),
                        window = self,
                        update = update,
@@ -117,10 +124,11 @@ class UnredirectWindow(rq.Request):
         rq.Pad(3),
         )
 
-def unredirect_window(self, update):
+def unredirect_window(self, update, onerror = None):
     """Stop redirecting this window hierarchy.
     """
     UnredirectWindow(display = self.display,
+                     onerror = onerror,
                      opcode = self.display.get_extension_major(extname),
                      window = self,
                      update = update,
@@ -137,10 +145,11 @@ class UnredirectSubindows(rq.Request):
         rq.Pad(3),
         )
 
-def unredirect_subwindows(self, update):
+def unredirect_subwindows(self, update, onerror = None):
     """Stop redirecting the hierarchies of children to this window.
     """
     RedirectWindow(display = self.display,
+                   onerror = onerror,
                    opcode = self.display.get_extension_major(extname),
                    window = self,
                    update = update,
@@ -156,14 +165,15 @@ class CreateRegionFromBorderClip(rq.Request):
         rq.Window('window'),
         )
 
-def create_region_from_border_clip(self):
+def create_region_from_border_clip(self, onerror = None):
     """Create a region of the border clip of the window, i.e. the area
     that is not clipped by the parent and any sibling windows.
     """
-    
+
     rid = self.display.allocate_resource_id()
     CreateRegionFromBorderClip(
         display = self.display,
+        onerror = onerror,
         opcode = self.display.get_extension_major(extname),
         region = rid,
         window = self,
@@ -182,7 +192,7 @@ class NameWindowPixmap(rq.Request):
         rq.Pixmap('pixmap'),
         )
 
-def name_window_pixmap(self):
+def name_window_pixmap(self, onerror = None):
     """Create a new pixmap that refers to the off-screen storage of
     the window, including its border.
 
@@ -195,6 +205,7 @@ def name_window_pixmap(self):
 
     pid = self.display.allocate_resource_id()
     NameWindowPixmap(display = self.display,
+                     onerror = onerror,
                      opcode = self.display.get_extension_major(extname),
                      window = self,
                      pixmap = pid,
@@ -202,7 +213,30 @@ def name_window_pixmap(self):
 
     cls = self.display.get_resource_class('pixmap', drawable.Pixmap)
     return cls(self.display, pid, owner = 1)
-    
+
+class GetOverlayWindow(rq.ReplyRequest):
+    _request = rq.Struct(
+        rq.Card8('opcode'),
+        rq.Opcode(7),
+        rq.RequestLength(),
+        rq.Window('window')
+    )
+    _reply = rq.Struct(
+        rq.ReplyCode(),
+        rq.Pad(1),
+        rq.Card16('sequence_number'),
+        rq.ReplyLength(),
+        rq.Window('overlay_window'),
+        rq.Pad(20),
+    )
+
+def get_overlay_window(self):
+    """Return the overlay window of the root window.
+    """
+
+    return GetOverlayWindow(display = self.display,
+                              opcode = self.display.get_extension_major(extname),
+                              window = self)
 
 def init(disp, info):
     disp.extension_add_method('display',
@@ -232,3 +266,7 @@ def init(disp, info):
     disp.extension_add_method('window',
                               'composite_name_window_pixmap',
                               name_window_pixmap)
+
+    disp.extension_add_method('window',
+                              'composite_get_overlay_window',
+                              get_overlay_window)
