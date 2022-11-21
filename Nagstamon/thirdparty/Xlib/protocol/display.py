@@ -1,64 +1,95 @@
-# -*- coding: latin-1 -*-
+# -*- coding: utf-8 -*-
 #
 # Xlib.protocol.display -- core display communication
 #
 #    Copyright (C) 2000-2002 Peter Liljenberg <petli@ctrl-c.liu.se>
 #
-#    This program is free software; you can redistribute it and/or modify
-#    it under the terms of the GNU General Public License as published by
-#    the Free Software Foundation; either version 2 of the License, or
-#    (at your option) any later version.
+# This library is free software; you can redistribute it and/or
+# modify it under the terms of the GNU Lesser General Public License
+# as published by the Free Software Foundation; either version 2.1
+# of the License, or (at your option) any later version.
 #
-#    This program is distributed in the hope that it will be useful,
-#    but WITHOUT ANY WARRANTY; without even the implied warranty of
-#    MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
-#    GNU General Public License for more details.
+# This library is distributed in the hope that it will be useful,
+# but WITHOUT ANY WARRANTY; without even the implied warranty of
+# MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.
+# See the GNU Lesser General Public License for more details.
 #
-#    You should have received a copy of the GNU General Public License
-#    along with this program; if not, write to the Free Software
-#    Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA  02110-1301,  USA
+# You should have received a copy of the GNU Lesser General Public
+# License along with this library; if not, write to the
+#    Free Software Foundation, Inc.,
+#    59 Temple Place,
+#    Suite 330,
+#    Boston, MA 02111-1307 USA
 
 # Standard modules
 import errno
+import math
 import select
 import socket
 import struct
 import sys
 
-# Xlib modules
-from Xlib import error
+# Python 2/3 compatibility.
+from six import PY3, byte2int, indexbytes
 
-from Xlib.support import lock, connect
+# Xlib modules
+from .. import error
+from ..ext import ge
+
+from ..support import lock, connect
 
 # Xlib.protocol modules
-from . import rq, event
+from . import rq
+from . import event
 
-# in Python 3, bytes are an actual array; in python 2, bytes are still
-# string-like, so in order to get an array element we need to call ord()
-if sys.version[0] >= '3':
-    def _bytes_item(x):
-        return x
+if PY3:
+
+    class bytesview(object):
+
+        def __init__(self, data, offset=0, size=None):
+            if size is None:
+                size = len(data)-offset
+            if isinstance(data, bytes):
+                view = memoryview(data)
+            elif isinstance(data, bytesview):
+                view = data.view
+            else:
+                raise TypeError('unsupported type: {}'.format(type(data)))
+            self.view = view[offset:offset+size]
+
+        def __len__(self):
+            return len(self.view)
+
+        def __getitem__(self, key):
+            if isinstance(key, slice):
+                return bytes(self.view[key])
+            return self.view[key]
+
 else:
-    def _bytes_item(x):
-        return ord(x)
+
+    def bytesview(data, offset=0, size=None):
+        if not isinstance(data, (bytes, buffer)):
+            raise TypeError('unsupported type: {}'.format(type(data)))
+        if size is None:
+            size = len(data)-offset
+        return buffer(data, offset, size)
 
 
-class Display:
-    resource_classes = {}
+class Display(object):
     extension_major_opcodes = {}
     error_classes = error.xerror_class.copy()
     event_classes = event.event_class.copy()
 
     def __init__(self, display = None):
-        name, host, displayno, screenno = connect.get_display(display)
+        name, protocol, host, displayno, screenno = connect.get_display(display)
 
         self.display_name = name
         self.default_screen = screenno
 
-        self.socket = connect.get_socket(name, host, displayno)
+        self.socket = connect.get_socket(name, protocol, host, displayno)
 
-        auth_name, auth_data = connect.get_auth(self.socket,
-                                                name, host, displayno)
+        auth_name, auth_data = connect.get_auth(self.socket, name,
+                                                protocol, host, displayno)
 
         # Internal structures for communication, grouped
         # by their function and locks
@@ -78,7 +109,7 @@ class Display:
         self.request_serial = 1
         self.request_queue = []
 
-        # Send-and-recieve loop, see function send_and_recive
+        # Send-and-receive loop, see function send_and_receive
         # for a detailed explanation
         self.send_recv_lock = lock.allocate_lock()
         self.send_active = 0
@@ -89,9 +120,15 @@ class Display:
         self.request_waiting = 0
         self.request_wait_lock = lock.allocate_lock()
 
-        # Data used by the send-and-recieve loop
+        # Calculate optimal default buffer size for recv.
+        buffer_size = self.socket.getsockopt(socket.SOL_SOCKET,
+                                             socket.SO_RCVBUF)
+        buffer_size = math.pow(2, math.floor(math.log(buffer_size, 2)))
+        self.recv_buffer_size = int(buffer_size)
+
+        # Data used by the send-and-receive loop
         self.sent_requests = []
-        self.request_length = 0
+        self.recv_packet_len = 0
         self.data_send = b''
         self.data_recv = b''
         self.data_sent_bytes = 0
@@ -108,7 +145,7 @@ class Display:
         # Right, now we're all set up for the connection setup
         # request with the server.
 
-        # Figure out which endianess the hardware uses
+        # Figure out which endianness the hardware uses
         self.big_endian = struct.unpack('BB', struct.pack('H', 0x0100))[0]
 
         if self.big_endian:
@@ -166,7 +203,7 @@ class Display:
 
         while not self.event_queue:
 
-            # Lock send_recv so no send_and_recieve
+            # Lock send_recv so no send_and_receive
             # can start or stop while we're checking
             # whether there are one active.
             self.send_recv_lock.acquire()
@@ -288,8 +325,14 @@ class Display:
     def get_extension_major(self, extname):
         return self.extension_major_opcodes[extname]
 
-    def add_extension_event(self, code, evt):
-        self.event_classes[code] = evt
+    def add_extension_event(self, code, evt, subcode=None):
+       if subcode == None:
+           self.event_classes[code] = evt
+       else:
+           if not code in self.event_classes:
+               self.event_classes[code] = {subcode: evt}
+           else:
+               self.event_classes[code][subcode] = evt
 
     def add_extension_error(self, code, err):
         self.error_classes[code] = err
@@ -356,7 +399,7 @@ class Display:
         be true.  Will return immediately if another thread is
         already doing send_and_recv.
 
-        To wait for an event to be recieved, event should be true.
+        To wait for an event to be received, event should be true.
 
         To wait for a response to a certain request (either an error
         or a response), request should be set the that request's
@@ -379,6 +422,9 @@ class Display:
         #     thing here)
         #  If waiting for an event, we want to recv
         #  If just trying to receive anything we can, we want to recv
+
+        # FIXME: It would be good if we could also sleep when we're waiting on
+        # a response to a request that has already been sent.
 
         if (((flush or request is not None) and self.send_active)
             or ((event or recv) and self.recv_active)):
@@ -438,19 +484,19 @@ class Display:
         # There's no thread doing what we need to do.  Find out exactly
         # what to do
 
-        # There must always be some thread recieving data, but it must not
+        # There must always be some thread receiving data, but it must not
         # necessarily be us
 
         if not self.recv_active:
-            recieving = 1
+            receiving = 1
             self.recv_active = 1
         else:
-            recieving = 0
+            receiving = 0
 
         flush_bytes = None
         sending = 0
 
-        # Loop, recieving and sending data.
+        # Loop, receiving and sending data.
         while 1:
 
             # We might want to start sending data
@@ -481,6 +527,10 @@ class Display:
             # for the network to fire up
             self.send_recv_lock.release()
 
+            # There's no longer anything useful we can do here.
+            if not (sending or receiving):
+                break
+
             # If we're flushing, figure out how many bytes we
             # have to send so that we're not caught in an interminable
             # loop if other threads continuously append requests.
@@ -491,9 +541,9 @@ class Display:
             try:
                 # We're only checking for the socket to be writable
                 # if we're the sending thread.  We always check for it
-                # to become readable: either we are the recieving thread
-                # and should take care of the data, or the recieving thread
-                # might finish recieving after having read the data
+                # to become readable: either we are the receiving thread
+                # and should take care of the data, or the receiving thread
+                # might finish receiving after having read the data
 
                 if sending:
                     writeset = [self.socket]
@@ -510,11 +560,15 @@ class Display:
 
                 rs, ws, es = select.select([self.socket], writeset, [], timeout)
 
-            # Ignore errors caused by a signal recieved while blocking.
+            # Ignore errors caused by a signal received while blocking.
             # All other errors are re-raised.
-            except OSError as err:
-                if err.errno != errno.EINTR:
-                    raise err
+            except select.error as err:
+                if isinstance(err, OSError):
+                    code = err.errno
+                else:
+                    code = err[0]
+                if code != errno.EINTR:
+                    raise
 
                 # We must lock send_and_recv before we can loop to
                 # the start of the loop
@@ -527,8 +581,8 @@ class Display:
             if ws:
                 try:
                     i = self.socket.send(self.data_send)
-                except OSError as err:
-                    self.close_internal('server: %s' % err[1])
+                except socket.error as err:
+                    self.close_internal('server: %s' % err)
                     raise self.socket_error
 
                 self.data_send = self.data_send[i:]
@@ -539,12 +593,14 @@ class Display:
             gotreq = 0
             if rs:
 
-                # We're the recieving thread, parse the data
-                if recieving:
+                # We're the receiving thread, parse the data
+                if receiving:
                     try:
-                        bytes_recv = self.socket.recv(4096)
-                    except OSError as err:
-                        self.close_internal('server: %s' % err.strerror)
+                        count = self.recv_packet_len - len(self.data_recv)
+                        count = max(self.recv_buffer_size, count)
+                        bytes_recv = self.socket.recv(count)
+                    except socket.error as err:
+                        self.close_internal('server: %s' % err)
                         raise self.socket_error
 
                     if not bytes_recv:
@@ -552,7 +608,7 @@ class Display:
                         self.close_internal('server')
                         raise self.socket_error
 
-                    self.data_recv = self.data_recv + bytes_recv
+                    self.data_recv = bytes(self.data_recv) + bytes_recv
                     gotreq = self.parse_response(request)
 
                 # Otherwise return, allowing the calling thread to figure
@@ -570,7 +626,7 @@ class Display:
 
             # There are three different end of send-recv-loop conditions.
             # However, we don't leave the loop immediately, instead we
-            # try to send and recieve any data that might be left.  We
+            # try to send and receive any data that might be left.  We
             # do this by giving a timeout of 0 to select to poll
             # the socket.
 
@@ -586,7 +642,7 @@ class Display:
             if request is not None and gotreq:
                 break
 
-            # Always break if we just want to recieve as much as possible
+            # Always break if we just want to receive as much as possible
             if recv:
                 break
 
@@ -604,7 +660,7 @@ class Display:
 
         if sending:
             self.send_active = 0
-        if recieving:
+        if receiving:
             self.recv_active = 0
 
         if self.event_waiting:
@@ -621,9 +677,9 @@ class Display:
     def parse_response(self, request):
         """Internal method.
 
-        Parse data recieved from server.  If REQUEST is not None
+        Parse data received from server.  If REQUEST is not None
         true is returned if the request with that serial number
-        was recieved, otherwise false is returned.
+        was received, otherwise false is returned.
 
         If REQUEST is -1, we're parsing the server connection setup
         response.
@@ -635,47 +691,54 @@ class Display:
         # Parse ordinary server response
         gotreq = 0
         while 1:
-            # Are we're waiting for additional data for a request response?
-            if self.request_length:
-                if len(self.data_recv) < self.request_length:
-                    return gotreq
-                else:
-                    gotreq = self.parse_request_response(request) or gotreq
+            if self.data_recv:
+                # Check the first byte to find out what kind of response it is
+                rtype = byte2int(self.data_recv)
 
+            # Are we're waiting for additional data for the current packet?
+            if self.recv_packet_len:
+                if len(self.data_recv) < self.recv_packet_len:
+                    return gotreq
+
+                if rtype == 1:
+                    gotreq = self.parse_request_response(request) or gotreq
+                    continue
+                elif rtype & 0x7f == ge.GenericEventCode:
+                    self.parse_event_response(rtype)
+                    continue
+                else:
+                    raise AssertionError(rtype)
 
             # Every response is at least 32 bytes long, so don't bother
-            # until we have recieved that much
+            # until we have received that much
             if len(self.data_recv) < 32:
                 return gotreq
 
-            # Check the first byte to find out what kind of response it is
-            rtype = _bytes_item(self.data_recv[0])
-
-            # Error resposne
+            # Error response
             if rtype == 0:
                 gotreq = self.parse_error_response(request) or gotreq
 
-            # Request response
-            elif rtype == 1:
+            # Request response or generic event.
+            elif rtype == 1 or rtype & 0x7f == ge.GenericEventCode:
                 # Set reply length, and loop around to see if
                 # we have got the full response
                 rlen = int(struct.unpack('=L', self.data_recv[4:8])[0])
-                self.request_length = 32 + rlen * 4
+                self.recv_packet_len = 32 + rlen * 4
 
-            # Else event response
+            # Else non-generic event
             else:
                 self.parse_event_response(rtype)
 
 
     def parse_error_response(self, request):
         # Code is second byte
-        code = _bytes_item(self.data_recv[1])
+        code = indexbytes(self.data_recv, 1)
 
         # Fetch error class
         estruct = self.error_classes.get(code, error.XError)
 
         e = estruct(self, self.data_recv[:32])
-        self.data_recv = self.data_recv[32:]
+        self.data_recv = bytesview(self.data_recv, 32)
 
         # print 'recv Error:', e
 
@@ -726,11 +789,11 @@ class Display:
             raise RuntimeError("Expected reply for request %s, but got %s.  Can't happen!"
                                % (req._serial, sno))
 
-        req._parse_response(self.data_recv[:self.request_length])
+        req._parse_response(self.data_recv[:self.recv_packet_len])
         # print 'recv Request:', req
 
-        self.data_recv = self.data_recv[self.request_length:]
-        self.request_length = 0
+        self.data_recv = bytesview(self.data_recv, self.recv_packet_len)
+        self.recv_packet_len = 0
 
 
         # Unlock any response waiting threads
@@ -748,21 +811,42 @@ class Display:
 
 
     def parse_event_response(self, etype):
-        # Skip bit 8 at lookup, that is set if this event came from an
-        # SendEvent
-        estruct = self.event_classes.get(etype & 0x7f, event.AnyEvent)
+        # Skip bit 8, that is set if this event came from an SendEvent
+        etype = etype & 0x7f
 
-        e = estruct(display = self, binarydata = self.data_recv[:32])
+        if etype == ge.GenericEventCode:
+            length = self.recv_packet_len
+        else:
+            length = 32
 
-        self.data_recv = self.data_recv[32:]
+        estruct = self.event_classes.get(etype, event.AnyEvent)
+        if type(estruct) == dict:
+            subcode = self.data_recv[1]
+
+            # Python2 compatibility
+            if type(subcode) == str:
+                subcode = ord(subcode)
+
+            # this etype refers to a set of sub-events with individual subcodes
+            estruct = estruct[subcode]
+
+        e = estruct(display = self, binarydata = self.data_recv[:length])
+
+        if etype == ge.GenericEventCode:
+            self.recv_packet_len = 0
+
+        self.data_recv = bytesview(self.data_recv, length)
 
         # Drop all requests having an error handler,
         # but which obviously succeded.
 
         # Decrement it by one, so that we don't remove the request
         # that generated these events, if there is such a one.
-        # Bug reported by Ilpo Nyyssönen
-        self.get_waiting_request((e.sequence_number - 1) % 65536)
+        # Bug reported by Ilpo NyyssÃ¶nen
+        # Note: not all events have a sequence_number field!
+        # (e.g. KeymapNotify).
+        if hasattr(e, 'sequence_number'):
+            self.get_waiting_request((e.sequence_number - 1) % 65536)
 
         # print 'recv Event:', e
 

@@ -1,108 +1,160 @@
 # Xlib.support.unix_connect -- Unix-type display connection functions
 #
 #    Copyright (C) 2000,2002 Peter Liljenberg <petli@ctrl-c.liu.se>
-#    Copyright (C) 2013 LiuLang <gsushzhsosgsu@gmail.com>
 #
-#    This program is free software; you can redistribute it and/or modify
-#    it under the terms of the GNU General Public License as published by
-#    the Free Software Foundation; either version 2 of the License, or
-#    (at your option) any later version.
+# This library is free software; you can redistribute it and/or
+# modify it under the terms of the GNU Lesser General Public License
+# as published by the Free Software Foundation; either version 2.1
+# of the License, or (at your option) any later version.
 #
-#    This program is distributed in the hope that it will be useful,
-#    but WITHOUT ANY WARRANTY; without even the implied warranty of
-#    MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
-#    GNU General Public License for more details.
+# This library is distributed in the hope that it will be useful,
+# but WITHOUT ANY WARRANTY; without even the implied warranty of
+# MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.
+# See the GNU Lesser General Public License for more details.
 #
-#    You should have received a copy of the GNU General Public License
-#    along with this program; if not, write to the Free Software
-#    Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA  02110-1301,  USA
+# You should have received a copy of the GNU Lesser General Public
+# License along with this library; if not, write to the
+#    Free Software Foundation, Inc.,
+#    59 Temple Place,
+#    Suite 330,
+#    Boston, MA 02111-1307 USA
 
-import fcntl
+import re
 import os
 import platform
-import re
 import socket
 
-F_SETFD = fcntl.F_SETFD
-FD_CLOEXEC = fcntl.FD_CLOEXEC
+# FCNTL is deprecated from Python 2.2, so only import it if we doesn't
+# get the names we need.  Furthermore, FD_CLOEXEC seems to be missing
+# in Python 2.2.
+
+import fcntl
+
+if hasattr(fcntl, 'F_SETFD'):
+    F_SETFD = fcntl.F_SETFD
+    if hasattr(fcntl, 'FD_CLOEXEC'):
+        FD_CLOEXEC = fcntl.FD_CLOEXEC
+    else:
+        FD_CLOEXEC = 1
+else:
+    from FCNTL import F_SETFD, FD_CLOEXEC
+
 
 from Xlib import error, xauth
 
+
+SUPPORTED_PROTOCOLS = (None, 'tcp', 'unix')
+
+# Darwin funky socket.
 uname = platform.uname()
 if (uname[0] == 'Darwin') and ([int(x) for x in uname[2].split('.')] >= [9, 0]):
+    SUPPORTED_PROTOCOLS += ('darwin',)
+    DARWIN_DISPLAY_RE = re.compile(r'^/private/tmp/[-:a-zA-Z0-9._]*:(?P<dno>[0-9]+)(\.(?P<screen>[0-9]+))?$')
 
-    display_re = re.compile(r'^([-a-zA-Z0-9._/]*):([0-9]+)(\.([0-9]+))?$')
+DISPLAY_RE = re.compile(r'^((?P<proto>tcp|unix)/)?(?P<host>[-:a-zA-Z0-9._]*):(?P<dno>[0-9]+)(\.(?P<screen>[0-9]+))?$')
 
-else:
-
-    display_re = re.compile(r'^([-a-zA-Z0-9._]*):([0-9]+)(\.([0-9]+))?$')
 
 def get_display(display):
     # Use $DISPLAY if display isn't provided
     if display is None:
         display = os.environ.get('DISPLAY', '')
 
-    m = display_re.match(display)
-    if not m:
+    re_list = [(DISPLAY_RE, {})]
+
+    if 'darwin' in SUPPORTED_PROTOCOLS:
+        re_list.insert(0, (DARWIN_DISPLAY_RE, {'protocol': 'darwin'}))
+
+    for re, defaults in re_list:
+        m = re.match(display)
+        if m is not None:
+            protocol, host, dno, screen = [
+                m.groupdict().get(field, defaults.get(field))
+                for field in ('proto', 'host', 'dno', 'screen')
+            ]
+            break
+    else:
         raise error.DisplayNameError(display)
 
-    name = display
-    host = m.group(1)
-    if host == 'unix':
-        host = ''
-    dno = int(m.group(2))
-    screen = m.group(4)
+    if protocol == 'tcp' and not host:
+        # Host is mandatory when protocol is TCP.
+        raise error.DisplayNameError(display)
+
+    dno = int(dno)
     if screen:
         screen = int(screen)
     else:
         screen = 0
 
-    return name, host, dno, screen
+    return display, protocol, host, dno, screen
 
 
-def get_socket(dname, host, dno):
+def _get_tcp_socket(host, dno):
+    s = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
+    s.connect((host, 6000 + dno))
+    return s
+
+def _get_unix_socket(address):
+    s = socket.socket(socket.AF_UNIX, socket.SOCK_STREAM)
+    s.connect(address)
+    return s
+
+def get_socket(dname, protocol, host, dno):
+    assert protocol in SUPPORTED_PROTOCOLS
     try:
-        # Darwin funky socket
-        if (uname[0] == 'Darwin') and host and host.startswith('/tmp/'):
-            s = socket.socket(socket.AF_UNIX, socket.SOCK_STREAM)
-            s.connect(dname)
+        # Darwin funky socket.
+        if protocol == 'darwin':
+            s = _get_unix_socket(dname)
 
-        # If hostname (or IP) is provided, use TCP socket
-        elif host:
-            s = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
-            s.connect((host, 6000 + dno))
+        # TCP socket, note the special case: `unix:0.0` is equivalent to `:0.0`.
+        elif (protocol is None or protocol != 'unix') and host and host != 'unix':
+            s = _get_tcp_socket(host, dno)
 
-        # Else use Unix socket
+        # Unix socket.
         else:
-            s = socket.socket(socket.AF_UNIX, socket.SOCK_STREAM)
-            s.connect('/tmp/.X11-unix/X%d' % dno)
-    except OSError as val:
+            address = '/tmp/.X11-unix/X%d' % dno
+            if not os.path.exists(address):
+                # Use abstract address.
+                address = '\0' + address
+            try:
+                s = _get_unix_socket(address)
+            except socket.error:
+                if not protocol and not host:
+                    # If no protocol/host was specified, fallback to TCP.
+                    s = _get_tcp_socket(host, dno)
+                else:
+                    raise
+    except socket.error as val:
         raise error.DisplayConnectionError(dname, str(val))
 
-    # Make sure that the connection isn't inherited in child processes
+    # Make sure that the connection isn't inherited in child processes.
     fcntl.fcntl(s.fileno(), F_SETFD, FD_CLOEXEC)
 
     return s
 
 
-def new_get_auth(sock, dname, host, dno):
+def new_get_auth(sock, dname, protocol, host, dno):
+    assert protocol in SUPPORTED_PROTOCOLS
     # Translate socket address into the xauth domain
-    if (uname[0] == 'Darwin') and host and host.startswith('/tmp/'):
+    if protocol == 'darwin':
         family = xauth.FamilyLocal
         addr = socket.gethostname()
 
-    elif host:
+    elif protocol == 'tcp':
         family = xauth.FamilyInternet
 
         # Convert the prettyprinted IP number into 4-octet string.
         # Sometimes these modules are too damn smart...
         octets = sock.getpeername()[0].split('.')
-        addr = ''.join(map(lambda x: chr(int(x)), octets))
+        addr = bytearray(int(x) for x in octets)
     else:
         family = xauth.FamilyLocal
-        addr = socket.gethostname()
+        addr = socket.gethostname().encode()
 
-    au = xauth.Xauthority()
+    try:
+        au = xauth.Xauthority()
+    except error.XauthError:
+        return b'', b''
+
     while 1:
         try:
             return au.get_best_auth(family, addr, dno)
@@ -113,16 +165,16 @@ def new_get_auth(sock, dname, host, dno):
         # $DISPLAY to localhost:10, but stores the xauth cookie as if
         # DISPLAY was :10.  Hence, if localhost and not found, try
         # again as a Unix socket.
-        if family == xauth.FamilyInternet and addr == '\x7f\x00\x00\x01':
+        if family == xauth.FamilyInternet and addr == b'\x7f\x00\x00\x01':
             family = xauth.FamilyLocal
-            addr = socket.gethostname()
+            addr = socket.gethostname().encode()
         else:
-            return '', ''
+            return b'', b''
 
 
 def old_get_auth(sock, dname, host, dno):
     # Find authorization cookie
-    auth_name = auth_data = ''
+    auth_name = auth_data = b''
 
     try:
         # We could parse .Xauthority, but xauth is simpler
@@ -139,7 +191,7 @@ def old_get_auth(sock, dname, host, dno):
             if len(parts) == 3:
                 auth_name = parts[1]
                 hexauth = parts[2]
-                auth = ''
+                auth = b''
 
                 # Translate hexcode into binary
                 for i in range(0, len(hexauth), 2):
@@ -148,14 +200,6 @@ def old_get_auth(sock, dname, host, dno):
                 auth_data = auth
     except os.error:
         pass
-
-    if not auth_data and host == 'localhost':
-    # 127.0.0.1 counts as FamilyLocal, not FamilyInternet
-    # See Xtransutil.c:ConvertAddress.
-    # There might be more ways to spell 127.0.0.1 but
-    # 'localhost', yet this code fixes a the case of
-    # OpenSSH tunneling X.
-        return get_auth('unix:%d' % dno, 'unix', dno)
 
     return auth_name, auth_data
 

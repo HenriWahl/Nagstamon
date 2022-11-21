@@ -2,33 +2,39 @@
 #
 #    Copyright (C) 2006 Mike Meyer <mwm@mired.org>
 #
-#    This program is free software; you can redistribute it and/or modify
-#    it under the terms of the GNU General Public License as published by
-#    the Free Software Foundation; either version 2 of the License, or
-#    (at your option) any later version.
+# This library is free software; you can redistribute it and/or
+# modify it under the terms of the GNU Lesser General Public License
+# as published by the Free Software Foundation; either version 2.1
+# of the License, or (at your option) any later version.
 #
-#    This program is distributed in the hope that it will be useful,
-#    but WITHOUT ANY WARRANTY; without even the implied warranty of
-#    MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
-#    GNU General Public License for more details.
+# This library is distributed in the hope that it will be useful,
+# but WITHOUT ANY WARRANTY; without even the implied warranty of
+# MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.
+# See the GNU Lesser General Public License for more details.
 #
-#    You should have received a copy of the GNU General Public License
-#    along with this program; if not, write to the Free Software
-#    Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA  02110-1301,  USA
-
+# You should have received a copy of the GNU Lesser General Public
+# License along with this library; if not, write to the
+#    Free Software Foundation, Inc.,
+#    59 Temple Place,
+#    Suite 330,
+#    Boston, MA 02111-1307 USA
 
 
 """RandR - provide access to the RandR extension information.
 
-This implementation is based off version 1.3 of the XRandR protocol, and may
+This implementation is based off version 1.5 of the XRandR protocol, and may
 not be compatible with other versions.
 
-Version 1.2 of the protocol is documented at:
+Version 1.5 of the protocol is documented at:
 http://cgit.freedesktop.org/xorg/proto/randrproto/tree/randrproto.txt
+
+Version 1.3.1 here:
+http://www.x.org/releases/X11R7.5/doc/randrproto/randrproto.txt
 
 """
 
 
+from tkinter import W
 from Xlib import X
 from Xlib.protocol import rq, structs
 
@@ -117,6 +123,12 @@ BadRROutput                 = 0
 BadRRCrtc                   = 1
 BadRRMode                   = 2
 
+# Error classes #
+class BadRROutputError(Exception): pass
+
+class BadRRCrtcError(Exception): pass
+
+class BadRRModeError(Exception): pass
 
 # Data Structures #
 
@@ -163,6 +175,19 @@ Render_Transform = rq.Struct(
         rq.Card32('matrix33'),
         )
 
+MonitorInfo = rq.Struct(
+    rq.Card32('name'),
+    rq.Bool('primary'),
+    rq.Bool('automatic'),
+    rq.LengthOf('crtcs', 2),
+    rq.Int16('x'),
+    rq.Int16('y'),
+    rq.Card16('width_in_pixels'),
+    rq.Card16('height_in_pixels'),
+    rq.Card32('width_in_millimeters'),
+    rq.Card32('height_in_millimeters'),
+    rq.List('crtcs', rq.Card32Obj)
+)
 
 # Requests #
 
@@ -192,7 +217,7 @@ def query_version(self):
         display=self.display,
         opcode=self.display.get_extension_major(extname),
         major_version=1,
-        minor_version=3,
+        minor_version=5,
         )
 
 
@@ -444,12 +469,11 @@ class GetOutputInfo(rq.ReplyRequest):
         rq.Card8('subpixel_order'),
         rq.LengthOf('crtcs', 2),
         rq.LengthOf('modes', 2),
-        rq.LengthOf('preferred', 2),
+        rq.Card16('num_preferred'),
         rq.LengthOf('clones', 2),
         rq.LengthOf('name', 2),
         rq.List('crtcs', rq.Card32Obj),
         rq.List('modes', rq.Card32Obj),
-        rq.List('preferred', rq.Card32Obj),
         rq.List('clones', rq.Card32Obj),
         rq.String8('name'),
         )
@@ -551,19 +575,18 @@ class ChangeOutputProperty(rq.Request):
         rq.Card8('mode'),
         rq.Pad(2),
         rq.LengthOf('value', 4),
-        rq.List('value', rq.Card8Obj),
+        rq.PropertyData('value'),
         )
 
-def change_output_property(self, output, property, type, format, mode, nUnits):
+def change_output_property(self, output, property, type, mode, value):
     return ChangeOutputProperty(
         display=self.display,
         opcode=self.display.get_extension_major(extname),
         output=output,
         property=property,
         type=type,
-        format=format,
         mode=mode,
-        nUnits=nUnits,
+        value=value,
         )
 
 
@@ -611,15 +634,17 @@ class GetOutputProperty(rq.ReplyRequest):
         rq.List('value', rq.Card8Obj),
         )
 
-def get_output_property(self, output, property, type, longOffset, longLength):
+def get_output_property(self, output, property, type, long_offset, long_length, delete=False, pending=False):
     return GetOutputProperty(
         display=self.display,
         opcode=self.display.get_extension_major(extname),
         output=output,
         property=property,
         type=type,
-        longOffset=longOffset,
-        longLength=longLength,
+        long_offset=long_offset,
+        long_length=long_length,
+        delete=delete,
+        pending=pending,
         )
 
 
@@ -641,11 +666,13 @@ class CreateMode(rq.ReplyRequest):
         rq.Pad(20),
         )
 
-def create_mode(self):
+def create_mode(self, mode, name):
     return CreateMode (
         display=self.display,
         opcode=self.display.get_extension_major(extname),
         window=self,
+        mode=mode,
+        name=name,
         )
 
 
@@ -674,7 +701,7 @@ class AddOutputMode(rq.Request):
         rq.Card32('mode'),
         )
 
-def add_output_mode(self):
+def add_output_mode(self, output, mode):
     return AddOutputMode(
         display=self.display,
         opcode=self.display.get_extension_major(extname),
@@ -692,7 +719,7 @@ class DeleteOutputMode(rq.Request):
         rq.Card32('mode'),
         )
 
-def delete_output_mode(self):
+def delete_output_mode(self, output, mode):
     return DeleteOutputMode(
         display=self.display,
         opcode=self.display.get_extension_major(extname),
@@ -715,6 +742,8 @@ class GetCrtcInfo(rq.ReplyRequest):
         rq.Card16('sequence_number'),
         rq.ReplyLength(),
         rq.Card32('timestamp'),
+        rq.Int16('x'),
+        rq.Int16('y'),
         rq.Card16('width'),
         rq.Card16('height'),
         rq.Card32('mode'),
@@ -759,14 +788,17 @@ class SetCrtcConfig(rq.ReplyRequest):
         rq.Pad(20),
         )
 
-def set_crtc_config(self, crtc, config_timestamp, mode, rotation, timestamp=X.CurrentTime):
+def set_crtc_config(self, crtc, config_timestamp, x, y, mode, rotation, outputs, timestamp=X.CurrentTime):
     return SetCrtcConfig (
         display=self.display,
         opcode=self.display.get_extension_major(extname),
         crtc=crtc,
         config_timestamp=config_timestamp,
+        x=x,
+        y=y,
         mode=mode,
         rotation=rotation,
+        outputs=outputs,
         timestamp=timestamp,
         )
 
@@ -807,7 +839,7 @@ class GetCrtcGamma(rq.ReplyRequest):
         rq.Card8('status'),
         rq.Card16('sequence_number'),
         rq.ReplyLength(),
-        rq.Card16('size'),
+        rq.LengthOf(('red', 'green', 'blue'), 2),
         rq.Pad(22),
         rq.List('red', rq.Card16Obj),
         rq.List('green', rq.Card16Obj),
@@ -835,12 +867,15 @@ class SetCrtcGamma(rq.Request):
         rq.List('blue', rq.Card16Obj),
         )
 
-def set_crtc_gamma(self, crtc, size):
+def set_crtc_gamma(self, crtc, size, red, green, blue):
     return SetCrtcGamma(
         display=self.display,
         opcode=self.display.get_extension_major(extname),
         crtc=crtc,
         size=size,
+        red=red,
+        green=green,
+        blue=blue,
         )
 
 
@@ -1063,6 +1098,76 @@ def get_output_primary(self):
         )
 
 
+# Version 1.5 methods 
+
+class GetMonitors(rq.ReplyRequest):
+    _request = rq.Struct(
+        rq.Card8('opcode'),
+        rq.Opcode(42),
+        rq.RequestLength(),
+        rq.Window('window'),
+        rq.Bool('is_active'),
+        rq.Pad(3)
+    )
+
+    _reply = rq.Struct(
+        rq.ReplyCode(),
+        rq.Pad(1),
+        rq.Card16('sequence_number'),
+        rq.ReplyLength(),
+        rq.Card32('timestamp'),
+        rq.LengthOf('monitors', 4),
+        rq.Card32('outputs'),
+        rq.Pad(12),
+        rq.List('monitors', MonitorInfo)
+    )
+
+
+def get_monitors(self, is_active=True):
+    return GetMonitors(
+        display=self.display,
+        opcode=self.display.get_extension_major(extname),
+        window=self,
+        is_active=is_active
+    )
+
+class SetMonitor(rq.Request):
+    _request = rq.Struct(
+        rq.Card8('opcode'),
+        rq.Opcode(43),
+        rq.RequestLength(),
+        rq.Window('window'),
+        rq.Object('monitor_info', MonitorInfo)
+    )
+
+
+def set_monitor(self, monitor_info):
+    return SetMonitor(
+        display=self.display,
+        opcode=self.display.get_extension_major(extname),
+        window=self,
+        monitor_info=monitor_info
+    )
+
+
+class DeleteMonitor(rq.Request):
+    _request = rq.Struct(
+        rq.Card8('opcode'),
+        rq.Opcode(44),
+        rq.RequestLength(),
+        rq.Window('window'),
+        rq.Card32('name')
+    )
+
+
+def delete_monitor(self, name):
+    return DeleteMonitor(
+        display=self.display,
+        opcode=self.display.get_extension_major(extname),
+        window=self,
+        name=name
+    )
+
 # Events #
 
 class ScreenChangeNotify(rq.Event):
@@ -1134,8 +1239,6 @@ class OutputPropertyNotify(rq.Event):
         rq.Card8('state'),
         rq.Pad(11),
         )
-
-
 # Initialization #
 
 def init(disp, info):
@@ -1171,11 +1274,20 @@ def init(disp, info):
     disp.extension_add_method('display', 'xrandr_get_panning', get_panning)
     disp.extension_add_method('display', 'xrandr_set_panning', set_panning)
 
-    disp.extension_add_event(info.first_event, ScreenChangeNotify)
-    disp.extension_add_event(info.first_event + 1, CrtcChangeNotify)
-    disp.extension_add_event(info.first_event + 2, OutputChangeNotify)
-    disp.extension_add_event(info.first_event + 3, OutputPropertyNotify)
+    # If the server is running RANDR 1.5+, enable 1.5 compatible methods and events
+    version = query_version(disp)
+    if version.major_version == 1 and version.minor_version >= 5:
+        # version 1.5 compatible
+        disp.extension_add_method('window', 'xrandr_get_monitors', get_monitors)
+        disp.extension_add_method('window', 'xrandr_set_monitor', set_monitor)
+        disp.extension_add_method('window', 'xrandr_delete_monitor', delete_monitor)
 
-    #disp.extension_add_error(BadRROutput, BadRROutputError)
-    #disp.extension_add_error(BadRRCrtc, BadRRCrtcError)
-    #disp.extension_add_error(BadRRMode, BadRRModeError)
+        disp.extension_add_event(info.first_event + RRScreenChangeNotify, ScreenChangeNotify)
+        # add RRNotify events (1 event code with 3 subcodes)
+        disp.extension_add_subevent(info.first_event + RRNotify, RRNotify_CrtcChange, CrtcChangeNotify)
+        disp.extension_add_subevent(info.first_event + RRNotify, RRNotify_OutputChange, OutputChangeNotify)
+        disp.extension_add_subevent(info.first_event + RRNotify, RRNotify_OutputProperty, OutputPropertyNotify)
+
+        disp.extension_add_error(BadRROutput, BadRROutputError)
+        disp.extension_add_error(BadRRCrtc, BadRRCrtcError)
+        disp.extension_add_error(BadRRMode, BadRRModeError)

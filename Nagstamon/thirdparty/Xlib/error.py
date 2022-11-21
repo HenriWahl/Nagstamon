@@ -2,25 +2,28 @@
 #
 #    Copyright (C) 2000 Peter Liljenberg <petli@ctrl-c.liu.se>
 #
-#    This program is free software; you can redistribute it and/or modify
-#    it under the terms of the GNU General Public License as published by
-#    the Free Software Foundation; either version 2 of the License, or
-#    (at your option) any later version.
+# This library is free software; you can redistribute it and/or
+# modify it under the terms of the GNU Lesser General Public License
+# as published by the Free Software Foundation; either version 2.1
+# of the License, or (at your option) any later version.
 #
-#    This program is distributed in the hope that it will be useful,
-#    but WITHOUT ANY WARRANTY; without even the implied warranty of
-#    MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
-#    GNU General Public License for more details.
+# This library is distributed in the hope that it will be useful,
+# but WITHOUT ANY WARRANTY; without even the implied warranty of
+# MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.
+# See the GNU Lesser General Public License for more details.
 #
-#    You should have received a copy of the GNU General Public License
-#    along with this program; if not, write to the Free Software
-#    Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA  02110-1301,  USA
+# You should have received a copy of the GNU Lesser General Public
+# License along with this library; if not, write to the
+#    Free Software Foundation, Inc.,
+#    59 Temple Place,
+#    Suite 330,
+#    Boston, MA 02111-1307 USA
 
 # Xlib modules
-from Xlib import X
+from . import X
 
 # Xlib.protocol modules
-from Xlib.protocol import rq
+from .protocol import rq
 
 
 class DisplayError(Exception):
@@ -73,9 +76,9 @@ class XError(rq.GetAttrData, Exception):
         s = []
         for f in ('code', 'resource_id', 'sequence_number',
                   'major_opcode', 'minor_opcode'):
-            s.append('%s = %s' % (f, self._data[f]))
+            s.append('{0} = {1}'.format(f, self._data[f]))
 
-        return '%s: %s' % (self.__class__, ', '.join(s))
+        return '{0}: {1}'.format(self.__class__, ', '.join(s))
 
 class XResourceError(XError):
     _fields = rq.Struct( rq.Card8('type'),  # Always 0
@@ -126,7 +129,7 @@ xerror_class = {
     }
 
 
-class CatchError:
+class CatchError(object):
     def __init__(self, *errors):
         self.error_types = errors
         self.error = None

@@ -2,46 +2,55 @@
 #
 #    Copyright (C) 2000 Peter Liljenberg <petli@ctrl-c.liu.se>
 #
-#    This program is free software; you can redistribute it and/or modify
-#    it under the terms of the GNU General Public License as published by
-#    the Free Software Foundation; either version 2 of the License, or
-#    (at your option) any later version.
+# This library is free software; you can redistribute it and/or
+# modify it under the terms of the GNU Lesser General Public License
+# as published by the Free Software Foundation; either version 2.1
+# of the License, or (at your option) any later version.
 #
-#    This program is distributed in the hope that it will be useful,
-#    but WITHOUT ANY WARRANTY; without even the implied warranty of
-#    MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
-#    GNU General Public License for more details.
+# This library is distributed in the hope that it will be useful,
+# but WITHOUT ANY WARRANTY; without even the implied warranty of
+# MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.
+# See the GNU Lesser General Public License for more details.
 #
-#    You should have received a copy of the GNU General Public License
-#    along with this program; if not, write to the Free Software
-#    Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA  02110-1301,  USA
+# You should have received a copy of the GNU Lesser General Public
+# License along with this library; if not, write to the
+#    Free Software Foundation, Inc.,
+#    59 Temple Place,
+#    Suite 330,
+#    Boston, MA 02111-1307 USA
 
 # Python modules
 import types
 
+# Python 2/3 compatibility.
+from six import create_unbound_method
+
 # Xlib modules
-from . import error, ext, X
+from . import error
+from . import ext
+from . import X
 
 # Xlib.protocol modules
-from Xlib.protocol import display, request, event, rq
+from .protocol import display as protocol_display
+from .protocol import request, event, rq
 
 # Xlib.xobjects modules
-import Xlib.xobject.resource
-import Xlib.xobject.drawable
-import Xlib.xobject.fontable
-import Xlib.xobject.colormap
-import Xlib.xobject.cursor
+from .xobject import resource
+from .xobject import drawable
+from .xobject import fontable
+from .xobject import colormap
+from .xobject import cursor
 
 _resource_baseclasses = {
-    'resource': Xlib.xobject.resource.Resource,
-    'drawable': Xlib.xobject.drawable.Drawable,
-    'window': Xlib.xobject.drawable.Window,
-    'pixmap': Xlib.xobject.drawable.Pixmap,
-    'fontable': Xlib.xobject.fontable.Fontable,
-    'font': Xlib.xobject.fontable.Font,
-    'gc': Xlib.xobject.fontable.GC,
-    'colormap': Xlib.xobject.colormap.Colormap,
-    'cursor': Xlib.xobject.cursor.Cursor,
+    'resource': resource.Resource,
+    'drawable': drawable.Drawable,
+    'window': drawable.Window,
+    'pixmap': drawable.Pixmap,
+    'fontable': fontable.Fontable,
+    'font': fontable.Font,
+    'gc': fontable.GC,
+    'colormap': colormap.Colormap,
+    'cursor': cursor.Cursor,
     }
 
 _resource_hierarchy = {
@@ -52,14 +61,14 @@ _resource_hierarchy = {
     'fontable': ('font', 'gc')
     }
 
-class _BaseDisplay(display.Display):
-    resource_classes = _resource_baseclasses.copy()
+class _BaseDisplay(protocol_display.Display):
 
     # Implement a cache of atom names, used by Window objects when
     # dealing with some ICCCM properties not defined in Xlib.Xatom
 
     def __init__(self, *args, **keys):
-        display.Display.__init__(*(self, ) + args, **keys)
+        self.resource_classes = _resource_baseclasses.copy()
+        protocol_display.Display.__init__(self, *args, **keys)
         self._atom_cache = {}
 
     def get_atom(self, atomname, only_if_exists=0):
@@ -75,7 +84,7 @@ class _BaseDisplay(display.Display):
         return r.atom
 
 
-class Display:
+class Display(object):
     def __init__(self, display = None):
         self.display = _BaseDisplay(display)
 
@@ -94,6 +103,11 @@ class Display:
         self.class_extension_dicts = {}
         self.display_extension_methods = {}
 
+        # a dict that maps the event name to the code
+        # or, when it's an event with a subcode, to a tuple of (event,subcode)
+        # note this wraps the dict so you address it as
+        # extension_event.EXTENSION_EVENT_NAME rather than
+        # extension_event["EXTENSION_EVENT_NAME"]
         self.extension_event = rq.DictWrapper({})
 
         exts = self.list_extensions()
@@ -103,7 +117,7 @@ class Display:
             if extname in exts:
 
                 # Import the module and fetch it
-                __import__('ext.' + modname,globals(),level=1)
+                __import__('Xlib.ext.' + modname)
                 mod = getattr(ext, modname)
 
                 info = self.query_extension(extname)
@@ -116,11 +130,11 @@ class Display:
 
 
         # Finalize extensions by creating new classes
-        for type_, dict in self.class_extension_dicts.items():
-            origcls = self.display.resource_classes[type_]
-            self.display.resource_classes[type_] = type(origcls.__name__,
-                                                        (origcls, object),
-                                                        dict)
+        for class_name, dictionary in self.class_extension_dicts.items():
+            origcls = self.display.resource_classes[class_name]
+            self.display.resource_classes[class_name] = type(origcls.__name__,
+                                                             (origcls,),
+                                                             dictionary)
 
         # Problem: we have already created some objects without the
         # extensions: the screen roots and default colormaps.
@@ -263,17 +277,19 @@ class Display:
             self.display_extension_methods[name] = function
 
         else:
-            types = (object, ) + _resource_hierarchy.get(object, ())
-            for type in types:
-                cls = _resource_baseclasses[type]
+            class_list = (object, ) + _resource_hierarchy.get(object, ())
+            for class_name in class_list:
+                cls = _resource_baseclasses[class_name]
                 if hasattr(cls, name):
-                    raise AssertionError('attempting to replace %s method: %s' % (type, name))
+                    raise AssertionError('attempting to replace %s method: %s' % (class_name, name))
+
+                method = create_unbound_method(function, cls)
 
                 # Maybe should check extension overrides too
                 try:
-                    self.class_extension_dicts[type][name] = function
+                    self.class_extension_dicts[class_name][name] = method
                 except KeyError:
-                    self.class_extension_dicts[type] = { name: function }
+                    self.class_extension_dicts[class_name] = { name: method }
 
     def extension_add_event(self, code, evt, name = None):
         """extension_add_event(code, evt, [name])
@@ -287,8 +303,8 @@ class Display:
         extension_event.
         """
 
-        newevt = type('{0}.SUB{1}'.format(evt.__name__, code),
-                      evt.__bases__, evt.__dict__.copy())
+        newevt = type(evt.__name__, evt.__bases__,
+                      evt.__dict__.copy())
         newevt._code = code
 
         self.display.add_extension_event(code, newevt)
@@ -298,9 +314,34 @@ class Display:
 
         setattr(self.extension_event, name, code)
 
+    def extension_add_subevent(self, code, subcode, evt, name = None):
+        """extension_add_subevent(code, evt, [name])
 
-    def add_extension_error(self, code, err):
-        """add_extension_error(code, err)
+        Add an extension subevent.  CODE is the numeric code, subcode
+        is the sub-ID of this event that shares the code ID with other
+        sub-events and EVT is the event class.  EVT will be cloned, and
+        the attribute _code of the new event class will be set to CODE.
+
+        If NAME is omitted, it will be set to the name of EVT.  This
+        name is used to insert an entry in the DictWrapper
+        extension_event.
+        """
+
+        newevt = type(evt.__name__, evt.__bases__,
+                      evt.__dict__.copy())
+        newevt._code = code
+
+        self.display.add_extension_event(code, newevt, subcode)
+
+        if name is None:
+            name = evt.__name__
+
+        # store subcodes as a tuple of (event code, subcode) in the
+        # extension dict maintained in the display object
+        setattr(self.extension_event, name, (code,subcode))
+
+    def extension_add_error(self, code, err):
+        """extension_add_error(code, err)
 
         Add an extension error.  CODE is the numeric code, and ERR is
         the error class.
@@ -348,7 +389,7 @@ class Display:
         lowest index and secondarily on the lowest keycode."""
         try:
             # Copy the map list, reversing the arguments
-            return [(x[1], x[0]) for x in self._keymap_syms[keysym]]
+            return map(lambda x: (x[1], x[0]), self._keymap_syms[keysym])
         except KeyError:
             return []
 
@@ -476,7 +517,7 @@ class Display:
                           event = event)
 
     def ungrab_pointer(self, time, onerror = None):
-        """elease a grabbed pointer and any queued events. See
+        """Release a grabbed pointer and any queued events. See
         XUngrabPointer(3X11)."""
         request.UngrabPointer(display = self.display,
                               onerror = onerror,
@@ -590,7 +631,7 @@ class Display:
             self.display.free_resource_id(fid)
             return None
         else:
-            cls = self.display.get_resource_class('font', Xlib.xobject.fontable.Font)
+            cls = self.display.get_resource_class('font', fontable.Font)
             return cls(self.display, fid, owner = 1)
 
     def list_fonts(self, pattern, max_names):
@@ -620,7 +661,7 @@ class Display:
         font_ascent
         font_descent
         replies_hint
-            See the descripton of XFontStruct in XGetFontProperty(3X11)
+            See the description of XFontStruct in XGetFontProperty(3X11)
             for details on these values.
         properties
             A list of properties. Each entry has two attributes:
@@ -773,7 +814,7 @@ class Display:
         request.ChangePointerControl(display = self.display,
                                      onerror = onerror,
                                      do_accel = do_accel,
-                                     do_thres = do_threshold,
+                                     do_thresh = do_threshold,
                                      accel_num = accel_num,
                                      accel_denum = accel_denum,
                                      threshold = threshold)
@@ -808,7 +849,8 @@ class Display:
 
     def change_hosts(self, mode, host_family, host, onerror = None):
         """mode is either X.HostInsert or X.HostDelete. host_family is
-        one of X.FamilyInternet, X.FamilyDECnet or X.FamilyChaos.
+        one of X.FamilyInternet, X.FamilyDECnet, X.FamilyChaos,
+        X.FamilyServerInterpreted or X.FamilyInternetV6.
 
         host is a list of bytes. For the Internet family, it should be the
         four bytes of an IPv4 address."""
@@ -827,7 +869,7 @@ hosts
     The hosts on the access list. Each entry has the following attributes:
 
     family
-        X.FamilyInternet, X.FamilyDECnet, or X.FamilyChaos.
+        X.FamilyInternet, X.FamilyDECnet, X.FamilyChaos, X.FamilyServerInterpreted or X.FamilyInternetV6.
     name
         A list of byte values, the coding depends on family. For the Internet family, it is the 4 bytes of an IPv4 address.
 
