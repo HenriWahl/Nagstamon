@@ -47,7 +47,7 @@ jobs:
     steps:
       - uses: actions/checkout@v3
       - run: /usr/bin/docker build -t build-nagstamon -f build/docker/Dockerfile-${{ github.job }} .
-      - run: /usr/bin/docker run -v ${{ github.workspace }}:/nagstamon build-nagstamon
+      - run: /usr/bin/docker run -v ${{ github.workspace }}:/nagstamon -e DEB_BUILD_OPTIONS=nocheck build-nagstamon
       - uses: actions/upload-artifact@v3
         with:
           path: build/*.deb
