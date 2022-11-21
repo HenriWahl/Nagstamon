@@ -26,7 +26,9 @@ from pathlib import Path
 import platform
 import re
 import sys
+from sys import executable
 import traceback
+from traceback import print_exc
 import webbrowser
 
 # import md5 for centreon url autologin encoding
@@ -465,6 +467,20 @@ def get_distro():
         dist_name, dist_version, dist_id = platform.dist()
         return dist_name.lower(), dist_version, dist_id
 
+def restart():
+    """
+    restart Nagstamon, e.g. for GUI changes in macOS
+    """
+    try:
+        process = psutil.Process(os.getpid())
+        for file_handler in process.open_files() + process.connections():
+            os.close(file_handler.fd)
+    except Exception as exception:
+        print_exc(file=sys.stdout)
+
+    print('yeehaa')
+
+    os.execl(executable, executable, *sys.argv)
 
 # depending on column different functions have to be used
 # 0 + 1 are column "Hosts", 1 + 2 are column "Service" due to extra font flag pictograms
