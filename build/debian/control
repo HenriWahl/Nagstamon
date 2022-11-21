@@ -1,20 +1,22 @@
 Source: nagstamon
 Section: utils
-X-Python3-Version: >= 3.4
 Priority: optional
 Maintainer: Python Applications Packaging Team <python-apps-team@lists.alioth.debian.org>
 Uploaders: Carl Chenet <chaica@ohmytux.com>
-Build-Depends: debhelper (>= 9), python3 (>= 3.4), quilt (>= 0.63)
-Build-Depends-Indep: python-support
-Standards-Version: 3.9.2
+Build-Depends: dbus, debhelper-compat (= 13), dh-python, dh-sequence-python3, quilt (>= 0.63)
+Build-Depends-Indep: python3-all (>= 3.4), python3-keyring, python3-setuptools, python3-psutil,
+Standards-Version: 4.6.0
 Homepage: https://nagstamon.de
 Vcs-Git: git://github.com/HenriWahl/Nagstamon.git
 Vcs-Browser: https://codeload.github.com/HenriWahl/Nagstamon/zip/master
 
 Package: nagstamon
 Architecture: all
-Depends: ${python3:Depends}, ${misc:Depends}, python3-dateutil, python3-pkg-resources, python3-bs4, python3-lxml, python3-pyqt5, python3-pyqt5.qtsvg, python3-pyqt5.qtmultimedia, libqt5multimedia5-plugins, python3-requests, python3-requests-kerberos, python3-psutil, python3-dbus, python3-keyring, python3-socks
-Description: Nagios status monitor which takes place in systray or on desktop
+Depends: ${python3:Depends}, ${misc:Depends}, python3-pkg-resources, python3-bs4, python3-lxml,
+ python3-pyqt5, python3-pyqt5.qtsvg, python3-pyqt5.qtmultimedia, libqt5multimedia5-plugins,
+ python3-requests, python3-requests-kerberos, python3-psutil, python3-dbus.mainloop.pyqt5,
+ python3-keyring, python3-ewmh
+Recommends: python3-secretstorageDescription: Nagios status monitor which takes place in systray or on desktop
  Nagstamon is a Nagios status monitor which takes place in systray or 
  on desktop (GNOME, KDE) as floating statusbar to inform you in 
  realtime about the status of your Nagios and some of its derivatives monitored network. 
