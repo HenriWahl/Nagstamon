@@ -67,8 +67,7 @@ from Nagstamon.Helpers import (is_found_by_re,
 
 # only on X11/Linux thirdparty path should be added because it contains the Xlib module
 # needed to tell window manager via EWMH to keep Nagstamon window on all virtual desktops
-# TODO: test if X11 or Wayland is used
-if OS not in OS_NON_LINUX:
+if OS not in OS_NON_LINUX and not DESKTOP_WAYLAND:
     # extract thirdparty path from resources path - make submodules accessible by thirdparty modules
     THIRDPARTY = os.sep.join(RESOURCES.split(os.sep)[0:-1] + ['thirdparty'])
     sys.path.insert(0, THIRDPARTY)
@@ -79,7 +78,8 @@ if OS not in OS_NON_LINUX:
 
     from Nagstamon.thirdparty.ewmh import EWMH
 
-    # DBus only interesting for Linux too
+# DBus only interesting for Linux too
+if OS not in OS_NON_LINUX:
     try:
         from dbus import (Interface,
                           SessionBus)
@@ -951,7 +951,7 @@ class StatusWindow(QWidget):
         self.hide()
 
         # ewmh.py in thirdparty directory needed to keep floating statusbar on all desktops in Linux
-        if not OS in OS_NON_LINUX:
+        if not OS in OS_NON_LINUX and not DESKTOP_WAYLAND:
             self.ewmh = EWMH()
 
         # avoid quitting when using Qt.Tool flag and closing settings dialog
@@ -1220,7 +1220,7 @@ class StatusWindow(QWidget):
             self.show()
 
             # X11/Linux needs some special treatment to get the statusbar floating on all virtual desktops
-            if OS not in OS_NON_LINUX:
+            if OS not in OS_NON_LINUX and not DESKTOP_WAYLAND:
                 # get all windows...
                 winid = self.winId().__int__()
                 self.ewmh.setWmDesktop(winid, 0xffffffff)
@@ -2060,7 +2060,7 @@ class StatusWindow(QWidget):
         if conf.windowed:
             return
         # X11/Linux needs some special treatment to get the statusbar floating on all virtual desktops
-        if OS not in OS_NON_LINUX:
+        if OS not in OS_NON_LINUX and not DESKTOP_WAYLAND:
             # get all windows...
             winid = self.winId().__int__()
             self.ewmh.setWmDesktop(winid, 0xffffffff)
