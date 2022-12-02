@@ -6976,11 +6976,16 @@ def get_screen_name(x, y):
     # integerify these values as they *might* be strings
     x = int(x)
     y = int(y)
-    screen = APP.screenAt(QPoint(x, y))
-    del x, y
-    if screen:
-        return screen.name
-    else:
+
+    # QApplication (using Qt5 and/or its Python binding on RHEL/CentOS 7) has no attribute 'screenAt'
+    try:
+        screen = APP.screenAt(QPoint(x, y))
+        del x, y
+        if screen:
+            return screen.name
+        else:
+            return None
+    except:
         return None
 
 
