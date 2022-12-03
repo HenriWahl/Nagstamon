@@ -44,7 +44,7 @@ from Nagstamon.Config import (Action,
                               KEYRING,
                               OS_NON_LINUX,
                               OS,
-                              OS_DARWIN,
+                              OS_MACOS,
                               OS_WINDOWS,
                               RESOURCES,
                               Server,
@@ -95,7 +95,7 @@ if OS not in OS_NON_LINUX:
         DBUS_AVAILABLE = False
 
 # make icon status in macOS dock accessible via NSApp, used by set_macos_dock_icon_visible()
-if OS == OS_DARWIN:
+if OS == OS_MACOS:
     from AppKit import (NSApp,
                         NSApplicationPresentationDefault,
                         NSApplicationPresentationHideDock)
@@ -343,7 +343,7 @@ class SystemTrayIcon(QSystemTrayIcon):
 
         # MacOSX does not distinguish between left and right click so menu will go to upper menu bar
         # update: apparently not, but own context menu will be shown when icon is clicked an all is OK = green
-        if OS != OS_DARWIN:
+        if OS != OS_MACOS:
             self.setContextMenu(self.menu)
 
     @Slot()
@@ -401,7 +401,7 @@ class SystemTrayIcon(QSystemTrayIcon):
             # when green icon is displayed and no popwin is about to pop up...
             if get_worst_status() == 'UP':
                 # ...nothing to do except on macOS where menu should be shown
-                if OS == OS_DARWIN:
+                if OS == OS_MACOS:
                     self.menu.show_at_cursor()
             else:
                 # show status window if there is something to tell
@@ -616,7 +616,7 @@ class MenuContextSystrayicon(MenuContext):
         """
         MenuContext.initialize(self)
         # makes even less sense on OSX
-        if OS != OS_DARWIN:
+        if OS != OS_MACOS:
             self.action_status = QAction('Show status window', self)
             self.action_status.triggered.connect(statuswindow.show_window_systrayicon)
             self.insertAction(self.action_refresh, self.action_status)
@@ -636,7 +636,7 @@ class FlatButton(QToolButton):
 
 
 # OSX does not support flat QToolButtons so keep the neat default ones
-if OS == OS_DARWIN:
+if OS == OS_MACOS:
     Button = QPushButton
     CSS_CLOSE_BUTTON = '''QPushButton {border-width: 0px;
                                        border-style: none;
@@ -966,7 +966,7 @@ class StatusWindow(QWidget):
         # show tooltips even if popup window has no focus
         self.setAttribute(Qt.WidgetAttribute.WA_AlwaysShowToolTips)
 
-        if OS == OS_DARWIN:
+        if OS == OS_MACOS:
             # avoid hiding window if it has no focus - necessary on OSX if using flag Qt.Tool
             self.setAttribute(Qt.WidgetAttribute.WA_MacAlwaysShowToolWindow)
 
@@ -1003,7 +1003,7 @@ class StatusWindow(QWidget):
         self.servers_vbox.addWidget(self.label_all_ok)
 
         # test with OSX top menubar
-        if OS == OS_DARWIN:
+        if OS == OS_MACOS:
             self.menubar = QMenuBar()
             action_exit = QAction('exit', self.menubar)
             action_settings = QAction('settings', self.menubar)
@@ -1202,7 +1202,7 @@ class StatusWindow(QWidget):
 
         if conf.statusbar_floating:
             # no need for icon in dock if floating - apply first to avoid window in background
-            if OS == OS_DARWIN:
+            if OS == OS_MACOS:
                 set_macos_dock_icon_visibility(False)
 
             # no need for systray
@@ -1251,7 +1251,7 @@ class StatusWindow(QWidget):
 
         elif conf.icon_in_systray:
             # no need for icon in dock if in systray
-            if OS == OS_DARWIN:
+            if OS == OS_MACOS:
                 set_macos_dock_icon_visibility(False)
 
             # statusbar and detail window should be frameless and stay on top
@@ -1288,7 +1288,7 @@ class StatusWindow(QWidget):
             # newer Qt5 seem to be better regarding fullscreen mode on non-OSX
             self.show_window()
             # fullscreen mode is rather buggy on everything other than OSX so just use a maximized window
-            if OS == OS_DARWIN:
+            if OS == OS_MACOS:
                 self.showFullScreen()
                 # no need for icon in dock if fullscreen
                 set_macos_dock_icon_visibility(False)
@@ -1301,7 +1301,7 @@ class StatusWindow(QWidget):
 
         elif conf.windowed:
             # show icon in dock if window is set
-            if OS == OS_DARWIN:
+            if OS == OS_MACOS:
                 set_macos_dock_icon_visibility(True)
 
             systrayicon.hide()
@@ -1551,7 +1551,7 @@ class StatusWindow(QWidget):
                     # ...and practice
                     self.resize_window(width, height, x, y)
                     # switch on
-                    if OS == OS_DARWIN:
+                    if OS == OS_MACOS:
                         # delayed because of flickering window in OSX
                         self.timer.singleShot(200, self.set_shown)
                     else:
@@ -1649,7 +1649,7 @@ class StatusWindow(QWidget):
                     self.servers_scrollarea.hide()
                     # macOS needs this since Qt6 to avoid statuswindow size changeability
                     # looks silly but works to force using the own hint as hint
-                    if OS == OS_DARWIN:
+                    if OS == OS_MACOS:
                         self.setMinimumSize(self.sizeHint())
                         self.setMaximumSize(self.sizeHint())
                     else:
@@ -2759,7 +2759,7 @@ class ServerStatusLabel(ClosingLabel):
 
         # set stylesheet depending on submitted style
         if style in COLOR_STATUS_LABEL:
-            if OS == OS_DARWIN:
+            if OS == OS_MACOS:
                 self.setStyleSheet('''background: {0};
                                       border-radius: 3px;
                                       '''.format(COLOR_STATUS_LABEL[style]))
@@ -3024,7 +3024,7 @@ class ServerVBox(QVBoxLayout):
     def update_label(self):
         self.label.setText('<big><b>&nbsp;{0}@{1}</b></big>'.format(self.server.username, self.server.name))
         # let label padding keep top and bottom space - apparently not necessary on OSX
-        if OS != OS_DARWIN:
+        if OS != OS_MACOS:
             self.label.setStyleSheet('''padding-top: {0}px;
                                         padding-bottom: {0}px;'''.format(SPACE))
 
@@ -5529,7 +5529,7 @@ class Dialog_Settings(Dialog):
         if OS == OS_WINDOWS:
             filter = 'Executables (*.exe *.EXE);; All files (*)'
             directory = os.environ['ProgramFiles']
-        elif OS == OS_DARWIN:
+        elif OS == OS_MACOS:
             filter = ''
             directory = '/Applications'
         else:

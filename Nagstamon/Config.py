@@ -45,9 +45,9 @@ if KEYRING:
 # instead of calling platform.system() every now and then just do it once here
 OS = platform.system()
 # needed when OS-specific decisions have to be made, mostly Linux/non-Linux
-OS_DARWIN = 'Darwin'
+OS_MACOS = 'Darwin'
 OS_WINDOWS = 'Windows'
-OS_NON_LINUX = (OS_DARWIN, OS_WINDOWS)
+OS_NON_LINUX = (OS_MACOS, OS_WINDOWS)
 
 # simple Wayland detection
 if 'WAYLAND_DISPLAY' in os.environ or\
@@ -753,7 +753,7 @@ class Config(object):
                               "SSH": Action(name="SSH", description="Connect via SSH.",
                                             type="command",
                                             string="C:\Program Files\PuTTY\putty.exe -l root $ADDRESS$")}
-        elif OS == OS_DARWIN:
+        elif OS == OS_MACOS:
             defaultactions = {"RDP": Action(name="RDP", description="Connect via RDP.",
                                             type="command", string="open rdp://$ADDRESS$"),
                               "VNC": Action(name="VNC", description="Connect via VNC.",

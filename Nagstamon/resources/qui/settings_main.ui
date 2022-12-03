@@ -42,7 +42,7 @@
       </sizepolicy>
      </property>
      <property name="currentIndex">
-      <number>6</number>
+      <number>1</number>
      </property>
      <widget class="QWidget" name="tab_servers">
       <property name="sizePolicy">
@@ -623,6 +623,13 @@
             </property>
            </widget>
           </item>
+          <item row="4" column="0">
+           <widget class="QRadioButton" name="input_radiobutton_windowed">
+            <property name="text">
+             <string>Window</string>
+            </property>
+           </widget>
+          </item>
           <item row="12" column="0">
            <layout class="QGridLayout" name="gridLayout_20">
             <item row="1" column="0">
@@ -661,10 +668,10 @@
             </property>
            </widget>
           </item>
-          <item row="4" column="0">
-           <widget class="QRadioButton" name="input_radiobutton_windowed">
+          <item row="13" column="0">
+           <widget class="QCheckBox" name="input_checkbox_hide_dock_icon_on_macos">
             <property name="text">
-             <string>Window</string>
+             <string>Hide Dock icon</string>
             </property>
            </widget>
           </item>
@@ -3180,6 +3187,7 @@
   <tabstop>input_checkbox_systray_offset_use</tabstop>
   <tabstop>input_spinbox_systray_offset</tabstop>
   <tabstop>input_combobox_fullscreen_display</tabstop>
+  <tabstop>input_checkbox_hide_dock_icon_on_macos</tabstop>
   <tabstop>button_fontchooser</tabstop>
   <tabstop>button_default_font</tabstop>
   <tabstop>input_radiobutton_popup_details_hover</tabstop>
@@ -3323,6 +3331,7 @@
   <tabstop>input_radiobutton_windowed</tabstop>
   <tabstop>input_lineedit_notification_custom_action_separator</tabstop>
   <tabstop>input_checkbox_notification_custom_action_single</tabstop>
+  <tabstop>input_checkbox_filter_all_unreachable_services</tabstop>
  </tabstops>
  <resources/>
  <connections>

@@ -56,10 +56,10 @@ from Nagstamon.Config import (AppInfo,
                               conf,
                               debug_queue,
                               OS,
-                              OS_DARWIN,
+                              OS_MACOS,
                               RESOURCES)
 
-if OS == OS_DARWIN:
+if OS == OS_MACOS:
     # requests_gssapi is newer but not available everywhere
     try:
         # extra imports needed to get it compiled on macOS
@@ -216,7 +216,7 @@ class GenericServer(object):
 
         # macOS pyinstaller onefile conglomerate tends to lose cacert.pem due to macOS temp folder cleaning
         self.cacert_path = self.cacert_content = False
-        if OS == OS_DARWIN:
+        if OS == OS_MACOS:
             # trying to find root path when run by pyinstaller onefile, must be something like
             # /var/folders/7w/hfvrg7v92x3gjt95cqh974240000gn/T/_MEIQ3l3u3
             root_path = Path(RESOURCES).parent.parent
@@ -1441,7 +1441,7 @@ class GenericServer(object):
                         cgi_data_log = cgi_data
                     self.Debug(server=self.get_name(), debug='FetchURL: ' + url + ' CGI Data: ' + str(cgi_data_log))
 
-                if OS == OS_DARWIN and self.cacert_path and not self.cacert_path.is_file():
+                if OS == OS_MACOS and self.cacert_path and not self.cacert_path.is_file():
                     # pyinstaller temp folder seems to be emptied completely after a while
                     # so the directories containing the resources have to be recreated too
                     self.cacert_path.parent.mkdir(exist_ok=True)
