@@ -6872,7 +6872,7 @@ class CheckVersion(QObject):
             if latest_version != 'unavailable':
                 if latest_version == AppInfo.VERSION:
                     message = 'You are using the latest version <b>Nagstamon {0}</b>.'.format(AppInfo.VERSION)
-                elif latest_version != AppInfo.VERSION:
+                elif latest_version > AppInfo.VERSION:
                     message = 'The new version <b>Nagstamon {0}</b> is available.<p>' \
                               'Get it at <a href={1}>{1}</a>.'.format(latest_version, AppInfo.WEBSITE + '/download')
 
