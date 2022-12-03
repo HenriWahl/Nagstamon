@@ -286,6 +286,7 @@ class Config(object):
         self.fullscreen_display = 0
         self.systray_offset_use = False
         self.systray_offset = 10
+        self.hide_dock_icon_on_macos = False
         self.font = ''
         self.defaults_acknowledge_sticky = False
         self.defaults_acknowledge_send_notification = False
