@@ -46,12 +46,12 @@ jobs:
     runs-on: ubuntu-latest
     needs: test
     steps:
+      - uses: actions/checkout@v3
       - uses: docker/login-action@v2
         with:
           registry: ghcr.io
           username: ${{ github.actor }}
           password: ${{ secrets.GITHUB_TOKEN }}
-      - uses: actions/checkout@v3
       - run: docker pull ${{ env.cr_image }}-${{ github.job }} || /usr/bin/docker build -t ${{ env.cr_image }}-${{ github.job }} -f build/docker/Dockerfile-${{ github.job }} .
       - run: docker push ${{ env.cr_image }}-${{ github.job }}
       - run: /usr/bin/docker run -v ${{ github.workspace }}:/nagstamon -e DEB_BUILD_OPTIONS=nocheck ${{ env.cr_image }}-${{ github.job }}
@@ -66,8 +66,14 @@ jobs:
     needs: test
     steps:
       - uses: actions/checkout@v3
-      - run: /usr/bin/docker build -t build-nagstamon -f build/docker/Dockerfile-${{ github.job }} .
-      - run: /usr/bin/docker run -v ${{ github.workspace }}:/nagstamon build-nagstamon
+      - uses: docker/login-action@v2
+        with:
+          registry: ghcr.io
+          username: ${{ github.actor }}
+          password: ${{ secrets.GITHUB_TOKEN }}
+      - run: docker pull ${{ env.cr_image }}-${{ github.job }} || /usr/bin/docker build -t ${{ env.cr_image }}-${{ github.job }} -f build/docker/Dockerfile-${{ github.job }} .
+      - run: docker push ${{ env.cr_image }}-${{ github.job }}
+      - run: /usr/bin/docker run -v ${{ github.workspace }}:/nagstamon ${{ env.cr_image }}-${{ github.job }}
       - uses: actions/upload-artifact@v3
         with:
           path: build/*.rpm
@@ -79,8 +85,14 @@ jobs:
     needs: test
     steps:
       - uses: actions/checkout@v3
-      - run: /usr/bin/docker build -t build-nagstamon -f build/docker/Dockerfile-${{ github.job }} .
-      - run: /usr/bin/docker run -v ${{ github.workspace }}:/nagstamon build-nagstamon
+      - uses: docker/login-action@v2
+        with:
+          registry: ghcr.io
+          username: ${{ github.actor }}
+          password: ${{ secrets.GITHUB_TOKEN }}
+      - run: docker pull ${{ env.cr_image }}-${{ github.job }} || /usr/bin/docker build -t ${{ env.cr_image }}-${{ github.job }} -f build/docker/Dockerfile-${{ github.job }} .
+      - run: docker push ${{ env.cr_image }}-${{ github.job }}
+      - run: /usr/bin/docker run -v ${{ github.workspace }}:/nagstamon ${{ env.cr_image }}-${{ github.job }}
       - uses: actions/upload-artifact@v3
         with:
           path: build/*.rpm
@@ -92,8 +104,14 @@ jobs:
     needs: test
     steps:
       - uses: actions/checkout@v3
-      - run: /usr/bin/docker build -t build-nagstamon -f build/docker/Dockerfile-${{ github.job }} .
-      - run: /usr/bin/docker run -v ${{ github.workspace }}:/nagstamon build-nagstamon
+      - uses: docker/login-action@v2
+        with:
+          registry: ghcr.io
+          username: ${{ github.actor }}
+          password: ${{ secrets.GITHUB_TOKEN }}
+      - run: docker pull ${{ env.cr_image }}-${{ github.job }} || /usr/bin/docker build -t ${{ env.cr_image }}-${{ github.job }} -f build/docker/Dockerfile-${{ github.job }} .
+      - run: docker push ${{ env.cr_image }}-${{ github.job }}
+      - run: /usr/bin/docker run -v ${{ github.workspace }}:/nagstamon ${{ env.cr_image }}-${{ github.job }}
       - uses: actions/upload-artifact@v3
         with:
           path: build/*.rpm
@@ -105,8 +123,14 @@ jobs:
     needs: test
     steps:
       - uses: actions/checkout@v3
-      - run: /usr/bin/docker build -t build-nagstamon -f build/docker/Dockerfile-${{ github.job }} .
-      - run: /usr/bin/docker run -v ${{ github.workspace }}:/nagstamon build-nagstamon
+      - uses: docker/login-action@v2
+        with:
+          registry: ghcr.io
+          username: ${{ github.actor }}
+          password: ${{ secrets.GITHUB_TOKEN }}
+      - run: docker pull ${{ env.cr_image }}-${{ github.job }} || /usr/bin/docker build -t ${{ env.cr_image }}-${{ github.job }} -f build/docker/Dockerfile-${{ github.job }} .
+      - run: docker push ${{ env.cr_image }}-${{ github.job }}
+      - run: /usr/bin/docker run -v ${{ github.workspace }}:/nagstamon ${{ env.cr_image }}-${{ github.job }}
       - uses: actions/upload-artifact@v3
         with:
           path: build/*.rpm
