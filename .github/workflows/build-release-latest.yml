@@ -10,6 +10,7 @@ on:
 env:
   python_win_version: 3.10.8
   repo_dir: nagstamon-jekyll/docs/repo
+  cr_image: ghcr.io/henriwahl/build-nagstamon
 
 jobs:
   test:
@@ -45,9 +46,15 @@ jobs:
     runs-on: ubuntu-latest
     needs: test
     steps:
+      - uses: docker/login-action@v2
+        with:
+          registry: ghcr.io
+          username: ${{ github.actor }}
+          password: ${{ secrets.GITHUB_TOKEN }}
       - uses: actions/checkout@v3
-      - run: /usr/bin/docker build -t build-nagstamon -f build/docker/Dockerfile-${{ github.job }} .
-      - run: /usr/bin/docker run -v ${{ github.workspace }}:/nagstamon -e DEB_BUILD_OPTIONS=nocheck build-nagstamon
+      - run: /usr/bin/docker build -t ${{ cr_image }}-${{ github.job }} -f build/docker/Dockerfile-${{ github.job }} .
+      - run: docker push ${{ cr_image }}-${{ github.job }}
+      - run: /usr/bin/docker run -v ${{ github.workspace }}:/nagstamon -e DEB_BUILD_OPTIONS=nocheck ${{ cr_image }}-${{ github.job }}
       - uses: actions/upload-artifact@v3
         with:
           path: build/*.deb
