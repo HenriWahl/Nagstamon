@@ -6875,6 +6875,9 @@ class CheckVersion(QObject):
                 elif latest_version > AppInfo.VERSION:
                     message = 'The new version <b>Nagstamon {0}</b> is available.<p>' \
                               'Get it at <a href={1}>{1}</a>.'.format(latest_version, AppInfo.WEBSITE + '/download')
+                elif latest_version < AppInfo.VERSION:
+                    # for some reason the local version is newer than that remote one - just ignore
+                    message = ''
 
             # check if there is anything to tell
             if message != '':
