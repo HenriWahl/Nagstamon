@@ -25,6 +25,13 @@ jobs:
       uses: actions/setup-python@v3
       with:
         python-version: ${{ matrix.python-version }}
+    - uses: docker/login-action@v2
+      with:
+        registry: ghcr.io
+        username: ${{ github.actor }}
+        password: ${{ secrets.GITHUB_TOKEN }}
+    - run: docker pull ${{ env.cr_image }}-${{ github.job }}-${{ matrix.python-version }} || /usr/bin/docker build -t ${{ env.cr_image }}-${{ github.job }}-${{ matrix.python-version }} -v .:/build -f build/docker/Dockerfile-${{ github.job }} .
+    - run: docker push ${{ env.cr_image }}-${{ github.job }}-${{ matrix.python-version }}
     - name: Install dependencies
       run: |
         sudo apt update

@@ -1,0 +1,10 @@
+ARG VERSION
+
+FROM python:${VERSION}
+LABEL maintainer=henri@nagstamon.de
+
+RUN apt -y update
+RUN apt -y install libdbus-1-dev libkrb5-dev
+RUN python -m pip install --upgrade pip
+RUN pip install pytest pylint wheel
+RUN pip install --requirements /build/requirements/linux.txt
