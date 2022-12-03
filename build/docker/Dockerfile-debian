@@ -1,4 +1,4 @@
-FROM debian:8
+FROM debian:10
 LABEL maintainer=henri@nagstamon.de
 
 RUN apt -y update
@@ -6,6 +6,7 @@ RUN apt -y install apt-utils
 
 # python3-pysocks in debian:8 becomes python3-socks in later versions
 RUN apt -y install debhelper \
+                   dh-python \
                    fakeroot \
                    git \
                    make \
@@ -23,7 +24,7 @@ RUN apt -y install debhelper \
                    python3-requests \
                    python3-requests-kerberos \
                    python3-setuptools \
-                   python3-pysocks
+                   python3-socks
 
 CMD cd /nagstamon/build && \
     /usr/bin/python3 build.py
