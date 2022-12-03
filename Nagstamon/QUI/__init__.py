@@ -97,6 +97,7 @@ if OS not in OS_NON_LINUX:
 # make icon status in macOS dock accessible via NSApp, used by set_macos_dock_icon_visible()
 if OS == OS_MACOS:
     from AppKit import (NSApp,
+                        NSBundle,
                         NSApplicationPresentationDefault,
                         NSApplicationPresentationHideDock)
 
@@ -1203,7 +1204,7 @@ class StatusWindow(QWidget):
         if conf.statusbar_floating:
             # no need for icon in dock if floating - apply first to avoid window in background
             if OS == OS_MACOS:
-                set_macos_dock_icon_visibility(False)
+                hide_macos_dock_icon(conf.hide_macos_dock_icon)
 
             # no need for systray
             systrayicon.hide()
@@ -1252,7 +1253,7 @@ class StatusWindow(QWidget):
         elif conf.icon_in_systray:
             # no need for icon in dock if in systray
             if OS == OS_MACOS:
-                set_macos_dock_icon_visibility(False)
+                hide_macos_dock_icon(conf.hide_macos_dock_icon)
 
             # statusbar and detail window should be frameless and stay on top
             # tool flag helps to be invisible in taskbar
@@ -1291,7 +1292,7 @@ class StatusWindow(QWidget):
             if OS == OS_MACOS:
                 self.showFullScreen()
                 # no need for icon in dock if fullscreen
-                set_macos_dock_icon_visibility(False)
+                hide_macos_dock_icon(conf.hide_macos_dock_icon)
             else:
                 self.show()
                 self.showMaximized()
@@ -1302,7 +1303,8 @@ class StatusWindow(QWidget):
         elif conf.windowed:
             # show icon in dock if window is set
             if OS == OS_MACOS:
-                set_macos_dock_icon_visibility(True)
+                #hide_macos_dock_icon(conf.hide_macos_dock_icon)
+                hide_macos_dock_icon(False)
 
             systrayicon.hide()
 
@@ -4954,6 +4956,10 @@ class Dialog_Settings(Dialog):
         else:
             self.window.input_checkbox_use_system_keyring.hide()
 
+        # hide 'Hide macOS Dock icon' if not on macOS
+        if OS != OS_MACOS:
+            self.window.input_checkbox_hide_macos_dock_icon.hide()
+
         # important final size adjustment
         self.window.adjustSize()
 
@@ -7054,15 +7060,16 @@ def check_servers():
         dialogs.server_missing.show()
         dialogs.server_missing.initialize('no_server_enabled')
 
-def set_macos_dock_icon_visibility(visible=False):
+def hide_macos_dock_icon(hide=False):
     """
     small helper to make dock icon visible or not in macOS
     inspired by https://stackoverflow.com/questions/6796028/start-a-gui-process-in-mac-os-x-without-dock-icon
     """
-    if visible:
-        NSApp.setActivationPolicy_(NSApplicationPresentationDefault)
-    else:
+    if hide:
         NSApp.setActivationPolicy_(NSApplicationPresentationHideDock)
+    else:
+        NSApp.setActivationPolicy_(NSApplicationPresentationDefault)
+
 
 # check for updates
 check_version = CheckVersion()
@@ -7096,6 +7103,15 @@ if not OS in OS_NON_LINUX:
 # and non-existence of macOS-systray-context-menu
 elif conf.icon_in_systray:
     systrayicon.set_menu(menu)
+
+# set flag to be LSUIElement like in file info.properties
+if OS == OS_MACOS:
+    if conf.hide_macos_dock_icon:
+        lsuielement = '1'
+    else:
+        lsuielement = '0'
+    macos_info_dictionary = NSBundle.mainBundle().infoDictionary()
+    macos_info_dictionary['LSUIElement'] = lsuielement
 
 # versatile mediaplayer
 mediaplayer = MediaPlayer(statuswindow, RESOURCE_FILES)

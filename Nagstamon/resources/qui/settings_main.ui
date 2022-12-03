@@ -669,9 +669,9 @@
            </widget>
           </item>
           <item row="13" column="0">
-           <widget class="QCheckBox" name="input_checkbox_hide_dock_icon_on_macos">
+           <widget class="QCheckBox" name="input_checkbox_hide_macos_dock_icon">
             <property name="text">
-             <string>Hide Dock icon</string>
+             <string>Hide macOS Dock icon - needs restart</string>
             </property>
            </widget>
           </item>
@@ -3187,7 +3187,7 @@
   <tabstop>input_checkbox_systray_offset_use</tabstop>
   <tabstop>input_spinbox_systray_offset</tabstop>
   <tabstop>input_combobox_fullscreen_display</tabstop>
-  <tabstop>input_checkbox_hide_dock_icon_on_macos</tabstop>
+  <tabstop>input_checkbox_hide_macos_dock_icon</tabstop>
   <tabstop>button_fontchooser</tabstop>
   <tabstop>button_default_font</tabstop>
   <tabstop>input_radiobutton_popup_details_hover</tabstop>
