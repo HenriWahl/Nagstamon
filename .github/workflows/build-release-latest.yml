@@ -30,15 +30,8 @@ jobs:
         registry: ghcr.io
         username: ${{ github.actor }}
         password: ${{ secrets.GITHUB_TOKEN }}
-    - run: docker pull ${{ env.cr_image }}-${{ github.job }}-${{ matrix.python-version }} || /usr/bin/docker build -t ${{ env.cr_image }}-${{ github.job }}-${{ matrix.python-version }} --build-arg VERSION=${{ matrix.python-version }} --build-arg REQUIREMENTS="$(cat build/requirements/linux.txt | base64 --wrap=0)" -f build/docker/Dockerfile-${{ github.job }} .
+    - run: docker pull ${{ env.cr_image }}-${{ github.job }}-${{ matrix.python-version }}- || /usr/bin/docker build -t ${{ env.cr_image }}-${{ github.job }}-${{ matrix.python-version }} --build-arg VERSION=${{ matrix.python-version }} --build-arg REQUIREMENTS="$(cat build/requirements/linux.txt | base64 --wrap=0)" -f build/docker/Dockerfile-${{ github.job }} .
     - run: docker push ${{ env.cr_image }}-${{ github.job }}-${{ matrix.python-version }}
-    #- name: Install dependencies
-    #  run: |
-    #    sudo apt update
-    #    sudo apt -y install libdbus-1-dev libkrb5-dev
-    #    python -m pip install --upgrade pip
-    #    pip install pytest pylint wheel #flake8
-    #    if [ -f build/requirements/linux.txt ]; then pip install -r build/requirements/linux.txt; fi
     # - name: Lint with flake8
     #   run: |
     #     # stop the build if there are Python syntax errors or undefined names
