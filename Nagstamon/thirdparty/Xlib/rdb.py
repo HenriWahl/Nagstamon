@@ -2,22 +2,19 @@
 #
 #    Copyright (C) 2000 Peter Liljenberg <petli@ctrl-c.liu.se>
 #
-# This library is free software; you can redistribute it and/or
-# modify it under the terms of the GNU Lesser General Public License
-# as published by the Free Software Foundation; either version 2.1
-# of the License, or (at your option) any later version.
+#    This program is free software; you can redistribute it and/or modify
+#    it under the terms of the GNU General Public License as published by
+#    the Free Software Foundation; either version 2 of the License, or
+#    (at your option) any later version.
 #
-# This library is distributed in the hope that it will be useful,
-# but WITHOUT ANY WARRANTY; without even the implied warranty of
-# MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.
-# See the GNU Lesser General Public License for more details.
+#    This program is distributed in the hope that it will be useful,
+#    but WITHOUT ANY WARRANTY; without even the implied warranty of
+#    MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+#    GNU General Public License for more details.
 #
-# You should have received a copy of the GNU Lesser General Public
-# License along with this library; if not, write to the
-#    Free Software Foundation, Inc.,
-#    59 Temple Place,
-#    Suite 330,
-#    Boston, MA 02111-1307 USA
+#    You should have received a copy of the GNU General Public License
+#    along with this program; if not, write to the Free Software
+#    Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA  02110-1301,  USA
 
 
 # See end of file for an explanation of the algorithm and
@@ -25,11 +22,12 @@
 
 
 # Standard modules
+import functools
 import re
 import sys
 
 # Xlib modules
-from .support import lock
+from Xlib.support import lock
 
 # Set up a few regexpes for parsing string representation of resources
 
@@ -50,7 +48,7 @@ class OptionError(Exception):
     pass
 
 
-class ResourceDB(object):
+class ResourceDB:
     def __init__(self, file = None, string = None, resources = None):
         self.db = {}
         self.lock = lock.allocate_lock()
@@ -70,7 +68,7 @@ class ResourceDB(object):
 
         """
 
-        if type(file) is bytes:
+        if type(file) is str:
             file = open(file, 'r')
 
         self.insert_string(file.read())
@@ -190,15 +188,15 @@ class ResourceDB(object):
 
         self.lock.release()
 
-    def __getitem__(self, keys_tuple):
+    def __getitem__(self, nc):
         """db[name, class]
 
         Return the value matching the resource identified by NAME and
         CLASS.  If no match is found, KeyError is raised.
         """
+        name, cls = nc
 
         # Split name and class into their parts
-        name, cls = keys_tuple
 
         namep = name.split('.')
         clsp = cls.split('.')
@@ -378,7 +376,8 @@ class ResourceDB(object):
         return argv
 
 
-class _Match(object):
+@functools.total_ordering
+class _Match:
     def __init__(self, path, dbs):
         self.path = path
 
@@ -390,14 +389,11 @@ class _Match(object):
             self.skip = 1
             self.db = dbs
 
-    def __lt__(self, other):
-        return self.path < other.path
-
-    def __gt__(self, other):
-        return self.path > other.path
-
     def __eq__(self, other):
         return self.path == other.path
+
+    def __lt__(self, other):
+        return self.path < other.path
 
     def match_length(self):
         return len(self.path)
@@ -559,7 +555,7 @@ def output_escape(value):
 # Option type definitions
 #
 
-class Option(object):
+class Option:
     def __init__(self):
         pass
 
@@ -699,7 +695,7 @@ stdopts = {'-bg': SepArg('*background'),
 # the resource object.
 
 # Example:  Inserting "foo.bar*gazonk: yep" into an otherwise empty
-# resource database would give the following structure:
+# resource database would give the folliwing structure:
 
 # { 'foo': ( { 'bar': ( { },
 #                       { 'gazonk': ( { },

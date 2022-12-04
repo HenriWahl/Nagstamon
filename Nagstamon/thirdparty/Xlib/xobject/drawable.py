@@ -2,34 +2,26 @@
 #
 #    Copyright (C) 2000 Peter Liljenberg <petli@ctrl-c.liu.se>
 #
-# This library is free software; you can redistribute it and/or
-# modify it under the terms of the GNU Lesser General Public License
-# as published by the Free Software Foundation; either version 2.1
-# of the License, or (at your option) any later version.
+#    This program is free software; you can redistribute it and/or modify
+#    it under the terms of the GNU General Public License as published by
+#    the Free Software Foundation; either version 2 of the License, or
+#    (at your option) any later version.
 #
-# This library is distributed in the hope that it will be useful,
-# but WITHOUT ANY WARRANTY; without even the implied warranty of
-# MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.
-# See the GNU Lesser General Public License for more details.
+#    This program is distributed in the hope that it will be useful,
+#    but WITHOUT ANY WARRANTY; without even the implied warranty of
+#    MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+#    GNU General Public License for more details.
 #
-# You should have received a copy of the GNU Lesser General Public
-# License along with this library; if not, write to the
-#    Free Software Foundation, Inc.,
-#    59 Temple Place,
-#    Suite 330,
-#    Boston, MA 02111-1307 USA
+#    You should have received a copy of the GNU General Public License
+#    along with this program; if not, write to the Free Software
+#    Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA  02110-1301,  USA
+
 
 from Xlib import X, Xatom, Xutil
 from Xlib.protocol import request, rq
 
 # Other X resource objects
-from . import resource
-from . import colormap
-from . import cursor
-from . import fontable
-
-# Inter-client communication conventions
-from . import icccm
+from Xlib.xobject import resource, colormap, cursor, fontable, icccm
 
 class Drawable(resource.Resource):
     __drawable__ = resource.Resource.__resource__
@@ -249,7 +241,7 @@ class Drawable(resource.Resource):
             else:
                 subimage = image
             w, h = subimage.size
-            data = subimage.tobytes("raw", rawmode, stride, 0)
+            data = subimage.tostring("raw", rawmode, stride, 0)
             self.put_image(gc, x, y, w, h, format, depth, 0, data)
             y1 = y1 + h
             y = y + h
@@ -319,9 +311,6 @@ class Drawable(resource.Resource):
 
 class Window(Drawable):
     __window__ = resource.Resource.__resource__
-
-    _STRING_ENCODING = 'ISO-8859-1'
-    _UTF8_STRING_ENCODING = 'UTF-8'
 
     def create_window(self, x, y, width, height, border_width, depth,
                       window_class =  X.CopyFromParent,
@@ -424,7 +413,8 @@ class Window(Drawable):
         return request.QueryTree(display = self.display,
                                  window = self.id)
 
-    def change_property(self, property, property_type, format, data,
+
+    def change_property(self, property, type, format, data,
                         mode = X.PropModeReplace, onerror = None):
 
         request.ChangeProperty(display = self.display,
@@ -432,18 +422,8 @@ class Window(Drawable):
                                mode = mode,
                                window = self.id,
                                property = property,
-                               type = property_type,
+                               type = type,
                                data = (format, data))
-
-    def change_text_property(self, property, property_type, data,
-                        mode = X.PropModeReplace, onerror = None):
-        if not isinstance(data, bytes):
-            if property_type == Xatom.STRING:
-                data = data.encode(self._STRING_ENCODING)
-            elif property_type == self.display.get_atom('UTF8_STRING'):
-                data = data.encode(self._UTF8_STRING_ENCODING)
-        self.change_property(property, property_type, 8, data,
-                             mode=mode, onerror=onerror)
 
     def delete_property(self, property, onerror = None):
         request.DeleteProperty(display = self.display,
@@ -451,12 +431,12 @@ class Window(Drawable):
                                window = self.id,
                                property = property)
 
-    def get_property(self, property, property_type, offset, length, delete = 0):
+    def get_property(self, property, type, offset, length, delete = 0):
         r = request.GetProperty(display = self.display,
                                 delete = delete,
                                 window = self.id,
                                 property = property,
-                                type = property_type,
+                                type = type,
                                 long_offset = offset,
                                 long_length = length)
 
@@ -468,12 +448,12 @@ class Window(Drawable):
         else:
             return None
 
-    def get_full_property(self, property, property_type, sizehint = 10):
-        prop = self.get_property(property, property_type, 0, sizehint)
+    def get_full_property(self, property, type, sizehint = 10):
+        prop = self.get_property(property, type, 0, sizehint)
         if prop:
             val = prop.value
             if prop.bytes_after:
-                prop = self.get_property(property, property_type, sizehint,
+                prop = self.get_property(property, type, sizehint,
                                          prop.bytes_after // 4 + 1)
                 val = val + prop.value
 
@@ -481,19 +461,6 @@ class Window(Drawable):
             return prop
         else:
             return None
-
-    def get_full_text_property(self, property, property_type=X.AnyPropertyType, sizehint = 10):
-        prop = self.get_full_property(property, property_type,
-                                      sizehint=sizehint)
-        if prop is None or prop.format != 8:
-            return None
-        if prop.property_type == Xatom.STRING:
-            prop.value = prop.value.decode(self._STRING_ENCODING)
-        elif prop.property_type == self.display.get_atom('UTF8_STRING'):
-            prop.value = prop.value.decode(self._UTF8_STRING_ENCODING)
-        # FIXME: at least basic support for compound text would be nice.
-        # elif prop.property_type == self.display.get_atom('COMPOUND_TEXT'):
-        return prop.value
 
     def list_properties(self):
         r = request.ListProperties(display = self.display,
@@ -662,37 +629,47 @@ class Window(Drawable):
                                  properties = properties)
 
     def set_wm_name(self, name, onerror = None):
-        self.change_text_property(Xatom.WM_NAME, Xatom.STRING, name,
-                                  onerror = onerror)
+        self.change_property(Xatom.WM_NAME, Xatom.STRING, 8, name,
+                             onerror = onerror)
 
     def get_wm_name(self):
-        return self.get_full_text_property(Xatom.WM_NAME, Xatom.STRING)
-
-    def set_wm_icon_name(self, name, onerror = None):
-        self.change_text_property(Xatom.WM_ICON_NAME, Xatom.STRING, name,
-                                  onerror = onerror)
-
-    def get_wm_icon_name(self):
-        return self.get_full_text_property(Xatom.WM_ICON_NAME, Xatom.STRING)
-
-    def set_wm_class(self, inst, cls, onerror = None):
-        self.change_text_property(Xatom.WM_CLASS, Xatom.STRING,
-                                  '%s\0%s\0' % (inst, cls),
-                                  onerror = onerror)
-
-    def get_wm_class(self):
-        value = self.get_full_text_property(Xatom.WM_CLASS, Xatom.STRING)
-        if value is None:
-            return None
-        parts = value.split('\0')
-        if len(parts) < 2:
+        d = self.get_full_property(Xatom.WM_NAME, Xatom.STRING)
+        if d is None or d.format != 8:
             return None
         else:
-            return parts[0], parts[1]
+            return d.value
+
+    def set_wm_icon_name(self, name, onerror = None):
+        self.change_property(Xatom.WM_ICON_NAME, Xatom.STRING, 8, name,
+                             onerror = onerror)
+
+    def get_wm_icon_name(self):
+        d = self.get_full_property(Xatom.WM_ICON_NAME, Xatom.STRING)
+        if d is None or d.format != 8:
+            return None
+        else:
+            return d.value
+
+
+    def set_wm_class(self, inst, cls, onerror = None):
+        self.change_property(Xatom.WM_CLASS, Xatom.STRING, 8,
+                             '%s\0%s\0' % (inst, cls),
+                             onerror = onerror)
+
+    def get_wm_class(self):
+        d = self.get_full_property(Xatom.WM_CLASS, Xatom.STRING)
+        if d is None or d.format != 8:
+            return None
+        else:
+            parts = d.value.split('\0')
+            if len(parts) < 2:
+                return None
+            else:
+                return parts[0], parts[1]
 
     def set_wm_transient_for(self, window, onerror = None):
         self.change_property(Xatom.WM_TRANSIENT_FOR, Xatom.WINDOW,
-                             32, [window.id],
+                             32, window.id,
                              onerror = onerror)
 
     def get_wm_transient_for(self):
@@ -719,7 +696,7 @@ class Window(Drawable):
     def set_wm_colormap_windows(self, windows, onerror = None):
         self.change_property(self.display.get_atom('WM_COLORMAP_WINDOWS'),
                              Xatom.WINDOW, 32,
-                             map(lambda w: w.id, windows),
+                             [w.id for w in windows],
                              onerror = onerror)
 
     def get_wm_colormap_windows(self):
@@ -729,16 +706,20 @@ class Window(Drawable):
             return []
         else:
             cls = self.display.get_resource_class('window', Window)
-            return map(lambda i, d = self.display, c = cls: c(d, i),
-                       d.value)
+            return list(map(lambda i, d = self.display, c = cls: c(d, i),
+                       d.value))
 
 
     def set_wm_client_machine(self, name, onerror = None):
-        self.change_text_property(Xatom.WM_CLIENT_MACHINE, Xatom.STRING, name,
-                                  onerror = onerror)
+        self.change_property(Xatom.WM_CLIENT_MACHINE, Xatom.STRING, 8, name,
+                             onerror = onerror)
 
     def get_wm_client_machine(self):
-        return self.get_full_text_property(Xatom.WM_CLIENT_MACHINE, Xatom.STRING)
+        d = self.get_full_property(Xatom.WM_CLIENT_MACHINE, Xatom.STRING)
+        if d is None or d.format != 8:
+            return None
+        else:
+            return d.value
 
     def set_wm_normal_hints(self, hints = {}, onerror = None, **keys):
         self._set_struct_prop(Xatom.WM_NORMAL_HINTS, Xatom.WM_SIZE_HINTS,
@@ -779,7 +760,7 @@ class Window(Drawable):
     def _get_struct_prop(self, pname, ptype, pstruct):
         r = self.get_property(pname, ptype, 0, pstruct.static_size // 4)
         if r and r.format == 32:
-            value = rq.encode_array(r.value)
+            value = r.value.tostring()
             if len(value) == pstruct.static_size:
                 return pstruct.parse_binary(value, self.display)[0]
 
@@ -811,9 +792,11 @@ class Pixmap(Drawable):
 
         self.display.free_resource_id(self.id)
 
-    def create_cursor(self, mask, foreground, background, x, y):
-        fore_red, fore_green, fore_blue = foreground
-        back_red, back_green, back_blue = background
+    def create_cursor(self, mask,
+                      f_rgb, b_rgb,
+                      x, y):
+        fore_red, fore_green, fore_blue = f_rgb
+        back_red, back_green, back_blue = b_rgb
         cid = self.display.allocate_resource_id()
         request.CreateCursor(display = self.display,
                              cid = cid,

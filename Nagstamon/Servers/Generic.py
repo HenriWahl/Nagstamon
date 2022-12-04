@@ -69,9 +69,13 @@ if OS == OS_MACOS:
     except ImportError:
         from requests_kerberos import HTTPKerberosAuth as HTTPSKerberos
 else:
-    # requests_gssapi needs installation of KfW - Kerberos for Windows
-    # requests_kerberoes doesn't
-    from requests_kerberos import HTTPKerberosAuth as HTTPSKerberos
+    # requests_gssapi is newer but not available everywhere
+    try:
+        # requests_gssapi needs installation of KfW - Kerberos for Windows
+        # requests_kerberoes doesn't
+        from requests_kerberos import HTTPKerberosAuth as HTTPSKerberos
+    except ImportError:
+        from requests_gssapi import HTTPSPNEGOAuth as HTTPSKerberos
 
 # disable annoying SubjectAltNameWarning warnings
 try:
