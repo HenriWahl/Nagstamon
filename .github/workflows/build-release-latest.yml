@@ -46,7 +46,7 @@ jobs:
     #     # exit-zero treats all errors as warnings. The GitHub editor is 127 chars wide
     #     flake8 . --count --exit-zero --max-complexity=10 --max-line-length=127 --statistics
     - name: Test with unittest
-      run: docker run --rm -v $PWD:/src ${{ env.cr_image }}-${{ github.job }}-${{ matrix.python-version }} python -m unittest /src/tests/test_*.py
+      run: docker run --rm -v $PWD:/src --workdir /src ${{ env.cr_image }}-${{ github.job }}-${{ matrix.python-version }} python -m unittest tests/test_*.py
 
   debian:
     runs-on: ubuntu-latest
