@@ -6,9 +6,13 @@ LABEL maintainer=henri@nagstamon.de
 
 RUN echo ${REQUIREMENTS}
 RUN apt -y update
+RUN apt -y install apt-utils
+
 RUN apt -y install libdbus-1-dev libkrb5-dev
 RUN python -m pip install --upgrade pip
 RUN pip install pytest pylint wheel
 
 RUN echo ${REQUIREMENTS} | tr '|' '\n' > requirements.txt
+RUN echo ${REQUIREMENTS}
+RUN cat requirements.txt
 RUN pip install -r requirements.txt
