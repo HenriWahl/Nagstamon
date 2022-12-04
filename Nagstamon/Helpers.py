@@ -34,7 +34,7 @@ from hashlib import md5
 
 from Nagstamon.Config import (conf,
                               OS,
-                              OS_DARWIN)
+                              OS_MACOS)
 
 # states needed for gravity comparison for notification and Generic.py
 STATES = ['UP',
@@ -103,7 +103,7 @@ class FilesDict(dict):
         :param key:
         :return:
         """
-        if OS == OS_DARWIN:
+        if OS == OS_MACOS:
             if not os.path.exists(key):
                 # pyinstaller temp folder seems to be emptied completely after a while
                 # so the directories containing the resources have to be recreated too

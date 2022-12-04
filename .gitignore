@@ -1,5 +1,6 @@
 __pycache__/
 .directory
+.DS_Store
 .idea/
 .metadata/
 .vscode/

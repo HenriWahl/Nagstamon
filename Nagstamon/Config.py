@@ -45,9 +45,9 @@ if KEYRING:
 # instead of calling platform.system() every now and then just do it once here
 OS = platform.system()
 # needed when OS-specific decisions have to be made, mostly Linux/non-Linux
-OS_DARWIN = 'Darwin'
+OS_MACOS = 'Darwin'
 OS_WINDOWS = 'Windows'
-OS_NON_LINUX = (OS_DARWIN, OS_WINDOWS)
+OS_NON_LINUX = (OS_MACOS, OS_WINDOWS)
 
 # simple Wayland detection
 if 'WAYLAND_DISPLAY' in os.environ or\
@@ -125,7 +125,7 @@ class AppInfo(object):
         contains app information previously located in GUI.py
     """
     NAME = 'Nagstamon'
-    VERSION = '3.11-20221202'
+    VERSION = '3.11-20221203'
     WEBSITE = 'https://nagstamon.de'
     COPYRIGHT = '©2008-2022 Henri Wahl et al.'
     COMMENTS = 'Nagios status monitor for your desktop'
@@ -286,6 +286,7 @@ class Config(object):
         self.fullscreen_display = 0
         self.systray_offset_use = False
         self.systray_offset = 10
+        self.hide_macos_dock_icon = False
         self.font = ''
         self.defaults_acknowledge_sticky = False
         self.defaults_acknowledge_send_notification = False
@@ -753,7 +754,7 @@ class Config(object):
                               "SSH": Action(name="SSH", description="Connect via SSH.",
                                             type="command",
                                             string="C:\Program Files\PuTTY\putty.exe -l root $ADDRESS$")}
-        elif OS == OS_DARWIN:
+        elif OS == OS_MACOS:
             defaultactions = {"RDP": Action(name="RDP", description="Connect via RDP.",
                                             type="command", string="open rdp://$ADDRESS$"),
                               "VNC": Action(name="VNC", description="Connect via VNC.",
