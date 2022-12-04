@@ -4672,10 +4672,6 @@ class Dialog_Settings(Dialog):
             # display to use in fullscreen mode
             self.window.input_radiobutton_fullscreen: [self.window.label_fullscreen_display,
                                                        self.window.input_combobox_fullscreen_display],
-            # offer option to hide icon in dock on macOS
-            self.window.input_radiobutton_icon_in_systray: [self.window.input_checkbox_hide_macos_dock_icon],
-            self.window.input_radiobutton_statusbar_floating: [self.window.input_checkbox_hide_macos_dock_icon],
-
             # notifications in general
             self.window.input_checkbox_notification: [self.window.notification_groupbox],
             # sound at all
@@ -4725,6 +4721,13 @@ class Dialog_Settings(Dialog):
                                                                self.window.button_choose_browser]}
 
         self.TOGGLE_DEPS_INVERTED = [self.window.input_checkbox_notification_custom_action_single]
+
+        # because this makes only sense in macOS these dependencies will be added here
+        if OS == OS_MACOS:
+            # offer option to hide icon in dock on macOS
+            self.TOGGLE_DEPS.update({
+                self.window.input_radiobutton_icon_in_systray: [self.window.input_checkbox_hide_macos_dock_icon],
+                self.window.input_radiobutton_statusbar_floating: [self.window.input_checkbox_hide_macos_dock_icon]})
 
         # set title to current version
         self.window.setWindowTitle(' '.join((AppInfo.NAME, AppInfo.VERSION)))
