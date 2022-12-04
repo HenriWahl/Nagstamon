@@ -1291,8 +1291,8 @@ class StatusWindow(QWidget):
             # fullscreen mode is rather buggy on everything other than OSX so just use a maximized window
             if OS == OS_MACOS:
                 self.showFullScreen()
-                # no need for icon in dock if fullscreen
-                hide_macos_dock_icon(conf.hide_macos_dock_icon)
+                # in fullscreen mode dock icon does not disturb because the dock is away anyway
+                hide_macos_dock_icon(False)
             else:
                 self.show()
                 self.showMaximized()
@@ -1303,7 +1303,7 @@ class StatusWindow(QWidget):
         elif conf.windowed:
             # show icon in dock if window is set
             if OS == OS_MACOS:
-                #hide_macos_dock_icon(conf.hide_macos_dock_icon)
+                # in windowed mode always show dock icon
                 hide_macos_dock_icon(False)
 
             systrayicon.hide()
@@ -4672,6 +4672,10 @@ class Dialog_Settings(Dialog):
             # display to use in fullscreen mode
             self.window.input_radiobutton_fullscreen: [self.window.label_fullscreen_display,
                                                        self.window.input_combobox_fullscreen_display],
+            # offer option to hide icon in dock on macOS
+            self.window.input_radiobutton_icon_in_systray: [self.window.input_checkbox_hide_macos_dock_icon],
+            self.window.input_radiobutton_statusbar_floating: [self.window.input_checkbox_hide_macos_dock_icon],
+
             # notifications in general
             self.window.input_checkbox_notification: [self.window.notification_groupbox],
             # sound at all

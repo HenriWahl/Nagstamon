@@ -1,0 +1,18 @@
+ARG VERSION
+FROM python:${VERSION}
+LABEL maintainer=henri@nagstamon.de
+
+ARG REQUIREMENTS
+RUN echo "${REQUIREMENTS}"
+
+RUN apt -y update
+RUN apt -y install apt-utils
+
+RUN apt -y install libdbus-1-dev libkrb5-dev
+RUN python -m pip install --upgrade pip
+RUN pip install pytest pylint wheel
+
+RUN echo ${REQUIREMENTS} | base64 --decode > requirements.txt
+RUN cat requirements.txt
+
+RUN pip install -r requirements.txt
