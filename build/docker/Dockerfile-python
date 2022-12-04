@@ -1,10 +1,14 @@
 ARG VERSION
+ARG REQUIREMENTS
 
 FROM python:${VERSION}
 LABEL maintainer=henri@nagstamon.de
 
+RUN echo ${REQUIREMENTS}
 RUN apt -y update
 RUN apt -y install libdbus-1-dev libkrb5-dev
 RUN python -m pip install --upgrade pip
 RUN pip install pytest pylint wheel
-RUN pip install --requirements /build/requirements/linux.txt
+
+RUN echo ${REQUIREMENTS} | tr '|' '\n' > requirements.txt
+RUN pip install -r requirements
