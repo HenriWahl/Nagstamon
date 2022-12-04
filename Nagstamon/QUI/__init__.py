@@ -4747,6 +4747,7 @@ class Dialog_Settings(Dialog):
         self.check_for_new_version.connect(check_version.check)
 
         # avoid offset spinbox if offset is not enabled
+        self.window.input_radiobutton_windowed.clicked.connect(self.toggle_systray_icon_offset)
         self.window.input_radiobutton_fullscreen.clicked.connect(self.toggle_systray_icon_offset)
         self.window.input_radiobutton_icon_in_systray.clicked.connect(self.toggle_systray_icon_offset)
         self.window.input_radiobutton_statusbar_floating.clicked.connect(self.toggle_systray_icon_offset)
