@@ -30,7 +30,7 @@ jobs:
         registry: ghcr.io
         username: ${{ github.actor }}
         password: ${{ secrets.GITHUB_TOKEN }}
-    - run: docker pull ${{ env.cr_image }}-${{ github.job }}-${{ matrix.python-version }} || /usr/bin/docker build -t ${{ env.cr_image }}-${{ github.job }}-${{ matrix.python-version }} --build-arg VERSION=${{ matrix.python-version }} --build-arg REQUIREMENTS=$(cat build/requirements/linux.txt | tr '\n' '|') -f build/docker/Dockerfile-${{ github.job }} .
+    - run: docker pull ${{ env.cr_image }}-${{ github.job }}-${{ matrix.python-version }} || /usr/bin/docker build -t ${{ env.cr_image }}-${{ github.job }}-${{ matrix.python-version }} --build-arg VERSION=${{ matrix.python-version }} --build-arg REQUIREMENTS="$(cat build/requirements/linux.txt | tr '\n' '|')" -f build/docker/Dockerfile-${{ github.job }} .
     - run: docker push ${{ env.cr_image }}-${{ github.job }}-${{ matrix.python-version }}
     - name: Install dependencies
       run: |
