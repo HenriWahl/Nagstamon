@@ -26,7 +26,7 @@ jobs:
       with:
         python-version: ${{ matrix.python-version }}
     - id: requirements_hash
-      run: echo "HASH=$(md5sum build/requirements/linux.txt | cut -d\ -f1)" >> $GITHUB_OUTPUT
+      run: echo "HASH=$(md5sum build/requirements/linux.txt | cut -d\  -f1)" >> $GITHUB_OUTPUT
     - uses: docker/login-action@v2
       with:
         registry: ghcr.io
