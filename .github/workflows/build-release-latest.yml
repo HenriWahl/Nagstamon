@@ -229,7 +229,8 @@ jobs:
   repo-fedora:
     runs-on: ubuntu-latest
     # if not all are ready there might be trouble when downloading artifacts
-    needs: [debian, fedora-34, fedora-35, fedora-36, fedora-37, macos, windows-32, windows-64, windows-64-debug]
+    # maybe faster now with build containers
+    needs: [fedora-34, fedora-35, fedora-36, fedora-37]
     steps:
       # get binaries created by other jobs
       - uses: actions/download-artifact@v3
