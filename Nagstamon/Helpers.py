@@ -455,6 +455,13 @@ def get_distro():
                 if not line.startswith('#'):
                     key, value = line.split('=', 1)
                     os_release_dict[key] = value.strip('"').strip("'")
+            # Since CentOS Linux got retired by Red Hat, there are various RHEL derivatives/clones; flow is:
+            # CentOS Stream -> Red Hat Enterprise Linux -> (AlmaLinux, EuroLinux, Oracle Linux, Rocky Linux)
+            # Goal of this hack is to rule them all as Red Hat Enterprise Linux, the baseline distribution.
+            if re.search('^platform:el\d+$', os_release_dict.get('PLATFORM_ID', 'unknown')):
+                os_release_dict['ID'] = 'rhel'
+                os_release_dict['VERSION_ID'] = os_release_dict.get('VERSION_ID', 'unknown').split('.', 1)[0]
+                os_release_dict['NAME'] = 'Red Hat Enterprise Linux'
             return (os_release_dict.get('ID').lower(),
                     os_release_dict.get('VERSION_ID', 'unknown').lower(),
                     os_release_dict.get('NAME').lower())

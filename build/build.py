@@ -226,7 +226,8 @@ DISTS = {
     'debian': debmain,
     'ubuntu': debmain,
     'linuxmint': debmain,
-    'fedora': rpmmain
+    'fedora': rpmmain,
+    'rhel': rpmmain
 }
 
 if __name__ == '__main__':
