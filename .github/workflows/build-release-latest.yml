@@ -21,10 +21,11 @@ jobs:
 
     steps:
     - uses: actions/checkout@v3
-    - name: Set up Python ${{ matrix.python-version }}
-      uses: actions/setup-python@v3
-      with:
-        python-version: ${{ matrix.python-version }}
+    #- name: Set up Python ${{ matrix.python-version }}
+    #  uses: actions/setup-python@v3
+    #  with:
+    #    python-version: ${{ matrix.python-version }}
+    # somehow weird way to get the hash over the requirements to be aware if they changed
     - id: requirements_hash
       run: echo "HASH=$(md5sum build/requirements/linux.txt | cut -d\  -f1)" >> $GITHUB_OUTPUT
     - uses: docker/login-action@v2
@@ -270,7 +271,7 @@ jobs:
       - run: docker run --rm -v $PWD/${{ env.repo_dir }}/${{ matrix.os_family }}/latest:/repo fedora /bin/sh -c "dnf -y install createrepo_c && createrepo /repo"
       # commit and push new binaries to nagstamon-repo
       - run: git config --global user.email "repo@nagstamon.de" && git config --global user.name "Nagstamon Repository"
-      - run: cd ${{ env.repo_dir }} && git add . && git commit -am "new latest repo" && git push
+      - run: cd ${{ env.repo_dir }} && git pull && git add . && git commit -am "new latest repo ${{ matrix.os_family }}" && git push
 
   github-release:
     runs-on: ubuntu-latest
