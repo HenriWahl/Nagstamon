@@ -245,11 +245,14 @@ jobs:
           retention-days: 1
           if-no-files-found: error
 
-  repo-fedora:
+  repo-rpm:
     runs-on: ubuntu-latest
     # if not all are ready there might be trouble when downloading artifacts
     # maybe faster now with build containers
-    needs: [fedora-34, fedora-35, fedora-36, fedora-37]
+    needs: [fedora-34, fedora-35, fedora-36, fedora-37, rhel-9]
+    strategy:
+      matrix:
+        os_family: [fedora, rhel]
     steps:
       # get binaries created by other jobs
       - uses: actions/download-artifact@v3
@@ -259,12 +262,12 @@ jobs:
       - run: chmod -R go-rwx ~/.ssh
       # get and prepare nagstamon-jekyll
       - run: git clone git@github.com:HenriWahl/nagstamon-jekyll.git
-      - run: rm -rf ${{ env.repo_dir }}/fedora/latest
-      - run: mkdir -p ${{ env.repo_dir }}/fedora/latest
+      - run: rm -rf ${{ env.repo_dir }}/${{ os_family }}
+      - run: mkdir -p ${{ env.repo_dir }}/${{ os_family }}/latest
       # copy *.rpm files into nagstamon-jekyll
-      - run: cp -r artifact/*.rpm ${{ env.repo_dir }}/fedora/latest
+      - run: cp -r artifact/*.rpm ${{ env.repo_dir }}/${{ os_family }}/latest
       # create rpm repo via Fedora container
-      - run: docker run --rm -v $PWD/${{ env.repo_dir }}/fedora/latest:/repo fedora /bin/sh -c "dnf -y install createrepo_c && createrepo /repo"
+      - run: docker run --rm -v $PWD/${{ env.repo_dir }}/${{ os_family }}/latest:/repo fedora /bin/sh -c "dnf -y install createrepo_c && createrepo /repo"
       # commit and push new binaries to nagstamon-repo
       - run: git config --global user.email "repo@nagstamon.de" && git config --global user.name "Nagstamon Repository"
       - run: cd ${{ env.repo_dir }} && git add . && git commit -am "new latest repo" && git push
