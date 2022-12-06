@@ -280,7 +280,7 @@ jobs:
       - run: chmod -R go-rwx ~/.ssh
       # get and prepare nagstamon-jekyll
       - run: git clone git@github.com:HenriWahl/nagstamon-jekyll.git
-      - run: rm -rf ${{ env.repo_dir }}/${{ matrix.os_family }}
+      - run: rm -rf ${{ env.repo_dir }}/${{ matrix.os_family }}/latest
       - run: mkdir -p ${{ env.repo_dir }}/${{ matrix.os_family }}/latest
       # copy *.rpm files into nagstamon-jekyll
       - run: cp -r artifact/*.${{ matrix.os_family }}*.rpm ${{ env.repo_dir }}/${{ matrix.os_family }}/latest
