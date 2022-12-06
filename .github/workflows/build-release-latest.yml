@@ -283,7 +283,7 @@ jobs:
       - run: rm -rf ${{ env.repo_dir }}/${{ matrix.os_family }}
       - run: mkdir -p ${{ env.repo_dir }}/${{ matrix.os_family }}/latest
       # copy *.rpm files into nagstamon-jekyll
-      - run: cp -r artifact/*.{{ matrix.os_family }}*.rpm ${{ env.repo_dir }}/${{ matrix.os_family }}/latest
+      - run: cp -r artifact/*.${{ matrix.os_family }}*.rpm ${{ env.repo_dir }}/${{ matrix.os_family }}/latest
       # create rpm repo via Fedora container
       - run: docker run --rm -v $PWD/${{ env.repo_dir }}/${{ matrix.os_family }}/latest:/repo fedora /bin/sh -c "dnf -y install createrepo_c && createrepo /repo"
       # commit and push new binaries to nagstamon-repo
