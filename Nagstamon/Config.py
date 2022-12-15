@@ -283,6 +283,11 @@ class Config(object):
         self.systray_offset_use = False
         self.systray_offset = 10
         self.hide_macos_dock_icon = False
+        # as default enable on Linux Desktops like Cinnamon and Gnome Flashback
+        if DESKTOP_NEEDS_FIX:
+            self.enable_position_fix = True
+        else:
+            self.enable_position_fix = False
         self.font = ''
         self.defaults_acknowledge_sticky = False
         self.defaults_acknowledge_send_notification = False

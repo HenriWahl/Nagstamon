@@ -1741,7 +1741,7 @@ class StatusWindow(QWidget):
         available_y = self.get_screen().availableGeometry().y()
 
         # Workaround for Cinnamon + GNOME Flashback
-        if OS not in OS_NON_LINUX and DESKTOP_NEEDS_FIX:
+        if OS not in OS_NON_LINUX and conf.enable_position_fix:
             if available_x == 0:
                 available_x = available_width
             if available_y == 0:
@@ -4728,6 +4728,12 @@ class Dialog_Settings(Dialog):
             self.TOGGLE_DEPS.update({
                 self.window.input_radiobutton_icon_in_systray: [self.window.input_checkbox_hide_macos_dock_icon],
                 self.window.input_radiobutton_statusbar_floating: [self.window.input_checkbox_hide_macos_dock_icon]})
+
+        # show option to enable position fix only on Unices
+        if not OS in OS_NON_LINUX:
+            self.window.input_checkbox_enable_position_fix.show()
+        else:
+            self.window.input_checkbox_enable_position_fix.hide()
 
         # set title to current version
         self.window.setWindowTitle(' '.join((AppInfo.NAME, AppInfo.VERSION)))
