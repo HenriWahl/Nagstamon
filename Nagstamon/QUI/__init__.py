@@ -4974,6 +4974,10 @@ class Dialog_Settings(Dialog):
         if OS != OS_MACOS:
             self.window.input_checkbox_hide_macos_dock_icon.hide()
 
+        # avoid showing offset setting if not icon in systray is configured
+        if not OS in OS_NON_LINUX and not conf.icon_in_systray:
+            self.toggle_systray_icon_offset()
+
         # important final size adjustment
         self.window.adjustSize()
 
