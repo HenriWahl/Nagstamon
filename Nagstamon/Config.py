@@ -18,10 +18,10 @@
 # along with this program; if not, write to the Free Software
 # Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA  02110-1301, USA
 
+from argparse import ArgumentParser
 import os
 import platform
 import sys
-import argparse
 import configparser
 import base64
 import zlib
@@ -321,16 +321,20 @@ class Config(object):
         # would not find a config file
         self.unconfigured = True
 
-        # when more tha a config directory was given something is wrong
-        if len(sys.argv) > 2:
-            print('Currently Nagstamon supports only 1 config directory.')
-            self.configdir = sys.argv[1]
-
-        # try to use a given config file - there must be one given
-        elif len(sys.argv) == 2:
-            self.configdir = sys.argv[1]
-
-        # otherwise if there exits a configdir in current working directory it should be used
+        # get CLI arguments
+        parser = ArgumentParser(prog='nagstamon')
+        # mitigate session restore problem https://github.com/HenriWahl/Nagstamon/issues/878
+        if len(sys.argv) == 2 or len(sys.argv) >= 6:
+            # only add configdir if it might be included at all
+            parser.add_argument('configdir', default=None)
+        # -session and -name are used by X11 session management and could be
+        # safely ignored because nagstamon keeps its own session info
+        parser.add_argument('-session', default=None, required=False)
+        parser.add_argument('-name', default=None, required=False)
+        arguments = parser.parse_args()
+        if 'configdir' in arguments.__dict__:
+            self.configdir = arguments.configdir
+        # otherwise if there exists a configdir in current working directory it should be used
         elif os.path.exists(os.getcwd() + os.sep + 'nagstamon.config'):
             self.configdir = os.getcwd() + os.sep + 'nagstamon.config'
         else:
