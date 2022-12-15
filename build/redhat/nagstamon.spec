@@ -17,7 +17,6 @@ BuildRequires: python3-pyqt6-devel
 BuildRequires: desktop-file-utils
 Requires:      python3
 Requires:      python3-beautifulsoup4
-Requires:      python3-crypto
 Requires:      python3-cryptography
 Requires:      python3-dateutil
 Requires:      python3-dbus

@@ -21,17 +21,16 @@ jobs:
 
     steps:
     - uses: actions/checkout@v3
-    - name: Set up Python ${{ matrix.python-version }}
-      uses: actions/setup-python@v3
-      with:
-        python-version: ${{ matrix.python-version }}
+    # somehow weird way to get the hash over the requirements to be aware if they changed
     - id: requirements_hash
       run: echo "HASH=$(md5sum build/requirements/linux.txt | cut -d\  -f1)" >> $GITHUB_OUTPUT
+      # docker login is needed for pushing the test image
     - uses: docker/login-action@v2
       with:
         registry: ghcr.io
         username: ${{ github.actor }}
         password: ${{ secrets.GITHUB_TOKEN }}
+    # if image defined by hash over requirements is not pullable aka does not exist it will be created and pushed
     - run: docker pull ${{ env.cr_image }}-${{ github.job }}-${{ matrix.python-version }}-${{ steps.requirements_hash.outputs.HASH }} || /usr/bin/docker build -t ${{ env.cr_image }}-${{ github.job }}-${{ matrix.python-version }}-${{ steps.requirements_hash.outputs.HASH }} --build-arg VERSION=${{ matrix.python-version }} --build-arg REQUIREMENTS="$(cat build/requirements/linux.txt | base64 --wrap=0)" -f build/docker/Dockerfile-${{ github.job }} .
     - run: docker push ${{ env.cr_image }}-${{ github.job }}-${{ matrix.python-version }}-${{ steps.requirements_hash.outputs.HASH }}
     # - name: Lint with flake8
@@ -41,6 +40,7 @@ jobs:
     #     # exit-zero treats all errors as warnings. The GitHub editor is 127 chars wide
     #     flake8 . --count --exit-zero --max-complexity=10 --max-line-length=127 --statistics
     - name: Test with unittest
+      # using the tests in precompiled image makes them way faster instead of creating the test environment every time from scratch
       run: docker run --rm -v $PWD:/src --workdir /src ${{ env.cr_image }}-${{ github.job }}-${{ matrix.python-version }}-${{ steps.requirements_hash.outputs.HASH }} python -m unittest tests/test_*.py
 
   debian:
@@ -48,13 +48,16 @@ jobs:
     needs: test
     steps:
       - uses: actions/checkout@v3
+      # docker login is needed for pushing the build image
       - uses: docker/login-action@v2
         with:
           registry: ghcr.io
           username: ${{ github.actor }}
           password: ${{ secrets.GITHUB_TOKEN }}
+      # if image defined by hash over requirements is not pullable aka does not exist it will be created and pushed
       - run: docker pull ${{ env.cr_image }}-${{ github.job }} || /usr/bin/docker build -t ${{ env.cr_image }}-${{ github.job }} -f build/docker/Dockerfile-${{ github.job }} .
       - run: docker push ${{ env.cr_image }}-${{ github.job }}
+      # building in precompiled image makes them way faster instead of creating the build environment every time from scratch
       - run: /usr/bin/docker run -v ${{ github.workspace }}:/nagstamon -e DEB_BUILD_OPTIONS=nocheck ${{ env.cr_image }}-${{ github.job }}
       - uses: actions/upload-artifact@v3
         with:
@@ -67,13 +70,16 @@ jobs:
     needs: test
     steps:
       - uses: actions/checkout@v3
+      # docker login is needed for pushing the build image
       - uses: docker/login-action@v2
         with:
           registry: ghcr.io
           username: ${{ github.actor }}
           password: ${{ secrets.GITHUB_TOKEN }}
+      # if image defined by hash over requirements is not pullable aka does not exist it will be created and pushed
       - run: docker pull ${{ env.cr_image }}-${{ github.job }} || /usr/bin/docker build -t ${{ env.cr_image }}-${{ github.job }} -f build/docker/Dockerfile-${{ github.job }} .
       - run: docker push ${{ env.cr_image }}-${{ github.job }}
+      # building in precompiled image makes them way faster instead of creating the build environment every time from scratch
       - run: /usr/bin/docker run -v ${{ github.workspace }}:/nagstamon ${{ env.cr_image }}-${{ github.job }}
       - uses: actions/upload-artifact@v3
         with:
@@ -86,13 +92,16 @@ jobs:
     needs: test
     steps:
       - uses: actions/checkout@v3
+      # docker login is needed for pushing the build image
       - uses: docker/login-action@v2
         with:
           registry: ghcr.io
           username: ${{ github.actor }}
           password: ${{ secrets.GITHUB_TOKEN }}
+      # if image defined by hash over requirements is not pullable aka does not exist it will be created and pushed
       - run: docker pull ${{ env.cr_image }}-${{ github.job }} || /usr/bin/docker build -t ${{ env.cr_image }}-${{ github.job }} -f build/docker/Dockerfile-${{ github.job }} .
       - run: docker push ${{ env.cr_image }}-${{ github.job }}
+      # building in precompiled image makes them way faster instead of creating the build environment every time from scratch
       - run: /usr/bin/docker run -v ${{ github.workspace }}:/nagstamon ${{ env.cr_image }}-${{ github.job }}
       - uses: actions/upload-artifact@v3
         with:
@@ -105,13 +114,16 @@ jobs:
     needs: test
     steps:
       - uses: actions/checkout@v3
+      # docker login is needed for pushing the build image
       - uses: docker/login-action@v2
         with:
           registry: ghcr.io
           username: ${{ github.actor }}
           password: ${{ secrets.GITHUB_TOKEN }}
+      # if image defined by hash over requirements is not pullable aka does not exist it will be created and pushed
       - run: docker pull ${{ env.cr_image }}-${{ github.job }} || /usr/bin/docker build -t ${{ env.cr_image }}-${{ github.job }} -f build/docker/Dockerfile-${{ github.job }} .
       - run: docker push ${{ env.cr_image }}-${{ github.job }}
+      # building in precompiled image makes them way faster instead of creating the build environment every time from scratch
       - run: /usr/bin/docker run -v ${{ github.workspace }}:/nagstamon ${{ env.cr_image }}-${{ github.job }}
       - uses: actions/upload-artifact@v3
         with:
@@ -124,13 +136,16 @@ jobs:
     needs: test
     steps:
       - uses: actions/checkout@v3
+      # docker login is needed for pushing the build image
       - uses: docker/login-action@v2
         with:
           registry: ghcr.io
           username: ${{ github.actor }}
           password: ${{ secrets.GITHUB_TOKEN }}
+      # if image defined by hash over requirements is not pullable aka does not exist it will be created and pushed
       - run: docker pull ${{ env.cr_image }}-${{ github.job }} || /usr/bin/docker build -t ${{ env.cr_image }}-${{ github.job }} -f build/docker/Dockerfile-${{ github.job }} .
       - run: docker push ${{ env.cr_image }}-${{ github.job }}
+      # building in precompiled image makes them way faster instead of creating the build environment every time from scratch
       - run: /usr/bin/docker run -v ${{ github.workspace }}:/nagstamon ${{ env.cr_image }}-${{ github.job }}
       - uses: actions/upload-artifact@v3
         with:
@@ -143,8 +158,17 @@ jobs:
     needs: test
     steps:
       - uses: actions/checkout@v3
-      - run: /usr/bin/docker build -t build-nagstamon -f build/docker/Dockerfile-${{ github.job }} .
-      - run: /usr/bin/docker run -v ${{ github.workspace }}:/nagstamon build-nagstamon
+      # docker login is needed for pushing the build image
+      - uses: docker/login-action@v2
+        with:
+          registry: ghcr.io
+          username: ${{ github.actor }}
+          password: ${{ secrets.GITHUB_TOKEN }}
+      # if image defined by hash over requirements is not pullable aka does not exist it will be created and pushed
+      - run: docker pull ${{ env.cr_image }}-${{ github.job }} || /usr/bin/docker build -t ${{ env.cr_image }}-${{ github.job }} -f build/docker/Dockerfile-${{ github.job }} .
+      - run: docker push ${{ env.cr_image }}-${{ github.job }}
+      # building in precompiled image makes them way faster instead of creating the build environment every time from scratch
+      - run: /usr/bin/docker run -v ${{ github.workspace }}:/nagstamon ${{ env.cr_image }}-${{ github.job }}
       - uses: actions/upload-artifact@v3
         with:
           path: build/*.rpm
@@ -239,11 +263,14 @@ jobs:
           retention-days: 1
           if-no-files-found: error
 
-  repo-fedora:
+  repo-rpm:
     runs-on: ubuntu-latest
     # if not all are ready there might be trouble when downloading artifacts
     # maybe faster now with build containers
-    needs: [fedora-34, fedora-35, fedora-36, fedora-37]
+    needs: [fedora-34, fedora-35, fedora-36, fedora-37, rhel-9]
+    strategy:
+      matrix:
+        os_family: [fedora, rhel]
     steps:
       # get binaries created by other jobs
       - uses: actions/download-artifact@v3
@@ -253,15 +280,15 @@ jobs:
       - run: chmod -R go-rwx ~/.ssh
       # get and prepare nagstamon-jekyll
       - run: git clone git@github.com:HenriWahl/nagstamon-jekyll.git
-      - run: rm -rf ${{ env.repo_dir }}/fedora/latest
-      - run: mkdir -p ${{ env.repo_dir }}/fedora/latest
+      - run: rm -rf ${{ env.repo_dir }}/${{ matrix.os_family }}/latest
+      - run: mkdir -p ${{ env.repo_dir }}/${{ matrix.os_family }}/latest
       # copy *.rpm files into nagstamon-jekyll
-      - run: cp -r artifact/*.rpm ${{ env.repo_dir }}/fedora/latest
+      - run: cp -r artifact/*.${{ matrix.os_family }}*.rpm ${{ env.repo_dir }}/${{ matrix.os_family }}/latest
       # create rpm repo via Fedora container
-      - run: docker run --rm -v $PWD/${{ env.repo_dir }}/fedora/latest:/repo fedora /bin/sh -c "dnf -y install createrepo_c && createrepo /repo"
+      - run: docker run --rm -v $PWD/${{ env.repo_dir }}/${{ matrix.os_family }}/latest:/repo fedora /bin/sh -c "dnf -y install createrepo_c && createrepo /repo"
       # commit and push new binaries to nagstamon-repo
       - run: git config --global user.email "repo@nagstamon.de" && git config --global user.name "Nagstamon Repository"
-      - run: cd ${{ env.repo_dir }} && git add . && git commit -am "new latest repo" && git push
+      - run: cd ${{ env.repo_dir }} && git pull && git add . && git commit -am "new latest repo ${{ matrix.os_family }}" && git push
 
   github-release:
     runs-on: ubuntu-latest

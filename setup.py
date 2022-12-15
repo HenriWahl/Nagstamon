@@ -87,10 +87,10 @@ bdist_dmg_options = dict(volume_label='{0} {1}'.format(NAME, VERSION),
                          applications_shortcut=False)
 
 # older Fedora needs Qt5
-if DIST.lower() == 'fedora' and int(DIST_VERSION) < 36:
+if DIST.lower() == 'fedora' and int(DIST_VERSION) < 36 or \
+   DIST.lower() == 'rhel' and int(DIST_VERSION) <= 9:
     bdist_rpm_options = dict(requires='python3 '
                                       'python3-beautifulsoup4 '
-                                      'python3-crypto '
                                       'python3-cryptography '
                                       'python3-dateutil '
                                       'python3-keyring '
@@ -107,7 +107,6 @@ if DIST.lower() == 'fedora' and int(DIST_VERSION) < 36:
 else:
     bdist_rpm_options = dict(requires='python3 '
                                       'python3-beautifulsoup4 '
-                                      'python3-crypto '
                                       'python3-cryptography '
                                       'python3-dateutil '
                                       'python3-keyring '
