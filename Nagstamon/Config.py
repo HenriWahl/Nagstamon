@@ -56,18 +56,14 @@ if 'WAYLAND_DISPLAY' in os.environ or\
 else:
     DESKTOP_WAYLAND = False
 
-# Cinnamon detection
-# CINNAMON_VERSION 4.2.4
-# DESKTOP_SESSION cinnamon
-# GDMSESSION cinnamon
-# XDG_CURRENT_DESKTOP X-Cinnamon
-# XDG_SESSION_DESKTOP cinnamon
-if 'CINNAMON_VERSION' in os.environ or\
-    'DESKTOP_SESSION' in os.environ and os.environ['DESKTOP_SESSION'] == 'cinnamon' or \
-    'XDG_SESSION_DESKTOP' in os.environ and os.environ['XDG_SESSION_DESKTOP'] == 'cinnamon':
-    DESKTOP_CINNAMON = True
+# detection of somehow quirky desktop enviroments which might need a fix
+QUIRKY_DESKTOPS =  ('cinnamon', 'gnome-flashback-metacity')
+if os.environ.get('CINNAMON_VERSION') or\
+    os.environ.get('DESKTOP_SESSION') in QUIRKY_DESKTOPS or \
+    os.environ.get('XDG_SESSION_DESKTOP') in QUIRKY_DESKTOPS:
+    DESKTOP_NEEDS_FIX = True
 else:
-    DESKTOP_CINNAMON = False
+    DESKTOP_NEEDS_FIX = False
 
 # queue.Queue() needs threading module which might be not such a good idea to be used
 # because QThread is already in use

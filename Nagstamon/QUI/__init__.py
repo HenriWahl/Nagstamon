@@ -40,7 +40,7 @@ from Nagstamon.Config import (Action,
                               conf,
                               CONFIG_STRINGS,
                               debug_queue,
-                              DESKTOP_CINNAMON,
+                              DESKTOP_NEEDS_FIX,
                               KEYRING,
                               OS_NON_LINUX,
                               OS,
@@ -1740,8 +1740,8 @@ class StatusWindow(QWidget):
         available_x = self.get_screen().availableGeometry().x()
         available_y = self.get_screen().availableGeometry().y()
 
-        # Workaround for Cinnamon
-        if OS not in OS_NON_LINUX and DESKTOP_CINNAMON:
+        # Workaround for Cinnamon + GNOME Flashback
+        if OS not in OS_NON_LINUX and DESKTOP_NEEDS_FIX:
             if available_x == 0:
                 available_x = available_width
             if available_y == 0:
