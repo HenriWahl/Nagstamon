@@ -327,8 +327,8 @@ class Config(object):
         # safely ignored because nagstamon keeps its own session info
         parser.add_argument('-session', default=None, required=False)
         parser.add_argument('-name', default=None, required=False)
-        arguments = parser.parse_args()
-        if 'configdir' in arguments.__dict__:
+        arguments, unknown_arguments = parser.parse_known_args()
+        if 'configdir' in arguments:
             self.configdir = arguments.configdir
         # otherwise if there exists a configdir in current working directory it should be used
         elif os.path.exists(os.getcwd() + os.sep + 'nagstamon.config'):
