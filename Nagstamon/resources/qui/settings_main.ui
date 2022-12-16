@@ -704,10 +704,10 @@
           <property name="spacing">
            <number>5</number>
           </property>
-          <item row="8" column="0" colspan="2">
-           <widget class="QCheckBox" name="input_checkbox_systray_offset_use">
+          <item row="15" column="0">
+           <widget class="QCheckBox" name="input_checkbox_enable_position_fix">
             <property name="text">
-             <string>Use offset to correct position problems</string>
+             <string>Enable position fix</string>
             </property>
            </widget>
           </item>
@@ -770,10 +770,10 @@
             </property>
            </widget>
           </item>
-          <item row="15" column="0">
-           <widget class="QCheckBox" name="input_checkbox_enable_position_fix">
+          <item row="8" column="0" colspan="2">
+           <widget class="QCheckBox" name="input_checkbox_systray_offset_use">
             <property name="text">
-             <string>Enable position fix - might be useful in Cinnamon</string>
+             <string>Use offset to correct position problems</string>
             </property>
            </widget>
           </item>
