@@ -582,102 +582,6 @@
          </layout>
         </widget>
        </item>
-       <item row="2" column="0">
-        <widget class="QGroupBox" name="groupbox_appearance">
-         <property name="sizePolicy">
-          <sizepolicy hsizetype="Minimum" vsizetype="Minimum">
-           <horstretch>0</horstretch>
-           <verstretch>0</verstretch>
-          </sizepolicy>
-         </property>
-         <property name="title">
-          <string>Appearance:</string>
-         </property>
-         <layout class="QGridLayout" name="gridLayout_17">
-          <property name="leftMargin">
-           <number>10</number>
-          </property>
-          <property name="topMargin">
-           <number>10</number>
-          </property>
-          <property name="rightMargin">
-           <number>10</number>
-          </property>
-          <property name="bottomMargin">
-           <number>10</number>
-          </property>
-          <property name="spacing">
-           <number>5</number>
-          </property>
-          <item row="1" column="0">
-           <widget class="QRadioButton" name="input_radiobutton_icon_in_systray">
-            <property name="text">
-             <string>Icon in systray</string>
-            </property>
-           </widget>
-          </item>
-          <item row="7" column="0" colspan="2">
-           <widget class="QCheckBox" name="input_checkbox_systray_offset_use">
-            <property name="text">
-             <string>Use offset to correct position problems</string>
-            </property>
-           </widget>
-          </item>
-          <item row="4" column="0">
-           <widget class="QRadioButton" name="input_radiobutton_windowed">
-            <property name="text">
-             <string>Window</string>
-            </property>
-           </widget>
-          </item>
-          <item row="12" column="0">
-           <layout class="QGridLayout" name="gridLayout_20">
-            <item row="1" column="0">
-             <widget class="QLabel" name="label_fullscreen_display">
-              <property name="text">
-               <string>Display to use:</string>
-              </property>
-             </widget>
-            </item>
-            <item row="0" column="0">
-             <widget class="QLabel" name="label_offset_statuswindow">
-              <property name="text">
-               <string>Offset for statuswindow:</string>
-              </property>
-             </widget>
-            </item>
-            <item row="0" column="1">
-             <widget class="QSpinBox" name="input_spinbox_systray_offset"/>
-            </item>
-            <item row="1" column="1">
-             <widget class="QComboBox" name="input_combobox_fullscreen_display"/>
-            </item>
-           </layout>
-          </item>
-          <item row="5" column="0">
-           <widget class="QRadioButton" name="input_radiobutton_fullscreen">
-            <property name="text">
-             <string>Fullscreen</string>
-            </property>
-           </widget>
-          </item>
-          <item row="0" column="0">
-           <widget class="QRadioButton" name="input_radiobutton_statusbar_floating">
-            <property name="text">
-             <string>Floating statusbar</string>
-            </property>
-           </widget>
-          </item>
-          <item row="13" column="0">
-           <widget class="QCheckBox" name="input_checkbox_hide_macos_dock_icon">
-            <property name="text">
-             <string>Hide macOS Dock icon - needs restart</string>
-            </property>
-           </widget>
-          </item>
-         </layout>
-        </widget>
-       </item>
        <item row="4" column="0">
         <widget class="QGroupBox" name="groupbox_font">
          <property name="sizePolicy">
@@ -769,6 +673,109 @@
              </layout>
             </item>
            </layout>
+          </item>
+         </layout>
+        </widget>
+       </item>
+       <item row="2" column="0">
+        <widget class="QGroupBox" name="groupbox_appearance">
+         <property name="sizePolicy">
+          <sizepolicy hsizetype="Minimum" vsizetype="Minimum">
+           <horstretch>0</horstretch>
+           <verstretch>0</verstretch>
+          </sizepolicy>
+         </property>
+         <property name="title">
+          <string>Appearance:</string>
+         </property>
+         <layout class="QGridLayout" name="gridLayout_17">
+          <property name="leftMargin">
+           <number>10</number>
+          </property>
+          <property name="topMargin">
+           <number>10</number>
+          </property>
+          <property name="rightMargin">
+           <number>10</number>
+          </property>
+          <property name="bottomMargin">
+           <number>10</number>
+          </property>
+          <property name="spacing">
+           <number>5</number>
+          </property>
+          <item row="15" column="0">
+           <widget class="QCheckBox" name="input_checkbox_enable_position_fix">
+            <property name="text">
+             <string>Enable position fix</string>
+            </property>
+           </widget>
+          </item>
+          <item row="6" column="0">
+           <widget class="QRadioButton" name="input_radiobutton_fullscreen">
+            <property name="text">
+             <string>Fullscreen</string>
+            </property>
+           </widget>
+          </item>
+          <item row="0" column="0">
+           <widget class="QRadioButton" name="input_radiobutton_statusbar_floating">
+            <property name="text">
+             <string>Floating statusbar</string>
+            </property>
+           </widget>
+          </item>
+          <item row="1" column="0">
+           <widget class="QRadioButton" name="input_radiobutton_icon_in_systray">
+            <property name="text">
+             <string>Icon in systray</string>
+            </property>
+           </widget>
+          </item>
+          <item row="5" column="0">
+           <widget class="QRadioButton" name="input_radiobutton_windowed">
+            <property name="text">
+             <string>Window</string>
+            </property>
+           </widget>
+          </item>
+          <item row="13" column="0">
+           <layout class="QGridLayout" name="gridLayout_20">
+            <item row="1" column="0">
+             <widget class="QLabel" name="label_fullscreen_display">
+              <property name="text">
+               <string>Display to use:</string>
+              </property>
+             </widget>
+            </item>
+            <item row="0" column="0">
+             <widget class="QLabel" name="label_offset_statuswindow">
+              <property name="text">
+               <string>Offset for statuswindow:</string>
+              </property>
+             </widget>
+            </item>
+            <item row="0" column="1">
+             <widget class="QSpinBox" name="input_spinbox_systray_offset"/>
+            </item>
+            <item row="1" column="1">
+             <widget class="QComboBox" name="input_combobox_fullscreen_display"/>
+            </item>
+           </layout>
+          </item>
+          <item row="14" column="0">
+           <widget class="QCheckBox" name="input_checkbox_hide_macos_dock_icon">
+            <property name="text">
+             <string>Hide macOS Dock icon - needs restart</string>
+            </property>
+           </widget>
+          </item>
+          <item row="8" column="0" colspan="2">
+           <widget class="QCheckBox" name="input_checkbox_systray_offset_use">
+            <property name="text">
+             <string>Use offset to correct position problems</string>
+            </property>
+           </widget>
           </item>
          </layout>
         </widget>
@@ -3183,11 +3190,13 @@
   <tabstop>input_radiobutton_short_display</tabstop>
   <tabstop>input_radiobutton_statusbar_floating</tabstop>
   <tabstop>input_radiobutton_icon_in_systray</tabstop>
+  <tabstop>input_radiobutton_windowed</tabstop>
   <tabstop>input_radiobutton_fullscreen</tabstop>
   <tabstop>input_checkbox_systray_offset_use</tabstop>
   <tabstop>input_spinbox_systray_offset</tabstop>
   <tabstop>input_combobox_fullscreen_display</tabstop>
   <tabstop>input_checkbox_hide_macos_dock_icon</tabstop>
+  <tabstop>input_checkbox_enable_position_fix</tabstop>
   <tabstop>button_fontchooser</tabstop>
   <tabstop>button_default_font</tabstop>
   <tabstop>input_radiobutton_popup_details_hover</tabstop>
@@ -3328,7 +3337,6 @@
   <tabstop>input_checkbox_show_grid</tabstop>
   <tabstop>input_checkbox_grid_use_custom_intensity</tabstop>
   <tabstop>input_slider_grid_alternation_intensity</tabstop>
-  <tabstop>input_radiobutton_windowed</tabstop>
   <tabstop>input_lineedit_notification_custom_action_separator</tabstop>
   <tabstop>input_checkbox_notification_custom_action_single</tabstop>
   <tabstop>input_checkbox_filter_all_unreachable_services</tabstop>

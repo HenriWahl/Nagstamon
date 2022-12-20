@@ -18,10 +18,10 @@
 # along with this program; if not, write to the Free Software
 # Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA  02110-1301, USA
 
+from argparse import ArgumentParser
 import os
 import platform
 import sys
-import argparse
 import configparser
 import base64
 import zlib
@@ -56,18 +56,14 @@ if 'WAYLAND_DISPLAY' in os.environ or\
 else:
     DESKTOP_WAYLAND = False
 
-# Cinnamon detection
-# CINNAMON_VERSION 4.2.4
-# DESKTOP_SESSION cinnamon
-# GDMSESSION cinnamon
-# XDG_CURRENT_DESKTOP X-Cinnamon
-# XDG_SESSION_DESKTOP cinnamon
-if 'CINNAMON_VERSION' in os.environ or\
-    'DESKTOP_SESSION' in os.environ and os.environ['DESKTOP_SESSION'] == 'cinnamon' or \
-    'XDG_SESSION_DESKTOP' in os.environ and os.environ['XDG_SESSION_DESKTOP'] == 'cinnamon':
-    DESKTOP_CINNAMON = True
+# detection of somehow quirky desktop enviroments which might need a fix
+QUIRKY_DESKTOPS =  ('cinnamon', 'gnome-flashback-metacity')
+if os.environ.get('CINNAMON_VERSION') or\
+    os.environ.get('DESKTOP_SESSION') in QUIRKY_DESKTOPS or \
+    os.environ.get('XDG_SESSION_DESKTOP') in QUIRKY_DESKTOPS:
+    DESKTOP_NEEDS_FIX = True
 else:
-    DESKTOP_CINNAMON = False
+    DESKTOP_NEEDS_FIX = False
 
 # queue.Queue() needs threading module which might be not such a good idea to be used
 # because QThread is already in use
@@ -125,7 +121,7 @@ class AppInfo(object):
         contains app information previously located in GUI.py
     """
     NAME = 'Nagstamon'
-    VERSION = '3.11-20221209'
+    VERSION = '3.11-20221216'
     WEBSITE = 'https://nagstamon.de'
     COPYRIGHT = '©2008-2022 Henri Wahl et al.'
     COMMENTS = 'Nagios status monitor for your desktop'
@@ -287,6 +283,11 @@ class Config(object):
         self.systray_offset_use = False
         self.systray_offset = 10
         self.hide_macos_dock_icon = False
+        # as default enable on Linux Desktops like Cinnamon and Gnome Flashback
+        if DESKTOP_NEEDS_FIX:
+            self.enable_position_fix = True
+        else:
+            self.enable_position_fix = False
         self.font = ''
         self.defaults_acknowledge_sticky = False
         self.defaults_acknowledge_send_notification = False
@@ -321,16 +322,20 @@ class Config(object):
         # would not find a config file
         self.unconfigured = True
 
-        # when more tha a config directory was given something is wrong
-        if len(sys.argv) > 2:
-            print('Currently Nagstamon supports only 1 config directory.')
-            self.configdir = sys.argv[1]
-
-        # try to use a given config file - there must be one given
-        elif len(sys.argv) == 2:
-            self.configdir = sys.argv[1]
-
-        # otherwise if there exits a configdir in current working directory it should be used
+        # get CLI arguments
+        parser = ArgumentParser(prog='nagstamon')
+        # mitigate session restore problem https://github.com/HenriWahl/Nagstamon/issues/878
+        if len(sys.argv) == 2 or len(sys.argv) >= 6:
+            # only add configdir if it might be included at all
+            parser.add_argument('configdir', default=None)
+        # -session and -name are used by X11 session management and could be
+        # safely ignored because nagstamon keeps its own session info
+        parser.add_argument('-session', default=None, required=False)
+        parser.add_argument('-name', default=None, required=False)
+        arguments, unknown_arguments = parser.parse_known_args()
+        if 'configdir' in arguments:
+            self.configdir = arguments.configdir
+        # otherwise if there exists a configdir in current working directory it should be used
         elif os.path.exists(os.getcwd() + os.sep + 'nagstamon.config'):
             self.configdir = os.getcwd() + os.sep + 'nagstamon.config'
         else:

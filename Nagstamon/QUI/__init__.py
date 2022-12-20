@@ -40,7 +40,7 @@ from Nagstamon.Config import (Action,
                               conf,
                               CONFIG_STRINGS,
                               debug_queue,
-                              DESKTOP_CINNAMON,
+                              DESKTOP_NEEDS_FIX,
                               KEYRING,
                               OS_NON_LINUX,
                               OS,
@@ -1740,8 +1740,8 @@ class StatusWindow(QWidget):
         available_x = self.get_screen().availableGeometry().x()
         available_y = self.get_screen().availableGeometry().y()
 
-        # Workaround for Cinnamon
-        if OS not in OS_NON_LINUX and DESKTOP_CINNAMON:
+        # Workaround for Cinnamon + GNOME Flashback
+        if OS not in OS_NON_LINUX and conf.enable_position_fix:
             if available_x == 0:
                 available_x = available_width
             if available_y == 0:
@@ -4729,6 +4729,12 @@ class Dialog_Settings(Dialog):
                 self.window.input_radiobutton_icon_in_systray: [self.window.input_checkbox_hide_macos_dock_icon],
                 self.window.input_radiobutton_statusbar_floating: [self.window.input_checkbox_hide_macos_dock_icon]})
 
+        # show option to enable position fix only on Unices
+        if not OS in OS_NON_LINUX:
+            self.window.input_checkbox_enable_position_fix.show()
+        else:
+            self.window.input_checkbox_enable_position_fix.hide()
+
         # set title to current version
         self.window.setWindowTitle(' '.join((AppInfo.NAME, AppInfo.VERSION)))
 
@@ -4967,6 +4973,10 @@ class Dialog_Settings(Dialog):
         # hide 'Hide macOS Dock icon' if not on macOS
         if OS != OS_MACOS:
             self.window.input_checkbox_hide_macos_dock_icon.hide()
+
+        # avoid showing offset setting if not icon in systray is configured
+        if not OS in OS_NON_LINUX and not conf.icon_in_systray:
+            self.toggle_systray_icon_offset()
 
         # important final size adjustment
         self.window.adjustSize()
